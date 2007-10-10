@@ -17,6 +17,7 @@
 package com.zimbra.cs.imap;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.Enumeration;
@@ -28,6 +29,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -55,7 +57,9 @@ class ImapPartSpecifier {
 
     boolean isEntireMessage()  { return mPart.equals("") && mModifier.equals(""); }
 
-    ImapPartSpecifier setHeaders(List<String> headers)  { mHeaders = headers;  return this; }
+    ImapPartSpecifier setHeaders(List<String> headers) {
+        mHeaders = headers;  return this;
+    }
     private String[] getHeaders() {
         if (mHeaders == null || mHeaders.isEmpty())
             return NO_HEADERS;
@@ -63,13 +67,6 @@ class ImapPartSpecifier {
         for (int i = 0; i < mHeaders.size(); i++)
             headers[i] = mHeaders.get(i);
         return headers;
-    }
-
-    private int getOctetStart(byte[] content) {
-        return (mOctetStart == -1 ? 0 : Math.min(mOctetStart, content.length));
-    }
-    private int getOctetEnd(byte[] content) {
-        return (mOctetEnd == -1 ? content.length : Math.min(mOctetEnd, content.length));
     }
 
     private static final String[] NO_HEADERS = new String[0];
@@ -101,7 +98,25 @@ class ImapPartSpecifier {
         return sb.toString();
     }
 
-    void write(PrintStream ps, OutputStream os, byte[] content) throws IOException {
+    void write(PrintStream ps, OutputStream os, MimeMessage mm) throws IOException, BinaryDecodingException {
+        write(ps, os, getContent(mm));
+    }
+
+    void writeMessage(PrintStream ps, OutputStream os, byte[] msg) throws IOException, ServiceException {
+        if (!isEntireMessage())
+            throw ServiceException.FAILURE("called writeMessage on non-toplevel part", null);
+
+        byte[] content = msg;
+        if (mOctetStart >= 0) {
+            int length = Math.max(0, Math.min(msg.length, mOctetEnd) - mOctetStart);
+            content = new byte[length];
+            if (length > 0)
+                System.arraycopy(msg, mOctetStart, content, 0, length);
+        }
+        write(ps, os, content);
+    }
+
+    private void write(PrintStream ps, OutputStream os, byte[] content) throws IOException {
         ps.print(this);  ps.write(' ');
 
         if (content == null) {
@@ -109,46 +124,19 @@ class ImapPartSpecifier {
         } else if (mCommand.equals("BINARY.SIZE")) {
             ps.print(content.length);
         } else {
-            int start = getOctetStart(content);
-            int end   = getOctetEnd(content);
-            boolean binary = mCommand.startsWith("BINARY") ? hasNULs(content, start, end) : false;
-            ps.print(binary ? "~{" : "{");  ps.print(end - start);  ps.write('}');
+            boolean binary = mCommand.startsWith("BINARY") && hasNULs(content);
+            ps.print(binary ? "~{" : "{");  ps.print(content.length);  ps.write('}');
             if (os != null) {
-                os.write(ImapHandler.LINE_SEPARATOR_BYTES);  os.write(content, start, end - start);
+                os.write(ImapHandler.LINE_SEPARATOR_BYTES);  os.write(content);
             }
         }
     }
 
-    void write(PrintStream ps, byte[] content) {
-        ps.print(this);  ps.write(' ');
-
-        if (content == null)
-            ps.print("NIL");
-        else if (mCommand.equals("BINARY.SIZE"))
-            ps.print(content.length);
-        else {
-            int start = getOctetStart(content);
-            int end   = getOctetEnd(content);
-            boolean binary = mCommand.startsWith("BINARY") ? hasNULs(content, start, end) : false;
-            ps.print(binary ? "~{" : "{");  ps.print(end - start);  ps.write('}');
-            ps.write(ImapHandler.LINE_SEPARATOR_BYTES, 0, ImapHandler.LINE_SEPARATOR_BYTES.length);
-            ps.write(content, start, end - start);
-        }
-    }
-
-    void write(PrintStream ps, OutputStream os, MimeMessage mm) throws IOException, BinaryDecodingException {
-        write(ps, os, getContent(mm));
-    }
-
-    void write(PrintStream ps, MimeMessage mm) throws BinaryDecodingException {
-        write(ps, getContent(mm));
-    }
-
-    private boolean hasNULs(byte[] buffer, int start, int end) {
+    private boolean hasNULs(byte[] buffer) {
         if (buffer == null)
             return false;
-        for (int i = start; i < end; i++) {
-            if (buffer[i] == 0)
+        for (int i = 0, end = buffer.length; i < end; i++) {
+            if (buffer[i] == '\0')
                 return true;
         }
         return false;
@@ -173,22 +161,22 @@ class ImapPartSpecifier {
                 if (mp instanceof MimeBodyPart) {
                     if (mCommand.startsWith("BINARY")) {
                         try {
-                            return ByteUtil.getContent(((MimeBodyPart) mp).getInputStream(), -1);
+                            return getContent(((MimeBodyPart) mp).getInputStream(), -1);
                         } catch (IOException ioe) {
                             throw new BinaryDecodingException();
                         }
                     } else {
-                        return ByteUtil.getRawContent((MimeBodyPart) mp);
+                        return getContent(((MimeBodyPart) mp).getRawInputStream(), mp.getSize());
                     }
                 } else if (mp instanceof MimeMessage) {
                     if (mCommand.startsWith("BINARY")) {
                         try {
-                            return ByteUtil.getContent(((MimeMessage) mp).getInputStream(), mp.getSize());
+                            return getContent(((MimeMessage) mp).getInputStream(), mp.getSize());
                         } catch (IOException ioe) {
                             throw new BinaryDecodingException();
                         }
                     } else {
-                        return ByteUtil.getContent(((MimeMessage) mp).getRawInputStream(), mp.getSize());
+                        return getContent(((MimeMessage) mp).getRawInputStream(), mp.getSize());
                     }
                 }
                 ZimbraLog.imap.debug("getting content of part; not MimeBodyPart: " + this);
@@ -211,7 +199,7 @@ class ImapPartSpecifier {
                 return result.append(ImapHandler.LINE_SEPARATOR).toString().getBytes();
             } else if (mModifier.equals("TEXT")) {
                 MimeMessage mm = (MimeMessage) mp;
-                return ByteUtil.getContent(mm.getRawInputStream(), mp.getSize());
+                return getContent(mm.getRawInputStream(), mp.getSize());
             }
             return null;
         } catch (IOException e) {
@@ -219,5 +207,20 @@ class ImapPartSpecifier {
         } catch (MessagingException e) {
             return null;
         }
+    }
+
+    /** Takes an <code>InputStream</code> and reads it into a <tt>byte[]</tt>
+     *  array.  If there is a "partial" octet start/length constraint on this
+     *  part specifier, it's applied while generating the array. */
+    private byte[] getContent(InputStream is, int sizeHint) throws IOException {
+        try {
+            if (mOctetStart > 0)
+                is.skip(mOctetStart);
+        } catch (IOException ioe) {
+            ByteUtil.closeStream(is);
+            throw ioe;
+        }
+        int limit = mOctetStart < 0 ? -1 : Math.max(0, mOctetEnd - mOctetStart);
+        return ByteUtil.getPartialContent(is, limit, sizeHint);
     }
 }
