@@ -39,7 +39,7 @@ import com.zimbra.common.util.ZimbraLog;
 /**
  * 
  * @author jylee
- *
+ * @author Andy Clark
  */
 @SuppressWarnings("serial")
 public class ZimletFilter extends ZimbraServlet implements Filter {
@@ -55,20 +55,20 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
 	}
 
 	private boolean isHttpReq(ServletRequest req, ServletResponse res) {
-		return (req instanceof HttpServletRequest && 
+		return (req instanceof HttpServletRequest &&
 				res instanceof HttpServletResponse);
 	}
-	
+
 	private AuthToken getAuthTokenForApp(HttpServletRequest req, HttpServletResponse resp)
 			throws IOException, ServiceException {
 		Config config = Provisioning.getInstance().getConfig();
 		int adminPort = config.getIntAttr(Provisioning.A_zimbraAdminPort, 0);
 		if (adminPort == req.getLocalPort()) {
 			return getAdminAuthTokenFromCookie(req, resp);
-		}	
+		}
 		return getAuthTokenFromCookie(req, resp, true);
 	}
-	
+
 	public void doFilter(ServletRequest request, ServletResponse response,
 			FilterChain chain) throws IOException, ServletException {
 		if (!isHttpReq(request, response)) {
@@ -78,9 +78,9 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
 		HttpServletResponse resp = (HttpServletResponse) response;
 
         AuthToken authToken;
-        try {
+		try {
         	authToken = getAuthTokenForApp(req, resp);
-        } catch (ServiceException se) {
+		} catch (ServiceException se) {
         	ZimbraLog.zimlet.info("can't get authToken: "+se.getMessage());
         	resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
         	return;
@@ -92,16 +92,21 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
     		return;
         }
 
+		boolean isAdminAuth = authToken.isAdmin() || authToken.isDomainAdmin();
+//		ZimbraLog.zimlet.info(">>> isAdminAuth: "+isAdminAuth);
+
         // get list of allowed zimlets
         Provisioning prov = Provisioning.getInstance();
-        Account account = null;
-        Set allowedZimletNames = null;
-        try {
-            account = prov.get(AccountBy.id, authToken.getAccountId());
-            allowedZimletNames = prov.getCOS(account).getMultiAttrSet(Provisioning.A_zimbraZimletAvailableZimlets);
+		Set<String> allowedZimletNames = new HashSet<String>();
+		try {
+			// add all available zimlets
+			if (!isAdminAuth) {
+				Account account = prov.get(AccountBy.id, authToken.getAccountId());
+				allowedZimletNames.addAll(prov.getCOS(account).getMultiAttrSet(Provisioning.A_zimbraZimletAvailableZimlets));
+			}
 
 			// add the admin zimlets
-			if (authToken.isAdmin() || authToken.isDomainAdmin()) {
+			else {
 				List<Zimlet> allZimlets = prov.listAllZimlets();
 				for (Zimlet zimlet : allZimlets) {
 					if (zimlet.isExtension()) {
@@ -109,21 +114,19 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
 					}
 				}
 			}
-        }
-        catch (ServiceException e) {
-            ZimbraLog.zimlet.info("unable to get list of zimlets");
-            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            return;
-        }
+		}
+		catch (ServiceException e) {
+			ZimbraLog.zimlet.info("unable to get list of zimlets");
+			resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+			return;
+		}
 
         // get list of zimlets for request
-        List<String> zimletNames = new LinkedList<String>();
+        Set<String> zimletNames = new HashSet<String>();
         String uri = req.getRequestURI();
 		boolean isZimletRes = uri.startsWith(ZIMLET_RES_URL_PREFIX);
 		if (isZimletRes) {
-            for (Object zimletName : allowedZimletNames) {
-                zimletNames.add(String.valueOf(zimletName));
-            }
+			zimletNames.addAll(allowedZimletNames);
         }
         else {
             Matcher matcher = mPattern.matcher(uri);
@@ -132,7 +135,7 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
                 resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 return;
             }
-            zimletNames.add(matcher.group(1));
+			zimletNames.add(matcher.group(1));
         }
 
         // check access
@@ -152,7 +155,12 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
                     iter.remove();
                     continue;
                 }
-            }
+
+				if (zimlet.isExtension() && !isAdminAuth) {
+//					ZimbraLog.zimlet.info("!!!!! removing extension zimlet: "+zimletName);
+					iter.remove();
+				}
+			}
             catch (ServiceException se) {
                 ZimbraLog.zimlet.info("service exception to zimlet "+zimletName+" from user "+authToken.getAccountId()+": "+se.getMessage());
                 iter.remove();

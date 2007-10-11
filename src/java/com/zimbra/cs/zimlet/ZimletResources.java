@@ -323,7 +323,7 @@ public class ZimletResources
     }
 
     private String getCacheId(HttpServletRequest req, String type) {
-        List<String> zimletNames = (List<String>) req.getAttribute(ZimletFilter.ALLOWED_ZIMLETS);
+        Set<String> zimletNames = (Set<String>) req.getAttribute(ZimletFilter.ALLOWED_ZIMLETS);
 
         StringBuilder str = new StringBuilder();
         str.append(getLocale(req).toString());
@@ -331,9 +331,8 @@ public class ZimletResources
         str.append(type);
         str.append(":");
 
-        LinkedList<String> ids = new LinkedList<String>(zimletNames);
-//        Collections.sort(ids);
-        Iterator<String> iter = ids.iterator();
+		Set<String> ids = new TreeSet<String>(zimletNames); 
+		Iterator<String> iter = ids.iterator();
         for (int i = 0; iter.hasNext(); i++) {
             if (i > 0) {
                 str.append(",");
@@ -362,7 +361,7 @@ public class ZimletResources
 
     private List<ZimletFile> getZimletFiles(HttpServletRequest req, String type) {
         List<ZimletFile> files = new LinkedList<ZimletFile>();
-        List<String> zimletNames = (List<String>) req.getAttribute(ZimletFilter.ALLOWED_ZIMLETS);
+        Set<String> zimletNames = (Set<String>) req.getAttribute(ZimletFilter.ALLOWED_ZIMLETS);
         for (String zimletName : zimletNames) {
             // read zimlet manifest
             String dirname = getServletContext().getRealPath("/zimlet/" + zimletName);
