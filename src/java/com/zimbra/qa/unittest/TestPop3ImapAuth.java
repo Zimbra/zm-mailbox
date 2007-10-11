@@ -215,7 +215,7 @@ extends TestCase {
         send(socket, null, IMAP_LOGOUT_RESPONSE2);
     }
     
-    public void testPop3X_ORIGINATING_IP()
+    public void testPop3XOIP()
     throws Exception {
         setPop3Cleartext(true);
         
