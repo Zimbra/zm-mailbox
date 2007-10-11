@@ -113,15 +113,15 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         
         return csd;
     }
-    
-    protected static String getOrigHtml(MimeMessage mm) throws ServiceException {
+
+    protected static String getOrigHtml(MimeMessage mm, String defaultCharset) throws ServiceException {
         try {
             List /*<MPartInfo>*/ parts = Mime.getParts(mm);
             for (Iterator it = parts.iterator(); it.hasNext(); ) {
                 MPartInfo mpi = (MPartInfo) it.next();
                 
                 if (mpi.getContentType().equals(Mime.CT_TEXT_HTML))
-                    return Mime.getStringContent(mpi.getMimePart());
+                    return Mime.getStringContent(mpi.getMimePart(), defaultCharset);
             }
             return null;
         } catch (IOException e) {

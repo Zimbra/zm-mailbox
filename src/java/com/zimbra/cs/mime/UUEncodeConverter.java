@@ -51,7 +51,7 @@ public class UUEncodeConverter extends MimeVisitor {
                 return false;
 
             // go through top-level text/plain part and extract uuencoded files
-            String text = Mime.getStringContent(msg);
+            String text = Mime.getStringContent(msg, null);
             boolean initial = text.startsWith("begin ");
             for (int location = 0; initial || (location = text.indexOf("\nbegin ", location)) != -1; initial = false, location++) {
                 // find the end of the uuencoded block

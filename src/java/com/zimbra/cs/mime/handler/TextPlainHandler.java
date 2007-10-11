@@ -55,7 +55,7 @@ public class TextPlainHandler extends MimeHandler {
             String ctype = source.getContentType();
             try {
                 // decodeText always closes the input stream
-                mContent = Mime.decodeText(source.getInputStream(), ctype);
+                mContent = Mime.decodeText(source.getInputStream(), ctype, null);
             } catch (IOException e) {
                 throw new MimeHandlerException(e);
             }

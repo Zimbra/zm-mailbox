@@ -154,7 +154,7 @@ public class TextHtmlHandler extends MimeHandler {
 
     @SuppressWarnings("unused")
     protected Reader getReader(InputStream is, String ctype) throws IOException {
-        return Mime.getTextReader(is, ctype);
+        return Mime.getTextReader(is, ctype, null);
     }
     
     /**

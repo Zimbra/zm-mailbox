@@ -157,7 +157,8 @@ public class NativeFormatter extends Formatter {
             boolean html = checkGlobalOverride(Provisioning.A_zimbraAttachmentsViewInHtmlOnly, context.authAccount) ||
                             (context.hasView() && context.getView().equals(HTML_VIEW));
             if (!html) {
-            	sendbackOriginalDoc(mp, contentType, context.req, context.resp);
+                String defaultCharset = context.targetAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null);
+            	sendbackOriginalDoc(mp, contentType, defaultCharset, context.req, context.resp);
             } else {
             	handleConversion(context, mp.getInputStream(), Mime.getFilename(mp), mp.getContentType(), item.getDigest());
             }
@@ -196,11 +197,12 @@ public class NativeFormatter extends Formatter {
         return Mime.getMimePart(msg.getMimeMessage(), part);
     }
 
-    public static void sendbackOriginalDoc(MimePart mp, String contentType, HttpServletRequest req, HttpServletResponse resp) throws IOException, MessagingException {
-        sendbackOriginalDoc(mp.getInputStream(), contentType, Mime.getFilename(mp), mp.getDescription(), req, resp);
+    public static void sendbackOriginalDoc(MimePart mp, String contentType, String defaultCharset, HttpServletRequest req, HttpServletResponse resp)
+    throws IOException, MessagingException {
+        sendbackOriginalDoc(mp.getInputStream(), contentType, defaultCharset, Mime.getFilename(mp), mp.getDescription(), req, resp);
     }
 
-    public static void sendbackOriginalDoc(InputStream is, String contentType, String filename, String desc,
+    public static void sendbackOriginalDoc(InputStream is, String contentType, String defaultCharset, String filename, String desc,
                                            HttpServletRequest req, HttpServletResponse resp)
     throws IOException {
         String disp = req.getParameter(UserServlet.QP_DISP);
@@ -219,14 +221,15 @@ public class NativeFormatter extends Formatter {
             String charset = Mime.getCharset(contentType);
             String content;
             if (charset != null && !charset.equals("")) {
-                Reader reader = Mime.getTextReader(is, contentType);
+                Reader reader = Mime.getTextReader(is, contentType, defaultCharset);
                 content = HtmlDefang.defang(reader, false);
             } else {
                 content = HtmlDefang.defang(is, false);
             }
             resp.getWriter().write(content);
-        } else
+        } else {
             ByteUtil.copy(is, true, resp.getOutputStream(), false);
+        }
     }
 
     public boolean canBeBlocked() {

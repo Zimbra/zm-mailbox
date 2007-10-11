@@ -469,15 +469,14 @@ public class Mime {
     }
 
     /** Returns a String containing the text content of the MimePart.  If the
-     *  part's specified charset is unknown, defaults to the system's default
-     *  charset.  Use this method instead of {@link Part#getContent()} to work
-     *  around JavaMail's fascism about proper MIME format and failure to
-     *  support RFC 2184. 
-     * @throws MessagingException 
-     * @throws IOException */
-    public static String getStringContent(MimePart textPart) throws IOException, MessagingException {
+     *  part's specified charset is unknown, defaults first to the user's
+     *  preferred charset and then to the to the system's default charset.
+     *  Use this method instead of {@link Part#getContent()} to work around
+     *  JavaMail's fascism about proper MIME format and failure to support
+     *  RFC 2184. */
+    public static String getStringContent(MimePart textPart, String defaultCharset) throws IOException, MessagingException {
         repairTransferEncoding(textPart);
-        return decodeText(textPart.getInputStream(), textPart.getContentType());
+        return decodeText(textPart.getInputStream(), textPart.getContentType(), defaultCharset);
     }
 
     public static void repairTransferEncoding(MimePart mp) throws MessagingException {
@@ -697,21 +696,21 @@ public class Mime {
         return new ContentType(cthdr).getValue().trim();
     }
 
-	/**
-	 * decode the specified InputStream into the supplied StringBuffer.
-	 * contentType must of type "text/*". If a charset parameter is present,
-	 * it is used as the charset for decoding the text, otherwise us-ascii is.
+	/** Reads the specified <code>InputStream</code> into a <code>String</code>.
+	 *  <code>contentType</code> must of type "text/*". If a valid charset
+     *  parameter is present in the Content-Type string, it is used as the
+     *  charset for decoding the text.  If not, we fall back to the user's
+     *  default charset preference.  If both of those options fail, the
+     *  platform default is used.
 	 * 
-	 * @param input InputStream to decode
-	 * @param contentType The Content-Type of the stream, which must be "text/*"
-	 * @param buffer
-	 * @throws IOException
-	 */
-	public static String decodeText(InputStream input, String contentType) throws IOException {
+     * @param input  The InputStream to decode.
+     * @param contentType  The Content-Type of the stream, which must be "text/*".
+     * @parame defaultCharset  The user's default charset preference */
+	public static String decodeText(InputStream input, String contentType, String defaultCharset) throws IOException {
         StringBuilder buffer = new StringBuilder();
         try {
-        	Reader reader = getTextReader(input, contentType);
-            char [] cbuff = new char[MAX_DECODE_BUFFER];
+        	Reader reader = getTextReader(input, contentType, defaultCharset);
+            char[] cbuff = new char[MAX_DECODE_BUFFER];
             int num;
             while ( (num = reader.read(cbuff, 0, cbuff.length)) != -1)
                 buffer.append(cbuff, 0, num);
@@ -721,30 +720,33 @@ public class Mime {
         return buffer.toString();
 	}
 	 
-    /**
-      * Returns a reader that will decode the specified InputStream.
-      * contentType must of type "text/*". If a charset parameter is present,
-      * it is used as the charset for decoding the text, otherwise the
-      * platform default is used.
-      * 
-      * @param input InputStream to decode
-      * @param contentType The Content-Type of the stream, which must be "text/*"
-      * @throws IOException
-      */
-    public static Reader getTextReader(InputStream input, String contentType) {
+    /** Returns a reader that decodes the specified <code>InputStream</code>.
+     *  <code>contentType</code> must of type "text/*".  If a valid charset
+     *  parameter is present in the Content-Type string, it is used as the
+     *  charset for decoding the text.  If not, we fall back to the user's
+     *  default charset preference.  If both of those options fail, the
+     *  platform default is used.
+     * 
+     * @param input  The InputStream to decode.
+     * @param contentType  The Content-Type of the stream, which must be "text/*".
+     * @parame defaultCharset  The user's default charset preference */
+    public static Reader getTextReader(InputStream input, String contentType, String defaultCharset) {
     	String charset = getCharset(contentType);
-        Reader reader = null;
-        if (charset != null) { 
+        if (charset != null) {
             try {
-                reader = new InputStreamReader(input, charset);
-            } catch (UnsupportedEncodingException e){
-                // use default encoding?
-            }
+                return new InputStreamReader(input, charset);
+            } catch (UnsupportedEncodingException e) { }
         }
 
-        if (reader == null)
-            reader = new InputStreamReader(input);
-        return reader;
+        // if we're here, either there was no explicit charset on the part or it was invalid, so try the user's personal default charset
+        if (defaultCharset != null && !defaultCharset.trim().equals("")) {
+            try {
+                return new InputStreamReader(input, defaultCharset);
+            } catch (UnsupportedEncodingException e) { }
+        }
+
+        // if we're here, the user's default charset was also either unspecified or unavailable, so go with the JVM's default charset
+        return new InputStreamReader(input);
     }
 
     public static String getCharset(String contentType) {

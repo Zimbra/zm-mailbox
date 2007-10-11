@@ -714,7 +714,7 @@ public class ToXML {
             List<MPartInfo> parts = Mime.getParts(mm);
             if (parts != null && !parts.isEmpty()) {
                 Set<MPartInfo> bodies = Mime.getBody(parts, wantHTML);
-                addParts(m, m, parts.get(0), bodies, part, maxSize, neuter, false);
+                addParts(m, m, parts.get(0), bodies, part, maxSize, neuter, false, getDefaultCharset(msg));
             }
         } catch (IOException ex) {
             throw ServiceException.FAILURE(ex.getMessage(), ex);
@@ -812,7 +812,7 @@ public class ToXML {
                 throw ServiceException.FAILURE(ex.getMessage(), ex);
             }
             if (parts != null && !parts.isEmpty())
-                addParts(ie, ie, parts.get(0), null, "", -1, false, true);
+                addParts(ie, ie, parts.get(0), null, "", -1, false, true, getDefaultCharset(cal));
         }
 
         return ie;
@@ -880,6 +880,11 @@ public class ToXML {
         }
     }
 
+
+    private static String getDefaultCharset(MailItem item) throws ServiceException {
+        Account acct = (item == null ? null : item.getAccount());
+        return acct == null ? null : acct.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null);
+    }
 
     /** Encodes an Invite stored within a calendar item object into <m> element
      *  with <mp> elements.
@@ -997,7 +1002,7 @@ public class ToXML {
                 List<MPartInfo> parts = Mime.getParts(mm);
                 if (parts != null && !parts.isEmpty()) {
                     Set<MPartInfo> bodies = Mime.getBody(parts, wantHTML);
-                    addParts(m, m, parts.get(0), bodies, part, maxSize, neuter, true);
+                    addParts(m, m, parts.get(0), bodies, part, maxSize, neuter, true, getDefaultCharset(calItem));
                 }
             }
         } catch (IOException ex) {
@@ -1432,7 +1437,7 @@ public class ToXML {
     }
 
     private static void addParts(Element parent, Element root, MPartInfo mpi, Set<MPartInfo> bodies, String prefix,
-                                 int maxSize, boolean neuter, boolean excludeCalendarParts) {
+                                 int maxSize, boolean neuter, boolean excludeCalendarParts, String defaultCharset) {
         String ctype = StringUtil.stripControlCharacters(mpi.getContentType());
 
         if (excludeCalendarParts && Mime.CT_TEXT_CALENDAR.equalsIgnoreCase(ctype))
@@ -1449,7 +1454,7 @@ public class ToXML {
             // the <shr> share info goes underneath the top-level <m>
             Element shr = root.addElement(MailConstants.E_SHARE_NOTIFICATION);
             try {
-                addContent(shr, mpi, maxSize);
+                addContent(shr, mpi, maxSize, defaultCharset);
             } catch (IOException e) {
                 if (mLog.isWarnEnabled())
                     mLog.warn("error writing body part: ", e);
@@ -1522,7 +1527,7 @@ public class ToXML {
             if (bodies != null)
                 elem.addAttribute(MailConstants.A_BODY, true);
             try {
-                addContent(elem, mpi, maxSize, neuter);
+                addContent(elem, mpi, maxSize, neuter, defaultCharset);
             } catch (IOException ioe) {
                 if (mLog.isWarnEnabled())
                     mLog.warn("error writing body part: ", ioe);
@@ -1534,7 +1539,7 @@ public class ToXML {
         if (mpi.hasChildren()) {
             for (Iterator it = mpi.getChildren().iterator(); it.hasNext();) {
                 MPartInfo cp = (MPartInfo) it.next();
-                addParts(elem, root, cp, bodies, prefix, maxSize, neuter, excludeCalendarParts);
+                addParts(elem, root, cp, bodies, prefix, maxSize, neuter, excludeCalendarParts, defaultCharset);
             }
         }
     }
@@ -1546,24 +1551,29 @@ public class ToXML {
      * @param elt  The element to add the <tt>&lt;content></tt> to.
      * @param mpi  The message part to extract the content from.
      * @param maxSize The maximum amount of content to inline (<=0 is unlimited).
+     * @parame defaultCharset  The user's default charset preference.
      * @throws MessagingException when message parsing or CTE-decoding fails
      * @throws IOException on error during parsing or defanging */
-    private static void addContent(Element elt, MPartInfo mpi, int maxSize) throws IOException, MessagingException {
-        addContent(elt, mpi, maxSize, true);
+    private static void addContent(Element elt, MPartInfo mpi, int maxSize, String defaultCharset)
+    throws IOException, MessagingException {
+        addContent(elt, mpi, maxSize, true, defaultCharset);
     }
 
     /** Adds the decoded text content of a message part to the {@link Element}.
      *  The content is added as the value of a new <tt>&lt;content></tt>
      *  sub-element.  <i>Note: This method will only extract the content of a
      *  <b>text/*</b> or <b>xml/*</b> message part.</i> 
+     * 
      * @param elt     The element to add the <tt>&lt;content></tt> to.
      * @param mpi     The message part to extract the content from.
      * @param maxSize The maximum amount of content to inline (<=0 is unlimited).
      * @param neuter  Whether to "neuter" image <tt>src</tt> attributes.
+     * @parame defaultCharset  The user's default charset preference.
      * @throws MessagingException when message parsing or CTE-decoding fails
      * @throws IOException on error during parsing or defanging
      * @see HtmlDefang#defang(String, boolean) */
-    private static void addContent(Element elt, MPartInfo mpi, int maxSize, boolean neuter) throws IOException, MessagingException {
+    private static void addContent(Element elt, MPartInfo mpi, int maxSize, boolean neuter, String defaultCharset)
+    throws IOException, MessagingException {
         // TODO: support other parts
         String ctype = mpi.getContentType();
         if (!ctype.matches(Mime.CT_TEXT_WILD) && !ctype.matches(Mime.CT_XML_WILD))
@@ -1583,7 +1593,7 @@ public class ToXML {
                     // Mime.getTextReader() expects charset attribute in the content type
                     // otherwise it defaults to us-ascii, and that's not what we
                     // want.
-                    Reader reader = Mime.getTextReader(stream, mp.getContentType());
+                    Reader reader = Mime.getTextReader(stream, mp.getContentType(), defaultCharset);
                     data = HtmlDefang.defang(reader, neuter);
                 } else {
                     String cte = mp.getEncoding();
@@ -1591,7 +1601,7 @@ public class ToXML {
                         stream = mp.getInputStream();
                         data = HtmlDefang.defang(stream, neuter);
                     } else {
-                        data = Mime.getStringContent(mp);
+                        data = Mime.getStringContent(mp, defaultCharset);
                         data = HtmlDefang.defang(data, neuter);
                     }
                 }
@@ -1599,9 +1609,9 @@ public class ToXML {
                 ByteUtil.closeStream(stream);
             }
         } else if (ctype.equals(Mime.CT_TEXT_ENRICHED)) {
-            data = TextEnrichedHandler.convertToHTML(Mime.getStringContent(mp));
+            data = TextEnrichedHandler.convertToHTML(Mime.getStringContent(mp, defaultCharset));
         } else {
-            data = Mime.getStringContent(mp);
+            data = Mime.getStringContent(mp, defaultCharset);
         }
 
         if (data != null) {

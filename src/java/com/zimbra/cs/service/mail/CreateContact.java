@@ -29,6 +29,7 @@ import java.util.Map;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimePart;
 
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.MailItem;
@@ -223,7 +224,7 @@ public class CreateContact extends MailDocumentHandler  {
                     String ctype = new ContentType(mp.getContentType()).getValue();
                     if (!ctype.equals(Mime.CT_TEXT_PLAIN) && !ctype.equals(Mime.CT_TEXT_VCARD))
                         throw MailServiceException.INVALID_CONTENT_TYPE(ctype);
-                    text = Mime.getStringContent(mp);
+                    text = Mime.getStringContent(mp, mbox.getAccount().getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null));
                 } catch (IOException e) {
                     throw ServiceException.FAILURE("error reading vCard", e);
                 } catch (MessagingException e) {

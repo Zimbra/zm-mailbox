@@ -35,6 +35,8 @@ import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
@@ -105,13 +107,20 @@ public class BodyTest extends AbstractTest {
     private boolean test(MailAdapter mail, String comparator, String key) {
         ZimbraMailAdapter zimbraMail = (ZimbraMailAdapter) mail;
         ParsedMessage pm = zimbraMail.getParsedMessage();
+
+        Account acct = null;
+        try {
+            acct = zimbraMail.getMailbox().getAccount();
+        } catch (ServiceException e) { }
+        String defaultCharset = (acct == null ? null : acct.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null));
+
         try {
             /*
              * We check the first level MIME parts that are text. If the key word appears there,
              * we consider it a match.
              */
             for (MPartInfo mpi : pm.getMessageParts()) {
-                String content = Mime.getStringContent(mpi.getMimePart());
+                String content = Mime.getStringContent(mpi.getMimePart(), defaultCharset);
                 if (content.toLowerCase().indexOf(key.toLowerCase()) >= 0) {
                     return true;
                 }

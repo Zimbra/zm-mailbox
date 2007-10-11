@@ -30,7 +30,7 @@ import com.zimbra.cs.mime.Mime;
 public class TextEnrichedHandler extends TextHtmlHandler {
 
     @Override protected Reader getReader(InputStream is, String ctype) throws IOException {
-        String content = Mime.decodeText(is, ctype);
+        String content = Mime.decodeText(is, ctype, null);
         return new StringReader(convertToHTML(content));
     }
 
