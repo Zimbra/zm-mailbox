@@ -50,8 +50,8 @@ extends TestCase {
     private static final String POP3_CLEARTEXT_FAILED_RESPONSE = "-ERR only valid after entering TLS mode";
     private static final String POP3_QUIT = "QUIT" + CRLF;
     private static final String POP3_QUIT_RESPONSE = "\\+OK .* closing connection";
-    private static final String POP3_X_ORIGINATING_IP = "X-ORIGINATING-IP 100.99.98.97" + CRLF;
-    private static final String POP3_X_ORIGINATING_IP_RESPONSE = "\\+OK";
+    private static final String POP3_XOIP = "XOIP 100.99.98.97" + CRLF;
+    private static final String POP3_XOIP_RESPONSE = "\\+OK";
     
     private static final String IMAP_CONNECT_RESPONSE = "\\* OK .* Zimbra IMAP4rev1 service ready";
     private static final String IMAP_LOGIN = "1 LOGIN user1 test123" + CRLF;
@@ -222,7 +222,7 @@ extends TestCase {
         // Test cleartext
         Socket socket = new Socket(HOSTNAME, mPop3CleartextPort);
         send(socket, "", POP3_CONNECT_RESPONSE);
-        send(socket, POP3_X_ORIGINATING_IP, POP3_X_ORIGINATING_IP_RESPONSE);
+        send(socket, POP3_XOIP, POP3_XOIP_RESPONSE);
         send(socket, POP3_USER, POP3_USER_RESPONSE);
         send(socket, POP3_PASS, POP3_PASS_RESPONSE);
         send(socket, POP3_QUIT, POP3_QUIT_RESPONSE);

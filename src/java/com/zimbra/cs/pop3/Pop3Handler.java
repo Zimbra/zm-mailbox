@@ -316,8 +316,8 @@ public abstract class Pop3Handler extends ProtocolHandler {
             break;
         case 'x':
         case 'X':
-            if ("X-ORIGINATING-IP".equalsIgnoreCase(mCommand)) {
-                doX_ORIGINATING_IP(arg);
+            if ("XOIP".equalsIgnoreCase(mCommand)) {
+                doXOIP(arg);
                 return true;
             }
             break;           
@@ -747,13 +747,13 @@ public abstract class Pop3Handler extends ProtocolHandler {
             else
                 sendLine("EXPIRE "+mExpire, false);
         }
-        sendLine("X-ORIGINATING-IP", false);
+        sendLine("XOIP", false);
         // TODO: VERSION INFO
         sendLine("IMPLEMENTATION ZimbraInc", false);
         sendLine(TERMINATOR);
     }
     
-    private void doX_ORIGINATING_IP(String origIp) throws Pop3CmdException, IOException {
+    private void doXOIP(String origIp) throws Pop3CmdException, IOException {
         if (origIp == null)
             throw new Pop3CmdException("please specify an ip address");
         
@@ -764,9 +764,9 @@ public abstract class Pop3Handler extends ProtocolHandler {
             ZimbraLog.pop.info("POP3 client identified as: " + origIp);
         } else {
             if (curOrigRemoteIp.equals(origIp))
-                ZimbraLog.pop.warn("POP3 X-ORIGINATING-IP is allowed only once per session, command ignored");
+                ZimbraLog.pop.warn("POP3 XOIP is allowed only once per session, command ignored");
             else
-                ZimbraLog.pop.error("POP3 X-ORIGINATING-IP is allowed only once per session, received different IP: " + origIp + ", command ignored");
+                ZimbraLog.pop.error("POP3 XOIP is allowed only once per session, received different IP: " + origIp + ", command ignored");
         }
         
         sendOK("");
