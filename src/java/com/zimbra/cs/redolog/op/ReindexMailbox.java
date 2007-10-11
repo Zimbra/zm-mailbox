@@ -173,7 +173,7 @@ public class ReindexMailbox extends RedoableOp {
             }
             
             // itemIds
-            if (getVersion().atLeast(1,10)) {
+            if (getVersion().atLeast(1,10) && in.readBoolean()) {
                 mItemIds = new HashSet<Integer>();
                 for (int count = in.readInt(); count > 0; count--) {
                     mItemIds.add(in.readInt());
