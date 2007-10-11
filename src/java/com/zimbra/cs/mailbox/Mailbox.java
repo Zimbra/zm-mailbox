@@ -407,7 +407,10 @@ public class Mailbox {
 
     /** used by checkInitialization() to make sure the init steps happen only once */
     private boolean mInitializationComplete = false;
-
+    
+    /** debug test code -- for batched indexing testing */
+    private Set<Integer> mMessagesToIndex = new HashSet<Integer>();
+    private static final int sDebugBatchMessageIndexSize = LC.debug_batch_message_indexing.intValue();
 
     /**
      * Constructor
@@ -453,7 +456,7 @@ public class Mailbox {
     			// Version (1.0,1.1)->1.2 Re-Index all contacts 
     			Set<Byte> types = new HashSet<Byte>();
     			types.add(MailItem.TYPE_CONTACT);
-    			reIndex(null, types, null, COMPLETED_REINDEX_CONTACTS_V1_2); 
+    			reIndex(null, types, null, COMPLETED_REINDEX_CONTACTS_V1_2, false); 
     		}
     		
             // same prescription for both the 1.2 -> 1.3 and 1.3 -> 1.4 migrations
@@ -1558,8 +1561,8 @@ public class Mailbox {
      *                              Integer.  A value of '0' means "don't run a completion function".
      * @throws ServiceException
      */
-    public void reIndex(OperationContext octxt, Set<Byte> typesOrNull, Set<Integer> itemIdsOrNull, int completionId) throws ServiceException {
-        ReindexMailbox redoRecorder = new ReindexMailbox(mId, typesOrNull, itemIdsOrNull, completionId);
+    public void reIndex(OperationContext octxt, Set<Byte> typesOrNull, Set<Integer> itemIdsOrNull, int completionId, boolean skipDelete) throws ServiceException {
+        ReindexMailbox redoRecorder = new ReindexMailbox(mId, typesOrNull, itemIdsOrNull, completionId, skipDelete);
         
         if (typesOrNull != null && itemIdsOrNull != null)
             throw ServiceException.INVALID_REQUEST("Must only specify one of Types, ItemIds to Mailbox.reIndex", null);
@@ -1604,23 +1607,25 @@ public class Mailbox {
                     msgs = new ArrayList<SearchResult>();
                     DbSearch.search(msgs, getOperationConnection(), c, SearchResult.ExtraData.NONE);
                     
-                    if (itemIdsOrNull != null || typesOrNull != null) {
-                        // NOT reindexing everything: delete manually
-                        int[] itemIds = new int[msgs.size()];
-                        int i = 0;
-                        for (SearchResult s : msgs)
-                            itemIds[i++] = s.indexId;
-                        
-                        if (mMailboxIndex != null)
-                            mMailboxIndex.deleteDocuments(itemIds);
-                        indexDeleted = true;
-                    } else {
-                        // reindexing everything, just delete the index
-                        if (mMailboxIndex != null)
-                            mMailboxIndex.deleteIndex();
-                        indexDeleted = true;
+                    if (!skipDelete) {
+                        if (itemIdsOrNull != null || typesOrNull != null) {
+                            // NOT reindexing everything: delete manually
+                            int[] itemIds = new int[msgs.size()];
+                            int i = 0;
+                            for (SearchResult s : msgs)
+                                itemIds[i++] = s.indexId;
+                            
+                            if (mMailboxIndex != null)
+                                mMailboxIndex.deleteDocuments(itemIds);
+                            indexDeleted = true;
+                        } else {
+                            // reindexing everything, just delete the index
+                            if (mMailboxIndex != null)
+                                mMailboxIndex.deleteIndex();
+                            indexDeleted = true;
+                        }
                     }
-
+                    
                     success = true;
                 } catch (IOException e) {
                     throw ServiceException.FAILURE("Error deleting index before re-indexing", e);
@@ -3081,26 +3086,19 @@ public class Mailbox {
     public ZimbraQueryResults search(SoapProtocol proto, OperationContext octxt, SearchParams params) throws IOException, ParseException, ServiceException {
         if (octxt == null)
             throw ServiceException.INVALID_REQUEST("The OperationContext must not be null", null);
+
+        synchronized(this) {
+            if (mMessagesToIndex.size() > 0) {
+                ZimbraLog.mailbox.debug("DEBUG_BATCH_MESSAGE_INDEXING -- indexing "+mMessagesToIndex.size()+" messages");
+                reIndex(octxt, null, mMessagesToIndex, 0, true);
+                mMessagesToIndex = new HashSet<Integer>();
+            }
+        }
         
         Account acct = getAccount();
         boolean includeTrash = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeTrashInSearch, false);
         boolean includeSpam = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeSpamInSearch, false);
 
-//        ZimbraQuery zq = new ZimbraQuery(this, params, includeTrash, includeSpam);
-//        try {
-//            zq.executeRemoteOps(proto, octxt);
-//            ZimbraQueryResults results = zq.execute(); 
-//            return results;
-//        } catch (IOException e) {
-//            zq.doneWithQuery();
-//            throw e;
-//        } catch (ServiceException e) {
-//            zq.doneWithQuery();
-//            throw e;
-//        } catch (Throwable t) {
-//            zq.doneWithQuery();
-//            throw ServiceException.FAILURE("Caught "+t.getMessage(), t);
-//        }
         return MailboxIndex.search(proto, octxt, this, params, includeTrash, includeSpam);
     }                    
     
@@ -3931,7 +3929,17 @@ public class Mailbox {
             }
             markOtherItemDirty(mboxBlob);
 
-            queueForIndexing(msg, false, pm);
+            if (sDebugBatchMessageIndexSize == 0) {
+                queueForIndexing(msg, false, pm);
+            } else {
+                mMessagesToIndex.add(msg.getId());
+                if (mMessagesToIndex.size() > sDebugBatchMessageIndexSize) {
+                    ZimbraLog.mailbox.debug("DEBUG_BATCH_MESSAGE_INDEXING -- indexing "+mMessagesToIndex.size()+" messages");
+                    reIndex(octxt, null, mMessagesToIndex, 0, true);
+                    mMessagesToIndex = new HashSet<Integer>();
+                }
+            }
+            
             success = true;
         } finally {
             if (storeRedoRecorder != null) {
@@ -3961,7 +3969,7 @@ public class Mailbox {
         }
         return msg;
     }
-
+    
     public static String getHash(String subject) {
         return ByteUtil.getSHA1Digest(subject.getBytes(), true);
     }

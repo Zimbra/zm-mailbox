@@ -154,7 +154,7 @@ public class ReIndex extends AdminDocumentHandler {
 
         public void run() {
             try {
-                mMbox.reIndex(mOctxt, mTypes, mItemIds, 0);
+                mMbox.reIndex(mOctxt, mTypes, mItemIds, 0, false);
             } catch (ServiceException e) {
                 if (!e.getCode().equals(ServiceException.INTERRUPTED)) 
                     e.printStackTrace();

@@ -39,15 +39,17 @@ public class ReindexMailbox extends RedoableOp {
     private Set<Byte> mTypes = null;
     private Set<Integer> mItemIds = null;
     private int mCompletionId = 0;
+    private boolean mSkipDelete = false;
 
     public ReindexMailbox() { }
 
-    public ReindexMailbox(int mailboxId, Set<Byte> typesOrNull, Set<Integer> itemIdsOrNull, int completionId) {
+    public ReindexMailbox(int mailboxId, Set<Byte> typesOrNull, Set<Integer> itemIdsOrNull, int completionId, boolean skipDelete) {
         setMailboxId(mailboxId);
         assert(typesOrNull == null || itemIdsOrNull == null);
         mTypes = typesOrNull;
         mItemIds = itemIdsOrNull;
         mCompletionId = completionId;
+        mSkipDelete = skipDelete;
     }
     
 
@@ -67,7 +69,7 @@ public class ReindexMailbox extends RedoableOp {
      */
     public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
-        mbox.reIndex(new OperationContext(this), mTypes, mItemIds, mCompletionId);
+        mbox.reIndex(new OperationContext(this), mTypes, mItemIds, mCompletionId, mSkipDelete);
     }
 
     /* (non-Javadoc)
@@ -75,6 +77,7 @@ public class ReindexMailbox extends RedoableOp {
      */
     protected String getPrintableData() {
         StringBuilder sb = new StringBuilder("Completion="+mCompletionId);
+        sb.append(" SkipDelete="+(mSkipDelete?"TRUE":"FALSE"));
         if (mItemIds != null) {
             sb.append(" ITEMIDS[");
             boolean atStart = true;
@@ -142,6 +145,11 @@ public class ReindexMailbox extends RedoableOp {
                 } else {
                     out.writeBoolean(false);
                 }
+                
+                if (getVersion().atLeast(1,20)) {
+                    out.writeBoolean(mSkipDelete);
+                }
+                                    
             } // v10
         } // v9
     }
@@ -170,8 +178,12 @@ public class ReindexMailbox extends RedoableOp {
                 for (int count = in.readInt(); count > 0; count--) {
                     mItemIds.add(in.readInt());
                 }
+                if (getVersion().atLeast(1,20)) {
+                    mSkipDelete = in.readBoolean();
+                }
             } else {
                 mItemIds = null;
+                mSkipDelete = false;
             } // v10
             
         } // v9
