@@ -3066,7 +3066,16 @@ public class Mailbox {
      */
     public ZimbraQueryResults search(OperationContext octxt, String queryString, byte[] types, SortBy sortBy, int chunkSize) 
     throws IOException, ParseException, ServiceException {
-        return search(SoapProtocol.Soap12, octxt, queryString, null, null, types, sortBy, chunkSize, true, SearchResultMode.NORMAL);
+        SearchParams params = new SearchParams();
+        params.setQueryStr(queryString);
+        params.setTimeZone(null);
+        params.setLocale(null);
+        params.setTypes(types);
+        params.setSortBy(sortBy);
+        params.setChunkSize(chunkSize);
+        params.setPrefetch(true);
+        params.setMode(SearchResultMode.NORMAL);
+        return search(SoapProtocol.Soap12, octxt, params);
     }
     
     /**
@@ -3101,34 +3110,6 @@ public class Mailbox {
 
         return MailboxIndex.search(proto, octxt, this, params, includeTrash, includeSpam);
     }                    
-    
-    /**
-     * You **MUST** call {@link ZimbraQueryResults#doneWithSearchResults()} when you are done with the search results, otherwise
-     * resources will be leaked.
-     * 
-     * @param octxt
-     * @param queryString
-     * @param types
-     * @param sortBy
-     * @param chunkSize A hint to the search engine telling it the size of the result set you are expecting
-     * @return
-     * @throws IOException
-     * @throws ParseException
-     * @throws ServiceException
-     */
-    public ZimbraQueryResults search(SoapProtocol proto, OperationContext octxt, String queryString, java.util.TimeZone tz, Locale locale, byte[] types, SortBy sortBy, int chunkSize, boolean prefetch, SearchResultMode mode) 
-    throws IOException, ParseException, ServiceException { 
-        SearchParams params = new SearchParams();
-        params.setQueryStr(queryString);
-        params.setTimeZone(tz);
-        params.setLocale(locale);
-        params.setTypes(types);
-        params.setSortBy(sortBy);
-        params.setChunkSize(chunkSize);
-        params.setPrefetch(prefetch);
-        params.setMode(mode);
-        return search(proto, octxt, params);
-    }
     
     /**
      * @param octxt

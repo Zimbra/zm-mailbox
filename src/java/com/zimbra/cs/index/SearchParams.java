@@ -120,6 +120,7 @@ public final class SearchParams implements Cloneable {
     public Mailbox.SearchResultMode getMode() { return mMode; }
     public boolean getEstimateSize() { return mEstimateSize; }
     public String getDefaultField() { return mDefaultField; }
+    public final boolean getIncludeTagDeleted() { return mIncludeTagDeleted; }
 
     // offset,limit 
     public int getLimit() { return mLimit; }
@@ -145,6 +146,7 @@ public final class SearchParams implements Cloneable {
             field = field + ':';
         mDefaultField = field; 
     }
+    public final void setIncludeTagDeleted(boolean includeTagDeleted) { mIncludeTagDeleted = includeTagDeleted; }
     
     /**Set the range of dates over which we want to expand out the 
      * instances of any returned CalendarItem objects.
@@ -263,6 +265,7 @@ public final class SearchParams implements Cloneable {
      *            This object's parameters are added as attributes (or sub-elements) of this parameter
      */
     public void encodeParams(Element searchElt) {
+        searchElt.addAttribute(MailConstants.A_INCLUDE_TAG_DELETED, getIncludeTagDeleted());
         searchElt.addAttribute(MailConstants.A_CAL_EXPAND_INST_START, getCalItemExpandStart());
         searchElt.addAttribute(MailConstants.A_CAL_EXPAND_INST_END, getCalItemExpandEnd());
         searchElt.addAttribute(MailConstants.E_QUERY, getQueryStr(), Element.Disposition.CONTENT);
@@ -314,6 +317,7 @@ public final class SearchParams implements Cloneable {
         SearchParams params = new SearchParams();
         
         params.setHopCount(zsc.getHopCount());
+        params.setIncludeTagDeleted(request.getAttributeBool(MailConstants.A_INCLUDE_TAG_DELETED, false));
         params.setCalItemExpandStart(request.getAttributeLong(MailConstants.A_CAL_EXPAND_INST_START, -1));
         params.setCalItemExpandEnd(request.getAttributeLong(MailConstants.A_CAL_EXPAND_INST_END, -1));
         String query = request.getAttribute(MailConstants.E_QUERY, defaultQueryStr);
@@ -487,6 +491,7 @@ public final class SearchParams implements Cloneable {
         o.mRecipients = mRecipients;
         o.mCalItemExpandStart = mCalItemExpandStart;
         o.mCalItemExpandEnd = mCalItemExpandEnd;
+        o.mIncludeTagDeleted = mIncludeTagDeleted;
         o.mTimeZone = mTimeZone;
         o.mLocale = mLocale;
         o.mHasCursor = mHasCursor;
@@ -522,6 +527,7 @@ public final class SearchParams implements Cloneable {
     private boolean mRecipients = false;
     private long mCalItemExpandStart = -1;
     private long mCalItemExpandEnd = -1;
+    private boolean mIncludeTagDeleted = false; // if FALSE, then items with the /Deleted tag set are not returned
     
     
     private TimeZone mTimeZone = null; // timezone that the query should be parsed in (for date/time queries)
@@ -553,4 +559,5 @@ public final class SearchParams implements Cloneable {
     private Mailbox.SearchResultMode mMode = Mailbox.SearchResultMode.NORMAL;
     
     private boolean mEstimateSize = false; // ask or a size estimate.  Note that this might have a nontrivial performance impact
+
 }
