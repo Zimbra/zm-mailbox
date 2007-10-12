@@ -27,10 +27,10 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class CreateIdentity extends DocumentHandler {
 	
-    public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account account = getRequestedAccount(zsc);
-        
+
         if (!canAccessAccount(zsc, account))
             throw ServiceException.PERM_DENIED("can not access account");
         

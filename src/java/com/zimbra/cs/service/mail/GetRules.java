@@ -32,11 +32,13 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class GetRules extends MailDocumentHandler {
 
     public Element handle(Element document, Map<String, Object> context) throws ServiceException {
-		ZimbraSoapContext lc = getZimbraSoapContext(context);
-		// FIXME: need to check that account exists
-        Account account = getRequestedAccount(lc);
+		ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Account account = getRequestedAccount(zsc);
 
-        Element response = lc.createElement(MailService.GET_RULES_RESPONSE);
+        if (!canAccessAccount(zsc, account))
+            throw ServiceException.PERM_DENIED("can not access account");
+
+        Element response = zsc.createElement(MailService.GET_RULES_RESPONSE);
         RuleManager mgr = RuleManager.getInstance();
         Element rules = mgr.getRulesAsXML(response, account);
         response.addUniqueElement(rules);
