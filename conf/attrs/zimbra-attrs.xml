@@ -2673,5 +2673,13 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>An virtual IP address for this domain, used to determine domain based on an IP address</desc>
 </attr>
 
+<attr id="563" name="zimbraSSLCertificate" type="astring" max="2048" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <desc>SSL certificate</desc>
+</attr>
+
+<attr id="564" name="zimbraSSLPrivateKey" type="astring" max="2048" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <desc>SSL private key</desc>
+</attr>
+
 </attrs>
 
