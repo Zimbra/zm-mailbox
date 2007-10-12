@@ -21,6 +21,7 @@
 package com.zimbra.cs.mime;
 
 import java.io.ByteArrayInputStream;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -330,17 +331,15 @@ public class Mime {
             return new RawContentInputStream(super.getInputStream());
         }
 
-        private class RawContentInputStream extends InputStream {
-            private final InputStream mInputStream;
+        private class RawContentInputStream extends FilterInputStream {
             private final String mBoundary;
             private byte[] mPrologue;
             private byte[] mEpilogue;
             private int mPrologueIndex = 0, mEpilogueIndex = 0;
             private boolean mInPrologue = true, mInContent = false, mInEpilogue = false;
-            private StringBuilder sb = new StringBuilder();
 
             RawContentInputStream(InputStream is) {
-                mInputStream = is;
+                super(is);
 
                 String explicitBoundary = getParsedContentType().getParameter("boundary");
                 mBoundary = explicitBoundary == null ? "_-_" + UUID.randomUUID().toString() : explicitBoundary;
@@ -361,7 +360,7 @@ public class Mime {
             }
 
             @Override public int available() throws IOException {
-                return mPrologue.length - mPrologueIndex + mInputStream.available() + mEpilogue.length - mEpilogueIndex;
+                return mPrologue.length - mPrologueIndex + super.available() + mEpilogue.length - mEpilogueIndex;
             }
 
             @Override public int read() throws IOException {
@@ -372,7 +371,7 @@ public class Mime {
                         mInPrologue = false;  mInContent = true;
                     }
                 } else if (mInContent) {
-                    c = mInputStream.read();
+                    c = super.read();
                     if (c == -1) {
                         c = mEpilogue[0];  mEpilogueIndex = 1;
                         mInContent = false;  mInEpilogue = true;
@@ -385,19 +384,22 @@ public class Mime {
                 } else {
                     c = -1;
                 }
-                if (c != -1)
-                    sb.append((char) c);
-                else
-                    System.out.println(sb);
                 return c;
             }
 
             @Override public int read(byte[] b, int off, int len) throws IOException {
+                if (b == null)
+                    throw new NullPointerException();
+                else if ((off < 0) || (off > b.length) || (len < 0) || ((off + len) > b.length) || ((off + len) < 0))
+                    throw new IndexOutOfBoundsException();
+                else if (len == 0)
+                    return 0;
+                else if (!mInPrologue && !mInContent && !mInEpilogue)
+                    return -1;
+
                 int remaining = len;
-                if (remaining == 0)
-                    return len;
                 if (mInPrologue) {
-                    int prologue = Math.min(len, mPrologue.length - mPrologueIndex);
+                    int prologue = Math.min(remaining, mPrologue.length - mPrologueIndex);
                     System.arraycopy(mPrologue, mPrologueIndex, b, off, prologue);
                     mPrologueIndex += prologue;
                     if (mPrologueIndex >= mPrologue.length) {
@@ -408,16 +410,17 @@ public class Mime {
                 if (remaining == 0)
                     return len;
                 if (mInContent) {
-                    int content = mInputStream.read(b, off, remaining);
-                    if (content != remaining) {
+                    int content = super.read(b, off, remaining);
+                    if (content == -1) {
                         mInContent = false;  mInEpilogue = true;
+                    } else {
+                        remaining -= content;  off += content;
                     }
-                    remaining -= content;  off += content;
                 }
                 if (remaining == 0)
                     return len;
                 if (mInEpilogue) {
-                    int epilogue = Math.min(len, mEpilogue.length - mEpilogueIndex);
+                    int epilogue = Math.min(remaining, mEpilogue.length - mEpilogueIndex);
                     System.arraycopy(mEpilogue, mEpilogueIndex, b, off, epilogue);
                     mEpilogueIndex += epilogue;
                     if (mEpilogueIndex >= mEpilogue.length) {
@@ -933,9 +936,15 @@ public class Mime {
         return body;
     }
 
-    public static void main(String[] args) throws UnsupportedEncodingException {
+    public static void main(String[] args) throws MessagingException, IOException {
         String s = URLDecoder.decode("Zimbra%20&#26085;&#26412;&#35486;&#21270;&#12398;&#32771;&#24942;&#28857;.txt", "utf-8");
         System.out.println(s);
         System.out.println(expandNumericCharacterReferences("Zimbra%20&#26085;&#26412;&#35486;&#21270;&#12398;&#32771;&#24942;&#28857;.txt&#x40;&;&#;&#x;&#&#3876;&#55"));
+
+        MimeMessage mm = new FixedMimeMessage(JMSession.getSession(), new java.io.FileInputStream("C:\\Temp\\mail\\24245"));
+        InputStream is = new RawContentMultipartDataSource(mm, new ContentType(mm.getContentType())).getInputStream();
+        int num;  byte buf[] = new byte[1024];
+        while ((num = is.read(buf)) != -1)
+            System.out.write(buf, 0, num);
     }
 }
