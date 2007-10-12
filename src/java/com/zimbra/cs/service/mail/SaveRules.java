@@ -34,21 +34,18 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class SaveRules extends MailDocumentHandler {
 
-    /* (non-Javadoc)
-     * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
-     */
-    public Element handle(Element document, Map<String, Object> context)
-            throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        // FIXME: need to check that account exists
-        Account account = getRequestedAccount(lc);
-        
+    public Element handle(Element document, Map<String, Object> context) throws ServiceException {
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Account account = getRequestedAccount(zsc);
+
+        if (!canModifyOptions(zsc, account))
+            throw ServiceException.PERM_DENIED("can not modify options");
+
         RuleManager mgr = RuleManager.getInstance();
         Element rulesElem = document.getElement(MailConstants.E_RULES);
         mgr.setXMLRules(account, rulesElem);
         
-        Element response = lc.createElement(MailConstants.SAVE_RULES_RESPONSE);
+        Element response = zsc.createElement(MailConstants.SAVE_RULES_RESPONSE);
         return response;
     }
-
 }
