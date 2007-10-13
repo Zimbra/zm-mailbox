@@ -167,7 +167,7 @@ public class ZimletResources
                     }
                 });
                 StringWriter out = new StringWriter();
-                compressor.compress(out, 0, true, false, false);
+                compressor.compress(out, 0, true, false, false, false);
                 String mintext = out.toString();
                 if (mintext == null) {
                     ZimbraLog.zimlet.debug("unable to minimize zimlet JS source");
