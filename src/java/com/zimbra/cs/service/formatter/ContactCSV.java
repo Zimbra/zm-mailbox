@@ -171,8 +171,10 @@ public class ContactCSV {
     }
     
     private void addNameField(String colName, List<String> csv, String field, Map<String,String> contact) {
-        String[] nameFields = field.split(",");
         String value = getField(colName.toLowerCase(), csv);
+        if (field == null || value == null)
+            return;
+        String[] nameFields = field.split(",");
         String firstNameField = nameFields[0];
 
         if (firstNameField == null)
