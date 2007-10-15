@@ -1,5 +1,6 @@
 package com.zimbra.cs.mailtest;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Formatter;
@@ -11,6 +12,7 @@ public class ImapClient extends MailClient {
     private String mStatus;
     private String mMessage;
     private Set<String> mCapability = new HashSet<String>();
+    private boolean mReceivedBYE;
 
     private int mCount;
 
@@ -20,21 +22,21 @@ public class ImapClient extends MailClient {
     private static final String TAG_PREFIX = "C";
     private static final String TAG_FORMAT = "C%02d";
     private static final String CAPABILITY = "CAPABILITY";
+    private static final String BYE = "BYE";
     
     private static final String STATUS_OK = "OK";
     private static final String STATUS_NO = "NO";
     private static final String STATUS_BAD = "BAD";
 
-    public ImapClient(String host, int port) {
-        super(host, port);
-    }
-
-    public ImapClient(String host) {
-        super(host, DEFAULT_PORT);
-    }
-
     public ImapClient() {}
 
+    public void connect() throws IOException {
+        if (mPort == -1) {
+            mPort = mSslEnabled ? DEFAULT_SSL_PORT : DEFAULT_PORT;
+        }
+        super.connect();
+    }
+    
     protected boolean processGreeting() throws IOException {
         processLine(recvLine());
         return STATUS_OK.equals(mStatus);
@@ -44,25 +46,36 @@ public class ImapClient extends MailClient {
         return sendCommand("LOGIN " + mAuthenticationId + " " + mPassword);
     }
 
+    public boolean sendLogout() throws IOException {
+        return sendCommand("LOGOUT");
+    }
+
     protected boolean sendAuthenticate() throws IOException {
         return sendCommand("AUTHENTICATE " + mMechanism);
+    }
+
+    protected boolean sendStartTLS() throws IOException {
+        return sendCommand("STARTTLS");
     }
 
     public String getProtocol() {
         return "imap";
     }
 
-    public boolean sendBye() throws IOException {
-        return sendCommand("LOGOUT");
-    }
-    
     public boolean sendCommand(String command) throws IOException {
         mTag = createTag();
         mStatus = null;
         mMessage = null;
         sendLine(mTag + ' ' + command);
-        while (mStatus == null) {
-            processLine(recvLine());
+        try {
+            while (mStatus == null) {
+                processLine(recvLine());
+            }
+        } catch (EOFException e) {
+            // As long as we received a BYE before the connection was closed,
+            // fail the command but do not rethrow EOFException.
+            if (mReceivedBYE) return false;
+            throw e;
         }
         return STATUS_OK.equals(mStatus);
     }
@@ -87,19 +100,17 @@ public class ImapClient extends MailClient {
         line = line.substring(2).trim();
         int i = line.indexOf(' ');
         String s = i != -1 ? line.substring(0, i) : line;
+        mMessage = i != -1 ? line.substring(i + 1) : null;
         if (STATUS_OK.equals(s) || STATUS_NO.equals(s) || STATUS_BAD.equals(s)) {
             mStatus = s;
-            mMessage = i != -1 ? line.substring(i + 1) : null;
-            return;
-        }
-        mMessage = line;
-        if (CAPABILITY.equals(s)) {
+        } else if (CAPABILITY.equals(s)) {
             mCapability.clear();
-            if (i != -1) {
-                mCapability.addAll(Arrays.asList(
-                    line.substring(s.length()).split("\\s")));
+            if (mMessage != null) {
+                mCapability.addAll(Arrays.asList(mMessage.split("\\s")));
             }
-        }                                                               
+        } else if (BYE.equals(s)) {
+            mReceivedBYE = true;
+        }
     }
 
     private void processTagged(String line) throws IOException {

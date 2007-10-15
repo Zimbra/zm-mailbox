@@ -1,5 +1,7 @@
 package com.zimbra.cs.mailtest;
 
+import static com.zimbra.cs.mailtest.ClientAuthenticator.*;
+
 import javax.security.sasl.Sasl;
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,12 +10,11 @@ import java.util.Arrays;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
-import static com.zimbra.cs.mailtest.ClientAuthenticator.*;
-
 public abstract class MailTest {
     protected MailClient mClient;
     private StringBuilder mLineBuffer;
-    private boolean mGotEof;
+    private boolean mEnableTLS;
+    private boolean mGotEndOfFile;
 
     protected MailTest(MailClient client) {
         mClient = client;
@@ -28,17 +29,19 @@ public abstract class MailTest {
         } catch (IllegalArgumentException e) {
             String msg = e.getMessage();
             if (msg != null) {
-                System.err.println(msg);
+                System.err.printf("ERROR: %s\n", msg);
                 printUsage(System.err);
                 System.exit(1);
             }
         }
         mClient.setLogPrintStream(System.out);
+        mClient.setSSLSocketFactory(SSLUtil.getDummySSLContext().getSocketFactory());
         mClient.connect();
+        if (mEnableTLS) mClient.startTLS();
         mClient.authenticate();
         mClient.setLogPrintStream(null);
         String qop = mClient.getNegotiatedQop();
-        System.out.printf("[Negotiated QOP is %s]\n", qop); 
+        if (qop != null) System.out.printf("[Negotiated QOP is %s]\n", qop); 
         startCommandLoop();
     }
 
@@ -53,7 +56,7 @@ public abstract class MailTest {
                 System.out.println(line);
             }
         } catch (IOException e) {
-            if (!mGotEof) e.printStackTrace();
+            if (!mGotEndOfFile) e.printStackTrace();
         }
     }
 
@@ -70,7 +73,7 @@ public abstract class MailTest {
                 e.printStackTrace();
             }
             try {
-                mGotEof = true;
+                mGotEndOfFile = true;
                 mClient.getInputStream().close();
             } catch (IOException e) {}
         }
@@ -89,7 +92,7 @@ public abstract class MailTest {
         ListIterator<String> it = Arrays.asList(args).listIterator();
         while (it.hasNext() && parseArgument(it)) {}
         if (!it.hasNext()) {
-            throw new IllegalArgumentException("ERROR: Missing required host name");
+            throw new IllegalArgumentException("Missing required host name");
         }
         mClient.setHost(it.next());
         if (it.hasNext()) {
@@ -131,14 +134,17 @@ public abstract class MailTest {
                 case 'r':
                     mClient.setRealm(it.next());
                     break;
-                case 'q':
-                    mClient.setSaslProperty(Sasl.QOP, it.next());
+                case 's':
+                    mClient.setSslEnabled(true);
                     break;
                 case 'k':
                     minQop = parseQop(arg, it.next());
                     break;
                 case 'l':
                     maxQop = parseQop(arg, it.next());
+                    break;
+                case 't':
+                    mEnableTLS = true;
                     break;
                 case 'h':
                     printUsage(System.out);
@@ -150,7 +156,13 @@ public abstract class MailTest {
             throw new IllegalArgumentException("Option requires argument: " + arg);
         }
         if (minQop != -1 || maxQop != -1) {
-            mClient.setSaslProperty(Sasl.QOP, getQop(minQop, maxQop));
+            String qop = getQop(minQop, maxQop);
+            if (mClient.isSSLEnabled() && qop.contains(QOP_AUTH_INT) ||
+                                          qop.contains(QOP_AUTH_CONF)) {
+                throw new IllegalArgumentException(
+                    "Confidentiality and integrity QOP not supported with SSL enabled");
+            }
+            mClient.setSaslProperty(Sasl.QOP, qop);
         }
         return true;
     }
