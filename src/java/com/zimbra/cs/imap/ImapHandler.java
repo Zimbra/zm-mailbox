@@ -682,6 +682,8 @@ public abstract class ImapHandler extends ProtocolHandler {
             throw e;
         }
         mSelectedFolder = i4folder;
+        
+        ZimbraLog.imap.info("selected folder " + mSelectedFolder.toString());
     }
 
     boolean canContinue(ServiceException e) {
@@ -940,6 +942,10 @@ public abstract class ImapHandler extends ProtocolHandler {
         mCredentials = new ImapCredentials(account, hack);
         if (mCredentials.isLocal())
             mCredentials.getMailbox().beginTrackingImap();
+        
+        ZimbraLog.addAccountNameToContext(mCredentials.getUsername());
+        ZimbraLog.imap.info("user " + mCredentials.getUsername() + " authenticated, mechanism=" + type);
+        
         return mCredentials;
     }
 

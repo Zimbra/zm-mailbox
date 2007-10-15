@@ -576,6 +576,10 @@ public abstract class Pop3Handler extends ProtocolHandler {
                 throw new Pop3CmdException("pop access not enabled for account");
             mAccountId = acct.getId();
             mAccountName = acct.getName();
+            
+            ZimbraLog.addAccountNameToContext(mAccountName);
+            ZimbraLog.pop.info("user " + mAccountName + " authenticated, mechanism=" + type);
+            
             Mailbox mailbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
             mMbx = new Pop3Mailbox(mailbox, acct, mQuery);
             mState = STATE_TRANSACTION;
