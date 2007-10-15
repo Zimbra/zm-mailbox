@@ -12,17 +12,15 @@ public class Pop3Client extends MailClient {
     private static final String STATUS_OK = "+OK";
     private static final String STATUS_ERR = "-ERR";
     
-    public Pop3Client(String host, int port) {
-        super(host, port);
-    }
-
-    public Pop3Client(String host) {
-        super(host, DEFAULT_PORT);
-    }
-
     public Pop3Client() {}
 
-
+    public void connect() throws IOException {
+        if (mPort == -1) {
+            mPort = mSslEnabled ? DEFAULT_SSL_PORT : DEFAULT_PORT;
+        }
+        super.connect();
+    }
+    
     protected boolean processGreeting() throws IOException {
         processLine(recvLine());
         return STATUS_OK.equals(mStatus);
@@ -33,10 +31,18 @@ public class Pop3Client extends MailClient {
                sendCommand("PASS " + mPassword);
     }
 
+    protected boolean sendLogout() throws IOException {
+        return sendCommand("QUIT");
+    }
+    
     protected boolean sendAuthenticate() throws IOException {
         return sendCommand("AUTH " + mMechanism);
     }
 
+    protected boolean sendStartTLS() throws IOException {
+        return sendCommand("STLS");
+    }
+    
     public String getProtocol() {
         return "pop3";
     }

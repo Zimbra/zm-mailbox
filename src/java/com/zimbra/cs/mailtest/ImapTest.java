@@ -18,6 +18,7 @@ public class ImapTest extends MailTest {
         "  -k #     : Minimum QOP to use (0=auth, 1=auth-int, 2=auth-conf)",
         "  -l #     : Maximum QOP to use (0=auth, 1=auth-int, 2=auth-conf)",
         "  -r realm : realm",
+        "  -s       : enable IMAP over SSL (imaps)",
         "  -h       : print this help message"
     };
 
