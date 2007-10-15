@@ -142,10 +142,12 @@ abstract class ImapRequest {
 
     void skipChar(char c) throws ImapParseException {
         Object part = mParts.get(mIndex);
-        if (part instanceof String && mOffset < ((String) part).length() && ((String) part).charAt(mOffset) == c)
-            mOffset++;
-        else
-            throw new ImapParseException(mTag, "end of line or wrong character; expected '" + c + '\'');
+        if (!(part instanceof String) || mOffset >= ((String) part).length()) {
+            throw new ImapParseException(mTag, "unexpected end of line; expected '" + c + "'");
+        }
+        char got = ((String) part).charAt(mOffset);
+        if (got == c) mOffset++;
+        else throw new ImapParseException(mTag, "wrong character; expected '" + c + "' but got '" + got + "'");
     }                                       
 
     void skipNIL() throws ImapParseException { skipAtom("NIL"); }
