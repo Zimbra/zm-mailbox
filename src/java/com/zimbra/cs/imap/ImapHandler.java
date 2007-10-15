@@ -211,6 +211,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             if (mAuthenticator.isAuthenticated()) {
                 // Authentication successful
                 completeAuthentication();
+                enableInactivityTimer();
                 return CONTINUE_PROCESSING;
             }
             // Authentication failed
