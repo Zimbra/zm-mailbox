@@ -166,12 +166,7 @@ public class GssAuthenticator extends Authenticator {
         }
         // Authentication complete, so finish up
         assert mSaslServer.isComplete();
-        if (DEBUG) {
-            for (String name : getSaslProperties().keySet()) {
-                debug("Negotiated property %s = %s", name,
-                    mSaslServer.getNegotiatedProperty(name));
-            }
-        }
+        if (DEBUG) dumpNegotiatedProperties();
         // If authentication failed, dispose of SaslServer instance
         if (!isAuthenticated()) {
             debug("Authentication failed");
@@ -238,6 +233,18 @@ public class GssAuthenticator extends Authenticator {
             cb.setAuthorized(authenticate(cb.getAuthorizationID(),
                                           cb.getAuthenticationID(), null));
         }
+    }
+
+    private void dumpNegotiatedProperties() {
+        pp("QOP", Sasl.QOP);
+        pp("MAX_BUFFER", Sasl.MAX_BUFFER);
+        pp("MAX_RECEIVE_SIZE", Sasl.RAW_SEND_SIZE);
+        pp("STRENGTH", Sasl.STRENGTH);
+    }
+
+    private void pp(String printName, String propName) {
+        Object obj = mSaslServer.getNegotiatedProperty(propName);
+        if (obj != null) debug("Negotiated property %s = %s", printName, obj);
     }
 
     private static void debug(String format, Object... args) {
