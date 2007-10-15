@@ -144,6 +144,19 @@ public class SkinUtil {
 			return cosSkin;
 		}
 
+		// Nothing in ldap has a valid skin. Since sand seens to be our most stable skin, try it.
+		String usuallyAvailableSkin = "sand";
+		if (accountSkin != usuallyAvailableSkin && cosSkin != usuallyAvailableSkin) {
+			if (checkSkin(usuallyAvailableSkin, installedSkins, allowedSkins)) {
+				return usuallyAvailableSkin;
+			}
+		}
+
+		// Return some installed skin.
+		if (installedSkins.length > 0) {
+			return installedSkins[0];
+		}
+
 		// Didn't find an acceptable skin. Return null and hope the client doesn't need it.
 		return null;
 	}
