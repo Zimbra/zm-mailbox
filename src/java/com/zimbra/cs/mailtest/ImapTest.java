@@ -8,12 +8,15 @@ import java.io.PrintStream;
 public class ImapTest extends MailTest {
     private static final String[] USAGE = {
         "Usage: java " + ImapTest.class.getName() + " [options] hostname",
-        "  -p port  : port to use (default is port " + ImapClient.DEFAULT_PORT + ")",
+        "  -p port  : port to use (default is " + ImapClient.DEFAULT_PORT +
+                    " or " + ImapClient.DEFAULT_SSL_PORT + " for SSL)",
         "  -u user  : authorization name to use",
         "  -a user  : authentication name to use",
         "  -w pass  : password to use",
         "  -v       : enable verbose output",
-        "  -m mech  : mechanism to use (plain, gssapi, or login)",
+        "  -m mech  : SASL mechanism to use (\"login\" for IMAP LOGIN)",
+        "  -k #     : Minimum QOP to use (0=auth, 1=auth-int, 2=auth-conf)",
+        "  -l #     : Maximum QOP to use (0=auth, 1=auth-int, 2=auth-conf)",
         "  -r realm : realm",
         "  -h       : print this help message"
     };

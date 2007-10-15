@@ -3,7 +3,6 @@ package com.zimbra.cs.mailtest;
 import com.zimbra.cs.security.sasl.SaslInputStream;
 import com.zimbra.cs.security.sasl.SaslOutputStream;
 import com.zimbra.cs.security.sasl.SaslSecurityLayer;
-import org.apache.commons.codec.binary.Base64;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
@@ -22,7 +21,6 @@ import javax.security.sasl.SaslException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
@@ -40,12 +38,15 @@ public class ClientAuthenticator {
     private LoginContext mLoginContext;
     private Subject mSubject;
     private SaslClient mSaslClient;
-    private byte[] mResponse;
     private boolean mDebug;
 
     public static final String MECHANISM_GSSAPI = "GSSAPI";
     public static final String MECHANISM_PLAIN = "PLAIN";
 
+    public static final String QOP_AUTH = "auth";
+    public static final String QOP_AUTH_CONF = "auth-conf";
+    public static final String QOP_AUTH_INT = "auth-int";
+    
     protected ClientAuthenticator(String mechanism, String protocol,
                                   String serverName) {
         if (mechanism  == null) throw new NullPointerException("mechanism");
@@ -61,6 +62,8 @@ public class ClientAuthenticator {
         if (mAuthorizationId == null) mAuthorizationId = mAuthenticationId;
         mSaslClient = MECHANISM_GSSAPI.equals(mMechanism) ?
             createGssSaslClient() : createSaslClient();
+        String qop = mProperties != null ? mProperties.get(Sasl.QOP) : null;
+        debug("Requested QOP is %s", qop != null ? qop : "auth");
     }
 
     private SaslClient createGssSaslClient() throws LoginException, SaslException {
@@ -122,14 +125,13 @@ public class ClientAuthenticator {
             new SaslCallbackHandler());
     }
 
-    public boolean evaluateChallenge(final byte[] challenge) throws SaslException {
+    public byte[] evaluateChallenge(final byte[] challenge) throws SaslException {
         checkInitialized();
         if (isComplete()) {
             throw new IllegalStateException("Authentication already completed");
         }
-        mResponse = mSubject != null ?
+        return mSubject != null ?
             evaluateGssChallenge(challenge) : mSaslClient.evaluateChallenge(challenge);
-        return mResponse == null;
     }
 
     private byte[] evaluateGssChallenge(final byte[] challenge) throws SaslException {
@@ -151,15 +153,6 @@ public class ClientAuthenticator {
         }
     }
     
-    public boolean evaluateChallengeBase64(String challenge) throws SaslException {
-        try {
-            byte[] b = Base64.decodeBase64(challenge.getBytes("us-ascii"));
-            return evaluateChallenge(b);
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException("US-ASCII encoding unsupported");
-        }
-    }
-    
     public byte[] getInitialResponse() throws SaslException {
         checkInitialized();
         if (!hasInitialResponse()) {
@@ -174,19 +167,6 @@ public class ClientAuthenticator {
         return mSaslClient.hasInitialResponse();
     }
 
-    public byte[] getResponse() {
-        checkInitialized();
-        return mResponse;
-    }
-
-    public String getResponseBase64() {
-        try {
-            return new String(Base64.encodeBase64(getResponse()), "us-ascii");
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException("US-ASCII encoding unsupported");
-        }
-    }
-    
     public boolean isComplete() {
         checkInitialized();
         return mSaslClient.isComplete();
@@ -241,6 +221,10 @@ public class ClientAuthenticator {
     public void setProperty(String name, String value) {
         getProperties().put(name, value);
     }
+
+    public String getNegotiatedProperty(String name) {
+        return (String) mSaslClient.getNegotiatedProperty(name);
+    }
     
     public void setAuthorizationId(String id) {
         mAuthorizationId = id;
@@ -286,4 +270,5 @@ public class ClientAuthenticator {
             System.out.printf("[ClientAuthenticator] " + format + "\n", args);
         }
     }
+
 }

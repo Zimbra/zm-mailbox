@@ -1,5 +1,6 @@
 package com.zimbra.cs.mailtest;
 
+import javax.security.sasl.Sasl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -7,9 +8,12 @@ import java.util.Arrays;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
+import static com.zimbra.cs.mailtest.ClientAuthenticator.*;
+
 public abstract class MailTest {
     protected MailClient mClient;
     private StringBuilder mLineBuffer;
+    private boolean mGotEof;
 
     protected MailTest(MailClient client) {
         mClient = client;
@@ -33,6 +37,8 @@ public abstract class MailTest {
         mClient.connect();
         mClient.authenticate();
         mClient.setLogPrintStream(null);
+        String qop = mClient.getNegotiatedQop();
+        System.out.printf("[Negotiated QOP is %s]\n", qop); 
         startCommandLoop();
     }
 
@@ -47,7 +53,7 @@ public abstract class MailTest {
                 System.out.println(line);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            if (!mGotEof) e.printStackTrace();
         }
     }
 
@@ -63,6 +69,10 @@ public abstract class MailTest {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            try {
+                mGotEof = true;
+                mClient.getInputStream().close();
+            } catch (IOException e) {}
         }
     }
 
@@ -96,6 +106,8 @@ public abstract class MailTest {
         if (arg.length() != 2) {
             throw new IllegalArgumentException("Illegal option: " + arg);
         }
+        int minQop = -1;
+        int maxQop = -1;
         try {
             switch (arg.charAt(1)) {
                 case 'p':
@@ -119,6 +131,15 @@ public abstract class MailTest {
                 case 'r':
                     mClient.setRealm(it.next());
                     break;
+                case 'q':
+                    mClient.setSaslProperty(Sasl.QOP, it.next());
+                    break;
+                case 'k':
+                    minQop = parseQop(arg, it.next());
+                    break;
+                case 'l':
+                    maxQop = parseQop(arg, it.next());
+                    break;
                 case 'h':
                     printUsage(System.out);
                     System.exit(0);
@@ -128,6 +149,33 @@ public abstract class MailTest {
         } catch (NoSuchElementException e) {
             throw new IllegalArgumentException("Option requires argument: " + arg);
         }
+        if (minQop != -1 || maxQop != -1) {
+            mClient.setSaslProperty(Sasl.QOP, getQop(minQop, maxQop));
+        }
         return true;
+    }
+
+    private static int parseQop(String arg, String value) {
+        if (value.equalsIgnoreCase(QOP_AUTH) || value.equals("0")) return 0;
+        if (value.equalsIgnoreCase(QOP_AUTH_INT) || value.equals("1")) return 1;
+        if (value.equalsIgnoreCase(QOP_AUTH_CONF) || value.equals("2")) return 2;
+        throw new IllegalArgumentException("Invalid value for option '" + arg + "'");
+    }
+
+    private static String getQop(int minQop, int maxQop) {
+        if (minQop == -1) minQop = 0;
+        if (maxQop == -1) maxQop = 2;
+        if (minQop > maxQop) maxQop = minQop;
+        StringBuilder sb = new StringBuilder();
+        for (int i = maxQop; i >= minQop; --i) {
+            switch (i) {
+                case 0: sb.append(QOP_AUTH); break;
+                case 1: sb.append(QOP_AUTH_INT); break;
+                case 2: sb.append(QOP_AUTH_CONF); break;
+                default: throw new AssertionError();
+            }
+            if (i > minQop) sb.append(',');
+        }
+        return sb.toString();
     }
 }
