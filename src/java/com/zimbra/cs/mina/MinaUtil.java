@@ -94,4 +94,19 @@ public final class MinaUtil {
     public static org.apache.mina.common.ByteBuffer toMinaByteBuffer(ByteBuffer bb) {
         return org.apache.mina.common.ByteBuffer.wrap(bb);
     }
+
+    public static String toHexString(ByteBuffer bb) {
+        return appendHex(new StringBuilder(), bb).toString();
+    }
+    
+    public static StringBuilder appendHex(StringBuilder sb, ByteBuffer bb) {
+        int limit = bb.limit();
+        for (int i = bb.position(); i < limit; i++) {
+            int c = bb.get(i) & 0xff;
+            sb.append(Character.forDigit(c >> 4, 16));
+            sb.append(Character.forDigit(c & 0xf, 16));
+            if (i < limit - 1) sb.append(' ');
+        }
+        return sb;
+    }
 }

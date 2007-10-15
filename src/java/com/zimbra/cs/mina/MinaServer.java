@@ -135,7 +135,7 @@ public abstract class MinaServer implements Server {
         }
         fc.addLast("codec", new ProtocolCodecFilter(new MinaCodecFactory(this)));
         fc.addLast("executer", new ExecutorFilter(mExecutorService));
-        if (isDebugEnabled()) fc.addLast("logger", new MinaLoggingFilter(this));
+        if (isDebugEnabled()) fc.addLast("logger", new MinaLoggingFilter(this, false));
         IoHandler handler = new MinaIoHandler(this);
         mSocketAcceptor.register(mChannel, handler, mAcceptorConfig);
         getLog().info("Starting listener on %s%s",

@@ -29,9 +29,11 @@ import java.nio.ByteBuffer;
  */
 class MinaLoggingFilter extends IoFilterAdapter {
     private final Log mLog;
+    private final boolean mHexDump;
 
-    MinaLoggingFilter(MinaServer server) {
+    MinaLoggingFilter(MinaServer server, boolean hexDump) {
         mLog = server.getLog();
+        mHexDump = hexDump;
     }
     
     public void sessionCreated(NextFilter nextFilter, IoSession session) {
@@ -119,13 +121,16 @@ class MinaLoggingFilter extends IoFilterAdapter {
 
     private String pp(ByteBuffer bb) {
         StringBuilder sb = new StringBuilder(bb.remaining());
+        if (mHexDump) {
+            sb = MinaUtil.appendHex(sb.append('('), bb).append(") ");
+        }
         int limit = bb.limit();
         for (int i = bb.position(); i < limit; i++) {
             sb.append((char) (bb.get(i) & 0xff));
         }
         return sb.toString();
     }
-    
+
     // TODO Should this log at debug level instead?
     private boolean isLoggable() {
         return mLog.isInfoEnabled();
