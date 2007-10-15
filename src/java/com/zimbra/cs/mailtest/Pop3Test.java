@@ -4,13 +4,15 @@ import java.io.PrintStream;
 
 public class Pop3Test extends MailTest {
     private static final String[] USAGE = {
-        "Usage: java " + ImapTest.class.getName() + " [options] hostname",
-        "  -p port  : port to use (default is port " + Pop3Client.DEFAULT_PORT + ")",
+        "Usage: java " + Pop3Test.class.getName() + " [options] hostname",
+        "  -p port  : port to use (default is " + Pop3Client.DEFAULT_PORT +
+                    " or " + Pop3Client.DEFAULT_SSL_PORT + " for SSL)",
         "  -u user  : authorization name to use",
         "  -a user  : authentication name to use",
         "  -w pass  : password to use",
         "  -v       : enable verbose output",
-        "  -m mech  : mechanism to use (plain, gssapi, or login)",
+        "  -m mech  : SASL mechanism to use (\"user\" for POP3 USER/PASS)",
+        "  -q qop   : Quality of protection to use (auth, auth-int, auth-conf",
         "  -r realm : realm",
         "  -h       : print this help message"
     };

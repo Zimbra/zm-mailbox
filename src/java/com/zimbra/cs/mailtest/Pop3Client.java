@@ -7,6 +7,7 @@ public class Pop3Client extends MailClient {
     private String mMessage;
     
     public static final int DEFAULT_PORT = 110;
+    public static final int DEFAULT_SSL_PORT = 995;
 
     private static final String STATUS_OK = "+OK";
     private static final String STATUS_ERR = "-ERR";

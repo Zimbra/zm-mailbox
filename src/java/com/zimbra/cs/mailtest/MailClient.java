@@ -1,13 +1,19 @@
 package com.zimbra.cs.mailtest;
 
+import org.apache.commons.codec.binary.Base64;
+
 import javax.security.auth.login.LoginException;
+import javax.security.sasl.Sasl;
 import javax.security.sasl.SaslException;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
 
 public abstract class MailClient {
     protected String mHost;
@@ -18,6 +24,7 @@ public abstract class MailClient {
     protected String mPassword;
     protected String mMechanism;
     protected String mRealm;
+    protected Map<String, String> mSaslProperties;
     protected MailInputStream mInputStream;
     protected MailOutputStream mOutputStream;
     protected PrintStream mLogPrintStream;
@@ -71,31 +78,47 @@ public abstract class MailClient {
         mAuthenticator.setPassword(mPassword);
         mAuthenticator.setRealm(mRealm);
         mAuthenticator.setDebug(mDebug);
+        if (mSaslProperties != null) {
+            mAuthenticator.getProperties().putAll(mSaslProperties);
+        }
         mAuthenticator.initialize();
         if (!sendAuthenticate()) {
             throw new LoginException(getMessage());
         }
+        if (mAuthenticator.isEncryptionEnabled()) {
+            mInputStream = new MailInputStream(
+                mAuthenticator.getUnwrappedInputStream(mSocket.getInputStream()));
+            mOutputStream = new MailOutputStream(
+                mAuthenticator.getWrappedOutputStream(mSocket.getOutputStream()));
+        }
     }
 
     protected void processContinuation(String line) throws IOException {
-        if (!mAuthenticator.evaluateChallengeBase64(line.substring(2))) {
-            sendContinuation();
+        byte[] response = mAuthenticator.evaluateChallenge(
+            decodeBase64(line.substring(2)));
+        if (response != null) sendLine(encodeBase64(response));
+    }
+
+    private static byte[] decodeBase64(String s) throws SaslException {
+        try {
+            return Base64.decodeBase64(s.getBytes("us-ascii"));
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalStateException("US-ASCII encoding unsupported");
         }
     }
-    
-    private void sendContinuation() throws IOException {
-        sendLine(mAuthenticator.getResponseBase64());
+
+    private static String encodeBase64(byte[] b) {
+        try {
+            return new String(Base64.encodeBase64(b), "us-ascii");
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalStateException("US-ASCII encoding unsupported");
+        }
     }
 
     private void checkCredentials() {
         if (mAuthenticationId == null) {
             throw new IllegalStateException("Missing authentication id");
         }
-        /*
-        if (mPassword == null) {
-            throw new IllegalStateException("Missing password");
-        }
-        */
     }
 
     public MailInputStream getInputStream() {
@@ -122,6 +145,13 @@ public abstract class MailClient {
         mAuthenticationId = id;
     }
 
+    public void setSaslProperty(String name, String value) {
+        if (mSaslProperties == null) {
+            mSaslProperties = new HashMap<String, String>();
+        }
+        mSaslProperties.put(name, value);
+    }
+    
     public void setPassword(String password) {
         mPassword = password;
     }
@@ -142,6 +172,11 @@ public abstract class MailClient {
         mDebug = debug;
     }
 
+    public String getNegotiatedQop() {
+        return mAuthenticator != null ?
+            mAuthenticator.getNegotiatedProperty(Sasl.QOP) : null;
+    }
+    
     protected void sendLine(String line) throws IOException {
         if (mLogPrintStream != null) mLogPrintStream.println("C: " + line);
         mOutputStream.writeLine(line);

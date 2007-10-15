@@ -15,6 +15,7 @@ public class ImapClient extends MailClient {
     private int mCount;
 
     public static final int DEFAULT_PORT = 143;
+    public static final int DEFAULT_SSL_PORT = 993;
 
     private static final String TAG_PREFIX = "C";
     private static final String TAG_FORMAT = "C%02d";
