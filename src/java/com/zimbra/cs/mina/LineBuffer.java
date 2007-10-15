@@ -63,12 +63,13 @@ public class LineBuffer {
         // End of line found,
         int len = pos - bb.position();
         ByteBuffer lbb = bb.slice();
-        bb.position(pos + 1);
-        // Remove trailing CR's
-        while (len > 0 && lbb.get(len - 1) == CR) --len;
         lbb.limit(len);
+        bb.position(pos + 1);
         mBuffer = MinaUtil.expand(mBuffer, len, len).put(lbb);
-        mBuffer.flip();
+        // Remove trailing CR's
+        pos = mBuffer.position();
+        while (pos > 0 && mBuffer.get(pos - 1) == CR) --pos;
+        mBuffer.position(pos).flip();
         mComplete = true;
     }
 

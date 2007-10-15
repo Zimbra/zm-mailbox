@@ -91,6 +91,15 @@ public class TestMina extends TestCase {
         assertEquals(LINE.length(), bb.remaining());
     }
 
+    public void testLineBuffer2() {
+        LineBuffer lb = new LineBuffer();
+        lb.parse(MinaUtil.toByteBuffer(LINE));
+        lb.parse(MinaUtil.toByteBuffer(CR));
+        lb.parse(MinaUtil.toByteBuffer(LF));
+        assertTrue(lb.isComplete());
+        assertEquals(LINE.length(), lb.toString().length());
+    }
+    
     public void testMinaOutputStream() throws IOException {
         TestMinaOutputStream tos = new TestMinaOutputStream();
         ByteBuffer data = testData(BIG_DATA_SIZE);
