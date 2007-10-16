@@ -233,50 +233,57 @@ public final class SessionCache {
 
     private static final class SweepMapTimerTask extends TimerTask {
         public void run() {
-            if (sLog.isDebugEnabled())
-                logActiveSessions();
-            
-            // keep track of the count of each session type that's removed
-            ValueCounter removedSessionTypes = new ValueCounter();
-            int numActive = 0;
+            try {
+                if (sLog.isDebugEnabled())
+                    logActiveSessions();
+                
+                // keep track of the count of each session type that's removed
+                ValueCounter removedSessionTypes = new ValueCounter();
+                int numActive = 0;
 
-            List<Session> toReap = new ArrayList<Session>(100);
+                List<Session> toReap = new ArrayList<Session>(100);
 
-            long now = System.currentTimeMillis();
-            synchronized (sLRUMap) {
-                Iterator iter = sLRUMap.values().iterator();
-                while (iter.hasNext()) {
-                    Session s = (Session) iter.next();
-                    if (s == null)
-                        continue;
-                    long cutoffTime = now - s.getSessionIdleLifetime();
-                    if (!s.accessedAfter(cutoffTime)) {
-                        iter.remove();
-                        toReap.add(s);
-                    } else {
-                        // mLRUMap iterates by last access order, most recently
-                        // accessed element last.  We can break here because
-                        // all later sessions are guaranteed not to be expired.
-                        break;
+                long now = System.currentTimeMillis();
+                synchronized (sLRUMap) {
+                    Iterator iter = sLRUMap.values().iterator();
+                    while (iter.hasNext()) {
+                        Session s = (Session) iter.next();
+                        if (s == null)
+                            continue;
+                        long cutoffTime = now - s.getSessionIdleLifetime();
+                        if (!s.accessedAfter(cutoffTime)) {
+                            iter.remove();
+                            toReap.add(s);
+                        } else {
+                            // mLRUMap iterates by last access order, most recently
+                            // accessed element last.  We can break here because
+                            // all later sessions are guaranteed not to be expired.
+                            break;
+                        }
                     }
+                    numActive = sLRUMap.size();
                 }
-                numActive = sLRUMap.size();
-            }
 
-            // IMPORTANT: Clean up sessions *after* releasing lock on sLRUMap.
-            // If Session.doCleanup() is called with sLRUMap locked, it can lead
-            // to deadlock. (bug 7866)
-            for (Session s: toReap) {
-                if (ZimbraLog.session.isDebugEnabled())
-                    ZimbraLog.session.debug("Removing cached session: " + s);
-                if (sLog.isInfoEnabled())
-                    removedSessionTypes.increment(StringUtil.getSimpleClassName(s));
-                s.doCleanup();
-            }
+                // IMPORTANT: Clean up sessions *after* releasing lock on sLRUMap.
+                // If Session.doCleanup() is called with sLRUMap locked, it can lead
+                // to deadlock. (bug 7866)
+                for (Session s: toReap) {
+                    if (ZimbraLog.session.isDebugEnabled())
+                        ZimbraLog.session.debug("Removing cached session: " + s);
+                    if (sLog.isInfoEnabled())
+                        removedSessionTypes.increment(StringUtil.getSimpleClassName(s));
+                    s.doCleanup();
+                }
 
-            if (sLog.isInfoEnabled() && removedSessionTypes.size() > 0) {
-                sLog.info("Removed " + removedSessionTypes.getTotal() + " idle sessions (" +
-                          removedSessionTypes + ").  " + numActive + " active sessions remain.");
+                if (sLog.isInfoEnabled() && removedSessionTypes.size() > 0) {
+                    sLog.info("Removed " + removedSessionTypes.getTotal() + " idle sessions (" +
+                              removedSessionTypes + ").  " + numActive + " active sessions remain.");
+                }
+                
+            } catch (Throwable e) { //don't let exceptions kill the timer
+                if (e instanceof OutOfMemoryError)
+                    Zimbra.halt("Caught out of memory error", e);
+                ZimbraLog.session.warn("Caught exception in SessionCache timer", e);
             }
         }
         

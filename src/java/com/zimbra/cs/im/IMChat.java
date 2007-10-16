@@ -234,7 +234,14 @@ public class IMChat {
     
     private class FlushTask extends TimerTask {
         public void run() {
+            try {
                 timerExecute();
+            } catch (Throwable e) {
+                //don't let exceptions kill the timer
+                if (e instanceof OutOfMemoryError)
+                    Zimbra.halt("Caught out of memory error", e);
+                ZimbraLog.im.warn("Caught exception in IMChat timer", e);                
+            }
         }
     }
     
