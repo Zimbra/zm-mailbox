@@ -35,12 +35,14 @@ public class ImapConfig extends ServerConfig {
     private String mGoodbye;
     private Set<String> mDisabledExtensions;
     private boolean mSaslGssapiEnabled;
+    private int mMaxRequestSize;
 
     private static final int DEFAULT_NUM_THREADS = 10;
     private static final int DEFAULT_BIND_PORT = Config.D_IMAP_BIND_PORT;
     private static final int DEFAULT_SSL_BIND_PORT = Config.D_IMAP_SSL_BIND_PORT;
     private static final int DEFAULT_MAX_IDLE_SECONDS = ImapFolder.IMAP_IDLE_TIMEOUT_SEC;
     private static final int DEFAULT_UNAUTH_MAX_IDLE_SECONDS = 60;
+    private static final int DEFAULT_MAX_REQUEST_SIZE = 10000000;
     
     public ImapConfig(boolean ssl) throws ServiceException {
         setMaxIdleSeconds(DEFAULT_MAX_IDLE_SECONDS);
@@ -76,6 +78,13 @@ public class ImapConfig extends ServerConfig {
         }
         mSaslGssapiEnabled = server.getBooleanAttr(
             A_zimbraImapSaslGssapiEnabled, false);
+        // enough space to hold the largest possible message, plus a bit extra to cover IMAP protocol chatter
+        mMaxRequestSize = server.getIntAttr(A_zimbraFileUploadMaxSize, -1);
+        if (mMaxRequestSize <= 0) {
+            mMaxRequestSize = DEFAULT_MAX_REQUEST_SIZE;
+        } else {
+            mMaxRequestSize += 1024;
+        }
         validate();
     }
 
@@ -115,6 +124,14 @@ public class ImapConfig extends ServerConfig {
 
     public boolean isSaslGssapiEnabled() {
         return mSaslGssapiEnabled;
+    }
+    
+    /**
+     * Returns the size of the largest request (total size of all non-literals
+     * and literals) this IMAP server will handle.
+     */
+    public int getMaxRequestSize() {
+        return mMaxRequestSize;
     }
     
     // TODO can this value be cached?

@@ -51,7 +51,7 @@ public class TcpImapRequest extends ImapRequest {
 
     private void incrementSize(long increment) throws ImapParseException {
         mSize += increment;
-        if (mSize > getMaxRequestLength())
+        if (mSize > mHandler.getConfig().getMaxRequestSize())
             throw new ImapParseException(mTag, "request too long");
     }
 

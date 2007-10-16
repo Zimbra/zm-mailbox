@@ -36,10 +36,7 @@ import java.util.Set;
 
 import org.apache.commons.codec.binary.Base64;
 
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.imap.ImapSearch.*;
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 abstract class ImapRequest {
@@ -93,24 +90,6 @@ abstract class ImapRequest {
      *  indicate that the server has finished processing the request.
      *  It may also be used when generating a parse exception. */
     void setTag(String tag)  { mTag = tag; }
-
-    private static int DEFAULT_MAX_REQUEST_LENGTH = 10000000;
-
-    /** Returns the size of the largest request (total size of all non-literals
-     *  and literals) this IMAP server will handle. */
-    static int getMaxRequestLength() {
-        int maxSize = DEFAULT_MAX_REQUEST_LENGTH;
-        try {
-            Server server = Provisioning.getInstance().getLocalServer();
-            // enough space to hold the largest possible message, plus a bit extra to cover IMAP protocol chatter
-            maxSize = server.getIntAttr(Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_REQUEST_LENGTH);
-            if (maxSize <= 0)
-                maxSize = DEFAULT_MAX_REQUEST_LENGTH;
-            else
-                maxSize += 1024;
-        } catch (ServiceException e) { }
-        return maxSize;
-    }
 
     /** Returns whether the read position is at the very end of the request. */
     boolean eof()  { return peekChar() == -1; }

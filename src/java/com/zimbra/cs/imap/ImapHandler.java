@@ -153,6 +153,8 @@ public abstract class ImapHandler extends ProtocolHandler {
     ImapCredentials getCredentials()  { return mCredentials; }
 
     public boolean isSSLEnabled() { return mConfig.isSSLEnabled(); }
+
+    public ImapConfig getConfig() { return mConfig; }
     
     protected String getOrigRemoteIpAddr() { return mOrigRemoteAddress; }
     
@@ -1762,7 +1764,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                             buffer = ((ImapURL) part).getContent(this, mCredentials, tag);
 
                         size += buffer.length;
-                        if (size > ImapRequest.getMaxRequestLength())
+                        if (size > mConfig.getMaxRequestSize())
                             throw new ImapParseException(tag, "TOOBIG", "request too long", false);
                         baos.write(buffer);
                     }
@@ -3219,7 +3221,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     void sendUntagged(String response) throws IOException        { sendResponse("*", response, false); }
     void sendUntagged(String response, boolean flush) throws IOException { sendResponse("*", response, flush); }
     void sendContinuation(String response) throws IOException    { sendResponse("+", response, true); }
-    
+
     private void sendResponse(String status, String msg, boolean flush) throws IOException {
         String response = status + ' ' + (msg == null ? "" : msg);
         if (ZimbraLog.imap.isDebugEnabled())

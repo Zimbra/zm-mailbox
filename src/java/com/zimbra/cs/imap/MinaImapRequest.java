@@ -127,7 +127,7 @@ public class MinaImapRequest extends ImapRequest implements MinaRequest {
         // TODO Make sure this cannot wrap around
         mSize += increment;
         // TODO Can max request mSize be treated as a constant?
-        if (mSize > getMaxRequestLength()) {
+        if (mSize > mHandler.getConfig().getMaxRequestSize()) {
             throw new ImapParseException(mTag, "request too long");
         }
     }
