@@ -22,6 +22,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.collections.map.LRUMap;
+
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -39,17 +41,17 @@ public class ZimletUserProperties {
 	private static final long   TTL = 30 * 60 * 1000;  // 30 mins TTL for cache
 	private long mCreateTime;
 
-	private static Map<String, ZimletUserProperties> sUserPropMap;
+	private static LRUMap sUserPropMap;
 	
 	static {
-		sUserPropMap = new HashMap<String, ZimletUserProperties>();
+		sUserPropMap = new LRUMap(1024);
 	}
 	
 	public static ZimletUserProperties getProperties(Account ac) {
 		String id = ac.getId();
         ZimletUserProperties prop;
         synchronized (sUserPropMap) {
-            prop = sUserPropMap.get(id);
+            prop = (ZimletUserProperties)sUserPropMap.get(id);
             if (prop != null) {
                 if (prop.mCreateTime + TTL < System.currentTimeMillis()) {
                     prop = null;
