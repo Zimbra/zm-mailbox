@@ -610,7 +610,9 @@ public class FileUploadServlet extends ZimbraServlet {
                 }
                 for (Upload up : reaped)
                     up.purge();
-            } catch (Exception e) { //don't let exceptions kill the timer
+            } catch (Throwable e) { //don't let exceptions kill the timer
+                if (e instanceof OutOfMemoryError)
+                    Zimbra.halt("Caught out of memory error", e);
                 ZimbraLog.system.warn("Caught exception in FileUploadServlet timer", e);
             }
         }

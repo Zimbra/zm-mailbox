@@ -757,8 +757,10 @@ public class IMChat extends ClassLogger {
         public void run() {
             try {
                 timerExecute();
-            } catch (Exception e) {
-              //don't let exceptions kill the timer
+            } catch (Throwable e) {
+                //don't let exceptions kill the timer
+                if (e instanceof OutOfMemoryError)
+                    Zimbra.halt("Caught out of memory error", e);
                 ZimbraLog.im.warn("Caught exception in IMChat timer", e);                
             }
         }

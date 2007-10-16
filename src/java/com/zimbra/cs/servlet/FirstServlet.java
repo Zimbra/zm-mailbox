@@ -33,6 +33,7 @@ import javax.servlet.http.HttpServlet;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.EasySSLProtocolSocketFactory;
@@ -137,7 +138,18 @@ public class FirstServlet extends HttpServlet {
         long zoneOffset = now.get(Calendar.ZONE_OFFSET);
         long millisSinceEpochLocal = millisSinceEpoch + dstOffset + zoneOffset;
         long firstRotateInMillis = configMillis - (millisSinceEpochLocal % configMillis);
-        TimerTask tt = new TimerTask() { public void run() { doOutputRotation(); } };
+        TimerTask tt = new TimerTask() { 
+            public void run() { 
+                try {
+                    doOutputRotation(); 
+                } catch (Throwable e) {
+                    if (e instanceof OutOfMemoryError)
+                        Zimbra.halt("Caught out of memory error", e);
+                    System.err.println("WARN: Caught exception in FirstServlet timer " + e);
+                    e.printStackTrace();
+                }
+            }
+        };
         sOutputRotationTimer.scheduleAtFixedRate(tt, firstRotateInMillis, configMillis);
     }
 

@@ -310,7 +310,9 @@ public final class SessionCache {
                     sb.append(typeStr).append("). ").append(totalActive).append(" active sessions remain.");
                     sLog.info(sb.toString());
                 }
-            } catch (Exception e) { //don't let exceptions kill the timer
+            } catch (Throwable e) { //don't let exceptions kill the timer
+                if (e instanceof OutOfMemoryError)
+                    Zimbra.halt("Caught out of memory error", e);
                 ZimbraLog.session.warn("Caught exception in SessionCache timer", e);
             }
                 

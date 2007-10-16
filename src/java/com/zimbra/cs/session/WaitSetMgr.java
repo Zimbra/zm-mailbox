@@ -43,7 +43,9 @@ public class WaitSetMgr {
         public void run() { 
             try {
                 WaitSetMgr.sweep();
-            } catch (Exception e) {
+            } catch (Throwable e) {
+                if (e instanceof OutOfMemoryError)
+                    Zimbra.halt("Caught out of memory error", e);
                 ZimbraLog.session.warn("Caught exception in WaitSetMgr timer", e);
             }
         }
