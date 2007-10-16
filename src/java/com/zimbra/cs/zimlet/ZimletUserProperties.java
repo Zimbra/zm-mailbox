@@ -1,5 +1,6 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
+ * 
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006 Zimbra, Inc.
  * 
@@ -45,17 +46,20 @@ public class ZimletUserProperties {
 	
 	public static ZimletUserProperties getProperties(Account ac) {
 		String id = ac.getId();
-		ZimletUserProperties prop = sUserPropMap.get(id);
-		if (prop != null) {
-			if (prop.mCreateTime + TTL < System.currentTimeMillis()) {
-				prop = null;
-				sUserPropMap.remove(id);
-			}
-		}
-		if (prop == null) {
-			prop = new ZimletUserProperties(ac);
-			sUserPropMap.put(id, prop);
-		}
+        ZimletUserProperties prop;
+        synchronized (sUserPropMap) {
+            prop = sUserPropMap.get(id);
+            if (prop != null) {
+                if (prop.mCreateTime + TTL < System.currentTimeMillis()) {
+                    prop = null;
+                    sUserPropMap.remove(id);
+                }
+            }
+            if (prop == null) {
+                prop = new ZimletUserProperties(ac);
+                sUserPropMap.put(id, prop);
+            }
+        }
 		return prop;
 	}
 	
