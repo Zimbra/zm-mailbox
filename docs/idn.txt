@@ -174,9 +174,9 @@ http://bugzilla.zimbra.com/show_bug.cgi?id=14225
                <e [t="{type}"] p="{personal-name}" a="{email-address}" d="{display-name}">{content}</e>
                are always returned in Unicode(in utf8 encoding).
                
-               Server will convert email values obtained from up stream code/components from ACE to unicode 
-               and return unicode when it encodes the SOAP response after all the handling is done for the 
-               request.
+               Server will convert email values from ACE to unicode and return unicode in SOAP response.
+               This conversion is done at the SOAP response boundary, after the request is handled and while 
+               it encodes the SOAP response.
                
                    e.g.
                    (a) <SearchResponse xmlns="urn:zimbraMail" more="0" sortBy="dateDesc" offset="0">
@@ -190,7 +190,39 @@ http://bugzilla.zimbra.com/show_bug.cgi?id=14225
                
                
      
-2.5 LDAP Search Filters 
+2.5 LDAP Search Filters
+    For SOAP SearchDirectory and zmprov searchAccounts(sa) commands, server 
+    converts assertion values in the query to ACE, then put together the massaged 
+    query and hand it to LDAP search.
+    
+    Note: for IDN, there is a limitation that the assertion value has to 
+    be at least the entire label if the label is not ASCII.  This is because 
+    by RFC the ToASCII and ToUnicode algorithms are not applied to the 
+    domain name as a whole or as individual characters, but rather to 
+    individual labels. For example, if the domain name is 
+    www.example.com, then the labels are www, example and com, and 
+    ToASCII or ToUnicode would be applied to each of these three 
+    separately.
+    
+    For example, for domain my.中文.cn
+        - examples of good queries:
+              (zimbraDomainName=*中文*)
+    
+        - examples of bad queries:
+              (zimbraDomainName=*文*)
+              
+    
+2.6 Address Book Lookup and Display
+    Address book SOAP commands are not treated with any ACE <-> Unicode conversion.
+    Emails in address book contact will be stored and returned in SOAP responses as how 
+    they are typed by the user.  That is, if ACE is entered, it will be stored and returned 
+    in ACE; if Unicode is entered, it will be stored and returned in Unicode.
+    
+    When email address of contact is used to address mails, it will be converted to ACE by 
+    the server as described in 2.4.
+
+
+2.6 Sieve Rules
     TODO
     
 
