@@ -1247,20 +1247,15 @@ public class ZMailbox {
     }
 
 	public synchronized ZContact getMyCard() throws ServiceException {
-/* TODO: This technique for determining the my card is great for me testing the ui, but
-   not exactly zippy. Need to work out a better solution. 
 		if (!mHasMyCard) {
-			List<ZContact> contacts = getContacts(null, null, false, Arrays.asList(Contact.A_isMyCard));
-			for (ZContact contact : contacts) {
-				String isMyCard = contact.getAttrs().get(Contact.A_isMyCard);
-				if (isMyCard != null && isMyCard.equals("true")) {
-					mMyCard = getContact(contact.getId());
-					break;
-				}
+			ZSearchParams searchParams = new ZSearchParams("#cardOwner:isMyCard");
+			searchParams.setTypes(ZSearchParams.TYPE_CONTACT);
+			List<ZSearchHit> hits = this.search(searchParams).getHits();
+			if (hits.size() > 0) {
+				mMyCard = getContact(hits.get(0).getId());
 			}
 			mHasMyCard = true;
 		}
-*/
 		return mMyCard;
 	}
 
