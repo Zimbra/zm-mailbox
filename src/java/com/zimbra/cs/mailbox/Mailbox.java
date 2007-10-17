@@ -449,9 +449,16 @@ public class Mailbox {
             if (!DebugConfig.disableIndexing)
                 mMailboxIndex = new MailboxIndex(this, null);
             
-            // read the mailbox version from config
-            Metadata md = getConfig(null, MD_CONFIG_VERSION);
-            mVersion = MailboxVersion.fromMetadata(md);
+            if (mVersion == null) { 
+                // if we've just initialized() the mailbox, then the version will
+                // be set in the config, but it won't be comitted yet -- and unfortunately 
+                // getConfig() won't return us the proper value in this case....so just
+                // use the local mVersion value if it is already set (that's the case
+                // if we are initializing a new mailbox) and otherwise we'll read the 
+                // mailbox version from config
+                Metadata md = getConfig(null, MD_CONFIG_VERSION);
+                mVersion = MailboxVersion.fromMetadata(md);
+            }
             
             // check for mailbox upgrade
     		if (!getVersion().atLeast(1, 2)) {
