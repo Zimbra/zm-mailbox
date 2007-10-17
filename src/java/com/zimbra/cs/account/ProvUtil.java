@@ -35,6 +35,7 @@ import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.Provisioning.SignatureBy;
+import com.zimbra.cs.account.ldap.LdapEntrySearchFilter;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.MailboxInfo;
@@ -949,6 +950,8 @@ public class ProvUtil implements DebugListener {
         }
             
         String query = args[i];
+        query = LdapEntrySearchFilter.toLdapIDNFilter(query);
+
 
         Map attrs = getMap(args, i+1);
 //        int iPageNum = 0;
@@ -1213,10 +1216,10 @@ public class ProvUtil implements DebugListener {
                 if (value instanceof String[]) {
                     String sv[] = (String[]) value;
                     for (String aSv : sv) {
-                        System.out.println(name + ": " + aSv);
+                        printOutput(name + ": " + aSv);
                     }
                 } else if (value instanceof String){
-                    System.out.println(name+": "+value);
+                    printOutput(name+": "+value);
                 }
             }
         }
@@ -1336,7 +1339,7 @@ public class ProvUtil implements DebugListener {
                     new EntrySearchFilter.Single(false, attr, op, value);
                 multi.add(single);
             } catch (IllegalArgumentException e) {
-                System.err.println("Bad search op in: " + attr + " " + op + " '" + value + "'");
+                printError("Bad search op in: " + attr + " " + op + " '" + value + "'");
                 e.printStackTrace();
                 usage();
                 return;
@@ -1568,11 +1571,7 @@ public class ProvUtil implements DebugListener {
                 String errText = "ERROR: " + e.getCode() + " (" + e.getMessage() + ")" + 
                         (cause == null ? "" : " (cause: " + cause.getClass().getName() + " " + cause.getMessage() + ")");
 
-                /*
-                System.err.println("ERROR: " + e.getCode() + " (" + e.getMessage() + ")" + 
-                        (cause == null ? "" : " (cause: " + cause.getClass().getName() + " " + cause.getMessage() + ")"));
-                */
-                doOutput(System.err, errText);
+                printError(errText);
                 
                 if (mVerbose) e.printStackTrace(System.err);
             } catch (ArgException e) {
@@ -1581,7 +1580,8 @@ public class ProvUtil implements DebugListener {
         }
     }
 
-    private static void doOutput(PrintStream ps, String text) {
+    private static void printError(String text) {
+        PrintStream ps = System.err;
         try {
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(ps, "UTF-8"));
             writer.write(text+"\n");
@@ -1591,7 +1591,19 @@ public class ProvUtil implements DebugListener {
         } catch (IOException e) {
             ps.println(text);
         }
-        
+    }
+    
+    private static void printOutput(String text) {
+        PrintStream ps = System.out;
+        try {
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(ps, "UTF-8"));
+            writer.write(text+"\n");
+            writer.flush();
+        } catch (UnsupportedEncodingException e) {
+            ps.println(text);
+        } catch (IOException e) {
+            ps.println(text);
+        }
     }
     
     public static void main(String args[]) throws IOException, ParseException {
@@ -1609,7 +1621,7 @@ public class ProvUtil implements DebugListener {
         options.addOption("P", "passfile", true, "filename with password in it");
         options.addOption("z", "zadmin", false, "use zimbra admin name/password from localconfig for account/password");        
         options.addOption("v", "verbose", false, "verbose mode");
-        options.addOption("d", "debug", false, "debug mode");        
+        options.addOption("d", "debug", false, "debug mode");
         
         CommandLine cl = null;
         boolean err = false;
@@ -1617,7 +1629,7 @@ public class ProvUtil implements DebugListener {
         try {
             cl = parser.parse(options, args, true);
         } catch (ParseException pe) {
-            System.err.println("error: " + pe.getMessage());
+            printError("error: " + pe.getMessage());
             err = true;
         }
             
@@ -1626,7 +1638,7 @@ public class ProvUtil implements DebugListener {
         }
         
         if (cl.hasOption('l') && cl.hasOption('s')) {
-            System.err.println("error: cannot specify both -l and -s at the same time");
+            printError("error: cannot specify both -l and -s at the same time");
             System.exit(2);
         }
         
@@ -1671,11 +1683,7 @@ public class ProvUtil implements DebugListener {
             String errText = "ERROR: " + e.getCode() + " (" + e.getMessage() + ")" + 
                     (cause == null ? "" : " (cause: " + cause.getClass().getName() + " " + cause.getMessage() + ")");  
             
-            /*
-            System.err.println("ERROR: " + e.getCode() + " (" + e.getMessage() + ")" + 
-                    (cause == null ? "" : " (cause: " + cause.getClass().getName() + " " + cause.getMessage() + ")"));  
-            */
-            doOutput(System.err, errText);
+            printError(errText);
             
             if (pu.mVerbose) e.printStackTrace(System.err);
             System.exit(2);

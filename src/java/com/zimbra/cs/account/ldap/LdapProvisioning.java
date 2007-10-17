@@ -3517,20 +3517,8 @@ public class LdapProvisioning extends Provisioning {
         
         String query = options.getQuery();
         
-        if (options.getConvertIDNToAscii() && query != null && query.length()>0) {
-            String asciiQuery = query;
-            try {
-                Term term = LdapFilterParser.parse(query); 
-                EntrySearchFilter filter = new EntrySearchFilter(term);
-                asciiQuery = LdapEntrySearchFilter.toLdapIDNFilter(filter);
-                ZimbraLog.account.debug("original query=[" + query + "], converted ascii query=[" + asciiQuery + "]");
-            } catch (ServiceException e) {
-                ZimbraLog.account.warn("unable to convert query to ascii, using original query: " + query, e);
-                asciiQuery = query;
-            }
-            query = asciiQuery;
-        }
-
+        if (options.getConvertIDNToAscii() && query != null && query.length()>0)
+            query = LdapEntrySearchFilter.toLdapIDNFilter(query);
         
         return searchObjects(query, options.getReturnAttrs(), options.getSortAttr(), options.isSortAscending(), base, options.getFlags(), options.getMaxResults());
     }

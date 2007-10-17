@@ -26,6 +26,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.EntrySearchFilter.Multi;
 import com.zimbra.cs.account.EntrySearchFilter.Operator;
 import com.zimbra.cs.account.EntrySearchFilter.Single;
+import com.zimbra.cs.account.EntrySearchFilter.Term;
 import com.zimbra.cs.account.EntrySearchFilter.Visitor;
 
 public class LdapEntrySearchFilter {
@@ -139,10 +140,26 @@ public class LdapEntrySearchFilter {
         sCalendarResourcesFilter = new EntrySearchFilter(calResType);
     }
 
+    public static String toLdapIDNFilter(String filterStr) {
+        String asciiQuery;
+        
+        try {
+            Term term = LdapFilterParser.parse(filterStr); 
+            EntrySearchFilter filter = new EntrySearchFilter(term);
+            asciiQuery = toLdapIDNFilter(filter);
+            ZimbraLog.account.debug("original query=[" + filterStr + "], converted ascii query=[" + asciiQuery + "]");
+        } catch (ServiceException e) {
+            ZimbraLog.account.warn("unable to convert query to ascii, using original query: " + filterStr, e);
+            asciiQuery = filterStr;
+        }
+        
+        return asciiQuery;
+    }
+    
     /*
      * serialize EntrySearchFilter to LDAP filter string
      */
-    public static String toLdapIDNFilter(EntrySearchFilter filter)
+    private static String toLdapIDNFilter(EntrySearchFilter filter)
     throws ServiceException {
         /*
         if (!filter.usesIndex())

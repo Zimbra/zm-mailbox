@@ -180,15 +180,8 @@ public class LdapFilterParser {
     }
     
     public static String test(String inFilterStr) {
-        String outFilterStr = inFilterStr;
-        try {
-            Term term = LdapFilterParser.parse(inFilterStr); 
-            EntrySearchFilter filter = new EntrySearchFilter(term);
-            outFilterStr = LdapEntrySearchFilter.toLdapIDNFilter(filter);
-        } catch (ServiceException e) {
-            e.printStackTrace();
-        }
-        
+        String outFilterStr = LdapEntrySearchFilter.toLdapIDNFilter(inFilterStr);
+               
         System.out.println("In: " + inFilterStr);
         System.out.println("Out: " + outFilterStr);
         System.out.println();
@@ -204,6 +197,8 @@ public class LdapFilterParser {
         test("!(objectClass=*abc)");
         test("!(objectClass=abc*)");
         test("!(objectClass=*abc*)");
+        
+        test("(|(zimbraMailDeliveryAddress=*@test.\u4e2d\u6587.com)(zimbraMailAlias=*@test.\u4e2d\u6587.com))");
     }
 
 }
