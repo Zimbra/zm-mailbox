@@ -73,7 +73,7 @@ public class ChildAccount extends AttributeCallback {
         }
 
         if (vidsToRemove.size() > 0)
-            attrsToModify.put("-" + Provisioning.A_zimbraPrefChildVisibleAccount, vidsToRemove);
+            attrsToModify.put("-" + Provisioning.A_zimbraPrefChildVisibleAccount, vidsToRemove.toArray(new String[vidsToRemove.size()]));
     }
     
     private Set<String> newValuesToBe(MultiValueMod mod, Entry entry, String attrName) {
