@@ -57,6 +57,10 @@ public class ZPrefs {
 
     public Map<String, List<String>> getPrefs() { return mPrefs; }
 
+    public String getComposeFormat() { return get(Provisioning.A_zimbraPrefComposeFormat); }
+
+    public String getLocale() { return get(Provisioning.A_zimbraPrefLocale); }
+
     public boolean getUseTimeZoneListInCalendar() { return getBool(Provisioning.A_zimbraPrefUseTimeZoneListInCalendar); }
 
     public boolean getReadingPaneEnabled() { return getBool(Provisioning.A_zimbraPrefReadingPaneEnabled); }
