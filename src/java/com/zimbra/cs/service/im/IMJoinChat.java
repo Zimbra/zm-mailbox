@@ -28,16 +28,14 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class IMJoinChat extends IMDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Element response = lc.createElement(IMConstants.IM_JOIN_CHAT_RESPONSE);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Element response = zsc.createElement(IMConstants.IM_JOIN_CHAT_RESPONSE);
         
         String threadId = request.getAttribute(IMConstants.A_THREAD_ID);
         String addr = request.getAttribute(IMConstants.A_ADDRESS);
         
-        Object lock = super.getLock(lc);
-        
-        synchronized(lock) {
-            IMPersona persona = super.getRequestedPersona(lc, context, lock);
+        IMPersona persona = super.getRequestedPersona(zsc);
+        synchronized(persona.getLock()) {
             persona.joinChat(addr, threadId);
         }
         return response;

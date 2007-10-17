@@ -56,6 +56,7 @@ import com.zimbra.cs.db.DbSearchConstraints;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.db.DbSearch.SearchResult;
 import com.zimbra.cs.im.IMNotification;
+import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.MailboxIndex;
@@ -363,6 +364,7 @@ public class Mailbox {
 
     private MailboxLock  mMaintenance = null;
     private MailboxIndex mMailboxIndex = null;
+    private IMPersona mPersona = null;
     private MailboxVersion mVersion = null;
 
     /** flag: messages sent by me */
@@ -505,6 +507,13 @@ public class Mailbox {
                     " (was expecting " + getAccountId() + ')');
         throw AccountServiceException.NO_SUCH_ACCOUNT(mData.accountId);
     }
+    
+    synchronized public IMPersona getPersona() throws ServiceException {
+        if (mPersona == null) {
+            mPersona = IMPersona.loadPersona(this);
+        } 
+        return mPersona;
+    }
 
     /** Returns the Mailbox's Lucene index. */
     public MailboxIndex getMailboxIndex() {
@@ -588,6 +597,10 @@ public class Mailbox {
     private void purgeListeners() {
         if (ZimbraLog.mailbox.isDebugEnabled())
             ZimbraLog.mailbox.debug("purging listeners");
+        
+        if (mPersona != null) 
+            mPersona.purgeListeners(); // do this BEFORE purgeListeners
+        
         Set<Session> purged = new HashSet<Session>(mListeners);
         for (Session session : purged)
             SessionCache.clearSession(session);
@@ -986,6 +999,7 @@ public class Mailbox {
             throw MailServiceException.MAINTENANCE(mId);
         ZimbraLog.mailbox.info("Locking mailbox %d for maintenance.", getId());
         mMaintenance = new MailboxLock(mData.accountId, mId, this);
+
         purgeListeners();
         if (mMailboxIndex != null)
             mMailboxIndex.flush();

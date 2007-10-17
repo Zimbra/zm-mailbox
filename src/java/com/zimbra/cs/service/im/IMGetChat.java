@@ -34,16 +34,14 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class IMGetChat extends IMDocumentHandler {
     
     public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         
-        Element response = lc.createElement(IMConstants.IM_GET_CHAT_RESPONSE);
+        Element response = zsc.createElement(IMConstants.IM_GET_CHAT_RESPONSE);
         
         String threadId = request.getAttribute(IMConstants.A_THREAD_ID);
         
-        Object lock = super.getLock(lc);
-        synchronized (lock) {
-            IMPersona persona = super.getRequestedPersona(lc, context, lock);
-            
+        IMPersona persona = super.getRequestedPersona(zsc);
+        synchronized (persona.getLock()) {
             IMChat chat = persona.getChat(threadId);
             if (chat != null)
                 response = chatToXml(chat, response);

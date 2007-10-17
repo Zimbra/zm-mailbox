@@ -71,7 +71,6 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.op.IndexItem;
-import com.zimbra.cs.service.im.IMGatewayRegister;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.Volume;
 import com.zimbra.cs.util.JMSession;
@@ -85,18 +84,21 @@ public final class MailboxIndex
         boolean includeTrashByDefault, boolean includeSpamByDefault) throws IOException, ParseException, ServiceException {
         
         String qs = params.getQueryStr();
-        if (qs.startsWith("$im")) {
+        if (qs.startsWith("$")) {
             String[] words = qs.split(" ");
             if ("$im_reg".equals(words[0])) {
                 if (words.length < 4)
                     throw ServiceException.FAILURE("USAGE: \"$im_reg service service_login_name service_login_password\"", null);
                 ServiceName service = ServiceName.valueOf(words[1]);
-                IMGatewayRegister.register(mbox, octxt,  service, words[2], words[3]);
+                mbox.getPersona().gatewayRegister(service, words[2], words[3]);
             } else if ("$im_unreg".equals(words[0])) {
                 if (words.length < 2)
                     throw ServiceException.FAILURE("USAGE: \"$im_unreg service service_login_name service_login_password\"", null);
                 ServiceName service = ServiceName.valueOf(words[1]);
-                IMGatewayRegister.unregister(mbox, octxt,  service);
+                mbox.getPersona().gatewayUnRegister(service);
+            } else if ("$maint".equals(words[0])) {
+                MailboxManager.MailboxLock lock = MailboxManager.getInstance().beginMaintenance(mbox.getAccountId(), mbox.getId());
+                MailboxManager.getInstance().endMaintenance(lock, true, false);
             } else {
                 throw ServiceException.FAILURE("Usage: \"$im_reg service name password\" or \"$im_unreg service\"", null); 
             }

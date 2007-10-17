@@ -114,7 +114,7 @@ public abstract class Session {
      *  
      * @throws ServiceException
      */
-    public synchronized void registerWithIM(IMPersona persona) {
+    public synchronized void registerWithIM(IMPersona persona) throws ServiceException {
         assert(Thread.holdsLock(persona.getLock()));
         assert(mPersona == null || mPersona == persona);
         if (mPersona == null && isIMListener() && mAuthenticatedAccountId.equalsIgnoreCase(mTargetAccountId)) {
@@ -145,7 +145,7 @@ public abstract class Session {
                 if (isIMListener() && mAuthenticatedAccountId.equalsIgnoreCase(mTargetAccountId)) {
                     try {
                         if (Provisioning.getInstance().get(AccountBy.id, this.getTargetAccountId()).getBooleanAttr(Provisioning.A_zimbraPrefIMAutoLogin, false)) {
-                            IMPersona persona = IMRouter.getInstance().findPersona(null, mMailbox);
+                            IMPersona persona = mMailbox.getPersona();
                             if (persona != null) {
                                 registerWithIM(persona);
                             }
@@ -174,11 +174,6 @@ public abstract class Session {
         // locking order is always Mailbox then Session
         assert(mMailbox == null || Thread.holdsLock(mMailbox) || !Thread.holdsLock(this));
         
-        if (mMailbox != null && isMailboxListener()) {
-            mMailbox.removeListener(this);
-            mMailbox = null;
-        }
-        
         // Must do this in two steps (first, w/ the Session lock, and then
         // w/ the Persona lock if we have one) b/c of possible deadlock.
         IMPersona persona = null;
@@ -189,6 +184,13 @@ public abstract class Session {
         if (persona != null) {
             persona.removeListener(this);
         }
+        
+        if (mMailbox != null && isMailboxListener()) {
+            mMailbox.removeListener(this);
+            mMailbox = null;
+        }
+        
+        
 
         if (mSessionId != null && isRegisteredInCache()) {
             SessionCache.unregisterSession(this);

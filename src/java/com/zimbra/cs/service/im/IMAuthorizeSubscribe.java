@@ -22,7 +22,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.IMConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.im.IMAddr;
-import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -46,11 +45,9 @@ public class IMAuthorizeSubscribe extends IMDocumentHandler {
             groups = new String[0];
 
         OperationContext oc = getOperationContext(zsc, context);
-        Object lock = super.getLock(zsc);
-        synchronized (lock) {
-            IMPersona persona = super.getRequestedPersona(zsc, context, lock);
-            persona.authorizeSubscribe(oc, addr, authorized, add, name, groups);
-        }
+        
+        getRequestedMailbox(zsc).getPersona().authorizeSubscribe(oc, addr, authorized, add, name, groups);
+
         return response;
     }
 

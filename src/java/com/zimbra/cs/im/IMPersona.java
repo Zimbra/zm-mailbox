@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.im;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Formatter;
@@ -74,10 +75,11 @@ public class IMPersona extends ClassLogger {
      * @return
      * @throws ServiceException
      */
-    static IMPersona loadPersona(OperationContext octxt, Mailbox mbox, IMAddr addr)
+    public static IMPersona loadPersona(Mailbox mbox)
                 throws ServiceException {
         IMPersona toRet = null;
-        Metadata meta = mbox.getConfig(octxt, "im");
+        Metadata meta = mbox.getConfig(null, "im");
+        IMAddr addr = new IMAddr(mbox.getAccount().getName());
         
         HashMap<String /*ServiceName*/, Map<String, String>> interopReg = new HashMap<String/*ServiceName*/, Map<String, String>>();
         
@@ -86,7 +88,7 @@ public class IMPersona extends ClassLogger {
             // setting?
             String mdAddr = meta.get(FN_ADDRESS, null);
             if (mdAddr != null && mdAddr.equals(addr.getAddr())) {
-                toRet = new IMPersona(addr, mbox);
+                toRet = new IMPersona(mbox, addr);
                 IMPresence presence = IMPresence.decodeMetadata(meta.getMap(FN_PRESENCE));
                 toRet.mMyPresence = presence;
             }
@@ -113,11 +115,12 @@ public class IMPersona extends ClassLogger {
             }
         }
         if (toRet == null)
-            toRet = new IMPersona(addr, mbox);
+            toRet = new IMPersona(mbox, addr);
         toRet.mInteropRegistrationData = interopReg;        
         return toRet;
     }
 
+    private Mailbox mMailbox = null;
     private boolean mHaveInitialRoster = false;
     private String mDefaultPrivacyListName = null;
     private Map<IMAddr, IMSubscribedNotification> mRoster = new HashMap<IMAddr, IMSubscribedNotification>();
@@ -129,7 +132,7 @@ public class IMPersona extends ClassLogger {
     private int mCurRequestId = 0;
     private Map<String, IMGroup> mGroups = new HashMap<String, IMGroup>();
     private Set<Session> mListeners = new HashSet<Session>();
-    private Mailbox mMailbox; // object used to lock the persona
+    
     // these TWO parameters make up my presence - the first one is the presence
     // I have saved in the DB, and the second is a flag if I am online or
     // offline
@@ -139,12 +142,12 @@ public class IMPersona extends ClassLogger {
     private ClientSession mXMPPSession;
     private HashMap<String /*ServiceName*/, Map<String, String>> mInteropRegistrationData;
 
-    private IMPersona(IMAddr addr, Mailbox lock) {
+    private IMPersona(Mailbox mbox, IMAddr addr) {
         super(ZimbraLog.im);
         assert (addr != null);
         mAddr = addr;
-        mMailbox = lock;
-        ZimbraLog.im.info("Creating IMPersona "+toString()+" at addr "+System.identityHashCode(this)+" mailbox is "+System.identityHashCode(mMailbox));
+        mMailbox = mbox;
+        ZimbraLog.im.info("Creating IMPersona "+toString()+" at addr "+System.identityHashCode(this)+" mbox at addr "+System.identityHashCode(mbox));
     }
 
     /**
@@ -153,7 +156,7 @@ public class IMPersona extends ClassLogger {
      * 
      * @param session
      */
-    public void addListener(Session session) {
+    public void addListener(Session session) throws ServiceException {
         synchronized(getLock()) {
             if (mListeners.size() == 0) {
                 mIsOnline = true;
@@ -167,6 +170,40 @@ public class IMPersona extends ClassLogger {
             mListeners.add(session);
         }
     }
+    
+    /**
+     * Active Sessions are tracked here so that we can use them to push
+     * notifications to the client
+     * 
+     * @param session
+     */
+    public void removeListener(Session session) {
+        synchronized(getLock()) {
+            mListeners.remove(session);
+            if (mListeners.size() == 0) {
+                mIsOnline = false;
+                try {
+                    pushMyPresence();
+                } catch (ServiceException e) {
+                    e.printStackTrace();
+                }
+                disconnectFromIMServer();
+            }
+        }
+    }
+
+    /**
+     * Mailbox is going into Maintenance mode, shut down the persona
+     */
+    public void purgeListeners() {
+        synchronized(getLock()) {
+            List<Session> toRemove = new ArrayList<Session>();
+            toRemove.addAll(mListeners);
+            for (Session s : toRemove) {
+                removeListener(s);
+            }
+        }
+    }
 
     /**
      * @param octxt
@@ -176,21 +213,25 @@ public class IMPersona extends ClassLogger {
      * @throws ServiceException
      */
     public void addOutgoingSubscription(OperationContext octxt, IMAddr address,
-                String name, String[] groups) throws ServiceException {
-        // tell the server we want to add this to our roster
-        Roster rosterPacket = new Roster(Type.set);
-        rosterPacket.addItem(address.makeJID(), name, Roster.Ask.subscribe,
-                    Roster.Subscription.to, Arrays.asList(groups));
-        xmppRoute(rosterPacket);
-        // tell the other user we want to subscribe
-        Presence subscribePacket = new Presence(Presence.Type.subscribe);
-        subscribePacket.setTo(address.makeJID());
-        xmppRoute(subscribePacket);
+        String name, String[] groups) throws ServiceException {
+        synchronized(getLock()) {
+            // tell the server we want to add this to our roster
+            Roster rosterPacket = new Roster(Type.set);
+            rosterPacket.addItem(address.makeJID(), name, Roster.Ask.subscribe,
+                Roster.Subscription.to, Arrays.asList(groups));
+            xmppRoute(rosterPacket);
+            // tell the other user we want to subscribe
+            Presence subscribePacket = new Presence(Presence.Type.subscribe);
+            subscribePacket.setTo(address.makeJID());
+            xmppRoute(subscribePacket);
+        }
     }
 
     public void addUserToChat(OperationContext octxt, IMChat chat, IMAddr addr,
                 String invitationMessage) throws ServiceException {
-        chat.addUserToChat(addr, invitationMessage);
+        synchronized(getLock()) {
+            chat.addUserToChat(addr, invitationMessage);
+        }
     }
 
     /**
@@ -205,14 +246,16 @@ public class IMPersona extends ClassLogger {
     public void authorizeSubscribe(OperationContext octxt, IMAddr toAddress,
                 boolean authorized, boolean add, String name, String[] groups)
                 throws ServiceException {
-        mPendingSubscribes.remove(toAddress);
-        if (authorized) {
-            Presence subscribed = new Presence(Presence.Type.subscribed);
-            subscribed.setTo(toAddress.makeJID());
-            xmppRoute(subscribed);
-        }
-        if (add) {
-            addOutgoingSubscription(octxt, toAddress, name, groups);
+        synchronized(getLock()) {
+            mPendingSubscribes.remove(toAddress);
+            if (authorized) {
+                Presence subscribed = new Presence(Presence.Type.subscribed);
+                subscribed.setTo(toAddress.makeJID());
+                xmppRoute(subscribed);
+            }
+            if (add) {
+                addOutgoingSubscription(octxt, toAddress, name, groups);
+            }
         }
     }
 
@@ -228,8 +271,10 @@ public class IMPersona extends ClassLogger {
     }
 
     public void closeChat(OperationContext octxt, IMChat chat) {
-        chat.closeChat();
-        mChats.remove(chat.getThreadId());
+        synchronized(getLock()) {
+            chat.closeChat();
+            mChats.remove(chat.getThreadId());
+        }
     }
 
     /**
@@ -279,74 +324,80 @@ public class IMPersona extends ClassLogger {
     }
     
     public void gatewayReconnect(Interop.ServiceName type) throws ServiceException {
-        try {
-            Interop.getInstance().reconnectUser(type, mAddr.makeFullJID(getResource()));            
-        } catch (Exception e) {
-            throw ServiceException.FAILURE("Exception calling gatewayReconnect("+type.name(), e);
+        synchronized(getLock()) {
+            try {
+                Interop.getInstance().reconnectUser(type, mAddr.makeFullJID(getResource()));            
+            } catch (Exception e) {
+                throw ServiceException.FAILURE("Exception calling gatewayReconnect("+type.name(), e);
+            }
         }
     }
     
     public void gatewayRegister(Interop.ServiceName type, String username, String password)
                 throws ServiceException {
         
-        try {
-            Interop.getInstance().connectUser(type, mAddr.makeFullJID(getResource()), username, password);
-        } catch (com.zimbra.cs.im.interop.AlreadyConnectedComponentException ace) {
+        synchronized(getLock()) {
             try {
-                Interop.getInstance().disconnectUser(type, mAddr.makeFullJID(getResource()));
                 Interop.getInstance().connectUser(type, mAddr.makeFullJID(getResource()), username, password);
+            } catch (com.zimbra.cs.im.interop.AlreadyConnectedComponentException ace) {
+                try {
+                    Interop.getInstance().disconnectUser(type, mAddr.makeFullJID(getResource()));
+                    Interop.getInstance().connectUser(type, mAddr.makeFullJID(getResource()), username, password);
+                } catch (Exception e) {
+                    throw ServiceException.FAILURE("Exception calling Interop.connectUser("
+                        + username + "," + password, e);
+                }
             } catch (Exception e) {
                 throw ServiceException.FAILURE("Exception calling Interop.connectUser("
                     + username + "," + password, e);
             }
-        } catch (Exception e) {
-            throw ServiceException.FAILURE("Exception calling Interop.connectUser("
-                + username + "," + password, e);
+            
+            // IQ iq = new IQ();
+            // { // <iq>
+            // iq.setFrom(mAddr.makeJID());
+            // iq.setTo(getJIDForGateway(type));
+            // iq.setType(Type.set);
+            //        
+            // org.dom4j.Element queryElt = iq.setChildElement("query",
+            // "jabber:iq:register");
+            // { // <query>
+            // org.dom4j.Element usernameElt = queryElt.addElement("username");
+            // usernameElt.setText(username);
+            // org.dom4j.Element passwordElt = queryElt.addElement("password");
+            // passwordElt.setText(password);
+            // } // </query>
+            // } // </iq>
+            //        
+            // xmppRoute(iq);
+            // pushMyPresence();
+            // return true;
         }
-        
-        // IQ iq = new IQ();
-        // { // <iq>
-        // iq.setFrom(mAddr.makeJID());
-        // iq.setTo(getJIDForGateway(type));
-        // iq.setType(Type.set);
-        //        
-        // org.dom4j.Element queryElt = iq.setChildElement("query",
-        // "jabber:iq:register");
-        // { // <query>
-        // org.dom4j.Element usernameElt = queryElt.addElement("username");
-        // usernameElt.setText(username);
-        // org.dom4j.Element passwordElt = queryElt.addElement("password");
-        // passwordElt.setText(password);
-        // } // </query>
-        // } // </iq>
-        //        
-        // xmppRoute(iq);
-        // pushMyPresence();
-        // return true;
     }
 
     public void gatewayUnRegister(Interop.ServiceName type) throws ServiceException {
-        try {
-            Interop.getInstance().disconnectUser(type, mAddr.makeFullJID(getResource()));
-        } catch (Exception e) {
-            throw ServiceException.FAILURE("Exception calling Interop.disconnectUser()", e);
+        synchronized(getLock()) {
+            try {
+                Interop.getInstance().disconnectUser(type, mAddr.makeFullJID(getResource()));
+            } catch (Exception e) {
+                throw ServiceException.FAILURE("Exception calling Interop.disconnectUser()", e);
+            }
+            // IQ iq = new IQ();
+            // { // <iq>
+            // iq.setFrom(mAddr.makeJID());
+            // iq.setTo(getJIDForGateway(type));
+            // iq.setType(Type.set);
+            //        
+            // org.dom4j.Element queryElt = iq.setChildElement("query",
+            // "jabber:iq:register");
+            // { // <query>
+            // queryElt.addElement("remove");
+            // } // </query>
+            // } // </iq>
+            //        
+            // xmppRoute(iq);
+            //        
+            // return true;
         }
-        // IQ iq = new IQ();
-        // { // <iq>
-        // iq.setFrom(mAddr.makeJID());
-        // iq.setTo(getJIDForGateway(type));
-        // iq.setType(Type.set);
-        //        
-        // org.dom4j.Element queryElt = iq.setChildElement("query",
-        // "jabber:iq:register");
-        // { // <query>
-        // queryElt.addElement("remove");
-        // } // </query>
-        // } // </iq>
-        //        
-        // xmppRoute(iq);
-        //        
-        // return true;
     }
 
     public IMAddr getAddr() {
@@ -361,17 +412,19 @@ public class IMPersona extends ClassLogger {
      * @return The set of gateways this user has access to
      */
     public List<Pair<ServiceName, UserStatus>> getAvailableGateways() {
-        List<Pair<ServiceName, UserStatus>>  ret = new LinkedList<Pair<ServiceName, UserStatus>>();     
-        List<ServiceName> services = Interop.getInstance().getAvailableServices();
-        for (ServiceName service : services) {
-            try {
-                ret.add(new Pair<ServiceName, UserStatus>(service, Interop.getInstance().getRegistrationStatus(service, mAddr.makeFullJID(getResource()))));
-            } catch (ComponentException ex) {
-                debug("Caught component exception trying to get registration status: ", ex);
+        synchronized(getLock()) {
+            List<Pair<ServiceName, UserStatus>>  ret = new LinkedList<Pair<ServiceName, UserStatus>>();     
+            List<ServiceName> services = Interop.getInstance().getAvailableServices();
+            for (ServiceName service : services) {
+                try {
+                    ret.add(new Pair<ServiceName, UserStatus>(service, Interop.getInstance().getRegistrationStatus(service, mAddr.makeFullJID(getResource()))));
+                } catch (ComponentException ex) {
+                    debug("Caught component exception trying to get registration status: ", ex);
+                }
             }
+            
+            return ret;
         }
-        
-        return ret;
     }
 
     /**
@@ -386,14 +439,10 @@ public class IMPersona extends ClassLogger {
         if (toRet == null && create) {
             Participant part;
             part = new IMChat.Participant(fromAddress);
-            try {
-                if (thread == null)
-                    throw new IllegalArgumentException("Cannot create a chat with a NULL threadId");
-                toRet = new IMChat(getMailbox(), this, thread, part);
-                mChats.put(thread, toRet);
-            } catch (ServiceException e) {
-                ZimbraLog.im.warn("Caught Service Exception: " + e.toString(), e);
-            }
+            if (thread == null)
+                throw new IllegalArgumentException("Cannot create a chat with a NULL threadId");
+            toRet = new IMChat(this, thread, part);
+            mChats.put(thread, toRet);
         }
         return toRet;
     }
@@ -406,14 +455,18 @@ public class IMPersona extends ClassLogger {
      * @return
      */
     public IMChat getChat(String threadId) {
-        return getChat(false, threadId, null);
+        synchronized(getLock()) {
+            return getChat(false, threadId, null);
+        }
     }
 
     public IMPresence getEffectivePresence() {
-        if (mIsOnline)
-            return mMyPresence;
-        else
-            return new IMPresence(Show.OFFLINE, mMyPresence.getPriority(), mMyPresence.getStatus());
+        synchronized(getLock()) {
+            if (mIsOnline)
+                return mMyPresence;
+            else
+                return new IMPresence(Show.OFFLINE, mMyPresence.getPriority(), mMyPresence.getStatus());
+        }
     }
 
     public String getFullJidAsString() {
@@ -437,7 +490,7 @@ public class IMPersona extends ClassLogger {
 //        return toRet;
 //    }
     
-    Map<String, String> getIMGatewayRegistration(Interop.ServiceName service) {
+    Map<String, String> getIMGatewayRegistration(Interop.ServiceName service) throws ServiceException {
         synchronized(getLock()) {
             return mInteropRegistrationData.get(service.name());
         }
@@ -466,12 +519,12 @@ public class IMPersona extends ClassLogger {
         return mMailbox;
     }
 
-    private Mailbox getMailbox() throws ServiceException {
+    Mailbox getMailbox() throws ServiceException {
         return mMailbox;
     }
 
     String getMucDomain() throws ServiceException {
-        return "conference." + mMailbox.getAccount().getDomainName();
+        return "conference." + getMailbox().getAccount().getDomainName();
     }
 
     public String getResource() {
@@ -486,25 +539,27 @@ public class IMPersona extends ClassLogger {
 //    }
     
     public void refreshRoster(Session s)  {
-        if (mHaveInitialRoster) {
-            // roster
-            IMRosterNotification rosterNot = new IMRosterNotification();
-            for (IMSubscribedNotification not: mRoster.values()) {
-                rosterNot.addEntry(not);
-            }
-            postIMNotification(rosterNot, s);
-            
-            // presence
-            for (Map.Entry<IMAddr, IMPresence> entry : mBufferedPresence.entrySet()) {
-                IMPresenceUpdateNotification not= new IMPresenceUpdateNotification(entry.getKey(), entry.getValue());
-                postIMNotification(not, s);
-            }
-            
-            // unanswered subscribe requests
-            for (IMSubscribeNotification not : mPendingSubscribes.values()) {
-                postIMNotification(not, s);
-            }
-        }  
+        synchronized(getLock()) {
+            if (mHaveInitialRoster) {
+                // roster
+                IMRosterNotification rosterNot = new IMRosterNotification();
+                for (IMSubscribedNotification not: mRoster.values()) {
+                    rosterNot.addEntry(not);
+                }
+                postIMNotification(rosterNot, s);
+                
+                // presence
+                for (Map.Entry<IMAddr, IMPresence> entry : mBufferedPresence.entrySet()) {
+                    IMPresenceUpdateNotification not= new IMPresenceUpdateNotification(entry.getKey(), entry.getValue());
+                    postIMNotification(not, s);
+                }
+                
+                // unanswered subscribe requests
+                for (IMSubscribeNotification not : mPendingSubscribes.values()) {
+                    postIMNotification(not, s);
+                }
+            }  
+        }
     }
 
     /**
@@ -907,70 +962,76 @@ public class IMPersona extends ClassLogger {
     }
     
     public void setPrivacyList(PrivacyList pl) {
-        // figure out what name to use
-        String plName = pl.getName();
-        if (plName == null) {
-            plName = mDefaultPrivacyListName;
-            if (plName == null)
-                plName = "default";
-        }
-        
-        // update privacy list
-        {
-            IQ set = new IQ();
-            set.setType(Type.set);
-            org.dom4j.Element query = set.setChildElement("query", "jabber:iq:privacy");
-            org.dom4j.Element list= query.addElement("list");
-            list.addAttribute("name", plName);
-            for (PrivacyListEntry e : pl) {
-                org.dom4j.Element item = list.addElement("item");
-                item.addAttribute("type", "jid");
-                item.addAttribute("value", e.getAddr().toString());
-                item.addAttribute("action", e.getAction().name());
-                item.addAttribute("order", Integer.toString(e.getOrder()));
-                if (e.getTypes() != PrivacyListEntry.BLOCK_ALL) {
-                    if (e.isBlockMessages())
-                        item.addElement("message");
-                    if (e.isBlockPresenceOut())
-                        item.addElement("presence-out");
-                    if (e.isBlockPresenceIn())
-                        item.addElement("presence-in");
-                    if (e.isBlockIQ())
-                        item.addElement("iq");
-                }
+        synchronized(getLock()) {
+            // figure out what name to use
+            String plName = pl.getName();
+            if (plName == null) {
+                plName = mDefaultPrivacyListName;
+                if (plName == null)
+                    plName = "default";
             }
-            xmppRoute(set);
-        }
-
-        // if the default list wasn't already set, then set this list as the default
-        if (mDefaultPrivacyListName == null) {
-            IQ set = new IQ();
-            set.setType(Type.set);
-            org.dom4j.Element query = set.setChildElement("query", "jabber:iq:privacy");
-            org.dom4j.Element defaultElt = query.addElement("default");
-            defaultElt.addAttribute("name", plName);
-            xmppRoute(set);
+            
+            // update privacy list
+            {
+                IQ set = new IQ();
+                set.setType(Type.set);
+                org.dom4j.Element query = set.setChildElement("query", "jabber:iq:privacy");
+                org.dom4j.Element list= query.addElement("list");
+                list.addAttribute("name", plName);
+                for (PrivacyListEntry e : pl) {
+                    org.dom4j.Element item = list.addElement("item");
+                    item.addAttribute("type", "jid");
+                    item.addAttribute("value", e.getAddr().toString());
+                    item.addAttribute("action", e.getAction().name());
+                    item.addAttribute("order", Integer.toString(e.getOrder()));
+                    if (e.getTypes() != PrivacyListEntry.BLOCK_ALL) {
+                        if (e.isBlockMessages())
+                            item.addElement("message");
+                        if (e.isBlockPresenceOut())
+                            item.addElement("presence-out");
+                        if (e.isBlockPresenceIn())
+                            item.addElement("presence-in");
+                        if (e.isBlockIQ())
+                            item.addElement("iq");
+                    }
+                }
+                xmppRoute(set);
+            }
+            
+            // if the default list wasn't already set, then set this list as the default
+            if (mDefaultPrivacyListName == null) {
+                IQ set = new IQ();
+                set.setType(Type.set);
+                org.dom4j.Element query = set.setChildElement("query", "jabber:iq:privacy");
+                org.dom4j.Element defaultElt = query.addElement("default");
+                defaultElt.addAttribute("name", plName);
+                xmppRoute(set);
+            }
         }
     }
     
     public void requestPrivacyList(String name) {
-        IQ request = new IQ();
-        request.setType(Type.get);
-        request.setID("getDefaultPrivList-"+(mCurRequestId++));
-        org.dom4j.Element query = request.setChildElement("query", "jabber:iq:privacy");
-        org.dom4j.Element list = query.addElement("list");
-        list.addAttribute("name", name);
-        xmppRoute(request);
+        synchronized(getLock()) {
+            IQ request = new IQ();
+            request.setType(Type.get);
+            request.setID("getDefaultPrivList-"+(mCurRequestId++));
+            org.dom4j.Element query = request.setChildElement("query", "jabber:iq:privacy");
+            org.dom4j.Element list = query.addElement("list");
+            list.addAttribute("name", name);
+            xmppRoute(request);
+        }
     }
     
     public void getDefaultPrivacyList() {
-        // request list of privacy lists, when we receive it we'll find the 
-        // default and ask the server to list it for us
-        IQ iq = new IQ();
-        iq.setType(Type.get);
-        iq.setID("getPrivLists-"+(mCurRequestId++));
-        iq.setChildElement("query", "jabber:iq:privacy");
-        xmppRoute(iq);
+        synchronized(getLock()) {
+            // request list of privacy lists, when we receive it we'll find the 
+            // default and ask the server to list it for us
+            IQ iq = new IQ();
+            iq.setType(Type.get);
+            iq.setID("getPrivLists-"+(mCurRequestId++));
+            iq.setChildElement("query", "jabber:iq:privacy");
+            xmppRoute(iq);
+        }
     }
     
     private void disconnectFromIMServer() {
@@ -990,29 +1051,34 @@ public class IMPersona extends ClassLogger {
 //    }
 
     public void joinChat(String addr, String threadId) throws ServiceException {
-        if (threadId == null) 
-            throw new IllegalArgumentException("Cannot joing a chat with a NULL threadId");
-        IMChat chat = mChats.get(threadId);
-        if (chat == null) {
-//            throw ServiceException.FAILURE("Couldn't find chat: "+ threadId, null);
-            chat = new IMChat(getMailbox(), this, threadId, null);
-            mChats.put(threadId, chat);
+        synchronized(getLock()) {
+            if (threadId == null) 
+                throw new IllegalArgumentException("Cannot joing a chat with a NULL threadId");
+            IMChat chat = mChats.get(threadId);
+            if (chat == null) {
+                chat = new IMChat(this, threadId, null);
+                mChats.put(threadId, chat);
+            }
+            chat.joinMUCChat(addr);
         }
-        chat.joinMUCChat(addr);
     }
 
     public void joinSharedGroup(String name) throws ServiceException {
-        try {
-            Group group = GroupManager.getInstance().getGroup(name);
-            group.getAdmins().add(mAddr.makeJID());
-        } catch (GroupNotFoundException ex) {}
+        synchronized(getLock()) {
+            try {
+                Group group = GroupManager.getInstance().getGroup(name);
+                group.getAdmins().add(mAddr.makeJID());
+            } catch (GroupNotFoundException ex) {}
+        }
     }
 
     public void leaveSharedGroup(String name) throws ServiceException {
-        try {
-            Group group = GroupManager.getInstance().getGroup(name);
-            group.getAdmins().remove(mAddr.makeJID());
-        } catch (GroupNotFoundException ex) {}
+        synchronized(getLock()) {
+            try {
+                Group group = GroupManager.getInstance().getGroup(name);
+                group.getAdmins().remove(mAddr.makeJID());
+            } catch (GroupNotFoundException ex) {}
+        }
     }
 
     void postIMNotification(IMNotification not) {
@@ -1022,9 +1088,6 @@ public class IMPersona extends ClassLogger {
     private void postIMNotification(IMNotification not, Session s) {
         if (s == null) { 
             for (Session session : mListeners) {
-                assert(session.getMailbox() == mMailbox);
-                if (session.getMailbox() != mMailbox) 
-                    ZimbraLog.im.error("Session_Mailbox != Mailbox for persona "+toString()+" session: "+toString());
                 session.notifyIM(not);
             }
         } else {
@@ -1093,27 +1156,6 @@ public class IMPersona extends ClassLogger {
     }
 
     /**
-     * Active Sessions are tracked here so that we can use them to push
-     * notifications to the client
-     * 
-     * @param session
-     */
-    public void removeListener(Session session) {
-        synchronized(this.getLock()) {
-            mListeners.remove(session);
-            if (mListeners.size() == 0) {
-                mIsOnline = false;
-                try {
-                    pushMyPresence();
-                } catch (ServiceException e) {
-                    e.printStackTrace();
-                }
-                disconnectFromIMServer();
-            }
-        }
-    }
-
-    /**
      * @param octxt
      * @param address
      * @param name
@@ -1122,17 +1164,19 @@ public class IMPersona extends ClassLogger {
      */
     public void removeOutgoingSubscription(OperationContext octxt, IMAddr address,
                 String name, String[] groups) throws ServiceException {
-        // tell the server to change our roster
-        Roster rosterPacket = new Roster(Type.set);
-        rosterPacket.addItem(address.makeJID(), name, Roster.Ask.unsubscribe,
-                    Roster.Subscription.none, Arrays.asList(groups));
-        xmppRoute(rosterPacket);
-        // tell the other user we want to unsubscribe
-        Presence unsubscribePacket = new Presence(Presence.Type.unsubscribe);
-        unsubscribePacket.setTo(address.makeJID());
-        xmppRoute(unsubscribePacket);
-        postIMNotification(IMSubscribedNotification.create(address, name, groups, false,
-                    Roster.Ask.unsubscribe));
+        synchronized(getLock()) {
+            // tell the server to change our roster
+            Roster rosterPacket = new Roster(Type.set);
+            rosterPacket.addItem(address.makeJID(), name, Roster.Ask.unsubscribe,
+                Roster.Subscription.none, Arrays.asList(groups));
+            xmppRoute(rosterPacket);
+            // tell the other user we want to unsubscribe
+            Presence unsubscribePacket = new Presence(Presence.Type.unsubscribe);
+            unsubscribePacket.setTo(address.makeJID());
+            xmppRoute(unsubscribePacket);
+            postIMNotification(IMSubscribedNotification.create(address, name, groups, false,
+                Roster.Ask.unsubscribe));
+        }
     }
 
     /**
@@ -1143,21 +1187,22 @@ public class IMPersona extends ClassLogger {
      */
     public void sendMessage(OperationContext octxt, IMAddr toAddr, String threadId,
                 IMMessage message) throws ServiceException {
-        //
-        // Find a chat with the right threadId, or find an open 1:1 chat with
-        // the target user
-        // or create a new chat if necessary...
-        IMChat chat = mChats.get(threadId);
-        if (chat == null) {
-            for (IMChat cur : mChats.values()) {
-                // find an existing point-to-point chat with that user in it
-                if (cur.participants().size() <= 2) {
-                    if (cur.getParticipant(toAddr) != null) {
-                        chat = cur;
+        synchronized(getLock()) {
+            //
+            // Find a chat with the right threadId, or find an open 1:1 chat with
+            // the target user
+            // or create a new chat if necessary...
+            IMChat chat = mChats.get(threadId);
+            if (chat == null) {
+                for (IMChat cur : mChats.values()) {
+                    // find an existing point-to-point chat with that user in it
+                    if (cur.participants().size() <= 2) {
+                        if (cur.getParticipant(toAddr) != null) {
+                            chat = cur;
                         break;
+                        }
                     }
                 }
-            }
             if (chat == null) {
                 // threadId = newChat(octxt, toAddr, message);
                 // threadId = toAddr.getAddr();
@@ -1167,79 +1212,82 @@ public class IMPersona extends ClassLogger {
                 // add the other user as the first participant in this chat
                 IMChat.Participant part;
                 part = new IMChat.Participant(toAddr);
-                chat = new IMChat(getMailbox(), this, threadId, part);
+                chat = new IMChat(this, threadId, part);
                 assert(threadId != null);
                 mChats.put(threadId, chat);
             }
-        }
-        String msg = (message.getBody(Lang.DEFAULT) != null ? message.getBody(Lang.DEFAULT).getPlainText() : null);
-        if (msg != null && msg.startsWith("/")) {
-            if (msg.startsWith("/add ")) {
-                String username = msg.substring("/add ".length()).trim();
-                IMAddr newUser = new IMAddr(username);
-                ZimbraLog.im
-                            .info("Adding user: \"" + username + "\" to chat " + threadId);
-                addUserToChat(null, chat, newUser, "Please join my chat");
-                return;
-            } else if (msg.startsWith("/join")) {
-                String[] words = msg.split("\\s+");
-                debug("Trying to join groupchat: %s", words[1]);
-                chat.joinMUCChat(words[1]);
-                return;
-            } else if (msg.startsWith("/info")) {
-                String info = chat.toString();
-                message.addBody(new IMMessage.TextPart(info));
-                IMMessageNotification notification = new IMMessageNotification(
-                            new IMAddr("SYSTEM"), chat.getThreadId(), message, 0);
-                postIMNotification(notification);
-                return;
-            } else if (msg.startsWith("/join_group")) {
-                String[] words = msg.split("\\s+");
-                debug("Trying to join shared group: %s", words[1]);
-                joinSharedGroup(words[1]);
-                return;
-            } else if (msg.startsWith("/leave_group")) {
-                String[] words = msg.split("\\s+");
-                debug("Trying to leave shared group: %s", words[1]);
-                leaveSharedGroup(words[1]);
-                return;
-            } else if (msg.startsWith("/block")) {
-                // "/block foo@bar.com,bug@gub.com,fooz.com"
-                if (msg.equals("/block"))
-                    msg = "/block ";
-                
-                msg = msg.substring("/block ".length());
-                String[] addrs = msg.split(",");
-                
-                String listName = mDefaultPrivacyListName;
-                if (listName == null)
-                    listName = "default";
-                
-                PrivacyList pl = new PrivacyList(listName);
-                int order = 1;
-                for (String s : addrs) {
-                    if (s.length() > 0) {
-                        PrivacyListEntry entry = new PrivacyListEntry(new IMAddr(s), order, PrivacyListEntry.Action.deny, PrivacyListEntry.BLOCK_ALL);
-                        try {
-                            pl.addEntry(entry);
-                        } catch (PrivacyList.DuplicateOrderException e) { e.printStackTrace(); }
-                        order++;
-                    }
-                }
-                
-                setPrivacyList(pl);
             }
+            String msg = (message.getBody(Lang.DEFAULT) != null ? message.getBody(Lang.DEFAULT).getPlainText() : null);
+            if (msg != null && msg.startsWith("/")) {
+                if (msg.startsWith("/add ")) {
+                    String username = msg.substring("/add ".length()).trim();
+                    IMAddr newUser = new IMAddr(username);
+                    ZimbraLog.im
+                    .info("Adding user: \"" + username + "\" to chat " + threadId);
+                    addUserToChat(null, chat, newUser, "Please join my chat");
+                    return;
+                } else if (msg.startsWith("/join")) {
+                    String[] words = msg.split("\\s+");
+                    debug("Trying to join groupchat: %s", words[1]);
+                    chat.joinMUCChat(words[1]);
+                    return;
+                } else if (msg.startsWith("/info")) {
+                    String info = chat.toString();
+                    message.addBody(new IMMessage.TextPart(info));
+                    IMMessageNotification notification = new IMMessageNotification(
+                        new IMAddr("SYSTEM"), chat.getThreadId(), message, 0);
+                    postIMNotification(notification);
+                    return;
+                } else if (msg.startsWith("/join_group")) {
+                    String[] words = msg.split("\\s+");
+                    debug("Trying to join shared group: %s", words[1]);
+                    joinSharedGroup(words[1]);
+                    return;
+                } else if (msg.startsWith("/leave_group")) {
+                    String[] words = msg.split("\\s+");
+                    debug("Trying to leave shared group: %s", words[1]);
+                    leaveSharedGroup(words[1]);
+                    return;
+                } else if (msg.startsWith("/block")) {
+                    // "/block foo@bar.com,bug@gub.com,fooz.com"
+                    if (msg.equals("/block"))
+                        msg = "/block ";
+
+                    msg = msg.substring("/block ".length());
+                    String[] addrs = msg.split(",");
+
+                    String listName = mDefaultPrivacyListName;
+                    if (listName == null)
+                        listName = "default";
+
+                    PrivacyList pl = new PrivacyList(listName);
+                    int order = 1;
+                    for (String s : addrs) {
+                        if (s.length() > 0) {
+                            PrivacyListEntry entry = new PrivacyListEntry(new IMAddr(s), order, PrivacyListEntry.Action.deny, PrivacyListEntry.BLOCK_ALL);
+                            try {
+                                pl.addEntry(entry);
+                            } catch (PrivacyList.DuplicateOrderException e) { e.printStackTrace(); }
+                            order++;
+                        }
+                    }
+
+                    setPrivacyList(pl);
+                }
+            }
+            chat.sendMessage(octxt, toAddr, threadId, message, this);
         }
-        chat.sendMessage(octxt, toAddr, threadId, message, this);
     }
 
     public void setMyPresence(OperationContext octxt, IMPresence presence)
                 throws ServiceException {
-        // TODO optimize out change-to-same eventually (leave for now, very
-        // convienent as is)
-        mMyPresence = presence;
-        flush(octxt);
-        pushMyPresence();
+        synchronized(getLock()) {
+            // TODO optimize out change-to-same eventually (leave for now, very
+            // convienent as is)
+            mMyPresence = presence;
+            flush(octxt);
+            pushMyPresence();
+        }
     }
 
     @Override

@@ -37,11 +37,11 @@ public class IMGatewayList extends IMDocumentHandler {
         
         Element response = zsc.createElement(IMConstants.IM_GATEWAY_LIST_RESPONSE);
         
-        Object lock = super.getLock(zsc);
-        synchronized (lock) {
-            IMPersona persona = getRequestedPersona(zsc, context, lock);
-            assert(persona.getLock() == lock);
+        IMPersona persona = getRequestedPersona(zsc);
+        synchronized (persona.getLock()) {
             
+            // hacky side-effect: the client requests the gateway list first, so this
+            // is currently where we create the client session
             List<Session> sessions = zsc.getReferencedSessions();
             for (Session s : sessions) {
                 s.registerWithIM(persona);

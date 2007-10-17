@@ -67,7 +67,7 @@ public class Search extends MailDocumentHandler  {
         String query = params.getQueryStr();
 
         // HACK: temporary until we get UI for gateway reg/unreg 
-        if (!query.startsWith("$im")) 
+        if (!query.startsWith("$im")&& !query.startsWith("$maint")) 
             query = "(" + query + ") -tag:\\Deleted";
 
 
@@ -238,12 +238,7 @@ public class Search extends MailDocumentHandler  {
      */
     protected Element addCalendarItemHit(CalendarItemHit ah, Element response, ZimbraSoapContext zsc, OperationContext octxt, ItemIdFormatter ifmt, boolean inline, SearchParams params)
     throws ServiceException {
-        
         CalendarItem calItem = ah.getCalendarItem();
-//        if (!calItem.isPublic() && !calItem.allowPrivateAccess(getAuthenticatedAccount(zsc))) {
-//            // bug 18620: don't return private appointments when searching as not-user
-//            return null;
-//        }
         
         Element calElement = null;
         int fields = PendingModifications.Change.ALL_FIELDS;

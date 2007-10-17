@@ -20,11 +20,8 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.im.IMPersona;
-import com.zimbra.cs.im.IMRouter;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.operation.BlockingOperation;
 import com.zimbra.cs.operation.Requester;
 import com.zimbra.cs.operation.Scheduler.Priority;
@@ -51,24 +48,8 @@ public abstract class IMDocumentHandler extends DocumentHandler {
     protected Priority getSchedulerPriority() {
         return Priority.INTERACTIVE_HIGH;
     }
-
-
-    Object getLock(ZimbraSoapContext zsc) throws ServiceException {
-        return super.getRequestedMailbox(zsc);
-    }
-
-    static IMPersona getRequestedPersona(ZimbraSoapContext zsc, Map<String, Object> context, Object lock) throws ServiceException {
-        return getRequestedPersona(getOperationContext(zsc, context), lock);
-    }
-
-    static IMPersona getRequestedPersona(OperationContext octxt, Object lock) throws ServiceException {
-        IMPersona toRet = IMRouter.getInstance().findPersona(octxt, (Mailbox) lock);
-        assert(toRet.getLock() == lock);
-        if (toRet.getLock() != lock) { // bug 18668 debugging
-            ZimbraLog.im.error("Returned persona lock not equal to requested lock");  
-        }
-        
-        return toRet;
-    }
     
+    protected IMPersona getRequestedPersona(ZimbraSoapContext zsc) throws ServiceException {
+        return getRequestedMailbox(zsc).getPersona();
+    }
 }

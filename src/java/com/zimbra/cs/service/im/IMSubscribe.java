@@ -52,9 +52,8 @@ public class IMSubscribe extends IMDocumentHandler {
         else
             groups = new String[0];
 
-        Object lock = super.getLock(zsc);
-        synchronized (lock) {
-            IMPersona persona = super.getRequestedPersona(zsc, context, lock);
+        IMPersona persona = super.getRequestedPersona(zsc);
+        synchronized (persona.getLock()) {
             if (add) 
                 persona.addOutgoingSubscription(octxt, addr, name, groups);
             else

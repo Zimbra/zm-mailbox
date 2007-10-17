@@ -35,11 +35,8 @@ public class IMGetPrivacyList extends IMDocumentHandler {
         
         String name = request.getAttribute(IMConstants.A_NAME, null);
 
-        Object lock = super.getLock(zsc);
-        synchronized (lock) {
-            IMPersona persona = getRequestedPersona(zsc, context, lock);
-            assert(persona.getLock() == lock);
-        
+        IMPersona persona = getRequestedPersona(zsc);
+        synchronized (persona.getLock()) {
             if (name == null) 
                 persona.getDefaultPrivacyList();
             else

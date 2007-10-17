@@ -22,7 +22,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Formatter;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TimerTask;
@@ -109,7 +108,6 @@ public class IMChat extends ClassLogger {
     private String mThreadId;
     private boolean mIsClosed = false;
     private Map<IMAddr, Participant> mParticipants = Collections.synchronizedMap(new HashMap<IMAddr, Participant>());
-    private Mailbox mMailbox;
     private IMPersona mPersona;
     private int mSavedChatId = -1;
     private JID mDestJid = null; // the JID we send to: a remote user, or a chatroom if this is a MUC
@@ -151,11 +149,10 @@ public class IMChat extends ClassLogger {
         return toString();
     }
 
-    IMChat(Mailbox mbox, IMPersona persona, String threadId, Participant initialPart)
+    IMChat(IMPersona persona, String threadId, Participant initialPart)
     {
         super(ZimbraLog.im);
         
-        mMailbox = mbox;
         mPersona = persona;
         mThreadId = threadId;
         mParticipants.put(initialPart.getAddress(), initialPart);
@@ -714,7 +711,7 @@ public class IMChat extends ClassLogger {
     }
 
     private void timerExecute() {
-        synchronized(mMailbox ) {
+        synchronized(mPersona.getLock()) {
 
             ZimbraLog.im.debug("ImChat.TimerExecute "+mTimerState);
             mTimer = null; // it is firing!  don't cancel it!
@@ -770,11 +767,13 @@ public class IMChat extends ClassLogger {
      * Write this chat as a MimeMessage into the user's IMs folder
      */
     private void flush() {
+        assert(Thread.holdsLock(mPersona.getLock()));
         if (mLastFlushSeqNo >= getHighestSeqNo())
             return;
 
         try {
-            Account acct = mMailbox.getAccount();
+            Mailbox mbox = mPersona.getMailbox();
+            Account acct = mbox.getAccount();
             if (acct.getBooleanAttr(Provisioning.A_zimbraPrefIMLogChats, true)) {
 
                 ZimbraLog.im.debug("Flushing chat: "+toString());
@@ -782,10 +781,10 @@ public class IMChat extends ClassLogger {
                 ParsedMessage pm  = ChatWriter.writeChat(this);
                 Message msg;
                 try {
-                    msg = mMailbox.updateOrCreateChat(null, pm, mSavedChatId);
+                    msg = mbox.updateOrCreateChat(null, pm, mSavedChatId);
                 } catch(NoSuchItemException e) {
                     // they deleted the chat from their mailbox.  Bad user.
-                    msg = mMailbox.updateOrCreateChat(null, pm, -1);
+                    msg = mbox.updateOrCreateChat(null, pm, -1);
                 }
                 mSavedChatId = msg.getId();
             }

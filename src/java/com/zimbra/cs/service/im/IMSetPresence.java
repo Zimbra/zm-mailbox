@@ -44,9 +44,8 @@ public class IMSetPresence extends IMDocumentHandler {
 
         IMPresence presence = new IMPresence(IMPresence.Show.valueOf(showStr.toUpperCase()), (byte)1, statusStr);
 
-        Object lock = super.getLock(zsc);
-        synchronized (lock) {
-            IMPersona persona = super.getRequestedPersona(zsc, context, lock);
+        IMPersona persona = super.getRequestedPersona(zsc);
+        synchronized (persona.getLock()) {
             persona.setMyPresence(octxt, presence);
         }
 

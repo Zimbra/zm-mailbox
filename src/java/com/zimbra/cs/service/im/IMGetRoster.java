@@ -34,10 +34,8 @@ public class IMGetRoster extends IMDocumentHandler {
         
         Element response = zsc.createElement(IMConstants.IM_GET_ROSTER_RESPONSE);
         
-        Object lock = super.getLock(zsc);
-        synchronized (lock) {
-            IMPersona persona = super.getRequestedPersona(zsc, context, lock);
-            
+        IMPersona persona = super.getRequestedPersona(zsc);
+        synchronized (persona.getLock()) {
             Element pres = response.addUniqueElement(IMConstants.E_PRESENCE);
             persona.getEffectivePresence().toXml(pres);
             

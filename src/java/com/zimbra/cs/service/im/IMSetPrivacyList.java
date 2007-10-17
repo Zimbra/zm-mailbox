@@ -61,10 +61,8 @@ public class IMSetPrivacyList extends IMDocumentHandler {
             }
         }
         
-        Object lock = super.getLock(zsc);
-        synchronized (lock) {
-            IMPersona persona = getRequestedPersona(zsc, context, lock);
-            assert(persona.getLock() == lock);
+        IMPersona persona = getRequestedPersona(zsc);
+        synchronized (persona.getLock()) {
             persona.setPrivacyList(pl);
         }
         

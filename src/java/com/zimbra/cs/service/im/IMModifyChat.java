@@ -44,10 +44,8 @@ public class IMModifyChat extends IMDocumentHandler {
         String threadId = request.getAttribute(IMConstants.A_THREAD_ID);
         response.addAttribute(IMConstants.A_THREAD_ID, threadId);
         
-        Object lock = super.getLock(zsc);
-        
-        synchronized(lock) {
-            IMPersona persona = super.getRequestedPersona(zsc, context, lock);
+        IMPersona persona = super.getRequestedPersona(zsc);
+        synchronized(persona.getLock()) {
             
             IMChat chat = null;
             

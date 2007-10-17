@@ -76,9 +76,8 @@ public class IMSendMessage extends IMDocumentHandler {
         IMMessage msg = new IMMessage(subject==null?null:new TextPart(subject),
             bodyPart, isTyping);
 
-        Object lock = super.getLock(zsc);
-        synchronized(lock) {
-            IMPersona persona = super.getRequestedPersona(zsc, context, lock);
+        IMPersona persona = super.getRequestedPersona(zsc);
+        synchronized(persona.getLock()) {
             persona.sendMessage(octxt, new IMAddr(addr), threadId, msg);
         }
 
