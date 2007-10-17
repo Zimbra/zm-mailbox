@@ -3509,8 +3509,8 @@ public class ZMailbox {
 
 	public synchronized List<ZPhoneAccount> getAllPhoneAccounts() throws ServiceException {
         if (mPhoneAccounts == null) {
-            mPhoneAccounts = new ArrayList<ZPhoneAccount>();
-            mPhoneAccountMap = new HashMap<String, ZPhoneAccount>(); 
+			ArrayList<ZPhoneAccount> accounts = new ArrayList<ZPhoneAccount>();
+			mPhoneAccountMap = new HashMap<String, ZPhoneAccount>();
             XMLElement req = new XMLElement(VoiceConstants.GET_VOICE_INFO_REQUEST);
             Element response = invoke(req);
 			Element storePrincipalEl = response.getElement(VoiceConstants.E_STOREPRINCIPAL);
@@ -3520,9 +3520,10 @@ public class ZMailbox {
 			List<Element> phoneElements = response.listElements(VoiceConstants.E_PHONE);
             for (Element element : phoneElements) {
                 ZPhoneAccount account = new ZPhoneAccount(element, this);
-                mPhoneAccounts.add(account);
+                accounts.add(account);
                 mPhoneAccountMap.put(account.getPhone().getName(), account);
             }
+			mPhoneAccounts = Collections.unmodifiableList(accounts);
 		}
         return mPhoneAccounts;
     }
