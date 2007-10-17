@@ -79,6 +79,7 @@ public class TestRenameDomain  extends TestCase {
     private static String NAME_LEAF_OLD_DOMAIN = "olddomain";
     private static String NAME_LEAF_NEW_DOMAIN = "newdomain";
     private static String UNICODESTR = "\u4e2d\u6587";   // \u5f35\u611b\u73b2   // for testing IDN
+    // private static String UNICODESTR = "english";
     
     private static String NAMEPREFIX_ACCOUNT     = "acct-";
     private static String NAMEPREFIX_ALIAS       = "alias-";
@@ -343,6 +344,7 @@ public class TestRenameDomain  extends TestCase {
             Map<String, Object> attrs = new HashMap<String, Object>();
             attrs.put(Provisioning.A_zimbraPrefMailSignature, SIGNATURE_CONTENT(acct, i));
             Signature entry = mProv.createSignature(acct, SIGNATURE_NAME(acct, i), attrs);
+            sigIds[i] = entry.getId();
         }
         
         return sigIds;
@@ -388,15 +390,13 @@ public class TestRenameDomain  extends TestCase {
     private Account createAccount(String acctName, IDNName domainName) throws Exception {
         Map<String, Object> acctAttrs = new HashMap<String, Object>();
         
-        // IDN TODO: MailAddress callback needs to handle multi-valued attrs, ..., use aname for now
-        acctAttrs.put(Provisioning.A_zimbraMailCanonicalAddress, "canonical-address" + "@" + domainName.aName());
-        // acctAttrs.put(Provisioning.A_zimbraMailDeliveryAddress, "delivery-address" + "@" + domainName.aName());
-        acctAttrs.put(Provisioning.A_zimbraMailForwardingAddress, "forwarding-address" + "@" + domainName.aName());
+        acctAttrs.put(Provisioning.A_zimbraMailCanonicalAddress, "canonical-address" + "@" + domainName.uName());
+        // acctAttrs.put(Provisioning.A_zimbraMailDeliveryAddress, "delivery-address" + "@" + domainName.uName());
+        acctAttrs.put(Provisioning.A_zimbraMailForwardingAddress, "forwarding-address" + "@" + domainName.uName());
         
-        // IDN TODO: checkValue is called before callback, the catchall addresses are of type regex, ..., use aname for now
-        acctAttrs.put(Provisioning.A_zimbraMailCatchAllAddress, "" + "@" + domainName.aName());
-        acctAttrs.put(Provisioning.A_zimbraMailCatchAllCanonicalAddress, "" + "@" + domainName.aName());
-        acctAttrs.put(Provisioning.A_zimbraMailCatchAllForwardingAddress, "" + "@" + domainName.aName());
+        acctAttrs.put(Provisioning.A_zimbraMailCatchAllAddress, "" + "@" + domainName.uName());
+        acctAttrs.put(Provisioning.A_zimbraMailCatchAllCanonicalAddress, "" + "@" + domainName.uName());
+        acctAttrs.put(Provisioning.A_zimbraMailCatchAllForwardingAddress, "" + "@" + domainName.uName());
         
         Account acct = mProv.createAccount(acctName, PASSWORD, acctAttrs);
         return acct;

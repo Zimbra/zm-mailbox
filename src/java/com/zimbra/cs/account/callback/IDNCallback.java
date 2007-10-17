@@ -28,7 +28,7 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.IDNUtil;
 
 
-public class MailAddress extends AttributeCallback {
+public class IDNCallback extends AttributeCallback {
 
     /**
      * check to make sure zimbraMailHost points to a valid server zimbraServiceHostname
@@ -46,8 +46,7 @@ public class MailAddress extends AttributeCallback {
                 
                 String asciiName;
                 if (addr.charAt(0) == '@') {
-                    // meant for catchall addresses, but checkValue would've rejected the unicode value before calling callback
-                    // for now, the catchall values has to be entered in ACE form if they are IDN
+                    // meant for catchall addresses
                     asciiName = "@" + IDNUtil.toAsciiDomainName(addr.substring(1));
                 } else
                     asciiName = IDNUtil.toAsciiEmail(addr);
@@ -57,7 +56,7 @@ public class MailAddress extends AttributeCallback {
             
             String aName = (mod.adding()?"+":"") + attrName;
             attrsToModify.remove(aName);
-            attrsToModify.put(aName, asciiValues);
+            attrsToModify.put(aName, asciiValues.toArray(new String[asciiValues.size()]));
         }
     }
 

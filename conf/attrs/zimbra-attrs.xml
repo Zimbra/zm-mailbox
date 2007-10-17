@@ -224,11 +224,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <deprecateDesc>greatly simplify dl/group model</deprecateDesc>
 </attr>
 
-<attr id="12" name="zimbraMailForwardingAddress" type="email" max="256" cardinality="multi" optionalIn="mailRecipient" flags="accountInfo,domainAdminModifiable" callback="MailAddress">
+<attr id="12" name="zimbraMailForwardingAddress" type="email" max="256" cardinality="multi" optionalIn="mailRecipient" flags="accountInfo,domainAdminModifiable">
   <desc>RFC822 forwarding address for an account</desc>
 </attr>
 
-<attr id="13" name="zimbraMailDeliveryAddress" type="email" max="256" immutable="1" cardinality="multi" optionalIn="mailRecipient" callback="MailAddress">
+<attr id="13" name="zimbraMailDeliveryAddress" type="email" max="256" immutable="1" cardinality="multi" optionalIn="mailRecipient">
   <desc>RFC822 email address of this recipient for local delivery</desc>
 </attr>
 
@@ -1047,19 +1047,19 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>should be one of: local, alias</desc>
 </attr>
 
-<attr id="213" name="zimbraMailCanonicalAddress" type="email" max="256" cardinality="single" optionalIn="mailRecipient" flags="domainAdminModifiable" callback="MailAddress">
+<attr id="213" name="zimbraMailCanonicalAddress" type="email" max="256" cardinality="single" optionalIn="mailRecipient" flags="domainAdminModifiable">
   <desc>RFC822 email address for senders outbound messages</desc>
 </attr>
 
-<attr id="214" name="zimbraMailCatchAllAddress" type="regex" max="256" value="^@[A-Za-z0-9-\.]+$" cardinality="multi" optionalIn="mailRecipient">
+<attr id="214" name="zimbraMailCatchAllAddress" type="regex" max="256" value="^@[A-Za-z0-9-\.]+$" cardinality="multi" optionalIn="mailRecipient" flags="idn">
   <desc>Address to catch all messages to specified domain</desc>
 </attr>
 
-<attr id="215" name="zimbraMailCatchAllForwardingAddress" type="regex" max="256" value="^@[A-Za-z0-9-\.]+$" cardinality="single" optionalIn="mailRecipient">
+<attr id="215" name="zimbraMailCatchAllForwardingAddress" type="regex" max="256" value="^@[A-Za-z0-9-\.]+$" cardinality="single" optionalIn="mailRecipient" flags="idn">
   <desc>Address to deliver catch all messages to</desc>
 </attr>
 
-<attr id="216" name="zimbraMailCatchAllCanonicalAddress" type="regex" max="256" value="^@[A-Za-z0-9-\.]+$" cardinality="single" optionalIn="mailRecipient">
+<attr id="216" name="zimbraMailCatchAllCanonicalAddress" type="regex" max="256" value="^@[A-Za-z0-9-\.]+$" cardinality="single" optionalIn="mailRecipient" flags="idn">
   <desc>Catch all address to rewrite to</desc>
 </attr>
 

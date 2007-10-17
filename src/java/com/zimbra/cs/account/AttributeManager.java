@@ -19,6 +19,7 @@ package com.zimbra.cs.account;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.callback.IDNCallback;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -89,6 +90,8 @@ public class AttributeManager {
     private static AttributeManager mInstance;
 
     private Map<String, AttributeInfo> mAttrs = new HashMap<String, AttributeInfo>();
+    
+    private AttributeCallback mIDNCallback = new IDNCallback();
 
     private static Map<Integer,String> mGroupMap = new HashMap<Integer,String>();
 
@@ -563,6 +566,12 @@ public class AttributeManager {
             if (name.charAt(0) == '-' || name.charAt(0) == '+') name = name.substring(1);
             AttributeInfo info = mAttrs.get(name.toLowerCase());
             if (info != null && value != null) {
+                // IDN unicode to ACE conversion needs to happen before checkValue or else 
+                // regex attrs will be rejected by checkValue
+                if (isEmailOrIDN(name)) {
+                    mIDNCallback.preModify(context, name, value, attrs, entry, isCreate);
+                    value = attrs.get(name);
+                }
                 info.checkValue(value, checkImmutable);
                 if (allowCallback && info.getCallback() != null)
                     info.getCallback().preModify(context, name, value, attrs, entry, isCreate);

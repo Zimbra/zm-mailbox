@@ -42,7 +42,8 @@ import com.zimbra.qa.unittest.TestProvisioningUtil.IDNName;
 public class TestIDN extends TestCase {
     private String TEST_ID;
     private static String TEST_NAME = "test-IDN";
-    private static String UNICODESTR = "\u4e2d\u6587";   // \u5f35\u611b\u73b2
+    private static String UNICODESTR = "\u4e2d\u6587";
+    // private static String UNICODESTR = "\u5f35\u611b\u73b2";
     private static String PASSWORD = "test123";
    
     
@@ -245,6 +246,11 @@ public class TestIDN extends TestCase {
         attrs.put("+" + Provisioning.A_zimbraMailForwardingAddress, "extra-2-forwarding-" + name.uName());
         attrs.put("+" + Provisioning.A_zimbraMailDeliveryAddress, "extra-1-delivery-" + name.uName());
         attrs.put("+" + Provisioning.A_zimbraMailDeliveryAddress, "extra-2-delivery-" + name.uName());
+        
+        attrs.put("+" + Provisioning.A_zimbraMailCatchAllAddress, "@" + name.uName());
+        attrs.put("+" + Provisioning.A_zimbraMailCatchAllCanonicalAddress, "@" + name.uName());
+        attrs.put("+" + Provisioning.A_zimbraMailCatchAllForwardingAddress, "@" + name.uName());
+        
         mProv.modifyAttrs(entry, attrs);
     }
     
