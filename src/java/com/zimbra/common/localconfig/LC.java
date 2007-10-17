@@ -269,6 +269,8 @@ public class LC {
     
     public static final KnownKey debug_batch_message_indexing;
     
+    public static final KnownKey debug_xmpp_disable_client_tls;
+    
     static {
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  " +
                 "Changing this setting does not immediately reflect in MySQL server.  " +
@@ -995,6 +997,8 @@ public class LC {
         debug_update_config_use_old_scheme.setDefault("false");
         debug_update_config_use_old_scheme.setDoc("If true, DbMailbox.updateConfig() will do DELETE/INSERT instead of UPDATE.");
         
-        debug_batch_message_indexing = new KnownKey("debug_batch_message_indexing", "0", "debug only test code to batch index updates (don't index immediately)");        
+        debug_batch_message_indexing = new KnownKey("debug_batch_message_indexing", "0", "debug only test code to batch index updates (don't index immediately)");
+        
+        debug_xmpp_disable_client_tls = new KnownKey("debug_xmpp_disable_client_tls", "0", "disable TLS for XMPP C2S protocol");         
     }
 }
