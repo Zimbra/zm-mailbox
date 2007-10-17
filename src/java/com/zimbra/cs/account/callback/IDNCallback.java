@@ -49,7 +49,7 @@ public class IDNCallback extends AttributeCallback {
                     // meant for catchall addresses
                     asciiName = "@" + IDNUtil.toAsciiDomainName(addr.substring(1));
                 } else
-                    asciiName = IDNUtil.toAsciiEmail(addr);
+                    asciiName = IDNUtil.toAscii(addr);
                 
                 asciiValues.add(asciiName);
             }

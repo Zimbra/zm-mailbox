@@ -34,7 +34,7 @@ public class IDNUtil {
         try {
             ascii = IDNA.toASCII(name);
         } catch (IDNAException e) {
-            ZimbraLog.account.warn("domain " + name + " cannot be converted to ASCII", e);
+            ZimbraLog.account.info("domain " + name + " cannot be converted to ASCII", e);
         }
         return ascii;
     }
