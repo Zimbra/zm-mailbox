@@ -1,26 +1,5 @@
-SECTION antivirus DEPENDS antispam
-REWRITE conf/amavisd.conf.in conf/amavisd.conf
-REWRITE conf/salocal.cf.in conf/salocal.cf
-REWRITE conf/clamd.conf.in conf/clamd.conf
-REWRITE conf/freshclam.conf.in conf/freshclam.conf
-
-	VAR zimbraVirusWarnRecipient
-	VAR zimbraVirusWarnAdmin
-	VAR zimbraVirusDefinitionsUpdateFrequency
-	VAR zimbraVirusBlockEncryptedArchive
-
-	LOCAL ldap_url
-	LOCAL zimbra_ldap_userdn
-	LOCAL zimbra_ldap_password
-	LOCAL av_notify_domain
-	LOCAL av_notify_user
-
-RESTART antivirus mta
-SECTION antispam
-
-REWRITE conf/amavisd.conf.in conf/amavisd.conf
-REWRITE conf/salocal.cf.in conf/salocal.cf
-
+SECTION amavis 
+  REWRITE conf/amavisd.conf.in conf/amavisd.conf
 	POSTCONF content_filter 
 	if SERVICE antivirus
 		POSTCONF content_filter smtp-amavis:[127.0.0.1]:10024
@@ -28,23 +7,38 @@ REWRITE conf/salocal.cf.in conf/salocal.cf
 	if SERVICE antispam
 		POSTCONF content_filter smtp-amavis:[127.0.0.1]:10024
 	fi
-
+	if SERVICE archiving
+		POSTCONF content_filter smtp-amavis:[127.0.0.1]:10024
+	fi
+	LOCAL av_notify_domain
+	LOCAL av_notify_user
 	LOCAL ldap_url
 	LOCAL zimbra_ldap_userdn
 	LOCAL zimbra_ldap_password
+	VAR zimbraVirusWarnRecipient
 	VAR zimbraSpamKillPercent
 	VAR zimbraSpamTagPercent
 	VAR zimbraSpamSubjectTag
-RESTART antispam mta
-SECTION mta
+  RESTART archiving antispam antivirus mta
 
-	POSTCONF content_filter 
-	if SERVICE antivirus
-		POSTCONF content_filter smtp-amavis:[127.0.0.1]:10024
-	fi
-	if SERVICE antispam
-		POSTCONF content_filter smtp-amavis:[127.0.0.1]:10024
-	fi
+SECTION antivirus DEPENDS antispam archiving
+  REWRITE conf/clamd.conf.in conf/clamd.conf
+  REWRITE conf/freshclam.conf.in conf/freshclam.conf
+	VAR zimbraVirusWarnAdmin
+	VAR zimbraVirusDefinitionsUpdateFrequency
+	VAR zimbraVirusBlockEncryptedArchive
+  VAR zimbraMtaMaxMessageSize
+  RESTART antivirus mta
+
+SECTION antispam DEPENDS antivirus archiving
+  REWRITE conf/salocal.cf.in conf/salocal.cf
+  VAR zimbraMtaMyNetworks
+  RESTART antispam mta
+
+SECTION archiving DEPENDS antispam antivirus
+  RESTART archiving mta
+
+SECTION mta DEPENDS amavis
 	VAR zimbraMtaRestriction
 	VAR zimbraMtaBlockedExtension
 	VAR zimbraMtaRecipientDelimiter
@@ -101,12 +95,12 @@ SECTION mta
 	POSTCONF virtual_mailbox_domains			LOCAL postfix_virtual_mailbox_domains
 	POSTCONF virtual_mailbox_maps				LOCAL postfix_virtual_mailbox_maps
 	POSTCONF virtual_transport					LOCAL postfix_virtual_transport
+  RESTART mta
 
-RESTART mta
 SECTION sasl
 	VAR zimbraMtaAuthURL
-REWRITE cyrus-sasl-2.1.22.3/etc/saslauthd.conf.in cyrus-sasl-2.1.22.3/etc/saslauthd.conf
-RESTART mta sasl
+  REWRITE cyrus-sasl-2.1.22.3/etc/saslauthd.conf.in cyrus-sasl-2.1.22.3/etc/saslauthd.conf
+  RESTART mta sasl
 
 SECTION webxml
 	VAR zimbraMailPort
@@ -114,7 +108,7 @@ SECTION webxml
 	REWRITE mailboxd/etc/zimbra.web.xml.in mailboxd/webapps/zimbra/WEB-INF/web.xml
 	REWRITE mailboxd/etc/zimbraAdmin.web.xml.in mailboxd/webapps/zimbraAdmin/WEB-INF/web.xml
 	REWRITE mailboxd/etc/service.web.xml.in mailboxd/webapps/service/WEB-INF/web.xml
-RESTART mailboxd
+  RESTART mailboxd
 
 SECTION mailbox
 	VAR zimbraMailPort
@@ -142,7 +136,7 @@ SECTION mailbox
   REWRITE conf/log4j.properties.in conf/log4j.properties
   REWRITE mailboxd/etc/jetty.properties.in mailboxd/etc/jetty.properties
 	REWRITE mailboxd/etc/jetty.xml.in mailboxd/etc/jetty.xml
-RESTART mailboxd
+  RESTART mailboxd
 
 SECTION imapproxy
 	LOCAL ldap_url
@@ -151,4 +145,4 @@ SECTION imapproxy
 	VAR zimbraImapSSLProxyBindPort
 	VAR zimbraPop3SSLProxyBindPort
 	REWRITE conf/nginx.conf.in conf/nginx.conf
-RESTART imapproxy
+  RESTART imapproxy
