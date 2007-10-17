@@ -30,9 +30,7 @@ import java.util.regex.Pattern;
 import javax.mail.Address;
 import javax.mail.Header;
 import javax.mail.MessagingException;
-import javax.mail.SendFailedException;
 import javax.mail.Transport;
-import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
@@ -51,7 +49,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.filter.jsieve.ActionTag;
 import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.MailSender.SafeSendFailedException;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
@@ -264,15 +261,26 @@ public class ZimbraMailAdapter implements MailAdapter
                     // redirect mail to another address
                     ActionRedirect redirect = (ActionRedirect) action;
                     String addr = redirect.getAddress();
-                    ZimbraLog.filter.info("Redirecting message to %s", addr);
+                    ZimbraLog.filter.info("Redirecting message to " + addr);
                     MimeMessage mm = mParsedMessage.getMimeMessage();
                     try {
-                        InternetAddress iaddr = new InternetAddress(addr);
-                        Address[] raddr = new Address[1];
-                        raddr[0] = iaddr;
-                        Transport.send(mm, raddr);
+                        mm.saveChanges();
                     } catch (MessagingException e) {
-                        ZimbraLog.filter.warn("Redirect to %s failed.  Saving message to INBOX.  %s", addr, e.toString());
+                        try {
+                            mm = new MimeMessage(mm) {
+                                @Override protected void updateHeaders() throws MessagingException {
+                                    setHeader("MIME-Version", "1.0");  if (getMessageID() == null) updateMessageID();
+                                }
+                            };
+                            ZimbraLog.filter.info("Message format error detected; wrapper class in use");
+                        } catch (MessagingException e2) {
+                            ZimbraLog.filter.warn("Message format error detected; workaround failed");
+                        }
+                    }
+                    try {
+                        Transport.send(mm, new Address[] { new InternetAddress(addr) });
+                    } catch (MessagingException e) {
+                        ZimbraLog.filter.warn("Redirect to " + addr + " failed.  Saving message to INBOX.  " + e.toString());
                         addMessage(Mailbox.ID_FOLDER_INBOX);
                     }
                 } else {
