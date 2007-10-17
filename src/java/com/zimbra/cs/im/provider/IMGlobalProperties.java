@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.im.provider;
 
+import java.io.File;
 import java.util.HashMap;
 
 import org.jivesoftware.util.JiveProperties;
@@ -25,20 +26,35 @@ import com.zimbra.common.localconfig.LC;
 
 public class IMGlobalProperties implements PropertyProvider {
     
-    private HashMap<String, String> mProvMap = new HashMap<String, String>();
+
+    /**
+     * LocalConfig mappings into jive properties
+     */
+    private HashMap<String, String> mLocalConfigMap = new HashMap<String, String>();
+    
     private JiveProperties mJiveProps;
     
     public IMGlobalProperties() {
-        mProvMap.put("xmpp.socket.ssl.keystore", LC.mailboxd_keystore.value());
-        mProvMap.put("xmpp.socket.ssl.keypass", LC.mailboxd_keystore_password.value());
-        mProvMap.put("xmpp.socket.ssl.truststore", LC.mailboxd_keystore.value());
-        mProvMap.put("xmpp.socket.ssl.trustpass", LC.mailboxd_truststore_password.value());
-        mProvMap.put("xmpp.socket.blocking", "false");
-        mProvMap.put("xmpp.server.certificate.verify", "false");
+        mLocalConfigMap.put("xmpp.socket.ssl.keystore", LC.mailboxd_keystore.value());
+        mLocalConfigMap.put("xmpp.socket.ssl.keypass", LC.mailboxd_keystore_password.value());
         
-//        if (true) { // UNCOMMENT ME TO DISABLE TLS FOR DEBUGGING!
-//            mProvMap.put("xmpp.client.tls.policy", "disabled");
-//        }
+        // search out the trustStore
+        String trustStoreLocation = System.getProperty("javax.net.ssl.trustStore", null);
+        if (trustStoreLocation == null) {
+            trustStoreLocation = LC.zimbra_java_home.value() + File.separator + "lib" + File.separator + "security" + File.separator + "cacerts"; 
+            if (!new File(trustStoreLocation).exists()) {
+                trustStoreLocation = LC.zimbra_java_home.value() + File.separator + "jre" + File.separator + "lib" + File.separator + "security" + File.separator + "cacerts"; 
+            }
+            mLocalConfigMap.put("xmpp.socket.ssl.truststore", trustStoreLocation);
+        }
+        
+        mLocalConfigMap.put("xmpp.socket.ssl.trustpass", LC.mailboxd_truststore_password.value());
+        mLocalConfigMap.put("xmpp.socket.blocking", "false");
+        mLocalConfigMap.put("xmpp.server.certificate.verify", "false");
+        
+        if (LC.debug_xmpp_disable_client_tls.booleanValue()) { // UNCOMMENT ME TO DISABLE TLS FOR DEBUGGING!
+            mLocalConfigMap.put("xmpp.client.tls.policy", "disabled");
+        }
                 
 //      mProvMap.put("xmpp.server.read.timeout", Integer.toString(60 * 60 * 1000));        
 //        provMap.put("", "");
@@ -46,8 +62,8 @@ public class IMGlobalProperties implements PropertyProvider {
     
     public String get(String key) {
         synchronized(this) {
-            if (mProvMap.containsKey(key)) {
-                return mProvMap.get(key);
+            if (mLocalConfigMap.containsKey(key)) {
+                return mLocalConfigMap.get(key);
             } else {
                 if (mJiveProps == null)
                     mJiveProps = JiveProperties.getInstance();
@@ -58,7 +74,7 @@ public class IMGlobalProperties implements PropertyProvider {
 
     public String put(String key, String value) {
         synchronized(this) {
-            if (mProvMap.containsKey(key)) {
+            if (mLocalConfigMap.containsKey(key)) {
                 throw new UnsupportedOperationException("Cannot write to provisioning-mapped props yet");
             }
             if (mJiveProps == null)
@@ -69,7 +85,7 @@ public class IMGlobalProperties implements PropertyProvider {
 
     public String remove(String key) {
         synchronized(this) {
-            if (mProvMap.containsKey(key)) {
+            if (mLocalConfigMap.containsKey(key)) {
                 throw new UnsupportedOperationException("Cannot write to provisioning-mapped props yet");
             }
             if (mJiveProps == null)
