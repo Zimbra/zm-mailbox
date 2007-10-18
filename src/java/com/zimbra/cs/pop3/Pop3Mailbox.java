@@ -72,8 +72,6 @@ class Pop3Mailbox {
             ZimbraQueryResults results = null;
             mMessages = new ArrayList<Pop3Message>(500);            
             try {
-                // don't display IMAP \Deleted messages via POP
-                query = "(" + query + ") -tag:\\Deleted";
                 results = mbox.search(mOpContext, query, POP3_TYPES, MailboxIndex.SortBy.DATE_DESCENDING, 500);
 
                 while (results.hasNext()) {

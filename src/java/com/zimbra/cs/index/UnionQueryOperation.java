@@ -27,20 +27,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
-import com.zimbra.cs.index.MailboxIndex.SortBy;
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.SetUtil;
-import com.zimbra.common.soap.SoapProtocol;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-import com.zimbra.common.util.ZimbraLog;
-
 
 
 /************************************************************************

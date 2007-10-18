@@ -2525,18 +2525,25 @@ public final class ZimbraQuery {
         }
 
         if (mOp!= null) {
+            QueryTargetSet targets = mOp.getQueryTargets();
+            assert(mOp instanceof UnionQueryOperation || targets.countExplicitTargets() <=1);
+            assert(targets.size() >1 || !targets.hasExternalTargets() || mOp instanceof RemoteQueryOperation);
+
             if (mLog.isDebugEnabled())
                 mLog.debug("OPERATION:"+mOp.toString());
 
-            QueryTargetSet targets = mOp.getQueryTargets();
-            assert(mOp instanceof UnionQueryOperation || targets.countExplicitTargets() <=1);
             assert(mResults == null);
 
             // if we've only got one target, and it is external, then mOp must be a RemoteQueryOp
-            assert(targets.size() >1 || !targets.hasExternalTargets() || mOp instanceof RemoteQueryOperation);
-
             mResults = mOp.run(mMbox, mbidx, mParams, mChunkSize);
             mResults = new HitIdGrouper(mResults, mParams.getSortBy());
+            
+            if (!mParams.getIncludeTagDeleted()) {
+                FilteredQueryResults filtered = new FilteredQueryResults(mResults);
+                filtered.setFilterTagDeleted(true);
+                mResults = filtered;
+            }
+            
             return mResults;
         } else {
             mLog.debug("Operation optimized to nothing.  Returning no results");
@@ -2661,11 +2668,11 @@ public final class ZimbraQuery {
         
         assert(union.mQueryOperations.size() > 0);
         
-        if (union.mQueryOperations.size() == 1) {
-            // this can happen if we replaced ALL of our operations with a single remote op...
-            return union.mQueryOperations.get(0).optimize(mbox);
-        }
-        
+//        if (union.mQueryOperations.size() == 1) {
+//            // this can happen if we replaced ALL of our operations with a single remote op...
+//            return union.mQueryOperations.get(0).optimize(mbox);
+//        }
+//        
         
         return union.optimize(mbox);
     }

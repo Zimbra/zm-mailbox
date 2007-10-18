@@ -223,6 +223,7 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
     private List<ImapMessage> loadVirtualFolder(OperationContext octxt, SearchFolder search) throws ServiceException {
         SearchParams params = new SearchParams();
         params.setQueryStr(mQuery);
+        params.setIncludeTagDeleted(true);
         params.setTypes(ImapHandler.ITEM_TYPES);
         params.setSortBy(MailboxIndex.SortBy.DATE_ASCENDING);
         params.setChunkSize(1000);

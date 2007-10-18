@@ -26,21 +26,23 @@ import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.index.MailboxIndex.SortBy;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.SoapProtocol;
 
-class RemoteQueryOperation extends QueryOperation {
+class RemoteQueryOperation extends FilterQueryOperation {
     
     RemoteQueryOperation() {}
 
-//    private UnionQueryOperation mOp = null;
-    private QueryOperation mOp = null;
     private ProxiedQueryResults mResults = null;
     private QueryTarget mTarget = null;
 
+    /**
+     * Try to OR an operation into this one.  Return FALSE if that isn't
+     * possible (incompatible query targets)
+     *  
+     * @return FALSE 
+     */
     boolean tryAddOredOperation(QueryOperation op) {
         QueryTargetSet targets = op.getQueryTargets();
         assert(targets.countExplicitTargets() == 1);
@@ -66,49 +68,8 @@ class RemoteQueryOperation extends QueryOperation {
         return true;
     }
 
-    String toQueryString() {
-        return mOp.toQueryString();
-    }
-
     public String toString() {
         return "REMOTE["+mTarget.toString()+"]:"+mOp.toString();
-    }
-
-    QueryTargetSet getQueryTargets() {
-        return mOp.getQueryTargets();
-    }
-
-    QueryOperation ensureSpamTrashSetting(Mailbox mbox, boolean includeTrash,
-                boolean includeSpam) throws ServiceException {
-
-        return mOp.ensureSpamTrashSetting(mbox, includeTrash, includeSpam);
-    }
-
-    boolean hasSpamTrashSetting() {
-        return mOp.hasSpamTrashSetting();
-    }
-
-    void forceHasSpamTrashSetting() {
-        mOp.forceHasSpamTrashSetting();
-    }
-
-    boolean hasNoResults() {
-        return mOp.hasNoResults();
-    }
-
-    boolean hasAllResults() {
-        return mOp.hasAllResults();
-    }
-
-    QueryOperation optimize(Mailbox mbox) throws ServiceException {
-        // optimize our sub-op, but *don't* optimize us out -- the RemoteQueryOperation wrapper
-        // is important
-        mOp = mOp.optimize(mbox);
-        return this;
-    }
-
-    protected QueryOperation combineOps(QueryOperation other, boolean union) {
-        return null;
     }
 
     protected void setup(SoapProtocol proto, Account authenticatedAccount, boolean isAdmin, SearchParams params) 
@@ -132,11 +93,6 @@ class RemoteQueryOperation extends QueryOperation {
         }
     }
     
-
-    protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx, SearchParams params, int chunkSize) {
-        mParams = params;
-    }
-
     public void resetIterator() throws ServiceException {
         if (mResults != null)
             mResults.resetIterator();
@@ -168,12 +124,6 @@ class RemoteQueryOperation extends QueryOperation {
     }
     
     public int estimateResultSize() throws ServiceException {
-        return 0;
+        return mOp.estimateResultSize();
     }
-    
-    protected void depthFirstRecurse(RecurseCallback cb) {
-        mOp.depthFirstRecurse(cb);
-        cb.recurseCallback(this);
-    }
-
 }

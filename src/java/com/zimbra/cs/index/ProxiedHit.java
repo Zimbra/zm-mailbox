@@ -140,5 +140,10 @@ public class ProxiedHit extends ZimbraHit
     public Element getElement() { 
         return mElement;
     }
+    
+    boolean isLocal() {
+        return false;
+    }
+    
 
 }

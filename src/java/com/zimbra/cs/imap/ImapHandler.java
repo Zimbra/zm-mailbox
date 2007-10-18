@@ -2518,6 +2518,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                     ZimbraLog.imap.info("[ search is: " + search + " ]");
 
                     SearchParams params = new SearchParams();
+                    params.setIncludeTagDeleted(true);
                     params.setQueryStr(search);
                     params.setTypes(ITEM_TYPES);
                     params.setSortBy(MailboxIndex.SortBy.DATE_ASCENDING);

@@ -45,7 +45,7 @@ import com.zimbra.cs.mailbox.MailItem;
 public final class ConversationHit extends ZimbraHit {
     
     private Conversation mConversation = null;
-    private Map<Long, MessageHit> mMessageHits = null;
+    private Map<Long, MessageHit> mMessageHits = new LinkedHashMap<Long, MessageHit>();
     private int mConversationId = 0;
 
     protected ConversationHit(ZimbraQueryResultsImpl results, Mailbox mbx, int conversationId, float score) {
@@ -58,9 +58,6 @@ public final class ConversationHit extends ZimbraHit {
     }
 
     public void addMessageHit(MessageHit mh) {
-        if (mMessageHits == null) {
-            mMessageHits = new LinkedHashMap<Long, MessageHit>();
-        }
         mMessageHits.put(new Long(mh.getItemId()), mh);
     }
 

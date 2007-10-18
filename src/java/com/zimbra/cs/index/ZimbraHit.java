@@ -276,6 +276,14 @@ public abstract class ZimbraHit
      * @throws ServiceException
      */
     abstract String getName() throws ServiceException;
+    
+    
+    /**
+     * @return TRUE if this hit is local to this mailbox (ie not proxied)
+     */
+    boolean isLocal() {
+        return true;
+    }
 
     public ImapMessage getImapMessage() throws ServiceException {
         if (mCachedImapMessage != null)

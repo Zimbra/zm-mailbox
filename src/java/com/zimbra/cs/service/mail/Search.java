@@ -66,11 +66,6 @@ public class Search extends MailDocumentHandler  {
 
         String query = params.getQueryStr();
 
-        // HACK: temporary until we get UI for gateway reg/unreg 
-        if (!query.startsWith("$im")&& !query.startsWith("$maint")) 
-            query = "(" + query + ") -tag:\\Deleted";
-
-
         params.setQueryStr(query);
 
         ZimbraQueryResults results = doSearch(zsc, octxt, mbox, params);

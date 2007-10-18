@@ -173,7 +173,7 @@ public final class MessagePartHit extends ZimbraHit {
         return mMessage;
     }
     
-    public MailItem getMailItem()  { return null; }
+    public MailItem getMailItem() throws ServiceException { return getMessageResult().getMailItem(); }
     
 
 }
