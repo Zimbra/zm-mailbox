@@ -72,6 +72,7 @@ import com.zimbra.cs.zclient.ZMailbox;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -123,15 +124,14 @@ public abstract class ImapHandler extends ProtocolHandler {
     protected String          mLastCommand;
     protected ImapFolder      mSelectedFolder;
     private   String          mIdleTag;
+    private   String          mOrigRemoteAddress;
     protected boolean         mGoodbyeSent;
-    private String            mOrigRemoteAddress;
     
     protected static ActivityTracker sActivityTracker;
 
     private static synchronized void initActivityTracker() {
-        if (sActivityTracker == null) {
+        if (sActivityTracker == null)
             sActivityTracker = ActivityTracker.getInstance("imap.csv");
-        }
     }
 
     ImapHandler(MinaImapServer server) {
@@ -3058,15 +3058,15 @@ public abstract class ImapHandler extends ProtocolHandler {
                         int[] mItemIds = new int[i4list.size()];
                         int counter  = 0;
                         for (ImapMessage curMsg : i4list) {
-                            mItemIds[counter++] = i4msg.msgId;
+                            mItemIds[counter++] = curMsg.msgId;
                             if (counter == 1)
                                 type = curMsg.getType();
-                            else if (i4msg.getType() != type)
+                            else if (curMsg.getType() != type)
                                 type = MailItem.TYPE_UNKNOWN;
                         }
                         copyMsgs = mbox.imapCopy(getContext(), mItemIds, type, iidTarget.getId());
                     } catch (IOException e) {
-                        throw ServiceException.FAILURE("Caught IOException execiting " + this, e);
+                        throw ServiceException.FAILURE("Caught IOException executing " + this, e);
                     }
                     
                     copies.addAll(copyMsgs);
