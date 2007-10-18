@@ -215,7 +215,7 @@ public class MailSender {
                     pm = new ParsedMessage(mm, mm.getSentDate().getTime(), mboxSave.attachmentsIndexingEnabled());
                     // save it to the requested folder
                     int sentFolderId = getSentFolderId(mboxSave, identity);
-                    Message msg = mboxSave.addMessage(octxt, pm, sentFolderId, true, flags, null, convId);
+                    Message msg = mboxSave.addMessage(octxt, pm, sentFolderId, mboxSave != mbox, flags, null, convId);
                     rollback[0] = new RollbackData(msg);
                 } else {
                     // delegated request, not local
@@ -228,7 +228,7 @@ public class MailSender {
                             String sentFolder = identity.getAttr(Provisioning.A_zimbraPrefSentMailFolder, "" + Mailbox.ID_FOLDER_SENT);
                             pm = new ParsedMessage(mm, mm.getSentDate().getTime(), mbox.attachmentsIndexingEnabled());
 
-                            String msgId = zmbox.addMessage(sentFolder, "s", null, mm.getSentDate().getTime(), pm.getRawData(), true);
+                            String msgId = zmbox.addMessage(sentFolder, "s", null, mm.getSentDate().getTime(), pm.getRawData(), false);
                             rollback[0] = new RollbackData(zmbox, authuser, msgId);
                         } catch (Exception e) {
                             ZimbraLog.smtp.warn("could not save to remote sent folder (perm denied); continuing", e);

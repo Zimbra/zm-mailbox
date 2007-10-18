@@ -3492,21 +3492,22 @@ public class Mailbox {
     private boolean dedupe(MimeMessage mm, Integer sentMsgId) throws ServiceException {
         Account acct = getAccount();
         String pref = acct.getAttr(Provisioning.A_zimbraPrefDedupeMessagesSentToSelf, null);
-        if (pref == null)                               // default to no deduping
+        if (pref == null) {                                 // default to no deduping
             return false;
-        else if (pref.equalsIgnoreCase(DEDUPE_ALL))     // remove all duplicates
+        } else if (pref.equalsIgnoreCase(DEDUPE_ALL)) {     // remove all duplicates
             return true;
-        else if (pref.equalsIgnoreCase(DEDUPE_SECOND))  // receive if we're not a direct recipient (to, cc, bcc)
+        } else if (pref.equalsIgnoreCase(DEDUPE_SECOND)) {  // receive if we're not a direct recipient (to, cc, bcc)
             try {
                 return !AccountUtil.isDirectRecipient(acct, mm);
             } catch (Exception e) {
                 return false;
             }
-            else if (pref.equalsIgnoreCase(DEDUPE_INBOX))   // move the existing mail from sent to inbox
-                // XXX: not implemented
-                return false;
-            else
-                return false;
+        } else if (pref.equalsIgnoreCase(DEDUPE_INBOX)) {   // move the existing mail from sent to inbox
+            // XXX: not implemented
+            return false;
+        } else {
+            return false;
+        }
     }
 
     public int getConversationIdFromReferent(MimeMessage newMsg, int parentID) {
@@ -3715,8 +3716,7 @@ public class Mailbox {
         if (checkDuplicates && !isSent && mSentMessageIDs.containsKey(msgidHeader)) {
             Integer sentMsgID = (Integer) mSentMessageIDs.get(msgidHeader);
             // if the rules say to drop this duplicated incoming message, return null now
-            // don't dedupe messages carrying calendar part
-            if (pm.getiCalendar() == null && dedupe(pm.getMimeMessage(), sentMsgID))
+            if (dedupe(pm.getMimeMessage(), sentMsgID))
                 return null;
             // if we're not dropping the new message, see if it goes in the same conversation as the old sent message
             if (conversationId == ID_AUTO_INCREMENT) {
