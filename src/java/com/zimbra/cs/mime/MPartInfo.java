@@ -25,7 +25,7 @@ import java.util.List;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimePart;
 
-import com.zimbra.cs.mime.MimeCompoundHeader.ContentType;
+import com.zimbra.common.mime.ContentType;
 
 public class MPartInfo {
 	MimePart mPart;

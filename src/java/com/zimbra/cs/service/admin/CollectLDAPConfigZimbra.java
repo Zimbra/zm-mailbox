@@ -25,17 +25,17 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.cs.mime.MimeCompoundHeader.ContentDisposition;
-import com.zimbra.cs.rmgmt.RemoteCommands;
-import com.zimbra.cs.rmgmt.RemoteManager;
-import com.zimbra.cs.rmgmt.RemoteResult;
-import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.ServerBy;
+import com.zimbra.cs.rmgmt.RemoteCommands;
+import com.zimbra.cs.rmgmt.RemoteManager;
+import com.zimbra.cs.rmgmt.RemoteResult;
+import com.zimbra.cs.servlet.ZimbraServlet;
 
 public class CollectLDAPConfigZimbra extends ZimbraServlet {
 	private static final String DOWNLOAD_CONTENT_TYPE = "application/x-compressed";

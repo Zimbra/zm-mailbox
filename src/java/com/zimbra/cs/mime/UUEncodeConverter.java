@@ -31,7 +31,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-import com.zimbra.cs.mime.MimeCompoundHeader.ContentDisposition;
+import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.ZimbraLog;
 

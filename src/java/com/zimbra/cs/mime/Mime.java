@@ -57,11 +57,12 @@ import javax.mail.internet.ParseException;
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.net.QCodec;
 
+import com.zimbra.common.mime.ContentType;
+import com.zimbra.common.mime.MimeCompoundHeader;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
-import com.zimbra.cs.mime.MimeCompoundHeader.ContentType;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;

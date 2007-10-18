@@ -39,20 +39,20 @@ import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 
+import com.zimbra.common.mime.ContentDisposition;
+import com.zimbra.common.mime.ContentType;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.mime.MimeCompoundHeader.ContentDisposition;
-import com.zimbra.cs.mime.MimeCompoundHeader.ContentType;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.util.NetUtil;
-import com.zimbra.common.util.ZimbraLog;
 
 /**
  * @author jylee

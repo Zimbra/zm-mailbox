@@ -51,6 +51,11 @@ import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpMethodParams;
 
+import com.zimbra.common.mime.ContentType;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.FileUtil;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.Folder;
@@ -59,11 +64,6 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.mime.MimeCompoundHeader.ContentType;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.DateUtil;
-import com.zimbra.common.util.FileUtil;
-import com.zimbra.common.soap.Element;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.NetUtil;
 

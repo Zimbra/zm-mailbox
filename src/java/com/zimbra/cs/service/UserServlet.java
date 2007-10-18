@@ -44,6 +44,13 @@ import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 
+import com.zimbra.common.mime.ContentType;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.HttpUtil;
+import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
@@ -59,17 +66,10 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.mime.MimeCompoundHeader;
 import com.zimbra.cs.service.formatter.*;
 import com.zimbra.cs.service.mail.GetItem;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.DateUtil;
-import com.zimbra.common.util.HttpUtil;
-import com.zimbra.common.util.Pair;
-import com.zimbra.common.util.ZimbraLog;
 
 /**
  * 
@@ -509,7 +509,7 @@ public class UserServlet extends ZimbraServlet {
 
             // if no format explicitly specified, try to guess it from the Content-Type header
             if (context.format == null && ctype != null) {
-                String normalizedType = new MimeCompoundHeader.ContentType(ctype).getValue();
+                String normalizedType = new ContentType(ctype).getValue();
                 Formatter fmt = mDefaultFormatters.get(normalizedType);
                 if (fmt != null)
                     context.format = fmt.getType();

@@ -46,18 +46,19 @@ import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.net.BCodec;
 import org.apache.commons.codec.net.QCodec;
 
+import com.zimbra.common.mime.ContentDisposition;
+import com.zimbra.common.mime.ContentType;
+import com.zimbra.common.mime.MimeCompoundHeader;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.mime.MimeCompoundHeader;
-import com.zimbra.cs.mime.MimeCompoundHeader.*;
 import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
 
 public class ImapMessage implements Comparable<ImapMessage> {
     static class ImapMessageSet extends TreeSet<ImapMessage> {

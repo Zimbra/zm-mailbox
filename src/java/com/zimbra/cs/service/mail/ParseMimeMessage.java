@@ -20,6 +20,8 @@
  */
 package com.zimbra.cs.service.mail;
 
+import com.zimbra.common.mime.ContentDisposition;
+import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ExceptionToString;
@@ -39,8 +41,6 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mime.BlobDataSource;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.mime.MimeCompoundHeader.ContentDisposition;
-import com.zimbra.cs.mime.MimeCompoundHeader.ContentType;
 import com.zimbra.cs.service.ContentServlet;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
