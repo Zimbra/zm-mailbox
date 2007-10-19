@@ -215,7 +215,7 @@ public class MailSender {
                     pm = new ParsedMessage(mm, mm.getSentDate().getTime(), mboxSave.attachmentsIndexingEnabled());
                     // save it to the requested folder
                     int sentFolderId = getSentFolderId(mboxSave, identity);
-                    Message msg = mboxSave.addMessage(octxt, pm, sentFolderId, mboxSave != mbox, flags, null, convId);
+                    Message msg = mboxSave.addMessage(octxt, pm, sentFolderId, !isDelegatedRequest, flags, null, convId);
                     rollback[0] = new RollbackData(msg);
                 } else {
                     // delegated request, not local
