@@ -236,7 +236,7 @@ public class MimeCompoundHeader {
             }
             line.append(sb);  position += sb.length();
         }
-        return line.append("\r\n").toString();
+        return line.toString();
     }
 
     // special subclass of URLCodec that replaces ' ' with "%20" rather than with "+"
