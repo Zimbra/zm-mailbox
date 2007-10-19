@@ -261,10 +261,6 @@ public class LC {
     
     public static final KnownKey zimbra_csv_mapping_file;
     
-    public static final KnownKey debug_lmtp_use_shared_stream;
-    public static final KnownKey debug_blob_store_use_shared_stream;
-    public static final KnownKey debug_message_cache_use_shared_stream;
-    
     public static final KnownKey debug_update_config_use_old_scheme;
     
     public static final KnownKey debug_batch_message_indexing;
@@ -978,20 +974,6 @@ public class LC {
         zimbra_csv_mapping_file = new KnownKey("zimbra_csv_mapping_file");
         zimbra_csv_mapping_file.setDefault("${zimbra_home}" + FS + "conf" + FS + "zimbra-contact-fields.xml");
         zimbra_csv_mapping_file.setDoc("Contact field mapping for CSV import and export");
-        
-        debug_lmtp_use_shared_stream = new KnownKey("debug_lmtp_use_shared_stream");
-        debug_lmtp_use_shared_stream.setDefault("false");
-        debug_lmtp_use_shared_stream.setDoc("If true, SharedByteArrayInputStream will be used during LMTP deliver to limit memory use");
-        
-        debug_blob_store_use_shared_stream = new KnownKey("debug_blob_store_use_shared_stream");
-        debug_blob_store_use_shared_stream.setDefault("false");
-        debug_blob_store_use_shared_stream.setDoc(
-            "If true, SharedFileInputStream will be used when instantiating a message from disk");
-        
-        debug_message_cache_use_shared_stream = new KnownKey("debug_message_cache_use_shared_stream");
-        debug_message_cache_use_shared_stream.setDefault("false");
-        debug_message_cache_use_shared_stream.setDoc(
-            "If true, SharedFileInputStream will be used when instantiating a message from the message cache");
         
         debug_update_config_use_old_scheme = new KnownKey("debug_update_config_use_old_scheme");
         debug_update_config_use_old_scheme.setDefault("false");

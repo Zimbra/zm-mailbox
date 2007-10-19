@@ -321,8 +321,8 @@ public class ByteUtil {
 		return data != null && data.length > 2 &&
 			((data[0] | (data[1] << 8)) == GZIPInputStream.GZIP_MAGIC);
 	}
-
-    private static String encodeFSSafeBase64(byte[] data) {
+	
+    public static String encodeFSSafeBase64(byte[] data) {
         byte[] encoded = Base64.encodeBase64(data);
         // Replace '/' with ',' to make the digest filesystem-safe.
         for (int i = 0; i < encoded.length; i++) {
@@ -343,9 +343,9 @@ public class ByteUtil {
     }
 
 	/**
-	 * return the SHA1 digest of the supplied data.
+	 * Returns the SHA1 digest of the supplied data.
 	 * @param data data to digest
-	 * @param base64 if true, return as base64 String, otherwise return
+	 * @param base64 if <tt>true</tt>, return as base64 String, otherwise return
 	 *  as hex string.
 	 * @return
 	 */
@@ -362,6 +362,36 @@ public class ByteUtil {
 	        //	e.printStackTrace();
 	        throw new RuntimeException(e);
 	    }
+	}
+	
+    /**
+     * Reads the given <tt>InputStream</tt> in its entirety, closes
+     * the stream, and returns the SHA1 digest of the read data.
+     * @param in data to digest
+     * @param base64 if <tt>true</tt>, returns as base64 String, otherwise return
+     *  as hex string.
+     * @return
+     */
+	public static String getSHA1Digest(InputStream in, boolean base64)
+	throws IOException {
+	    try {
+	        MessageDigest md = MessageDigest.getInstance("SHA1");
+	        byte[] buffer = new byte[1024];
+	        int numBytes;
+	        while ((numBytes = in.read(buffer)) >= 0) {
+	            md.update(buffer, 0, numBytes);
+	        }
+	        byte[] digest = md.digest();
+	        in.close();
+	        if (base64)
+	            return encodeFSSafeBase64(digest);
+	        else
+	            return new String(Hex.encodeHex(digest));
+        } catch (NoSuchAlgorithmException e) {
+            // this should never happen unless the JDK is foobar
+            //  e.printStackTrace();
+            throw new RuntimeException(e);
+        }
 	}
 
 	/**
@@ -387,9 +417,8 @@ public class ByteUtil {
 	}
 
 	/**
-	 * Returns the digest using the default algorithm.
-	 * @param data
-	 * @return
+	 * Returns the SHA1 digest for the given data, encoded
+	 * as base64.
 	 */
 	public static String getDigest(byte[] data) {
 		return getSHA1Digest(data, true);
@@ -416,20 +445,32 @@ public class ByteUtil {
     }
 
     /**
-     * Copy an input stream fully to output stream.
-     * @param in
-     * @param closeIn If true, input stream is closed before returning, even
+     * Copies an input stream fully to output stream.
+     * @param in the <tt>InputStream</tt>
+     * @param closeIn if <tt>true</tt>, the <tt>InputStream</tt> is closed before returning, even
      *                when there is an error.
-     * @param out
-     * @param closeOut If true, output stream is closed before returning, even
+     * @param out the <tt>OutputStream</tt>
+     * @param closeOut if <tt>true</tt>, the <tt>OutputStream</tt> is closed before returning, even
      *                 when there is an error.
-     * @return
+     * @return the number of bytes copied
      * @throws IOException
      */
     public static int copy(InputStream in, boolean closeIn, OutputStream out, boolean closeOut) throws IOException {
         return copy(in, closeIn, out, closeOut, -1L);
     }
 
+    /**
+     * Copies an input stream fully to output stream.
+     * @param in the <tt>InputStream</tt>
+     * @param closeIn if <tt>true</tt>, the <tt>InputStream</tt> is closed before returning, even
+     *                when there is an error.
+     * @param out the <tt>OutputStream</tt>
+     * @param closeOut if <tt>true</tt>, the <tt>OutputStream</tt> is closed before returning, even
+     *                 when there is an error.
+     * @param maxLength maximum number of bytes to copy
+     * @return the number of bytes copied
+     * @throws IOException
+     */
     public static int copy(InputStream in, boolean closeIn, OutputStream out, boolean closeOut, long maxLength) throws IOException {
         try {
             byte buffer[] = new byte[8192];
