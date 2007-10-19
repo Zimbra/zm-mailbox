@@ -24,6 +24,7 @@ import java.util.Map;
 
 import junit.framework.Assert;
 import junit.framework.Test;
+import junit.framework.TestCase;
 import junit.framework.TestResult;
 
 import com.zimbra.common.localconfig.LC;
@@ -65,6 +66,7 @@ import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMessage;
 import com.zimbra.cs.zclient.ZSearchHit;
 import com.zimbra.cs.zclient.ZSearchParams;
+import com.zimbra.cs.zclient.ZTag;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.MessagePart;
 import com.zimbra.soap.SoapFaultException;
@@ -73,7 +75,7 @@ import com.zimbra.soap.SoapFaultException;
  * @author bburtin
  */
 public class TestUtil {
-
+    
     public static Account getAccount(String userName)
     throws ServiceException {
         String address = getAddress(userName);
@@ -155,8 +157,8 @@ public class TestUtil {
     }
 
     private static String[] MESSAGE_TEMPLATE_LINES = {
-        "From: Jeff Spiccoli <jspiccoli@${DOMAIN}>",
-        "To: Test User 1 <user1@${DOMAIN}>",
+        "From: Jeff Spiccoli <${SENDER}@${DOMAIN}>",
+        "To: Test User 1 <${RECIPIENT}@${DOMAIN}>",
         "Subject: ${SUBJECT}",
         "Date: Mon, 28 Mar 2005 10:21:10 -0700",
         "X-Zimbra-Received: Mon, 28 Mar 2005 10:21:1${MESSAGE_NUM} -0700",
@@ -187,12 +189,25 @@ public class TestUtil {
         vars.put("MESSAGE_NUM", new Integer(messageNum));
         vars.put("SUBJECT", subject);
         vars.put("DOMAIN", getDomain());
+        vars.put("SENDER", "jspiccoli");
+        vars.put("RECIPIENT", "user1");
+        return StringUtil.fillTemplate(MESSAGE_TEMPLATE, vars);
+    }
+
+    private static String getTestMessage(int messageNum, String subject, String recipient, String sender)
+    throws ServiceException {
+        Map<String, Object> vars = new HashMap<String, Object>();
+        vars.put("MESSAGE_NUM", new Integer(messageNum));
+        vars.put("SUBJECT", subject);
+        vars.put("DOMAIN", getDomain());
+        vars.put("SENDER", sender);
+        vars.put("RECIPIENT", recipient);
         return StringUtil.fillTemplate(MESSAGE_TEMPLATE, vars);
     }
 
     public static void insertMessageLmtp(int messageNum, String subject, String recipient, String sender)
     throws Exception {
-        String message = getTestMessage(messageNum, subject);
+        String message = getTestMessage(messageNum, subject, recipient, sender);
         LmtpClient lmtp = new LmtpClient("localhost", 7025);
         List<String> recipients = new ArrayList<String>();
         recipients.add(recipient);
@@ -219,7 +234,7 @@ public class TestUtil {
         msg.setAttachmentUploadId(attachmentUploadId);
         senderMbox.sendMessage(msg, null, false);
     }
-
+    
     /**
      * Searches a mailbox and returns the id's of all matching items.
      */
@@ -373,5 +388,36 @@ public class TestUtil {
         sp.soapSetURI("https://localhost:7071" + ZimbraServlet.ADMIN_SERVICE_URI);
         sp.soapZimbraAdminAuthenticate();
         return sp;
+    }
+    
+    /**
+     * Verifies that a message is tagged.
+     */
+    public static void verifyTag(ZMailbox mbox, ZMessage msg, String tagName)
+    throws Exception {
+        List<ZTag> tags = mbox.getTags(msg.getTagIds());
+        for (ZTag tag : tags) {
+            if (tag.getName().equals(tagName)) {
+                return;
+            }
+        }
+        Assert.fail("Message not tagged with " + tagName);
+    }
+
+    public static ZMessage getMessage(ZMailbox mbox, String query)
+    throws Exception {
+        List<ZMessage> results = search(mbox, query);
+        String errorMsg = String.format("Unexpected number of messages returned by query '%s'", query);
+        Assert.assertEquals(errorMsg, 1, results.size());
+        return results.get(0);
+    }
+    
+    /**
+     * Verifies that a message is flagged.
+     */
+    public static void verifyFlag(ZMailbox mbox, ZMessage msg, ZMessage.Flag flag) {
+        String flags = msg.getFlags();
+        String errorMsg = String.format("Flag %s not found in %s", flag.getFlagChar(), msg.getFlags());
+        Assert.assertTrue(errorMsg, flags.indexOf(flag.getFlagChar()) >= 0);
     }
 }
