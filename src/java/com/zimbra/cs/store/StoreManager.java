@@ -60,6 +60,18 @@ public abstract class StoreManager {
      * @throws IOException
      * @throws ServiceException
      */
+    public abstract Blob storeIncoming(InputStream data, int length, String path, short volumeId)
+    throws IOException, ServiceException;
+
+    /**
+     * Store a message in incoming directory.
+     * @param data
+     * @param digest
+     * @param path If null, blob store assigns one.
+     * @return
+     * @throws IOException
+     * @throws ServiceException
+     */
     public abstract Blob storeIncoming(byte[] data, String digest,
                                        String path, short volumeId)
     throws IOException, ServiceException;

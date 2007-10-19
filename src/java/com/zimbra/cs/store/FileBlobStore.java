@@ -21,14 +21,20 @@
 package com.zimbra.cs.store;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Iterator;
+import java.io.OutputStream;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import javax.mail.util.SharedFileInputStream;
 
@@ -38,7 +44,6 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxBlob;
@@ -53,12 +58,6 @@ public class FileBlobStore extends StoreManager {
 
     private UniqueFileNameGenerator mUniqueFilenameGenerator;
 
-    static {
-        // XXX bburtin: remove this after testing is completed
-        ZimbraLog.test.info("%s=%b", LC.debug_blob_store_use_shared_stream.key(),
-            LC.debug_blob_store_use_shared_stream.booleanValue());
-    }
-    
 	FileBlobStore() throws Exception {
         mUniqueFilenameGenerator = new UniqueFileNameGenerator();
         long sweepMaxAgeMS =
@@ -85,19 +84,17 @@ public class FileBlobStore extends StoreManager {
     public Blob storeIncoming(byte[] data, String digest,
                               String path, short volumeId)
     throws IOException, ServiceException {
-        byte[] writeData;
-
         // Prevent bogus digest values.
         if (!ByteUtil.isValidDigest(digest))
             throw ServiceException.FAILURE(
                 "Invalid blob digest \"" + digest + "\"", null);
 
+        return storeIncoming(new ByteArrayInputStream(data), data.length, path, volumeId);
+    }
+    
+    public Blob storeIncoming(InputStream in, int sizeHint, String path, short volumeId)
+    throws IOException, ServiceException {
         Volume volume = Volume.getById(volumeId);
-        if (volume.getCompressBlobs() && data.length > volume.getCompressionThreshold()) {
-            writeData = ByteUtil.compress(data);
-        } else {
-            writeData = data;
-        }
 
         if (path == null) {
             String incomingDir = volume.getIncomingMsgDir();
@@ -108,24 +105,61 @@ public class FileBlobStore extends StoreManager {
         }
         File file = new File(path);
         ensureParentDirExists(file);
+        Blob blob = new Blob(file, volumeId);
+        MessageDigest digest;
 
+        // Initialize streams and digest calculator.
+        try {
+            digest = MessageDigest.getInstance("SHA1");
+        } catch (NoSuchAlgorithmException e) {
+            throw ServiceException.FAILURE("", e);
+        }
+        DigestInputStream digestStream = new DigestInputStream(in, digest);
         FileOutputStream fos = new FileOutputStream(file);
-        fos.write(writeData);
+        ByteArrayOutputStream baos = null;
+        OutputStream out = fos;
+        
+        if (0 < sizeHint && sizeHint <= volume.getCompressionThreshold()) {
+            // Keep data in memory for small blobs.
+            baos = new ByteArrayOutputStream(sizeHint);
+        } else if (volume.getCompressBlobs() && sizeHint > volume.getCompressionThreshold()) {
+            // Compress large blobs when writing to disk.  Keep data in memory, since
+            // MimeMessage can't reference a compressed blob.
+            out = new GZIPOutputStream(fos);
+            blob.setCompressed(true);
+            baos = new ByteArrayOutputStream(sizeHint);
+        }
+        
+        // Write to the file and byte array.
+        byte[] buffer = new byte[1024];
+        int numRead = -1;
+        int totalRead = 0;
+        while ((numRead = digestStream.read(buffer)) >= 0) {
+            out.write(buffer, 0, numRead);
+            if (baos != null) {
+                baos.write(buffer, 0, numRead);
+            }
+            totalRead += numRead;
+        }
         if (!DebugConfig.disableMessageStoreFsync) {
-            fos.flush();
+            out.flush();
             fos.getChannel().force(true);
         }
-        fos.close();
-
-        if (mLog.isDebugEnabled()) {
-            mLog.debug("Stored size=" + data.length +
-                      " wrote=" + writeData.length +
-                      " path=" + path +
-                      " vol=" + volumeId +
-                      " digest=" + digest);
+        out.close();
+        if (fos != out) {
+            fos.close();
+        }
+        
+        // Set the blob's digest and data.
+        blob.setDigest(ByteUtil.encodeFSSafeBase64(digest.digest()));
+        if (baos != null) {
+            blob.setData(baos.toByteArray());
         }
 
-        Blob blob = new Blob(file, volumeId);
+        if (mLog.isDebugEnabled()) {
+            mLog.debug("Stored %s: data size=%d bytes, file size=%d bytes, volumeId=%d, isCompressed=%b",
+                path, blob.getFile().length(), file.length(), volumeId, blob.isCompressed());
+        }
         return blob;
     }
 
@@ -311,22 +345,15 @@ public class FileBlobStore extends StoreManager {
         if (header == GZIPInputStream.GZIP_MAGIC) {
         	is = new GZIPInputStream(is);
         } else {
-            if (LC.debug_blob_store_use_shared_stream.booleanValue()) {
-                is.close();
-                is = new SharedFileInputStream(blob.getFile());
-            }
+            is.close();
+            is = new SharedFileInputStream(blob.getFile());
         }
         return is;
     }
 
-    /* (non-Javadoc)
-	 * @see com.zimbra.cs.store.StoreManager#deleteStore(com.zimbra.cs.mailbox.Mailbox, int)
-	 */
 	public boolean deleteStore(Mailbox mbox, int volume)
-    throws IOException, ServiceException {
-        List volumes = Volume.getAll();
-        for (Iterator iter = volumes.iterator(); iter.hasNext(); ) {
-        	Volume vol = (Volume) iter.next();
+    throws IOException {
+        for (Volume vol : Volume.getAll()) {
             FileUtil.deleteDir(new File(vol.getMailboxDir(mbox.getId(), Volume.TYPE_MESSAGE)));
         }
         return true;

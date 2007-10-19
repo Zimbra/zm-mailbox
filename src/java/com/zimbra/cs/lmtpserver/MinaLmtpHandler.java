@@ -22,6 +22,7 @@ import com.zimbra.cs.mina.MinaRequest;
 import com.zimbra.cs.mina.MinaIoSessionOutputStream;
 import com.zimbra.cs.mina.MinaTextLineRequest;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.InetSocketAddress;
@@ -40,7 +41,12 @@ public class MinaLmtpHandler extends LmtpHandler implements MinaHandler {
     
     public void requestReceived(MinaRequest req) throws IOException {
         if (expectingMessageData) {
-            processMessageData(((MinaLmtpDataRequest) req).getBytes());
+            // XXX bburtin: This code is currently instantiating a byte array.  It should
+            // be rewritten to use streams.
+            byte[] data = ((MinaLmtpDataRequest) req).getBytes();
+            ByteArrayInputStream bais = new ByteArrayInputStream(data);
+            LmtpMessageInputStream messageStream = new LmtpMessageInputStream(bais, getAdditionalHeaders());
+            processMessageData(messageStream);
             expectingMessageData = false;
         } else {
             processCommand(((MinaTextLineRequest) req).getLine());

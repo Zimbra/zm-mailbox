@@ -31,6 +31,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.stats.ZimbraPerf;
+import com.zimbra.cs.store.Volume;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.util.Config;
 
@@ -365,12 +366,7 @@ public abstract class LmtpHandler extends ProtocolHandler {
 
     protected abstract void continueDATA() throws IOException;
     
-    protected void processMessageData(byte[] data) throws IOException {
-        if (data == null || data.length == 0) {
-            sendResponse("554 5.6.0 Empty message not allowed");
-            return;
-        }
-
+    protected void processMessageData(LmtpMessageInputStream in) throws IOException {
         // Log envelope information
         if (ZimbraLog.lmtp.isInfoEnabled()) {
             StringBuilder recipients = new StringBuilder();
@@ -394,25 +390,20 @@ public abstract class LmtpHandler extends ProtocolHandler {
                 mEnvelope.getSender(), recipients, size);
         }
 
-    	ZimbraLog.lmtp.debug("Actual number of bytes read: %d", data.length);
-
     	// TODO cleanup maybe add Date if not present
     	// TODO cleanup maybe add From header from envelope is not present
     	// TODO add Received header for this lmtp transaction
     	// TODO should there be a too many recipients test?
 
-        int dataLength = data.length;
+        mConfig.getLmtpBackend().deliver(mEnvelope, in, mEnvelope.getSize());
+
         int numRecipients = mEnvelope.getRecipients().size();
         ZimbraPerf.COUNTER_LMTP_RCVD_MSGS.increment();
-        ZimbraPerf.COUNTER_LMTP_RCVD_BYTES.increment(dataLength);
+        ZimbraPerf.COUNTER_LMTP_RCVD_BYTES.increment(in.getMessageSize());
         ZimbraPerf.COUNTER_LMTP_RCVD_RCPT.increment(numRecipients);
     	
-        mConfig.getLmtpBackend().deliver(mEnvelope, data);
-
         int numDelivered = 0;
-    	List recipients = mEnvelope.getRecipients();
-    	for (Iterator iter = recipients.iterator(); iter.hasNext();) {
-    		LmtpAddress recipient = (LmtpAddress)iter.next();
+    	for (LmtpAddress recipient : mEnvelope.getRecipients()) {
             LmtpStatus status = recipient.getDeliveryStatus();
     		if (status == LmtpStatus.ACCEPT) {
                 numDelivered++;
@@ -427,7 +418,7 @@ public abstract class LmtpHandler extends ProtocolHandler {
     	}
         
         ZimbraPerf.COUNTER_LMTP_DLVD_MSGS.increment(numDelivered);
-        ZimbraPerf.COUNTER_LMTP_DLVD_BYTES.increment(numDelivered * dataLength);
+        ZimbraPerf.COUNTER_LMTP_DLVD_BYTES.increment(numDelivered * in.getMessageSize());
         
     	reset();
     }

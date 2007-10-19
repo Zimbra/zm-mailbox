@@ -17,13 +17,15 @@
 
 package com.zimbra.cs.lmtpserver;
 
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.tcpserver.TcpServerInputStream;
 
 import java.net.Socket;
 import java.io.IOException;
 
 public class TcpLmtpHandler extends LmtpHandler {
-    private LmtpInputStream mInputStream;
+    private TcpServerInputStream mInputStream;
 
     TcpLmtpHandler(LmtpServer server) {
         super(server);
@@ -32,7 +34,7 @@ public class TcpLmtpHandler extends LmtpHandler {
     @Override
     protected boolean setupConnection(Socket connection) throws IOException {
         reset();
-        mInputStream = new LmtpInputStream(connection.getInputStream());
+        mInputStream = new TcpServerInputStream(connection.getInputStream());
         mWriter = new LmtpWriter(connection.getOutputStream());
         return setupConnection(connection.getInetAddress());
     }
@@ -60,8 +62,7 @@ public class TcpLmtpHandler extends LmtpHandler {
 
     @Override
     protected void continueDATA() throws IOException {
-        byte[] data = mInputStream.readMessage(
-            mEnvelope.getSize(), getAdditionalHeaders());
-        processMessageData(data);
+        LmtpMessageInputStream min = new LmtpMessageInputStream(mInputStream, getAdditionalHeaders());
+        processMessageData(min);
     }
 }

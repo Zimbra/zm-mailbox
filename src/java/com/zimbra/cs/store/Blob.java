@@ -36,6 +36,9 @@ public class Blob {
     private File mFile;
     private String mPath;
     private short mVolumeId;
+    private boolean mIsCompressed = false;
+    private byte[] mData;
+    private String mDigest;
 
     public Blob(File file, short volumeId) {
         mFile = file;
@@ -54,10 +57,32 @@ public class Blob {
     public short getVolumeId() {
     	return mVolumeId;
     }
+    
+    public boolean isCompressed() {
+        return mIsCompressed;
+    }
+    
+    public String getDigest() {
+        return mDigest;
+    }
+    
+    public byte[] getData() {
+        return mData;
+    }
+    
+    public void setCompressed(boolean isCompressed) {
+        mIsCompressed = isCompressed;
+    }
+    
+    public void setData(byte[] data) {
+        mData = data;
+    }
+    
+    public void setDigest(String digest) {
+        mDigest = digest;
+    }
 
     public String toString() {
-        StringBuffer sb = new StringBuffer("path=").append(mPath);
-        sb.append(", vol=").append(mVolumeId);
-        return sb.toString();
+        return String.format("path=%s, vol=%d, isCompressed=%b", mPath, mVolumeId, mIsCompressed);
     }
 }

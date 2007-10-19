@@ -17,6 +17,7 @@
 
 package com.zimbra.qa.unittest;
 
+import java.io.ByteArrayInputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
@@ -174,7 +175,24 @@ public class TestUtilCode extends TestCase
         Exception outer = new Exception("outer", middle);
         assertSame(inner, SystemUtil.getInnermostException(outer));
     }
-
+    
+    /**
+     * Tests {@link ByteUtil#getSHA1Digest.
+     */
+    public void testSHA1Digest()
+    throws Exception {
+        byte[] data = "I am not a number.  I am a free man.".getBytes();
+        String expected = "cc1ce56b9820cb5c4d6df9c9e39de0c7bf5b44a3";
+        String expectedBase64 = "zBzla5ggy1xNbfnJ453gx79bRKM=";
+        
+        assertEquals(expected, ByteUtil.getSHA1Digest(data, false));
+        assertEquals(expectedBase64, ByteUtil.getSHA1Digest(data, true));
+        assertEquals(expectedBase64, ByteUtil.getDigest(data));
+        
+        assertEquals(expected, ByteUtil.getSHA1Digest(new ByteArrayInputStream(data), false));
+        assertEquals(expectedBase64, ByteUtil.getSHA1Digest(new ByteArrayInputStream(data), true));
+    }
+    
     private static <E> boolean compareLists(List<E> list, List<List<E>> listOfLists) {
         int i = 0;
         for (List<E> curList : listOfLists) {

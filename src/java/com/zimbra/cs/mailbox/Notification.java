@@ -40,7 +40,6 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.lmtpserver.LmtpCallback;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 
@@ -66,19 +65,21 @@ implements LmtpCallback {
     private Notification() {
     }
     
-    public void afterDelivery(Account account, Mailbox mbox, ParsedMessage parsedMessage,
-                              String envelopeSender, String recipientEmail, Message newMessage) {
+    public void afterDelivery(Account account, Mailbox mbox, String envelopeSender,
+                              String recipientEmail, Message newMessage) {
         // If notification fails, log a warning and continue so that message delivery
         // isn't affected
         try {
-            notifyIfNecessary(account, newMessage, recipientEmail, parsedMessage);
+            notifyIfNecessary(account, newMessage, recipientEmail);
         } catch (MessagingException e) {
+            ZimbraLog.mailbox.warn("Unable to send new mail notification", e);
+        } catch (ServiceException e) {
             ZimbraLog.mailbox.warn("Unable to send new mail notification", e);
         }
         
         try {
             outOfOfficeIfNecessary(account, mbox, newMessage,
-                recipientEmail, envelopeSender, parsedMessage);
+                recipientEmail, envelopeSender);
         } catch (MessagingException e) {
             ZimbraLog.mailbox.warn("Unable to send out-of-office reply", e);
         } catch (ServiceException e) {
@@ -96,7 +97,7 @@ implements LmtpCallback {
      * the incoming message meeting certain criteria.
      */
     private void outOfOfficeIfNecessary(Account account, Mailbox mbox, Message msg,
-                                               String rcpt, String envSenderString, ParsedMessage pm)
+                                        String rcpt, String envSenderString)
         throws ServiceException, MessagingException
     {
         String destination = null;
@@ -135,7 +136,7 @@ implements LmtpCallback {
         
         // Get the JavaMail mime message - we have to look at headers to 
         // see this message qualifies for an out of office response.
-        MimeMessage mm = pm.getMimeMessage();
+        MimeMessage mm = msg.getMimeMessage();
 
         // If envelope sender is empty
         if (envSenderString == null) {
@@ -216,7 +217,7 @@ implements LmtpCallback {
             return;
         }
 
-        // Check if recipient was direclty mentioned in to/cc of this message
+        // Check if recipient was directly mentioned in to/cc of this message
         String[] otherAccountAddrs = account.getMultiAttr(Provisioning.A_zimbraPrefOutOfOfficeDirectAddress);
         if (!AccountUtil.isDirectRecipient(account, otherAccountAddrs, mm, OUT_OF_OFFICE_DIRECT_CHECK_NUM_RECIPIENTS)) {
             ofailed("not direct", destination, rcpt, msg);
@@ -255,12 +256,12 @@ implements LmtpCallback {
             out.setSentDate(new Date());
 
             // Subject
-            String subject = "Re: " + pm.getNormalizedSubject();
+            String subject = "Re: " + msg.getSubject();
             String charset = getCharset(account, subject);
             out.setSubject(subject, charset);
 
             // In-Reply-To
-            String messageId = pm.getMessageID();
+            String messageId = mm.getMessageID();
             if (messageId != null && !messageId.trim().equals("")) {
                 out.setHeader("In-Reply-To", messageId);
             }
@@ -310,8 +311,8 @@ implements LmtpCallback {
      * If the recipient's account is set up for email notification, sends a notification
      * message to the user's notification address.
      */
-    private void notifyIfNecessary(Account account, Message msg, String rcpt, ParsedMessage pm)
-        throws MessagingException
+    private void notifyIfNecessary(Account account, Message msg, String rcpt)
+        throws MessagingException, ServiceException
     {
         // Does user have new mail notification turned on
         boolean notify = account.getBooleanAttr(Provisioning.A_zimbraPrefNewMailNotificationEnabled, false);
@@ -350,7 +351,7 @@ implements LmtpCallback {
         }
         
         // If precedence is bulk or junk
-        MimeMessage mm = pm.getMimeMessage();
+        MimeMessage mm = msg.getMimeMessage();
         String[] precedence = mm.getHeader("Precedence");
         if (hasPrecedence(precedence, "bulk")) {
             nfailed("precedence bulk", destination, rcpt, msg);
@@ -362,7 +363,7 @@ implements LmtpCallback {
         }
 
         // Check for mail loop
-        String[] autoSubmittedHeaders = pm.getMimeMessage().getHeader("Auto-Submitted");
+        String[] autoSubmittedHeaders = mm.getHeader("Auto-Submitted");
         if (autoSubmittedHeaders != null) {
             for (int i = 0; i < autoSubmittedHeaders.length; i++) {
                 String headerValue= autoSubmittedHeaders[i].toLowerCase();
@@ -384,11 +385,11 @@ implements LmtpCallback {
         String recipientDomain = EmailUtil.getLocalPartAndDomain(rcpt)[1];
 
         Map<String, String> vars = new HashMap<String, String>();
-        vars.put("SENDER_ADDRESS", pm.getSender());
+        vars.put("SENDER_ADDRESS", msg.getSender());
         vars.put("RECIPIENT_ADDRESS", rcpt);
         vars.put("RECIPIENT_DOMAIN", recipientDomain);
         vars.put("NOTIFICATION_ADDRESS", destination);
-        vars.put("SUBJECT", pm.getSubject());
+        vars.put("SUBJECT", msg.getSubject());
         vars.put("NEWLINE", "\n");
         
         from = StringUtil.fillTemplate(from, vars);

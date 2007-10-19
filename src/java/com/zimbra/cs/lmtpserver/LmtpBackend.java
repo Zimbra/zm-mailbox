@@ -17,16 +17,18 @@
 
 package com.zimbra.cs.lmtpserver;
 
+import java.io.InputStream;
+
 public interface LmtpBackend {
 	
 	/**
-	 * Get account status.
+	 * Gets account status.
 	 */
 	public LmtpStatus getAddressStatus(LmtpAddress address);
 
 	/**
-	 * Deliver this message to the list of recipients in the message, and set the 
-	 * delivery status on each of those recipeint addresses. 
+	 * Delivers this message to the list of recipients in the message, and sets the 
+	 * delivery status on each recipient address. 
 	 */
-	public void deliver(LmtpEnvelope env, byte[] data);
+	public void deliver(LmtpEnvelope env, InputStream in, int sizeHint);
 }

@@ -18,7 +18,9 @@
 package com.zimbra.cs.lmtpserver.utils;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -530,8 +532,7 @@ public class LmtpInject {
                 client = mDriver.getClient();
 
                 boolean ok = false;
-                byte[] msg = ByteUtil.getContent(mFile);
-                ok = client.sendMessage(msg, mDriver.getRecipients(), mDriver.getSender(), filename);
+                ok = client.sendMessage(new FileInputStream(mFile), mDriver.getRecipients(), mDriver.getSender(), filename);
                 if (ok) {
                     mDriver.incSuccess();
                     mDriver.addToFileSizeTotal(mFile.length());
@@ -624,11 +625,12 @@ public class LmtpInject {
             mRecipients = new String[] { recipient };
         }
 
-        public boolean sendMessage(byte[] msg, String[] recipients, String sender, String logLabel)
+        @Override
+        public boolean sendMessage(InputStream msgStream, String[] recipients, String sender, String logLabel)
             throws IOException, LmtpProtocolException
         {
             String[] rcpts = recipients != null ? recipients : mRecipients;
-            return super.sendMessage(msg, rcpts, sender, logLabel);
+            return super.sendMessage(msgStream, rcpts, sender, logLabel);
         }
     }
 

@@ -49,8 +49,8 @@ public class QuotaWarning implements LmtpCallback {
         return sInstance;
     }
     
-    public void afterDelivery(Account account, Mailbox mbox, ParsedMessage parsedMessage,
-                              String envelopeSender, String recipientEmail, Message newMessage){
+    public void afterDelivery(Account account, Mailbox mbox, String envelopeSender,
+                              String recipientEmail, Message newMessage){
         try {
             int warnPercent = account.getIntAttr(Provisioning.A_zimbraQuotaWarnPercent, 90);
             long quota = account.getLongAttr(Provisioning.A_zimbraMailQuota, 0);

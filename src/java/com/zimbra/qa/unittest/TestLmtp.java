@@ -16,6 +16,8 @@
  */
 package com.zimbra.qa.unittest;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,8 +25,10 @@ import java.util.Map;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.lmtpserver.LmtpMessageInputStream;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMessage;
 
@@ -113,6 +117,43 @@ extends TestCase {
         Map<String, String> attrs = new HashMap<String, String>();
         attrs.put(Provisioning.A_zimbraQuotaWarnInterval, interval);
         Provisioning.getInstance().modifyAttrs(mAccount, attrs);
+    }
+    
+    public void testLmtpMessageInputStream()
+    throws Exception {
+        runLmtpMessageTest("abcd\r\n", null);
+        runLmtpMessageTest("abcd\r\n.\r", null);
+        runLmtpMessageTest("ab\r\ncd\r\n.\r\n", "ab\r\ncd\r\n");
+        
+        // Transparency
+        runLmtpMessageTest(".\r\n", "\r\n");
+        runLmtpMessageTest(".\rabcd\r\n.\r\n", "\rabcd\r\n");
+        runLmtpMessageTest(".a\r\n.\r\n", "a\r\n");
+        runLmtpMessageTest(".a\r\n.\r\n", "a\r\n");
+        runLmtpMessageTest("a\r\n.a\r\n.\r\n", "a\r\na\r\n");
+        runLmtpMessageTest(".\r\n", "\r\n");
+    }
+
+    private void runLmtpMessageTest(String input, String expectedOutput)
+    throws Exception {
+        ByteArrayInputStream in = new ByteArrayInputStream(input.getBytes());
+        LmtpMessageInputStream lin = new LmtpMessageInputStream(in, null);
+        
+        StringBuilder readContent = new StringBuilder();
+        try {
+            int c;
+            while ((c = lin.read()) >= 0) {
+                readContent.append((char) c);
+            }
+        } catch (IOException ioe) {
+            if (expectedOutput == null) {
+                return;
+            } else {
+                throw ioe;
+            }
+        }
+        
+        assertEquals(expectedOutput, readContent.toString());
     }
     
     public void tearDown()

@@ -40,6 +40,8 @@ public class SharedDeliveryContext {
     private Blob mBlob;
     private MailboxBlob mMailboxBlob;
     private List<Integer> mMailboxIdList;
+    private Blob mPreexistingBlob;
+    private boolean mIsFirst = true;
 
     /**
      * Constructor for non-shared case
@@ -78,12 +80,37 @@ public class SharedDeliveryContext {
     public void setBlob(Blob blob) {
     	mBlob = blob;
     }
-
+    
     public MailboxBlob getMailboxBlob() {
     	return mMailboxBlob;
     }
 
     public void setMailboxBlob(MailboxBlob mailboxBlob) {
     	mMailboxBlob = mailboxBlob;
+    }
+
+    /**
+     * Sets the blob stored on disk before mailbox delivery
+     * is started.
+     * @param blob the blob or <tt>null</tt> if the blob needs to be stored
+     * in the incoming directory during delivery.
+     */
+    public void setPreexistingBlob(Blob blob) {
+        mPreexistingBlob = blob;
+    }
+    
+    public Blob getPreexistingBlob() {
+        return mPreexistingBlob;
+    }
+    
+    /**
+     * Tells the caller if this is the first mailbox being delivered to.
+     */
+    public boolean isFirst() {
+        return mIsFirst;
+    }
+    
+    public void setFirst(boolean isFirst) {
+        mIsFirst = isFirst;
     }
 }

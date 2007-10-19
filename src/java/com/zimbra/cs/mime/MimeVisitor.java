@@ -38,10 +38,10 @@ public abstract class MimeVisitor {
 
     /** The list of registered MimeVistor classes that convert stored
      *  messages on the fly. */
-    private static List<Class> sMimeConverters = new ArrayList<Class>();
+    private static List<Class<? extends MimeVisitor>> sMimeConverters = new ArrayList<Class<? extends MimeVisitor>>();
     /** The list of registered MimeVistor classes that convert new messages
      *  before storing them to disk. */
-    private static List<Class> sMimeMutators   = new ArrayList<Class>();
+    private static List<Class<? extends MimeVisitor>> sMimeMutators   = new ArrayList<Class<? extends MimeVisitor>>();
 
         static {
             registerConverter(UUEncodeConverter.class);
@@ -52,32 +52,26 @@ public abstract class MimeVisitor {
      *  when a message is fetched from the store or prepared for indexing.
      *  Note that changes made by these MimeVisitors are not persisted to disk
      *  but instead are executed every time the message is accessed. */
-    public static void registerConverter(Class vclass) {
-        try {
-            if (vclass.newInstance() instanceof MimeVisitor)
-                sMimeConverters.add(vclass);
-        } catch (Exception e) { }
+    public static void registerConverter(Class<? extends MimeVisitor> vclass) {
+        sMimeConverters.add(vclass);
     }
 
     /** Retrieves the list of all registered MimeVisitor converter classes.
      * @see #registerConverter(Class) */
-    public static List<Class> getConverters() {
-        return new ArrayList<Class>(sMimeConverters);
+    public static List<Class<? extends MimeVisitor>> getConverters() {
+        return new ArrayList<Class<? extends MimeVisitor>>(sMimeConverters);
     }
 
     /** Adds a MimeVisitor class to the list of mutators invoked before a
      *  message is saved to disk or sent via SMTP. */
-    public static void registerMutator(Class vclass) {
-        try {
-            if (vclass.newInstance() instanceof MimeVisitor)
-                sMimeMutators.add(vclass);
-        } catch (Exception e) { }
+    public static void registerMutator(Class<? extends MimeVisitor> vclass) {
+        sMimeMutators.add(vclass);
     }
 
     /** Retrieves the list of all registered MimeVisitor mutator classes.
      * @see #registerMutator(Class) */
-    public static List<Class> getMutators() {
-        return new ArrayList<Class>(sMimeMutators);
+    public static List<Class<? extends MimeVisitor>> getMutators() {
+        return new ArrayList<Class<? extends MimeVisitor>>(sMimeMutators);
     }
 
 

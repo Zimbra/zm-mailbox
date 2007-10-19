@@ -21,6 +21,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringWriter;
 import java.lang.ref.SoftReference;
 import java.util.*;
@@ -3642,11 +3643,6 @@ public class Mailbox {
     throws IOException, ServiceException {
         // make sure the message has been analyzed before taking the Mailbox lock
         pm.analyze();
-        try {
-            pm.getRawData();
-        } catch (MessagingException me) {
-            throw MailServiceException.MESSAGE_PARSE_ERROR(me);
-        }
         // and then actually add the message
         long start = ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.start();
 
@@ -3693,15 +3689,6 @@ public class Mailbox {
 
         boolean debug = ZimbraLog.mailbox.isDebugEnabled();
 
-        byte[] data;
-        String digest;
-        int msgSize;
-        try {
-            data = pm.getRawData();  digest = pm.getRawDigest();  msgSize = pm.getRawSize();
-        } catch (MessagingException me) {
-            throw MailServiceException.MESSAGE_PARSE_ERROR(me);
-        }
-
         if (conversationId <= HIGHEST_SYSTEM_ID)
             conversationId = ID_AUTO_INCREMENT;
 
@@ -3726,6 +3713,16 @@ public class Mailbox {
             }
         }
 
+        String digest;
+        int msgSize;
+        try {
+            digest = pm.getRawDigest();
+            msgSize = pm.getRawSize();
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Unable to get message properties.", e);
+        } catch (MessagingException e) {
+            throw ServiceException.FAILURE("Unable to get message properties.", e);
+        }
         CreateMessage redoRecorder = new CreateMessage(mId, rcptEmail, pm.getReceivedDate(), sharedDeliveryCtxt.getShared(),
                                                        digest, msgSize, folderId, noICal, flags, tagStr);
         StoreIncomingBlob storeRedoRecorder = null;
@@ -3863,18 +3860,38 @@ public class Mailbox {
             // step 5: store the blob
             // TODO: Add partition support.  Need to store as many times as there
             //       are unique partitions in the set of recipient mailboxes.
-            blob = sharedDeliveryCtxt.getBlob();
             StoreManager sm = StoreManager.getInstance();
-            if (blob == null) {
+            if (sharedDeliveryCtxt.isFirst()) {
+                sharedDeliveryCtxt.setFirst(false);
                 // This mailbox is the only recipient, or it is the first
-                // of multiple recipients.  Save message to incoming directory.
-                if (!isRedo)
-                    blob = sm.storeIncoming(data, digest, null, msg.getVolumeId());
-                else
-                    blob = sm.storeIncoming(data, digest, redoPlayer.getPath(), redoPlayer.getVolumeId());
+                // of multiple recipients.  Save message to incoming directory if
+                // it's not already there.
+                Blob preexisting = sharedDeliveryCtxt.getPreexistingBlob();
+                if (preexisting == null) {
+                    InputStream in = pm.getInputStream();
+                    if (!isRedo)
+                        blob = sm.storeIncoming(in, msgSize, null, msg.getVolumeId());
+                    else
+                        blob = sm.storeIncoming(in, msgSize, redoPlayer.getPath(), redoPlayer.getVolumeId());
+                    in.close();
+                } else {
+                    // Blob was already stored in incoming by the caller.
+                    sharedDeliveryCtxt.setBlob(preexisting);
+                    blob = preexisting;
+                }
                 String blobPath = blob.getPath();
                 short blobVolumeId = blob.getVolumeId();
 
+                // XXX bburtin: replace with stream code
+                byte[] data;
+                try {
+                    data = pm.getRawData();
+                } catch (IOException e) {
+                    throw ServiceException.FAILURE("Unable to get MIME data.", e);
+                } catch (MessagingException e) {
+                    throw ServiceException.FAILURE("Unable to get MIME data.", e);
+                }
+                
                 if (sharedDeliveryCtxt.getShared()) {
                     markOtherItemDirty(blob);
 
@@ -3896,6 +3913,7 @@ public class Mailbox {
                     // mailbox directory.  This is more efficient than
                     // creating a link in mailbox directory and deleting
                     // incoming copy.
+                    pm.close();
                     mboxBlob = sm.renameTo(blob, this, messageId, msg.getSavedSequence(), msg.getVolumeId());
 
                     // In single-recipient case the blob bytes are logged in
@@ -3904,6 +3922,7 @@ public class Mailbox {
                     redoRecorder.setMessageBodyInfo(data, blobPath, blobVolumeId);
                 }
             } else {
+                blob = sharedDeliveryCtxt.getBlob();
                 String srcPath;
                 Blob srcBlob;
                 MailboxBlob srcMboxBlob = sharedDeliveryCtxt.getMailboxBlob();

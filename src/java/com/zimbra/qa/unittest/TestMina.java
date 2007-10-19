@@ -17,17 +17,18 @@
 
 package com.zimbra.qa.unittest;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
 import junit.framework.TestCase;
 
-import com.zimbra.cs.mina.MinaUtil;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.cs.lmtpserver.LmtpMessageInputStream;
+import com.zimbra.cs.lmtpserver.MinaLmtpDataRequest;
 import com.zimbra.cs.mina.LineBuffer;
 import com.zimbra.cs.mina.MinaOutputStream;
-import com.zimbra.cs.lmtpserver.MinaLmtpDataRequest;
-import com.zimbra.cs.lmtpserver.LmtpInputStream;
-
-import java.nio.ByteBuffer;
-import java.io.IOException;
-import java.io.ByteArrayInputStream;
+import com.zimbra.cs.mina.MinaUtil;
 
 public class TestMina extends TestCase {
     private static final String LINE = "This is a line";
@@ -199,7 +200,12 @@ public class TestMina extends TestCase {
     private static byte[] getLmtpInputStreamResult(String data, String prefix)
             throws IOException {
         byte[] b = data.getBytes();
-        LmtpInputStream is = new LmtpInputStream(new ByteArrayInputStream(b));
-        return is.readMessage(b.length, prefix);
+        // XXX bburtin: get rid of byte array
+        LmtpMessageInputStream is = new LmtpMessageInputStream(new ByteArrayInputStream(b), prefix);
+        int size = b.length;
+        if (prefix != null) {
+            size += prefix.length();
+        }
+        return ByteUtil.getContent(is, size);
     }
 }

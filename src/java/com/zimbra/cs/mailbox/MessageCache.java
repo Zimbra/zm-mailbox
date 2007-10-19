@@ -61,12 +61,6 @@ public class MessageCache {
 
     private static final int DEFAULT_CACHE_SIZE = 16 * 1000 * 1000;
     
-    static {
-        // XXX bburtin: remove after testing is complete
-        ZimbraLog.test.info("%s=%b", LC.debug_message_cache_use_shared_stream.key(),
-            LC.debug_message_cache_use_shared_stream.booleanValue());
-    }
-
     private static Map<String, CacheNode> mCache = new LinkedHashMap<String, CacheNode>(150, (float) 0.75, true);
     private static int mTotalSize = 0;
     private static int mMaxCacheSize;
@@ -187,10 +181,8 @@ public class MessageCache {
                     // use the raw byte array to construct the MimeMessage if possible, else read from disk
                     if (cnOrig == null || cnOrig.mContent == null) {
                         is = fetchFromStore(item);
-                    } else if (LC.debug_message_cache_use_shared_stream.booleanValue()) {
-                        is =  new SharedByteArrayInputStream(cnOrig.mContent);
                     } else {
-                        is =  new ByteArrayInputStream(cnOrig.mContent);
+                        is =  new SharedByteArrayInputStream(cnOrig.mContent);
                     }
                     
                     cnode = new CacheNode(size, new Mime.FixedMimeMessage(JMSession.getSession(), is), expand ? ConvertedState.BOTH : ConvertedState.RAW);
@@ -212,10 +204,8 @@ public class MessageCache {
 
                         if (cnOrig == null || cnOrig.mContent == null) {
                             fetchFromStore(item);
-                        } else if (LC.debug_message_cache_use_shared_stream.booleanValue()) {
-                            is =  new SharedByteArrayInputStream(cnOrig.mContent);
                         } else {
-                            is = new ByteArrayInputStream(cnOrig.mContent);
+                            is =  new SharedByteArrayInputStream(cnOrig.mContent);
                         }
                         
                         cnode = new CacheNode(size, new MimeMessage(JMSession.getSession(), is), ConvertedState.BOTH);

@@ -19,13 +19,11 @@ package com.zimbra.cs.lmtpserver;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mime.ParsedMessage;
 
 public interface LmtpCallback {
 
     /**
      * Called after the message is delivered to the given account.
      */
-    public void afterDelivery(Account account, Mailbox mbox, ParsedMessage parsedMessage,
-                              String envelopeSender, String recipientEmail, Message newMessage);
+    public void afterDelivery(Account account, Mailbox mbox, String envelopeSender, String recipientEmail, Message newMessage);
 }

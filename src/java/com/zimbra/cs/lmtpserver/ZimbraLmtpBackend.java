@@ -18,6 +18,7 @@
 package com.zimbra.cs.lmtpserver;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -31,6 +32,7 @@ import javax.mail.MessagingException;
 import org.apache.commons.collections.map.LRUMap;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -48,6 +50,7 @@ import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.store.Volume;
 import com.zimbra.cs.util.Zimbra;
 
 public class ZimbraLmtpBackend implements LmtpBackend {
@@ -127,9 +130,9 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 		}
 	}
 	
-	public void deliver(LmtpEnvelope env, byte[] data) {
+	public void deliver(LmtpEnvelope env, InputStream in, int sizeHint) {
         try {
-            deliverMessageToLocalMailboxes(data, env.getRecipients(), env.getSender().getEmailAddress());
+            deliverMessageToLocalMailboxes(in, env.getRecipients(), env.getSender().getEmailAddress(), sizeHint);
         } catch (MessagingException me) {
             ZimbraLog.lmtp.warn("Exception delivering mail (permanent failure)", me);
             setDeliveryStatuses(env.getRecipients(), LmtpStatus.REJECT);
@@ -157,10 +160,9 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         }
     }
 
-    private void recordReceipt(ParsedMessage pm, Mailbox mbox) {
-        if (sReceivedMessageIDs == null || pm == null || mbox == null)
+    private void recordReceipt(String msgid, Mailbox mbox) {
+        if (sReceivedMessageIDs == null || msgid == null || mbox == null)
             return;
-        String msgid = pm.getMessageID();
         if (msgid == null || msgid.equals(""))
             return;
         Integer mboxid = mbox.getId();
@@ -200,13 +202,39 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         }
     }
 
-    private void deliverMessageToLocalMailboxes(byte[] data, List<LmtpAddress> recipients, String envSender)
+    private void deliverMessageToLocalMailboxes(InputStream in,
+                                                List<LmtpAddress> recipients,
+                                                String envSender,
+                                                int sizeHint)
     throws MessagingException, ServiceException {
 
         boolean shared = recipients.size() > 1;
         List<Integer> targetMailboxIds = new ArrayList<Integer>(recipients.size());
 
         Map<LmtpAddress, RecipientDetail> rcptMap = new HashMap<LmtpAddress, RecipientDetail>(recipients.size());
+
+        Volume volume = Volume.getCurrentMessageVolume();
+        Blob blob = null;
+        int diskThreshold = Provisioning.getInstance().getLocalServer().getIntAttr(
+            Provisioning.A_zimbraLmtpDiskStreamingThreshold, 0);
+        byte[] data = null;
+        
+        try {
+            if (sizeHint <= diskThreshold) {
+                ZimbraLog.lmtp.debug("Reading message of size %d into memory.", sizeHint);
+                data = ByteUtil.getContent(in, sizeHint);
+                if (data.length == 0) {
+                    throw new MessagingException("Empty message not allowed");
+                }
+            } else {
+                ZimbraLog.lmtp.debug("Streaming message of size %d to disk.", sizeHint);
+                blob = StoreManager.getInstance().storeIncoming(in, sizeHint, null, volume.getId());
+                data = blob.getData();
+                ZimbraLog.lmtp.debug("Wrote message to %s.", blob.getPath());
+            }
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Unable to process incoming message.", e);
+        }
 
         try {
             // Examine attachments indexing option for all recipients and
@@ -253,16 +281,40 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                     }
                     continue;
                 }
-
+                
                 if (account != null && mbox != null) {
                     ParsedMessage pm;
                     if (attachmentsIndexingEnabled) {
-                        if (pmAttachIndex == null)
-                            pmAttachIndex = new ParsedMessage(data, true).analyze();
+                        if (pmAttachIndex == null) {
+                            ZimbraLog.lmtp.debug("Creating ParsedMessage with attachment indexing enabled.");
+                            if (data != null) {
+                                pmAttachIndex = new ParsedMessage(data, true).analyze();
+                            } else {
+                                try {
+                                    pmAttachIndex = new ParsedMessage(blob.getFile(), true);
+                                    pmAttachIndex.setRawDigest(blob.getDigest());
+                                    pmAttachIndex.analyze();
+                                } catch (IOException e) {
+                                    throw ServiceException.FAILURE("Unable to parse message.", e);
+                                }
+                            }
+                        }
                         pm = pmAttachIndex;
                     } else {
-                        if (pmNoAttachIndex == null)
-                            pmNoAttachIndex = new ParsedMessage(data, false).analyze();
+                        if (pmNoAttachIndex == null) {
+                            ZimbraLog.lmtp.debug("Creating ParsedMessage with attachment indexing disabled.");
+                            if (data != null) {
+                                pmNoAttachIndex = new ParsedMessage(data, false).analyze();
+                            } else {
+                                try {
+                                    pmNoAttachIndex = new ParsedMessage(blob.getFile(), false);
+                                    pmNoAttachIndex.setRawDigest(blob.getDigest());
+                                    pmNoAttachIndex.analyze();
+                                } catch (IOException e) {
+                                    throw ServiceException.FAILURE("Unable to parse message.", e);
+                                }
+                            }
+                        }
                         pm = pmNoAttachIndex;
                     }
                     assert(pm != null);
@@ -288,6 +340,22 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 
             SharedDeliveryContext sharedDeliveryCtxt =
             	new SharedDeliveryContext(shared, targetMailboxIds);
+            if (blob != null) {
+                if ((pmAttachIndex != null && pmAttachIndex.wasMutated()) ||
+                    (pmNoAttachIndex != null && pmNoAttachIndex.wasMutated())) {
+                    ZimbraLog.lmtp.debug("Incoming message was mutated.  Deleting copy on disk.");
+                    // Message was mutated, so the blob on disk is now invalid.
+                    try {
+                        StoreManager.getInstance().delete(blob);
+                        blob = null;
+                    } catch (IOException e) {
+                        throw ServiceException.FAILURE("Unable to delete " + blob, e);
+                    }
+                } else {
+                    // Tell mailbox code that the blob is already in the incoming directory.
+                    sharedDeliveryCtxt.setPreexistingBlob(blob);
+                }
+            }
 
             // We now know which addresses are valid and which ParsedMessage
             // version each recipient needs.  Deliver!
@@ -310,19 +378,24 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                 Message msg = null;
                                 
                                 ZimbraLog.addAccountNameToContext(account.getName());
+                                String msgid = null;
                                 if (dedupe(pm, mbox)) {
                                     // message was already delivered to this mailbox
                                     ZimbraLog.lmtp.info("Not delivering message with duplicate Message-ID %s", pm.getMessageID());
                                     msg = null;
                                 } else if (!DebugConfig.disableFilter) {
-                                    msg = RuleManager.getInstance().applyRules(account, mbox, pm, pm.getRawData().length,
+                                    // Get msgid first, to avoid having to reopen and reparse the blob
+                                    // file if Mailbox.addMessageInternal() closes it.
+                                    msgid = pm.getMessageID();
+                                    msg = RuleManager.getInstance().applyRules(account, mbox, pm, pm.getRawSize(),
                                                                                rcptEmail, sharedDeliveryCtxt);
                                 } else {
+                                    msgid = pm.getMessageID();
                                     msg = mbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX, false, Flag.BITMASK_UNREAD, null,
                                                           rcptEmail, sharedDeliveryCtxt);
                                 }
                                 if (msg != null) {
-                                    recordReceipt(pm, mbox);
+                                    recordReceipt(msgid, mbox);
                                     
                                     // Execute callbacks
                                     for (LmtpCallback callback : sCallbacks) {
@@ -330,7 +403,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                             ZimbraLog.lmtp.debug("Executing callback %s", callback.getClass().getName());
                                         }
                                         try {
-                                            callback.afterDelivery(account, mbox, pm, envSender, rcptEmail, msg);
+                                            callback.afterDelivery(account, mbox, envSender, rcptEmail, msg);
                                         } catch (Throwable t) {
                                             if (t instanceof OutOfMemoryError) {
                                                 Zimbra.halt("LMTP callback failed", t);
@@ -384,9 +457,20 @@ public class ZimbraLmtpBackend implements LmtpBackend {
             } finally {
                 // Clean up blobs in incoming directory after delivery to all recipients.
                 if (shared) {
+                    try {
+                        if (pmAttachIndex != null) {
+                            pmAttachIndex.close();
+                        }
+                        if (pmNoAttachIndex != null) {
+                            pmNoAttachIndex.close();
+                        }
+                    } catch (IOException e) {
+                        ZimbraLog.lmtp.warn("Unable to close ParsedMessage.", e);
+                    }
                     Blob sharedBlob = sharedDeliveryCtxt.getBlob();
                     if (sharedBlob != null) {
                         try {
+                            ZimbraLog.lmtp.debug("Deleting shared blob at %s.", sharedBlob.getPath());
                             StoreManager.getInstance().delete(sharedBlob);
                         } catch (IOException e) {
                             ZimbraLog.lmtp.warn("Unable to delete temporary incoming blob after delivery: " + sharedBlob.toString(), e);

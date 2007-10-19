@@ -21,15 +21,15 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
-import com.zimbra.cs.lmtpserver.LmtpInputStream;
-import com.zimbra.cs.lmtpserver.LmtpProtocolException;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.cs.lmtpserver.LmtpProtocolException;
+import com.zimbra.cs.tcpserver.TcpServerInputStream;
 
 public class LmtpClient {
 
@@ -38,7 +38,7 @@ public class LmtpClient {
     private Protocol mProtocol;
 	private Socket mConnection;
 	private String mGreetname;
-	private LmtpInputStream mIn;
+	private TcpServerInputStream mIn;
 	private BufferedOutputStream mOut;
 	private boolean mNewConnection;
 	private String mResponse;
@@ -53,7 +53,7 @@ public class LmtpClient {
 
 		mConnection = new Socket(host, port);
 		mOut = new BufferedOutputStream(mConnection.getOutputStream());
-		mIn = new LmtpInputStream(mConnection.getInputStream());
+		mIn = new TcpServerInputStream(mConnection.getInputStream());
 		
 		mNewConnection = true;
 	}
@@ -123,18 +123,23 @@ public class LmtpClient {
 
     public boolean sendMessage(byte[] msg, String recipient, String sender, String logLabel)
     throws IOException, LmtpProtocolException {
-        return sendMessage(msg, new String[] { recipient }, sender, logLabel);
+        return sendMessage(new ByteArrayInputStream(msg), new String[] { recipient }, sender, logLabel);
+    }
+
+    public boolean sendMessage(InputStream msgStream, String recipient, String sender, String logLabel)
+    throws IOException, LmtpProtocolException {
+        return sendMessage(msgStream, new String[] { recipient }, sender, logLabel);
     }
     
     /**
      * Sends a MIME message.
-     * @param msg the message body
+     * @param msgStream the message body
      * @param recipients recipient email addresses
      * @param sender sender email address
      * @param logLabel context string used for logging status
      * @return <code>true</code> if the message was successfully delivered to all recipients
      */
-    public boolean sendMessage(byte[] msg, String[] recipients, String sender, String logLabel)
+    public boolean sendMessage(InputStream msgStream, String[] recipients, String sender, String logLabel)
         throws IOException, LmtpProtocolException 
     {
         long start = System.currentTimeMillis();
@@ -185,7 +190,7 @@ public class LmtpClient {
 		// But we want to treat it as String for a little while because we want to
 		// apply transparency and BufferedReader.getLine() is handy.  This conversion
 		// here has a reverse with getBytes(charset) elsewhere in sendLine().
-		BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(msg), "iso-8859-1")); 
+		BufferedReader br = new BufferedReader(new InputStreamReader(msgStream, "iso-8859-1")); 
 		String line;
 		while ((line = br.readLine()) != null) {
 			if (line.length() > 0 && line.charAt(0) == '.') {
@@ -201,8 +206,7 @@ public class LmtpClient {
 		sendLine(".");
 		
         boolean allDelivered = true;
-        for (Iterator iter = acceptedRecipients.iterator(); iter.hasNext();) {
-            String recipient = (String)iter.next();
+        for (String recipient : acceptedRecipients) {
 			if (replyOk()) {
                 long elapsed = System.currentTimeMillis() - start;
                 if (!mQuiet) {
