@@ -215,8 +215,9 @@ http://bugzilla.zimbra.com/show_bug.cgi?id=14225
 2.6 Address Book Lookup and Display
     Address book SOAP commands are not treated with any ACE <-> Unicode conversion.
     Emails in address book contact will be stored and returned in SOAP responses as how 
-    they are typed by the user.  That is, if ACE is entered, it will be stored and returned 
-    in ACE; if Unicode is entered, it will be stored and returned in Unicode.
+    they are entered in the address book - either typed by user or added automatically.  
+    That is, if ACE is entered, it will be stored and returned in ACE; if Unicode is 
+    entered, it will be stored and returned in Unicode.
     
     When email address of contact is used to address mails, it will be converted to ACE by 
     the server as described in 2.4.
@@ -230,11 +231,13 @@ http://bugzilla.zimbra.com/show_bug.cgi?id=14225
 3. Client Behavior
 ===================
 
-In Web client, admin console, and zmprov:
+In Web client and admin console
     - Input: all email addresses and/or domain names can be entered and recognized
              in both unicode or ACE(ASCII Compatible Encoding).
     
-    - Output: all email addresses and domain names should be displayed in unicode.
+    - Output: all email addresses and domain names should be displayed in unicode, except for 
+              address book contacts.  Address book contacts are displayed in the original text 
+              as when they are entered.  See 2.6.
 
 3.1 Web Client
     http://bugzilla.zimbra.com/show_bug.cgi?id=20428
@@ -242,6 +245,13 @@ In Web client, admin console, and zmprov:
 3.2 Admin Console
 
 3.3 zmprov
+    - Input: all email addresses and/or domain names can be entered and recognized
+             in both unicode or ACE(ASCII Compatible Encoding).
+             
+    - Output: 
+         - For SOAP (zmprov -s) interface, attribute values are displayed in Unicode.
+         - FOr LDAP (zmprov -l) interface, attribute values are displayed in whatever is stored in LDAP, that is, ACE.
+             
 
 
  
