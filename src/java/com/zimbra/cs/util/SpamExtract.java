@@ -342,7 +342,7 @@ public class SpamExtract {
         boolean foundAtleastOneAttachedMessage = false;
         for (int i = 0; i < nAttachments; i++) {
             BodyPart bp = mmp.getBodyPart(i);
-            if (!bp.getContentType().equalsIgnoreCase("message/rfc822")) {
+            if (!bp.isMimeType("message/rfc822")) {
                 // Let's ignore all parts that are not messages.
                 continue;
             }
