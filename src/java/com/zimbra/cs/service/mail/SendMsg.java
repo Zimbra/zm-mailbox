@@ -192,7 +192,11 @@ public class SendMsg extends MailDocumentHandler {
             throw MailServiceException.NO_SUCH_UPLOAD(attachId);
         (mimeData.uploads = new ArrayList<Upload>(1)).add(up);
         try {
-            return new Mime.FixedMimeMessage(JMSession.getSession(), up.getInputStream());
+            return new MimeMessage(JMSession.getSession(), up.getInputStream()) {
+                @Override protected void updateHeaders() throws MessagingException {
+                    setHeader("MIME-Version", "1.0");  if (getMessageID() == null) updateMessageID();
+                }
+            };
         } catch (MessagingException e) {
             throw MailServiceException.MESSAGE_PARSE_ERROR(e);
         } catch (IOException e) {
