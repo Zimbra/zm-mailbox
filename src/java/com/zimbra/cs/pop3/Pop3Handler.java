@@ -137,7 +137,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
     
     protected boolean processCommand(String line) throws IOException {
         // TODO: catch IOException too?
-        if (mAuthenticator != null && !mAuthenticator.isComplete()) {
+        if (line != null && mAuthenticator != null && !mAuthenticator.isComplete()) {
             return continueAuthentication(line);
         }
         
