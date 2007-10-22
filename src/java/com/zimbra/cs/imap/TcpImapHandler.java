@@ -106,6 +106,13 @@ public class TcpImapHandler extends ImapHandler {
             if (req == null)
                 req = new TcpImapRequest(mInputStream, this);
             req.continuation();
+            
+            if (req.isMaxRequestSizeExceeded()) {
+                req.sendNO("[TOOBIG] request too long");
+                setIdle(false);
+                mIncompleteRequest = null;
+                return CONTINUE_PROCESSING;
+            }
 
             long start = ZimbraPerf.STOPWATCH_IMAP.start();
 

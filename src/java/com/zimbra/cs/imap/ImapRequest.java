@@ -74,11 +74,54 @@ abstract class ImapRequest {
     String mTag;
     List<Object> mParts = new ArrayList<Object>();
     int mIndex, mOffset;
+    long mSize;
+    private boolean mMaxRequestSizeExceeded;
 
     ImapRequest(ImapHandler handler) {
         mHandler = handler;
     }
 
+    void incrementSize(long increment) {
+        mSize += increment;
+        if (mSize > mHandler.getConfig().getMaxRequestSize()) {
+            mMaxRequestSizeExceeded = true;
+        }
+    }
+
+    void addPart(Object obj) {
+        assert obj instanceof String || obj instanceof byte[];
+        // Do not add any more parts if we have exceeded the maximum request
+        // size. The exception is if this is the first part, in order to be
+        // able to recover the tag when sending the error response.
+        if (!isMaxRequestSizeExceeded() || mParts.size() == 0) {
+            mParts.add(obj);
+        }
+    }
+
+    boolean isMaxRequestSizeExceeded() {
+        return mMaxRequestSizeExceeded;
+    }
+
+    void sendNO(String msg) throws IOException {
+        String tag = getTag();
+        if (tag != null) {
+            mHandler.sendNO(tag, msg);
+        } else {
+            mHandler.sendUntagged("BAD " + msg, true);
+        }
+    }
+
+    String getTag() {
+        if (mTag == null && mIndex == 0 && mOffset == 0 && mParts.size() > 0) {
+            try {
+                readTag();
+            } catch (ImapParseException e) {}
+            mIndex = 0;
+            mOffset = 0;
+        }
+        return mTag;
+    }
+    
     /** Returns whether the specified IMAP extension is enabled for this
      *  session.
      * @see ImapHandler#extensionEnabled(String) */
@@ -141,7 +184,6 @@ abstract class ImapRequest {
             throw new ImapParseException(mTag, "should not be inside literal");
         return (String) part;
     }
-
 
     String readContent(boolean[] acceptable) throws ImapParseException {
         return readContent(acceptable, false);

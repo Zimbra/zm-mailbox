@@ -17,20 +17,19 @@
 
 package com.zimbra.cs.imap;
 
+import com.zimbra.cs.mina.LineBuffer;
+import com.zimbra.cs.mina.MinaHandler;
+import com.zimbra.cs.mina.MinaRequest;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
-
-import com.zimbra.cs.mina.MinaRequest;
-import com.zimbra.cs.mina.MinaHandler;
-import com.zimbra.cs.mina.LineBuffer;
 
 public class MinaImapRequest extends ImapRequest implements MinaRequest {
     private LineBuffer mLine;   // Command line
     private ByteBuffer mBuffer; // Buffer for literal data
     private State mState;       // Current request state
     private int mLiteralCount;  // Remaining byte count for current literal
-    private long mSize;         // Current message size
     private boolean mBlocking;  // Current literal is blocking continuation
 
     private enum State {
@@ -45,20 +44,20 @@ public class MinaImapRequest extends ImapRequest implements MinaRequest {
     }
 
     public void parse(ByteBuffer bb) throws IOException {
-        while (mState != State.COMPLETE && bb.hasRemaining()) {
-            switch (mState) {
-            case COMMAND:
-                try {
-                    parseLine(bb);
-                } catch (ImapParseException e) {
-                    mHandler.handleImapParseException(e);
-                    throw new IllegalArgumentException("Bad request line", e);
+        try {
+            while (mState != State.COMPLETE && bb.hasRemaining()) {
+                switch (mState) {
+                    case COMMAND:
+                        parseLine(bb);
+                        break;
+                    case LITERAL:
+                        parseLiteral(bb);
+                        break;
                 }
-                break;
-            case LITERAL:
-                parseLiteral(bb);
-                break;
             }
+        } catch (ImapParseException e) {
+            mHandler.handleImapParseException(e);
+            throw new IllegalArgumentException("Bad request line", e);
         }
     }
 
@@ -66,17 +65,21 @@ public class MinaImapRequest extends ImapRequest implements MinaRequest {
         return mState == State.COMPLETE;
     }
 
-    private void parseLiteral(ByteBuffer bb) throws IOException {
+    private void parseLiteral(ByteBuffer bb) throws IOException, ImapParseException {
         int n = Math.min(mLiteralCount, bb.remaining());
-        mBuffer.put((ByteBuffer) bb.slice().limit(n));
+        if (!isMaxRequestSizeExceeded()) {
+            mBuffer.put((ByteBuffer) bb.slice().limit(n));
+        }
         bb.position(bb.position() + n);
         mLiteralCount -= n;
         if (mLiteralCount == 0) {
-            mParts.add(mBuffer.array());
+            if (!isMaxRequestSizeExceeded()) {
+                addPart(mBuffer.array());
+            }
             mBuffer = null;
             mState = State.COMMAND;
         } else if (mBlocking) {
-            mHandler.sendContinuation("send literal data");
+            sendContinuation();
         }
     }
 
@@ -88,7 +91,7 @@ public class MinaImapRequest extends ImapRequest implements MinaRequest {
         String line = mLine.toString();
         mLine = null;
         incrementSize(line.length());
-        mParts.add(line);
+        addPart(line);
         parseLine(line);
     }
 
@@ -107,29 +110,24 @@ public class MinaImapRequest extends ImapRequest implements MinaRequest {
         mState = State.LITERAL;
         mLiteralCount = parseNumber(line, i + 1, j);
         if (mLiteralCount == -1) {
-            throw new ImapParseException(getTag(line), "bad literal format");
+            throw new ImapParseException(getTag(), "bad literal format");
         }
         incrementSize(mLiteralCount);
-        mBuffer = ByteBuffer.allocate(mLiteralCount);
+        if (!isMaxRequestSizeExceeded()) {
+            mBuffer = ByteBuffer.allocate(mLiteralCount);
+        }
         if (mBlocking) {
-            mHandler.sendContinuation("send literal data");
+            sendContinuation();
         }
     }
 
-    private static String getTag(String line) {
-        int i = line.indexOf(' ');
-        if (i == -1) return null;
-        String s = line.substring(0, i);
-        return s.equals("") || s.equals("*") || s.equals("+") ? null : s;
-    }
-    
-    private void incrementSize(int increment) throws ImapParseException {
-        // TODO Make sure this cannot wrap around
-        mSize += increment;
-        // TODO Can max request mSize be treated as a constant?
-        if (mSize > mHandler.getConfig().getMaxRequestSize()) {
-            throw new ImapParseException(mTag, "request too long");
+    private void sendContinuation() throws IOException, ImapParseException {
+        if (isMaxRequestSizeExceeded()) {
+            // If this request is too long then send an error response
+            // rather than a continuation request
+            throw new ImapParseException(getTag(), "TOOBIG", "request too big", false);
         }
+        mHandler.sendContinuation("send literal data");
     }
     
     private static int parseNumber(String s, int i, int j) {

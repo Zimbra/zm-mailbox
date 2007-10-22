@@ -34,7 +34,6 @@ public class TcpImapRequest extends ImapRequest {
 
     private TcpServerInputStream mStream;
     private int mLiteral = -1;
-    private long mSize;
     private boolean mUnlogged;
 
     TcpImapRequest(String line, ImapHandler handler) {
@@ -44,42 +43,22 @@ public class TcpImapRequest extends ImapRequest {
 
     TcpImapRequest(TcpServerInputStream tsis, ImapHandler handler) {
         super(handler);
-        mStream  = tsis;
+        mStream = tsis;
     }
 
     TcpImapRequest rewind()  { mIndex = mOffset = 0;  return this; }
 
-    private void incrementSize(long increment) throws ImapParseException {
-        mSize += increment;
-        if (mSize > mHandler.getConfig().getMaxRequestSize())
-            throw new ImapParseException(mTag, "request too long");
-    }
-
     void continuation() throws IOException, ImapParseException {
-        if (mLiteral >= 0) {
-            Object part = mParts.get(mParts.size() - 1);
-            byte[] buffer = (part instanceof byte[] ? (byte[]) part : new byte[mLiteral]);
-            if (buffer != part)
-                mParts.add(buffer);
-            int read = mStream.read(buffer, buffer.length - mLiteral, mLiteral);
-            if (read == -1)
-                throw new ImapTerminatedException();
-            if (!mUnlogged && ZimbraLog.imap.isDebugEnabled())
-                ZimbraLog.imap.debug("C: {" + read + "}:" + (read > 100 ? "" : new String(buffer, buffer.length - mLiteral, read)));
-            mLiteral -= read;
-            if (mLiteral > 0)
-                throw new ImapContinuationException(false);
-            mLiteral = -1;
-        }
+        if (mLiteral >= 0) continueLiteral();
 
         String line = mStream.readLine(), logline = line;
-        // TcpServerInputStream.readLine() reutrns null on end of stream!
+        // TcpServerInputStream.readLine() returns null on end of stream!
         if (line == null)
             throw new ImapTerminatedException();
         incrementSize(line.length());
-        mParts.add(line);
+        addPart(line);
 
-        if (mParts.size() == 1) {
+        if (mParts.size() == 1 && !isMaxRequestSizeExceeded()) {
             // check for "LOGIN" command and elide if necessary
             int space = line.indexOf(' ') + 1;
             if (space > 1 && space < line.length() - 7)
@@ -104,7 +83,7 @@ public class TcpImapRequest extends ImapRequest {
                     continuation();
                 } else {
                     if (mTag == null && mIndex == 0 && mOffset == 0) {
-                        mTag = readTag();  rewind();
+                        mTag = readTag(); rewind();
                     }
                     throw new ImapParseException(mTag, "malformed nonblocking literal");
                 }
@@ -112,6 +91,34 @@ public class TcpImapRequest extends ImapRequest {
         }
     }
 
+    private void continueLiteral() throws IOException, ImapParseException {
+        if (isMaxRequestSizeExceeded()) {
+            int skipped = (int) mStream.skip(mLiteral);
+            if (mLiteral > 0 && skipped == 0) {
+                throw new ImapTerminatedException();
+            }
+            mLiteral -= skipped;
+            if (mLiteral > 0) {
+                throw new ImapContinuationException(false);
+            }
+            mLiteral = -1;
+            return;
+        }
+        Object part = mParts.get(mParts.size() - 1);
+        byte[] buffer = (part instanceof byte[] ? (byte[]) part : new byte[mLiteral]);
+        if (buffer != part)
+            mParts.add(buffer);
+        int read = mStream.read(buffer, buffer.length - mLiteral, mLiteral);
+        if (read == -1)
+            throw new ImapTerminatedException();
+        if (!mUnlogged && ZimbraLog.imap.isDebugEnabled())
+            ZimbraLog.imap.debug("C: {" + read + "}:" + (read > 100 ? "" : new String(buffer, buffer.length - mLiteral, read)));
+        mLiteral -= read;
+        if (mLiteral > 0)
+            throw new ImapContinuationException(false);
+        mLiteral = -1;
+    }
+    
     private byte[] getCurrentBuffer() throws ImapParseException {
         Object part = mParts.get(mIndex);
         if (!(part instanceof byte[]))

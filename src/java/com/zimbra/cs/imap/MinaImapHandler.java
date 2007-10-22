@@ -85,6 +85,13 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
 
     public void requestReceived(MinaRequest req) throws IOException {
         assert req instanceof MinaImapRequest;
+        MinaImapRequest imapReq = (MinaImapRequest) req;
+        
+        if (imapReq.isMaxRequestSizeExceeded()) {
+            imapReq.sendNO("[TOOBIG] request too big");
+            return;
+        }
+
         if (mCredentials != null) {
             ZimbraLog.addAccountNameToContext(mCredentials.getUsername());
         }
@@ -100,7 +107,7 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
         
         long start = ZimbraPerf.STOPWATCH_IMAP.start();
         try {
-            if (!processRequest((MinaImapRequest) req)) dropConnection();
+            if (!processRequest(imapReq)) dropConnection();
         } finally {
             ZimbraPerf.STOPWATCH_IMAP.stop(start);
             if (mLastCommand != null) {
