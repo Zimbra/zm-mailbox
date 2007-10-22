@@ -5726,13 +5726,22 @@ public class Mailbox {
         }
     }
 
-    public static final int NON_DELIVERY_FLAGS = Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME;
+    public static final int NON_DELIVERY_FLAGS = Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME | Flag.BITMASK_COPIED | Flag.BITMASK_DELETED;
 
     void snapshotCounts() throws ServiceException {
         // for write ops, update the "new messages" count in the DB appropriately
         RedoableOp recorder = mCurrentChange.recorder;
         if (recorder != null && mCurrentChange.getRedoPlayer() == null) {
-            boolean isNewMessage = recorder.getOpCode() == RedoableOp.OP_CREATE_MESSAGE && (((CreateMessage) recorder).getFlags() & NON_DELIVERY_FLAGS) == 0;
+            boolean isNewMessage = recorder.getOpCode() == RedoableOp.OP_CREATE_MESSAGE;
+            if (isNewMessage) {
+                CreateMessage cm = (CreateMessage) recorder;
+                if (cm.getFolderId() == ID_FOLDER_SPAM || cm.getFolderId() == ID_FOLDER_TRASH)
+                    isNewMessage = false;
+                else if ((cm.getFlags() & NON_DELIVERY_FLAGS) != 0)
+                    isNewMessage = false;
+                else if (mCurrentChange.octxt != null && mCurrentChange.octxt.getSession() != null && !mCurrentChange.octxt.isDelegatedRequest(this))
+                    isNewMessage = false;
+            }
             boolean isSoapRequest = mCurrentChange.octxt != null && mCurrentChange.octxt.getSession() instanceof SoapSession;
             if (isNewMessage)
                 mCurrentChange.recent = mData.recentMessages + 1;

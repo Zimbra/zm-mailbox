@@ -26,7 +26,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.im.IMPersona;
-import com.zimbra.cs.im.IMRouter;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.operation.Operation;
@@ -109,15 +108,12 @@ public abstract class Session {
         return mSessionType;
     }
     
-    /**
-     * Registers this session as an IM listener
-     *  
-     * @throws ServiceException
-     */
+    /** Registers this session as an IM listener
+     * @throws ServiceException */
     public synchronized void registerWithIM(IMPersona persona) throws ServiceException {
         assert(Thread.holdsLock(persona.getLock()));
         assert(mPersona == null || mPersona == persona);
-        if (mPersona == null && isIMListener() && mAuthenticatedAccountId.equalsIgnoreCase(mTargetAccountId)) {
+        if (mPersona == null && isIMListener() && !isDelegatedSession()) {
             mPersona = persona; 
             mPersona.addListener(this);
         }
@@ -142,7 +138,7 @@ public abstract class Session {
                 mMailbox.addListener(this);
 
                 // Connect the session to their IM Persona, if and only if IMAutoLogin is enabled for this account 
-                if (isIMListener() && mAuthenticatedAccountId.equalsIgnoreCase(mTargetAccountId)) {
+                if (isIMListener() && !isDelegatedSession()) {
                     try {
                         if (Provisioning.getInstance().get(AccountBy.id, this.getTargetAccountId()).getBooleanAttr(Provisioning.A_zimbraPrefIMAutoLogin, false)) {
                             IMPersona persona = mMailbox.getPersona();
@@ -189,8 +185,6 @@ public abstract class Session {
             mMailbox.removeListener(this);
             mMailbox = null;
         }
-        
-        
 
         if (mSessionId != null && isRegisteredInCache()) {
             SessionCache.unregisterSession(this);
@@ -200,7 +194,7 @@ public abstract class Session {
         return this;
     }
     
-    /** Returns TRUE if this session wants to hear about IM events */
+    /** Returns TRUE if this session wants to hear about IM events. */
     protected boolean isIMListener() { 
         return false;
     }
@@ -242,21 +236,21 @@ public abstract class Session {
         mRecentOperations.add(new RecentOperation(now, op.getClass()));
     }
 
-    synchronized public List<RecentOperation> getRecentOperations() { return mRecentOperations; }
+    synchronized public List<RecentOperation> getRecentOperations()  { return mRecentOperations; }
 
     public final void encodeState(Element parent) {
         doEncodeState(parent);
     }
-    
-    protected void doEncodeState(Element parent) { }
+
+    protected void doEncodeState(Element parent)  { }
 
     /** Returns the Session's identifier. */
-    public String getSessionId() { 
+    public String getSessionId() {
         return mSessionId;
     }
 
     /** Sets the Session's identifier. */
-    Session setSessionId(String sessionId) { 
+    Session setSessionId(String sessionId) {
         mSessionId = sessionId;
         return this;
     }
@@ -274,11 +268,6 @@ public abstract class Session {
     /** Returns the {@link Mailbox} (if any) this Session is listening on. */
     public Mailbox getMailbox() {
         return mMailbox;
-    }
-
-    /** Returns whether the submitted account ID matches that of the Session's owner. */
-    public boolean validateAccountId(String accountId) {
-        return mAuthenticatedAccountId.equals(accountId);
     }
 
     /** Handles the set of changes from a single Mailbox transaction.
@@ -323,9 +312,7 @@ public abstract class Session {
         return mCreationTime; 
     }
 
-    /**
-     * Public API for updating the access time of a session
-     */
+    /** Public API for updating the access time of a session. */
     public void updateAccessTime() {
         // go through the session cache so that the session cache's
         // time-ordered access list stays correct
@@ -356,6 +343,10 @@ public abstract class Session {
      * @see #getAuthenticatedAccountId() */
     public String getTargetAccountId() {
         return mTargetAccountId;
+    }
+
+    public boolean isDelegatedSession() {
+        return !mAuthenticatedAccountId.equalsIgnoreCase(mTargetAccountId);
     }
 
     private SimpleDateFormat mDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS");

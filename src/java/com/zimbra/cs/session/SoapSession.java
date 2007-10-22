@@ -280,7 +280,7 @@ public class SoapSession extends Session {
         if (pms == null || !pms.hasNotifications() || mMailbox == null)
             return;
 
-        if (source == this && mAuthenticatedAccountId.equalsIgnoreCase(mTargetAccountId)) {
+        if (source == this && !isDelegatedSession()) {
             // on the session's first write op, record the timestamp to the database
             boolean firstWrite = mLastWrite == -1;
             mLastWrite = System.currentTimeMillis();
@@ -295,8 +295,17 @@ public class SoapSession extends Session {
             // keep track of "recent" message count: all present before the session started, plus all received during the session
             if (pms.created != null) {
                 for (MailItem item : pms.created.values()) {
-                    if (item instanceof Message && (item.getFlagBitmask() & Mailbox.NON_DELIVERY_FLAGS) == 0)
-                        mRecentMessages++;
+                    if (item instanceof Message) {
+                        boolean isReceived = true;
+                        if (item.getFolderId() == Mailbox.ID_FOLDER_SPAM || item.getFolderId() == Mailbox.ID_FOLDER_TRASH)
+                            isReceived = false;
+                        else if ((item.getFlagBitmask() & Mailbox.NON_DELIVERY_FLAGS) != 0)
+                            isReceived = false;
+                        else if (source != null && !source.isDelegatedSession())
+                            isReceived = false;
+                        if (isReceived)
+                            mRecentMessages++;
+                    }
                 }
             }
         }
