@@ -72,13 +72,25 @@ public class TestImap extends TestCase {
 
     public void testLiteral() throws Exception {
         connect(false);
-        assertTrue(sendLogin(USER, PASS.getBytes("UTF-8")));
+        Object[] parts = new Object[] { " ", USER, " ", PASS.getBytes() };
+        assertTrue(mClient.sendCommand("LOGIN", parts, false));
     }
-    
+
     public void testBigLiteral() throws Exception {
+        testBigLiteral(false);
+    }
+
+    public void testBigLiteralSync() throws Exception {
+        testBigLiteral(true);
+    }
+
+    private void testBigLiteral(boolean sync) throws Exception {
         connect(false);
-        byte[] pass = fill(new byte[13000000], 'x');
-        assertFalse("Expected command to fail", sendLogin(USER, pass));
+        byte[] lit1 = fill(new byte[13000000], 'x');
+        byte[] lit2 = fill(new byte[100], 'y');
+        Object[] parts = new Object[] { " ", USER, " ", lit1, " ", lit2, "FOO"};
+        boolean res = mClient.sendCommand("LOGIN", parts, sync);
+        assertFalse("Expected command to fail", res);
         assertTrue("Expected [TOOBIG] response", mClient.getMessage().contains("[TOOBIG]"));
     }
 
@@ -87,11 +99,6 @@ public class TestImap extends TestCase {
         return b;
     }
 
-    private boolean sendLogin(String user, byte[] pass) throws Exception {
-        Object[] parts = new Object[] { " ", user, " ", pass };
-        return mClient.sendCommand("LOGIN", parts, true);
-    }
-    
     private void connect(boolean ssl) throws IOException {
         System.out.println("---------");
         mClient = new ImapClient(HOST, ssl ? SSL_PORT : PORT);
