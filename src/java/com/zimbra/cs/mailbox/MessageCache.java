@@ -182,7 +182,7 @@ public class MessageCache {
                     if (cnOrig == null || cnOrig.mContent == null) {
                         is = fetchFromStore(item);
                     } else {
-                        is =  new SharedByteArrayInputStream(cnOrig.mContent);
+                        is = new SharedByteArrayInputStream(cnOrig.mContent);
                     }
                     
                     cnode = new CacheNode(size, new Mime.FixedMimeMessage(JMSession.getSession(), is), expand ? ConvertedState.BOTH : ConvertedState.RAW);
@@ -203,9 +203,9 @@ public class MessageCache {
                         ZimbraLog.mailbox.warn("MIME converter failed for message " + item.getId(), e);
 
                         if (cnOrig == null || cnOrig.mContent == null) {
-                            fetchFromStore(item);
+                            is = fetchFromStore(item);
                         } else {
-                            is =  new SharedByteArrayInputStream(cnOrig.mContent);
+                            is = new SharedByteArrayInputStream(cnOrig.mContent);
                         }
                         
                         cnode = new CacheNode(size, new MimeMessage(JMSession.getSession(), is), ConvertedState.BOTH);
