@@ -72,7 +72,7 @@ public class TcpImapRequest extends ImapRequest {
         // if the line ends in a LITERAL+ non-blocking literal, keep reading
         if (line.endsWith("+}") && extensionEnabled("LITERAL+")) {
             int openBrace = line.lastIndexOf('{', line.length() - 3);
-            if (openBrace > 0) {
+            if (openBrace >= 0) {
                 long size = -1;
                 try {
                     size = Long.parseLong(line.substring(openBrace + 1, line.length() - 2));
