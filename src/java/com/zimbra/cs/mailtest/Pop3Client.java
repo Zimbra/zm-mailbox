@@ -14,6 +14,10 @@ public class Pop3Client extends MailClient {
     
     public Pop3Client() {}
 
+    public Pop3Client(String host, int port) {
+        super(host, port);
+    }
+    
     public void connect() throws IOException {
         if (mPort == -1) {
             mPort = mSslEnabled ? DEFAULT_SSL_PORT : DEFAULT_PORT;
@@ -22,7 +26,7 @@ public class Pop3Client extends MailClient {
     }
     
     protected boolean processGreeting() throws IOException {
-        processLine(recvLine());
+        processLine(readLine());
         return STATUS_OK.equals(mStatus);
     }
 
@@ -35,8 +39,14 @@ public class Pop3Client extends MailClient {
         return sendCommand("QUIT");
     }
     
-    protected boolean sendAuthenticate() throws IOException {
-        return sendCommand("AUTH " + mMechanism);
+    protected boolean sendAuthenticate(boolean ir) throws IOException {
+        StringBuffer sb = new StringBuffer("AUTH ");
+        sb.append(mMechanism);
+        if (ir) {
+            byte[] response = mAuthenticator.getInitialResponse();
+            sb.append(' ').append(encodeBase64(response));
+        }
+        return sendCommand(sb.toString());
     }
 
     protected boolean sendStartTLS() throws IOException {
@@ -50,9 +60,9 @@ public class Pop3Client extends MailClient {
     public boolean sendCommand(String command) throws IOException {
         mStatus = null;
         mMessage = null;
-        sendLine(command);
+        writeLine(command);
         while (mStatus == null) {
-            processLine(recvLine());
+            processLine(readLine());
         }
         return STATUS_OK.equals(mStatus);
     }
