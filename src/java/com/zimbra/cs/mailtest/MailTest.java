@@ -34,12 +34,12 @@ public abstract class MailTest {
                 System.exit(1);
             }
         }
-        mClient.setLogPrintStream(System.out);
+        mClient.setLogStream(System.out);
         mClient.setSSLSocketFactory(SSLUtil.getDummySSLContext().getSocketFactory());
         mClient.connect();
         if (mEnableTLS) mClient.startTLS();
         mClient.authenticate();
-        mClient.setLogPrintStream(null);
+        mClient.setLogStream(null);
         String qop = mClient.getNegotiatedQop();
         if (qop != null) System.out.printf("[Negotiated QOP is %s]\n", qop); 
         startCommandLoop();

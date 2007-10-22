@@ -1,7 +1,10 @@
 package com.zimbra.cs.mailtest;
 
+import com.zimbra.cs.mina.MinaUtil;
+
 import java.io.EOFException;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Formatter;
 import java.util.HashSet;
@@ -30,6 +33,10 @@ public class ImapClient extends MailClient {
 
     public ImapClient() {}
 
+    public ImapClient(String host, int port) {
+        super(host, port);
+    }
+
     public void connect() throws IOException {
         if (mPort == -1) {
             mPort = mSslEnabled ? DEFAULT_SSL_PORT : DEFAULT_PORT;
@@ -38,7 +45,7 @@ public class ImapClient extends MailClient {
     }
     
     protected boolean processGreeting() throws IOException {
-        processLine(recvLine());
+        processLine(readLine());
         return STATUS_OK.equals(mStatus);
     }
     
@@ -50,8 +57,14 @@ public class ImapClient extends MailClient {
         return sendCommand("LOGOUT");
     }
 
-    protected boolean sendAuthenticate() throws IOException {
-        return sendCommand("AUTHENTICATE " + mMechanism);
+    protected boolean sendAuthenticate(boolean ir) throws IOException {
+        StringBuilder sb = new StringBuilder("AUTHENTICATE ");
+        sb.append(mMechanism);
+        if (ir) {
+            byte[] response = mAuthenticator.getInitialResponse();
+            sb.append(' ').append(encodeBase64(response));
+        }
+        return sendCommand(sb.toString());
     }
 
     protected boolean sendStartTLS() throws IOException {
@@ -63,13 +76,30 @@ public class ImapClient extends MailClient {
     }
 
     public boolean sendCommand(String command) throws IOException {
+        return sendCommand(command, null, false);
+    }
+
+    public boolean sendCommand(String command, Object[] parts, boolean sync)
+            throws IOException {
         mTag = createTag();
         mStatus = null;
         mMessage = null;
-        sendLine(mTag + ' ' + command);
+        write(mTag);
+        write(" ");
+        write(command);
+        if (parts != null) {
+            for (Object part : parts) {
+                if (part instanceof String) {
+                    write((String) part);
+                } else if (!sendLiteral(part, sync)) {
+                    return false;
+                }
+            }
+        }
+        newLine();
         try {
             while (mStatus == null) {
-                processLine(recvLine());
+                processLine(readLine());
             }
         } catch (EOFException e) {
             // As long as we received a BYE before the connection was closed,
@@ -80,6 +110,34 @@ public class ImapClient extends MailClient {
         return STATUS_OK.equals(mStatus);
     }
 
+    private boolean sendLiteral(Object part, boolean sync) throws IOException {
+        byte[] b = getPartBytes(part);
+        write("{");
+        write(String.valueOf(b.length));
+        if (!sync) write("+");
+        writeLine("}");
+        if (sync) {
+            String line = readLine();
+            if (!line.startsWith("+ ")) {
+                processLine(line);
+                return false;
+            }
+        }
+        write(b);
+        return true;
+    }
+
+    private byte[] getPartBytes(Object part) {
+        if (part instanceof byte[]) {
+            return (byte[]) part;
+        }
+        if (part instanceof ByteBuffer) {
+            return MinaUtil.getBytes((ByteBuffer) part);
+        }
+        throw new IllegalArgumentException(
+            "Invalid argument type: " + part.getClass());
+    }
+    
     public String getMessage() {
         return mMessage;
     }

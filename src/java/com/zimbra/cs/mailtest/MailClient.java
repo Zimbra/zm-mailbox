@@ -32,13 +32,19 @@ public abstract class MailClient {
     protected Map<String, String> mSaslProperties;
     protected MailInputStream mInputStream;
     protected MailOutputStream mOutputStream;
-    protected PrintStream mLogPrintStream;
+    protected PrintStream mLogStream;
+    protected StringBuilder mLogBuffer;
     protected ClientAuthenticator mAuthenticator;
     protected boolean mDebug;
     protected boolean mClosed;
 
     protected MailClient() {}
 
+    protected MailClient(String host, int port) {
+        mHost = host;
+        mPort = port;
+    }
+    
     public void connect() throws IOException {
         SocketFactory sf = mSslEnabled ?
             getSSLSocketFactory() : SocketFactory.getDefault();
@@ -59,7 +65,7 @@ public abstract class MailClient {
     }
     
     protected abstract boolean processGreeting() throws IOException;
-    protected abstract boolean sendAuthenticate() throws IOException;
+    protected abstract boolean sendAuthenticate(boolean ir) throws IOException;
     protected abstract boolean sendLogin() throws IOException;
     protected abstract boolean sendLogout() throws IOException;
     protected abstract boolean sendStartTLS() throws IOException;
@@ -78,8 +84,8 @@ public abstract class MailClient {
             throw new IOException("Logout failed");
         }
     }
-    
-    public void authenticate() throws LoginException, IOException {
+
+    public void authenticate(boolean ir) throws LoginException, IOException {
         if (mMechanism == null || "LOGIN".equals(mMechanism)) {
             login();
             return;
@@ -95,7 +101,7 @@ public abstract class MailClient {
             mAuthenticator.getProperties().putAll(mSaslProperties);
         }
         mAuthenticator.initialize();
-        if (!sendAuthenticate()) {
+        if (!sendAuthenticate(ir)) {
             throw new LoginException(getMessage());
         }
         if (mAuthenticator.isEncryptionEnabled()) {
@@ -106,13 +112,17 @@ public abstract class MailClient {
         }
     }
 
+    public void authenticate() throws LoginException, IOException {
+        authenticate(false);
+    }
+
     protected void processContinuation(String line) throws IOException {
         byte[] response = mAuthenticator.evaluateChallenge(
             decodeBase64(line.substring(2)));
-        if (response != null) sendLine(encodeBase64(response));
+        if (response != null) writeLine(encodeBase64(response));
     }
 
-    private static byte[] decodeBase64(String s) throws SaslException {
+    protected static byte[] decodeBase64(String s) throws SaslException {
         try {
             return Base64.decodeBase64(s.getBytes("us-ascii"));
         } catch (UnsupportedEncodingException e) {
@@ -120,7 +130,7 @@ public abstract class MailClient {
         }
     }
 
-    private static String encodeBase64(byte[] b) {
+    protected static String encodeBase64(byte[] b) {
         try {
             return new String(Base64.encodeBase64(b), "us-ascii");
         } catch (UnsupportedEncodingException e) {
@@ -129,6 +139,9 @@ public abstract class MailClient {
     }
 
     private void checkCredentials() {
+        if (mAuthenticationId == null) {
+            mAuthenticationId = mAuthorizationId;
+        }
         if (mAuthenticationId == null) {
             throw new IllegalStateException("Missing authentication id");
         }
@@ -197,8 +210,11 @@ public abstract class MailClient {
         mMechanism = mechanism;
     }
 
-    public void setLogPrintStream(PrintStream ps) {
-        mLogPrintStream = ps;
+    public void setLogStream(PrintStream ps) {
+        mLogStream = ps;
+        if (mLogBuffer == null) {
+            mLogBuffer = new StringBuilder(132);
+        }
     }
 
     public void setDebug(boolean debug) {
@@ -218,24 +234,58 @@ public abstract class MailClient {
             mAuthenticator.getNegotiatedProperty(Sasl.QOP) : null;
     }
 
-    protected void sendLine(String line) throws IOException {
+    protected void write(String s) throws IOException {
         ensureOpen();
         try {
-            mOutputStream.writeLine(line);
-            mOutputStream.flush();
+            mOutputStream.write(s);
         } catch (IOException e) {
             close(); // automatically close upon I/O error
             throw e;
         }
-        if (mLogPrintStream != null) mLogPrintStream.println("C: " + line);
+        if (mLogBuffer != null) {
+            mLogBuffer.append(s);
+        }
     }
 
-    protected String recvLine() throws IOException {
+    protected void write(byte[] b) throws IOException {
+        ensureOpen();
+        try {
+            mOutputStream.write(b);
+        } catch (IOException e) {
+            close();
+            throw e;
+        }
+        if (mLogBuffer != null) {
+            mLogBuffer.append("<<...>>");
+        }
+    }
+    
+    protected void newLine() throws IOException {
+        ensureOpen();
+        try {
+            mOutputStream.newLine();
+            mOutputStream.flush();
+        } catch (IOException e) {
+            close();
+            throw e;
+        }
+        if (mLogBuffer != null) {
+            mLogStream.println("C: " + mLogBuffer.toString());
+            mLogBuffer.setLength(0);
+        }
+    }
+    
+    protected void writeLine(String line) throws IOException {
+        write(line);
+        newLine();
+    }
+
+    protected String readLine() throws IOException {
         ensureOpen();
         try {
             String line = mInputStream.readLine();
             if (line == null) throw new EOFException();
-            if (mLogPrintStream != null) mLogPrintStream.println("S: " + line);
+            if (mLogStream != null) mLogStream.println("S: " + line);
             return line;
         } catch (IOException e) {
             close(); // automatically close upon I/O error
