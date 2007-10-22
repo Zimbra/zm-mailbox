@@ -47,7 +47,7 @@ public class ZGetInfoResult {
     private List<ZSignature> mSignatures;
     private List<String> mMailURLs;
     private Set<String> mEmailAddresses;
-    
+
     static Map<String, List<String>> getMap(Element e, String root, String child) throws ServiceException {
         Map<String, List<String>> result = new HashMap<String, List<String>>();
         Element attrsEl = e.getOptionalElement(root);
@@ -144,9 +144,13 @@ public class ZGetInfoResult {
             mEmailAddresses =  new HashSet<String>();
             mEmailAddresses.add(getName().toLowerCase());
             List<String> aliasList = getAttrs().get(Provisioning.A_zimbraMailAlias);
-            if (aliasList != null) 
+            if (aliasList != null)
                 for (String alias: aliasList)
                     mEmailAddresses.add(alias.toLowerCase());
+            List<String> allowFromList = getAttrs().get(Provisioning.A_zimbraAllowFromAddress);
+            if (allowFromList != null)
+                for (String allowFrom: allowFromList)
+                    mEmailAddresses.add(allowFrom.toLowerCase());
         }
         return mEmailAddresses;
     }
