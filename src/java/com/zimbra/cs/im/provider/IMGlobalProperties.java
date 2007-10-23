@@ -52,12 +52,13 @@ public class IMGlobalProperties implements PropertyProvider {
         mLocalConfigMap.put("xmpp.socket.blocking", "false");
         mLocalConfigMap.put("xmpp.server.certificate.verify", "false");
         
-        if (LC.debug_xmpp_disable_client_tls.booleanValue()) { // UNCOMMENT ME TO DISABLE TLS FOR DEBUGGING!
+        if (LC.debug_xmpp_disable_client_tls.booleanValue()) {
             mLocalConfigMap.put("xmpp.client.tls.policy", "disabled");
         }
-                
-//      mProvMap.put("xmpp.server.read.timeout", Integer.toString(60 * 60 * 1000));        
-//        provMap.put("", "");
+        
+        if (LC.im_dnsutil_dnsoverride.value() != null && LC.im_dnsutil_dnsoverride.value().length() > 0) {
+            mLocalConfigMap.put("dnsutil.dnsOverride", LC.im_dnsutil_dnsoverride.value());
+        }
     }
     
     public String get(String key) {
