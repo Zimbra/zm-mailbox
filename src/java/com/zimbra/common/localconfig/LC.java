@@ -267,6 +267,8 @@ public class LC {
     
     public static final KnownKey debug_xmpp_disable_client_tls;
     
+    public static final KnownKey im_dnsutil_dnsoverride;
+    
     static {
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  " +
                 "Changing this setting does not immediately reflect in MySQL server.  " +
@@ -981,6 +983,9 @@ public class LC {
         
         debug_batch_message_indexing = new KnownKey("debug_batch_message_indexing", "0", "debug only test code to batch index updates (don't index immediately)");
         
-        debug_xmpp_disable_client_tls = new KnownKey("debug_xmpp_disable_client_tls", "0", "disable TLS for XMPP C2S protocol");         
+        debug_xmpp_disable_client_tls = new KnownKey("debug_xmpp_disable_client_tls", "0", "disable TLS for XMPP C2S protocol");
+        
+        im_dnsutil_dnsoverride = new KnownKey("im_dnsutil_dnsoverride", "", 
+                  "DNS override settings for IM federation, in the format '{domain,host:port},{domain,host:port},...'");
     }
 }
