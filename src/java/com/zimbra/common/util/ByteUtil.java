@@ -191,14 +191,14 @@ public class ByteUtil {
             try {
                 while (is.read() != -1);
             } catch (Exception e) {
-                ZimbraLog.misc.warn("exception while draining PipedInputStream", e);
+                ZimbraLog.misc.debug("ignoring exception while draining PipedInputStream", e);
             }
         }
 
         try {
             is.close();
         } catch (Exception e) {
-            ZimbraLog.misc.warn("ignoring exception while closing input stream", e);
+            ZimbraLog.misc.debug("ignoring exception while closing input stream", e);
         }
     }
 
@@ -209,7 +209,7 @@ public class ByteUtil {
         try {
             os.close();
         } catch (Exception e) {
-            ZimbraLog.misc.warn("ignoring exception while closing output stream", e);
+            ZimbraLog.misc.debug("ignoring exception while closing output stream", e);
         }
     }
 
