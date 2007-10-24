@@ -192,6 +192,14 @@ public class ZMessageHit implements ZSearchHit {
         return hasFlags() && mFlags.indexOf(ZMessage.Flag.flagged.getFlagChar()) != -1;
     }
 
+    public boolean isHighPriority() {
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.highPriority.getFlagChar()) != -1;
+    }
+
+    public boolean isLowPriority() {
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.lowPriority.getFlagChar()) != -1;
+    }
+
     public boolean isForwarded() {
         return hasFlags() && mFlags.indexOf(ZMessage.Flag.forwarded.getFlagChar()) != -1;
     }

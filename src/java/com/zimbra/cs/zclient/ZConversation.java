@@ -33,6 +33,8 @@ public class ZConversation implements ZItem {
         unread('u'),
         draft('d'),
         flagged('f'),
+        highPriority('!'),
+        lowPriority('?'),
         sentByMe('s'),
         replied('r'),
         forwarded('w'),   

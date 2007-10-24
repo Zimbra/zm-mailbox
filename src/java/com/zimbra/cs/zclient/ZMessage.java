@@ -31,6 +31,8 @@ public class ZMessage implements ZItem {
     public enum Flag {
         unread('u'),
         flagged('f'),
+        highPriority('!'),
+        lowPriority('?'),
         attachment('a'),
         replied('r'),
         sentByMe('s'),

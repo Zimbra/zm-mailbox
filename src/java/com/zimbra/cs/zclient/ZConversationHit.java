@@ -153,6 +153,14 @@ public class ZConversationHit implements ZSearchHit {
         return hasFlags() && mFlags.indexOf(ZConversation.Flag.flagged.getFlagChar()) != -1;
     }
 
+    public boolean isHighPriority() {
+        return hasFlags() && mFlags.indexOf(ZConversation.Flag.highPriority.getFlagChar()) != -1;
+    }
+
+    public boolean isLowPriority() {
+        return hasFlags() && mFlags.indexOf(ZConversation.Flag.lowPriority.getFlagChar()) != -1;
+    }
+
     public boolean isSentByMe() {
         return hasFlags() && mFlags.indexOf(ZConversation.Flag.sentByMe.getFlagChar()) != -1;
     }
