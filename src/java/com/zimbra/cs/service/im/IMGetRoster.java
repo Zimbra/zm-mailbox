@@ -55,6 +55,7 @@ public class IMGetRoster extends IMDocumentHandler {
             if (s != null) {
                 persona.refreshRoster(s);
                 persona.getDefaultPrivacyList();
+                persona.refreshChats(s);
             }
         }
 

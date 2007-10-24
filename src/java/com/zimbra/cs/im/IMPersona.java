@@ -276,6 +276,19 @@ public class IMPersona extends ClassLogger {
             mChats.remove(chat.getThreadId());
         }
     }
+    
+    public void refreshChats(Session s) {
+        synchronized(getLock()) {
+            for (IMChat chat : mChats.values()) {
+                int seqNo = chat.getFirstSeqNo();
+                for (IMMessage msg : chat.messages()) {
+                    IMMessageNotification not = new IMMessageNotification(msg.getFrom(), chat.getThreadId(), msg, seqNo);
+                    postIMNotification(not, s); 
+                    seqNo++;
+                }
+            }
+        }
+    }
 
     /**
      * @param packet
@@ -1081,10 +1094,16 @@ public class IMPersona extends ClassLogger {
         }
     }
 
+    /**
+     * post a notification to all active sessions
+     */
     void postIMNotification(IMNotification not) {
         postIMNotification(not, null);
     }
     
+    /**
+     * post a notification to just a single session
+     */
     private void postIMNotification(IMNotification not, Session s) {
         if (s == null) { 
             for (Session session : mListeners) {

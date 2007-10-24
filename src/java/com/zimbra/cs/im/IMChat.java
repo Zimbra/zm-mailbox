@@ -407,6 +407,10 @@ public class IMChat extends ClassLogger {
                         (subject == null || subject.length() == 0) &&
                         (bodyPart == null || bodyPart.getPlainText().length() == 0)) 
             {
+                //
+                // typing indication only...don't store
+                //
+                
                 IMBaseMessageNotification notification = 
                     new IMBaseMessageNotification(msg.getFrom().toBareJID(), getThreadId(), typing, System.currentTimeMillis());  
                 mPersona.postIMNotification(notification);
