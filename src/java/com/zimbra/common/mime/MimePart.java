@@ -327,7 +327,7 @@ public abstract class MimePart {
                 start = Math.max(0, Math.min(start, mBodyContent.length));
                 end = end < 0 ? mBodyContent.length : Math.max(start, Math.min(end, mBodyContent.length));
                 return new ByteArrayInputStream(mBodyContent, (int) start, (int) (end - start));
-            } else {
+            } else if (mBodyFile != null) {
                 if (!mBodyFile.exists())
                     return null;
                 // FIXME: check for GZIPped content
@@ -344,6 +344,8 @@ public abstract class MimePart {
                     }
                 }
                 return end == fileLength ? fis : new FileSegmentInputStream(fis, end - start);
+            } else {
+                return null;
             }
         }
 
@@ -357,7 +359,7 @@ public abstract class MimePart {
                 byte[] content = new byte[size];
                 System.arraycopy(mBodyContent, (int) start, content, 0, size);
                 return content;
-            } else {
+            } else if (mBodyFile != null) {
                 RandomAccessFile raf;
                 try {
                     raf = new RandomAccessFile(mBodyFile, "r");
@@ -372,6 +374,8 @@ public abstract class MimePart {
                 byte[] content = new byte[(int) (end - start)];
                 raf.readFully(content);
                 return content;
+            } else {
+                return null;
             }
         }
     }
@@ -398,14 +402,14 @@ public abstract class MimePart {
 
         @Override public int read(byte[] b, int off, int len) throws IOException {
             int num = mCurrentStream == null ? -1 : mCurrentStream.read(b, off, len);
-            if (num == -1 && mCurrentStream != null)
+            while (num == -1 && mCurrentStream != null)
                 num = getNextStream() == null ? -1 : mCurrentStream.read(b, off, len);
             return num;
         }
 
         @Override public long skip(long n) throws IOException {
             long remaining = n - (mCurrentStream == null ? 0 : mCurrentStream.skip(n));
-            if (remaining > 0 && mCurrentStream != null)
+            while (remaining > 0 && mCurrentStream != null)
                 remaining -= getNextStream() == null ? 0 : mCurrentStream.skip(remaining);
             return n - remaining;
         }
