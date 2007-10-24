@@ -366,27 +366,32 @@ public class ParseMimeMessage {
                 } else if (eName.equals(MailService.E_MIMEPART)) { /* <mp> */
                     // processMessagePart(mm, elem);
 	            } else if (eName.equals(MailService.E_EMAIL)) { /* <e> */
-                    maddrs.add(elem);
+                    maddrs.add(elem, ctxt.defaultCharset);
                 } else if (eName.equals(MailService.E_IN_REPLY_TO)) { /* <irt> */
-                    mm.setHeader("In-Reply-To", elem.getText());
+                    // mm.setHeader("In-Reply-To", elem.getText());
                 } else if (eName.equals(MailService.E_SUBJECT)) { /* <su> */
-                    String subject = elem.getText();
-                    mm.setSubject(subject, "utf-8");
-                    mLog.debug("\t\tSubject: "+subject);
-	            } else if (eName.equals(MailService.E_FRAG)) { /* <f> */
-	            	mLog.debug("Ignoring message fragment data");
+                    // mm.setSubject(elem.getText(), "utf-8");
+                } else if (eName.equals(MailService.E_FRAG)) { /* <f> */
+                    mLog.debug("Ignoring message fragment data");
                 } else if (eName.equals(MailService.E_INVITE)) { /* <inv> */
                     // Already processed above.  Ignore it.
                 } else if (eName.equals(MailService.E_CAL_TZ)) { /* <tz> */
                     // Ignore as a special case.
-	            } else {
-	                unsupportedChildElement(elem, msgElem);
+                } else {
+                    unsupportedChildElement(elem, msgElem);
 	            }
 	        }
 
+            String subject = msgElem.getAttribute(MailService.E_SUBJECT, "");
+            mm.setSubject(subject, checkCharset(subject, ctxt.defaultCharset));
+
+            String irt = msgElem.getAttribute(MailService.E_IN_REPLY_TO, null);
+            if (irt != null)
+                mm.setHeader("In-Reply-To", irt);
+
             // can have no addresses specified if it's a draft...
             if (!maddrs.isEmpty())
-                addAddressHeaders(mm, maddrs);
+                addAddressHeaders(mm, maddrs, ctxt.defaultCharset);
 
 			if (!hasContent && !isMultipart)
 				mm.setText("", Mime.P_CHARSET_DEFAULT);
@@ -531,7 +536,10 @@ public class ParseMimeMessage {
         }
     }
 
-    private static String checkCharset(String data, String requestedCharset) {
+    static String checkCharset(String data, String requestedCharset) {
+        if (data == null)
+            return Mime.P_CHARSET_DEFAULT;
+
         if (!requestedCharset.equalsIgnoreCase(Mime.P_CHARSET_UTF8)) {
             try {
                 Charset cset = Charset.forName(requestedCharset);
@@ -688,12 +696,12 @@ public class ParseMimeMessage {
             newContacts = contacts;
         }
 
-        public void add(Element elem) throws ServiceException, UnsupportedEncodingException {
+        public void add(Element elem, String defaultCharset) throws ServiceException, UnsupportedEncodingException {
             String emailAddress = elem.getAttribute(MailService.A_ADDRESS);
             String personalName = elem.getAttribute(MailService.A_PERSONAL, null);
             String addressType = elem.getAttribute(MailService.A_ADDRESS_TYPE);
 
-            InternetAddress addr = new InternetAddress(emailAddress, personalName, Mime.P_CHARSET_UTF8);
+            InternetAddress addr = new InternetAddress(emailAddress, personalName, checkCharset(personalName, defaultCharset));
             if (elem.getAttributeBool(MailService.A_ADD_TO_AB, false))
                 newContacts.add(addr);
 
@@ -730,7 +738,7 @@ public class ParseMimeMessage {
         }
     }
 
-    private static void addAddressHeaders(MimeMessage mm, MessageAddresses maddrs)
+    private static void addAddressHeaders(MimeMessage mm, MessageAddresses maddrs, String defaultCharset)
     throws MessagingException {
         InternetAddress[] addrs = maddrs.get(EmailType.TO.toString());
         if (addrs != null) {
