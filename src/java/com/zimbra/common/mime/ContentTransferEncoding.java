@@ -48,8 +48,7 @@ public enum ContentTransferEncoding {
     static class Base64EncoderStream extends TransferEncodingStream {
         static final byte[] BASE64_TABLE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".getBytes();
 
-        private int column;
-        private byte[] buf = new byte[4];
+        private int column, buf[] = new int[4];
 
         Base64EncoderStream(ByteArrayInputStream bais)  { super(bais); }
         Base64EncoderStream(BufferedInputStream is)     { super(is); }
@@ -71,7 +70,7 @@ public enum ContentTransferEncoding {
                     buf[2] = c2 == -1 ? (byte) '=' : BASE64_TABLE[(accumulator >> 6) & 0x3F];
                     buf[3] = c3 == -1 ? (byte) '=' : BASE64_TABLE[accumulator & 0x3F];
                 }
-                byte c = buf[position];
+                int c = buf[position];
                 if (position == 3 && c == '=')
                     column = CHUNK_SIZE - 1;
                 column++;  return c;
@@ -84,17 +83,16 @@ public enum ContentTransferEncoding {
     }
 
     static class Base64DecoderStream extends TransferEncodingStream {
-        private static final byte[] BASE64_DECODE = new byte[128];
+        private static final int[] BASE64_DECODE = new int[128];
             static {
                 for (int i = 0; i < 128; i++)
                     BASE64_DECODE[i] = -1;
                 for (int i = 0; i < Base64EncoderStream.BASE64_TABLE.length; i++)
-                    BASE64_DECODE[Base64EncoderStream.BASE64_TABLE[i]] = (byte) i;
+                    BASE64_DECODE[Base64EncoderStream.BASE64_TABLE[i]] = i;
             }
 
         private boolean closed;
-        private int position = 3, valid = 3;
-        private byte[] buf = new byte[3];
+        private int position = 3, valid = 3, buf[] = new int[3];
 
         Base64DecoderStream(ByteArrayInputStream bais)  { super(bais); }
         Base64DecoderStream(BufferedInputStream is)     { super(is); }
@@ -121,9 +119,9 @@ public enum ContentTransferEncoding {
                     }
                 }
 
-                buf[0] = (byte) ((accumulator >> 16) & 0xFF);
-                buf[1] = (byte) ((accumulator >> 8) & 0xFF);
-                buf[2] = (byte) (accumulator & 0xFF);
+                buf[0] = (accumulator >> 16) & 0xFF;
+                buf[1] = (accumulator >> 8) & 0xFF;
+                buf[2] = accumulator & 0xFF;
                 position = 0;
             }
             return buf[position++];
@@ -131,13 +129,13 @@ public enum ContentTransferEncoding {
     }
 
     static class QuotedPrintableDecoderStream extends TransferEncodingStream {
-        private static final byte[] QP_DECODE = new byte[128];
+        private static final int[] QP_DECODE = new int[128];
             static {
                 for (int i = 0; i < 128; i++)
                     QP_DECODE[i] = -1;
                 for (int i = 0; i < QuotedPrintableEncoderStream.QP_TABLE.length; i++) {
-                    QP_DECODE[QuotedPrintableEncoderStream.QP_TABLE[i]] = (byte) i;
-                    QP_DECODE[Character.toLowerCase(QuotedPrintableEncoderStream.QP_TABLE[i])] = (byte) i;
+                    QP_DECODE[QuotedPrintableEncoderStream.QP_TABLE[i]] = i;
+                    QP_DECODE[Character.toLowerCase(QuotedPrintableEncoderStream.QP_TABLE[i])] = i;
                 }
             }
 
@@ -176,8 +174,7 @@ public enum ContentTransferEncoding {
     static class QuotedPrintableEncoderStream extends TransferEncodingStream {
         static final byte[] QP_TABLE = "0123456789ABCDEF".getBytes();
 
-        private int column, valid, peek1 = -1, peek2 = -1;
-        private byte out1, out2;
+        private int column, valid, peek1 = -1, peek2 = -1, out1, out2;
         private boolean text;
 
         QuotedPrintableEncoderStream(ByteArrayInputStream bais, ContentType ctype)  { super(bais);  setContentType(ctype); }
@@ -259,13 +256,12 @@ public enum ContentTransferEncoding {
 //        private static final int CHUNK_SIZE = 76;
 //        private static final byte[] BASE64_TABLE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".getBytes();
 //
-//        private int column, bytes, accumulator;
-//        private byte[] buf = new byte[6];
+//        private int column, bytes, accumulator, buf[] = new int[6];
 //
 //        Base64OutputStream(OutputStream os)  { super(os);  buf[4] = '\r';  buf[5] = '\n'; }
 //
 //        @Override public void write(int b) throws IOException {
-//            accumulator = (accumulator << 8) | (byte) b;
+//            accumulator = (accumulator << 8) | (b & 0xFF);
 //            if (++bytes == 3) {
 //                buf[0] = BASE64_TABLE[(accumulator >> 18) & 0x3F];
 //                buf[1] = BASE64_TABLE[(accumulator >> 12) & 0x3F];
@@ -291,9 +287,5 @@ public enum ContentTransferEncoding {
 //            }
 //            super.close();
 //        }
-//    }
-
-//    static class Base64InputStream extends PushbackInputStream {
-//        
 //    }
 }
