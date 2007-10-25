@@ -120,7 +120,7 @@ mysql> quit
 % tar -xvzf  {p4_client_local_dir}/ThirdPartyBuilds/MACOSXx86/openldap/openldap-2.3.37.7.tgz -C /opt/zimbra
 </pre>
 
-Run the following command:
+Run the following commands:
 
 <pre>
 % ln -s /opt/zimbra/{sleepycat_extract_dir} /opt/zimbra/sleepycat
