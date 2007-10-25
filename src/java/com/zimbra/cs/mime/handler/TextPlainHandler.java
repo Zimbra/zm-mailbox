@@ -57,7 +57,7 @@ public class TextPlainHandler extends MimeHandler {
             DataSource source = getDataSource();
             InputStream is = null;
             try {
-                mContent = Mime.decodeText(is = source.getInputStream(), source.getContentType());
+                mContent = Mime.decodeText(is = source.getInputStream(), source.getContentType(), null);
             } catch (IOException e) {
                 throw new MimeHandlerException(e);
             } finally {

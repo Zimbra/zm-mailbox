@@ -29,6 +29,8 @@ import javax.mail.internet.MimeMultipart;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.CalendarDataSource;
@@ -110,7 +112,7 @@ public class SendMsgOperation extends Operation {
 
     private void fixupICalendarFromOutlook(Mailbox ownerMbox)
     throws ServiceException {
-        MimeVisitor mv = new OutlookICalendarFixupMimeVisitor();
+        MimeVisitor mv = new OutlookICalendarFixupMimeVisitor(ownerMbox.getAccount());
         try {
             mv.accept(mMm);
         } catch (MessagingException e) {
@@ -133,10 +135,12 @@ public class SendMsgOperation extends Operation {
         private int mMsgDepth;
         private String[] mFromEmails;
         private String mSentBy;
+        private String mDefaultCharset;
 
-        OutlookICalendarFixupMimeVisitor() {
+        OutlookICalendarFixupMimeVisitor(Account acct) {
             mNeedFixup = false;
             mMsgDepth = 0;
+            mDefaultCharset = (acct == null ? null : acct.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null));
         }
 
         @Override
@@ -204,7 +208,7 @@ public class SendMsgOperation extends Operation {
             ZVCalendar ical;
             try {
                 DataSource ds = bp.getDataHandler().getDataSource();
-                Reader reader = Mime.getTextReader(ds.getInputStream(), ds.getContentType());
+                Reader reader = Mime.getTextReader(ds.getInputStream(), ds.getContentType(), mDefaultCharset);
                 ical = ZCalendarBuilder.build(reader);
             } catch (Exception e) {
                 throw new MessagingException("Unable to parse iCalendar part: " + e.getMessage(), e);

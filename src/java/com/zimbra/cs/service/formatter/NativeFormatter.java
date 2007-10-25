@@ -132,7 +132,8 @@ public class NativeFormatter extends Formatter {
             boolean html = checkGlobalOverride(Provisioning.A_zimbraAttachmentsViewInHtmlOnly, context.authAccount) ||
                             (context.hasView() && context.getView().equals("html"));
             if (!html) {
-                sendbackOriginalDoc(mp, contentType, context.req, context.resp);
+                String defaultCharset = context.targetAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null);
+                sendbackOriginalDoc(mp, contentType, defaultCharset, context.req, context.resp);
             } else {
                 context.req.setAttribute(ATTR_MIMEPART, mp);
                 context.req.setAttribute(ATTR_MSGDIGEST, item.getDigest());
@@ -159,16 +160,13 @@ public class NativeFormatter extends Formatter {
         return Mime.getMimePart(msg.getMimeMessage(), part);
     }
 
-    public static void sendbackOriginalDoc(MimePart mp, String contentType, HttpServletRequest req, HttpServletResponse resp) throws IOException, MessagingException {
-        sendbackOriginalDoc(mp.getInputStream(), contentType, Mime.getFilename(mp), mp.getDescription(), req, resp);
+    public static void sendbackOriginalDoc(MimePart mp, String contentType, String defaultCharset, HttpServletRequest req, HttpServletResponse resp)
+    throws IOException, MessagingException {
+        sendbackOriginalDoc(mp.getInputStream(), contentType, defaultCharset, Mime.getFilename(mp), mp.getDescription(), req, resp);
     }
 
-    public static void sendbackOriginalDoc(InputStream is,
-                                           String contentType,
-                                           String filename,
-                                           String desc,
-                                           HttpServletRequest req,
-                                           HttpServletResponse resp)
+    public static void sendbackOriginalDoc(InputStream is, String contentType, String defaultCharset, String filename, String desc,
+                                           HttpServletRequest req, HttpServletResponse resp)
     throws IOException {
         if (filename == null)
             filename = "unknown";

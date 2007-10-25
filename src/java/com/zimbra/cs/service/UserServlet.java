@@ -293,7 +293,7 @@ public class UserServlet extends ZimbraServlet {
         }
     }
 
-    private boolean checkAuthentication(HttpServletRequest req, HttpServletResponse resp, Context context) throws IOException, ServletException, UserServletException {
+    private boolean checkAuthentication(HttpServletRequest req, HttpServletResponse resp, Context context) throws IOException, ServletException {
         // if they specify /~/, we must auth
         if (context.targetAccount == null && context.accountPath.equals("~")) {
             getAccount(context);

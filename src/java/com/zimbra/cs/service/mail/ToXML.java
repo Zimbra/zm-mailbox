@@ -25,6 +25,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.NamedEntry;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SearchParams.ExpandResults;
@@ -644,7 +645,7 @@ public class ToXML {
             List<MPartInfo> parts = Mime.getParts(mm);
             if (parts != null && !parts.isEmpty()) {
                 Set<MPartInfo> bodies = Mime.getBody(parts, wantHTML);
-                addParts(m, parts.get(0), bodies, part, neuter);
+                addParts(m, parts.get(0), bodies, part, neuter, getDefaultCharset(msg));
             }
         } catch (IOException ex) {
             throw ServiceException.FAILURE(ex.getMessage(), ex);
@@ -703,8 +704,8 @@ public class ToXML {
             calItemElem.addAttribute(MailService.A_MODIFIED_SEQUENCE, calItem.getModifiedSequence());
         }
 
-            for (int i = 0; i < calItem.numInvites(); i++) {
-                Invite inv = calItem.getInvite(i);
+        for (int i = 0; i < calItem.numInvites(); i++) {
+            Invite inv = calItem.getInvite(i);
 
             Element ie = calItemElem.addElement(MailService.E_INVITE);
             setCalendarItemType(ie, calItem);
@@ -715,7 +716,7 @@ public class ToXML {
 
             ie.addAttribute(MailService.A_ID, lc.formatItemId(inv.getMailItemId()));
             ie.addAttribute(MailService.A_CAL_COMPONENT_NUM, inv.getComponentNum());
-        if (inv.hasRecurId())
+            if (inv.hasRecurId())
                 ie.addAttribute(MailService.A_CAL_RECURRENCE_ID, inv.getRecurId().toString());
 
             encodeInvite(ie, lc, calItem, inv, NOTIFY_FIELDS, false);
@@ -746,6 +747,11 @@ public class ToXML {
         }
     }
 
+
+    private static String getDefaultCharset(MailItem item) throws ServiceException {
+        Account acct = (item == null ? null : item.getAccount());
+        return acct == null ? null : acct.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null);
+    }
 
     /** Encodes an Invite stored within a calendar item object into <m> element
      *  with <mp> elements.
@@ -825,16 +831,16 @@ public class ToXML {
                 if (sent != null)
                 m.addAttribute(MailService.A_SENT_DATE, sent.getTime());
 
-            Element invElt = m.addElement(MailService.E_INVITE);
-            setCalendarItemType(invElt, calItem);
-            encodeTimeZoneMap(invElt, calItem.getTimeZoneMap());
-            for (Invite inv : calItem.getInvites(invId))
-                encodeInvite(invElt, lc, calItem, inv, NOTIFY_FIELDS, repliesWithInvites);
+                Element invElt = m.addElement(MailService.E_INVITE);
+                setCalendarItemType(invElt, calItem);
+                encodeTimeZoneMap(invElt, calItem.getTimeZoneMap());
+                for (Invite inv : calItem.getInvites(invId))
+                    encodeInvite(invElt, lc, calItem, inv, NOTIFY_FIELDS, repliesWithInvites);
     
                 List<MPartInfo> parts = Mime.getParts(mm);
                 if (parts != null && !parts.isEmpty()) {
                     Set<MPartInfo> bodies = Mime.getBody(parts, wantHTML);
-                addParts(m, parts.get(0), bodies, part, neuter);
+                addParts(m, parts.get(0), bodies, part, neuter, getDefaultCharset(calItem));
             }
         } catch (IOException ex) {
             throw ServiceException.FAILURE(ex.getMessage(), ex);
@@ -1265,7 +1271,7 @@ public class ToXML {
     }
 
 
-    private static void addParts(Element parent, MPartInfo mpi, Set<MPartInfo> bodies, String prefix, boolean neuter) {
+    private static void addParts(Element parent, MPartInfo mpi, Set<MPartInfo> bodies, String prefix, boolean neuter, String defaultCharset) {
         Element elem = parent.addElement(MailService.E_MIMEPART);
         MimePart mp = mpi.getMimePart();
 
@@ -1277,7 +1283,7 @@ public class ToXML {
         if (Mime.CT_XML_ZIMBRA_SHARE.equals(ctype)) {
             Element shr = parent.getParent().addElement("shr");
             try {
-                addContent(shr, mpi);
+                addContent(shr, mpi, defaultCharset);
             } catch (IOException e) {
                 if (mLog.isWarnEnabled())
                     mLog.warn("error writing body part: ", e);
@@ -1345,7 +1351,7 @@ public class ToXML {
         if (bodies != null && bodies.contains(mpi)) {
             elem.addAttribute(MailService.A_BODY, true);
             try {
-                addContent(elem, mpi, neuter);
+                addContent(elem, mpi, neuter, defaultCharset);
             } catch (IOException ioe) {
                 if (mLog.isWarnEnabled())
                     mLog.warn("error writing body part: ", ioe);
@@ -1357,7 +1363,7 @@ public class ToXML {
         if (mpi.hasChildren()) {
             for (Iterator it = mpi.getChildren().iterator(); it.hasNext();) {
                 MPartInfo cp = (MPartInfo) it.next();
-                addParts(elem, cp, bodies, prefix, neuter);
+                addParts(elem, cp, bodies, prefix, neuter, defaultCharset);
             }
         }
     }
@@ -1368,23 +1374,28 @@ public class ToXML {
      *  <b>text/*</b> or <b>xml/*</b> message part.</i> 
      * @param elt  The element to add the <code>&lt;content></code> to.
      * @param mpi  The message part to extract the content from.
+     * @parame defaultCharset  The user's default charset preference.
      * @throws MessagingException when message parsing or CTE-decoding fails
      * @throws IOException on error during parsing or defanging */
-    private static void addContent(Element elt, MPartInfo mpi) throws IOException, MessagingException {
-        addContent(elt, mpi, true);
+    private static void addContent(Element elt, MPartInfo mpi, String defaultCharset)
+    throws IOException, MessagingException {
+        addContent(elt, mpi, true, defaultCharset);
     }
 
     /** Adds the decoded text content of a message part to the {@link Element}.
      *  The content is added as the value of a new <code>&lt;content></code>
      *  sub-element.  <i>Note: This method will only extract the content of a
      *  <b>text/*</b> or <b>xml/*</b> message part.</i> 
+     * 
      * @param elt     The element to add the <code>&lt;content></code> to.
      * @param mpi     The message part to extract the content from.
      * @param neuter  Whether to "neuter" image <code>src</code> attributes.
+     * @parame defaultCharset  The user's default charset preference.
      * @throws MessagingException when message parsing or CTE-decoding fails
      * @throws IOException on error during parsing or defanging
      * @see HtmlDefang#defang(String, boolean) */
-    private static void addContent(Element elt, MPartInfo mpi, boolean neuter) throws IOException, MessagingException {
+    private static void addContent(Element elt, MPartInfo mpi, boolean neuter, String defaultCharset)
+    throws IOException, MessagingException {
         // TODO: support other parts
         String ctype = mpi.getContentType();
         if (!ctype.matches(Mime.CT_TEXT_WILD) && !ctype.matches(Mime.CT_XML_WILD))
@@ -1398,7 +1409,7 @@ public class ToXML {
             try {
                 if (charset != null && !charset.trim().equals("")) {
                     stream = mp.getInputStream();
-                    Reader reader = Mime.getTextReader(stream, mp.getContentType());
+                    Reader reader = Mime.getTextReader(stream, mp.getContentType(), defaultCharset);
                     data = HtmlDefang.defang(reader, neuter);
                 } else {
                     String cte = mp.getEncoding();
@@ -1406,7 +1417,7 @@ public class ToXML {
                         stream = mp.getInputStream();
                         data = HtmlDefang.defang(stream, neuter);
                     } else {
-                        data = Mime.getStringContent(mp);
+                        data = Mime.getStringContent(mp, defaultCharset);
                         data = HtmlDefang.defang(data, neuter);
                     }
                 }
@@ -1415,9 +1426,9 @@ public class ToXML {
                     stream.close();
             }
         } else if (ctype.equals(Mime.CT_TEXT_ENRICHED)) {
-            data = TextEnrichedHandler.convertToHTML(Mime.getStringContent(mp));
+            data = TextEnrichedHandler.convertToHTML(Mime.getStringContent(mp, defaultCharset));
         } else {
-            data = Mime.getStringContent(mp);
+            data = Mime.getStringContent(mp, defaultCharset);
         }
 
         if (data != null) {
