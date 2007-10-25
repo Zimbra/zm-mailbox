@@ -19,6 +19,7 @@ package com.zimbra.cs.service.formatter;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PushbackInputStream;
 import java.io.Reader;
 import java.util.List;
 
@@ -166,12 +167,16 @@ public class NativeFormatter extends Formatter {
     }
     
     private void handleDocument(Context context, Document doc) throws IOException, ServiceException, ServletException {
+        String v = context.params.get(UserServlet.QP_VERSION);
+        int version = v != null ? Integer.parseInt(v) : -1;
+
+        doc = (version > 0 ? (Document)doc.getMailbox().getItemRevision(context.opContext, doc.getId(), doc.getType(), version) : doc);
         InputStream is = doc.getContentStream();
     	if (HTML_VIEW.equals(context.getView())) {
     		handleConversion(context, is, doc.getName(), doc.getContentType(), doc.getDigest());
     	} else {
         	context.resp.setContentType(doc.getContentType());
-        	ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
+            sendbackBinaryData(context.req, context.resp, is, Part.INLINE, doc.getName());
         }
     }
     
@@ -207,8 +212,6 @@ public class NativeFormatter extends Formatter {
     throws IOException {
         String disp = req.getParameter(UserServlet.QP_DISP);
         disp = (disp == null || disp.toLowerCase().startsWith("i") ) ? Part.INLINE : Part.ATTACHMENT;
-        String cd = disp + "; filename=" + HttpUtil.encodeFilename(req, filename == null ? "unknown" : filename);
-        resp.addHeader("Content-Disposition", cd);
 
         if (desc != null)
             resp.addHeader("Content-Description", desc);
@@ -228,7 +231,7 @@ public class NativeFormatter extends Formatter {
             }
             resp.getWriter().write(content);
         } else {
-            ByteUtil.copy(is, true, resp.getOutputStream(), false);
+            sendbackBinaryData(req, resp, is, disp, filename);
         }
     }
 
@@ -260,5 +263,50 @@ public class NativeFormatter extends Formatter {
         } catch (NoSuchItemException nsie) {
             mbox.createDocument(context.opContext, folder.getId(), pd, MailItem.TYPE_DOCUMENT);
         }
+    }
+    
+    private static final int READ_AHEAD_BUFFER_SIZE = 256;
+    private static final byte[][] SCRIPT_PATTERN = { 
+        { '<', 's', 'c', 'r', 'i', 'p', 't' }, 
+        { '<', 'S', 'C', 'R', 'I', 'P', 'T' } 
+    };
+
+    public static void sendbackBinaryData(HttpServletRequest req, HttpServletResponse resp, InputStream in, String disposition, String filename) throws IOException {
+        PushbackInputStream pis = new PushbackInputStream(in, READ_AHEAD_BUFFER_SIZE);
+        boolean isSafe = false;
+        String ua = req.getHeader("User-Agent");
+        if (ua == null || ua.indexOf("MSIE") == -1)
+            isSafe = true;
+        if (disposition != null && disposition.equals(Part.ATTACHMENT))
+            isSafe = true;
+
+        if (!isSafe) {
+            byte[] buf = new byte[READ_AHEAD_BUFFER_SIZE];
+            int bytesRead = pis.read(buf, 0, READ_AHEAD_BUFFER_SIZE);
+            boolean hasScript = false;
+            for (int i = 0; i < bytesRead; i++) {
+                if (buf[i] == SCRIPT_PATTERN[0][0] || buf[i] == SCRIPT_PATTERN[1][0]) {
+                    hasScript = true;
+                    for (int pos = 1; pos < 7 && (i + pos) < bytesRead; pos++) {
+                        if (buf[i+pos] != SCRIPT_PATTERN[0][pos] &&
+                                buf[i+pos] != SCRIPT_PATTERN[1][pos]) {
+                            hasScript = false;
+                            break;
+                        }
+                    }
+                    if (hasScript) {
+                        resp.addHeader("Cache-Control", "no-transform");
+                        disposition = Part.ATTACHMENT;
+                        break;
+                    }
+                }
+            }
+            pis.unread(buf, 0, bytesRead);
+        }
+        if (disposition != null) {
+            String cd = disposition + "; filename=" + HttpUtil.encodeFilename(req, filename == null ? "unknown" : filename);
+            resp.addHeader("Content-Disposition", cd);
+        }
+        ByteUtil.copy(pis, true, resp.getOutputStream(), false);
     }
 }
