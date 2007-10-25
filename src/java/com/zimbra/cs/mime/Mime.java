@@ -459,13 +459,16 @@ public class Mime {
     public static Object getMultipartContent(MimePart multipartPart, String contentType) throws IOException, MessagingException {
         Object content = multipartPart.getContent();
         if (content instanceof InputStream) {
+        	MimeMultipart mmp = null;
             try {
                 // handle unparsed content due to miscapitalization of content-type value
-                content = new MimeMultipart(new InputStreamDataSource((InputStream) content, contentType));
+                mmp = new MimeMultipart(new InputStreamDataSource((InputStream) content, contentType));
             } catch (Exception e) {
             } finally {
                 ByteUtil.closeStream((InputStream) content);
             }
+            if (mmp != null)
+            	content = mmp;
         }
         if (content instanceof MimeMultipart)
             content = validateMultipart((MimeMultipart) content, multipartPart);
