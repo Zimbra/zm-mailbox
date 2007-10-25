@@ -136,6 +136,16 @@ public class ZPrefs {
 
     public long getCalendarFirstDayOfWeek() { return getLong(Provisioning.A_zimbraPrefCalendarFirstDayOfWeek); }
 
+    public String getInboxUnreadLifetime() { return get(Provisioning.A_zimbraPrefInboxUnreadLifetime); }
+
+    public String getInboxReadLifetime() { return get(Provisioning.A_zimbraPrefInboxReadLifetime); }
+
+    public String getSentLifetime() { return get(Provisioning.A_zimbraPrefSentLifetime); }
+
+    public String getJunkLifetime() { return get(Provisioning.A_zimbraPrefJunkLifetime); }
+
+    public String getTrashLifetime() { return get(Provisioning.A_zimbraPrefTrashLifetime); }
+
     public long getCalendarDayHourStart() {
         long hour = getLong(Provisioning.A_zimbraPrefCalendarDayHourStart);
         return hour == -1 ? 8 : hour;
