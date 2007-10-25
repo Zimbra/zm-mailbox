@@ -55,7 +55,7 @@ public class LdapDIT {
     protected Provisioning mProv;
     
     /*
-     * Vatiable Naming Conventions:
+     * Variable Naming Conventions:
      * 
      *              RDN : {attr-name}={attr-value}
      *               DN : List of comma (,) seperated RDNs
@@ -69,11 +69,15 @@ public class LdapDIT {
      *          BASE_DN : An absolute DN under that a left-most RDN resides.
      */
     
+    protected static final String ROOT_DN = "";
+    
+    
     /*
      * Defaults tht can be used in subclasses but cannot be changed in subclasses.
      * If a subclass need to use different values it has to define it's own variables.
      */
     protected final String DEFAULT_CONFIG_BASE_DN        = "cn=zimbra";
+    protected final String DEFAULT_MAIL_BASE_DN          = ROOT_DN;
     
     protected final String DEFAULT_BASE_RDN_ADMIN        = "cn=admins";
     protected final String DEFAULT_BASE_RDN_ACCOUNT      = "ou=people";
@@ -92,7 +96,10 @@ public class LdapDIT {
     /*
      * Variables that has to be set in the init method
      */
+    protected String BASE_DN_ZIMBRA;
     protected String BASE_DN_CONFIG_BRANCH;
+    protected String BASE_DN_MAIL_BRANCH;
+
     protected String BASE_RDN_ACCOUNT;
     
     protected String BASE_DN_ADMIN;
@@ -122,6 +129,7 @@ public class LdapDIT {
     
     protected void init() {
         BASE_DN_CONFIG_BRANCH = DEFAULT_CONFIG_BASE_DN;
+        BASE_DN_MAIL_BRANCH = ROOT_DN;
 
         BASE_RDN_ACCOUNT  = DEFAULT_BASE_RDN_ACCOUNT;
 
@@ -139,10 +147,15 @@ public class LdapDIT {
         BASE_DN_MIME         = DEFAULT_BASE_RDN_MIME        + "," + DN_GLOBALCONFIG;
         BASE_DN_SERVER       = DEFAULT_BASE_RDN_SERVER      + "," + BASE_DN_CONFIG_BRANCH;
         BASE_DN_ZIMLET       = DEFAULT_BASE_RDN_ZIMLET      + "," + BASE_DN_CONFIG_BRANCH;
+        
+        BASE_DN_ZIMBRA       = ROOT_DN;
+        
     }
     
     private final void verify() {
-        if (BASE_DN_CONFIG_BRANCH == null ||
+        if (BASE_DN_ZIMBRA == null ||
+            BASE_DN_CONFIG_BRANCH == null ||
+            BASE_DN_MAIL_BRANCH == null ||
             BASE_RDN_ACCOUNT == null ||
             NAMING_RDN_ATTR_USER == null ||
             NAMING_RDN_ATTR_COS == null ||
@@ -160,17 +173,31 @@ public class LdapDIT {
     }
     
     /*
+     * Zimbra root
+     */
+    public String zimbraBaseDN() {
+        return BASE_DN_ZIMBRA;
+    }
+    
+    /*
      * config branch
      */
-    public String configBranchBaseDn() {
+    public String configBranchBaseDN() {
         return BASE_DN_CONFIG_BRANCH;
+    }    
+    
+    /*
+     * mail branch
+     */
+    public String mailBranchBaseDN() {
+        return BASE_DN_MAIL_BRANCH;
     }
     
     /*
      * ===========
      *   account
      * ===========
-     */
+     */    
     public String accountNamingRdnAttr() {
         return NAMING_RDN_ATTR_USER;
     }
@@ -191,6 +218,7 @@ public class LdapDIT {
 
         return emailToDN(localPart, domain);
     }
+
     
     public String accountDNRename(String oldDn, String newLocalPart, String newDomain) throws ServiceException, NamingException {
         return emailToDN(newLocalPart, newDomain);
@@ -320,12 +348,18 @@ public class LdapDIT {
         else
             return "";
     }
+    
+
 
     /*
      * ==========
      *   domain
      * ==========
      */
+    public String domainBaseDN() {
+        return mailBranchBaseDN();
+    }
+    
     /**
      * Given a domain like foo.com, return an array of dns that work their way up the tree:
      *    [0] = dc=foo,dc=com
@@ -346,7 +380,6 @@ public class LdapDIT {
         }
         return dns;
     }
-    
     
     // account base search dn
     public String domainToAccountSearchDN(String domain) throws ServiceException {

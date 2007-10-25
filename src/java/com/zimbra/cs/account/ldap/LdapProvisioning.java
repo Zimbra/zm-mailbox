@@ -472,7 +472,7 @@ public class LdapProvisioning extends Provisioning {
         if (a == null) {
             zimbraId= LdapUtil.escapeSearchFilterArg(zimbraId);
             a = getAccountByQuery(
-                    "",
+                    mDIT.mailBranchBaseDN(),
                     "(&(zimbraId=" + zimbraId + ")" +
                     FILTER_ACCOUNT_OBJECTCLASS + ")",
                     ctxt, loadFromMaster);
@@ -511,7 +511,7 @@ public class LdapProvisioning extends Provisioning {
     private Account getAccountByForeignPrincipal(String foreignPrincipal, boolean loadFromMaster) throws ServiceException {
         foreignPrincipal = LdapUtil.escapeSearchFilterArg(foreignPrincipal);
         return getAccountByQuery(
-                "",
+                mDIT.mailBranchBaseDN(),
                 "(&(zimbraForeignPrincipal=" + foreignPrincipal + ")" +
                 FILTER_ACCOUNT_OBJECTCLASS + ")",
                 null, loadFromMaster);
@@ -558,7 +558,7 @@ public class LdapProvisioning extends Provisioning {
         if (account == null) {
             emailAddress = LdapUtil.escapeSearchFilterArg(emailAddress);
             account = getAccountByQuery(
-                    "",
+                    mDIT.mailBranchBaseDN(),
                     "(&(|(zimbraMailDeliveryAddress=" + emailAddress +
                     ")(zimbraMailAlias=" + emailAddress + "))" +
                     FILTER_ACCOUNT_OBJECTCLASS + ")",
@@ -841,7 +841,7 @@ public class LdapProvisioning extends Provisioning {
         throws ServiceException
     {
         //flags &= ~Provisioning.SA_DOMAIN_FLAG; // leaving on for now
-        return searchObjects(query, returnAttrs, sortAttr, sortAscending, "", flags, 0);
+        return searchObjects(query, returnAttrs, sortAttr, sortAscending, mDIT.mailBranchBaseDN(), flags, 0);
     }
     
     private static String getObjectClassQuery(int flags) {
@@ -961,7 +961,7 @@ public class LdapProvisioning extends Provisioning {
             NamingEnumeration ne = null;
 
             int total = 0;
-            String configBranchBaseDn = mDIT.configBranchBaseDn();
+            String configBranchBaseDn = mDIT.configBranchBaseDN();
             try {
                 do {
                     lctxt.setRequestControls(new Control[]{new PagedResultsControl(pageSize, cookie, Control.CRITICAL)});
@@ -972,10 +972,15 @@ public class LdapProvisioning extends Provisioning {
                         throw new SizeLimitExceededException("exceeded limit of "+maxResults);
                         SearchResult sr = (SearchResult) ne.nextElement();
                         String dn = sr.getNameInNamespace();
-                        // skip admin accounts
-                        if (dn.endsWith(configBranchBaseDn)) continue;
+                        
                         Attributes attrs = sr.getAttributes();
                         Attribute objectclass = attrs.get("objectclass");
+                        
+                        // skip admin accounts
+                        // if we are looking for domains, they can be under config branch in non default DIT impl. 
+                        if (dn.endsWith(configBranchBaseDn) && !objectclass.contains(C_zimbraDomain)) 
+                            continue;    
+                        
                         if (objectclass == null || objectclass.contains(C_zimbraAccount)) visitor.visit(makeAccount(dn, attrs, this));
                         else if (objectclass.contains(C_zimbraAlias)) visitor.visit(makeAlias(dn, attrs, this));
                         else if (objectclass.contains(C_zimbraMailList)) visitor.visit(makeDistributionList(dn, attrs, this));
@@ -1389,7 +1394,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             if (ctxt == null)
                 ctxt = LdapUtil.getDirContext();
-            NamingEnumeration ne = LdapUtil.searchDir(ctxt, "", query, sSubtreeSC);
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, mDIT.domainBaseDN(), query, sSubtreeSC);
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 if (ne.hasMore()) {
@@ -1495,7 +1500,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             ctxt = LdapUtil.getDirContext();
 
-            NamingEnumeration ne = LdapUtil.searchDir(ctxt, "", "(objectclass=zimbraDomain)", sSubtreeSC);
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, mDIT.domainBaseDN(), "(objectclass=zimbraDomain)", sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 result.add(new LdapDomain(sr.getNameInNamespace(), sr.getAttributes(), getConfig().getDomainDefaults()));
@@ -2403,7 +2408,8 @@ public class LdapProvisioning extends Provisioning {
 
     private DistributionList getDistributionListById(String zimbraId, DirContext ctxt) throws ServiceException {
         //zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
-        return getDistributionListByQuery("","(&(zimbraId="+zimbraId+")" + 
+        return getDistributionListByQuery(mDIT.mailBranchBaseDN(),
+                                          "(&(zimbraId="+zimbraId+")" + 
                                           FILTER_DISTRIBUTION_LIST_OBJECTCLASS+ ")", ctxt);
     }
 
@@ -2438,7 +2444,7 @@ public class LdapProvisioning extends Provisioning {
         listAddress = IDNUtil.toAsciiEmail(listAddress);
         
         listAddress = LdapUtil.escapeSearchFilterArg(listAddress);
-        return getDistributionListByQuery("", 
+        return getDistributionListByQuery(mDIT.mailBranchBaseDN(), 
                                           "(&(zimbraMailAlias="+listAddress+")" +
                                           FILTER_DISTRIBUTION_LIST_OBJECTCLASS+ ")",
                                           null);
@@ -3029,7 +3035,7 @@ public class LdapProvisioning extends Provisioning {
     	DirContext ctxt = null;
     	try {
     		ctxt = LdapUtil.getDirContext();
-    		NamingEnumeration ne = LdapUtil.searchDir(ctxt, "", "(objectclass=zimbraZimletEntry)", sSubtreeSC);
+    		NamingEnumeration ne = LdapUtil.searchDir(ctxt, mDIT.configBranchBaseDN(), "(objectclass=zimbraZimletEntry)", sSubtreeSC);
     		while (ne.hasMore()) {
     			SearchResult sr = (SearchResult) ne.next();
              result.add(new LdapZimlet(sr.getNameInNamespace(), sr.getAttributes()));
@@ -3155,7 +3161,7 @@ public class LdapProvisioning extends Provisioning {
         if (resource == null) {
             zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
             resource = (LdapCalendarResource) getAccountByQuery(
-                "",
+                mDIT.mailBranchBaseDN(),
                 "(&(zimbraId=" + zimbraId + ")" +
                 FILTER_CALENDAR_RESOURCE_OBJECTCLASS + ")",
                 null, loadFromMaster);
@@ -3174,7 +3180,7 @@ public class LdapProvisioning extends Provisioning {
         if (resource == null) {
             emailAddress = LdapUtil.escapeSearchFilterArg(emailAddress);
             resource = (LdapCalendarResource) getAccountByQuery(
-                "",
+                mDIT.mailBranchBaseDN(),
                 "(&(|(zimbraMailDeliveryAddress=" + emailAddress +
                 ")(zimbraMailAlias=" + emailAddress + "))" +
                 FILTER_CALENDAR_RESOURCE_OBJECTCLASS + ")",
@@ -3190,7 +3196,7 @@ public class LdapProvisioning extends Provisioning {
         foreignPrincipal = LdapUtil.escapeSearchFilterArg(foreignPrincipal);
         LdapCalendarResource resource =
             (LdapCalendarResource) getAccountByQuery(
-                "",
+                mDIT.mailBranchBaseDN(),
                 "(&(zimbraForeignPrincipal=" + foreignPrincipal + ")" +
                 FILTER_CALENDAR_RESOURCE_OBJECTCLASS + ")",
                 null, loadFromMaster);
@@ -3206,7 +3212,7 @@ public class LdapProvisioning extends Provisioning {
     throws ServiceException {
         return searchCalendarResources(filter, returnAttrs,
                                        sortAttr, sortAscending,
-                                       "");
+                                       mDIT.mailBranchBaseDN());
     }
 
     List<NamedEntry> searchCalendarResources(
@@ -3504,7 +3510,7 @@ public class LdapProvisioning extends Provisioning {
     }
 
     public List<NamedEntry> searchDirectory(SearchOptions options) throws ServiceException {
-        String base = "";
+        String base = mDIT.zimbraBaseDN();
         
         LdapDomain ld = (LdapDomain) options.getDomain();
         if (ld != null) 

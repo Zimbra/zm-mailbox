@@ -169,7 +169,7 @@ public class TestProvisioning extends TestCase {
         ACCT_ALIAS_IN_OTHER_DOMAIN_AFTER_ACCOUNT_RENAME_TO_ORIG_DOMAIN_EMAIL = ACCT_ALIAS_IN_OTHER_DOMAIN_USER + "@" + DOMAIN_NAME;
         ACCT_FULL_NAME = "Phoebe Shao";
         
-        ACCT_NAMING_ATTR = LC.get("dap_dit_naming_rdn_attr_user");
+        ACCT_NAMING_ATTR = LC.get("ldap_dit_naming_rdn_attr_user");
         if (StringUtil.isNullOrEmpty(ACCT_NAMING_ATTR))
             ACCT_NAMING_ATTR = "uid";
         ACCT_NAMING_ATTR_VALUE = namingAttrValue(ACCT_USER);
@@ -309,6 +309,13 @@ public class TestProvisioning extends TestCase {
         }
         
         public boolean verifyDLCountForDomainBasedSearch() {
+            if (!mIsCustomProv)
+                return true;
+            else
+                return false;
+        }
+        
+        public boolean verifyAliasCountForDomainBasedSearch() {
             if (!mIsCustomProv)
                 return true;
             else
@@ -721,7 +728,7 @@ public class TestProvisioning extends TestCase {
                 // actually the following just verifies that they are not changed, 
                 // for now can't verify if they are moved unless we improve the test
                 list = searchAliasesInDomain(domain);
-                TestProvisioningUtil.verifyEntriesByName(list, new String[]{ACCT_ALIAS_EMAIL}, true);
+                TestProvisioningUtil.verifyEntriesByName(list, new String[]{ACCT_ALIAS_EMAIL}, mCustomProvTester.verifyAliasCountForDomainBasedSearch());
             } else {
                 // make sure the alias is still in the same domain
                 list = searchAliasesInDomain(domain);
@@ -777,7 +784,7 @@ public class TestProvisioning extends TestCase {
     
             if (mCustomProvTester.isCustom()) {
                 list = searchAliasesInDomain(domain);
-                TestProvisioningUtil.verifyEntriesByName(list, new String[]{ACCT_ALIAS_EMAIL}, true);
+                TestProvisioningUtil.verifyEntriesByName(list, new String[]{ACCT_ALIAS_EMAIL}, mCustomProvTester.verifyAliasCountForDomainBasedSearch());
     
             } else {
                 // now, both aliases should be moved to the orig domain
@@ -797,6 +804,11 @@ public class TestProvisioning extends TestCase {
             mProv.removeAlias(entry, ACCT_ALIAS_IN_OTHER_DOMAIN_AFTER_ACCOUNT_RENAME_TO_ORIG_DOMAIN_EMAIL);
         }
         if (!Flag.needLdapPaging("searchDirectory")) {
+            /*
+             * Note, for custon DIT, if this fails, delete the voice alias in grp0.
+             * TODO, fix test.
+             */
+            
             // verify it
             list = searchAliasesInDomain(domain);
             assertEquals(0, list.size());
@@ -1236,7 +1248,8 @@ public class TestProvisioning extends TestCase {
         Map<String, String> attrs = new HashMap<String, String>();
         attrs.put(Provisioning.A_zimbraGalMode, Provisioning.AM_LDAP);
         attrs.put(Provisioning.A_zimbraGalLdapURL, "ldap://localhost:389");
-        attrs.put(Provisioning.A_zimbraGalLdapBindDn, "uid=zimbra,cn=admins,cn=zimbra");
+        // attrs.put(Provisioning.A_zimbraGalLdapBindDn, "uid=zimbra,cn=admins,cn=zimbra");
+        attrs.put(Provisioning.A_zimbraGalLdapBindDn, LC.zimbra_ldap_userdn.value());
         attrs.put(Provisioning.A_zimbraGalLdapBindPassword, "zimbra");
         attrs.put(Provisioning.A_zimbraGalLdapFilter, "(mail=*%s*)");
         
@@ -1343,32 +1356,53 @@ public class TestProvisioning extends TestCase {
         Set<String> visibleCids = new HashSet<String>();
         Set<String> invisibleCids = new HashSet<String>();
         Set<String> cids = new HashSet<String>();
+        Map attrs = new HashMap<String, Object>();;
+        String childNameLocal;
+        String childName;
         for (int i=0; i<5; i++) {
-            String childName = "v-child-"+i + "@" + DOMAIN_NAME;
-            Account acct = mProv.createAccount(childName, PASSWORD, new HashMap<String, Object>());
+            attrs.clear();
+            childNameLocal = "v-child-" + i;
+            childName =  childNameLocal + "@" + DOMAIN_NAME;
+            mCustomProvTester.addAttr(attrs, BASE_DN_PSEUDO_ATTR, ACCT_BASE_DN);
+            mCustomProvTester.addAttr(attrs, ACCT_NAMING_ATTR, namingAttrValue(childNameLocal));
+            Account acct = mProv.createAccount(childName, PASSWORD, attrs);
             visibleCids.add(acct.getId());
             cids.add(acct.getId());
             
-            childName = "iv-child-"+i + "@" + DOMAIN_NAME;
-            acct = mProv.createAccount(childName, PASSWORD, new HashMap<String, Object>());
+            attrs.clear();
+            childNameLocal = "iv-child-" + i;
+            childName = childNameLocal + "@" + DOMAIN_NAME;
+            mCustomProvTester.addAttr(attrs, BASE_DN_PSEUDO_ATTR, ACCT_BASE_DN);
+            mCustomProvTester.addAttr(attrs, ACCT_NAMING_ATTR, namingAttrValue(childNameLocal));
+            acct = mProv.createAccount(childName, PASSWORD, attrs);
             invisibleCids.add(acct.getId());
             cids.add(acct.getId());
         }
         
-        Account acctNotChild = mProv.createAccount("not-child@"+DOMAIN_NAME, PASSWORD, new HashMap<String, Object>());
+        attrs.clear();
+        childNameLocal = "not-child";
+        childName = childNameLocal + "@" + DOMAIN_NAME;
+        mCustomProvTester.addAttr(attrs, BASE_DN_PSEUDO_ATTR, ACCT_BASE_DN);
+        mCustomProvTester.addAttr(attrs, ACCT_NAMING_ATTR, namingAttrValue(childNameLocal));
+        Account acctNotChild = mProv.createAccount(childName, PASSWORD, attrs);
         String idNotChild = acctNotChild.getId();
         Set<String> idsNotChild = new HashSet<String>();
         idsNotChild.add(idNotChild);
         
         Set<String> temp = new HashSet<String>();
         Account parent;
-        Map attrs = new HashMap<String, Object>();;
+        
+        String parentNameLocal = "parent";
+        String parentName = parentNameLocal + "@" + DOMAIN_NAME;
         
         // should fail: adding an non child as visible child
         try {
+            attrs.clear();
+            mCustomProvTester.addAttr(attrs, BASE_DN_PSEUDO_ATTR, ACCT_BASE_DN);
+            mCustomProvTester.addAttr(attrs, ACCT_NAMING_ATTR, namingAttrValue(parentNameLocal));
             attrs.put(Provisioning.A_zimbraChildAccount, cids);
             attrs.put(Provisioning.A_zimbraPrefChildVisibleAccount, SetUtil.union(temp, visibleCids, idsNotChild));
-            parent = mProv.createAccount("parent@"+DOMAIN_NAME, PASSWORD, attrs);
+            parent = mProv.createAccount(parentName, PASSWORD, attrs);
             fail();
         } catch (ServiceException e) {
             if (!e.getCode().equals(ServiceException.INVALID_REQUEST))
@@ -1377,9 +1411,11 @@ public class TestProvisioning extends TestCase {
         
         // should pass
         attrs.clear();
+        mCustomProvTester.addAttr(attrs, BASE_DN_PSEUDO_ATTR, ACCT_BASE_DN);
+        mCustomProvTester.addAttr(attrs, ACCT_NAMING_ATTR, namingAttrValue(parentNameLocal));
         attrs.put(Provisioning.A_zimbraChildAccount, cids);
         attrs.put(Provisioning.A_zimbraPrefChildVisibleAccount, visibleCids);
-        parent = mProv.createAccount("parent@"+DOMAIN_NAME, PASSWORD, attrs);
+        parent = mProv.createAccount(parentName, PASSWORD, attrs);
         
         // add a non child as visible
         try {

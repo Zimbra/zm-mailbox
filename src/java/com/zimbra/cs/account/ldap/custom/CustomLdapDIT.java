@@ -25,6 +25,7 @@ import com.zimbra.common.localconfig.KnownKey;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
@@ -70,13 +71,14 @@ public class CustomLdapDIT extends LdapDIT {
     
     /*
      * We do not, yet, want to put the following keys in LC.  
-     * We put them here to suppress the WARM spit out by LC.get if the key is not a KnownKey nor set in localconfig.xml.
+     * We put them here to suppress WARMs spit out by LC.get if the key is not a KnownKey nor is it set in localconfig.xml.
      */
     static class CustomLdapDITLC {
         public static final KnownKey ldap_dit_base_dn_admin  = new KnownKey("ldap_dit_base_dn_admin",  "", "LDAP Custom DIT base DN for LDAP admin entries");
         public static final KnownKey ldap_dit_base_dn_config = new KnownKey("ldap_dit_base_dn_config", "", "LDAP Custom DIT base DN for config branch");
         public static final KnownKey ldap_dit_base_dn_cos    = new KnownKey("ldap_dit_base_dn_cos",    "", "LDAP Custom DIT base DN for cos entries");
         public static final KnownKey ldap_dit_base_dn_domain = new KnownKey("ldap_dit_base_dn_domain", "", "LDAP Custom DIT base DN for domain entries");
+        public static final KnownKey ldap_dit_base_dn_mail   = new KnownKey("ldap_dit_base_dn_mail",   "", "LDAP Custom DIT base DN for mail(accounts, aliases, DLs, resources) entries");
         public static final KnownKey ldap_dit_base_dn_mime   = new KnownKey("ldap_dit_base_dn_mime",   "", "LDAP Custom DIT base DN for mime entries");
         public static final KnownKey ldap_dit_base_dn_server = new KnownKey("ldap_dit_base_dn_server", "", "LDAP Custom DIT base DN for server entries");
         public static final KnownKey ldap_dit_base_dn_zimlet = new KnownKey("ldap_dit_base_dn_zimlet", "", "LDAP Custom DIT base DN for zimlet entries");
@@ -90,7 +92,6 @@ public class CustomLdapDIT extends LdapDIT {
     }
     
     private String getLC(KnownKey key, String defaultValue) {
-        // String lcValue = LC.get(key);
         String lcValue = key.value();
         
         if (StringUtil.isNullOrEmpty(lcValue))
@@ -99,9 +100,21 @@ public class CustomLdapDIT extends LdapDIT {
             return lcValue;
     }
     
+    private String getLCAndValidateUnderConfigBranchDN(KnownKey key, String defaultValue) {
+        String dn = getLC(key, defaultValue);
+        
+        if (!validateUnderDN(BASE_DN_CONFIG_BRANCH, dn)) {
+            ZimbraLog.account.warn("dn " + dn + " must be under " + BASE_DN_CONFIG_BRANCH + ", localconfig value " + dn + " ignored, using default value " + defaultValue);
+            dn = defaultValue;
+        }
+        
+        return dn;
+    }
+    
     protected void init() {
        
         BASE_DN_CONFIG_BRANCH = getLC(CustomLdapDITLC.ldap_dit_base_dn_config, DEFAULT_CONFIG_BASE_DN);
+        BASE_DN_MAIL_BRANCH   = getLC(CustomLdapDITLC.ldap_dit_base_dn_mail, DEFAULT_MAIL_BASE_DN).toLowerCase();
 
         BASE_RDN_ACCOUNT  = "";
 
@@ -114,20 +127,68 @@ public class CustomLdapDIT extends LdapDIT {
        
         DN_GLOBALCONFIG   = NAMING_RDN_ATTR_GLOBALCONFIG + "=config" + "," + BASE_DN_CONFIG_BRANCH; 
 
-        BASE_DN_ADMIN        = getLC(CustomLdapDITLC.ldap_dit_base_dn_admin,  DEFAULT_BASE_RDN_ADMIN  + "," + BASE_DN_CONFIG_BRANCH);
-        BASE_DN_COS          = getLC(CustomLdapDITLC.ldap_dit_base_dn_cos,    DEFAULT_BASE_RDN_COS    + "," + BASE_DN_CONFIG_BRANCH); 
-        BASE_DN_MIME         = getLC(CustomLdapDITLC.ldap_dit_base_dn_mime,   DEFAULT_BASE_RDN_MIME   + "," + DN_GLOBALCONFIG);
-        BASE_DN_SERVER       = getLC(CustomLdapDITLC.ldap_dit_base_dn_server, DEFAULT_BASE_RDN_SERVER + "," + BASE_DN_CONFIG_BRANCH);
-        BASE_DN_ZIMLET       = getLC(CustomLdapDITLC.ldap_dit_base_dn_zimlet, DEFAULT_BASE_RDN_ZIMLET + "," + BASE_DN_CONFIG_BRANCH);
+        BASE_DN_ADMIN        = getLCAndValidateUnderConfigBranchDN(CustomLdapDITLC.ldap_dit_base_dn_admin,  DEFAULT_BASE_RDN_ADMIN  + "," + BASE_DN_CONFIG_BRANCH);
+        BASE_DN_COS          = getLCAndValidateUnderConfigBranchDN(CustomLdapDITLC.ldap_dit_base_dn_cos,    DEFAULT_BASE_RDN_COS    + "," + BASE_DN_CONFIG_BRANCH); 
+        BASE_DN_MIME         = getLCAndValidateUnderConfigBranchDN(CustomLdapDITLC.ldap_dit_base_dn_mime,   DEFAULT_BASE_RDN_MIME   + "," + DN_GLOBALCONFIG);
+        BASE_DN_SERVER       = getLCAndValidateUnderConfigBranchDN(CustomLdapDITLC.ldap_dit_base_dn_server, DEFAULT_BASE_RDN_SERVER + "," + BASE_DN_CONFIG_BRANCH);
+        BASE_DN_ZIMLET       = getLCAndValidateUnderConfigBranchDN(CustomLdapDITLC.ldap_dit_base_dn_zimlet, DEFAULT_BASE_RDN_ZIMLET + "," + BASE_DN_CONFIG_BRANCH);
     
-        BASE_DN_DOMAIN       = getLC(CustomLdapDITLC.ldap_dit_base_dn_domain, DEFAULT_BASE_RDN_DOMAIN + "," + BASE_DN_CONFIG_BRANCH);
+        BASE_DN_DOMAIN       = getLCAndValidateUnderConfigBranchDN(CustomLdapDITLC.ldap_dit_base_dn_domain, DEFAULT_BASE_RDN_DOMAIN + "," + BASE_DN_CONFIG_BRANCH);
+    
+        BASE_DN_ZIMBRA       = computeZimbraBaseDN();
     }
     
+    /*
+     * take the common base for config branch and mail branch
+     */
+    private String computeZimbraBaseDN() {
+        String[] rdns1 = BASE_DN_CONFIG_BRANCH.split(",");
+        String[] rdns2 = BASE_DN_MAIL_BRANCH.split(",");
+        
+        int idx1 = rdns1.length - 1;
+        int idx2 = rdns2.length - 1;
+        
+        int shorter;
+        
+        if (rdns1.length < rdns2.length)
+            shorter = rdns1.length;
+        else
+            shorter = rdns2.length;
+        
+        String commonDn = null;
+        for (int i=0; i<shorter; i++, idx1--, idx2--) {
+            if (rdns1[idx1].equalsIgnoreCase(rdns2[idx2])) {
+                if (commonDn == null)
+                    commonDn = rdns1[idx1];
+                else
+                    commonDn = rdns1[idx1] + "," + commonDn;
+            } else
+                break;
+        }
+        
+        return commonDn;
+    }
     
     private ServiceException UNSUPPORTED(String msg) {
         return ServiceException.FAILURE(msg + " unsupported in " + getClass().getCanonicalName(), null);
     }
     
+    /*
+     * verify that dn is under parentDn
+     */
+    private boolean validateUnderDN(String parentDn, String dn) {
+                
+        if (!parentDn.equals(ROOT_DN)) {
+            if (!dn.toLowerCase().endsWith(parentDn.toLowerCase()))
+                return false;
+        }
+        return true;
+    }
+    
+    private void validateMailBranchEntryDN(String dn) throws ServiceException {
+        if (!validateUnderDN(BASE_DN_MAIL_BRANCH, dn))
+            throw ServiceException.INVALID_REQUEST("dn " + dn + " must be under " + BASE_DN_MAIL_BRANCH, null);
+    }
     
     private String defaultDomain() throws ServiceException {
         String defaultDomain = mProv.getConfig().getAttr(Provisioning.A_zimbraDefaultDomainName, null);
@@ -143,6 +204,8 @@ public class CustomLdapDIT extends LdapDIT {
         
         if (rdnValue == null)
             throw ServiceException.FAILURE("missing rdn attribute" + rdnAttr, null);
+        
+        validateMailBranchEntryDN(baseDn);
 
         return rdnAttr + "=" + LdapUtil.escapeRDNValue(rdnValue) + "," + baseDn;
     }
@@ -172,12 +235,10 @@ public class CustomLdapDIT extends LdapDIT {
     }
     
     /*
-     * Get email user part attr from attrs and form the email with the default domain
-     * 
-     * Param attrs is not used in this implementation of DIT
+     * Get email local part attr from attrs and form the email with the default domain
      */
     public String dnToEmail(String dn, Attributes attrs) throws ServiceException, NamingException {
-        String localPart = LdapUtil.getAttrString(attrs, DEFAULT_NAMING_RDN_ATTR_USER); // which is always uid
+        String localPart = LdapUtil.getAttrString(attrs, DEFAULT_NAMING_RDN_ATTR_USER);
                 
         return localPart + "@" + defaultDomain();
     }
@@ -304,18 +365,28 @@ public class CustomLdapDIT extends LdapDIT {
      *   domain
      * ==========
      */
+    public String domainBaseDN() {
+        return BASE_DN_DOMAIN;
+    }
+    
     public String[] domainToDNs(String[] parts) {
         return domainToDNsInternal(parts, BASE_DN_DOMAIN);
     }
     
-    // account base search dn
+    /*
+     * account base search dn
+     * 
+     * In custom DIT, accounts are not located under domain's DN.  
+     * Accounts can be created anywhere in the DIT.  We use the mail branch base if 
+     * it is configured, the default mail branch base is "".
+     */ 
     public String domainToAccountSearchDN(String domain) throws ServiceException {
-        return "";
+        return BASE_DN_MAIL_BRANCH;
     }
     
     // account base search dn
     public String domainDNToAccountSearchDN(String domainDN) throws ServiceException {
-        return "";
+        return BASE_DN_MAIL_BRANCH;
     }
 
     
