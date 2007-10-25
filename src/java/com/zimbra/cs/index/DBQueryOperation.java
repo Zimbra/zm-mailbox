@@ -747,8 +747,11 @@ class DBQueryOperation extends QueryOperation
     }
 
     private void dbFirstGetNextChunk(Connection conn, Mailbox mbox, byte sort) throws ServiceException {
-        if (mLog.isDebugEnabled())
-            mLog.debug("Running a DB-FIRST execution");
+        long overallStart = 0;
+        if (mLog.isDebugEnabled()) {
+            mLog.debug("Fetching a DB-FIRST chunk");
+            overallStart = System.currentTimeMillis();
+        }
         
         do {
             //
@@ -827,11 +830,19 @@ class DBQueryOperation extends QueryOperation
             }
                 
         } while(mDBHits.size() ==0 && !mEndOfHits);
+        
+        if (mLog.isDebugEnabled()) {
+            long overallTime = System.currentTimeMillis() - overallStart;
+            mLog.debug("Done fetching DB-FIRST chunk (took "+overallTime+"ms)");
+        }
     }
 
     private void luceneFirstGetNextChunk(Connection conn, Mailbox mbox, byte sort) throws ServiceException {
-        if (mLog.isDebugEnabled())
-            mLog.debug("Running a LUCENE-FIRST execution");
+        long overallStart = 0;
+        if (mLog.isDebugEnabled()) {
+            mLog.debug("Fetching a LUCENE-FIRST chunk");
+            overallStart = System.currentTimeMillis();
+        }
         
         // do the Lucene op first, pass results to DB op
         do {
@@ -840,9 +851,13 @@ class DBQueryOperation extends QueryOperation
             
             // this is horrible and hideous and for bug 15511
             boolean forceOneHitPerChunk = Db.supports(Db.Capability.BROKEN_IN_CLAUSE);
+
+            long luceneStart = 0;
+            if (mLog.isDebugEnabled())
+                luceneStart = System.currentTimeMillis();
             
             mLuceneChunk = mLuceneOp.getNextResultsChunk(forceOneHitPerChunk ? 1 : mHitsPerChunk);
-
+            
             // we need to set our index-id's here!
             DbLeafNode sc = topLevelAndedConstraint();
             
@@ -857,6 +872,11 @@ class DBQueryOperation extends QueryOperation
             }
             
             sc.indexIds = mLuceneChunk.getIndexIds();
+            
+            if (mLog.isDebugEnabled()) {
+                long luceneTime = System.currentTimeMillis() - luceneStart;
+                mLog.debug("Fetched Lucene Chunk of "+sc.indexIds.size()+" hits in "+luceneTime+"ms");
+            }
 
             // exponentially expand the chunk size in case we have to go back to the DB
             mHitsPerChunk*=2;
@@ -869,8 +889,15 @@ class DBQueryOperation extends QueryOperation
                 // LIMIT clause, we can be assured that this query will get all the remaining results.
                 mEndOfHits = true;
             } else {
+                long dbStart = System.currentTimeMillis();
+                
                 // must not ask for offset,limit here b/c of indexId constraints!,  
                 DbSearch.search(mDBHits, conn, mConstraints, mbox, sort, -1, -1, mExtra);
+                
+                if (mLog.isDebugEnabled()) {
+                    long dbTime = System.currentTimeMillis() - dbStart;
+                    mLog.debug("Fetched DB-second chunk in "+dbTime+"ms");
+                }
 
                 if (getSortBy() == SortBy.SCORE_DESCENDING) {
                     // We have to re-sort the chunk by score here b/c the DB doesn't
@@ -892,6 +919,11 @@ class DBQueryOperation extends QueryOperation
 
             }
         } while (mDBHits.size() == 0 && !mEndOfHits);
+        
+        if (mLog.isDebugEnabled()) {
+            long overallTime = System.currentTimeMillis() - overallStart;
+            mLog.debug("Done fetching LUCENE-FIRST chunk (took "+overallTime+"ms)");
+        }
         
     }
 

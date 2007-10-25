@@ -31,12 +31,16 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.lucene.document.Document;
+import org.apache.lucene.document.FieldSelector;
+import org.apache.lucene.document.MapFieldSelector;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.BooleanClause.Occur;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox;
 
@@ -48,7 +52,16 @@ import com.zimbra.cs.mailbox.Mailbox;
  ***********************************************************************/
 class LuceneQueryOperation extends QueryOperation
 {
+    protected static Log mLog = LogFactory.getLog(LuceneQueryOperation.class);
+    
+    public static boolean USE_TOPDOCS = true;
+    
     private Hits mLuceneHits = null;
+    
+    private TopDocs mTopDocs = null;
+    private int mTopDocsLen = 0;
+    private int mTopDocsChunkSize = 2000;
+    
     private int mCurHitNo = 0;
     private RefCountedIndexSearcher mSearcher = null;
     private Sort mSort = null;
@@ -219,24 +232,116 @@ class LuceneQueryOperation extends QueryOperation
      */
     protected LuceneResultsChunk getNextResultsChunk(int maxChunkSize) throws ServiceException {
         try {
-            if (!mHaveRunSearch)
-                runSearch();
+            if (USE_TOPDOCS) {
+                if (!mHaveRunSearch) {
+                    assert(mCurHitNo == 0);
+                    mTopDocsLen = 3*maxChunkSize;
+                    long start = 0;
+                    if (mLog.isDebugEnabled())
+                        start = System.currentTimeMillis(); 
+                    runSearch();
+                    if (mLog.isDebugEnabled()) {
+                        long time = System.currentTimeMillis() - start;
+                        int totalResults = mTopDocs != null ? mTopDocs.totalHits : 0;
+                        mLog.debug("Fetched Initial "+mTopDocsLen+" (out of "+totalResults+" total) search results from Lucene in "+time+"ms");
+                    }
+                }
+            } else {
+                if (!mHaveRunSearch) {
+                    long start = 0;
+                    if (mLog.isDebugEnabled())
+                        start = System.currentTimeMillis(); 
+                    runSearch();
+                    if (mLog.isDebugEnabled()) {
+                        long time = System.currentTimeMillis() - start;
+                        mLog.debug("Fetched initial results from Lucene in "+time+"ms");
+                    }
+                }
+            }
 
             LuceneResultsChunk toRet = new LuceneResultsChunk();
-            int luceneLen = mLuceneHits != null ? mLuceneHits.length() : 0;
+            int luceneLen;
+            
+            if (USE_TOPDOCS) {
+                luceneLen = mTopDocs != null ? mTopDocs.totalHits : 0;
+            } else {
+                luceneLen = mLuceneHits != null ? mLuceneHits.length() : 0;
+            }
+            
+            long timeUsed = 0;
+            long start = 0;
+            long fetchFromLucene1 = 0;
+            long fetchFromLucene2 = 0;
+            FieldSelector f = new MapFieldSelector(new String[] { LuceneFields.L_MAILBOX_BLOB_ID } );
 
             while ((toRet.size() < maxChunkSize) && (mCurHitNo < luceneLen)) {
-                float score = mLuceneHits.score(mCurHitNo);
-                Document d = mLuceneHits.doc(mCurHitNo++);
-
+                if (USE_TOPDOCS && mTopDocsLen <= mCurHitNo) {
+                    mTopDocsLen += mTopDocsChunkSize;
+                    mTopDocsChunkSize *=4;
+                    if (mTopDocsChunkSize > 1000000)
+                        mTopDocsChunkSize = 1000000;
+                    if (mTopDocsLen > luceneLen)
+                        mTopDocsLen = luceneLen;
+                    if (mLog.isDebugEnabled()) {
+                        start = System.currentTimeMillis();
+                    }
+                    runSearch();
+                    if (mLog.isDebugEnabled()) {
+                        long time = System.currentTimeMillis() - start;
+                        mLog.debug("Fetched "+mTopDocsLen+" search results from Lucene in "+time+"ms");
+                    }
+                }
+                
+                if (mLog.isDebugEnabled())
+                    start = System.currentTimeMillis();
+                
+                Document d;
+                if (USE_TOPDOCS) {
+                    int docId = mTopDocs.scoreDocs[mCurHitNo].doc;
+                    d = mSearcher.getSearcher().doc(docId);
+                } else {
+                    if (false) {
+//                      d = mLuceneHits.doc(mCurHitNo);
+                        d = mLuceneHits.doc(mCurHitNo);
+                    } else {
+                        int docId = mLuceneHits.id(mCurHitNo);
+                        d = mSearcher.getReader().document(docId, f);
+                    }
+                }
+                
+                if (mLog.isDebugEnabled()) {
+                    long now = System.currentTimeMillis();
+                    fetchFromLucene1 += (now - start);
+                    start = now;
+                }
+                
+                float score;
+                if (USE_TOPDOCS) {
+                    score = mTopDocs.scoreDocs[mCurHitNo].score;
+                } else {
+                    score = mLuceneHits.score(mCurHitNo);
+                }
+                
+                if (mLog.isDebugEnabled())
+                    fetchFromLucene2 += (System.currentTimeMillis() - start);
+                
+                mCurHitNo++;
+                
                 String mbid = d.get(LuceneFields.L_MAILBOX_BLOB_ID);
                 try {
                     if (mbid != null) {
-                        toRet.addHit(Integer.parseInt(mbid), d, score);
+                        start = System.currentTimeMillis();
+                        toRet.addHit(Integer.parseInt(mbid), null, score);
+                        long end = System.currentTimeMillis();
+                        timeUsed += (end-start);
                     }
                 } catch (NumberFormatException e) {
                     e.printStackTrace();
                 }
+            }
+            
+            if (mLog.isDebugEnabled()) {
+                mLog.debug("FetchFromLucene1 "+fetchFromLucene1+"ms FetchFromLucene2 "+fetchFromLucene2+"ms ");
             }
 
             return toRet;
@@ -309,7 +414,6 @@ class LuceneQueryOperation extends QueryOperation
                     mSearcher = mbidx.getCountedIndexSearcher();
                     mSort = mbidx.getSort(res.getSortBy());
                 }
-//              runSearch();
             } catch (IOException e) {
                 e.printStackTrace();
                 if (mSearcher != null) {
@@ -326,7 +430,6 @@ class LuceneQueryOperation extends QueryOperation
      * Execute the actual search via Lucene 
      */
     private void runSearch() {
-        assert(!mHaveRunSearch);
         mHaveRunSearch = true;
 
         try {
@@ -335,9 +438,17 @@ class LuceneQueryOperation extends QueryOperation
                     BooleanQuery outerQuery = new BooleanQuery();
                     outerQuery.add(new BooleanClause(new TermQuery(new Term(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE)), Occur.MUST));
                     outerQuery.add(new BooleanClause(mQuery, Occur.MUST));
-                    mLuceneHits = mSearcher.getSearcher().search(outerQuery, mSort);
+                    if (USE_TOPDOCS) {
+                        if (mSort == null) 
+                            mTopDocs = mSearcher.getSearcher().search(outerQuery, null, mTopDocsLen);
+                        else
+                            mTopDocs = mSearcher.getSearcher().search(outerQuery, null, mTopDocsLen, mSort);
+                    } else {
+                        mLuceneHits = mSearcher.getSearcher().search(outerQuery, mSort);
+                    }
                 } else {
-                    mLuceneHits = null; 
+                    mTopDocs = null;
+                    mLuceneHits = null;
                 }
             } else {
                 assert(false);
@@ -348,6 +459,7 @@ class LuceneQueryOperation extends QueryOperation
                 mSearcher.release();
                 mSearcher = null;
             }
+            mTopDocs = null;
             mLuceneHits = null;
         }
     }
@@ -584,10 +696,15 @@ class LuceneQueryOperation extends QueryOperation
     }
     
     int countHits() {
-        if (mLuceneHits != null) {
-            return mLuceneHits.length();
+        if (USE_TOPDOCS) {
+            int totalResults = mTopDocs != null ? mTopDocs.totalHits : 0;
+            return totalResults;
         } else {
-            return 0;
+            if (mLuceneHits != null) {
+                return mLuceneHits.length();
+            } else {
+                return 0;
+            }
         }
     }
     

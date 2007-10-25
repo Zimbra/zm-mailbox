@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.index;
 
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Searcher;
 
@@ -32,6 +33,7 @@ class RefCountedIndexSearcher {
         mSearcher = new IndexSearcher(mReader.getReader());
     }
     public synchronized Searcher getSearcher() { return mSearcher; }
+    public synchronized IndexReader getReader() { return mReader.getReader(); }
     public synchronized void forceClose() {
         mReader.forceClose();
         mReader = null;
