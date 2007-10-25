@@ -537,6 +537,10 @@ public abstract class MimePart {
             mLastBoundary.mBoundaryStart = linestart;
         }
 
+        void clearBoundary() {
+            mLastBoundary = null;
+        }
+
         BoundaryTerminator getBoundaryTerminator() {
             return mLastBoundary;
         }

@@ -204,6 +204,7 @@ public class MimeBodyPart extends MimePart {
             byte[] buffer = new byte[8192];
             while (pais.read(buffer) > -1)
                 ;
+            pais.clearBoundary();
             recordEndpoint(pais.getPosition());
             return this;
         }
@@ -266,6 +267,7 @@ public class MimeBodyPart extends MimePart {
             } while ((c = pais.read()) != -1);
         } while (c != -1);
 
+        pais.clearBoundary();
         recordEndpoint(pais.getPosition());
         return this;
     }
