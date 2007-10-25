@@ -2685,6 +2685,7 @@ public class ZMailbox {
 
         private List<ZEmailAddress> mAddresses;
         private String mSubject;
+        private String mPriority;
         private String mInReplyTo;
         private MessagePart mMessagePart;
         private String mAttachmentUploadId;
@@ -2721,6 +2722,9 @@ public class ZMailbox {
         public String getSubject() { return mSubject; }
         public void setSubject(String subject) { mSubject = subject; }
 
+        public String getPriority() { return mPriority; }
+        public void setPriority(String priority) { mPriority = priority; }
+
         public List<String> getMessageIdsToAttach() { return mMessageIdsToAttach; }
         public void setMessageIdsToAttach(List<String> messageIdsToAttach) { mMessageIdsToAttach = messageIdsToAttach; }
     }
@@ -2745,6 +2749,10 @@ public class ZMailbox {
 
         if (message.getSubject() != null)
             m.addElement(MailConstants.E_SUBJECT).setText(message.getSubject());
+
+        if (message.getPriority() != null && message.getPriority().length() != 0) {
+            m.addAttribute(MailConstants.A_FLAGS, message.getPriority());
+        }
 
         if (message.getInReplyTo() != null)
             m.addElement(MailConstants.E_IN_REPLY_TO).setText(message.getInReplyTo());

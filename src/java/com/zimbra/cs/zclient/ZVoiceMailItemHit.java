@@ -89,7 +89,7 @@ public class ZVoiceMailItemHit implements ZSearchHit {
     }
 
     public boolean isFlagged() {
-        return hasFlags() && mFlags.indexOf(ZMessage.Flag.highpriority.getFlagChar()) != -1; 
+        return hasFlags() && mFlags.indexOf(ZMessage.Flag.highPriority.getFlagChar()) != -1; 
     }
 
     public boolean isPrivate() {
