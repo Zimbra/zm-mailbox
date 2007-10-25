@@ -413,7 +413,12 @@ public abstract class Provisioning {
 
     
     public static final String A_zimbraDomainDefaultCOSId = "zimbraDomainDefaultCOSId";
-    
+
+    /**
+    * Logout URL for domain
+    */
+    public static final String A_zimbraWebClientLogoutURL = "zimbraWebClientLogoutURL";
+
     /**
      * For a zimbraDomain object, the domain's name (i.e., widgets.com) 
      */
@@ -755,6 +760,7 @@ public abstract class Provisioning {
     public static final String A_zimbraFeatureFlaggingEnabled = "zimbraFeatureFlaggingEnabled";
 
     public static final String A_zimbraFeaturePortalEnabled = "zimbraFeaturePortalEnabled";
+
     
 
     /**
@@ -767,7 +773,7 @@ public abstract class Provisioning {
      */
     public static final String A_zimbraDebugInfo = "zimbraDebugInfo";
 
-    /**
+    /**                                                                                                                         
      * number of old passwords to keep, or 0 for no history.
      */
     public static final String A_zimbraPasswordEnforceHistory = "zimbraPasswordEnforceHistory";
