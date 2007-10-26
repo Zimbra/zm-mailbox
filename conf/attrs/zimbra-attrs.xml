@@ -2686,5 +2686,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Incoming messages larger than this number of bytes are streamed to disk during LMTP delivery, instead of being read into memory.  This limits memory consumption at the expense of higher disk utilization.</desc>
 </attr>
 
+<attr id="566" name="zimbraFeatureMailPriorityEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>mail priority feature</desc>
+</attr>
+
 </attrs>
 
