@@ -52,6 +52,8 @@ public class JMSession {
             
             props.setProperty("mail.smtp.sendpartial", Boolean.toString(sSmtpConfig.getSendPartial()));
             mSession = Session.getInstance(props);
+            if (LC.javamail_smtp_debug.booleanValue())
+            	mSession.setDebug(true);
             
             // Assume that most malformed base64 errors occur due to incorrect delimiters,
             // as opposed to errors in the data itself.  See bug 11213 for more details.

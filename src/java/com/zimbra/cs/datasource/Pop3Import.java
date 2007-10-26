@@ -74,6 +74,8 @@ implements MailItemImport {
 		props.setProperty("mail.pop3s.socketFactory.class", CustomSSLSocketFactory.class.getName());
         props.setProperty("mail.pop3s.socketFactory.fallback", "false");
         sSession = Session.getInstance(props);
+        if (LC.javamail_pop3_debug.booleanValue())
+        	sSession.setDebug(true);
         
         Properties sscProps = new Properties();
         sscProps.setProperty("mail.pop3s.connectiontimeout", Long.toString(TIMEOUT));
@@ -81,6 +83,8 @@ implements MailItemImport {
         sscProps.setProperty("mail.pop3s.socketFactory.class", DummySSLSocketFactory.class.getName());
         sscProps.setProperty("mail.pop3s.socketFactory.fallback", "false");
         sSelfSignedCertSession = Session.getInstance(sscProps);
+        if (LC.javamail_pop3_debug.booleanValue())
+        	sSelfSignedCertSession.setDebug(true);
         
         UID_PROFILE = new FetchProfile();
         UID_PROFILE.add(UIDFolder.FetchProfileItem.UID);
