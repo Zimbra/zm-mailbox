@@ -28,6 +28,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.httpclient.URLUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -50,37 +51,21 @@ public class ProxyTarget {
 
         String scheme;
         int port;
+        String url;
+        
+        String requestStr = req.getRequestURI();
+        String qs = req.getQueryString();
+        if (qs != null)
+            requestStr =  requestStr + "?" + qs;
 
         int localAdminPort = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, 0);
         if (req.getLocalPort() == localAdminPort) {
-            scheme = "https";
-            port = mServer.getIntAttr(Provisioning.A_zimbraAdminPort, 0);
-            if (port <= 0)
-                throw ServiceException.FAILURE(
-                        "remote server " + mServer.getName() +
-                        " does not have admin port enabled", null);
+            url = URLUtil.getAdminURL(mServer, requestStr, true);
         } else {
-            port = mServer.getIntAttr(Provisioning.A_zimbraMailPort, 0);
-            if (port > 0) {
-                scheme = "http";
-            } else {
-                scheme = "https";
-                port = mServer.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
-                if (port <= 0)
-                    throw ServiceException.FAILURE(
-                            "remote server " + mServer.getName() +
-                            " has neither http nor https port enabled", null);
-            }
+            url = URLUtil.getMailURL(mServer, requestStr, false);
         }
-
-        String hostname = mServer.getAttr(Provisioning.A_zimbraServiceHostname);
-        StringBuffer url = new StringBuffer(scheme);
-        url.append("://").append(hostname).append(':').append(port);
-        url.append(req.getRequestURI());
-        String qs = req.getQueryString();
-        if (qs != null)
-            url.append('?').append(qs);
-        mURL = url.toString();
+        
+        mURL = url;
     }
 
     public boolean isTargetLocal() throws ServiceException {

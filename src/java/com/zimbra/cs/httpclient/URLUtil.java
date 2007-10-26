@@ -93,7 +93,7 @@ public class URLUtil {
         switch (mode) {
         case both:
         case mixed:
-	case redirect:
+        case redirect:
             ssl = preferSSL;
             break;
         case https:
@@ -149,6 +149,24 @@ public class URLUtil {
         sb.append(LC.zimbra_admin_service_scheme.value()).append(hostname).append(":").append(port).append(path);
         return sb.toString();
     }
+    
+    /**
+     * Returns absolute URL with scheme, host, and port for admin app on server.
+     * Admin app only runs over SSL.
+     * @param server
+     * @param path what follows port number; begins with slash
+     * @checkPort verify if the port is valid
+     * @return
+     */
+    public static String getAdminURL(Server server, String path, boolean checkPort) throws ServiceException {
+        String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
+        int port = server.getIntAttr(Provisioning.A_zimbraAdminPort, 0);
+        if (checkPort && port <= 0)
+            throw ServiceException.FAILURE("server " + server.getName() + " does not have admin port enabled", null);
+        StringBuffer sb = new StringBuffer(128);
+        sb.append(LC.zimbra_admin_service_scheme.value()).append(hostname).append(":").append(port).append(path);
+        return sb.toString();
+    }    
 
 
     /**
