@@ -16,6 +16,7 @@ package com.zimbra.cs.service.formatter;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PushbackInputStream;
 import java.util.List;
 
 import javax.mail.MessagingException;
@@ -149,7 +150,7 @@ public class NativeFormatter extends Formatter {
     private void handleDocument(Context context, Document doc) throws IOException, ServiceException {
     	context.resp.setContentType(doc.getContentType());
     	InputStream is = doc.getLastRevision().getContent();
-    	ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
+            sendbackBinaryData(context.req, context.resp, is, Part.INLINE, doc.getName());
     }
     
     public static MimePart getMimePart(CalendarItem calItem, String part) throws IOException, MessagingException, ServiceException {
@@ -172,12 +173,10 @@ public class NativeFormatter extends Formatter {
             filename = "unknown";
         String disp = req.getParameter(UserServlet.QP_DISP);
         disp = (disp == null || disp.startsWith("i") ) ? Part.INLINE : Part.ATTACHMENT;
-        String cd = disp + "; filename=" + HttpUtil.encodeFilename(req, filename);
-        resp.addHeader("Content-Disposition", cd);
         if (desc != null)
             resp.addHeader("Content-Description", desc);
         resp.setContentType(contentType);
-        ByteUtil.copy(is, true, resp.getOutputStream(), false);
+            sendbackBinaryData(req, resp, is, disp, filename);
     }
 
     public boolean canBeBlocked() {
@@ -192,6 +191,51 @@ public class NativeFormatter extends Formatter {
         } catch (MessagingException e) {
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "error parsing message");
         }
+    }
+    
+    private static final int READ_AHEAD_BUFFER_SIZE = 256;
+    private static final byte[][] SCRIPT_PATTERN = { 
+        { '<', 's', 'c', 'r', 'i', 'p', 't' }, 
+        { '<', 'S', 'C', 'R', 'I', 'P', 'T' } 
+    };
+
+    public static void sendbackBinaryData(HttpServletRequest req, HttpServletResponse resp, InputStream in, String disposition, String filename) throws IOException {
+        PushbackInputStream pis = new PushbackInputStream(in, READ_AHEAD_BUFFER_SIZE);
+        boolean isSafe = false;
+        String ua = req.getHeader("User-Agent");
+        if (ua == null || ua.indexOf("MSIE") == -1)
+            isSafe = true;
+        if (disposition != null && disposition.equals(Part.ATTACHMENT))
+            isSafe = true;
+
+        if (!isSafe) {
+            byte[] buf = new byte[READ_AHEAD_BUFFER_SIZE];
+            int bytesRead = pis.read(buf, 0, READ_AHEAD_BUFFER_SIZE);
+            boolean hasScript = false;
+            for (int i = 0; i < bytesRead; i++) {
+                if (buf[i] == SCRIPT_PATTERN[0][0] || buf[i] == SCRIPT_PATTERN[1][0]) {
+                    hasScript = true;
+                    for (int pos = 1; pos < 7 && (i + pos) < bytesRead; pos++) {
+                        if (buf[i+pos] != SCRIPT_PATTERN[0][pos] &&
+                                buf[i+pos] != SCRIPT_PATTERN[1][pos]) {
+                            hasScript = false;
+                            break;
+                        }
+                    }
+                    if (hasScript) {
+                        resp.addHeader("Cache-Control", "no-transform");
+                        disposition = Part.ATTACHMENT;
+                        break;
+                    }
+                }
+            }
+            pis.unread(buf, 0, bytesRead);
+        }
+        if (disposition != null) {
+            String cd = disposition + "; filename=" + HttpUtil.encodeFilename(req, filename == null ? "unknown" : filename);
+            resp.addHeader("Content-Disposition", cd);
+        }
+        ByteUtil.copy(pis, true, resp.getOutputStream(), false);
     }
 }
 
