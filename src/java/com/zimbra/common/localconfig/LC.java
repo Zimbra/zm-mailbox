@@ -269,6 +269,10 @@ public class LC {
     
     public static final KnownKey im_dnsutil_dnsoverride;
     
+    public static final KnownKey javamail_pop3_debug;
+    public static final KnownKey javamail_imap_debug;
+    public static final KnownKey javamail_smtp_debug;
+    
     static {
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  " +
                 "Changing this setting does not immediately reflect in MySQL server.  " +
@@ -987,5 +991,17 @@ public class LC {
         
         im_dnsutil_dnsoverride = new KnownKey("im_dnsutil_dnsoverride", "", 
                   "DNS override settings for IM federation, in the format '{domain,host:port},{domain,host:port},...'");
+        
+        javamail_pop3_debug = new KnownKey("javamail_pop3_debug");
+        javamail_pop3_debug.setDefault("false");
+        javamail_pop3_debug.setDoc("Whether to enable javamail debug for POP3.");
+        
+        javamail_imap_debug = new KnownKey("javamail_imap_debug");
+        javamail_imap_debug.setDefault("false");
+        javamail_imap_debug.setDoc("Whether to enable javamail debug for IMAP.");
+        
+        javamail_smtp_debug = new KnownKey("javamail_smtp_debug");
+        javamail_smtp_debug.setDefault("false");
+        javamail_smtp_debug.setDoc("Whether to enable javamail debug for SMTP.");
     }
 }
