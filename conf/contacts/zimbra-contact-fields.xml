@@ -149,43 +149,38 @@ lastName.
         <column name="QQ ID"/>
     </format>
 
-    <format name="thunderbird-csv" type="csv" flag="noheader">
-      <column field="firstName"/>
-      <column field="lastName"/>
-      <column> <!-- display name --> </column>
-      <column field="nickname"/>
-      <column field="email"/>
-      <column field="email2"/>
-      <column field="workPhone"/>
-      <column field="homePhone"/>
-      <column field="workFax"/>
-      <column field="pager"/>
-      <column field="mobile"/>
-      <column field="homeStreet"/>
-      <column field="homeStreet"/>
-      <column field="homeCity"/>
-      <column field="homeState"/>
-      <column field="homePostalCode"/>
-      <column field="homeCountry"/>
-      <column field="workStreet"/>
-      <column field="workStreet"/>
-      <column field="workCity"/>
-      <column field="workState"/>
-      <column field="workPostalCode"/>
-      <column field="workCountry"/>
-      <column field="jobTitle"/>
-      <column field="department"/>
-      <column><!-- organization --></column>
-      <column field="workURL"/>
-      <column field="homeURL"/>
-      <column><!-- ??? --></column>
-      <column><!-- ??? --></column>
-      <column><!-- ??? --></column>
-      <column field="custom1"/>
-      <column field="custom2"/>
-      <column field="custom3"/>
-      <column field="custom4"/>
-      <column field="notes"/>
+    <format name="thunderbird-csv" type="csv">
+        <column name="First Name" field="firstName"/>
+        <column name="Last Name" field="lastName"/>
+        <column name="Nickname" field="nickname"/>
+        <column name="Primary Email" field="email"/>
+        <column name="Secondary Email" field="email2"/>
+        <column name="Work Phone" field="workPhone"/>
+        <column name="Home Phone" field="homePhone"/>
+        <column name="Fax Number" field="workFax"/>
+        <column name="Pager Number" field="pager"/>
+        <column name="Mobile Number" field="mobilePhone"/>
+        <column name="Home Address,Home Address 2" field="homeStreet" type="multivalue"/>
+        <column name="Home City" field="homeCity"/>
+        <column name="Home State" field="homeState"/>
+        <column name="Home ZipCode" field="homePostalCode"/>
+        <column name="Home Country" field="homeCountry"/>
+        <column name="Work Address,Work Address 2" field="workStreet" type="multivalue"/>
+        <column name="Work City" field="workCity"/>
+        <column name="Work State" field="workState"/>
+        <column name="Work ZipCode" field="workPostalCode"/>
+        <column name="Work Country" field="workCountry"/>
+        <column name="Job Title" field="jobTitle"/>
+        <column name="Department" field="department"/>
+        <column name="Organization" field="company"/>
+        <column name="Web Page 1" field="homeURL"/>
+        <column name="Web Page 2" field="workURL"/>
+        <column name="Birth Month,Birth Day,Birth Year" field="birthday" type="multivalue"/>
+        <column name="Custom 1" field="custom1"/>
+        <column name="Custom 2" field="custom2"/>
+        <column name="Custom 3" field="custom3"/>
+        <column name="Custom 4" field="custom4"/>
+        <column name="Notes" field="notes"/>
     </format>
 
     <format name="outlook-2000-csv" type="csv">
