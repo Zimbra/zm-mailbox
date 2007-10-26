@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import javax.mail.util.SharedFileInputStream;
+import javax.mail.util.SharedByteArrayInputStream;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -44,6 +44,8 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxBlob;
@@ -334,7 +336,7 @@ public class FileBlobStore extends StoreManager {
             return null;
         return getContent(mboxBlob.getBlob());
     }
-
+    
     public InputStream getContent(Blob blob) throws IOException {
         if (blob == null)
             return null;
@@ -346,7 +348,19 @@ public class FileBlobStore extends StoreManager {
         	is = new GZIPInputStream(is);
         } else {
             is.close();
-            is = new SharedFileInputStream(blob.getFile());
+            int diskThreshold = Integer.MAX_VALUE;
+            try {
+                diskThreshold = Provisioning.getInstance().getLocalServer().getIntAttr(
+                    Provisioning.A_zimbraStoreDiskStreamingThreshold, Integer.MAX_VALUE);
+            } catch (ServiceException e) {
+                ZimbraLog.misc.warn("Unable to determine value of %s.  Reading message into memory.",
+                    Provisioning.A_zimbraStoreDiskStreamingThreshold, e);
+            }
+            if (blob.getFile().length() > diskThreshold) {
+                is = new BlobInputStream(blob.getFile());
+            } else {
+                is = new SharedByteArrayInputStream(ByteUtil.getContent(blob.getFile()));
+            }
         }
         return is;
     }

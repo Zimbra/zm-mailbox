@@ -186,10 +186,6 @@ public class MessageCache {
                     }
                     
                     cnode = new CacheNode(size, new Mime.FixedMimeMessage(JMSession.getSession(), is), expand ? ConvertedState.BOTH : ConvertedState.RAW);
-                    
-                    if (!(is instanceof SharedInputStream)) {
-                        is.close();
-                    }
                 }
 
                 if (expand) {
@@ -209,22 +205,15 @@ public class MessageCache {
                         }
                         
                         cnode = new CacheNode(size, new MimeMessage(JMSession.getSession(), is), ConvertedState.BOTH);
-
-                        if (!(is instanceof SharedInputStream)) {
-                            is.close();
-                        }
                     }
                 }
 
                 // cache the MimeMessage (if it'll fit)
-                cacheItem(key, cnode);
+                // cacheItem(key, cnode);
             } catch (IOException e) {
                 throw ServiceException.FAILURE("IOException while retrieving content for item " + item.getId(), e);
             } catch (MessagingException e) {
                 throw ServiceException.FAILURE("MessagingException while creating MimeMessage for item " + item.getId(), e);
-            } finally {
-            	if (!(is instanceof SharedInputStream))
-            		ByteUtil.closeStream(is);
             }
         } else {
             if (ZimbraLog.cache.isDebugEnabled())

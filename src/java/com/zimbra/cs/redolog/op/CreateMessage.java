@@ -391,9 +391,6 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
 
             InputStream is = StoreManager.getInstance().getContent(src);
             MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), is);
-            if (!(is instanceof SharedInputStream)) {
-                ByteUtil.closeStream(is);
-            }
             pm = new ParsedMessage(mm, mReceivedDate, mbox.attachmentsIndexingEnabled());
         } else { // mMsgBodyType == MSGBODY_INLINE
             pm = new ParsedMessage(mData, mReceivedDate, mbox.attachmentsIndexingEnabled());

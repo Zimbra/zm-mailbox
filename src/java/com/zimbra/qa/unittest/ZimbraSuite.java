@@ -20,6 +20,7 @@ package com.zimbra.qa.unittest;
 import java.util.ArrayList;
 import java.util.List;
 
+import junit.framework.TestCase;
 import junit.framework.TestResult;
 import junit.framework.TestSuite;
 
@@ -35,7 +36,7 @@ import com.zimbra.common.util.ZimbraLog;
  */
 public class ZimbraSuite extends TestSuite
 {
-    private static final List<Class<?>> sClasses = new ArrayList<Class<?>>();
+    private static final List<Class<? extends TestCase>> sClasses = new ArrayList<Class<? extends TestCase>>();
     
     static {
         sClasses.add(TestWaitSet.class);
@@ -76,16 +77,17 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestMaxMessageSize.class);
         sClasses.add(TestMetadata.class);
         sClasses.add(TestSoap.class);
+        sClasses.add(TestBlobInputStream.class);
     };
     
     /**
      * Used by extensions to add additional tests to the main test suite.
      */
-    public static void addTest(Class<?> clazz) {
+    public static void addTest(Class<? extends TestCase> clazz) {
         sClasses.add(clazz);
     }
     
-    public static void removeTest(Class<?> clazz) {
+    public static void removeTest(Class<? extends TestCase> clazz) {
         sClasses.remove(clazz);
     }
 
@@ -125,7 +127,7 @@ public class ZimbraSuite extends TestSuite
     public static TestResult runTestSuite(Element response) {
         TestSuite suite = new TestSuite();
         
-        for (Class<?> c : ZimbraSuite.sClasses) {
+        for (Class<? extends TestCase> c : ZimbraSuite.sClasses) {
             suite.addTest(new TestSuite(c));
         }
         

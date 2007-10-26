@@ -2681,8 +2681,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>SSL private key</desc>
 </attr>
 
-<attr id="565" name="zimbraLmtpDiskStreamingThreshold" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
-  <globalConfigValue>1048576</globalConfigValue>
+<attr id="565" name="zimbraStoreDiskStreamingThreshold" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>2048</globalConfigValue>
   <desc>Incoming messages larger than this number of bytes are streamed to disk during LMTP delivery, instead of being read into memory.  This limits memory consumption at the expense of higher disk utilization.</desc>
 </attr>
 

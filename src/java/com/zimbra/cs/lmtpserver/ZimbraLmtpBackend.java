@@ -216,7 +216,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         Volume volume = Volume.getCurrentMessageVolume();
         Blob blob = null;
         int diskThreshold = Provisioning.getInstance().getLocalServer().getIntAttr(
-            Provisioning.A_zimbraLmtpDiskStreamingThreshold, 0);
+            Provisioning.A_zimbraStoreDiskStreamingThreshold, Integer.MAX_VALUE);
         byte[] data = null;
         
         try {
