@@ -148,7 +148,8 @@ public class MailConstants {
     public static final QName ICAL_REPLY_REQUEST = QName.get("ICalReplyRequest", NAMESPACE);
     public static final QName GET_FREE_BUSY_REQUEST = QName.get("GetFreeBusyRequest", NAMESPACE);
     public static final QName GET_ICAL_REQUEST = QName.get("GetICalRequest", NAMESPACE);
-    public static final QName ANNOUNCE_ORGANIZER_CHANGE = QName.get("AnnounceOrganizerChange", NAMESPACE);
+    public static final QName ANNOUNCE_ORGANIZER_CHANGE_REQUEST = QName.get("AnnounceOrganizerChangeRequest", NAMESPACE);
+    public static final QName DISMISS_CALITEM_ALARM_REQUEST = QName.get("DismissCalendarItemAlarmRequest", NAMESPACE);
 
     // spell checking
     public static final QName CHECK_SPELLING_REQUEST = QName.get("CheckSpellingRequest", NAMESPACE);
@@ -393,6 +394,7 @@ public class MailConstants {
     public static final String E_CAL_REPLY = "reply";
     public static final String E_CAL_ATTACH = "attach";
     public static final String E_CAL_ALARM = "alarm";
+    public static final String E_CAL_ALARM_DATA = "alarmData";
     public static final String E_CAL_ALARM_TRIGGER = "trigger";
     public static final String E_CAL_ALARM_REPEAT = "repeat";
     public static final String E_CAL_ALARM_RELATIVE = "rel";
@@ -424,6 +426,9 @@ public class MailConstants {
     public static final String E_CAL_XPROP = "xprop";
     public static final String E_CAL_XPARAM = "xparam";
 
+    public static final String A_CAL_ALARM_DISMISSED_AT = "dismissedAt";
+    public static final String A_CAL_NEXT_ALARM = "nextAlarm";
+    public static final String A_CAL_ALARM_INSTANCE_START = "alarmInstStart";
     public static final String A_CAL_INCLUDE_CONTENT = "includeContent";
     public static final String A_NEED_CALENDAR_SENTBY_FIXUP = "needCalendarSentByFixup";
     public static final String A_UID = "uid";
