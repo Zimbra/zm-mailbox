@@ -109,15 +109,6 @@ public class ImapImport implements MailItemImport {
         }
         return error;
     }
-
-    private long getRemoteFolderUidValidity(IMAPFolder remoteFolder) {
-    	try {
-    		return remoteFolder.getUIDValidity();
-    	} catch (MessagingException x) {
-    		ZimbraLog.datasource.debug("IMAP folder %s does not have UUV", remoteFolder.getFullName());
-    		return 0;
-    	}
-    }
     
     private boolean hasAttribute(IMAPFolder folder, String attribute) throws MessagingException {
     	String[] attrs = folder.getAttributes();
@@ -219,7 +210,8 @@ public class ImapImport implements MailItemImport {
                                 MimeMessage mimeMsg = localMsg.getMimeMessage(false);
                                 copyFlags(localMsg.getFlagBitmask(), mimeMsg);
                                 AppendUID[] newUids = remoteFolder.appendUIDMessages(new MimeMessage[] { mimeMsg });
-                                DbImapMessage.storeImapMessage(mbox, localFolder.getId(), newUids[0].uid, id);
+                                if (newUids != null && newUids.length == 1 && newUids[0] != null && newUids[0].uid > 0)
+                                	DbImapMessage.storeImapMessage(mbox, localFolder.getId(), newUids[0].uid, id);
                             }
                             
                             // Empty local folder so that it will be resynced later and store the new UIDVALIDITY value.
@@ -305,7 +297,9 @@ public class ImapImport implements MailItemImport {
                     imapFolder.getRemotePath(), imapFolder.getLocalPath());
                 if (imapFolder.getUidValidity() != 0) {
 	                try {
-	                    importFolder(account, ds, store, imapFolder);
+	                	for (int i = 0; i < 3; ++i) //at most run 3 times on a single folder import to prevent a dead loop
+	                		if (importFolder(account, ds, store, imapFolder))
+	                			break;
 	                } catch (MessagingException e) {
 	                    ZimbraLog.datasource.warn("An error occurred while importing folder %s", imapFolder.getRemotePath(), e);
 	                } catch (ServiceException e) {
@@ -440,7 +434,7 @@ public class ImapImport implements MailItemImport {
         }
     }
 
-    private void importFolder(Account account, DataSource ds, Store store, ImapFolder trackedFolder)
+    private boolean importFolder(Account account, DataSource ds, Store store, ImapFolder trackedFolder)
     throws MessagingException, IOException, ServiceException {
         // Instantiate folders
         com.sun.mail.imap.IMAPFolder remoteFolder =
@@ -450,7 +444,7 @@ public class ImapImport implements MailItemImport {
         } catch (ReadOnlyFolderException e) {
             ZimbraLog.datasource.info("Unable to open folder %s for write.  Skipping this folder.",
                 remoteFolder.getFullName());
-            return;
+            return true;
         }
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         com.zimbra.cs.mailbox.Folder localFolder = mbox.getFolderById(null, trackedFolder.getItemId());
@@ -543,6 +537,7 @@ public class ImapImport implements MailItemImport {
         }
 
         // Remaining local ID's are messages that were not found on the remote server
+        boolean runAgain = false;
         for (int localId : localIds) {
             if (trackedMsgs.containsItemId(localId)) {
                 ZimbraLog.datasource.debug("Message %d was deleted remotely.  Deleting local copy.", localId);
@@ -557,7 +552,14 @@ public class ImapImport implements MailItemImport {
                 copyFlags(localMsg.getFlagBitmask(), mimeMsg);
                 AppendUID[] newUids = remoteFolder.appendUIDMessages(new MimeMessage[] { mimeMsg });
                 numAddedRemotely++;
+                if (newUids != null && newUids.length == 1 && newUids[0] != null && newUids[0].uid > 0)
                 	DbImapMessage.storeImapMessage(mbox, localFolder.getId(), newUids[0].uid, localId);
+                else {
+                    //remote doesn't give us a UID in response, so we delete first and wait for the bounce back
+                	//TODO: this is pretty inefficient, so find another way!
+                    mbox.delete(null, localId, MailItem.TYPE_UNKNOWN);
+                    runAgain = true; //sync this folder again
+                }
             }
         }
         
@@ -565,9 +567,11 @@ public class ImapImport implements MailItemImport {
 
         ZimbraLog.datasource.debug(
             "Import of %s completed.  Matched: %d, updated: %d, added locally: %d, " +
-            "deleted locally: %d, added remotely: %d, deleted remotely: %d.",
+            "deleted locally: %d, added remotely: %d, deleted remotely: %d.%s",
             remoteFolder.getFullName(), numMatched, numUpdated, numAddedLocally,
-            numDeletedLocally, numAddedRemotely, numDeletedRemotely);
+            numDeletedLocally, numAddedRemotely, numDeletedRemotely, runAgain ? " Rerun import." : "");
+        
+        return !runAgain;
     }
     
     /**
