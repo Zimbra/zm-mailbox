@@ -1284,10 +1284,47 @@ public class Recurrence
         }
         
         public List<Instance> expandInstances(CalendarItem calItem, long start, long end) {
-            // get the list of instances that THIS rule expands into
-            List<Instance> stdInstances = super.expandInstances(calItem, start, end);
+            long startAdjusted = start;
+            long endAdjusted = end;
+            // Expand the start/end times to ensure all exception instances are included.
+            for (IException except : mExceptions) {
+                if (except != null) {
+                    RecurId rid = except.getRecurId();
+                    if (rid != null) {
+                        ParsedDateTime dt = rid.getDt();
+                        if (dt != null) {
+                            long recurIdTime = dt.getUtcTime();
+                            ParsedDateTime st = except.getStartTime();
+                            if (st != null) {
+                                long stTime = st.getUtcTime();
+                                if (stTime >= start && stTime < end) {
+                                    if (recurIdTime < startAdjusted)
+                                        startAdjusted = recurIdTime;
+                                    else if (recurIdTime > endAdjusted)
+                                        endAdjusted = recurIdTime + 1;
+                                }
+                            }
+                            if (end < Long.MAX_VALUE) {
+                                ParsedDateTime et = except.getEndTime();
+                                if (et != null) {
+                                    long etTime = et.getUtcTime();
+                                    if (etTime > start && etTime <= end) {
+                                        if (recurIdTime < startAdjusted)
+                                            startAdjusted = recurIdTime;
+                                        else if (recurIdTime > endAdjusted)
+                                            endAdjusted = recurIdTime + 1;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
-            List exceptInstances[] = new List[mExceptions.size()]; // as big as we might need
+            // get the list of instances that THIS rule expands into
+            List<Instance> stdInstances = super.expandInstances(calItem, startAdjusted, endAdjusted);
+
+            List<Instance> exceptInstances[] = new List[mExceptions.size()]; // as big as we might need
             int numActiveExceptions = 0;
             
             // now, iterate through the instances in THIS rule and for each one,
@@ -1310,7 +1347,7 @@ public class Recurrence
                             // what the RFC says -- for now we'll log and add the extra instances...
                             if (exceptInstances[exceptNum] == null) {
                                 numActiveExceptions++;                            
-                                exceptInstances[exceptNum] = except.expandInstances(calItem, start, end);
+                                exceptInstances[exceptNum] = except.expandInstances(calItem, startAdjusted, endAdjusted);
                             }
                         }
                         if (cur != null && except.matches(cur.getStart())) {
@@ -1319,10 +1356,30 @@ public class Recurrence
                             cur = null;
                             if (exceptInstances[exceptNum] == null) {
                                 numActiveExceptions++;                            
-                                exceptInstances[exceptNum] = except.expandInstances(calItem, start, end);
+                                exceptInstances[exceptNum] = except.expandInstances(calItem, startAdjusted, endAdjusted);
                             }
                         }
                     }
+                }
+            }
+
+            // Restrict to [start, end) range.
+            for (Iterator<Instance> iter = stdInstances.iterator(); iter.hasNext(); ) {
+                Instance inst = iter.next();
+                if (inst == null) continue;
+                long st = inst.getStart();
+                if (st < start || st >= end)
+                    iter.remove();
+            }
+            for (int i = 0; i < exceptInstances.length; i++) {
+                List<Instance> instances = exceptInstances[i];
+                if (instances == null) continue;
+                for (Iterator<Instance> iter = instances.iterator(); iter.hasNext(); ) {
+                    Instance inst = iter.next();
+                    if (inst == null) continue;
+                    long st = inst.getStart();
+                    if (st < start || st >= end)
+                        iter.remove();
                 }
             }
 
