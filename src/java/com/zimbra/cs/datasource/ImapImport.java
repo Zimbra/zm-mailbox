@@ -17,6 +17,8 @@
 package com.zimbra.cs.datasource;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -133,7 +135,14 @@ public class ImapImport implements MailItemImport {
                 mbox.getFolderById(null, ds.getFolderId());
 
             // Handle new remote folders and moved/renamed/deleted local folders
-            Folder[]  remoteFolders = remoteRootFolder.list("*"); 
+            Folder[]  remoteFolders = remoteRootFolder.list("*");
+            //when deleting folders, especially remoted folders, we delete children before parents
+            //to avoid complications.  so we want to sort in fullname length descending order.
+            Arrays.sort(remoteFolders, new Comparator<Folder>() {
+				public int compare(Folder o1, Folder o2) {
+					return o2.getFullName().length() - o1.getFullName().length();
+				}
+            });
             for (int i = 0; i < remoteFolders.length; i++) {
                 IMAPFolder remoteFolder = (IMAPFolder) remoteFolders[i];
                 
