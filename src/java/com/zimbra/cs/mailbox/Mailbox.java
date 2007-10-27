@@ -3223,8 +3223,7 @@ public class Mailbox {
             CalendarItem calItem = getCalendarItemById(octxt, calItemId);
             if (calItem == null)
                 throw MailServiceException.NO_SUCH_CALITEM(calItemId);
-            calItem.recomputeNextAlarm(dismissedAt + 1);
-            calItem.saveMetadata();
+            calItem.updateNextAlarm(dismissedAt + 1);
             success = true;
         } finally {
             endTransaction(success);
@@ -3335,8 +3334,7 @@ public class Mailbox {
             // Recompute alarm time after processing all Invites.
             if (nextAlarm == 0)
                 nextAlarm = oldNextAlarm;
-            calItem.recomputeNextAlarm(nextAlarm);
-            calItem.saveMetadata();
+            calItem.updateNextAlarm(nextAlarm);
 
             // Override replies list if one is provided.
             // Null list means keep existing replies.  Empty list means to clear existing replies.

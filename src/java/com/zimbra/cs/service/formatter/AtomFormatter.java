@@ -95,7 +95,7 @@ public class AtomFormatter extends Formatter {
     }
     
     private void addCalendarItem(CalendarItem calItem, Element feed, Context context) {
-        Collection instances = calItem.expandInstances(context.getStartTime(), context.getEndTime());
+        Collection instances = calItem.expandInstances(context.getStartTime(), context.getEndTime(), false);
         for (Iterator instIt = instances.iterator(); instIt.hasNext(); ) {
             CalendarItem.Instance inst = (CalendarItem.Instance) instIt.next();
             InviteInfo invId = inst.getInviteInfo();

@@ -99,7 +99,7 @@ public class CompleteTaskInstance extends CalendarRequest {
             // Update recurrence's start date to the next instance start date.
             long oldStart = recurStart.getUtcTime();
             long newStart = -1;
-            Collection<Instance> instances = calItem.expandInstances(oldStart, Long.MAX_VALUE);
+            Collection<Instance> instances = calItem.expandInstances(oldStart, Long.MAX_VALUE, false);
             for (Instance inst : instances) {
                 if (inst.getStart() > oldStart) {
                     newStart = inst.getStart();

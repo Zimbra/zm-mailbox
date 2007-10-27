@@ -198,7 +198,7 @@ public class Appointment extends CalendarItem {
         if (et < now)
             return null;
 
-        Collection<Instance> instances = expandInstances(st, et);
+        Collection<Instance> instances = expandInstances(st, et, false);
         List<Availability> list = new ArrayList<Availability>(instances.size());
         int numConflicts = 0;
         for (Instance inst : instances) {

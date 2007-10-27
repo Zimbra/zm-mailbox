@@ -426,7 +426,7 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
             long defInvEnd = dtEnd != null ? dtEnd.getDate().getTime() : 0;
             long startAdjusted = start - (defInvEnd - defInvStart) + 1;
 
-            Collection instances = cur.expandInstances(startAdjusted, end); 
+            Collection instances = cur.expandInstances(startAdjusted, end, false);
             for (Iterator instIter = instances.iterator(); instIter.hasNext();) {
                 Appointment.Instance inst = (Appointment.Instance)(instIter.next());
                 assert(inst.getStart() < end && inst.getEnd() > start);

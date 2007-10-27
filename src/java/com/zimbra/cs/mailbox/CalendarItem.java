@@ -326,13 +326,19 @@ public abstract class CalendarItem extends MailItem {
         if (firstInvite.hasAlarm()) {
             item.recomputeNextAlarm(nextAlarm);
             item.saveMetadata();
+            AlarmData alarmData = item.getAlarmData();
+            if (alarmData != null) {
+                long newNextAlarm = alarmData.getNextAt();
+                if (newNextAlarm > 0 && newNextAlarm < item.mStartTime)
+                    item.mStartTime = newNextAlarm;
+            }
         }
 
         DbMailItem.addToCalendarItemTable(item);
         return item;
     }
 
-    private boolean updateRecurrence() throws ServiceException {
+    private boolean updateRecurrence(long nextAlarm) throws ServiceException {
         long startTime, endTime;
 
         // update our recurrence rule, start with the initial rule
@@ -395,7 +401,16 @@ public abstract class CalendarItem extends MailItem {
             startTime = dtStart != null ? dtStart.getUtcTime() : 0;
             endTime = dtEnd != null ? dtEnd.getUtcTime() : 0;
         }
-        
+
+        // Recompute next alarm.  Bring appointment start time forward to the alarm time,
+        // if the next alarm is before the first instance.
+        recomputeNextAlarm(nextAlarm);
+        if (mAlarmData != null) {
+            long newNextAlarm = mAlarmData.getNextAt();
+            if (newNextAlarm > 0 && newNextAlarm < startTime)
+                startTime = newNextAlarm;
+        }
+
         if (mStartTime != startTime || mEndTime != endTime) {
             mStartTime = startTime;
             mEndTime = endTime;
@@ -485,18 +500,36 @@ public abstract class CalendarItem extends MailItem {
         return MailItem.encodeMetadata(meta, color, version);
     }
 
-    // /**
-    // * Expand all the instances for the time period from start to end
-    // *
-    // * @param start
-    // * @param end
-    // * @return list of Instances for the specified time period
-    // */
-    public Collection<Instance> expandInstances(long start, long end) {
-        List<Instance> instances = new ArrayList<Instance>();
+    /**
+     * Expand all the instances for the time period from start to end
+     *
+     * @param start
+     * @param end
+     * @param includeAlarmOnlyInstances
+     * @return list of Instances for the specified time period
+     */
+    public Collection<Instance> expandInstances(long start, long end, boolean includeAlarmOnlyInstances) {
+        long endAdjusted = end;
+        long alarmInstStart = 0;
+        if (includeAlarmOnlyInstances) {
+            // Adjust end of the range for alarm case.  If the alarm time of an appointment falls
+            // within the time range but the instance start time is after the range, we need to
+            // extend the end time long enough include the instance start time.  This will allow
+            // the rest of the recurrence expansion logic to do the right thing based on the new
+            // range.
+            if (mAlarmData != null) {
+                alarmInstStart = mAlarmData.getNextInstanceStart();
+                long nextAlarm = mAlarmData.getNextAt();
+                if (nextAlarm >= start && nextAlarm < end) {
+                    if (alarmInstStart >= end)
+                        endAdjusted = alarmInstStart + 1;
+                }
+            }
+        }
 
+        List<Instance> instances = new ArrayList<Instance>();
         if (mRecurrence != null) {
-            instances = mRecurrence.expandInstances(this, start, end);
+            instances = mRecurrence.expandInstances(this, start, endAdjusted);
         } else {
             if (mInvites != null) {
                 for (Invite inv : mInvites) {
@@ -504,7 +537,7 @@ public abstract class CalendarItem extends MailItem {
                     long invStart = dtStart != null ? dtStart.getUtcTime() : 0;
                     ParsedDateTime dtEnd = inv.getEffectiveEndTime();
                     long invEnd = dtEnd != null ? dtEnd.getUtcTime() : 0;
-                    if ((invStart < end && invEnd > start) || (dtStart == null)) {
+                    if ((invStart < endAdjusted && invEnd > start) || (dtStart == null)) {
                         Instance inst = new Instance(this, new InviteInfo(inv),
                                                      dtStart == null,
                                                      invStart, invEnd,
@@ -514,6 +547,17 @@ public abstract class CalendarItem extends MailItem {
                 }
             }
         }
+
+        // Remove instances that aren't in the actual range, except the alarm instance.
+        if (includeAlarmOnlyInstances && endAdjusted != end) {
+            for (Iterator<Instance> iter = instances.iterator(); iter.hasNext(); ) {
+                Instance inst = iter.next();
+                long instStart = inst.getStart();
+                if (instStart != alarmInstStart && instStart < start && instStart >= end)
+                    iter.remove();
+            }
+        }
+
         return instances;
     }
 
@@ -989,8 +1033,11 @@ public abstract class CalendarItem extends MailItem {
                        // it doesn't have anymore REQUESTs!
             return false;
         } else {
+            if (nextAlarm > 0 && mAlarmData != null && mAlarmData.getNextAt() != nextAlarm)
+                modifiedCalItem = true;
+
             if (modifiedCalItem) {
-                if (!updateRecurrence()) {
+                if (!updateRecurrence(nextAlarm)) {
                     // no default invite!  This appointment/task no longer valid
                     delete();
                     return false;
@@ -1008,9 +1055,6 @@ public abstract class CalendarItem extends MailItem {
                     } else {
                         mData.flags &= ~Flag.BITMASK_ATTACHED;
                     }
-
-                    // Update alarm trigger time and related info.
-                    recomputeNextAlarm(nextAlarm);
 
                     saveMetadata();
                     return true;
@@ -2018,11 +2062,24 @@ public abstract class CalendarItem extends MailItem {
         return false;
     }
 
+    public void updateNextAlarm(long nextAlarm) throws ServiceException {
+        boolean hadAlarm = mAlarmData != null;
+        recomputeNextAlarm(nextAlarm);
+        if (mAlarmData != null) {
+            long newNextAlarm = mAlarmData.getNextAt();
+            if (newNextAlarm > 0 && newNextAlarm < mStartTime)
+                mStartTime = newNextAlarm;
+            DbMailItem.updateInCalendarItemTable(this);
+        }
+        if (mAlarmData != null || hadAlarm)
+            saveMetadata();
+    }
+
     /**
      * Recompute the next alarm trigger time that is at or later than "nextAlarm".
-     * @param nextAlarm
+     * @param nextAlarm next alarm should go off at or after this time
      */
-    public void recomputeNextAlarm(long nextAlarm) {
+    private void recomputeNextAlarm(long nextAlarm) {
         if (!hasAlarm()) {
             mAlarmData = null;
             return;
@@ -2037,7 +2094,7 @@ public abstract class CalendarItem extends MailItem {
         long triggerAt = Long.MAX_VALUE;
         Instance alarmInstance = null;
         Alarm theAlarm = null;
-        Collection<Instance> instances = expandInstances(nextAlarm, getEndTime());
+        Collection<Instance> instances = expandInstances(nextAlarm, getEndTime(), false);
         for (Instance inst : instances) {
             InviteInfo invId = inst.getInviteInfo();
             Invite inv = getInvite(invId.getMsgId(), invId.getComponentId());

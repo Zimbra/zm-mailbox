@@ -122,21 +122,32 @@ public class GetCalendarItemSummaries extends CalendarRequest {
             int numInRange = 0;
             
             if (expandRanges) {
-                Collection<CalendarItem.Instance> instances = calItem.expandInstances(rangeStart, rangeEnd);
+                Collection<CalendarItem.Instance> instances = calItem.expandInstances(rangeStart, rangeEnd, true);
+                AlarmData alarmData = calItem.getAlarmData();
+                long alarmTime = 0;
+                long alarmInst = 0;
+                if (alarmData != null) {
+                    alarmTime = alarmData.getNextAt();
+                    alarmInst = alarmData.getNextInstanceStart();
+                }
                 for (CalendarItem.Instance inst : instances) {
                     try {
                         InviteInfo invId = inst.getInviteInfo();
                         Invite inv = calItem.getInvite(invId.getMsgId(), invId.getComponentId());
                         boolean showAll = !hidePrivate || inv.isPublic();
-                        
+
                         // figure out which fields are different from the default and put their data here...
+
                         ParsedDuration invDuration = inv.getEffectiveDuration();
                         long instStart = inst.getStart();
-                        
+                        // For an instance whose alarm time is within the time range, we must
+                        // include it even if its start time is after the range.
+                        long startOrAlarm = instStart == alarmInst ? alarmTime : instStart;
+
                         if (inst.isTimeless() ||
-                                    (instStart < rangeEnd &&
-                                                invDuration != null &&
-                                                (invDuration.addToTime(instStart)) > rangeStart)) {
+                            (startOrAlarm < rangeEnd &&
+                             invDuration != null &&
+                             (invDuration.addToTime(instStart)) > rangeStart)) {
                             numInRange++;
                         } else {
                             continue;
@@ -145,7 +156,6 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                         if (calItemElem == null) {
                             calItemElem = lc.createElement(isAppointment ? MailConstants.E_APPOINTMENT : MailConstants.E_TASK);
 
-                            AlarmData alarmData = calItem.getAlarmData();
                             if (alarmData != null)
                                 ToXML.encodeAlarmData(calItemElem, calItem, alarmData);
 

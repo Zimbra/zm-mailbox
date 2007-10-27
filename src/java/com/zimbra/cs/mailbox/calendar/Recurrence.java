@@ -676,8 +676,8 @@ public class Recurrence
             return mDtStart;
         }
         public ParsedDateTime getEndTime() {
-            // FIXME: 
-            
+            // FIXME: Don't just return MAX_DATETIME.
+
 //            if (mCount > 0) {
 //
 //                resetIterator();

@@ -106,7 +106,7 @@ public class RssFormatter extends Formatter {
     }
     
     private void addCalendarItem(CalendarItem calItem, Element channel, Context context) {
-        Collection instances = calItem.expandInstances(context.getStartTime(), context.getEndTime());
+        Collection instances = calItem.expandInstances(context.getStartTime(), context.getEndTime(), false);
         for (Iterator instIt = instances.iterator(); instIt.hasNext(); ) {
             CalendarItem.Instance inst = (CalendarItem.Instance) instIt.next();
             InviteInfo invId = inst.getInviteInfo();
