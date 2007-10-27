@@ -412,7 +412,10 @@ RECURRENCE SPECIFIERS!
 //   TODO: need way to link message to appointment after the fact
 //
 //
-<SetAppointmentRequest [l="folder_to_create_in"] [f="flags"] [t="tags"]>
+<SetAppointmentRequest
+    [l="folder_to_create_in"] [f="flags"] [t="tags"]
+    [nextAlarm="next alarm will go off at"]
+>
   <default
       ptst="NE|AC|TE|DE|DG|CO|IN"  // my participation status
   >
@@ -861,7 +864,9 @@ OR
 />
 
 <GetAppointmentResponse>
-  <appt uid="UID" id="appointment_id" [f="{flags}"] [t="{tags}"] s="{size}" d="{date}" l="{folder}">
+  <appt uid="UID" id="appointment_id" [f="{flags}"] [t="{tags}"] s="{size}" d="{date}" l="{folder}"
+        [nextAlarm="next alarm will go off at"]
+  >
     [<inv id="invite-original-mail-item-id" compNum="component-number" seq="num">
       ...
         ---See <inv> part of GetMsgResponse---
@@ -902,6 +907,32 @@ OR
 {folder-id} = optional folder id to import appointments into
 
 {attach-upload-id} = attachment id from upload server. If specified, then body of content is ignored.
+
+-------------------------------------------------------------------------------
+
+     * <DismissCalendarItemAlarmRequest>
+     *   <appt|task id="cal item id" lastAlarm="alarm time in millis"/>+
+     * </DismissCalendarItemAlarmRequest>
+     *
+     * <DismissCalendarItemAlarmResponse>
+     *   <appt|task id="cal item id">
+     *     <alarmData ...>  // so the client knows when to trigger the next alarm
+     *   </appt|task>+
+     * </DismissCalendarItemAlarmResponse>
+<DismissCalendarItemAlarmRequest>
+  <appt|task id="cal item id" dismissedAt="time alarm was dismissed, in millis"/>+
+</DismissCalendarItemAlarmRequest>
+
+<DismissCalendarItemAlarmResponse>
+  <appt|task id="cal item id">
+    <alarmData ...>  // so the client knows when to trigger the next alarm
+                     // See <alarmData> definition under SearchResponse, in soap.txt
+  </appt|task>+  // one for each <appt|task> in the request
+</DismissCalendarItemAlarmResponse>
+
+
+
+
 
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------

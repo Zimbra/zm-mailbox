@@ -57,6 +57,7 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
     private Mailbox.SetCalendarItemData mDefaultInvite;
     private Mailbox.SetCalendarItemData mExceptions[];
     private List<ReplyInfo> mReplies;
+    private long mNextAlarm;
     private short mVolumeId = -1;
 
     public SetCalendarItem() {}
@@ -164,6 +165,10 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
                 }
             }
         }
+
+        if (getVersion().atLeast(1, 21)) {
+            out.writeLong(mNextAlarm);
+        }
     }
 
     protected void deserializeData(RedoLogInput in) throws IOException {
@@ -228,6 +233,10 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
                 }
             }
         }
+
+        if (getVersion().atLeast(1, 21)) {
+            mNextAlarm = in.readLong();
+        }
     }
 
     public SetCalendarItem(int mailboxId, boolean attachmentIndexingEnabled,
@@ -241,10 +250,11 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
     
     public void setData(Mailbox.SetCalendarItemData defaultInvite,
                         Mailbox.SetCalendarItemData exceptions[],
-                        List<ReplyInfo> replies) {
+                        List<ReplyInfo> replies, long nextAlarm) {
         mDefaultInvite = defaultInvite;
         mExceptions = exceptions;
         mReplies = replies;
+        mNextAlarm = nextAlarm;
     }
     
     public Mailbox.SetCalendarItemData getDefaultData() {
@@ -300,7 +310,7 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
         
         mbox.setCalendarItem(getOperationContext(), mFolderId, mFlags, mTags,
-                             mDefaultInvite, mExceptions, mReplies);
+                             mDefaultInvite, mExceptions, mReplies, mNextAlarm);
     }
 
     protected String getPrintableData() {
@@ -329,6 +339,7 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
                 i++;
             }
         }
+        toRet.append("nextAlarm=").append(mNextAlarm).append("\n");
         return toRet.toString();
     }
 }

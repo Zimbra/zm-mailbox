@@ -38,6 +38,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.*;
+import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -494,6 +495,7 @@ public class ItemActionHelper {
                     QName qname = (item.getType() == MailItem.TYPE_TASK ? MailConstants.SET_TASK_REQUEST : MailConstants.SET_APPOINTMENT_REQUEST);
                     Element request = new Element.XMLElement(qname).addAttribute(MailConstants.A_FOLDER, folderStr).addAttribute(MailConstants.A_FLAGS, flags);
                     CalendarItem cal = (CalendarItem) item;
+                    ToXML.encodeAlarmTimes(request, cal);
 
                     boolean isOrganizer = false;
                     Invite invDefault = cal.getDefaultInviteOrNull();
@@ -519,7 +521,7 @@ public class ItemActionHelper {
 
                     if (isOrganizer) {
                         // Announce organizer change to attendees.
-                        request = new Element.XMLElement(MailConstants.ANNOUNCE_ORGANIZER_CHANGE);
+                        request = new Element.XMLElement(MailConstants.ANNOUNCE_ORGANIZER_CHANGE_REQUEST);
                         request.addAttribute(MailConstants.A_ID, createdId);
                         zmbx.invoke(request);
                     }

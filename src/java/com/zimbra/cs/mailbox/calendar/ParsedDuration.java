@@ -203,27 +203,38 @@ public final class ParsedDuration
         
         return toRet;
     }
-    
-    public Date addToDate(Date date) {
+
+    private Date addToDate(Date date, boolean subtract) {
         GregorianCalendar cal = new GregorianCalendar();
         cal.setTime(date);
-        int mult = 1;
-        if (mNegative) {
-            mult = -1;
-        }
+        int mult = mNegative ? -1 : 1;
+        if (subtract)
+            mult *= -1;
         cal.add(java.util.Calendar.WEEK_OF_YEAR, mult*mWeeks);
         cal.add(java.util.Calendar.DAY_OF_YEAR, mult*mDays);
         cal.add(java.util.Calendar.HOUR_OF_DAY, mult*mHours);
         cal.add(java.util.Calendar.MINUTE, mult*mMins);
         cal.add(java.util.Calendar.SECOND, mult*mSecs);
-        
+
         return cal.getTime();
     }
-    
-    public long addToTime(long utcTime) {
-        return addToDate(new Date(utcTime)).getTime();
+
+    public Date addToDate(Date date) {
+        return addToDate(date, false);
     }
-    
+
+    public Date subtractFromDate(Date date) {
+        return addToDate(date, true);
+    }
+
+    public long addToTime(long utcTime) {
+        return addToDate(new Date(utcTime), false).getTime();
+    }
+
+    public long subtractFromTime(long utcTime) {
+        return addToDate(new Date(utcTime), true).getTime();
+    }
+
     /**
      * In order to _correctly_ calculate the number of ms in this duration, we actually
      * need to know the STARTING time...this is because things like "1 Day" might change

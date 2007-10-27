@@ -21,7 +21,6 @@
 package com.zimbra.cs.service.mail;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Map;
 
 import com.zimbra.common.util.Log;
@@ -36,6 +35,7 @@ import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
@@ -122,9 +122,8 @@ public class GetCalendarItemSummaries extends CalendarRequest {
             int numInRange = 0;
             
             if (expandRanges) {
-                Collection instances = calItem.expandInstances(rangeStart, rangeEnd); 
-                for (Iterator instIter = instances.iterator(); instIter.hasNext(); ) {
-                    CalendarItem.Instance inst = (CalendarItem.Instance) instIter.next();
+                Collection<CalendarItem.Instance> instances = calItem.expandInstances(rangeStart, rangeEnd);
+                for (CalendarItem.Instance inst : instances) {
                     try {
                         InviteInfo invId = inst.getInviteInfo();
                         Invite inv = calItem.getInvite(invId.getMsgId(), invId.getComponentId());
@@ -145,6 +144,10 @@ public class GetCalendarItemSummaries extends CalendarRequest {
 
                         if (calItemElem == null) {
                             calItemElem = lc.createElement(isAppointment ? MailConstants.E_APPOINTMENT : MailConstants.E_TASK);
+
+                            AlarmData alarmData = calItem.getAlarmData();
+                            if (alarmData != null)
+                                ToXML.encodeAlarmData(calItemElem, calItem, alarmData);
 
                             if (showAll) {
                                 // flags and tags
@@ -388,15 +391,13 @@ public class GetCalendarItemSummaries extends CalendarRequest {
         
         ItemId iidFolder = new ItemId(request.getAttribute(MailConstants.A_FOLDER, DEFAULT_FOLDER), zsc);
         
-        Collection calItems = mbox.getCalendarItemsForRange(getItemType(), getOperationContext(zsc, context), rangeStart, rangeEnd, iidFolder.getId(), null);
+        Collection<CalendarItem> calItems = mbox.getCalendarItemsForRange(getItemType(), getOperationContext(zsc, context), rangeStart, rangeEnd, iidFolder.getId(), null);
 
         Element response = getResponseElement(zsc);
-        
+
         int totalInstancesExpanded = 0;
-        
-        for (Iterator aptIter = calItems.iterator(); aptIter.hasNext(); ) {
-            CalendarItem calItem = (CalendarItem) aptIter.next();
-            
+
+        for (CalendarItem calItem : calItems) {
             EncodeCalendarItemResult encoded = encodeCalendarItemInstances(zsc, calItem, acct, rangeStart, rangeEnd, false);
 //            assert(encoded.element != null || encoded.numInstancesExpanded==0);
             if (encoded.element != null)

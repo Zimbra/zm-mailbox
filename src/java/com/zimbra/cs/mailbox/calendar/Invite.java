@@ -372,18 +372,18 @@ public class Invite {
         }
         meta.put(FN_IS_ORGANIZER, inv.isOrganizer());
 
-        List ats = inv.getAttendees();
+        List<ZAttendee> ats = inv.getAttendees();
         meta.put(FN_NUM_ATTENDEES, String.valueOf(ats.size()));
         int i = 0;
-        for (Iterator iter = ats.iterator(); iter.hasNext(); i++) {
-            ZAttendee at = (ZAttendee)iter.next();
+        for (Iterator<ZAttendee> iter = ats.iterator(); iter.hasNext(); i++) {
+            ZAttendee at = iter.next();
             meta.put(FN_ATTENDEE + i, at.encodeAsMetadata());
         }
 
         meta.put(FN_PRIORITY, inv.getPriority());
         meta.put(FN_PCT_COMPLETE, inv.getPercentComplete());
 
-        if (inv.mAlarms.size() > 0) {
+        if (!inv.mAlarms.isEmpty()) {
             meta.put(FN_NUM_ALARMS, inv.mAlarms.size());
             i = 0;
             for (Iterator<Alarm> iter = inv.mAlarms.iterator(); iter.hasNext(); i++) {
@@ -607,10 +607,6 @@ public class Invite {
                         invite.addAlarm(alarm);
                 }
             } catch (ServiceException e) {
-                ZimbraLog.calendar.warn("Problem decoding alarm " + i + " for calendar item " 
-                        + calItem!=null ? Integer.toString(calItem.getId()) : "(null)"
-                        + " invite "+mailItemId+"-" + componentNum, e);
-            } catch (ParseException e) {
                 ZimbraLog.calendar.warn("Problem decoding alarm " + i + " for calendar item " 
                         + calItem!=null ? Integer.toString(calItem.getId()) : "(null)"
                         + " invite "+mailItemId+"-" + componentNum, e);
@@ -1027,14 +1023,10 @@ public class Invite {
         }
     }
     public boolean isRecurrence() { return ((mFlags & APPT_FLAG_ISRECUR)!=0); }
-    void setHasAlarm(boolean hasAlarm) {
-        if (hasAlarm) {
-            mFlags |= APPT_FLAG_HASALARM;
-        } else {
-            mFlags &= ~APPT_FLAG_HASALARM;
-        }
+
+    public boolean hasAlarm() {
+        return !mAlarms.isEmpty();
     }
-    public boolean hasAlarm() { return ((mFlags & APPT_FLAG_HASALARM)!=0); }
     
     public boolean hasAttachment() { return ((mFlags & APPT_FLAG_HAS_ATTACHMENT)!=0); }
     public void setHasAttachment(boolean hasAttachment) {
@@ -1099,7 +1091,7 @@ public class Invite {
     //  [instead we just check for mAttendees.size()>0 ]
     //public static final int APPT_FLAG_OTHER_ATTENDEES = 0x08;
     
-    public static final int APPT_FLAG_HASALARM        = 0x10;
+    public static final int APPT_FLAG_HASALARM        = 0x10;  // obsolete
     public static final int APPT_FLAG_ISRECUR         = 0x20;
     public static final int APPT_FLAG_NEEDS_REPLY     = 0x40;  // obsolete
     public static final int APPT_FLAG_HAS_ATTACHMENT  = 0x80;  // obsolete
@@ -1208,11 +1200,8 @@ public class Invite {
      */
     public ZAttendee getMatchingAttendee(Account acct) throws ServiceException {
         // Find my ATTENDEE record in the Invite, it must be in our response
-        List attendees = getAttendees();
-        
-        for (Iterator iter = attendees.iterator(); iter.hasNext();) {
-            ZAttendee at = (ZAttendee)(iter.next());
-            
+        List<ZAttendee> attendees = getAttendees();
+        for (ZAttendee at : attendees) {
             String thisAtEmail = at.getAddress();
             if (AccountUtil.addressMatchesAccount(acct, thisAtEmail)) {
                 return at;
@@ -1230,11 +1219,8 @@ public class Invite {
      */
     public ZAttendee getMatchingAttendee(String atName) throws ServiceException {
         // Find my ATTENDEE record in the Invite, it must be in our response
-        List attendees = getAttendees();
-        
-        for (Iterator iter = attendees.iterator(); iter.hasNext();) {
-            ZAttendee at = (ZAttendee)(iter.next());
-            
+        List<ZAttendee> attendees = getAttendees();
+        for (ZAttendee at : attendees) {
             String thisAtEmail = at.getAddress();
             if (thisAtEmail != null && thisAtEmail.equalsIgnoreCase(atName)) {
                 return at;
@@ -1263,12 +1249,8 @@ public class Invite {
         boolean modified = false;
         
         OUTER: 
-            for (Iterator otherIter = other.getAttendees().iterator(); otherIter.hasNext();) {
-                ZAttendee otherAt = (ZAttendee)otherIter.next();
-                
-                for (Iterator iter = attendees.iterator(); iter.hasNext();) {
-                    ZAttendee at = (ZAttendee)(iter.next());
-                    
+            for (ZAttendee otherAt : other.getAttendees()) {
+                for (ZAttendee at : attendees) {
                     if (otherAt.addressesMatch(at)) {
                     	
                     	// BUG:4911  When an invitee responds they include an ATTENDEE record, but
@@ -1296,9 +1278,8 @@ public class Invite {
             }
         
         if (toAdd.size() > 0) {
-            for (Iterator iter = toAdd.iterator(); iter.hasNext();) {
+            for (ZAttendee add : toAdd) {
                 modified = true;
-                ZAttendee add = (ZAttendee)iter.next();
                 attendees.add(add);
             }
         }
@@ -1397,7 +1378,7 @@ public class Invite {
             vcal.addComponent(local.newToVTimeZone());
         }
         
-        for (Iterator iter = mTzMap.tzIterator(); iter.hasNext();) {
+        for (Iterator<ICalTimeZone> iter = mTzMap.tzIterator(); iter.hasNext();) {
             ICalTimeZone cur = (ICalTimeZone) iter.next();
             vcal.addComponent(cur.newToVTimeZone());
         }
@@ -1680,7 +1661,7 @@ public class Invite {
                         InviteInfo inviteInfo = new InviteInfo(newInv);
                         List<IRecurrence> addRules = new ArrayList<IRecurrence>();
                         if (addRecurs.size() > 0) {
-                            for (Iterator iter = addRecurs.iterator(); iter.hasNext();) {
+                            for (Iterator<Object> iter = addRecurs.iterator(); iter.hasNext();) {
                                 Object next = iter.next();
                                 if (next instanceof ZRecur) {
                                     ZRecur cur = (ZRecur) next;
@@ -1693,7 +1674,7 @@ public class Invite {
                         }
                         List<IRecurrence> subRules = new ArrayList<IRecurrence>();
                         if (subRecurs.size() > 0) {
-                            for (Iterator iter = subRecurs.iterator(); iter.hasNext();) {
+                            for (Iterator<Object> iter = subRecurs.iterator(); iter.hasNext();) {
                                 Object next = iter.next();
                                 if (next instanceof ZRecur) {
                                     ZRecur cur = (ZRecur) iter.next();

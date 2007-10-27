@@ -47,6 +47,7 @@ public class Metadata {
     // FIXME: RECIPIENTS and TYPES conflict
     static final String FN_ATTRS           = "a";
     static final String FN_RIGHTS          = "acl";
+    static final String FN_ALARM_DATA      = "ad";
     static final String FN_ACCOUNT_ID      = "aid";
     static final String FN_CALITEM_IDS     = "ais";
     static final String FN_CALITEM_END     = "ape";

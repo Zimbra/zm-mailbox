@@ -38,6 +38,7 @@ import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SearchParams.ExpandResults;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.*;
+import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.mailbox.CalendarItem.Instance;
 import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -766,6 +767,8 @@ public class ToXML {
             }
             if (isPublic || allowPrivateAccess(octxt, calItem))
                 encodeCalendarReplies(calItemElem, calItem, null);
+
+            encodeAlarmTimes(calItemElem, calItem);
         }
     }
 
@@ -789,6 +792,8 @@ public class ToXML {
         Element ie = parent.addElement(MailConstants.E_INVITE);
         setCalendarItemType(ie, cal);
         encodeTimeZoneMap(ie, cal.getTimeZoneMap());
+
+        //encodeAlarmTimes(ie, cal);
 
         ie.addAttribute(MailConstants.A_CAL_SEQUENCE, inv.getSeqNo());
         ie.addAttribute(MailConstants.A_ID, ifmt.formatItemId(inv.getMailItemId()));
@@ -988,6 +993,8 @@ public class ToXML {
                     encodeInviteComponent(invElt, ifmt, octxt, calItem, inv, NOTIFY_FIELDS);
             }
 
+            //encodeAlarmTimes(invElt, calItem);
+
             if (showAll) {
                 if (headers != null) {
                     for (String name : headers) {
@@ -1135,8 +1142,8 @@ public class ToXML {
 
     private static void encodeTimeZoneMap(Element parent, TimeZoneMap tzmap) {
         assert(tzmap != null);
-        for (Iterator iter = tzmap.tzIterator(); iter.hasNext(); ) {
-            ICalTimeZone tz = (ICalTimeZone) iter.next();
+        for (Iterator<ICalTimeZone> iter = tzmap.tzIterator(); iter.hasNext(); ) {
+            ICalTimeZone tz = iter.next();
             Element e = parent.addElement(MailConstants.E_CAL_TZ);
             e.addAttribute(MailConstants.A_ID, tz.getID());
             e.addAttribute(MailConstants.A_CAL_TZ_STDOFFSET, tz.getStandardOffset() / 60 / 1000);
@@ -1399,8 +1406,8 @@ public class ToXML {
         boolean addedMethod = false;
         Mailbox mbox = msg.getMailbox();
 
-        for (Iterator iter = msg.getCalendarItemInfoIterator(); iter.hasNext(); ) {
-            Message.CalendarItemInfo info = (Message.CalendarItemInfo) iter.next();
+        for (Iterator<Message.CalendarItemInfo> iter = msg.getCalendarItemInfoIterator(); iter.hasNext(); ) {
+            Message.CalendarItemInfo info = iter.next();
 
             CalendarItem calItem = null;
             try {
@@ -1414,6 +1421,8 @@ public class ToXML {
             }
 
             if (calItem != null) {
+                //encodeAlarmTimes(ie, calItem);
+
                 setCalendarItemType(ie, calItem);
                 Invite inv = calItem.getInvite(msg.getId(), info.getComponentNo());
 
@@ -1537,8 +1546,7 @@ public class ToXML {
 
         // recurse to child parts, if any
         if (mpi.hasChildren()) {
-            for (Iterator it = mpi.getChildren().iterator(); it.hasNext();) {
-                MPartInfo cp = (MPartInfo) it.next();
+            for (MPartInfo cp : mpi.getChildren()) {
                 addParts(elem, root, cp, bodies, prefix, maxSize, neuter, excludeCalendarParts, defaultCharset);
             }
         }
@@ -1789,5 +1797,40 @@ public class ToXML {
     private static void setCalendarItemType(Element elem, CalendarItem calItem) {
         elem.addAttribute(MailConstants.A_CAL_ITEM_TYPE,
                 calItem.getType() == MailItem.TYPE_APPOINTMENT ? "appt" : "task");
+    }
+
+    public static void encodeAlarmTimes(Element elem, CalendarItem calItem)
+    throws ServiceException {
+        AlarmData alarmData = calItem.getAlarmData();
+        if (alarmData != null) {
+            long nextAlarm = alarmData.getNextAt();
+            if (nextAlarm < Long.MAX_VALUE)
+                elem.addAttribute(MailConstants.A_CAL_NEXT_ALARM, nextAlarm);
+        }
+    }
+
+    public static Element encodeAlarmData(Element parent, CalendarItem calItem, AlarmData alarmData)
+    throws ServiceException {
+        Element alarmElem = parent.addElement(MailConstants.E_CAL_ALARM_DATA);
+        encodeAlarmTimes(alarmElem, calItem);
+        // Start time of the meeting instance we're reminding about.
+        long alarmInstStart = alarmData.getNextInstanceStart();
+        alarmElem.addAttribute(MailConstants.A_CAL_ALARM_INSTANCE_START, alarmInstStart);
+        int alarmInvId = alarmData.getInvId();
+        int alarmCompNum = alarmData.getCompNum();
+        Invite alarmInv = calItem.getInvite(alarmInvId, alarmCompNum);
+        if (alarmInv != null) {
+            // Some info on the meeting instance the reminder is for.
+            // These allow the UI to display tooltip and issue a Get
+            // call on the correct meeting instance.
+            alarmElem.addAttribute(MailConstants.A_NAME, alarmInv.getName());
+            alarmElem.addAttribute(MailConstants.A_CAL_LOCATION, alarmInv.getLocation());
+            alarmElem.addAttribute(MailConstants.A_CAL_INV_ID, alarmInvId);
+            alarmElem.addAttribute(MailConstants.A_CAL_COMPONENT_NUM, alarmCompNum);
+        }
+        Alarm alarmObj = alarmData.getAlarm();
+        if (alarmObj != null)
+            alarmObj.toXml(alarmElem);
+        return alarmElem;
     }
 }

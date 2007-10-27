@@ -97,7 +97,7 @@ public class SetCalendarItem extends CalendarRequest {
             SetCalendarItemParseResult parsed = parseSetAppointmentRequest(request, zsc, octxt, getItemType(), false);
             int calItemId = mbox.setCalendarItem(
                     octxt, iidFolder.getId(), flags, tags,
-                    parsed.defaultInv, parsed.exceptions, parsed.replies);
+                    parsed.defaultInv, parsed.exceptions, parsed.replies, parsed.nextAlarm);
 
             Element response = getResponseElement(zsc);
 
@@ -181,6 +181,7 @@ public class SetCalendarItem extends CalendarRequest {
         public SetCalendarItemData[] exceptions;
         public List<ReplyInfo> replies;
         public boolean isEvent;
+        public long nextAlarm;
     }
 
     public static SetCalendarItemParseResult parseSetAppointmentRequest(Element request, ZimbraSoapContext zsc, OperationContext octxt, byte itemType, boolean parseIds)
@@ -229,6 +230,8 @@ public class SetCalendarItem extends CalendarRequest {
             result.replies = CalendarUtils.parseReplyList(repliesElem, defInv.getTimeZoneMap());
 
         result.isEvent = defInv.isEvent();
+
+        result.nextAlarm = request.getAttributeLong(MailConstants.A_CAL_NEXT_ALARM, 0);
 
         return result;
     }

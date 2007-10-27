@@ -18,6 +18,7 @@ package com.zimbra.cs.mailbox.calendar;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -66,6 +67,16 @@ public class Alarm {
     // ATTENDEEs
     private List<ZAttendee> mAttendees;
 
+
+    public String getDescription() { return mDescription; }
+    public int getRepeatCount() { return mRepeatCount; }
+
+    public long getRepeatMillis() {
+        if (mRepeatDuration == null)
+            return mRepeatDuration.getDurationAsMsecs(new Date());
+        else
+            return 0;
+    }
 
     private Alarm(Action action,
                   TriggerType triggerType, TriggerRelated related,
@@ -553,8 +564,7 @@ public class Alarm {
      * @throws ServiceException
      * @throws ParseException
      */
-    public static Alarm decodeMetadata(Metadata meta)
-    throws ServiceException, ParseException {
+    public static Alarm decodeMetadata(Metadata meta) throws ServiceException {
         Action action = expandAction(meta.get(FN_ACTION));
         if (!actionAllowed(action))
             return null;
@@ -564,7 +574,11 @@ public class Alarm {
         ParsedDuration triggerRelative = null;
         ParsedDateTime triggerAbsolute = null;
         if (TriggerType.ABSOLUTE.equals(tt)) {
-            triggerAbsolute = ParsedDateTime.parseUtcOnly(meta.get(FN_TRIGGER_ABSOLUTE));
+            try {
+                triggerAbsolute = ParsedDateTime.parseUtcOnly(meta.get(FN_TRIGGER_ABSOLUTE));
+            } catch (ParseException e) {
+                throw ServiceException.FAILURE("Error parsing metadata for alarm", e);
+            }
         } else {
             triggerRelative = ParsedDuration.parse(meta.get(FN_TRIGGER_RELATIVE));
             triggerRelated = expandTriggerRelated(meta.get(FN_TRIGGER_RELATED, null));
@@ -600,5 +614,26 @@ public class Alarm {
                 action, tt, triggerRelated, triggerRelative, triggerAbsolute,
                 repeatDuration, repeatCount, description, summary, attach, attendees);
         return alarm;
+    }
+
+    /**
+     * Returns the alarm trigger time in millis.  Only display alarm will return a meaningful
+     * trigger time.  Other alarm types will return Long.MAX_VALUE.
+     * Both start and end times of the appointment/task instance is required because the alarm
+     * may be specified relative to either start or end time.
+     * @param instStart start time of the appointment/task instance
+     * @param instEnd end time of the appointment/task instance
+     * @return
+     */
+    public long getTriggerTime(long instStart, long instEnd) {
+//        if (!Action.DISPLAY.equals(mAction)) return Long.MAX_VALUE;
+        if (TriggerType.ABSOLUTE.equals(mTriggerType)) {
+            assert(mTriggerAbsolute != null);
+            return mTriggerAbsolute.getUtcTime();
+        }
+        if (TriggerRelated.END.equals(mTriggerRelated))
+            return mTriggerRelative.addToTime(instEnd);
+        else
+            return mTriggerRelative.addToTime(instStart);
     }
 }

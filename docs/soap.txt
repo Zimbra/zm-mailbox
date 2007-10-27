@@ -1272,8 +1272,21 @@ Expanded instance data -- only if calExpandInstStart and
           [<otherAtt>] // otherAtt flag if not same as default
     </inst>
 ]+
-        
-</apt> 
+
+Next alarm trigger time and related info:
+[   <alarmData
+        nextAlarm="time in millis to show the alarm"
+        alarmInstStart="start time of the meeting instance the alarm is reminding about"
+        name="meeting subject"
+        loc="meeting location"
+        invId="invId" compNum="compNum" // these are used in GetMsg call
+    >
+      <alarm .../>  // detail of the alarm (repeat policy, text to show, etc.)
+                    // See <alarm> definition in soap-calendar.txt
+    </alarmData>
+]
+
+</appt|task>
 
    -- fba: actual free-busy status: Free, Busy, busy-Tentative, busy-Unavailable (a.k.a. OutOfOffice)
            While free-busy status is simply a property of an event that
