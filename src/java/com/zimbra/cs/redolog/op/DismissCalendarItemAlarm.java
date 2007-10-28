@@ -40,7 +40,7 @@ public class DismissCalendarItemAlarm extends RedoableOp {
     }
 
     public int getOpCode() {
-        return OP_REPOSITION_NOTE;
+        return OP_DISMISS_CALENDAR_ITEM_ALARM;
     }
 
     protected String getPrintableData() {
