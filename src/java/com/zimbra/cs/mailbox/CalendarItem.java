@@ -323,6 +323,8 @@ public abstract class CalendarItem extends MailItem {
         item.createBlob(pm, firstInvite, volumeId);
         item.finishCreation(null);
 
+        item.mEndTime = item.computeRecurrenceEndTime(item.mEndTime);
+
         if (firstInvite.hasAlarm()) {
             item.recomputeNextAlarm(nextAlarm);
             item.saveMetadata();
@@ -336,6 +338,30 @@ public abstract class CalendarItem extends MailItem {
 
         DbMailItem.addToCalendarItemTable(item);
         return item;
+    }
+
+    private long computeRecurrenceEndTime(long defaultVal) throws ServiceException {
+        if (isRecurring()) {
+            Collection<Instance> instances = expandInstances(mStartTime, Long.MAX_VALUE, false);
+            Instance lastInst = null;
+            for (Iterator<Instance> iter = instances.iterator(); iter.hasNext(); ) {
+                lastInst = iter.next();
+            }
+            if (lastInst != null)
+                return lastInst.getEnd();
+        }
+        return defaultVal;
+    }
+
+    // for migration of old data
+    public int fixRecurrenceEndTime() throws ServiceException {
+        long endTime = computeRecurrenceEndTime(mEndTime);
+        if (endTime != mEndTime) {
+            mEndTime = endTime;
+            DbMailItem.updateInCalendarItemTable(this);
+            return 1;
+        }
+        return 0;
     }
 
     private boolean updateRecurrence(long nextAlarm) throws ServiceException {
@@ -393,6 +419,7 @@ public abstract class CalendarItem extends MailItem {
             
             startTime = dtStartTime != null ? dtStartTime.getUtcTime() : 0;
             endTime = dtEndTime != null ? dtEndTime.getUtcTime() : 0;
+            endTime = computeRecurrenceEndTime(endTime);
         } else {
             mRecurrence = null;
             ParsedDateTime dtStart = firstInv.getStartTime();
@@ -529,7 +556,13 @@ public abstract class CalendarItem extends MailItem {
 
         List<Instance> instances = new ArrayList<Instance>();
         if (mRecurrence != null) {
+            long startTime = System.currentTimeMillis();
             instances = mRecurrence.expandInstances(this, start, endAdjusted);
+            long elapsed = System.currentTimeMillis() - startTime;
+            ZimbraLog.calendar.info(
+                    "RECURRENCE EXPANSION for appt/task " + getId() +
+                    ": start=" + start + ", end=" + end +
+                    "; took " + elapsed + "ms");
         } else {
             if (mInvites != null) {
                 for (Invite inv : mInvites) {

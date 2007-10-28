@@ -3432,6 +3432,52 @@ public class Mailbox {
         }
     }
 
+    public int fixAllCalendarItemEndTime(OperationContext octxt)
+    throws ServiceException {
+        int numFixed = 0;
+        ZimbraLog.calendar.info("Started: end time fixup in calendar of mailbox " + getId());
+        List[] lists = new List[2];
+        lists[0] = getItemList(octxt, MailItem.TYPE_APPOINTMENT);
+        lists[1] = getItemList(octxt, MailItem.TYPE_TASK);
+        for (List items : lists) {
+            for (Iterator iter = items.iterator(); iter.hasNext(); ) {
+                Object obj = iter.next();
+                if (!(obj instanceof CalendarItem))
+                    continue;
+                CalendarItem calItem = (CalendarItem) obj;
+                try {
+                    numFixed += fixCalendarItemEndTime(octxt, calItem);
+                } catch (ServiceException e) {
+                    ZimbraLog.calendar.error(
+                            "Error fixing calendar item " + calItem.getId() +
+                            " in mailbox " + getId() + ": " + e.getMessage(), e);
+                }
+            }
+        }
+        ZimbraLog.calendar.info(
+                "Finished: end time fixup in calendar of mailbox " +
+                getId() + "; fixed " + numFixed + " timezone entries");
+        return numFixed;
+    }
+
+    public synchronized int fixCalendarItemEndTime(OperationContext octxt, CalendarItem calItem)
+    throws ServiceException {
+        FixCalendarItemEndTime redoRecorder = new FixCalendarItemEndTime(getId(), calItem.getId());
+        boolean success = false;
+        try {
+            beginTransaction("fixupCalendarItemEndTime", octxt, redoRecorder);
+            int numFixed = calItem.fixRecurrenceEndTime();
+            if (numFixed > 0) {
+                ZimbraLog.calendar.info("Fixed calendar item " + calItem.getId());
+                markItemModified(calItem, Change.MODIFIED_CONTENT | Change.MODIFIED_INVITE);
+                success = true;
+            }
+            return numFixed;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
     public synchronized int[] addInvite(OperationContext octxt, Invite inv, int folderId, boolean force, ParsedMessage pm)
     throws ServiceException {
         return addInvite(octxt, inv, folderId, force, pm, 0);

@@ -154,7 +154,9 @@ public abstract class RedoableOp {
 
     public static final int OP_DISMISS_CALENDAR_ITEM_ALARM = 66;
 
-    public static final int OP_LAST				        = 67;
+    public static final int OP_FIX_CALENDAR_ITEM_END_TIME = 67;
+
+    public static final int OP_LAST				        = 68;
 
 	// Element index is same as Redoable.OP_* constants.
 	// The strings must match the class names.
@@ -226,6 +228,7 @@ public abstract class RedoableOp {
         "SaveChat",
         "PurgeImapDeleted",
         "DismissCalendarItemAlarm",
+        "FixCalendarItemEndTime",
 	};
 
 	public static String getOpClassName(int opcode) {

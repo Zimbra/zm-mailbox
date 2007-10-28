@@ -90,13 +90,12 @@ public class ZRecur {
     /**
      * For performance reasons,we stop expanding instances of a recurrence once
      * this many instances have been returned.  This only counts instances actually
-     * returned, it does not count any instances in intermediate values, so
-     * a recurrence like:
+     * returned, it does not count any instances in intermediate values.
      */
-    private static final int MAXIMUM_INSTANCES_RETURNED = 200;
-    private static final int MAXIMUM_INSTANCES_EXPANDED = 10000;
+    private static final int MAXIMUM_INSTANCES_RETURNED = 366;
+    private static final int MAXIMUM_INSTANCES_EXPANDED = 1200;
     
-    public static String listAsStr(List l) {
+    public static String listAsStr(List<? extends Object> l) {
         StringBuffer toRet = new StringBuffer();
         boolean first = true;
         for (Object obj  : l) {
@@ -489,13 +488,24 @@ public class ZRecur {
     throws ServiceException {
         List<java.util.Date> toRet = new LinkedList<java.util.Date>();
 
+        // Cutoff time for expansions.  Monthly and yearly expansions are limited to
+        // ten years unless limited otherwise by COUNT/UNTIL.  Expansions at smaller
+        // granularity are limited to 1 year.
+        Calendar startCal = dtStart.getCalendarCopy();
+        startCal.add(Calendar.YEAR, 1);
+        java.util.Date expansionEndDate = startCal.getTime();
+        if (Frequency.MONTHLY.equals(mFreq) || Frequency.YEARLY.equals(mFreq)) {
+            startCal.add(Calendar.YEAR, 9);  // 1 + 9 = 10
+            expansionEndDate = startCal.getTime();
+        }
+
         java.util.Date rangeStartDate = new java.util.Date(rangeStart);
         // subtract 1000ms (1sec) because the code in the method treats
         // end time as inclusive while the rangeEnd input argument is
         // exclusive value
         java.util.Date rangeEndDate = new java.util.Date(rangeEnd - 1000);
         java.util.Date dtStartDate = new java.util.Date(dtStart.getUtcTime());
-        
+
         java.util.Date earliestDate;
         if (dtStartDate.after(rangeStartDate))
             earliestDate = dtStartDate;
@@ -705,14 +715,10 @@ public class ZRecur {
                 
                 addList.add((Calendar)(cur.clone()));
 
-                Date d1 = cur.getTime();
                 cur.set(Calendar.DAY_OF_MONTH, 1);
-                Date d2 = cur.getTime();
                 cur.add(Calendar.MONTH, interval);
-                Date d3 = cur.getTime();
                 int daysInMonth = cur.getActualMaximum(Calendar.DAY_OF_MONTH);
                 cur.set(Calendar.DAY_OF_MONTH, Math.min(baseMonthDay, daysInMonth));
-                Date d4 = cur.getTime();
                 
                 addList = expandMonthDayList(addList);
                 addList = expandDayListForMonthlyYearly(addList);
@@ -766,7 +772,7 @@ public class ZRecur {
                 if (toAdd.after(dtStartDate))
                     expansionsLeft--;
 
-                if (!toAdd.after(rangeEndDate)) {
+                if (!toAdd.after(rangeEndDate) && toAdd.before(expansionEndDate)) {
                     if (!toAdd.before(earliestDate)) {
                         toRet.add(toAdd);
                         noInstanceFound = false;

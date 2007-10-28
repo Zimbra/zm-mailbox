@@ -676,17 +676,6 @@ public class Recurrence
             return mDtStart;
         }
         public ParsedDateTime getEndTime() {
-            // FIXME: Don't just return MAX_DATETIME.
-
-//            if (mCount > 0) {
-//
-//                resetIterator();
-//                long latestTime = peekNextInstance().getEnd();
-//                for (int i = 0; i < mCount && hasNextInstance(); i++) {
-//                    getNextInstance();
-//                }
-//                return peekNextInstance().getEnd();
-//            }
             if (mRecur != null) {
                 ParsedDateTime until = mRecur.getUntil();
                 if (until != null && mDtStart != null) {
@@ -698,38 +687,7 @@ public class Recurrence
             }
             return ParsedDateTime.MAX_DATETIME;
         }
-        
-//      /**
-//      * @param rule
-//      */
-//     private void computeEndTime(RRule rule) {
-//         // TODO Auto-generated method stub
-//         Recur recur = rule.getRecur();
-//         Date until = recur.getUntil();
-//         if (until != null) {
-//             mEnd = until.getTime();
-//             return;
-//         }
-//         String freq = recur.getFrequency();
-//         int interval = recur.getInterval();
-//         if (interval == -1) {
-//             interval = 1;
-//         }
-//         int count = recur.getCount();
-//         if (Recur.DAILY.equals(freq)) {
-//             java.util.Calendar cal = java.util.Calendar.getInstance();
-//             cal.setTimeInMillis(mStart);
-//             cal.add(java.util.Calendar.DAY_OF_YEAR, interval * (count - 1));
-//             mEnd = cal.getTimeInMillis();
-//             return;
-//         }
-//         // FIXME!
-//         mEnd = mStart+1;
-//     }
-     
-     
-        
-        
+
         public String toString() {
             StringBuilder toRet = new StringBuilder();
             toRet.append("RULE(FIRST=").append(mDtStart != null ? mDtStart.getDate() : "<none>");
