@@ -31,6 +31,8 @@ import javax.mail.internet.MimeMessage;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
+
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.DateField;
 import org.apache.lucene.document.Document;
@@ -82,6 +84,10 @@ public final class MailboxIndex
 {
     public static ZimbraQueryResults search(SoapProtocol proto, OperationContext octxt, Mailbox mbox, SearchParams params,
         boolean includeTrashByDefault, boolean includeSpamByDefault) throws IOException, ParseException, ServiceException {
+        
+        if (ZimbraLog.index.isDebugEnabled()) {
+            ZimbraLog.index.debug("SearchRequest: "+params.getQueryStr());
+        }
         
         String qs = params.getQueryStr();
         if (qs.startsWith("$")) {

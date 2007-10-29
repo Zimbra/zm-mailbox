@@ -2449,6 +2449,9 @@ public final class ZimbraQuery {
 
             // optimize the query down
             mOp = mOp.optimize(mMbox);
+            if (mOp == null)
+                mOp = new NullQueryOperation();
+            
             assert(mOp != null);
             if (mLog.isDebugEnabled()) {
                 mLog.debug("OPTIMIZED="+mOp.toString());
