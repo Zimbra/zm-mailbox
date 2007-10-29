@@ -368,17 +368,7 @@ public class ZimbraSoapContext {
     List<SessionInfo> getReferencedSessionsInfo() {
         return mSessionInfo;
     }
-    
-    public List<Session> getReferencedSessions() {
-        List<Session> toRet = new ArrayList<Session>(mSessionInfo.size());
-        
-        for (ZimbraSoapContext.SessionInfo sinfo : mSessionInfo) {
-            Session s = SessionCache.lookup(sinfo.sessionId, getAuthtokenAccountId());
-            toRet.add(s);
-        }
-        return toRet;
-    }
-    
+
     /**
      * @return TRUE if any of our referenced sessions are brand-new.  This special-case API
      *         is used to short-circuit blocking handlers so that they return immediately

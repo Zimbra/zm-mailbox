@@ -42,7 +42,7 @@ public class IMGatewayList extends IMDocumentHandler {
             
             // hacky side-effect: the client requests the gateway list first, so this
             // is currently where we create the client session
-            List<Session> sessions = zsc.getReferencedSessions();
+            List<Session> sessions = getReferencedSessions(zsc);
             for (Session s : sessions) {
                 s.registerWithIM(persona);
             }

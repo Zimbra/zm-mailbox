@@ -40,6 +40,8 @@ import com.zimbra.soap.ZimbraSoapContext.SessionInfo;
 import org.dom4j.QName;
 
 import javax.servlet.http.HttpServletRequest;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -221,7 +223,7 @@ public abstract class DocumentHandler {
      * @param stype       One of the types defined in the {@link SessionCache} class.
      * @param getSession  Whether to try to generate a new Session.
      * @return A new Session object of the appropriate type, or <tt>null</tt>. */
-    public Session updateAuthenticatedAccount(ZimbraSoapContext zsc, AuthToken authToken, boolean getSession) {
+    public Session updateAuthenticatedAccount(ZimbraSoapContext zsc, AuthToken authToken, boolean getSession) throws ServiceException {
         String oldAccountId = zsc.getAuthtokenAccountId();
         String accountId = authToken.getAccountId();
         if (accountId != null && !accountId.equals(oldAccountId))
@@ -231,14 +233,30 @@ public abstract class DocumentHandler {
         return (getSession ? getSession(zsc) : null);
     }
 
+    protected static List<Session> getReferencedSessions(ZimbraSoapContext zsc) {
+        List<SessionInfo> references = zsc.getReferencedSessionsInfo();
+        
+        List<Session> sessions = new ArrayList<Session>(references.size());
+        for (SessionInfo sinfo : references) {
+            Session s = SessionCache.lookup(sinfo.sessionId, zsc.getAuthtokenAccountId());
+            if (s != null)
+                sessions.add(s);
+        }
+        return sessions;
+    }
+
+    public Session.Type getDefaultSessionType() {
+        return Session.Type.SOAP;
+    }
+
     /** Fetches the in-memory {@link Session} object appropriate for this
      *  request.  If none already exists, one is created if possible.
      * 
      * @param zsc The encapsulation of the SOAP request's <tt>&lt;context</tt>
      *            element.
      * @return A {@link com.zimbra.cs.session.SoapSession}, or <tt>null</tt>. */
-    public Session getSession(ZimbraSoapContext zsc) {
-        return getSession(zsc, Session.Type.SOAP);
+    protected final Session getSession(ZimbraSoapContext zsc) throws ServiceException {
+        return getSession(zsc, getDefaultSessionType());
     }
 
     /** Fetches a {@link Session} object to persist and manage state between

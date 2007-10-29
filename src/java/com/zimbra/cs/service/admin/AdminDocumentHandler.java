@@ -146,14 +146,10 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
         }
     }
 
-    /** Fetches the in-memory {@link Session} object appropriate for this request.
-     *  If none already exists, one is created.
-     * @return An {@link com.zimbra.cs.session.AdminSession}. */
     @Override
-    public Session getSession(ZimbraSoapContext zsc) {
-        return getSession(zsc, Session.Type.ADMIN);
+    public Session.Type getDefaultSessionType() {
+        return Session.Type.ADMIN;
     }
-
 
     public boolean isDomainAdminOnly(ZimbraSoapContext zsc) {
         return AccessManager.getInstance().isDomainAdminOnly(zsc.getAuthToken());
