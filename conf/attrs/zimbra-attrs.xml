@@ -732,7 +732,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <globalConfigValue>postalCode=workPostalCode</globalConfigValue>
   <globalConfigValue>telephoneNumber=workPhone</globalConfigValue>
   <globalConfigValue>st=workState</globalConfigValue>
-  <globalConfigValue>zimbraMailDeliveryAddress,zimbraMailAlias,mail=email,email2,email3,email4,email5,email6,,email7,email8,email9,email10,email11,email12,email13,email14,email15,email16</globalConfigValue>
+  <globalConfigValue>zimbraMailDeliveryAddress,zimbraMailAlias,mail=email,email2,email3,email4,email5,email6,email7,email8,email9,email10,email11,email12,email13,email14,email15,email16</globalConfigValue>
   <globalConfigValue>title=jobTitle</globalConfigValue>
   <globalConfigValue>whenChanged,modifyTimeStamp=modifyTimeStamp</globalConfigValue>
   <globalConfigValue>whenCreated,createTimeStamp=createTimeStamp</globalConfigValue>
