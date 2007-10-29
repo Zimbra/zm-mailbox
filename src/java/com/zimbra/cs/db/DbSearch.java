@@ -171,7 +171,7 @@ public class DbSearch {
         int mailboxId = mbox.getId();
         // Assemble the search query
         StringBuilder statement = new StringBuilder("SELECT count(*) ");
-        statement.append(" FROM " + DbMailItem.getMailItemTableName(mbox, "AS mi"));
+        statement.append(" FROM " + DbMailItem.getMailItemTableName(mbox, " mi"));
         statement.append(" WHERE ");
         statement.append("mailbox_id = ? AND ");
         int num = 1;

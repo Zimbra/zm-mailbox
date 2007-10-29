@@ -133,7 +133,7 @@ class LuceneQueryOperation extends QueryOperation
             return false;
         
         Query q = clauses[0].getQuery();
-        
+
         if (q instanceof TermQuery) {
             TermQuery tq = (TermQuery)q;
             Term term = tq.getTerm();
@@ -142,11 +142,26 @@ class LuceneQueryOperation extends QueryOperation
                 int docsCutoff = (int)(mSearcher.getSearcher().maxDoc() * sDbFirstTermFreqPerc);
                 if (ZimbraLog.index.isDebugEnabled())
                     ZimbraLog.index.debug("Term matches "+freq+" docs.  DB-First cutoff ("+(100*sDbFirstTermFreqPerc)+"%) is "+docsCutoff+" docs");
-                if (freq > docsCutoff) 
+                if (freq > docsCutoff)  
                     return true;
             } catch (IOException e) {
                 return false;
             }
+        }
+    
+        try {
+            fetchFirstResults(1000); // some arbitrarily large initial size to fetch
+            if (this.countHits() > DBQueryOperation.MAX_HITS_PER_CHUNK) { // also arbitrary, just to make very small searches run w/o 
+                int dbHitCount = this.mDBOp.getDbHitCount();
+                
+                if (ZimbraLog.index.isDebugEnabled()) {
+                    ZimbraLog.index.debug("Lucene part has "+this.countHits()+" hits, db part has "+dbHitCount);
+                }
+                if (dbHitCount < this.countHits())
+                    return true; // run DB-FIRST 
+            }
+        } catch (ServiceException e) {
+            return false;
         }
         
         return false;
@@ -222,6 +237,36 @@ class LuceneQueryOperation extends QueryOperation
         private HashMap <Integer /*indexId*/, ScoredLuceneHit> mHits = new LinkedHashMap<Integer, ScoredLuceneHit>();
     }
 
+    
+    private void fetchFirstResults(int initialChunkSize) throws ServiceException {
+        if (USE_TOPDOCS) {
+            if (!mHaveRunSearch) {
+                assert(mCurHitNo == 0);
+                mTopDocsLen = 3*initialChunkSize;
+                long start = 0;
+                if (mLog.isDebugEnabled())
+                    start = System.currentTimeMillis(); 
+                runSearch();
+                if (mLog.isDebugEnabled()) {
+                    long time = System.currentTimeMillis() - start;
+                    int totalResults = mTopDocs != null ? mTopDocs.totalHits : 0;
+                    mLog.debug("Fetched Initial "+mTopDocsLen+" (out of "+totalResults+" total) search results from Lucene in "+time+"ms");
+                }
+            }
+        } else {
+            if (!mHaveRunSearch) {
+                long start = 0;
+                if (mLog.isDebugEnabled())
+                    start = System.currentTimeMillis(); 
+                runSearch();
+                if (mLog.isDebugEnabled()) {
+                    long time = System.currentTimeMillis() - start;
+                    mLog.debug("Fetched initial results from Lucene in "+time+"ms");
+                }
+            }
+        }
+    }
+    
     /**
      * Called be a DBQueryOperation that is wrapping us in a DB-First query plan:
      * gets a chunk of results that it feeds into a SQL query
@@ -232,33 +277,9 @@ class LuceneQueryOperation extends QueryOperation
      */
     protected LuceneResultsChunk getNextResultsChunk(int maxChunkSize) throws ServiceException {
         try {
-            if (USE_TOPDOCS) {
-                if (!mHaveRunSearch) {
-                    assert(mCurHitNo == 0);
-                    mTopDocsLen = 3*maxChunkSize;
-                    long start = 0;
-                    if (mLog.isDebugEnabled())
-                        start = System.currentTimeMillis(); 
-                    runSearch();
-                    if (mLog.isDebugEnabled()) {
-                        long time = System.currentTimeMillis() - start;
-                        int totalResults = mTopDocs != null ? mTopDocs.totalHits : 0;
-                        mLog.debug("Fetched Initial "+mTopDocsLen+" (out of "+totalResults+" total) search results from Lucene in "+time+"ms");
-                    }
-                }
-            } else {
-                if (!mHaveRunSearch) {
-                    long start = 0;
-                    if (mLog.isDebugEnabled())
-                        start = System.currentTimeMillis(); 
-                    runSearch();
-                    if (mLog.isDebugEnabled()) {
-                        long time = System.currentTimeMillis() - start;
-                        mLog.debug("Fetched initial results from Lucene in "+time+"ms");
-                    }
-                }
-            }
-
+            if (!mHaveRunSearch) 
+                fetchFirstResults(maxChunkSize);
+            
             LuceneResultsChunk toRet = new LuceneResultsChunk();
             int luceneLen;
             
@@ -619,7 +640,8 @@ class LuceneQueryOperation extends QueryOperation
     void addAndedClause(Query q, boolean truth) {
         mQueryString = "UNKNOWN"; // not supported for this case
 
-        assert(!mHaveRunSearch);
+        mHaveRunSearch = false; // will need to re-run the search with this new clause
+        mCurHitNo = 0;
 
         BooleanQuery top = new BooleanQuery();
         BooleanClause lhs = new BooleanClause(mQuery, Occur.MUST);

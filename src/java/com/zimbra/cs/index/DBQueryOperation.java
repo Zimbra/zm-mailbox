@@ -66,6 +66,8 @@ class DBQueryOperation extends QueryOperation
     protected static Log mLog = LogFactory.getLog(DBQueryOperation.class);
     
     protected int mSizeEstimate = -1; // will only be set if the search parameters call for it
+    
+    protected int mCountDbResults = -1; // count of DB hits
 
     protected IConstraints mConstraints = new DbLeafNode();
     protected int mCurHitsOffset = 0; // this is the logical offset of the end of the mDBHits buffer 
@@ -83,12 +85,6 @@ class DBQueryOperation extends QueryOperation
     protected boolean atStart = true; // don't re-fill buffer twice if they call hasNext() then reset() w/o actually getting next
     protected int mHitsPerChunk = 100;
     protected static final int MAX_HITS_PER_CHUNK = 2000;
-
-    /**
-     * This number *must* be smaller than the value of LuceneQuery.maxClauseCount 
-     * (LuceneQuery.getMaxClauseCount())
-     */
-    protected static final int MAX_DBFIRST_RESULTS = 200;
 
     /**
      * TRUE if we know there are no more hits to get for mDBHitsIter 
@@ -764,9 +760,9 @@ class DBQueryOperation extends QueryOperation
                 mSizeEstimate = DbSearch.countResults(conn, mConstraints, mbox);
             }
             
-            DbSearch.search(dbRes, conn, mConstraints, mbox, sort, mOffset, MAX_DBFIRST_RESULTS, mExtra);
+            DbSearch.search(dbRes, conn, mConstraints, mbox, sort, mOffset, MAX_HITS_PER_CHUNK, mExtra);
             
-            if (dbRes.size() < MAX_DBFIRST_RESULTS) {
+            if (dbRes.size() < MAX_HITS_PER_CHUNK) {
                 mEndOfHits = true;
             }
             
@@ -1231,5 +1227,25 @@ class DBQueryOperation extends QueryOperation
         if (mLuceneOp != null) 
             mLuceneOp.depthFirstRecurseInternal(cb);
         cb.recurseCallback(this);
+    }
+    
+    protected int getDbHitCount(Connection conn, Mailbox mbox) throws ServiceException {
+        if (mCountDbResults == -1) {
+            mCountDbResults = DbSearch.countResults(conn, mConstraints, mbox);
+        }
+        return mCountDbResults;
+    }
+        
+    protected int getDbHitCount() throws ServiceException {
+        if (mCountDbResults == -1) {
+            Mailbox mbox = getMailbox();
+            Connection conn = DbPool.getConnection();
+            try {
+                mCountDbResults = getDbHitCount(conn, mbox);
+            } finally {
+                DbPool.quietClose(conn);
+            }
+        }
+        return mCountDbResults;
     }
 }
