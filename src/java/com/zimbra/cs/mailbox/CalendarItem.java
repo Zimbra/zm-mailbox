@@ -559,7 +559,7 @@ public abstract class CalendarItem extends MailItem {
             long startTime = System.currentTimeMillis();
             instances = mRecurrence.expandInstances(this, start, endAdjusted);
             long elapsed = System.currentTimeMillis() - startTime;
-            ZimbraLog.calendar.info(
+            ZimbraLog.calendar.debug(
                     "RECURRENCE EXPANSION for appt/task " + getId() +
                     ": start=" + start + ", end=" + end +
                     "; took " + elapsed + "ms");
