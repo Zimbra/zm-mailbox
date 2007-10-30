@@ -242,7 +242,7 @@ class RenameDomain {
                 if (!expectingSrc)
                     throw ServiceException.FAILURE("invalid value in " + Provisioning.A_zimbraDomainRenameInfo + ": " + renameInfo + " missing " + DEST + " keyword", null);
                 if (phase == null)
-                    throw ServiceException.FAILURE("invalid value in " + Provisioning.A_zimbraDomainRenameInfo + ": " + renameInfo + " missing phase info for source doamin" , null);
+                    throw ServiceException.FAILURE("invalid value in " + Provisioning.A_zimbraDomainRenameInfo + ": " + renameInfo + " missing phase info for source domain" , null);
                 return new RenameInfo(null, domainName, phase);
             } else {
                 if (expectingSrc)
