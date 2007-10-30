@@ -46,7 +46,8 @@ public class AccountStatus extends AttributeCallback {
 
         if (status.equals(Provisioning.ACCOUNT_STATUS_CLOSED)) {
             attrsToModify.put(Provisioning.A_zimbraMailStatus, Provisioning.MAIL_STATUS_DISABLED);
-        } else {
+        } else if (attrsToModify.get(Provisioning.A_zimbraMailStatus) == null) {
+            // the request is not also changing zimbraMailStatus, set = zimbraMailStatus to enabled
             attrsToModify.put(Provisioning.A_zimbraMailStatus, Provisioning.MAIL_STATUS_ENABLED);
         }
        
@@ -69,7 +70,6 @@ public class AccountStatus extends AttributeCallback {
             Object done = context.get(KEY);
             if (done == null) {
                 context.put(KEY, KEY);
-                ZimbraLog.misc.info("removing closed account and all its aliases from all distribution lists");
                 if (entry instanceof Account) {
                     try {
                         handleAccountStatusClosed((Account)entry);
@@ -87,6 +87,7 @@ public class AccountStatus extends AttributeCallback {
         String status = account.getAccountStatus();
         
         if (status.equals(Provisioning.ACCOUNT_STATUS_CLOSED)) {
+            ZimbraLog.misc.info("removing closed account and all its aliases from all distribution lists");
             LdapProvisioning prov = (LdapProvisioning) Provisioning.getInstance();
             
             String aliases[] = account.getAliases();
