@@ -1743,7 +1743,7 @@ public class ProvUtil implements DebugListener {
         Domain domain = lookupDomain(key);
         String curPreAuthKey = domain.getAttr(Provisioning.A_zimbraPreAuthKey);
         if (curPreAuthKey != null && !force)
-            throw ServiceException.INVALID_REQUEST("pre auth key exists for doamin " + key + ", use command -f option to force overwriting the existing key", null);
+            throw ServiceException.INVALID_REQUEST("pre auth key exists for domain " + key + ", use command -f option to force overwriting the existing key", null);
         
         String preAuthKey = PreAuthKey.generateRandomPreAuthKey();
         HashMap<String,String> attrs = new HashMap<String,String>();
