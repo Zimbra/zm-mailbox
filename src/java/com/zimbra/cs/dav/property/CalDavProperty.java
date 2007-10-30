@@ -27,6 +27,8 @@ import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.dav.resource.CalendarObject;
+import com.zimbra.cs.dav.resource.UrlNamespace;
+import com.zimbra.cs.dav.service.DavServlet;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mime.Mime;
 
@@ -58,16 +60,16 @@ public class CalDavProperty extends ResourceProperty {
 		return new CalendarData(obj);
 	}
 	
-	public static ResourceProperty getCalendarHomeSet(String url) {
-		return new CalendarHomeSet(url);
+	public static ResourceProperty getCalendarHomeSet(String user) {
+		return new CalendarHomeSet(user);
 	}
 	
-	public static ResourceProperty getScheduleInboxURL(String url) {
-		return new ScheduleInboxURL(url);
+	public static ResourceProperty getScheduleInboxURL(String user) {
+		return new ScheduleInboxURL(user);
 	}
 	
-	public static ResourceProperty getScheduleOutboxURL(String url) {
-		return new ScheduleOutboxURL(url);
+	public static ResourceProperty getScheduleOutboxURL(String user) {
+		return new ScheduleOutboxURL(user);
 	}
 	
 	public static ResourceProperty getCalendarUserAddressSet(Collection<String> addrs) {
@@ -148,28 +150,28 @@ public class CalDavProperty extends ResourceProperty {
 	}
 	
 	private static class CalendarHomeSet extends CalDavProperty {
-		public CalendarHomeSet(String url) {
+		public CalendarHomeSet(String user) {
 			super(DavElements.E_CALENDAR_HOME_SET);
 			Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
-			e.setText(url);
+			e.setText(DavServlet.DAV_PATH + "/" + user + "/");
 			mChildren.add(e);
 		}
 	}
 	
 	private static class ScheduleInboxURL extends CalDavProperty {
-		public ScheduleInboxURL(String url) {
+		public ScheduleInboxURL(String user) {
 			super(DavElements.E_SCHEDULE_INBOX_URL);
 			Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
-			e.setText(url);
+			e.setText(DavServlet.DAV_PATH + "/" + user + "/Inbox/");
 			mChildren.add(e);
 		}
 	}
 	
 	private static class ScheduleOutboxURL extends CalDavProperty {
-		public ScheduleOutboxURL(String url) {
+		public ScheduleOutboxURL(String user) {
 			super(DavElements.E_SCHEDULE_OUTBOX_URL);
 			Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
-			e.setText(url);
+			e.setText(DavServlet.DAV_PATH + "/" + user + "/Sent/");
 			mChildren.add(e);
 		}
 	}
@@ -179,7 +181,9 @@ public class CalDavProperty extends ResourceProperty {
 			super(DavElements.E_CALENDAR_USER_ADDRESS_SET);
 			for (String addr : addrs) {
 				Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
-				e.setText("mailto:"+addr);
+				if (!addr.startsWith("http:") && !addr.startsWith("mailto:") && !addr.startsWith("/"))
+				    addr = "mailto:" + addr;
+				e.setText(addr);
 				mChildren.add(e);
 			}
 		}

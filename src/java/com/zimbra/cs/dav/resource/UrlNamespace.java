@@ -81,6 +81,8 @@ public class UrlNamespace {
 
 	/* Returns DavResource at the specified URL. */
 	public static DavResource getResourceAtUrl(DavContext ctxt, String url) throws DavException {
+        if (url.startsWith(PRINCIPALS_PATH))
+            return getPrincipalAtUrl(ctxt, url);
 		int index = url.indexOf(DavServlet.DAV_PATH);
 		if (index == -1 || url.endsWith(DavServlet.DAV_PATH))
 			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
@@ -93,8 +95,29 @@ public class UrlNamespace {
 		return getResourceAt(ctxt, user, path);
 	}
 
+    public static DavResource getPrincipalAtUrl(DavContext ctxt, String url) throws DavException {
+        ZimbraLog.dav.debug("getPrincipalAtUrl");
+        int index = url.indexOf(PRINCIPALS_PATH);
+        if (index == -1 || url.endsWith(PRINCIPALS_PATH))
+            throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
+        index += PRINCIPALS_PATH.length();
+        String name = url.substring(index);
+        if (name.endsWith("/"))
+            name = name.substring(0, name.length()-1);
+        ZimbraLog.dav.debug("name: "+name);
+        try {
+            Account a = Provisioning.getInstance().get(Provisioning.AccountBy.name, name);
+            if (a == null)
+                throw new DavException("user not found", HttpServletResponse.SC_NOT_FOUND, null);
+            return new User(url, a);
+        } catch (ServiceException se) {
+            throw new DavException("user not found", HttpServletResponse.SC_NOT_FOUND, null);
+        }
+    }
+    
 	/* Returns DavResource in the user's mailbox at the specified path. */
 	public static DavResource getResourceAt(DavContext ctxt, String user, String path) throws DavException {
+        ZimbraLog.dav.debug("getResource at "+user+" "+path);
 		if (path == null)
 			throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
 		
@@ -121,14 +144,18 @@ public class UrlNamespace {
 	}
 	
 	/* Returns the root URL of the user. */
-	public static String getHomeUrl(String user) throws ServiceException, DavException {
-		return getResourceUrl(user, "");
+	public static String getHomeUrl(String user) {
+		return getResourceUrl(user, "/");
 	}
 	
 	public static final String ACL_USER   = "/acl/user";
 	public static final String ACL_GROUP  = "/acl/group";
 	public static final String ACL_COS    = "/acl/cos";
 	public static final String ACL_DOMAIN = "/acl/domain";
+    
+    public static final String PRINCIPALS      = "principals";
+    public static final String PRINCIPAL_USERS = "users";
+    public static final String PRINCIPALS_PATH = "/" + PRINCIPALS + "/" + PRINCIPAL_USERS + "/";
 	
 	/* RFC 3744 */
 	public static String getAclUrl(String owner, String principal, String type) throws DavException {
@@ -146,13 +173,18 @@ public class UrlNamespace {
 	}
 
 	/* Returns URL to the resource. */
-	public static String getResourceUrl(DavResource rs) throws ServiceException, DavException {
+	public static String getResourceUrl(DavResource rs) {
 		return getResourceUrl(rs.getOwner(), rs.getUri());
 	}
 
-	public static String getResourceUrl(String user, String resourcePath) throws ServiceException, DavException {
-		return urlEscape(DavServlet.getDavUrl(user) + resourcePath);
+	public static String getResourceUrl(String user, String resourcePath) {
+	    //return urlEscape(DavServlet.getDavUrl(user) + resourcePath);
+        return urlEscape(DavServlet.DAV_PATH + "/" + user + resourcePath);
 	}
+    
+    public static String getPrincipalUrl(String user) {
+        return urlEscape(PRINCIPALS_PATH + user + "/");
+    }
 	
 	private static String urlEscape(String str) {
 		// rfc 2396 url escape.
@@ -328,10 +360,10 @@ public class UrlNamespace {
 	}
 	
 	public static Account getPrincipal(String principalUrl) throws ServiceException {
-		int index = principalUrl.indexOf(DavServlet.DAV_PATH);
+		int index = principalUrl.indexOf(PRINCIPALS_PATH);
 		if (index == -1)
 			return null;
-		String acct = principalUrl.substring(index + DavServlet.DAV_PATH.length() + 1);
+		String acct = principalUrl.substring(index + PRINCIPALS_PATH.length());
 		Provisioning prov = Provisioning.getInstance();
 		return prov.get(AccountBy.name, acct);
 	}

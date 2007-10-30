@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -38,6 +39,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -56,7 +58,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.util.AccountUtil;
 
-public class ScheduleOutbox extends CalendarCollection {
+public class ScheduleOutbox extends Collection {
 	public ScheduleOutbox(DavContext ctxt, Folder f) throws DavException, ServiceException {
 		super(ctxt, f);
 		addResourceType(DavElements.E_SCHEDULE_OUTBOX);
@@ -89,10 +91,18 @@ public class ScheduleOutbox extends CalendarCollection {
 				throw new DavException("the requestor is not the organizer", HttpServletResponse.SC_FORBIDDEN);
 		}
 		ZimbraLog.dav.debug("originator: "+originator);
+        ArrayList<String> rcptArray = new ArrayList<String>();
+        while (recipients.hasMoreElements()) {
+            String rcpt = (String)recipients.nextElement();
+            if (rcpt.indexOf(',') > 0) {
+                String[] rcpts = rcpt.split(",");
+                Collections.addAll(rcptArray, rcpts);
+            } else {
+                rcptArray.add(rcpt);
+            }
+        }
 		Element scheduleResponse = ctxt.getDavResponse().getTop(DavElements.E_SCHEDULE_RESPONSE);
-		while (recipients.hasMoreElements()) {
-			String rcpt = (String) recipients.nextElement();
-			//rcpt = this.getAddressFromPrincipalURL(rcpt);
+		for (String rcpt : rcptArray) {
 			ZimbraLog.dav.debug("recipient email: "+rcpt);
 			Element resp = scheduleResponse.addElement(DavElements.E_CALDAV_RESPONSE);
 			switch (req.getTok()) {
@@ -160,9 +170,13 @@ public class ScheduleOutbox extends CalendarCollection {
         }
         ArrayList<Address> recipients = new java.util.ArrayList<Address>();
         recipients.add(to);
-        String subject, uid, text;
+        String subject, uid, text, status;
 
-        subject = "Meeting request: " + req.getPropVal(ICalTok.SUMMARY, "");
+        subject = "Meeting Request: ";
+        status = req.getPropVal(ICalTok.STATUS, "");
+        if (status.equals("CANCELLED"))
+            subject = "Meeting Cancelled: ";
+        subject += req.getPropVal(ICalTok.SUMMARY, "");
         text = req.getPropVal(ICalTok.DESCRIPTION, "");
         uid = req.getPropVal(ICalTok.UID, null);
         if (uid == null) {
@@ -179,4 +193,32 @@ public class ScheduleOutbox extends CalendarCollection {
 			resp.addElement(DavElements.E_REQUEST_STATUS).setText("5.1");
         }
 	}
+    
+    /*
+     * to workaround the pre release iCal bugs
+     */
+    protected String getAddressFromPrincipalURL(String url) throws ServiceException, DavException {
+        url = url.trim();
+        if (url.startsWith("http://")) {
+            // iCal sets the organizer field to be the URL of
+            // CalDAV account.
+            //     ORGANIZER:http://jylee-macbook:7070/service/dav/user1
+            int pos = url.indexOf("/service/dav/");
+            if (pos != -1) {
+                int start = pos + 13;
+                int end = url.indexOf("/", start);
+                String userId = (end == -1) ? url.substring(start) : url.substring(start, end);
+                Account organizer = Provisioning.getInstance().get(AccountBy.name, userId);
+                if (organizer == null)
+                    throw new DavException("user not found: "+userId, HttpServletResponse.SC_BAD_REQUEST, null);
+                return organizer.getName();
+            }
+        } else if (url.toLowerCase().startsWith("mailto:")) {
+            // iCal sometimes prefixes the email addr with more than one mailto:
+            while (url.toLowerCase().startsWith("mailto:")) {
+                url = url.substring(7);
+            }
+        }
+        return url;
+    }
 }

@@ -17,7 +17,6 @@
 package com.zimbra.cs.dav.resource;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 
 import com.zimbra.common.service.ServiceException;
@@ -34,12 +33,12 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 
-public class ScheduleInbox extends CalendarCollection {
+public class ScheduleInbox extends Collection {
 	public ScheduleInbox(DavContext ctxt, Folder f) throws DavException, ServiceException {
 		super(ctxt, f);
 		addResourceType(DavElements.E_SCHEDULE_INBOX);
 	}
-	public Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
+	public java.util.Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
 		try {
 			return getScheduleMessages(ctxt);
 		} catch (ServiceException se) {

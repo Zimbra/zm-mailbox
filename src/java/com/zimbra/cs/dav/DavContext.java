@@ -55,19 +55,31 @@ public class DavContext {
 	private DavResponse mResponse;
 	private boolean mResponseSent;
 	private DavResource mRequestedResource;
+    private RequestType mRequestType;
 	
+    private enum RequestType { PRINCIPAL, RESOURCE };
+    
 	public DavContext(HttpServletRequest req, HttpServletResponse resp, Account authUser) {
 		mReq = req;  mResp = resp;
 		mUri = req.getPathInfo();
 		if (mUri != null && mUri.length() > 1) {
 		    int index = mUri.indexOf('/', 1);
-		    if (index != -1) {
-		        mUser = mUri.substring(1, index);
-		        mPath = mUri.substring(index);
-		    } else {
-                mUser = mUri.substring(1);
-                mPath = "/";
-		    }
+            if (index > 0) {
+                String reqType = mUri.substring(1, index);
+                if (reqType.equals("home"))
+                    mRequestType = RequestType.RESOURCE;
+                else
+                    mRequestType = RequestType.PRINCIPAL;
+                int start = index+1;
+                index = mUri.indexOf('/', index+1);
+                if (index != -1) {
+                    mUser = mUri.substring(start, index);
+                    mPath = mUri.substring(index);
+                } else {
+                    mUser = mUri.substring(start);
+                    mPath = "/";
+                }
+            }
 		}
 		mStatus = HttpServletResponse.SC_OK;
 		mAuthAccount = authUser;
@@ -231,7 +243,10 @@ public class DavContext {
 	
 	public DavResource getRequestedResource() throws DavException, ServiceException {
 		if (mRequestedResource == null) {
-			mRequestedResource = UrlNamespace.getResourceAt(this, mUser, mPath);
+            if (mRequestType == RequestType.RESOURCE)
+                mRequestedResource = UrlNamespace.getResourceAt(this, mUser, mPath);
+            else
+                mRequestedResource = UrlNamespace.getPrincipalAtUrl(this, mUri);
 			if (mRequestedResource != null)
 				ZimbraLog.addToContext(ZimbraLog.C_NAME, mRequestedResource.getOwner());
 		}

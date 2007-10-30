@@ -270,31 +270,4 @@ public class CalendarCollection extends Collection {
 		FreeBusy fb = mbox.getFreeBusy(range.getStart(), range.getEnd());
 		return fb.toVCalendar(FreeBusy.Method.REPLY, ctxt.getAuthAccount().getName(), mbox.getAccount().getName(), null);
 	}
-		
-	/*
-	 * to workaround the pre release iCal bugs
-	 */
-	protected String getAddressFromPrincipalURL(String url) throws ServiceException, DavException {
-		if (url.startsWith("http://")) {
-			// iCal sets the organizer field to be the URL of
-			// CalDAV account.
-			//     ORGANIZER:http://jylee-macbook:7070/service/dav/user1
-			int pos = url.indexOf("/service/dav/");
-			if (pos != -1) {
-				int start = pos + 13;
-				int end = url.indexOf("/", start);
-				String userId = (end == -1) ? url.substring(start) : url.substring(start, end);
-				Account organizer = Provisioning.getInstance().get(AccountBy.name, userId);
-				if (organizer == null)
-					throw new DavException("user not found: "+userId, HttpServletResponse.SC_BAD_REQUEST, null);
-				return organizer.getName();
-			}
-		} else if (url.toLowerCase().startsWith("mailto:")) {
-			// iCal sometimes prefixes the email addr with more than one mailto:
-			while (url.toLowerCase().startsWith("mailto:")) {
-				url = url.substring(7);
-			}
-		}
-		return url;
-	}
 }

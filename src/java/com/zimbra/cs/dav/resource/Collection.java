@@ -25,14 +25,11 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
-import com.zimbra.cs.dav.DavProtocol.Compliance;
 import com.zimbra.cs.dav.property.Acl;
-import com.zimbra.cs.dav.property.CalDavProperty;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -70,31 +67,6 @@ public class Collection extends MailItemResource {
 			Mountpoint mp = (Mountpoint) f;
 			mRemoteOwnerId = mp.getOwnerId();
 			mRemoteId = mp.getRemoteId();
-		}
-
-		/* root folder is also the principal URL for the user */
-		if (isRootCollection())
-			addResourceType(DavElements.E_PRINCIPAL);
-		
-		boolean hasCalendar = false;
-		for (Folder sub : f.getSubfolderHierarchy())
-			if (sub.getDefaultView() == MailItem.TYPE_APPOINTMENT) {
-				hasCalendar = true;
-				break;
-			}
-		if (hasCalendar) {
-			mDavCompliance.add(Compliance.one);
-			mDavCompliance.add(Compliance.two);
-			mDavCompliance.add(Compliance.three);
-			mDavCompliance.add(Compliance.access_control);
-			mDavCompliance.add(Compliance.calendar_access);
-			mDavCompliance.add(Compliance.calendar_schedule);
-			addProperty(CalDavProperty.getCalendarHomeSet(UrlNamespace.getResourceUrl(this.getOwner(), f.getPath())));
-			addProperty(CalDavProperty.getScheduleInboxURL(UrlNamespace.getResourceUrl(this.getOwner(), "/Inbox/")));
-			addProperty(CalDavProperty.getScheduleOutboxURL(UrlNamespace.getResourceUrl(this.getOwner(), "/Sent/")));
-			ArrayList<String> addrs = new ArrayList<String>();
-			addrs.add(f.getAccount().getAttr(Provisioning.A_zimbraMailDeliveryAddress));
-			addProperty(CalDavProperty.getCalendarUserAddressSet(addrs));
 		}
 	}
 	

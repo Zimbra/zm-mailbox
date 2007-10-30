@@ -45,7 +45,7 @@ import com.zimbra.cs.servlet.ZimbraServlet;
 @SuppressWarnings("serial")
 public class DavServlet extends ZimbraServlet {
 
-	public static final String DAV_PATH = "/service/dav";
+	public static final String DAV_PATH = "/dav";
 	
 	private static Map<String, DavMethod> sMethods;
 	
