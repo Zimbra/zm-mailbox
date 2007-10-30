@@ -9,6 +9,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.common.util.ZimbraLog;
 
 import org.apache.lucene.analysis.Analyzer;
 
@@ -193,7 +194,12 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
                   iidStr = tok;
               }
               iid = new ItemId(iidStr, (String)null);
-              return ZimbraQuery.InQuery.Create(mMailbox, mAnalyzer, modifier, iid, subfolderPath, (target == UNDERID));
+              try {
+                return ZimbraQuery.InQuery.Create(mMailbox, mAnalyzer, modifier, iid, subfolderPath, (target == UNDERID));
+              } catch (ServiceException e) {
+                              ZimbraLog.index.debug("Ignoring INID/UNDERID clause b/c of ServiceException: "+e);
+                  return ZimbraQuery.InQuery.Create(mMailbox, mAnalyzer, modifier, ZimbraQuery.InQuery.IN_NO_FOLDER, false);
+              }
           }
           case UNDER:
           case IN:

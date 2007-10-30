@@ -732,6 +732,7 @@ public final class ZimbraQuery {
         public static final Integer IN_ANY_FOLDER = new Integer(-2);
         public static final Integer IN_LOCAL_FOLDER = new Integer(-3);
         public static final Integer IN_REMOTE_FOLDER = new Integer(-4);
+        public static final Integer IN_NO_FOLDER = new Integer(-5);
 
         public static BaseQuery Create(Mailbox mailbox, Analyzer analyzer, int modifier, Integer folderId, boolean includeSubfolders) throws ServiceException {
             if (folderId < 0) {
@@ -945,7 +946,9 @@ public final class ZimbraQuery {
 
         protected QueryOperation getQueryOperation(boolean truth) {
             if (mSpecialTarget != null) {
-                if (mSpecialTarget == IN_ANY_FOLDER) {
+                if (mSpecialTarget == IN_NO_FOLDER) {
+                    return new NullQueryOperation();
+                } else if (mSpecialTarget == IN_ANY_FOLDER) {
                     DBQueryOperation dbOp = DBQueryOperation.Create();
                     dbOp.addAnyFolderClause(calcTruth(truth));
                     return dbOp;

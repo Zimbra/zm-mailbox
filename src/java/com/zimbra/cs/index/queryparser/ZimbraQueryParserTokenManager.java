@@ -7,6 +7,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import org.apache.lucene.analysis.Analyzer;
 import java.util.ArrayList;
 import java.util.Date;
