@@ -351,10 +351,10 @@ public class FileBlobStore extends StoreManager {
             int diskThreshold = Integer.MAX_VALUE;
             try {
                 diskThreshold = Provisioning.getInstance().getLocalServer().getIntAttr(
-                    Provisioning.A_zimbraStoreDiskStreamingThreshold, Integer.MAX_VALUE);
+                    Provisioning.A_zimbraMailDiskStreamingThreshold, Integer.MAX_VALUE);
             } catch (ServiceException e) {
                 ZimbraLog.misc.warn("Unable to determine value of %s.  Reading message into memory.",
-                    Provisioning.A_zimbraStoreDiskStreamingThreshold, e);
+                    Provisioning.A_zimbraMailDiskStreamingThreshold, e);
             }
             if (blob.getFile().length() > diskThreshold) {
                 is = new BlobInputStream(blob.getFile());

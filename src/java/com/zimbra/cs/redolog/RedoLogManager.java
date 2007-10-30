@@ -442,7 +442,7 @@ public class RedoLogManager {
 
 				try {
                     long start = System.currentTimeMillis();
-					mLogWriter.log(op, op.getSerializedByteArrayVector(), synchronous);
+					mLogWriter.log(op, op.getInputStream(), synchronous);
                     long elapsed = System.currentTimeMillis() - start;
                     synchronized (mStatGuard) {
                     	mElapsed += elapsed;

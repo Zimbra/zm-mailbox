@@ -23,11 +23,14 @@
  */
 package com.zimbra.cs.redolog.op;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.zimbra.cs.redolog.RedoLogInput;
+import com.zimbra.cs.redolog.RedoLogInputStream;
 import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.store.StoreManager;
 
@@ -46,7 +49,7 @@ public class StoreIncomingBlob extends RedoableOp {
     private String mPath;           // full path to blob file
     private short mVolumeId = -1;   // volume on which the blob is saved
     private int mMsgSize;           // original, uncompressed blob size in bytes
-    private byte[] mData;
+    private RedoableOpData mData;
     private List<Integer> mMailboxIdList;
 
     public StoreIncomingBlob() {
@@ -73,7 +76,19 @@ public class StoreIncomingBlob extends RedoableOp {
     }
 
     public void setBlobBodyInfo(byte[] data, String path, short volumeId) {
-        mData = data;
+        mData = new RedoableOpData(data);
+        mPath = path;
+        mVolumeId = volumeId;
+    }
+    
+    public void setBlobBodyInfo(File file, short volumeId) {
+        mData = new RedoableOpData(file);
+        mPath = file.getPath();
+        mVolumeId = volumeId;
+    }
+    
+    private void setBlobBodyInfo(InputStream dataStream, int dataLength, String path, short volumeId) {
+        mData = new RedoableOpData(dataStream, dataLength);
         mPath = path;
         mVolumeId = volumeId;
     }
@@ -97,18 +112,12 @@ public class StoreIncomingBlob extends RedoableOp {
         return sb.toString();
     }
 
-    public byte[][] getSerializedByteArrayVector() throws IOException {
-        synchronized (mSBAVGuard) {
-            if (mSerializedByteArrayVector != null)
-                return mSerializedByteArrayVector;
-    
-            mSerializedByteArrayVector = new byte[2][];
-            mSerializedByteArrayVector[0] = serializeToByteArray();
-            mSerializedByteArrayVector[1] = mData;
-            return mSerializedByteArrayVector;
-        }
+    @Override
+    public InputStream getAdditionalDataStream()
+    throws IOException {
+        return mData.getInputStream();
     }
-
+    
     protected void serializeData(RedoLogOutput out) throws IOException {
     	if (getVersion().atLeast(1, 0)) {
     		if (mMailboxIdList != null) {
@@ -122,7 +131,10 @@ public class StoreIncomingBlob extends RedoableOp {
         out.writeUTF(mPath);
         out.writeShort(mVolumeId);
         out.writeInt(mMsgSize);
-        out.writeInt(mData.length);
+        // Eventually we may differentiate between the message size and compressed
+        // size but currently they're the same.
+        out.writeInt(mMsgSize);
+        
         // During serialize, do not serialize the blob data buffer.
         // Blob buffer is handled by getSerializedByteArrayVector()
         // implementation in this class as the last vector element.
@@ -148,13 +160,9 @@ public class StoreIncomingBlob extends RedoableOp {
         mPath = in.readUTF();
         mVolumeId = in.readShort();
         mMsgSize = in.readInt();
+        mMsgSize = in.readInt();  // Serialization code wrote the size twice
         int dataLen = in.readInt();
-        if (dataLen > MAX_BLOB_SIZE) {
-            throw new IOException("Deserialized blob size too large (" +
-            					  dataLen + " bytes)");
-        }
-        mData = new byte[dataLen];
-        in.readFully(mData, 0, dataLen);
+        mData = new RedoableOpData(new RedoLogInputStream(in, dataLen), dataLen);
         // mData must be the last thing deserialized.  See comments in
         // serializeData().
     }
@@ -169,13 +177,13 @@ public class StoreIncomingBlob extends RedoableOp {
             redoRecorder =
             	new StoreIncomingBlob(mDigest, mMsgSize, mMailboxIdList);
             redoRecorder.start(getTimestamp());
-            redoRecorder.setBlobBodyInfo(mData, mPath, mVolumeId);
+            redoRecorder.setBlobBodyInfo(mData.getInputStream(), mData.getLength(), mPath, mVolumeId);
             redoRecorder.log();
         }
 
         boolean success = false;
         try {
-            StoreManager.getInstance().storeIncoming(mData, mDigest, mPath, mVolumeId);
+            StoreManager.getInstance().storeIncoming(mData.getInputStream(), mMsgSize, mPath, mVolumeId);
             success = true;
         } finally {
             if (redoRecorder != null) {

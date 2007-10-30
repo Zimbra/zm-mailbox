@@ -3964,16 +3964,6 @@ public class Mailbox {
                 String blobPath = blob.getPath();
                 short blobVolumeId = blob.getVolumeId();
 
-                // XXX bburtin: replace with stream code
-                byte[] data;
-                try {
-                    data = pm.getRawData();
-                } catch (IOException e) {
-                    throw ServiceException.FAILURE("Unable to get MIME data.", e);
-                } catch (MessagingException e) {
-                    throw ServiceException.FAILURE("Unable to get MIME data.", e);
-                }
-                
                 if (sharedDeliveryCtxt.getShared()) {
                     markOtherItemDirty(blob);
 
@@ -3982,7 +3972,11 @@ public class Mailbox {
                     if (needRedo) {
                         storeRedoRecorder = new StoreIncomingBlob(digest, msgSize, sharedDeliveryCtxt.getMailboxIdList());
                         storeRedoRecorder.start(getOperationTimestampMillis());
-                        storeRedoRecorder.setBlobBodyInfo(data, blobPath, blobVolumeId);
+                        if (blob.isCompressed() || pm.wasMutated()) {
+                            storeRedoRecorder.setBlobBodyInfo(getData(pm), blobPath, blobVolumeId);
+                        } else {
+                            storeRedoRecorder.setBlobBodyInfo(blob.getFile(), blobVolumeId);
+                        }
                         storeRedoRecorder.log();
                     }
 
@@ -4001,7 +3995,11 @@ public class Mailbox {
                     // In single-recipient case the blob bytes are logged in
                     // CreateMessage entry, to avoid having to write two
                     // redolog entries for a single delivery.
-                    redoRecorder.setMessageBodyInfo(data, blobPath, blobVolumeId);
+                    if (blob.isCompressed() || pm.wasMutated()) {
+                        redoRecorder.setMessageBodyInfo(getData(pm), blobPath, blobVolumeId);
+                    } else {
+                        redoRecorder.setMessageBodyInfo(mboxBlob.getBlob().getFile(), blobVolumeId);
+                    }
                 }
             } else {
                 blob = sharedDeliveryCtxt.getBlob();
@@ -4071,6 +4069,17 @@ public class Mailbox {
                 msg.getId(), digest, folderId, folderName);
         }
         return msg;
+    }
+
+    private byte[] getData(ParsedMessage pm)
+    throws ServiceException {
+        try {
+            return pm.getRawData();
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Unable to get MIME data.", e);
+        } catch (MessagingException e) {
+            throw ServiceException.FAILURE("Unable to get MIME data.", e);
+        }
     }
     
     public static String getHash(String subject) {

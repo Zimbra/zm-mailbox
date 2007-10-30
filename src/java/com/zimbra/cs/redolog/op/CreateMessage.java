@@ -20,30 +20,31 @@
  */
 package com.zimbra.cs.redolog.op;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.SharedInputStream;
-
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.RedoException;
 import com.zimbra.cs.redolog.RedoLogInput;
+import com.zimbra.cs.redolog.RedoLogInputStream;
 import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.Volume;
-import com.zimbra.cs.util.JMSession;
 
 /**
  * @author jhahm
@@ -72,9 +73,9 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
     private int mCalendarItemId;    // new calendar item created if this is meeting or task invite message
     private String mCalendarItemPartStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
     private boolean mNoICal;        // true if we should NOT process the iCalendar part
+    private RedoableOpData mData;
 
     private byte mMsgBodyType;
-    private byte[] mData;           // used if mMsgBodyType == MSGBODY_INLINE
     private String mPath;           // if mMsgBodyType == MSGBODY_LINK, source file to link to
     // if mMsgBodyType == MSGBODY_INLINE, path of saved blob file 
     private short mVolumeId = -1;   // volume on which this message file is saved
@@ -232,8 +233,8 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
         return OP_CREATE_MESSAGE;
     }
 
-    public byte[] getMessageBody() {
-        return mData;
+    public byte[] getMessageBody() throws IOException {
+        return mData.getData();
     }
 
     public String getPath() {
@@ -242,8 +243,15 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
 
     public void setMessageBodyInfo(byte[] data, String path, short volumeId) {
         mMsgBodyType = MSGBODY_INLINE;
-        mData = data;
+        mData = new RedoableOpData(data);
         mPath = path;
+        mVolumeId = volumeId;
+    }
+    
+    public void setMessageBodyInfo(File dataFile, short volumeId) {
+        mMsgBodyType = MSGBODY_INLINE;
+        mData = new RedoableOpData(dataFile);
+        mPath = dataFile.getPath();
         mVolumeId = volumeId;
     }
 
@@ -283,22 +291,16 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
         return sb.toString();
     }
 
-    public byte[][] getSerializedByteArrayVector() throws IOException {
-        synchronized (mSBAVGuard) {
-            if (mSerializedByteArrayVector != null)
-                return mSerializedByteArrayVector;
-
-            if (mMsgBodyType == MSGBODY_INLINE) {
-                mSerializedByteArrayVector = new byte[2][];
-                mSerializedByteArrayVector[1] = mData;
-            } else {
-                mSerializedByteArrayVector = new byte[1][];
-            }
-            mSerializedByteArrayVector[0] = serializeToByteArray();
-            return mSerializedByteArrayVector;
+    @Override
+    protected InputStream getAdditionalDataStream()
+    throws IOException {
+        if (mMsgBodyType == MSGBODY_INLINE) {
+            return mData.getInputStream();
+        } else {
+            return null;
         }
     }
-
+    
     protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeUTF(mRcptEmail != null ? mRcptEmail : "");
         if (getVersion().atLeast(1, 4))
@@ -322,7 +324,7 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
 
         out.writeByte(mMsgBodyType);
         if (mMsgBodyType == MSGBODY_INLINE) {
-            out.writeInt(mData.length);
+            out.writeInt(mData.getLength());
             // During serialize, do not serialize the message data buffer.
             // Message buffer is handled by getSerializedByteArrayVector()
             // implementation in this class as the last vector element.
@@ -333,7 +335,7 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
             out.writeShort(mLinkSrcVolumeId);
         }
     }
-
+    
     protected void deserializeData(RedoLogInput in) throws IOException {
         mRcptEmail = in.readUTF();
         if (getVersion().atLeast(1, 4))
@@ -359,19 +361,28 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
 
         mMsgBodyType = in.readByte();
         if (mMsgBodyType == MSGBODY_INLINE) {
-            int dataLen = in.readInt();
-            if (dataLen > StoreIncomingBlob.MAX_BLOB_SIZE) {
-                throw new IOException("Deserialized message size too large (" + dataLen + " bytes)");
+            int dataLength = in.readInt();
+            int threshold = Integer.MAX_VALUE;
+            try {
+                threshold = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, Integer.MAX_VALUE);
+            } catch (ServiceException e) {
+                ZimbraLog.redolog.warn("Unable to determine disk streaming threshold.  Reading message into memory.", e);
             }
-            mData = new byte[dataLen];
-            in.readFully(mData, 0, dataLen);
-            // mData must be the last thing deserialized.  See comments in
+            if (dataLength <= threshold) {
+                byte[] data = new byte[dataLength];
+                in.readFully(data, 0, dataLength);
+                mData = new RedoableOpData(data);
+            } else {
+                mData = new RedoableOpData(new RedoLogInputStream(in, dataLength), dataLength);
+            }
+            
+            // Blob data must be the last thing deserialized.  See comments in
             // serializeData().
         } else {
             mLinkSrcVolumeId = in.readShort();
         }
     }
-
+    
     public void redo() throws Exception {
         int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
@@ -380,6 +391,7 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
         mboxList.add(new Integer(mboxId));
         SharedDeliveryContext sharedDeliveryCtxt = new SharedDeliveryContext(mShared, mboxList);
         ParsedMessage pm = null;
+        
         if (mMsgBodyType == MSGBODY_LINK) {
             File file = new File(mPath);
             if (!file.exists())
@@ -388,12 +400,16 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
                             this);
             Blob src = new Blob(file, mLinkSrcVolumeId);
             sharedDeliveryCtxt.setBlob(src);
-
-            InputStream is = StoreManager.getInstance().getContent(src);
-            MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), is);
-            pm = new ParsedMessage(mm, mReceivedDate, mbox.attachmentsIndexingEnabled());
+            pm = new ParsedMessage(file, mReceivedDate, mbox.attachmentsIndexingEnabled());
         } else { // mMsgBodyType == MSGBODY_INLINE
-            pm = new ParsedMessage(mData, mReceivedDate, mbox.attachmentsIndexingEnabled());
+            // Just one recipient.  Store the blob, then add the message.
+            if (mData.hasDataInMemory()) {
+                pm = new ParsedMessage(mData.getData(), mReceivedDate, mbox.attachmentsIndexingEnabled());
+            } else {
+                Volume volume = Volume.getCurrentMessageVolume();
+                Blob blob = StoreManager.getInstance().storeIncoming(mData.getInputStream(), mData.getLength(), null, volume.getId());
+                pm = new ParsedMessage(blob.getFile(), mReceivedDate, mbox.attachmentsIndexingEnabled());
+            }
         }
 
         try {

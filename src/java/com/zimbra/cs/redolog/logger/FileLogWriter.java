@@ -25,6 +25,7 @@ package com.zimbra.cs.redolog.logger;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -266,7 +267,7 @@ public class FileLogWriter implements LogWriter {
      * special case this condition to mean fsync should be done by the calling
      * thread.
      */
-    public void log(RedoableOp op, byte[][] datav, boolean synchronous) throws IOException {
+    public void log(RedoableOp op, InputStream data, boolean synchronous) throws IOException {
         int seq;
 
         synchronized (mLock) {
@@ -288,12 +289,11 @@ public class FileLogWriter implements LogWriter {
             mLogSeq++;
             mLogCount++;
             seq = mLogSeq;
-            for (int i = 0; i < datav.length; i++) {
-                byte[] buf = datav[i];
-                if (buf != null) {
-                    mRAF.write(buf);
-                    mFileSize += buf.length;
-                }
+            int numRead;
+            byte[] buf = new byte[1024];
+            while ((numRead = data.read(buf)) >= 0) {
+                mRAF.write(buf, 0, numRead);
+                mFileSize += numRead;
             }
 
             // We do this with log writer lock held, so the commits and any
@@ -375,7 +375,7 @@ public class FileLogWriter implements LogWriter {
         for (Iterator it = opsSet.iterator(); it.hasNext(); ) {
             Map.Entry entry = (Map.Entry) it.next();
             RedoableOp op = (RedoableOp) entry.getValue();
-            tempLogger.log(op, op.getSerializedByteArrayVector(), false);
+            tempLogger.log(op, op.getInputStream(), false);
         }
         tempLogger.close();
 

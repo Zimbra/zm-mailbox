@@ -54,13 +54,14 @@ public abstract class StoreManager {
     /**
      * Store a message in incoming directory.
      * @param data
+     * @param sizeHint used for determining whether data should be compressed
      * @param digest
      * @param path If null, blob store assigns one.
      * @return
      * @throws IOException
      * @throws ServiceException
      */
-    public abstract Blob storeIncoming(InputStream data, int length, String path, short volumeId)
+    public abstract Blob storeIncoming(InputStream data, int sizeHint, String path, short volumeId)
     throws IOException, ServiceException;
 
     /**

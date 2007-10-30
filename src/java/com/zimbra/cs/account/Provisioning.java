@@ -1006,7 +1006,7 @@ public abstract class Provisioning {
     public static final String A_zimbraLmtpBindOnStartup = "zimbraLmtpBindOnStartup";
     public static final String A_zimbraLmtpBindAddress = "zimbraLmtpBindAddress";
     public static final String A_zimbraLmtpNumThreads = "zimbraLmtpNumThreads";
-    public static final String A_zimbraStoreDiskStreamingThreshold = "zimbraStoreDiskStreamingThreshold";
+    public static final String A_zimbraMailDiskStreamingThreshold = "zimbraMailDiskStreamingThreshold";
 
     public static final String A_zimbraImapAdvertisedName = "zimbraImapAdvertisedName";
     public static final String A_zimbraImapBindPort = "zimbraImapBindPort";

@@ -25,6 +25,7 @@ package com.zimbra.cs.redolog.logger;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.LinkedHashMap;
 
 import com.zimbra.cs.redolog.op.RedoableOp;
@@ -52,7 +53,7 @@ public interface LogWriter {
 	/**
 	 * Logs an entry.
      * @param op entry being logged
-	 * @param data serialized byte array of a RedoableOp; must not be null;
+     * @param data the data stream; must not be null;
      *             while it is possible to compute data from op, only what
      *             is passed in as data gets logged
 	 * @param synchronous if true, method doesn't return until log entry
@@ -61,8 +62,8 @@ public interface LogWriter {
 	 *                    on the logger implementation
 	 * @throws IOException
 	 */
-	public void log(RedoableOp op, byte[][] data, boolean synchronous) throws IOException;
-
+	public void log(RedoableOp op, InputStream data, boolean synchronous) throws IOException;
+    
     /**
      * Make sure all writes are committed to disk, or whatever the log
      * destination medium is.  This is mainly useful only when we need to

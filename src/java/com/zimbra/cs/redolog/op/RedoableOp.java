@@ -20,10 +20,14 @@
  */
 package com.zimbra.cs.redolog.op;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.SequenceInputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -479,6 +483,14 @@ public abstract class RedoableOp {
 	// Used by serialize() and deserialize().
 	protected abstract void serializeData(RedoLogOutput out) throws IOException;
 	protected abstract void deserializeData(RedoLogInput in) throws IOException;
+    
+    /**
+     * Returns any additional data that must be written after the usual header
+     * and data.
+     */
+    protected InputStream getAdditionalDataStream() throws IOException {
+        return null;
+    }
 
 	/**
 	 * Returns the next operation in the redo log stream.
@@ -561,7 +573,7 @@ public abstract class RedoableOp {
         }
 	}
 
-    protected byte[] serializeToByteArray() throws IOException {
+    private byte[] serializeToByteArray() throws IOException {
         byte[] buf;
         ByteArrayOutputStream baos = new ByteArrayOutputStream(512);
         RedoLogOutput out = new RedoLogOutput(baos);
@@ -572,15 +584,23 @@ public abstract class RedoableOp {
         return buf;
     }
 
-    public byte[][] getSerializedByteArrayVector() throws IOException {
+    public InputStream getInputStream() throws IOException {
         synchronized (mSBAVGuard) {
             if (mSerializedByteArrayVector == null)
                 setSerializedByteArray(serializeToByteArray());
-    		return mSerializedByteArrayVector;
+            List<InputStream> streams = new ArrayList<InputStream>(mSerializedByteArrayVector.length + 1);
+            for (byte[] array : mSerializedByteArrayVector) {
+                streams.add(new ByteArrayInputStream(array));
+            }
+            InputStream additional = getAdditionalDataStream();
+            if (additional != null) {
+                streams.add(additional);
+            }
+            
+    		return new SequenceInputStream(Collections.enumeration(streams));
         }
 	}
-
-
+    
     // indexing sub-operation that is chained to this operation
 
     private List<RedoableOp> mChainedOps;

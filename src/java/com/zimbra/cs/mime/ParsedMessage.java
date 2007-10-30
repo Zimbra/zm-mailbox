@@ -155,7 +155,7 @@ public class ParsedMessage {
      * Creates a <tt>ParsedMessage</tt> from a file already stored on disk.
      * @param file the file on disk.  Cannot be compressed.
      */
-    public ParsedMessage(File file, boolean indexAttachments)
+    public ParsedMessage(File file, Long receivedDate, boolean indexAttachments)
     throws MessagingException, IOException {
         mIndexAttachments = indexAttachments;
         SharedFileInputStream in = new SharedFileInputStream(file);
@@ -177,7 +177,10 @@ public class ParsedMessage {
         }
 
         // must set received-date before Lucene document is initialized
-        setReceivedDate(getZimbraDateHeader(mMimeMessage));
+        if (receivedDate == null) {
+            receivedDate = getZimbraDateHeader(mMimeMessage); 
+        }
+        setReceivedDate(receivedDate);
     }
 
     /**

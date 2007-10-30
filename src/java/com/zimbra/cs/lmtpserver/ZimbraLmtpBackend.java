@@ -216,7 +216,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         Volume volume = Volume.getCurrentMessageVolume();
         Blob blob = null;
         int diskThreshold = Provisioning.getInstance().getLocalServer().getIntAttr(
-            Provisioning.A_zimbraStoreDiskStreamingThreshold, Integer.MAX_VALUE);
+            Provisioning.A_zimbraMailDiskStreamingThreshold, Integer.MAX_VALUE);
         byte[] data = null;
         
         try {
@@ -291,7 +291,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                 pmAttachIndex = new ParsedMessage(data, true).analyze();
                             } else {
                                 try {
-                                    pmAttachIndex = new ParsedMessage(blob.getFile(), true);
+                                    pmAttachIndex = new ParsedMessage(blob.getFile(), null, true);
                                     pmAttachIndex.setRawDigest(blob.getDigest());
                                     pmAttachIndex.analyze();
                                 } catch (IOException e) {
@@ -307,7 +307,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                 pmNoAttachIndex = new ParsedMessage(data, false).analyze();
                             } else {
                                 try {
-                                    pmNoAttachIndex = new ParsedMessage(blob.getFile(), false);
+                                    pmNoAttachIndex = new ParsedMessage(blob.getFile(), null, false);
                                     pmNoAttachIndex.setRawDigest(blob.getDigest());
                                     pmNoAttachIndex.analyze();
                                 } catch (IOException e) {
