@@ -7,7 +7,7 @@ There are two primary applications using DAV with Zimbra server.
 
 The main DAV URL for users mailbox is
 
-http://<server>/service/dav/<username>
+http://<server>/dav/<username>
 
 Most of modern operating system now comes with DAV support built in.  
 On Windows XP, File Explorer can be used to access DAV repository.
@@ -32,16 +32,22 @@ the sender.
 The second use case is with CalDAV compliant calendar client.  There
 are several CalDAV clients available.  Currently  the most popular 
 and feature rich client is Leopard iCal.  Zimbra CalDAV has been
-tested against the beta Leopard build 9A321.  Some of the other
+tested against the release build of Leopard.  Some of the other
 calendar clients that support iCal are Mozilla Lightning, Mozilla
 Sunbird, Gnome Evolution, and OSAF Chandler.
 
-iCal supports CalDAV principal URL, and the main DAV URL can be
-used to configure iCal.  For other clients, users may need to
+iCal supports CalDAV principal concept, and the URL to use is simply
+
+http://<server>
+
+Using the supplied username and password it can discover the user's
+calendar.
+
+For other clients, users may need to
 add "Calendar" at the end of the URL to point to the calendar
 folder.  e.g.
 
-http://<server>/service/dav/<username>/Calendar
+http://<server>/dav/<username>/Calendar
 
 iCal on Tiger and older release only support ics import and export,
 not the full CalDAV.  The ics import mode is not compatible with
