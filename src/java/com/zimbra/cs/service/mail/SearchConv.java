@@ -161,10 +161,19 @@ public class SearchConv extends Search {
                     Element response = soapTransp.invokeWithoutSession(proxyRequest);
                     return response.detach();
                 } catch (ParseException e) {
+                    MailServiceException me = null;
+                    String message = e.getMessage();
+                    if (e.code != null)
+                        message = e.code;
+                    if (e.expectedTokenSequences != null) {
+                        // this is a direct ParseException from JavaCC - don't return their long message as the code
+                        message = "PARSER_ERROR";
+                    }
                     if (e.currentToken != null)
-                        throw MailServiceException.QUERY_PARSE_ERROR(params.getQueryStr(), e, e.currentToken.image, e.currentToken.beginColumn, e.getMessage());
+                        me = MailServiceException.QUERY_PARSE_ERROR(params.getQueryStr(), e, e.currentToken.image, e.currentToken.beginColumn, message);
                     else 
-                        throw MailServiceException.QUERY_PARSE_ERROR(params.getQueryStr(), e, "", -1, e.getMessage());
+                        me = MailServiceException.QUERY_PARSE_ERROR(params.getQueryStr(), e, "", -1, message);
+                    throw me;
                 } catch (IOException ex) {
                     throw ServiceException.FAILURE("IOException: ", ex);
                 } catch (SoapFaultException ex) {
