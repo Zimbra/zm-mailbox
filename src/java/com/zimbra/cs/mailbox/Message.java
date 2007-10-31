@@ -545,6 +545,9 @@ public class Message extends MailItem {
         mRawSubject = pm.getSubject();
         mData.subject = pm.getNormalizedSubject();
 
+        // the fragment may have changed
+        mFragment = pm.getFragment();
+
         // handle the message's PARENT
         boolean parentChanged = false;
         MailItem parent = getParent();
