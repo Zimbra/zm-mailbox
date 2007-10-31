@@ -20,16 +20,13 @@
  */
 package com.zimbra.cs.redolog.op;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -234,6 +231,9 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
     }
 
     public byte[] getMessageBody() throws IOException {
+        if (mMsgBodyType == MSGBODY_LINK) {
+            return null;
+        }
         return mData.getData();
     }
 
