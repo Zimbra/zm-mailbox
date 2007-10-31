@@ -399,7 +399,13 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
                             " (digest=" + mDigest + ")",
                             this);
             Blob src = new Blob(file, mLinkSrcVolumeId);
+
+            // Manipulate the shared delivery context to make it look like we're calling addMessage
+            // for 2nd or later of a shared delivery.  The purpose is to prevent addMessage from
+            // saving the blob to incoming directory or write StoreIncomingBlob redo op.
+            sharedDeliveryCtxt.setFirst(false);
             sharedDeliveryCtxt.setBlob(src);
+
             pm = new ParsedMessage(file, mReceivedDate, mbox.attachmentsIndexingEnabled());
         } else { // mMsgBodyType == MSGBODY_INLINE
             // Just one recipient.  Store the blob, then add the message.
