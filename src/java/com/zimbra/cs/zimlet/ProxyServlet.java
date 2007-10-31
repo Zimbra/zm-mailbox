@@ -184,7 +184,8 @@ public class ProxyServlet extends ZimbraServlet {
                 method = new GetMethod(target);
             else if (reqMethod.equalsIgnoreCase("POST")) {
                 PostMethod post = new PostMethod(target);
-                post.setRequestEntity(new ByteArrayRequestEntity(body, req.getContentType()));
+                if (body != null)
+                    post.setRequestEntity(new ByteArrayRequestEntity(body, req.getContentType()));
                 method = post;
             } else {
                 ZimbraLog.zimlet.info("unsupported request method: " + reqMethod);
