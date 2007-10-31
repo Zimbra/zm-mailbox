@@ -156,7 +156,7 @@ public class SoapEngine {
             String aid = zsc.getAuthtokenAccountId();
             if (aid != null && !rid.equals(aid))
                 Account.addAccountToLogContext(aid, ZimbraLog.C_ANAME, ZimbraLog.C_AID);
-            else if (zsc.getAuthToken().getAdminAccountId() != null)
+            else if (zsc.getAuthToken() != null && zsc.getAuthToken().getAdminAccountId() != null)
                 Account.addAccountToLogContext(zsc.getAuthToken().getAdminAccountId(), ZimbraLog.C_ANAME, ZimbraLog.C_AID);                        
         }
         
