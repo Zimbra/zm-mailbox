@@ -32,6 +32,9 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.methods.GetMethod;
 import org.dom4j.Element;
 
 import com.zimbra.common.service.ServiceException;
@@ -56,7 +59,9 @@ import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
+import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.NetUtil;
 
 public class ScheduleOutbox extends Collection {
 	public ScheduleOutbox(DavContext ctxt, Folder f) throws DavException, ServiceException {
@@ -140,20 +145,49 @@ public class ScheduleOutbox extends Collection {
 
 		ZimbraLog.dav.debug("start: "+new Date(start)+", end: "+new Date(end));
 		Provisioning prov = Provisioning.getInstance();
-		rcpt = this.getAddressFromPrincipalURL(rcpt);
-		Account rcptAcct = prov.get(Provisioning.AccountBy.name, rcpt);
+		rcpt = rcpt.trim();
+		String rcptAddr = this.getAddressFromPrincipalURL(rcpt);
+		Account rcptAcct = prov.get(Provisioning.AccountBy.name, rcptAddr);
+        String fbMsg = null;
 		if (rcptAcct == null)
-			throw new DavException("not on local server: "+rcpt, HttpServletResponse.SC_BAD_REQUEST);
+			throw new DavException("account not found "+rcptAddr, HttpServletResponse.SC_BAD_REQUEST);
 		if (Provisioning.onLocalServer(rcptAcct)) {
 			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(rcptAcct);
 			FreeBusy fb = mbox.getFreeBusy(start, end);
-			String fbMsg = fb.toVCalendar(FreeBusy.Method.REPLY, originator, rcpt, null);
-			resp.addElement(DavElements.E_RECIPIENT).setText(rcpt);
-			resp.addElement(DavElements.E_REQUEST_STATUS).setText("2.0;Success");
-			resp.addElement(DavElements.E_CALENDAR_DATA).setText(fbMsg);
+			fbMsg = fb.toVCalendar(FreeBusy.Method.REPLY, originator, rcpt, null);
 		} else {
-			// XXX get the freebusy information from remote server
+            HttpMethod method = null;
+            try {
+                StringBuilder targetUrl = new StringBuilder();
+                targetUrl.append(UserServlet.getRestUrl(rcptAcct));
+                targetUrl.append("/Calendar?fmt=ifb");
+                targetUrl.append("&start=");
+                targetUrl.append(start);
+                targetUrl.append("&end=");
+                targetUrl.append(end);
+                HttpClient client = new HttpClient();
+                NetUtil.configureProxy(client);
+                method = new GetMethod(targetUrl.toString());
+                try {
+                    client.executeMethod(method);
+                    byte[] buf = ByteUtil.getContent(method.getResponseBodyAsStream(), 0);
+                    fbMsg = new String(buf, "UTF-8");
+                    fbMsg = fbMsg.replaceAll("METHOD:PUBLISH", "METHOD:REPLY");
+                    fbMsg = fbMsg.replaceAll("ORGANIZER:.*", "ORGANIZER:"+originator+"\nATTENDEE:"+rcpt);
+                } catch (IOException ex) {
+                    // ignore this recipient and go on
+                    fbMsg = null;
+                }
+            } finally {
+                if (method != null)
+                    method.releaseConnection();
+            }
 		}
+        if (fbMsg != null) {
+            resp.addElement(DavElements.E_RECIPIENT).setText(rcpt);
+            resp.addElement(DavElements.E_REQUEST_STATUS).setText("2.0;Success");
+            resp.addElement(DavElements.E_CALENDAR_DATA).setText(fbMsg);
+        }
 	}
 
 	private void handleEventRequest(DavContext ctxt, ZCalendar.ZVCalendar cal, ZComponent req, String originator, String rcpt, Element resp) {
