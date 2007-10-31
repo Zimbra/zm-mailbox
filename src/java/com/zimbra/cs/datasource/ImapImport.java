@@ -70,7 +70,10 @@ public class ImapImport implements MailItemImport {
     private static Session sSelfSignedCertSession;
     private static FetchProfile FETCH_PROFILE;
 
-    static {        
+    static {
+    	String idExt = "(\"vendor\" \"Zimbra\" \"os\" \"" + System.getProperty("os.name") +
+    	               "\" \"os-version\" \"" + System.getProperty("os.version") + "\" \"guid\" \"" + "4062-5711-9195-4050" + "\")";
+    	
         Properties props = new Properties();
         props.setProperty("mail.imap.connectiontimeout", Long.toString(TIMEOUT));
         props.setProperty("mail.imap.timeout", Long.toString(TIMEOUT));
@@ -78,6 +81,10 @@ public class ImapImport implements MailItemImport {
         props.setProperty("mail.imaps.timeout", Long.toString(TIMEOUT));    	
 		props.setProperty("mail.imaps.socketFactory.class", CustomSSLSocketFactory.class.getName());
         props.setProperty("mail.imaps.socketFactory.fallback", "false");
+        if (idExt != null) {
+        	props.setProperty("mail.imap.idextension", idExt);
+        	props.setProperty("mail.imaps.idextension", idExt);
+        }
         sSession = Session.getInstance(props);
         if (LC.javamail_imap_debug.booleanValue())
         	sSession.setDebug(true);
@@ -87,6 +94,8 @@ public class ImapImport implements MailItemImport {
         sscProps.setProperty("mail.imaps.timeout", Long.toString(TIMEOUT));    	
         sscProps.setProperty("mail.imaps.socketFactory.class", DummySSLSocketFactory.class.getName());
         sscProps.setProperty("mail.imaps.socketFactory.fallback", "false");
+        if (idExt != null)
+        	props.setProperty("mail.imaps.idextension", idExt);
         sSelfSignedCertSession = Session.getInstance(sscProps);
         if (LC.javamail_imap_debug.booleanValue())
         	sSelfSignedCertSession.setDebug(true);
