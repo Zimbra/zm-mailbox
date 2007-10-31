@@ -56,6 +56,18 @@ public class ServiceException extends Exception {
     
     public static final String PROXIED_FROM_ACCT  = "proxiedFromAcct"; // exception proxied from remote account
     
+    public String toString() {
+        StringBuilder toRet = new StringBuilder(super.toString());
+        toRet.append("\nCode:").append(mCode);
+        if (mArgs != null) {
+            for (Argument arg : mArgs) {
+                toRet.append(" Arg:").append(arg.toString()).append("");
+                }
+        }
+        
+        return toRet.toString();
+    }
+    
     public static class Argument {
         public static enum Type {
             IID,        // mail-item ID or mailbox-id 
@@ -79,6 +91,10 @@ public class ServiceException extends Exception {
         public String mName;
         public String mValue;
         public Type mType;
+        
+        public String toString() {
+            return "("+mName+", "+mType.name()+", \""+mValue+"\")";
+        }
     }
     
     /**
