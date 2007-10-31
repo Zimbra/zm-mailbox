@@ -51,10 +51,17 @@ public class ParseException extends Exception {
     specialConstructor = false;
   }
 
-  public ParseException(String message) {
-    super(message);
-    specialConstructor = false;
+//  public ParseException(String message) {
+//      super(message);
+//      specialConstructor = false;
+// }
+  
+  public ParseException(String message, String code) {
+      super(message);
+      specialConstructor = false;
+      this.code = code;
   }
+ 
 
   /**
    * This variable determines which constructor was used to create
@@ -83,6 +90,8 @@ public class ParseException extends Exception {
    * defined in the generated ...Constants interface.
    */
   public String[] tokenImage;
+  
+  public String code;
 
   /**
    * This method has the standard behavior when this object has been

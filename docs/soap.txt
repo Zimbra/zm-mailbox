@@ -820,7 +820,8 @@ urn:zimbraMail
    mail.NO_SUCH_DOC        - no such doc
    mail.NO_SUCH_UPLOAD     - no such upload
    mail.NO_SUCH_WAITSET    - no such waitset
-   mail.QUERY_PARSE_ERROR  - couldn't parse search query
+   mail.QUERY_PARSE_ERROR  - couldn't parse search query (see below
+                             for detailed error info)
    mail.NO_SUCH_CONTACT      - the specified contact id did not exist
    mail.MODIFY_CONFLICT      - if the modified date on a contact is different then one in the request
    mail.ALREADY_EXISTS
@@ -861,6 +862,24 @@ urn:zimbraMail
    mail.TOO_MANY_QUERY_TERMS_EXPANDED
    mail.INVALID_COMMIT_ID
 
+
+
+------------------------------
+
+mail.QUERY_PARSE_ERROR details
+
+Arguments:
+   colNo - index into query string where the error occured
+   curTok - current token being parsed (not always set)
+   parserErr - localizable error code describing what happened.  Current codes:
+         UNKNOWN_TEXT_AFTER_IS - user entered is:blah, blah unknown
+         MISSING_TEXT_AFTER_TOFROMCC - user entered from: without required text
+         LEXICAL_ERROR - Invalid character in search string or invalid operator name (e.g. "iis:foo")
+         PARSER_ERROR - Missing operand after operator ("in:") or other general parse error, look at curTok
+         INVALID_DATE - Couldn't parse argument to date: (before: after: etc) query.  Check curTok. 
+
+------------------------------
+   
 <!-- 
 
 defaults aren't normally included in the response, they may

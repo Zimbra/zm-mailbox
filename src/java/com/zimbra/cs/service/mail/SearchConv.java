@@ -162,9 +162,9 @@ public class SearchConv extends Search {
                     return response.detach();
                 } catch (ParseException e) {
                     if (e.currentToken != null)
-                        throw MailServiceException.QUERY_PARSE_ERROR(params.getQueryStr(), e, e.currentToken.image, e.currentToken.beginLine, e.currentToken.beginColumn);
+                        throw MailServiceException.QUERY_PARSE_ERROR(params.getQueryStr(), e, e.currentToken.image, e.currentToken.beginColumn, e.getMessage());
                     else 
-                        throw MailServiceException.QUERY_PARSE_ERROR(params.getQueryStr(), e, "", -1, -1);
+                        throw MailServiceException.QUERY_PARSE_ERROR(params.getQueryStr(), e, "", -1, e.getMessage());
                 } catch (IOException ex) {
                     throw ServiceException.FAILURE("IOException: ", ex);
                 } catch (SoapFaultException ex) {

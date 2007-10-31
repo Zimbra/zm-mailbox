@@ -164,8 +164,14 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
         return ZimbraQuery.FieldQuery.Create(mMailbox, mAnalyzer, modifier,target,targetImg, tok);
     }
 
+    public static final ParseException parseException(String s, String code, Token t) throws ParseException {
+       ParseException pe = new ParseException(s, code);
+       pe.currentToken = t;
+       return pe;
+    }
 
-    public ZimbraQuery.BaseQuery GetQuery(int modifier, int target, String tok) throws ParseException, ServiceException, MailServiceException
+
+    public ZimbraQuery.BaseQuery GetQuery(int modifier, int target, String tok, Token t) throws ParseException, ServiceException, MailServiceException
     {
         switch(target) {
           case HAS:
@@ -197,6 +203,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
               try {
                 return ZimbraQuery.InQuery.Create(mMailbox, mAnalyzer, modifier, iid, subfolderPath, (target == UNDERID));
               } catch (ServiceException e) {
+                  // bug: 18623 -- dangling mountpoints create problems with 'is:remote'
                               ZimbraLog.index.debug("Ignoring INID/UNDERID clause b/c of ServiceException: "+e);
                   return ZimbraQuery.InQuery.Create(mMailbox, mAnalyzer, modifier, ZimbraQuery.InQuery.IN_NO_FOLDER, false);
               }
@@ -218,7 +225,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
             if (cback != null) {
                 return cback.execute(mMailbox, mAnalyzer, modifier);
             } else {
-                throw new ParseException("Unknown text after is: in query string");
+                throw parseException("Unknown text after is: in query string", "UNKNOWN_TEXT_AFTER_IS", t);
             }
           case CONV:
             return ZimbraQuery.ConvQuery.create(mMailbox, mAnalyzer, modifier, tok);
@@ -237,7 +244,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
           case APPT_END:
           {
               ZimbraQuery.DateQuery q = new ZimbraQuery.DateQuery(mAnalyzer, target);
-              q.parseDate(modifier, tok, mTimeZone, mLocale);
+              q.parseDate(modifier, t, mTimeZone, mLocale);
               return q;
           }
           case TOFROM:
@@ -245,12 +252,12 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
           case FROMCC:
           case TOFROMCC:
                         if (tok == null || tok.length() < 1) {
-                 throw new ParseException("Missing required text after a TO/FROM/CC");
+                 throw parseException("Missing required text after a TO/FROM/CC", "MISSING_TEXT_AFTER_TOFROMCC", t);
                         }
                         return ZimbraQuery.AddrQuery.createFromTarget(mMailbox, mAnalyzer, modifier, target, tok);
           case FROM:
                         if (tok == null || tok.length() < 1) {
-                 throw new ParseException("Missing required text after a TO/FROM/CC");
+                 throw parseException("Missing required text after a TO/FROM/CC", "MISSING_TEXT_AFTER_TOFROMCC", t);
                         }
                         return ZimbraQuery.SenderQuery.create(mMailbox, mAnalyzer, modifier, target, tok);
           case TO:
@@ -258,7 +265,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
           case ENVFROM:
           case CC:
             if (tok == null || tok.length() < 1) {
-                throw new ParseException("Missing required text after a TO/FROM/CC");
+                throw parseException("Missing required text after a TO/FROM/CC", "MISSING_TEXT_AFTER_TOFROMCC", t);
             }
             if (tok.charAt(0) == '@') {
                 return new ZimbraQuery.DomainQuery(mAnalyzer, modifier, target, tok);
@@ -300,7 +307,11 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
         try {
             return DoParse();
         } catch(TokenMgrError e) {
-            throw new ParseException(e.getMessage());
+            Token t = new Token();
+            t.image = "";
+            t.beginColumn = e.colNo;
+            t.endColumn = e.colNo;
+            throw parseException(e.getMessage(), "LEXICAL_ERROR", t);
         }
     }
 
@@ -457,7 +468,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
         jj_consume_token(-1);
         throw new ParseException();
       }
-                                       {if (true) return GetQuery(modifier, target, t.image);}
+                                       {if (true) return GetQuery(modifier, target, t.image, t);}
       break;
     default:
       jj_la1[7] = jj_gen;
@@ -531,7 +542,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
         jj_consume_token(-1);
         throw new ParseException();
       }
-                                                      {if (true) return GetQuery(modifier, target, t.image);}
+                                                      {if (true) return GetQuery(modifier, target, t.image, t);}
       break;
     default:
       jj_la1[10] = jj_gen;
@@ -676,7 +687,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
         jj_consume_token(-1);
         throw new ParseException();
       }
-                                                           {if (true) return GetQuery(0, target, u.image+t.image);}
+                                                           {if (true) return GetQuery(0, target, u.image+t.image, t);}
       break;
     case TEXT_TOK:
     case QUOTED_TOK:
@@ -692,7 +703,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
         jj_consume_token(-1);
         throw new ParseException();
       }
-                                       {if (true) return GetQuery(0, target, t.image);}
+                                       {if (true) return GetQuery(0, target, t.image, t);}
       break;
     default:
       jj_la1[18] = jj_gen;
@@ -1006,7 +1017,7 @@ public final class ZimbraQueryParser implements ZimbraQueryParserConstants {
           jj_consume_token(-1);
           throw new ParseException();
         }
-                                          {if (true) return GetQuery(0,mDefaultField,t.image);}
+                                          {if (true) return GetQuery(0,mDefaultField,t.image, t);}
         break;
       default:
         jj_la1[22] = jj_gen;

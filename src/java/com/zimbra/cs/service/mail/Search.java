@@ -26,6 +26,7 @@ import java.util.Map;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
@@ -100,10 +101,19 @@ public class Search extends MailDocumentHandler  {
         } catch (IOException e) {
             throw ServiceException.FAILURE("IO error", e);
         } catch (ParseException e) {
+            MailServiceException me = null;
+            String message = e.getMessage();
+            if (e.code != null)
+                message = e.code;
+            if (e.expectedTokenSequences != null) {
+                // this is a direct ParseException from JavaCC - don't return their long message as the code
+                message = "PARSER_ERROR";
+            }
             if (e.currentToken != null)
-                throw MailServiceException.QUERY_PARSE_ERROR(params.getQueryStr(), e, e.currentToken.image, e.currentToken.beginLine, e.currentToken.beginColumn);
+                me = MailServiceException.QUERY_PARSE_ERROR(params.getQueryStr(), e, e.currentToken.image, e.currentToken.beginColumn, message);
             else 
-                throw MailServiceException.QUERY_PARSE_ERROR(params.getQueryStr(), e, "", -1, -1);
+                me = MailServiceException.QUERY_PARSE_ERROR(params.getQueryStr(), e, "", -1, message);
+            throw me;
         }
         return results;
     }

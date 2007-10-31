@@ -32,6 +32,10 @@ public class TokenMgrError extends Error
     * one of the above 4 values.
     */
    int errorCode;
+   
+   int colNo;
+   
+   public int getColNo() { return colNo; }
 
    /**
     * Replaces unprintable characters by their espaced (or unicode escaped)
@@ -129,5 +133,6 @@ public class TokenMgrError extends Error
 
    public TokenMgrError(boolean EOFSeen, int lexState, int errorLine, int errorColumn, String errorAfter, char curChar, int reason) {
       this(LexicalError(EOFSeen, lexState, errorLine, errorColumn, errorAfter, curChar), reason);
+      colNo = errorColumn;
    }
 }

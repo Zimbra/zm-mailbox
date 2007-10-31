@@ -106,7 +106,7 @@ public class MailServiceException extends ServiceException {
     public static final String CURRENT_TOKEN   = "curTok"; 
     public static final String LINE_NO         = "lineNo"; 
     public static final String COL_NO          = "colNo";
-    
+    public static final String PARSER_ERR      = "parserErr"; 
         
     /**
      * A public inner subclass whose purpose is to group various NoSuchItemXYZ
@@ -358,8 +358,13 @@ public class MailServiceException extends ServiceException {
         return new MailServiceException("object with that id already exists: " + id, ALREADY_EXISTS, SENDERS_FAULT, t, new Argument(ITEM_ID, id, Argument.Type.IID));
     }
 
-    public static MailServiceException QUERY_PARSE_ERROR(String query, Throwable t, String curToken, int lineNo, int offset) {
-        return new MailServiceException("Couldn't parse query: " + query, QUERY_PARSE_ERROR, SENDERS_FAULT, t, new Argument(CURRENT_TOKEN, curToken, Argument.Type.STR), new Argument(LINE_NO, lineNo, Argument.Type.NUM), new Argument(COL_NO, offset, Argument.Type.NUM));
+    public static MailServiceException QUERY_PARSE_ERROR(String query, Throwable t, String curToken, int offset, String parserErr) {
+        return new MailServiceException("Couldn't parse query: " + query, QUERY_PARSE_ERROR, SENDERS_FAULT, t, 
+            new Argument(CURRENT_TOKEN, curToken, Argument.Type.STR), 
+            new Argument(COL_NO, offset, Argument.Type.NUM),
+            new Argument(PARSER_ERR, parserErr, Argument.Type.STR)
+        
+        );
     }
 
     public static MailServiceException MESSAGE_PARSE_ERROR(Throwable t) {

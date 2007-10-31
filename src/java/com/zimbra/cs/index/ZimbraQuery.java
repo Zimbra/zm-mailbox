@@ -311,19 +311,28 @@ public final class ZimbraQuery {
             return op;
         }
 
+        
+        public static final ParseException parseException(String s, String code, Token t) throws ParseException {
+            ParseException pe = new ParseException(s, code);
+            pe.currentToken = t;
+            return pe;   
+         }
+        
         protected static final String NUMERICDATE_PATTERN = "^([0-9]+)$";
         protected static final Pattern sNumericDatePattern = Pattern.compile(NUMERICDATE_PATTERN);
 
         protected static final String RELDATE_PATTERN = "([+-])([0-9]+)([mhdwy][a-z]*)?";
         protected static final Pattern sRelDatePattern = Pattern.compile(RELDATE_PATTERN);
         
-        public void parseDate(int modifier, String s, TimeZone tz, Locale locale) throws com.zimbra.cs.index.queryparser.ParseException
+        public void parseDate(int modifier, Token tok, TimeZone tz, Locale locale) throws com.zimbra.cs.index.queryparser.ParseException
         {
             //          * DATE:  absolute-date = mm/dd/yyyy | yyyy/dd/mm  OR
             //          *        relative-date = [+/-]nnnn{minute,hour,day,week,month,year}
             //          *        (need to figure out how to represent "this week", "last
             //          *        week", "this month", etc)
 
+            String s = tok.image;
+            
             mDate = null; // the beginning of the user-specified range (inclusive)
             mEndDate = null; // the end of the user-specified range (NOT-included in the range)
             mLowestTime = -1;
@@ -334,20 +343,20 @@ public final class ZimbraQuery {
             boolean explicitEq = false;
 
             if (s.length() <= 0)
-                throw new ParseException("Invalid string in date query: \"\"");
+                throw parseException("Invalid string in date query: \"\"", "INVALID_DATE", tok);
             char ch = s.charAt(0);
             if (ch == '<' || ch == '>') {
                 if (getQueryType() == ZimbraQueryParser.BEFORE || getQueryType() == ZimbraQueryParser.AFTER) 
-                    throw new ParseException(">, <, >= and <= may not be specified with BEFORE or AFTER searches");
+                    throw parseException(">, <, >= and <= may not be specified with BEFORE or AFTER searches", "INVALID_DATE", tok);
 
                 hasExplicitComparasins = true;
 
                 if (s.length() <= 1)
-                    throw new ParseException("Invalid string in date query: \""+s+"\"");
+                    throw parseException("Invalid string in date query: \""+s+"\"", "INVALID_DATE", tok);
 
                 char ch2 = s.charAt(1);
                 if (ch2 == '=' && s.length() <= 2)
-                    throw new ParseException("Invalid string in date query: \""+s+"\"");
+                    throw parseException("Invalid string in date query: \""+s+"\"", "INVALID_DATE", tok);
 
                 if (ch == '<')
                     explicitLT = true;
@@ -363,7 +372,7 @@ public final class ZimbraQuery {
             }
 
             if (s.length() <= 0)
-                throw new ParseException("Invalid string in date query: \""+s+"\"");
+                throw parseException("Invalid string in date query: \""+s+"\"", "INVALID_DATE", tok);
 
 
             int origType = getQueryType();
@@ -513,11 +522,7 @@ public final class ZimbraQuery {
                         try {
                             mDate = df.parse(s);
                         } catch (java.text.ParseException ex) {
-                            Token fake = new Token();
-                            fake.image = s;
-                            ParseException pe = new ParseException(ex.getLocalizedMessage());
-                            pe.currentToken = fake;
-                            throw pe;
+                            throw parseException(ex.getLocalizedMessage(), "INVALID_DATE", tok);
                         }
 
                         Calendar cal = Calendar.getInstance();
@@ -2002,7 +2007,7 @@ public final class ZimbraQuery {
     private static int lookupQueryTypeFromString(String str) throws ServiceException {
         Integer toRet = sTokenImageMap.get(str);
         if (toRet == null)
-            throw MailServiceException.QUERY_PARSE_ERROR(str, null, str, -1, -1);
+            throw MailServiceException.QUERY_PARSE_ERROR(str, null, str, -1, "UNKNOWN_QUERY_TYPE");
         return toRet.intValue();
     }
     

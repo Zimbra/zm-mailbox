@@ -193,8 +193,14 @@ public final class ZimbraQueryParser {
         return ZimbraQuery.FieldQuery.Create(mMailbox, mAnalyzer, modifier,target,targetImg, tok);
     }
     
+    public static final ParseException parseException(String s, String code, Token t) throws ParseException {
+       ParseException pe = new ParseException(s, code);
+       pe.currentToken = t;
+       return pe;	
+    }
+    
 
-    public ZimbraQuery.BaseQuery GetQuery(int modifier, int target, String tok) throws ParseException, ServiceException, MailServiceException
+    public ZimbraQuery.BaseQuery GetQuery(int modifier, int target, String tok, Token t) throws ParseException, ServiceException, MailServiceException
     {
         switch(target) {
           case HAS:
@@ -248,7 +254,7 @@ public final class ZimbraQueryParser {
             if (cback != null) {
                 return cback.execute(mMailbox, mAnalyzer, modifier);
             } else {
-                throw new ParseException("Unknown text after is: in query string");
+                throw parseException("Unknown text after is: in query string", "UNKNOWN_TEXT_AFTER_IS", t);
             }
           case CONV:
             return ZimbraQuery.ConvQuery.create(mMailbox, mAnalyzer, modifier, tok);
@@ -267,7 +273,7 @@ public final class ZimbraQueryParser {
           case APPT_END:
           {
               ZimbraQuery.DateQuery q = new ZimbraQuery.DateQuery(mAnalyzer, target);
-              q.parseDate(modifier, tok, mTimeZone, mLocale);
+              q.parseDate(modifier, t, mTimeZone, mLocale);
               return q;
           }
           case TOFROM:
@@ -275,12 +281,12 @@ public final class ZimbraQueryParser {
           case FROMCC:
           case TOFROMCC:
 			if (tok == null || tok.length() < 1) {
-                 throw new ParseException("Missing required text after a TO/FROM/CC");
+                 throw parseException("Missing required text after a TO/FROM/CC", "MISSING_TEXT_AFTER_TOFROMCC", t);
 			}
 			return ZimbraQuery.AddrQuery.createFromTarget(mMailbox, mAnalyzer, modifier, target, tok);
           case FROM:
 			if (tok == null || tok.length() < 1) {
-                 throw new ParseException("Missing required text after a TO/FROM/CC");
+                 throw parseException("Missing required text after a TO/FROM/CC", "MISSING_TEXT_AFTER_TOFROMCC", t);
 			}
     			return ZimbraQuery.SenderQuery.create(mMailbox, mAnalyzer, modifier, target, tok);            
           case TO:
@@ -288,7 +294,7 @@ public final class ZimbraQueryParser {
           case ENVFROM:
           case CC:
             if (tok == null || tok.length() < 1) {
-                throw new ParseException("Missing required text after a TO/FROM/CC");
+                throw parseException("Missing required text after a TO/FROM/CC", "MISSING_TEXT_AFTER_TOFROMCC", t);
             }
             if (tok.charAt(0) == '@') {
                 return new ZimbraQuery.DomainQuery(mAnalyzer, modifier, target, tok);
@@ -330,7 +336,11 @@ public final class ZimbraQueryParser {
         try {
             return DoParse();
         } catch(TokenMgrError e) {
-            throw new ParseException(e.getMessage());
+            Token t = new Token();
+            t.image = "";
+            t.beginColumn = e.colNo;
+            t.endColumn = e.colNo;
+            throw parseException(e.getMessage(), "LEXICAL_ERROR", t);
         }
     }
 
@@ -548,7 +558,7 @@ ZimbraQuery.BaseQuery Rhs_Text(int target) throws ServiceException :
         <RPAREN> { return new ZimbraQuery.SubQuery(mAnalyzer, 0,clauses); }
     )   
     
-    |  (t=<TEXT_TOK>|t=<QUOTED_TOK>) { return GetQuery(modifier, target, t.image); }
+    |  (t=<TEXT_TOK>|t=<QUOTED_TOK>) { return GetQuery(modifier, target, t.image, t); }
 }
 
 /***
@@ -576,7 +586,7 @@ ZimbraQuery.BaseQuery Rhs_Item(int target) throws ServiceException :
         <RPAREN> { return new ZimbraQuery.SubQuery(mAnalyzer, 0,clauses); }
     )   
     
-    |  (t=<TEXT_TOK>|t=<QUOTED_TOK>|t=<BRACES_TOK>) { return GetQuery(modifier, target, t.image); }
+    |  (t=<TEXT_TOK>|t=<QUOTED_TOK>|t=<BRACES_TOK>) { return GetQuery(modifier, target, t.image, t); }
 }
 
 /***
@@ -629,8 +639,8 @@ ZimbraQuery.BaseQuery Rhs_Date(int target) throws ServiceException :
         <RPAREN> { return new ZimbraQuery.SubQuery(mAnalyzer, 0,clauses); }
     )   
         
-    |  (u=<MINUS>|u=<PLUS>)(t=<TEXT_TOK>|t=<QUOTED_TOK>) { return GetQuery(0, target, u.image+t.image); }
-    |  (t=<TEXT_TOK>|t=<QUOTED_TOK>) { return GetQuery(0, target, t.image); }
+    |  (u=<MINUS>|u=<PLUS>)(t=<TEXT_TOK>|t=<QUOTED_TOK>) { return GetQuery(0, target, u.image+t.image, t); }
+    |  (t=<TEXT_TOK>|t=<QUOTED_TOK>) { return GetQuery(0, target, t.image, t); }
 }
 
 
@@ -662,7 +672,7 @@ ZimbraQuery.BaseQuery Clause() throws ServiceException :
         | (t=<FIELD>) q = Rhs_Field(t.kind, t.image) 
         | (t=<ITEM>) q = Rhs_Item(t.kind)
         | (t=<DATE>|t=<DAY>|t=<MONTH>|t=<WEEK>|t=<YEAR>|t=<AFTER>|t=<BEFORE>|t=<CONV_START>|t=<CONV_END>|t=<APPT_START>|t=<APPT_END>) q = Rhs_Date(t.kind)
-        | (t=<TEXT_TOK>|t=<QUOTED_TOK>) { return GetQuery(0,mDefaultField,t.image); }
+        | (t=<TEXT_TOK>|t=<QUOTED_TOK>) { return GetQuery(0,mDefaultField,t.image, t); }
      )
      { return q; }
 
