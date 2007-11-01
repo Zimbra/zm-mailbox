@@ -128,6 +128,7 @@ public class LC {
     public static final KnownKey ldap_connect_pool_timeout;
     public static final KnownKey ldap_replication_password;
     public static final KnownKey ldap_postfix_password;
+    public static final KnownKey ldap_amavis_password;
     public static final KnownKey ldap_require_tls;
     
 
@@ -547,6 +548,10 @@ public class LC {
         ldap_postfix_password = new KnownKey("ldap_postfix_password");
         ldap_postfix_password.setDefault("zmpostfix");
         ldap_postfix_password.setDoc("Password used by postfix to authenticate to ldap.");
+
+        ldap_amavis_password = new KnownKey("ldap_amavis_password");
+        ldap_amavis_password.setDefault("zmamavis");
+        ldap_amavis_password.setDoc("Password used by amavis to authenticate to ldap.");
         
         ldap_require_tls = new KnownKey("ldap_require_tls");
         ldap_require_tls.setDefault("false");
