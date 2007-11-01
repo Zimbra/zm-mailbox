@@ -24,9 +24,21 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.ZimbraNamespace;
+import com.zimbra.common.soap.HeaderConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.index.ZimbraQueryResults;
-import com.zimbra.cs.mailbox.*;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.mail.GetFolder;
 import com.zimbra.cs.service.mail.ToXML;
@@ -34,14 +46,6 @@ import com.zimbra.cs.service.mail.GetFolder.FolderNode;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.BuildInfo;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.ZimbraNamespace;
-import com.zimbra.common.soap.HeaderConstants;
-import com.zimbra.common.soap.Element;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -99,6 +103,7 @@ public class SoapSession extends Session {
     private long mPreviousAccess = -1;
     private long mLastWrite      = -1;
 
+    // Read/write access to all these members requires synchronizing on "mSentChanges".
     private int mForceRefresh;
     private LinkedList<QueuedNotifications> mSentChanges = new LinkedList<QueuedNotifications>();
     private QueuedNotifications mChanges = new QueuedNotifications(1);
@@ -223,31 +228,32 @@ public class SoapSession extends Session {
      * @throws ServiceException 
      */
     public RegisterNotificationResult registerNotificationConnection(PushChannel sc) throws ServiceException {
-        // must lock the Mailbox before locking the Session to avoid deadlock
-        //   because ToXML functions can now call back into the Mailbox
-        synchronized (mMailbox) {
-            synchronized (this) {
-                if (mPushChannel != null) {
-                    mPushChannel.closePushChannel();
-                    mPushChannel = null;
-                }
-                
-                if (mMailbox == null) {
-                    sc.closePushChannel();
-                    return RegisterNotificationResult.NO_NOTIFY;
-                }
+        // don't have to lock the Mailbox before locking the Session to avoid deadlock because we're not calling any ToXML functions
+        synchronized (this) {
+            if (mPushChannel != null) {
+                mPushChannel.closePushChannel();
+                mPushChannel = null;
+            }
+            
+            if (mMailbox == null) {
+                sc.closePushChannel();
+                return RegisterNotificationResult.NO_NOTIFY;
+            }
 
+            boolean dataReady;
+            synchronized (mSentChanges) {
                 // are there any notifications already pending given the passed-in seqno?
                 boolean notifying = mChanges.hasNotifications();
                 int lastSeqNo = sc.getLastKnownSeqNo();
                 boolean isEmpty = mSentChanges.isEmpty();
-                if (notifying || (mChanges.getSequence() > lastSeqNo + 1 && !isEmpty)) {
-                    sc.notificationsReady();  
-                    return RegisterNotificationResult.DATA_READY;
-                } else {
-                    mPushChannel = sc;
-                    return RegisterNotificationResult.BLOCKING;
-                }
+                dataReady = notifying || (mChanges.getSequence() > lastSeqNo + 1 && !isEmpty);
+            }
+            if (dataReady) {
+                sc.notificationsReady();  
+                return RegisterNotificationResult.DATA_READY;
+            } else {
+                mPushChannel = sc;
+                return RegisterNotificationResult.BLOCKING;
             }
         }
     }
@@ -257,7 +263,9 @@ public class SoapSession extends Session {
         if (imn == null)
             return;
 
-        mChanges.addNotification(imn);
+        synchronized (mSentChanges) {
+            mChanges.addNotification(imn);
+        }
         try {
             // if we're in a hanging no-op, alert the client that there are changes
             notifyPushChannel(true);
@@ -322,39 +330,41 @@ public class SoapSession extends Session {
         }
     }
 
-    private synchronized void cacheNotifications(PendingModifications pms, boolean fromThisSession) {
-        // if we're going to be sending a <refresh> anyway, there's no need to record these changes
-        int currentSequence = getCurrentNotificationSequence();
-        if (mForceRefresh == currentSequence && !fromThisSession)
-            return;
-
-        // XXX: should constrain to folders, tags, and stuff relevant to the current query?
-
-        // determine whether this set of notifications would cause the cached set to overflow
-        if (mForceRefresh != currentSequence && MAX_QUEUED_NOTIFICATIONS > 0) {
-            // XXX: more accurate would be to combine pms and mChanges and take the count...
-            int count = pms.getNotificationCount() + mChanges.getNotificationCount();
-            if (count > MAX_QUEUED_NOTIFICATIONS) {
-                // if we've overflowed, jettison the pending change set
-                mChanges.clearMailboxChanges();
-                mForceRefresh = currentSequence;
-            }
-
-            for (QueuedNotifications ntfn : mSentChanges) {
-                count += ntfn.getNotificationCount();
+    private void cacheNotifications(PendingModifications pms, boolean fromThisSession) {
+        synchronized (mSentChanges) {
+            // if we're going to be sending a <refresh> anyway, there's no need to record these changes
+            int currentSequence = getCurrentNotificationSequence();
+            if (mForceRefresh == currentSequence && !fromThisSession)
+                return;
+    
+            // XXX: should constrain to folders, tags, and stuff relevant to the current query?
+    
+            // determine whether this set of notifications would cause the cached set to overflow
+            if (mForceRefresh != currentSequence && MAX_QUEUED_NOTIFICATIONS > 0) {
+                // XXX: more accurate would be to combine pms and mChanges and take the count...
+                int count = pms.getNotificationCount() + mChanges.getNotificationCount();
                 if (count > MAX_QUEUED_NOTIFICATIONS) {
-                    ntfn.clearMailboxChanges();
-                    mForceRefresh = Math.max(mForceRefresh, ntfn.getSequence());
+                    // if we've overflowed, jettison the pending change set
+                    mChanges.clearMailboxChanges();
+                    mForceRefresh = currentSequence;
+                }
+    
+                for (QueuedNotifications ntfn : mSentChanges) {
+                    count += ntfn.getNotificationCount();
+                    if (count > MAX_QUEUED_NOTIFICATIONS) {
+                        ntfn.clearMailboxChanges();
+                        mForceRefresh = Math.max(mForceRefresh, ntfn.getSequence());
+                    }
                 }
             }
+    
+            if (mForceRefresh == currentSequence && !fromThisSession)
+                return;
+            // if we're here, these changes either
+            //   a) do not cause the session's notification cache to overflow, or
+            //   b) originate from this session and hence must be notified back to the session
+            mChanges.addNotification(pms);
         }
-
-        if (mForceRefresh == currentSequence && !fromThisSession)
-            return;
-        // if we're here, these changes either
-        //   a) do not cause the session's notification cache to overflow, or
-        //   b) originate from this session and hence must be notified back to the session
-        mChanges.addNotification(pms);
     }
 
     public void forcePush() {
@@ -366,25 +376,24 @@ public class SoapSession extends Session {
     }
 
     private void notifyPushChannel(boolean clearChannel) throws ServiceException {
-        // must lock the Mailbox before locking the Session to avoid deadlock
-        //   because ToXML functions can now call back into the Mailbox
-        synchronized (mMailbox) {
-            synchronized (this) {
-                if (mPushChannel != null) {
-                    mPushChannel.notificationsReady();
-                    if (clearChannel)
-                    	mPushChannel = null;
-                }
+        // don't have to lock the Mailbox before locking the Session to avoid deadlock because we're not calling any ToXML functions
+        synchronized (this) {
+            if (mPushChannel != null) {
+                mPushChannel.notificationsReady();
+                if (clearChannel)
+                	mPushChannel = null;
             }
         }
     }
 
 
     public boolean requiresRefresh(int lastSequence) {
-        if (lastSequence <= 0)
-            return mForceRefresh == getCurrentNotificationSequence();
-        else
-            return mForceRefresh > Math.min(lastSequence, getCurrentNotificationSequence());
+        synchronized (mSentChanges) {
+            if (lastSequence <= 0)
+                return mForceRefresh == getCurrentNotificationSequence();
+            else
+                return mForceRefresh > Math.min(lastSequence, getCurrentNotificationSequence());
+        }
     }
 
     private static final String A_ID = "id";
@@ -401,9 +410,10 @@ public class SoapSession extends Session {
      * @param ctxt  An existing SOAP header <context> element 
      * @param zsc   The SOAP request's encapsulated context */
     public void putRefresh(Element ctxt, ZimbraSoapContext zsc) throws ServiceException {
-        synchronized (this) {
-            if (mMailbox == null)
-                return;
+        if (mMailbox == null)
+            return;
+
+        synchronized (mSentChanges) {
             for (QueuedNotifications ntfn : mSentChanges)
                 ntfn.clearMailboxChanges();
         }
@@ -444,23 +454,27 @@ public class SoapSession extends Session {
     }
 
     public int getCurrentNotificationSequence() {
-        return mChanges.getSequence();
+        synchronized (mSentChanges) {
+            return mChanges.getSequence();
+        }
     }
 
     public void acknowledgeNotifications(int sequence) {
-        if (mSentChanges == null || mSentChanges.isEmpty())
-            return;
-
-        if (sequence <= 0) {
-            // if the client didn't send a valid "last sequence number", *don't* keep old changes around
-            mSentChanges.clear();
-        } else {
-            // clear any notifications we now know the client has received
-            for (Iterator<QueuedNotifications> it = mSentChanges.iterator(); it.hasNext(); ) {
-                if (it.next().getSequence() <= sequence)
-                    it.remove();
-                else
-                    break;
+        synchronized (mSentChanges) {
+            if (mSentChanges == null || mSentChanges.isEmpty())
+                return;
+    
+            if (sequence <= 0) {
+                // if the client didn't send a valid "last sequence number", *don't* keep old changes around
+                mSentChanges.clear();
+            } else {
+                // clear any notifications we now know the client has received
+                for (Iterator<QueuedNotifications> it = mSentChanges.iterator(); it.hasNext(); ) {
+                    if (it.next().getSequence() <= sequence)
+                        it.remove();
+                    else
+                        break;
+                }
             }
         }
     }
@@ -507,47 +521,48 @@ public class SoapSession extends Session {
 
         String explicitAcct = getAuthenticatedAccountId().equals(zsc.getAuthtokenAccountId()) ? null : getAuthenticatedAccountId();
 
-        // must lock the Mailbox before locking the Session to avoid deadlock
-        //   because ToXML functions can now call back into the Mailbox
-        synchronized (mMailbox) {
-            synchronized (this) {
-                // send the <change> block
-                // <change token="555" [acct="4f778920-1a84-11da-b804-6b188d2a20c4"]/>
-                ctxt.addUniqueElement(HeaderConstants.E_CHANGE)
-                    .addAttribute(HeaderConstants.A_CHANGE_ID, mMailbox.getLastChangeID())
-                    .addAttribute(HeaderConstants.A_ACCOUNT_ID, explicitAcct);
+        // because ToXML functions can now call back into the Mailbox, don't hold any locks when calling putQueuedNotifications
+        LinkedList<QueuedNotifications> notifications;
+        synchronized (mSentChanges) {
+            // send the <change> block
+            // <change token="555" [acct="4f778920-1a84-11da-b804-6b188d2a20c4"]/>
+            ctxt.addUniqueElement(HeaderConstants.E_CHANGE)
+                .addAttribute(HeaderConstants.A_CHANGE_ID, mMailbox.getLastChangeID())
+                .addAttribute(HeaderConstants.A_ACCOUNT_ID, explicitAcct);
 
-                // clear any notifications we now know the client has received
-                acknowledgeNotifications(lastSequence);
+            // clear any notifications we now know the client has received
+            acknowledgeNotifications(lastSequence);
 
-                // cover ourselves in case a client is doing something really stupid...
-                if (mSentChanges.size() > 20) {
-                    ZimbraLog.session.warn("clearing abnormally long notification change list due to misbehaving client");
-                    mSentChanges.clear();
-                }
-
-                if (mChanges.hasNotifications() || requiresRefresh(lastSequence)) {
-                    assert(mChanges.getSequence() >= 1);
-                    int newSequence = mChanges.getSequence() + 1;
-                    mSentChanges.add(mChanges);
-                    mChanges = new QueuedNotifications(newSequence); 
-                }
-
-                // mChanges must be empty at this point (everything moved into the mSentChanges list)
-                assert(!mChanges.hasNotifications());
-
-                // drop out if notify is off or if there is nothing to send
-                if (mSentChanges.isEmpty())
-                    return ctxt;
-
-                // send all the old changes
-                QueuedNotifications last = mSentChanges.getLast();
-                for (QueuedNotifications ntfn : mSentChanges) {
-                    if (ntfn.hasNotifications() || ntfn == last)
-                        putQueuedNotifications(ntfn, ctxt, zsc, explicitAcct);
-                }
+            // cover ourselves in case a client is doing something really stupid...
+            if (mSentChanges.size() > 20) {
+                ZimbraLog.session.warn("clearing abnormally long notification change list due to misbehaving client");
+                mSentChanges.clear();
             }
+
+            if (mChanges.hasNotifications() || requiresRefresh(lastSequence)) {
+                assert(mChanges.getSequence() >= 1);
+                int newSequence = mChanges.getSequence() + 1;
+                mSentChanges.add(mChanges);
+                mChanges = new QueuedNotifications(newSequence); 
+            }
+
+            // mChanges must be empty at this point (everything moved into the mSentChanges list)
+            assert(!mChanges.hasNotifications());
+
+            // drop out if notify is off or if there is nothing to send
+            if (mSentChanges.isEmpty())
+                return ctxt;
+
+            notifications = new LinkedList<QueuedNotifications>(mSentChanges);
         }
+
+        // send all the old changes
+        QueuedNotifications last = notifications.getLast();
+        for (QueuedNotifications ntfn : notifications) {
+            if (ntfn.hasNotifications() || ntfn == last)
+                putQueuedNotifications(ntfn, ctxt, zsc, explicitAcct);
+        }
+
         return ctxt;
     }
 
