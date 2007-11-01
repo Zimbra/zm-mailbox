@@ -324,15 +324,13 @@ public final class ZimbraQuery {
         protected static final String RELDATE_PATTERN = "([+-])([0-9]+)([mhdwy][a-z]*)?";
         protected static final Pattern sRelDatePattern = Pattern.compile(RELDATE_PATTERN);
         
-        public void parseDate(int modifier, Token tok, TimeZone tz, Locale locale) throws com.zimbra.cs.index.queryparser.ParseException
+        public void parseDate(int modifier, String s, Token tok, TimeZone tz, Locale locale) throws com.zimbra.cs.index.queryparser.ParseException
         {
             //          * DATE:  absolute-date = mm/dd/yyyy | yyyy/dd/mm  OR
             //          *        relative-date = [+/-]nnnn{minute,hour,day,week,month,year}
             //          *        (need to figure out how to represent "this week", "last
             //          *        week", "this month", etc)
 
-            String s = tok.image;
-            
             mDate = null; // the beginning of the user-specified range (inclusive)
             mEndDate = null; // the end of the user-specified range (NOT-included in the range)
             mLowestTime = -1;

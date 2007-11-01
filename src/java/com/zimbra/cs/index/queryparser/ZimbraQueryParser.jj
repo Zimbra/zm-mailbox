@@ -273,7 +273,7 @@ public final class ZimbraQueryParser {
           case APPT_END:
           {
               ZimbraQuery.DateQuery q = new ZimbraQuery.DateQuery(mAnalyzer, target);
-              q.parseDate(modifier, t, mTimeZone, mLocale);
+              q.parseDate(modifier, tok, t, mTimeZone, mLocale);
               return q;
           }
           case TOFROM:
