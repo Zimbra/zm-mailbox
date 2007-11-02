@@ -71,4 +71,21 @@ public abstract class ZimbraCustomAuth {
      * @throws Exception.  If authentication failed, an Exception should be thrown.
      */
     public abstract void authenticate(Account acct, String password) throws Exception;
+    
+    /*
+     * This function is called by the framework after a successful authenticate.  If 
+     * authenticate failed this method won't be invoked.
+     *  
+     * Overwrite this method to indicate to the framework if checking for password aging 
+     * is desired in the custom auth.   Default is false.
+     * 
+     * It only makes sense to return true for a custom auth if the password is stored in 
+     * the Zimbra directory.  
+     * 
+     * If checkPasswordAging returns false, password aging check will be completely skipped in the framework.
+     * If checkPasswordAging returns true, password aging will be executed by the framework if enabled.
+     */
+    public boolean checkPasswordAging() {
+        return false;
+    }
 }

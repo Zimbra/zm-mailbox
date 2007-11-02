@@ -2569,7 +2569,7 @@ public class LdapProvisioning extends Provisioning {
         AuthMechanism authMech = AuthMechanism.makeInstance(acct);
         verifyPassword(acct, password, authMech);
 
-        if (!checkPasswordPolicy || !authMech.isZimbraAuth())
+        if (!checkPasswordPolicy || !authMech.checkPasswordAging())
             return;
 
         // below this point, the only fault that may be thrown is CHANGE_PASSWORD

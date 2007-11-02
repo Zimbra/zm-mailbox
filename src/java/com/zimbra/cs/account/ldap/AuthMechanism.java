@@ -74,10 +74,11 @@ abstract class AuthMechanism {
         zimbraAuth.doAuth(prov, domain, acct, password);
     }
 
-    
     public boolean isZimbraAuth() {
         return false;
     }
+    
+    abstract boolean checkPasswordAging() throws ServiceException;
     
     abstract void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password) throws ServiceException;
     
@@ -123,6 +124,10 @@ abstract class AuthMechanism {
             }
             throw AccountServiceException.AUTH_FAILED(acct.getName());       
         }
+        
+        boolean checkPasswordAging() throws ServiceException {
+            return true;
+        }
     }
     
     /*
@@ -135,6 +140,10 @@ abstract class AuthMechanism {
         
         void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password) throws ServiceException {
             prov.externalLdapAuth(domain, mAuthMech, acct, password);
+        }
+        
+        boolean checkPasswordAging() throws ServiceException {
+            return false;
         }
     }
     
@@ -160,13 +169,18 @@ abstract class AuthMechanism {
                 }
             }
         }
+        
+        boolean checkPasswordAging() throws ServiceException {
+            return false;
+        }
     }
     
     /*
      * CustomAuth
      */
     static class CustomAuth extends AuthMechanism {
-        private String mAuthHandler; 
+        private String mHandlerName = ""; 
+        private ZimbraCustomAuth mHandler;
         
         CustomAuth(String authMech) {
             super(authMech);
@@ -174,35 +188,38 @@ abstract class AuthMechanism {
             // value is in the format of custom:{handler}
             int idx = mAuthMech.indexOf(':');
             if (idx != -1) {
-                mAuthHandler = mAuthMech.substring(idx+1);
+                mHandlerName = mAuthMech.substring(idx+1);
+                mHandler = ZimbraCustomAuth.getHandler(mHandlerName);
             }
         }
         
         void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password) throws ServiceException {
             
-            if (mAuthHandler == null)
-                throw AccountServiceException.AUTH_FAILED(acct.getName(), new Exception("missing handler for custom auth"));
+            if (mHandler == null)
+                throw AccountServiceException.AUTH_FAILED(acct.getName(), new Exception("handler " + mHandlerName + " for custom auth for domain " + domain.getName() + " not found"));
             
-            ZimbraCustomAuth handler = ZimbraCustomAuth.getHandler(mAuthHandler);
-            if (handler == null) {
-                throw AccountServiceException.AUTH_FAILED(acct.getName(), new Exception("handler " + mAuthHandler + " for custom auth for domain " + domain.getName() + " not found"));
-            } else {
-                try {
-                    handler.authenticate(acct, password);
-                    return;
-                } catch (Exception e) {
-                    if (e instanceof ServiceException) {
-                        throw (ServiceException)e;
-                    } else {   
-                        String msg = e.getMessage();
-                        if (StringUtil.isNullOrEmpty(msg))
-                            msg = "";
-                        else
-                            msg = " (" + msg + ")";
-                        throw AccountServiceException.AUTH_FAILED(acct.getName() + msg , e);
-                    }
+            try {
+                mHandler.authenticate(acct, password);
+                return;
+            } catch (Exception e) {
+                if (e instanceof ServiceException) {
+                    throw (ServiceException)e;
+                } else {   
+                    String msg = e.getMessage();
+                    if (StringUtil.isNullOrEmpty(msg))
+                        msg = "";
+                    else
+                        msg = " (" + msg + ")";
+                    throw AccountServiceException.AUTH_FAILED(acct.getName() + msg , e);
                 }
             }
+            
+        }
+        
+        boolean checkPasswordAging() throws ServiceException {
+            if (mHandler == null)
+                throw ServiceException.FAILURE("custom auth handler " + mHandlerName + " not found", null);
+            return mHandler.checkPasswordAging();
         }
     }
 }
