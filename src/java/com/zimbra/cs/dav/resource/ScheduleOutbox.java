@@ -52,8 +52,10 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.FreeBusy;
+import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.ParsedDuration;
+import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
@@ -88,13 +90,6 @@ public class ScheduleOutbox extends Collection {
 		}
 		if (req == null)
 			throw new DavException("empty request", HttpServletResponse.SC_BAD_REQUEST);
-		ZProperty organizerProp = req.getProperty(ICalTok.ORGANIZER);
-		if (organizerProp != null) {
-			ZOrganizer organizer = new ZOrganizer(organizerProp);
-			String organizerStr = this.getAddressFromPrincipalURL(organizer.getAddress());
-			if (!organizerStr.equals(ctxt.getAuthAccount().getName()))
-				throw new DavException("the requestor is not the organizer", HttpServletResponse.SC_FORBIDDEN);
-		}
 		ZimbraLog.dav.debug("originator: "+originator);
         ArrayList<String> rcptArray = new ArrayList<String>();
         while (recipients.hasMoreElements()) {
@@ -190,43 +185,72 @@ public class ScheduleOutbox extends Collection {
         }
 	}
 
-	private void handleEventRequest(DavContext ctxt, ZCalendar.ZVCalendar cal, ZComponent req, String originator, String rcpt, Element resp) {
+    private void handleEventRequest(DavContext ctxt, ZCalendar.ZVCalendar cal, ZComponent req, String originator, String rcpt, Element resp) throws ServiceException,DavException {
         Address from, to;
         try {
             from = AccountUtil.getFriendlyEmailAddress(ctxt.getAuthAccount());
             if (rcpt.toLowerCase().startsWith("mailto:"))
-            	rcpt = rcpt.substring(7);
+                rcpt = rcpt.substring(7);
             to = new InternetAddress(rcpt);
         } catch (AddressException e) {
-			resp.addElement(DavElements.E_RECIPIENT).setText(rcpt);
-			resp.addElement(DavElements.E_REQUEST_STATUS).setText("3.7;"+rcpt);
-			return;
+            resp.addElement(DavElements.E_RECIPIENT).setText(rcpt);
+            resp.addElement(DavElements.E_REQUEST_STATUS).setText("3.7;"+rcpt);
+            return;
         }
         ArrayList<Address> recipients = new java.util.ArrayList<Address>();
         recipients.add(to);
-        String subject, uid, text, status;
+        String subject, uid, text, status, method;
 
-        subject = "Meeting Request: ";
         status = req.getPropVal(ICalTok.STATUS, "");
+        method = cal.getPropVal(ICalTok.METHOD, "REQUEST");
+        
+        if (method.equals("REQUEST")) {
+            ZProperty organizerProp = req.getProperty(ICalTok.ORGANIZER);
+            if (organizerProp != null) {
+                ZOrganizer organizer = new ZOrganizer(organizerProp);
+                String organizerStr = this.getAddressFromPrincipalURL(organizer.getAddress());
+                if (!organizerStr.equals(ctxt.getAuthAccount().getName()))
+                    throw new DavException("the requestor is not the organizer", HttpServletResponse.SC_FORBIDDEN);
+            }
+            subject = "Meeting Request: ";
+        } else if (method.equals("REPLY")) {
+            ZProperty attendeeProp = req.getProperty(ICalTok.ATTENDEE);
+            if (attendeeProp == null)
+                throw new DavException("missing property ATTENDEE", HttpServletResponse.SC_BAD_REQUEST);
+            ZAttendee attendee = new ZAttendee(attendeeProp);
+            String partStat = attendee.getPartStat();
+            if (partStat.equals(IcalXmlStrMap.PARTSTAT_ACCEPTED)) {
+                subject = "Accepted: ";
+            } else if (partStat.equals(IcalXmlStrMap.PARTSTAT_TENTATIVE)) {
+                subject = "Tentative: ";
+            } else if (partStat.equals(IcalXmlStrMap.PARTSTAT_DECLINED)) {
+                subject = "Declined: ";
+            } else {
+                subject = "Meeting Reply: ";
+            }
+        } else {
+            subject = "Meeting: ";
+        }
+        
         if (status.equals("CANCELLED"))
             subject = "Meeting Cancelled: ";
         subject += req.getPropVal(ICalTok.SUMMARY, "");
         text = req.getPropVal(ICalTok.DESCRIPTION, "");
         uid = req.getPropVal(ICalTok.UID, null);
         if (uid == null) {
-			resp.addElement(DavElements.E_RECIPIENT).setText(rcpt);
-			resp.addElement(DavElements.E_REQUEST_STATUS).setText("3.1;UID");
-			return;
+            resp.addElement(DavElements.E_RECIPIENT).setText(rcpt);
+            resp.addElement(DavElements.E_REQUEST_STATUS).setText("3.1;UID");
+            return;
         }
         try {
-        	MimeMessage mm = CalendarMailSender.createCalendarMessage(from, from, recipients, subject, text, uid, cal);
-        	Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(ctxt.getAuthAccount());
-        	mbox.getMailSender().sendMimeMessage(ctxt.getOperationContext(), mbox, true, mm, null, null, 0, null, null, true, false);
+            MimeMessage mm = CalendarMailSender.createCalendarMessage(from, from, recipients, subject, text, uid, cal);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(ctxt.getAuthAccount());
+            mbox.getMailSender().sendMimeMessage(ctxt.getOperationContext(), mbox, true, mm, null, null, 0, null, null, true, false);
         } catch (ServiceException e) {
-			resp.addElement(DavElements.E_RECIPIENT).setText(rcpt);
-			resp.addElement(DavElements.E_REQUEST_STATUS).setText("5.1");
+            resp.addElement(DavElements.E_RECIPIENT).setText(rcpt);
+            resp.addElement(DavElements.E_REQUEST_STATUS).setText("5.1");
         }
-	}
+    }
     
     /*
      * to workaround the pre release iCal bugs
