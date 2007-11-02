@@ -133,7 +133,7 @@ public abstract class DavMethod {
 		public RequestProp() {
 			props = new ArrayList<QName>();
 			errProps = new HashMap<QName, DavException>();
-			nameOnly = true;
+			nameOnly = false;
 			allProp = true;
 		}
 		

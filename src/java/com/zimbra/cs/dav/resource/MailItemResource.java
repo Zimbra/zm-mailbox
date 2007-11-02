@@ -87,7 +87,7 @@ public abstract class MailItemResource extends DavResource {
 		mEtag = MailItemResource.getEtag(item);
 		mSubject = item.getSubject();
 		mPath = item.getPath();
-		mModifiedDate = item.getDate();
+		mModifiedDate = item.getChangeDate();
 		mOwnerId = item.getAccount().getId();
 		try {
 			mDeadProps = getDeadProps(ctxt, item);
@@ -95,6 +95,8 @@ public abstract class MailItemResource extends DavResource {
 			ZimbraLog.dav.warn("can't get dead properties for MailItem id="+mId, e);
 		}
 		setProperty(DavElements.P_GETETAG, mEtag);
+		if (mModifiedDate > 0)
+            setLastModifiedDate(mModifiedDate);
 	}
 	
 	public MailItemResource(String path, String acct) {

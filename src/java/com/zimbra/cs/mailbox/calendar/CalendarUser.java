@@ -164,7 +164,7 @@ public abstract class CalendarUser {
 
     public URI getURI() throws ServiceException {
         try {
-            return new URI("MAILTO", mAddress, null);
+            return new URI("mailto", mAddress, null);
         } catch(URISyntaxException e) {
             throw ServiceException.FAILURE("Could not create URI for address "+mAddress, e);
         }
@@ -176,7 +176,7 @@ public abstract class CalendarUser {
         if (hasCn())
             prop.addParameter(new ZParameter(ICalTok.CN, getCn()));
         if (hasSentBy())
-            prop.addParameter(new ZParameter(ICalTok.SENT_BY, "MAILTO:" + getSentBy()));
+            prop.addParameter(new ZParameter(ICalTok.SENT_BY, "mailto:" + getSentBy()));
         if (hasDir())
             prop.addParameter(new ZParameter(ICalTok.DIR, getDir()));
         if (hasLanguage())
@@ -186,7 +186,7 @@ public abstract class CalendarUser {
     public ZProperty toProperty() throws ServiceException {
     	String addr = getAddress();
     	if (addr != null && addr.indexOf(':') < 0)
-    		addr = "MAILTO:" + addr;
+    		addr = "mailto:" + addr;
         ZProperty prop = new ZProperty(getPropertyName(), addr);
         setProperty(prop);
         return prop;
@@ -221,7 +221,7 @@ public abstract class CalendarUser {
         }
         if (hasSentBy()) {
             if (sb.length() > 0) sb.append(';');
-            sb.append("SENT-BY=\"MAILTO:").append(getSentBy()).append('"');
+            sb.append("SENT-BY=\"mailto:").append(getSentBy()).append('"');
         }
         if (hasDir()) {
             if (sb.length() > 0) sb.append(';');
@@ -232,7 +232,7 @@ public abstract class CalendarUser {
             sb.append("LANGUAGE=").append(getLanguage()).append(";");
         }
         if (sb.length() > 0) sb.append(':');
-        sb.append("MAILTO:").append(getAddress());
+        sb.append("mailto:").append(getAddress());
         return sb;
     }
 }

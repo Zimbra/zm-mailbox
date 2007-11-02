@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -65,6 +66,8 @@ public abstract class DavResource {
 		mOwner = owner;
 		mProps = new HashMap<QName,ResourceProperty>();
 		mUri = uri;
+		if (isCollection() && !mUri.endsWith("/"))
+            mUri = mUri + "/";
 		mDavCompliance = new TreeSet<Compliance>();
 		mDavCompliance.add(Compliance.one);
 		mDavCompliance.add(Compliance.two);
@@ -121,7 +124,7 @@ public abstract class DavResource {
 	}
 
 	public Set<QName> getAllPropertyNames() {
-		Set<QName> ret = new TreeSet<QName>();
+		Set<QName> ret = new HashSet<QName>();
 		for (QName key : mProps.keySet())
 			if (!mProps.get(key).isProtected())
 				ret.add(key);

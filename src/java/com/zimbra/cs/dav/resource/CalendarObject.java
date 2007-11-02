@@ -126,16 +126,6 @@ public class CalendarObject extends MailItemResource {
 			buf.append(wr.toCharArray());
 			wr.close();
 		}
-		if (ctxt.isIcalClient()) {
-			// XXX hack for early iCal release that puts HTTP url for organizer field.
-			int orgPos = buf.indexOf(DavElements.ORGANIZER);
-			int xorgPos = buf.indexOf(DavElements.ORGANIZER_HREF+":");
-			if (orgPos > 0 && xorgPos > 0) {
-				buf.replace(orgPos, orgPos + 9, DavElements.ORGANIZER_MAILTO);
-				xorgPos = buf.indexOf(DavElements.ORGANIZER_HREF+":");
-				buf.replace(xorgPos, xorgPos+16, DavElements.ORGANIZER);
-			}
-		}
 		buf.append("END:VCALENDAR\r\n");
 		return buf.toString();
 	}
