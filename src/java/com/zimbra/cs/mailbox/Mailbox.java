@@ -3991,7 +3991,8 @@ public class Mailbox {
                     // incoming copy.
                     pm.close();
                     mboxBlob = sm.renameTo(blob, this, messageId, msg.getSavedSequence(), msg.getVolumeId());
-
+                    pm.fileMoved(mboxBlob.getBlob().getFile());
+                    
                     // In single-recipient case the blob bytes are logged in
                     // CreateMessage entry, to avoid having to write two
                     // redolog entries for a single delivery.

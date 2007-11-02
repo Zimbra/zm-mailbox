@@ -76,7 +76,6 @@ public class ParsedMessage {
 
     private MimeMessage mMimeMessage;
     private MimeMessage mExpandedMessage;
-    private boolean mMutatorsRun = false;
     private boolean mParsed = false;
     private boolean mAnalyzed = false;
     private boolean mIndexAttachments = true;
@@ -112,6 +111,7 @@ public class ParsedMessage {
         // FIXME: not running mutators yet because of exception throwing!
 //      runMimeMutators();
         // must set received-date before Lucene document is initialized
+        runMimeConverters();
         setReceivedDate(receivedDate);
     }
 
@@ -121,36 +121,29 @@ public class ParsedMessage {
 
     public ParsedMessage(byte[] rawData, Long receivedDate, boolean indexAttachments) throws MessagingException {
         mIndexAttachments = indexAttachments;
-        parseRawData(rawData);
+        InputStream is = new SharedByteArrayInputStream(rawData);
+        mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), is);
 
-        // if there are no mutators, the raw data is valid and storeable
         try {
             runMimeMutators();
             if (!wasMutated()) {
+                // Not mutated, so raw data is valid and storeable.
                 mRawData = rawData;
             }
         } catch (MessagingException e) {
             // mutator threw an exception, so go back to the raw and use it verbatim
             ZimbraLog.extensions.warn(
                 "Error applying message mutator.  Reverting to original MIME message.", e);
-            parseRawData(rawData);
+            mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), is);
             mRawData = rawData;
         }
+        runMimeConverters();
         // must set received-date before Lucene document is initialized
         if (receivedDate != null) {
             setReceivedDate(receivedDate);
         }
     }
     
-    public boolean wasMutated() {
-        return mWasMutated;
-    }
-    
-    private void parseRawData(byte[] rawData) throws MessagingException {
-        InputStream is = new SharedByteArrayInputStream(rawData);
-        mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), is);
-    }
-
     /**
      * Creates a <tt>ParsedMessage</tt> from a file already stored on disk.
      * @param file the file on disk.  Cannot be compressed.
@@ -159,23 +152,32 @@ public class ParsedMessage {
     throws MessagingException, IOException {
         mIndexAttachments = indexAttachments;
         SharedFileInputStream in = new SharedFileInputStream(file);
-        mMimeMessage = new Mime.FixedMimeMessage(JMSession.getSession(), in);
-        mExpandedMessage = mMimeMessage;
+        mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), in);
         
         try {
             // Maintain reference to the file only if the content was not mutated.
             runMimeMutators();
-            if (!wasMutated()) {
+            if (wasMutated()) {
+                // Load data into memory.  This allows access to the message
+                // data after close() has been called.
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                mMimeMessage.writeTo(out);
+                mRawData = out.toByteArray();
+                mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(
+                    JMSession.getSession(), new SharedByteArrayInputStream(mRawData));
+                in.close();
+            } else {
                 mRawFile = file;
                 mRawFileInputStream = in;
             }
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             ZimbraLog.extensions.warn(
                 "Error applying message mutator.  Reverting to original MIME message.", e);
-            mMimeMessage = new Mime.FixedMimeMessage(JMSession.getSession(), in);
-            mExpandedMessage = mMimeMessage;
+            mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), in);
         }
 
+        runMimeConverters();
+        
         // must set received-date before Lucene document is initialized
         if (receivedDate == null) {
             receivedDate = getZimbraDateHeader(mMimeMessage); 
@@ -183,6 +185,10 @@ public class ParsedMessage {
         setReceivedDate(receivedDate);
     }
 
+    public boolean wasMutated() {
+        return mWasMutated;
+    }
+    
     /**
      * Allows the caller to set the digest.  This avoids rereading the file,
      * in the case where the caller has already read it once and calculated
@@ -199,19 +205,11 @@ public class ParsedMessage {
      * @return the ParsedMessage itself
      * @throws ServiceException 
      * @see #runMimeConverters() */
-    private ParsedMessage parse() throws ServiceException {
+    private ParsedMessage parse() {
         if (mParsed)
             return this;
         mParsed = true;
 
-        // apply any mutators that affect the on-disk representation of the message
-        try {
-            runMimeMutators();
-        } catch (MessagingException e) {
-            throw ServiceException.FAILURE("error applying message mutator", e);
-        }
-        // do an on-the-fly temporary expansion of the raw message (uudecode, tnef-decode, etc.)
-        runMimeConverters();
         try {
             mMessageParts = Mime.getParts(mExpandedMessage);
             mHasAttachments = Mime.hasAttachment(mMessageParts);
@@ -230,9 +228,7 @@ public class ParsedMessage {
      *   <tt>false</tt> if the encapsulated message is unchanged
      *         
      * @see MimeVisitor#registerMutator */
-    void runMimeMutators() throws MessagingException {
-        if (mMutatorsRun)
-            return;
+    private void runMimeMutators() throws MessagingException {
         mWasMutated = false;
         for (Class<? extends MimeVisitor> vclass : MimeVisitor.getMutators()) {
             try {
@@ -245,7 +241,6 @@ public class ParsedMessage {
                 ZimbraLog.misc.warn("exception ignored running mutator; skipping", e);
             }
         }
-        mMutatorsRun = true;
     }
 
     /** Applies all registered on-the-fly MIME converters to a copy of the
@@ -258,7 +253,7 @@ public class ParsedMessage {
      * message, <code>false</code> if the encapsulated message is unchanged.
      *         
      * @see MimeVisitor#registerConverter */
-    boolean runMimeConverters() {
+    private boolean runMimeConverters() {
         // this callback copies the MimeMessage if a converter would want 
         //   to make a change, but doesn't alter the original MimeMessage
         MimeVisitor.ModificationCallback forkCallback = new MimeVisitor.ModificationCallback() {
@@ -304,15 +299,18 @@ public class ParsedMessage {
         try {
             InputStream in;
             if (mRawData != null) {
+                // Constructed from a byte array, or constructed from a file and then mutated.
                 in = new SharedByteArrayInputStream(mRawData);
             } else if (mRawFile != null) {
+                // Constructed from a file and not mutated.
                 in = new SharedFileInputStream(mRawFile);
             } else {
                 assert(false);
                 ZimbraLog.mailbox.warn("Data not available for MimeMessage.  Returning null.");
                 return null;
             }
-            mMimeMessage = new Mime.FixedMimeMessage(JMSession.getSession(), in);
+            mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), in);
+            runMimeConverters();
         } catch (IOException e) {
             ZimbraLog.mailbox.warn("Unable to create MimeMessage.", e);
         } catch (MessagingException e) {
@@ -437,17 +435,17 @@ public class ParsedMessage {
         return mIndexAttachments;
     }
 
-    public List<MPartInfo> getMessageParts() throws ServiceException {
+    public List<MPartInfo> getMessageParts() {
         parse();
         return mMessageParts;
     }
 
-    public boolean hasAttachments() throws ServiceException {
+    public boolean hasAttachments() {
         parse();
         return mHasAttachments;
     }
 
-    public int getPriorityBitmask() throws ServiceException {
+    public int getPriorityBitmask() {
         parse();
 
         try {
@@ -955,8 +953,28 @@ public class ParsedMessage {
         if (mRawFile != null) {
             mMimeMessage = null;
             mExpandedMessage = null;
-            mRawFile = null;
-            mRawFileInputStream.close();
+            if (mRawFileInputStream != null) {
+                mRawFileInputStream.close();
+                mRawFileInputStream = null;
+            }
         }
+    }
+    
+    /**
+     * Tells this <tt>ParsedMessage</tt> to get its data from a new file.
+     * Only applies to <tt>ParsedMessage</tt>s that were instantiated from
+     * a file and not mutated.
+     */
+    public void fileMoved(File newFile)
+    throws IOException {
+        if (mRawFile != null) {
+            mMimeMessage = null;
+            mExpandedMessage = null;
+            if (mRawFileInputStream != null) {
+                mRawFileInputStream.close();
+                mRawFileInputStream = null;
+            }
+        }
+        mRawFile = newFile;
     }
 }

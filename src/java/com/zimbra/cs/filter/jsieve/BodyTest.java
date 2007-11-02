@@ -126,7 +126,6 @@ public class BodyTest extends AbstractTest {
                 }
             }
         } catch (IOException e) {
-        } catch (ServiceException e) {
         } catch (MessagingException e) {
         }
         return false;
