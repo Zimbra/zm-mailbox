@@ -960,7 +960,14 @@ public abstract class Provisioning {
     
     public static final String A_zimbraPrefIdentityId = "zimbraPrefIdentityId";
     public static final String A_zimbraPrefIdentityName = "zimbraPrefIdentityName";
-    
+
+    /**
+     * To get default HtmlEditor Properties
+     */
+    public static final String A_zimbraPrefHtmlEditorDefaultFontFamily = "zimbraPrefHtmlEditorDefaultFontFamily";
+    public static final String A_zimbraPrefHtmlEditorDefaultFontSize = "zimbraPrefHtmlEditorDefaultFontSize";    
+    public static final String A_zimbraPrefHtmlEditorDefaultFontColor = "zimbraPrefHtmlEditorDefaultFontColor";
+
     public static final String A_zimbraPrefDefaultSignatureId = "zimbraPrefDefaultSignatureId";
     public static final String A_zimbraSignatureId = "zimbraSignatureId";
     public static final String A_zimbraSignatureName = "zimbraSignatureName";

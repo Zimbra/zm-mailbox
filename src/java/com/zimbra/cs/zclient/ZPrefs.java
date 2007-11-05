@@ -59,6 +59,12 @@ public class ZPrefs {
 
     public String getComposeFormat() { return get(Provisioning.A_zimbraPrefComposeFormat); }
 
+    public String getHtmlEditorDefaultFontFamily() { return get(Provisioning.A_zimbraPrefHtmlEditorDefaultFontFamily); }
+
+    public String getHtmlEditorDefaultFontSize() { return get(Provisioning.A_zimbraPrefHtmlEditorDefaultFontSize); }
+
+    public String getHtmlEditorDefaultFontColor() { return get(Provisioning.A_zimbraPrefHtmlEditorDefaultFontColor); }
+
     public String getLocale() { return get(Provisioning.A_zimbraPrefLocale); }
 
     public boolean getUseTimeZoneListInCalendar() { return getBool(Provisioning.A_zimbraPrefUseTimeZoneListInCalendar); }
