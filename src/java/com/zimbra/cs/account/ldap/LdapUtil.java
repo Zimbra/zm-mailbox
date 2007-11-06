@@ -378,6 +378,9 @@ public class LdapUtil {
      * can be logged with the callers catcher.
      */
     public static boolean isValidUUID(String strRep) throws IllegalArgumentException {
+        if (strRep.length() > 36)
+            throw new IllegalArgumentException("uuid must be no longer than 36 characters");
+        
         UUID uuid = UUID.fromString(strRep);
         return (uuid != null);   
     }
