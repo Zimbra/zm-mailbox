@@ -52,17 +52,13 @@ public class GetServerNIFs extends AdminDocumentHandler {
         Element response = lc.createElement(AdminConstants.GET_SERVER_NIFS_RESPONSE);
         try {
 			while ((line = in.readLine()) != null) {
-			    Element elNIF = response.addElement(AdminConstants.E_NI);
-
-			    Matcher IPmatcher = ADDR_PATTERN.matcher(line);
-			    if (IPmatcher.find()) {
-			    	elNIF.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, IPmatcher.group(KEY_GROUP).toLowerCase()).setText(IPmatcher.group(VALUE_GROUP));
-			    }
-			    
-			    Matcher maskMatcher = MASK_PATTERN.matcher(line);
-			    if (maskMatcher.find()) {
+				Matcher IPmatcher = ADDR_PATTERN.matcher(line);
+				Matcher maskMatcher = MASK_PATTERN.matcher(line);
+				if (IPmatcher.find() && maskMatcher.find()) {
+					Element elNIF = response.addElement(AdminConstants.E_NI);
+					elNIF.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, IPmatcher.group(KEY_GROUP).toLowerCase()).setText(IPmatcher.group(VALUE_GROUP));
 			    	elNIF.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, maskMatcher.group(KEY_GROUP).toLowerCase()).setText(maskMatcher.group(VALUE_GROUP));
-			    }			    
+				}
 			}
 		} catch (IOException e) {
 			throw ServiceException.FAILURE("exception occurred handling CLI command", e);

@@ -1882,3 +1882,18 @@ in soap-waitset.txt
   If no <entry> is given, all enties of the type will be flushed from cache.
 
 <FlushCacheResponse/>
+
+---------------------------------------------------------------------------
+# Get server's network interfaces. Returns IP  addresses and net masks
+# This call will use zmrcd to call /opt/zimbra/libexec/zmserverips 
+
+<GetServerNIfsRequest>
+ <server by="id|name|serviceHostname">...</server>
+</GetServerNIfsRequest>
+
+<GetServerNIfsResponse>
+	<ni>
+	<a n="addr">ip address</a>
+	<a n="mask">network mask</a>
+	</ni>*
+</GetServerNIfsResponse>
