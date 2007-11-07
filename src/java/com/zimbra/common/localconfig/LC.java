@@ -200,6 +200,7 @@ public class LC {
     public static final KnownKey mailboxd_pidfile;
     public static final KnownKey mailboxd_keystore;
     public static final KnownKey mailboxd_keystore_password;
+    public static final KnownKey mailboxd_truststore;
     public static final KnownKey mailboxd_truststore_password;
     public static final KnownKey mailboxd_output_file;
     public static final KnownKey mailboxd_output_rotate_interval;
@@ -819,6 +820,10 @@ public class LC {
         mailboxd_keystore_password = new KnownKey("mailboxd_keystore_password");
         mailboxd_keystore_password.setDefault("zimbra");
         mailboxd_keystore_password.setDoc("Password to be used with the KeyManager keystore.");
+        
+        mailboxd_truststore = new KnownKey("mailboxd_truststore");
+        mailboxd_truststore.setDefault("${mailboxd_directory}" + FS + "etc" + FS + "truststore");
+        mailboxd_truststore.setDoc("Location of truststore data file.");
         
         mailboxd_truststore_password = new KnownKey("mailboxd_truststore_password");
         mailboxd_truststore_password.setDefault("changeit");
