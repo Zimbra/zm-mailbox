@@ -2691,5 +2691,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>mail priority feature</desc>
 </attr>
 
+<attr id="567" name="zimbraIMBindAddress" type="string" max="128" cardinality="multi" optionalIn="server">
+  <desc>interface address(es) on which IM server should listen; if empty, binds to all interfaces</desc>
+</attr>
+
 </attrs>
 
