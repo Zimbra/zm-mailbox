@@ -1183,9 +1183,10 @@ public class LdapProvisioning extends Provisioning {
                 }
             }
             
-            HashMap<String, String[]> attrs = new HashMap<String, String[]>();
-            attrs.put(Provisioning.A_zimbraMailAlias, addMultiValue(entry, Provisioning.A_zimbraMailAlias, alias));
-            attrs.put(Provisioning.A_mail, addMultiValue(entry, Provisioning.A_mail, alias));
+            HashMap<String, String> attrs = new HashMap<String, String>();
+            attrs.put("+" + Provisioning.A_zimbraMailAlias, alias);
+            attrs.put("+" + Provisioning.A_mail, alias);
+                       
             // UGH
             modifyAttrsInternal(((NamedEntry) entry), ctxt, attrs);
         } catch (NameAlreadyBoundException nabe) {
@@ -1248,9 +1249,9 @@ public class LdapProvisioning extends Provisioning {
             // if the entry exists, remove zimbraMailAlias attr first, then alias
             if (entry != null) {
                 try {
-                    HashMap<String, String[]> attrs = new HashMap<String, String[]>();
-                    attrs.put(Provisioning.A_mail, removeMultiValue(entry, Provisioning.A_mail, alias));
-                    attrs.put(Provisioning.A_zimbraMailAlias, removeMultiValue(entry, Provisioning.A_zimbraMailAlias, alias));                
+                    HashMap<String, String> attrs = new HashMap<String, String>();
+                    attrs.put("-" + Provisioning.A_mail, alias);
+                    attrs.put("-" + Provisioning.A_zimbraMailAlias, alias); 
                     modifyAttrsInternal(((NamedEntry)entry), ctxt, attrs);
                 } catch (ServiceException e) {
                   ZimbraLog.account.warn("unable to remove zimbraMailAlias/mail attrs: "+alias);
