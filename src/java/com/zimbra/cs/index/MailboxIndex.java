@@ -161,13 +161,18 @@ public final class MailboxIndex
         }
         
         ZimbraQuery zq = new ZimbraQuery(mbox, params);
+        
+        if (ZimbraLog.searchstats.isDebugEnabled()) {
+            int textCount = zq.countSearchTextParts();
+            ZimbraLog.searchstats.debug("Executing search with ["+textCount+"] text parts");
+        }
+        
         try {
             ZimbraQueryResults results = zq.execute(octxt, proto);
             
             if (isTaskSort) {
                 results = new TaskSortingQueryResults(results, originalSort);
             }
-            
             return results;
         } catch (IOException e) {
             zq.doneWithQuery();

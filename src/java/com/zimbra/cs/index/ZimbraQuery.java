@@ -2206,6 +2206,26 @@ public final class ZimbraQuery {
 
         mSortByOverride = sortBy;
     }
+
+    private static final class CountTextParts implements QueryOperation.RecurseCallback {
+        int numTextParts = 0;
+        
+        public void recurseCallback(QueryOperation op) {
+            if (op instanceof LuceneQueryOperation)
+                numTextParts++;
+        }
+    }
+    
+    /**
+     * @return TRUE if this search touches the fulltext database
+     */
+    int countSearchTextParts() {
+        if (mOp == null)
+            return 0;
+        CountTextParts count = new CountTextParts();
+        mOp.depthFirstRecurse(count);
+        return count.numTextParts;
+    }
     
     public static boolean unitTests(Mailbox mbox) throws ServiceException {
 
