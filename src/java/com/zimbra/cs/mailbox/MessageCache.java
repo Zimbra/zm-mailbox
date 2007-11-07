@@ -32,6 +32,7 @@ import javax.mail.internet.SharedInputStream;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.stats.ZimbraPerf;
@@ -137,9 +138,21 @@ public class MessageCache {
      * @see #getMimeMessage()
      * @see #getItemContent() */
     static InputStream getRawContent(MailItem item) throws ServiceException {
-        return new ByteArrayInputStream(getItemContent(item));
+        String key = item.getDigest();
+        if (key == null || key.equals(""))
+            return null;
+        if (item.getSize() < mMaxCacheSize) {
+            // Content is small enough to be cached in memory
+            return new SharedByteArrayInputStream(getItemContent(item));
+        }
+        try {
+            return fetchFromStore(item);
+        } catch (IOException e) {
+            String msg = String.format("Unable to get content for %s %d", item.getClass().getSimpleName(), item.getId());
+            throw ServiceException.FAILURE(msg, e);
+        }
     }
-
+    
     /** Returns a JavaMail {@link javax.mail.internet.MimeMessage}
      *  encapsulating the message content.  If possible, TNEF and uuencoded
      *  attachments are expanded and their components are presented as
