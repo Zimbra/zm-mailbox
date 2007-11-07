@@ -161,8 +161,7 @@ public class StoreIncomingBlob extends RedoableOp {
         mVolumeId = in.readShort();
         mMsgSize = in.readInt();
         mMsgSize = in.readInt();  // Serialization code wrote the size twice
-        int dataLen = in.readInt();
-        mData = new RedoableOpData(new RedoLogInputStream(in, dataLen), dataLen);
+        mData = new RedoableOpData(new RedoLogInputStream(in, mMsgSize), mMsgSize);
         // mData must be the last thing deserialized.  See comments in
         // serializeData().
     }

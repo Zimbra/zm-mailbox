@@ -25,6 +25,9 @@ package com.zimbra.cs.redolog.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,8 +43,10 @@ import com.zimbra.cs.redolog.logger.FileHeader;
 import com.zimbra.cs.redolog.logger.FileLogReader;
 import com.zimbra.cs.redolog.op.CreateMessage;
 import com.zimbra.cs.redolog.op.RedoableOp;
+import com.zimbra.cs.redolog.op.StoreIncomingBlob;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.DevNullOutputStream;
 
 /**
  * @author jhahm
@@ -49,6 +54,7 @@ import com.zimbra.common.util.CliUtil;
 public class RedoLogVerify {
 
     private static Options mOptions = new Options();
+    private PrintStream mOut = System.out;
 
     static {
         mOptions.addOption("q", "quiet",   false, "quiet mode");
@@ -93,10 +99,13 @@ public class RedoLogVerify {
     private boolean mDumpMessageBody;
     private List<BadFile> mBadFiles;
 
-    private RedoLogVerify(boolean quiet, boolean dumpMsgBody) {
+    public RedoLogVerify(boolean quiet, boolean dumpMsgBody, OutputStream out) {
         mQuiet = quiet;
         mDumpMessageBody = dumpMsgBody;
         mBadFiles = new ArrayList<BadFile>();
+        if (out != null) {
+            mOut = new PrintStream(out);
+        }
     }
 
     public boolean scanLog(File logfile) throws IOException {
@@ -104,10 +113,10 @@ public class RedoLogVerify {
         FileLogReader logReader = new FileLogReader(logfile, false);
         logReader.open();
         FileHeader header = logReader.getHeader();
-        System.out.println("HEADER");
-        System.out.println("------");
-        System.out.println(header);
-        System.out.println("------");
+        mOut.println("HEADER");
+        mOut.println("------");
+        mOut.println(header);
+        mOut.println("------");
         long lastPosition = 0;
 
         try {
@@ -115,16 +124,18 @@ public class RedoLogVerify {
             while ((op = logReader.getNextOp()) != null) {
                 lastPosition = logReader.position();
                 if (!mQuiet)
-                    System.out.println(op);
-                if (mDumpMessageBody && op instanceof CreateMessage) {
-                    CreateMessage cm = (CreateMessage) op;
-                    byte[] body = cm.getMessageBody();
-                    if (body != null) {
-                        if (ByteUtil.isGzipped(body)) {
-                            body = ByteUtil.uncompress(body);
+                    mOut.println(op);
+                if (op instanceof CreateMessage || op instanceof StoreIncomingBlob) {
+                    InputStream in = op.getAdditionalDataStream();
+                    if (in != null) {
+                        PrintStream out;
+                        if (mDumpMessageBody) {
+                            out = mOut;
+                        } else {
+                            out = new PrintStream(new DevNullOutputStream());
                         }
-                        System.out.print(new String(body));
-                        System.out.println("<END OF MESSAGE>");
+                        ByteUtil.copy(in, true, out, false);
+                        out.println("<END OF MESSAGE>");
                     }
                 }
             }
@@ -139,7 +150,7 @@ public class RedoLogVerify {
             long size = logReader.getSize();
             if (lastPosition < size) {
                 long diff = size - lastPosition;
-                System.out.println("There were " + diff + " bytes of junk data at the end.");
+                mOut.println("There were " + diff + " bytes of junk data at the end.");
                 throw e;
             }
         } finally {
@@ -148,17 +159,17 @@ public class RedoLogVerify {
         return good;
     }
 
-    private boolean verifyFile(File file) {
-        System.out.println("VERIFYING: " + file.getName());
+    public boolean verifyFile(File file) {
+        mOut.println("VERIFYING: " + file.getName());
         boolean good = false;
         try {
             good = scanLog(file);
         } catch (IOException e) {
             mBadFiles.add(new BadFile(file, e));
-            System.err.println("Exception while verifying " + file.getName());
+            mOut.println("Exception while verifying " + file.getName());
             e.printStackTrace();
         }
-        System.out.println();
+        mOut.println();
         return good;
     }
 
@@ -172,7 +183,7 @@ public class RedoLogVerify {
     }
 
     private boolean verifyDirectory(File dir) {
-        System.out.println("VERIFYING DIRECTORY: " + dir.getName());
+        mOut.println("VERIFYING DIRECTORY: " + dir.getName());
         File[] all = dir.listFiles();
         if (all == null || all.length == 0)
             return true;
@@ -195,15 +206,15 @@ public class RedoLogVerify {
     private void listErrors() {
         if (mBadFiles.size() == 0)
             return;
-        System.out.println();
-        System.out.println();
-        System.out.println("-----------------------------------------------");
-        System.out.println();
-        System.out.println("The following files had errors:");
-        System.out.println();
+        mOut.println();
+        mOut.println();
+        mOut.println("-----------------------------------------------");
+        mOut.println();
+        mOut.println("The following files had errors:");
+        mOut.println();
         for (BadFile bf : mBadFiles) {
-            System.out.println(bf.file.getName());
-            System.out.println("    " + bf.error.getMessage());
+            mOut.println(bf.file.getName());
+            mOut.println("    " + bf.error.getMessage());
         }
     }
 
@@ -219,7 +230,7 @@ public class RedoLogVerify {
 
         boolean allGood = true;
         RedoLogVerify verify =
-            new RedoLogVerify(cl.hasOption('q'), cl.hasOption('m'));
+            new RedoLogVerify(cl.hasOption('q'), cl.hasOption('m'), null);
 
         for (int i = 0; i < args.length; i++) {
             File f = new File(args[i]);

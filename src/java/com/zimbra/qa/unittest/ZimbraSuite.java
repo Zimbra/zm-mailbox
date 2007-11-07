@@ -78,6 +78,7 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestMetadata.class);
         sClasses.add(TestSoap.class);
         sClasses.add(TestBlobInputStream.class);
+        sClasses.add(TestRedoLog.class);
     };
     
     /**

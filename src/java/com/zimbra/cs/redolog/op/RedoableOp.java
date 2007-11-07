@@ -488,7 +488,7 @@ public abstract class RedoableOp {
      * Returns any additional data that must be written after the usual header
      * and data.
      */
-    protected InputStream getAdditionalDataStream() throws IOException {
+    public InputStream getAdditionalDataStream() throws IOException {
         return null;
     }
 

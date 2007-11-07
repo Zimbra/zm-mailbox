@@ -292,7 +292,7 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
     }
 
     @Override
-    protected InputStream getAdditionalDataStream()
+    public InputStream getAdditionalDataStream()
     throws IOException {
         if (mMsgBodyType == MSGBODY_INLINE) {
             return mData.getInputStream();
