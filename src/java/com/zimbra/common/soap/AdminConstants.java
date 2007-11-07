@@ -95,6 +95,10 @@ public class AdminConstants {
     public static final QName CREATE_SERVER_RESPONSE = QName.get("CreateServerResponse", NAMESPACE);
     public static final QName GET_SERVER_REQUEST = QName.get("GetServerRequest", NAMESPACE);
     public static final QName GET_SERVER_RESPONSE = QName.get("GetServerResponse", NAMESPACE);
+    
+    public static final QName GET_SERVER_NIFS_REQUEST = QName.get("GetServerNIfsRequest", NAMESPACE);
+    public static final QName GET_SERVER_NIFS_RESPONSE = QName.get("GetServerNIfsResponse", NAMESPACE);    
+    
     public static final QName MODIFY_SERVER_REQUEST = QName.get("ModifyServerRequest", NAMESPACE);
     public static final QName MODIFY_SERVER_RESPONSE = QName.get("ModifyServerResponse", NAMESPACE);
     public static final QName DELETE_SERVER_REQUEST = QName.get("DeleteServerRequest", NAMESPACE);
@@ -343,6 +347,7 @@ public class AdminConstants {
     public static final String E_ATTRS_TO_GET = "attrstoget";
     public static final String E_MAX_SEARCH_RESULTS = "maxsearchresults";
     public static final String E_MAILBOX = "mbox";
+    public static final String E_NI = "ni";
     public static final String E_NUM_OF_PAGES = "numpages";
     public static final String E_VOLUME = "volume";
     public static final String E_PROGRESS = "progress";
