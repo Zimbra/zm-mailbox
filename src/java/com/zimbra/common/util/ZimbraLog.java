@@ -116,6 +116,11 @@ public class ZimbraLog {
     public static final Log index = LogFactory.getLog("zimbra.index");
     
     /**
+     * Fhe "zimbra.searchstat" logger.  For logging statistics about what kinds of searches are run
+     */
+    public static final Log searchstats = LogFactory.getLog("zimbra.searchstats");
+    
+    /**
      * the "zimbra.redolog" logger. For redolog-releated events.
      */
     public static final Log redolog = LogFactory.getLog("zimbra.redolog");
