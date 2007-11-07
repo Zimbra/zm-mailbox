@@ -43,6 +43,12 @@ public abstract class FilterQueryOperation extends QueryOperation {
     }
 
     @Override
+    QueryOperation expandLocalRemotePart(Mailbox mbox) throws ServiceException {
+        mOp.expandLocalRemotePart(mbox);
+        return this;
+    }
+    
+    @Override
     QueryOperation ensureSpamTrashSetting(Mailbox mbox, boolean includeTrash, boolean includeSpam)
         throws ServiceException {
         return mOp.ensureSpamTrashSetting(mbox, includeTrash, includeSpam);

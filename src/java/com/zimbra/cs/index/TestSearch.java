@@ -71,6 +71,9 @@ public class TestSearch extends TestCase {
         }
         long startTime = System.currentTimeMillis();
 
+        runTestQuery(mMailboxId, "is:unread is:remote", false, NO_EXPECTED_CHECK, SortBy.DATE_DESCENDING);
+        
+        if (true) {
         runTestQuery(mMailboxId, "in:inbox", false, NO_EXPECTED_CHECK, SortBy.DATE_DESCENDING);
         
         assertTrue(runTestQuery(mMailboxId, "appt-start:<1/1/2006 recurring", false, 
@@ -330,6 +333,8 @@ public class TestSearch extends TestCase {
         assertTrue(runTestQuery(mMailboxId, "metadata:foo sort:score and not metadata:foo sort:score and metadata:(\"foo\" \"foo bar\" gub)", false, NO_EXPECTED_CHECK, SortBy.DATE_DESCENDING));
         assertTrue(runTestQuery(mMailboxId, "metadata:foo sort:score metadata:(\"foo\" \"foo bar\" gub) sort:score", false, NO_EXPECTED_CHECK, SortBy.DATE_DESCENDING));
         assertTrue(runTestQuery(mMailboxId, "item:({1,2,3} or {4,5,6})", false, NO_EXPECTED_CHECK, SortBy.DATE_DESCENDING));
+        assertTrue(runTestQuery(mMailboxId, "item:({1,2,3}) is:unread", false, NO_EXPECTED_CHECK, SortBy.DATE_DESCENDING));
+    }
         
         long endTime = System.currentTimeMillis();
         long time = endTime - startTime;
@@ -475,7 +480,7 @@ public class TestSearch extends TestCase {
         params.setLimit(100);
         params.setPrefetch(true);
         params.setMode(SearchResultMode.NORMAL);
-        ZimbraQuery zq = new ZimbraQuery(mbox, params, false, false);
+        ZimbraQuery zq = new ZimbraQuery(mbox, params);
         ZimbraQueryResults res = zq.execute(null, SoapProtocol.Soap12);
 
         try {

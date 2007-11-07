@@ -26,12 +26,27 @@ class QueryTarget {
 	public static QueryTarget UNSPECIFIED = new QueryTarget();
 	public static QueryTarget LOCAL = new QueryTarget();
 	
+	// pseudo-target, must be optimized out before we try to execute!
+	public static QueryTarget IS_REMOTE = new QueryTarget(); 
+	
 	private QueryTarget() { mTarget = null; }
 	public QueryTarget(String target) {
 		mTarget = target;
 	}
 	
 	private String mTarget;
+	
+	public boolean isCompatibleLocal() {
+	    return (this == UNSPECIFIED || this == LOCAL);
+	}
+	
+	public boolean isCompatible(String targetAcctId) {
+	    if (isCompatibleLocal())
+	        return false;
+	    if (this == IS_REMOTE)
+	        return false;
+	    return mTarget.equals(targetAcctId);
+	}
 	
 	public String toString() {
 		if (this == UNSPECIFIED)

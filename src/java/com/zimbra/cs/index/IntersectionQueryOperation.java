@@ -496,34 +496,21 @@ class IntersectionQueryOperation extends QueryOperation {
         return false;
     }
 
+    QueryOperation expandLocalRemotePart(Mailbox mbox) throws ServiceException {
+        List<QueryOperation> newList = new ArrayList<QueryOperation>();
+        for (QueryOperation op : mQueryOperations) {
+            newList.add(op.expandLocalRemotePart(mbox));
+        }
+        mQueryOperations = newList;
+        return this;
+    }
 
     QueryOperation ensureSpamTrashSetting(Mailbox mbox, boolean includeTrash, boolean includeSpam) throws ServiceException {
         // just tack it on -- presumably this will be combined in the optimize()
         // step...
         if (!hasSpamTrashSetting()) {
-
-            boolean addedOne = false;
-
-            // first, try to add it to the DB operations...Note that this is a bit of a
-            // heuristic hack here: We could conceivably push the trash/spam setting
-            // down onto ALL our subOps, and you could argue that would be faster...EXCEPT
-            // that we know that when we do the "ensure trash/spam" pushdown, it always 
-            // becomes a DB op (only the DB knows the answer).....and soooooo, since most
-            // of the time when we've got a non-DBQueryOp child, there is NOT a DB operation
-            // already, pushing the trash/spam setting down would actually create most work.
-            for (Iterator iter = mQueryOperations.iterator(); iter.hasNext();) {
-                QueryOperation op = (QueryOperation) iter.next();
-                if (op instanceof DBQueryOperation) {
-                    op.ensureSpamTrashSetting(mbox, includeTrash, includeSpam);
-                    addedOne = true;
-                }
-            }
-
-            // okay, we had no DB operations below us...so just push it down to everyone
-            //
-            // hmmm....perhaps we should only be pushing it down to one operation here?  That could
-            // very well be a bit faster....
-            if (!addedOne) {
+            
+            if (true) {
                 // ensureSpamTrashSetting might very well return a new root node...so we need
                 // to build a new mQueryOperations list using the result of ensureSpamTrashSetting
                 List<QueryOperation> newList = new ArrayList<QueryOperation>();
@@ -531,6 +518,38 @@ class IntersectionQueryOperation extends QueryOperation {
                     newList.add(op.ensureSpamTrashSetting(mbox, includeTrash, includeSpam));
                 }
                 mQueryOperations = newList;
+            } else {                
+
+                boolean addedOne = false;
+
+                // first, try to add it to the DB operations...Note that this is a bit of a
+                // heuristic hack here: We could conceivably push the trash/spam setting
+                // down onto ALL our subOps, and you could argue that would be faster...EXCEPT
+                // that we know that when we do the "ensure trash/spam" pushdown, it always 
+                // becomes a DB op (only the DB knows the answer).....and soooooo, since most
+                // of the time when we've got a non-DBQueryOp child, there is NOT a DB operation
+                // already, pushing the trash/spam setting down would actually create most work.
+                for (Iterator iter = mQueryOperations.iterator(); iter.hasNext();) {
+                    QueryOperation op = (QueryOperation) iter.next();
+                    if (op instanceof DBQueryOperation) {
+                        op.ensureSpamTrashSetting(mbox, includeTrash, includeSpam);
+                        addedOne = true;
+                    }
+                }
+
+                // okay, we had no DB operations below us...so just push it down to everyone
+                //
+                // hmmm....perhaps we should only be pushing it down to one operation here?  That could
+                // very well be a bit faster....
+                if (!addedOne) {
+                    // ensureSpamTrashSetting might very well return a new root node...so we need
+                    // to build a new mQueryOperations list using the result of ensureSpamTrashSetting
+                    List<QueryOperation> newList = new ArrayList<QueryOperation>();
+                    for (QueryOperation op : mQueryOperations) {
+                        newList.add(op.ensureSpamTrashSetting(mbox, includeTrash, includeSpam));
+                    }
+                    mQueryOperations = newList;
+                }
             }
         }
         return this;

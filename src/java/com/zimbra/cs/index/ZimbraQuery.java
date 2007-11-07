@@ -45,6 +45,7 @@ import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.BooleanClause.Occur;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.queryparser.Token;
 import com.zimbra.cs.index.queryparser.ZimbraQueryParser;
@@ -55,7 +56,6 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
-import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
@@ -835,118 +835,6 @@ public final class ZimbraQuery {
             mIncludeSubfolders = includeSubfolders;
         }
         
-        /**
-         * Used for "is:local" queries
-         * 
-         * @param mbox
-         * @return 
-         */
-        private QueryOperation getLocalFolderOperation(Mailbox mbox) {
-            try {
-                Folder root = mbox.getFolderById(null, Mailbox.ID_FOLDER_ROOT);
-                List<Folder> allFolders = root.getSubfolderHierarchy();
-
-                Folder trash = mbox.getFolderById(null, Mailbox.ID_FOLDER_TRASH);
-                List<Folder> trashFolders = trash.getSubfolderHierarchy();
-
-                allFolders.remove(trash);
-                for (Folder f : trashFolders) {
-                    allFolders.remove(f);
-                }
-
-                Folder spam = mbox.getFolderById(null, Mailbox.ID_FOLDER_SPAM);
-                allFolders.remove(spam);
-
-                if (allFolders.size() == 0) {
-                    return new NullQueryOperation();
-                } else {
-                    UnionQueryOperation outer = new UnionQueryOperation();
-
-                    for (Folder f : allFolders) {
-                        if (!(f instanceof Mountpoint) && !(f instanceof SearchFolder)) {
-                            DBQueryOperation dbop = new DBQueryOperation();
-                            outer.add(dbop);
-                            dbop.addInClause(f, true);
-                        }
-                    }
-                    return outer;
-                }
-            } catch (ServiceException e) {
-                return new NullQueryOperation();
-            }
-        }
-
-        /**
-         * Used for "is:remote" queries
-         *  
-         * @param truth
-         * @param mbox
-         * @return
-         */
-        private QueryOperation getRemoteFolderOperation(boolean truth, Mailbox mbox) {
-            try {
-                Folder root = mbox.getFolderById(null, Mailbox.ID_FOLDER_ROOT);
-                List<Folder> allFolders = root.getSubfolderHierarchy();
-
-                Folder trash = mbox.getFolderById(null, Mailbox.ID_FOLDER_TRASH);
-                List<Folder> trashFolders = trash.getSubfolderHierarchy();
-
-                allFolders.remove(trash);
-                for (Folder f : trashFolders) {
-                    allFolders.remove(f);
-                }
-
-                Folder spam = mbox.getFolderById(null, Mailbox.ID_FOLDER_SPAM);
-                allFolders.remove(spam);
-
-                // from our list of all folders, remove anything that isn't a mountpoint
-                // and also remove anything that is a local-pointing mountpoint
-                for (Iterator<Folder> iter = allFolders.iterator(); iter.hasNext();) {
-                    Folder f = iter.next();
-                    if (!(f instanceof Mountpoint))
-                        iter.remove();
-                    else {
-                        Mountpoint mpt = (Mountpoint)f;
-                        if (mpt.isLocal()) {
-                            iter.remove();
-                        }
-                    }
-                }
-
-                if (allFolders.size() == 0) {
-                    if (truth) {
-                        return new NullQueryOperation();
-                    }
-                } else {
-                    if (truth) {
-                        UnionQueryOperation outer = new UnionQueryOperation();
-
-                        for (Folder f : allFolders) {
-                            assert((f instanceof Mountpoint) && !((Mountpoint)f).isLocal());
-                            Mountpoint mpt = (Mountpoint)f;
-                            DBQueryOperation dbop = new DBQueryOperation();
-                            outer.add(dbop);
-                            dbop.addInRemoteFolderClause(new ItemId(mpt.getOwnerId(), mpt.getRemoteId()), "", mIncludeSubfolders, truth);                            
-                        }
-                        return outer;
-                    } else {
-                        IntersectionQueryOperation outer = new IntersectionQueryOperation();
-
-                        for (Folder f : allFolders) {
-                            assert((f instanceof Mountpoint) && !((Mountpoint)f).isLocal());
-                            Mountpoint mpt = (Mountpoint)f;
-                            DBQueryOperation dbop = new DBQueryOperation();
-                            outer.addQueryOp(dbop);
-                            dbop.addInRemoteFolderClause(new ItemId(mpt.getOwnerId(), mpt.getRemoteId()), "", mIncludeSubfolders, truth);                            
-                        }
-
-                        return outer;
-                    }
-                }
-            } catch (ServiceException e) {}
-            return new NullQueryOperation();
-        }
-
         protected QueryOperation getQueryOperation(boolean truth) {
             if (mSpecialTarget != null) {
                 if (mSpecialTarget == IN_NO_FOLDER) {
@@ -958,17 +846,25 @@ public final class ZimbraQuery {
                 } else {
                     if (calcTruth(truth)) {
                         if (mSpecialTarget == IN_REMOTE_FOLDER) {
-                            return getRemoteFolderOperation(true, mMailbox);
+                            DBQueryOperation dbop = new DBQueryOperation();
+                            dbop.addIsRemoteClause();
+                            return dbop;
                         } else {
                             assert(mSpecialTarget == IN_LOCAL_FOLDER);
-                            return getLocalFolderOperation(mMailbox);
+                            DBQueryOperation dbop = new DBQueryOperation();
+                            dbop.addIsLocalClause();
+                            return dbop;
                         }
                     } else {
                         if (mSpecialTarget == IN_REMOTE_FOLDER) {
-                            return getLocalFolderOperation(mMailbox);
+                            DBQueryOperation dbop = new DBQueryOperation();
+                            dbop.addIsLocalClause();
+                            return dbop;
                         } else {
                             assert(mSpecialTarget == IN_LOCAL_FOLDER);
-                            return getRemoteFolderOperation(true, mMailbox);
+                            DBQueryOperation dbop = new DBQueryOperation();
+                            dbop.addIsRemoteClause();
+                            return dbop;
                         }
                     }
                 }
@@ -2055,8 +1951,7 @@ public final class ZimbraQuery {
     }
 
     /**
-     * @author tim
-     *
+     * 
      * ParseTree's job is to take the LIST of query terms (BaseQuery's) and build them
      * into a Tree structure of Things (return results) and Operators (AND and OR)
      * 
@@ -2388,7 +2283,11 @@ public final class ZimbraQuery {
         return parser.Parse();
     }
     
-    public ZimbraQuery(Mailbox mbox, SearchParams params, boolean includeTrash, boolean includeSpam) throws ParseException, ServiceException {
+    public ZimbraQuery(Mailbox mbox, SearchParams params) throws ParseException, ServiceException {
+        Account acct = mbox.getAccount();
+        boolean includeTrash = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeTrashInSearch, false);
+        boolean includeSpam = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeSpamInSearch, false);
+        
         mParams = params;
         mMbox = mbox;
         long chunkSize = (long)mParams.getOffset() + (long)mParams.getLimit();
@@ -2410,6 +2309,18 @@ public final class ZimbraQuery {
         }
         parser.init(analyzer, mMbox, params.getTimeZone(), params.getLocale(), lookupQueryTypeFromString(params.getDefaultField()));
         mClauses = parser.Parse();
+        
+        if (ZimbraLog.index.isDebugEnabled()) {
+            String str = this.toString() +" search([";
+            for (int i = 0; i < mParams.getTypes().length; i++) {
+                if (i > 0) {
+                    str += ",";
+                }
+                str+=mParams.getTypes()[i];
+            }
+            str += "]," + mParams.getSortBy()+ ")";
+            ZimbraLog.index.debug(str);
+        }
 
         String sortByStr = parser.getSortByStr();
         if (sortByStr != null)
@@ -2452,6 +2363,23 @@ public final class ZimbraQuery {
             if (mLog.isDebugEnabled()) {
                 mLog.debug("OP="+mOp.toString());
             }
+            
+            // do spam/trash hackery!
+            if (!includeTrash || !includeSpam) {
+                if (!mOp.hasSpamTrashSetting()) {
+                    mOp = mOp.ensureSpamTrashSetting(mMbox, includeTrash, includeSpam);
+                    if (mLog.isDebugEnabled()) {
+                        mLog.debug("AFTERTS="+mOp.toString());
+                    }
+                }
+            }
+            
+            {
+                mOp = mOp.expandLocalRemotePart(mbox);
+                if (mLog.isDebugEnabled()) {
+                    mLog.debug("AFTEREXP="+mOp.toString());
+                }
+            }
 
             // optimize the query down
             mOp = mOp.optimize(mMbox);
@@ -2463,16 +2391,6 @@ public final class ZimbraQuery {
                 mLog.debug("OPTIMIZED="+mOp.toString());
             }
 
-            // do spam/trash hackery!
-            if (!includeTrash || !includeSpam) {
-                if (!mOp.hasSpamTrashSetting()) {
-                    mOp = mOp.ensureSpamTrashSetting(mMbox, includeTrash, includeSpam);
-                    if (mLog.isDebugEnabled()) {
-                        mLog.debug("AFTERTS="+mOp.toString());
-                    }
-                    mOp = mOp.optimize(mMbox); // optimize again now that we have the trash/spam setting
-                }
-            }
         }
     }
 
@@ -2520,18 +2438,6 @@ public final class ZimbraQuery {
         // STEP 2: run the query
         // 
         MailboxIndex mbidx = mMbox.getMailboxIndex();
-
-        if (ZimbraLog.index.isDebugEnabled()) {
-            String str = this.toString() +" search([";
-            for (int i = 0; i < mParams.getTypes().length; i++) {
-                if (i > 0) {
-                    str += ",";
-                }
-                str+=mParams.getTypes()[i];
-            }
-            str += "]," + mParams.getSortBy()+ ")";
-            ZimbraLog.index.debug(str);
-        }
 
         if (mOp!= null) {
             QueryTargetSet targets = mOp.getQueryTargets();

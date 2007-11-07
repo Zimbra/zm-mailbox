@@ -54,6 +54,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
+import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.util.ItemId;
 
@@ -78,6 +79,11 @@ class DBQueryOperation extends QueryOperation
      * us optimize away queries that might match "everything"
      */
     protected boolean mAllResultsQuery = true;
+    
+    protected boolean mIncludeIsLocalFolders = false;
+    protected boolean mIncludeIsRemoteFolders = false;
+    
+    
 
     protected Collection <SearchResult> mDBHits;
     protected List<ZimbraHit>mNextHits = new ArrayList<ZimbraHit>();
@@ -137,9 +143,60 @@ class DBQueryOperation extends QueryOperation
      * @return List of Folders which are in Trash, including Trash itself
      * @throws ServiceException
      */
-    private List /* Folder */ getTrashFolders(Mailbox mbox) throws ServiceException {
+    static List<Folder> getTrashFolders(Mailbox mbox) throws ServiceException {
         return mbox.getFolderById(null, Mailbox.ID_FOLDER_TRASH).getSubfolderHierarchy(); 
     }
+    
+    QueryOperation expandLocalRemotePart(Mailbox mbox) throws ServiceException {
+        if (mConstraints instanceof DbLeafNode) {
+            boolean added = false;
+            
+            if (mIncludeIsLocalFolders) {
+                mIncludeIsLocalFolders = false; // expanded!
+                
+                DbLeafNode leaf = (DbLeafNode)mConstraints;
+
+                for (Folder f : mbox.getFolderById(null, Mailbox.ID_FOLDER_ROOT).getSubfolderHierarchy()) {
+                    if (!(f instanceof Mountpoint) && !(f instanceof SearchFolder)) {
+                        // add local folder ref
+                        leaf.folders.add(f);
+                        added = true;
+                    }
+                }
+                if (!added) {
+                    return new NullQueryOperation();
+                } else {
+                    return this;
+                }
+            } else if (mIncludeIsRemoteFolders) {
+                UnionQueryOperation toRet = new UnionQueryOperation();
+                mIncludeIsRemoteFolders = false; // expanded
+                
+                for (Folder f : mbox.getFolderById(null, Mailbox.ID_FOLDER_ROOT).getSubfolderHierarchy()) {
+                    if (f instanceof Mountpoint) {
+                        Mountpoint mpt = (Mountpoint)f;
+                        if (!mpt.isLocal()) {
+                            // add remote folder ref
+                            DBQueryOperation db = new DBQueryOperation();
+                            db.addInRemoteFolderClause(new ItemId(mpt.getOwnerId(), mpt.getRemoteId()), "", true, true);
+                            toRet.add(db);
+                            added = true;
+                        }
+                    }
+                }
+                if (!added) {
+                    return new NullQueryOperation();
+                } else {
+                    return toRet;
+                }                    
+            } else {
+                return this;
+            }
+        } else {
+            throw new IllegalStateException("expandLocalRemotePart must be called before optimize() is called");
+        }
+    }
+    
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.index.QueryOperation#ensureSpamTrashSetting(com.zimbra.cs.mailbox.Mailbox)
@@ -147,33 +204,38 @@ class DBQueryOperation extends QueryOperation
     QueryOperation ensureSpamTrashSetting(Mailbox mbox, boolean includeTrash, boolean includeSpam) throws ServiceException
     {
         if (!hasSpamTrashSetting()) {
-            List<Folder> exclude = new ArrayList<Folder>();
+            ArrayList<Folder> exclude = new ArrayList<Folder>();
             if (!includeSpam) {
                 Folder spam = mbox.getFolderById(null, Mailbox.ID_FOLDER_SPAM);            
                 exclude.add(spam);
             }
             
             if (!includeTrash) {
-                List trashFolders = getTrashFolders(mbox);
-                for (Iterator iter  = trashFolders.iterator(); iter.hasNext();) {
-                    Folder cur = (Folder)(iter.next());
+                List<Folder> trashFolders = getTrashFolders(mbox);
+                for (Iterator<Folder> iter  = trashFolders.iterator(); iter.hasNext();) {
+                    Folder cur = iter.next();
                     exclude.add(cur);
                 }
             }
-
+            
             mConstraints.ensureSpamTrashSetting(mbox, exclude);
         }
         return this;
     }
-
+    
+    
     /* (non-Javadoc)
      * @see com.zimbra.cs.index.QueryOperation#hasSpamTrashSetting()
      */
     boolean hasSpamTrashSetting() {
         if (mLuceneOp != null && mLuceneOp.hasSpamTrashSetting())
             return true;
-        else
-            return mConstraints.hasSpamTrashSetting();
+        else {
+            if (mIncludeIsRemoteFolders)
+                return true;
+            else
+                return mConstraints.hasSpamTrashSetting();
+        }
     }
     /* (non-Javadoc)
      * @see com.zimbra.cs.index.QueryOperation#forceHasSpamTrashSetting()
@@ -344,7 +406,7 @@ class DBQueryOperation extends QueryOperation
         mAllResultsQuery = false;
         if (convId.belongsTo(mbox)) {
             // LOCAL!
-            if (mQueryTarget != QueryTarget.LOCAL && mQueryTarget != QueryTarget.UNSPECIFIED) 
+            if (!mQueryTarget.isCompatibleLocal()) 
                 throw new IllegalArgumentException("Cannot addConvId w/ local target b/c DBQueryOperation already has a remote target");
             mQueryTarget = QueryTarget.LOCAL;
             topLevelAndedConstraint().addConvId(convId.getId(), truth);
@@ -357,6 +419,36 @@ class DBQueryOperation extends QueryOperation
             topLevelAndedConstraint().addRemoteConvId(convId, truth);
         }
     }
+    
+    /**
+     * Handles 'is:local' clause meaning all local folders
+     */
+    void addIsLocalClause() {
+        if (!mQueryTarget.isCompatibleLocal()) {
+            throw new IllegalArgumentException("Cannot addIsLocalFolderClause b/c DBQueryOperation already has a remote target");
+        } 
+        mQueryTarget = QueryTarget.LOCAL;
+        mAllResultsQuery = false;
+        
+        mIncludeIsLocalFolders = true;
+    }
+    
+    /**
+     * Handles 'is:local' clause meaning all local folders
+     */
+    void addIsRemoteClause() {
+        if (mQueryTarget == QueryTarget.LOCAL) {
+            throw new IllegalArgumentException("Cannot addIsRemoteFolderClause b/c DBQueryOperation already has a local target");
+        }
+        if (!(mQueryTarget == QueryTarget.IS_REMOTE || mQueryTarget == QueryTarget.UNSPECIFIED)) {
+            throw new IllegalArgumentException("Cannot addIsRemoteFolderClause b/c DBQueryOperation already has a remote target: "+mQueryTarget);
+        }
+        mQueryTarget = QueryTarget.IS_REMOTE;
+        mAllResultsQuery = false;
+        
+        mIncludeIsRemoteFolders = true;
+    }
+    
     
     /**
      * Handles query clause that resolves to a remote folder.
@@ -383,7 +475,7 @@ class DBQueryOperation extends QueryOperation
         assert(!(folder instanceof Mountpoint) || ((Mountpoint)folder).isLocal()); 
 //        ((Mountpoint)folder).getOwnerId().equals(folder.getMailbox().getAccountId()));
         
-        if (mQueryTarget != QueryTarget.LOCAL && mQueryTarget != QueryTarget.UNSPECIFIED) 
+        if (!mQueryTarget.isCompatibleLocal()) 
             throw new IllegalArgumentException("Cannot addInClause w/ local target b/c DBQueryOperation already has a remote target");
         mQueryTarget = QueryTarget.LOCAL;
         
@@ -1048,6 +1140,11 @@ class DBQueryOperation extends QueryOperation
         } else if (hasNoResults()) {
             retVal.append("--- NO RESULT ---");
         } else {
+            if (this.mIncludeIsLocalFolders) {
+                retVal.append("IS:LOCAL ");
+            } else if (this.mIncludeIsRemoteFolders) {
+                retVal.append("IS:REMOTE ");
+            } 
             retVal.append(mConstraints.toString());
         }
         retVal.append(")");

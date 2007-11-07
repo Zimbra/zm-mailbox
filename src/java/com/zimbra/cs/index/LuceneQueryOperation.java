@@ -91,6 +91,11 @@ class LuceneQueryOperation extends QueryOperation
         mDBOp = op;
     }
 
+    @Override
+    QueryOperation expandLocalRemotePart(Mailbox mbox) throws ServiceException {
+        return this;
+    }
+    
     /* (non-Javadoc)
      * @see com.zimbra.cs.index.QueryOperation#ensureSpamTrashSetting(com.zimbra.cs.mailbox.Mailbox, boolean, boolean)
      */

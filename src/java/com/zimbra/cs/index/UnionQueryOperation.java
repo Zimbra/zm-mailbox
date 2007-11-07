@@ -166,6 +166,16 @@ class UnionQueryOperation extends QueryOperation
     boolean hasAllResults() {
         return false;
     }
+    
+    QueryOperation expandLocalRemotePart(Mailbox mbox) throws ServiceException {
+        ArrayList<QueryOperation> newList = new ArrayList<QueryOperation>();
+        for (QueryOperation op : mQueryOperations) {
+            newList.add(op.expandLocalRemotePart(mbox));
+        }
+        mQueryOperations = newList;
+        return this;
+    }
+    
     QueryOperation ensureSpamTrashSetting(Mailbox mbox, boolean includeTrash, boolean includeSpam) throws ServiceException
     {
         ArrayList<QueryOperation> newList = new ArrayList<QueryOperation>();

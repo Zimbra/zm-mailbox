@@ -82,13 +82,16 @@ import com.zimbra.cs.util.JMSession;
  */
 public final class MailboxIndex 
 {
-    public static ZimbraQueryResults search(SoapProtocol proto, OperationContext octxt, Mailbox mbox, SearchParams params,
-        boolean includeTrashByDefault, boolean includeSpamByDefault) throws IOException, ParseException, ServiceException {
+    public static ZimbraQueryResults search(SoapProtocol proto, OperationContext octxt, Mailbox mbox, SearchParams params) 
+    throws IOException, ParseException, ServiceException {
         
         if (ZimbraLog.index.isDebugEnabled()) {
             ZimbraLog.index.debug("SearchRequest: "+params.getQueryStr());
         }
         
+        //
+        // Testing hacks
+        // 
         String qs = params.getQueryStr();
         if (qs.startsWith("$")) {
             String[] words = qs.split(" ");
@@ -112,6 +115,9 @@ public final class MailboxIndex
             return new EmptyQueryResults(params.getTypes(), params.getSortBy(), params.getMode());
         }
         
+        //
+        // calendar expansions
+        //
         if ((params.getCalItemExpandStart() > 0) || (params.getCalItemExpandEnd() > 0)) {
             StringBuilder toAdd = new StringBuilder();
             toAdd.append('(').append(qs).append(')');
@@ -154,7 +160,7 @@ public final class MailboxIndex
                 break;
         }
         
-        ZimbraQuery zq = new ZimbraQuery(mbox, params, includeTrashByDefault, includeSpamByDefault);
+        ZimbraQuery zq = new ZimbraQuery(mbox, params);
         try {
             ZimbraQueryResults results = zq.execute(octxt, proto);
             

@@ -3126,12 +3126,7 @@ public class Mailbox {
                 mMessagesToIndex = new HashSet<Integer>();
             }
         }
-        
-        Account acct = getAccount();
-        boolean includeTrash = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeTrashInSearch, false);
-        boolean includeSpam = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeSpamInSearch, false);
-
-        return MailboxIndex.search(proto, octxt, this, params, includeTrash, includeSpam);
+        return MailboxIndex.search(proto, octxt, this, params);
     }                    
     
     /**
@@ -3148,12 +3143,9 @@ public class Mailbox {
         if (octxt == null)
             throw ServiceException.INVALID_REQUEST("The OperationContext must not be null", null);
         
-        Account acct = getAccount();
-        boolean includeTrash = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeTrashInSearch, false);
-        boolean includeSpam = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeSpamInSearch, false);
         // okay, lets run the search through the query parser -- this has the side-effect of
         // re-writing the query in a format that is OK to proxy to the other server
-        ZimbraQuery zq = new ZimbraQuery(this, params, includeTrash, includeSpam);
+        ZimbraQuery zq = new ZimbraQuery(this, params);
         return zq.toQueryString();
     }
     

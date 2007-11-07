@@ -52,6 +52,11 @@ public class NoTermQueryOperation extends QueryOperation {
         mParams = params;
     }
 
+    @Override
+    QueryOperation expandLocalRemotePart(Mailbox mbox) throws ServiceException {
+        return this;
+    }
+    
     QueryOperation ensureSpamTrashSetting(Mailbox mbox, boolean includeTrash,
             boolean includeSpam) throws ServiceException {
         return this;

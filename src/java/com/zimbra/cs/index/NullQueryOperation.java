@@ -42,6 +42,11 @@ class NullQueryOperation extends QueryOperation {
         
     }
     
+    @Override
+    QueryOperation expandLocalRemotePart(Mailbox mbox) throws ServiceException {
+        return this;
+    }
+    
     public QueryOperation ensureSpamTrashSetting(Mailbox mbox, boolean includeTrash, boolean includeSpam) throws ServiceException
     {
         return this;
