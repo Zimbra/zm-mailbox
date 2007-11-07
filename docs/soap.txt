@@ -949,7 +949,7 @@ Messages:
               of a messasage.  There is at most 1 content element.
   {conv-id}  = converstation id. only present if <m> is not enclosed within a <c> element
   {size}     = size in bytes
-  {flags}    = (u)nread, (f)lagged, has (a)ttachment, (r)eplied, (s)ent by me, for(w)arded,
+  {flags}    = (u)nread, (f)lagged, has (a)ttachment, (r)eplied, (s)ent by me, for(w)arded, calendar in(v)ite,
                (d)raft, IMAP-\Deleted (x), (n)otification sent, urgent (!), low-priority (?)
   {date}     = secs since epoch, from date header in message
   {original-id} = message id of message being replied to/forwarded (outbound messages only)
