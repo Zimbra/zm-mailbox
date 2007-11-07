@@ -27,4 +27,6 @@ public class RemoteCommands {
     public static final String COLLECT_CONFIG_FILES = "zmcollectconfigfiles";
     
     public static final String COLLECT_LDAP_ZIMBRA = "zmcollectldapzimbra";
+    
+    public static final String ZM_SERVER_IPS = "zmserverips";
 }
