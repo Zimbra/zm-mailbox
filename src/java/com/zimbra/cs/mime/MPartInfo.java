@@ -38,11 +38,9 @@ public class MPartInfo {
 	int mPartNum;
 	int mSize;
 	Object mContent; // content set to MimeMultipart or MimeMessage if it was a multipart and/or message
-    boolean mIsFAInit = false;
-    boolean mIsFA;
-    boolean mPullOutInit = false;
-    boolean mPullOut;
-	
+    boolean mIsFilterableAttachment;
+    boolean mIsToplevelAttachment;
+
     public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("MPartInfo: {");
@@ -52,7 +50,7 @@ public class MPartInfo {
         sb.append("disposition: ").append(mDisposition).append(", ");
         sb.append("filename: ").append(mFilename).append(", ");
         sb.append("partNum: ").append(mPartNum).append(", ");
-        sb.append("isFilterableAttachment: ").append(isFilterableAttachment());
+        sb.append("isFilterableAttachment: ").append(mIsFilterableAttachment);
         sb.append("}");
         return sb.toString();
     }
@@ -66,11 +64,7 @@ public class MPartInfo {
 	 * @return
 	 */
     public boolean isFilterableAttachment() {
-        if (!mIsFAInit) {
-            mIsFA = Mime.isFilterableAttachment(this);
-            mIsFAInit = true;
-        }
-        return mIsFA;
+        return mIsFilterableAttachment;
     }
 
 	public MimePart getMimePart() {

@@ -147,6 +147,8 @@ public class Mime {
         }
     }
 
+    private static final Set<String> INLINEABLE_TYPES = new HashSet<String>(Arrays.asList("image/jpeg", "image/png", "image/gif", CT_XML_ZIMBRA_SHARE));
+
     /**
      * return complete List of MPartInfo objects. 
      * @param mm
@@ -158,6 +160,12 @@ public class Mime {
         List<MPartInfo> parts = new ArrayList<MPartInfo>();
         if (mm != null)
             handlePart(mm, "", parts, null, 0);
+        Set<MPartInfo> bodies = getBody(parts, true);
+        for (MPartInfo part : parts) {
+            part.mIsFilterableAttachment = isFilterableAttachment(part, bodies);
+            if (part.mIsFilterableAttachment)
+                part.mIsToplevelAttachment = bodies == null || !bodies.contains(part) || !INLINEABLE_TYPES.contains(part.mContentType);
+        }
         return parts;
     }
     
@@ -562,21 +570,27 @@ public class Mime {
 	 * @param part
 	 * @return
 	 */
-	 static boolean isFilterableAttachment(MPartInfo part) {
+	 private static boolean isFilterableAttachment(MPartInfo part, Set<MPartInfo> bodies) {
 	    MPartInfo parent = part.getParent();
-	    
+
 	    if (part.getContentType().startsWith(CT_MULTIPART_PREFIX))
 	        return false;
-	    
+
+
 	    if (part.getContentType().startsWith(CT_TEXT_PREFIX)) {
 	        if (parent == null || (part.getPartNum() == 1 && parent.getContentType().equals(CT_MESSAGE_RFC822))) {
 	            // ignore top-level text/* types
 	            return false;
 	        }
-	        
+
+            if (bodies != null && bodies.contains(part)) {
+                // inlined text parts are not filterable attachments
+	            return false;
+            }
+
 	        if (parent != null && parent.getContentType().equals(CT_MULTIPART_ALTERNATIVE)) {
 	            // ignore body parts with a parent of multipart/alternative
-	            return false; 
+	            return false;
 	        }
 	        
 	        // ignore if: it is the first body part, and has a multipart/*
@@ -593,7 +607,7 @@ public class Mime {
 	    }
 	    return true;
 	 }
-	 
+
 	 /**
 	  * Given a list of <code>MPartInfo</code>s (as returned from {@link #getParts}),
 	  * returns a <code>Set</code> of unique content-type strings, or an
@@ -602,20 +616,22 @@ public class Mime {
 	 public static Set<String> getAttachmentList(List<MPartInfo> parts) {
 	     // get a set of all the content types 
 	     HashSet<String> set = new HashSet<String>();
-         for (MPartInfo mpi : parts)
+         for (MPartInfo mpi : parts) {
 	         if (mpi.isFilterableAttachment())
 	             set.add(mpi.getContentType());
+         }
 	     return set;
 	 }
 	 
-	/** Returns true if any of the given message parts qualify as "attachments"
-     *  for the purpose of displaying the little paperclip icon in the web UI.
-	 *  Note that Zimbra folder sharing notifications are expressly *not*
-     *  considered attachments for this purpose. */
+	/** Returns true if any of the given message parts qualify as top-level
+     *  "attachments" for the purpose of displaying the little paperclip icon
+     *  in the web UI.  Note that Zimbra folder sharing notifications are
+     *  expressly *not* considered attachments for this purpose. */
 	public static boolean hasAttachment(List<MPartInfo> parts) {
-        for (MPartInfo mpi : parts)
-	        if (mpi.isFilterableAttachment() && !mpi.getContentType().equalsIgnoreCase(CT_XML_ZIMBRA_SHARE))
+        for (MPartInfo mpi : parts) {
+	        if (mpi.mIsToplevelAttachment)
 	            return true;
+        }
 	    return false;
 	}
 
