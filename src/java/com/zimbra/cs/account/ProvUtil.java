@@ -681,6 +681,7 @@ public class ProvUtil implements DebugListener {
         LdapProvisioning lp = (LdapProvisioning) mProv;
         Domain domain = lookupDomain(args[1]);
         lp.renameDomain(domain.getId(), args[2]);
+        printOutput("domain " + args[1] + " renamed to " + args[2]);
     }
 
     private void doGetQuotaUsage(String[] args) throws ServiceException {
