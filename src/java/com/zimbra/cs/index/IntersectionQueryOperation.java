@@ -735,21 +735,21 @@ class IntersectionQueryOperation extends QueryOperation {
     //
     // WARNING: Lucene ops ALWAYS combine, so we assume there is only one!
     {
-        LuceneQueryOperation lop = null;
-        for (Iterator iter = mQueryOperations.iterator(); iter.hasNext();) {
+        TextQueryOperation lop = null;
+        for (Iterator<QueryOperation> iter = mQueryOperations.iterator(); iter.hasNext();) {
             QueryOperation op = (QueryOperation) iter.next();
-            if (op instanceof LuceneQueryOperation) {
-                lop = (LuceneQueryOperation)op;
+            if (op instanceof TextQueryOperation) {
+                lop = (TextQueryOperation)op;
                 iter.remove();
                 break;
             }
         }
         if (lop != null) {
             boolean foundIt = false;
-            for (Iterator iter = mQueryOperations.iterator(); iter.hasNext();) {
+            for (Iterator<QueryOperation> iter = mQueryOperations.iterator(); iter.hasNext();) {
                 QueryOperation op = (QueryOperation) iter.next();
                 if (op instanceof DBQueryOperation) {
-                    ((DBQueryOperation)op).addLuceneOp(lop);
+                    ((DBQueryOperation)op).addTextOp(lop);
                     foundIt = true;
                 }
             }

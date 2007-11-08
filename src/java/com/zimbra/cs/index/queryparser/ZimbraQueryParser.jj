@@ -205,14 +205,14 @@ public final class ZimbraQueryParser {
         switch(target) {
           case HAS:
           	if (!tok.equalsIgnoreCase("attachment")) {
-	            return new ZimbraQuery.HasQuery(mAnalyzer, modifier, tok);
+	            return new ZimbraQuery.HasQuery(mMailbox, mAnalyzer, modifier, tok);
             }
             tok = "any";
             // otherwise FALL THROUGH to AttachmentQuery below!
           case ATTACHMENT:
-            return new ZimbraQuery.AttachmentQuery(mAnalyzer, modifier,tok);
+            return new ZimbraQuery.AttachmentQuery(mMailbox, mAnalyzer, modifier,tok);
           case TYPE:
-            return new ZimbraQuery.TypeQuery(mAnalyzer, modifier,tok);
+            return new ZimbraQuery.TypeQuery(mMailbox, mAnalyzer, modifier,tok);
           case ITEM:
             return ZimbraQuery.ItemQuery.Create(mMailbox, mAnalyzer, modifier, tok);
           case UNDERID:
@@ -297,7 +297,7 @@ public final class ZimbraQueryParser {
                 throw parseException("Missing required text after a TO/FROM/CC", "MISSING_TEXT_AFTER_TOFROMCC", t);
             }
             if (tok.charAt(0) == '@') {
-                return new ZimbraQuery.DomainQuery(mAnalyzer, modifier, target, tok);
+                return new ZimbraQuery.DomainQuery(mMailbox, mAnalyzer, modifier, target, tok);
             }
             return new ZimbraQuery.TextQuery(mMailbox, mAnalyzer, modifier,target,tok);
           case MODSEQ:

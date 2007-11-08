@@ -204,12 +204,12 @@ public final class ZimbraQuery {
             addMapping(mMap, new String[] { "text", "text/*" }                           , "text");
         }
 
-        public AttachmentQuery(Analyzer analyzer, int modifier, String what) {
-            super(modifier, ZimbraQueryParser.TYPE, LuceneFields.L_ATTACHMENTS, lookup(mMap, what));
+        public AttachmentQuery(Mailbox mbox, Analyzer analyzer, int modifier, String what) {
+            super(mbox, modifier, ZimbraQueryParser.TYPE, LuceneFields.L_ATTACHMENTS, lookup(mMap, what));
         }
 
-        protected AttachmentQuery(int modifier, String luceneField, String what) {
-            super(modifier, ZimbraQueryParser.TYPE, luceneField, lookup(mMap, what));
+        protected AttachmentQuery(Mailbox mbox, int modifier, String luceneField, String what) {
+            super(mbox, modifier, ZimbraQueryParser.TYPE, luceneField, lookup(mMap, what));
         }
     }
 
@@ -646,13 +646,16 @@ public final class ZimbraQuery {
     public static class DomainQuery extends BaseQuery
     {
         private String mTarget;
-        public DomainQuery(Analyzer analyzer, int modifier, int qType, String target) {
+        private Mailbox mMailbox;
+        
+        public DomainQuery(Mailbox mbox, Analyzer analyzer, int modifier, int qType, String target) {
             super(modifier, qType);
             mTarget = target;
+            mMailbox = mbox;
         }
 
         protected QueryOperation getQueryOperation(boolean truth) {
-            LuceneQueryOperation op = LuceneQueryOperation.Create();
+            TextQueryOperation op = mMailbox.getMailboxIndex().createTextQueryOperation();
             Query q = new TermQuery(new Term(QueryTypeString(getQueryType()), mTarget));
             op.addClause(getQueryOperatorString()+mTarget, q,calcTruth(truth));
             return op;
@@ -725,8 +728,8 @@ public final class ZimbraQuery {
             addMapping(mMap, new String[] { "url" }                , "url");
         }
 
-        public HasQuery(Analyzer analyzer, int modifier, String what) {
-            super(modifier, ZimbraQueryParser.HAS, LuceneFields.L_OBJECTS, lookup(mMap, what));
+        public HasQuery(Mailbox mbox, Analyzer analyzer, int modifier, String what) {
+            super(mbox, modifier, ZimbraQueryParser.HAS, LuceneFields.L_OBJECTS, lookup(mMap, what));
         }
     }
 
@@ -963,6 +966,8 @@ public final class ZimbraQuery {
 
     public abstract static class LuceneTableQuery extends BaseQuery
     {
+        private Mailbox mMailbox;
+        
         protected static void addMapping(HashMap<String, String> map, String[] array, String value) {
             for (int i = array.length-1; i>=0; i--) {
                 map.put(array[i], value);
@@ -982,14 +987,15 @@ public final class ZimbraQuery {
         private String mLuceneField;
         private String mValue;
 
-        public LuceneTableQuery(int modifier, int target, String luceneField, String value) {
+        public LuceneTableQuery(Mailbox mbox, int modifier, int target, String luceneField, String value) {
             super(modifier, target);
+            mMailbox = mbox;
             mLuceneField = luceneField;
             mValue = value;
         }
 
         protected QueryOperation getQueryOperation(boolean truth) {
-            LuceneQueryOperation op = LuceneQueryOperation.Create();
+            TextQueryOperation op = mMailbox.getMailboxIndex().createTextQueryOperation();
 
             Query q = null;
             if (mValue != null) {
@@ -1513,6 +1519,7 @@ public final class ZimbraQuery {
         private String mWildcardTerm;
         private String mOrigText;
         private List<QueryInfo> mQueryInfo = new ArrayList<QueryInfo>(); 
+        private Mailbox mMailbox;
 
         private static final int MAX_WILDCARD_TERMS = 2000;
 
@@ -1528,6 +1535,7 @@ public final class ZimbraQuery {
         public TextQuery(Mailbox mbox, Analyzer analyzer, int modifier, int qType, String text) throws ServiceException {
             super(modifier, qType);
 
+            mMailbox = mbox;
             mOredTokens = new LinkedList<String>();
 
             // The set of tokens from the user's query.  The way the parser works, the token set should generally only be one element  
@@ -1628,12 +1636,12 @@ public final class ZimbraQuery {
                 //
                 // By design: interpret *zero* tokens to mean "ignore this search term"
                 // 
-                // we can't simply ignore this query, however -- we have to put a null
+                // We can't simply skip this term in the generated parse tree -- we have to put a null
                 // query into the query list, otherwise conjunctions will get confused...so
                 // we pass NULL to addClause which will add a blank clause for us...
                 return new NoTermQueryOperation();
             } else {
-                LuceneQueryOperation lop = LuceneQueryOperation.Create();
+                TextQueryOperation lop = mMailbox.getMailboxIndex().createTextQueryOperation();
 
                 for (QueryInfo inf : mQueryInfo) {
                     lop.addQueryInfo(inf);
@@ -1684,8 +1692,8 @@ public final class ZimbraQuery {
 
     public static class TypeQuery extends AttachmentQuery
     {
-        public TypeQuery(Analyzer analyzer, int modifier, String what) {
-            super(modifier, LuceneFields.L_MIMETYPE, what);
+        public TypeQuery(Mailbox mbox, Analyzer analyzer, int modifier, String what) {
+            super(mbox, modifier, LuceneFields.L_MIMETYPE, what);
         }
     }
 
@@ -2211,7 +2219,7 @@ public final class ZimbraQuery {
         int numTextParts = 0;
         
         public void recurseCallback(QueryOperation op) {
-            if (op instanceof LuceneQueryOperation)
+            if (op instanceof TextQueryOperation)
                 numTextParts++;
         }
     }
@@ -2492,8 +2500,8 @@ public final class ZimbraQuery {
      */
     private static final class excludePrivateCalendarItems implements QueryOperation.RecurseCallback {
         public void recurseCallback(QueryOperation op) {
-            if (op instanceof LuceneQueryOperation) {
-                ((LuceneQueryOperation)op).addAndedClause(new TermQuery(new Term(LuceneFields.L_FIELD, CalendarItem.INDEX_FIELD_ITEM_CLASS_PRIVATE)), false);
+            if (op instanceof TextQueryOperation) {
+                ((TextQueryOperation)op).addAndedClause(new TermQuery(new Term(LuceneFields.L_FIELD, CalendarItem.INDEX_FIELD_ITEM_CLASS_PRIVATE)), false);
             }
         }
     }

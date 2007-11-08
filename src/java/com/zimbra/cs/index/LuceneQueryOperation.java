@@ -15,20 +15,9 @@
  * ***** END LICENSE BLOCK *****
  */
 
-/*
- * Created on Oct 29, 2004
- *
- */
 package com.zimbra.cs.index;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.FieldSelector;
@@ -50,25 +39,21 @@ import com.zimbra.cs.mailbox.Mailbox;
  * LuceneQueryOperation
  * 
  ***********************************************************************/
-class LuceneQueryOperation extends QueryOperation
+class LuceneQueryOperation extends TextQueryOperation
 {
     protected static Log mLog = LogFactory.getLog(LuceneQueryOperation.class);
     
     public static boolean USE_TOPDOCS = true;
     
     private Hits mLuceneHits = null;
-    
     private TopDocs mTopDocs = null;
     private int mTopDocsLen = 0;
     private int mTopDocsChunkSize = 2000;
-    
     private int mCurHitNo = 0;
     private RefCountedIndexSearcher mSearcher = null;
     private Sort mSort = null;
     private boolean mHaveRunSearch = false;
     private String mQueryString = "";
-    private boolean mHasSpamTrashSetting = false;
-    protected List<QueryInfo> mQueryInfo = new ArrayList<QueryInfo>();
     protected static final float sDbFirstTermFreqPerc;
     
     static {
@@ -81,55 +66,7 @@ class LuceneQueryOperation extends QueryOperation
         sDbFirstTermFreqPerc = f;
     }
 
-    /**
-     * because we don't store the real mail-item-id of documents, we ALWAYS need a DBOp 
-     * in order to properly get our results.
-     */
-    private DBQueryOperation mDBOp = null;
-
-    void setDBOperation(DBQueryOperation op) {
-        mDBOp = op;
-    }
-
-    @Override
-    QueryOperation expandLocalRemotePart(Mailbox mbox) throws ServiceException {
-        return this;
-    }
-    
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.index.QueryOperation#ensureSpamTrashSetting(com.zimbra.cs.mailbox.Mailbox, boolean, boolean)
-     */
-    QueryOperation ensureSpamTrashSetting(Mailbox mbox, boolean includeTrash, boolean includeSpam) throws ServiceException
-    {
-        // wrap ourselves in a DBQueryOperation, since we're eventually going to need to go to the DB
-        DBQueryOperation dbOp = DBQueryOperation.Create();
-        dbOp.addLuceneOp(this);
-        return dbOp.ensureSpamTrashSetting(mbox, includeTrash, includeSpam);
-    }
-
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.index.QueryOperation#hasSpamTrashSetting()
-     */
-    boolean hasSpamTrashSetting() {
-        return mHasSpamTrashSetting;
-    }
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.index.QueryOperation#hasNoResults()
-     */
-    boolean hasNoResults() {
-        return false;
-    }
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.index.QueryOperation#hasAllResults()
-     */
-    boolean hasAllResults() {
-        return false;
-    }
-    void forceHasSpamTrashSetting() {
-        mHasSpamTrashSetting = true;
-    }
-    
-    boolean shouldExecuteDbFirst() {
+    protected boolean shouldExecuteDbFirst() {
         if (mSearcher == null)
             return true;
 
@@ -172,18 +109,6 @@ class LuceneQueryOperation extends QueryOperation
         return false;
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.index.QueryOperation#getQueryTargets()
-     */
-    QueryTargetSet getQueryTargets() {
-        QueryTargetSet toRet = new QueryTargetSet(1);
-        toRet.add(QueryTarget.UNSPECIFIED);
-        return toRet;
-    }
-
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.index.ZimbraQueryResults#doneWithSearchResults()
-     */
     public void doneWithSearchResults() throws ServiceException {
         mSort = null;
         if (mSearcher != null) {
@@ -192,57 +117,12 @@ class LuceneQueryOperation extends QueryOperation
     };
 
     /**
-     * Called by our DBOp to reset our iterator...
+     * Reset our hit iterator back to the beginning of the result set.  
      */
     protected void resetDocNum() {
         mCurHitNo = 0;
     }
 
-    /**
-     * We use this data structure to track a "chunk" of Lucene hits which
-     * the DBQueryOperation will use to check against the DB.
-     */
-    protected static class LuceneResultsChunk {
-
-        static class ScoredLuceneHit {
-            ScoredLuceneHit(float score) { mScore= score; }
-            public List<Document> mDocs = new ArrayList<Document>();
-            public float mScore; // highest score in list
-        }
-
-        Set<Integer> getIndexIds() { 
-            Set<Integer>toRet = new LinkedHashSet<Integer>(mHits.keySet().size());
-            for (Iterator iter = mHits.keySet().iterator(); iter.hasNext();) {
-                Integer curInt = (Integer)iter.next();
-                toRet.add(curInt);
-            }
-            return toRet;
-        }
-
-        private int size() { return mHits.size(); }
-
-        private void addHit(int indexId, Document doc, float score) {
-            addHit(new Integer(indexId), doc, score);
-        }
-
-        private void addHit(Integer indexId, Document doc, float score) {
-            ScoredLuceneHit sh = mHits.get(indexId);
-            if (sh == null) {
-                sh = new ScoredLuceneHit(score);
-                mHits.put(indexId, sh);
-            }
-
-            sh.mDocs.add(doc);
-        }
-
-        ScoredLuceneHit getScoredHit(Integer indexId) { 
-            return mHits.get(indexId);
-        }
-
-        private HashMap <Integer /*indexId*/, ScoredLuceneHit> mHits = new LinkedHashMap<Integer, ScoredLuceneHit>();
-    }
-
-    
     private void fetchFirstResults(int initialChunkSize) throws ServiceException {
         if (USE_TOPDOCS) {
             if (!mHaveRunSearch) {
@@ -280,12 +160,12 @@ class LuceneQueryOperation extends QueryOperation
      * @return
      * @throws ServiceException
      */
-    protected LuceneResultsChunk getNextResultsChunk(int maxChunkSize) throws ServiceException {
+    protected TextResultsChunk getNextResultsChunk(int maxChunkSize) throws ServiceException {
         try {
             if (!mHaveRunSearch) 
                 fetchFirstResults(maxChunkSize);
             
-            LuceneResultsChunk toRet = new LuceneResultsChunk();
+            TextResultsChunk toRet = new TextResultsChunk();
             int luceneLen;
             
             if (USE_TOPDOCS) {
@@ -377,48 +257,15 @@ class LuceneQueryOperation extends QueryOperation
         }
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.index.ZimbraQueryResults#resetIterator()
-     */
-    public void resetIterator() throws ServiceException {
-        if (mDBOp != null) {
-            mDBOp.resetIterator();
-        }
-    }
-
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.index.ZimbraQueryResults#getNext()
-     */
-    public ZimbraHit getNext() throws ServiceException {
-        if (mDBOp != null) {
-            return mDBOp.getNext();
-        }
-        return null;
-    }
-
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.index.ZimbraQueryResults#peekNext()
-     */
-    public ZimbraHit peekNext() throws ServiceException
-    {
-        if (mDBOp != null) {
-            return mDBOp.peekNext();
-        }
-        return null;
-    }
-
     private BooleanQuery mQuery;
 
-    static LuceneQueryOperation Create() {
+    protected static LuceneQueryOperation doCreate() {
         LuceneQueryOperation toRet = new LuceneQueryOperation();
         toRet.mQuery = new BooleanQuery();
         return toRet;
     }
 
-    // used only by the AllQueryOperation subclass....
-    protected LuceneQueryOperation()
-    {
-    }
+    private LuceneQueryOperation() { }
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.index.QueryOperation#prepare(com.zimbra.cs.mailbox.Mailbox, com.zimbra.cs.index.ZimbraQueryResultsImpl, com.zimbra.cs.index.MailboxIndex, com.zimbra.cs.index.SearchParams, int)
@@ -430,15 +277,15 @@ class LuceneQueryOperation extends QueryOperation
         if (mDBOp == null) {
             // wrap ourselves in a DBQueryOperation, since we're eventually going to need to go to the DB
             mDBOp = DBQueryOperation.Create();
-            mDBOp.addLuceneOp(this);
+            mDBOp.addTextOp(this);
             mDBOp.prepare(mbx, res, mbidx, params, chunkSize); // will call back into this function again!
         } else {
             this.setupResults(mbx, res);
 
             try {
                 if (mbidx != null) {
-                    mSearcher = mbidx.getCountedIndexSearcher();
-                    mSort = mbidx.getSort(res.getSortBy());
+                    mSearcher = mbidx.getLuceneIndex().getCountedIndexSearcher();
+                    mSort = mbidx.getLuceneIndex().getSort(res.getSortBy());
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -491,13 +338,6 @@ class LuceneQueryOperation extends QueryOperation
     }
 
     /* (non-Javadoc)
-     * @see com.zimbra.cs.index.QueryOperation#optimize(com.zimbra.cs.mailbox.Mailbox)
-     */
-    QueryOperation optimize(Mailbox mbox) throws ServiceException {
-        return this;
-    }
-
-    /* (non-Javadoc)
      * @see com.zimbra.cs.index.QueryOperation#toQueryString()
      */
     String toQueryString() {
@@ -510,10 +350,15 @@ class LuceneQueryOperation extends QueryOperation
 
     public String toString()
     {
-        return "LUCENE(" + mQuery.toString() + (mHasSpamTrashSetting ? " <ANYWHERE>" : "") + ")";
+        return "LUCENE(" + mQuery.toString() + (hasSpamTrashSetting() ? " <ANYWHERE>" : "") + ")";
     }
 
-    private LuceneQueryOperation cloneInternal() throws CloneNotSupportedException {
+    /**
+     * Just clone *this* object, don't clone the embedded DBOp
+     * @return
+     * @throws CloneNotSupportedException
+     */
+    protected LuceneQueryOperation cloneInternal() throws CloneNotSupportedException {
         LuceneQueryOperation toRet = (LuceneQueryOperation)super.clone();
 
         assert(mSearcher == null);
@@ -524,10 +369,7 @@ class LuceneQueryOperation extends QueryOperation
 
         return toRet;
     }
-
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.index.QueryOperation#clone()
-     */
+    
     public Object clone() {
         try {
             LuceneQueryOperation toRet = cloneInternal();
@@ -539,20 +381,23 @@ class LuceneQueryOperation extends QueryOperation
             return null;
         }
     }
-
+    
     /**
-     * helper for cloning when there is a joined DBQueryOp--LuceneQueryOp
-     * @param caller
+     * Called from DBQueryOperation.clone()
+     * 
+     * @param caller - our DBQueryOperation which has ALREADY BEEN CLONED
      * @return
      * @throws CloneNotSupportedException
      */
     protected Object clone(DBQueryOperation caller) throws CloneNotSupportedException {
         LuceneQueryOperation toRet = cloneInternal();
-
-        toRet.mDBOp = caller;
+        toRet.setDBOperation(caller);
 
         return toRet;
     }
+
+    
+    
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.index.QueryOperation#combineOps(com.zimbra.cs.index.QueryOperation, boolean)
@@ -601,7 +446,7 @@ class LuceneQueryOperation extends QueryOperation
      * Used by a wrapping DBQueryOperation, when it is running a DB-First plan
      * @return The current query
      */
-    BooleanQuery getCurrentQuery() {
+    protected BooleanQuery getCurrentQuery() {
         assert(!mHaveRunSearch);
         return mQuery; 
     }
@@ -614,25 +459,12 @@ class LuceneQueryOperation extends QueryOperation
      * 
      * @param q
      */
-    void resetQuery(BooleanQuery q) {
+    protected void resetQuery(BooleanQuery q) {
         mHaveRunSearch = false;
         mQuery = q; 
         mCurHitNo = 0;
     }
     
-    /**
-     * Allows the parser (specifically the BaseQuery subclasses) to store some query result 
-     * information so that it can be returned to the caller after the query has run.  This is
-     * used for things like spelling suggestion correction, or wildcard expansion info: 
-     * things that are not results per-se but still need to have some way to be sent back to 
-     * the caller
-     * 
-     * @param inf
-     */
-    void addQueryInfo(QueryInfo inf) {
-        mQueryInfo.add(inf);
-    }
-
     /**
      * This API may only be called AFTER query optimizing and AFTER remote queries have been
      * split.  This API is used by the query executor so that it can temporarily add a bunch of 
@@ -700,19 +532,6 @@ class LuceneQueryOperation extends QueryOperation
     }
     
     /* (non-Javadoc)
-     * @see com.zimbra.cs.index.ZimbraQueryResults#getResultInfo()
-     */
-    public List<QueryInfo> getResultInfo() {
-        List<QueryInfo> toRet = new ArrayList<QueryInfo>();
-        toRet.addAll(mQueryInfo);
-        
-        if (mDBOp != null)
-            toRet.addAll(mDBOp.mQueryInfo);
-        
-        return toRet;
-    }
-    
-    /* (non-Javadoc)
      * @see com.zimbra.cs.index.ZimbraQueryResults#estimateResultSize()
      */
     public int estimateResultSize() throws ServiceException {
@@ -734,17 +553,4 @@ class LuceneQueryOperation extends QueryOperation
             }
         }
     }
-    
-    protected void depthFirstRecurseInternal(RecurseCallback cb) {
-        cb.recurseCallback(this);
-    }
-
-    
-    protected void depthFirstRecurse(RecurseCallback cb) {
-        if (mDBOp != null) 
-            mDBOp.depthFirstRecurse(cb);
-        else 
-            depthFirstRecurseInternal(cb);
-    }
-    
 }
