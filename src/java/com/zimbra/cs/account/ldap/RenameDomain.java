@@ -130,18 +130,21 @@ class RenameDomain {
         mProv.deleteDomain(oldDomainId);
             
         /*
-         * 4. restore zimbraId to the id of the old domain and erase rename info
+         * 4. restore zimbraId to the id of the old domain, erase rename info, and 
+         *    actiavte/enable the new(renamed) domain.
          */ 
         LdapProvisioning.flushDomainCache(mProv, newDomain.getId());
         HashMap<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraId, oldDomainId);
         attrs.put(Provisioning.A_zimbraDomainRenameInfo, "");
+        attrs.put(Provisioning.A_zimbraDomainStatus, Provisioning.DOMAIN_STATUS_ACTIVE);
+        attrs.put(Provisioning.A_zimbraMailStatus, Provisioning.MAIL_STATUS_ENABLED);
         mProv.modifyAttrsInternal(newDomain, mDirCtxt, attrs);  // skip callback
         
         /*
-         * 5. activate the new domain
+         * 5. inform all servers that the domain is now active/enabled
          */
-        mProv.modifyDomainStatus(newDomain, Provisioning.DOMAIN_STATUS_ACTIVE);
+        mProv.flushDomainCacheOnAllServers(oldDomainId);
         
     }
     

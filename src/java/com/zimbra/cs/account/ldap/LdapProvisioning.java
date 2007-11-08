@@ -1540,15 +1540,6 @@ public class LdapProvisioning extends Provisioning {
             }
         }
     }
-    
-    public void modifyDomainStatus(Domain domain, String newStatus) throws ServiceException {
-        HashMap<String, String> attrs = new HashMap<String, String>();
-        attrs.put(Provisioning.A_zimbraDomainStatus, newStatus);
-        modifyAttrs(domain, attrs);
-        
-        flushDomainCacheOnAllServers(domain.getId());
-    }
-    
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#createCos(java.lang.String, java.util.Map)
@@ -4751,19 +4742,19 @@ public class LdapProvisioning extends Provisioning {
     
     void flushDomainCacheOnAllServers(String domainId) throws ServiceException {
         SoapProvisioning soapProv = new SoapProvisioning();
+        String adminUrl = null;
         
         for (Server server : getAllServers()) {
             
-            String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
-                                
-            int port = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
-            if (port <= 0) {
-                ZimbraLog.account.warn("flushDomainCacheOnAllServers: remote server " + server.getName() + " does not have https port enabled, domain cache not flushed on server");
-                continue;        
+            try {
+                adminUrl = URLUtil.getAdminURL(server, ZimbraServlet.ADMIN_SERVICE_URI, true);
+            } catch (ServiceException e) {
+                ZimbraLog.account.warn("domain cache not flushed on server: " + e.getMessage());
+                continue; 
             }
-                
-            soapProv.soapSetURI(LC.zimbra_admin_service_scheme.value()+hostname+":"+port+ZimbraServlet.ADMIN_SERVICE_URI);
-                
+            
+            soapProv.soapSetURI(adminUrl);
+            
             try {
                 soapProv.soapZimbraAdminAuthenticate();
                 flushDomainCache(soapProv, domainId);
