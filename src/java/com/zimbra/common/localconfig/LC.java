@@ -822,7 +822,7 @@ public class LC {
         mailboxd_keystore_password.setDoc("Password to be used with the KeyManager keystore.");
         
         mailboxd_truststore = new KnownKey("mailboxd_truststore");
-        mailboxd_truststore.setDefault("${mailboxd_directory}" + FS + "etc" + FS + "truststore");
+        mailboxd_truststore.setDefault("${zimbra_java_home}" + FS + "lib" + FS + "security" + FS + "cacerts");
         mailboxd_truststore.setDoc("Location of truststore data file.");
         
         mailboxd_truststore_password = new KnownKey("mailboxd_truststore_password");
