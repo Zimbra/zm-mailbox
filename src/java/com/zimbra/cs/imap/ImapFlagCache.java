@@ -34,14 +34,14 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 
 public class ImapFlagCache implements Iterable<ImapFlagCache.ImapFlag> {
     static final class ImapFlag {
-        String  mName;
-        String  mImapName;
-        int     mId;
-        long    mBitmask;
-        boolean mPositive;
-        boolean mPermanent;
-        boolean mListed;
-        int     mModseq;
+        final String  mName;
+        final String  mImapName;
+        final int     mId;
+        final long    mBitmask;
+        final boolean mPositive;
+        final boolean mPermanent;
+        final boolean mListed;
+        final int     mModseq;
 
         static final boolean VISIBLE = true, HIDDEN = false;
 
