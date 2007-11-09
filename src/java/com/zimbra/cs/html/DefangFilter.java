@@ -617,7 +617,8 @@ public class DefangFilter extends DefaultFilter {
             }
         }
         if (aName.equalsIgnoreCase("style")) {
-            result = value.replaceAll("[uU][Rr][Ll]\\s*\\(.*\\)","url()");
+            result = value.replaceAll("/\\*.*\\*/","");
+            result = result.replaceAll("[uU][Rr][Ll]\\s*\\(.*\\)","url()");
             result = result.replaceAll("expression\\s*\\(.*\\)","");
         }
         if (!result.equals(value)) {
