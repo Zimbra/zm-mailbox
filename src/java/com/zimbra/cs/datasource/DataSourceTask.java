@@ -59,6 +59,7 @@ extends ScheduledTask {
     
     public Void call()
     throws Exception {
+        ZimbraLog.clearContext();
         ZimbraLog.addMboxToContext(getMailboxId());
         ZimbraLog.datasource.debug("Running scheduled import for DataSource %s",
             getDataSourceId());
@@ -68,6 +69,7 @@ extends ScheduledTask {
             // Look up mailbox, account and data source
             mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
             Account account = mbox.getAccount();
+            ZimbraLog.addAccountNameToContext(account.getName());
             Provisioning prov = Provisioning.getInstance();
             DataSource ds = prov.get(account, DataSourceBy.id, getDataSourceId());
             if (ds != null) {
@@ -80,14 +82,11 @@ extends ScheduledTask {
                 DataSourceManager.cancelTask(mbox, getDataSourceId());
             }
         } catch (ServiceException e) {
-            ZimbraLog.datasource.warn("Scheduled DataSource import failed.  Cancelling future tasks.", e);
-            DataSourceManager.cancelTask(mbox, getDataSourceId());
+            ZimbraLog.datasource.warn("Scheduled DataSource import failed.", e);
             return null;
         }
         
-        ZimbraLog.removeDataSourceNameFromContext();
-        ZimbraLog.removeMboxFromContext();
-
+        ZimbraLog.clearContext();
         return null;
     }
 }
