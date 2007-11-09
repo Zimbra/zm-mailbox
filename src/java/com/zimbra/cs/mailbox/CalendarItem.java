@@ -951,6 +951,8 @@ public abstract class CalendarItem extends MailItem {
                 }
 //              break; // don't stop here!  new Invite *could* obsolete multiple existing ones! 
             } else if (needRecurrenceIdUpdate || organizerChanged) {
+                modifiedCalItem = true;
+                
                 // If organizer is changing on any invite, change it on all invites.
                 boolean added = false;
                 if (organizerChanged) {
@@ -977,6 +979,7 @@ public abstract class CalendarItem extends MailItem {
 
         boolean callProcessPartStat = false;
         if (addNewOne) {
+            assert(modifiedCalItem);
             newInvite.setCalendarItem(this);
 
             // Don't allow creating/editing a private appointment on behalf of another user,
@@ -1035,14 +1038,17 @@ public abstract class CalendarItem extends MailItem {
                 }
             }
 
-            modifyBlob(toRemove, replaceExistingInvites, toUpdate, pm, newInvite, volumeId, isCancel, !denyPrivateAccess);
+            // TIM: don't write the blob until the end of the function (so we only do one write for the update)
+//            modifyBlob(toRemove, replaceExistingInvites, toUpdate, pm, newInvite, volumeId, isCancel, !denyPrivateAccess);
             modifiedCalItem = true;
         } else {
-            modifyBlob(toRemove, replaceExistingInvites, toUpdate, null, null, volumeId, isCancel, !denyPrivateAccess);
+            // TIM: don't write the blob until the end of the function (so we only do one write for the update)
+//            modifyBlob(toRemove, replaceExistingInvites, toUpdate, null, null, volumeId, isCancel, !denyPrivateAccess);
         }
         
         // now remove the inviteid's from our list
         for (Iterator<Integer> iter = idxsToRemove.iterator(); iter.hasNext();) {
+            assert(modifiedCalItem);
             Integer i = iter.next();
             mInvites.remove(i.intValue());
         }
@@ -1097,8 +1103,14 @@ public abstract class CalendarItem extends MailItem {
                     } else {
                         mData.flags &= ~Flag.BITMASK_ATTACHED;
                     }
+                    
+                    if (addNewOne) 
+                        modifyBlob(toRemove, replaceExistingInvites, toUpdate, pm, newInvite, volumeId, isCancel, !denyPrivateAccess, true);
+                    else 
+                        modifyBlob(toRemove, replaceExistingInvites, toUpdate, null, null, volumeId, isCancel, !denyPrivateAccess, true);
 
-                    saveMetadata();
+                    // TIM: modifyBlob will save the metadata for us as a side-effect
+//                    saveMetadata();
                     return true;
                 }
             } else {
@@ -1330,6 +1342,8 @@ public abstract class CalendarItem extends MailItem {
      * @param newInv
      * @param volumeId
      * @param isCancel if the method is being called while processing a cancel request
+     * @param allowPrivateAccess
+     * @param forceSave if TRUE then this call is guaranteed to save the current metadata state
      * @throws ServiceException
      */
     private void modifyBlob(List<Invite> toRemove,
@@ -1339,7 +1353,8 @@ public abstract class CalendarItem extends MailItem {
                             Invite newInv,
                             short volumeId,
                             boolean isCancel,
-                            boolean allowPrivateAccess)
+                            boolean allowPrivateAccess,
+                            boolean forceSave)
     throws ServiceException
     {
         // TODO - as an optimization, should check to see if the invite's MM is already in here! (ie
@@ -1357,6 +1372,9 @@ public abstract class CalendarItem extends MailItem {
                     // if the blob isn't already there, and we're going to add one, then
                     // just go into create
                     createBlob(invPm, newInv, volumeId);
+                } else {
+                    if (forceSave)
+                        saveMetadata();
                 }
                 return;
             }
@@ -1460,14 +1478,19 @@ public abstract class CalendarItem extends MailItem {
                 updated = true;
             }
 
-            if (!updated)
+            if (!updated) {
+                if (forceSave)
+                    saveMetadata();
                 return;
+            }
             
             if (mmp.getCount() == 0) {
                 if (!isCancel)
                     ZimbraLog.calendar.warn("Invalid state: deleting blob for calendar item " + getId() +
                             " in mailbox " + getMailboxId() + " while processing a non-cancel request");
                 markBlobForDeletion();
+                if (forceSave)
+                    saveMetadata();
             } else {
                 // must call this explicitly or else new part won't be added...
                 mm.setContent(mmp);
