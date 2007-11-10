@@ -83,7 +83,8 @@
     <property name="deploy.war" value="${warfile}"/>
     <property name="deploy.host" value="localhost"/>
     <property name="deploy.port" value="7070"/>
-
+	<property name="ldap.port" value="389"/>
+	
     <condition property="remote.deploy.host" value="${env.ZIMBRA_REMOTE_DEPLOY_HOST}">
         <isset property="env.ZIMBRA_REMOTE_DEPLOY_HOST"/>
     </condition>
@@ -864,6 +865,9 @@
     </target>
 
     <target name="ldap-load" depends="zmprov-commands">
+	     <waitfor checkevery="5" checkeveryunit="second" maxwait="60" maxwaitunit="second">
+	     	<socket server="${zimbra.server.hostname}" port="${ldap.port}"/>
+	     </waitfor>    
         <antcall target="ldap-add">
             <param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra.ldif"/>
         </antcall>
