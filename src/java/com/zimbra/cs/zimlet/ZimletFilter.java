@@ -16,7 +16,7 @@
  */
 package com.zimbra.cs.zimlet;
 
-import java.io.IOException;
+import java.io.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.*;
@@ -46,7 +46,7 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
 
     public static final String ALLOWED_ZIMLETS = "com.zimbra.cs.zimlet.Allowed";
 
-	private static final String ZIMLET_URL = "^/service/zimlet/([^/\\?]+)[/\\?]?.*$";
+	private static final String ZIMLET_URL = "^/service/zimlet/(?:_dev/)?([^/\\?]+)[/\\?]?.*$";
     private static final String ZIMLET_RES_URL_PREFIX = "/service/zimlet/res/";
     private Pattern mPattern;
 	
@@ -97,20 +97,26 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
 
         // get list of allowed zimlets
         Provisioning prov = Provisioning.getInstance();
-		Set<String> allowedZimletNames = new HashSet<String>();
+		List<Zimlet> allowedZimlets = new LinkedList<Zimlet>();
 		try {
 			// add all available zimlets
 			if (!isAdminAuth) {
+				// zimlets for this account's COS
 				Account account = prov.get(AccountBy.id, authToken.getAccountId());
-				allowedZimletNames.addAll(prov.getCOS(account).getMultiAttrSet(Provisioning.A_zimbraZimletAvailableZimlets));
+				for (String zimletName : prov.getCOS(account).getMultiAttrSet(Provisioning.A_zimbraZimletAvailableZimlets)) {
+					Zimlet zimlet = prov.getZimlet(zimletName);
+					if (zimlet.isEnabled()) {
+						allowedZimlets.add(zimlet);
+					}
+				}
 			}
 
 			// add the admin zimlets
 			else {
 				List<Zimlet> allZimlets = prov.listAllZimlets();
 				for (Zimlet zimlet : allZimlets) {
-					if (zimlet.isExtension()) {
-						allowedZimletNames.add(zimlet.getName());
+					if (zimlet.isExtension() && zimlet.isEnabled()) {
+						allowedZimlets.add(zimlet);
 					}
 				}
 			}
@@ -121,8 +127,15 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
 			return;
 		}
 
+		// order by priority
+		List<Zimlet> zimletList = ZimletUtil.orderZimletsByPriority(allowedZimlets);
+		Set<String> allowedZimletNames = new HashSet<String>();
+		for (Zimlet zimlet : zimletList) {
+			allowedZimletNames.add(zimlet.getName());
+		}
+
         // get list of zimlets for request
-        Set<String> zimletNames = new HashSet<String>();
+        Set<String> zimletNames = new LinkedHashSet<String>();
         String uri = req.getRequestURI();
 		boolean isZimletRes = uri.startsWith(ZIMLET_RES_URL_PREFIX);
 		if (isZimletRes) {
@@ -139,10 +152,16 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
         }
 
         // check access
+		File devdir = new File(request.getRealPath("/zimlet/_dev"));
         Iterator<String> iter = zimletNames.iterator();
         while (iter.hasNext()) {
             String zimletName = iter.next();
             try {
+				File devfile = new File(devdir, zimletName);
+				if (devfile.exists()) {
+					continue;
+				}
+
                 Zimlet zimlet = prov.getZimlet(zimletName);
                 if (zimlet == null) {
                     ZimbraLog.zimlet.info("no such zimlet: "+zimletName);

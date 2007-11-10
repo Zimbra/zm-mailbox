@@ -78,7 +78,6 @@ public class ZimletUtil {
 	private static int P_MAX = Integer.MAX_VALUE;
 	private static boolean sZimletsLoaded = false;
 	private static Map<String,ZimletFile> sZimlets = new HashMap<String,ZimletFile>();
-	private static Map<String,ZimletFile> sDevZimlets = new HashMap<String,ZimletFile>();
 	private static Map<String,Class> sZimletHandlers = new HashMap<String,Class>();
 
 	public static String[] listZimletNames() {
@@ -88,8 +87,8 @@ public class ZimletUtil {
 	}
 	
 	public static String[] listDevZimletNames() {
-		String[] zimlets = sDevZimlets.keySet().toArray(new String[0]);
-		Arrays.sort(zimlets);
+		String[] zimlets = loadDevZimlets().keySet().toArray(new String[0]);
+		Arrays.sort(zimlets); // TODO: Should sort by zimlet priority.
 		return zimlets;
 	}
 	
@@ -211,11 +210,13 @@ public class ZimletUtil {
 	 * Load all the installed Zimlets.
 	 *
 	 */
-	public synchronized static void loadZimlets() {
+	public synchronized static Map<String,ZimletFile> loadZimlets() {
 		if (!sZimletsLoaded) {
 			loadZimletsFromDir(sZimlets, LC.zimlet_directory.value());
 			sZimletsLoaded = true;
 		}
+		// NOTE: Was added for consistency with loadDevZimlets
+		return sZimlets;
 	}
 
 	/**
@@ -223,8 +224,10 @@ public class ZimletUtil {
 	 * Load all the Zimlets in the dev test directory.
 	 *
 	 */
-	public synchronized static void loadDevZimlets() {
-		loadZimletsFromDir(sDevZimlets, LC.zimlet_directory.value() + File.separator + ZIMLET_DEV_DIR);
+	public static Map<String,ZimletFile> loadDevZimlets() {
+		Map<String,ZimletFile> zimletMap = new HashMap<String,ZimletFile>();
+		loadZimletsFromDir(zimletMap, LC.zimlet_directory.value() + File.separator + ZIMLET_DEV_DIR);
+		return zimletMap;
 	}
 
 	/**
@@ -325,20 +328,15 @@ public class ZimletUtil {
 	 */
 	public static void listDevZimlets(Element elem) {
 		try {
-			loadDevZimlets();
-			synchronized (sDevZimlets) {
-	        	Iterator iter = sDevZimlets.values().iterator();
-	        	while (iter.hasNext()) {
-	        		ZimletFile zim = (ZimletFile) iter.next();
-	    			String zimletBase = ZIMLET_BASE + "/" + ZIMLET_DEV_DIR + "/" + zim.getZimletName() + "/";
-	    			Element entry = elem.addElement(AccountConstants.E_ZIMLET);
-	    			Element zimletContext = entry.addElement(AccountConstants.E_ZIMLET_CONTEXT);
-	    			zimletContext.addAttribute(AccountConstants.A_ZIMLET_BASE_URL, zimletBase);
-	    			zim.getZimletDescription().addToElement(entry);
-	    			if (zim.hasZimletConfig()) {
-	    				zim.getZimletConfig().addToElement(entry);
-	    			}
-	        	}
+			for (ZimletFile zim : loadDevZimlets().values()) {
+				String zimletBase = ZIMLET_BASE + "/" + ZIMLET_DEV_DIR + "/" + zim.getZimletName() + "/";
+				Element entry = elem.addElement(AccountConstants.E_ZIMLET);
+				Element zimletContext = entry.addElement(AccountConstants.E_ZIMLET_CONTEXT);
+				zimletContext.addAttribute(AccountConstants.A_ZIMLET_BASE_URL, zimletBase);
+				zim.getZimletDescription().addToElement(entry);
+				if (zim.hasZimletConfig()) {
+					zim.getZimletConfig().addToElement(entry);
+				}
 			}
 		} catch (ZimletException ze) {
 			ZimbraLog.zimlet.info("error loading dev zimlets: "+ze.getMessage());

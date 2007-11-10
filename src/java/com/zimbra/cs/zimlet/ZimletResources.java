@@ -331,8 +331,7 @@ public class ZimletResources
         str.append(type);
         str.append(":");
 
-		Set<String> ids = new TreeSet<String>(zimletNames); 
-		Iterator<String> iter = ids.iterator();
+		Iterator<String> iter = zimletNames.iterator();
         for (int i = 0; iter.hasNext(); i++) {
             if (i > 0) {
                 str.append(",");
@@ -364,11 +363,16 @@ public class ZimletResources
         Set<String> zimletNames = (Set<String>) req.getAttribute(ZimletFilter.ALLOWED_ZIMLETS);
         for (String zimletName : zimletNames) {
             // read zimlet manifest
-            String dirname = getServletContext().getRealPath("/zimlet/" + zimletName);
-            String manifest = dirname + "/" + zimletName + ".xml";
-            File file = new File(manifest);
+			File basedir = new File(getServletContext().getRealPath("/zimlet"));
+			File dir = new File(basedir, zimletName);
+			if (!dir.exists()) {
+				basedir = new File(basedir, "_dev");
+				dir = new File(basedir, zimletName);
+			}
+            File file = new File(dir, zimletName + ".xml");
 
-            Document document = parseDocument(file, zimletName);
+
+			Document document = parseDocument(file, zimletName);
             if (document == null) {
                 continue;
             }
@@ -391,7 +395,7 @@ public class ZimletResources
                 if (RE_REMOTE.matcher(filename).matches()) {
                     continue;
                 }
-                files.add(new ZimletFile(zimletName, dirname + "/" + filename));
+                files.add(new ZimletFile(zimletName, dir.getAbsolutePath() + File.separator + filename));
             }
         }
         return files;

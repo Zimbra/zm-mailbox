@@ -293,7 +293,7 @@ public class ZimletFile implements Comparable {
 			String zimletTargetName = zimletFile.getName() + ZIP_SUFFIX;
 			int i;
 			for (i = 0; i < files.length; i++) {
-				if (files[i] == zimletTargetName) {
+				if (files[i].equals(zimletTargetName)) {
 					return zimlet + File.separator + files[i];
 				}
 			}
