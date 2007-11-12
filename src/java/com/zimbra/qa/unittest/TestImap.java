@@ -18,6 +18,7 @@
 package com.zimbra.qa.unittest;
 
 import com.zimbra.cs.mailtest.ImapClient;
+import com.zimbra.cs.mailtest.MailException;
 import com.zimbra.cs.mailtest.SSLUtil;
 import junit.framework.TestCase;
 
@@ -73,7 +74,7 @@ public class TestImap extends TestCase {
     public void testLiteral() throws Exception {
         connect(false);
         Object[] parts = new Object[] { " ", USER, " ", PASS.getBytes() };
-        assertTrue(mClient.sendCommand("LOGIN", parts, false));
+        mClient.sendCommand("LOGIN", parts, false);
     }
 
     public void testBigLiteral() throws Exception {
@@ -89,9 +90,13 @@ public class TestImap extends TestCase {
         byte[] lit1 = fill(new byte[13000000], 'x');
         byte[] lit2 = fill(new byte[100], 'y');
         Object[] parts = new Object[] { " ", USER, " ", lit1, " ", lit2, "FOO"};
-        boolean res = mClient.sendCommand("LOGIN", parts, sync);
-        assertFalse("Expected command to fail", res);
-        assertTrue("Expected [TOOBIG] response", mClient.getMessage().contains("[TOOBIG]"));
+        try {
+            mClient.sendCommand("LOGIN", parts, sync);
+        } catch (MailException e) {
+            assertTrue("Expected [TOOBIG] response", mClient.getMessage().contains("[TOOBIG]"));
+            return;
+        }
+        throw new AssertionError("Expected LOGIN command to fail");
     }
 
     private static byte[] fill(byte[] b, int c) {

@@ -12,8 +12,6 @@ import java.util.Set;
 
 public class ImapClient extends MailClient {
     private String mTag;
-    private String mStatus;
-    private String mMessage;
     private Set<String> mCapability = new HashSet<String>();
     private boolean mReceivedBYE;
 
@@ -44,55 +42,61 @@ public class ImapClient extends MailClient {
         super.connect();
     }
     
-    protected boolean processGreeting() throws IOException {
+    protected void processGreeting() throws IOException {
         processLine(readLine());
-        return STATUS_OK.equals(mStatus);
+        if (!STATUS_OK.equals(mStatus)) {
+            throw new MailException("Expected greeting, but got: " + mResponse);
+        }
     }
     
-    protected boolean sendLogin() throws IOException {
-        return sendCommand("LOGIN " + mAuthenticationId + " " + mPassword);
+    public void login() throws IOException {
+        checkCredentials();
+        sendCommand("LOGIN", mAuthenticationId + " " + mPassword);
     }
 
-    public boolean sendLogout() throws IOException {
-        return sendCommand("LOGOUT");
+    public void logout() throws IOException {
+        sendCommand("LOGOUT");
     }
 
-    protected boolean sendAuthenticate(boolean ir) throws IOException {
-        StringBuilder sb = new StringBuilder("AUTHENTICATE ");
-        sb.append(mMechanism);
+    protected void sendAuthenticate(boolean ir) throws IOException {
+        StringBuilder sb = new StringBuilder(mMechanism);
         if (ir) {
             byte[] response = mAuthenticator.getInitialResponse();
             sb.append(' ').append(encodeBase64(response));
         }
-        return sendCommand(sb.toString());
+        sendCommand("AUTHENTICATE", sb.toString());
     }
 
-    protected boolean sendStartTLS() throws IOException {
-        return sendCommand("STARTTLS");
+    protected void sendStartTLS() throws IOException {
+        sendCommand("STARTTLS");
     }
 
+    public void selectFolder(String folder) throws IOException {
+        sendCommand("SELECT", "\"" + folder + "\"");
+    }
+    
     public String getProtocol() {
         return "imap";
     }
 
-    public boolean sendCommand(String command) throws IOException {
-        return sendCommand(command, null, false);
+    public void sendCommand(String cmd, String args) throws IOException {
+        sendCommand(cmd, new String[] { args }, false);
     }
-
-    public boolean sendCommand(String command, Object[] parts, boolean sync)
-            throws IOException {
+    
+    public void sendCommand(String cmd, Object[] parts, boolean sync) throws IOException {
         mTag = createTag();
         mStatus = null;
-        mMessage = null;
+        mResponse = null;
         write(mTag);
         write(" ");
-        write(command);
+        write(cmd);
         if (parts != null) {
+            write(" ");
             for (Object part : parts) {
                 if (part instanceof String) {
                     write((String) part);
-                } else if (!sendLiteral(part, sync)) {
-                    return false;
+                } else {
+                    sendLiteral(part, sync);
                 }
             }
         }
@@ -104,13 +108,17 @@ public class ImapClient extends MailClient {
         } catch (EOFException e) {
             // As long as we received a BYE before the connection was closed,
             // fail the command but do not rethrow EOFException.
-            if (mReceivedBYE) return false;
+            if (mReceivedBYE) {
+                throw new MailException(cmd + " failed because connection was closed");
+            }
             throw e;
         }
-        return STATUS_OK.equals(mStatus);
+        if (!STATUS_OK.equals(mStatus)) {
+            throw new MailException(cmd + " failed: " + mResponse);
+        }
     }
 
-    private boolean sendLiteral(Object part, boolean sync) throws IOException {
+    private void sendLiteral(Object part, boolean sync) throws IOException {
         byte[] b = getPartBytes(part);
         write("{");
         write(String.valueOf(b.length));
@@ -119,15 +127,13 @@ public class ImapClient extends MailClient {
         if (sync) {
             String line = readLine();
             if (!line.startsWith("+ ")) {
-                processLine(line);
-                return false;
+                throw new MailException("Expected literal continuation, but got: " + line);
             }
         }
         write(b);
-        return true;
     }
 
-    private byte[] getPartBytes(Object part) {
+    private static byte[] getPartBytes(Object part) {
         if (part instanceof byte[]) {
             return (byte[]) part;
         }
@@ -139,7 +145,7 @@ public class ImapClient extends MailClient {
     }
     
     public String getMessage() {
-        return mMessage;
+        return mResponse;
     }
     
     private void processLine(String line) throws IOException {
@@ -158,13 +164,13 @@ public class ImapClient extends MailClient {
         line = line.substring(2).trim();
         int i = line.indexOf(' ');
         String s = i != -1 ? line.substring(0, i) : line;
-        mMessage = i != -1 ? line.substring(i + 1) : null;
+        mResponse = i != -1 ? line.substring(i + 1) : null;
         if (STATUS_OK.equals(s) || STATUS_NO.equals(s) || STATUS_BAD.equals(s)) {
             mStatus = s;
         } else if (CAPABILITY.equals(s)) {
             mCapability.clear();
-            if (mMessage != null) {
-                mCapability.addAll(Arrays.asList(mMessage.split("\\s")));
+            if (mResponse != null) {
+                mCapability.addAll(Arrays.asList(mResponse.split("\\s")));
             }
         } else if (BYE.equals(s)) {
             mReceivedBYE = true;
@@ -174,7 +180,7 @@ public class ImapClient extends MailClient {
     private void processTagged(String line) throws IOException {
         String tag = getTag(line);
         if (!tag.equals(mTag)) {
-            throw new IOException("Unexpected tagged reponse: " + line);
+            throw new IOException("Unexpected tagged response: " + line);
         }
         String s = line.substring(tag.length()).trim();
         int i = s.indexOf(' ');
@@ -182,7 +188,7 @@ public class ImapClient extends MailClient {
             throw new IOException("Missing status in tagged response: " + line);
         }
         mStatus = s.substring(0, i);
-        mMessage = s.substring(i).trim();
+        mResponse = s.substring(i).trim();
     }
 
     private static String getTag(String line) throws IOException {

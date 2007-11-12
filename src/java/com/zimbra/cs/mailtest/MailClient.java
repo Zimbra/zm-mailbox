@@ -37,6 +37,13 @@ public abstract class MailClient {
     protected ClientAuthenticator mAuthenticator;
     protected boolean mDebug;
     protected boolean mClosed;
+    protected State mState;
+    protected String mStatus;
+    protected String mResponse;
+
+    public static enum State {
+        NON_AUTHENTICATED, AUTHENTICATED, SELECTED, LOGOUT
+    }
 
     protected MailClient() {}
 
@@ -53,10 +60,7 @@ public abstract class MailClient {
             new BufferedInputStream(mSocket.getInputStream()));
         mOutputStream = new MailOutputStream(
             new BufferedOutputStream(mSocket.getOutputStream()));
-        if (!processGreeting()) {
-            throw new IOException(
-                "Expected greeting from server, but got: " + getMessage());
-        }
+        processGreeting();
     }
 
     private SSLSocketFactory getSSLSocketFactory() {
@@ -64,27 +68,20 @@ public abstract class MailClient {
             mSSLSocketFactory : (SSLSocketFactory) SSLSocketFactory.getDefault();
     }
     
-    protected abstract boolean processGreeting() throws IOException;
-    protected abstract boolean sendAuthenticate(boolean ir) throws IOException;
-    protected abstract boolean sendLogin() throws IOException;
-    protected abstract boolean sendLogout() throws IOException;
-    protected abstract boolean sendStartTLS() throws IOException;
+    protected abstract void processGreeting() throws IOException;
+    protected abstract void sendAuthenticate(boolean ir) throws IOException;
+    protected abstract void sendStartTLS() throws IOException;
+
+    public abstract void login() throws IOException;
+    public abstract void logout() throws IOException;
+    public abstract void sendCommand(String cmd, String args) throws IOException;
     public abstract String getProtocol();
-    public abstract String getMessage();
+    public abstract void selectFolder(String folder) throws IOException;
 
-    public void login() throws LoginException, IOException {
-        checkCredentials();
-        if (!sendLogin()) {
-            throw new LoginException(getMessage());
-        }
+    public void sendCommand(String cmd) throws IOException {
+        sendCommand(cmd, null);
     }
-
-    public void logout() throws IOException {
-        if (!sendLogout()) {
-            throw new IOException("Logout failed");
-        }
-    }
-
+    
     public void authenticate(boolean ir) throws LoginException, IOException {
         if (mMechanism == null || "LOGIN".equals(mMechanism)) {
             login();
@@ -101,9 +98,7 @@ public abstract class MailClient {
             mAuthenticator.getProperties().putAll(mSaslProperties);
         }
         mAuthenticator.initialize();
-        if (!sendAuthenticate(ir)) {
-            throw new LoginException(getMessage());
-        }
+        sendAuthenticate(ir);
         if (mAuthenticator.isEncryptionEnabled()) {
             mInputStream = new MailInputStream(
                 mAuthenticator.getUnwrappedInputStream(mSocket.getInputStream()));
@@ -138,7 +133,7 @@ public abstract class MailClient {
         }
     }
 
-    private void checkCredentials() {
+    protected void checkCredentials() {
         if (mAuthenticationId == null) {
             mAuthenticationId = mAuthorizationId;
         }
@@ -148,9 +143,7 @@ public abstract class MailClient {
     }
 
     public void startTLS() throws IOException {
-        if (!sendStartTLS()) {
-            throw new IOException(getMessage());
-        }
+        sendStartTLS();
         SSLSocket sock = (SSLSocket) getSSLSocketFactory().createSocket(
             mSocket, mSocket.getInetAddress().getHostName(), mSocket.getPort(), false);
         try {
