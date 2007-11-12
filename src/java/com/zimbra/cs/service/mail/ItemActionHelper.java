@@ -38,7 +38,6 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.*;
-import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -115,10 +114,10 @@ public class ItemActionHelper {
 
     public static ItemActionHelper SPAM(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
                 List<Integer> ids, byte type, boolean flagValue, 
-                TargetConstraint tcon, int folderId)
+                TargetConstraint tcon, ItemId iidFolder)
     throws ServiceException {
         ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.SPAM, type, flagValue, tcon);
-        ia.setFolderId(folderId);
+        ia.setIidFolder(iidFolder);
         ia.schedule();
         return ia;
     }
@@ -198,11 +197,8 @@ public class ItemActionHelper {
     // only when OP=RENAME or OP=UPDATE
     protected String mName; 
 
-    // only when OP=MOVE or OP=RENAME or OP=UPDATE
+    // only when OP=MOVE or OP=COPY or OP=RENAME or OP=UPDATE or OP=SPAM
     protected ItemId mIidFolder; 
-    
-    // only when OP=SPAM
-    protected int mFolderId;
 
     // only when OP=UPDATE
     protected String mFlags;
@@ -220,19 +216,16 @@ public class ItemActionHelper {
         toRet.append(" FlagValue=").append(mFlagValue);
         if (mTargetConstraint != null) 
             toRet.append(" TargetConst=").append(mTargetConstraint.toString());
-        
+
         if (mOperation == Op.TAG) 
             toRet.append(" TagId=").append(mTagId);
-        
+
         if (mOperation == Op.COLOR || mOperation == Op.UPDATE)
             toRet.append(" Color=").append(mColor);
-        
-        if (mOperation == Op.MOVE || mOperation == Op.UPDATE) 
+
+        if (mOperation == Op.MOVE || mOperation == Op.UPDATE || mOperation == Op.COPY || mOperation == Op.RENAME || mOperation == Op.SPAM) 
             toRet.append(" iidFolder=").append(mIidFolder);
-        
-        if (mOperation == Op.SPAM) 
-            toRet.append(" folderId=").append(mFolderId);
-        
+
         if (mOperation == Op.UPDATE) {
             if (mFlags != null) 
                 toRet.append(" flags=").append(mFlags);
@@ -257,10 +250,6 @@ public class ItemActionHelper {
     public void setIidFolder(ItemId iidFolder)  { 
         assert(mOperation == Op.MOVE || mOperation == Op.COPY || mOperation == Op.RENAME || mOperation == Op.UPDATE);
         mIidFolder = iidFolder; 
-    }
-    public void setFolderId(int folderId) {
-        assert(mOperation == Op.SPAM);
-        mFolderId = folderId; 
     }
     public void setFlags(String flags) {
         assert(mOperation == Op.UPDATE);
@@ -313,6 +302,12 @@ public class ItemActionHelper {
         }
 
         try {
+            if (mOperation == Op.SPAM) {
+                // make sure to always do the spam training before moving to the target folder
+                for (int id : mIds)
+                    SpamHandler.getInstance().handle(getMailbox(), id, mItemType, mFlagValue);
+            }
+
             if (movable && !mIidFolder.belongsTo(mMailbox))
                 executeRemote();
             else
@@ -354,6 +349,7 @@ public class ItemActionHelper {
             case HARD_DELETE:
                 getMailbox().delete(getOpCtxt(), mIds, mItemType, mTargetConstraint);
                 break;
+            case SPAM:
             case MOVE:
                 getMailbox().move(getOpCtxt(), mIds, mItemType, mIidFolder.getId(), mTargetConstraint);
                 break;
@@ -362,11 +358,6 @@ public class ItemActionHelper {
                 mCreatedIds = new ArrayList<String>(mIds.length);
                 for (MailItem item : copies)
                     mCreatedIds.add(mIdFormatter.formatItemId(item));
-                break;
-            case SPAM:
-                getMailbox().move(getOpCtxt(), mIds, mItemType, mFolderId, mTargetConstraint);
-                for (int id : mIds)
-                    SpamHandler.getInstance().handle(getMailbox(), id, mItemType, mFlagValue);
                 break;
             case TRASH:
                 try {

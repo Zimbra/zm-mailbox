@@ -93,8 +93,8 @@ public class ItemAction extends MailDocumentHandler {
         }
 
         // figure out which items are local and which ones are remote, and proxy accordingly
-        ArrayList<Integer> local = new ArrayList<Integer>();
-        HashMap<String, StringBuffer> remote = new HashMap<String, StringBuffer>();
+        List<Integer> local = new ArrayList<Integer>();
+        Map<String, StringBuffer> remote = new HashMap<String, StringBuffer>();
         partitionItems(zsc, action.getAttribute(MailConstants.A_ID), local, remote);
 
         StringBuffer successes = proxyRemoteItems(action, remote, request, context);
@@ -126,9 +126,9 @@ public class ItemAction extends MailDocumentHandler {
                 ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER), zsc);
                 localResults = ItemActionHelper.COPY(octxt, mbox, responseProto, local, type, tcon, iidFolder).getResult();
         	} else if (opStr.equals(OP_SPAM)) {
-        		int defaultFolder = flagValue ? Mailbox.ID_FOLDER_SPAM : Mailbox.ID_FOLDER_INBOX;
-        		int folderId = (int) action.getAttributeLong(MailConstants.A_FOLDER, defaultFolder);
-        		localResults = ItemActionHelper.SPAM(octxt, mbox, responseProto, local, type, flagValue, tcon, folderId).getResult();
+        		String defaultFolder = (flagValue ? Mailbox.ID_FOLDER_SPAM : Mailbox.ID_FOLDER_INBOX) + "";
+                ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER, defaultFolder), zsc);
+        		localResults = ItemActionHelper.SPAM(octxt, mbox, responseProto, local, type, flagValue, tcon, iidFolder).getResult();
             } else if (opStr.equals(OP_TRASH)) {
                 localResults = ItemActionHelper.TRASH(octxt, mbox, responseProto, local, type, tcon).getResult();
             } else if (opStr.equals(OP_RENAME)) {
