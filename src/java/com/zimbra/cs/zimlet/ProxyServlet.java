@@ -108,7 +108,8 @@ public class ProxyServlet extends ZimbraServlet {
             header.equals("host") ||
             //header.equals("user-agent") ||
             header.equals("cache-control") ||
-            header.equals("cookie")) {
+            header.equals("cookie") ||
+            header.equals("transfer-encoding")) {
             return false;
         }
         return true;
