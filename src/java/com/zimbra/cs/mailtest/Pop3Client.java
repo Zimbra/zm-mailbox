@@ -3,9 +3,6 @@ package com.zimbra.cs.mailtest;
 import java.io.IOException;
 
 public class Pop3Client extends MailClient {
-    private String mStatus;
-    private String mMessage;
-    
     public static final int DEFAULT_PORT = 110;
     public static final int DEFAULT_SSL_PORT = 995;
 
@@ -25,52 +22,60 @@ public class Pop3Client extends MailClient {
         super.connect();
     }
     
-    protected boolean processGreeting() throws IOException {
+    protected void processGreeting() throws IOException {
         processLine(readLine());
-        return STATUS_OK.equals(mStatus);
+        if (!STATUS_OK.equals(mStatus)) {
+            throw new MailException("Expected greeting, but got: " + mResponse);
+        }
     }
 
-    protected boolean sendLogin() throws IOException {
-        return sendCommand("USER " + mAuthenticationId) &&
-               sendCommand("PASS " + mPassword);
+    public void login() throws IOException {
+        checkCredentials();
+        sendCommand("USER", mAuthenticationId);
+        sendCommand("PASS", mPassword);
     }
 
-    protected boolean sendLogout() throws IOException {
-        return sendCommand("QUIT");
+    public void logout() throws IOException {
+        sendCommand("QUIT");
     }
     
-    protected boolean sendAuthenticate(boolean ir) throws IOException {
-        StringBuffer sb = new StringBuffer("AUTH ");
-        sb.append(mMechanism);
+    protected void sendAuthenticate(boolean ir) throws IOException {
+        StringBuffer sb = new StringBuffer(mMechanism);
         if (ir) {
             byte[] response = mAuthenticator.getInitialResponse();
             sb.append(' ').append(encodeBase64(response));
         }
-        return sendCommand(sb.toString());
+        sendCommand("AUTH", sb.toString());
     }
 
-    protected boolean sendStartTLS() throws IOException {
-        return sendCommand("STLS");
+    protected void sendStartTLS() throws IOException {
+        sendCommand("STLS");
+    }
+
+    public void selectFolder(String folder) {
+        if (!"INBOX".equals(folder)) {
+            throw new IllegalArgumentException("Can only select INBOX folder");
+        }
     }
     
     public String getProtocol() {
         return "pop3";
     }
     
-    public boolean sendCommand(String command) throws IOException {
+    public void sendCommand(String cmd, String args) throws IOException {
         mStatus = null;
-        mMessage = null;
-        writeLine(command);
+        mResponse = null;
+        String line = cmd;
+        if (args != null) line += " " + args;
+        writeLine(line);
         while (mStatus == null) {
             processLine(readLine());
         }
-        return STATUS_OK.equals(mStatus);
+        if (!STATUS_OK.equals(mStatus)) {
+            throw new MailException(cmd + " failed: " + mResponse);
+        }
     }
 
-    public String getMessage() {
-        return mMessage;
-    }
-    
     private void processLine(String line) throws IOException {
         if (line.startsWith("+ ")) {
             processContinuation(line);
@@ -79,10 +84,10 @@ public class Pop3Client extends MailClient {
         int i = line.indexOf(' ');
         if (i == -1) {
             mStatus = line;
-            mMessage = "";
+            mResponse = "";
         } else {
             mStatus = line.substring(0, i);
-            mMessage = line.substring(i).trim();
+            mResponse = line.substring(i).trim();
         }
     }
 }
