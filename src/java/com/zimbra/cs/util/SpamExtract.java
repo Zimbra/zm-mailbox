@@ -324,10 +324,15 @@ public class SpamExtract {
             try {
                 os = new BufferedOutputStream(new FileOutputStream(file)); 
                 mm.writeTo(os);
+                if (mVerbose) mLog.info("Wrote: " + file);
+            } catch (java.io.IOException e) {
+                String fileName = outdir + "/" + mOutputPrefix + "-" + mExtractIndex;
+                mLog.error("Cannot write to " + fileName, e);
             } finally {
-                os.close();
+                if (os != null)
+                    os.close();
             }
-            if (mVerbose) mLog.info("Wrote: " + file);
+            
             return;
         }
 
