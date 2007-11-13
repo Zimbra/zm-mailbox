@@ -410,16 +410,34 @@ public class DbSearch {
         return num;
     }
     
-    private static final boolean requiresAppointmentUnion(DbSearchConstraintsNode node) {
+    /**
+     * @return TRUE if some part of this query has a non-appointment select (ie 'type not in (11,15)' non-null 
+     */
+    private static final boolean hasMailItemOnlyConstraints(DbSearchConstraintsNode node) {
         DbSearchConstraintsNode.NodeType ntype = node.getNodeType();
         if (ntype == DbSearchConstraintsNode.NodeType.AND || ntype == DbSearchConstraintsNode.NodeType.OR) {
             for (DbSearchConstraintsNode subnode : node.getSubNodes()) {
-                if (requiresAppointmentUnion(subnode))
+                if (hasMailItemOnlyConstraints(subnode))
                     return true;
             }
             return false;
         }
-        return node.getSearchConstraints().requiresAppointmentUnion();
+        return node.getSearchConstraints().hasNonAppointmentTypes();
+    }
+    
+    /**
+     * @return TRUE if this constraint needs to do a join with the Appointment table in order to be evaluated
+     */
+    private static final boolean hasAppointmentTableConstraints(DbSearchConstraintsNode node) {
+        DbSearchConstraintsNode.NodeType ntype = node.getNodeType();
+        if (ntype == DbSearchConstraintsNode.NodeType.AND || ntype == DbSearchConstraintsNode.NodeType.OR) {
+            for (DbSearchConstraintsNode subnode : node.getSubNodes()) {
+                if (hasAppointmentTableConstraints(subnode))
+                    return true;
+            }
+            return false;
+        }
+        return node.getSearchConstraints().hasAppointmentTableConstraints();
     }
     
     
@@ -450,40 +468,87 @@ public class DbSearch {
         ResultSet rs = null;
         StringBuilder statement = new StringBuilder();
         int numParams = 0;
-        boolean requiresAppointmentUnion = requiresAppointmentUnion(node);
+        boolean hasMailItemOnlyConstraints = true;
+        boolean hasAppointmentTableConstraints = hasAppointmentTableConstraints(node);
+        if (hasAppointmentTableConstraints) {
+            hasMailItemOnlyConstraints = hasMailItemOnlyConstraints(node);
+        }
+        boolean requiresUnion = hasMailItemOnlyConstraints && hasAppointmentTableConstraints;
         
         try {
-            /*
-             * "SELECT mi.id,mi.date, [extrafields] FROM mail_item AS mi 
-             *    [FORCE INDEX (...)]
-             *    WHERE mi.mailboxid=? AND
-             */
-            statement.append(encodeSelect(mbox, sort, extra, false, node, hasValidLIMIT));
             
-            /*
-             *( SUB-NODE AND/OR (SUB-NODE...) ) AND/OR ( SUB-NODE ) AND
-             *    ( 
-             *       one of: [type NOT IN (...)]  || [type = ?] || [type IN ( ...)]
-             *       [ AND tags != 0]
-             *       [ AND tags IN ( ... ) ]
-             *       [ AND flags IN (...) ] 
-             *       ..etc
-             *    )   
-             */
-            numParams += encodeConstraint(mbox, node, 
-                (requiresAppointmentUnion ? APPOINTMENT_TABLE_TYPES : null), 
-                false, statement, conn);
+            if (hasMailItemOnlyConstraints) {
+                if (requiresUnion) {
+                    statement.append("(");
+                }
+                
+                /*
+                 * "SELECT mi.id,mi.date, [extrafields] FROM mail_item AS mi 
+                 *    [FORCE INDEX (...)]
+                 *    WHERE mi.mailboxid=? AND
+                 */
+                statement.append(encodeSelect(mbox, sort, extra, false, node, hasValidLIMIT));
+                
+                /*
+                 *( SUB-NODE AND/OR (SUB-NODE...) ) AND/OR ( SUB-NODE ) AND
+                 *    ( 
+                 *       one of: [type NOT IN (...)]  || [type = ?] || [type IN ( ...)]
+                 *       [ AND tags != 0]
+                 *       [ AND tags IN ( ... ) ]
+                 *       [ AND flags IN (...) ] 
+                 *       ..etc
+                 *    )   
+                 */
+                numParams += encodeConstraint(mbox, node, 
+                    (hasAppointmentTableConstraints ? APPOINTMENT_TABLE_TYPES : null), 
+                    false, statement, conn);
+                
+                if (requiresUnion) {
+                    /*
+                     * ORDER BY (sortField) 
+                     */
+                    statement.append(sortQuery(sort, true));
+                    
+                    /*
+                     * LIMIT ?, ? 
+                     */
+                    if (hasValidLIMIT && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
+                        statement.append(" LIMIT ").append(offset).append(',').append(limit);
+                    }
+                }
+            }
             
-            if (requiresAppointmentUnion) {
+            if (requiresUnion) {
                 /*
                  * UNION
                  */
-                statement.append(" UNION ALL ");
+                statement.append(" ) UNION ALL (");
+            }
+            
+            if (hasAppointmentTableConstraints) {
                 /*
                  * SELECT...again...(this time with "appointment as ap")...WHERE...
                  */
                 statement.append(encodeSelect(mbox, sort, extra, true, node, hasValidLIMIT));
                 numParams += encodeConstraint(mbox, node, APPOINTMENT_TABLE_TYPES, true, statement, conn);
+                
+                if (requiresUnion) {
+                    /*
+                     * ORDER BY (sortField) 
+                     */
+                    statement.append(sortQuery(sort, true));
+                    
+                    /*
+                     * LIMIT ?, ? 
+                     */
+                    if (hasValidLIMIT && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
+                        statement.append(" LIMIT ").append(offset).append(',').append(limit);
+                    }
+                    
+                    if (requiresUnion) {
+                        statement.append(")");
+                    }
+                }
             }
             
             //
@@ -499,38 +564,36 @@ public class DbSearch {
              * LIMIT ?, ? 
              */
             if (hasValidLIMIT && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
-                statement.append(" LIMIT ?, ?");
-                numParams += 2; // two constraints added
+                statement.append(" LIMIT ").append(offset).append(',').append(limit);
             }
+
+            /**********************************************************/
+            /* Above here: build statement, below here bind params */
+            /**********************************************************/
 
             /*
              * Create the statement and bind all our parameters!
              */
             if (sLog.isDebugEnabled())
                 sLog.debug("SQL: ("+numParams+" parameters): "+statement.toString());
+            
             stmt = conn.prepareStatement(statement.toString());
             int param = 1;
-            param = setSearchVars(stmt, node, param, (requiresAppointmentUnion ? APPOINTMENT_TABLE_TYPES : null), false);
             
-            if (requiresAppointmentUnion) {
+            
+            if (hasMailItemOnlyConstraints) {
+                param = setSearchVars(stmt, node, param, (hasAppointmentTableConstraints ? APPOINTMENT_TABLE_TYPES : null), false);
+            }
+            
+            if (hasAppointmentTableConstraints) {
                 param = setSearchVars(stmt, node, param, APPOINTMENT_TABLE_TYPES, true);
             }
             
-            //
-            // TODO FIXME: include COLLATION for sender/subject sort
-            //
-            
             /*
-             * LIMIT
+             * Limit query if DB doesn't support LIMIT clause
              */
-            if (hasValidLIMIT) {
-                if (Db.supports(Db.Capability.LIMIT_CLAUSE)) {
-                    stmt.setInt(param++, offset);
-                    stmt.setInt(param++, limit);
-                } else {
-                    stmt.setMaxRows(offset + limit + 1);
-                }
-            }
+            if (hasValidLIMIT && !Db.supports(Db.Capability.LIMIT_CLAUSE))
+                stmt.setMaxRows(offset + limit + 1);
 
             /*
              * EXECUTE!

@@ -218,11 +218,21 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         excludeTypes = new HashSet<Byte>();
         return types;
     }
+
+    /**
+     * @return TRUE if these constraints have a non-appointment type in them
+     */
+    boolean hasNonAppointmentTypes() {
+        Set<Byte> fullTypes = calcTypes();
+        fullTypes.remove(MailItem.TYPE_APPOINTMENT);
+        fullTypes.remove(MailItem.TYPE_TASK);
+        return !fullTypes.isEmpty();
+    }
     
     /**
      * @return TRUE if these constraints have a constraint that requires a join with the Appointment table
      */
-    boolean requiresAppointmentUnion() {
+    boolean hasAppointmentTableConstraints() {
         Set<Byte> fullTypes = calcTypes();
         
 // testing hack:        
