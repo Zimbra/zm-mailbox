@@ -224,9 +224,12 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
      */
     boolean hasNonAppointmentTypes() {
         Set<Byte> fullTypes = calcTypes();
-        fullTypes.remove(MailItem.TYPE_APPOINTMENT);
-        fullTypes.remove(MailItem.TYPE_TASK);
-        return !fullTypes.isEmpty();
+        
+        HashSet<Byte> temp = new HashSet<Byte>();
+        temp.addAll(fullTypes);
+        temp.remove(MailItem.TYPE_APPOINTMENT);
+        temp.remove(MailItem.TYPE_TASK);
+        return !temp.isEmpty();
     }
     
     /**

@@ -138,6 +138,9 @@ abstract class ResultValidator {
             }
             return sb.toString();
         }
+        
+        public Object getExpected(int num) { return mExpected.get(num); }
+        
     }
 
     protected int mNumExpected = -1;
