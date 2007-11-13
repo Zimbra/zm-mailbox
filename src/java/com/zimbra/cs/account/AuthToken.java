@@ -36,6 +36,8 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.ACL.GuestAccount;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.BlobMetaData;
@@ -194,13 +196,19 @@ public class AuthToken {
         mIsAdmin = isAdmin && "TRUE".equals(acct.getAttr(Provisioning.A_zimbraIsAdminAccount));
         mIsDomainAdmin = isAdmin && "TRUE".equals(acct.getAttr(Provisioning.A_zimbraIsDomainAdminAccount));
 		mEncoded = null;
-        mType = C_TYPE_ZIMBRA_USER;
+		if (acct instanceof ACL.GuestAccount) {
+            mType = C_TYPE_EXTERNAL_USER;
+            GuestAccount g = (ACL.GuestAccount) acct;
+            mDigest = g.getDigest();
+            mExternalUserEmail = g.getName();
+        } else
+            mType = C_TYPE_ZIMBRA_USER;
 	}
 
     public AuthToken(String acctId, String externalEmail, String pass, String digest, long expires) {
         mAccountId = acctId;
         mExpires = expires;
-        mExternalUserEmail = externalEmail;
+        mExternalUserEmail = externalEmail == null ? "public" : externalEmail;
         if (digest != null)
             mDigest = digest;
         else
@@ -210,7 +218,7 @@ public class AuthToken {
     }
     
     public static String generateDigest(String a, String b) {
-        if (a == null || b == null)
+        if (a == null)
             return null;
         StringBuilder buf = new StringBuilder();
         buf.append(a);

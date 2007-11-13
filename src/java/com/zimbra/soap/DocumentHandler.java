@@ -27,6 +27,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
+import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -132,9 +133,11 @@ public abstract class DocumentHandler {
     public static Account getAuthenticatedAccount(ZimbraSoapContext zsc) throws ServiceException {
         String id = zsc.getAuthtokenAccountId();
 
+        if (ACL.GUID_PUBLIC.equals(id))
+            return new ACL.GuestAccount(zsc.getAuthToken());
         Account acct = Provisioning.getInstance().get(AccountBy.id, id);
         if (acct == null)
-            throw ServiceException.AUTH_EXPIRED();
+            throw ServiceException.AUTH_REQUIRED();
         return acct;
     }
 

@@ -81,7 +81,7 @@ public class ACL {
     /** The pseudo-GUID signifying "all authenticated and unauthenticated users". */
     public static final String GUID_PUBLIC   = "99999999-9999-9999-9999-999999999999";
 
-    public static final Account ANONYMOUS_ACCT = new Account("public", GUID_PUBLIC, getAnonAttrs(), null);
+    public static final Account ANONYMOUS_ACCT = new GuestAccount("public", null);
 
     static Map<String, Object> getAnonAttrs() {
         Map<String,Object> attrs = new HashMap<String,Object>();
