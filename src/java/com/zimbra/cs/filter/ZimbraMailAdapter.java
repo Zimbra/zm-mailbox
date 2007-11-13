@@ -19,6 +19,7 @@ package com.zimbra.cs.filter;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
@@ -403,12 +404,8 @@ public class ZimbraMailAdapter implements MailAdapter
 
     public List<String> getHeader(String name)
     {
-        String header = mParsedMessage.getHeader(name);
-        List<String> headerList = new ArrayList<String>();
-        if (header != null) {
-            headerList.add(header);
-        }
-        return headerList;
+        String[] headers = mParsedMessage.getHeaders(name);
+        return (headers == null ? new ArrayList(0) : Arrays.asList(headers));
     }
 
     public List<String> getHeaderNames() throws SieveMailException

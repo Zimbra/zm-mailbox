@@ -510,6 +510,9 @@ public class ParsedMessage {
         }
     }
 
+    /**
+     * Returns the decoded header for this header name, only the first header is returned.
+     */
     public String getHeader(String headerName) {
         try {
             String value = getMimeMessage().getHeader(headerName, null);
@@ -524,7 +527,32 @@ public class ParsedMessage {
             return "";
         }
     }
+    
+    /**
+     * Returns the decoded headers for this header name, all headers for this header name are returned.
+     */
+    public String[] getHeaders(String headerName) {
+        try {
+            String value = getMimeMessage().getHeader(headerName, ",");
+            if (value == null || value.length() == 0)
+                return null;
+            
+            String[] values = value.split(",");
+            for (int i=0; i<values.length; i++) {
+                try {
+                    values[i] = MimeUtility.decodeText(values[i]);
+                } catch (UnsupportedEncodingException e) {
+                    // values[i] would contain the undecoded value, fine
+                }
+            }
 
+            return values;
+        } catch (MessagingException e) {
+            return null;
+        }
+    }
+    
+    
     public String getRecipients() {
         if (mRecipients == null) {
             String recipients = null;
