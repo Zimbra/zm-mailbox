@@ -64,7 +64,7 @@ extends TestCase
         String sender = TestUtil.getAddress(USER_NAME);
         String recipient = TestUtil.getAddress(USER_NAME);
         String subject = NAME_PREFIX + " testRenameTag 1";
-        TestUtil.insertMessageLmtp(1, subject, recipient, sender);
+        TestUtil.addMessageLmtp(1, subject, recipient, sender);
         
         // Confirm that the original tag was applied
         ZMessage msg = TestUtil.getMessage(mMbox, "tag:" + TAG_NAME);
@@ -79,7 +79,7 @@ extends TestCase
         
         // Send another message
         subject = NAME_PREFIX + " testRenameTag 2";
-        TestUtil.insertMessageLmtp(2, subject, recipient, sender);
+        TestUtil.addMessageLmtp(2, subject, recipient, sender);
         
         // Confirm that the new tag name is now applied to both messages
         List<ZMessage> messages = TestUtil.search(mMbox, "tag:" + NEW_TAG_NAME);

@@ -74,10 +74,10 @@ public class TestTags extends TestCase
         // Clean up, in case the last test didn't exit cleanly
         cleanUp();
         
-        mMessage1 = TestUtil.insertMessage(mMbox, 1, MSG_SUBJECT);
-        mMessage2 = TestUtil.insertMessage(mMbox, 2, MSG_SUBJECT);
-        mMessage3 = TestUtil.insertMessage(mMbox, 3, MSG_SUBJECT);
-        mMessage4 = TestUtil.insertMessage(mMbox, 4, MSG_SUBJECT);
+        mMessage1 = TestUtil.addMessage(mMbox, 1, MSG_SUBJECT);
+        mMessage2 = TestUtil.addMessage(mMbox, 2, MSG_SUBJECT);
+        mMessage3 = TestUtil.addMessage(mMbox, 3, MSG_SUBJECT);
+        mMessage4 = TestUtil.addMessage(mMbox, 4, MSG_SUBJECT);
         
         mConv = mMbox.getConversationById(null, mMessage1.getConversationId());
         refresh();

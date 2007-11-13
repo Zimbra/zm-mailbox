@@ -100,15 +100,15 @@ public class TestUnread extends TestCase
         // Clean up data, in case a previous test didn't exit cleanly
         TestUtil.deleteTestData(USER_NAME, TEST_NAME);
         
-        Message msg = TestUtil.insertMessage(mMbox, 1, TEST_NAME);
+        Message msg = TestUtil.addMessage(mMbox, 1, TEST_NAME);
         mMessage1Id = msg.getId();
         ZimbraLog.test.debug("Created message 1, id=" + mMessage1Id);
         
-        msg = TestUtil.insertMessage(mMbox, 2, "RE: " + TEST_NAME);
+        msg = TestUtil.addMessage(mMbox, 2, "RE: " + TEST_NAME);
         mMessage2Id = msg.getId();
         ZimbraLog.test.debug("Created message 2, id=" + mMessage2Id);
         
-        msg =  TestUtil.insertMessage(mMbox, 3, "RE: " + TEST_NAME);
+        msg =  TestUtil.addMessage(mMbox, 3, "RE: " + TEST_NAME);
         mMessage3Id = msg.getId();
         ZimbraLog.test.debug("Created message 3, id=" + mMessage3Id);
         

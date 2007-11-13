@@ -96,7 +96,7 @@ public class TestWaitSet extends TestCase {
                 String sender = TestUtil.getAddress(USER_1_NAME);
                 String recipient = TestUtil.getAddress(USER_1_NAME);
                 String subject = NAME_PREFIX + " testWaitSet 1";
-                TestUtil.insertMessageLmtp(1, subject, recipient, sender);
+                TestUtil.addMessageLmtp(1, subject, recipient, sender);
                 try { Thread.sleep(500); } catch (Exception e) {}
                 synchronized(cb) { assertEquals(true, cb.completed); }
                 curSeqNo = cb.seqNo;
@@ -120,7 +120,7 @@ public class TestWaitSet extends TestCase {
                 String sender = TestUtil.getAddress(WS_USER_NAME);
                 String recipient = TestUtil.getAddress(USER_2_NAME);
                 String subject = NAME_PREFIX + " testWaitSet 3";
-                TestUtil.insertMessageLmtp(1, subject, recipient, sender);
+                TestUtil.addMessageLmtp(1, subject, recipient, sender);
                 try { Thread.sleep(500); } catch (Exception e) {}
                 synchronized(cb) { assertEquals(true, cb.completed); }
                 curSeqNo = cb.seqNo;
@@ -154,7 +154,7 @@ public class TestWaitSet extends TestCase {
                 String sender = TestUtil.getAddress(USER_1_NAME);
                 String recipient = TestUtil.getAddress(USER_1_NAME);
                 String subject = NAME_PREFIX + " testWaitSet 1";
-                TestUtil.insertMessageLmtp(1, subject, recipient, sender);
+                TestUtil.addMessageLmtp(1, subject, recipient, sender);
                 try { Thread.sleep(500); } catch (Exception e) {}
                 synchronized(cb) { assertEquals(true, cb.completed); }
                 curSeqNo = cb.seqNo;
@@ -187,7 +187,7 @@ public class TestWaitSet extends TestCase {
                 String sender = TestUtil.getAddress(WS_USER_NAME);
                 String recipient = TestUtil.getAddress(WS_USER_NAME);
                 String subject = NAME_PREFIX + " testWaitSet 2";
-                TestUtil.insertMessageLmtp(1, subject, recipient, sender);
+                TestUtil.addMessageLmtp(1, subject, recipient, sender);
                 try { Thread.sleep(500); } catch (Exception e) {}
                 synchronized(cb) { assertEquals(true, cb.completed); }
                 curSeqNo = cb.seqNo;

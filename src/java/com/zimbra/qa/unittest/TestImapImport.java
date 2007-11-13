@@ -105,7 +105,7 @@ extends TestCase {
         // Remote: add 1 message
         ZimbraLog.test.info("Testing adding message to remote inbox.");
         String remoteQuery = "in:inbox msg1";
-        TestUtil.insertMessage(mRemoteMbox, 1, NAME_PREFIX + " msg1");
+        TestUtil.addMessage(mRemoteMbox, 1, NAME_PREFIX + " msg1");
         checkMsgCount(mRemoteMbox, remoteQuery, 1);
         assertNull(mLocalMbox.getFolderByPath(LOCAL_PATH_INBOX));
 
@@ -170,7 +170,7 @@ extends TestCase {
         
         // Insert message into folder1 and remember original id
         String subject = NAME_PREFIX + " msg2";
-        String originalId = TestUtil.insertMessage(mLocalMbox, 2, subject, localFolder1.getId());
+        String originalId = TestUtil.addMessage(mLocalMbox, 2, subject, localFolder1.getId());
         msgs = TestUtil.search(mLocalMbox, subject);
         assertEquals(1, msgs.size());
         assertEquals(originalId, msgs.get(0).getId());
@@ -190,7 +190,7 @@ extends TestCase {
         // Add message to remote folder and delete local folder at the same time
         ZimbraLog.test.info("Testing simultaneous message add and folder delete 1.");
         ZFolder remoteFolder2 = mRemoteMbox.getFolderByPath(REMOTE_PATH_F2); 
-        TestUtil.insertMessage(mRemoteMbox, 3, NAME_PREFIX + " msg3", remoteFolder2.getId());
+        TestUtil.addMessage(mRemoteMbox, 3, NAME_PREFIX + " msg3", remoteFolder2.getId());
         ZFolder localFolder3 = mLocalMbox.getFolderByPath(LOCAL_PATH_F3);
         mLocalMbox.deleteFolder(localFolder3.getId());
         checkMsgCount(mLocalMbox, "in:" + LOCAL_PATH_F2, 0);
@@ -206,7 +206,7 @@ extends TestCase {
         // Add message to a local folder and delete the same folder in remote mailbox
         ZimbraLog.test.info("Testing simultaneous message add and folder delete 2.");
         ZFolder localFolder = mLocalMbox.getFolderByPath(LOCAL_PATH_F2);
-        TestUtil.insertMessage(mLocalMbox, 4, NAME_PREFIX + " msg4", localFolder.getId());
+        TestUtil.addMessage(mLocalMbox, 4, NAME_PREFIX + " msg4", localFolder.getId());
         remoteFolder1 = mRemoteMbox.getFolderByPath(REMOTE_PATH_F1);
         mRemoteMbox.deleteFolder(remoteFolder1.getId());
         importImap();
@@ -223,7 +223,7 @@ extends TestCase {
         ZimbraLog.test.info("Testing sync from local to remote.");
         checkMsgCount(mLocalMbox, "in:" + LOCAL_PATH_INBOX, 0);
         ZFolder localInbox = mLocalMbox.getFolderByPath(LOCAL_PATH_INBOX);
-        TestUtil.insertMessage(mLocalMbox, 5, NAME_PREFIX + " msg5", localInbox.getId());
+        TestUtil.addMessage(mLocalMbox, 5, NAME_PREFIX + " msg5", localInbox.getId());
         checkMsgCount(mLocalMbox, "in:" + LOCAL_PATH_INBOX, 1);
         checkMsgCount(mRemoteMbox, "in:inbox", 0);
 

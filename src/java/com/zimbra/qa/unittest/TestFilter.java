@@ -106,7 +106,7 @@ extends TestCase {
     throws Exception {
         // Note: tag gets created implicitly when filter rules are saved
         String address = TestUtil.getAddress(USER_NAME);
-        TestUtil.insertMessageLmtp(1,
+        TestUtil.addMessageLmtp(1,
             "=?UTF-8?B?W2l0dnNmLUluY2lkZW5jaWFzXVs0OTc3Ml0gW2luY2lkZW5jaWFzLXZpbGxhbnVldmFdIENvcnRlcyBkZSBsdXosIGTDrWEgMjUvMDkvMjAwNi4=?=",
             address, address);
         List<ZMessage> messages = TestUtil.search(mMbox, "villanueva");
@@ -125,7 +125,7 @@ extends TestCase {
         String sender = TestUtil.getAddress("multiplefilters");
         String recipient = TestUtil.getAddress(USER_NAME);
         String subject = NAME_PREFIX + " This goes into folder1 and folder2";
-        TestUtil.insertMessageLmtp(1, subject, recipient, sender);
+        TestUtil.addMessageLmtp(1, subject, recipient, sender);
         
         ZMessage msg = TestUtil.getMessage(mMbox, "in:" + FOLDER1_PATH + " " + subject);
         TestUtil.verifyTag(mMbox, msg, TAG1_NAME);
@@ -146,7 +146,7 @@ extends TestCase {
     throws Exception {
         String recipient = TestUtil.getAddress(USER_NAME);
         String subject = NAME_PREFIX + "Testing bug5455";
-        TestUtil.insertMessageLmtp(1, subject, recipient, recipient);
+        TestUtil.addMessageLmtp(1, subject, recipient, recipient);
         
         ZMessage msg = TestUtil.getMessage(mMbox, "in:" + FOLDER1_PATH + " " + subject);
         TestUtil.verifyFlag(mMbox, msg, Flag.flagged);

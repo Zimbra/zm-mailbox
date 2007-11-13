@@ -275,7 +275,7 @@ public class TestDomainStatus extends TestCase {
         boolean ok = false;
         
         try {
-            TestUtil.insertMessageLmtp(1, NAME_PREFIX + " 1", acct.getName(), "phoebeshao");
+            TestUtil.addMessageLmtp(1, NAME_PREFIX + " 1", acct.getName(), "phoebeshao");
             
             if (status.equals(Provisioning.ACCOUNT_STATUS_ACTIVE) ||
                 status.equals(Provisioning.ACCOUNT_STATUS_LOCKOUT) ||

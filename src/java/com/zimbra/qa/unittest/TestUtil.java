@@ -182,12 +182,12 @@ extends Assert {
 
     private static String MESSAGE_TEMPLATE = StringUtil.join("\n", MESSAGE_TEMPLATE_LINES);
 
-    public static Message insertMessage(Mailbox mbox, int messageNum, String subject)
+    public static Message addMessage(Mailbox mbox, int messageNum, String subject)
     throws Exception {
-        return insertMessage(mbox, Mailbox.ID_FOLDER_INBOX, messageNum, subject, System.currentTimeMillis());
+        return addMessage(mbox, Mailbox.ID_FOLDER_INBOX, messageNum, subject, System.currentTimeMillis());
     }
     
-    public static Message insertMessage(Mailbox mbox, int folderId, int messageNum, String subject, long timestamp)
+    public static Message addMessage(Mailbox mbox, int folderId, int messageNum, String subject, long timestamp)
     throws Exception {
         String message = getTestMessage(messageNum, subject, null, null, new Date(timestamp));
         ParsedMessage pm = new ParsedMessage(message.getBytes(), timestamp, false);
@@ -226,7 +226,7 @@ extends Assert {
         return StringUtil.fillTemplate(MESSAGE_TEMPLATE, vars);
     }
 
-    public static void insertMessageLmtp(int messageNum, String subject, String recipient, String sender)
+    public static void addMessageLmtp(int messageNum, String subject, String recipient, String sender)
     throws Exception {
         String message = getTestMessage(messageNum, subject, recipient, sender, null);
         LmtpClient lmtp = new LmtpClient("localhost", 7025);
@@ -234,12 +234,12 @@ extends Assert {
         lmtp.close();
     }
 
-    public static String insertMessage(ZMailbox mbox, int messageNum, String subject)
+    public static String addMessage(ZMailbox mbox, int messageNum, String subject)
     throws ServiceException {
-        return insertMessage(mbox, messageNum, subject, Integer.toString(Mailbox.ID_FOLDER_INBOX));
+        return addMessage(mbox, messageNum, subject, Integer.toString(Mailbox.ID_FOLDER_INBOX));
     }
     
-    public static String insertMessage(ZMailbox mbox, int messageNum, String subject, String folderId)
+    public static String addMessage(ZMailbox mbox, int messageNum, String subject, String folderId)
     throws ServiceException {
         String message = getTestMessage(messageNum, subject);
         return mbox.addMessage(folderId, null, null, 0, message, true);

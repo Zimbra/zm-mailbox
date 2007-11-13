@@ -132,19 +132,19 @@ extends TestCase {
     private void sendMessages()
     throws Exception {
         verifyFolderSize(mFolder1Id, 0);
-        TestUtil.insertMessageLmtp(1, FOLDER1, USER_NAME, USER_NAME);
+        TestUtil.addMessageLmtp(1, FOLDER1, USER_NAME, USER_NAME);
         verifyFolderSize(mFolder1Id, 1);
         
         verifyFolderSize(mFolder2Id, 0);
-        TestUtil.insertMessageLmtp(2, FOLDER2, USER_NAME, USER_NAME);
+        TestUtil.addMessageLmtp(2, FOLDER2, USER_NAME, USER_NAME);
         verifyFolderSize(mFolder2Id, 1);
         
         verifyFolderSize(mFolder3Id, 0);
-        TestUtil.insertMessageLmtp(3, FOLDER3, USER_NAME, USER_NAME);
+        TestUtil.addMessageLmtp(3, FOLDER3, USER_NAME, USER_NAME);
         verifyFolderSize(mFolder3Id, 1);
         
         verifyFolderSize(mFolder4Id, 0);
-        TestUtil.insertMessageLmtp(4, FOLDER4, USER_NAME, USER_NAME);
+        TestUtil.addMessageLmtp(4, FOLDER4, USER_NAME, USER_NAME);
         verifyFolderSize(mFolder4Id, 1);
     }
 
