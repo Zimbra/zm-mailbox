@@ -2346,6 +2346,12 @@ public class LdapProvisioning extends Provisioning {
                 if (domainChanged && addressExists(ctxt, newDomainDN, replacedAliases.newAddrs()))
                     throw AccountServiceException.DISTRIBUTION_LIST_EXISTS(newEmail);    
             }
+            
+            /*
+             * always reset uid to the local part, because in non default DIT the naming RDN might not 
+             * be uid, and ctxt.rename won't change the uid to the new localpart in that case.
+             */
+            attrs.put(A_uid, newLocal);
  
             // move over the distribution list entry
             String oldDn = dl.getDN();
