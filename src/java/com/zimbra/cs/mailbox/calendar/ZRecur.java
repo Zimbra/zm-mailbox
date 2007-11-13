@@ -487,15 +487,17 @@ public class ZRecur {
         long rangeEnd)
     throws ServiceException {
         List<java.util.Date> toRet = new LinkedList<java.util.Date>();
-
-        // Cutoff time for expansions.  Monthly and yearly expansions are limited to
-        // ten years unless limited otherwise by COUNT/UNTIL.  Expansions at smaller
-        // granularity are limited to 1 year.
+        
+        // Cutoff time for expansions.  
         Calendar startCal = dtStart.getCalendarCopy();
         startCal.add(Calendar.YEAR, 1);
         java.util.Date expansionEndDate = startCal.getTime();
-        if (Frequency.MONTHLY.equals(mFreq) || Frequency.YEARLY.equals(mFreq)) {
-            startCal.add(Calendar.YEAR, 9);  // 1 + 9 = 10
+        if (Frequency.DAILY.equals(mFreq)) {
+            startCal.add(Calendar.YEAR, 9);  // +9 = 10 years
+            expansionEndDate = startCal.getTime();
+        }
+        if (Frequency.WEEKLY.equals(mFreq) || Frequency.MONTHLY.equals(mFreq) || Frequency.YEARLY.equals(mFreq) ) {
+            startCal.add(Calendar.YEAR, 39);  // +39 = 40 years
             expansionEndDate = startCal.getTime();
         }
 
