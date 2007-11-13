@@ -534,11 +534,10 @@ public class ParsedMessage {
      */
     public String[] getHeaders(String headerName) {
         try {
-            String value = getMimeMessage().getHeader(headerName, ",");
-            if (value == null || value.length() == 0)
+            String[] values = getMimeMessage().getHeader(headerName);
+            if (values == null || values.length == 0)
                 return null;
             
-            String[] values = value.split(",");
             for (int i=0; i<values.length; i++) {
                 try {
                     values[i] = MimeUtility.decodeText(values[i]);
