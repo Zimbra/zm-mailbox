@@ -275,7 +275,7 @@ public class TestDomainStatus extends TestCase {
         boolean ok = false;
         
         try {
-            TestUtil.addMessageLmtp(1, NAME_PREFIX + " 1", acct.getName(), "phoebeshao");
+            TestUtil.addMessageLmtp(NAME_PREFIX + " 1", acct.getName(), "phoebeshao");
             
             if (status.equals(Provisioning.ACCOUNT_STATUS_ACTIVE) ||
                 status.equals(Provisioning.ACCOUNT_STATUS_LOCKOUT) ||
@@ -301,7 +301,6 @@ public class TestDomainStatus extends TestCase {
         
         authTest(acct, status);
         mailTest(acct, status);
-        
     }
     
     private void statusTest(String domainStatus) throws Exception {

@@ -64,38 +64,38 @@ extends TestCase {
         validateNumWarnings(0);
         
         // Make sure we haven't already hit the quota warning level
-        TestUtil.addMessageLmtp(1, NAME_PREFIX + " 1", address, address);
+        TestUtil.addMessageLmtp(NAME_PREFIX + " 1", address, address);
         validateNumWarnings(0);
         
         // Make sure setting quota warning to 0 is a no-op
         setQuotaWarnPercent(0);
-        TestUtil.addMessageLmtp(2, NAME_PREFIX + " 2", address, address);
+        TestUtil.addMessageLmtp(NAME_PREFIX + " 2", address, address);
         validateNumWarnings(0);
         
         // Make sure setting quota warning to 99 doesn't trigger the warning
         setQuotaWarnPercent(0);
-        TestUtil.addMessageLmtp(3, NAME_PREFIX + " 3", address, address);
+        TestUtil.addMessageLmtp(NAME_PREFIX + " 3", address, address);
         validateNumWarnings(0);
         
         // Make sure setting quota warning to 1 triggers the warning
         setQuotaWarnPercent(1);
-        TestUtil.addMessageLmtp(4, NAME_PREFIX + " 4", address, address);
+        TestUtil.addMessageLmtp(NAME_PREFIX + " 4", address, address);
         validateNumWarnings(1);
         
         // Make sure a second warning doesn't get sent (interval not exceeded)
-        TestUtil.addMessageLmtp(5, NAME_PREFIX + " 5", address, address);
+        TestUtil.addMessageLmtp(NAME_PREFIX + " 5", address, address);
         validateNumWarnings(1);
         
         // Make sure that a warning is triggered when the interval is exceeded
         setQuotaWarnInterval("1s");
         Thread.sleep(1000);
-        TestUtil.addMessageLmtp(6, NAME_PREFIX + " 6", address, address);
+        TestUtil.addMessageLmtp(NAME_PREFIX + " 6", address, address);
         validateNumWarnings(2);
         
         // Make sure that a second warning is not triggered when the interval is not set
         // (default: 1 day)
         setQuotaWarnInterval("");
-        TestUtil.addMessageLmtp(7, NAME_PREFIX + " 7", address, address);
+        TestUtil.addMessageLmtp(NAME_PREFIX + " 7", address, address);
         validateNumWarnings(2);
     }
     

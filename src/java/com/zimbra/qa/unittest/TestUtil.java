@@ -182,14 +182,14 @@ extends Assert {
 
     private static String MESSAGE_TEMPLATE = StringUtil.join("\n", MESSAGE_TEMPLATE_LINES);
 
-    public static Message addMessage(Mailbox mbox, int messageNum, String subject)
+    public static Message addMessage(Mailbox mbox, String subject)
     throws Exception {
-        return addMessage(mbox, Mailbox.ID_FOLDER_INBOX, messageNum, subject, System.currentTimeMillis());
+        return addMessage(mbox, Mailbox.ID_FOLDER_INBOX, subject, System.currentTimeMillis());
     }
     
-    public static Message addMessage(Mailbox mbox, int folderId, int messageNum, String subject, long timestamp)
+    public static Message addMessage(Mailbox mbox, int folderId, String subject, long timestamp)
     throws Exception {
-        String message = getTestMessage(messageNum, subject, null, null, new Date(timestamp));
+        String message = getTestMessage(subject, null, null, new Date(timestamp));
         ParsedMessage pm = new ParsedMessage(message.getBytes(), timestamp, false);
         pm.analyze();
         return mbox.addMessage(null, pm, folderId, false, Flag.BITMASK_UNREAD, null);
@@ -199,12 +199,12 @@ extends Assert {
         return String.format("%1$ta, %1$td %1$tb %1$tY %1$tH:%1$tM:%1$tS %1$tz (%1$tZ)", date);
     }
 
-    private static String getTestMessage(int messageNum, String subject)
+    private static String getTestMessage(String subject)
     throws ServiceException {
-        return getTestMessage(messageNum, subject, null, null, null);
+        return getTestMessage(subject, null, null, null);
     }
 
-    public static String getTestMessage(int messageNum, String subject, String recipient, String sender, Date date)
+    public static String getTestMessage(String subject, String recipient, String sender, Date date)
     throws ServiceException {
         if (recipient == null) {
             recipient = "user1";
@@ -217,7 +217,6 @@ extends Assert {
         }
         
         Map<String, Object> vars = new HashMap<String, Object>();
-        vars.put("MESSAGE_NUM", new Integer(messageNum));
         vars.put("SUBJECT", subject);
         vars.put("DOMAIN", getDomain());
         vars.put("SENDER", sender);
@@ -226,9 +225,9 @@ extends Assert {
         return StringUtil.fillTemplate(MESSAGE_TEMPLATE, vars);
     }
 
-    public static void addMessageLmtp(int messageNum, String subject, String recipient, String sender)
+    public static void addMessageLmtp(String subject, String recipient, String sender)
     throws Exception {
-        String message = getTestMessage(messageNum, subject, recipient, sender, null);
+        String message = getTestMessage(subject, recipient, sender, null);
         LmtpClient lmtp = new LmtpClient("localhost", 7025);
         lmtp.sendMessage(message.getBytes(), recipient, sender, "TestUtil");
         lmtp.close();
@@ -241,7 +240,7 @@ extends Assert {
     
     public static String addMessage(ZMailbox mbox, int messageNum, String subject, String folderId)
     throws ServiceException {
-        String message = getTestMessage(messageNum, subject);
+        String message = getTestMessage(subject);
         return mbox.addMessage(folderId, null, null, 0, message, true);
     }
 

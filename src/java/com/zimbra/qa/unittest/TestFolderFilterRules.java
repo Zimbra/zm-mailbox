@@ -34,10 +34,16 @@ extends TestCase {
     private static String USER_NAME = "user1";
 
     private static String NAME_PREFIX = "TestFolderFilterRules";
+    
     private static String FOLDER1 = NAME_PREFIX + "1";
     private static String FOLDER2 = NAME_PREFIX + "2";
     private static String FOLDER3 = NAME_PREFIX + "3";
     private static String FOLDER4 = NAME_PREFIX + "4";
+    
+    private static String SUBJECT1 = NAME_PREFIX + " 1";
+    private static String SUBJECT2 = NAME_PREFIX + " 2";
+    private static String SUBJECT3 = NAME_PREFIX + " 3";
+    private static String SUBJECT4 = NAME_PREFIX + " 4";
 
     private int mFolder1Id;
     private int mFolder2Id;
@@ -132,19 +138,19 @@ extends TestCase {
     private void sendMessages()
     throws Exception {
         verifyFolderSize(mFolder1Id, 0);
-        TestUtil.addMessageLmtp(1, FOLDER1, USER_NAME, USER_NAME);
+        TestUtil.addMessageLmtp(SUBJECT1, USER_NAME, USER_NAME);
         verifyFolderSize(mFolder1Id, 1);
         
         verifyFolderSize(mFolder2Id, 0);
-        TestUtil.addMessageLmtp(2, FOLDER2, USER_NAME, USER_NAME);
+        TestUtil.addMessageLmtp(SUBJECT2, USER_NAME, USER_NAME);
         verifyFolderSize(mFolder2Id, 1);
         
         verifyFolderSize(mFolder3Id, 0);
-        TestUtil.addMessageLmtp(3, FOLDER3, USER_NAME, USER_NAME);
+        TestUtil.addMessageLmtp(SUBJECT3, USER_NAME, USER_NAME);
         verifyFolderSize(mFolder3Id, 1);
         
         verifyFolderSize(mFolder4Id, 0);
-        TestUtil.addMessageLmtp(4, FOLDER4, USER_NAME, USER_NAME);
+        TestUtil.addMessageLmtp(SUBJECT4, USER_NAME, USER_NAME);
         verifyFolderSize(mFolder4Id, 1);
     }
 
@@ -222,28 +228,28 @@ extends TestCase {
         "require [\"fileinto\", \"reject\", \"tag\", \"flag\"];",
         "",
         "# Folder 1",
-        "if anyof (header :is \"subject\" \"" + FOLDER1 + "\" )",
+        "if anyof (header :is \"subject\" \"" + SUBJECT1 + "\" )",
         "{",
         "    fileinto \"/" + FOLDER1 + "\";",
         "    stop;",
         "}",
         "",
         "# Folder 2",
-        "if anyof (header :is \"subject\" \"" + FOLDER2 + "\" )",
+        "if anyof (header :is \"subject\" \"" + SUBJECT2 + "\" )",
         "{",
         "    fileinto \"/" + FOLDER1 + "/" + FOLDER2 + "\";",
         "    stop;",
         "}",
         "",
         "# Folder 3",
-        "if anyof (header :is \"subject\" \"" + FOLDER3 + "\" )",
+        "if anyof (header :is \"subject\" \"" + SUBJECT3 + "\" )",
         "{",
         "    fileinto \"/" + FOLDER1 + "/" + FOLDER2 + "/" + FOLDER3 + "\";",
         "    stop;",
         "}",
         "",
         "# Folder 4",
-        "if anyof (header :is \"subject\" \"" + FOLDER4 + "\" )",
+        "if anyof (header :is \"subject\" \"" + SUBJECT4 + "\" )",
         "{",
         "    fileinto \"/" + FOLDER4 + "\";",
         "    stop;",

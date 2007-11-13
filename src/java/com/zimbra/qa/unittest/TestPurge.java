@@ -84,13 +84,13 @@ public class TestPurge extends TestCase {
         // Insert messages
         String prefix = NAME_PREFIX + " testInbox ";
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
-        Message purgedUnread = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_INBOX, 1, prefix + "purgedUnread",
+        Message purgedUnread = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_INBOX, prefix + "purgedUnread",
             System.currentTimeMillis() - (25 * Constants.MILLIS_PER_HOUR));
-        Message keptUnread = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_INBOX, 2, prefix + "keptUnread",
+        Message keptUnread = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_INBOX, prefix + "keptUnread",
             System.currentTimeMillis() - (18 * Constants.MILLIS_PER_HOUR));
-        Message purgedRead = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_INBOX, 3, prefix + "purgedRead",
+        Message purgedRead = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_INBOX, prefix + "purgedRead",
             System.currentTimeMillis() - (18 * Constants.MILLIS_PER_HOUR));
-        Message keptRead = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_INBOX, 4, prefix + "keptRead",
+        Message keptRead = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_INBOX, prefix + "keptRead",
             System.currentTimeMillis() - (15 * Constants.MILLIS_PER_HOUR));
         
         // Mark read/unread and refresh
@@ -121,9 +121,9 @@ public class TestPurge extends TestCase {
         // Insert messages
         String prefix = NAME_PREFIX + " testSent ";
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
-        Message purged = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_SENT, 1, prefix + "purged",
+        Message purged = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_SENT, prefix + "purged",
             System.currentTimeMillis() - (25 * Constants.MILLIS_PER_HOUR));
-        Message kept = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_SENT, 2, prefix + "kept",
+        Message kept = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_SENT, prefix + "kept",
             System.currentTimeMillis() - (18 * Constants.MILLIS_PER_HOUR));
         
         // Run purge and verify results
@@ -148,9 +148,9 @@ public class TestPurge extends TestCase {
         // Insert messages
         String prefix = NAME_PREFIX + " testTrashUser ";
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
-        Message purged = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_TRASH, 1, prefix + "purged",
+        Message purged = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_TRASH, prefix + "purged",
             System.currentTimeMillis() - (36 * Constants.MILLIS_PER_HOUR));
-        Message kept = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_TRASH, 2, prefix + "kept",
+        Message kept = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_TRASH, prefix + "kept",
             System.currentTimeMillis() - (16 * Constants.MILLIS_PER_HOUR));
         
         // Run purge and verify results
@@ -175,9 +175,9 @@ public class TestPurge extends TestCase {
         // Insert messages
         String prefix = NAME_PREFIX + " testTrashUser ";
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
-        Message purged = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_TRASH, 1, prefix + "purged",
+        Message purged = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_TRASH, prefix + "purged",
             System.currentTimeMillis() - (36 * Constants.MILLIS_PER_HOUR));
-        Message kept = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_TRASH, 2, prefix + "kept",
+        Message kept = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_TRASH, prefix + "kept",
             System.currentTimeMillis() - (16 * Constants.MILLIS_PER_HOUR));
         
         // Run purge and verify results
@@ -202,9 +202,9 @@ public class TestPurge extends TestCase {
         // Insert messages
         String prefix = NAME_PREFIX + " testJunkUser ";
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
-        Message purged = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_SPAM, 1, prefix + "purged",
+        Message purged = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_SPAM, prefix + "purged",
             System.currentTimeMillis() - (36 * Constants.MILLIS_PER_HOUR));
-        Message kept = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_SPAM, 2, prefix + "kept",
+        Message kept = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_SPAM, prefix + "kept",
             System.currentTimeMillis() - (16 * Constants.MILLIS_PER_HOUR));
         
         // Run purge and verify results
@@ -229,9 +229,9 @@ public class TestPurge extends TestCase {
         // Insert messages
         String prefix = NAME_PREFIX + " testJunkUser ";
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
-        Message purged = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_SPAM, 1, prefix + "purged",
+        Message purged = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_SPAM, prefix + "purged",
             System.currentTimeMillis() - (36 * Constants.MILLIS_PER_HOUR));
-        Message kept = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_SPAM, 2, prefix + "kept",
+        Message kept = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_SPAM, prefix + "kept",
             System.currentTimeMillis() - (16 * Constants.MILLIS_PER_HOUR));
         
         // Run purge and verify results
@@ -255,9 +255,9 @@ public class TestPurge extends TestCase {
         String prefix = NAME_PREFIX + " testAll ";
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         Folder folder = mbox.createFolder(null, "/" + NAME_PREFIX, (byte) 0, MailItem.TYPE_UNKNOWN);
-        Message purged = TestUtil.addMessage(mbox, folder.getId(), 1, prefix + "purged",
+        Message purged = TestUtil.addMessage(mbox, folder.getId(), prefix + "purged",
             System.currentTimeMillis() - (41 * Constants.MILLIS_PER_DAY));
-        Message kept = TestUtil.addMessage(mbox, folder.getId(), 2, prefix + "kept",
+        Message kept = TestUtil.addMessage(mbox, folder.getId(), prefix + "kept",
             System.currentTimeMillis() - (39 * Constants.MILLIS_PER_DAY));
         
         // Run purge and verify results
@@ -281,9 +281,9 @@ public class TestPurge extends TestCase {
         String prefix = NAME_PREFIX + " testAllSafeguard ";
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         Folder folder = mbox.createFolder(null, "/" + NAME_PREFIX, (byte) 0, MailItem.TYPE_UNKNOWN);
-        Message purged = TestUtil.addMessage(mbox, folder.getId(), 1, prefix + "purged",
+        Message purged = TestUtil.addMessage(mbox, folder.getId(), prefix + "purged",
             System.currentTimeMillis() - (32 * Constants.MILLIS_PER_DAY));
-        Message kept = TestUtil.addMessage(mbox, folder.getId(), 2, prefix + "kept",
+        Message kept = TestUtil.addMessage(mbox, folder.getId(), prefix + "kept",
             System.currentTimeMillis() - (30 * Constants.MILLIS_PER_DAY));
         
         // Run purge and verify results

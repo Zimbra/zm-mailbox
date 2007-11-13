@@ -53,7 +53,7 @@ public class TestSendAndReceive extends TestCase {
         // Send message from user2 to user1
         String sender = TestUtil.getAddress("user2");
         String recipient = TestUtil.getAddress(USER_NAME);
-        TestUtil.addMessageLmtp(1, NAME_PREFIX + " testHeaders()", recipient, sender);
+        TestUtil.addMessageLmtp(NAME_PREFIX + " testReceivedHeaders()", recipient, sender);
         
         // Search
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);

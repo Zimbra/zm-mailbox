@@ -206,11 +206,11 @@ public class TestFolders extends TestCase
         String name = NAME_PREFIX + " MDT";
 
         // Create three messages and move two of them into a new folder.
-        Message m1 = TestUtil.addMessage(mMbox, 1, name);
+        Message m1 = TestUtil.addMessage(mMbox, name);
         ZimbraLog.test.debug("Created message 1, id=" + m1.getId());
-        Message m2 = TestUtil.addMessage(mMbox, 2, "RE: " + name);
+        Message m2 = TestUtil.addMessage(mMbox, "RE: " + name);
         ZimbraLog.test.debug("Created message 2, id=" + m2.getId());
-        Message m3 = TestUtil.addMessage(mMbox, 3, "RE: " + name);
+        Message m3 = TestUtil.addMessage(mMbox, "RE: " + name);
         ZimbraLog.test.debug("Created message 3, id=" + m3.getId());
         
         Folder f = mMbox.createFolder(null, name, Mailbox.ID_FOLDER_INBOX, MailItem.TYPE_UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);

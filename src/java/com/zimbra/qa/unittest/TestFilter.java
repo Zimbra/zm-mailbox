@@ -19,10 +19,13 @@ package com.zimbra.qa.unittest;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.mail.internet.MimeMessage;
+
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.zclient.ZFilterAction;
 import com.zimbra.cs.zclient.ZFilterCondition;
 import com.zimbra.cs.zclient.ZFilterRule;
@@ -106,7 +109,7 @@ extends TestCase {
     throws Exception {
         // Note: tag gets created implicitly when filter rules are saved
         String address = TestUtil.getAddress(USER_NAME);
-        TestUtil.addMessageLmtp(1,
+        TestUtil.addMessageLmtp(
             "=?UTF-8?B?W2l0dnNmLUluY2lkZW5jaWFzXVs0OTc3Ml0gW2luY2lkZW5jaWFzLXZpbGxhbnVldmFdIENvcnRlcyBkZSBsdXosIGTDrWEgMjUvMDkvMjAwNi4=?=",
             address, address);
         List<ZMessage> messages = TestUtil.search(mMbox, "villanueva");
@@ -125,7 +128,7 @@ extends TestCase {
         String sender = TestUtil.getAddress("multiplefilters");
         String recipient = TestUtil.getAddress(USER_NAME);
         String subject = NAME_PREFIX + " This goes into folder1 and folder2";
-        TestUtil.addMessageLmtp(1, subject, recipient, sender);
+        TestUtil.addMessageLmtp(subject, recipient, sender);
         
         ZMessage msg = TestUtil.getMessage(mMbox, "in:" + FOLDER1_PATH + " " + subject);
         TestUtil.verifyTag(mMbox, msg, TAG1_NAME);
@@ -145,8 +148,8 @@ extends TestCase {
     public void testBug5455()
     throws Exception {
         String recipient = TestUtil.getAddress(USER_NAME);
-        String subject = NAME_PREFIX + "Testing bug5455";
-        TestUtil.addMessageLmtp(1, subject, recipient, recipient);
+        String subject = NAME_PREFIX + " Testing bug5455";
+        TestUtil.addMessageLmtp(subject, recipient, recipient);
         
         ZMessage msg = TestUtil.getMessage(mMbox, "in:" + FOLDER1_PATH + " " + subject);
         TestUtil.verifyFlag(mMbox, msg, Flag.flagged);
@@ -155,6 +158,10 @@ extends TestCase {
         msg = TestUtil.getMessage(mMbox, "in:" + FOLDER2_PATH + " " + subject);
         TestUtil.verifyFlag(mMbox, msg, Flag.flagged);
         TestUtil.verifyTag(mMbox, msg, TAG1_NAME);
+    }
+
+    public void testMultipleReceivedHeaders()
+    throws Exception {
     }
     
     protected void tearDown() throws Exception {

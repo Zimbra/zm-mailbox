@@ -142,7 +142,7 @@ public class TestPop3Import extends TestCase {
         // Add message with bogus date to source mailbox
         MailDateFormat format = new MailDateFormat();
         Date date = format.parse("Thu, 31  Aug 2039 10:29:46 +0800");
-        String message = TestUtil.getTestMessage(1, NAME_PREFIX + " testBogusDate", null, null, date);
+        String message = TestUtil.getTestMessage(NAME_PREFIX + " testBogusDate", null, null, date);
         ZMailbox remoteMbox = TestUtil.getZMailbox(TEMP_USER_NAME);
         String folderId = Integer.toString(Mailbox.ID_FOLDER_INBOX);
         remoteMbox.addMessage(folderId, null, null, 0, message, true);
