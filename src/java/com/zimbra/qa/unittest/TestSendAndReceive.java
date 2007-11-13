@@ -18,6 +18,7 @@ package com.zimbra.qa.unittest;
 
 import java.io.BufferedReader;
 import java.io.StringReader;
+import java.util.Calendar;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -90,6 +91,23 @@ public class TestSendAndReceive extends TestCase {
         
         assertTrue("Received header not found.  Content=\n" + content, foundReceived);
         assertTrue("Return-Path header not found.  Content=\n" + content, foundReturnPath);
+    }
+    
+    /**
+     * Confirms that the message received date is set to the value of the
+     * <tt>X-Zimbra-Received</tt> header.
+     */
+    public void testZimbraReceivedHeader()
+    throws Exception {
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        List<ZMessage> messages = TestUtil.search(mbox, "subject:\"Test Phone Number Formats\"");
+        assertEquals("Unexpected message count", 1, messages.size());
+        ZMessage msg = messages.get(0);
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(msg.getReceivedDate());
+        assertEquals(2005, cal.get(Calendar.YEAR));
+        assertEquals(1, cal.get(Calendar.MONTH));
+        assertEquals(27, cal.get(Calendar.DAY_OF_MONTH));
     }
     
     public void tearDown()

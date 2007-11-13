@@ -139,9 +139,10 @@ public class ParsedMessage {
         }
         runMimeConverters();
         // must set received-date before Lucene document is initialized
-        if (receivedDate != null) {
-            setReceivedDate(receivedDate);
+        if (receivedDate == null) {
+            receivedDate = getZimbraDateHeader(mMimeMessage); 
         }
+        setReceivedDate(receivedDate);
     }
     
     /**
