@@ -30,8 +30,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.zimbra.cs.redolog.RedoLogInput;
-import com.zimbra.cs.redolog.RedoLogInputStream;
 import com.zimbra.cs.redolog.RedoLogOutput;
+import com.zimbra.cs.store.BlobInputStream;
 import com.zimbra.cs.store.StoreManager;
 
 /**
@@ -161,9 +161,19 @@ public class StoreIncomingBlob extends RedoableOp {
         mVolumeId = in.readShort();
         mMsgSize = in.readInt();
         mMsgSize = in.readInt();  // Serialization code wrote the size twice
-        mData = new RedoableOpData(new RedoLogInputStream(in, mMsgSize), mMsgSize);
+
         // mData must be the last thing deserialized.  See comments in
         // serializeData().
+        long pos = in.getFilePointer();
+        mData = new RedoableOpData(new File(in.getPath()), pos, mMsgSize);
+        
+        // Now that we have a stream to the data, skip to the next op.
+        int numSkipped = in.skipBytes(mMsgSize);
+        if (numSkipped != mMsgSize) {
+            String msg = String.format("Attempted to skip %d bytes at position %d in %s, but actually skipped %d.",
+                mMsgSize, pos, in.getPath(), numSkipped);
+            throw new IOException(msg);
+        }
     }
 
     public void redo() throws Exception {

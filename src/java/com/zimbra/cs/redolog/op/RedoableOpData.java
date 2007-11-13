@@ -26,17 +26,19 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.RandomAccessFile;
 
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.cs.store.BlobInputStream;
 
 
 class RedoableOpData {
 
     private byte[] mData;
     private File mFile;
+    private long mFileOffset;
     private InputStream mInputStream;
     private int mLength;
     
@@ -46,8 +48,13 @@ class RedoableOpData {
     }
     
     RedoableOpData(File file) {
+        this(file, 0, (int) file.length());
+    }
+    
+    RedoableOpData(File file, long offset, int length) {
         mFile = file;
-        mLength = (int) file.length();
+        mFileOffset = offset;
+        mLength = length;
     }
     
     RedoableOpData(InputStream in, int length) {
@@ -63,7 +70,16 @@ class RedoableOpData {
     throws IOException {
         if (mData == null) {
             if (mFile != null) {
-                mData = ByteUtil.getContent(mFile);
+                RandomAccessFile file = new RandomAccessFile(mFile, "r");
+                file.seek(mFileOffset);
+                mData = new byte[mLength];
+                int numRead = file.read(mData);
+                file.close();
+                if (numRead != mLength) {
+                    String msg = String.format("Attempted to read %d bytes from %s at offset %d.  Actually read %d.",
+                        mLength, mFile.getPath(), mFileOffset, numRead);
+                    throw new IOException(msg);
+                }
             }
             if (mInputStream != null) {
                 mData = ByteUtil.getContent(mInputStream, 1024);
@@ -82,7 +98,7 @@ class RedoableOpData {
             return new ByteArrayInputStream(mData);
         }
         if (mFile != null) {
-            return new FileInputStream(mFile);
+            return new BlobInputStream(mFile, mFileOffset, (long) mLength);
         }
         assert(false);
         return null;

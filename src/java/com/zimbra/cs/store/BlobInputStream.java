@@ -45,12 +45,21 @@ implements SharedInputStream {
     private long mStart;
     private long mEnd;
 
+    /**
+     * Constructs a <tt>BlobInputStream</tt> that reads an entire file.
+     */
     public BlobInputStream(File file)
     throws IOException {
         this(file, null, null);
     }
 
-    private BlobInputStream(File file, Long start, Long end)
+    /**
+     * Constructs a <tt>BlobInputStream</tt> that reads a section of a file.
+     * @param file the file
+     * @param start starting index
+     * @param end ending index (exclusive)
+     */
+    public BlobInputStream(File file, Long start, Long end)
     throws IOException {
         mFile = file;
         mRAF = new RandomAccessFile(file, "r");

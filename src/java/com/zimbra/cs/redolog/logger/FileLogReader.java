@@ -68,7 +68,7 @@ public class FileLogReader {
 
 	public synchronized void open() throws IOException {
 		mRAF = new RandomAccessFile(mFile, mReadOnly ? "r" : "rw");
-		mIN = new RedoLogInput(mRAF);
+		mIN = new RedoLogInput(mRAF, mFile.getPath());
         mHeader.read(mRAF);
         mHeaderRead = true;
         mFileSizeAtOpen = mRAF.length();

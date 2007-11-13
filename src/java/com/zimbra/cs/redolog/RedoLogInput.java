@@ -36,15 +36,38 @@ import com.zimbra.common.util.ByteUtil;
  */
 public class RedoLogInput {
 	private DataInput mIN;
+    private String mPath;
 
 	public RedoLogInput(InputStream is) {
 		mIN = new DataInputStream(is);
 	}
 
-	public RedoLogInput(RandomAccessFile raf) {
+	public RedoLogInput(RandomAccessFile raf, String path) {
+        mPath = path;
 		mIN = raf;
 	}
-
+    
+    /**
+     * Returns the path to the redo log file, or <tt>null</tt> if this object
+     * reads from an <tt>InputStream</tt>. 
+     */
+    public String getPath() {
+        return mPath;
+    }
+    
+    /**
+     * Returns the current offset in this file, or <tt>-1</tt> if this object
+     * reads from an <tt>InputStream</tt>.
+     */
+    public long getFilePointer()
+    throws IOException {
+        if (mIN instanceof RandomAccessFile) {
+            RandomAccessFile file = (RandomAccessFile) mIN;
+            return file.getFilePointer();
+        }
+        return -1;
+    }
+    
 	public int skipBytes(int n) throws IOException { return mIN.skipBytes(n); }
 	public void readFully(byte[] b) throws IOException { mIN.readFully(b); }
 	public void readFully(byte[] b, int off, int len) throws IOException { mIN.readFully(b, off, len); }

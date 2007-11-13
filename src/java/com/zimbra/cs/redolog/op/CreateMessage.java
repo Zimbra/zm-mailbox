@@ -37,7 +37,6 @@ import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.RedoException;
 import com.zimbra.cs.redolog.RedoLogInput;
-import com.zimbra.cs.redolog.RedoLogInputStream;
 import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
@@ -368,12 +367,23 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
             } catch (ServiceException e) {
                 ZimbraLog.redolog.warn("Unable to determine disk streaming threshold.  Reading message into memory.", e);
             }
+            // mData must be the last thing deserialized.  See comments in
+            // serializeData().
             if (dataLength <= threshold) {
                 byte[] data = new byte[dataLength];
                 in.readFully(data, 0, dataLength);
                 mData = new RedoableOpData(data);
             } else {
-                mData = new RedoableOpData(new RedoLogInputStream(in, dataLength), dataLength);
+                long pos = in.getFilePointer();
+                mData = new RedoableOpData(new File(in.getPath()), pos, mMsgSize);
+                
+                // Now that we have a stream to the data, skip to the next op.
+                int numSkipped = in.skipBytes(mMsgSize);
+                if (numSkipped != mMsgSize) {
+                    String msg = String.format("Attempted to skip %d bytes at position %d in %s, but actually skipped %d.",
+                        mMsgSize, pos, in.getPath(), numSkipped);
+                    throw new IOException(msg);
+                }
             }
             
             // Blob data must be the last thing deserialized.  See comments in

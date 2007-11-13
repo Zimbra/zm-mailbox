@@ -295,6 +295,7 @@ public class FileLogWriter implements LogWriter {
                 mRAF.write(buf, 0, numRead);
                 mFileSize += numRead;
             }
+            data.close();
 
             // We do this with log writer lock held, so the commits and any
             // callbacks made on their behalf are truly in the correct order.

@@ -38,15 +38,12 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.redolog.RolloverManager;
 import com.zimbra.cs.redolog.logger.FileHeader;
 import com.zimbra.cs.redolog.logger.FileLogReader;
-import com.zimbra.cs.redolog.op.CreateMessage;
 import com.zimbra.cs.redolog.op.RedoableOp;
-import com.zimbra.cs.redolog.op.StoreIncomingBlob;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.CliUtil;
-import com.zimbra.common.util.DevNullOutputStream;
 
 /**
  * @author jhahm
@@ -125,18 +122,10 @@ public class RedoLogVerify {
                 lastPosition = logReader.position();
                 if (!mQuiet)
                     mOut.println(op);
-                if (op instanceof CreateMessage || op instanceof StoreIncomingBlob) {
-                    InputStream in = op.getAdditionalDataStream();
-                    if (in != null) {
-                        PrintStream out;
-                        if (mDumpMessageBody) {
-                            out = mOut;
-                        } else {
-                            out = new PrintStream(new DevNullOutputStream());
-                        }
-                        ByteUtil.copy(in, true, out, false);
-                        out.println("<END OF MESSAGE>");
-                    }
+                InputStream dataStream = op.getAdditionalDataStream();
+                if (mDumpMessageBody && dataStream != null) {
+                    ByteUtil.copy(dataStream, true, mOut, false);
+                    mOut.println("<END OF MESSAGE>");
                 }
             }
             good = true;
