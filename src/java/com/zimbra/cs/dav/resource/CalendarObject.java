@@ -82,7 +82,8 @@ public class CalendarObject extends MailItemResource {
 			path.append("/");
 		path.append(uid);
 		path.append(CAL_EXTENSION);
-		return path.toString();
+        // XXX iCal doesn't handle unescaped URL in some cases
+		return UrlNamespace.urlEscape(path.toString());
 	}
 
 	/* Returns true if the supplied Filter matches this calendar object. */

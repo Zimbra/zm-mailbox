@@ -17,6 +17,7 @@
 package com.zimbra.cs.dav.resource;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
 
@@ -186,22 +187,35 @@ public class UrlNamespace {
         return urlEscape(PRINCIPALS_PATH + user + "/");
     }
 	
-	private static String urlEscape(String str) {
+    private static final Map<Character,String> sUrlEscapeMap = new java.util.HashMap<Character,String>();
+    
+    static {
+        sUrlEscapeMap.put(' ', "%20");
+        sUrlEscapeMap.put('"', "%22");
+        sUrlEscapeMap.put('\'', "%27");
+        sUrlEscapeMap.put('{', "%7B");
+        sUrlEscapeMap.put('}', "%7D");
+    }
+    
+	public static String urlEscape(String str) {
 		// rfc 2396 url escape.
-		// currently escaping ' and " only
-		if (str.indexOf(' ') == -1 && str.indexOf('\'') == -1 && str.indexOf('"') == -1)
-			return str;
-		StringBuilder buf = new StringBuilder();
-		for (char c : str.toCharArray()) {
-			if (c == ' ')
-				buf.append("%20");
-			else if (c == '"')
-				buf.append("%22");
-			else if (c == '\'')
-				buf.append("%27");
-			else buf.append(c);
+		StringBuilder buf = null;
+		for (int i = 0; i < str.length(); i++) {
+            char c = str.charAt(i);
+            String escaped = sUrlEscapeMap.get(c);
+            if (escaped != null) {
+                if (buf == null) {
+                    buf = new StringBuilder();
+                    buf.append(str.substring(0, i));
+                }
+                buf.append(escaped);
+            } else if (buf != null) {
+                buf.append(c);
+            }
 		}
-		return buf.toString();
+        if (buf != null)
+            return buf.toString();
+        return str;
 	}
 	
 	/* Returns DavResource for the MailItem. */

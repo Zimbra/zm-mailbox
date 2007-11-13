@@ -126,10 +126,7 @@ public class DavResponse {
 	 */
 	public void addResource(DavContext ctxt, DavResource rs, DavMethod.RequestProp props, boolean includeChildren) throws DavException {
 		ctxt.setStatus(DavProtocol.STATUS_MULTI_STATUS);
-		Element top = mResponse.getRootElement();
-		if (top == null)
-			top = mResponse.addElement(DavElements.E_MULTISTATUS);
-		Element resp = top.addElement(DavElements.E_RESPONSE);
+		Element resp = getTop(DavElements.E_MULTISTATUS).addElement(DavElements.E_RESPONSE);
 		rs.getProperty(DavElements.E_HREF).toElement(ctxt, resp, false);
 		
 		Map<Integer,Element> propstatMap = new HashMap<Integer,Element>();
@@ -160,6 +157,13 @@ public class DavResponse {
 				addResource(ctxt, child, props, includeChildren);
 	}
 
+    public void addStatus(DavContext ctxt, String href, int status) {
+        ctxt.setStatus(DavProtocol.STATUS_MULTI_STATUS);
+        Element resp = getTop(DavElements.E_MULTISTATUS).addElement(DavElements.E_RESPONSE);
+        resp.addElement(DavElements.E_HREF).setText(href);
+        resp.addElement(DavElements.E_STATUS).setText(sStatusTextMap.get(status));
+    }
+    
 	private Element findProp(Element top, Map<Integer,Element> propstatMap, int status) {
 		Element propstat = findPropstat(top, propstatMap, status);
 		return propstat.element(DavElements.E_PROP);

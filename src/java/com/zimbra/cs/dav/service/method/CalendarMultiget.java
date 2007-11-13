@@ -46,8 +46,12 @@ public class CalendarMultiget extends Report {
 		for (Object obj : query.elements(DavElements.E_HREF)) {
 			if (obj instanceof Element) {
 				Element href = (Element) obj;
-				DavResource rs = UrlNamespace.getResourceAtUrl(ctxt, href.getText());
-				resp.addResource(ctxt, rs, reqProp, false);
+                try {
+                    DavResource rs = UrlNamespace.getResourceAtUrl(ctxt, href.getText());
+                    resp.addResource(ctxt, rs, reqProp, false);
+                } catch (Exception e) {
+                    resp.addStatus(ctxt, href.getText(), HttpServletResponse.SC_NOT_FOUND);
+                }
 			}
 		}
 	}
