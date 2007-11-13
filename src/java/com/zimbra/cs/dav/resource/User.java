@@ -45,7 +45,10 @@ public class User extends DavResource {
         addrs.add(url);
         addProperty(CalDavProperty.getCalendarUserAddressSet(addrs));
         setProperty(DavElements.E_HREF, url);
-        setProperty(DavElements.E_DISPLAYNAME, owner.getName());
+        String cn = owner.getAttr(Provisioning.A_cn);
+        if (cn == null)
+            cn = owner.getName();
+        setProperty(DavElements.E_DISPLAYNAME, cn);
     }
     
     @Override
