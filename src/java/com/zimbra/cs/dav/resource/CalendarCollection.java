@@ -28,6 +28,7 @@ import java.util.Locale;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -156,9 +157,10 @@ public class CalendarCollection extends Collection {
 	/* creates an appointment sent in PUT request in this calendar. */
 	public DavResource createItem(DavContext ctxt, String name) throws DavException, IOException {
 		HttpServletRequest req = ctxt.getRequest();
-		if (req.getContentLength() <= 0)
-			throw new DavException("empty request", HttpServletResponse.SC_BAD_REQUEST, null);
-		if (!req.getContentType().equalsIgnoreCase(Mime.CT_TEXT_CALENDAR))
+		ContentType ct = new ContentType(req.getContentType());
+		if (req.getContentLength() <= 0 ||
+                ct.getValue() == null || 
+                !ct.getValue().equalsIgnoreCase(Mime.CT_TEXT_CALENDAR))
 			throw new DavException("empty request", HttpServletResponse.SC_BAD_REQUEST, null);
 		
 		/*
