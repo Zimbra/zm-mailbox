@@ -191,7 +191,29 @@ public class DataSource extends NamedEntry implements Comparable {
     
     public String getReplyToDisplay() {
         return getAttr(Provisioning.A_zimbraPrefReplyToDisplay);
-    } 
+    }
+    
+    //IMAP datasources can override these
+    
+    /**
+     * Match well known remote path to a local path if mapping exists.
+     * 
+     * @param remotePath remote path 
+     * @return local path if mapping exists; null if not
+     */
+    public String matchKnownLocalPath(String remotePath) {
+    	return null;
+    }
+    
+    /**
+     * Match local path to a well known remote path if mapping exists.
+     * 
+     * @param localPath local path
+     * @return remote path if mapping exists ; null if not
+     */
+    public String matchKnownRemotePath(String localPath) {
+    	return null;
+    }
     
     private static byte[] randomSalt() {
         SecureRandom random = new SecureRandom();
@@ -281,7 +303,6 @@ public class DataSource extends NamedEntry implements Comparable {
         System.out.println(enc);
         System.out.println(decryptData(dataSourceId, enc));
     }
-
 }
 
 

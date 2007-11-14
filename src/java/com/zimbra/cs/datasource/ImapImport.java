@@ -196,17 +196,18 @@ public class ImapImport implements MailItemImport {
                     if (localFolder != null) {
                         if (!localFolder.getPath().equals(folderTracker.getLocalPath())) {
                             // Folder path does not match
-                            if (isParent(localRootFolder, localFolder)) {
+                        	String jmPath = localPathToRemotePath(ds, localRootFolder, localFolder, remoteFolder.getSeparator());
+                            if (jmPath != null && isParent(localRootFolder, localFolder)) {
                                 // Folder has a new name/path but is still under the
                                 // data source root
                                 ZimbraLog.datasource.info("Local folder %s was renamed to %s",
                                     folderTracker.getLocalPath(), localFolder.getPath());
-                                renameJavaMailFolder(remoteFolder, localRootFolder, localFolder);
+                                renameJavaMailFolder(remoteFolder, jmPath);
                                 folderTracker.setLocalPath(localFolder.getPath());
                                 DbImapFolder.updateImapFolder(folderTracker);
                             } else {
-                                // Folder was moved outside the data source root.
-                                // Treat as an add.
+                                // Folder was moved outside the data source root, or folder setting is changed to "not to sync"
+                                // Treat as a delete.
                                 ZimbraLog.datasource.info("Local folder %s was renamed to %s and moved outside the data source root.",
                                     folderTracker.getLocalPath(), localFolder.getPath());
                                 DbImapFolder.deleteImapFolder(mbox, ds, folderTracker);
@@ -243,22 +244,24 @@ public class ImapImport implements MailItemImport {
 
                 // Handle new IMAP folder
                 if (folderTracker == null) {
-                    ZimbraLog.datasource.info("Found new remote folder %s", remoteFolder.getFullName());
                     String zimbraPath = getZimbraFolderPath(mbox, ds, remoteFolder);
-                    // Try to get the folder first, in case it was manually created or the
-                    // last sync failed between creating the folder and writing the mapping row.
-                    try {
-                        localFolder = mbox.getFolderByPath(null, zimbraPath);
-                    } catch (NoSuchItemException e) {
+                    if (zimbraPath != null) { //null means don't sync this folder
+                    	ZimbraLog.datasource.info("Found new remote folder %s. Creating local folder %s.", remoteFolder.getFullName(), zimbraPath);
+	                    // Try to get the folder first, in case it was manually created or the
+	                    // last sync failed between creating the folder and writing the mapping row.
+	                    try {
+	                        localFolder = mbox.getFolderByPath(null, zimbraPath);
+	                    } catch (NoSuchItemException e) {
+	                    }
+	                    
+	                    if (localFolder == null) {
+	                        localFolder = mbox.createFolder(null, zimbraPath, (byte) 0,
+	                            MailItem.TYPE_UNKNOWN);
+	                    }
+	                    folderTracker = DbImapFolder.createImapFolder(mbox, ds, localFolder.getId(),
+	                        localFolder.getPath(), remoteFolder.getFullName(), remoteUvv);
+	                    imapFolders.add(folderTracker);
                     }
-                    
-                    if (localFolder == null) {
-                        localFolder = mbox.createFolder(null, zimbraPath, (byte) 0,
-                            MailItem.TYPE_UNKNOWN);
-                    }
-                    folderTracker = DbImapFolder.createImapFolder(mbox, ds, localFolder.getId(),
-                        localFolder.getPath(), remoteFolder.getFullName(), remoteUvv);
-                    imapFolders.add(folderTracker);
                 }
             }
 
@@ -277,8 +280,10 @@ public class ImapImport implements MailItemImport {
                     ZimbraLog.datasource.info(
                         "Skipping folder %s, probably deleted by parent deletion", zimbraFolder.getName());
                     ImapFolder imapFolder = imapFolders.getByItemId(zimbraFolder.getId());
-                    imapFolders.remove(imapFolder);
-                    DbImapFolder.deleteImapFolder(mbox, ds, imapFolder);
+                    if (imapFolder != null) {
+	                    imapFolders.remove(imapFolder);
+	                    DbImapFolder.deleteImapFolder(mbox, ds, imapFolder);
+                    }
                     continue;
                 }
 
@@ -299,13 +304,14 @@ public class ImapImport implements MailItemImport {
 	                    }
                 	}
                 } else {
-                    ZimbraLog.datasource.info("Found new local folder %s.  Creating remote folder.",
-                        zimbraFolder.getPath());
-                    IMAPFolder jmFolder = createJavaMailFolder(store, remoteRootFolder.getSeparator(),
-                        localRootFolder, zimbraFolder);
-                    imapFolder = DbImapFolder.createImapFolder(mbox, ds, zimbraFolder.getId(),
-                        zimbraFolder.getPath(), jmFolder.getFullName(), jmFolder.getUIDValidity());
-                    imapFolders.add(imapFolder);
+                    String jmPath = localPathToRemotePath(ds, localRootFolder, zimbraFolder, remoteRootFolder.getSeparator());
+                    if (jmPath != null) { //null means don't sync up
+                    	ZimbraLog.datasource.info("Found new local folder %s.  Creating remote folder %s.", zimbraFolder.getPath(), jmPath);
+	                    IMAPFolder jmFolder = createJavaMailFolder(store, jmPath);
+	                    imapFolder = DbImapFolder.createImapFolder(mbox, ds, zimbraFolder.getId(),
+	                        zimbraFolder.getPath(), jmFolder.getFullName(), jmFolder.getUIDValidity());
+	                    imapFolders.add(imapFolder);
+                    }
                 }
             }
 
@@ -334,33 +340,26 @@ public class ImapImport implements MailItemImport {
         }
     }
 
-    private void renameJavaMailFolder(Folder remoteFolder,
-                                      com.zimbra.cs.mailbox.Folder localRootFolder,
-                                      com.zimbra.cs.mailbox.Folder localFolder)
+    private void renameJavaMailFolder(Folder remoteFolder, String jmPath)
     throws MessagingException {
-        String jmPath = localPathToRemotePath(localRootFolder, localFolder, remoteFolder
-            .getSeparator());
         ZimbraLog.datasource.info("Renaming IMAP folder from %s to %s", remoteFolder.getFullName(), jmPath);
         Folder newName = remoteFolder.getStore().getFolder(jmPath);
         remoteFolder.renameTo(newName);
     }
 
-    private IMAPFolder createJavaMailFolder(Store store, char separator,
-                                        com.zimbra.cs.mailbox.Folder localRootFolder,
-                                        com.zimbra.cs.mailbox.Folder localFolder)
+    private IMAPFolder createJavaMailFolder(Store store, String jmPath)
     throws MessagingException {
-        String jmPath = localPathToRemotePath(localRootFolder, localFolder, separator);
-        ZimbraLog.datasource.info("Creating IMAP folder %s for local folder %s", jmPath,
-            localFolder.getPath());
         IMAPFolder jmFolder = (IMAPFolder) store.getFolder(jmPath);
         jmFolder.create(Folder.HOLDS_FOLDERS | Folder.HOLDS_MESSAGES);
         return jmFolder;
     }
 
-    private String localPathToRemotePath(com.zimbra.cs.mailbox.Folder localRootFolder,
+    private String localPathToRemotePath(DataSource ds, com.zimbra.cs.mailbox.Folder localRootFolder,
                                          com.zimbra.cs.mailbox.Folder localFolder, char separator) {
         // Strip local root from the folder's path.  IMAP paths don't start with "/".
-        String rootPath = localRootFolder.getPath() + "/";
+        String rootPath = localRootFolder.getPath();
+        if (!rootPath.endsWith("/"))
+        	rootPath += "/";
         String folderPath = localFolder.getPath();
         if (folderPath.startsWith(rootPath)) {
             folderPath = folderPath.substring(rootPath.length());
@@ -369,8 +368,12 @@ public class ImapImport implements MailItemImport {
         }
 
         // Generate IMAP path
-        String imapPath = folderPath;
-        if (separator != '/') {
+        String imapPath = ds.matchKnownRemotePath(localFolder.getPath());
+        if ("".equals(imapPath)) //means to ignore
+        	imapPath = null;
+        else if (imapPath == null && localFolder.getId() >= Mailbox.FIRST_USER_ID)
+        	imapPath = folderPath;
+        if (imapPath != null && separator != '/') {
             String[] parts = localFolder.getPath().split("/");
             imapPath = StringUtil.join("" + separator, parts);
         }
@@ -413,13 +416,17 @@ public class ImapImport implements MailItemImport {
             relativePath.replace('/', replaceChar);
             relativePath.replace(separator, '/');
         }
-
-        // Remove leading slashes and append to root folder path
-        com.zimbra.cs.mailbox.Folder rootZimbraFolder = mbox.getFolderById(null, ds.getFolderId());
-        Matcher matcher = PAT_LEADING_SLASHES.matcher(relativePath);
-        relativePath = matcher.replaceFirst("");
-        String absolutePath = rootZimbraFolder.getPath() + "/" + relativePath;
-        return absolutePath;
+        
+        String zimbraPath = ds.matchKnownLocalPath(relativePath);
+        if (zimbraPath == null) {
+	        // Remove leading slashes and append to root folder path
+	        com.zimbra.cs.mailbox.Folder rootZimbraFolder = mbox.getFolderById(null, ds.getFolderId());
+	        Matcher matcher = PAT_LEADING_SLASHES.matcher(relativePath);
+	        relativePath = matcher.replaceFirst("");
+	        zimbraPath = (rootZimbraFolder.getId() == Mailbox.ID_FOLDER_USER_ROOT ? "" : rootZimbraFolder.getPath()) + "/" + relativePath;
+        } else if (zimbraPath.length() == 0) //means to ignore
+        	zimbraPath = null;
+        return zimbraPath;
     }
 
     private void validateDataSource(DataSource ds) throws ServiceException {
