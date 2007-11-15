@@ -32,8 +32,13 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.TreeMap;
 
-import com.zimbra.cs.imap.ImapCredentials.ActivatedExtension;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
+import com.zimbra.cs.imap.ImapHandler.ActivatedExtension;
 import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.ZimbraHit;
@@ -54,11 +59,6 @@ import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.SoapProtocol;
-import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.ZimbraLog;
 
 public class ImapFolder extends Session implements Iterable<ImapMessage> {
     public static final int IMAP_IDLE_TIMEOUT_SEC = 30 * Constants.SECONDS_PER_MINUTE;
@@ -110,14 +110,13 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
             throw ServiceException.PERM_DENIED("cannot select folder: " + mPath);
         mWritable = (params & SELECT_READONLY) == 0 && mPath.isWritable();
         if ((params & SELECT_CONDSTORE) != 0)
-            mCredentials.activateExtension(ActivatedExtension.CONDSTORE);
+            mHandler.activateExtension(ActivatedExtension.CONDSTORE);
 
         // need mInitialRecent to be set *before* loading the folder so we can determine what's \Recent
         mInitialRECENT = ((Folder) path.getFolder()).getImapRECENT();
     }
 
-    @Override
-    public Session register() throws ServiceException {
+    @Override public Session register() throws ServiceException {
         super.register();
 
         mMailbox.beginTrackingImap();
@@ -140,8 +139,7 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
         return this;
     }
 
-    @Override
-    public Session unregister() {
+    @Override public Session unregister() {
         snapshotRECENT();
         return super.unregister();
     }
@@ -274,7 +272,7 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
         // in order to avoid screwing up the RECENT value, this must come after snapshotRECENT() and folder.getImapRECENT()
         mWritable = (params & SELECT_READONLY) == 0 && mPath.isWritable();
         if ((params & SELECT_CONDSTORE) != 0)
-            mCredentials.activateExtension(ActivatedExtension.CONDSTORE);
+            mHandler.activateExtension(ActivatedExtension.CONDSTORE);
 
         mNotificationsSuspended = false;
         mDirtyMessages.clear();
@@ -298,18 +296,15 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
         mSavedSearchResults = null;
     }
 
-    @Override
-    protected boolean isMailboxListener() {
+    @Override protected boolean isMailboxListener() {
         return true;
     }
 
-    @Override
-    protected boolean isRegisteredInCache() {
+    @Override protected boolean isRegisteredInCache() {
         return true;
     }
 
-    @Override
-    public void doEncodeState(Element parent) {
+    @Override public void doEncodeState(Element parent) {
         ImapCredentials.EnabledHack[] hacks = mCredentials.getEnabledHacks();
         Element imap = parent.addElement("imap");
         if (mSequence != null)
@@ -319,8 +314,7 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
         imap.addAttribute("writable", isWritable()).addAttribute("dirty", mDirtyMessages.size());
     }
 
-    @Override
-    protected long getSessionIdleLifetime() {
+    @Override protected long getSessionIdleLifetime() {
         return IMAP_IDLE_TIMEOUT_MSEC;
     }
 
@@ -411,7 +405,7 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
     /** Returns whether a given SELECT option is active for this folder. */
     boolean isExtensionActivated(ActivatedExtension ext) {
         switch (ext) {
-            case CONDSTORE: return !isVirtual() && mCredentials.isExtensionActivated(ext);
+            case CONDSTORE: return !isVirtual() && mHandler.isExtensionActivated(ext);
             default:        return false;
         }
     }
@@ -821,7 +815,7 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
         void sort()  { Collections.sort(numbered);  Collections.sort(unnumbered); }
     }
 
-    public void notifyPendingChanges(PendingModifications pns, int changeId, Session source) {
+    @Override public void notifyPendingChanges(PendingModifications pns, int changeId, Session source) {
         if (!pns.hasNotifications())
             return;
 
@@ -991,8 +985,7 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
         return true;
     }
 
-    @Override
-    protected void cleanup() {
+    @Override protected void cleanup() {
         // XXX: is there a synchronization issue here?
         if (mHandler != null) {
             ZimbraLog.imap.debug("dropping connection because Session is closing");

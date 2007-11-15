@@ -30,7 +30,6 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
-import com.zimbra.cs.imap.ImapCredentials.ActivatedExtension;
 import com.zimbra.cs.imap.ImapCredentials.EnabledHack;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
@@ -104,6 +103,8 @@ import java.util.regex.Pattern;
 public abstract class ImapHandler extends ProtocolHandler {
     enum State { NOT_AUTHENTICATED, AUTHENTICATED, SELECTED, LOGOUT }
 
+    enum ActivatedExtension { CONDSTORE };
+
     private static final long MAXIMUM_IDLE_PROCESSING_MILLIS = 15 * Constants.MILLIS_PER_SECOND;
 
     static final char[] LINE_SEPARATOR       = { '\r', '\n' };
@@ -126,7 +127,8 @@ public abstract class ImapHandler extends ProtocolHandler {
     private   String          mIdleTag;
     private   String          mOrigRemoteAddress;
     protected boolean         mGoodbyeSent;
-    
+    private   Set<ActivatedExtension> mActivatedExtensions;
+
     protected static ActivityTracker sActivityTracker;
 
     private static synchronized void initActivityTracker() {
@@ -352,6 +354,13 @@ public abstract class ImapHandler extends ProtocolHandler {
                         }
                         checkEOF(tag, req);
                         return doEXAMINE(tag, path, params);
+                    } else if (command.equals("ENABLE") && extensionEnabled("ENABLE")) {
+                        List<String> extensions = new ArrayList<String>();
+                        do {
+                            req.skipSpace();  extensions.add(req.readATOM());
+                        } while (!req.eof());
+                        checkEOF(tag, req);
+                        return doENABLE(tag, extensions);
                     }
                     break;
                 case 'F':
@@ -705,11 +714,11 @@ public abstract class ImapHandler extends ProtocolHandler {
         return CONTINUE_PROCESSING;
     }
 
-    private static final String[] SUPPORTED_EXTENSIONS = new String[] {
-        "ACL", "BINARY", "CATENATE", "CHILDREN", "CONDSTORE", "ESEARCH", "ID", "IDLE",
+    private static final Set<String> SUPPORTED_EXTENSIONS = new LinkedHashSet<String>(Arrays.asList(
+        "ACL", "BINARY", "CATENATE", "CHILDREN", "CONDSTORE", "ENABLE", "ESEARCH", "ID", "IDLE",
         "LIST-EXTENDED", "LITERAL+", "LOGIN-REFERRALS", "MULTIAPPEND", "NAMESPACE", "QUOTA",
         "RIGHTS=ektx", "SASL-IR", "UIDPLUS", "UNSELECT", "WITHIN", "X-DRAFT-I05-SEARCHRES"
-    };
+    ));
 
     protected void sendCapability() throws IOException {
         // [IMAP4rev1]        RFC 3501: Internet Message Access Protocol - Version 4rev1
@@ -722,6 +731,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         // [CATENATE]         RFC 4469: Internet Message Access Protocol (IMAP) CATENATE Extension
         // [CHILDREN]         RFC 3348: IMAP4 Child Mailbox Extension
         // [CONDSTORE]        RFC 4551: IMAP Extension for Conditional STORE Operation or Quick Flag Changes Resynchronization
+        // [ENABLE]           draft-gulbrandsen-imap-enable-03: The IMAP ENABLE Extension
         // [ESEARCH]          RFC 4731: IMAP4 Extension to SEARCH Command for Controlling What Kind of Information Is Returned
         // [ID]               RFC 2971: IMAP4 ID Extension
         // [IDLE]             RFC 2177: IMAP4 IDLE command
@@ -754,12 +764,11 @@ public abstract class ImapHandler extends ProtocolHandler {
 
     // TODO Remove this debugging option for final release
     private static final Boolean GSS_ENABLED = Boolean.getBoolean("ZimbraGssEnabled");
-    
+
     private boolean isGssAuthEnabled() {
-        return (GSS_ENABLED || mConfig.isSaslGssapiEnabled()) &&
-               extensionEnabled("AUTH=GSSAPI");
+        return (GSS_ENABLED || mConfig.isSaslGssapiEnabled()) && extensionEnabled("AUTH=GSSAPI");
     }
-    
+
     boolean extensionEnabled(String extension) {
         // check whether the extension is explicitly disabled on the server
         if (mConfig.isExtensionDisabled(extension))
@@ -773,7 +782,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         if (extension.equalsIgnoreCase("IDLE") && mCredentials != null && mCredentials.isHackEnabled(EnabledHack.NO_IDLE))
             return false;
         // everything else is enabled
-        return true;
+        return SUPPORTED_EXTENSIONS.contains(extension);
     }
 
     boolean doNOOP(String tag) throws IOException {
@@ -804,9 +813,53 @@ public abstract class ImapHandler extends ProtocolHandler {
                 ZimbraLog.imap.info("IMAP client identified as: " + attrs);
         }
 
+        sendNotifications(true, false);
         sendUntagged("ID (\"NAME\" \"Zimbra\" \"VERSION\" \"" + BuildInfo.VERSION + "\" \"RELEASE\" \"" + BuildInfo.RELEASE + "\")");
         sendOK(tag, "ID completed");
         return CONTINUE_PROCESSING;
+    }
+
+    boolean doENABLE(String tag, List<String> extensions) throws IOException, ImapParseException {
+        List<ActivatedExtension> targets = new ArrayList<ActivatedExtension>(extensions.size());
+        for (String ext : extensions) {
+            // draft-gulbrandsen-imap-enable-03 3: "If the argument is not an extension known to
+            //                                      the server, the server MUST ignore the argument."
+            if (!SUPPORTED_EXTENSIONS.contains(ext))
+                continue;
+
+            // draft-gulbrandsen-imap-enable-03 3: "If the argument is an extension known to the server,
+            //                                      and it is not specifically permitted to enable it
+            //                                      using ENABLE, the server MUST respond with BAD."
+            try {
+                ActivatedExtension ax = ActivatedExtension.valueOf(ext);
+                if (extensionEnabled(ext))
+                    targets.add(ax);
+            } catch (IllegalArgumentException iae) {
+                throw new ImapParseException(tag, "non-enableable extension: " + ext);
+            }
+        }
+
+        // draft-gulbrandsen-imap-enable-03 3: "If the argument is an extension is supported by the
+        //                                      server and which needs to be enabled, the server MUST
+        //                                      enable the extension for the duration of the connection."
+        for (ActivatedExtension ax : targets)
+            activateExtension(ax);
+
+        sendNotifications(true, false);
+        sendOK(tag, "ENABLE completed");
+        return CONTINUE_PROCESSING;
+    }
+
+    void activateExtension(ActivatedExtension ext) {
+        if (ext == null)
+            return;
+        if (mActivatedExtensions == null)
+            mActivatedExtensions = new HashSet<ActivatedExtension>(1);
+        mActivatedExtensions.add(ext);
+    }
+
+    boolean isExtensionActivated(ActivatedExtension ext) {
+        return mActivatedExtensions != null && mActivatedExtensions.contains(ext);
     }
 
     abstract boolean doSTARTTLS(String tag) throws IOException;
@@ -868,7 +921,8 @@ public abstract class ImapHandler extends ProtocolHandler {
     boolean doLOGIN(String tag, String username, String password) throws IOException {
         if (!checkState(tag, State.NOT_AUTHENTICATED))
             return CONTINUE_PROCESSING;
-        else if (!allowCleartextLogins()) {
+
+        if (!allowCleartextLogins()) {
             sendNO(tag, "cleartext logins disabled");
             return CONTINUE_PROCESSING;
         }
@@ -924,8 +978,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         return CONTINUE_PROCESSING;
     }
 
-    private ImapCredentials startSession(Account account, EnabledHack hack,
-                                         String tag, String mechanism) throws ServiceException, IOException {
+    private ImapCredentials startSession(Account account, EnabledHack hack, String tag, String mechanism) throws ServiceException, IOException {
         String type = mechanism != null ? "authentication" : "login";
         // make sure we can actually login via IMAP on this host
         if (!account.getBooleanAttr(Provisioning.A_zimbraImapEnabled, false)) {
@@ -2488,14 +2541,14 @@ public abstract class ImapHandler extends ProtocolHandler {
 
         boolean requiresMODSEQ = i4search.requiresMODSEQ();
         if (requiresMODSEQ)
-            mCredentials.activateExtension(ActivatedExtension.CONDSTORE);
+            activateExtension(ActivatedExtension.CONDSTORE);
         // RFC 4551 3.1.2: "A server that returned NOMODSEQ response code for a mailbox,
         //                  which subsequently receives one of the following commands
         //                  while the mailbox is selected:
         //                     -  a FETCH or SEARCH command that includes the MODSEQ
         //                         message data item
         //                  MUST reject any such command with the tagged BAD response."
-        if (requiresMODSEQ && !mSelectedFolder.isExtensionActivated(ActivatedExtension.CONDSTORE))
+        if (requiresMODSEQ && !isExtensionActivated(ActivatedExtension.CONDSTORE))
             throw new ImapParseException(tag, "NOMODSEQ", "cannot SEARCH MODSEQ in this mailbox", true);
 
         boolean saveResults = (options != null && (options & RETURN_SAVE) != 0);
@@ -2627,8 +2680,8 @@ public abstract class ImapHandler extends ProtocolHandler {
         if (changedSince >= 0)
             attributes |= FETCH_MODSEQ;
         if ((attributes & FETCH_MODSEQ) != 0)
-            mCredentials.activateExtension(ActivatedExtension.CONDSTORE);
-        boolean modseqEnabled = mSelectedFolder.isExtensionActivated(ActivatedExtension.CONDSTORE);
+            activateExtension(ActivatedExtension.CONDSTORE);
+        boolean modseqEnabled = isExtensionActivated(ActivatedExtension.CONDSTORE);
         // RFC 4551 3.1.2: "A server that returned NOMODSEQ response code for a mailbox,
         //                  which subsequently receives one of the following commands
         //                  while the mailbox is selected:
@@ -2813,8 +2866,8 @@ public abstract class ImapHandler extends ProtocolHandler {
         }
 
         if (modseq >= 0)
-            mCredentials.activateExtension(ActivatedExtension.CONDSTORE);
-        boolean modseqEnabled = mSelectedFolder.isExtensionActivated(ActivatedExtension.CONDSTORE);
+            activateExtension(ActivatedExtension.CONDSTORE);
+        boolean modseqEnabled = isExtensionActivated(ActivatedExtension.CONDSTORE);
         // RFC 4551 3.1.2: "A server that returned NOMODSEQ response code for a mailbox,
         //                  which subsequently receives one of the following commands
         //                  while the mailbox is selected:
@@ -3180,7 +3233,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             i4folder.checkpointSize();
 
             // notify of any message flag changes
-            boolean sendModseq = i4folder.isExtensionActivated(ActivatedExtension.CONDSTORE);
+            boolean sendModseq = isExtensionActivated(ActivatedExtension.CONDSTORE);
             for (Iterator<ImapFolder.DirtyMessage> it = i4folder.dirtyIterator(); it.hasNext(); ) {
                 ImapFolder.DirtyMessage dirty = it.next();
                 if (dirty.i4msg.isAdded())

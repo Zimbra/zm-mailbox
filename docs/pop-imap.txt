@@ -10,6 +10,7 @@ IMAP protocol and extensions supported:
     [CATENATE]         RFC 4469: Internet Message Access Protocol (IMAP) CATENATE Extension
     [CHILDREN]         RFC 3348: IMAP4 Child Mailbox Extension
     [CONDSTORE]        RFC 4551: IMAP Extension for Conditional STORE Operation or Quick Flag Changes Resynchronization
+    [ENABLE]           draft-gulbrandsen-imap-enable-03: The IMAP ENABLE Extension
     [ESEARCH]          RFC 4731: IMAP4 Extension to SEARCH Command for Controlling What Kind of Information Is Returned
     [ID]               RFC 2971: IMAP4 ID Extension
     [IDLE]             RFC 2177: IMAP4 IDLE command

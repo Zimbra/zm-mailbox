@@ -48,8 +48,6 @@ public class ImapCredentials {
         public String toString()  { return extension; }
     }
 
-    static enum ActivatedExtension { CONDSTORE };
-
     private static final String SN_IMAP = "imap";
     private static final String FN_SUBSCRIPTIONS = "subs";
 
@@ -57,14 +55,12 @@ public class ImapCredentials {
     private final String      mUsername;
     private final boolean     mIsLocal;
     private final EnabledHack mEnabledHack;
-    private final Set<ActivatedExtension> mActivatedExtensions;
 
     public ImapCredentials(Account acct, EnabledHack hack) throws ServiceException {
         mAccountId = acct.getId();
         mUsername = acct.getName();
         mIsLocal = Provisioning.onLocalServer(acct);
         mEnabledHack = (hack == null ? EnabledHack.NONE : hack);
-        mActivatedExtensions = new HashSet<ActivatedExtension>(1);
     }
 
     String getUsername() {
@@ -83,15 +79,6 @@ public class ImapCredentials {
         if (mEnabledHack == null || mEnabledHack == EnabledHack.NONE)
             return null;
         return new EnabledHack[] { mEnabledHack };
-    }
-
-    void activateExtension(ActivatedExtension ext) {
-        if (ext != null)
-            mActivatedExtensions.add(ext);
-    }
-
-    boolean isExtensionActivated(ActivatedExtension ext) {
-        return mActivatedExtensions.contains(ext);
     }
 
     String getAccountId() {
