@@ -955,7 +955,24 @@ public class TestProvisioning extends TestCase {
         mProv.removeMembers(entry, new String[]{dlNested.getName()});
 
         mProv.renameDistributionList(entry.getId(), NEW_EMAIL);
+        entryGot = mProv.get(Provisioning.DistributionListBy.name, NEW_EMAIL);
+        TestProvisioningUtil.verifySameId(entry, entryGot);
+        if (!Flag.needLdapPaging("getAllDistributionLists")) {
+            list = mProv.getAllDistributionLists(domain);
+            TestProvisioningUtil.verifyEntriesByName(list, new String[]{NEW_EMAIL, DL_NESTED_EMAIL}, mCustomProvTester.verifyDLCountForDomainBasedSearch());
+        }
+        
+        // refresh the entry, it might have been moved
+        entry = mProv.get(Provisioning.DistributionListBy.name, NEW_EMAIL);
+        
+        // rename it back
         mProv.renameDistributionList(entry.getId(), DL_EMAIL);
+        entryGot = mProv.get(Provisioning.DistributionListBy.name, DL_EMAIL);
+        TestProvisioningUtil.verifySameId(entry, entryGot);
+        if (!Flag.needLdapPaging("getAllDistributionLists")) {
+            list = mProv.getAllDistributionLists(domain);
+            TestProvisioningUtil.verifyEntriesByName(list, new String[]{DL_EMAIL, DL_NESTED_EMAIL}, mCustomProvTester.verifyDLCountForDomainBasedSearch());
+        }
                                 
         return new DistributionList[]{entry, dlNested, dlSpecilaChars};
     }
