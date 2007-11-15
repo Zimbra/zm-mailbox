@@ -21,18 +21,21 @@
 package com.zimbra.cs.imap;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.NetUtil;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mina.MinaThreadFactory;
+import com.zimbra.cs.server.Server;
 import com.zimbra.cs.stats.RealtimeStatsCallback;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServer;
-import com.zimbra.common.util.NetUtil;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.server.Server;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * @author dkarp
@@ -40,6 +43,8 @@ import java.util.Map;
 public class ImapServer extends TcpServer implements RealtimeStatsCallback {
     private static Server sImapServer;
     private static Server sImapSSLServer;
+    
+    private static final String HANDLER_THREAD_NAME = "ImapHandler";
 
     private ImapServer(ImapConfig config) throws ServiceException {
         super(config.isSSLEnabled() ? "ImapSSLServer" : "ImapServer", config);
@@ -64,12 +69,19 @@ public class ImapServer extends TcpServer implements RealtimeStatsCallback {
         if (sImapSSLServer == null) sImapSSLServer = startServer(true);
     }
 
+    // A single handler thread pool is shared by both IMAP and IMAPS
+    private static ExecutorService sHandlerThreadPool;
+    
     private static Server startServer(boolean ssl) throws ServiceException {
         ImapConfig config = new ImapConfig(Provisioning.getInstance(), ssl);
         Server server;
         if (MinaImapServer.isEnabled()) {
+            if (sHandlerThreadPool == null) {
+                sHandlerThreadPool = Executors.newFixedThreadPool(
+                    config.getNumThreads(), new MinaThreadFactory(HANDLER_THREAD_NAME));   
+            }
             try {
-                server = new MinaImapServer(config);
+                server = new MinaImapServer(config, sHandlerThreadPool);
             } catch (IOException e) {
                 Zimbra.halt("failed to start MinaImapServer", e);
                 return null;

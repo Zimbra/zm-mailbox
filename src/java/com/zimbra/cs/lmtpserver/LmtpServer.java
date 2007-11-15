@@ -17,19 +17,23 @@
 
 package com.zimbra.cs.lmtpserver;
 
-import java.io.IOException;
-
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.NetUtil;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mina.MinaThreadFactory;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServer;
-import com.zimbra.common.util.NetUtil;
 import com.zimbra.cs.util.Zimbra;
+
+import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class LmtpServer extends TcpServer {
     private static com.zimbra.cs.server.Server lmtpServer;
 
+    private static final String HANDLER_THREAD_NAME = "LmtpHandler";
+    
     public LmtpServer(LmtpConfig config) throws ServiceException {
         super("LmtpServer", config);
     }
@@ -47,10 +51,11 @@ public class LmtpServer extends TcpServer {
         if (lmtpServer != null) return;
 
         LmtpConfig config = new LmtpConfig(Provisioning.getInstance());
-
+        ExecutorService pool = Executors.newFixedThreadPool(
+            config.getNumThreads(), new MinaThreadFactory(HANDLER_THREAD_NAME));
         if (MinaLmtpServer.isEnabled()) {
             try {
-                lmtpServer = new MinaLmtpServer(config);
+                lmtpServer = new MinaLmtpServer(config, pool);
             } catch (IOException e) {
                 Zimbra.halt("failed to create MinaLmtpServer", e);
             }

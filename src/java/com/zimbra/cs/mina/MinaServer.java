@@ -20,13 +20,14 @@ package com.zimbra.cs.mina;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
+import com.zimbra.cs.security.sasl.SaslFilter;
 import com.zimbra.cs.server.Server;
 import com.zimbra.cs.server.ServerConfig;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.security.sasl.SaslFilter;
 import org.apache.mina.common.DefaultIoFilterChainBuilder;
 import org.apache.mina.common.IoHandler;
 import org.apache.mina.common.IoSession;
+import org.apache.mina.common.ThreadModel;
 import org.apache.mina.filter.SSLFilter;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.executor.ExecutorFilter;
@@ -52,12 +53,21 @@ import java.util.concurrent.TimeUnit;
 public abstract class MinaServer implements Server {
     protected final ServerSocketChannel mChannel;
     protected final SocketAcceptorConfig mAcceptorConfig;
-    protected final ExecutorService mExecutorService;
+    protected final ExecutorService mHandlerThreadPool;
     protected final SocketAcceptor mSocketAcceptor;
     protected final ServerConfig mServerConfig;
 
     private static SSLContext sslContext;
 
+    private static final String HANDLER_THREAD_NAME = "MinaProtocolHandler";
+    
+    private static final int NUM_IO_PROCESSORS =
+        Runtime.getRuntime().availableProcessors() + 1;
+    
+    // There is one I/O thread pool shared by all protocol handlers
+    private static final ExecutorService IO_THREAD_POOL =
+        Executors.newCachedThreadPool(new MinaThreadFactory("MinaIoProcessorThread"));
+    
     // TODO Disable for production
     public static final String NIO_ENABLED_PROP = "ZimbraNioEnabled";
     public static final String NIO_DEBUG_ENABLED_PROP = "ZimbraNioDebugEnabled";
@@ -100,18 +110,26 @@ public abstract class MinaServer implements Server {
      * Creates a new server for the specified configuration.
      * 
      * @param config the ServerConfig for the server
+     * @param pool the optional handler thread pool to use for this server
      * @throws IOException if an I/O error occurred while creating the server
      * @throws ServiceException if a ServiceException occured
      */
-    protected MinaServer(ServerConfig config) throws IOException, ServiceException {
+    protected MinaServer(ServerConfig config, ExecutorService pool)
+            throws IOException, ServiceException {
+        mServerConfig = config;
+        mHandlerThreadPool = pool;
         mChannel = config.getServerSocketChannel();
         mAcceptorConfig = new SocketAcceptorConfig();
         mAcceptorConfig.setReuseAddress(true);
-        mExecutorService = Executors.newCachedThreadPool();
-        mSocketAcceptor = new SocketAcceptor();
-        mServerConfig = config;
+        mAcceptorConfig.setThreadModel(ThreadModel.MANUAL);
+        mSocketAcceptor = new SocketAcceptor(NUM_IO_PROCESSORS, IO_THREAD_POOL);
     }
 
+    protected MinaServer(ServerConfig config) throws IOException, ServiceException {
+        this(config, Executors.newFixedThreadPool(
+            config.getNumThreads(), new MinaThreadFactory(HANDLER_THREAD_NAME)));
+    }
+    
     /**
      * Returns the configuration for this server.
      * 
@@ -134,7 +152,7 @@ public abstract class MinaServer implements Server {
             fc.addFirst("ssl", new SSLFilter(getSSLContext()));
         }
         fc.addLast("codec", new ProtocolCodecFilter(new MinaCodecFactory(this)));
-        fc.addLast("executer", new ExecutorFilter(mExecutorService));
+        fc.addLast("executer", new ExecutorFilter(mHandlerThreadPool));
         if (isDebugEnabled()) fc.addLast("logger", new MinaLoggingFilter(this, false));
         IoHandler handler = new MinaIoHandler(this);
         mSocketAcceptor.register(mChannel, handler, mAcceptorConfig);
@@ -151,13 +169,13 @@ public abstract class MinaServer implements Server {
      */
     public void shutdown(int graceSecs) {
         mSocketAcceptor.unbindAll();
-        mExecutorService.shutdown();
+        mHandlerThreadPool.shutdown();
         try {
-            mExecutorService.awaitTermination(graceSecs, TimeUnit.SECONDS);
+            mHandlerThreadPool.awaitTermination(graceSecs, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             // Fall through
         }
-        mExecutorService.shutdownNow();
+        mHandlerThreadPool.shutdownNow();
     }
 
     /**

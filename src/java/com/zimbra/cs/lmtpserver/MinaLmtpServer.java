@@ -18,25 +18,25 @@
 package com.zimbra.cs.lmtpserver;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mina.MinaHandler;
 import com.zimbra.cs.mina.MinaRequest;
 import com.zimbra.cs.mina.MinaServer;
+import org.apache.mina.common.IoSession;
 
 import java.io.IOException;
-
-import org.apache.mina.common.IoSession;
+import java.util.concurrent.ExecutorService;
 
 public class MinaLmtpServer extends MinaServer {
     public static boolean isEnabled() {
         return MinaServer.isEnabled() || LC.nio_lmtp_enabled.booleanValue();
     }
 
-    public MinaLmtpServer(LmtpConfig config)
+    public MinaLmtpServer(LmtpConfig config, ExecutorService pool)
             throws IOException, ServiceException {
-        super(config);
+        super(config, pool);
     }
 
     @Override

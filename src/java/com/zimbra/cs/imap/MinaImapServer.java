@@ -18,15 +18,16 @@
 package com.zimbra.cs.imap;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mina.MinaHandler;
 import com.zimbra.cs.mina.MinaRequest;
 import com.zimbra.cs.mina.MinaServer;
 import org.apache.mina.common.IoSession;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
 
 /**
  * MINA-based IMAP server implementation.
@@ -36,8 +37,9 @@ public class MinaImapServer extends MinaServer {
         return MinaServer.isEnabled() || LC.nio_imap_enabled.booleanValue();
     }
 
-    MinaImapServer(ImapConfig config) throws IOException, ServiceException {
-        super(config);
+    MinaImapServer(ImapConfig config, ExecutorService pool)
+            throws IOException, ServiceException {
+        super(config, pool);
     }
 
     @Override

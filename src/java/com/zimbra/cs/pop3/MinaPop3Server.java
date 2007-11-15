@@ -18,26 +18,27 @@
 package com.zimbra.cs.pop3;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mina.MinaHandler;
 import com.zimbra.cs.mina.MinaRequest;
 import com.zimbra.cs.mina.MinaServer;
 import com.zimbra.cs.mina.MinaTextLineRequest;
 import com.zimbra.cs.server.ServerConfig;
+import org.apache.mina.common.IoSession;
 
 import java.io.IOException;
-
-import org.apache.mina.common.IoSession;
+import java.util.concurrent.ExecutorService;
 
 public class MinaPop3Server extends MinaServer {
     public static boolean isEnabled() {
         return MinaServer.isEnabled() || LC.nio_pop3_enabled.booleanValue();
     }
 
-    MinaPop3Server(ServerConfig config) throws IOException, ServiceException {
-        super(config);
+    MinaPop3Server(ServerConfig config, ExecutorService pool)
+            throws IOException, ServiceException {
+        super(config, pool);
     }
 
     @Override public MinaHandler createHandler(IoSession session) {

@@ -17,24 +17,29 @@
 
 package com.zimbra.cs.pop3;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.io.IOException;
-
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.NetUtil;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mina.MinaThreadFactory;
+import com.zimbra.cs.server.Server;
 import com.zimbra.cs.stats.RealtimeStatsCallback;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServer;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.common.util.NetUtil;
-import com.zimbra.cs.server.Server;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Pop3Server extends TcpServer implements RealtimeStatsCallback {
     private static com.zimbra.cs.server.Server sPopServer;
     private static com.zimbra.cs.server.Server sPopSSLServer;
 
+    private static final String HANDLER_THREAD_NAME = "Pop3Handler";
+    
     private Pop3Server(Pop3Config config) throws ServiceException {
         super(config.isSSLEnabled() ? "Pop3SSLServer" : "Pop3Server", config);
         ZimbraPerf.addStatsCallback(this);
@@ -48,7 +53,7 @@ public class Pop3Server extends TcpServer implements RealtimeStatsCallback {
             throws IOException {
         NetUtil.bindServerSocket(addr, port, ssl, MinaPop3Server.isEnabled());
     }
-    
+
     public synchronized static void startupPop3Server() throws ServiceException {
         if (sPopServer == null) {
             sPopServer = startServer(false);
@@ -61,12 +66,18 @@ public class Pop3Server extends TcpServer implements RealtimeStatsCallback {
         }
     }
 
+    private static ExecutorService sPop3HandlerThreadPool;        
+
     private static Server startServer(boolean ssl) throws ServiceException {
         Pop3Config config = new Pop3Config(Provisioning.getInstance(), ssl);
         Server server;
         if (MinaPop3Server.isEnabled()) {
+             if (sPop3HandlerThreadPool == null) {
+                sPop3HandlerThreadPool = Executors.newFixedThreadPool(
+                    config.getNumThreads(), new MinaThreadFactory(HANDLER_THREAD_NAME)); 
+             }
              try {
-                 server = new MinaPop3Server(config);
+                server = new MinaPop3Server(config, sPop3HandlerThreadPool);
              } catch (IOException e) {
                  Zimbra.halt("failed to create MinaPop3Server", e);
                  return null;
