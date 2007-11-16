@@ -30,12 +30,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.imap.ImapHandler.ActivatedExtension;
@@ -376,6 +378,10 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
         return mInitialMODSEQ;
     }
 
+    int getCurrentMODSEQ() throws ServiceException {
+        return mMailbox.getFolderById(null, mFolderId).getImapMODSEQ();
+    }
+
     /** Returns the "sequence number" of the first unread message in the
      *  folder, or -1 if none are unread.  This is <b>only</b> valid
      *  immediately after the folder is initialized and is not updated
@@ -684,6 +690,46 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
         return (int) Math.max(-1, Math.min(Integer.MAX_VALUE, Long.parseLong(id)));
     }
 
+    private List<Pair<Integer, Integer>> normalizeSubsequence(String subseqStr, boolean byUID) {
+        if (subseqStr == null || subseqStr.trim().equals(""))
+            return Collections.emptyList();
+
+        ImapMessage i4msg = getLastMessage();
+        int lastID = (i4msg == null ? (byUID ? Integer.MAX_VALUE : getSize()) : (byUID ? i4msg.imapUid : i4msg.sequence));
+
+        List<Pair<Integer, Integer>> normalized = new ArrayList<Pair<Integer, Integer>>(5);
+        for (String subset : subseqStr.split(",")) {
+            int lower, upper;
+            if (subset.indexOf(':') == -1) {
+                // single item
+                lower = upper = (subset.equals("*") ? lastID : parseId(subset));
+            } else {
+                // colon-delimited range
+                String[] range = subset.split(":", 2);
+                lower = (range[0].equals("*") ? lastID : parseId(range[0]));
+                upper = (range[1].equals("*") ? lastID : parseId(range[1]));
+                if (lower > upper)  { int tmp = upper; upper = lower; lower = tmp; }
+            }
+
+            // add to list, merging with existing ranges if needed
+            int insertpos = 0;
+            for (int i = 0; i < normalized.size(); i++) {
+                Pair<Integer, Integer> range = normalized.get(i);
+                int lrange = range.getFirst(), urange = range.getSecond();
+                if (lower > urange + 1) {
+                    insertpos++;  continue;
+                } else if (upper < lrange - 1) {
+                    break;
+                } else {
+                    normalized.remove(i--);
+                    lower = Math.min(lower, lrange);  upper = Math.max(upper, urange);
+                }
+            }
+            normalized.add(insertpos, new Pair<Integer, Integer>(lower, upper));
+        }
+        return normalized;
+    }
+
     ImapMessageSet getSubsequence(String subseqStr, boolean byUID) {
         ImapMessageSet result = new ImapMessageSet();
         if (subseqStr == null || subseqStr.trim().equals("") || getSize() == 0)
@@ -691,36 +737,65 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
         else if (subseqStr.equals("$"))
             return getSavedSearchResults();
 
-        ImapMessage i4msg = getLastMessage();
-        int lastID = (i4msg == null ? (byUID ? Integer.MAX_VALUE : getSize()) : (byUID ? i4msg.imapUid : i4msg.sequence));
-
-        for (String subset : subseqStr.split(",")) {
-            if (subset.indexOf(':') == -1) {
+        for (Pair<Integer, Integer> range : normalizeSubsequence(subseqStr, byUID)) {
+            int lower = range.getFirst(), upper = range.getSecond();
+            if (lower == upper) {
                 // single message -- get it and add it (may be null)
-                int id = (subset.equals("*") ? lastID : parseId(subset));
-                result.add(byUID ? getByImapId(id) : getBySequence(id));
+                result.add(byUID ? getByImapId(lower) : getBySequence(lower));
             } else {
-                // colon-delimited range -- get them and add them (may be null)
-                String[] range = subset.split(":", 2);
-                int lower = (range[0].equals("*") ? lastID : parseId(range[0]));
-                int upper = (range[1].equals("*") ? lastID : parseId(range[1]));
-                if (lower > upper)  { int tmp = upper; upper = lower; lower = tmp; }
+                // range of messages -- get them and add them (may be null)
                 if (!byUID) {
-                    upper = Math.min(lastID, upper);
                     for (int seq = Math.max(0, lower); seq <= upper; seq++)
                         result.add(getBySequence(seq));
                 } else {
+                    ImapMessage i4msg;
                     int start = uidSearch(lower), end = uidSearch(upper);
                     if (start < 0)  start = -start - 1;
                     if (end < 0)    end = -end - 2;
-                    for (int seq = start; seq <= end; seq++)
+                    for (int seq = start; seq <= end; seq++) {
                         if ((i4msg = getBySequence(seq + 1)) != null)
                             result.add(i4msg);
+                    }
                 }
             }
         }
 
         return result;
+    }
+
+    String invertSubsequence(String subseqStr, boolean byUID, Set<ImapMessage> i4set) {
+        StringBuilder sb = new StringBuilder();
+
+        Iterator<ImapMessage> i4it = i4set.iterator();
+        Iterator<Pair<Integer, Integer>> itrange = normalizeSubsequence(subseqStr, byUID).iterator();
+
+        Pair<Integer, Integer> range = itrange.next();
+        int lower = range.getFirst(), upper = range.getSecond();
+        ImapMessage i4msg = i4it.hasNext() ? i4it.next() : null;
+        int id = i4msg == null ? -1 : (byUID ? i4msg.imapUid : i4msg.sequence);
+
+        while (lower != -1) {
+            if (lower > upper) {
+                // no valid values remaining in this range, so go to the next one
+                if (!itrange.hasNext())  break;
+                range = itrange.next();  lower = range == null ? -1 : range.getFirst();  upper = range == null ? -1 : range.getSecond();
+            } else if (id == -1 || id > upper) {
+                // the remainder of the range qualifies, so serialize it and go to the next range
+                sb.append(sb.length() == 0 ? "" : ",").append(lower).append(lower == upper ? "" : ":" + upper);
+                if (!itrange.hasNext())  break;
+                range = itrange.next();  lower = range == null ? -1 : range.getFirst();  upper = range == null ? -1 : range.getSecond();
+            } else if (id <= lower) {
+                // the current ID is too low for this range, so fetch the next ID
+                if (id == lower)  lower++;
+                i4msg = i4it.hasNext() ? i4it.next() : null;  id = i4msg == null ? -1 : (byUID ? i4msg.imapUid : i4msg.sequence);
+            } else {
+                // the current ID lies within this range, so serialize part and fetch the next ID
+                sb.append(sb.length() == 0 ? "" : ",").append(lower).append(lower == id - 1 ? "" : ":" + (id - 1));
+                lower = id + 1;
+                i4msg = i4it.hasNext() ? i4it.next() : null;  id = i4msg == null ? -1 : (byUID ? i4msg.imapUid : i4msg.sequence);
+            }
+        }
+        return sb.toString();
     }
 
     static String encodeSubsequence(List<Integer> items) {
@@ -779,12 +854,15 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
     List<Integer> collapseExpunged() {
         if (getSize() == 0)
             return Collections.emptyList();
-        // FIXME: need synchronization
+
+        boolean byUID = mHandler.isExtensionActivated(ActivatedExtension.QRESYNC);
         boolean debug = ZimbraLog.imap.isDebugEnabled();
-        List<Integer> removed = new ArrayList<Integer>();
+        if (debug)  ZimbraLog.imap.debug("  ** iterating (collapseExpunged)");
+
+        // FIXME: need synchronization
         boolean trimmed = false;
         int seq = 1;
-        if (debug)  ZimbraLog.imap.debug("  ** iterating (collapseExpunged)");
+        List<Integer> removed = new ArrayList<Integer>();
         for (ListIterator lit = mSequence.listIterator(); lit.hasNext(); seq++) {
             ImapMessage i4msg = (ImapMessage) lit.next();
             if (i4msg.isExpunged()) {
@@ -794,7 +872,8 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
                 //   and the subsequent call to setIndex() will correctly set the mUIDs mapping
                 uncache(i4msg);
                 lit.remove();
-                removed.add(seq--);
+                removed.add(byUID ? i4msg.imapUid : seq);
+                seq--;
                 trimmed = true;
             } else if (trimmed) {
                 setIndex(i4msg, seq);

@@ -69,12 +69,13 @@ abstract class ImapRequest {
             BASE64_CHARS['+'] = BASE64_CHARS['/'] = true;
         }
 
+
     final ImapHandler mHandler;
 
     String mTag;
     List<Object> mParts = new ArrayList<Object>();
     int mIndex, mOffset;
-    long mSize;
+    private long mSize;
     private boolean mMaxRequestSizeExceeded;
 
     ImapRequest(ImapHandler handler) {
@@ -96,6 +97,13 @@ abstract class ImapRequest {
         if (!isMaxRequestSizeExceeded() || mParts.size() == 0) {
             mParts.add(obj);
         }
+    }
+
+    private String getCurrentLine() throws ImapParseException {
+        Object part = mParts.get(mIndex);
+        if (!(part instanceof String))
+            throw new ImapParseException(mTag, "should not be inside literal");
+        return (String) part;
     }
 
     boolean isMaxRequestSizeExceeded() {
@@ -121,7 +129,7 @@ abstract class ImapRequest {
         }
         return mTag;
     }
-    
+
     /** Returns whether the specified IMAP extension is enabled for this
      *  session.
      * @see ImapHandler#extensionEnabled(String) */
@@ -133,6 +141,28 @@ abstract class ImapRequest {
      *  indicate that the server has finished processing the request.
      *  It may also be used when generating a parse exception. */
     void setTag(String tag)  { mTag = tag; }
+
+
+    String readContent(boolean[] acceptable) throws ImapParseException {
+        return readContent(acceptable, false);
+    }
+
+    String readContent(boolean[] acceptable, boolean emptyOK) throws ImapParseException {
+        String content = getCurrentLine();
+        int i;
+        for (i = mOffset; i < content.length(); i++) {
+            char c = content.charAt(i);
+            if (c > 0x7F || !acceptable[c])
+                break;
+        }
+        if (i == mOffset && !emptyOK)
+            throw new ImapParseException(mTag, "zero-length content");
+
+        String result = content.substring(mOffset, i);
+        mOffset += result.length();
+        return result;
+    }
+
 
     /** Returns whether the read position is at the very end of the request. */
     boolean eof()  { return peekChar() == -1; }
@@ -173,119 +203,14 @@ abstract class ImapRequest {
     }                                       
 
     void skipNIL() throws ImapParseException { skipAtom("NIL"); }
+
     void skipAtom(String atom) throws ImapParseException {
         if (!readATOM().equals(atom))
             throw new ImapParseException(mTag, "did not find expected " + atom);
     }
 
-    private String getCurrentLine() throws ImapParseException {
-        Object part = mParts.get(mIndex);
-        if (!(part instanceof String))
-            throw new ImapParseException(mTag, "should not be inside literal");
-        return (String) part;
-    }
-
-    String readContent(boolean[] acceptable) throws ImapParseException {
-        return readContent(acceptable, false);
-    }
-    String readContent(boolean[] acceptable, boolean emptyOK) throws ImapParseException {
-        String content = getCurrentLine();
-        int i;
-        for (i = mOffset; i < content.length(); i++) {
-            char c = content.charAt(i);
-            if (c > 0x7F || !acceptable[c])
-                break;
-        }
-        if (i == mOffset && !emptyOK)
-            throw new ImapParseException(mTag, "zero-length content");
-
-        String result = content.substring(mOffset, i);
-        mOffset += result.length();
-        return result;
-    }
-
-    String readTag() throws ImapParseException   { return mTag = readContent(TAG_CHARS); }
     String readAtom() throws ImapParseException  { return readContent(ATOM_CHARS); }
     String readATOM() throws ImapParseException  { return readContent(ATOM_CHARS).toUpperCase(); }
-
-    static final boolean NONZERO = false, ZERO_OK = true;
-    String readNumber() throws ImapParseException  { return readNumber(ZERO_OK); }
-    String readNumber(boolean zeroOK) throws ImapParseException {
-        String number = readContent(NUMBER_CHARS);
-        if (number.startsWith("0") && (!zeroOK || number.length() > 1))
-            throw new ImapParseException(mTag, "invalid number: " + number);
-        return number;
-    }
-    int parseInteger(String number) throws ImapParseException {
-        try {
-            return Integer.parseInt(number);
-        } catch (NumberFormatException nfe) {
-            throw new ImapParseException(mTag, "number out of range: " + number);
-        }
-    }
-    long parseLong(String number) throws ImapParseException {
-        try {
-            return Long.parseLong(number);
-        } catch (NumberFormatException nfe) {
-            throw new ImapParseException(mTag, "number out of range: " + number);
-        }
-    }
-
-    byte[] readBase64(boolean skipEquals) throws ImapParseException {
-        // in some cases, "=" means to just return null and be done with it
-        if (skipEquals && peekChar() == '=') {
-            skipChar('=');  return null;
-        }
-
-        String encoded = readContent(BASE64_CHARS, true);
-        int padding = (4 - (encoded.length() % 4)) % 4;
-        if (padding == 3)
-            throw new ImapParseException(mTag, "invalid base64-encoded content");
-        while (padding-- > 0) {
-            skipChar('=');  encoded += "=";
-        }
-        try {
-            return new Base64().decode(encoded.getBytes("us-ascii"));
-        } catch (UnsupportedEncodingException e) {
-            throw new ImapParseException(mTag, "invalid base64-encoded content");
-        }
-    }
-
-    private static final int LAST_PUNCT = 0, LAST_DIGIT = 1, LAST_STAR = 2;
-
-    private String validateSequence(String value) throws ImapParseException {
-        // "$" is OK per draft-melnikov-imap-search-res-03
-        if (value.equals("$") && extensionEnabled("X-DRAFT-I05-SEARCHRES"))
-            return value;
-
-        int i, last = LAST_PUNCT;
-        boolean colon = false;
-        for (i = 0; i < value.length(); i++) {
-            char c = value.charAt(i);
-            if (c > 0x7F || c == '$' || !SEQUENCE_CHARS[c])
-                throw new ImapParseException(mTag, "illegal character '" + c + "' in sequence");
-            else if (c == '*') {
-                if (last == LAST_DIGIT)  throw new ImapParseException(mTag, "malformed sequence");
-                last = LAST_STAR;
-            } else if (c == ',') {
-                if (last == LAST_PUNCT)  throw new ImapParseException(mTag, "malformed sequence");
-                last = LAST_PUNCT;  colon = false;
-            } else if (c == ':') {
-                if (colon || last == LAST_PUNCT)  throw new ImapParseException(mTag, "malformed sequence");
-                last = LAST_PUNCT;  colon = true;
-            } else {
-                if (last == LAST_STAR || c == '0' && last == LAST_PUNCT)
-                    throw new ImapParseException(mTag, "malformed sequence");
-                last = LAST_DIGIT;
-            }
-        }
-        if (last == LAST_PUNCT)
-            throw new ImapParseException(mTag, "malformed sequence");
-        return value;
-    }
-    String readSequence() throws ImapParseException {
-        return validateSequence(readContent(SEQUENCE_CHARS));
-    }
 
     String readQuoted() throws ImapParseException {
         String content = getCurrentLine();
@@ -369,6 +294,98 @@ abstract class ImapRequest {
         else                return readQuoted();
     }
 
+
+    String readTag() throws ImapParseException   { return mTag = readContent(TAG_CHARS); }
+
+
+    static final boolean NONZERO = false, ZERO_OK = true;
+    String readNumber() throws ImapParseException  { return readNumber(ZERO_OK); }
+    String readNumber(boolean zeroOK) throws ImapParseException {
+        String number = readContent(NUMBER_CHARS);
+        if (number.startsWith("0") && (!zeroOK || number.length() > 1))
+            throw new ImapParseException(mTag, "invalid number: " + number);
+        return number;
+    }
+    int parseInteger(String number) throws ImapParseException {
+        try {
+            return Integer.parseInt(number);
+        } catch (NumberFormatException nfe) {
+            throw new ImapParseException(mTag, "number out of range: " + number);
+        }
+    }
+    long parseLong(String number) throws ImapParseException {
+        try {
+            return Long.parseLong(number);
+        } catch (NumberFormatException nfe) {
+            throw new ImapParseException(mTag, "number out of range: " + number);
+        }
+    }
+
+
+    byte[] readBase64(boolean skipEquals) throws ImapParseException {
+        // in some cases, "=" means to just return null and be done with it
+        if (skipEquals && peekChar() == '=') {
+            skipChar('=');  return null;
+        }
+
+        String encoded = readContent(BASE64_CHARS, true);
+        int padding = (4 - (encoded.length() % 4)) % 4;
+        if (padding == 3)
+            throw new ImapParseException(mTag, "invalid base64-encoded content");
+        while (padding-- > 0) {
+            skipChar('=');  encoded += "=";
+        }
+        try {
+            return new Base64().decode(encoded.getBytes("us-ascii"));
+        } catch (UnsupportedEncodingException e) {
+            throw new ImapParseException(mTag, "invalid base64-encoded content");
+        }
+    }
+
+
+    String readSequence(boolean specialsOK) throws ImapParseException {
+        return validateSequence(readContent(SEQUENCE_CHARS), specialsOK);
+    }
+
+    String readSequence() throws ImapParseException {
+        return validateSequence(readContent(SEQUENCE_CHARS), true);
+    }
+
+    private static final int LAST_PUNCT = 0, LAST_DIGIT = 1, LAST_STAR = 2;
+
+    private String validateSequence(String value, boolean specialsOK) throws ImapParseException {
+        // "$" is OK per draft-melnikov-imap-search-res-03
+        if (value.equals("$") && specialsOK && extensionEnabled("X-DRAFT-I05-SEARCHRES"))
+            return value;
+
+        int i, last = LAST_PUNCT;
+        boolean colon = false;
+        for (i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            if (c > 0x7F || c == '$' || !SEQUENCE_CHARS[c] || (c == '*' && !specialsOK)) {
+                throw new ImapParseException(mTag, "illegal character '" + c + "' in sequence");
+            } else if (c == '*') {
+                if (last == LAST_DIGIT)  throw new ImapParseException(mTag, "malformed sequence");
+                last = LAST_STAR;
+            } else if (c == ',') {
+                if (last == LAST_PUNCT)  throw new ImapParseException(mTag, "malformed sequence");
+                last = LAST_PUNCT;  colon = false;
+            } else if (c == ':') {
+                if (colon || last == LAST_PUNCT)  throw new ImapParseException(mTag, "malformed sequence");
+                last = LAST_PUNCT;  colon = true;
+            } else {
+                if (last == LAST_STAR || c == '0' && last == LAST_PUNCT)
+                    throw new ImapParseException(mTag, "malformed sequence");
+                last = LAST_DIGIT;
+            }
+        }
+        if (last == LAST_PUNCT)
+            throw new ImapParseException(mTag, "malformed sequence");
+        return value;
+    }
+
+
+
     String readFolder() throws IOException, ImapParseException {
         return readFolder(false);
     }
@@ -386,6 +403,7 @@ abstract class ImapRequest {
             return raw;
         }
     }
+
 
     private static Set<String> SYSTEM_FLAGS = new HashSet<String>(Arrays.asList("ANSWERED", "FLAGGED", "DELETED", "SEEN", "DRAFT"));
 
@@ -423,6 +441,7 @@ abstract class ImapRequest {
         return tags;
     }
 
+
     private Date readDate() throws ImapParseException {
         return readDate(mHandler.getDateFormat(), false);
     }
@@ -437,6 +456,7 @@ abstract class ImapRequest {
             throw new ImapParseException(mTag, "invalid date format");
         }
     }
+
 
     Map<String, String> readParameters(boolean nil) throws IOException, ImapParseException {
         if (peekChar() != '(') {
@@ -457,6 +477,7 @@ abstract class ImapRequest {
         skipChar(')');
         return params;
     }
+
 
     int readFetch(List<ImapPartSpecifier> parts) throws IOException, ImapParseException {
         boolean list = peekChar() == '(';
@@ -558,6 +579,7 @@ abstract class ImapRequest {
         return pspec;
     }
 
+
     private static final Map<String, String> NEGATED_SEARCH = new HashMap<String, String>();
         static {
             NEGATED_SEARCH.put("ANSWERED",   "UNANSWERED");
@@ -642,7 +664,7 @@ abstract class ImapRequest {
             else if (key.equals("YOUNGER") && extensionEnabled("WITHIN"))  { skipSpace(); child = new RelativeDateSearch(DateSearch.Relation.after, parseInteger(readNumber())); }
             else if (key.equals(SUBCLAUSE))     { skipChar('(');  child = readSearchClause(charset, MULTIPLE_CLAUSES, new AndOperation());  skipChar(')'); }
             else if (Character.isDigit(key.charAt(0)) || key.charAt(0) == '*' || key.charAt(0) == '$')
-                child = new SequenceSearch(validateSequence(key), false);
+                child = new SequenceSearch(validateSequence(key, true), false);
             else if (key.equals("OR")) {
                 skipSpace(); child = readSearchClause(charset, SINGLE_CLAUSE, new OrOperation());
                 skipSpace(); readSearchClause(charset, SINGLE_CLAUSE, (LogicalOperation) child);

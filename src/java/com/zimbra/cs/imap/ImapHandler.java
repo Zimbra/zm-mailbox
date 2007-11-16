@@ -103,7 +103,7 @@ import java.util.regex.Pattern;
 public abstract class ImapHandler extends ProtocolHandler {
     enum State { NOT_AUTHENTICATED, AUTHENTICATED, SELECTED, LOGOUT }
 
-    enum ActivatedExtension { CONDSTORE };
+    enum ActivatedExtension { CONDSTORE, QRESYNC };
 
     private static final long MAXIMUM_IDLE_PROCESSING_MILLIS = 15 * Constants.MILLIS_PER_SECOND;
 
@@ -338,7 +338,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                         checkEOF(tag, req);
                         return doEXPUNGE(tag, byUID, sequence);
                     } else if (command.equals("EXAMINE")) {
-                        byte params = 0;
+                        byte params = 0;  QResyncInfo qri = null;
                         req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mCredentials);
                         if (req.peekChar() == ' ') {
                             req.skipSpace();  req.skipChar('(');
@@ -346,14 +346,34 @@ public abstract class ImapHandler extends ProtocolHandler {
                                 if (params != 0)
                                     req.skipSpace();
                                 String param = req.readATOM();
-                                if (param.equals("CONDSTORE") && extensionEnabled("CONDSTORE"))  params |= ImapFolder.SELECT_CONDSTORE;
-                                else
-                                    throw new ImapParseException(tag, "unknown SELECT parameter \"" + param + '"');
+                                if (param.equals("CONDSTORE") && extensionEnabled("CONDSTORE")) {
+                                    params |= ImapFolder.SELECT_CONDSTORE;
+                                } else if (param.equals("QRESYNC") && isExtensionActivated(ActivatedExtension.QRESYNC)) {
+                                    params |= ImapFolder.SELECT_CONDSTORE;
+                                    qri = new QResyncInfo();
+                                    req.skipSpace();  req.skipChar('(');
+                                    qri.uvv = req.parseInteger(req.readNumber());  req.skipSpace();
+                                    qri.modseq = req.parseInteger(req.readNumber());
+                                    if (req.peekChar() == ' ') {
+                                        req.skipSpace();
+                                        if (req.peekChar() != '(')
+                                            qri.knownUIDs = req.readSequence(false);
+                                        if (qri.knownUIDs == null || req.peekChar() == ' ') {
+                                            if (qri.knownUIDs != null)  req.skipSpace();
+                                            req.skipChar('(');  qri.seqMilestones = req.readSequence(false);
+                                            req.skipSpace();    qri.uidMilestones = req.readSequence(false);
+                                            req.skipChar(')');
+                                        }
+                                    }
+                                    req.skipChar(')');
+                                } else {
+                                    throw new ImapParseException(tag, "unknown EXAMINE parameter \"" + param + '"');
+                                }
                             }
                             req.skipChar(')');
                         }
                         checkEOF(tag, req);
-                        return doEXAMINE(tag, path, params);
+                        return doEXAMINE(tag, path, params, qri);
                     } else if (command.equals("ENABLE") && extensionEnabled("ENABLE")) {
                         List<String> extensions = new ArrayList<String>();
                         do {
@@ -369,12 +389,26 @@ public abstract class ImapHandler extends ProtocolHandler {
                         int modseq = -1;
                         req.skipSpace();  String sequence = req.readSequence();
                         req.skipSpace();  int attributes = req.readFetch(parts);
-                        if (req.peekChar() == ' ' && extensionEnabled("CONDSTORE")) {
-                            req.skipSpace();  req.skipChar('(');  req.skipAtom("CHANGEDSINCE");  req.skipSpace();
-                            modseq = req.parseInteger(req.readNumber(ImapRequest.ZERO_OK));  req.skipChar(')');
+                        if (req.peekChar() == ' ') {
+                            boolean first = true;
+                            req.skipSpace();  req.skipChar('(');
+                            while (req.peekChar() != ')') {
+                                if (!first)
+                                    req.skipSpace();
+                                String modifier = req.readATOM();
+                                if (modifier.equals("CHANGEDSINCE") && extensionEnabled("CONDSTORE")) {
+                                    req.skipSpace();  modseq = req.parseInteger(req.readNumber(ImapRequest.ZERO_OK));
+                                } else if (modifier.equals("VANISHED") && byUID && isExtensionActivated(ActivatedExtension.QRESYNC)) {
+                                    attributes |= FETCH_VANISHED;
+                                } else {
+                                    throw new ImapParseException(tag, "bad FETCH modifier: " + modifier);
+                                }
+                                first = false;
+                            }
+                            req.skipChar(')');
                         }
                         checkEOF(tag, req);
-                        return doFETCH(tag, sequence, attributes, parts, modseq, byUID);
+                        return doFETCH(tag, sequence, attributes, parts, byUID, modseq);
                     }
                     break;
                 case 'G':
@@ -521,6 +555,43 @@ public abstract class ImapHandler extends ProtocolHandler {
 
                         checkEOF(tag, req);
                         return doSTORE(tag, sequence, flags, operation, silent, modseq, byUID);
+                    } else if (command.equals("SELECT")) {
+                        byte params = 0;  QResyncInfo qri = null;
+                        req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mCredentials);
+                        if (req.peekChar() == ' ') {
+                            req.skipSpace();  req.skipChar('(');
+                            while (req.peekChar() != ')') {
+                                if (params != 0)
+                                    req.skipSpace();
+                                String param = req.readATOM();
+                                if (param.equals("CONDSTORE") && extensionEnabled("CONDSTORE")) {
+                                    params |= ImapFolder.SELECT_CONDSTORE;
+                                } else if (param.equals("QRESYNC") && isExtensionActivated(ActivatedExtension.QRESYNC)) {
+                                    params |= ImapFolder.SELECT_CONDSTORE;
+                                    qri = new QResyncInfo();
+                                    req.skipSpace();  req.skipChar('(');
+                                    qri.uvv = req.parseInteger(req.readNumber());  req.skipSpace();
+                                    qri.modseq = req.parseInteger(req.readNumber());
+                                    if (req.peekChar() == ' ') {
+                                        req.skipSpace();
+                                        if (req.peekChar() != '(')
+                                            qri.knownUIDs = req.readSequence(false);
+                                        if (qri.knownUIDs == null || req.peekChar() == ' ') {
+                                            if (qri.knownUIDs != null)  req.skipSpace();
+                                            req.skipChar('(');  qri.seqMilestones = req.readSequence(false);
+                                            req.skipSpace();    qri.uidMilestones = req.readSequence(false);
+                                            req.skipChar(')');
+                                        }
+                                    }
+                                    req.skipChar(')');
+                                } else {
+                                    throw new ImapParseException(tag, "unknown SELECT parameter \"" + param + '"');
+                                }
+                            }
+                            req.skipChar(')');
+                        }
+                        checkEOF(tag, req);
+                        return doSELECT(tag, path, params, qri);
                     } else if (command.equals("SEARCH")) {
                         Integer options = null;
                         req.skipSpace();
@@ -546,23 +617,6 @@ public abstract class ImapHandler extends ProtocolHandler {
                         ImapSearch i4search = req.readSearch();
                         checkEOF(tag, req);
                         return doSEARCH(tag, i4search, byUID, options);
-                    } else if (command.equals("SELECT")) {
-                        byte params = 0;
-                        req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mCredentials);
-                        if (req.peekChar() == ' ') {
-                            req.skipSpace();  req.skipChar('(');
-                            while (req.peekChar() != ')') {
-                                if (params != 0)
-                                    req.skipSpace();
-                                String param = req.readATOM();
-                                if (param.equals("CONDSTORE") && extensionEnabled("CONDSTORE"))  params |= ImapFolder.SELECT_CONDSTORE;
-                                else
-                                    throw new ImapParseException(tag, "unknown SELECT parameter \"" + param + '"');
-                            }
-                            req.skipChar(')');
-                        }
-                        checkEOF(tag, req);
-                        return doSELECT(tag, path, params);
                     } else if (command.equals("STARTTLS") && extensionEnabled("STARTTLS")) {
                         checkEOF(tag, req);
                         return doSTARTTLS(tag);
@@ -672,15 +726,21 @@ public abstract class ImapHandler extends ProtocolHandler {
         return getState() == State.LOGOUT ? null : mSelectedFolder;
     }
 
-    void unsetSelectedFolder() {
-        if (mSelectedFolder != null)
+    void unsetSelectedFolder() throws IOException {
+        if (mSelectedFolder != null) {
             mSelectedFolder.unregister();
+            if (isExtensionActivated(ActivatedExtension.QRESYNC))
+                sendUntagged("[CLOSED]");
+        }
         mSelectedFolder = null;
     }
 
-    void setSelectedFolder(ImapFolder i4folder) throws ServiceException {
-        if (i4folder == mSelectedFolder)
+    void setSelectedFolder(ImapFolder i4folder) throws ServiceException, IOException {
+        if (i4folder == mSelectedFolder) {
+            if (isExtensionActivated(ActivatedExtension.QRESYNC))
+                sendUntagged("[CLOSED]");
             return;
+        }
 
         unsetSelectedFolder();
         if (i4folder == null)
@@ -716,8 +776,8 @@ public abstract class ImapHandler extends ProtocolHandler {
 
     private static final Set<String> SUPPORTED_EXTENSIONS = new LinkedHashSet<String>(Arrays.asList(
         "ACL", "BINARY", "CATENATE", "CHILDREN", "CONDSTORE", "ENABLE", "ESEARCH", "ID", "IDLE",
-        "LIST-EXTENDED", "LITERAL+", "LOGIN-REFERRALS", "MULTIAPPEND", "NAMESPACE", "QUOTA",
-        "RIGHTS=ektx", "SASL-IR", "UIDPLUS", "UNSELECT", "WITHIN", "X-DRAFT-I05-SEARCHRES"
+        "LIST-EXTENDED", "LITERAL+", "LOGIN-REFERRALS", "MULTIAPPEND", "NAMESPACE", "QUOTA", "RIGHTS=ektx",
+        "SASL-IR", "UIDPLUS", "UNSELECT", "WITHIN", "X-DRAFT-I05-SEARCHRES", "X-DRAFT-W05-QRESYNC"
     ));
 
     protected void sendCapability() throws IOException {
@@ -747,6 +807,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         // [UNSELECT]         RFC 3691: IMAP UNSELECT command
         // [WITHIN]           RFC 5032: WITHIN Search Extension to the IMAP Protocol
         // [X-DRAFT-I05-SEARCHRES]  draft-melnikov-imap-search-res-05: IMAP extension for referencing the last SEARCH result
+        // [X-DRAFT-W05-QRESYNC]    draft-ietf-lemonade-reconnect-client-06: IMAP4 Extensions for Quick Mailbox Resynchronization
 
         boolean authenticated = isAuthenticated();
         String nologin  = mStartedTLS || authenticated || mConfig.allowCleartextLogins()  ? "" : " LOGINDISABLED";
@@ -778,6 +839,8 @@ public abstract class ImapHandler extends ProtocolHandler {
             return extensionEnabled("ESEARCH");
         if (extension.equalsIgnoreCase("RIGHTS=ektx"))
             return extensionEnabled("ACL");
+        if (extension.equalsIgnoreCase("X-DRAFT-W05-QRESYNC"))
+            return extensionEnabled("CONDSTORE");
         // see if the user's session has disabled the extension
         if (extension.equalsIgnoreCase("IDLE") && mCredentials != null && mCredentials.isHackEnabled(EnabledHack.NO_IDLE))
             return false;
@@ -824,17 +887,18 @@ public abstract class ImapHandler extends ProtocolHandler {
         for (String ext : extensions) {
             // draft-gulbrandsen-imap-enable-03 3: "If the argument is not an extension known to
             //                                      the server, the server MUST ignore the argument."
-            if (!SUPPORTED_EXTENSIONS.contains(ext))
+            if (!extensionEnabled(ext))
                 continue;
 
-            // draft-gulbrandsen-imap-enable-03 3: "If the argument is an extension known to the server,
-            //                                      and it is not specifically permitted to enable it
-            //                                      using ENABLE, the server MUST respond with BAD."
-            try {
-                ActivatedExtension ax = ActivatedExtension.valueOf(ext);
-                if (extensionEnabled(ext))
-                    targets.add(ax);
-            } catch (IllegalArgumentException iae) {
+            if (ext.equals("CONDSTORE")) {
+                targets.add(ActivatedExtension.CONDSTORE);
+            } else if (ext.equals("X-DRAFT-W05-QRESYNC")) {
+                targets.add(ActivatedExtension.CONDSTORE);
+                targets.add(ActivatedExtension.QRESYNC);
+            } else {
+                // draft-gulbrandsen-imap-enable-03 3: "If the argument is an extension known to the server,
+                //                                      and it is not specifically permitted to enable it
+                //                                      using ENABLE, the server MUST respond with BAD."
                 throw new ImapParseException(tag, "non-enableable extension: " + ext);
             }
         }
@@ -1004,19 +1068,24 @@ public abstract class ImapHandler extends ProtocolHandler {
         return mCredentials;
     }
 
-    boolean doSELECT(String tag, ImapPath path, byte params) throws IOException {
-        return selectFolder(tag, "SELECT", path, params);
+    private static class QResyncInfo {
+        int uvv, modseq;
+        String knownUIDs, seqMilestones, uidMilestones;
     }
 
-    boolean doEXAMINE(String tag, ImapPath path, byte params) throws IOException {
-        return selectFolder(tag, "EXAMINE", path, (byte) (params | ImapFolder.SELECT_READONLY));
+    boolean doSELECT(String tag, ImapPath path, byte params, QResyncInfo qri) throws IOException, ImapParseException {
+        return selectFolder(tag, "SELECT", path, params, qri);
     }
 
-    private boolean selectFolder(String tag, String command, ImapPath path, byte params) throws IOException {
+    boolean doEXAMINE(String tag, ImapPath path, byte params, QResyncInfo qri) throws IOException, ImapParseException {
+        return selectFolder(tag, "EXAMINE", path, (byte) (params | ImapFolder.SELECT_READONLY), qri);
+    }
+
+    private boolean selectFolder(String tag, String command, ImapPath path, byte params, QResyncInfo qri) throws IOException, ImapParseException {
         if (!checkState(tag, State.AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
-        ImapFolder i4oldFolder = mSelectedFolder;
+        ImapFolder i4folder = null;
         boolean writable = command.equals("SELECT");
         List<String> permflags = Collections.emptyList();
         try {
@@ -1032,7 +1101,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                 return CONTINUE_PROCESSING;
             }
 
-            ImapFolder i4folder = null;
+            ImapFolder i4oldFolder = mSelectedFolder;
             if (i4oldFolder != null && !i4oldFolder.isVirtual() && path.isEquivalent(i4oldFolder.getPath())) {
                 try {
                     i4oldFolder.reopen(params);
@@ -1076,19 +1145,25 @@ public abstract class ImapHandler extends ProtocolHandler {
         // note: not sending back a "* OK [UIDNEXT ....]" response for search folders
         //    6.3.1: "If this is missing, the client can not make any assumptions about the
         //            next unique identifier value."
-        sendUntagged(mSelectedFolder.getSize() + " EXISTS");
-        sendUntagged(mSelectedFolder.getRecentCount() + " RECENT");
-        if (mSelectedFolder.getFirstUnread() > 0)
-        	sendUntagged("OK [UNSEEN " + mSelectedFolder.getFirstUnread() + ']');
-        sendUntagged("OK [UIDVALIDITY " + mSelectedFolder.getUIDValidity() + ']');
-        if (!mSelectedFolder.isVirtual())
-            sendUntagged("OK [UIDNEXT " + mSelectedFolder.getInitialUIDNEXT() + ']');
-        sendUntagged("FLAGS (" + StringUtil.join(" ", mSelectedFolder.getFlagList(false)) + ')');
+        sendUntagged(i4folder.getSize() + " EXISTS");
+        sendUntagged(i4folder.getRecentCount() + " RECENT");
+        if (i4folder.getFirstUnread() > 0)
+        	sendUntagged("OK [UNSEEN " + i4folder.getFirstUnread() + ']');
+        sendUntagged("OK [UIDVALIDITY " + i4folder.getUIDValidity() + ']');
+        if (!i4folder.isVirtual())
+            sendUntagged("OK [UIDNEXT " + i4folder.getInitialUIDNEXT() + ']');
+        sendUntagged("FLAGS (" + StringUtil.join(" ", i4folder.getFlagList(false)) + ')');
         sendUntagged("OK [PERMANENTFLAGS (" + StringUtil.join(" ", permflags) + ")]");
-        if (!mSelectedFolder.isVirtual())
-            sendUntagged("OK [HIGHESTMODSEQ " + mSelectedFolder.getInitialMODSEQ() + ']');
+        if (!i4folder.isVirtual())
+            sendUntagged("OK [HIGHESTMODSEQ " + i4folder.getInitialMODSEQ() + ']');
         else
             sendUntagged("OK [NOMODSEQ]");
+
+        if (qri != null && qri.uvv == i4folder.getUIDValidity() && !i4folder.isVirtual()) {
+            String knownUIDs = qri.knownUIDs == null ? "1:" + (i4folder.getInitialUIDNEXT() - 1) : qri.knownUIDs;
+            fetch(tag, knownUIDs, FETCH_FLAGS | FETCH_VANISHED, null, true, qri.modseq, false);
+        }
+
         sendOK(tag, (writable ? "[READ-WRITE] " : "[READ-ONLY] ") + command + " completed");
         return CONTINUE_PROCESSING;
     }
@@ -2417,6 +2492,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         if (!checkState(tag, State.SELECTED))
             return CONTINUE_PROCESSING;
 
+        boolean expunged = false;
         try {
             // 6.4.2: "The CLOSE command permanently removes all messages that have the \Deleted
             //         flag set from the currently selected mailbox, and returns to the authenticated
@@ -2425,15 +2501,23 @@ public abstract class ImapHandler extends ProtocolHandler {
             //         No messages are removed, and no error is given, if the mailbox is
             //         selected by an EXAMINE command or is otherwise selected read-only."
             if (mSelectedFolder.isWritable() && mSelectedFolder.getPath().isWritable(ACL.RIGHT_DELETE))
-                expungeMessages(mSelectedFolder, null);
+                expunged = expungeMessages(mSelectedFolder, null);
         } catch (ServiceException e) {
             // log the error but keep going...
             ZimbraLog.imap.warn("error during CLOSE", e);
         }
 
+        String status = "";
+        try {
+            if (expunged && !mSelectedFolder.isVirtual() && isExtensionActivated(ActivatedExtension.QRESYNC))
+                status = "[HIGHESTMODSEQ " + mSelectedFolder.getCurrentMODSEQ() + "] ";
+        } catch (ServiceException e) {
+            ZimbraLog.imap.info("error while determining HIGHESTMODSEQ of selected folder", e);
+        }
+
         unsetSelectedFolder();
 
-        sendOK(tag, "CLOSE completed");
+        sendOK(tag, status + "CLOSE completed");
         return CONTINUE_PROCESSING;
     }
 
@@ -2462,35 +2546,47 @@ public abstract class ImapHandler extends ProtocolHandler {
         }
 
         String command = (byUID ? "UID EXPUNGE" : "EXPUNGE");
+        boolean expunged = false;
         try {
             if (!mSelectedFolder.getPath().isWritable(ACL.RIGHT_DELETE))
                 throw ServiceException.PERM_DENIED("you do not have permission to delete messages from this folder");
 
-            expungeMessages(mSelectedFolder, sequenceSet);
+            expunged = expungeMessages(mSelectedFolder, sequenceSet);
         } catch (ServiceException e) {
             ZimbraLog.imap.warn(command + " failed", e);
             sendNO(tag, command + " failed");
             return canContinue(e);
         }
 
+        String status = "";
+        try {
+            if (expunged && byUID && !mSelectedFolder.isVirtual() && isExtensionActivated(ActivatedExtension.QRESYNC))
+                status = "[HIGHESTMODSEQ " + mSelectedFolder.getCurrentMODSEQ() + "] ";
+        } catch (ServiceException e) {
+            ZimbraLog.imap.info("error while determining HIGHESTMODSEQ of selected folder", e);
+        }
+
         sendNotifications(true, false);
-        sendOK(tag, command + " completed");
+        sendOK(tag, status + command + " completed");
         return CONTINUE_PROCESSING;
     }
 
-    void expungeMessages(ImapFolder i4folder, String sequenceSet) throws ServiceException, IOException {
+    boolean expungeMessages(ImapFolder i4folder, String sequenceSet) throws ServiceException, IOException {
         Set<ImapMessage> i4set;
         synchronized (mSelectedFolder.getMailbox()) {
             i4set = (sequenceSet == null ? null : i4folder.getSubsequence(sequenceSet, true));
         }
         List<Integer> ids = new ArrayList<Integer>(SUGGESTED_DELETE_BATCH_SIZE);
 
+        boolean changed = false;
         long checkpoint = System.currentTimeMillis();
         for (int i = 1, max = i4folder.getSize(); i <= max; i++) {
             ImapMessage i4msg = i4folder.getBySequence(i);
-            if (i4msg != null && !i4msg.isExpunged() && (i4msg.flags & Flag.BITMASK_DELETED) > 0)
-                if (i4set == null || i4set.contains(i4msg))
-                    ids.add(i4msg.msgId);
+            if (i4msg != null && !i4msg.isExpunged() && (i4msg.flags & Flag.BITMASK_DELETED) > 0) {
+                if (i4set == null || i4set.contains(i4msg)) {
+                    ids.add(i4msg.msgId);  changed = true;
+                }
+            }
 
             if (ids.size() >= (i == max ? 1 : SUGGESTED_DELETE_BATCH_SIZE)) {
                 try {
@@ -2501,7 +2597,6 @@ public abstract class ImapHandler extends ProtocolHandler {
                     for (int id : ids)
                         idsArray[counter++] = id;
                     mSelectedFolder.getMailbox().delete(getContext(), idsArray, MailItem.TYPE_UNKNOWN, null);
-                    
                 } catch (MailServiceException.NoSuchItemException e) {
                     // something went wrong, so delete *this* batch one at a time
                     for (int id : ids) {
@@ -2524,6 +2619,8 @@ public abstract class ImapHandler extends ProtocolHandler {
                 }
             }
         }
+
+        return changed;
     }
 
     private static final int RETURN_MIN   = 0x01;
@@ -2656,6 +2753,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     static final int FETCH_BINARY_SIZE   = 0x0040;
     static final int FETCH_UID           = 0x0080;
     static final int FETCH_MODSEQ        = 0x0100;
+    static final int FETCH_VANISHED      = 0x0200;
     static final int FETCH_MARK_READ     = 0x1000;
 
     private static final int FETCH_FROM_CACHE = FETCH_FLAGS | FETCH_UID;
@@ -2665,9 +2763,16 @@ public abstract class ImapHandler extends ProtocolHandler {
     static final int FETCH_ALL  = FETCH_FAST  | FETCH_ENVELOPE;
     static final int FETCH_FULL = FETCH_ALL   | FETCH_BODY;
 
-    boolean doFETCH(String tag, String sequenceSet, int attributes, List<ImapPartSpecifier> parts, int changedSince, boolean byUID) throws IOException, ImapParseException {
+    boolean doFETCH(String tag, String sequenceSet, int attributes, List<ImapPartSpecifier> parts, boolean byUID, int changedSince) throws IOException, ImapParseException {
+        return fetch(tag, sequenceSet, attributes, parts, byUID, changedSince, true);
+    }
+
+    boolean fetch(String tag, String sequenceSet, int attributes, List<ImapPartSpecifier> parts, boolean byUID, int changedSince, boolean standalone)
+    throws IOException, ImapParseException {
         if (!checkState(tag, State.SELECTED))
             return CONTINUE_PROCESSING;
+
+        ImapFolder i4folder = mSelectedFolder;
 
         // 6.4.8: "However, server implementations MUST implicitly include the UID message
         //         data item as part of any FETCH response caused by a UID command, regardless
@@ -2675,7 +2780,13 @@ public abstract class ImapHandler extends ProtocolHandler {
         if (byUID)
             attributes |= FETCH_UID;
         String command = (byUID ? "UID FETCH" : "FETCH");
-        boolean markRead = mSelectedFolder.isWritable() && (attributes & FETCH_MARK_READ) != 0;
+        boolean markRead = i4folder.isWritable() && (attributes & FETCH_MARK_READ) != 0;
+
+        // draft-ietf-lemonade-reconnect-client-06 3.2: "The VANISHED UID FETCH modifier MUST
+        //                                               only be specified together with
+        //                                               the CHANGEDSINCE UID FETCH modifier."
+        if ((attributes & FETCH_VANISHED) != 0 && (!byUID || changedSince < 0))
+            throw new ImapParseException(tag, "cannot specify VANISHED without CHANGEDSINCE");
 
         if (changedSince >= 0)
             attributes |= FETCH_MODSEQ;
@@ -2703,26 +2814,39 @@ public abstract class ImapHandler extends ProtocolHandler {
         }
 
         ImapMessageSet i4set;
-        Mailbox mbox = mSelectedFolder.getMailbox();
+        Mailbox mbox = i4folder.getMailbox();
         synchronized (mbox) {
-            i4set = mSelectedFolder.getSubsequence(sequenceSet, byUID);
+            i4set = i4folder.getSubsequence(sequenceSet, byUID);
         }
         boolean allPresent = byUID || !i4set.contains(null);
         i4set.remove(null);
+
+        // if VANISHED was requested, we need to return the set of UIDs that *don't* exist in the folder
+        if (byUID && (attributes & FETCH_VANISHED) != 0) {
+            int highwater = Integer.MAX_VALUE;
+            try {
+                highwater = i4folder.getCurrentMODSEQ();
+            } catch (ServiceException e) { }
+            if (highwater > changedSince) {
+                String vanished = i4folder.invertSubsequence(sequenceSet, byUID, i4set);
+                if (!vanished.equals(""))
+                    sendUntagged("VANISHED (EARLIER) " + vanished);
+            }
+        }
 
         // if a CHANGEDSINCE sequence number was specified, narrow the message set before iterating over the messages
         if (changedSince >= 0) {
             try {
                 // get a list of all the messages modified since the checkpoint
-                Set<Integer> folderId = new HashSet<Integer>(Arrays.asList(mSelectedFolder.getId()));
+                Set<Integer> folderId = new HashSet<Integer>(Arrays.asList(i4folder.getId()));
                 ImapMessageSet modified = new ImapMessageSet();
                 for (int id : mbox.getModifiedItems(getContext(), changedSince, MailItem.TYPE_UNKNOWN, folderId).getFirst()) {
-                    ImapMessage i4msg = mSelectedFolder.getById(id);
+                    ImapMessage i4msg = i4folder.getById(id);
                     if (i4msg != null)
                         modified.add(i4msg);
                 }
                 // add any messages with tags whose names have been changed since the checkpoint
-                ImapFlagCache i4cache = mSelectedFolder.getTagset();
+                ImapFlagCache i4cache = i4folder.getTagset();
                 if (i4cache.getMaximumModseq() > changedSince) {
                     for (ImapMessage i4msg : i4set) {
                         if (i4msg.getFlagModseq(i4cache) > changedSince)
@@ -2732,16 +2856,18 @@ public abstract class ImapHandler extends ProtocolHandler {
                 // and intersect those "modified" messages with the set of requested messages
                 i4set.retainAll(modified);
             } catch (ServiceException e) {
-                ZimbraLog.imap.warn(command + " failed", e);
-                sendNO(tag, command + " failed");
-                return canContinue(e);
+                if (standalone) {
+                    ZimbraLog.imap.warn(command + " failed", e);
+                    sendNO(tag, command + " failed");
+                    return canContinue(e);
+                }
             }
         }
 
         synchronized (mbox) {
-            if (mSelectedFolder.areTagsDirty()) {
-                sendUntagged("FLAGS (" + StringUtil.join(" ", mSelectedFolder.getFlagList(false)) + ')');
-                mSelectedFolder.cleanTags();
+            if (i4folder.areTagsDirty()) {
+                sendUntagged("FLAGS (" + StringUtil.join(" ", i4folder.getFlagList(false)) + ')');
+                i4folder.cleanTags();
             }
         }
 
@@ -2758,7 +2884,7 @@ public abstract class ImapHandler extends ProtocolHandler {
 
                 result.print("* " + i4msg.sequence + " FETCH (");
 
-                if (!fullMessage.isEmpty() || !parts.isEmpty() || (attributes & ~FETCH_FROM_CACHE) != 0) {
+                if (!fullMessage.isEmpty() || (parts != null && !parts.isEmpty()) || (attributes & ~FETCH_FROM_CACHE) != 0) {
                     item = mbox.getItemById(getContext(), i4msg.msgId, i4msg.getType());
                 }
 
@@ -2783,7 +2909,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                     }
                 }
 
-                if (!parts.isEmpty() || (attributes & FETCH_FROM_MIME) != 0) {
+                if ((parts != null && !parts.isEmpty()) || (attributes & FETCH_FROM_MIME) != 0) {
                     mm = ImapMessage.getMimeMessage(item, raw);
                     if ((attributes & FETCH_BODY) != 0) {
                         result.print(empty ? "" : " ");  result.print("BODY ");
@@ -2808,16 +2934,16 @@ public abstract class ImapHandler extends ProtocolHandler {
                 if (markMessage) {
                     mbox.alterTag(getContext(), i4msg.msgId, i4msg.getType(), Flag.ID_FLAG_UNREAD, false, null);
                 }
-                ImapFolder.DirtyMessage unsolicited = mSelectedFolder.undirtyMessage(i4msg);
+                ImapFolder.DirtyMessage unsolicited = i4folder.undirtyMessage(i4msg);
                 if ((attributes & FETCH_FLAGS) != 0 || unsolicited != null) {
-                    result.print(empty ? "" : " ");  result.print(i4msg.getFlags(mSelectedFolder));  empty = false;
+                    result.print(empty ? "" : " ");  result.print(i4msg.getFlags(i4folder));  empty = false;
                 }
 
                 // RFC 4551 3.2: "Once the client specified the MODSEQ message data item in a
                 //                FETCH request, the server MUST include the MODSEQ fetch response
                 //                data items in all subsequent unsolicited FETCH responses."
                 if ((attributes & FETCH_MODSEQ) != 0 || (modseqEnabled && unsolicited != null)) {
-                    int modseq = unsolicited == null ? i4msg.getModseq(item, mSelectedFolder.getTagset()) : unsolicited.modseq;
+                    int modseq = unsolicited == null ? i4msg.getModseq(item, i4folder.getTagset()) : unsolicited.modseq;
                     result.print((empty ? "" : " ") + "MODSEQ (" + modseq + ')');  empty = false;
                 }
             } catch (ImapPartSpecifier.BinaryDecodingException e) {
@@ -2841,14 +2967,16 @@ public abstract class ImapHandler extends ProtocolHandler {
             }
         }
 
-        sendNotifications(false, false);
-        if (allPresent) {
-        	sendOK(tag, command + " completed");
-        } else {
-        	// RFC 2180 4.1.2: "The server MAY allow the EXPUNGE of a multi-accessed mailbox,
-            //                  and on subsequent FETCH commands return FETCH responses only
-		    //                  for non-expunged messages and a tagged NO."
-        	sendNO(tag, "some of the requested messages no longer exist");
+        if (standalone) {
+            sendNotifications(false, false);
+            if (allPresent) {
+                sendOK(tag, command + " completed");
+            } else {
+                // RFC 2180 4.1.2: "The server MAY allow the EXPUNGE of a multi-accessed mailbox,
+                //                  and on subsequent FETCH commands return FETCH responses only
+                //                  for non-expunged messages and a tagged NO."
+                sendNO(tag, "some of the requested messages no longer exist");
+            }
         }
         return CONTINUE_PROCESSING;
     }
@@ -3226,8 +3354,15 @@ public abstract class ImapHandler extends ProtocolHandler {
             int oldRecent = i4folder.getRecentCount();
             boolean removed = false, received = i4folder.checkpointSize();
             if (notifyExpunges) {
-                for (Integer index : i4folder.collapseExpunged()) {
-                    sendUntagged(index + " EXPUNGE");  removed = true;
+                List<Integer> expunged = i4folder.collapseExpunged();
+                removed = !expunged.isEmpty();
+                if (removed) {
+                    if (isExtensionActivated(ActivatedExtension.QRESYNC)) {
+                        sendUntagged("VANISHED " + ImapFolder.encodeSubsequence(expunged));
+                    } else {
+                        for (Integer index : expunged)
+                            sendUntagged(index + " EXPUNGE");
+                    }
                 }
             }
             i4folder.checkpointSize();

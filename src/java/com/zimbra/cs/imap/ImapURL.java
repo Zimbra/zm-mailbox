@@ -282,7 +282,7 @@ class ImapURL {
         }
     }
 
-    public static void main(String[] args) throws ImapParseException, ServiceException {
+    public static void main(String[] args) throws ImapParseException, ServiceException, IOException {
         Account acct = Provisioning.getInstance().get(AccountBy.name, "user1@macbeth.liquidsys.com");
         ImapHandler handler = new TcpImapHandler(null);
         ImapCredentials creds = new ImapCredentials(acct, ImapCredentials.EnabledHack.NONE);

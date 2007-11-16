@@ -360,10 +360,10 @@ public class TcpImapHandler extends ImapHandler {
         handler.doLIST("D005", "/", patterns, (byte) 0, (byte) 0);
 
         System.out.println("> A006 SELECT \"/floo\"");
-        handler.doSELECT("A006", new ImapPath("/floo", null), (byte) 0);
+        handler.doSELECT("A006", new ImapPath("/floo", null), (byte) 0, null);
 
         System.out.println("> B006 SELECT \"/INBOX\"");
-        handler.doSELECT("B006", new ImapPath("/INBOX", null), (byte) 0);
+        handler.doSELECT("B006", new ImapPath("/INBOX", null), (byte) 0, null);
 
         System.out.println("> A007 STATUS \"/Sent\" (UNSEEN UIDVALIDITY MESSAGES)");
         handler.doSTATUS("A007", new ImapPath("/Sent", null), STATUS_UNSEEN | STATUS_UIDVALIDITY | STATUS_MESSAGES);
@@ -372,15 +372,15 @@ public class TcpImapHandler extends ImapHandler {
         handler.doSTATUS("B007", new ImapPath("/INBOX", null), STATUS_UNSEEN | STATUS_UIDVALIDITY | STATUS_MESSAGES);
 
         System.out.println("> A008 FETCH 1:3,*:1234 FULL");
-        handler.doFETCH("A008", "1:3,*:1234", FETCH_FULL, parts, -1, false);
+        handler.doFETCH("A008", "1:3,*:1234", FETCH_FULL, parts, false, -1);
 
         System.out.println("> A009 UID FETCH 444,288,602:593 FULL");
-        handler.doFETCH("A009", "444,288,602:593", FETCH_FULL, parts, -1, true);
+        handler.doFETCH("A009", "444,288,602:593", FETCH_FULL, parts, true, -1);
 
         System.out.println("> A010 FETCH 7 (ENVELOPE BODY.PEEK[1] BODY[HEADER.FIELDS (DATE SUBJECT)]");
         List<String> headers = new LinkedList<String>();  headers.add("date");  headers.add("subject");
         parts.clear();  parts.add(new ImapPartSpecifier("BODY", "1", ""));  parts.add(new ImapPartSpecifier("BODY", "", "HEADER.FIELDS").setHeaders(headers));
-        handler.doFETCH("A010", "7", FETCH_ENVELOPE, parts, -1, false);
+        handler.doFETCH("A010", "7", FETCH_ENVELOPE, parts, false, -1);
 
         System.out.println("> A011 STORE 1 +FLAGS ($MDNSent)");
         List<String> flags = new ArrayList<String>();  flags.add("$MDNSENT");
