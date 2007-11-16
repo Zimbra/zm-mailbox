@@ -30,6 +30,7 @@ import java.util.Set;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ClassLoaderUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Cos;
@@ -52,6 +53,7 @@ public class SkinUtil {
     
     private static String findSkin(ClassLoader classLoader, File dir) throws ServiceException {
         String skinName = null;
+        String version = null;
         
         String relResName = "./" + dir.getName() + "/" + "skin.properties";
         
@@ -60,14 +62,25 @@ public class SkinUtil {
         if (url != null) {
             Properties props = new Properties();
             try {
-				FileInputStream stream = new FileInputStream(new File(url.getFile()));
+				FileInputStream stream;
+				stream = new FileInputStream(new File(url.getFile()));
 				try {
 					props.load(stream);
 					skinName = props.getProperty("SkinName");
+					
+					// check SkinVersion -- we only allow SkinVersion=2 skins
+//					version = props.getProperty("SkinVersion");
+//	ZimbraLog.webclient.debug("checking skin '"+dir.getName()+"' version="+version );
+//					if ("2".equals(version)) {
+//						skinName = null;
+//						throw new IOException("skin.properties file is incompatible with this release (missing SkinVersion=2)");
+//					}
 				} finally {
 					stream.close();
 				}
+				ZimbraLog.webclient.debug("Loaded skin '"+dir.getName()+"'" );
 			} catch (IOException e) {
+				ZimbraLog.webclient.warn("Error loading skin '"+dir.getName()+"':" + e.getMessage() );
                 // no such property
             }
         }
@@ -76,6 +89,7 @@ public class SkinUtil {
     }
     
     private static String[] loadSkins() throws ServiceException {
+		ZimbraLog.webclient.debug("Loading skins..." );
         String skinsDir = LC.skins_directory.value();
         ClassLoader classLoader = ClassLoaderUtil.getClassLoaderByDirectory(skinsDir);
         if (classLoader == null)
@@ -100,7 +114,8 @@ public class SkinUtil {
         
         String[] sortedSkins = skins.toArray(new String[skins.size()]);
         Arrays.sort(sortedSkins);
-        
+
+		ZimbraLog.webclient.debug("Skin loading complete." );        
         return sortedSkins;
     }
     
@@ -129,18 +144,21 @@ public class SkinUtil {
 		// If the requested skin is intalled and allowed, return it.
 		Set<String> allowedSkins = acct.getMultiAttrSet(Provisioning.A_zimbraAvailableSkin);
 		if (checkSkin(requestedSkin, installedSkins, allowedSkins)) {
+			ZimbraLog.webclient.debug("Loading requested skin "+requestedSkin );
 			return requestedSkin;
 		}
 
 		// If the account's skin is intalled and allowed, return it.
 		String accountSkin = acct.getAttr(Provisioning.A_zimbraPrefSkin);
 		if (checkSkin(accountSkin, installedSkins, allowedSkins)) {
+			ZimbraLog.webclient.debug("Loading account skin "+accountSkin );
 			return accountSkin;
 		}
 
 		// If the cos default skin is intalled and allowed, return it.
 		String cosSkin = Provisioning.getInstance().getCOS(acct).getAttr(Provisioning.A_zimbraPrefSkin);
 		if (checkSkin(cosSkin, installedSkins, allowedSkins)) {
+			ZimbraLog.webclient.debug("Loading COS skin "+cosSkin );
 			return cosSkin;
 		}
 
@@ -148,12 +166,14 @@ public class SkinUtil {
 		String usuallyAvailableSkin = "sand";
 		if (accountSkin != usuallyAvailableSkin && cosSkin != usuallyAvailableSkin) {
 			if (checkSkin(usuallyAvailableSkin, installedSkins, allowedSkins)) {
+				ZimbraLog.webclient.debug("Loading default skin "+usuallyAvailableSkin );
 				return usuallyAvailableSkin;
 			}
 		}
 
 		// Return some installed skin.
 		if (installedSkins.length > 0) {
+			ZimbraLog.webclient.debug("Returning first known skin "+installedSkins[0] );
 			return installedSkins[0];
 		}
 

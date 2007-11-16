@@ -37,6 +37,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.common.util.ZimbraLog;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -164,6 +165,7 @@ public class Auth extends AccountDocumentHandler {
 		Element requestedSkinEl = request.getOptionalElement(AccountConstants.E_REQUESTED_SKIN);
 		String requestedSkin = requestedSkinEl != null ? requestedSkinEl.getText() : null;  
 		String skin = SkinUtil.chooseSkin(acct, requestedSkin);
+		ZimbraLog.webclient.debug("chooseSkin() returned "+skin );
 		if (skin != null) {
 			response.addElement(AccountConstants.E_SKIN).setText(skin);
 		}
