@@ -785,9 +785,9 @@
         <delete dir="${webserver.root.dir}/webapps/service"/>
         <delete file="${webserver.root.dir}/webapps/service.war"/>
 
-        <delete dir="${zimbra.home.dir}/openldap/var/openldap-data"/>
+        <delete dir="${zimbra.home.dir}/openldap-data"/>
 
-        <mkdir dir="${zimbra.home.dir}/openldap/var/openldap-data"/>
+        <mkdir dir="${zimbra.home.dir}/openldap-data"/>
         <mkdir dir="${zimbra.home.dir}/log"/>
         <mkdir dir="${zimbra.home.dir}/zmstat"/>
         <mkdir dir="${zimbra.home.dir}/store"/>
@@ -853,14 +853,14 @@
     <target name="ldap-add">
         <echo>Loading ${ldif.file}</echo>
         <exec failonerror="true" executable="${ldapmodify}">
-            <arg line="-a -c -w zimbra -D uid=zimbra,cn=admins,cn=zimbra -x -f ${ldif.file}"/>
+            <arg line="-a -c -w zimbra -D cn=config -x -f ${ldif.file}"/>
         </exec>
     </target>
 
     <target name="ldap-modify">
         <echo>Loading ${ldif.file}</echo>
         <exec failonerror="true" executable="${ldapmodify}">
-            <arg line="-c -w zimbra -D uid=zimbra,cn=admins,cn=zimbra -x -f ${ldif.file}"/>
+            <arg line="-c -w zimbra -D cn=config -x -f ${ldif.file}"/>
         </exec>
     </target>
 
