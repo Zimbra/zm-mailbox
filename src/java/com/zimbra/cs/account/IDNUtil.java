@@ -24,7 +24,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 public class IDNUtil {
-    private static final String ACE_PREFIX = "xn--";
+    public static final String ACE_PREFIX = "xn--";
     
     /*
      * convert an unicode domain name to ACE(ASCII Compatible Encoding)
@@ -99,8 +99,10 @@ public class IDNUtil {
     }
     
     public static void main(String arsg[]) {
-        String u1 = "abc.\u5f35\u611b\u73b2" + ".jp";
+        // String u1 = "abc.\u5f35\u611b\u73b2" + ".jp";
         // String u1 = "abc.XYZ" + ".jp";
+        // String u1 = "my.xyz\u4e2d\u6587abc.com";
+        String u1 = "\u4e2d\u6587.xyz\u4e2d\u6587abc.com";
         String a1 = toAsciiDomainName(u1);
         System.out.println("u1: " + u1);
         System.out.println("a1: " + a1);

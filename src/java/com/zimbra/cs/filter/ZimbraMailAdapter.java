@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,6 +33,7 @@ import javax.mail.Address;
 import javax.mail.Header;
 import javax.mail.MessagingException;
 import javax.mail.Transport;
+import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
@@ -47,6 +49,7 @@ import org.apache.jsieve.mail.SieveMailException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.filter.jsieve.ActionTag;
 import com.zimbra.cs.mailbox.Flag;
@@ -70,6 +73,11 @@ public class ZimbraMailAdapter implements MailAdapter
     private static String sSpamHeader;
     private static Pattern sSpamHeaderValue;
     protected SharedDeliveryContext mSharedDeliveryCtxt;
+    
+    /**
+     * Set of address headers that need to be processed for IDN.
+     */
+    private static Set<String> sAddrHdrs;
     
     /**
      * The message being adapted.
@@ -103,6 +111,14 @@ public class ZimbraMailAdapter implements MailAdapter
             ZimbraLog.filter.fatal("Unable to get spam header from provisioning", e);
             throw new RuntimeException("Unable to get spam header from provisioning", e);
         }
+        
+        sAddrHdrs = new HashSet<String>();
+        sAddrHdrs.add("bcc");
+        sAddrHdrs.add("cc");
+        sAddrHdrs.add("from");
+        sAddrHdrs.add("reply-to");
+        sAddrHdrs.add("sender");
+        sAddrHdrs.add("to");
     }
     
             
@@ -402,10 +418,61 @@ public class ZimbraMailAdapter implements MailAdapter
         return getActions().listIterator();
     }
 
+    private List<String> handleIDN(String headerName, String[] headers) {
+
+        List hdrs = new ArrayList<String>();
+        for (int i = 0; i < headers.length; i++) {
+            boolean altered = false;
+            
+            if (headers[i].contains(IDNUtil.ACE_PREFIX)) {
+                // handle multiple addresses in a header
+                StringTokenizer st = new StringTokenizer(headers[i], ",;", true);
+                StringBuffer addrs = new StringBuffer();
+                while (st.hasMoreTokens()) {
+                    String address = st.nextToken();
+                    String delim = st.hasMoreTokens()?st.nextToken():"";
+                    try {
+                        InternetAddress inetAddr = new InternetAddress(address);
+                        String addr = inetAddr.getAddress();
+                        String unicodeAddr = IDNUtil.toUnicode(addr);
+                        if (unicodeAddr.equalsIgnoreCase(addr)) {
+                            addrs.append(address).append(delim);
+                        } else {
+                            altered = true;
+                            // put the unicode addr back to the address
+                            inetAddr.setAddress(unicodeAddr);
+                            addrs.append(inetAddr.toString()).append(delim);
+                        }
+                    } catch (AddressException e) {
+                        ZimbraLog.filter.warn("handleIDN encountered invalid address " + address + "in header " + headerName);
+                        addrs.append(address).append(delim);  // put back the orig address
+                    }
+                }
+                
+                // if altered, add the altered value
+                if (altered) {
+                    String unicodeAddrs = addrs.toString();
+                    ZimbraLog.filter.debug("handleIDN added value " + unicodeAddrs + " for header " + headerName);
+                    hdrs.add(unicodeAddrs);
+                }
+            }
+            
+            // always put back the orig value
+            hdrs.add(headers[i]);
+            
+        }
+        
+        return hdrs;
+    }
+    
     public List<String> getHeader(String name)
     {
         String[] headers = mParsedMessage.getHeaders(name);
-        return (headers == null ? new ArrayList(0) : Arrays.asList(headers));
+        
+        if (sAddrHdrs.contains(name.toLowerCase()))
+            return handleIDN(name, headers);
+        else
+            return (headers == null ? new ArrayList(0) : Arrays.asList(headers));
     }
 
     public List<String> getHeaderNames() throws SieveMailException

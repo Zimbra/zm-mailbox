@@ -38,9 +38,15 @@ The 3 RFCs boil down to the following summaries:
 
 
 For example:
-           Unicode name: my.中文.cn
-    Equivalent ACE name: my.xn--fiq228c.cn
+          Unicode name     ACE name
+   ---------------------------------------
+            my.中文.com     my.xn--fiq228c.com
+      my.xyz中文abc.com     my.xn--xyzabc-dw7i870n.com
+     中文.xyz中文abc.com     xn--fiq228c.xn--xyzabc-dw7i870n.com 
            
+Note:
+   - The conversion is on "label(dot separated segments) basis", not on individual characters nor the entire domain name.
+   - Let's say {X}{Y}{Z} are non-ASCII characters, ACE for {X} is not necessarily a substring of ACE for {X}{Y} or ACE for {X}{Y}{Z}. 
 
 links:
 http://www.icann.org/topics/idn.html
@@ -223,8 +229,10 @@ http://bugzilla.zimbra.com/show_bug.cgi?id=14225
     the server as described in 2.4.
 
 
-2.6 Sieve Rules
-    TODO
+2.6 Filter(sieve) Rules
+    We use jSieve for filtering mails for designated actions.  During filter processing of 
+    of headers, if the header is From, To, CC, Bcc, Reply-To, or Sender, we convert domains 
+    into Unicode and return both Unicode and ACE names for each IDN domain.
     
 
 ===================  
