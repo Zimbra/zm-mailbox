@@ -178,10 +178,16 @@ public abstract class CalendarItem extends MailItem {
         if (DebugConfig.disableIndexing)
             return;
         
+        long start = System.currentTimeMillis();
         List<org.apache.lucene.document.Document> docs = getLuceneDocuments();
-        
+        long split1 = System.currentTimeMillis();
+
         mMailbox.getMailboxIndex().indexCalendarItem(mMailbox, redo, deleteFirst, this, 
             docs, getDate());
+        long split2 = System.currentTimeMillis();
+        long time1 = split1-start;
+        long time2 = split2-split1;
+//        ZimbraLog.index.info("CalendarItem.reindex("+time1+", "+time2+")");
     }
     
     protected List<org.apache.lucene.document.Document> getLuceneDocuments() throws ServiceException {
@@ -199,34 +205,65 @@ public abstract class CalendarItem extends MailItem {
         if (defaultInvite != null && defaultInvite.getLocation() != null)
             defaultLocation = defaultInvite.getLocation();
         
+        String defaultName= "";
+        if (defaultInvite != null && defaultInvite.getName() != null)
+            defaultName = defaultInvite.getName();
+        
         for (Invite inv : getInvites()) {
-            MimeMessage mm = inv.getMimeMessage();
-            if (mm == null)
-                continue;
-            
-            try {
+            if (inv.getDontIndexMimeMessage()) {
+                // this invite has no MimeMessage part, so don't bother trying to fetch it...instead
+                // just build the Lucene document directly from the data we already have
+                org.apache.lucene.document.Document doc = new org.apache.lucene.document.Document();
                 StringBuilder s = new StringBuilder();
                 for (ZAttendee at : inv.getAttendees()) {
-                    mm.addRecipient(RecipientType.TO, at.getFriendlyAddress());
+                    doc.add(new Field(LuceneFields.L_H_TO, at.getFriendlyAddress().toString(), Field.Store.NO, Field.Index.TOKENIZED));
                     s.append(at.getIndexString()).append(' ');
                 }
-                
+                s.append(' ');
                 if (inv.getLocation() != null) {
                     s.append(inv.getLocation()).append(' ');
                 }  else {
                     s.append(defaultLocation).append(' ');
                 }
-                
-                mm.saveChanges();
-                
-                ParsedMessage pm = new ParsedMessage(mm, mMailbox.attachmentsIndexingEnabled());
-                List<org.apache.lucene.document.Document> docs = pm.getLuceneDocuments();
-                for (org.apache.lucene.document.Document doc : docs) {
-                    doc.add(new Field(LuceneFields.L_CONTENT, s.toString(), Field.Store.NO, Field.Index.TOKENIZED));
-                    toRet.add(doc);
+                if (inv.getName() != null) {
+                    s.append(inv.getName()).append(' ');
+                } else {
+                    s.append(defaultName).append(' ');
                 }
-            } catch(MessagingException e) {
-                throw ServiceException.FAILURE("Failure Indexing: " + toString(), e);
+                s.append(inv.getDescription()).append(' ');
+                s.append(inv.getComment()).append(' ');
+                doc.add(new Field(LuceneFields.L_CONTENT, s.toString(), Field.Store.NO, Field.Index.TOKENIZED));
+                toRet.add(doc);
+            } else {
+                MimeMessage mm = inv.getMimeMessage();
+                
+                if (mm == null)
+                    continue;
+                
+                try {
+                    StringBuilder s = new StringBuilder();
+                    for (ZAttendee at : inv.getAttendees()) {
+                        mm.addRecipient(RecipientType.TO, at.getFriendlyAddress());
+                        s.append(at.getIndexString()).append(' ');
+                    }
+                    
+                    if (inv.getLocation() != null) {
+                        s.append(inv.getLocation()).append(' ');
+                    }  else {
+                        s.append(defaultLocation).append(' ');
+                    }
+                    
+                    mm.saveChanges();
+                    
+                    ParsedMessage pm = new ParsedMessage(mm, mMailbox.attachmentsIndexingEnabled());
+                    List<org.apache.lucene.document.Document> docs = pm.getLuceneDocuments();
+                    for (org.apache.lucene.document.Document doc : docs) {
+                        doc.add(new Field(LuceneFields.L_CONTENT, s.toString(), Field.Store.NO, Field.Index.TOKENIZED));
+                        toRet.add(doc);
+                    }
+                } catch(MessagingException e) {
+                    throw ServiceException.FAILURE("Failure Indexing: " + toString(), e);
+                }
             }
         }
         

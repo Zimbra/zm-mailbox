@@ -3482,7 +3482,7 @@ public class Mailbox {
      * @param octxt
      * @param inv
      * @param force if true, then force override the existing calendar item, false use normal RFC2446 sequencing rules
-     * @param pm
+     * @param pm NULL is OK here
      * 
      * @return int[2] = { calendar-item-id, invite-mail-item-id }  Note that even though the invite has a mail-item-id, that mail-item does not really exist, it can ONLY be referenced through the calendar item "calItemId-invMailItemId"
      * @throws ServiceException
@@ -3491,6 +3491,7 @@ public class Mailbox {
                                         long nextAlarm)
     throws ServiceException {
         if (pm == null) {
+            inv.setDontIndexMimeMessage(true); // the MimeMessage is fake, so we don't need to index it
             MimeMessage mm = CalendarMailSender.createCalendarMessage(inv);
             pm = new ParsedMessage(mm, octxt == null ? System.currentTimeMillis() : octxt.getTimestamp(), true);
         }

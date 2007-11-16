@@ -315,7 +315,7 @@ public class Invite {
     private static final String FN_NUM_ALARMS      = "numAl";
     private static final String FN_ALARM           = "al";
     private static final String FN_XPROP_OR_XPARAM = "x";
-
+    private static final String FN_DONT_INDEX_MM   = "noidxmm";
 
     /**
      * This is only really public to support serializing RedoOps -- you
@@ -395,6 +395,8 @@ public class Invite {
         if (inv.mXProps.size() > 0)
             encodeXPropsAsMetadata(meta, inv.xpropsIterator());
         
+        if (inv.mDontIndexMimeMessage)
+            meta.put(FN_DONT_INDEX_MM, true);
         return meta;
     }
 
@@ -619,6 +621,8 @@ public class Invite {
                 invite.addXProp(xprop);
             }
         }
+        
+        invite.setDontIndexMimeMessage(meta.getBool(FN_DONT_INDEX_MM, false));
 
         return invite;
     }
@@ -659,6 +663,18 @@ public class Invite {
 
     private static final int CACHED_DESC_MAXLEN = 1024;
     private String mDescription;
+    
+    /**
+     * An optimization for indexing, if this is set then we don't need to try to fetch 
+     * this Invite's MimeMessage in order to reindex it.
+     * 
+     * This is TRUE if the Invite had no accompanying MimeMessage when it was stored,
+     * e.g. if it came from a REST-imported ICS file. 
+     */
+    private boolean mDontIndexMimeMessage = false;
+    
+    public synchronized void setDontIndexMimeMessage(boolean truthiness) { mDontIndexMimeMessage = truthiness; }
+    public synchronized boolean getDontIndexMimeMessage() { return mDontIndexMimeMessage; }
 
     /**
      * Returns the meeting notes.  Meeting notes is the text/plain part in an
@@ -1963,6 +1979,7 @@ public class Invite {
                 mSentByMe,
                 mDescription, mFragment);
         inv.setClassPropSetByMe(classPropSetByMe());
+        inv.setDontIndexMimeMessage(getDontIndexMimeMessage());
         return inv;
     }
 }
