@@ -21,7 +21,6 @@ public class Pair<F,S> {
 	private S mSecond;
 
     public Pair(F first, S second) {
-//        assert(first != null && second != null);
         mFirst = first;
         mSecond = second;
     }
@@ -46,7 +45,7 @@ public class Pair<F,S> {
         mSecond = second;
     }
 
-    public boolean equals(Object obj) {
+    @Override public boolean equals(Object obj) {
         if (obj instanceof Pair) {
             Pair that = (Pair) obj;
             if (mFirst != that.mFirst && (mFirst == null || !mFirst.equals(that.mFirst)))
@@ -59,10 +58,14 @@ public class Pair<F,S> {
         }
     }
 
-    public int hashCode() {
+    @Override public int hashCode() {
         int code1 = mFirst == null ? 0 : mFirst.hashCode();
         int code2 = mSecond == null ? 0 : mSecond.hashCode();
         return code1 ^ code2;
+    }
+
+    @Override public String toString() {
+        return "(" + mFirst + "," + mSecond + ")";
     }
 
     public static void main(String[] args) {
