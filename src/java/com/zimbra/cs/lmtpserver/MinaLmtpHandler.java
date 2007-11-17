@@ -88,6 +88,11 @@ public class MinaLmtpHandler extends LmtpHandler implements MinaHandler {
         }
     }
 
+    public void dropConnection(long timeout) {
+        // TODO handle timeout here
+        dropConnection();
+    }
+    
     @Override
     protected boolean setupConnection(Socket connection) {
         throw new UnsupportedOperationException();

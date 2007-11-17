@@ -79,6 +79,11 @@ public class MinaPop3Handler extends Pop3Handler implements MinaHandler {
         }
     }
 
+    public void dropConnection(long timeout) {
+        // TODO Handle timeout here
+        dropConnection();
+    }
+    
     @Override
     protected boolean setupConnection(Socket connection) {
         throw new UnsupportedOperationException();

@@ -24,10 +24,7 @@ import com.zimbra.cs.security.sasl.SaslFilter;
 import com.zimbra.cs.server.Server;
 import com.zimbra.cs.server.ServerConfig;
 import com.zimbra.cs.util.Zimbra;
-import org.apache.mina.common.DefaultIoFilterChainBuilder;
-import org.apache.mina.common.IoHandler;
-import org.apache.mina.common.IoSession;
-import org.apache.mina.common.ThreadModel;
+import org.apache.mina.common.*;
 import org.apache.mina.filter.SSLFilter;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.executor.ExecutorFilter;
@@ -40,8 +37,11 @@ import javax.net.ssl.TrustManagerFactory;
 import javax.security.sasl.SaslServer;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.SocketAddress;
 import java.nio.channels.ServerSocketChannel;
 import java.security.KeyStore;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -168,14 +168,53 @@ public abstract class MinaServer implements Server {
      * @param graceSecs number of seconds to wait before forced shutdown
      */
     public void shutdown(int graceSecs) {
-        mSocketAcceptor.unbindAll();
+        getLog().info("Initiating shutdown");
+        SocketAddress addr = mChannel.socket().getLocalSocketAddress();
+        // Would prefer to unbind first then cleanly close active connections,
+        // but mina unbind seems to automatically close the active sessions
+        // so we must close connections then unbind, which does expose us to
+        // a potential race condition.
+        long start = System.currentTimeMillis();
+        long graceMSecs = graceSecs * 1000;
+        // Close active sessions and handlers
+        closeSessions(addr, graceMSecs);
+        // Unbind listener socket
+        mSocketAcceptor.unbind(addr);
+        // Shutdown protocol handler threads
         mHandlerThreadPool.shutdown();
-        try {
-            mHandlerThreadPool.awaitTermination(graceSecs, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            // Fall through
+        // Wait remaining grace period for handlers to cleanly terminate
+        long elapsed = System.currentTimeMillis() - start;
+        if (elapsed > graceMSecs) {
+            try {
+                mHandlerThreadPool.awaitTermination(
+                    graceMSecs - elapsed, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                // Fall through
+            }
         }
+        // Force shutdown after grace period has expired
         mHandlerThreadPool.shutdownNow();
+    }
+
+    private void closeSessions(SocketAddress addr, long timeout) {
+        // Close currently open sessions and get active handlers
+        List<MinaHandler> handlers = new ArrayList<MinaHandler>();
+        for (IoSession session : mSocketAcceptor.getManagedSessions(addr)) {
+            getLog().info("Closing session = " + session);
+            MinaHandler handler = MinaIoHandler.getHandler(session);
+            if (handler != null) handlers.add(handler);
+        }
+        // Wait up to grace seconds to close active handlers
+        long start = System.currentTimeMillis();
+        for (MinaHandler handler : handlers) {
+            long elapsed = System.currentTimeMillis() - start;
+            try {
+                // Force close if timeout - elapsed < 0
+                handler.dropConnection(timeout - elapsed);
+            } catch (IOException e) {
+                getLog().warn("Error closing handler: %s", handler, e);
+            }
+        }
     }
 
     /**

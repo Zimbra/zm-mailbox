@@ -191,7 +191,11 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
      */
     @Override
     protected void dropConnection(boolean sendBanner) {
-        if (mSession.isClosing()) return; // Already being closed
+        dropConnection(sendBanner, WRITE_TIMEOUT);
+    }
+
+    private void dropConnection(boolean sendBanner, long timeout) {
+        if (!mSession.isConnected()) return; // No longer connected
         ZimbraLog.imap.debug("dropConnection: sendBanner = %s\n", sendBanner);
         if (mSelectedFolder != null) {
             mSelectedFolder.setHandler(null);
@@ -203,9 +207,9 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
                 sendUntagged(mConfig.getGoodbye(), true);
                 mGoodbyeSent = true;
             }
-            if (mFuture != null) {
+            if (mFuture != null && timeout >= 0) {
                 // Wait for last write to complete before closing session
-                mFuture.join(WRITE_TIMEOUT);
+                mFuture.join(timeout);
                 if (!mFuture.isReady()) {
                     ZimbraLog.imap.warn("Force closing session because write timed out: " + mSession);
                 }
@@ -216,6 +220,10 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
         }
     }
 
+    public void dropConnection(long timeout) {
+        dropConnection(true, timeout);
+    }
+    
     public void connectionClosed() {
         dropConnection();
     }

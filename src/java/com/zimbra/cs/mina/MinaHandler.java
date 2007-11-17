@@ -54,4 +54,13 @@ public interface MinaHandler {
      * @throws IOException if an I/O error occurs
      */
     void requestReceived(MinaRequest req) throws IOException;
+
+    /**
+     * Drop connection and wait up to 'timeout' milliseconds for last write
+     * to complete before connection is closed.
+     * 
+     * @param timeout timeout grace per
+     * @throws IOException if an I/O error occurs
+     */
+    void dropConnection(long timeout) throws IOException;
 }
