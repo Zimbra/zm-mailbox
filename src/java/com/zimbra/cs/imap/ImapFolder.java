@@ -763,6 +763,25 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
         return result;
     }
 
+    String cropSubsequence(String subseqStr, boolean byUID, int croplow, int crophigh) {
+        if (croplow <= 0 && crophigh <= 0)
+            return subseqStr;
+        StringBuilder sb = new StringBuilder(subseqStr.length());
+        for (Pair<Integer, Integer> range : normalizeSubsequence(subseqStr, byUID)) {
+            int lower = range.getFirst(), upper = range.getSecond();
+            if (croplow > 0 && upper < croplow)
+                continue;
+            if (crophigh > 0 && lower > crophigh)
+                continue;
+            if (croplow > 0)
+                lower = Math.max(lower, croplow);
+            if (crophigh > 0)
+                upper = Math.min(upper, crophigh);
+            sb.append(sb.length() == 0 ? "" : ",").append(lower).append(lower == upper ? "" : ":" + upper);
+        }
+        return sb.toString();
+    }
+
     String invertSubsequence(String subseqStr, boolean byUID, Set<ImapMessage> i4set) {
         StringBuilder sb = new StringBuilder();
 
@@ -771,28 +790,27 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
 
         Pair<Integer, Integer> range = itrange.next();
         int lower = range.getFirst(), upper = range.getSecond();
-        ImapMessage i4msg = i4it.hasNext() ? i4it.next() : null;
-        int id = i4msg == null ? -1 : (byUID ? i4msg.imapUid : i4msg.sequence);
+        int id = !i4it.hasNext() ? -1 : (byUID ? i4it.next().imapUid : i4it.next().sequence);
 
         while (lower != -1) {
             if (lower > upper) {
                 // no valid values remaining in this range, so go to the next one
                 if (!itrange.hasNext())  break;
-                range = itrange.next();  lower = range == null ? -1 : range.getFirst();  upper = range == null ? -1 : range.getSecond();
+                range = itrange.next();  lower = range.getFirst();  upper = range.getSecond();
             } else if (id == -1 || id > upper) {
                 // the remainder of the range qualifies, so serialize it and go to the next range
                 sb.append(sb.length() == 0 ? "" : ",").append(lower).append(lower == upper ? "" : ":" + upper);
                 if (!itrange.hasNext())  break;
-                range = itrange.next();  lower = range == null ? -1 : range.getFirst();  upper = range == null ? -1 : range.getSecond();
+                range = itrange.next();  lower = range.getFirst();  upper = range.getSecond();
             } else if (id <= lower) {
                 // the current ID is too low for this range, so fetch the next ID
                 if (id == lower)  lower++;
-                i4msg = i4it.hasNext() ? i4it.next() : null;  id = i4msg == null ? -1 : (byUID ? i4msg.imapUid : i4msg.sequence);
+                id = !i4it.hasNext() ? -1 : (byUID ? i4it.next().imapUid : i4it.next().sequence);
             } else {
                 // the current ID lies within this range, so serialize part and fetch the next ID
                 sb.append(sb.length() == 0 ? "" : ",").append(lower).append(lower == id - 1 ? "" : ":" + (id - 1));
                 lower = id + 1;
-                i4msg = i4it.hasNext() ? i4it.next() : null;  id = i4msg == null ? -1 : (byUID ? i4msg.imapUid : i4msg.sequence);
+                id = !i4it.hasNext() ? -1 : (byUID ? i4it.next().imapUid : i4it.next().sequence);
             }
         }
         return sb.toString();

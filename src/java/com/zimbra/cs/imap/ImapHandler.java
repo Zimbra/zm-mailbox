@@ -1159,9 +1159,30 @@ public abstract class ImapHandler extends ProtocolHandler {
         else
             sendUntagged("OK [NOMODSEQ]");
 
+        // handle any QRESYNC stuff if the UVVs match
         if (qri != null && qri.uvv == i4folder.getUIDValidity() && !i4folder.isVirtual()) {
+            boolean sentVanished = false;
             String knownUIDs = qri.knownUIDs == null ? "1:" + (i4folder.getInitialUIDNEXT() - 1) : qri.knownUIDs;
-            fetch(tag, knownUIDs, FETCH_FLAGS | FETCH_VANISHED, null, true, qri.modseq, false);
+            if (qri.seqMilestones != null && qri.uidMilestones != null) {
+                int lowwater = 1;
+                ImapMessageSet seqset = i4folder.getSubsequence(qri.seqMilestones, false);
+                ImapMessageSet uidset = i4folder.getSubsequence(qri.uidMilestones, true);
+                seqset.remove(null);  uidset.remove(null);
+                for (Iterator<ImapMessage> itseq = seqset.iterator(), ituid = uidset.iterator(); itseq.hasNext() && ituid.hasNext(); ) {
+                    ImapMessage i4msg;
+                    if ((i4msg = itseq.next()) != ituid.next())
+                        break;
+                    lowwater = i4msg.imapUid + 1;
+                }
+                if (lowwater > 1) {
+                    String constrainedSet = i4folder.cropSubsequence(knownUIDs, true, lowwater, -1);
+                    String vanished = i4folder.invertSubsequence(constrainedSet, true, i4folder.getAllMessages());
+                    if (!vanished.equals(""))
+                        sendUntagged("VANISHED (EARLIER) " + vanished);
+                    sentVanished = true;
+                }
+            }
+            fetch(tag, knownUIDs, FETCH_FLAGS | (sentVanished ? 0 : FETCH_VANISHED), null, true, qri.modseq, false);
         }
 
         sendOK(tag, (writable ? "[READ-WRITE] " : "[READ-ONLY] ") + command + " completed");
@@ -2828,7 +2849,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                 highwater = i4folder.getCurrentMODSEQ();
             } catch (ServiceException e) { }
             if (highwater > changedSince) {
-                String vanished = i4folder.invertSubsequence(sequenceSet, byUID, i4set);
+                String vanished = i4folder.invertSubsequence(sequenceSet, true, i4set);
                 if (!vanished.equals(""))
                     sendUntagged("VANISHED (EARLIER) " + vanished);
             }
