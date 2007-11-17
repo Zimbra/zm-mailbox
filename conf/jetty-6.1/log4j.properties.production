@@ -3,13 +3,9 @@
 
 log4j.threshhold=OFF
 
-log4j.rootLogger=INFO,LOGFILE
+log4j.rootLogger=INFO,CONSOLE
 
-# Appender LOGFILE writes to the file "mailbox.log".
-log4j.appender.LOGFILE=org.apache.log4j.DailyRollingFileAppender
-log4j.appender.LOGFILE.File=/opt/zimbra/log/mailbox.log
-log4j.appender.LOGFILE.DatePattern='.'yyyy-MM-dd
-log4j.appender.LOGFILE.Append=true
-log4j.appender.LOGFILE.layout=org.apache.log4j.PatternLayout
-log4j.appender.LOGFILE.layout.ConversionPattern=%d %-5p [%t] %c{1} - %m%n
-
+# CONSOLE is set to be a ConsoleAppender which outputs to System.out.
+log4j.appender.CONSOLE=org.apache.log4j.ConsoleAppender
+log4j.appender.CONSOLE.layout=org.apache.log4j.PatternLayout
+log4j.appender.CONSOLE.layout.ConversionPattern=%-4r %-5p [%t] %c{1} - %m%n
