@@ -232,9 +232,10 @@ public class LC {
     public static final KnownKey debug_mailboxindex_use_new_locking;
 
     public static final KnownKey zimbra_class_provisioning;
+    public static final KnownKey zimbra_class_accessmanager;
     public static final KnownKey zimbra_class_mboxmanager;
     public static final KnownKey zimbra_class_database;
-
+    
     public static final KnownKey data_source_trust_self_signed_certs;
 
     public static final KnownKey timezone_file;
@@ -929,6 +930,8 @@ public class LC {
 
         zimbra_class_provisioning =
             new KnownKey("zimbra_class_provisioning", "com.zimbra.cs.account.ldap.LdapProvisioning", "Provisioning interface class");
+        zimbra_class_accessmanager =
+            new KnownKey("zimbra_class_accessmanager", "com.zimbra.cs.account.AccessManager", "Access manager interface class");
         zimbra_class_mboxmanager =
             new KnownKey("zimbra_class_mboxmanager", "com.zimbra.cs.mailbox.MailboxManager", "Mailbox manager interface class");
         zimbra_class_database =
