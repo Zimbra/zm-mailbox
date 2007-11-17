@@ -17,14 +17,28 @@
 
 package com.zimbra.cs.account;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 
 public abstract class AccessManager {
 
-    private static AccessManager sManager = new DomainAccessManager();
+    private static AccessManager sManager;
     
     public static AccessManager getInstance() {
+        if (sManager == null) {
+            String className = LC.zimbra_class_accessmanager.value();
+            if (className != null && !className.equals("")) {
+                try {
+                	sManager = (AccessManager) Class.forName(className).newInstance();
+                } catch (Exception e) {
+                    ZimbraLog.account.error("could not instantiate AccessManager interface of class '" + className + "'; defaulting to DomainAccessManager", e);
+                }
+            }
+            if (sManager == null)
+            	sManager = new DomainAccessManager();
+        }
         return sManager;
     }
     
