@@ -27,6 +27,7 @@ IMAP protocol and extensions supported:
     [UNSELECT]         RFC 3691: IMAP UNSELECT command
     [WITHIN]           RFC 5032: WITHIN Search Extension to the IMAP Protocol
     [X-DRAFT-I05-SEARCHRES]  draft-melnikov-imap-search-res-05: IMAP extension for referencing the last SEARCH result
+    [X-DRAFT-W05-QRESYNC]    draft-ietf-lemonade-reconnect-client-06: IMAP4 Extensions for Quick Mailbox Resynchronization
     [$MDNSent]         RFC 3503: Message Disposition Notification (MDN) profile for Internet Message Access Protocol (IMAP)
 
 POP protocol and extensions supported:

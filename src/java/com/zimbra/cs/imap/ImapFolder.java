@@ -411,7 +411,7 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
     /** Returns whether a given SELECT option is active for this folder. */
     boolean isExtensionActivated(ActivatedExtension ext) {
         switch (ext) {
-            case CONDSTORE: return !isVirtual() && mHandler.isExtensionActivated(ext);
+            case CONDSTORE: return !isVirtual() && mHandler.sessionActivated(ext);
             default:        return false;
         }
     }
@@ -873,7 +873,7 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
         if (getSize() == 0)
             return Collections.emptyList();
 
-        boolean byUID = mHandler.isExtensionActivated(ActivatedExtension.QRESYNC);
+        boolean byUID = mHandler.sessionActivated(ActivatedExtension.QRESYNC);
         boolean debug = ZimbraLog.imap.isDebugEnabled();
         if (debug)  ZimbraLog.imap.debug("  ** iterating (collapseExpunged)");
 
