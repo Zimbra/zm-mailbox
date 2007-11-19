@@ -845,7 +845,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         if (extension.equalsIgnoreCase("IDLE") && mCredentials != null && mCredentials.isHackEnabled(EnabledHack.NO_IDLE))
             return false;
         // everything else is enabled
-        return SUPPORTED_EXTENSIONS.contains(extension);
+        return true;
     }
 
     boolean doNOOP(String tag) throws IOException {
@@ -887,7 +887,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         for (String ext : extensions) {
             // draft-gulbrandsen-imap-enable-03 3: "If the argument is not an extension known to
             //                                      the server, the server MUST ignore the argument."
-            if (!extensionEnabled(ext))
+            if (!SUPPORTED_EXTENSIONS.contains(ext) || !extensionEnabled(ext))
                 continue;
 
             if (ext.equals("CONDSTORE")) {
