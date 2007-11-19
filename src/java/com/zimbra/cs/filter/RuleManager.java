@@ -22,6 +22,7 @@ package com.zimbra.cs.filter;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -218,7 +219,12 @@ public class RuleManager {
      * Parses the sieve script and returns the result. 
      */
     private Node parse(String script) throws ParseException {
-        ByteArrayInputStream sin = new ByteArrayInputStream(script.getBytes());
+        ByteArrayInputStream sin = null;
+        try {
+            sin = new ByteArrayInputStream(script.getBytes("UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            throw new ParseException(e.getMessage());
+        }
         Node node = SieveFactory.getInstance().parse(sin);
         return node;
     }
