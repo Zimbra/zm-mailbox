@@ -787,6 +787,8 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
 
         Iterator<ImapMessage> i4it = i4set.iterator();
         Iterator<Pair<Integer, Integer>> itrange = normalizeSubsequence(subseqStr, byUID).iterator();
+        if (!itrange.hasNext())
+            return subseqStr;
 
         Pair<Integer, Integer> range = itrange.next();
         int lower = range.getFirst(), upper = range.getSecond();
