@@ -1174,7 +1174,7 @@
     <target name="stop-ldap-windows" if="is-windows">
         <exec executable="net">
             <arg value="stop"/>
-            <arg value="openldap directory service"/>
+            <arg value="CDSSilverSlapd"/>
         </exec>
     </target>
 
@@ -1197,7 +1197,7 @@
     <target name="start-ldap-windows" if="is-windows">
         <exec executable="net">
             <arg value="start"/>
-            <arg value="openldap directory service"/>
+            <arg value="CDSSilverSlapd"/>
         </exec>
     </target>
 
