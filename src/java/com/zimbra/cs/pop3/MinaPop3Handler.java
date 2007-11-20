@@ -20,6 +20,7 @@ package com.zimbra.cs.pop3;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mina.MinaHandler;
 import com.zimbra.cs.mina.MinaIoSessionOutputStream;
+import com.zimbra.cs.mina.MinaOutputStream;
 import com.zimbra.cs.mina.MinaRequest;
 import com.zimbra.cs.mina.MinaServer;
 import com.zimbra.cs.mina.MinaTextLineRequest;
@@ -33,6 +34,8 @@ import java.net.Socket;
 public class MinaPop3Handler extends Pop3Handler implements MinaHandler {
     private IoSession mSession;
 
+    private static final long WRITE_TIMEOUT = 5000; // 5 seconds
+
     public MinaPop3Handler(MinaPop3Server server, IoSession session) {
         super(server);
         this.mSession = session;
@@ -45,7 +48,7 @@ public class MinaPop3Handler extends Pop3Handler implements MinaHandler {
     }
 
     public void connectionClosed() throws IOException {
-        dropConnection();
+        mSession.close();
     }
 
     public void connectionIdle() {
@@ -69,21 +72,25 @@ public class MinaPop3Handler extends Pop3Handler implements MinaHandler {
     
     @Override
     protected void dropConnection() {
-        if (!mSession.isClosing()) {
-            try {
-                mOutputStream.close();
-            } catch (IOException e) {
-                // Should never happen...
-            }
-            mSession.close();
-        }
-    }
-
-    public void dropConnection(long timeout) {
-        // TODO Handle timeout here
-        dropConnection();
+        dropConnection(WRITE_TIMEOUT);
     }
     
+    public void dropConnection(long timeout) {
+        if (!mSession.isConnected()) return;
+        try {
+            mOutputStream.close();
+        } catch (IOException e) {
+            // Should never happen...
+        }
+        if (timeout >= 0) {
+            // Wait for all remaining bytes to be written
+            if (!((MinaOutputStream) mOutputStream).join(timeout)) {
+                ZimbraLog.pop.warn("Force closing session because write timed out: " + mSession);
+            }
+        }
+        mSession.close();
+    }
+
     @Override
     protected boolean setupConnection(Socket connection) {
         throw new UnsupportedOperationException();

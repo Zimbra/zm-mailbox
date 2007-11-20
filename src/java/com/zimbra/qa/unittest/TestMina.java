@@ -124,6 +124,9 @@ public class TestMina extends TestCase {
         public void flushBytes(ByteBuffer bb) {
             buf = MinaUtil.expand(buf, bb.remaining()).put(bb);
         }
+        public boolean join(long ms) {
+            return true;
+        }
     }
     
     private static ByteBuffer testData(int size) {

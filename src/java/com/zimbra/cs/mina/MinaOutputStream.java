@@ -44,7 +44,7 @@ public abstract class MinaOutputStream extends OutputStream {
     public synchronized void write(byte[] b, int off, int len)
             throws IOException {
         if ((off | len | (b.length - (len + off)) | (off + len)) < 0) {
-	    throw new IndexOutOfBoundsException();
+            throw new IndexOutOfBoundsException();
         }
         if (mClosed) throw new IOException("Stream has been closed");
         while (len > 0) {
@@ -56,6 +56,23 @@ public abstract class MinaOutputStream extends OutputStream {
             if (!mBuffer.hasRemaining()) flushBytes();
             len -= count;
             off += count;
+        }
+    }
+
+    public synchronized void write(String s) throws IOException {
+        if (mClosed) throw new IOException("Stream has been closed");
+        int off = 0;
+        int len = s.length();
+        while (len > 0) {
+            if (mBuffer == null) {
+                mBuffer = ByteBuffer.allocate(Math.max(len, mSize));
+            }
+            int count = Math.min(len, mBuffer.remaining());
+            len -= count;
+            while (count-- > 0) {
+                mBuffer.put((byte) s.charAt(off++));
+            }
+            if (!mBuffer.hasRemaining()) flushBytes();
         }
     }
 
@@ -92,4 +109,16 @@ public abstract class MinaOutputStream extends OutputStream {
      * @throws IOException if an I/O error occurs
      */
     protected abstract void flushBytes(ByteBuffer bb) throws IOException;
+
+    /**
+     * Waits up to 'timeout' milliseconds for all remaining bytes to be
+     * written. Typically called after close() to make sure that all data
+     * has been written to the output stream. Return true if successful
+     * otherwise false if timeout was reached before last write was complete,
+     * in which case the method can be called again if desired.
+     *
+     * @param timeout max number of milliseconds to wait, or 0 to wait forever
+     * @return true if all bytes have been written, false otherwise
+     */
+    public abstract boolean join(long timeout);
 }

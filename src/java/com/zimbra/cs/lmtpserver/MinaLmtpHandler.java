@@ -17,23 +17,27 @@
 
 package com.zimbra.cs.lmtpserver;
 
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mina.MinaHandler;
-import com.zimbra.cs.mina.MinaRequest;
 import com.zimbra.cs.mina.MinaIoSessionOutputStream;
+import com.zimbra.cs.mina.MinaOutputStream;
+import com.zimbra.cs.mina.MinaRequest;
 import com.zimbra.cs.mina.MinaTextLineRequest;
+import org.apache.mina.common.IdleStatus;
+import org.apache.mina.common.IoSession;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.net.Socket;
 import java.net.InetSocketAddress;
-
-import org.apache.mina.common.IoSession;
-import org.apache.mina.common.IdleStatus;
+import java.net.Socket;
 
 public class MinaLmtpHandler extends LmtpHandler implements MinaHandler {
     private final IoSession mSession;
     private boolean expectingMessageData;
+    private MinaOutputStream mOutputStream;
 
+    private static final long WRITE_TIMEOUT = 5000;
+    
     public MinaLmtpHandler(MinaLmtpServer server, IoSession session) {
         super(server);
         mSession = session;
@@ -61,13 +65,14 @@ public class MinaLmtpHandler extends LmtpHandler implements MinaHandler {
     
     public void connectionOpened() {
         reset();
-        mWriter = new LmtpWriter(new MinaIoSessionOutputStream(mSession));
+        mOutputStream = new MinaIoSessionOutputStream(mSession);
+        mWriter = new LmtpWriter(mOutputStream);
         mSession.setIdleTime(IdleStatus.BOTH_IDLE, mConfig.getMaxIdleSeconds());
         setupConnection(((InetSocketAddress) mSession.getRemoteAddress()).getAddress());
     }
 
     public void connectionClosed() {
-        dropConnection();
+        mSession.close();
     }
 
     public void connectionIdle() {
@@ -82,15 +87,23 @@ public class MinaLmtpHandler extends LmtpHandler implements MinaHandler {
     
     @Override
     protected void dropConnection() {
-        if (!mSession.isClosing()) {
-            mWriter.close();
-            mSession.close();
-        }
+        dropConnection(WRITE_TIMEOUT);
     }
 
     public void dropConnection(long timeout) {
-        // TODO handle timeout here
-        dropConnection();
+        if (!mSession.isConnected()) return;
+        try {
+            mOutputStream.close();
+        } catch (IOException e) {
+            // Should never happen...
+        }
+        if (timeout >= 0) {
+            // Wait for all remaining bytes to be written
+            if (!mOutputStream.join(timeout)) {
+                ZimbraLog.lmtp.warn("Force closing session because write timed out: " + mSession);
+            }
+        }
+        mSession.close();
     }
     
     @Override

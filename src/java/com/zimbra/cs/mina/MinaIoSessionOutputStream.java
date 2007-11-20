@@ -18,7 +18,7 @@
 package com.zimbra.cs.mina;
 
 import org.apache.mina.common.IoSession;
-
+import org.apache.mina.common.WriteFuture;
 import java.nio.ByteBuffer;
 
 /**
@@ -28,6 +28,7 @@ import java.nio.ByteBuffer;
  */
 public class MinaIoSessionOutputStream extends MinaOutputStream {
     private final IoSession mSession;
+    private WriteFuture mFuture;
 
     /**
      * Creates a new output stream for writing output bytes using a specified
@@ -53,8 +54,21 @@ public class MinaIoSessionOutputStream extends MinaOutputStream {
 
     @Override
     protected void flushBytes(ByteBuffer bb) {
-        mSession.write(MinaUtil.toMinaByteBuffer(bb));
+        mFuture = mSession.write(MinaUtil.toMinaByteBuffer(bb));
     }
-    
+
+    @Override
+    public boolean join(long timeout) {
+        if (timeout < 0) {
+            throw new IllegalArgumentException("Invalid timeout");
+        }
+        if (mFuture == null) return true;
+        if (timeout > 0) {
+            mFuture.join(timeout);
+        } else {
+            mFuture.join();
+        }
+        return mFuture.isWritten();
+    }
 }
 

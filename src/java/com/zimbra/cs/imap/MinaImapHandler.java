@@ -23,23 +23,20 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mina.MinaHandler;
 import com.zimbra.cs.mina.MinaIoSessionOutputStream;
+import com.zimbra.cs.mina.MinaOutputStream;
 import com.zimbra.cs.mina.MinaRequest;
 import com.zimbra.cs.mina.MinaServer;
-import com.zimbra.cs.mina.MinaUtil;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.Config;
 import org.apache.mina.common.IdleStatus;
 import org.apache.mina.common.IoSession;
-import org.apache.mina.common.WriteFuture;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.nio.ByteBuffer;
 
 public class MinaImapHandler extends ImapHandler implements MinaHandler {
     private IoSession mSession;
-    private WriteFuture mFuture;
 
     // Maximum number of milliseconds to wait for last write operation to
     // complete before we force close the session.
@@ -197,20 +194,15 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
     private void dropConnection(boolean sendBanner, long timeout) {
         if (!mSession.isConnected()) return; // No longer connected
         ZimbraLog.imap.debug("dropConnection: sendBanner = %s\n", sendBanner);
-        if (mSelectedFolder != null) {
-            mSelectedFolder.setHandler(null);
-            SessionCache.clearSession(mSelectedFolder);
-            mSelectedFolder = null;
-        }
+        cleanup();
         try {
             if (sendBanner && !mGoodbyeSent) {
                 sendUntagged(mConfig.getGoodbye(), true);
                 mGoodbyeSent = true;
             }
-            if (mFuture != null && timeout >= 0) {
-                // Wait for last write to complete before closing session
-                mFuture.join(timeout);
-                if (!mFuture.isReady()) {
+            if (timeout >= 0) {
+                // Wait for all remaining bytes to be written
+                if (!((MinaOutputStream) mOutputStream).join(timeout)) {
                     ZimbraLog.imap.warn("Force closing session because write timed out: " + mSession);
                 }
             }
@@ -225,9 +217,18 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
     }
     
     public void connectionClosed() {
-        dropConnection();
+        cleanup();
+        mSession.close();
     }
 
+    private void cleanup() {
+        if (mSelectedFolder != null) {
+            mSelectedFolder.setHandler(null);
+            SessionCache.clearSession(mSelectedFolder);
+            mSelectedFolder = null;
+        }
+    }
+    
     public void connectionIdle() {
         notifyIdleConnection();
     }
@@ -264,15 +265,16 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
     }
 
     @Override
-    protected void flushOutput() {
-        // TODO Do we need to do anything here?
+    protected void flushOutput() throws IOException {
+        mOutputStream.flush();
     }
     
     @Override
     void sendLine(String line, boolean flush) throws IOException {
-        if (mSession.isClosing()) throw new IOException("Stream is closed");
-        ByteBuffer bb = MinaUtil.toByteBuffer(line + "\r\n");
-        mFuture = mSession.write(MinaUtil.toMinaByteBuffer(bb));
+        MinaOutputStream out = (MinaOutputStream) mOutputStream;
+        out.write(line);
+        out.write("\r\n");
+        if (flush) out.flush();
     }
 
     private void info(String msg, Throwable e) {
