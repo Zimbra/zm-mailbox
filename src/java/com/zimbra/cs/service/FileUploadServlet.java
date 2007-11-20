@@ -79,9 +79,7 @@ public class FileUploadServlet extends ZimbraServlet {
     /** The character separating upload IDs in a list */
     public static final String UPLOAD_DELIMITER = ",";
     /** The character separating server ID from upload ID */
-    private static final char UPLOAD_PART_DELIMITER = ':';
-    /** The length of a fully-qualified upload ID (2 UUIDs and a ':') */
-    private static final int UPLOAD_ID_LENGTH = 73;
+    private static final String UPLOAD_PART_DELIMITER = ":";
 
     public static final class Upload {
         final String   accountId;
@@ -137,9 +135,11 @@ public class FileUploadServlet extends ZimbraServlet {
      * @param uploadId  The id of the upload.
      * @throws ServiceException if the upload id is malformed. */
     static String getUploadServerId(String uploadId) throws ServiceException {
-        if (uploadId == null || uploadId.length() != UPLOAD_ID_LENGTH || uploadId.charAt(UPLOAD_ID_LENGTH / 2) != UPLOAD_PART_DELIMITER)
+        // uploadId is in the format of {serverId}:{uuid of the upload}
+        String[] parts = null;
+        if (uploadId == null || (parts = uploadId.split(UPLOAD_PART_DELIMITER)).length != 2)
             throw ServiceException.INVALID_REQUEST("invalid upload ID: " + uploadId, null);
-        return uploadId.substring(0, UPLOAD_ID_LENGTH / 2);
+        return parts[0];
     }
 
     /** Returns whether the specified upload resides on this server.
@@ -156,8 +156,6 @@ public class FileUploadServlet extends ZimbraServlet {
         String context = "accountId=" + accountId + ", uploadId=" + uploadId;
         if (accountId == null || uploadId == null)
             throw ServiceException.FAILURE("fetchUploads(): missing parameter: " + context, null);
-        if (uploadId.length() != UPLOAD_ID_LENGTH || uploadId.charAt(UPLOAD_ID_LENGTH / 2) != UPLOAD_PART_DELIMITER)
-            throw ServiceException.INVALID_REQUEST("invalid upload ID: " + uploadId, null);
 
         // if the upload is remote, fetch it from the other server
         if (!isLocalUpload(uploadId))
@@ -181,7 +179,7 @@ public class FileUploadServlet extends ZimbraServlet {
 
     private static Upload fetchRemoteUpload(String accountId, String uploadId, String authtoken) throws ServiceException {
         // the first half of the upload id is the server id where it lives
-        Server server = Provisioning.getInstance().get(ServerBy.id, uploadId.substring(0, UPLOAD_ID_LENGTH / 2));
+        Server server = Provisioning.getInstance().get(ServerBy.id, getUploadServerId(uploadId));
         String url = AccountUtil.getBaseUri(server);
         if (url == null)
             return null;
