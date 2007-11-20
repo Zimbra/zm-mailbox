@@ -90,8 +90,9 @@ Zimbra network you can get to this with http://kenny/public
    On Windows, follow instructions to install MySQL as a service with
    the required database admin user password.
 
-6. Install OpenLDAP (Get pkg from \\kenny)
-   Or http://download.bergmans.us/openldap/
+6. Install OpenLDAP, get it from p4: main\ThirdPartyBuilds\windows\openldap
+
+   What you want to install is the CDS Silver build.
 
    On Windows, install to c:\opt\zimbra\openldap. Then go to the
    openldap directory and run "slapd install" to install it as a
