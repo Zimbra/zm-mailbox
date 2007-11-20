@@ -788,6 +788,7 @@
         <delete dir="${zimbra.home.dir}/openldap-data"/>
 
         <mkdir dir="${zimbra.home.dir}/openldap-data"/>
+    	<mkdir dir="${zimbra.home.dir}/openldap/var/run"/>
         <mkdir dir="${zimbra.home.dir}/log"/>
         <mkdir dir="${zimbra.home.dir}/zmstat"/>
         <mkdir dir="${zimbra.home.dir}/store"/>
