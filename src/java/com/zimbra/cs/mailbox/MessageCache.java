@@ -28,20 +28,19 @@ import java.util.Map;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
-import javax.mail.internet.SharedInputStream;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.stats.ZimbraPerf;
+import com.zimbra.cs.store.BlobInputStream;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.common.util.ZimbraLog;
 
 /**
  * @author dkarp
@@ -49,6 +48,7 @@ import com.zimbra.common.util.ZimbraLog;
 public class MessageCache {
 
     private static enum ConvertedState { RAW, EXPANDED, BOTH };
+    private static final int STREAMED_MESSAGE_SIZE = 4096;
 
     private static final class CacheNode {
         int mSize;
@@ -189,11 +189,14 @@ public class MessageCache {
                 int size = item.getSize();
                 if (expand && cnOrig != null && cnOrig.mMessage != null && cnOrig.mConvertersRun == ConvertedState.RAW) {
                     // switching from RAW to EXPANDED -- can reuse an existing raw MimeMessage
-                    cnode = new CacheNode(size, cnOrig.mMessage, ConvertedState.BOTH);
+                    cnode = new CacheNode(cnOrig.mSize, cnOrig.mMessage, ConvertedState.BOTH);
                 } else {
                     // use the raw byte array to construct the MimeMessage if possible, else read from disk
                     if (cnOrig == null || cnOrig.mContent == null) {
                         is = fetchFromStore(item);
+                        if (is instanceof BlobInputStream) {
+                            size = STREAMED_MESSAGE_SIZE;
+                        }
                     } else {
                         is = new SharedByteArrayInputStream(cnOrig.mContent);
                     }
@@ -205,14 +208,19 @@ public class MessageCache {
                     try {
                         // handle UUENCODE and TNEF conversion here...
                         for (Class visitor : MimeVisitor.getConverters())
-                            if (((MimeVisitor) visitor.newInstance()).accept(cnode.mMessage))
+                            if (((MimeVisitor) visitor.newInstance()).accept(cnode.mMessage)) {
                                 cnode.mConvertersRun = ConvertedState.EXPANDED;
+                                size = item.getSize(); // Even with BlobInputStream, an expanded message will be stored in memory
+                            }
                     } catch (Exception e) {
                         // if the conversion bombs for any reason, revert to the original
                         ZimbraLog.mailbox.warn("MIME converter failed for message " + item.getId(), e);
 
                         if (cnOrig == null || cnOrig.mContent == null) {
                             is = fetchFromStore(item);
+                            if (is instanceof BlobInputStream) {
+                                size = STREAMED_MESSAGE_SIZE;
+                            }
                         } else {
                             is = new SharedByteArrayInputStream(cnOrig.mContent);
                         }
@@ -222,7 +230,7 @@ public class MessageCache {
                 }
 
                 // cache the MimeMessage (if it'll fit)
-                // cacheItem(key, cnode);
+                cacheItem(key, cnode);
             } catch (IOException e) {
                 throw ServiceException.FAILURE("IOException while retrieving content for item " + item.getId(), e);
             } catch (MessagingException e) {
