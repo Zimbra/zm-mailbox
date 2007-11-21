@@ -567,29 +567,12 @@ public class LdapProvisioning extends Provisioning {
         }
         return account;
     }
-    
-    private int guessType(String value) {
-        if (value.indexOf("@") != -1)
-            return BY_EMAIL;
-        else if (value.length() == 36 &&
-                value.charAt(8) == '-' &&
-                value.charAt(13) == '-' &&
-                value.charAt(18) == '-' &&
-                value.charAt(23) == '-')
-            return BY_ID;
-        else return BY_NAME;
-    }
   
     private Cos lookupCos(String key, DirContext ctxt) throws ServiceException {
         Cos c = null;
-        switch(guessType(key)) {
-        case BY_ID:
-            c = getCosById(key, ctxt);
-            break;
-        case BY_NAME:
+        c = getCosById(key, ctxt);
+        if (c == null)
             c = getCosByName(key, ctxt);
-            break;
-        }
         if (c == null)
             throw AccountServiceException.NO_SUCH_COS(key);
         else

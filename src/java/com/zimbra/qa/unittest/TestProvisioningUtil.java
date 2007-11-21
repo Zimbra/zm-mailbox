@@ -40,6 +40,10 @@ public class TestProvisioningUtil extends TestCase {
         return fmt.format(date);
     }
     
+    public static String baseDomainName(String testName) {
+        return testName + "-" + genTestId() + "." + NAME_ROOT_DOMAIN;
+    }
+    
     public static String baseDomainName(String testName, String testId) {
         return testName + "-" + testId + "." + NAME_ROOT_DOMAIN;
     }

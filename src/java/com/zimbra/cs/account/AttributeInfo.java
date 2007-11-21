@@ -300,10 +300,14 @@ public class AttributeInfo {
             else
                 throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be a valid generalized time: yyyyMMddHHmmssZ", null);
         case TYPE_ID:
+            return;
+            // Per bug 21776 we no longer check constraints for zimbraId.
+            /* 
             if (ID_PATTERN.matcher(value).matches())
                 return;
             else
-                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be a valid id", null);           
+                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be a valid id", null); 
+            */              
         case TYPE_INTEGER:
             try {
                 int v = Integer.parseInt(value);
