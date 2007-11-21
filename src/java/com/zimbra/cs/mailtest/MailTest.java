@@ -155,14 +155,9 @@ public abstract class MailTest {
         } catch (NoSuchElementException e) {
             throw new IllegalArgumentException("Option requires argument: " + arg);
         }
-        if (minQop != -1 || maxQop != -1) {
-            String qop = getQop(minQop, maxQop);
-            if (mClient.isSSLEnabled() && qop.contains(QOP_AUTH_INT) ||
-                                          qop.contains(QOP_AUTH_CONF)) {
-                throw new IllegalArgumentException(
-                    "Confidentiality and integrity QOP not supported with SSL enabled");
-            }
-            mClient.setSaslProperty(Sasl.QOP, qop);
+        // If SSL is enabled then only QOP_AUTH is supported
+        if (!mClient.isSSLEnabled()) {
+            mClient.setSaslProperty(Sasl.QOP, getQop(minQop, maxQop));
         }
         return true;
     }
