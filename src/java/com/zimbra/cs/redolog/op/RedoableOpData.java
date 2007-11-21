@@ -98,7 +98,7 @@ class RedoableOpData {
             return new ByteArrayInputStream(mData);
         }
         if (mFile != null) {
-            return new BlobInputStream(mFile, mFileOffset, (long) mLength);
+            return new BlobInputStream(mFile, mFileOffset, mFileOffset + mLength);
         }
         assert(false);
         return null;
