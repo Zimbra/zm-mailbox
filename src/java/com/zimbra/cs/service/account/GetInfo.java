@@ -120,7 +120,7 @@ public class GetInfo extends AccountDocumentHandler  {
 
         if (sections.contains(Section.PREFS)) {
             Element prefs = response.addUniqueElement(AccountConstants.E_PREFS);
-            GetPrefs.doPrefs(account, locale.toString(), prefs, attrMap, null);
+            GetPrefs.doPrefs(account, prefs, attrMap, null);
         }
         if (sections.contains(Section.ATTRS)) {
             Element attrs = response.addUniqueElement(AccountConstants.E_ATTRS);

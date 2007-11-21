@@ -67,22 +67,17 @@ public class GetPrefs extends AccountDocumentHandler  {
 
         Map<String, Object> map = acct.getUnicodeAttrs();
         if (map != null) {
-            Locale locale = Provisioning.getInstance().getLocale(acct);
-            doPrefs(acct, locale.toString(), response, map, specificPrefs);
+            doPrefs(acct, response, map, specificPrefs);
         }
     }
     
-	public static void doPrefs(Account acct, String locale, Element prefs, Map<String, Object> attrsMap, HashSet<String> specificPrefs) {
-        boolean needLocale = (specificPrefs == null || specificPrefs.contains(Provisioning.A_zimbraPrefLocale));
-        if (needLocale)
-            prefs.addKeyValuePair(Provisioning.A_zimbraPrefLocale, locale, AccountConstants.E_PREF, AccountConstants.A_NAME);
-
+    public static void doPrefs(Account acct, Element prefs, Map<String, Object> attrsMap, HashSet<String> specificPrefs) {
         for (Map.Entry<String, Object> entry : attrsMap.entrySet()) {
             String key = entry.getKey();
 
             if (specificPrefs != null && !specificPrefs.contains(key))
                 continue;
-            if (!key.startsWith("zimbraPref") || key.equals(Provisioning.A_zimbraPrefLocale))
+            if (!key.startsWith("zimbraPref"))
                 continue;
 
             Object value = entry.getValue();
