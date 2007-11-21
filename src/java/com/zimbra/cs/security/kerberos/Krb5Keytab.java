@@ -105,7 +105,8 @@ public class Krb5Keytab {
     public synchronized List<KerberosKey> getKeys(KerberosPrincipal kp)
             throws IOException {
         checkLastModified();
-        return Collections.unmodifiableList(keyMap.get(kp));
+        List<KerberosKey> keys = keyMap.get(kp);
+        return keys != null ? Collections.unmodifiableList(keys) : null;
     }
 
     /**
