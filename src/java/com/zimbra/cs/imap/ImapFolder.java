@@ -920,13 +920,13 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
 
         AddedItems added = new AddedItems();
         if (pns.deleted != null)
-            if (!handleDeletes(changeId, pns.deleted))
+            if (!handleDeletes(changeId, pns.deleted.values()))
                 return;
         if (pns.created != null)
-            if (!handleCreates(changeId, pns.created, added))
+            if (!handleCreates(changeId, pns.created.values(), added))
                 return;
         if (pns.modified != null)
-            if (!handleModifies(changeId, pns.modified, added))
+            if (!handleModifies(changeId, pns.modified.values(), added))
                 return;
 
         // add new messages to the currently selected mailbox
@@ -987,8 +987,8 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
         }
     }
 
-    private boolean handleDeletes(int changeId, Map<Integer, Object> deleted) {
-        for (Object obj : deleted.values()) {
+    private boolean handleDeletes(int changeId, Collection<Object> deleted) {
+        for (Object obj : deleted) {
             int id = (obj instanceof MailItem ? ((MailItem) obj).getId() : ((Integer) obj).intValue());
             if (Tag.validateId(id)) {
                 mTags.uncache(1L << Tag.getIndex(id));
@@ -1012,8 +1012,8 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
         return true;
     }
 
-    private boolean handleCreates(int changeId, Map<Integer, MailItem> created, AddedItems newItems) {
-        for (MailItem item : created.values()) {
+    private boolean handleCreates(int changeId, Collection<MailItem> created, AddedItems newItems) {
+        for (MailItem item : created) {
             if (item instanceof Tag) {
                 cacheTag((Tag) item);
             } else if (item == null || item.getId() <= 0) {
@@ -1034,9 +1034,9 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
         return true;
     }
 
-    private boolean handleModifies(int changeId, Map<Integer, Change> modified, AddedItems newItems) {
+    private boolean handleModifies(int changeId, Collection<Change> modified, AddedItems newItems) {
         boolean debug = ZimbraLog.imap.isDebugEnabled();
-        for (Change chg : modified.values()) {
+        for (Change chg : modified) {
             if (chg.what instanceof Tag && (chg.why & Change.MODIFIED_NAME) != 0) {
                 Tag ltag = (Tag) chg.what;
                 mTags.uncache(ltag.getBitmask());
