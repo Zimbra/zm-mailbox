@@ -309,6 +309,58 @@ public class DateUtil {
             }
         }
     }
+    
+    /**
+     * Returns the number of seconds specified by the time interval value.
+     * The format of the time interval value is one of the following, where <tt>NN</tt>
+     * is a number:
+     * <ul>
+     *   <li>NNd - days</li>
+     *   <li>NNh - hours</li>
+     *   <li>NNm - minutes</li>
+     *   <li>NNs - seconds</li>
+     *   <li>NN - seconds</li>
+     * </ul>
+     * @param value the time interval value
+     * @param defaultValue returned if the time interval is null or cannot be parsed
+     */
+    public static long getTimeIntervalSecs(String value, long defaultValue) {
+        /*
+         * like getTimeInterval, but return interval in seconds, saving the overhead 
+         * for code that needs seconds but gets milliseconds from getTimeInterval and 
+         * has to convert it back seconds.
+         */
+        if (value == null || value.length() == 0)
+            return defaultValue;
+        else {
+            try {
+                char units = value.charAt(value.length()-1);
+                if (units >= '0' && units <= '9') {
+                    return Long.parseLong(value);
+                } else {
+                    long n = Long.parseLong(value.substring(0, value.length()-1));
+                    switch (units) {
+                    case 'd':
+                        n = n * Constants.SECONDS_PER_DAY;
+                        break;
+                    case 'h':
+                        n = n * Constants.SECONDS_PER_HOUR;
+                        break;
+                    case 'm':
+                        n = n * Constants.SECONDS_PER_MINUTE;
+                        break;
+                    case 's':
+                        break;
+                    default:
+                        return defaultValue;
+                    }
+                    return n;
+                }
+            } catch (NumberFormatException e) {
+                return defaultValue;
+            }
+        }
+    }
 
     public static void main(String args[]) {
         System.out.println("date = " + new Date(parseDateSpecifier("12/25/1998", 0)));
