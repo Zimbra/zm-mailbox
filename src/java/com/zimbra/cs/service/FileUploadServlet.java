@@ -306,6 +306,7 @@ public class FileUploadServlet extends ZimbraServlet {
         
 	    String fmt = req.getParameter(ContentServlet.PARAM_FORMAT);
 	    addRemoteIpToLoggingContext(req);
+	    ZimbraLog.addUserAgentToContext(req.getHeader("User-Agent"));
 
         // file upload requires authentication
         int adminPort = -1;
