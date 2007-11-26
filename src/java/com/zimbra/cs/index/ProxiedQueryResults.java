@@ -20,6 +20,14 @@
  */
 package com.zimbra.cs.index;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
@@ -28,17 +36,12 @@ import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.util.ParseMailboxID;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.soap.*;
 import com.zimbra.soap.ZimbraSoapContext;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
-
 
 /**
  * Represents the results of a query made on a remote server.  This class takes the ServerID
@@ -74,7 +77,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
     // mailbox specifier
     private boolean isMultipleMailboxes = false;
     private boolean isAllMailboxes = false;
-    private List /*ParseMailboxID*/ mMailboxes;
+    private List<ParseMailboxID> mMailboxes;
     
     private void setSearchParams(SearchParams params) {
         this.mSearchParams = (SearchParams)params.clone();
@@ -146,7 +149,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
      * @param server
      * @param params
      */
-    public ProxiedQueryResults(SoapProtocol respProto, String encodedAuthToken, String server, SearchParams params, Mailbox.SearchResultMode mode, List /*ParseMailboxID*/ mailboxes)
+    public ProxiedQueryResults(SoapProtocol respProto, String encodedAuthToken, String server, SearchParams params, Mailbox.SearchResultMode mode, List<ParseMailboxID> mailboxes)
     {
         super(params.getTypes(), params.getSortBy(), mode);
 
@@ -160,7 +163,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
     }
 
 
-    public void doneWithSearchResults() throws ServiceException {
+    public void doneWithSearchResults() {
 //        mTransport = null;
     }
 
@@ -186,7 +189,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
         return getNext();
     }
 
-    public void resetIterator() throws ServiceException {
+    public void resetIterator() {
         mIterOffset = 0;
         mAtEndOfList = false;
     }
@@ -206,7 +209,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
                 return null;
             }
         }
-        return (ZimbraHit)mHitBuffer.get(mIterOffset - mBufferStartOffset);
+        return mHitBuffer.get(mIterOffset - mBufferStartOffset);
     }
 
     String getServer() { return mServer; }
@@ -277,15 +280,14 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
             }
 
             // call the remote server now!
-            SoapProtocol proto = searchElt instanceof Element.JSONElement ? SoapProtocol.SoapJS : SoapProtocol.Soap12;
             ZimbraSoapContext zsc = null;            
             try {
-                zsc = new ZimbraSoapContext(AuthToken.getAuthToken(mAuthToken), mTargetAcctId, proto, proto, mSearchParams.getHopCount()+1);
+                zsc = new ZimbraSoapContext(AuthToken.getAuthToken(mAuthToken), mTargetAcctId, mResponseProto, mResponseProto, mSearchParams.getHopCount()+1);
             } catch (AuthTokenException ex) {
                 throw ServiceException.FAILURE("Caught AuthToken exception: ", ex);
             }
 
-            Element envelope = proto.soapEnvelope(searchElt, zsc.toProxyCtxt());
+            Element envelope = mResponseProto.soapEnvelope(searchElt, zsc.toProxyCtxt());
             Element searchResp  = null;
             SoapHttpTransport transport = null;
 
@@ -362,5 +364,5 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
     private List<QueryInfo> mInfo = new ArrayList<QueryInfo>();
     public List<QueryInfo> getResultInfo() { return mInfo; }
 
-    public int estimateResultSize() throws ServiceException { return 0; }
+    public int estimateResultSize() { return 0; }
 }
