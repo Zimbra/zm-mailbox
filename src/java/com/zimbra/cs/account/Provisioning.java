@@ -1334,7 +1334,7 @@ public abstract class Provisioning {
      */
     
     public static final String A_zimbraReverseProxyLookupTarget         = "zimbraReverseProxyLookupTarget";
-    
+    public static final String A_zimbraReverseProxyAuthWaitInterval     = "zimbraReverseProxyAuthWaitInterval";
     public static final String A_zimbraReverseProxyMailHostQuery        = "zimbraReverseProxyMailHostQuery";
     public static final String A_zimbraReverseProxyMailHostSearchBase   = "zimbraReverseProxyMailHostSearchBase";
     public static final String A_zimbraReverseProxyMailHostAttribute    = "zimbraReverseProxyMailHostAttribute";

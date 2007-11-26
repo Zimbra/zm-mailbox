@@ -2700,5 +2700,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether user is allowed to retrieve mail from an external IMAP data source</desc>
 </attr>
 
+<attr id="569" name="zimbraReverseProxyAuthWaitInterval" type="duration" cardinality="single" optionalIn="globalConfig">
+  <globalConfigValue>10s</globalConfigValue>
+  <desc>wait duration before nginx sending back the NO response for failed imap/pop3 reverse proxy lookups</desc>
+</attr>
+
+
 </attrs>
 

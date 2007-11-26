@@ -306,7 +306,7 @@ public abstract class Entry {
      * 
      * the time interval is returned in milliseconds.
      * 
-     * @param name name of the attribute to retreive. 
+     * @param name name of the attribute to retrieve. 
      * @param defaultValue value to use if attr is not present or can't be parsed.
      * @return interval in milliseconds
      */
@@ -314,6 +314,21 @@ public abstract class Entry {
         return DateUtil.getTimeInterval(getAttr(name), defaultValue);        
     }
 
+    /**
+     * get a time interval, which is a number, optional followed by a character denoting the units
+     * (d = days, h = hours, m = minutes, s = seconds. If no character unit is specified, the default is
+     * seconds.
+     * 
+     * the time interval is returned in seconds.
+     * 
+     * @param name name of the attribute to retrieve. 
+     * @param defaultValue value to use if attr is not present or can't be parsed.
+     * @return interval in seconds
+     */
+    public long getTimeIntervalSecs(String name, long defaultValue) {
+        return DateUtil.getTimeIntervalSecs(getAttr(name), defaultValue);        
+    }
+    
     /**
      * temporarily associate a key/value pair with this entry. When an entry is reloaded, any cached data is cleared via
      * a call to resetData.
