@@ -132,7 +132,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 	
 	public void deliver(LmtpEnvelope env, InputStream in, int sizeHint) {
         try {
-            deliverMessageToLocalMailboxes(in, env.getRecipients(), env.getSender().getEmailAddress(), sizeHint);
+            deliverMessageToLocalMailboxes(in, env, sizeHint);
         } catch (MessagingException me) {
             ZimbraLog.lmtp.warn("Exception delivering mail (permanent failure)", me);
             setDeliveryStatuses(env.getRecipients(), LmtpStatus.REJECT);
@@ -201,13 +201,30 @@ public class ZimbraLmtpBackend implements LmtpBackend {
             action = da;
         }
     }
+    
+    private void logEnvelope(LmtpEnvelope env, String msgId) {
+        
+        // Log envelope information
+        if (ZimbraLog.lmtp.isInfoEnabled()) {
+            String size = (env.getSize() == 0 ?
+                           "unspecified" : Integer.toString(env.getSize()) + " bytes");
+
+            ZimbraLog.lmtp.info("Delivering message: size=%s, nrcpts=%d, sender=%s, msgid=%s",
+                                size, 
+                                env.getRecipients().size(), 
+                                env.getSender(),
+                                msgId==null?"":msgId);
+        }
+    }
 
     private void deliverMessageToLocalMailboxes(InputStream in,
-                                                List<LmtpAddress> recipients,
-                                                String envSender,
+                                                LmtpEnvelope env, 
                                                 int sizeHint)
     throws MessagingException, ServiceException {
 
+        List<LmtpAddress> recipients = env.getRecipients();
+        String envSender = env.getSender().getEmailAddress();
+        
         boolean shared = recipients.size() > 1;
         List<Integer> targetMailboxIds = new ArrayList<Integer>(recipients.size());
 
@@ -246,10 +263,12 @@ public class ZimbraLmtpBackend implements LmtpBackend {
             ParsedMessage pmAttachIndex = null;
             // ParsedMessage for users without attachments indexing
             ParsedMessage pmNoAttachIndex = null;
+            
+            // message id for logging
+            String msgId = null;
 
             for (LmtpAddress recipient : recipients) {
                 String rcptEmail = recipient.getEmailAddress();
-                ZimbraLog.addAccountNameToContext(rcptEmail);
 
                 Account account = null;
                 Mailbox mbox = null;
@@ -270,7 +289,6 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                         ZimbraLog.mailbox.warn("No mailbox found delivering mail to " + rcptEmail);
                         continue;
                     }
-                    ZimbraLog.addMboxToContext(mbox.getId());
                     attachmentsIndexingEnabled = mbox.attachmentsIndexingEnabled();
                 } catch (ServiceException se) {
                     if (se.isReceiversFault()) {
@@ -318,7 +336,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                         pm = pmNoAttachIndex;
                     }
                     assert(pm != null);
-                    ZimbraLog.addMsgIdToContext(pm.getMessageID());
+                    msgId = pm.getMessageID();
                     
                     // For non-shared delivery (i.e. only one recipient),
                     // always deliver regardless of backup mode.
@@ -337,6 +355,9 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 	                    targetMailboxIds.add(new Integer(mbox.getId()));
                 }
             }
+            
+            logEnvelope(env, msgId);
+            ZimbraLog.clearContext();
 
             SharedDeliveryContext sharedDeliveryCtxt =
             	new SharedDeliveryContext(shared, targetMailboxIds);
@@ -364,6 +385,11 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                     String rcptEmail = recipient.getEmailAddress();
                     LmtpStatus status = LmtpStatus.TRYAGAIN;
                     RecipientDetail rd = rcptMap.get(recipient);
+                    if (rd.account != null)
+                        ZimbraLog.addAccountNameToContext(rd.account.getName());
+                    if (rd.mbox != null)
+                        ZimbraLog.addMboxToContext(rd.mbox.getId());
+
                     try {
                         if (rd != null) {
                             switch (rd.action) {
@@ -377,7 +403,6 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                 ParsedMessage pm = rd.pm;
                                 Message msg = null;
                                 
-                                ZimbraLog.addAccountNameToContext(account.getName());
                                 String msgid = null;
                                 if (dedupe(pm, mbox)) {
                                     // message was already delivered to this mailbox

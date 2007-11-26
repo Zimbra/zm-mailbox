@@ -367,30 +367,7 @@ public abstract class LmtpHandler extends ProtocolHandler {
     protected abstract void continueDATA() throws IOException;
     
     protected void processMessageData(LmtpMessageInputStream in) throws IOException {
-        // Log envelope information
-        if (ZimbraLog.lmtp.isInfoEnabled()) {
-            StringBuilder recipients = new StringBuilder();
-            boolean firstTime = true;
-            for (LmtpAddress recipient : mEnvelope.getRecipients()) {
-                if (!firstTime) {
-                    recipients.append(',');
-                } else {
-                    firstTime = false;
-                }
-                recipients.append(recipient);
-                if (recipients.length() > 100) {
-                    recipients.setLength(100);
-                    recipients.append("...");
-                    break;
-                }
-            }
-            String size = (mEnvelope.getSize() == 0 ?
-                "unspecified" : Integer.toString(mEnvelope.getSize()) + " bytes");
-            ZimbraLog.lmtp.info("Delivering message: sender=%s, recipient(s)={%s}, size=%s",
-                mEnvelope.getSender(), recipients, size);
-        }
-
-    	// TODO cleanup maybe add Date if not present
+        // TODO cleanup maybe add Date if not present
     	// TODO cleanup maybe add From header from envelope is not present
     	// TODO add Received header for this lmtp transaction
     	// TODO should there be a too many recipients test?
