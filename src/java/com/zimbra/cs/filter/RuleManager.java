@@ -103,6 +103,15 @@ public class RuleManager {
             throw ServiceException.PARSE_ERROR("evaluating Sieve script", e);
         }
     }
+    
+    /**
+     * Clears the in memory parsed filter rule cache
+     * 
+     * @param account the account for which the cached parsed rules are to be cleared
+     */
+    public void clearCachedRules(Account account) {
+        account.setCachedData(FILTER_RULES_CACHE_KEY, null);
+    }
 
     /**
      * Returns the filter rules Sieve script for the given account. 

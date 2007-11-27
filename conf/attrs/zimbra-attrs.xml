@@ -292,7 +292,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>set to true for admin accounts</desc>
 </attr>
 
-<attr id="32" name="zimbraMailSieveScript" type="string" cardinality="single" optionalIn="account">
+<attr id="32" name="zimbraMailSieveScript" type="string" cardinality="single" optionalIn="account" callback="MailSieveScript">
   <desc>sieve script generated from user filter rules</desc>
 </attr>
 
