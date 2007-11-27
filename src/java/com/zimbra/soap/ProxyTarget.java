@@ -49,8 +49,6 @@ public class ProxyTarget {
 
         mAuthToken = authToken;
 
-        String scheme;
-        int port;
         String url;
         
         String requestStr = req.getRequestURI();
@@ -66,6 +64,10 @@ public class ProxyTarget {
         }
         
         mURL = url;
+    }
+
+    public ProxyTarget(Server server, String authToken, String url) {
+        mServer = server;  mAuthToken = authToken;  mURL = url;
     }
 
     public boolean isTargetLocal() throws ServiceException {
@@ -109,5 +111,9 @@ public class ProxyTarget {
                 transport.shutdown();
         }
         return response;
+    }
+
+    @Override public String toString() {
+        return "ProxyTarget(url=" + mURL + ")";
     }
 }
