@@ -338,6 +338,7 @@ public class SoapEngine {
                 if (needsAuth || needsAdminAuth)
                     response = handler.proxyIfNecessary(request, context);
             }
+
             // if no proxy, execute the request locally
             if (response == null) {
                 Object userObj = handler.preHandle(request, context);
@@ -384,9 +385,8 @@ public class SoapEngine {
 
     private void acknowledgeNotifications(ZimbraSoapContext zsc) {
         String authAccountId = zsc.getAuthtokenAccountId();
-        for (SessionInfo sinfo : zsc.getReferencedSessionsInfo()) {
-            if (sinfo.sequence <= 0)
-                continue;
+        SessionInfo sinfo = zsc.getSessionInfo();
+        if (sinfo != null && sinfo.sequence > 0) {
             Session session = SessionCache.lookup(sinfo.sessionId, authAccountId);
             if (session instanceof SoapSession)
                 ((SoapSession) session).acknowledgeNotifications(sinfo.sequence);
@@ -408,20 +408,18 @@ public class SoapEngine {
         String requestedAccountId = zsc.getRequestedAccountId();
 
         Element ctxt = zsc.createElement(HeaderConstants.CONTEXT);
-        boolean foundSessionForRequestedAccount = false;
+        boolean requiresChangeHeader = requestedAccountId != null;
         try {
-            for (SessionInfo sinfo : zsc.getReferencedSessionsInfo()) {
-                Session session = SessionCache.lookup(sinfo.sessionId, authAccountId);
-                if (session == null)
-                    continue;
-
+            SessionInfo sinfo = zsc.getSessionInfo();
+            Session session = sinfo == null ? null : SessionCache.lookup(sinfo.sessionId, authAccountId);
+            if (session != null) {
                 // session ID is valid, so ping it back to the client:
                 ZimbraSoapContext.encodeSession(ctxt, session.getSessionId(), session.getSessionType(), false);
 
                 if (session instanceof SoapSession) {
                     SoapSession soap = (SoapSession) session;
                     if (session.getTargetAccountId().equals(requestedAccountId))
-                        foundSessionForRequestedAccount = true;
+                        requiresChangeHeader = false;
 
                     // put <refresh> blocks back for any newly-created SoapSession objects
                     if (sinfo.created || soap.requiresRefresh(sinfo.sequence))
@@ -436,7 +434,7 @@ public class SoapEngine {
             // bug: 17481 if <nosession> is specified, then the SessionInfo list will be empty...but
             // we still want to encode the <change> element at least for the directly-requested accountId...
             // so encode it here as a last resort
-            if (!foundSessionForRequestedAccount && requestedAccountId != null) {
+            if (requiresChangeHeader) {
                 try {
                     String explicitAcct = requestedAccountId.equals(authAccountId) ? null : requestedAccountId;
                     // send the <change> block

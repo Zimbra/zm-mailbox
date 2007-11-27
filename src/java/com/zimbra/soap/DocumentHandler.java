@@ -24,7 +24,12 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.*;
+import com.zimbra.cs.account.AccessManager;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.mailbox.ACL;
@@ -42,10 +47,7 @@ import org.dom4j.QName;
 
 import javax.servlet.http.HttpServletRequest;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -210,9 +212,7 @@ public abstract class DocumentHandler {
     /** Returns whether the client making the SOAP request is localhost. */
     protected boolean clientIsLocal(Map<String, Object> context) {
         HttpServletRequest req = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
-        if (req == null) return true;
-        String peerIP = req.getRemoteAddr();
-        return "127.0.0.1".equals(peerIP);
+        return (req == null ? true : "127.0.0.1".equals(req.getRemoteAddr()));
     }
 
     /** Updates the {@link ZimbraSoapContext} to treat the specified account
@@ -226,30 +226,28 @@ public abstract class DocumentHandler {
      * @param stype       One of the types defined in the {@link SessionCache} class.
      * @param getSession  Whether to try to generate a new Session.
      * @return A new Session object of the appropriate type, or <tt>null</tt>. */
-    public Session updateAuthenticatedAccount(ZimbraSoapContext zsc, AuthToken authToken, boolean getSession) throws ServiceException {
+    public Session updateAuthenticatedAccount(ZimbraSoapContext zsc, AuthToken authToken, boolean getSession) {
         String oldAccountId = zsc.getAuthtokenAccountId();
         String accountId = authToken.getAccountId();
         if (accountId != null && !accountId.equals(oldAccountId))
-            zsc.getReferencedSessionsInfo().clear();
+            zsc.clearSessionInfo();
         zsc.setAuthToken(authToken);
 
         return (getSession ? getSession(zsc) : null);
     }
 
-    protected static List<Session> getReferencedSessions(ZimbraSoapContext zsc) {
-        List<SessionInfo> references = zsc.getReferencedSessionsInfo();
-        
-        List<Session> sessions = new ArrayList<Session>(references.size());
-        for (SessionInfo sinfo : references) {
-            Session s = SessionCache.lookup(sinfo.sessionId, zsc.getAuthtokenAccountId());
-            if (s != null)
-                sessions.add(s);
-        }
-        return sessions;
+    protected static Session getReferencedSession(ZimbraSoapContext zsc) {
+        SessionInfo sinfo = zsc.getSessionInfo();
+        return sinfo == null ? null : SessionCache.lookup(sinfo.sessionId, zsc.getAuthtokenAccountId());
     }
 
     public Session.Type getDefaultSessionType() {
         return Session.Type.SOAP;
+    }
+
+    protected final Session getSession(ZimbraSoapContext zsc, Map<String, Object> context) {
+        Session session = (Session) context.get(SoapEngine.ZIMBRA_SESSION);
+        return (session != null ? session : getSession(zsc));
     }
 
     /** Fetches the in-memory {@link Session} object appropriate for this
@@ -258,7 +256,7 @@ public abstract class DocumentHandler {
      * @param zsc The encapsulation of the SOAP request's <tt>&lt;context</tt>
      *            element.
      * @return A {@link com.zimbra.cs.session.SoapSession}, or <tt>null</tt>. */
-    protected final Session getSession(ZimbraSoapContext zsc) throws ServiceException {
+    protected final Session getSession(ZimbraSoapContext zsc) {
         return getSession(zsc, getDefaultSessionType());
     }
 
@@ -284,15 +282,13 @@ public abstract class DocumentHandler {
         Session s = null;
 
         // if the caller referenced a session of this type, fetch it from the session cache
-        List<SessionInfo> sessions = zsc.getReferencedSessionsInfo();
-        for (Iterator<SessionInfo> it = sessions.iterator(); it.hasNext(); ) {
-            // touch all the sessions referenced by the request
-            SessionInfo sinfo = it.next();
+        SessionInfo sinfo = zsc.getSessionInfo();
+        if (sinfo != null) {
             s = SessionCache.lookup(sinfo.sessionId, authAccountId);
             if (s == null) {
                 // purge dangling references from the context's list of referenced sessions
                 ZimbraLog.session.info("requested session no longer exists: " + sinfo.sessionId);
-                it.remove();
+                zsc.clearSessionInfo();
             } else if (s.getSessionType() != stype) {
                 // only want a session of the appropriate type
                 s = null;
@@ -303,7 +299,7 @@ public abstract class DocumentHandler {
         if (s == null) {
             try {
                 if (stype == Session.Type.SOAP) {
-                    s = new SoapSession(authAccountId, zsc.getRequestedAccountId()).register();
+                    s = new SoapSession(authAccountId).register();
                 } else if (stype == Session.Type.ADMIN) {
                     s = new AdminSession(authAccountId).register();
                 }
@@ -311,8 +307,11 @@ public abstract class DocumentHandler {
                 ZimbraLog.session.info("ZimbraSoapContext - exception while creating session: ", e);
             }
             if (s != null)
-                sessions.add(zsc.new SessionInfo(s.getSessionId(), 0, true));
+                zsc.recordNewSession(s.getSessionId());
         }
+
+        if (s != null && stype == Session.Type.SOAP && zsc.isDelegatedRequest())
+            s = ((SoapSession) s).getDelegateSession(zsc.getRequestedAccountId());
 
         return s;
     }
@@ -408,8 +407,7 @@ public abstract class DocumentHandler {
             // executing remotely; find out target and proxy there
             HttpServletRequest httpreq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
             ProxyTarget proxy = new ProxyTarget(server.getId(), zsc.getRawAuthToken(), httpreq);
-            response = proxy.dispatch(request, zsc);
-            response.detach();
+            response = proxy.dispatch(request, zsc).detach();
         }
         return response;
     }

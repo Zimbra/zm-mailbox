@@ -20,29 +20,35 @@
  */
 package com.zimbra.cs.session;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.ZimbraNamespace;
-import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.HeaderConstants;
+import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.mail.GetFolder;
-import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.service.mail.GetFolder.FolderNode;
+import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.BuildInfo;
@@ -55,6 +61,137 @@ import com.zimbra.soap.ZimbraSoapContext;
  * Add your own get/set methods here for session data.
  */
 public class SoapSession extends Session {
+    private class DelegateSession extends Session {
+        private long mNextFolderCheck;
+        private Set<Integer> mVisibleFolderIds;
+
+        DelegateSession(String authId, String targetId) {
+            super(authId, targetId, Type.SOAP);
+        }
+
+        @Override public DelegateSession register() {
+            try {
+                super.register();
+                calculateVisibleFolders(true);
+                return this;
+            } catch (ServiceException e) {
+                unregister();
+                return null;
+            }
+        }
+
+        @Override public DelegateSession unregister() {
+            super.unregister();
+            removeDelegateSession(this);
+            return this;
+        }
+
+        @Override protected boolean isMailboxListener() {
+            return true;
+        }
+
+        @Override protected boolean isRegisteredInCache() {
+            return false;
+        }
+
+        @Override protected long getSessionIdleLifetime() {
+            return Integer.MAX_VALUE;
+        }
+
+        @Override public void notifyPendingChanges(PendingModifications pms, int changeId, Session source) {
+            try {
+                if (calculateVisibleFolders(false))
+                    pms = filterNotifications(pms);
+                if (pms != null && pms.hasNotifications())
+                    handleNotifications(pms, source == this || source == SoapSession.this);
+            } catch (ServiceException e) {
+                ZimbraLog.session.warn("exception during delegated notifyPendingChanges", e);
+            }
+        }
+
+        @Override public void cleanup()  { }
+
+        private synchronized boolean calculateVisibleFolders(boolean force) throws ServiceException {
+            long now = System.currentTimeMillis();
+            if (!force && mNextFolderCheck > now)
+                return mVisibleFolderIds != null;
+
+            mNextFolderCheck = now + 5 * Constants.MILLIS_PER_MINUTE;
+
+            Mailbox mbox = mMailbox;
+            Set<Folder> visible = mbox == null ? null : mbox.getVisibleFolders(new OperationContext(getAuthenticatedAccountId()));
+            Set<Integer> ids = null;
+            if (visible != null) {
+                ids = new HashSet<Integer>(visible.size());
+                for (Folder folder : visible)
+                    ids.add(folder.getId());
+            }
+            return (mVisibleFolderIds = ids) != null;
+        }
+
+        private PendingModifications filterNotifications(PendingModifications pms) throws ServiceException {
+            // first, recalc visible folders if any folders got created or moved or had their ACL changed
+            boolean recalc = false;
+            if (pms.created != null && !pms.created.isEmpty()) {
+                for (MailItem item : pms.created.values()) {
+                    if (item instanceof Folder) {
+                        recalc = true;  break;
+                    }
+                }
+            }
+            if (!recalc && pms.modified != null && !pms.modified.isEmpty()) {
+                for (Change chg : pms.modified.values()) {
+                    if ((chg.why & (Change.MODIFIED_ACL | Change.MODIFIED_FOLDER)) != 0 && chg.what instanceof Folder) {
+                        recalc = true;  break;
+                    }
+                }
+            }
+            if (recalc) {
+                if (!calculateVisibleFolders(true))
+                    return pms;
+            }
+            assert(mVisibleFolderIds != null);
+
+
+            PendingModifications filtered = new PendingModifications();
+            filtered.changedTypes = pms.changedTypes;
+            if (pms.deleted != null && !pms.deleted.isEmpty()) {
+                filtered.recordDeleted(pms.deleted.keySet(), pms.changedTypes);
+            }
+            if (pms.created != null && !pms.created.isEmpty()) {
+                for (MailItem item : pms.created.values()) {
+                    if (mVisibleFolderIds.contains(item instanceof Folder ? item.getId() : item.getFolderId()))
+                        filtered.recordCreated(item);
+                }
+            }
+            if (pms.modified != null && !pms.modified.isEmpty()) {
+                for (Change chg : pms.modified.values()) {
+                    if (!(chg.what instanceof MailItem))
+                        continue;
+                    MailItem item = (MailItem) chg.what;
+                    boolean visible = mVisibleFolderIds.contains(item.getFolderId());
+                    if ((chg.why & Change.MODIFIED_FOLDER) != 0) {
+                        // a move between visible folders ends up as a delete and a create, but that should be OK
+                        filtered.recordDeleted(item);
+                        if (visible)
+                            filtered.recordCreated(item);
+                    } else if (visible) {
+                        filtered.recordModified(item, chg.why);
+                    }
+                }
+            }
+            return filtered;
+        }
+    }
+
+    private class RemoteSessionInfo {
+        final String mServerId, mSessionId;
+        long mLastPoll;
+
+        RemoteSessionInfo(String sessionId, String serverId, long lastPoll) {
+            mSessionId = sessionId;  mServerId = serverId;  mLastPoll = lastPoll;
+        }
+    }
 
     private static class QueuedNotifications {
         /** IMNotifications are strictly sequential right now */
@@ -109,6 +246,8 @@ public class SoapSession extends Session {
     private QueuedNotifications mChanges = new QueuedNotifications(1);
 
     private PushChannel mPushChannel = null;
+    private Map<String, DelegateSession> mDelegateSessions;
+    private Map<String, RemoteSessionInfo> mRemoteSessions;
 
     private static final long SOAP_SESSION_TIMEOUT_MSEC = 10 * Constants.MILLIS_PER_MINUTE;
 
@@ -122,21 +261,14 @@ public class SoapSession extends Session {
         super(authenticatedId, Session.Type.SOAP);
     }
 
-    /** Creates a <tt>SoapSession</tt> owned by one account and potentially
-     *  listening on another user's {@link Mailbox}.
-     * @see Session#register() */
-    public SoapSession(String authenticatedId, String requestedId) {
-        super(authenticatedId, requestedId, Session.Type.SOAP);
-    }
-
-    @Override public Session register() throws ServiceException {
+    @Override public SoapSession register() throws ServiceException {
         super.register();
         mRecentMessages = mMailbox.getRecentMessageCount();
         mPreviousAccess = mMailbox.getLastSoapAccessTime();
         return this;
     }
 
-    @Override public Session unregister() {
+    @Override public SoapSession unregister() {
         // when the session goes away, record the timestamp of the last write op to the database
         if (mLastWrite != -1 && mMailbox != null) {
             try {
@@ -145,9 +277,18 @@ public class SoapSession extends Session {
                 ZimbraLog.session.warn("exception recording unloaded session's last access time", t);
             }
         }
-
+        synchronized (this) {
+            // unloading a SoapSession also must unload all its delegates
+            if (mDelegateSessions != null) {
+                List<DelegateSession> delegates = new ArrayList<DelegateSession>(mDelegateSessions.values());
+                for (DelegateSession ds : delegates)
+                    ds.unregister();
+                mDelegateSessions = null;
+            }
+        }
         // note that Session.unregister() unsets mMailbox...
-        return super.unregister();
+        super.unregister();
+        return this;
     }
 
     @Override protected boolean isMailboxListener() {
@@ -167,7 +308,36 @@ public class SoapSession extends Session {
 //            return false;
 //        }
     }
-    
+
+
+    public DelegateSession getDelegateSession(String targetAccountId) {
+        targetAccountId = targetAccountId.toLowerCase();
+        synchronized (this) {
+            if (mDelegateSessions == null)
+                mDelegateSessions = new HashMap<String, DelegateSession>();
+            DelegateSession ds = mDelegateSessions.get(targetAccountId);
+            if (ds == null) {
+                ds = new DelegateSession(mAuthenticatedAccountId, targetAccountId).register();
+                if (ds != null)
+                    mDelegateSessions.put(targetAccountId, ds);
+            }
+            return ds;
+        }
+    }
+
+    void removeDelegateSession(DelegateSession ds) {
+        if (mDelegateSessions == null)
+            return;
+        synchronized (this) {
+            boolean removed = mDelegateSessions.remove(ds.mTargetAccountId.toLowerCase()) != null;
+            if (!removed)
+                return;
+        }
+        synchronized (mSentChanges) {
+            mForceRefresh = mChanges.getSequence();
+        }
+    }
+
 
     @Override protected long getSessionIdleLifetime() {
         return SOAP_SESSION_TIMEOUT_MSEC;
@@ -202,31 +372,26 @@ public class SoapSession extends Session {
     }
 
 
-    /**
-     * A callback interface which is listening on this session and waiting for new notifications
-     */
+    /** A callback interface which is listening on this session and waiting
+     *  for new notifications */
     public static interface PushChannel {
         public void closePushChannel();
         public int getLastKnownSeqNo();
         public ZimbraSoapContext getSoapContext();
         public void notificationsReady() throws ServiceException; 
     }
-    
+
     public static enum RegisterNotificationResult {
         NO_NOTIFY,      // notifications not available for this session
         DATA_READY,     // notifications already here
         BLOCKING;       // none here yet, wait
     }
-    
-    /**
-     * A push channel has come online
+
+    /** Record that a push channel has come online.
      *
-     * @return TRUE if the PushChannel is waiting (no data  and notifications turned on),
-     * or FALSE if the channel is not waiting
-     * 
-     * @param push channel 
-     * @throws ServiceException 
-     */
+     * @return TRUE if the PushChannel is waiting (no data and notifications
+     *         turned on), or FALSE if the channel is not waiting.
+     * @param sc  The push channel. */
     public RegisterNotificationResult registerNotificationConnection(PushChannel sc) throws ServiceException {
         // don't have to lock the Mailbox before locking the Session to avoid deadlock because we're not calling any ToXML functions
         synchronized (this) {
@@ -288,7 +453,7 @@ public class SoapSession extends Session {
         if (pms == null || !pms.hasNotifications() || mMailbox == null)
             return;
 
-        if (source == this && !isDelegatedSession()) {
+        if (source == this) {
             // on the session's first write op, record the timestamp to the database
             boolean firstWrite = mLastWrite == -1;
             mLastWrite = System.currentTimeMillis();
@@ -309,7 +474,7 @@ public class SoapSession extends Session {
                             isReceived = false;
                         else if ((item.getFlagBitmask() & Mailbox.NON_DELIVERY_FLAGS) != 0)
                             isReceived = false;
-                        else if (source != null && !source.isDelegatedSession())
+                        else if (source != null)
                             isReceived = false;
                         if (isReceived)
                             mRecentMessages++;
@@ -318,9 +483,13 @@ public class SoapSession extends Session {
             }
         }
 
+        handleNotifications(pms, source == this);
+    }
+
+    void handleNotifications(PendingModifications pms, boolean fromThisSession) {
         try {
             // update the set of notifications not yet sent to the client
-            cacheNotifications(pms, source == this);
+            cacheNotifications(pms, fromThisSession);
             // if we're in a hanging no-op, alert the client that there are changes
         	notifyPushChannel(true);
             // FIXME: this query result cache purge seems a little aggressive
@@ -336,9 +505,9 @@ public class SoapSession extends Session {
             int currentSequence = getCurrentNotificationSequence();
             if (mForceRefresh == currentSequence && !fromThisSession)
                 return;
-    
+
             // XXX: should constrain to folders, tags, and stuff relevant to the current query?
-    
+
             // determine whether this set of notifications would cause the cached set to overflow
             if (mForceRefresh != currentSequence && MAX_QUEUED_NOTIFICATIONS > 0) {
                 // XXX: more accurate would be to combine pms and mChanges and take the count...
@@ -348,7 +517,7 @@ public class SoapSession extends Session {
                     mChanges.clearMailboxChanges();
                     mForceRefresh = currentSequence;
                 }
-    
+
                 for (QueuedNotifications ntfn : mSentChanges) {
                     count += ntfn.getNotificationCount();
                     if (count > MAX_QUEUED_NOTIFICATIONS) {
@@ -357,7 +526,7 @@ public class SoapSession extends Session {
                     }
                 }
             }
-    
+
             if (mForceRefresh == currentSequence && !fromThisSession)
                 return;
             // if we're here, these changes either
@@ -447,7 +616,7 @@ public class SoapSession extends Session {
                 FolderNode root = GetFolder.getFolderTree(octxt, mMailbox, null, true);
                 GetFolder.encodeFolderNode(ifmt, octxt, eRefresh, root);
             } catch (ServiceException e) {
-                if (e.getCode() != ServiceException.PERM_DENIED)
+                if (!e.getCode().equals(ServiceException.PERM_DENIED))
                     throw e;
             }
         }
@@ -555,7 +724,7 @@ public class SoapSession extends Session {
 
             notifications = new LinkedList<QueuedNotifications>(mSentChanges);
         }
-
+            
         // send all the old changes
         QueuedNotifications last = notifications.getLast();
         for (QueuedNotifications ntfn : notifications) {
@@ -576,7 +745,7 @@ public class SoapSession extends Session {
      */
     private void putQueuedNotifications(QueuedNotifications ntfn, Element parent, ZimbraSoapContext zsc, String explicitAcct) {
         assert(ntfn.getSequence() > 0);
-        
+
         // <notify [acct="4f778920-1a84-11da-b804-6b188d2a20c4"]/>
         Element eNotify = parent.addElement(ZimbraNamespace.E_NOTIFY)
                                 .addAttribute(HeaderConstants.A_ACCOUNT_ID, explicitAcct)
@@ -595,14 +764,14 @@ public class SoapSession extends Session {
         PendingModifications pms = ntfn.mMailboxChanges;
 
         if (pms != null && pms.deleted != null && pms.deleted.size() > 0) { 
-            StringBuilder ids = new StringBuilder ();
-            for (Object obj : pms.deleted.values()) {
+            StringBuilder ids = new StringBuilder();
+            for (PendingModifications.ModificationKey mkey : pms.deleted.keySet()) {
                 if (ids.length() != 0)
                     ids.append(',');
-                if (obj instanceof MailItem)
-                    ids.append(((MailItem) obj).getId());
-                else if (obj instanceof Integer)
-                    ids.append(obj);
+                // should be using the ItemIdFormatter, but I'm preoptimizing here
+                if (!mkey.getAccountId().equals(mAuthenticatedAccountId))
+                    ids.append(mkey.getAccountId()).append(':');
+                ids.append(mkey.getItemId());
             }
             Element eDeleted = eNotify.addUniqueElement(ZimbraNamespace.E_DELETED);
             eDeleted.addAttribute(A_ID, ids.toString());
@@ -683,8 +852,8 @@ public class SoapSession extends Session {
                 return null;
         }
     }
-    
-    public void cleanup() {
+
+    @Override public void cleanup() {
         try {
             clearCachedQueryResults();
         } catch (ServiceException e) {

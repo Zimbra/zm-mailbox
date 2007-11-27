@@ -41,8 +41,8 @@ public abstract class MailDocumentHandler extends DocumentHandler {
     @Override
     public Object preHandle(Element request, Map<String, Object> context) throws ServiceException { 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Session session = getSession(zsc);
-        Mailbox.OperationContext octxt = getOperationContext(zsc, context);
+        Session session = getSession(zsc, context);
+        Mailbox.OperationContext octxt = getOperationContext(zsc, session);
         Mailbox mbox = getRequestedMailbox(zsc);
         return BlockingOperation.schedule(request.getName(), session, octxt, mbox, Requester.SOAP, getSchedulerPriority(), 1);   
     }

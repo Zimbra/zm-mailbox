@@ -930,7 +930,7 @@ public class Mailbox {
      *  the transaction.
      * @param itemId  The deleted item's id. */
     void markItemDeleted(byte type, int itemId) {
-        mCurrentChange.mDirty.recordDeleted(itemId, type);
+        mCurrentChange.mDirty.recordDeleted(mData.accountId, itemId, type);
     }
     
     /** Adds the item ids to the current change's list of items deleted during
@@ -938,7 +938,7 @@ public class Mailbox {
      * @param typesMask Mask of all MailItem types listed in itemIds.  see {@link MailItem#typeToBitmask}a
      * @param itemIds  The list of deleted items' ids. */
     void markItemDeleted(int typesMask, List<Integer> itemIds) {
-        mCurrentChange.mDirty.recordDeleted(itemIds, typesMask);
+        mCurrentChange.mDirty.recordDeleted(mData.accountId, itemIds, typesMask);
     }
 
     /** Adds the item to the current change's list of items modified during

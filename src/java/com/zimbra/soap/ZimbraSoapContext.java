@@ -20,18 +20,20 @@
  */
 package com.zimbra.soap;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
-
 import org.dom4j.QName;
 import org.mortbay.util.ajax.Continuation;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.HeaderConstants;
+import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
@@ -43,11 +45,6 @@ import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession.PushChannel;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.HeaderConstants;
-import com.zimbra.common.soap.SoapProtocol;
 
 /**
  * This class models the soap context (the data from the soap envelope)  
@@ -60,13 +57,8 @@ public class ZimbraSoapContext {
         int sequence;
         boolean created;
 
-        SessionInfo(String id, int seqNo) {
-            this(id, seqNo, false);
-        }
         SessionInfo(String id, int seqNo, boolean newSession) {
-            sessionId = id;
-            sequence = seqNo;
-            created = newSession;
+            sessionId = id;  sequence = seqNo;  created = newSession;
         }
 
         public String toString()  { return sessionId; }
@@ -101,7 +93,7 @@ public class ZimbraSoapContext {
     private boolean mChangeConstraintType = OperationContext.CHECK_MODIFIED;
     private int     mMaximumChangeId = -1;
 
-    private List<SessionInfo> mSessionInfo = new ArrayList<SessionInfo>();
+    private SessionInfo mSessionInfo;
     private boolean mSessionSuppressed; // don't create a new session for this request
     private boolean mUnqualifiedItemIds;
     private boolean mWaitForNotifications;
@@ -135,7 +127,7 @@ public class ZimbraSoapContext {
         mRequestedAccountId = accountId;
         mRequestProtocol = reqProtocol;
         mResponseProtocol = respProtocol;
-        
+
         mSessionSuppressed = true;
         mHopCount = hopCount;
     }
@@ -152,7 +144,8 @@ public class ZimbraSoapContext {
         mRequestProtocol = zsc.mRequestProtocol;
         mResponseProtocol = zsc.mResponseProtocol;
 
-        mSessionSuppressed = true;
+        mSessionInfo = zsc.mSessionInfo;
+        mSessionSuppressed = zsc.mSessionSuppressed;
         mUnqualifiedItemIds = zsc.mUnqualifiedItemIds;
 
         mHopCount = zsc.mHopCount + 1;
@@ -281,7 +274,7 @@ public class ZimbraSoapContext {
                     if ("".equals(sessionId = session.getTextTrim()))
                         sessionId = session.getAttribute(HeaderConstants.A_ID, null);
                     if (sessionId != null)
-                        mSessionInfo.add(new SessionInfo(sessionId, (int) session.getAttributeLong(HeaderConstants.A_SEQNO, seqNo)));
+                        mSessionInfo = new SessionInfo(sessionId, (int) session.getAttributeLong(HeaderConstants.A_SEQNO, seqNo), false);
                 }
             }
         }
@@ -356,68 +349,71 @@ public class ZimbraSoapContext {
         return !mAuthTokenAccountId.equalsIgnoreCase(getRequestedAccountId());
     }
 
+
     public boolean isNotificationEnabled() {
         return !mSessionSuppressed;
     }
 
-    /** Returns a list of the {@link SessionInfo} items associated with this
+    /** Returns the {@link SessionInfo} item associated with this
      *  SOAP request.  SessionInfo objects correspond to either:<ul>
      *  <li>sessions specified in a <tt>&lt;sessionId></tt> element in the 
      *      <tt>&lt;context></tt> SOAP header block, or</li>
      *  <li>new sessions created during the course of the SOAP call</li></ul> */
-    List<SessionInfo> getReferencedSessionsInfo() {
+    SessionInfo getSessionInfo() {
         return mSessionInfo;
     }
 
-    /**
-     * @return TRUE if any of our referenced sessions are brand-new.  This special-case API
-     *         is used to short-circuit blocking handlers so that they return immediately
-     *         to send a <refresh> block if one is necessary.
-     */
-    public boolean hasCreatedSession() {
-        for (SessionInfo sinfo : getReferencedSessionsInfo()) {
-            if (sinfo.created)
-                return true;
-        }
-        return false;
+    SessionInfo recordNewSession(String sessionId) {
+        return (mSessionInfo = new SessionInfo(sessionId, 0, true));
     }
+
+    void clearSessionInfo() {
+        mSessionInfo = null;
+    }
+
+    /** Returns <tt>TRUE</tt> if our referenced session is brand-new.  This
+     *  special-case API is used to short-circuit blocking handlers so that
+     *  they return immediately to send a <refresh> block if one is needed. */
+    public boolean hasCreatedSession() {
+        return mSessionInfo != null && mSessionInfo.created;
+    }
+
 
     public boolean beginWaitForNotifications(Continuation continuation) throws ServiceException {
         boolean someBlocked = false;
         boolean someReady = false;
         mWaitForNotifications = true;
         mContinuation = continuation;
-        
-        for (SessionInfo sinfo : mSessionInfo) {
-            Session session = SessionCache.lookup(sinfo.sessionId, mAuthTokenAccountId);
-            if (session instanceof SoapSession) {
-                SoapSession ss = (SoapSession) session;
-                SoapSession.RegisterNotificationResult result = ss.registerNotificationConnection(sinfo.getPushChannel());
-                switch (result) {
-                    case NO_NOTIFY: break;
-                    case DATA_READY: someReady = true; break;
-                    case BLOCKING: someBlocked = true; break;
-                }
+
+        Session session = SessionCache.lookup(mSessionInfo.sessionId, mAuthTokenAccountId);
+        if (session instanceof SoapSession) {
+            SoapSession ss = (SoapSession) session;
+            SoapSession.RegisterNotificationResult result = ss.registerNotificationConnection(mSessionInfo.getPushChannel());
+            switch (result) {
+                case NO_NOTIFY: break;
+                case DATA_READY: someReady = true; break;
+                case BLOCKING: someBlocked = true; break;
             }
         }
 
         return (someBlocked && !someReady);
     }
 
-    /**
-     * Called by the Session object if a new notification comes in 
-     */
+    /** Called by the Session object if a new notification comes in. */
     synchronized public void signalNotification(boolean canceled) {
         mWaitForNotifications = false;
         mCanceledWaitForNotifications = canceled;
         mContinuation.resume();
     }
     
-    synchronized public boolean isCanceledWaitForNotifications() { return mCanceledWaitForNotifications; }
+    synchronized public boolean isCanceledWaitForNotifications() {
+        return mCanceledWaitForNotifications;
+    }
     
     synchronized public boolean waitingForNotifications() {
         return mWaitForNotifications;
     }
+
 
     /** Serializes this object for use in a proxied SOAP request.  The
      *  attributes encapsulated by the <code>ZimbraContext</code> -- the

@@ -20,13 +20,13 @@
  */
 package com.zimbra.cs.session;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 
+import com.zimbra.common.util.Pair;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-
 
 public final class PendingModifications {
     public static final class Change {
@@ -62,6 +62,18 @@ public final class PendingModifications {
         Change(Object thing, int reason)  { what = thing;  why = reason; }
     }
 
+    static final class ModificationKey extends Pair<String, Integer> {
+        public ModificationKey(String first, Integer second) {
+            super(first, second);
+        }
+        public ModificationKey(MailItem item) {
+            super(item.getMailbox().getAccountId(), item.getId());
+        }
+
+        public String getAccountId()  { return getFirst(); }
+        public Integer getItemId()    { return getSecond(); }
+    }
+
 
     /** Set of all the MailItem types that are included in this structure
      * The mask is generated from the MailItem type using 
@@ -69,16 +81,16 @@ public final class PendingModifications {
     public int changedTypes = 0;
 
     // The key is MailItemID
-    public LinkedHashMap<Integer, MailItem> created;
-    public HashMap<Integer, Change> modified;
-    public HashMap<Integer, Object> deleted;
+    public LinkedHashMap<ModificationKey, MailItem> created;
+    public HashMap<ModificationKey, Change> modified;
+    public HashMap<ModificationKey, Object> deleted;
 
     public PendingModifications() { }
 
     public boolean hasNotifications() {
-        return (deleted  != null && deleted.size() > 0) ||
-               (created  != null && created.size() > 0) ||
-               (modified != null && modified.size() > 0);
+        return (deleted  != null && !deleted.isEmpty()) ||
+               (created  != null && !created.isEmpty()) ||
+               (modified != null && !modified.isEmpty());
     }
 
     public int getNotificationCount() {
@@ -92,50 +104,58 @@ public final class PendingModifications {
     public void recordCreated(MailItem item) {
 //        ZimbraLog.mailbox.debug("--> NOTIFY: created " + item.getId());
         if (created == null)
-            created = new LinkedHashMap<Integer, MailItem>();
+            created = new LinkedHashMap<ModificationKey, MailItem>();
         changedTypes |= MailItem.typeToBitmask(item.getType());
-        created.put(item.getId(), item);
+        created.put(new ModificationKey(item), item);
     }
 
-    public void recordDeleted(int id, byte type) {
+    public void recordDeleted(String accountId, int id, byte type) {
         if (type != 0) 
             changedTypes |= MailItem.typeToBitmask(type);
-        Integer key = new Integer(id);
-        delete(key, key);
+        ModificationKey key = new ModificationKey(accountId, id);
+        delete(key, key.getItemId());
     }
 
-    public void recordDeleted(List<Integer> ids, int typesMask) {
+    public void recordDeleted(String accountId, Collection<Integer> ids, int typesMask) {
         changedTypes |= typesMask;
-        for (Integer id : ids) 
-            delete(id, id);
+        for (Integer id : ids) {
+            ModificationKey key = new ModificationKey(accountId, id);
+            delete(key, id);
+        }
     }
 
     public void recordDeleted(MailItem item) {
         changedTypes |= MailItem.typeToBitmask(item.getType());
-        delete(new Integer(item.getId()), item);
+        delete(new ModificationKey(item), item);
     }
 
-    private void delete(Integer key, Object value) {
+    public void recordDeleted(Collection<ModificationKey> keys, int typesMask) {
+        changedTypes |= typesMask;
+        for (ModificationKey key : keys)
+            delete(key, key.getItemId());
+    }
+
+    private void delete(ModificationKey key, Object value) {
 //      ZimbraLog.mailbox.debug("--> NOTIFY: deleted " + key);
         if (created != null && created.remove(key) != null)
             return;
         if (modified != null)
             modified.remove(key);
         if (deleted == null)
-            deleted = new HashMap<Integer, Object>();
+            deleted = new HashMap<ModificationKey, Object>();
         deleted.put(key, value);
     }
 
     public void recordModified(Mailbox mbox, int reason) {
-        recordModified(new Integer(0), mbox, reason);
+        recordModified(new ModificationKey(mbox.getAccountId(), 0), mbox, reason);
     }
 
     public void recordModified(MailItem item, int reason) {
         changedTypes |= MailItem.typeToBitmask(item.getType());
-        recordModified(new Integer(item.getId()), item, reason);
+        recordModified(new ModificationKey(item), item, reason);
     }
 
-    private void recordModified(Integer key, Object item, int reason) {
+    private void recordModified(ModificationKey key, Object item, int reason) {
 //        ZimbraLog.mailbox.debug("--> NOTIFY: modified " + key + " (" + reason + ')');
         Change chg = null;
         if (created != null && created.containsKey(key)) {
@@ -143,7 +163,7 @@ public final class PendingModifications {
         } else if (deleted != null && deleted.containsKey(key)) {
             return;
         } else if (modified == null) {
-            modified = new HashMap<Integer, Change>();
+            modified = new HashMap<ModificationKey, Change>();
         } else {
             chg = modified.get(key);
             if (chg != null) {
@@ -156,17 +176,13 @@ public final class PendingModifications {
         modified.put(key, chg);
     }
 
-    void add(PendingModifications other) {
+    PendingModifications add(PendingModifications other) {
         changedTypes |= other.changedTypes;
-        
+
         if (other.deleted != null) {
-            for (Object obj : other.deleted.values()) {
-                // note that deleted MailItems are just added as IDs for concision
-                if (obj instanceof MailItem)
-                    recordDeleted(((MailItem) obj).getId(), (byte) 0);
-                else if (obj instanceof Integer)
-                    recordDeleted((Integer) obj, (byte) 0);
-            }
+            // note that deleted MailItems are just added as IDs for concision
+            for (ModificationKey key : other.deleted.keySet())
+                delete(key, key.getItemId());
         }
 
         if (other.created != null) {
@@ -182,8 +198,10 @@ public final class PendingModifications {
                     recordModified((Mailbox) chg.what, chg.why);
             }
         }
+
+        return this;
     }
-    
+
     public void clear()  { 
         created = null;  
         deleted = null;  

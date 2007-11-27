@@ -34,22 +34,20 @@ public class IMGatewayList extends IMDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        
+
         Element response = zsc.createElement(IMConstants.IM_GATEWAY_LIST_RESPONSE);
-        
+
         IMPersona persona = getRequestedPersona(zsc);
         synchronized (persona.getLock()) {
-            
             // hacky side-effect: the client requests the gateway list first, so this
             // is currently where we create the client session
-            List<Session> sessions = getReferencedSessions(zsc);
-            for (Session s : sessions) {
+            Session s = getReferencedSession(zsc);
+            if (s != null)
                 s.registerWithIM(persona);
-            }
-            
+
             List<Pair<ServiceName, UserStatus>> types = persona.getAvailableGateways();
             String domain = persona.getDomain();
-            
+
             for (Pair<ServiceName, UserStatus> p : types) {
                 Element typeElt = response.addElement("service");
                 typeElt.addAttribute("type", p.getFirst().name());
