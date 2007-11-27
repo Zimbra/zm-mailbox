@@ -182,7 +182,7 @@ public class ZGrant {
      * the zimbraId of the granteee
      */
     public String getGranteeId() {
-        return mGranteeId;
+        return mGranteeId;                                                                          
     }
     
     /**
@@ -190,6 +190,14 @@ public class ZGrant {
      */
     public String getArgs() {
         return mArgs;
+    }
+
+    /**
+     * Is this grant a public grant?
+     *
+     */
+    public boolean isPublic() {
+        return this.getGranteeType().equals(GranteeType.pub);
     }
     
     public String toString() {
