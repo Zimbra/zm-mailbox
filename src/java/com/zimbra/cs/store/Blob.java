@@ -66,6 +66,10 @@ public class Blob {
         return mDigest;
     }
     
+    /**
+     * Returns the in-memory data for this blob, or <tt>null</tt> if the
+     * blob is being streamed to/from disk.
+     */
     public byte[] getData() {
         return mData;
     }
@@ -73,7 +77,10 @@ public class Blob {
     public void setCompressed(boolean isCompressed) {
         mIsCompressed = isCompressed;
     }
-    
+
+    /**
+     * Sets the in-memory data for this blob.
+     */
     public void setData(byte[] data) {
         mData = data;
     }
