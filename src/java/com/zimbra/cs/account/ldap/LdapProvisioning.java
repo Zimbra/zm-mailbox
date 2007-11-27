@@ -35,6 +35,7 @@ import com.zimbra.cs.account.Account.CalendarUserType;
 import com.zimbra.cs.account.EntrySearchFilter.Term;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
@@ -2485,13 +2486,13 @@ public class LdapProvisioning extends Provisioning {
         
         String accountStatus = acct.getAccountStatus();
         if (accountStatus == null)
-            throw AccountServiceException.AUTH_FAILED(acct.getName());
+            throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "missing account status");
         if (accountStatus.equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE)) 
             throw AccountServiceException.MAINTENANCE_MODE();
 
         if (!(accountStatus.equals(Provisioning.ACCOUNT_STATUS_ACTIVE) ||
-                accountStatus.equals(Provisioning.ACCOUNT_STATUS_LOCKOUT)))
-            throw AccountServiceException.AUTH_FAILED(acct.getName());
+              accountStatus.equals(Provisioning.ACCOUNT_STATUS_LOCKOUT)))
+            throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "account(or domain) status is "+accountStatus);
     }
     
     @Override
@@ -2500,6 +2501,10 @@ public class LdapProvisioning extends Provisioning {
             preAuth(acct, acctValue, acctBy, timestamp, expires, preAuth);
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                     new String[] {"cmd", "PreAuth","account", acct.getName()}));
+        } catch (AuthFailedServiceException e) {
+            ZimbraLog.security.warn(ZimbraLog.encodeAttrs(
+                    new String[] {"cmd", "PreAuth","account", acct.getName(), "error", e.getMessage()+": "+e.getReason()}));             
+            throw e;
         } catch (ServiceException e) {
             ZimbraLog.security.warn(ZimbraLog.encodeAttrs(
                     new String[] {"cmd", "PreAuth","account", acct.getName(), "error", e.getMessage()}));             
@@ -2522,7 +2527,7 @@ public class LdapProvisioning extends Provisioning {
         long now = System.currentTimeMillis();
         long diff = Math.abs(now-timestamp);
         if (diff > TIMESTAMP_WINDOW)
-            throw AccountServiceException.AUTH_FAILED(acct.getName()+" (preauth timestamp is too old)");
+            throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "preauth timestamp is too old");
         
         // compute expected preAuth
         HashMap<String,String> params = new HashMap<String,String>();
@@ -2532,7 +2537,7 @@ public class LdapProvisioning extends Provisioning {
         params.put("expires", expires+"");
         String computedPreAuth = PreAuthKey.computePreAuth(params, domainPreAuthKey);
         if (!computedPreAuth.equalsIgnoreCase(preAuth))
-            throw AccountServiceException.AUTH_FAILED(acct.getName()+" (preauth mismatch)");
+            throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "preauth mismatch");
     }
     
     /* (non-Javadoc)
@@ -2542,10 +2547,14 @@ public class LdapProvisioning extends Provisioning {
     public void authAccount(Account acct, String password, String proto) throws ServiceException {
         try {
             if (password == null || password.equals(""))
-                throw AccountServiceException.AUTH_FAILED(acct.getName()+ " (empty password)");
+                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "empty password");
             authAccount(acct, password, true);
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                     new String[] {"cmd", "Auth","account", acct.getName(), "protocol", proto}));
+        } catch (AuthFailedServiceException e) {
+            ZimbraLog.security.warn(ZimbraLog.encodeAttrs(
+                    new String[] {"cmd", "Auth","account", acct.getName(), "protocol", proto, "error", e.getMessage()+": "+e.getReason()}));             
+            throw e;
         } catch (ServiceException e) {
             ZimbraLog.security.warn(ZimbraLog.encodeAttrs(
                     new String[] {"cmd", "Auth","account", acct.getName(), "protocol", proto, "error", e.getMessage()}));             
@@ -2660,9 +2669,9 @@ public class LdapProvisioning extends Provisioning {
             }
 
         } catch (AuthenticationException e) {
-            throw AccountServiceException.AUTH_FAILED(acct.getName(), e);
+            throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "external LDAP auth failed, "+e.getMessage(), e);
         } catch (AuthenticationNotSupportedException e) {
-            throw AccountServiceException.AUTH_FAILED(acct.getName(), e);
+            throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "external LDAP auth failed, "+e.getMessage(), e);
         } catch (NamingException e) {
             throw ServiceException.FAILURE(e.getMessage(), e);
         }
@@ -2678,7 +2687,7 @@ public class LdapProvisioning extends Provisioning {
         LdapLockoutPolicy lockoutPolicy = new LdapLockoutPolicy(this, acct);
         try {
             if (lockoutPolicy.isLockedOut())
-                throw AccountServiceException.AUTH_FAILED(acct.getName());
+                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "account lockout");
 
             // attempt to verify the password
             verifyPasswordInternal(acct, password, authMech);

@@ -21,6 +21,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
@@ -1030,7 +1031,8 @@ public class LdapUtil {
                 dn = sr.getNameInNamespace();
             }
             
-            if (dn == null) throw AccountServiceException.AUTH_FAILED("authn failed");
+            if (dn == null) 
+                throw AuthFailedServiceException.AUTH_FAILED(email, "entry not found");
         
             System.out.println("DN = "+ dn);
             

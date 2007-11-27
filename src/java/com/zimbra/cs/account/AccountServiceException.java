@@ -79,13 +79,43 @@ public class AccountServiceException extends ServiceException {
         super(message, code, isReceiversFault, cause);
     }
     
-    public static AccountServiceException AUTH_FAILED(String accountName) {
-        return new AccountServiceException("authentication failed for " + accountName, AUTH_FAILED, SENDERS_FAULT, null);
-    }
+    /*
+     * AuthFailedServiceException provides the functionality of keeping the reason(why auth failed) separately 
+     * from the message.
+     * 
+     * getMessage() returns a generic message "authentication failed for {account-name}"
+     *              This info is returned to the client.
+     *              
+     * getReason() returns the reason why auth failed.
+     *             This info is logged but not returned to the client, for security reasons.
+     */
+    public static class AuthFailedServiceException extends ServiceException {
+        private String mReason;
+        
+        private AuthFailedServiceException(String acctName, String reason, String code, boolean isReceiversFault, Throwable cause) {
+            super("authentication failed for " + acctName, code, isReceiversFault, cause);
+            mReason = reason;
+        }
+        
+        /*
+         * reason should not be returned in response,  but should be logged
+         */
+        public String getReason() {
+            return mReason==null?"":mReason;
+        }
+        
+        public static AuthFailedServiceException AUTH_FAILED(String acctName) {
+            return AUTH_FAILED(acctName, null, null);
+        }
+        
+        public static AuthFailedServiceException AUTH_FAILED(String acctName, String reason) {
+            return AUTH_FAILED(acctName, reason, null);
+        }
 
-    public static AccountServiceException AUTH_FAILED(String accountName, Throwable t) {
-        return new AccountServiceException("authentication failed for " + accountName, AUTH_FAILED, SENDERS_FAULT, t);
-    }    
+        public static AuthFailedServiceException AUTH_FAILED(String acctName, String reason, Throwable t) {
+            return new AuthFailedServiceException(acctName, reason, AUTH_FAILED, SENDERS_FAULT, t);
+        }   
+    }
     
     public static AccountServiceException CHANGE_PASSWORD() {
         return new AccountServiceException("must change password", CHANGE_PASSWORD, SENDERS_FAULT, null);

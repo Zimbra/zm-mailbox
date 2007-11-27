@@ -27,6 +27,7 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -55,7 +56,7 @@ public class ChangePassword extends AccountDocumentHandler {
         
         Account acct = prov.get(AccountBy.name, name);
         if (acct == null)
-            throw AccountServiceException.AUTH_FAILED(name);
+            throw AuthFailedServiceException.AUTH_FAILED(name);
 		String oldPassword = request.getAttribute(AccountConstants.E_OLD_PASSWORD);
 		String newPassword = request.getAttribute(AccountConstants.E_PASSWORD);
 		prov.changePassword(acct, oldPassword, newPassword);

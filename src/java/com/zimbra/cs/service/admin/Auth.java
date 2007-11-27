@@ -22,7 +22,12 @@ package com.zimbra.cs.service.admin;
 
 import java.util.Map;
 
-import com.zimbra.cs.account.*;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.session.Session;
@@ -81,7 +86,7 @@ public class Auth extends AdminDocumentHandler {
                 acct = prov.get(AccountBy.name, name);
 
             if (acct == null)
-                throw AccountServiceException.AUTH_FAILED(name);
+                throw AuthFailedServiceException.AUTH_FAILED(name);
         
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                     new String[] {"cmd", "AdminAuth","account", name})); 

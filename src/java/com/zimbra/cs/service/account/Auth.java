@@ -24,6 +24,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AttributeFlag;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.AuthToken;
@@ -101,7 +102,7 @@ public class Auth extends AccountDocumentHandler {
 
             Account acct = prov.get(by, value);
             if (acct == null)
-                throw AccountServiceException.AUTH_FAILED(value);
+                throw AuthFailedServiceException.AUTH_FAILED(value);
 
             long expires = 0;
 

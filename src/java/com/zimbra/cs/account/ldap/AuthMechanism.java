@@ -24,6 +24,7 @@ import javax.security.auth.login.LoginException;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.krb5.Krb5Login;
@@ -102,12 +103,13 @@ abstract class AuthMechanism {
             String encodedPassword = acct.getAttr(Provisioning.A_userPassword);
 
             if (encodedPassword == null)
-                throw AccountServiceException.AUTH_FAILED(acct.getName());
+                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "missing "+Provisioning.A_userPassword);
 
             if (LdapUtil.isSSHA(encodedPassword)) {
-                if (LdapUtil.verifySSHA(encodedPassword, password)) {
+                if (LdapUtil.verifySSHA(encodedPassword, password))
                     return; // good password, RETURN
-                }
+                else
+                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "invalid password");     
 
             } else if (acct instanceof LdapEntry) {
                 String[] urls = new String[] { LdapUtil.getLdapURL() };
@@ -115,14 +117,14 @@ abstract class AuthMechanism {
                     LdapUtil.ldapAuthenticate(urls, ((LdapEntry)acct).getDN(), password);
                     return; // good password, RETURN                
                 } catch (AuthenticationException e) {
-                    throw AccountServiceException.AUTH_FAILED(acct.getName(), e);
+                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), e.getMessage(), e);
                 } catch (AuthenticationNotSupportedException e) {
-                    throw AccountServiceException.AUTH_FAILED(acct.getName(), e);
+                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), e.getMessage(), e);
                 } catch (NamingException e) {
                     throw ServiceException.FAILURE(e.getMessage(), e);
                 }
             }
-            throw AccountServiceException.AUTH_FAILED(acct.getName());       
+            throw AuthFailedServiceException.AUTH_FAILED(acct.getName());       
         }
         
         boolean checkPasswordAging() throws ServiceException {
@@ -159,13 +161,13 @@ abstract class AuthMechanism {
             String principal = Krb5Principal.getKrb5Principal(domain, acct);
             
             if (principal == null)
-                throw AccountServiceException.AUTH_FAILED(acct.getName(), new Exception("cannot obtain principal for " + mAuthMech + " auth"));
+                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "cannot obtain principal for " + mAuthMech + " auth");
             
             if (principal != null) {
                 try {
                     Krb5Login.verifyPassword(principal, password);
                 } catch (LoginException e) {
-                    throw AccountServiceException.AUTH_FAILED(acct.getName() + "(kerberos5 principal: " + principal + ")", e);
+                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName() + "(kerberos5 principal: " + principal + ")", e.getMessage(), e);
                 }
             }
         }
@@ -196,7 +198,7 @@ abstract class AuthMechanism {
         void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password) throws ServiceException {
             
             if (mHandler == null)
-                throw AccountServiceException.AUTH_FAILED(acct.getName(), new Exception("handler " + mHandlerName + " for custom auth for domain " + domain.getName() + " not found"));
+                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "handler " + mHandlerName + " for custom auth for domain " + domain.getName() + " not found");
             
             try {
                 mHandler.authenticate(acct, password);
@@ -210,7 +212,11 @@ abstract class AuthMechanism {
                         msg = "";
                     else
                         msg = " (" + msg + ")";
-                    throw AccountServiceException.AUTH_FAILED(acct.getName() + msg , e);
+                    /*
+                     * include msg in the response, in addition to logs.  This is because custom 
+                     * auth handlers might want to pass the reason back to the client.
+                     */ 
+                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName()+msg, msg, e);
                 }
             }
             
