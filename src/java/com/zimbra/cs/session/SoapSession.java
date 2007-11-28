@@ -664,7 +664,7 @@ public class SoapSession extends Session {
             elem.addAttribute(MailConstants.A_UNREAD, target.getUnreadCount());
             elem.addAttribute(MailConstants.A_NUM, target.getSize());
             elem.addAttribute(MailConstants.A_SIZE, target.getTotalSize());
-            elem.addAttribute(MailConstants.A_URL, "".equals(target.getUrl()) ? null : target.getUrl());
+            elem.addAttribute(MailConstants.A_URL, "".equals(target.getUrl()) ? null : ToXML.sanitizeURL(target.getUrl()));
             if (target.isUnread())
                 elem.addAttribute(MailConstants.A_FLAGS, "u" + elem.getAttribute(MailConstants.A_FLAGS, "").replace("u", ""));
         } else {

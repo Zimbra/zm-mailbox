@@ -154,18 +154,8 @@ public class ToXML {
 
         if (needToOutput(fields, Change.MODIFIED_URL)) {
             String url = folder.getUrl();
-            if (!url.equals("") || fields != NOTIFY_FIELDS) {
-                if (url.indexOf('@') != -1) {
-                    try {
-                        HttpURL httpurl = new HttpURL(url);
-                        if (httpurl.getPassword() != null) {
-                            httpurl.setPassword("");
-                            url = httpurl.toString();
-                        }
-                    } catch (org.apache.commons.httpclient.URIException urie) { }
-                }
-                elem.addAttribute(MailConstants.A_URL, url);
-            }
+            if (!url.equals("") || fields != NOTIFY_FIELDS)
+                elem.addAttribute(MailConstants.A_URL, sanitizeURL(url));
         }
 
         Mailbox mbox = folder.getMailbox();
@@ -203,6 +193,19 @@ public class ToXML {
             }
         }
         return elem;
+    }
+
+    public static String sanitizeURL(String url) {
+        if (url != null && url.indexOf('@') != -1) {
+            try {
+                HttpURL httpurl = new HttpURL(url);
+                if (httpurl.getPassword() != null) {
+                    httpurl.setPassword("");
+                    return httpurl.toString();
+                }
+            } catch (org.apache.commons.httpclient.URIException urie) { }
+        }
+        return url;
     }
 
     private static Element encodeFolderCommon(Element elem, ItemIdFormatter ifmt, Folder folder, int fields) {
@@ -1799,8 +1802,7 @@ public class ToXML {
                 calItem.getType() == MailItem.TYPE_APPOINTMENT ? "appt" : "task");
     }
 
-    public static void encodeAlarmTimes(Element elem, CalendarItem calItem)
-    throws ServiceException {
+    public static void encodeAlarmTimes(Element elem, CalendarItem calItem) {
         AlarmData alarmData = calItem.getAlarmData();
         if (alarmData != null) {
             long nextAlarm = alarmData.getNextAt();
@@ -1809,8 +1811,7 @@ public class ToXML {
         }
     }
 
-    public static Element encodeAlarmData(Element parent, CalendarItem calItem, AlarmData alarmData)
-    throws ServiceException {
+    public static Element encodeAlarmData(Element parent, CalendarItem calItem, AlarmData alarmData) {
         Element alarmElem = parent.addElement(MailConstants.E_CAL_ALARM_DATA);
         encodeAlarmTimes(alarmElem, calItem);
         // Start time of the meeting instance we're reminding about.
