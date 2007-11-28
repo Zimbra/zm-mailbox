@@ -1026,8 +1026,10 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		}
 	}
 	public static class UrlWiklet extends Wiklet {
+		private static final String sLABEL = "label";		
 		private static final String sTYPE = "type";
 		private static final String sVERSIONURL = "version";
+		private static final String sHISTORYURL = "history";
 		public String getName() {
 			return "Url";
 		}
@@ -1051,12 +1053,25 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 				if(type != null && type.equals(sVERSIONURL) && ctxt.latestVersionItem !=null) {
 					wurl = new WikiUrl(ctxt.latestVersionItem);
 					url = wurl.getFullUrl(ctxt.wctxt, ctxt.latestVersionItem.getMailbox().getAccountId())+"?ver="+ctxt.item.getVersion();
+				}else if(type != null && type.equals(sHISTORYURL)) {
+					if (ctxt.item instanceof Folder){
+						url = null;						
+					}else{
+						wurl = new WikiUrl(ctxt.item);
+						title = params.get(sLABEL);
+						if(title==null){
+							title = sHISTORYURL;
+						}
+						url = wurl.getFullUrl(ctxt.wctxt, ctxt.item.getMailbox().getAccountId())+"?view="+sHISTORYURL;
+					}
 				}else{
 					url = wurl.getFullUrl(ctxt.wctxt, ctxt.item.getMailbox().getAccountId());
 				}
-				buf.append("<a href='");
-				buf.append(url);
-				buf.append("'>").append(title).append("</a>");
+				if(url != null){
+					buf.append("<a href='");
+					buf.append(url);
+					buf.append("'>").append(title).append("</a>");
+				}
 				return buf.toString();
 			} catch (Exception e) {
 				return "<!-- cannot generate URL for item "+title+" -->" + title;

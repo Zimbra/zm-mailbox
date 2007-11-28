@@ -80,7 +80,7 @@ public class WikiFormatter extends Formatter {
             }
         } else {
             WikiTemplate wt = getTemplate(context, wiki);
-            template = wt.getComposedPage(ctxt, wiki, CHROME);
+            template = wt.getComposedPage(ctxt, wiki, VERSION_CHROME);
         }
     	String url = UserServlet.getRestUrl(wiki);
 		printWikiPage(context, template, wiki.getName(),url);
@@ -90,13 +90,14 @@ public class WikiFormatter extends Formatter {
     	WikiContext ctxt = createWikiContext(context);
     	String template = null;
        	WikiTemplate wt = getTemplate(context, wiki.getMailbox().getAccountId(), wiki.getFolderId(), VERSION);
-       	template = wt.getComposedPage(ctxt, wiki, CHROME);
+       	template = wt.getComposedPage(ctxt, wiki, VERSION_CHROME);
     	String url = UserServlet.getRestUrl(wiki);
 		printWikiPage(context, template, wiki.getName(),url);
 	}
     
     private static final String TOC = "_Index";
     private static final String CHROME = "_Template";
+    private static final String VERSION_CHROME = "_VersionTemplate";
     private static final String VERSION = "_VersionIndex";    
     
     private WikiTemplate getTemplate(Context context, WikiItem item) throws ServiceException {
