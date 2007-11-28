@@ -152,7 +152,7 @@ public class ContactCSV {
 
     private void addField(String colName, List<String> csv, String field, Map<String, String> contact) {
         String value = getField(colName.toLowerCase(), csv);
-        if (value != null && value.length() > 0) {
+        if (field != null && value != null && value.length() > 0) {
             contact.put(field, value);
         }
     }
