@@ -37,6 +37,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -353,14 +354,10 @@ public class SoapEngine {
             response = e.getFault() != null ? e.getFault().detach() : soapProto.soapFault(ServiceException.FAILURE(e.toString(), e)); 
             if (!e.isSourceLocal())
                 mLog.debug("handler exception", e);
-        } catch (AccountServiceException e) {
-            if (e.getCode().equals(AccountServiceException.AUTH_FAILED)) {
-                // Don't log stack trace for auth failures, since they commonly happen
-                mLog.info("handler exception: %s", e.getMessage());
-            } else {
-                mLog.info("handler exception", e);
-            }
+        } catch (AuthFailedServiceException e) {
             response = soapProto.soapFault(e);
+            // Don't log stack trace for auth failures, since they commonly happen
+            mLog.info("handler exception: %s%s", e.getMessage(), e.getReason(", %s"));
         } catch (ServiceException e) {
             response = soapProto.soapFault(e);
             mLog.info("handler exception", e);

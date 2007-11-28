@@ -102,7 +102,7 @@ public class Auth extends AccountDocumentHandler {
 
             Account acct = prov.get(by, value);
             if (acct == null)
-                throw AuthFailedServiceException.AUTH_FAILED(value);
+                throw AuthFailedServiceException.AUTH_FAILED(value, "account not found");
 
             long expires = 0;
 

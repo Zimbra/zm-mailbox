@@ -2503,7 +2503,7 @@ public class LdapProvisioning extends Provisioning {
                     new String[] {"cmd", "PreAuth","account", acct.getName()}));
         } catch (AuthFailedServiceException e) {
             ZimbraLog.security.warn(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "PreAuth","account", acct.getName(), "error", e.getMessage()+": "+e.getReason()}));             
+                    new String[] {"cmd", "PreAuth","account", acct.getName(), "error", e.getMessage()+e.getReason(", %s")}));             
             throw e;
         } catch (ServiceException e) {
             ZimbraLog.security.warn(ZimbraLog.encodeAttrs(
@@ -2553,7 +2553,7 @@ public class LdapProvisioning extends Provisioning {
                     new String[] {"cmd", "Auth","account", acct.getName(), "protocol", proto}));
         } catch (AuthFailedServiceException e) {
             ZimbraLog.security.warn(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "Auth","account", acct.getName(), "protocol", proto, "error", e.getMessage()+": "+e.getReason()}));             
+                    new String[] {"cmd", "Auth","account", acct.getName(), "protocol", proto, "error", e.getMessage() + e.getReason(", %s")}));             
             throw e;
         } catch (ServiceException e) {
             ZimbraLog.security.warn(ZimbraLog.encodeAttrs(

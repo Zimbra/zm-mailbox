@@ -89,7 +89,7 @@ public class AccountServiceException extends ServiceException {
      * getReason() returns the reason why auth failed.
      *             This info is logged but not returned to the client, for security reasons.
      */
-    public static class AuthFailedServiceException extends ServiceException {
+    public static class AuthFailedServiceException extends AccountServiceException {
         private String mReason;
         
         private AuthFailedServiceException(String acctName, String reason, String code, boolean isReceiversFault, Throwable cause) {
@@ -97,11 +97,15 @@ public class AccountServiceException extends ServiceException {
             mReason = reason;
         }
         
-        /*
-         * reason should not be returned in response,  but should be logged
-         */
         public String getReason() {
             return mReason==null?"":mReason;
+        }
+        
+        public String getReason(String format) {
+            if (mReason==null)
+                return "";
+            else
+                return String.format(format, mReason);
         }
         
         public static AuthFailedServiceException AUTH_FAILED(String acctName) {

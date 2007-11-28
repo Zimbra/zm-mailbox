@@ -122,7 +122,7 @@ public class PreAuthServlet extends ZimbraServlet {
                 acct = prov.get(AccountBy.fromString(accountBy), account);                            
             
                 if (acct == null)
-                    throw AuthFailedServiceException.AUTH_FAILED(account);
+                    throw AuthFailedServiceException.AUTH_FAILED(account, "account not found");
                 
                 prov.preAuthAccount(acct, account, accountBy, timestamp, expires, preAuth);
             

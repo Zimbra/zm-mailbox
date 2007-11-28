@@ -86,7 +86,7 @@ public class Auth extends AdminDocumentHandler {
                 acct = prov.get(AccountBy.name, name);
 
             if (acct == null)
-                throw AuthFailedServiceException.AUTH_FAILED(name);
+                throw AuthFailedServiceException.AUTH_FAILED(name, "account not found");
         
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                     new String[] {"cmd", "AdminAuth","account", name})); 
