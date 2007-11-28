@@ -57,7 +57,8 @@ public class ZimbraNamespace {
     public static final String E_CREATED  = "created";
     public static final String E_DELETED  = "deleted";
     public static final String E_MODIFIED = "modified";
-    
+    public static final String E_IM       = "im";
+
     public static final String ZIMBRA_ACCOUNT_STR = "urn:zimbraAccount";
     public static final Namespace ZIMBRA_ACCOUNT = Namespace.get(ZIMBRA_ACCOUNT_STR);
 
