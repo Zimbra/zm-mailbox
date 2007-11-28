@@ -2707,8 +2707,14 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="570" name="zimbraPrefIMSoundsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>TRUE</defaultCOSValue>
-  <desc>whether sound is enabled in IM</desc>
+  <desc>whether sounds is enabled in IM</desc>
 </attr>
+
+<attr id="571" name="zimbraFeatureIMInteropEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether IM interop is allowed</desc>
+</attr>
+
 
 </attrs>
 

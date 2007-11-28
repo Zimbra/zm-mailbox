@@ -730,6 +730,8 @@ public abstract class Provisioning {
     public static final String A_zimbraFeatureHtmlComposeEnabled = "zimbraFeatureHtmlComposeEnabled";
 
     public static final String A_zimbraFeatureIMEnabled = "zimbraFeatureIMEnabled";
+    
+    public static final String A_zimbraFeatureIMInteropEnabled = "zimbraFeatureIMInteropEnabled";
 
     public static final String A_zimbraFeatureInstantNotify = "zimbraFeatureInstantNotify";
 
