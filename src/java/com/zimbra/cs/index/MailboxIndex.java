@@ -41,7 +41,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbSearch;
-import com.zimbra.cs.im.interop.Interop.ServiceName;
+//import com.zimbra.cs.im.interop.Interop.ServiceName;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.CalendarItem;
@@ -78,17 +78,18 @@ public final class MailboxIndex
         String qs = params.getQueryStr();
         if (qs.startsWith("$")) {
             String[] words = qs.split(" ");
-            if ("$im_reg".equals(words[0])) {
-                if (words.length < 4)
-                    throw ServiceException.FAILURE("USAGE: \"$im_reg service service_login_name service_login_password\"", null);
-                ServiceName service = ServiceName.valueOf(words[1]);
-                mbox.getPersona().gatewayRegister(service, words[2], words[3]);
-            } else if ("$im_unreg".equals(words[0])) {
-                if (words.length < 2)
-                    throw ServiceException.FAILURE("USAGE: \"$im_unreg service service_login_name service_login_password\"", null);
-                ServiceName service = ServiceName.valueOf(words[1]);
-                mbox.getPersona().gatewayUnRegister(service);
-            } else if ("$maint".equals(words[0])) {
+//            if ("$im_reg".equals(words[0])) {
+//                if (words.length < 4)
+//                    throw ServiceException.FAILURE("USAGE: \"$im_reg service service_login_name service_login_password\"", null);
+//                ServiceName service = ServiceName.valueOf(words[1]);
+//                mbox.getPersona().gatewayRegister(service, words[2], words[3]);
+//            } else if ("$im_unreg".equals(words[0])) {
+//                if (words.length < 2)
+//                    throw ServiceException.FAILURE("USAGE: \"$im_unreg service service_login_name service_login_password\"", null);
+//                ServiceName service = ServiceName.valueOf(words[1]);
+//                mbox.getPersona().gatewayUnRegister(service);
+//            } else
+                if ("$maint".equals(words[0])) {
                 MailboxManager.MailboxLock lock = MailboxManager.getInstance().beginMaintenance(mbox.getAccountId(), mbox.getId());
                 MailboxManager.getInstance().endMaintenance(lock, true, false);
             } else {

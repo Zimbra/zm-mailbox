@@ -21,9 +21,8 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.IMConstants;
+import com.zimbra.cs.im.GatewayRegistrationStatus;
 import com.zimbra.cs.im.IMPersona;
-import com.zimbra.cs.im.interop.Interop.ServiceName;
-import com.zimbra.cs.im.interop.Interop.UserStatus;
 import com.zimbra.cs.session.Session;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.Pair;
@@ -45,17 +44,17 @@ public class IMGatewayList extends IMDocumentHandler {
             if (s != null)
                 s.registerWithIM(persona);
 
-            List<Pair<ServiceName, UserStatus>> types = persona.getAvailableGateways();
+            List<Pair<String, GatewayRegistrationStatus>> types = persona.getAvailableGateways();
             String domain = persona.getDomain();
 
-            for (Pair<ServiceName, UserStatus> p : types) {
+            for (Pair<String, GatewayRegistrationStatus> p : types) {
                 Element typeElt = response.addElement("service");
-                typeElt.addAttribute("type", p.getFirst().name());
-                typeElt.addAttribute("domain", p.getFirst().name()+"."+domain);
+                typeElt.addAttribute("type", p.getFirst());
+                typeElt.addAttribute("domain", p.getFirst()+"."+domain);
                 if (p.getSecond() != null) {
                     Element rElt = typeElt.addElement("registration");
                     rElt.addAttribute("name", p.getSecond().username);
-                    rElt.addAttribute("state", p.getSecond().state.name().toLowerCase());
+                    rElt.addAttribute("state", p.getSecond().state.toLowerCase());
                     if (p.getSecond().nextConnectAttemptTime > 0) {
                         rElt.addAttribute("timeUntilNextConnect", p.getSecond().nextConnectAttemptTime-System.currentTimeMillis());
                     }

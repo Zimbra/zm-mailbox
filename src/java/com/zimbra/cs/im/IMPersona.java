@@ -36,7 +36,6 @@ import org.jivesoftware.wildfire.group.Group;
 import org.jivesoftware.wildfire.group.GroupManager;
 import org.jivesoftware.wildfire.group.GroupNotFoundException;
 import org.jivesoftware.wildfire.user.UserNotFoundException;
-import org.xmpp.component.ComponentException;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
@@ -48,9 +47,9 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.im.IMChat.Participant;
 import com.zimbra.cs.im.IMMessage.Lang;
 import com.zimbra.cs.im.IMPresence.Show;
-import com.zimbra.cs.im.interop.Interop;
-import com.zimbra.cs.im.interop.Interop.ServiceName;
-import com.zimbra.cs.im.interop.Interop.UserStatus;
+//import com.zimbra.cs.im.interop.Interop;
+//import com.zimbra.cs.im.interop.Interop.ServiceName;
+//import com.zimbra.cs.im.interop.Interop.UserStatus;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -336,26 +335,32 @@ public class IMPersona extends ClassLogger {
             return super.formatObject(o);
     }
     
-    public void gatewayReconnect(Interop.ServiceName type) throws ServiceException {
+    public void gatewayReconnect(String serviceName) throws ServiceException {
+        if (sInterop == null)
+            throw ServiceException.FAILURE("Interop not available", null);
+        
         synchronized(getLock()) {
             try {
-                Interop.getInstance().reconnectUser(type, mAddr.makeFullJID(getResource()));            
+                sInterop.reconnectUser(serviceName, mAddr.makeFullJID(getResource()));            
             } catch (Exception e) {
-                throw ServiceException.FAILURE("Exception calling gatewayReconnect("+type.name(), e);
+                throw ServiceException.FAILURE("Exception calling gatewayReconnect("+serviceName, e);
             }
         }
     }
     
-    public void gatewayRegister(Interop.ServiceName type, String username, String password)
+    public void gatewayRegister(String serviceName, String username, String password)
                 throws ServiceException {
+        
+        if (sInterop == null)
+            throw ServiceException.FAILURE("Interop not available", null);
         
         synchronized(getLock()) {
             try {
-                Interop.getInstance().connectUser(type, mAddr.makeFullJID(getResource()), username, password);
-            } catch (com.zimbra.cs.im.interop.AlreadyConnectedComponentException ace) {
+                sInterop.connectUser(serviceName, mAddr.makeFullJID(getResource()), username, password);
+            } catch (ServiceException ace) {
                 try {
-                    Interop.getInstance().disconnectUser(type, mAddr.makeFullJID(getResource()));
-                    Interop.getInstance().connectUser(type, mAddr.makeFullJID(getResource()), username, password);
+                    sInterop.disconnectUser(serviceName, mAddr.makeFullJID(getResource()));
+                    sInterop.connectUser(serviceName, mAddr.makeFullJID(getResource()), username, password);
                 } catch (Exception e) {
                     throw ServiceException.FAILURE("Exception calling Interop.connectUser("
                         + username + "," + password, e);
@@ -387,10 +392,13 @@ public class IMPersona extends ClassLogger {
         }
     }
 
-    public void gatewayUnRegister(Interop.ServiceName type) throws ServiceException {
+    public void gatewayUnRegister(String serviceName) throws ServiceException {
+        if (sInterop == null)
+            throw ServiceException.FAILURE("Interop not available", null);
+        
         synchronized(getLock()) {
             try {
-                Interop.getInstance().disconnectUser(type, mAddr.makeFullJID(getResource()));
+                sInterop.disconnectUser(serviceName, mAddr.makeFullJID(getResource()));
             } catch (Exception e) {
                 throw ServiceException.FAILURE("Exception calling Interop.disconnectUser()", e);
             }
@@ -421,18 +429,26 @@ public class IMPersona extends ClassLogger {
         return mAddr.getDomain();
     }
     
+    private static InteropProvider sInterop = null;
+    
+    public static void setInteropProvider(InteropProvider provider) {
+        sInterop = provider;
+    }
+    
     /**
      * @return The set of gateways this user has access to
      */
-    public List<Pair<ServiceName, UserStatus>> getAvailableGateways() {
+    public List<Pair<String, GatewayRegistrationStatus>> getAvailableGateways() {
         synchronized(getLock()) {
-            List<Pair<ServiceName, UserStatus>>  ret = new LinkedList<Pair<ServiceName, UserStatus>>();     
-            List<ServiceName> services = Interop.getInstance().getAvailableServices();
-            for (ServiceName service : services) {
-                try {
-                    ret.add(new Pair<ServiceName, UserStatus>(service, Interop.getInstance().getRegistrationStatus(service, mAddr.makeFullJID(getResource()))));
-                } catch (ComponentException ex) {
-                    debug("Caught component exception trying to get registration status: ", ex);
+            List<Pair<String, GatewayRegistrationStatus>>  ret = new LinkedList<Pair<String, GatewayRegistrationStatus>>();
+            if (sInterop != null) {
+                List<String> services = sInterop.getAvailableServices();
+                for (String service : services) {
+                    try {
+                        ret.add(new Pair<String, GatewayRegistrationStatus>(service, sInterop.getRegistrationStatus(service, mAddr.makeFullJID(getResource()))));
+                    } catch (ServiceException ex) {
+                        debug("Caught component exception trying to get registration status for "+service+" jid="+mAddr.makeFullJID(getResource())+": ", ex);
+                    }
                 }
             }
             
@@ -503,22 +519,22 @@ public class IMPersona extends ClassLogger {
 //        return toRet;
 //    }
     
-    Map<String, String> getIMGatewayRegistration(Interop.ServiceName service) throws ServiceException {
+    public Map<String, String> getIMGatewayRegistration(String serviceName) throws ServiceException {
         synchronized(getLock()) {
-            return mInteropRegistrationData.get(service.name());
+            return mInteropRegistrationData.get(serviceName);
         }
     }
     
-    void setIMGatewayRegistration(Interop.ServiceName service, Map<String, String> data) throws ServiceException {
+    public void setIMGatewayRegistration(String serviceName, Map<String, String> data) throws ServiceException {
         synchronized(getLock()) {
-            mInteropRegistrationData.put(service.name(), data);
+            mInteropRegistrationData.put(serviceName, data);
             flush(null);
         }
     }
     
-    void removeIMGatewayRegistration(Interop.ServiceName service) throws ServiceException {
+    public void removeIMGatewayRegistration(String serviceName) throws ServiceException {
         synchronized(getLock()) {
-            mInteropRegistrationData.remove(service.name());
+            mInteropRegistrationData.remove(serviceName);
             flush(null);
         }
     }

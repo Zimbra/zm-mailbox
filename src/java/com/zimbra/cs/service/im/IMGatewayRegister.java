@@ -21,7 +21,6 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.IMConstants;
 import com.zimbra.cs.im.IMPersona;
-import com.zimbra.cs.im.interop.Interop.ServiceName;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -40,11 +39,11 @@ public class IMGatewayRegister extends IMDocumentHandler
         if ("reg".equals(op)) {
             String nameStr = request.getAttribute("name");
             String pwStr = request.getAttribute("password");
-            persona.gatewayRegister(ServiceName.valueOf(serviceStr), nameStr, pwStr);
+            persona.gatewayRegister(serviceStr, nameStr, pwStr);
         } else if ("reconnect".equals(op)) {
-            persona.gatewayReconnect(ServiceName.valueOf(serviceStr));
+            persona.gatewayReconnect(serviceStr);
         } else {
-            persona.gatewayUnRegister(ServiceName.valueOf(serviceStr));
+            persona.gatewayUnRegister(serviceStr);
         }
         response.addAttribute("result", result);
         

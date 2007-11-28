@@ -1016,7 +1016,6 @@ public abstract class CalendarItem extends MailItem {
 
         boolean callProcessPartStat = false;
         if (addNewOne) {
-            assert(modifiedCalItem);
             newInvite.setCalendarItem(this);
 
             // Don't allow creating/editing a private appointment on behalf of another user,

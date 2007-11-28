@@ -129,6 +129,20 @@ public class ExtensionUtil {
             }
         }
     }
+    
+    /**
+     * Called 
+     */
+    public static synchronized void postInitAll() {
+        ZimbraLog.extensions.info("Post-Initializing extensions");
+        
+        for (Object o : sInitializedExtensions.values()) {
+            if (o instanceof ZimbraExtensionPostInit) {
+                ((ZimbraExtensionPostInit)o).postInit();
+            }
+        }
+    }
+    
 
     public static synchronized void destroyAll() {
         ZimbraLog.extensions.info("Destroying extensions");

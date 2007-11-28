@@ -28,7 +28,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.im.interop.Interop;
+//import com.zimbra.cs.im.interop.Interop;
 import com.zimbra.cs.im.provider.IMGlobalProperties;
 import com.zimbra.cs.im.provider.IMLocalProperties;
 
@@ -38,7 +38,6 @@ public class ZimbraIM {
     
     public synchronized static void startup() throws ServiceException {
         try {
-            Interop.setDataProvider(new InteropRegistrationProviderImpl());
             
             JiveGlobals.setHomeDirectory(LC.zimbra_home.value());
             

@@ -116,7 +116,7 @@ public class Zimbra {
 
         if (!redoLog.isSlave()) {
             Server server = Provisioning.getInstance().getLocalServer();
-            
+
             if (server.getBooleanAttr(Provisioning.A_zimbraXMPPEnabled, false)) {
                 ZimbraIM.startup();
             }
@@ -142,6 +142,8 @@ public class Zimbra {
 
         // should be last, so that other subsystems can add dynamic stats counters 
         ZimbraPerf.initialize();
+        
+        ExtensionUtil.postInitAll();
         
         sInited = true;
     }
