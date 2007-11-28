@@ -786,7 +786,6 @@ public class SoapSession extends Session {
             return;
         }
 
-        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
         PendingModifications pms = ntfn.mMailboxChanges;
 
         if (pms != null && pms.deleted != null && pms.deleted.size() > 0) { 
@@ -806,6 +805,7 @@ public class SoapSession extends Session {
         if (pms != null && pms.created != null && pms.created.size() > 0) {
             Element eCreated = eNotify.addUniqueElement(ZimbraNamespace.E_CREATED);
             for (MailItem item : pms.created.values()) {
+                ItemIdFormatter ifmt = new ItemIdFormatter(mAuthenticatedAccountId, item.getMailbox(), false);
                 try {
                     ToXML.encodeItem(eCreated, ifmt, octxt, item, ToXML.NOTIFY_FIELDS);
                 } catch (ServiceException e) {
@@ -820,6 +820,7 @@ public class SoapSession extends Session {
             for (Change chg : pms.modified.values()) {
                 if (chg.why != 0 && chg.what instanceof MailItem) {
                     MailItem item = (MailItem) chg.what;
+                    ItemIdFormatter ifmt = new ItemIdFormatter(mAuthenticatedAccountId, item.getMailbox(), false);
                     try {
                         ToXML.encodeItem(eModified, ifmt, octxt, item, chg.why);
                     } catch (ServiceException e) {
@@ -833,7 +834,7 @@ public class SoapSession extends Session {
         }
         
         if (ntfn.mIMNotifications != null && ntfn.mIMNotifications.size() > 0) {
-            Element eIM = eNotify.addUniqueElement("im");
+            Element eIM = eNotify.addUniqueElement(ZimbraNamespace.E_IM);
             for (IMNotification imn : ntfn.mIMNotifications) {
                 try {
                     imn.toXml(eIM);
@@ -859,8 +860,7 @@ public class SoapSession extends Session {
         }
     }
     
-    public void putQueryResults(String queryStr, String groupBy, String sortBy, ZimbraQueryResults res)
-    throws ServiceException {
+    public void putQueryResults(String queryStr, String groupBy, String sortBy, ZimbraQueryResults res) throws ServiceException {
         synchronized (this) {
             clearCachedQueryResults();
             mQueryStr = queryStr;

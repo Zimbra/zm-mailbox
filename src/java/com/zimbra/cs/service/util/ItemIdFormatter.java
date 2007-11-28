@@ -38,6 +38,9 @@ public class ItemIdFormatter {
     public ItemIdFormatter(Account authAcct, Mailbox mbox, boolean noqualify) {
         this(authAcct == null ? null : authAcct.getId(), mbox.getAccountId(), noqualify);
     }
+    public ItemIdFormatter(String authId, Mailbox mbox, boolean noqualify) {
+        this(authId, mbox.getAccountId(), noqualify);
+    }
     public ItemIdFormatter(String authId, String defaultId, boolean noqualify) {
         mAuthenticatedId = authId;
         mDefaultId = defaultId == null ? authId : defaultId;
