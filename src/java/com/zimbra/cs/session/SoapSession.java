@@ -37,18 +37,22 @@ import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.mail.GetFolder;
-import com.zimbra.cs.service.mail.GetFolder.FolderNode;
 import com.zimbra.cs.service.mail.ToXML;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.BuildInfo;
@@ -611,14 +615,36 @@ public class SoapSession extends Session {
             }
 
             // dump recursive folder hierarchy starting at USER_ROOT (i.e. folders visible to the user)
+            GetFolder.FolderNode root = GetFolder.getFolderTree(octxt, mMailbox, null, false);
+            expandMountpoints(octxt, root);
+            GetFolder.encodeFolderNode(ifmt, octxt, eRefresh, root);
+        }
+    }
+
+    private void expandMountpoints(OperationContext octxt, GetFolder.FolderNode node) {
+        if (node.mFolder == null) {
+            return;
+        } else if (node.mFolder instanceof Mountpoint) {
+            Mountpoint mpt = (Mountpoint) node.mFolder;
             try {
-            	// use the operation here just so we can re-use the logic...
-                FolderNode root = GetFolder.getFolderTree(octxt, mMailbox, null, true);
-                GetFolder.encodeFolderNode(ifmt, octxt, eRefresh, root);
+                Account owner = Provisioning.getInstance().get(Provisioning.AccountBy.id, mpt.getOwnerId());
+                // FIXME: not handling mountpoints pointing to a different server
+                if (owner == null || !Provisioning.onLocalServer(owner))
+                    return;
+
+                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(owner);
+                GetFolder.FolderNode remote = GetFolder.getFolderTree(octxt, mbox, new ItemId(mbox, mpt.getRemoteId()), false);
+                if (remote != null) {
+                    node.mSubfolders.addAll(remote.mSubfolders);
+                    // fault in a delegate session because there's actually something to listen on...
+                    getDelegateSession(mpt.getOwnerId());
+                }
             } catch (ServiceException e) {
-                if (!e.getCode().equals(ServiceException.PERM_DENIED))
-                    throw e;
+                return;
             }
+        } else {
+            for (GetFolder.FolderNode child : node.mSubfolders)
+                expandMountpoints(octxt, child);
         }
     }
 

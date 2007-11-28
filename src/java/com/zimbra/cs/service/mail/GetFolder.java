@@ -21,7 +21,6 @@
 package com.zimbra.cs.service.mail;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -128,8 +127,7 @@ public class GetFolder extends MailDocumentHandler {
 		if (proxied != null) {
 			eRoot.addAttribute(MailConstants.A_REST_URL, proxied.getAttribute(MailConstants.A_REST_URL, null));
 			eRoot.addAttribute(MailConstants.A_RIGHTS, proxied.getAttribute(MailConstants.A_RIGHTS, null));
-			for (Iterator it = proxied.elementIterator(); it.hasNext(); ) {
-				Element eRemote = (Element) it.next();
+            for (Element eRemote : proxied.listElements()) {
 				// skip the <acl> element, if any
 				if (!eRemote.getName().equals(MailConstants.E_ACL))
 					eRoot.addElement(eRemote.detach());
@@ -145,20 +143,22 @@ public class GetFolder extends MailDocumentHandler {
         public List<FolderNode> mSubfolders = new ArrayList<FolderNode>();
     }
     
-	public static FolderNode getFolderTree(OperationContext oc, Mailbox mbox, ItemId iid, boolean visible) throws ServiceException {
+	public static FolderNode getFolderTree(OperationContext octxt, Mailbox mbox, ItemId iid, boolean returnAllVisibleFolders) throws ServiceException {
 	    synchronized (mbox) {
             // get the root node...
 	        int folderId = iid != null ? iid.getId() : Mailbox.ID_FOLDER_USER_ROOT;
-            Folder folder = mbox.getFolderById(visible ? null : oc, folderId);
+            Folder folder = mbox.getFolderById(returnAllVisibleFolders ? null : octxt, folderId);
 
             // for each subNode...
-            Set<Folder> visibleFolders = mbox.getVisibleFolders(oc);
-            return handleFolder(folder, visibleFolders);
+            Set<Folder> visibleFolders = mbox.getVisibleFolders(octxt);
+            return handleFolder(folder, visibleFolders, returnAllVisibleFolders);
         }
 	}
     
-	private static FolderNode handleFolder(Folder folder, Set<Folder> visible) throws ServiceException {
+	private static FolderNode handleFolder(Folder folder, Set<Folder> visible, boolean returnAllVisibleFolders) throws ServiceException {
 	    boolean isVisible = visible == null || visible.remove(folder);
+        if (!isVisible && !returnAllVisibleFolders)
+            return null;
 
 	    // short-circuit if we know that this won't be in the output
         List<Folder> subfolders = folder.getSubfolders(null);
@@ -176,7 +176,7 @@ public class GetFolder extends MailDocumentHandler {
 
         // write the subfolders' data to the response
         for (Folder subfolder : subfolders) {
-            FolderNode child = handleFolder(subfolder, visible);
+            FolderNode child = handleFolder(subfolder, visible, returnAllVisibleFolders);
             if (child != null) {
                 node.mSubfolders.add(child);
                 isVisible = true;
