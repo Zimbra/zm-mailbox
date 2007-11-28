@@ -85,6 +85,10 @@ public class DataSource extends NamedEntry implements Comparable {
         mAcctId = acct.getId();
     }
     
+    public String getAccountId() {
+    	return mAcctId;
+    }
+    
     /*
      * get account of the data source
      */

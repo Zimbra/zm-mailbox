@@ -30,7 +30,7 @@ import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.L10nUtil;
 
 import javax.mail.internet.InternetAddress;
-import java.io.UnsupportedEncodingException;
+import javax.mail.internet.AddressException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -2271,5 +2271,31 @@ public abstract class Provisioning {
      * @throws ServiceException
      */
     public abstract void flushCache(CacheEntryType type, CacheEntry[] entries) throws ServiceException;
-    
+
+
+    /**
+     * checks to make sure the specified address is a valid email address (addr part only, no personal part)
+     *
+     * @throws ServiceException
+     */
+    public static void validEmailAddress(String addr) throws ServiceException {
+        try {
+            InternetAddress ia = new InternetAddress(addr, true);
+            // is this even needed?
+            // ia.validate();
+            if (ia.getPersonal() != null && !ia.getPersonal().equals(""))
+                throw ServiceException.INVALID_REQUEST("invalid email address", null);
+        } catch (AddressException e) {
+            throw ServiceException.INVALID_REQUEST("invalid email address", e);
+        }
+    }
+
+    public static void validDomainName(String domain) throws ServiceException {
+        String email = "test" + "@" + domain;
+        try {
+            validEmailAddress(email);
+        } catch (ServiceException e) {
+            throw ServiceException.INVALID_REQUEST("invalid domain name " + domain, null);
+        }
+    }
 }

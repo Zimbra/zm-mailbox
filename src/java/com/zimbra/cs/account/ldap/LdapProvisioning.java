@@ -2443,34 +2443,6 @@ public class LdapProvisioning extends Provisioning {
         }
         return local;
     }
-
-    /**
-     * checks to make sure the specified address is a valid email address (addr part only, no personal part) 
-     *
-     * TODO To change the template for this generated type comment go to
-     * Window - Preferences - Java - Code Style - Code Templates
-     * @throws ServiceException
-     */
-    private static void validEmailAddress(String addr) throws ServiceException {
-        try {
-            InternetAddress ia = new InternetAddress(addr, true);
-            // is this even needed?
-            // ia.validate();
-            if (ia.getPersonal() != null && !ia.getPersonal().equals(""))
-                throw ServiceException.INVALID_REQUEST("invalid email address", null);
-        } catch (AddressException e) {
-            throw ServiceException.INVALID_REQUEST("invalid email address", e);
-        }
-    }
-    
-    private static void validDomainName(String domain) throws ServiceException {
-        String email = "test" + "@" + domain;
-        try {
-            validEmailAddress(email);
-        } catch (ServiceException e) {
-            throw ServiceException.INVALID_REQUEST("invalid domain name " + domain, null);
-        }
-    }
     
     public static final long TIMESTAMP_WINDOW = Constants.MILLIS_PER_MINUTE * 5; 
 
