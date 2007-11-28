@@ -506,12 +506,14 @@ public class ZMailbox {
             mTransport.setResponseProtocol(options.getResponseProtocol());
     }
 
-    public synchronized Element invoke(Element request) throws ServiceException {
+    public Element invoke(Element request) throws ServiceException {
+		return invoke(request, null);
+	}
+
+	public synchronized Element invoke(Element request, String requestedAccountId) throws ServiceException {
         try {
-            switch (mNotifyPreference) {
-                case nosession:  return mTransport.invokeWithoutSession(request);
-                default:         return mTransport.invoke(request);
-            }
+			boolean nosession = mNotifyPreference == NotifyPreference.nosession;
+			return mTransport.invoke(request, false, nosession, requestedAccountId);
         } catch (SoapFaultException e) {
             throw e; // for now, later, try to map to more specific exception
         } catch (IOException e) {
@@ -2729,21 +2731,41 @@ public class ZMailbox {
         public void setMessageIdsToAttach(List<String> messageIdsToAttach) { mMessageIdsToAttach = messageIdsToAttach; }
     }
 
-    public Element getMessageElement(Element req, ZOutgoingMessage message) {
+    public Element getMessageElement(Element req, ZOutgoingMessage message, ZMountpoint mountpoint) throws ServiceException {
         Element m = req.addElement(MailConstants.E_MSG);
 
-        if (message.getOriginalMessageId() != null)
-            m.addAttribute(MailConstants.A_ORIG_ID, message.getOriginalMessageId());
+		String id = message.getOriginalMessageId();
+		if (mountpoint != null) {
+			// Use normalized id for a shared folder
+			int idx = id.indexOf(":");
+			if (idx != -1) {
+				id = id.substring(idx + 1);
+			}
+		}
+		if (id != null) {
+			m.addAttribute(MailConstants.A_ORIG_ID, id);
+		}
 
-        if (message.getReplyType() != null)
+		if (message.getReplyType() != null)
             m.addAttribute(MailConstants.A_REPLY_TYPE, message.getReplyType());
 
         if (message.getAddresses() != null) {
             for (ZEmailAddress addr : message.getAddresses()) {
-                Element e = m.addElement(MailConstants.E_EMAIL);
-                e.addAttribute(MailConstants.A_TYPE, addr.getType());
-                e.addAttribute(MailConstants.A_ADDRESS, addr.getAddress());
-                e.addAttribute(MailConstants.A_PERSONAL, addr.getPersonal());
+				if (mountpoint != null && addr.getType().equals(ZEmailAddress.EMAIL_TYPE_FROM)) {
+					//  For on behalf of messages, replace the from: and add a sender: 
+					Element e = m.addElement(MailConstants.E_EMAIL);
+					e.addAttribute(MailConstants.A_TYPE, ZEmailAddress.EMAIL_TYPE_SENDER);
+					e.addAttribute(MailConstants.A_ADDRESS, addr.getAddress());
+
+					e = m.addElement(MailConstants.E_EMAIL);
+					e.addAttribute(MailConstants.A_TYPE, ZEmailAddress.EMAIL_TYPE_FROM);
+					e.addAttribute(MailConstants.A_ADDRESS, mountpoint.getOwnerDisplayName());
+				} else {
+					Element e = m.addElement(MailConstants.E_EMAIL);
+					e.addAttribute(MailConstants.A_TYPE, addr.getType());
+					e.addAttribute(MailConstants.A_ADDRESS, addr.getAddress());
+					e.addAttribute(MailConstants.A_PERSONAL, addr.getPersonal());
+				}
             }
         }
 
@@ -2783,7 +2805,23 @@ public class ZMailbox {
         return m;
     }
 
-    public ZSendMessageResponse sendMessage(ZOutgoingMessage message, String sendUid, boolean needCalendarSentByFixup) throws ServiceException {
+	private ZMountpoint getMountpoint(ZOutgoingMessage message) throws ServiceException {
+		ZMountpoint mountpoint = null;
+		String oringinalId = message.getOriginalMessageId();
+		if (oringinalId != null) {
+			ZGetMessageParams params = new ZGetMessageParams();
+			params.setId(oringinalId);
+			params.setPart("");
+			ZMessage original = getMessage(params);
+			ZFolder folder = getFolderById(original.getFolderId());
+			if (folder instanceof ZMountpoint) {
+				mountpoint = (ZMountpoint) folder;
+			}
+		}
+		return mountpoint;
+	}
+
+	public ZSendMessageResponse sendMessage(ZOutgoingMessage message, String sendUid, boolean needCalendarSentByFixup) throws ServiceException {
         XMLElement req = new XMLElement(MailConstants.SEND_MSG_REQUEST);
 
         if (sendUid != null && sendUid.length() > 0)
@@ -2792,10 +2830,13 @@ public class ZMailbox {
         if (needCalendarSentByFixup)
             req.addAttribute(MailConstants.A_NEED_CALENDAR_SENTBY_FIXUP, needCalendarSentByFixup);
 
-        //noinspection UnusedDeclaration
-        Element m = getMessageElement(req, message);
+		ZMountpoint mountpoint = getMountpoint(message);
 
-        Element resp = invoke(req);
+		//noinspection UnusedDeclaration
+        Element m = getMessageElement(req, message, mountpoint);
+
+		String requestedAccountId = mountpoint == null ? null : mountpoint.getOwnerId();
+        Element resp = invoke(req, requestedAccountId);
         Element msg = resp.getOptionalElement(MailConstants.E_MSG);
         String id = msg == null ? null : msg.getAttribute(MailConstants.A_ID, null);
         return new ZSendMessageResponse(id);
@@ -2804,7 +2845,8 @@ public class ZMailbox {
     public synchronized ZMessage saveDraft(ZOutgoingMessage message, String existingDraftId, String folderId) throws ServiceException {
         XMLElement req = new XMLElement(MailConstants.SAVE_DRAFT_REQUEST);
 
-        Element m = getMessageElement(req, message);
+		ZMountpoint mountpoint = getMountpoint(message);
+        Element m = getMessageElement(req, message, mountpoint);
 
         if (existingDraftId != null && existingDraftId.length() > 0) {
             mMessageCache.remove(existingDraftId);
@@ -2814,7 +2856,8 @@ public class ZMailbox {
         if (folderId != null)
             m.addAttribute(MailConstants.A_FOLDER, folderId);
 
-        return new ZMessage(invoke(req).getElement(MailConstants.E_MSG));
+		String requestedAccountId = mountpoint == null ? null : mGetInfoResult.getId();
+        return new ZMessage(invoke(req, requestedAccountId).getElement(MailConstants.E_MSG));
     }
 
     public void createIdentity(ZIdentity identity) throws ServiceException {
@@ -3265,7 +3308,7 @@ public class ZMailbox {
         XMLElement req = new XMLElement(MailConstants.CREATE_APPOINTMENT_REQUEST);
 
         //noinspection UnusedDeclaration
-        Element mEl = getMessageElement(req, message);
+        Element mEl = getMessageElement(req, message, null);
 
         if (flags != null)
             mEl.addAttribute(MailConstants.A_FLAGS, flags);
@@ -3286,7 +3329,7 @@ public class ZMailbox {
         req.addAttribute(MailConstants.A_ID, id);
         req.addAttribute(MailConstants.E_INVITE_COMPONENT, component);
 
-        Element mEl = getMessageElement(req, message);
+        Element mEl = getMessageElement(req, message, null);
 
         Element invEl = invite.toElement(mEl);
         Element compEl = invEl.getElement(MailConstants.E_INVITE_COMPONENT);
@@ -3304,7 +3347,7 @@ public class ZMailbox {
         req.addAttribute(MailConstants.A_ID, id);
         req.addAttribute(MailConstants.E_INVITE_COMPONENT, component);
 
-        Element mEl = getMessageElement(req, message);
+        Element mEl = getMessageElement(req, message, null);
 
         Element invEl = invite.toElement(mEl);
 
@@ -3332,7 +3375,7 @@ public class ZMailbox {
                 instEl.addAttribute(MailConstants.A_CAL_RANGE, range.name());
         }
         
-        if (message != null) getMessageElement(req, message);
+        if (message != null) getMessageElement(req, message, null);
 
         mMessageCache.remove(id);
 
@@ -3389,7 +3432,7 @@ public class ZMailbox {
             instance.toElement(MailConstants.E_CAL_EXCEPTION_ID, req);
         }
 
-        if (message != null) getMessageElement(req, message);
+        if (message != null) getMessageElement(req, message, null);
         
         mMessageCache.remove(id);
 
@@ -3443,7 +3486,7 @@ public class ZMailbox {
         XMLElement req = new XMLElement(MailConstants.CREATE_TASK_REQUEST);
 
         //noinspection UnusedDeclaration
-        Element mEl = getMessageElement(req, message);
+        Element mEl = getMessageElement(req, message, null);
 
         if (flags != null)
             mEl.addAttribute(MailConstants.A_FLAGS, flags);
@@ -3464,7 +3507,7 @@ public class ZMailbox {
         req.addAttribute(MailConstants.A_ID, id);
         req.addAttribute(MailConstants.E_INVITE_COMPONENT, component);
 
-        Element mEl = getMessageElement(req, message);
+        Element mEl = getMessageElement(req, message, null);
 
         Element invEl = invite.toElement(mEl);
         Element compEl = invEl.getElement(MailConstants.E_INVITE_COMPONENT);
@@ -3482,7 +3525,7 @@ public class ZMailbox {
         req.addAttribute(MailConstants.A_ID, id);
         req.addAttribute(MailConstants.E_INVITE_COMPONENT, component);
 
-        Element mEl = getMessageElement(req, message);
+        Element mEl = getMessageElement(req, message, null);
 
         Element invEl = invite.toElement(mEl);
 
@@ -3508,7 +3551,7 @@ public class ZMailbox {
                 instEl.addAttribute(MailConstants.A_CAL_RANGE, range.name());
         }
 
-        if (message != null) getMessageElement(req, message);
+        if (message != null) getMessageElement(req, message, null);
 
         mMessageCache.remove(id);
 
