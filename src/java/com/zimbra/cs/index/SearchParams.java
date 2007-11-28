@@ -40,7 +40,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 
 /**
- * Simple class that encapsulates all of the parameters involved in a Search request.http://search.yahoo.com/search?p=YHOO&ei=UTF-8&fr=moz2
+ * Simple class that encapsulates all of the parameters involved in a Search request.
  * Not used everywhere, need to convert all code to use this....
  * 
  * To initialize, set:
@@ -56,7 +56,7 @@ import com.zimbra.soap.ZimbraSoapContext;
  *
  */
 public final class SearchParams implements Cloneable {
-    
+
     private static final int MAX_OFFSET = 10000000; // 10M
     private static final int MAX_LIMIT = 10000000; // 10M
     
