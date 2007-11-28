@@ -2705,6 +2705,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>wait duration before nginx sending back the NO response for failed imap/pop3 reverse proxy lookups</desc>
 </attr>
 
+<attr id="570" name="zimbraPrefIMSoundsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether sound is enabled in IM</desc>
+</attr>
 
 </attrs>
 
