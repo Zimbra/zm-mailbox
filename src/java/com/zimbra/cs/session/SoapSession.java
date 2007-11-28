@@ -34,6 +34,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
@@ -616,26 +617,32 @@ public class SoapSession extends Session {
 
             // dump recursive folder hierarchy starting at USER_ROOT (i.e. folders visible to the user)
             GetFolder.FolderNode root = GetFolder.getFolderTree(octxt, mMailbox, null, false);
-            expandMountpoints(octxt, root);
+            Map<String, Folder> mountpoints = new HashMap<String, Folder>();
+            expandMountpoints(octxt, root, mountpoints);
             GetFolder.encodeFolderNode(ifmt, octxt, eRefresh, root);
+            if (!mountpoints.isEmpty())
+                transferMountpointCounts(eRefresh.getOptionalElement(MailConstants.E_FOLDER), mountpoints);
         }
     }
 
-    private void expandMountpoints(OperationContext octxt, GetFolder.FolderNode node) {
+    private void expandMountpoints(OperationContext octxt, GetFolder.FolderNode node, Map<String, Folder> mountpoints) {
         if (node.mFolder == null) {
             return;
         } else if (node.mFolder instanceof Mountpoint) {
             Mountpoint mpt = (Mountpoint) node.mFolder;
             try {
                 Account owner = Provisioning.getInstance().get(Provisioning.AccountBy.id, mpt.getOwnerId());
+                if (owner == null || owner.getId().equals(mAuthenticatedAccountId))
+                    return;
                 // FIXME: not handling mountpoints pointing to a different server
-                if (owner == null || !Provisioning.onLocalServer(owner))
+                if (!Provisioning.onLocalServer(owner))
                     return;
 
                 Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(owner);
                 GetFolder.FolderNode remote = GetFolder.getFolderTree(octxt, mbox, new ItemId(mbox, mpt.getRemoteId()), false);
                 if (remote != null) {
                     node.mSubfolders.addAll(remote.mSubfolders);
+                    mountpoints.put(node.mId + "", remote.mFolder);
                     // fault in a delegate session because there's actually something to listen on...
                     getDelegateSession(mpt.getOwnerId());
                 }
@@ -644,7 +651,25 @@ public class SoapSession extends Session {
             }
         } else {
             for (GetFolder.FolderNode child : node.mSubfolders)
-                expandMountpoints(octxt, child);
+                expandMountpoints(octxt, child, mountpoints);
+        }
+    }
+
+    private void transferMountpointCounts(Element elem, Map<String, Folder> mountpoints) {
+        if (elem == null)
+            return;
+
+        Folder target = mountpoints.get(elem.getAttribute(MailConstants.A_ID, null));
+        if (target != null) {
+            elem.addAttribute(MailConstants.A_UNREAD, target.getUnreadCount());
+            elem.addAttribute(MailConstants.A_NUM, target.getSize());
+            elem.addAttribute(MailConstants.A_SIZE, target.getTotalSize());
+            elem.addAttribute(MailConstants.A_URL, "".equals(target.getUrl()) ? null : target.getUrl());
+            if (target.isUnread())
+                elem.addAttribute(MailConstants.A_FLAGS, "u" + elem.getAttribute(MailConstants.A_FLAGS, "").replace("u", ""));
+        } else {
+            for (Element child : elem.listElements())
+                transferMountpointCounts(child, mountpoints);
         }
     }
 
