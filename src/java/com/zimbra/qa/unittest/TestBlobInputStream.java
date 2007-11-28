@@ -67,6 +67,13 @@ public class TestBlobInputStream extends TestCase {
         checkEof(in);
         in.close();
         
+        // Test invalid start/end
+        try {
+            in = new BlobInputStream(mFile, 6L, 5L);
+            fail("Test with start=6 and end=5 should not have succeeded.");
+        } catch (IOException e) {
+        }
+        
         // Test skip
         in = new BlobInputStream(mFile);
         assertEquals(2, in.skip(2));
