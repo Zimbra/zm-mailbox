@@ -44,7 +44,6 @@ import javax.mail.internet.MailDateFormat;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeUtility;
 import javax.mail.util.SharedByteArrayInputStream;
-import javax.mail.util.SharedFileInputStream;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -64,6 +63,7 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.object.ObjectHandlerException;
+import com.zimbra.cs.store.BlobInputStream;
 import com.zimbra.cs.util.JMSession;
 
 /**
@@ -98,7 +98,7 @@ public class ParsedMessage {
     private File mRawFile;
     private byte[] mRawData;
     private String mRawDigest;
-    private SharedFileInputStream mRawFileInputStream;
+    private BlobInputStream mRawFileInputStream;
     private boolean mWasMutated;
 
     public ParsedMessage(MimeMessage msg, boolean indexAttachments) {
@@ -152,7 +152,7 @@ public class ParsedMessage {
     public ParsedMessage(File file, Long receivedDate, boolean indexAttachments)
     throws MessagingException, IOException {
         mIndexAttachments = indexAttachments;
-        SharedFileInputStream in = new SharedFileInputStream(file);
+        BlobInputStream in = new BlobInputStream(file);
         mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), in);
         
         try {
@@ -188,6 +188,14 @@ public class ParsedMessage {
 
     public boolean wasMutated() {
         return mWasMutated;
+    }
+    
+    /**
+     * Returns <tt>true</tt> if this message is being streamed from
+     * disk and does not require MIME expansion.
+     */
+    public boolean isStreamedFromDisk() {
+        return (mRawFile != null && (mMimeMessage == mExpandedMessage));
     }
     
     /**
@@ -304,7 +312,7 @@ public class ParsedMessage {
                 in = new SharedByteArrayInputStream(mRawData);
             } else if (mRawFile != null) {
                 // Constructed from a file and not mutated.
-                in = new SharedFileInputStream(mRawFile);
+                in = new BlobInputStream(mRawFile);
             } else {
                 assert(false);
                 ZimbraLog.mailbox.warn("Data not available for MimeMessage.  Returning null.");
@@ -974,17 +982,12 @@ public class ParsedMessage {
     
     /**
      * If this <tt>ParsedMessage</tt> references a file on disk, closes
-     * the file and drops references to the encapsulated <tt>MimeMessage</tt>.
+     * the file descriptor.
      */
-    public void close()
+    public void closeFile()
     throws IOException {
-        if (mRawFile != null) {
-            mMimeMessage = null;
-            mExpandedMessage = null;
-            if (mRawFileInputStream != null) {
-                mRawFileInputStream.close();
-                mRawFileInputStream = null;
-            }
+        if (mRawFileInputStream != null) {
+            mRawFileInputStream.closeFile();
         }
     }
     
@@ -995,13 +998,8 @@ public class ParsedMessage {
      */
     public void fileMoved(File newFile)
     throws IOException {
-        if (mRawFile != null) {
-            mMimeMessage = null;
-            mExpandedMessage = null;
-            if (mRawFileInputStream != null) {
-                mRawFileInputStream.close();
-                mRawFileInputStream = null;
-            }
+        if (mRawFileInputStream != null) {
+            mRawFileInputStream.fileMoved(newFile);
         }
         mRawFile = newFile;
     }

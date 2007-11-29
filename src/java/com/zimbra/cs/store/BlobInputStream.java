@@ -28,6 +28,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.mail.internet.SharedInputStream;
 
@@ -44,6 +46,7 @@ implements SharedInputStream {
     private int mMarkReadLimit;
     private long mStart;
     private long mEnd;
+    private Set<BlobInputStream> mSubStreams;
     
     /**
      * Constructs a <tt>BlobInputStream</tt> that reads an entire file.
@@ -97,14 +100,43 @@ implements SharedInputStream {
     }
 
     /**
-     * Closes the file descriptor.  A subsequent call
+     * Closes the file descriptor for this stream only.  A subsequent call
      * to <tt>read()</tt>, <tt>skip</tt>, etc. may reopen it.
      */
-    private void closeFile()
+    private void closeMyFile()
     throws IOException {
         if (mRAF != null) {
             mRAF.close();
             mRAF = null;
+        }
+    }
+    
+    /**
+     * Closes the file descriptors used by this stream and its substreams.
+     * If someone continues to read from this stream, the file descriptor
+     * is automatically reopened. 
+     */
+    public void closeFile()
+    throws IOException {
+        closeMyFile();
+        if (mSubStreams != null) {
+            for (BlobInputStream subStream : mSubStreams) {
+                subStream.closeFile();
+            }
+        }
+    }
+    
+    /**
+     * Updates this stream and all substreams with a new file location.
+     */
+    public void fileMoved(File newFile)
+    throws IOException {
+        closeMyFile();
+        mFile = newFile;
+        if (mSubStreams != null) {
+            for (BlobInputStream subStream : mSubStreams) {
+                subStream.fileMoved(newFile);
+            }
         }
     }
     
@@ -117,7 +149,7 @@ implements SharedInputStream {
 
     @Override
     public void close() throws IOException {
-        closeFile();
+        closeMyFile();
         mPos = mEnd;
     }
 
@@ -135,7 +167,7 @@ implements SharedInputStream {
     @Override
     public int read() throws IOException {
         if (mPos >= mEnd) {
-            closeFile();
+            closeMyFile();
             return -1;
         }
         openFile();
@@ -144,7 +176,7 @@ implements SharedInputStream {
         if (c >= 0) {
             mPos++;
         } else {
-            closeFile();
+            closeMyFile();
         }
         return c;
     }
@@ -152,7 +184,7 @@ implements SharedInputStream {
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
         if (mPos >= mEnd) {
-            closeFile();
+            closeMyFile();
             return -1;
         }
         openFile();
@@ -163,7 +195,7 @@ implements SharedInputStream {
         if (numRead >= 0) {
             mPos += numRead;
         } else {
-            closeFile();
+            closeMyFile();
         }
         return numRead;
     }
@@ -187,7 +219,7 @@ implements SharedInputStream {
             return 0;
         }
         if (mPos >= mEnd) {
-            closeFile();
+            closeMyFile();
             return 0;
         }
         openFile();
@@ -197,14 +229,14 @@ implements SharedInputStream {
         if (numSkipped > 0) {
             mPos += numSkipped;
         } else {
-            closeFile();
+            closeMyFile();
         }
         return numSkipped;
     }
     
     @Override
     protected void finalize() throws Throwable {
-        closeFile();
+        closeMyFile();
     }
 
     ////////////// SharedInputStream methods //////////////
@@ -228,11 +260,18 @@ implements SharedInputStream {
         } else {
             end += mStart;
         }
+        
+        BlobInputStream newStream = null;
         try {
-            return new BlobInputStream(mFile, start, end);
+            newStream = new BlobInputStream(mFile, start, end);
         } catch (IOException e) {
             ZimbraLog.misc.warn("Unable to create substream for %s", mFile.getPath(), e);
         }
-        return null;
+
+        if (mSubStreams == null) {
+            mSubStreams = new HashSet<BlobInputStream>();
+        }
+        mSubStreams.add(newStream);
+        return newStream;
     }
 }

@@ -44,6 +44,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.MessageCache;
 import com.zimbra.cs.mailbox.Notification;
 import com.zimbra.cs.mailbox.QuotaWarning;
 import com.zimbra.cs.mailbox.SharedDeliveryContext;
@@ -160,6 +161,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void recordReceipt(String msgid, Mailbox mbox) {
         if (sReceivedMessageIDs == null || msgid == null || mbox == null)
             return;
@@ -479,19 +481,30 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                         }
                     }
                 }
+                
+                // If this message is being streamed from disk, cache it
+                ParsedMessage mimeSource = pmAttachIndex;
+                if (mimeSource == null) {
+                    mimeSource = pmNoAttachIndex;
+                }
+                if (mimeSource != null && blob != null && mimeSource.isStreamedFromDisk()) {
+                    MessageCache.cacheStreamedMessage(blob.getDigest(), mimeSource.getMimeMessage());
+                }
             } finally {
+                try {
+                    // Close file descriptors
+                    if (pmAttachIndex != null) {
+                        pmAttachIndex.closeFile();
+                    }
+                    if (pmNoAttachIndex != null) {
+                        pmNoAttachIndex.closeFile();
+                    }
+                } catch (IOException e) {
+                    ZimbraLog.lmtp.warn("Unable to close file descriptors after delivery.", e);
+                }
+
                 // Clean up blobs in incoming directory after delivery to all recipients.
                 if (shared) {
-                    try {
-                        if (pmAttachIndex != null) {
-                            pmAttachIndex.close();
-                        }
-                        if (pmNoAttachIndex != null) {
-                            pmNoAttachIndex.close();
-                        }
-                    } catch (IOException e) {
-                        ZimbraLog.lmtp.warn("Unable to close ParsedMessage.", e);
-                    }
                     Blob sharedBlob = sharedDeliveryCtxt.getBlob();
                     if (sharedBlob != null) {
                         try {

@@ -3982,7 +3982,7 @@ public class Mailbox {
                     // mailbox directory.  This is more efficient than
                     // creating a link in mailbox directory and deleting
                     // incoming copy.
-                    pm.close();
+                    pm.closeFile();
                     mboxBlob = sm.renameTo(blob, this, messageId, msg.getSavedSequence(), msg.getVolumeId());
                     pm.fileMoved(mboxBlob.getBlob().getFile());
                     

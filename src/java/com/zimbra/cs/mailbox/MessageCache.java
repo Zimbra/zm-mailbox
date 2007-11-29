@@ -19,7 +19,6 @@
  */
 package com.zimbra.cs.mailbox;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
@@ -34,7 +33,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.stats.ZimbraPerf;
@@ -47,6 +45,17 @@ import com.zimbra.cs.util.JMSession;
  */
 public class MessageCache {
 
+    /**
+     * Summary of the states of a <tt>CacheNode</tt>:
+     * <ul>
+     *   <li><b>RAW</b>: No attempt has been made to expand the message.  Raw message data is available
+     *     via either <tt>mContent</tt> or <tt>mMessage</tt> or both.</li>
+     *   <li><b>EXPANDED</b>: <tt>mMessage</tt> references the expanded <tt>MimeMessage</tt>.
+     *     <tt>mContent</tt> may contain original raw data.</li>
+     *   <li><b>BOTH</b>: Expansion was attempted, but had no effect.  The same data will be returned,
+     *     regardless of whether the caller requests an expanded message or not.</li>
+     * </ul>
+     */
     private static enum ConvertedState { RAW, EXPANDED, BOTH };
     private static final int STREAMED_MESSAGE_SIZE = 4096;
 
@@ -77,12 +86,19 @@ public class MessageCache {
      *  before you change the item's content; otherwise, the cache will return
      *  stale data. */
     static void purge(MailItem item) {
-        String key = item.getDigest();
+        purge(item.getDigest());
+    }
+    
+    private static void purge(String digest) {
+        CacheNode cnode = null;
         synchronized (mCache) {
-            mCache.remove(key);
+            cnode = mCache.remove(digest);
+            if (cnode != null) {
+                mTotalSize -= cnode.mSize;
+            }
         }
     }
-
+    
     /** Returns the raw, uncompressed content of the item.  For messages,
      *  this is the body as received via SMTP; no postprocessing has been
      *  performed to make opaque attachments (e.g. TNEF) visible.
@@ -251,6 +267,19 @@ public class MessageCache {
         if (msgBlob == null)
             throw ServiceException.FAILURE("missing blob for id: " + item.getId() + ", change: " + item.getModifiedSequence(), null);
         return StoreManager.getInstance().getContent(msgBlob);
+    }
+
+    /**
+     * Public API that adds a <tt>MimeMessage</tt> that's streamed from disk to the <tt>MessageCache</tt>.
+     * The message being cached cannot require MIME expansion.
+     * @param digest the message digest
+     * @param msg a <tt>MimeMessage</tt> that is being streamed from disk
+     */
+    public static void cacheStreamedMessage(String digest, MimeMessage msg) {
+        // Remove/update size, in case an older version is already in the cache
+        purge(digest);
+        CacheNode cnode = new CacheNode(STREAMED_MESSAGE_SIZE, msg, ConvertedState.BOTH);
+        cacheItem(digest, cnode);
     }
 
     private static void cacheItem(String key, CacheNode cnode) {
