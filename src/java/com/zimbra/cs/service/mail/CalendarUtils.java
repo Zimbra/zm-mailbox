@@ -223,6 +223,25 @@ public class CalendarUtils {
             summaryStr = mod.getName();
         }
 
+        // HACK: Workaround for bug 8854/21749.  If <alarm> elements are missing, inherit
+        // old alarms.  If any was given, even an empty one, clear all alarms.
+        Element element = inviteElem;
+        Element compElem = element.getOptionalElement(MailConstants.E_INVITE_COMPONENT);
+        if (compElem != null)
+            element = compElem;
+        Iterator<Element> alarmsIter = element.elementIterator(MailConstants.E_CAL_ALARM);
+        boolean hasAlarmElems = false;
+        while (alarmsIter.hasNext()) {
+            hasAlarmElems = true;
+            break;
+        }
+        if (!hasAlarmElems) {
+            for (Iterator<Alarm> alarmIter = oldInv.alarmsIterator(); alarmIter.hasNext(); ) {
+                Alarm alarm = alarmIter.next();
+                mod.addAlarm(alarm);
+            }
+        }
+
         ParseMimeMessage.InviteParserResult toRet = new ParseMimeMessage.InviteParserResult();
         toRet.mCal = iCal;
         toRet.mUid = mod.getUid();
