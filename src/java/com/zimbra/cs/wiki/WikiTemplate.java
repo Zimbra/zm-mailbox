@@ -726,7 +726,10 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 			return null;
 		}
 		public String apply(Context ctxt) {
-            return ctxt.item.getName();
+            String mText = ctxt.item.getName(); 
+            mText = mText.replaceAll("<", "&lt;");
+            mText = mText.replaceAll(">", "&gt;");
+            return mText;
 		}
 	}
 	public static class FragmentWiklet extends Wiklet {
@@ -1043,6 +1046,8 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 			if (ctxt.item == null)
 				return "<!-- cannot resolve item for url wiklet -->";
 			String title = ctxt.item.getName();
+			title = title.replaceAll("<", "&lt;");
+			title = title.replaceAll(">", "&gt;");			
 			WikiUrl wurl = new WikiUrl(ctxt.item);
 			try {
 				Map<String,String> params = ctxt.token.parseParam();
