@@ -35,9 +35,10 @@ public class TcpPop3Handler extends Pop3Handler {
     
     @Override
     protected boolean setupConnection(Socket connection) throws IOException {
+        connection.setSoTimeout(mConfig.getMaxIdleSeconds() * 1000);
         mInputStream = new TcpServerInputStream(connection.getInputStream());
         mOutputStream = new BufferedOutputStream(connection.getOutputStream());
-        return setupConnection(connection.getInetAddress());
+        return startConnection(connection.getInetAddress());
     }
 
     @Override

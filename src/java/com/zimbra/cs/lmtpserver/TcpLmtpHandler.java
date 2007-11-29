@@ -34,6 +34,7 @@ public class TcpLmtpHandler extends LmtpHandler {
     @Override
     protected boolean setupConnection(Socket connection) throws IOException {
         reset();
+        connection.setSoTimeout(mConfig.getMaxIdleSeconds() * 1000);
         mInputStream = new TcpServerInputStream(connection.getInputStream());
         mWriter = new LmtpWriter(connection.getOutputStream());
         return setupConnection(connection.getInetAddress());

@@ -17,17 +17,15 @@
 
 package com.zimbra.cs.tcpserver;
 
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
+import com.zimbra.cs.util.Zimbra;
+
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.nio.channels.AsynchronousCloseException;
-
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
-
-import com.zimbra.cs.util.Zimbra;
-
-import EDU.oswego.cs.dl.util.concurrent.ClockDaemon;
 
 /**
  * Protocol-agnostic abstract base class for handling each client connection
@@ -71,59 +69,11 @@ public abstract class ProtocolHandler implements Runnable {
      */
     protected abstract void notifyIdleConnection();
 
-    /**
-     * Gets the watchdog task. The default watchdog task periodically checks if any
-     * progress has been made processing the connection. If the connection is found
-     * to be idle, the server closes that connection.
-     *
-     * Subclass can override this method to provide a watchdog task that functions differently.
-     * @return the WatchdogTask
-     */
-    protected Runnable getWatchdogTask() {
-        return new WatchdogTask();
-    }
-
-    // Watchdog to kill idle connections
-    private static ClockDaemon mWatchdogDaemon;
-    private Object mWatchdogTask;
-    static {
-        mWatchdogDaemon = new ClockDaemon();
-        mWatchdogDaemon.setThreadFactory(new TcpThreadFactory("TcpWatchdog", true));
-    }
-    
-    private boolean mMadeProgress = true;
-    private final Object mMadeProgressGuard = new Object();
-
-    protected class WatchdogTask implements Runnable {
-        public void run() {
-            if (!getMadeProgress() && getIdle()) {
-                mIdleClosed = true;
-                notifyIdleConnection();
-                hardShutdown("Closing idle connection");
-            } else {
-                setMadeProgress(false); // and we'll check again later if you did anything
-            }
-        }
-    }
-
-    protected boolean getMadeProgress() {
-        synchronized (mMadeProgressGuard) {
-            return mMadeProgress;
-        }
-    }
-
-    private void setMadeProgress(boolean b) {
-        synchronized (mMadeProgressGuard) {
-            mMadeProgress = b;
-        }
-    }
-
     private static Log mLog = LogFactory.getLog(ProtocolHandler.class);
 
     protected Socket mConnection;
     private boolean mIdle;
     private final Object mIdleGuard = new Object();
-    private boolean mIdleClosed;
     private boolean mShuttingDown;
     private final Object mShuttingDownGuard = new Object();
     private TcpServer mServer;
@@ -161,7 +111,6 @@ public abstract class ProtocolHandler implements Runnable {
 
     void setConnection(Socket connection) {
         mConnection = connection;
-        mIdleClosed = false;
     }
 
     public void run() {
@@ -182,12 +131,14 @@ public abstract class ProtocolHandler implements Runnable {
             } else {
                 mLog.info("Connection refused for client " + remoteAddress);
             }
+        } catch (SocketTimeoutException e) {
+            mLog.debug("Idle timeout: " + e);
+            notifyIdleConnection();
         } catch (Error e) {
             Zimbra.halt("Fatal error occurred while handling connection", e);
         } catch (Throwable e) {
             mLog.info("Exception occurred while handling connection", e);
         } finally {
-            cancelWatchdog();
             dropConnection();
             try {
                 mConnection.close();
@@ -201,9 +152,6 @@ public abstract class ProtocolHandler implements Runnable {
     }
 
     private void processConnection() throws Exception {
-        int idleTimeoutMS = mServer.getConfigMaxIdleMilliSeconds();
-        if (idleTimeoutMS > 0)
-            mWatchdogTask = mWatchdogDaemon.executePeriodically(idleTimeoutMS, getWatchdogTask(), true);
         boolean cont = true;
         while (cont) {
             if (getShuttingDown())
@@ -211,16 +159,13 @@ public abstract class ProtocolHandler implements Runnable {
             try {
                 cont = processCommand();
                 setIdle(true);
-                setMadeProgress(true);
             } catch (IOException e) {
                 if (e instanceof SocketException || e instanceof AsynchronousCloseException ) {
                     // If we get a network exception on a connection that was closed
                     // by watchdog due to idleness, treat it as if we got a QUIT
                     // command and closed the connection normally.
                     cont = false;
-                    if (mIdleClosed) {
-                        mLog.debug("Idle timeout: " + e);
-                    } else if (getShuttingDown()) {
+                    if (getShuttingDown()) {
                         // Don't print stack trace with info/error level if socket
                         // was closed due to shutdown.
                         mLog.debug("Shutdown in progress", e);
@@ -232,13 +177,6 @@ public abstract class ProtocolHandler implements Runnable {
                     throw e;
                 }
             }
-        }
-    }
-
-    private void cancelWatchdog() {
-        if (mWatchdogTask != null) {
-            ClockDaemon.cancel(mWatchdogTask);
-            mWatchdogTask = null;
         }
     }
 

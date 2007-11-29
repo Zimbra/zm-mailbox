@@ -30,7 +30,7 @@ import java.util.Set;
 import java.util.HashSet;
 
 public class ImapConfig extends ServerConfig {
-    private int mUnauthMaxIdleSeconds = -1;
+    private int mUnauthMaxIdleSeconds = 0;
     private String mBanner;
     private String mGoodbye;
     private Set<String> mDisabledExtensions;

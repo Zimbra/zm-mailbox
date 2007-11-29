@@ -44,7 +44,7 @@ public class MinaPop3Handler extends Pop3Handler implements MinaHandler {
     public void connectionOpened() throws IOException {
         mOutputStream = new MinaIoSessionOutputStream(mSession);
         mSession.setIdleTime(IdleStatus.BOTH_IDLE, mConfig.getMaxIdleSeconds());
-        setupConnection(((InetSocketAddress) mSession.getRemoteAddress()).getAddress());
+        startConnection(((InetSocketAddress) mSession.getRemoteAddress()).getAddress());
     }
 
     public void connectionClosed() throws IOException {

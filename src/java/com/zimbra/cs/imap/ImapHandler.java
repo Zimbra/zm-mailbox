@@ -3419,7 +3419,7 @@ public abstract class ImapHandler extends ProtocolHandler {
 
     abstract protected void flushOutput() throws IOException;
 
-    abstract protected void enableInactivityTimer();
+    abstract protected void enableInactivityTimer() throws IOException;
 
     abstract protected void completeAuthentication() throws IOException;
 

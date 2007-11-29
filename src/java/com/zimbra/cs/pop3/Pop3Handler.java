@@ -120,7 +120,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
         return true;
     }
 
-    protected boolean setupConnection(InetAddress remoteAddr)
+    protected boolean startConnection(InetAddress remoteAddr)
             throws IOException {
         ZimbraLog.clearContext();
         ZimbraLog.addIpToContext(remoteAddr.getHostAddress());

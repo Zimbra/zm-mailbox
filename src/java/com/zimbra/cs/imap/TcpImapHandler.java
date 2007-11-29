@@ -32,6 +32,7 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -39,7 +40,6 @@ import java.util.List;
 import java.util.Set;
 
 public class TcpImapHandler extends ImapHandler {
-    private Socket mConnection;
     private TcpServerInputStream mInputStream;
     private String         mRemoteAddress;
     private TcpImapRequest mIncompleteRequest = null;
@@ -50,7 +50,7 @@ public class TcpImapHandler extends ImapHandler {
                                                       
     @Override
     protected boolean setupConnection(Socket connection) throws IOException {
-        mConnection = connection;
+        connection.setSoTimeout(mConfig.getUnauthMaxIdleSeconds() * 1000);        
         mRemoteAddress = connection.getInetAddress().getHostAddress();
         INFO("connected");
 
@@ -65,6 +65,7 @@ public class TcpImapHandler extends ImapHandler {
         }
 
         sendUntagged(mConfig.getBanner(), true);
+
         return true;
     }
 
@@ -275,9 +276,8 @@ public class TcpImapHandler extends ImapHandler {
     }
     
     @Override
-    protected void enableInactivityTimer() {
-        // Already enabled when connection was established.
-        // TODO Fix watchdog to allow this timeout to be changed dynamically.
+    protected void enableInactivityTimer() throws SocketException {
+        mConnection.setSoTimeout(mConfig.getMaxIdleSeconds() * 1000);
     }
 
     @Override

@@ -27,7 +27,7 @@ import java.nio.channels.ServerSocketChannel;
 
 public class ServerConfig {
     private String mName;
-    private int mMaxIdleSeconds = -1;
+    private int mMaxIdleSeconds = 0;
     private String mBindAddress;
     private int mBindPort = -1;
     private int mNumThreads = -1;
@@ -40,8 +40,9 @@ public class ServerConfig {
 
     public void validate() throws ServiceException {
         if (mName == null) failure("missing configuration name");
-        if (mBindPort < 0) failure("invalid bind port value " + mBindPort);
-        if (mNumThreads < 0) failure("invalid number of threads " + mNumThreads);
+        if (mMaxIdleSeconds < 0) failure("invalid MaxIdleSeconds value: " + mMaxIdleSeconds);
+        if (mBindPort < 0) failure("invalid BindPort value: " + mBindPort);
+        if (mNumThreads < 0) failure("invalid NumThreads value: " + mNumThreads);
     }
 
     protected void failure(String msg) throws ServiceException {
