@@ -1332,14 +1332,14 @@ public abstract class Provisioning {
     public static final String A_zimbraSpamReportTypeHam      = "zimbraSpamReportTypeHam";
     
     /*
-     * proxy
+     * reverse proxy
      */
-    
     public static final String A_zimbraReverseProxyLookupTarget         = "zimbraReverseProxyLookupTarget";
     public static final String A_zimbraReverseProxyAuthWaitInterval     = "zimbraReverseProxyAuthWaitInterval";
     public static final String A_zimbraReverseProxyMailHostQuery        = "zimbraReverseProxyMailHostQuery";
     public static final String A_zimbraReverseProxyMailHostSearchBase   = "zimbraReverseProxyMailHostSearchBase";
     public static final String A_zimbraReverseProxyMailHostAttribute    = "zimbraReverseProxyMailHostAttribute";
+    public static final String A_zimbraReverseProxyUserNameAttribute    = "zimbraReverseProxyUserNameAttribute";
     public static final String A_zimbraReverseProxyPortQuery            = "zimbraReverseProxyPortQuery";
     public static final String A_zimbraReverseProxyPortSearchBase       = "zimbraReverseProxyPortSearchBase";
     public static final String A_zimbraReverseProxyPop3PortAttribute    = "zimbraReverseProxyPop3PortAttribute";
@@ -1349,6 +1349,7 @@ public abstract class Provisioning {
     public static final String A_zimbraReverseProxyDomainNameQuery      = "zimbraReverseProxyDomainNameQuery";
     public static final String A_zimbraReverseProxyDomainNameSearchBase = "zimbraReverseProxyDomainNameSearchBase";
     public static final String A_zimbraReverseProxyDomainNameAttribute  = "zimbraReverseProxyDomainNameAttribute";
+    public static final String A_zimbraVirtualIPAddress                 = "zimbraVirtualIPAddress";
 
     /*
      * whether to use <> or account's real address for out of office 

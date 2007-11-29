@@ -2714,5 +2714,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>available IM interop gateways</desc>
 </attr>
 
+<attr id="572" name="zimbraReverseProxyUserNameAttribute" type="string" cardinality="single" optionalIn="globalConfig">
+  <desc>LDAP attribute that contains user name for the principal</desc>
+</attr>
+
 </attrs>
 
