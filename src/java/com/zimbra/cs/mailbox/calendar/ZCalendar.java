@@ -868,13 +868,23 @@ public class ZCalendar {
         ZVCalendar mCurCal = null;
         List<ZComponent> mComponents = new ArrayList<ZComponent>();
         ZProperty mCurProperty = null;
+        private int mNumCals;
+        private boolean mInZCalendar;
 
         public void startCalendar() { 
+            mInZCalendar = true;
             mCurCal = new ZVCalendar();
             mCals.add(mCurCal);
         }
 
-        public void endCalendar() { mCurCal = null; }
+        public void endCalendar() {
+            mCurCal = null;
+            mInZCalendar = false;
+            mNumCals++;
+        }
+
+        public boolean inZCalendar() { return mInZCalendar; }
+        public int getNumCals() { return mNumCals; }
 
         public void startComponent(String name) {
             ZComponent newComponent = new ZComponent(name);
@@ -958,7 +968,14 @@ public class ZCalendar {
                 } catch (IOException ioe) {
                     ioe.printStackTrace();
                 }
-                throw ServiceException.PARSE_ERROR(s.toString(), e);
+                ServiceException se = ServiceException.PARSE_ERROR(s.toString(), e);
+                if (handler.inZCalendar() || handler.getNumCals() < 1) {
+                    // Got parse error inside ZCALENDAR block.  Can't recover.
+                    throw se;
+                } else {
+                    // Found garbage after END:ZCALENDAR.  Log warning and move on.
+                    ZimbraLog.calendar.warn("Ignoring bad data at the end of text/calendar part: " + s.toString() , e);
+                }
             }
 
             return handler.mCals;
