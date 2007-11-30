@@ -402,7 +402,7 @@ public class LC {
         localized_msgs_directory.setDoc("Directory for localized message files.");
 
         localized_client_msgs_directory = new KnownKey("localized_client_msgs_directory");
-        localized_client_msgs_directory.setDefault("${mailboxd_directory}" + FS + "webapps" + FS + "zimbra" + FS + "WEB-INF" + FS + "classes" + FS + "msgs");
+        localized_client_msgs_directory.setDefault("${mailboxd_directory}" + FS + "webapps" + FS + "zimbra" + FS + "WEB-INF" + FS + "classes" + FS + "messages");
         localized_client_msgs_directory.setDoc("Directory for localized client message files.");
 
         skins_directory = new KnownKey("skins_directory");
