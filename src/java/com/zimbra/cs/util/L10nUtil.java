@@ -257,12 +257,14 @@ public class L10nUtil {
         private static void loadBundles() {
             sLocalizedLocales = new HashSet<Locale>();
             
-            // String msgsDir = "/opt/zimbra/jetty/webapps/zimbra/WEB-INF/classes/msgs";
+            // String msgsDir = "/opt/zimbra/jetty/webapps/zimbra/WEB-INF/classes/messages";
             String msgsDir = LC.localized_client_msgs_directory.value();
+            ZimbraLog.misc.info("Scanning installed locales from " + msgsDir);
             ClassLoader classLoader = getClassLoader(msgsDir);
             Locale[] allLocales = Locale.getAvailableLocales();
             
-            // the en_US locale is alwasy available
+            // the en_US locale is always available
+            ZimbraLog.misc.info("Adding locale " + Locale.US.toString() + " (always added)");
             sLocalizedLocales.add(Locale.US);
             
             for (Locale lc : allLocales) {
@@ -275,6 +277,7 @@ public class L10nUtil {
                              * found a resource for the locale, a locale is considered "installed" as long as 
                              * any of its resource (the list in ClientResource) is present
                              */ 
+                            ZimbraLog.misc.info("Adding locale " + lc.toString());
                             sLocalizedLocales.add(lc);
                             break;
                         }
