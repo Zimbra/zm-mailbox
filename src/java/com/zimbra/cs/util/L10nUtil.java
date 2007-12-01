@@ -32,6 +32,7 @@ import java.util.ResourceBundle;
 import java.util.Set;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 public class L10nUtil {
@@ -284,6 +285,38 @@ public class L10nUtil {
                     } catch (MissingResourceException e) {
                     }
                 }
+            }
+            
+            /*
+             * UI displays locales with country in sub menus. 
+             * 
+             * E.g. if there are:
+             *      id: "zh_CN", name: "Chinese (China)"
+             *      id: "zh_HK", name: "Chinese (Hong Kong)"
+             *
+             *      then the menu looks like:
+             *          Chinese
+             *                   Chinese (China)
+             *                   Chinese (Hong Kong)
+             *
+             *      The UI relies on the presence of a "language only" entry 
+             *      for the top level label "Chinese".    
+             *      i.e. id: "zh", name: "Chinese"
+             *          
+             *      Thus we need to add a "language only" pseudo entry for locales that have 
+             *      a country part but the "language only" entry is not already there.
+             */
+            Set<Locale> pseudoLocales = new HashSet<Locale>();
+            for (Locale lc : sLocalizedLocales) {
+                String language = lc.getLanguage();
+                Locale lcLang = new Locale(language);
+                if (!sLocalizedLocales.contains(lcLang) && !pseudoLocales.contains(lcLang)) {
+                    ZimbraLog.misc.info("Adding locale " + lcLang.toString() + " (pseudo)");
+                    pseudoLocales.add(lcLang);
+                }
+            }
+            if (pseudoLocales.size() > 0) {
+                sLocalizedLocales = SetUtil.union(sLocalizedLocales, pseudoLocales);
             }
         }
         
