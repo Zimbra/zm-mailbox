@@ -892,7 +892,9 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
                 //   and the subsequent call to setIndex() will correctly set the mUIDs mapping
                 uncache(i4msg);
                 lit.remove();
-                removed.add(byUID ? i4msg.imapUid : seq);
+                // note that we can't send expunge notifications for messages the client doesn't know about yet...
+                if (!i4msg.isAdded())
+                    removed.add(byUID ? i4msg.imapUid : seq);
                 seq--;
                 trimmed = true;
             } else if (trimmed) {
