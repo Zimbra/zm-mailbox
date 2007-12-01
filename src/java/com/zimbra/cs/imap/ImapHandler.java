@@ -3363,12 +3363,13 @@ public abstract class ImapHandler extends ProtocolHandler {
         if (mbox == null)
             return;
 
-        // is this the right thing to synchronize on?
+        List<String> notifications = new ArrayList<String>();
+        // XXX: is this the right thing to synchronize on?
         synchronized (mbox) {
             // FIXME: notify untagged NO if close to quota limit
 
             if (i4folder.areTagsDirty()) {
-                sendUntagged("FLAGS (" + StringUtil.join(" ", i4folder.getFlagList(false)) + ')');
+                notifications.add("FLAGS (" + StringUtil.join(" ", i4folder.getFlagList(false)) + ')');
                 i4folder.cleanTags();
             }
 
@@ -3379,10 +3380,10 @@ public abstract class ImapHandler extends ProtocolHandler {
                 removed = !expunged.isEmpty();
                 if (removed) {
                     if (sessionActivated(ActivatedExtension.QRESYNC)) {
-                        sendUntagged("VANISHED " + ImapFolder.encodeSubsequence(expunged));
+                        notifications.add("VANISHED " + ImapFolder.encodeSubsequence(expunged));
                     } else {
                         for (Integer index : expunged)
-                            sendUntagged(index + " EXPUNGE");
+                            notifications.add(index + " EXPUNGE");
                     }
                 }
             }
@@ -3395,19 +3396,22 @@ public abstract class ImapHandler extends ProtocolHandler {
                 if (dirty.i4msg.isAdded())
                     dirty.i4msg.setAdded(false);
                 else
-                    sendUntagged(dirty.i4msg.sequence + " FETCH (" + dirty.i4msg.getFlags(i4folder) +
-                                 (sendModseq && dirty.modseq > 0 ? " MODSEQ (" + dirty.modseq + ')' : "") + ')');
+                    notifications.add(dirty.i4msg.sequence + " FETCH (" + dirty.i4msg.getFlags(i4folder) +
+                                      (sendModseq && dirty.modseq > 0 ? " MODSEQ (" + dirty.modseq + ')' : "") + ')');
             }
             i4folder.clearDirty();
 
             if (received || removed)
-                sendUntagged(i4folder.getSize() + " EXISTS");
+                notifications.add(i4folder.getSize() + " EXISTS");
             if (received || oldRecent != i4folder.getRecentCount())
-                sendUntagged(i4folder.getRecentCount() + " RECENT");
-
-            if (flush)
-                flushOutput();
+                notifications.add(i4folder.getRecentCount() + " RECENT");
         }
+
+        // no I/O while the Mailbox is locked...
+        for (String ntfn : notifications)
+            sendUntagged(ntfn);
+        if (flush)
+            flushOutput();
     }
 
     @Override
