@@ -47,7 +47,17 @@ public class CheckSpelling extends MailDocumentHandler {
     throws ServiceException {
         ZimbraSoapContext zc = getZimbraSoapContext(context);
         Element response = zc.createElement(MailConstants.CHECK_SPELLING_RESPONSE);
-        
+
+        // Make sure a spell check server is specified 
+        Provisioning prov = Provisioning.getInstance();
+        Server localServer = prov.getLocalServer();
+        String[] urls = localServer.getMultiAttr(Provisioning.A_zimbraSpellCheckURL);
+        if (ArrayUtil.isEmpty(urls)) {
+            sLog.warn("No value specified for %s", Provisioning.A_zimbraSpellCheckURL);
+            return unavailable(response);
+        }
+
+        // Handle no content
         String text = request.getTextTrim();
         if (StringUtil.isNullOrEmpty(text)) {
             sLog.debug("<CheckSpellingRequest> was empty");
@@ -55,42 +65,30 @@ public class CheckSpelling extends MailDocumentHandler {
             return response;
         }
         
+        // Check spelling
         Map<String, String> params = null;        
-        try {
-        	Provisioning prov = Provisioning.getInstance();
-            Server localServer = prov.getLocalServer();
-            String[] urls = localServer.getMultiAttr(Provisioning.A_zimbraSpellCheckURL);
-            if (ArrayUtil.isEmpty(urls)) {
-                throw ServiceException.NO_SPELL_CHECK_URL(Provisioning.A_zimbraSpellCheckURL + " is not specified");
+        for (int i = 0; i < urls.length; i++) {
+            RemoteServerRequest req = new RemoteServerRequest();
+            req.addParameter("text", text);
+            String url = urls[i];
+            try {
+                if (sLog.isDebugEnabled())
+                    sLog.debug("Checking spelling: url=%s, text=%s", url, text);
+                req.invoke(url);
+                params = req.getResponseParameters();
+                break; // Successful request.  No need to check the other servers.
+            } catch (IOException ex) {
+                ZimbraLog.mailbox.warn("An error occurred while contacting " + url, ex);
             }
-
-            for (int i = 0; i < urls.length; i++) {
-                RemoteServerRequest req = new RemoteServerRequest();
-                req.addParameter("text", text);
-                String url = urls[i];
-                try {
-                    if (sLog.isDebugEnabled())
-                        sLog.debug("Checking spelling: url=%s, text=%s", url, text);
-                    req.invoke(url);
-                    params = req.getResponseParameters();
-                    break; // Successful request.  No need to check the other servers.
-                } catch (IOException ex) {
-                    ZimbraLog.mailbox.warn("An error occurred while contacting " + url, ex);
-                }
-            }
-            
-            if (params.containsKey("error")) {
-                throw ServiceException.FAILURE("Spell check failed: " + params.get("error"), null);
-            }
-        } catch (ServiceException e) {
-        	if (e.getCode().equals(ServiceException.NO_SPELL_CHECK_URL)) {
-        		return unavailable(response);
-        	} else throw e;
         }
 
+        // Check for errors
         if (params == null) {
             sLog.warn("Unable to check spelling.  No params returned.");
             return unavailable(response);
+        }
+        if (params.containsKey("error")) {
+            throw ServiceException.FAILURE("Spell check failed: " + params.get("error"), null);
         }
         
         String misspelled = params.get("misspelled");
