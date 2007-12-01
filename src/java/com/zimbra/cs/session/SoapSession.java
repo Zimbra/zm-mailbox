@@ -622,7 +622,7 @@ public class SoapSession extends Session {
     }
 
     private void expandMountpoints(OperationContext octxt, GetFolder.FolderNode node, Map<String, Folder> mountpoints) {
-        if (node.mFolder == null) {
+        if (node.mFolder == null || mountpoints == null) {
             return;
         } else if (node.mFolder instanceof Mountpoint) {
             Mountpoint mpt = (Mountpoint) node.mFolder;
@@ -636,7 +636,7 @@ public class SoapSession extends Session {
 
                 Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(owner);
                 GetFolder.FolderNode remote = GetFolder.getFolderTree(octxt, mbox, new ItemId(mbox, mpt.getRemoteId()), false);
-                if (remote != null) {
+                if (remote != null && remote.mId != Mailbox.ID_FOLDER_USER_ROOT) {
                     node.mSubfolders.addAll(remote.mSubfolders);
                     mountpoints.put(node.mId + "", remote.mFolder);
                     // fault in a delegate session because there's actually something to listen on...
