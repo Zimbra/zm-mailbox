@@ -42,6 +42,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -103,6 +104,8 @@ public class SoapSession extends Session {
             return Integer.MAX_VALUE;
         }
 
+        @Override public void cleanup()  { }
+
         @Override public void notifyPendingChanges(PendingModifications pms, int changeId, Session source) {
             try {
                 if (calculateVisibleFolders(false))
@@ -113,8 +116,6 @@ public class SoapSession extends Session {
                 ZimbraLog.session.warn("exception during delegated notifyPendingChanges", e);
             }
         }
-
-        @Override public void cleanup()  { }
 
         private synchronized boolean calculateVisibleFolders(boolean force) throws ServiceException {
             long now = System.currentTimeMillis();
@@ -134,27 +135,27 @@ public class SoapSession extends Session {
             return (mVisibleFolderIds = ids) != null;
         }
 
-        private PendingModifications filterNotifications(PendingModifications pms) throws ServiceException {
-            // first, recalc visible folders if any folders got created or moved or had their ACL changed
+        private boolean folderRecalcRequired(PendingModifications pms) {
             boolean recalc = false;
             if (pms.created != null && !pms.created.isEmpty()) {
                 for (MailItem item : pms.created.values()) {
-                    if (item instanceof Folder) {
-                        recalc = true;  break;
-                    }
+                    if (item instanceof Folder)
+                        return true;
                 }
             }
             if (!recalc && pms.modified != null && !pms.modified.isEmpty()) {
                 for (Change chg : pms.modified.values()) {
-                    if ((chg.why & (Change.MODIFIED_ACL | Change.MODIFIED_FOLDER)) != 0 && chg.what instanceof Folder) {
-                        recalc = true;  break;
-                    }
+                    if ((chg.why & (Change.MODIFIED_ACL | Change.MODIFIED_FOLDER)) != 0 && chg.what instanceof Folder)
+                        return true;
                 }
             }
-            if (recalc) {
-                if (!calculateVisibleFolders(true))
-                    return pms;
-            }
+            return false;
+        }
+
+        private PendingModifications filterNotifications(PendingModifications pms) throws ServiceException {
+            // first, recalc visible folders if any folders got created or moved or had their ACL changed
+            if (folderRecalcRequired(pms) && !calculateVisibleFolders(true))
+                return pms;
             assert(mVisibleFolderIds != null);
 
 
@@ -598,31 +599,26 @@ public class SoapSession extends Session {
         OperationContext octxt = DocumentHandler.getOperationContext(zsc, this);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
-        // Lock the mailbox but not the "this" object, to avoid deadlock
-        // with another thread that calls a Session method from within a
-        // synchronized Mailbox method.
-        synchronized (mMailbox) {
-            // dump current mailbox status (currently just size)
-            ToXML.encodeMailbox(eRefresh, mMailbox);
+        // dump current mailbox status (currently just size)
+        ToXML.encodeMailbox(eRefresh, mMailbox);
 
-            // dump all tags under a single <tags> parent
-            List<Tag> tags = mMailbox.getTagList(octxt);
-            if (tags != null && tags.size() > 0) {
-                Element eTags = eRefresh.addUniqueElement(ZimbraNamespace.E_TAGS);
-                for (Tag tag : tags) {
-                    if (tag != null && !(tag instanceof Flag))
-                        ToXML.encodeTag(eTags, ifmt, tag);
-                }
+        // dump all tags under a single <tags> parent
+        List<Tag> tags = mMailbox.getTagList(octxt);
+        if (tags != null && tags.size() > 0) {
+            Element eTags = eRefresh.addUniqueElement(ZimbraNamespace.E_TAGS);
+            for (Tag tag : tags) {
+                if (tag != null && !(tag instanceof Flag))
+                    ToXML.encodeTag(eTags, ifmt, tag);
             }
-
-            // dump recursive folder hierarchy starting at USER_ROOT (i.e. folders visible to the user)
-            GetFolder.FolderNode root = GetFolder.getFolderTree(octxt, mMailbox, null, false);
-            Map<String, Folder> mountpoints = new HashMap<String, Folder>();
-            expandMountpoints(octxt, root, mountpoints);
-            GetFolder.encodeFolderNode(ifmt, octxt, eRefresh, root);
-            if (!mountpoints.isEmpty())
-                transferMountpointCounts(eRefresh.getOptionalElement(MailConstants.E_FOLDER), mountpoints);
         }
+
+        // dump recursive folder hierarchy starting at USER_ROOT (i.e. folders visible to the user)
+        GetFolder.FolderNode root = GetFolder.getFolderTree(octxt, mMailbox, null, false);
+        Map<String, Folder> mountpoints = new HashMap<String, Folder>();
+        expandMountpoints(octxt, root, mountpoints);
+        GetFolder.encodeFolderNode(ifmt, octxt, eRefresh, root);
+        if (!mountpoints.isEmpty())
+            transferMountpointCounts(eRefresh.getOptionalElement(MailConstants.E_FOLDER), mountpoints);
     }
 
     private void expandMountpoints(OperationContext octxt, GetFolder.FolderNode node, Map<String, Folder> mountpoints) {
