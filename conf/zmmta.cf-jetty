@@ -99,7 +99,7 @@ SECTION mta DEPENDS amavis
 
 SECTION sasl
 	VAR zimbraMtaAuthURL
-  REWRITE cyrus-sasl-2.1.22.3/etc/saslauthd.conf.in cyrus-sasl-2.1.22.3/etc/saslauthd.conf
+  REWRITE cyrus-sasl-2.1.22.3z/etc/saslauthd.conf.in cyrus-sasl-2.1.22.3z/etc/saslauthd.conf
   RESTART mta sasl
 
 SECTION webxml

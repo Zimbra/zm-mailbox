@@ -116,8 +116,8 @@ mysql> quit
 % tar -xvzf  {p4_client_local_dir}/ThirdPartyBuilds/MACOSXx86/openssl/openssl-0.9.8e.tgz -C /opt/zimbra
 % tar -xvzf  {p4_client_local_dir}/ThirdPartyBuilds/MACOSXx86/heimdal/heimdal-1.0.1.tgz -C /opt/zimbra
 % tar -xvzf  {p4_client_local_dir}/ThirdPartyBuilds/MACOSXx86/curl/curl-7.17.0.tgz -C /opt/zimbra
-% tar -xvzf  {p4_client_local_dir}/ThirdPartyBuilds/MACOSXx86/cyrus-sasl/cyrus-sasl-2.1.22.3.tgz -C /opt/zimbra
-% tar -xvzf  {p4_client_local_dir}/ThirdPartyBuilds/MACOSXx86/openldap/openldap-2.3.39.5z.tgz -C /opt/zimbra
+% tar -xvzf  {p4_client_local_dir}/ThirdPartyBuilds/MACOSXx86/cyrus-sasl/cyrus-sasl-2.1.22.3z.tgz -C /opt/zimbra
+% tar -xvzf  {p4_client_local_dir}/ThirdPartyBuilds/MACOSXx86/openldap/openldap-2.3.39.6z.tgz -C /opt/zimbra
 </pre>
 
 Run the following commands:

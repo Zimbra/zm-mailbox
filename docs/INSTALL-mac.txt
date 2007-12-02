@@ -124,10 +124,10 @@ Installing openldap:
 % {p4_client_local_dir}/ThirdPartyBuilds/MACOSX/curl/curl-7.17.0.tgz -C
 % /opt/zimbra
 % tar -xvzf
-% {p4_client_local_dir}/ThirdPartyBuilds/MACOSX/cyrus-sasl/cyrus-sasl-2.1.22.3.tgz
+% {p4_client_local_dir}/ThirdPartyBuilds/MACOSX/cyrus-sasl/cyrus-sasl-2.1.22.3z.tgz
 % -C /opt/zimbra
 % tar -xvzf
-% {p4_client_local_dir}/ThirdPartyBuilds/MACOSX/openldap/openldap-2.3.39.5z.tgz
+% {p4_client_local_dir}/ThirdPartyBuilds/MACOSX/openldap/openldap-2.3.39.6z.tgz
 % -C /opt/zimbra
 </pre>
 
