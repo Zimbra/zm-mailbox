@@ -17,18 +17,20 @@
 
 package com.zimbra.qa.unittest;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-
-import junit.framework.TestCase;
-
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.TaskUtil;
 import com.zimbra.cs.lmtpserver.LmtpMessageInputStream;
 import com.zimbra.cs.lmtpserver.MinaLmtpDataRequest;
 import com.zimbra.cs.mina.LineBuffer;
 import com.zimbra.cs.mina.MinaOutputStream;
 import com.zimbra.cs.mina.MinaUtil;
+import junit.framework.TestCase;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeoutException;
 
 public class TestMina extends TestCase {
     private static final String LINE = "This is a line";
@@ -179,6 +181,34 @@ public class TestMina extends TestCase {
         testMsgData(MSG_4);
     }
 
+    public void testTaskUtil1() throws Exception {
+        final long timeout = 100;
+        try {
+            TaskUtil.call(new Callable<Object>() {
+                public Object call() throws InterruptedException {
+                    Thread.sleep(timeout * 4);
+                    return null;
+                }
+            }, timeout);
+        } catch (TimeoutException e) {
+            return;
+        }
+        throw new AssertionError("Task should have timed out");
+    }
+
+    public void testTaskUtil2() throws Exception {
+        final long timeout = 500;
+        try {
+            TaskUtil.call(new Callable<Object>() {
+                public Object call() throws InterruptedException {
+                    return null;
+                }
+            }, timeout);
+        } catch (TimeoutException e) {
+            throw new AssertionError("Task should not have timed out");
+        }
+    }
+    
     // Test MinaLmtpDataRequest for given input data. Test compares result
     // against what is produced by LmtpInputStream as a reference.
     private void testMsgData(String data) throws IOException {
