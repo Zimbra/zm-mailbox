@@ -23,6 +23,10 @@ package com.zimbra.cs.account;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
@@ -42,6 +46,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.BlobMetaData;
 import com.zimbra.common.util.BlobMetaDataEncodingException;
+import com.zimbra.common.util.StringUtil;
 
 /**
  * @author schemers
@@ -64,6 +69,7 @@ public class AuthToken {
     private static final String C_TYPE_EXTERNAL_USER = "external";
     private static final String C_EXTERNAL_USER_EMAIL = "email";
     private static final String C_DIGEST = "digest";
+    private static final String C_MAILHOST = "mailhost";
     
 	private static LRUMap mCache = new LRUMap(AUTHTOKEN_CACHE_SIZE);
     
@@ -79,6 +85,7 @@ public class AuthToken {
     private String mType;
     private String mExternalUserEmail;
     private String mDigest;
+    private String[] mMailHostAddrs;
     
     public String toString() {
         return "AuthToken(acct="+mAccountId+" admin="+mAdminAccountId+" exp="
@@ -157,6 +164,10 @@ public class AuthToken {
             mType = (String)map.get(C_TYPE);
             mExternalUserEmail = (String)map.get(C_EXTERNAL_USER_EMAIL);
             mDigest = (String)map.get(C_DIGEST);
+            String mailhostAddrs = (String)map.get(C_MAILHOST);
+            if (mailhostAddrs != null) {
+            	mMailHostAddrs = mailhostAddrs.split (",");
+            }
         } catch (ServiceException e) {
             throw new AuthTokenException("service exception", e);
         } catch (DecoderException e) {
@@ -203,6 +214,26 @@ public class AuthToken {
             mExternalUserEmail = g.getName();
         } else
             mType = C_TYPE_ZIMBRA_USER;
+		
+		/* build up the server:port strings for the account's mailhost */
+		String mailhost = acct.getAttr(Provisioning.A_zimbraMailHost);
+		if (mailhost != null) {
+			List<String> mailHostAddrs = new ArrayList <String> ();
+			try {
+				Server server = Provisioning.getInstance().getServer(acct);
+				String serverPort = server.getAttr(Provisioning.A_zimbraMailPort);
+				InetAddress[] serverAddrs = InetAddress.getAllByName(mailhost);
+				for (InetAddress serverAddr: serverAddrs) {
+					mailHostAddrs.add(serverAddr.getHostAddress() + ":" + serverPort);
+				}
+			} catch (ServiceException e) {
+				// cannot get server object
+			} catch (UnknownHostException e) {
+				// cannot look up server name
+			}
+			
+			mMailHostAddrs = mailHostAddrs.toArray(new String[0]); 
+		}
 	}
 
     public AuthToken(String acctId, String externalEmail, String pass, String digest, long expires) {
@@ -278,6 +309,10 @@ public class AuthToken {
             BlobMetaData.encodeMetaData(C_TYPE, mType, encodedBuff);
             BlobMetaData.encodeMetaData(C_EXTERNAL_USER_EMAIL, mExternalUserEmail, encodedBuff);
             BlobMetaData.encodeMetaData(C_DIGEST, mDigest, encodedBuff);
+            if ((mMailHostAddrs != null) && (mMailHostAddrs.length > 0)) {
+            	BlobMetaData.encodeMetaData(C_MAILHOST, StringUtil.join(",", mMailHostAddrs), encodedBuff);
+            }
+            
             String data = new String(Hex.encodeHex(encodedBuff.toString().getBytes()));
             AuthTokenKey key = getCurrentKey();
             String hmac = getHmac(data, key.getKey());
