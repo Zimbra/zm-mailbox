@@ -159,6 +159,8 @@ public final class PendingModifications {
 //        ZimbraLog.mailbox.debug("--> NOTIFY: modified " + key + " (" + reason + ')');
         Change chg = null;
         if (created != null && created.containsKey(key)) {
+            if (item instanceof MailItem)
+                recordCreated((MailItem) item);
             return;
         } else if (deleted != null && deleted.containsKey(key)) {
             return;
