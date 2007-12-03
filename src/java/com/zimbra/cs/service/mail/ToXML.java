@@ -97,27 +97,29 @@ public class ToXML {
     // no construction
     private ToXML()  {}
 
-    public static void encodeItem(Element parent, ItemIdFormatter ifmt, OperationContext octxt, MailItem item, int fields)
+    public static Element encodeItem(Element parent, ItemIdFormatter ifmt, OperationContext octxt, MailItem item, int fields)
     throws ServiceException {
-        if (item instanceof Folder)
-            encodeFolder(parent, ifmt, octxt, (Folder) item, fields);
-        else if (item instanceof Tag)
-            encodeTag(parent, ifmt, (Tag) item, fields);
-        else if (item instanceof Note)
-            encodeNote(parent, ifmt, (Note) item, fields);
-        else if (item instanceof Contact)
-            encodeContact(parent, ifmt, (Contact) item, false, null, fields);
-        else if (item instanceof CalendarItem) 
-            encodeCalendarItemSummary(parent, ifmt, octxt, (CalendarItem) item, fields, true);
-        else if (item instanceof Conversation)
-            encodeConversationSummary(parent, ifmt, octxt, (Conversation) item, fields);
-        else if (item instanceof WikiItem)
-            encodeWiki(parent, ifmt, octxt, (WikiItem) item, fields, -1);
-        else if (item instanceof Document)
-            encodeDocument(parent, ifmt, octxt, (Document) item, fields, -1);
-        else if (item instanceof Message) {
+        if (item instanceof Folder) {
+            return encodeFolder(parent, ifmt, octxt, (Folder) item, fields);
+        } else if (item instanceof Tag) {
+            return encodeTag(parent, ifmt, (Tag) item, fields);
+        } else if (item instanceof Note) {
+            return encodeNote(parent, ifmt, (Note) item, fields);
+        } else if (item instanceof Contact) {
+            return encodeContact(parent, ifmt, (Contact) item, false, null, fields);
+        } else if (item instanceof CalendarItem) { 
+            return encodeCalendarItemSummary(parent, ifmt, octxt, (CalendarItem) item, fields, true);
+        } else if (item instanceof Conversation) {
+            return encodeConversationSummary(parent, ifmt, octxt, (Conversation) item, null, OutputParticipants.PUT_SENDERS, fields, false);
+        } else if (item instanceof WikiItem) {
+            return encodeWiki(parent, ifmt, octxt, (WikiItem) item, fields, -1);
+        } else if (item instanceof Document) {
+            return encodeDocument(parent, ifmt, octxt, (Document) item, fields, -1);
+        } else if (item instanceof Message) {
             OutputParticipants output = (fields == NOTIFY_FIELDS ? OutputParticipants.PUT_BOTH : OutputParticipants.PUT_SENDERS);
-            encodeMessageSummary(parent, ifmt, octxt, (Message) item, output, fields);
+            return encodeMessageSummary(parent, ifmt, octxt, (Message) item, output, fields);
+        } else {
+            return null;
         }
     }
 
@@ -506,14 +508,15 @@ public class ToXML {
      * @throws ServiceException 
      */
     public static Element encodeConversationSummary(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Conversation conv, int fields) throws ServiceException {
-        return encodeConversationSummary(parent, ifmt, octxt, conv, null, OutputParticipants.PUT_SENDERS, fields);
+        return encodeConversationSummary(parent, ifmt, octxt, conv, null, OutputParticipants.PUT_SENDERS, fields, true);
     }
 
     public static Element encodeConversationSummary(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Conversation conv, Message msgHit, OutputParticipants output) throws ServiceException {
-        return encodeConversationSummary(parent, ifmt, octxt, conv, msgHit, output, NOTIFY_FIELDS);
+        return encodeConversationSummary(parent, ifmt, octxt, conv, msgHit, output, NOTIFY_FIELDS, true);
     }
 
-    private static Element encodeConversationSummary(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Conversation conv, Message msgHit, OutputParticipants output, int fields) throws ServiceException {
+    private static Element encodeConversationSummary(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Conversation conv, Message msgHit, OutputParticipants output, int fields, boolean alwaysSerialize)
+    throws ServiceException {
         boolean addRecips  = msgHit != null && msgHit.isFromMe() && (output == OutputParticipants.PUT_RECIPIENTS || output == OutputParticipants.PUT_BOTH);
         boolean addSenders = (output == OutputParticipants.PUT_BOTH || !addRecips) && needToOutput(fields, Change.MODIFIED_SENDERS);
 
@@ -522,8 +525,9 @@ public class ToXML {
         if ((octxt != null && octxt.isDelegatedRequest(mbox)) || (addSenders && conv.isTagged(mbox.mDeletedFlag)))
             msgs = mbox.getMessagesByConversation(octxt, conv.getId(), Conversation.SORT_DATE_ASCENDING);
 
-        Element c = encodeConversationCommon(parent, ifmt, conv, msgs, fields);
-        if (msgs != null && msgs.isEmpty())
+        boolean noneVisible = msgs != null && msgs.isEmpty();
+        Element c = noneVisible && !alwaysSerialize ? null : encodeConversationCommon(parent, ifmt, conv, msgs, fields);
+        if (noneVisible)
             return c;
 
         if (needToOutput(fields, Change.MODIFIED_DATE))

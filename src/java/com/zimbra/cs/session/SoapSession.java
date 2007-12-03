@@ -57,6 +57,7 @@ import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.session.PendingModifications.ModificationKey;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -122,8 +123,6 @@ public class SoapSession extends Session {
             if (!force && mNextFolderCheck > now)
                 return mVisibleFolderIds != null;
 
-            mNextFolderCheck = now + 5 * Constants.MILLIS_PER_MINUTE;
-
             Mailbox mbox = mMailbox;
             Set<Folder> visible = mbox == null ? null : mbox.getVisibleFolders(new OperationContext(getAuthenticatedAccountId()));
             Set<Integer> ids = null;
@@ -132,7 +131,10 @@ public class SoapSession extends Session {
                 for (Folder folder : visible)
                     ids.add(folder.getId());
             }
-            return (mVisibleFolderIds = ids) != null;
+
+            mVisibleFolderIds = ids;
+            mNextFolderCheck = now + 5 * Constants.MILLIS_PER_MINUTE;
+            return ids != null;
         }
 
         private boolean folderRecalcRequired(PendingModifications pms) {
@@ -152,12 +154,14 @@ public class SoapSession extends Session {
             return false;
         }
 
+        private static final int BASIC_CONVERSATION_FLAGS = Change.MODIFIED_FLAGS | Change.MODIFIED_TAGS | Change.MODIFIED_UNREAD;
+        private static final int MODIFIED_CONVERSATION_FLAGS = BASIC_CONVERSATION_FLAGS | Change.MODIFIED_SIZE  | Change.MODIFIED_SENDERS;
+
         private PendingModifications filterNotifications(PendingModifications pms) throws ServiceException {
             // first, recalc visible folders if any folders got created or moved or had their ACL changed
             if (folderRecalcRequired(pms) && !calculateVisibleFolders(true))
                 return pms;
             assert(mVisibleFolderIds != null);
-
 
             PendingModifications filtered = new PendingModifications();
             filtered.changedTypes = pms.changedTypes;
@@ -166,7 +170,7 @@ public class SoapSession extends Session {
             }
             if (pms.created != null && !pms.created.isEmpty()) {
                 for (MailItem item : pms.created.values()) {
-                    if (mVisibleFolderIds.contains(item instanceof Folder ? item.getId() : item.getFolderId()))
+                    if (item instanceof Conversation || mVisibleFolderIds.contains(item instanceof Folder ? item.getId() : item.getFolderId()))
                         filtered.recordCreated(item);
                 }
             }
@@ -176,17 +180,42 @@ public class SoapSession extends Session {
                         continue;
                     MailItem item = (MailItem) chg.what;
                     boolean visible = mVisibleFolderIds.contains(item.getFolderId());
-                    if ((chg.why & Change.MODIFIED_FOLDER) != 0) {
+                    boolean moved = (chg.why & Change.MODIFIED_FOLDER) != 0;
+                    if (item instanceof Conversation) {
+                        filtered.recordModified(item, chg.why | MODIFIED_CONVERSATION_FLAGS);
+                    } else if (moved) {
                         // a move between visible folders ends up as a delete and a create, but that should be OK
                         filtered.recordDeleted(item);
                         if (visible)
                             filtered.recordCreated(item);
+                        // if it's a message and it's moved, make sure the conv shows up in the modified or created list
+                        if (item instanceof Message)
+                            forceConversationModification((Message) item, pms, filtered, MODIFIED_CONVERSATION_FLAGS);
                     } else if (visible) {
                         filtered.recordModified(item, chg.why);
+                        // if it's an unmoved visible message and it had a tag/flag/unread change, make sure the conv shows up in the modified or created list
+                        if (item instanceof Message && (chg.why & BASIC_CONVERSATION_FLAGS) != 0)
+                            forceConversationModification((Message) item, pms, filtered, BASIC_CONVERSATION_FLAGS);
                     }
                 }
             }
+
             return filtered;
+        }
+
+        private void forceConversationModification(Message msg, PendingModifications pms, PendingModifications filtered, int changeMask) {
+            int convId = msg.getConversationId();
+            ModificationKey mkey = new ModificationKey(msg.getMailbox().getAccountId(), convId);
+            Change existing = null;
+            if (pms.created != null && pms.created.containsKey(mkey)) {
+                ;
+            } else if (pms.modified != null && (existing = pms.modified.get(mkey)) != null) {
+                filtered.recordModified((MailItem) existing.what, existing.why | changeMask);
+            } else {
+                try {
+                    filtered.recordModified(mMailbox.getConversationById(null, convId), changeMask);
+                } catch (Throwable t) { }
+            }
         }
     }
 
@@ -735,16 +764,11 @@ public class SoapSession extends Session {
         if (ctxt == null || mMailbox == null)
             return null;
 
-        String explicitAcct = getAuthenticatedAccountId().equals(zsc.getAuthtokenAccountId()) ? null : getAuthenticatedAccountId();
-
         // because ToXML functions can now call back into the Mailbox, don't hold any locks when calling putQueuedNotifications
         LinkedList<QueuedNotifications> notifications;
         synchronized (mSentChanges) {
-            // send the <change> block
-            // <change token="555" [acct="4f778920-1a84-11da-b804-6b188d2a20c4"]/>
-            ctxt.addUniqueElement(HeaderConstants.E_CHANGE)
-                .addAttribute(HeaderConstants.A_CHANGE_ID, mMailbox.getLastChangeID())
-                .addAttribute(HeaderConstants.A_ACCOUNT_ID, explicitAcct);
+            // send the "change" block:  <change token="555"/>
+            ctxt.addUniqueElement(HeaderConstants.E_CHANGE).addAttribute(HeaderConstants.A_CHANGE_ID, mMailbox.getLastChangeID());
 
             // clear any notifications we now know the client has received
             acknowledgeNotifications(lastSequence);
@@ -776,11 +800,18 @@ public class SoapSession extends Session {
         QueuedNotifications last = notifications.getLast();
         for (QueuedNotifications ntfn : notifications) {
             if (ntfn.hasNotifications() || ntfn == last)
-                putQueuedNotifications(ntfn, ctxt, zsc, explicitAcct);
+                putQueuedNotifications(ntfn, ctxt, zsc);
         }
 
         return ctxt;
     }
+
+    /** Size limit beyond which we suppress notifications on conversations
+     *  belonging to other people's mailboxes.  We need to fetch the entire
+     *  list of visible messages when serializing delegated conversations.
+     *  If it looks like it'd be too expensive to fetch that list, we just
+     *  skip the notification. */
+    private static final int DELEGATED_CONVERSATION_SIZE_LIMIT = 30;
 
     /**
      * Write a single instance of the PendingModifications structure into the 
@@ -790,14 +821,11 @@ public class SoapSession extends Session {
      * @param zsc
      * @param explicitAcct
      */
-    private void putQueuedNotifications(QueuedNotifications ntfn, Element parent, ZimbraSoapContext zsc, String explicitAcct) {
+    private void putQueuedNotifications(QueuedNotifications ntfn, Element parent, ZimbraSoapContext zsc) {
         assert(ntfn.getSequence() > 0);
 
-        // <notify [acct="4f778920-1a84-11da-b804-6b188d2a20c4"]/>
-        Element eNotify = parent.addElement(ZimbraNamespace.E_NOTIFY)
-                                .addAttribute(HeaderConstants.A_ACCOUNT_ID, explicitAcct)
-                                .addAttribute(HeaderConstants.A_SEQNO, ntfn.getSequence());
-
+        // create the base "notify" block:  <notify seq="6"/>
+        Element eNotify = parent.addElement(ZimbraNamespace.E_NOTIFY).addAttribute(HeaderConstants.A_SEQNO, ntfn.getSequence());
 
         OperationContext octxt = null;
         try {
@@ -809,18 +837,11 @@ public class SoapSession extends Session {
 
         PendingModifications pms = ntfn.mMailboxChanges;
 
+        Element eDeleted = eNotify.addUniqueElement(ZimbraNamespace.E_DELETED);
+        StringBuilder deletedIds = new StringBuilder();
         if (pms != null && pms.deleted != null && pms.deleted.size() > 0) { 
-            StringBuilder ids = new StringBuilder();
-            for (PendingModifications.ModificationKey mkey : pms.deleted.keySet()) {
-                if (ids.length() != 0)
-                    ids.append(',');
-                // should be using the ItemIdFormatter, but I'm preoptimizing here
-                if (!mkey.getAccountId().equals(mAuthenticatedAccountId))
-                    ids.append(mkey.getAccountId()).append(':');
-                ids.append(mkey.getItemId());
-            }
-            Element eDeleted = eNotify.addUniqueElement(ZimbraNamespace.E_DELETED);
-            eDeleted.addAttribute(A_ID, ids.toString());
+            for (ModificationKey mkey : pms.deleted.keySet())
+                addDeletedNotification(mkey, deletedIds);
         }
 
         if (pms != null && pms.created != null && pms.created.size() > 0) {
@@ -841,9 +862,15 @@ public class SoapSession extends Session {
             for (Change chg : pms.modified.values()) {
                 if (chg.why != 0 && chg.what instanceof MailItem) {
                     MailItem item = (MailItem) chg.what;
+                    // don't serialize out changes on too-large delegated conversation
+                    if (mMailbox != item.getMailbox() && item instanceof Conversation && ((Conversation) item).getMessageCount() > DELEGATED_CONVERSATION_SIZE_LIMIT)
+                        continue;
+
                     ItemIdFormatter ifmt = new ItemIdFormatter(mAuthenticatedAccountId, item.getMailbox(), false);
                     try {
-                        ToXML.encodeItem(eModified, ifmt, octxt, item, chg.why);
+                        Element elt = ToXML.encodeItem(eModified, ifmt, octxt, item, chg.why);
+                        if (elt == null)
+                            addDeletedNotification(new ModificationKey(item), deletedIds);
                     } catch (ServiceException e) {
                         ZimbraLog.session.warn("error encoding item " + item.getId(), e);
                         return;
@@ -860,10 +887,24 @@ public class SoapSession extends Session {
                 try {
                     imn.toXml(eIM);
                 } catch (ServiceException e) {
-                    e.printStackTrace();
+                    ZimbraLog.session.warn("error serializing IM notification; skipping", e);
                 }
             }
         }
+
+        if (deletedIds == null || deletedIds.length() == 0)
+            eDeleted.detach();
+        else
+            eDeleted.addAttribute(A_ID, deletedIds.toString());
+    }
+
+    private void addDeletedNotification(ModificationKey mkey, StringBuilder deletedIds) {
+        if (deletedIds.length() != 0)
+            deletedIds.append(',');
+        // should be using the ItemIdFormatter, but I'm preoptimizing here
+        if (!mkey.getAccountId().equals(mAuthenticatedAccountId))
+            deletedIds.append(mkey.getAccountId()).append(':');
+        deletedIds.append(mkey.getItemId());
     }
 
 
