@@ -19,6 +19,7 @@ package com.zimbra.cs.wiki;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -34,6 +35,8 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.WikiItem;
+import com.zimbra.cs.util.L10nUtil;
+import com.zimbra.cs.util.L10nUtil.MsgKey;
 import com.zimbra.cs.wiki.Wiki.WikiContext;
 import com.zimbra.cs.wiki.Wiki.WikiUrl;
 
@@ -407,6 +410,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 			addWiklet(new WikilinkWiklet());
 			addWiklet(new UrlWiklet());
 			addWiklet(new FragmentWiklet());
+			addWiklet(new MsgWiklet());			
 		}
 		
 		private static void addWiklet(Wiklet w) {
@@ -1080,6 +1084,38 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 				return buf.toString();
 			} catch (Exception e) {
 				return "<!-- cannot generate URL for item "+title+" -->" + title;
+			}
+		}
+	}
+	
+	public static class MsgWiklet extends Wiklet {
+		private static final String sKEY = "key";
+		public String getName() {
+			return "Msg";
+		}
+		public String getPattern() {
+			return "MSG";
+		}
+		public WikiTemplate findInclusion(Context ctxt) {
+			return null;
+		}
+		public String apply(Context ctxt) {
+			
+			try {
+				Map<String,String> params = ctxt.token.parseParam();
+				String key = params.get(sKEY);
+				
+				MsgKey msgKey = MsgKey.valueOf(key);	
+				
+				if(msgKey != null){
+					Locale lc= ctxt.item.getMailbox().getAccount().getLocale();
+					return L10nUtil.getMessage(msgKey, lc);					
+				}else {
+					return "";
+				}
+				
+			} catch (Exception e) {
+				return "";
 			}
 		}
 	}

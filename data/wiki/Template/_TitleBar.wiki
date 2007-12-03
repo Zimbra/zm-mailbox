@@ -16,7 +16,7 @@
 				<tr>
 					<td class="zmwiki-pageIcon" valign="top"><!--wiklet class='ICON' /--></td>
 					<td><span class="zmwiki-pageName" valign="top"><wiklet class='NAME' /></span><br> 
-					<span class="zmwiki-author zmwiki-smallGrayLinks">by <wiklet class='CREATOR' /></span><br>
+					<span class="zmwiki-author zmwiki-smallGrayLinks"><wiklet class='MSG' key='wikiBy'/> <wiklet class='CREATOR' /></span><br>
 					<!--span class="zmwiki-author">Modified on <wiklet class='MODIFYDATE'/></span--> 
 					</td>
 					

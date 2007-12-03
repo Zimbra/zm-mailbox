@@ -5,7 +5,7 @@
 		<tr><td colspan="3">
 		    <table cellspacing="0" cellpadding="0" border="0" width="100%" class="zmwiki-horzBorder">
 			<tr>
-			<td class="zmwiki-tocHeader"> <wiklet class='MSG' key='wikiToc' /> Table of Contents </td>
+			<td class="zmwiki-tocHeader"> <wiklet class='MSG' key='wikiTOC' /> </td>
 		    </tr>
 		    </table>
 		</td></tr>			
@@ -22,10 +22,10 @@
 	
 			<tr class='zmwiki-headerUnderLine'>
 			<td class='zmwiki-header' width=16>&nbsp;</td>
-			<td class='zmwiki-header'>Document name</td>
-			<td class='zmwiki-header'>Modified by</td>
-			<td class='zmwiki-header'>Modified on</td>
-			<td class='zmwiki-header'>Version</td>		
+			<td class='zmwiki-header'><wiklet class="MSG" key="wikiDocName"/></td>
+			<td class='zmwiki-header'><wiklet class="MSG" key="wikiModifiedBy"/></td>
+			<td class='zmwiki-header'><wiklet class="MSG" key="wikiModifiedOn"/></td>
+			<td class='zmwiki-header'><wiklet class="MSG" key="wikiVersion"/></td>		
 			</tr>
 
 			<wiklet class='CONTENT' />

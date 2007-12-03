@@ -105,6 +105,15 @@ public class L10nUtil {
         zsRecurEndByDate,
         zsRecurBlurb,
         
+        wikiTOC,
+        wikiActions,
+        wikiDocName,
+        wikiModifiedBy,
+        wikiModifiedOn,
+        wikiVersion,
+        wikiPageHistory,
+        wikiBy,
+        
         // add other messages in the future...
     }
 
