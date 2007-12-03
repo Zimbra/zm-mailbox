@@ -449,6 +449,17 @@ public class Alarm {
                 repeatDuration, repeatCount, description, summary, attach, attendees);
         return alarm;
     }
+    
+    /**
+     * Create an alarm object from a simple warning relative time.
+     * 
+     * @param reminder number of minutes before start of meeting
+     * @return the Alarm object
+     */
+    public static Alarm fromSimpleReminder(int minBeforeStart) throws ServiceException {
+    	return new Alarm(Action.DISPLAY, TriggerType.RELATIVE, TriggerRelated.START,
+    			ParsedDuration.parse(true, 0, 0, 0, minBeforeStart, 0), null, null, 0, null, null, null, null);
+    }
 
     private static final String FN_ACTION = "ac";
     private static final String FN_TRIGGER_TYPE = "tt";
