@@ -469,7 +469,7 @@ public class ByteUtil {
      *                 when there is an error.
      * @param maxLength maximum number of bytes to copy
      * @return the number of bytes copied
-     * @throws IOException
+     * @throws IOException if the number of bytes read exceeds <tt>maxLength</tt>
      */
     public static int copy(InputStream in, boolean closeIn, OutputStream out, boolean closeOut, long maxLength) throws IOException {
         try {
