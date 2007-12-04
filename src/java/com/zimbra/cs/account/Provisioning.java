@@ -1350,6 +1350,11 @@ public abstract class Provisioning {
     public static final String A_zimbraReverseProxyDomainNameSearchBase = "zimbraReverseProxyDomainNameSearchBase";
     public static final String A_zimbraReverseProxyDomainNameAttribute  = "zimbraReverseProxyDomainNameAttribute";
     public static final String A_zimbraVirtualIPAddress                 = "zimbraVirtualIPAddress";
+    
+    /*
+     * memcached
+     */
+    public static final String A_zimbraMemcachedBindPort = "zimbraMemcachedBindPort";
 
     /*
      * whether to use <> or account's real address for out of office 
