@@ -118,23 +118,26 @@ public class SoapSession extends Session {
             }
         }
 
-        private synchronized boolean calculateVisibleFolders(boolean force) throws ServiceException {
+        private boolean calculateVisibleFolders(boolean force) throws ServiceException {
             long now = System.currentTimeMillis();
-            if (!force && mNextFolderCheck > now)
-                return mVisibleFolderIds != null;
 
             Mailbox mbox = mMailbox;
-            Set<Folder> visible = mbox == null ? null : mbox.getVisibleFolders(new OperationContext(getAuthenticatedAccountId()));
-            Set<Integer> ids = null;
-            if (visible != null) {
-                ids = new HashSet<Integer>(visible.size());
-                for (Folder folder : visible)
-                    ids.add(folder.getId());
-            }
+            synchronized (mbox) {
+                if (!force && mNextFolderCheck > now)
+                    return mVisibleFolderIds != null;
 
-            mVisibleFolderIds = ids;
-            mNextFolderCheck = now + 5 * Constants.MILLIS_PER_MINUTE;
-            return ids != null;
+                Set<Folder> visible = mbox == null ? null : mbox.getVisibleFolders(new OperationContext(getAuthenticatedAccountId()));
+                Set<Integer> ids = null;
+                if (visible != null) {
+                    ids = new HashSet<Integer>(visible.size());
+                    for (Folder folder : visible)
+                        ids.add(folder.getId());
+                }
+    
+                mVisibleFolderIds = ids;
+                mNextFolderCheck = now + 5 * Constants.MILLIS_PER_MINUTE;
+                return ids != null;
+            }
         }
 
         private boolean folderRecalcRequired(PendingModifications pms) {
@@ -281,7 +284,7 @@ public class SoapSession extends Session {
     private QueuedNotifications mChanges = new QueuedNotifications(1);
 
     private PushChannel mPushChannel = null;
-    private Map<String, DelegateSession> mDelegateSessions;
+    private Map<String, DelegateSession> mDelegateSessions = new HashMap<String, DelegateSession>(3);
     private Map<String, RemoteSessionInfo> mRemoteSessions;
 
     private static final long SOAP_SESSION_TIMEOUT_MSEC = 10 * Constants.MILLIS_PER_MINUTE;
@@ -312,15 +315,18 @@ public class SoapSession extends Session {
                 ZimbraLog.session.warn("exception recording unloaded session's last access time", t);
             }
         }
+
+        // unloading a SoapSession also must unload all its delegates
+        List<DelegateSession> delegates;
         synchronized (this) {
-            // unloading a SoapSession also must unload all its delegates
-            if (mDelegateSessions != null) {
-                List<DelegateSession> delegates = new ArrayList<DelegateSession>(mDelegateSessions.values());
-                for (DelegateSession ds : delegates)
-                    ds.unregister();
-                mDelegateSessions = null;
-            }
+            delegates = mDelegateSessions == null ? null : new ArrayList<DelegateSession>(mDelegateSessions.values());
+            mDelegateSessions = null;
         }
+        if (delegates != null) {
+            for (DelegateSession ds : delegates)
+                ds.unregister();
+        }
+
         // note that Session.unregister() unsets mMailbox...
         super.unregister();
         return this;
@@ -344,12 +350,18 @@ public class SoapSession extends Session {
 //        }
     }
 
+    @Override protected long getSessionIdleLifetime() {
+        return SOAP_SESSION_TIMEOUT_MSEC;
+    }
+
 
     public DelegateSession getDelegateSession(String targetAccountId) {
         targetAccountId = targetAccountId.toLowerCase();
         synchronized (this) {
+            // don't return delegate sessions after an unregister()
             if (mDelegateSessions == null)
-                mDelegateSessions = new HashMap<String, DelegateSession>();
+                return null;
+
             DelegateSession ds = mDelegateSessions.get(targetAccountId);
             if (ds == null) {
                 ds = new DelegateSession(mAuthenticatedAccountId, targetAccountId).register();
@@ -361,9 +373,9 @@ public class SoapSession extends Session {
     }
 
     void removeDelegateSession(DelegateSession ds) {
-        if (mDelegateSessions == null)
-            return;
         synchronized (this) {
+            if (mDelegateSessions == null || mDelegateSessions.isEmpty())
+                return;
             boolean removed = mDelegateSessions.remove(ds.mTargetAccountId.toLowerCase()) != null;
             if (!removed)
                 return;
@@ -373,10 +385,6 @@ public class SoapSession extends Session {
         }
     }
 
-
-    @Override protected long getSessionIdleLifetime() {
-        return SOAP_SESSION_TIMEOUT_MSEC;
-    }
 
     /** Returns the number of messages added to the Mailbox since the time
      *  returned by {@link #getPreviousSessionTime()}.  Note that this means
