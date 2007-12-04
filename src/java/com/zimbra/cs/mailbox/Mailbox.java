@@ -106,7 +106,6 @@ import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMailbox.Options;
 
-
 /**
  * @author schemers
  */
@@ -2048,11 +2047,12 @@ public class Mailbox {
      *  revision does not exist, either because the version number is out of
      *  range or because the requested revision has not been retained, returns
      *  <tt>null</tt>. */
-    public MailItem getItemRevision(OperationContext octxt, int id, byte type, int version) throws ServiceException {
+    public synchronized MailItem getItemRevision(OperationContext octxt, int id, byte type, int version) throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("getItemRevision", octxt);
             MailItem revision = checkAccess(getItemById(id, type)).getRevision(version);
+
             success = true;
             return revision;
         } finally {
@@ -2064,7 +2064,7 @@ public class Mailbox {
      *  both current and past.  These revisions are returned in increasing
      *  order of their 1-based "version", with the current revision always
      *  present and listed last. */
-    public List<MailItem> getAllRevisions(OperationContext octxt, int id, byte type) throws ServiceException {
+    public synchronized List<MailItem> getAllRevisions(OperationContext octxt, int id, byte type) throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("getAllRevisions", octxt);
