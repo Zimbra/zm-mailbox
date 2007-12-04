@@ -58,6 +58,8 @@ public class CheckPortConflict extends AttributeCallback {
         sPortAttrs.add(Provisioning.A_zimbraPop3SSLProxyBindPort);
             
         sPortAttrs.add(Provisioning.A_zimbraRemoteManagementPort);
+        
+        sPortAttrs.add(Provisioning.A_zimbraMemcachedBindPort);
     }
         
        

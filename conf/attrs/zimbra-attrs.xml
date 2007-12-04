@@ -2751,6 +2751,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Whether to index junk messages</desc>
 </attr>
 
+<attr id="580" name="zimbraMemcachedBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict">
+  <globalConfigValue>11211</globalConfigValue>
+  <desc>port number on which memcached server should listen</desc>
+</attr>
+
 
 </attrs>
 
