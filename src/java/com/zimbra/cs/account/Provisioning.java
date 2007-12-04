@@ -1367,6 +1367,11 @@ public abstract class Provisioning {
      */
     public static final String A_zimbraPrefVoiceItemsPerPage = "zimbraPrefVoiceItemsPerPage";
     
+    /*
+     * junk messages
+     */ 
+    public static final String A_zimbraJunkMessagesIndexingEnabled      = "zimbraJunkMessagesIndexingEnabled";
+    
     private static Provisioning sProvisioning;
 
     public synchronized static Provisioning getInstance() {
