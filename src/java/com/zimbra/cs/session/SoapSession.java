@@ -465,7 +465,7 @@ public class SoapSession extends Session {
             }
         }
     }
-    
+
 
     @Override public void notifyIM(IMNotification imn) {
         if (imn == null)
@@ -655,7 +655,7 @@ public class SoapSession extends Session {
         expandMountpoints(octxt, root, mountpoints);
         GetFolder.encodeFolderNode(ifmt, octxt, eRefresh, root);
         if (!mountpoints.isEmpty())
-            transferMountpointCounts(eRefresh.getOptionalElement(MailConstants.E_FOLDER), mountpoints);
+            transferMountpointCounts(eRefresh.getOptionalElement(MailConstants.E_FOLDER), octxt, mountpoints);
     }
 
     private void expandMountpoints(OperationContext octxt, GetFolder.FolderNode node, Map<String, Folder> mountpoints) {
@@ -673,7 +673,7 @@ public class SoapSession extends Session {
 
                 Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(owner);
                 GetFolder.FolderNode remote = GetFolder.getFolderTree(octxt, mbox, new ItemId(mbox, mpt.getRemoteId()), false);
-                if (remote != null && remote.mId != Mailbox.ID_FOLDER_USER_ROOT) {
+                if (remote != null && remote.mFolder != null && !remote.mFolder.isHidden() && remote.mId != Mailbox.ID_FOLDER_USER_ROOT) {
                     node.mSubfolders.addAll(remote.mSubfolders);
                     mountpoints.put(node.mId + "", remote.mFolder);
                     // fault in a delegate session because there's actually something to listen on...
@@ -688,7 +688,7 @@ public class SoapSession extends Session {
         }
     }
 
-    private void transferMountpointCounts(Element elem, Map<String, Folder> mountpoints) {
+    private void transferMountpointCounts(Element elem, OperationContext octxt, Map<String, Folder> mountpoints) {
         if (elem == null)
             return;
 
@@ -698,11 +698,12 @@ public class SoapSession extends Session {
             elem.addAttribute(MailConstants.A_NUM, target.getSize());
             elem.addAttribute(MailConstants.A_SIZE, target.getTotalSize());
             elem.addAttribute(MailConstants.A_URL, "".equals(target.getUrl()) ? null : ToXML.sanitizeURL(target.getUrl()));
+            elem.addAttribute(MailConstants.A_RIGHTS, ToXML.encodeEffectivePermissions(target, octxt));
             if (target.isUnread())
                 elem.addAttribute(MailConstants.A_FLAGS, "u" + elem.getAttribute(MailConstants.A_FLAGS, "").replace("u", ""));
         } else {
             for (Element child : elem.listElements())
-                transferMountpointCounts(child, mountpoints);
+                transferMountpointCounts(child, octxt, mountpoints);
         }
     }
 

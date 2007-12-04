@@ -164,34 +164,18 @@ public class ToXML {
         boolean remote = octxt != null && octxt.isDelegatedRequest(mbox);
         boolean canAdminister = !remote;
         if (remote) {
-            // return only effective permissions for remote folders
-            try {
-                short perms = mbox.getEffectivePermissions(octxt, folder.getId(), MailItem.TYPE_FOLDER);
-                elem.addAttribute(MailConstants.A_RIGHTS, ACL.rightsToString(perms));
-                canAdminister = (perms & ACL.RIGHT_ADMIN) != 0;
-            } catch (ServiceException e) {
-                mLog.warn("ignoring exception while fetching effective permissions for folder " + folder.getId(), e);
-            }
+            // return effective permissions only for remote folders
+            String perms = encodeEffectivePermissions(folder, octxt);
+            elem.addAttribute(MailConstants.A_RIGHTS, perms);
+            canAdminister = perms != null && perms.indexOf(ACL.ABBR_ADMIN) != -1;
         }
 
         if (canAdminister) {
             // return full ACLs for folders we have admin rights on
             if (needToOutput(fields, Change.MODIFIED_ACL)) {
                 ACL acl = folder.getEffectiveACL();
-                if (acl != null || fields != NOTIFY_FIELDS) {
-                    Element eACL = elem.addUniqueElement(MailConstants.E_ACL);
-                    if (acl != null) {
-                        for (ACL.Grant grant : acl.getGrants()) {
-                            NamedEntry nentry = FolderAction.lookupGranteeByZimbraId(grant.getGranteeId(), grant.getGranteeType());
-                            eACL.addElement(MailConstants.E_GRANT)
-                                .addAttribute(MailConstants.A_ZIMBRA_ID, grant.getGranteeId())
-                                .addAttribute(MailConstants.A_GRANT_TYPE, FolderAction.typeToString(grant.getGranteeType()))
-                                .addAttribute(MailConstants.A_RIGHTS, ACL.rightsToString(grant.getGrantedRights()))
-                                .addAttribute(MailConstants.A_DISPLAY, nentry == null ? null : nentry.getName())
-                            	.addAttribute(MailConstants.A_PASSWORD, grant.getPassword());
-                        }
-                    }
-                }
+                if (acl != null || fields != NOTIFY_FIELDS)
+                    encodeACL(elem, acl);
             }
         }
         return elem;
@@ -208,6 +192,33 @@ public class ToXML {
             } catch (org.apache.commons.httpclient.URIException urie) { }
         }
         return url;
+    }
+
+    public static String encodeEffectivePermissions(Folder folder, OperationContext octxt) {
+        try {
+            short perms = folder.getMailbox().getEffectivePermissions(octxt, folder.getId(), MailItem.TYPE_FOLDER);
+            return ACL.rightsToString(perms);
+        } catch (ServiceException e) {
+            mLog.warn("ignoring exception while fetching effective permissions for folder " + folder.getId(), e);
+            return null;
+        }
+    }
+
+    public static Element encodeACL(Element parent, ACL acl) {
+        if (acl == null)
+            return null;
+
+        Element eACL = parent.addUniqueElement(MailConstants.E_ACL);
+        for (ACL.Grant grant : acl.getGrants()) {
+            NamedEntry nentry = FolderAction.lookupGranteeByZimbraId(grant.getGranteeId(), grant.getGranteeType());
+            eACL.addElement(MailConstants.E_GRANT)
+                .addAttribute(MailConstants.A_ZIMBRA_ID, grant.getGranteeId())
+                .addAttribute(MailConstants.A_GRANT_TYPE, FolderAction.typeToString(grant.getGranteeType()))
+                .addAttribute(MailConstants.A_RIGHTS, ACL.rightsToString(grant.getGrantedRights()))
+                .addAttribute(MailConstants.A_DISPLAY, nentry == null ? null : nentry.getName())
+                .addAttribute(MailConstants.A_PASSWORD, grant.getPassword());
+        }
+        return eACL;
     }
 
     private static Element encodeFolderCommon(Element elem, ItemIdFormatter ifmt, Folder folder, int fields) {
