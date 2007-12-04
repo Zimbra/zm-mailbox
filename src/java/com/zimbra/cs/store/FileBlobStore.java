@@ -175,7 +175,28 @@ public class FileBlobStore extends StoreManager {
         String destPath = dest.getAbsolutePath();
         ensureParentDirExists(dest);
 
-        FileUtil.copy(src.getFile(), dest, !DebugConfig.disableMessageStoreFsync);
+        Volume volume = Volume.getById(destVolumeId);
+        
+        InputStream srcStream = getContent(src);
+        if (srcStream == null)
+            throw new IOException("MailboxBlob.copy(" + srcPath + "," + destPath + "): unable to read content from " + srcPath);
+
+        boolean srcCompressed = srcStream instanceof GZIPInputStream;
+        boolean destCompressed = false;
+        if (volume.getCompressBlobs()) {
+            if (srcCompressed || src.getFile().length() <= volume.getCompressionThreshold()) {
+                FileUtil.copy(src.getFile(), dest, !DebugConfig.disableMessageStoreFsync);
+                destCompressed = srcCompressed;
+            } else {
+                FileUtil.compress(src.getFile(), dest, !DebugConfig.disableMessageStoreFsync);
+                destCompressed = true;
+            }
+        } else {
+            if (srcCompressed)
+                FileUtil.uncompress(src.getFile(), dest, !DebugConfig.disableMessageStoreFsync);
+            else
+                FileUtil.copy(src.getFile(), dest, !DebugConfig.disableMessageStoreFsync);
+        }
 
         if (mLog.isDebugEnabled()) {
             mLog.debug("Copied id=" + destMsgId +
@@ -184,9 +205,10 @@ public class FileBlobStore extends StoreManager {
                       " newpath=" + destPath);
         }
 
+        Blob newBlob = new Blob(dest, destVolumeId);
+        newBlob.setCompressed(destCompressed);
         MailboxBlob destMboxBlob =
-            new MailboxBlob(destMbox, destMsgId, destRevision,
-                            new Blob(dest, destVolumeId));
+            new MailboxBlob(destMbox, destMsgId, destRevision, newBlob);
         return destMboxBlob;
     }
 
