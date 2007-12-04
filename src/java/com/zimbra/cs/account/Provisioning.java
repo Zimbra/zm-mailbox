@@ -1377,6 +1377,11 @@ public abstract class Provisioning {
     public static final String A_zimbraPrefCalendarReminderMobile     = "zimbraPrefCalendarReminderMobile";
     public static final String A_zimbraPrefCalendarReminderYMessenger = "zimbraPrefCalendarReminderYMessenger";
     
+    /*
+     * junk messages
+     */ 
+    public static final String A_zimbraJunkMessagesIndexingEnabled      = "zimbraJunkMessagesIndexingEnabled";
+    
     private static Provisioning sProvisioning;
 
     public synchronized static Provisioning getInstance() {
