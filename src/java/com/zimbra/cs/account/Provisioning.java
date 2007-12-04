@@ -1366,6 +1366,16 @@ public abstract class Provisioning {
      * Voice mail
      */
     public static final String A_zimbraPrefVoiceItemsPerPage = "zimbraPrefVoiceItemsPerPage";
+
+    /*
+     * Calendar reminder preferences
+     */
+    public static final String A_zimbraPrefCalendarReminderDuration1  = "zimbraPrefCalendarReminderDuration1";
+    public static final String A_zimbraPrefCalendarReminderDuration2  = "zimbraPrefCalendarReminderDuration2";
+    public static final String A_zimbraPrefCalendarReminderEmail      = "zimbraPrefCalendarReminderEmail";
+    public static final String A_zimbraPrefCalendarReminderSendEmail  = "zimbraPrefCalendarReminderSendEmail";    
+    public static final String A_zimbraPrefCalendarReminderMobile     = "zimbraPrefCalendarReminderMobile";
+    public static final String A_zimbraPrefCalendarReminderYMessenger = "zimbraPrefCalendarReminderYMessenger";
     
     private static Provisioning sProvisioning;
 
