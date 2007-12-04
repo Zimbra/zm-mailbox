@@ -71,21 +71,20 @@ public class CreateMountpoint extends MailDocumentHandler {
             target = Provisioning.getInstance().get(AccountBy.name, ownerName);
             if (target == null)
                 throw AccountServiceException.NO_SUCH_ACCOUNT(ownerName);
+
             ownerId = target.getId();
+            if (ownerId.equalsIgnoreCase(zsc.getRequestedAccountId()))
+                throw ServiceException.INVALID_REQUEST("cannot mount your own folder", null);
         }
 
-        int remoteId  = (int) t.getAttributeLong(MailConstants.A_REMOTE_ID, -1);
-        if (remoteId == -1) {
-            String remotePath = t.getAttribute(MailConstants.A_PATH);
-            remoteId = resolveRemotePath(zsc, context, ownerId, remotePath).getId();
-            if (remoteId == -1)
-                throw MailServiceException.NO_SUCH_FOLDER(remotePath);
-        }
+        Element remote = fetchRemoteFolder(zsc, context, ownerId, (int) t.getAttributeLong(MailConstants.A_REMOTE_ID, -1), t.getAttribute(MailConstants.A_PATH, null));
+        int remoteId = new ItemId(remote.getAttribute(MailConstants.A_ID), zsc).getId();
+        if (view == null)
+            view = remote.getAttribute(MailConstants.A_DEFAULT_VIEW, null);
 
         Mountpoint mpt;
         try {
-            mpt = mbox.createMountpoint(octxt, iidParent.getId(), name, ownerId, remoteId, 
-                MailItem.getTypeForName(view), Flag.flagsToBitmask(flags), color);
+            mpt = mbox.createMountpoint(octxt, iidParent.getId(), name, ownerId, remoteId, MailItem.getTypeForName(view), Flag.flagsToBitmask(flags), color);
         } catch (ServiceException se) {
             if (se.getCode() == MailServiceException.ALREADY_EXISTS && fetchIfExists) {
                 Folder folder = mbox.getFolderByName(octxt, iidParent.getId(), name);
@@ -93,22 +92,39 @@ public class CreateMountpoint extends MailDocumentHandler {
                     mpt = (Mountpoint) folder;
                 else
                     throw se;
-            } else
+            } else {
                 throw se;
+            }
         }
 
         Element response = zsc.createElement(MailConstants.CREATE_MOUNTPOINT_RESPONSE);
-        if (mpt != null)
-            ToXML.encodeMountpoint(response, ifmt, mpt);
+        if (mpt != null) {
+            Element eMount = ToXML.encodeMountpoint(response, ifmt, mpt);
+            eMount.addAttribute(MailConstants.A_UNREAD, remote.getAttribute(MailConstants.A_UNREAD, null));
+            eMount.addAttribute(MailConstants.A_NUM, remote.getAttribute(MailConstants.A_NUM, null));
+            eMount.addAttribute(MailConstants.A_SIZE, remote.getAttribute(MailConstants.A_SIZE, null));
+            eMount.addAttribute(MailConstants.A_URL, remote.getAttribute(MailConstants.A_URL, null));
+            eMount.addAttribute(MailConstants.A_RIGHTS, remote.getAttribute(MailConstants.A_RIGHTS, null));
+            if (remote.getAttribute(MailConstants.A_FLAGS, "").indexOf("u") != -1)
+                eMount.addAttribute(MailConstants.A_FLAGS, "u" + eMount.getAttribute(MailConstants.A_FLAGS, "").replace("u", ""));
+        }
         return response;
     }
 
-    private ItemId resolveRemotePath(ZimbraSoapContext zsc, Map<String, Object> context, String ownerId, String remotePath) throws ServiceException {
+    private Element fetchRemoteFolder(ZimbraSoapContext zsc, Map<String, Object> context, String ownerId, int remoteId, String remotePath)
+    throws ServiceException {
         Element request = zsc.createRequestElement(MailConstants.GET_FOLDER_REQUEST);
-        request.addElement(MailConstants.E_FOLDER).addAttribute(MailConstants.A_PATH, remotePath);
+        if (remoteId > 0)
+            request.addElement(MailConstants.E_FOLDER).addAttribute(MailConstants.A_FOLDER, remoteId);
+        else if (remotePath != null)
+            request.addElement(MailConstants.E_FOLDER).addAttribute(MailConstants.A_PATH, remotePath);
+        else
+            throw ServiceException.INVALID_REQUEST("must specify one of rid/path", null);
 
         Element response = proxyRequest(request, context, ownerId);
-        String id = response.getElement(MailConstants.E_FOLDER).getAttribute(MailConstants.A_ID);
-        return new ItemId(id, zsc);
+        Element remote = response.getOptionalElement(MailConstants.E_FOLDER);
+        if (remote == null)
+            throw ServiceException.INVALID_REQUEST("cannot mount a search or mountpoint", null);
+        return remote;
     }
 }
