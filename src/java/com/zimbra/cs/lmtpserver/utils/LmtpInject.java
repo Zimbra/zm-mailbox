@@ -532,7 +532,7 @@ public class LmtpInject {
                 client = mDriver.getClient();
 
                 boolean ok = false;
-                ok = client.sendMessage(new FileInputStream(mFile), mDriver.getRecipients(), mDriver.getSender(), filename);
+                ok = client.sendMessage(new FileInputStream(mFile), mDriver.getRecipients(), mDriver.getSender(), filename, mFile.length());
                 if (ok) {
                     mDriver.incSuccess();
                     mDriver.addToFileSizeTotal(mFile.length());
@@ -626,11 +626,11 @@ public class LmtpInject {
         }
 
         @Override
-        public boolean sendMessage(InputStream msgStream, String[] recipients, String sender, String logLabel)
+        public boolean sendMessage(InputStream msgStream, String[] recipients, String sender, String logLabel, Long size)
             throws IOException, LmtpProtocolException
         {
             String[] rcpts = recipients != null ? recipients : mRecipients;
-            return super.sendMessage(msgStream, rcpts, sender, logLabel);
+            return super.sendMessage(msgStream, rcpts, sender, logLabel, size);
         }
     }
 

@@ -17,8 +17,11 @@
 
 package com.zimbra.cs.lmtpserver;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.SequenceInputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,7 +35,6 @@ import javax.mail.MessagingException;
 import org.apache.commons.collections.map.LRUMap;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -42,6 +44,7 @@ import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.MessageCache;
@@ -219,6 +222,97 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         }
     }
 
+    /**
+     * Reads up to <tt>limit</tt> bytes from the <tt>InputStream</tt>.
+     * @param in the data stream
+     * @param sizeHint used to allocate the byte array that is returned.  Used for
+     *   optimizing memory allocation.  Does not affect the behavior of this method.
+     *   If unknown, set this value to <tt>0</tt>.
+     * @param limit maximum number of bytes to read
+     */
+    public static byte[] readData(InputStream in, int sizeHint, int limit)
+    throws IOException {
+        if (limit <= 0) {
+            return new byte[0];
+        }
+        if (sizeHint > limit) {
+            sizeHint = limit;
+        }
+        byte[] data = null;
+        int bytesRead = 0; // Index of next insertion and also the length of data read
+        
+        if (sizeHint > 0) {
+            // Size hint is specified.  Try reading directly into the byte array.
+            // If the size hint is correct, we avoid the extra arraycopy calls that
+            // ByteArrayOutputStream would do.
+            data = new byte[sizeHint];
+
+            // Read until we've hit the end of the stream or filled the byte array.
+            while (true) {
+                int numToRead = data.length - bytesRead;
+                if (numToRead <= 0) {
+                    break;
+                }
+                int numRead = in.read(data, bytesRead, numToRead);
+                if (numRead < 0) {
+                    break;
+                }
+                bytesRead += numRead;
+            }
+            
+            if (bytesRead >= limit) {
+                return data;
+            }
+
+            if (bytesRead < data.length) {
+                // Size hint was too big.
+                byte[] truncated = new byte[bytesRead];
+                System.arraycopy(data, 0, truncated, 0, bytesRead);
+                return truncated;
+            }
+        }
+        
+        // See if there's more data available.  Note that we use read() instead
+        // of available() because available() will sometimes return 0 when there's
+        // actually more data to read.
+        int oneMoreByte = in.read();
+        if (oneMoreByte < 0) {
+            // No more data to read.  Return what we've already read.
+            if (data == null) {
+                return new byte[0];
+            } else {
+                return data;
+            }
+        } else {
+            bytesRead++;
+        }
+        
+        // Size hint was 0 or low.  Read the remaining data into a ByteArrayOutputStream.
+        ByteArrayOutputStream buf = null;
+        if (data != null) {
+            buf = new ByteArrayOutputStream(data.length * 2);
+            buf.write(data);
+        } else {
+            buf = new ByteArrayOutputStream(1024);
+        }
+        buf.write((byte) oneMoreByte);
+        
+        byte[] chunk = new byte[1024];
+        while (true) {
+            int numToRead = Math.min(limit - bytesRead, chunk.length);
+            if (numToRead <= 0) {
+                break;
+            }
+            int numRead = in.read(chunk, 0, numToRead);
+            if (numRead < 0) {
+                break;
+            }
+            buf.write(chunk, 0, numRead);
+            bytesRead += numRead;
+        }
+        return buf.toByteArray();
+    }
+    
     private void deliverMessageToLocalMailboxes(InputStream in,
                                                 LmtpEnvelope env, 
                                                 int sizeHint)
@@ -240,10 +334,23 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         
         try {
             if (sizeHint <= diskThreshold) {
-                ZimbraLog.lmtp.debug("Reading message of size %d into memory.", sizeHint);
-                data = ByteUtil.getContent(in, sizeHint);
+                // Try to read the message into memory, up to the threshold
+                ZimbraLog.lmtp.debug("Reading message into memory.  sizeHint=%d", sizeHint);
+                data = readData(in, sizeHint, diskThreshold + 1);
                 if (data.length == 0) {
                     throw new MessagingException("Empty message not allowed");
+                }
+                
+                if (data.length > diskThreshold) {
+                    // More data available.  Stream to disk instead.
+                    ZimbraLog.lmtp.info(
+                        "Message with size hint %d exceeded threshold of %d.  Streaming message to disk.",
+                        sizeHint, diskThreshold);
+                    ByteArrayInputStream firstChunk = new ByteArrayInputStream(data); 
+                    SequenceInputStream jointStream = new SequenceInputStream(firstChunk, in);
+                    blob = StoreManager.getInstance().storeIncoming(jointStream, diskThreshold, null, volume.getId());
+                    data = blob.getData();
+                    ZimbraLog.lmtp.debug("Wrote message to %s.", blob.getPath());
                 }
             } else {
                 ZimbraLog.lmtp.debug("Streaming message of size %d to disk.", sizeHint);
@@ -487,8 +594,16 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                 if (mimeSource == null) {
                     mimeSource = pmNoAttachIndex;
                 }
-                if (mimeSource != null && blob != null && mimeSource.isStreamedFromDisk()) {
-                    MessageCache.cacheStreamedMessage(blob.getDigest(), mimeSource.getMimeMessage());
+                MailboxBlob mboxBlob = sharedDeliveryCtxt.getMailboxBlob();
+                if (mboxBlob != null && mimeSource != null && mimeSource.isStreamedFromDisk()) {
+                    try {
+                        // Update the MimeMessage with the blob that's stored inside the mailbox
+                        // and cache it.
+                        mimeSource.fileMoved(mboxBlob.getBlob().getFile());
+                        MessageCache.cacheStreamedMessage(blob.getDigest(), mimeSource.getMimeMessage());
+                    } catch (IOException e) {
+                        ZimbraLog.lmtp.warn("Unable to cache message for %s", mboxBlob.getBlob().getFile().getPath(), e);
+                    }
                 }
             } finally {
                 try {

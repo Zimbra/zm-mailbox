@@ -65,6 +65,14 @@ public class LmtpMessageInputStream extends InputStream {
     public int getMessageSize() {
         return mMessageSize;
     }
+
+    @Override
+    public int available() throws IOException {
+        if (mDone) {
+            return 0;
+        }
+        return mIn.available();
+    }
     
     @Override
     public int read() throws IOException {
