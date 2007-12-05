@@ -29,6 +29,7 @@ import java.util.List;
 import javax.mail.internet.MimeMessage;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.calendar.*;
@@ -362,9 +363,10 @@ public class Message extends MailItem {
         if (conv != null)
             data.parentId = conv.getId();
         data.folderId    = folder.getId();
-        data.indexId     = id;
-        data.imapId      = id;
+        if (!folder.inSpam() || Provisioning.getInstance().getConfig().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false))
+            data.indexId     = id;
         data.volumeId    = volumeId;
+        data.imapId      = id;
         data.date        = (int) (pm.getReceivedDate() / 1000);
         data.size        = msgSize;
         data.setBlobDigest(digest);

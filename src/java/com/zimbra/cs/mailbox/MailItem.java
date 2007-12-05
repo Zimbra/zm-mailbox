@@ -1667,7 +1667,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             throw ServiceException.PERM_DENIED("you do not have the required rights on the target folder");
 
         // we'll share the index entry if this item can't change out from under us
-        if (isIndexed() && !isMutable())
+        if (isIndexed() && !isMutable() && mData.indexId > 0)
             alterTag(mMailbox.mCopiedFlag, true);
 
         // if the copy or original is in Spam, put the copy in its own conversation
@@ -1676,8 +1676,22 @@ public abstract class MailItem implements Comparable<MailItem> {
         UnderlyingData data = mData.duplicate(id, folder.getId(), destVolumeId);
         if (detach)
             data.parentId = -1;
-        if (isIndexed() && isMutable())
-            data.indexId = id;
+
+        if (isIndexed()) {
+            if (data.indexId <= 0) { 
+                // if prev item wasn't indexed, index us if we aren't in spam.
+                if (!folder.inSpam()) 
+                    data.indexId = id;
+            } else if (isMutable()) {
+                // if prev item wasn't indexed AND is mutable, then split index 
+                if (folder.inSpam()) {
+                    data.indexId = -1;
+                } else {
+                    data.indexId = id;
+                }
+            }
+        }
+
         data.metadata = encodeMetadata();
         data.contentChanged(mMailbox);
         DbMailItem.copy(this, id, folder, data.indexId, data.parentId, data.volumeId, data.metadata);
@@ -1691,6 +1705,11 @@ public abstract class MailItem implements Comparable<MailItem> {
             MailboxBlob blob = sm.link(srcBlob.getBlob(), mMailbox, data.id, data.modContent, data.volumeId);
             mMailbox.markOtherItemDirty(blob);
         }
+
+        // if we're not sharing the index entry, we need to index the new item
+        if (copy.getIndexId() == copy.getId())
+            mMailbox.queueForIndexing(copy, false, null);
+        
         return copy;
     }
 
@@ -1733,8 +1752,6 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (!target.canAccess(ACL.RIGHT_INSERT))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the target folder");
 
-        // we'll share the index entry if this item can't change out from under us
-        boolean shared = isIndexed() && !isMutable();
         // fetch the parent *before* changing the DB
         MailItem parent = getParent();
 
@@ -1753,8 +1770,25 @@ public abstract class MailItem implements Comparable<MailItem> {
         UnderlyingData data = mData.duplicate(copyId, target.getId(), destVolumeId);
         data.metadata = encodeMetadata();
         data.imapId = copyId;
-        if (isIndexed() && !shared)
-            data.indexId = copyId;
+        
+        if (isIndexed()) {
+            if (data.indexId <= 0) { 
+                // if prev item wasn't indexed, index us if we aren't in spam.
+                if (!target.inSpam()) 
+                    data.indexId = copyId;
+            } else if (isMutable()) {
+                // if prev item wasn't indexed AND is mutable, then split index 
+                if (target.inSpam()) {
+                    data.indexId = -1;
+                } else {
+                    data.indexId = copyId;
+                }
+            }
+        }
+
+        // we've shared this index entry if we're using the old index entry and it is valid
+        boolean shared = (data.indexId == mData.indexId) && (data.indexId > 0);  
+        
         data.contentChanged(mMailbox);
         DbMailItem.icopy(this, data, shared);
 
@@ -1785,7 +1819,12 @@ public abstract class MailItem implements Comparable<MailItem> {
             StoreManager sm = StoreManager.getInstance();
             MailboxBlob blob = sm.link(srcBlob.getBlob(), mMailbox, data.id, data.modContent, data.volumeId);
             mMailbox.markOtherItemDirty(blob);
+            
+            // if we're not sharing the index entry, we need to index the new item
+            if (copy.getIndexId() == copy.getId())
+                mMailbox.queueForIndexing(copy, false, null);
         }
+        
         return copy;
     }
 
@@ -1927,7 +1966,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             return name;
         }
     }
-
+    
     /** Moves an item to a different {@link Folder}.  Persists the change
      *  to the database and the in-memory cache.  Updates all relevant
      *  unread counts, folder sizes, etc.<p>
@@ -1980,9 +2019,24 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (!inSpam() && target.inSpam())
             detach();
 
+        // item moved out of spam, so update the index id
+        // (will be written to DB in DbMailItem.setFolder());
+        if (inSpam() && !target.inSpam())
+            if (isIndexed() && mData.indexId <= 0) {
+                mData.indexId = mData.id;
+                getMailbox().queueForIndexing(this, false, null);
+            }
+
         DbMailItem.setFolder(this, target);
         folderChanged(target, 0);
         return true;
+    }
+    
+    /** Records all relevant changes to the in-memory object for when an item's
+     *  index_id is changed.  Does <u>not</u> persist those
+     *  changes to the database. */
+    void indexIdChanged(int indexId) {
+        mData.indexId = indexId;        
     }
 
     /** Records all relevant changes to the in-memory object for when an item

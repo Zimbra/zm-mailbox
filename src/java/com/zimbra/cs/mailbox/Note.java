@@ -20,6 +20,7 @@
  */
 package com.zimbra.cs.mailbox;
 
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.redolog.op.IndexItem;
@@ -128,7 +129,8 @@ public class Note extends MailItem {
         data.id          = id;
         data.type        = TYPE_NOTE;
         data.folderId    = folder.getId();
-        data.indexId     = id;
+        if (!folder.inSpam() || Provisioning.getInstance().getConfig().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false))
+            data.indexId     = id;
         data.volumeId    = volumeId;
         data.date        = mbox.getOperationTimestamp();
         data.subject     = content;

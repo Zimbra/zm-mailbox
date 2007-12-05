@@ -531,6 +531,8 @@ public class Conversation extends MailItem {
 
         List<Integer> markedRead = new ArrayList<Integer>();
         List<Message> moved = new ArrayList<Message>();
+        List<Message> indexUpdated = new ArrayList<Message>();
+        
         for (Message msg : msgs) {
             Folder source = msg.getFolder();
 
@@ -557,6 +559,14 @@ public class Conversation extends MailItem {
                     markedRead.add(msg.getId());
                 }
             }
+            
+            // moved an item out of the spam folder, need to index it
+            if (msg.inSpam() && !target.inSpam()) {
+                if (msg.isIndexed() && msg.getIndexId() <= 0) {
+                    msg.indexIdChanged(msg.getId());
+                    indexUpdated.add(msg);
+                }
+            }
 
             // handle folder message counts
             source.updateSize(-1, -msg.getTotalSize());
@@ -578,6 +588,13 @@ public class Conversation extends MailItem {
             if (target.inSpam())
                 detach();
             DbMailItem.setFolder(moved, target);
+            
+            if (!indexUpdated.isEmpty()) { 
+                DbMailItem.setIndexIds(mMailbox, indexUpdated);
+                for (Message msg : indexUpdated) {
+                    mMailbox.queueForIndexing(msg, false, null);
+                }
+            }
         }
 
         return !moved.isEmpty();
