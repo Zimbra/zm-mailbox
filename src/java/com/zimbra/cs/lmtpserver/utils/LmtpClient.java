@@ -123,12 +123,17 @@ public class LmtpClient {
 
     public boolean sendMessage(byte[] msg, String recipient, String sender, String logLabel)
     throws IOException, LmtpProtocolException {
-        return sendMessage(new ByteArrayInputStream(msg), new String[] { recipient }, sender, logLabel);
+        return sendMessage(new ByteArrayInputStream(msg), new String[] { recipient }, sender, logLabel, (long) msg.length);
     }
 
     public boolean sendMessage(InputStream msgStream, String recipient, String sender, String logLabel)
     throws IOException, LmtpProtocolException {
-        return sendMessage(msgStream, new String[] { recipient }, sender, logLabel);
+        return sendMessage(msgStream, new String[] { recipient }, sender, logLabel, null);
+    }
+    
+    public boolean sendMessage(InputStream msgStream, String recipient, String sender, String logLabel, long size)
+    throws IOException, LmtpProtocolException {
+        return sendMessage(msgStream, new String[] { recipient }, sender, logLabel, size);
     }
     
     /**
@@ -137,9 +142,10 @@ public class LmtpClient {
      * @param recipients recipient email addresses
      * @param sender sender email address
      * @param logLabel context string used for logging status
+     * @param size the size of the data or <tt>null</tt> if not specified
      * @return <code>true</code> if the message was successfully delivered to all recipients
      */
-    public boolean sendMessage(InputStream msgStream, String[] recipients, String sender, String logLabel)
+    public boolean sendMessage(InputStream msgStream, String[] recipients, String sender, String logLabel, Long size)
         throws IOException, LmtpProtocolException 
     {
         long start = System.currentTimeMillis();
@@ -165,7 +171,11 @@ public class LmtpClient {
 			}
 		}
 		
-		sendLine("MAIL FROM:<" + sender + ">");
+        String sizeString = "";
+        if (size != null) {
+            sizeString = " SIZE=" + size;
+        }
+		sendLine("MAIL FROM:<" + sender + ">" + sizeString);
 		if (!replyOk()) {
 			throw new LmtpProtocolException(mResponse);
 		}

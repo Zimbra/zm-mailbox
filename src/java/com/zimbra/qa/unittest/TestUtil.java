@@ -17,6 +17,7 @@
 
 package com.zimbra.qa.unittest;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -175,9 +176,7 @@ extends Assert {
         "",
         "All I need are some tasty waves, a cool buzz, and I'm fine.",
         "",
-        "Jeff",
-        "",
-        "(${SUBJECT} ${MESSAGE_NUM})"
+        "Jeff"
     };
 
     private static String MESSAGE_TEMPLATE = StringUtil.join("\n", MESSAGE_TEMPLATE_LINES);
@@ -225,14 +224,41 @@ extends Assert {
         return StringUtil.fillTemplate(MESSAGE_TEMPLATE, vars);
     }
 
+    public static String getTestMessage(String subject, String body, String recipient, String sender, Date date)
+    throws ServiceException {
+        if (recipient == null) {
+            recipient = "user1";
+        }
+        if (sender == null) {
+            sender = "jspiccoli";
+        }
+        if (date == null) {
+            date = new Date();
+        }
+        
+        Map<String, Object> vars = new HashMap<String, Object>();
+        vars.put("SUBJECT", subject);
+        vars.put("DOMAIN", getDomain());
+        vars.put("SENDER", sender);
+        vars.put("RECIPIENT", recipient);
+        vars.put("DATE", getDateHeaderValue(date));
+        return StringUtil.fillTemplate(MESSAGE_TEMPLATE, vars);
+    }
+    
     public static void addMessageLmtp(String subject, String recipient, String sender)
     throws Exception {
-        String message = getTestMessage(subject, recipient, sender, null);
-        LmtpClient lmtp = new LmtpClient("localhost", 7025);
-        lmtp.sendMessage(message.getBytes(), recipient, sender, "TestUtil");
-        lmtp.close();
+        addMessageLmtp(subject, new String[] { recipient }, sender);
     }
 
+    public static void addMessageLmtp(String subject, String[] recipients, String sender)
+    throws Exception {
+        String message = getTestMessage(subject, recipients[0], sender, null);
+        LmtpClient lmtp = new LmtpClient("localhost", 7025);
+        byte[] data = message.getBytes();
+        lmtp.sendMessage(new ByteArrayInputStream(data), recipients, sender, "TestUtil", (long) data.length);
+        lmtp.close();
+    }
+    
     public static String addMessage(ZMailbox mbox, int messageNum, String subject)
     throws ServiceException {
         return addMessage(mbox, messageNum, subject, Integer.toString(Mailbox.ID_FOLDER_INBOX));
