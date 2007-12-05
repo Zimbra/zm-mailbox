@@ -186,19 +186,16 @@ public class SoapSession extends Session {
                     boolean moved = (chg.why & Change.MODIFIED_FOLDER) != 0;
                     if (item instanceof Conversation) {
                         filtered.recordModified(item, chg.why | MODIFIED_CONVERSATION_FLAGS);
-                    } else if (moved) {
-                        // a move between visible folders ends up as a delete and a create, but that should be OK
-                        filtered.recordDeleted(item);
-                        if (visible)
-                            filtered.recordCreated(item);
-                        // if it's a message and it's moved, make sure the conv shows up in the modified or created list
-                        if (item instanceof Message)
-                            forceConversationModification((Message) item, pms, filtered, MODIFIED_CONVERSATION_FLAGS);
                     } else if (visible) {
                         filtered.recordModified(item, chg.why);
                         // if it's an unmoved visible message and it had a tag/flag/unread change, make sure the conv shows up in the modified or created list
-                        if (item instanceof Message && (chg.why & BASIC_CONVERSATION_FLAGS) != 0)
-                            forceConversationModification((Message) item, pms, filtered, BASIC_CONVERSATION_FLAGS);
+                        if (item instanceof Message && (moved || (chg.why & BASIC_CONVERSATION_FLAGS) != 0))
+                            forceConversationModification((Message) item, pms, filtered, moved ? MODIFIED_CONVERSATION_FLAGS : BASIC_CONVERSATION_FLAGS);
+                    } else if (moved) {
+                        filtered.recordDeleted(item);
+                        // if it's a message and it's moved, make sure the conv shows up in the modified or created list
+                        if (item instanceof Message)
+                            forceConversationModification((Message) item, pms, filtered, MODIFIED_CONVERSATION_FLAGS);
                     }
                 }
             }
