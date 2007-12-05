@@ -673,7 +673,7 @@ public class SoapSession extends Session {
 
                 Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(owner);
                 GetFolder.FolderNode remote = GetFolder.getFolderTree(octxt, mbox, new ItemId(mbox, mpt.getRemoteId()), false);
-                if (remote != null && remote.mFolder != null && !remote.mFolder.isHidden() && remote.mId != Mailbox.ID_FOLDER_USER_ROOT) {
+                if (remote != null && remote.mFolder != null && !remote.mFolder.isHidden()) {
                     node.mSubfolders.addAll(remote.mSubfolders);
                     mountpoints.put(node.mId + "", remote.mFolder);
                     // fault in a delegate session because there's actually something to listen on...
