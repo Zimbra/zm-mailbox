@@ -198,8 +198,15 @@ public class ZimletResources
         try {
             // We browser sniff so need to make sure any caches do the same.
             resp.addHeader("Vary", "User-Agent");
-            // Cache It!
-            resp.setHeader("Cache-control", "public, max-age=604800");
+
+            // Bug 20626: We're no longer caching zimlets
+            // Set to expire far in the past.
+            resp.setHeader("Expires", "Tue, 24 Jan 2000 17:46:50 GMT");
+            // Set standard HTTP/1.1 no-cache headers.
+            resp.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+            // Set standard HTTP/1.0 no-cache header.
+            resp.setHeader("Pragma", "no-cache");
+
             resp.setContentType(contentType);
             resp.setContentLength(buffer.length);
             if (uri.endsWith(COMPRESSED_EXT)) {
