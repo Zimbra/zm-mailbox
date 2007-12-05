@@ -30,7 +30,7 @@ mail {
 #    memcache_entry_ttl             3600s;
 
 #   Pass error messages
-    proxy_pass_error_message on;
+#    proxy_pass_error_message on;
 
 #   http authentication configuration
     auth_http localhost:7072/service/extension/nginx-lookup;
