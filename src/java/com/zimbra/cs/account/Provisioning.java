@@ -1387,6 +1387,8 @@ public abstract class Provisioning {
      */ 
     public static final String A_zimbraJunkMessagesIndexingEnabled      = "zimbraJunkMessagesIndexingEnabled";
     
+    public static final int MAX_ZIMBRA_ID_LEN = 127;
+    
     private static Provisioning sProvisioning;
 
     public synchronized static Provisioning getInstance() {
