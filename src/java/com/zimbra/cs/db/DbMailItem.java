@@ -409,6 +409,7 @@ public class DbMailItem {
         try {
             String imapRenumber = mbox.isTrackingImap() ? ", imap_id = CASE WHEN imap_id IS NULL THEN NULL ELSE 0 END" : "";
             int pos = 1;
+            boolean hasIndexId = false;
             if (item instanceof Folder) {
                 stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
                             " SET parent_id = ?, folder_id = ?, mod_metadata = ?, change_date = ?" +
@@ -419,11 +420,18 @@ public class DbMailItem {
                             " SET folder_id = ?, mod_metadata = ?, change_date = ?" + imapRenumber +
                             " WHERE " + IN_THIS_MAILBOX_AND + "parent_id = ? AND folder_id != ?");
             } else {
+                // set the indexId, in case it changed (moving items out of junk can trigger an index ID change)
+                hasIndexId = true;
                 stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                            " SET folder_id = ?, mod_metadata = ?, change_date = ? " + imapRenumber +
+                            " SET folder_id = ?, index_id = ?, mod_metadata = ?, change_date = ? " + imapRenumber +
                             " WHERE " + IN_THIS_MAILBOX_AND + "id = ? AND folder_id != ?");
             }
             stmt.setInt(pos++, folder.getId());
+            if (hasIndexId)
+                if (item.getIndexId() <= 0)
+                    stmt.setNull(pos++, Types.INTEGER);
+                else
+                    stmt.setInt(pos++, item.getIndexId());
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
             stmt.setInt(pos++, mbox.getId());
@@ -498,6 +506,37 @@ public class DbMailItem {
             DbPool.closeStatement(stmt);
         }
     }
+    
+    public static void setIndexIds(Mailbox mbox, List<Message> msgs) throws ServiceException {
+        if (msgs == null || msgs.isEmpty())
+            return;
+        
+        Connection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            for (int i = 0; i < msgs.size(); i += Db.getINClauseBatchSize()) {
+                int count = Math.min(Db.getINClauseBatchSize(), msgs.size() - i);
+                stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
+                            " SET index_id = id  WHERE " + IN_THIS_MAILBOX_AND + "id IN " + DbUtil.suitableNumberOfVariables(count));
+                int pos = 1;
+                stmt.setInt(pos++, mbox.getId());
+                for (int index = i; index < i + count; index++)
+                    stmt.setInt(pos++, msgs.get(index).getId());
+                stmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            // catch item_id uniqueness constraint violation and return failure
+//            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW))
+//                throw MailServiceException.ALREADY_EXISTS(msgs.toString(), e);
+//            else
+            throw ServiceException.FAILURE("writing new folder data for messages", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+    
 
     public static void setParent(MailItem child, MailItem parent) throws ServiceException {
         setParent(new MailItem[] { child }, parent);
@@ -2459,6 +2498,8 @@ public class DbMailItem {
         data.parentId    = rs.getInt(CI_PARENT_ID + offset);
         data.folderId    = rs.getInt(CI_FOLDER_ID + offset);
         data.indexId     = rs.getInt(CI_INDEX_ID + offset);
+        if (rs.wasNull())
+            data.indexId = -1;
         data.imapId      = rs.getInt(CI_IMAP_ID + offset);
         if (rs.wasNull())
             data.imapId = -1;

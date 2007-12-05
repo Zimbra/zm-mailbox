@@ -975,10 +975,10 @@ public class Mailbox {
      * @param data  The extra data to be used for the indexing step.
      * @see #commitCache(Mailbox.MailboxChange) */
     void queueForIndexing(MailItem item, boolean deleteFirst, Object data) {
-        mCurrentChange.addIndexedItem(item, deleteFirst, data);
+        if (item.getIndexId() > 0)
+            mCurrentChange.addIndexedItem(item, deleteFirst, data);
     }
-
-
+    
     public synchronized Connection getOperationConnection() throws ServiceException {
         if (!mCurrentChange.isActive())
             throw ServiceException.FAILURE("cannot fetch Connection outside transaction", new Exception());
@@ -4385,10 +4385,6 @@ public class Mailbox {
                 MailItem copy = item.copy(getFolderById(folderId), newId, item.getVolumeId() == -1 ? -1 : volumeId);
                 redoRecorder.setDestId(srcId, newId);
 
-                // if we're not sharing the index entry, we need to index the new item
-                if (copy.getIndexId() == copy.getId())
-                    queueForIndexing(copy, false, null);
-
                 result.add(copy);
             }
 
@@ -4432,10 +4428,6 @@ public class Mailbox {
 
                 MailItem copy = item.icopy(target, newId, item.getVolumeId() == -1 ? -1 : volumeId);
                 redoRecorder.setDestId(srcId, newId);
-
-                // if we're not sharing the index entry, we need to index the new item
-                if (copy.getIndexId() == copy.getId())
-                    queueForIndexing(copy, false, null);
 
                 result.add(copy);
             }
@@ -4510,6 +4502,7 @@ public class Mailbox {
             for (MailItem item : items) {
                 // do the move...
                 boolean moved = item.move(target);
+                
                 // ...and determine whether the move needs to cause an UIDNEXT change
                 if (moved && !resetUIDNEXT && isTrackingImap() && (item instanceof Conversation || item instanceof Message || item instanceof Contact))
                     resetUIDNEXT = true;
@@ -4549,6 +4542,7 @@ public class Mailbox {
                 folderId = item.getFolderId();
 
             String oldName = item.getName();
+            
             item.rename(name, getFolderById(folderId));
 
             if (item instanceof Tag) {
@@ -4603,6 +4597,7 @@ public class Mailbox {
             redoRecorder.setParentIds(recorderParentIds);
 
             String name = parts[parts.length - 1];
+
             item.rename(name, parent);
 
             success = true;

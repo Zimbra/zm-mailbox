@@ -704,7 +704,7 @@ public class Folder extends MailItem {
             for (Folder subfolder : mSubfolders)
                 subfolder.recursiveAlterUnread(unread);
     }
-
+    
     /** Updates the unread state of all items in the folder.  Persists the
      *  change to the database and cache, and also updates the unread counts
      *  for the folder and the affected items' parents and {@link Tag}s
@@ -835,7 +835,7 @@ public class Folder extends MailItem {
         // moving a folder to the Trash marks its contents as read
         if (!inTrash() && target.inTrash())
             recursiveAlterUnread(false);
-
+        
         // tell the folder's old and new parents
         mParent.removeChild(this);
         target.addChild(this);

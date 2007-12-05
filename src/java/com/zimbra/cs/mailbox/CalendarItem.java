@@ -41,6 +41,7 @@ import org.apache.lucene.document.Field;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.localconfig.DebugConfig;
@@ -337,7 +338,8 @@ public abstract class CalendarItem extends MailItem {
         data.id       = id;
         data.type     = type;
         data.folderId = folder.getId();
-        data.indexId  = id;
+        if (!folder.inSpam() || Provisioning.getInstance().getConfig().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false))
+            data.indexId  = id;
         data.imapId   = id;
         data.volumeId = volumeId;
         data.date     = mbox.getOperationTimestamp();

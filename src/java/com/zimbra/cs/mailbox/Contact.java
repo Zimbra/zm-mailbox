@@ -22,6 +22,7 @@ package com.zimbra.cs.mailbox;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mime.Mime;
@@ -603,7 +604,8 @@ public class Contact extends MailItem {
         data.id          = id;
         data.type        = TYPE_CONTACT;
         data.folderId    = folder.getId();
-        data.indexId     = id;
+        if (!folder.inSpam() || Provisioning.getInstance().getConfig().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false))
+            data.indexId = id;
         data.imapId      = id;
         data.volumeId    = volumeId;
         data.setBlobDigest(pc.getDigest());
