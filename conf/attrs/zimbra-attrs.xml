@@ -2756,6 +2756,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>port number on which memcached server should listen</desc>
 </attr>
 
+<attr id="581" name="zimbraMemcachedBindAddress" type="string" max="128" cardinality="multi" optionalIn="server">
+  <desc>interface address(es) on which memcached server</desc>
+</attr>
 
 </attrs>
 
