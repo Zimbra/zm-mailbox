@@ -98,7 +98,7 @@ SECTION mta DEPENDS amavis
   RESTART mta
 
 SECTION sasl
-	VAR zimbraMtaAuthURL
+  VAR getAllMtaAuthURLs
   REWRITE cyrus-sasl-2.1.22.3z/etc/saslauthd.conf.in cyrus-sasl-2.1.22.3z/etc/saslauthd.conf
   RESTART mta sasl
 
@@ -145,5 +145,7 @@ SECTION imapproxy
 	VAR zimbraPop3ProxyBindPort
 	VAR zimbraImapSSLProxyBindPort
 	VAR zimbraPop3SSLProxyBindPort
+  VAR getAllReverseProxyURLs
+  VAR getAllMemcachedServers
 	REWRITE conf/nginx.conf.in conf/nginx.conf
   RESTART imapproxy

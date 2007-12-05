@@ -16,7 +16,7 @@ events {
 mail {
 
 #   Memcache configuration
-    memcache_servers localhost:11211;
+%%uncomment VAR:getAllMemcachedServers%%  memcache_servers %%getAllMemcachedServers%%;
 
 #   The time to live (TTL) for an entry added to the memcached server
 #   This value represents the amount of time that the route information
@@ -33,7 +33,7 @@ mail {
 #    proxy_pass_error_message on;
 
 #   http authentication configuration
-    auth_http localhost:7072/service/extension/nginx-lookup;
+    auth_http %%getAllReverseProxyURLs%%;
 
 	pop3_capabilities        "TOP" "USER" "UIDL" "STLS" "EXPIRE 31 USER";
 	imap_capabilities        "IMAP4rev1" "STARTTLS" "BINARY" "CHILDREN" "ID" "LITERAL+" "LOGIN-REFERRALS" "NAMESPACE" "QUOTA" "SASL-IR" "UIDPLUS" "UNSELECT";
