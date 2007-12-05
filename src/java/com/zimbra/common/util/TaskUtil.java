@@ -18,20 +18,44 @@ public final class TaskUtil {
     }
 
     public static <V> V call(Callable<V> c, long timeout) throws Exception {
-        final Thread thread = Thread.currentThread();
-        TimerTask task = new TimerTask() {
-            public void run() {
-                thread.interrupt();
-            }
-        };
+        TimeoutTask task = new TimeoutTask(Thread.currentThread());
         getTimer().schedule(task, timeout);
         try {
-            V result = c.call();
-            // If timeout task cannot be cancelled, just wait to be interrupted
-            if (!task.cancel()) new Object().wait();
-            return result;
+            return c.call();
         } catch (InterruptedException e) {
             throw new TimeoutException();
+        } finally {
+            // Stop timeout task so won't get interrupted. Also, clear
+            // interrupt status in case we got interrupted right after
+            // the call was completed.
+            task.stop();
+            Thread.interrupted();
+        }
+    }
+
+    private static class TimeoutTask extends TimerTask {
+        final Thread thread;
+        final Object lock = new Object();
+        boolean stopped;
+
+        TimeoutTask(Thread t) {
+            thread = t;
+        }
+
+        public void stop() {
+            synchronized (lock) {
+                if (stopped) return;
+                cancel();
+                stopped = true;
+            }
+        }
+        
+        public void run() {
+            synchronized (lock) {
+                if (stopped) return;
+                thread.interrupt();
+                stopped = true;
+            }
         }
     }
 }
