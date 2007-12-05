@@ -182,7 +182,7 @@ public class SoapSession extends Session {
                     if (!(chg.what instanceof MailItem))
                         continue;
                     MailItem item = (MailItem) chg.what;
-                    boolean visible = mVisibleFolderIds.contains(item.getFolderId());
+                    boolean visible = mVisibleFolderIds.contains(item instanceof Folder ? item.getId() : item.getFolderId());
                     boolean moved = (chg.why & Change.MODIFIED_FOLDER) != 0;
                     if (item instanceof Conversation) {
                         filtered.recordModified(item, chg.why | MODIFIED_CONVERSATION_FLAGS);
