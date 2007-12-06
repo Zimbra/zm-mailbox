@@ -108,7 +108,7 @@ public class Mountpoint extends Folder {
      * @see #canContain(byte) */
     static Mountpoint create(int id, Folder parent, String name, String ownerId, int remoteId, byte view, int flags, byte color)
     throws ServiceException {
-        if (parent == null || ownerId == null || ownerId.length() != 36 || remoteId <= 0)
+        if (parent == null || ownerId == null || remoteId <= 0)
             throw ServiceException.INVALID_REQUEST("invalid parameters when creating mountpoint", null);
         if (!parent.canAccess(ACL.RIGHT_INSERT))
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on the parent folder");
