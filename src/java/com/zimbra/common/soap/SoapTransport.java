@@ -108,6 +108,10 @@ public abstract class SoapTransport {
         return mContext;
     }
 
+    public void clearZimbraContext() {
+        mContext = null;
+    }
+
     public void setSessionId(String sessionId) {
         mSessionId = sessionId;
     }
