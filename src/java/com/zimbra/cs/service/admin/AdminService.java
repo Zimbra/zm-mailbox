@@ -67,6 +67,7 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.DELETE_DOMAIN_REQUEST, new DeleteDomain());
 
         dispatcher.registerHandler(AdminConstants.CREATE_COS_REQUEST, new CreateCos());
+        dispatcher.registerHandler(AdminConstants.COPY_COS_REQUEST, new CopyCos());
         dispatcher.registerHandler(AdminConstants.GET_COS_REQUEST, new GetCos());
         dispatcher.registerHandler(AdminConstants.GET_ALL_COS_REQUEST, new GetAllCos());
         dispatcher.registerHandler(AdminConstants.MODIFY_COS_REQUEST, new ModifyCos());

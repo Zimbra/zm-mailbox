@@ -32,7 +32,6 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Account.CalendarUserType;
-import com.zimbra.cs.account.EntrySearchFilter.Term;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
@@ -67,8 +66,6 @@ import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletUtil;
 
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
 import javax.naming.AuthenticationException;
 import javax.naming.AuthenticationNotSupportedException;
 import javax.naming.ContextNotEmptyException;
@@ -93,7 +90,6 @@ import javax.naming.ldap.Control;
 import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.PagedResultsControl;
 import javax.naming.ldap.PagedResultsResponseControl;
-import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1529,33 +1525,62 @@ public class LdapProvisioning extends Provisioning {
      * @see com.zimbra.cs.account.Provisioning#createCos(java.lang.String, java.util.Map)
      */
     public Cos createCos(String name, Map<String, Object> cosAttrs) throws ServiceException {
-        name = name.toLowerCase().trim();
+        String defaultCosId =  getCosByName(DEFAULT_COS_NAME, null).getId();
+        return copyCos(defaultCosId, name, cosAttrs);
+    }
+    
+    /* (non-Javadoc)
+     * @see com.zimbra.cs.account.Provisioning#copyCos(java.lang.String, java.lang.String)
+     */
+    public Cos copyCos(String srcCosId, String destCosName) throws ServiceException {
+        return copyCos(srcCosId, destCosName, null);
+    }
+    
+    private Cos copyCos(String srcCosId, String destCosName, Map<String, Object> cosAttrs) throws ServiceException {
+        destCosName = destCosName.toLowerCase().trim();
 
-        if (!sValidCosName.matcher(name).matches())
-            throw ServiceException.INVALID_REQUEST("invalid name: "+name, null);
+        if (!sValidCosName.matcher(destCosName).matches())
+            throw ServiceException.INVALID_REQUEST("invalid name: "+destCosName, null);
 
+        Map<String, Object> allAttrs = new HashMap<String, Object>();
+        Cos srcCos = getCosById(srcCosId, null);
+        if (srcCos == null)
+            throw AccountServiceException.NO_SUCH_COS(srcCosId);
+        
+        for (Map.Entry<String, Object> e : srcCos.getAttrs().entrySet()) {
+            allAttrs.put(e.getKey(), e.getValue());
+        }
+        allAttrs.remove(Provisioning.A_objectClass);
+        allAttrs.remove(Provisioning.A_zimbraId);
+        allAttrs.remove(Provisioning.A_cn);
+        if (cosAttrs != null) {
+            for (Map.Entry<String, Object> e : cosAttrs.entrySet()) {
+                allAttrs.put(e.getKey(), e.getValue());
+            }
+        }
+        
         HashMap attrManagerContext = new HashMap();
-        AttributeManager.getInstance().preModify(cosAttrs, null, attrManagerContext, true, true);
-
+        AttributeManager.getInstance().preModify(allAttrs, null, attrManagerContext, true, true);
+        
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext(true);
-
+            
             Attributes attrs = new BasicAttributes(true);
-            LdapUtil.mapToAttrs(cosAttrs, attrs);
+            LdapUtil.mapToAttrs(allAttrs, attrs);
             LdapUtil.addAttr(attrs, A_objectClass, "zimbraCOS");
             
             String zimbraIdStr = LdapUtil.generateUUID();
             attrs.put(A_zimbraId, zimbraIdStr);
-            attrs.put(A_cn, name);
-            String dn = mDIT.cosNametoDN(name);
+            attrs.put(A_cn, destCosName);
+            String dn = mDIT.cosNametoDN(destCosName);
             LdapUtil.createEntry(ctxt, dn, attrs, "createCos");
 
             Cos cos = getCosById(zimbraIdStr, ctxt);
-            AttributeManager.getInstance().postModify(cosAttrs, cos, attrManagerContext, true);
+            AttributeManager.getInstance().postModify(allAttrs, cos, attrManagerContext, true);
             return cos;
         } catch (NameAlreadyBoundException nabe) {
-            throw AccountServiceException.COS_EXISTS(name);
+            throw AccountServiceException.COS_EXISTS(destCosName);
         } finally {
             LdapUtil.closeContext(ctxt);
         }

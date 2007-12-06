@@ -423,8 +423,11 @@ public class TestProvisioning extends TestCase {
         Cos defaultCos = mProv.get(Provisioning.CosBy.name, "default");
         assertNotNull(defaultCos);
         
+        String destCosName = "cos2-" + TEST_ID;
+        Cos destCos = mProv.copyCos(defaultCos.getId(), destCosName);
+        
         List list = mProv.getAllCos();
-        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{defaultCos, entry}, false);
+        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{defaultCos, entry, destCos}, false);
         
         mProv.renameCos(entry.getId(), NEW_NAME);
         mProv.renameCos(entry.getId(), COS_NAME);
