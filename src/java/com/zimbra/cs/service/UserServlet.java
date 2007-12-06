@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -155,6 +156,12 @@ public class UserServlet extends ZimbraServlet {
     public static final String QP_VERSION = "ver";  // version for WikiItem and Document
 
     public static final String QP_HISTORY = "history";  // history for WikiItem
+    
+    public static final String QP_LANGUAGE = "language"; // all three
+    
+    public static final String QP_COUNTRY = "country"; // all three
+
+    public static final String QP_VARIANT = "variant"; // all three
     
     public static final String AUTH_COOKIE = "co"; // auth by cookie
 
@@ -334,8 +341,12 @@ public class UserServlet extends ZimbraServlet {
             // at this point context.authAccount is set either from the Cookie,
             // or from basic auth.  if there was no credential in either the Cookie
             // or basic auth, authAccount is set to anonymous account.
-            if (context.authAccount != null)
+            if (context.authAccount != null) {
                 ZimbraLog.addAccountNameToContext(context.authAccount.getName());
+                if(context.authAccount.getLocale() != null && context.locale == null){
+                	context.locale = context.authAccount.getLocale();
+                }
+            }
             addRemoteIpToLoggingContext(req);
 
             doAuthGet(req, resp, context);
@@ -702,6 +713,7 @@ public class UserServlet extends ZimbraServlet {
         public Account targetAccount;
         public Mailbox targetMailbox;
         public OperationContext opContext;
+        public Locale locale;
         private long mStartTime = -2;
         private long mEndTime = -2;
 
@@ -712,7 +724,23 @@ public class UserServlet extends ZimbraServlet {
             this.req = request;
             this.resp = response;
             this.params = HttpUtil.getURIParams(request);
-
+            
+            //rest url override for locale
+            String language = this.params.get(QP_LANGUAGE);
+            if (language != null) {
+                String country =  this.params.get(QP_COUNTRY);
+                if (country != null) {
+                    String variant = this.params.get(QP_VARIANT);
+                    if (variant != null) {
+                        this.locale = new Locale(language, country, variant);
+                    }
+                    this.locale =  new Locale(language, country);
+                }
+                this.locale =  new Locale(language);
+            }else{
+            	this.locale =  req.getLocale();
+            }            
+            
             String pathInfo = request.getPathInfo().toLowerCase();
             if (pathInfo == null || pathInfo.equals("/") || pathInfo.equals("") || !pathInfo.startsWith("/"))
                 throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "invalid path");
@@ -772,7 +800,7 @@ public class UserServlet extends ZimbraServlet {
 
             // see if we can get target account or not
             if (itemId != null && itemId.getAccountId() != null) {
-                targetAccount = prov.get(AccountBy.id, itemId.getAccountId());
+                targetAccount = prov.get(AccountBy.id, itemId.getAccountId());                                
                 return;
             } else if (accountPath.equals("~")) {
                 // can't resolve this yet

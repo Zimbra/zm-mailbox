@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.StringTokenizer;
 
 import org.apache.commons.collections.map.LRUMap;
@@ -106,12 +107,16 @@ public abstract class Wiki {
 		OperationContext octxt;
 		String           auth;
 		String           view;
+		Locale 			 locale;
 		
 		public WikiContext(OperationContext o, String a) {
 			octxt = o; auth = a; view = null;
 		}
 		public WikiContext(OperationContext o, String a, String v) {
 			octxt = o; auth = a; view = v;
+		}
+		public WikiContext(OperationContext o, String a, String v, Locale l) {
+			octxt = o; auth = a; view = v; locale = l;
 		}
 	}
 	
