@@ -1795,7 +1795,8 @@ public class ProvUtil implements DebugListener {
     }
     
     private void doGetAllReverseProxyURLs(String[] args) throws ServiceException {
-        String REVERSE_PROXY_PROTO = "http://";
+        // String REVERSE_PROXY_PROTO = "http://";
+        String REVERSE_PROXY_PROTO = "";  // don't need proto for nginx.conf
         int REVERSE_PROXY_PORT = 7072;
         // String REVERSE_PROXY_PATH = "/service/extension/nginx-lookup";
         String REVERSE_PROXY_PATH = ExtensionDispatcherServlet.EXTENSION_PATH + "/nginx-lookup";
