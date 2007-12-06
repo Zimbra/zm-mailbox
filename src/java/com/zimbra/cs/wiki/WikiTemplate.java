@@ -344,12 +344,15 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 	public static class Context {
 		public Context(Context copy) {
 			this(copy.wctxt, copy.item, copy.itemTemplate);
+			this.locale = copy.wctxt.locale;
 		}
 		public Context(WikiContext wc, MailItem it, WikiTemplate itt) {
 			this(wc, it, itt, null);
+			this.locale = wc.locale;
 		}
 		public Context(WikiContext wc, MailItem it, WikiTemplate itt, MailItem tit) {
 			wctxt = wc; item = it; itemTemplate = itt; content = null; latestVersionItem = tit;
+			this.locale = wc.locale;
 		}		
 		
 		public WikiContext wctxt;
@@ -357,9 +360,10 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		public WikiTemplate itemTemplate;
 		public Token token;
 		public String content;
-		public MailItem latestVersionItem;		
-		
+		public MailItem latestVersionItem;
+		public Locale locale;
 	}
+	
 	public static abstract class Wiklet {
 		public abstract String getName();
 		public abstract String getPattern();
@@ -846,10 +850,13 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		private static final String sSHORTDATETIME  = "shortdateandtime";
 		private static final String sMEDIUMDATETIME = "mediumdateandtime";
 		private static final String sLONGDATETIME   = "longdateandtime";
-		private static final String sFULLDATETIME   = "fulldateandtime";
+		private static final String sFULLDATETIME   = "fulldateandtime";		
 		protected static Map<String,DateFormat> sFORMATS;
 		
+		protected static Map<Locale,Map<String,DateFormat>> sLOCALEMAPS;
+		
 		static {
+			sLOCALEMAPS = new HashMap<Locale,Map<String,DateFormat>>();
 			sFORMATS = new HashMap<String,DateFormat>();
 			
 			sFORMATS.put(sSHORTDATE,  DateFormat.getDateInstance(DateFormat.SHORT));
@@ -870,12 +877,48 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		public WikiTemplate findInclusion(Context ctxt) {
 			return null;
 		}
+		
+		protected DateFormat getDateFormat(Locale locale, String dateTimeStyle) {
+			
+			Map<String, DateFormat> dateFormat = sLOCALEMAPS.get(locale);
+			
+			if(dateFormat ==  null) {
+				dateFormat = new HashMap<String, DateFormat>();
+				dateFormat.put(sSHORTDATE,  DateFormat.getDateInstance(DateFormat.SHORT, locale));
+				dateFormat.put(sMEDIUMDATE, DateFormat.getDateInstance(DateFormat.MEDIUM, locale));
+				dateFormat.put(sLONGDATE,   DateFormat.getDateInstance(DateFormat.LONG, locale));
+				dateFormat.put(sFULLDATE,   DateFormat.getDateInstance(DateFormat.FULL, locale));
+			
+				dateFormat.put(sSHORTTIME,  DateFormat.getTimeInstance(DateFormat.SHORT, locale));
+				dateFormat.put(sMEDIUMTIME, DateFormat.getTimeInstance(DateFormat.MEDIUM, locale));
+				dateFormat.put(sLONGTIME,   DateFormat.getTimeInstance(DateFormat.LONG, locale));
+				dateFormat.put(sFULLTIME,   DateFormat.getTimeInstance(DateFormat.FULL, locale));
+			
+				dateFormat.put(sSHORTDATETIME,  DateFormat.getDateTimeInstance(DateFormat.SHORT,  DateFormat.SHORT, locale));
+				dateFormat.put(sMEDIUMDATETIME, DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM, locale));
+				dateFormat.put(sLONGDATETIME,   DateFormat.getDateTimeInstance(DateFormat.LONG,   DateFormat.LONG, locale));
+				dateFormat.put(sFULLDATETIME,   DateFormat.getDateTimeInstance(DateFormat.FULL,   DateFormat.FULL, locale));
+				sLOCALEMAPS.put(locale, dateFormat);
+				return dateFormat.get(dateTimeStyle);
+			}else {
+				return dateFormat.get(dateTimeStyle);
+			}
+		}
+		
 		protected String formatDate(Context ctxt, Date date) {
+			
+			Locale locale = ctxt.locale;			
+			
 			Map<String,String> params = ctxt.token.parseParam();
 			String format = params.get(sFORMAT);
 			if (format == null || !sFORMATS.containsKey(format))
 				format = sSHORTDATETIME;
-			DateFormat formatter = sFORMATS.get(format);
+			DateFormat formatter = null;
+			if(locale == null) {
+				formatter = sFORMATS.get(format);
+			}else{
+				formatter = this.getDateFormat(locale, format);
+			}			
 			synchronized (formatter) {
 				return formatter.format(date);
 			}
