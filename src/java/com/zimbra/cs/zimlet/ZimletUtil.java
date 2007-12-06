@@ -1109,16 +1109,21 @@ public class ZimletUtil {
 			}
 		}
 		
-        public void configureZimlet(byte[] config) throws ServiceException {
-            List<Server> allServers = mProv.getAllServers();
-            for (Server server : allServers) {
-                boolean hasMailboxService = server.getMultiAttrSet(Provisioning.A_zimbraServiceEnabled).contains("mailbox");
-                if (mRunningInServer && (mProv.getLocalServer().compareTo(server) == 0) ||
-                    !hasMailboxService)
-                    continue;
-                ZimbraLog.zimlet.info("Configure zimlet on " + server.getName());
-                configureZimletOnServer(config, server);
-            }
+        public void configureZimlet(byte[] config, boolean localInstall) throws ServiceException {
+			if (localInstall) {
+				ZimbraLog.zimlet.info("Configure zimlet on " + mProv.getLocalServer().getName());
+                configureZimletOnServer(config, mProv.getLocalServer());
+			} else {
+				List<Server> allServers = mProv.getAllServers();
+				for (Server server : allServers) {
+					boolean hasMailboxService = server.getMultiAttrSet(Provisioning.A_zimbraServiceEnabled).contains("mailbox");
+					if (mRunningInServer && (mProv.getLocalServer().compareTo(server) == 0) ||
+						!hasMailboxService)
+						continue;
+					ZimbraLog.zimlet.info("Configure zimlet on " + server.getName());
+					configureZimletOnServer(config, server);
+				}
+			}
         }
         
 		public void deployZimletOnServer(String zimlet, byte[] data, Server server, DeployListener listener) throws ServiceException {
@@ -1464,7 +1469,7 @@ public class ZimletUtil {
 				break;
 			case INSTALL_CONFIG:
 			    ZimletSoapUtil soapUtil = new ZimletSoapUtil();
-			    soapUtil.configureZimlet(ByteUtil.getContent(new File(zimlet)));
+			    soapUtil.configureZimlet(ByteUtil.getContent(new File(zimlet)),localInstall);
 				break;
 			default:
 				usage();
