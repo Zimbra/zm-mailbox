@@ -490,8 +490,7 @@ public class Mailbox {
         return mId;
     }
 
-    /** Returns the ID of this mailbox's Account.  This is a 36-character
-     *  GUID, e.g. <tt>"1b4e28ba-2fa1-11d2-883f-b9a761bde3fb"</tt>.
+    /** Returns the ID of this mailbox's Account.
      * 
      * @see #getAccount() */
     public String getAccountId() {
