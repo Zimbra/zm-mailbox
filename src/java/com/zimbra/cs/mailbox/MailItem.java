@@ -180,7 +180,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         public short  volumeId = -1;
         private String blobDigest;
         public int    date;
-        public int    size;
+        public long   size;
         public int    unreadCount;
         public int    flags;
         public long   tags;
@@ -599,7 +599,7 @@ public abstract class MailItem implements Comparable<MailItem> {
 
     /** Returns the item's size as it counts against mailbox quota.  For items
      *  that have a blob, this is the size in bytes of the raw blob. */
-    public int getSize() {
+    public long getSize() {
         return mData.size;
     }
 

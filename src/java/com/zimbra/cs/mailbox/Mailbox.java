@@ -1367,7 +1367,7 @@ public class Mailbox {
             for (Map.Entry<MailItem.UnderlyingData, Long> entry : folderData.entrySet()) {
                 Folder folder = (Folder) MailItem.constructItem(this, entry.getKey());
                 if (entry.getValue() > 0)
-                    folder.setSize(folder.getSize(), entry.getValue());
+                    folder.setSize(folder.getItemCount(), entry.getValue());
             }
             // establish the folder hierarchy
             for (Folder folder : mFolderCache.values()) {

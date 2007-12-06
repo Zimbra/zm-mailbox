@@ -217,7 +217,7 @@ public class Tag extends MailItem {
 
         if (!originalName.equals(name)) {
             for (Folder folder : mMailbox.listAllFolders()) {
-                if (folder.getSize() > 0)
+                if (folder.getItemCount() > 0)
                     folder.updateHighestMODSEQ();
             }
             RuleManager.getInstance().tagRenamed(getAccount(), originalName, name);

@@ -231,7 +231,7 @@ public final class ResultsPager
         }
         
         public long getDate() { return mDate; } 
-        public int getSize() { return 0; }
+        public long getSize() { return 0; }
         public int getConversationId() { return 0; }
         public int getItemId() { return mItemId; }
         public byte getItemType() { return 0; }

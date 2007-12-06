@@ -120,6 +120,9 @@ public class WikiDigestFixup {
         List<WikiDigest> list = new ArrayList<WikiDigest>(len);
         if (len > 0) {
             for (MailItem item : items) {
+                // didn't support >2GB wiki items when the bug was occurring
+                if (item.getSize() > Integer.MAX_VALUE)
+                    continue;
                 int id = item.getId();
                 int rev = item.getSavedSequence();
                 short vol = item.getVolumeId();
@@ -127,7 +130,7 @@ public class WikiDigestFixup {
                 InputStream is = null;
                 try {
                     is = sStore.getContent(blob);
-                    byte[] data = ByteUtil.getContent(is, item.getSize());
+                    byte[] data = ByteUtil.getContent(is, (int) item.getSize());
                     String digest = ByteUtil.getDigest(data);
                     String currentDigest = item.getDigest();
                     if (!digest.equals(currentDigest)) {

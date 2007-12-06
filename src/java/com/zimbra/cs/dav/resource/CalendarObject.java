@@ -60,7 +60,7 @@ public class CalendarObject extends MailItemResource {
 		if (defInv != null)
 			setProperty(DavElements.P_DISPLAYNAME, defInv.getName());
 		setProperty(DavElements.P_GETCONTENTTYPE, Mime.CT_TEXT_CALENDAR);
-		setProperty(DavElements.P_GETCONTENTLENGTH, Integer.toString(calItem.getSize()));
+		setProperty(DavElements.P_GETCONTENTLENGTH, Long.toString(calItem.getSize()));
 		addProperty(CalDavProperty.getCalendarData(this));
 		mAccount = calItem.getAccount();
 	}

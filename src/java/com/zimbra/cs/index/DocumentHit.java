@@ -51,7 +51,7 @@ public class DocumentHit extends ZimbraHit {
         return mDocument.getDate();
     }
 
-    public int getSize() {
+    public long getSize() {
     	return mDocument.getSize();
     }
 

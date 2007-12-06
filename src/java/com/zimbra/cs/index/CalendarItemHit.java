@@ -100,7 +100,7 @@ public class CalendarItemHit extends ZimbraHit {
         return getCalendarItem().getDate();
     }
     
-    public int getSize() throws ServiceException {
+    public long getSize() throws ServiceException {
         return getCalendarItem().getSize();
     }
     

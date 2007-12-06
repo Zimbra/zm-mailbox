@@ -133,7 +133,7 @@ public class MessageHit extends ZimbraHit {
         } catch (ServiceException e) {
             e.printStackTrace();
         }
-        int size = 0;
+        long size = 0;
         try {
             size = getSize();
         } catch (ServiceException e) {
@@ -142,7 +142,7 @@ public class MessageHit extends ZimbraHit {
         return "MS: " + super.toString() + " C" + convId + " M" + Integer.toString(getItemId()) + " S="+size;
     }
 
-    public int getSize() throws ServiceException {
+    public long getSize() throws ServiceException {
 //        if (mDoc != null) {
         if (false) {
             String sizeStr = mDoc.get(LuceneFields.L_SIZE);
