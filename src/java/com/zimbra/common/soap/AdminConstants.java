@@ -80,6 +80,8 @@ public class AdminConstants {
 
     public static final QName CREATE_COS_REQUEST = QName.get("CreateCosRequest", NAMESPACE);
     public static final QName CREATE_COS_RESPONSE = QName.get("CreateCosResponse", NAMESPACE);
+    public static final QName COPY_COS_REQUEST = QName.get("CopyCosRequest", NAMESPACE);
+    public static final QName COPY_COS_RESPONSE = QName.get("CopyCosResponse", NAMESPACE);
     public static final QName GET_COS_REQUEST = QName.get("GetCosRequest", NAMESPACE);
     public static final QName GET_COS_RESPONSE = QName.get("GetCosResponse", NAMESPACE);
     public static final QName MODIFY_COS_REQUEST = QName.get("ModifyCosRequest", NAMESPACE);
@@ -355,7 +357,7 @@ public class AdminConstants {
     public static final String E_ADMIN_SOAP_URL = "adminSoapURL";
     public static final String E_SEARCH = "search";
     public static final String E_DIRECTORY = "directory";
-
+    
     public static final String A_ACTION = "action";
     public static final String A_APPLY_CONFIG = "applyConfig";
     public static final String A_APPLY_COS = "applyCos";
