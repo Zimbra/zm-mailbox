@@ -150,7 +150,7 @@ public class ToXML {
         Element elem = parent.addElement(MailConstants.E_FOLDER);
         encodeFolderCommon(elem, ifmt, folder, fields);
         if (needToOutput(fields, Change.MODIFIED_SIZE)) {
-            elem.addAttribute(MailConstants.A_NUM, folder.getSize());
+            elem.addAttribute(MailConstants.A_NUM, folder.getItemCount());
             elem.addAttribute(MailConstants.A_SIZE, folder.getTotalSize());
         }
 
@@ -1066,7 +1066,7 @@ public class ToXML {
         }
 
         Element content = m.addUniqueElement(MailConstants.E_CONTENT);
-        int size = msg.getSize() + 2048;
+        long size = msg.getSize() + 2048;
         if (!wholeMessage) {
             content.addAttribute(MailConstants.A_URL, CONTENT_SERVLET_URI + ifmt.formatItemId(msg) + PART_PARAM_STRING + part);
         } else if (size > MAX_INLINE_MSG_SIZE) {

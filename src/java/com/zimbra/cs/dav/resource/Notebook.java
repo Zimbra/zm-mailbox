@@ -51,7 +51,7 @@ public class Notebook extends MailItemResource {
 		setProperty(DavElements.P_DISPLAYNAME, doc.getName());
 		// content length is just an estimate.  the actual content will be larger
 		// after chrome composition.
-		setProperty(DavElements.P_GETCONTENTLENGTH, Integer.toString(doc.getSize()));
+		setProperty(DavElements.P_GETCONTENTLENGTH, Long.toString(doc.getSize()));
 		setProperty(DavElements.P_GETCONTENTTYPE, doc.getContentType());
 	}
 

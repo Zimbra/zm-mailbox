@@ -1782,7 +1782,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                 Mailbox mbox = (Mailbox) mboxobj;
                 Folder folder = (Folder) path.getFolder();
 
-                messages = folder.getSize();
+                messages = (int) folder.getItemCount();
                 if ((status & STATUS_RECENT) == 0)
                     recent = -1;
                 else if (messages == 0)

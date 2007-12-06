@@ -97,7 +97,7 @@ public final class MessagePartHit extends ZimbraHit {
     }
     
     
-    public byte getItemType() throws ServiceException {
+    public byte getItemType() {
         return MailItem.TYPE_MESSAGE;
     }
     
@@ -109,9 +109,8 @@ public final class MessagePartHit extends ZimbraHit {
         } catch (ServiceException e) {
             e.printStackTrace();
         }
-        int size = 0;
-        size = getSize();
         
+        long size = getSize();
         return "MP: " + super.toString() + " C" +convId + " M" + this.getItemId() + " P" + Integer.toString(getItemId()) + "-" + getPartName()+" S="+size;
     }
 
@@ -141,7 +140,7 @@ public final class MessagePartHit extends ZimbraHit {
         return "";
     }
 
-    public int getSize() {
+    public long getSize() {
         if (mDoc != null) {
             String sizeStr = mDoc.get(LuceneFields.L_SIZE);
             long sizeLong = ZimbraAnalyzer.SizeTokenFilter.DecodeSize(sizeStr);

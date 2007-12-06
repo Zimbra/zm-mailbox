@@ -86,8 +86,7 @@ public class Folder extends MailItem {
             throw new IllegalArgumentException();
     }
 
-    @Override
-    public String getSender() {
+    @Override public String getSender() {
         return "";
     }
 
@@ -95,7 +94,7 @@ public class Folder extends MailItem {
      *  <tt>'/'</tt> as the path delimiter.  Paths are relative to the user
      *  root folder ({@link Mailbox#ID_FOLDER_USER_ROOT}), which has the path
      *  <tt>"/"</tt>.  So the Inbox's path is <tt>"/Inbox"</tt>, etc. */
-    public String getPath() {
+    @Override public String getPath() {
         if (mId == Mailbox.ID_FOLDER_ROOT || mId == Mailbox.ID_FOLDER_USER_ROOT)
             return "/";
         String parentPath = mParent.getPath();
@@ -118,8 +117,18 @@ public class Folder extends MailItem {
         return mAttributes;
     }
 
-    /** Returns the sum of the sizes of all items in the folder. */
-    public long getTotalSize() {
+    /** Returns the number of non-subfolder items in the folder.  (For
+     *  example: messages, contacts, and appointments.)  <i>(Note that this
+     *  is not recursive and thus does not include the items in the folder's
+     *  subfolders.)</i> */
+    public long getItemCount() {
+        return getSize();
+    }
+
+    /** Returns the sum of the sizes of all items in the folder.  <i>(Note
+     *  that this is not recursive and thus does not include the items in the
+     *  folder's subfolders.)</i> */
+    @Override public long getTotalSize() {
         return mTotalSize;
     }
 
@@ -167,16 +176,14 @@ public class Folder extends MailItem {
 
     /** Returns whether the folder is the Trash folder or any of its
      *  subfolders. */
-    @Override
-    public boolean inTrash() {
+    @Override public boolean inTrash() {
         if (mId <= Mailbox.HIGHEST_SYSTEM_ID)
             return (mId == Mailbox.ID_FOLDER_TRASH);
         return mParent.inTrash();
     }
 
     /** Returns whether the folder is the Junk folder. */
-    @Override
-    public boolean inSpam() {
+    @Override public boolean inSpam() {
         return (mId == Mailbox.ID_FOLDER_SPAM);
     }
 
@@ -227,8 +234,7 @@ public class Folder extends MailItem {
      *                      and {@link ACL#RIGHT_DELETE}).
      * @param authuser      The user whose rights we need to query.
      * @see ACL */
-    @Override
-    short checkRights(short rightsNeeded, Account authuser, boolean asAdmin) throws ServiceException {
+    @Override short checkRights(short rightsNeeded, Account authuser, boolean asAdmin) throws ServiceException {
         if (rightsNeeded == 0)
             return rightsNeeded;
         // XXX: in Mailbox, authuser is set to null if authuser == owner.
@@ -352,13 +358,11 @@ public class Folder extends MailItem {
     /** Returns this folder's parent folder.  The root folder's parent is
      *  itself.
      * @see Mailbox#ID_FOLDER_ROOT */
-    @Override
-    public MailItem getParent() throws ServiceException {
+    @Override public MailItem getParent() throws ServiceException {
         return mParent != null ? mParent : super.getFolder();
     }
 
-    @Override
-    Folder getFolder() throws ServiceException {
+    @Override Folder getFolder() throws ServiceException {
         return mParent != null ? mParent : super.getFolder();
     }
 
@@ -445,7 +449,7 @@ public class Folder extends MailItem {
     /** Sets the number of items in the folder and their total size.
      * @param count      The folder's new item count.
      * @param totalSize  The folder's new total size. */
-    void setSize(int count, long totalSize) throws ServiceException {
+    void setSize(long count, long totalSize) throws ServiceException {
         if (!trackSize() || (count == 0 && totalSize == 0))
             return;
         markItemModified(Change.MODIFIED_SIZE);
@@ -456,8 +460,7 @@ public class Folder extends MailItem {
         mTotalSize = totalSize;
     }
 
-    @Override
-    protected void updateUnread(int delta) throws ServiceException {
+    @Override protected void updateUnread(int delta) throws ServiceException {
         super.updateUnread(delta);
         if (delta != 0 && trackUnread())
             updateHighestMODSEQ();
@@ -713,8 +716,7 @@ public class Folder extends MailItem {
      * 
      * @perms {@link ACL#RIGHT_READ} on the folder,
      *        {@link ACL#RIGHT_WRITE} on all affected messages. */
-    @Override
-    void alterUnread(boolean unread) throws ServiceException {
+    @Override void alterUnread(boolean unread) throws ServiceException {
         if (unread)
             throw ServiceException.INVALID_REQUEST("folders can only be marked read", null);
         if (!canAccess(ACL.RIGHT_READ))
@@ -759,8 +761,7 @@ public class Folder extends MailItem {
      *  inheritance and hence clears the folder's ACL as a side-effect.
      * 
      * @perms {@link ACL#RIGHT_WRITE} on the folder */
-    @Override
-    void alterTag(Tag tag, boolean newValue) throws ServiceException {
+    @Override void alterTag(Tag tag, boolean newValue) throws ServiceException {
         // folder flags are applied to the folder, not the contents
         if (!(tag instanceof Flag) || !((Flag) tag).isFolderOnly()) {
             super.alterTag(tag, newValue);
@@ -800,7 +801,7 @@ public class Folder extends MailItem {
      * @perms {@link ACL#RIGHT_WRITE} on the folder to rename it,
      *        {@link ACL#RIGHT_DELETE} on the folder and
      *        {@link ACL#RIGHT_INSERT} on the target folder to move it */
-    void rename(String name, Folder target) throws ServiceException {
+    @Override void rename(String name, Folder target) throws ServiceException {
         name = validateItemName(name);
         boolean renamed = !name.equals(mData.name);
         if (!renamed && target == mParent)
@@ -816,8 +817,7 @@ public class Folder extends MailItem {
      * 
      * @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *        {@link ACL#RIGHT_DELETE} on the folder being moved */
-    @Override
-    boolean move(Folder target) throws ServiceException {
+    @Override boolean move(Folder target) throws ServiceException {
         markItemModified(Change.MODIFIED_FOLDER | Change.MODIFIED_PARENT);
         if (mData.folderId == target.getId())
             return false;
@@ -851,8 +851,7 @@ public class Folder extends MailItem {
         return true;
     }
 
-    @Override
-    void addChild(MailItem child) throws ServiceException {
+    @Override void addChild(MailItem child) throws ServiceException {
         if (child == null || !canParent(child)) {
             throw MailServiceException.CANNOT_CONTAIN();
         } else if (child == this) {
@@ -877,8 +876,7 @@ public class Folder extends MailItem {
         }
     }
 
-    @Override
-    void removeChild(MailItem child) throws ServiceException {
+    @Override void removeChild(MailItem child) throws ServiceException {
         if (child == null) {
             throw MailServiceException.CANNOT_CONTAIN();
         } else if (!(child instanceof Folder)) {
@@ -897,8 +895,7 @@ public class Folder extends MailItem {
     }
 
     /** Deletes this folder and all its subfolders. */
-    @Override
-    void delete(DeleteScope scope, boolean writeTombstones) throws ServiceException {
+    @Override void delete(DeleteScope scope, boolean writeTombstones) throws ServiceException {
         if (scope == DeleteScope.CONTENTS_ONLY) {
             deleteSingleFolder(writeTombstones);
         } else {
@@ -947,15 +944,13 @@ public class Folder extends MailItem {
      *    <li><tt>service.FAILURE</tt> - if there's a database failure
      *    <li><tt>service.PERM_DENIED</tt> - if you don't have
      *        sufficient permissions</ul> */
-    @Override
-    MailItem.PendingDelete getDeletionInfo() throws ServiceException {
+    @Override MailItem.PendingDelete getDeletionInfo() throws ServiceException {
         if (!canAccess(ACL.RIGHT_DELETE))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the item");
         return DbMailItem.getLeafNodes(this);
     }
 
-    @Override
-    void propagateDeletion(PendingDelete info) throws ServiceException {
+    @Override void propagateDeletion(PendingDelete info) throws ServiceException {
         if (info.incomplete)
             info.cascadeIds = DbMailItem.markDeletionTargets(mMailbox, info.itemIds.getIds(TYPE_MESSAGE, TYPE_CHAT), info.modifiedIds);
         else
@@ -964,8 +959,7 @@ public class Folder extends MailItem {
         super.propagateDeletion(info);
     }
 
-    @Override
-    void purgeCache(PendingDelete info, boolean purgeItem) throws ServiceException {
+    @Override void purgeCache(PendingDelete info, boolean purgeItem) throws ServiceException {
         // when deleting a folder, need to purge conv cache!
         mMailbox.purge(TYPE_CONVERSATION);
         // fault modified conversations back in, thereby marking them dirty
@@ -974,8 +968,7 @@ public class Folder extends MailItem {
         super.purgeCache(info, purgeItem);
     }
 
-    @Override
-    void uncacheChildren() throws ServiceException {
+    @Override void uncacheChildren() throws ServiceException {
         if (mSubfolders != null)
             for (Folder subfolder : mSubfolders)
                 mMailbox.uncache(subfolder);
@@ -994,8 +987,7 @@ public class Folder extends MailItem {
     }
 
 
-    @Override
-    void decodeMetadata(Metadata meta) throws ServiceException {
+    @Override void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
 
         // avoid a painful data migration...
@@ -1030,8 +1022,7 @@ public class Folder extends MailItem {
         }
     }
 
-    @Override
-    Metadata encodeMetadata(Metadata meta) {
+    @Override Metadata encodeMetadata(Metadata meta) {
         return encodeMetadata(meta, mColor, mVersion, mAttributes, mDefaultView, mRights, mSyncData, mImapUIDNEXT, mTotalSize, mImapMODSEQ, mImapRECENT);
     }
 
@@ -1066,8 +1057,7 @@ public class Folder extends MailItem {
 
     private static final String CN_ATTRIBUTES = "attributes";
 
-    @Override
-    public String toString() {
+    @Override public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("folder: {");
         sb.append("n:\"").append(getName()).append("\", ");

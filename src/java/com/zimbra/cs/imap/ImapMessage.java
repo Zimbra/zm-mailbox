@@ -106,7 +106,7 @@ public class ImapMessage implements Comparable<ImapMessage> {
         return (sflags & FLAG_IS_CONTACT) == 0 ? MailItem.TYPE_MESSAGE : MailItem.TYPE_CONTACT;
     }
 
-    int getSize(MailItem item) throws ServiceException {
+    long getSize(MailItem item) throws ServiceException {
         if (item instanceof Message)
             return item.getSize();
         // FIXME: need to generate the representation of the item to do this correctly...

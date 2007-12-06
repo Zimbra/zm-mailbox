@@ -60,13 +60,13 @@ public class MessageCache {
     private static final int STREAMED_MESSAGE_SIZE = 4096;
 
     private static final class CacheNode {
-        int mSize;
+        long mSize;
         byte[] mContent;
         MimeMessage mMessage;
         ConvertedState mConvertersRun;
 
-        CacheNode(int size, byte[] content)                            { mSize = size;  mContent = content; }
-        CacheNode(int size, MimeMessage mm, ConvertedState converted)  { mSize = size;  mMessage = mm;  mConvertersRun = converted; }
+        CacheNode(long size, byte[] content)                            { mSize = size;  mContent = content; }
+        CacheNode(long size, MimeMessage mm, ConvertedState converted)  { mSize = size;  mMessage = mm;  mConvertersRun = converted; }
     }
 
     private static final int DEFAULT_CACHE_SIZE = 16 * 1000 * 1000;
@@ -126,9 +126,11 @@ public class MessageCache {
         if (!cacheHit) {
             try {
                 // wasn't cached; fetch, cache, and return it
-                int size = item.getSize();
+                long size = item.getSize();
+                if (size > Integer.MAX_VALUE)
+                    throw MailServiceException.MESSAGE_TOO_BIG(Integer.MAX_VALUE);
                 InputStream is = fetchFromStore(item);
-                cnode = new CacheNode(size, ByteUtil.getContent(is, size));
+                cnode = new CacheNode(size, ByteUtil.getContent(is, (int) size));
 
                 // cache the message content (if it'll fit)
                 cacheItem(key, cnode);
@@ -202,7 +204,7 @@ public class MessageCache {
         	InputStream is = null;
             try {
                 // wasn't cached; fetch the content and create the MimeMessage
-                int size = item.getSize();
+                long size = item.getSize();
                 if (expand && cnOrig != null && cnOrig.mMessage != null && cnOrig.mConvertersRun == ConvertedState.RAW) {
                     // switching from RAW to EXPANDED -- can reuse an existing raw MimeMessage
                     cnode = new CacheNode(cnOrig.mSize, cnOrig.mMessage, ConvertedState.BOTH);
@@ -210,9 +212,8 @@ public class MessageCache {
                     // use the raw byte array to construct the MimeMessage if possible, else read from disk
                     if (cnOrig == null || cnOrig.mContent == null) {
                         is = fetchFromStore(item);
-                        if (is instanceof BlobInputStream) {
+                        if (is instanceof BlobInputStream)
                             size = STREAMED_MESSAGE_SIZE;
-                        }
                     } else {
                         is = new SharedByteArrayInputStream(cnOrig.mContent);
                     }
@@ -223,20 +224,20 @@ public class MessageCache {
                 if (expand) {
                     try {
                         // handle UUENCODE and TNEF conversion here...
-                        for (Class visitor : MimeVisitor.getConverters())
+                        for (Class visitor : MimeVisitor.getConverters()) {
                             if (((MimeVisitor) visitor.newInstance()).accept(cnode.mMessage)) {
                                 cnode.mConvertersRun = ConvertedState.EXPANDED;
                                 size = item.getSize(); // Even with BlobInputStream, an expanded message will be stored in memory
                             }
+                        }
                     } catch (Exception e) {
                         // if the conversion bombs for any reason, revert to the original
                         ZimbraLog.mailbox.warn("MIME converter failed for message " + item.getId(), e);
 
                         if (cnOrig == null || cnOrig.mContent == null) {
                             is = fetchFromStore(item);
-                            if (is instanceof BlobInputStream) {
+                            if (is instanceof BlobInputStream)
                                 size = STREAMED_MESSAGE_SIZE;
-                            }
                         } else {
                             is = new SharedByteArrayInputStream(cnOrig.mContent);
                         }

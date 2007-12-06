@@ -63,7 +63,7 @@ public final class ContactHit extends ZimbraHit {
         return mContact;
     }
     
-    public int getSize() throws ServiceException {
+    public long getSize() throws ServiceException {
         return getContact().getSize();
     }
     

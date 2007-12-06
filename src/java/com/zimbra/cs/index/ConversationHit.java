@@ -124,7 +124,7 @@ public final class ConversationHit extends ZimbraHit {
         return mh == null ? 0 : mh.getDate();
     }
     
-    public int getSize() throws ServiceException {
+    public long getSize() throws ServiceException {
         return getConversation().getSize();
     }
     

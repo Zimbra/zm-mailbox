@@ -126,7 +126,7 @@ public class DbMailItem {
             else
                 stmt.setInt(pos++, data.imapId);
             stmt.setInt(pos++, data.date);
-            stmt.setInt(pos++, data.size);
+            stmt.setLong(pos++, data.size);
             if (data.volumeId >= 0)
                 stmt.setShort(pos++, data.volumeId);
             else
@@ -619,7 +619,7 @@ public class DbMailItem {
                         " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             stmt.setInt(pos++, (int) (item.getDate() / 1000));
-            stmt.setInt(pos++, item.getSize());
+            stmt.setLong(pos++, item.getSize());
             stmt.setString(pos++, checkMetadataLength(metadata));
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
@@ -644,7 +644,7 @@ public class DbMailItem {
                         " SET size = ?, unread = ?, metadata = ?, mod_metadata = ?, change_date = ?, mod_content = ?" +
                         " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
-            stmt.setInt(pos++, item.getSize());
+            stmt.setLong(pos++, item.getSize());
             stmt.setInt(pos++, item.getUnreadCount());
             stmt.setString(pos++, checkMetadataLength(metadata));
             stmt.setInt(pos++, mbox.getOperationChangeID());
@@ -672,7 +672,7 @@ public class DbMailItem {
                         " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             stmt.setInt(pos++, (int) (note.getDate() / 1000));
-            stmt.setInt(pos++, note.getSize());
+            stmt.setLong(pos++, note.getSize());
             stmt.setString(pos++, checkSubjectLength(note.getSubject()));
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
@@ -702,7 +702,7 @@ public class DbMailItem {
                         " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             stmt.setInt(pos++, (int) (item.getDate() / 1000));
-            stmt.setInt(pos++, item.getSize());
+            stmt.setLong(pos++, item.getSize());
             stmt.setInt(pos++, item.getInternalFlagBitmask());
             stmt.setString(pos++, name);
             stmt.setString(pos++, name);
@@ -754,7 +754,7 @@ public class DbMailItem {
             else
                 stmt.setInt(pos++, item.getParentId());
             stmt.setInt(pos++, (int) (item.getDate() / 1000));
-            stmt.setInt(pos++, item.getSize());
+            stmt.setLong(pos++, item.getSize());
             stmt.setString(pos++, item.getDigest());
             stmt.setInt(pos++, item.getInternalFlagBitmask());
             stmt.setString(pos++, checkSenderLength(sender));
@@ -1510,8 +1510,7 @@ public class DbMailItem {
             }
 
             Mailbox.MailboxData mbd = new Mailbox.MailboxData();
-            String totalSize = (Db.supports(Db.Capability.CAST_AS_BIGINT) ? "SUM(CAST(size AS BIGINT))" : "SUM(size)");
-            stmt = conn.prepareStatement("SELECT folder_id, type, tags, COUNT(*), SUM(unread), " + totalSize +
+            stmt = conn.prepareStatement("SELECT folder_id, type, tags, COUNT(*), SUM(unread), SUM(size)" +
                         " FROM " + table + " WHERE " + IN_THIS_MAILBOX_AND + "type NOT IN " + NON_SEARCHABLE_TYPES +
                         " GROUP BY folder_id, type, tags");
             stmt.setInt(1, mbox.getId());
@@ -1549,8 +1548,7 @@ public class DbMailItem {
             rs.close();
             stmt.close();
 
-            String revSize = (Db.supports(Db.Capability.CAST_AS_BIGINT) ? "SUM(CAST(rev.size AS BIGINT))" : "SUM(rev.size)");
-            stmt = conn.prepareStatement("SELECT mi.folder_id, " + revSize +
+            stmt = conn.prepareStatement("SELECT mi.folder_id, SUM(rev.size)" +
                         " FROM " + table + ", " + getRevisionTableName(mbox, "rev") +
                         " WHERE rev.mailbox_id = ? AND mi.mailbox_id = rev.mailbox_id AND mi.id = rev.item_id" +
                         " GROUP BY folder_id");
@@ -2161,7 +2159,7 @@ public class DbMailItem {
             }
 
             int id = rs.getInt(LEAF_CI_ID);
-            int size = rs.getInt(LEAF_CI_SIZE);
+            long size = rs.getLong(LEAF_CI_SIZE);
             byte type = rs.getByte(LEAF_CI_TYPE);
 
             Integer item = new Integer(id);
@@ -2248,9 +2246,9 @@ public class DbMailItem {
                 Integer folderId = rs.getInt(2);
                 LocationCount count = info.messages.get(folderId);
                 if (count == null)
-                    info.messages.put(folderId, new LocationCount(0, rs.getInt(3)));
+                    info.messages.put(folderId, new LocationCount(0, rs.getLong(3)));
                 else
-                    count.increment(0, rs.getInt(3));
+                    count.increment(0, rs.getLong(3));
 
                 boolean hasBlob = rs.getBoolean(6);
                 if (hasBlob) {
@@ -2383,7 +2381,7 @@ public class DbMailItem {
             rs = stmt.executeQuery();
 
             while (rs.next())
-                result.add(new Pop3Message(rs.getInt(1), rs.getInt(2), rs.getString(3)));
+                result.add(new Pop3Message(rs.getInt(1), rs.getLong(2), rs.getString(3)));
             return result;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("loading POP3 folder data: " + folder.getPath(), e);
@@ -2504,7 +2502,7 @@ public class DbMailItem {
         if (rs.wasNull())
             data.imapId = -1;
         data.date        = rs.getInt(CI_DATE + offset);
-        data.size        = rs.getInt(CI_SIZE + offset);
+        data.size        = rs.getLong(CI_SIZE + offset);
         data.volumeId    = rs.getShort(CI_VOLUME_ID + offset);
         if (rs.wasNull())
             data.volumeId = -1;
@@ -2537,7 +2535,7 @@ public class DbMailItem {
         data.indexId     = -1;
         data.imapId      = -1;
         data.date        = rs.getInt(1);
-        data.size        = rs.getInt(2);
+        data.size        = rs.getLong(2);
         data.volumeId    = rs.getShort(3);
         if (rs.wasNull())
             data.volumeId = -1;

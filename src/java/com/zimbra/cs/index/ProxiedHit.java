@@ -56,7 +56,7 @@ public class ProxiedHit extends ZimbraHit
         mElement = elt;
     }
 
-    int getSize() throws ServiceException {
+    long getSize() throws ServiceException {
         return (int) mElement.getAttributeLong(MailConstants.A_SIZE, 0);
     }
 

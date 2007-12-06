@@ -130,17 +130,17 @@ public abstract class ZimbraHit
      * @throws ServiceException
      */
     abstract long getDate() throws ServiceException;
-    
-    
+
+
     /**
      * This function is only guaranteed to return a useful value for local hits
      * 
      * @return
      * @throws ServiceException
      */
-    abstract int getSize() throws ServiceException ;
-    
-    
+    abstract long getSize() throws ServiceException ;
+
+
     /**
      * This function is only guaranteed to return a useful value for local hits 
      * 
