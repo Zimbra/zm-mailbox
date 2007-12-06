@@ -514,7 +514,18 @@ Notes:
   zimbraNotes
 
 -----------------------------
+<CopyCosRequest>
+  <name>{dest-cos-name}</name>
+  <cos by="id|name">{src-cos-id-or-name}</cos>
+</CopyCosRequest>
 
+<CopyCosResponse>
+  <cos name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </cos>
+</CopyCosResponse>
+
+-----------------------------
 <GetCosRequest>
   <cos by="id|name">...</cos>
 </GetCosRequest>

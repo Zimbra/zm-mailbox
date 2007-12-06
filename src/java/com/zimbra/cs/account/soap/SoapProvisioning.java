@@ -312,6 +312,15 @@ public class SoapProvisioning extends Provisioning {
         addAttrElements(req, attrs);
         return new SoapCos(invoke(req).getElement(AdminConstants.E_COS));
     }
+    
+    @Override
+    public Cos copyCos(String srcCosId, String destCosName)
+            throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.COPY_COS_REQUEST);
+        req.addElement(AdminConstants.E_NAME).setText(destCosName);
+        req.addElement(AdminConstants.E_COS).addAttribute(AdminConstants.A_BY, CosBy.id.name()).setText(srcCosId);
+        return new SoapCos(invoke(req).getElement(AdminConstants.E_COS));
+    }
 
     @Override
     public DistributionList createDistributionList(String listAddress,
