@@ -138,7 +138,12 @@ public abstract class Element {
             throw new ContainerException("wrong parent");
         child.mParent = null;
     }
-    public Element detach() throws ContainerException  { if (mParent != null) { mParent.detach(this); } return this; }
+    public Element detach() throws ContainerException {
+        setNamespace(mPrefix, getNamespaceURI(mPrefix));
+        if (mParent != null)
+            mParent.detach(this);
+        return this;
+    }
 
     // reading from the element hierarchy
     public String getName()           { return mName; }
@@ -202,6 +207,17 @@ public abstract class Element {
                 return (String) uri;
         }
         return (mParent == null ? null : mParent.getNamespaceURI(prefix));
+    }
+    protected Element collapseNamespace() {
+        if (mNamespaces != null && mParent != null && mParent.mPrefix.equals(mPrefix)) {
+            String localURI = mNamespaces.get(mPrefix);
+            if (localURI != null && localURI.equals(mParent.getNamespaceURI(mPrefix))) {
+                mNamespaces.remove(mPrefix);
+                if (mNamespaces.isEmpty())
+                    mNamespaces = null;
+            }
+        }
+        return this;
     }
 
     public static String checkNull(String key, String value) throws ServiceException {
@@ -502,7 +518,7 @@ public abstract class Element {
                 mAttributes.put(name, content = new ArrayList<Element>());
             content.add(elt);
             elt.mParent = this;
-            return elt;
+            return elt.collapseNamespace();
         }
 
         public Element addUniqueElement(String name) throws ContainerException  { return addUniqueElement(new JSONElement(name)); }
@@ -970,7 +986,7 @@ public abstract class Element {
                 mChildren = new ArrayList<Element>();
             mChildren.add(elt);
             elt.mParent = this;
-            return elt;
+            return elt.collapseNamespace();
         }
 
         public Element setText(String content) throws ContainerException {
