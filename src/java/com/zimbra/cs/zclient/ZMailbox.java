@@ -519,7 +519,9 @@ public class ZMailbox {
         } catch (IOException e) {
             throw ZClientException.IO_ERROR("invoke "+e.getMessage(), e);
         } finally {
-            handleResponseContext(mTransport.getZimbraContext());
+            Element context = mTransport.getZimbraContext();
+            mTransport.clearZimbraContext();
+            handleResponseContext(context);
         }
     }
 
