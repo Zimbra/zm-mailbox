@@ -235,11 +235,12 @@ public class ToXML {
                 elem.addAttribute(MailConstants.A_FOLDER, ifmt.formatItemId(folder.getFolderId()));
 
             // rest URL if either the parent or name has changed
-            if (needToOutput(fields, Change.MODIFIED_FOLDER | Change.MODIFIED_NAME) && !folder.isHidden()) {
+            if (needToOutput(fields, Change.MODIFIED_FOLDER | Change.MODIFIED_NAME) && !folder.isHidden() && folder.getId() != Mailbox.ID_FOLDER_USER_ROOT) {
                 if (folder.getDefaultView() == MailItem.TYPE_WIKI ||
                         folder.getDefaultView() == MailItem.TYPE_APPOINTMENT ||
                         folder.getDefaultView() == MailItem.TYPE_TASK ||
-                        folder.getDefaultView() == MailItem.TYPE_CONTACT)
+                        folder.getDefaultView() == MailItem.TYPE_CONTACT ||
+                        folder.getDefaultView() == MailItem.TYPE_DOCUMENT)
                     encodeRestUrl(elem, folder);
             }
         }
@@ -308,8 +309,7 @@ public class ToXML {
 
     public static Element encodeRestUrl(Element elt, MailItem item) {
         try {
-        	String url = UserServlet.getRestUrl(item);
-            return elt.addAttribute(MailConstants.A_REST_URL, url);
+            return elt.addAttribute(MailConstants.A_REST_URL, UserServlet.getRestUrl(item));
         } catch (ServiceException se) {
             mLog.error("cannot generate REST url", se);
             return elt;
