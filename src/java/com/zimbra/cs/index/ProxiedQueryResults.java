@@ -25,7 +25,6 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
-import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AuthToken;
@@ -36,12 +35,15 @@ import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.util.ParseMailboxID;
+import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.soap.ProxyTarget;
 import com.zimbra.soap.ZimbraSoapContext;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import org.dom4j.QName;
 
 /**
  * Represents the results of a query made on a remote server.  This class takes the ServerID
@@ -202,8 +204,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
         return retVal;
     }
 
-    public ZimbraHit peekNext() throws ServiceException 
-    {
+    public ZimbraHit peekNext() throws ServiceException {
         if (mIterOffset >= mBufferEndOffset) {
             if (!bufferNextHits()) {
                 return null;
@@ -215,7 +216,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
     String getServer() { return mServer; }
 
 
-    public String toString() {
+    @Override public String toString() {
         String url;
         try {
             Server server = Provisioning.getInstance().get(ServerBy.name, mServer);
@@ -233,11 +234,9 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
      * @return
      * @throws ServiceException
      */
-    private boolean bufferNextHits() throws ServiceException 
-    {
-        if (mAtEndOfList || mSearchParams.getHopCount() > ZimbraSoapContext.MAX_HOP_COUNT) {
+    private boolean bufferNextHits() throws ServiceException {
+        if (mAtEndOfList || mSearchParams.getHopCount() > ZimbraSoapContext.MAX_HOP_COUNT)
             return false;
-        }
 
         mBufferStartOffset = mIterOffset;
 
@@ -250,108 +249,102 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
         mBufferEndOffset = mBufferStartOffset + chunkSizeToUse;
         mHitBuffer = new ArrayList<ProxiedHit>(chunkSizeToUse);
 
-        try {
-            Element searchElt;
-            if (isMultipleMailboxes) {
-                searchElt = Element.create(mResponseProto, AdminConstants.SEARCH_MULTIPLE_MAILBOXES_REQUEST);
+        QName qnrequest = (isMultipleMailboxes ? AdminConstants.SEARCH_MULTIPLE_MAILBOXES_REQUEST : MailConstants.SEARCH_REQUEST);
+        Element searchElt = Element.create(mResponseProto, qnrequest);
+
+        mSearchParams.setOffset(mBufferStartOffset);
+        mSearchParams.setLimit(chunkSizeToUse);
+        mSearchParams.encodeParams(searchElt);
+
+        if (isMultipleMailboxes) {
+            if (isAllMailboxes) {
+                Element mbxElt = searchElt.addElement(MailConstants.E_MAILBOX);
+                ParseMailboxID id = ParseMailboxID.serverAll(mServer);
+                mbxElt.addAttribute(MailConstants.A_ID, id.getString());
             } else {
-                searchElt = Element.create(mResponseProto, MailConstants.SEARCH_REQUEST);
-            }
-
-            mSearchParams.setOffset(mBufferStartOffset);
-            mSearchParams.setLimit(chunkSizeToUse);
-            mSearchParams.encodeParams(searchElt);
-
-            if (isMultipleMailboxes) {
-                if (isAllMailboxes) {
-                    Element mbxElt = searchElt.addElement(MailConstants.E_MAILBOX);
-                    ParseMailboxID id = ParseMailboxID.serverAll(mServer);
-                    mbxElt.addAttribute(MailConstants.A_ID, id.getString());
-                } else {
-                    for (Iterator iter = mMailboxes.iterator(); iter.hasNext();) {
-                        ParseMailboxID id = (ParseMailboxID)iter.next();
-
-                        //                    assert(!id.isLocal());
-                        //                    assert(id.getServer().equals(serverID));
-
-                        searchElt.addElement(MailConstants.E_MAILBOX).addAttribute(MailConstants.A_ID, id.getString());
-                    }
+                for (ParseMailboxID id : mMailboxes) {
+                    // assert(!id.isLocal());
+                    // assert(id.getServer().equals(serverID));
+                    searchElt.addElement(MailConstants.E_MAILBOX).addAttribute(MailConstants.A_ID, id.getString());
                 }
             }
-
-            // call the remote server now!
-            ZimbraSoapContext zsc = null;            
-            try {
-                zsc = new ZimbraSoapContext(AuthToken.getAuthToken(mAuthToken), mTargetAcctId, mResponseProto, mResponseProto, mSearchParams.getHopCount()+1);
-            } catch (AuthTokenException ex) {
-                throw ServiceException.FAILURE("Caught AuthToken exception: ", ex);
-            }
-
-            Element envelope = mResponseProto.soapEnvelope(searchElt, zsc.toProxyCtxt());
-            Element searchResp  = null;
-            SoapHttpTransport transport = null;
-
-            try {
-                Server server = Provisioning.getInstance().get(ServerBy.name, mServer);
-                String url = URLUtil.getAdminURL(server);
-                transport = new SoapHttpTransport(url);
-
-                if (ZimbraLog.index.isDebugEnabled()) ZimbraLog.index.debug("Fetching remote search results from "+transport);
-
-                searchResp = transport.invokeRaw(envelope);
-                searchResp = transport.extractBodyElement(searchResp); 
-            } catch (SoapFaultException ex) {
-                ZimbraLog.index.warn("Unable to ("+ex.toString()+") fetch search results from remote server "+transport);
-                mAtEndOfList = true;
-                mBufferEndOffset = mIterOffset;
-                return false;
-            } catch (java.net.ConnectException ex) {
-                ZimbraLog.index.warn("Unable to ("+ex.toString()+") fetch search results from remote server "+transport);
-                mAtEndOfList = true;
-                mBufferEndOffset = mIterOffset;
-                return false;
-            }
-
-            int hitOffset = (int) searchResp.getAttributeLong(MailConstants.A_QUERY_OFFSET);
-            boolean hasMore = searchResp.getAttributeBool(MailConstants.A_QUERY_MORE);
-
-            assert(mBufferStartOffset == hitOffset);
-
-            // put these hits into our buffer!
-            int bufferIdx = 0;
-            int stop = mBufferEndOffset - mBufferStartOffset;
-            for (Iterator iter = searchResp.elementIterator(); iter.hasNext() && bufferIdx < stop;) {
-                Element e = (Element)iter.next();
-                if (e.getName().equalsIgnoreCase(MailConstants.E_INFO)) {
-                    for (Iterator<Element> infoIter = e.elementIterator(); infoIter.hasNext();)  
-                        mInfo.add(new ProxiedQueryInfo(infoIter.next()));
-                } else {
-                    mHitBuffer.add(bufferIdx++, new ProxiedHit(this, e));
-                }
-            }
-
-            //
-            // are we at the end of the line here?
-            //
-            if ((bufferIdx < stop) || (!hasMore)) {
-                // update the buffer-end-pointer 
-                mBufferEndOffset = mBufferStartOffset + bufferIdx;
-
-                if (hasMore) {
-                    assert(!hasMore); // if bufferIdx < stop then !hasMore should be set...server bug!
-                }
-                this.mAtEndOfList = true;
-            } else {
-                assert(mBufferEndOffset == mBufferStartOffset+bufferIdx);
-            }
-
-            assert(mBufferStartOffset <= mIterOffset);
-
-            // OK, we were successful if we managed to buffer the current hit
-            return (mBufferEndOffset > mIterOffset);
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("IOException ", e);
         }
+
+        // call the remote server now!
+        ZimbraSoapContext zsc = null;
+        try {
+            zsc = new ZimbraSoapContext(AuthToken.getAuthToken(mAuthToken), mTargetAcctId, mResponseProto, mResponseProto, mSearchParams.getHopCount()+1);
+        } catch (AuthTokenException ex) {
+            throw ServiceException.FAILURE("Caught AuthToken exception: ", ex);
+        }
+
+        Server server = Provisioning.getInstance().get(ServerBy.name, mServer);
+        String baseurl = null;
+        if (!isMultipleMailboxes) {
+            try {
+                baseurl = URLUtil.getSoapURL(server, false);
+            } catch (ServiceException e) { }
+        }
+        if (baseurl == null)
+            baseurl = URLUtil.getAdminURL(server, ZimbraServlet.ADMIN_SERVICE_URI, true);
+        ProxyTarget proxy = new ProxyTarget(server, mAuthToken, baseurl + qnrequest.getName());
+
+        Element searchResp = null;
+        try {
+            searchResp = proxy.dispatch(searchElt, zsc);
+        } catch (SoapFaultException sfe) {
+            ZimbraLog.index.warn("Unable to ("+sfe.toString()+") fetch search results from remote server " + proxy);
+            mAtEndOfList = true;
+            mBufferEndOffset = mIterOffset;
+            return false;
+        } catch (ServiceException e) {
+            if (ServiceException.PROXY_ERROR.equals(e.getCode())) {
+                ZimbraLog.index.warn("Unable to ("+e.toString()+") fetch search results from remote server " + proxy);
+                mAtEndOfList = true;
+                mBufferEndOffset = mIterOffset;
+                return false;
+            }
+            throw e;
+        }
+
+        int hitOffset = (int) searchResp.getAttributeLong(MailConstants.A_QUERY_OFFSET);
+        boolean hasMore = searchResp.getAttributeBool(MailConstants.A_QUERY_MORE);
+
+        assert(mBufferStartOffset == hitOffset);
+
+        // put these hits into our buffer!
+        int bufferIdx = 0;
+        int stop = mBufferEndOffset - mBufferStartOffset;
+        for (Iterator<Element> iter = searchResp.elementIterator(); iter.hasNext() && bufferIdx < stop; ) {
+            Element e = iter.next();
+            if (e.getName().equalsIgnoreCase(MailConstants.E_INFO)) {
+                for (Element info : e.listElements())  
+                    mInfo.add(new ProxiedQueryInfo(info));
+            } else {
+                mHitBuffer.add(bufferIdx++, new ProxiedHit(this, e));
+            }
+        }
+
+        //
+        // are we at the end of the line here?
+        //
+        if (bufferIdx < stop || !hasMore) {
+            // update the buffer-end-pointer 
+            mBufferEndOffset = mBufferStartOffset + bufferIdx;
+
+            if (hasMore) {
+                assert(!hasMore); // if bufferIdx < stop then !hasMore should be set...server bug!
+            }
+            this.mAtEndOfList = true;
+        } else {
+            assert(mBufferEndOffset == mBufferStartOffset+bufferIdx);
+        }
+
+        assert(mBufferStartOffset <= mIterOffset);
+
+        // OK, we were successful if we managed to buffer the current hit
+        return (mBufferEndOffset > mIterOffset);
+
 //      catch (ServiceException e) {
 //      if (!isMultipleMailboxes) {
 //      //throw ServiceException.FAILURE("ServiceException ", e);
