@@ -61,6 +61,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.util.BuildInfo;
 
 public class ImapImport implements MailItemImport {
 
@@ -72,7 +73,7 @@ public class ImapImport implements MailItemImport {
 
     static {
     	String idExt = "(\"vendor\" \"Zimbra\" \"os\" \"" + System.getProperty("os.name") +
-    	               "\" \"os-version\" \"" + System.getProperty("os.version") + "\" \"guid\" \"" + "4062-5711-9195-4050" + "\")";
+    	               "\" \"os-version\" \"" + System.getProperty("os.version") + "\" \"guid\" \"" + BuildInfo.TYPE + "\")";
     	
         Properties props = new Properties();
         props.setProperty("mail.imap.connectiontimeout", Long.toString(TIMEOUT));
