@@ -17,11 +17,12 @@
 package com.zimbra.cs.dav.resource;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
 
 import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.collections.map.LRUMap;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.HttpUtil;
@@ -40,6 +41,8 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Mountpoint;
+import com.zimbra.cs.service.util.ItemId;
 
 /**
  * UrlNamespace provides a mapping from a URL to a DavResource.
@@ -128,8 +131,11 @@ public class UrlNamespace {
 		if (target.startsWith(ATTACHMENTS_PREFIX)) {
 			resource = getPhantomResource(ctxt, user);
 		} else {
-			MailItem item = getMailItem(ctxt, user, target);
-			resource = getResourceFromMailItem(ctxt, item);
+		    try {
+		        resource = getMailItemResource(ctxt, user, target);
+		    } catch (ServiceException se) {
+		        ZimbraLog.dav.warn("can't get mail item resource for "+user+", "+target, se);
+		    }
 		}
 		
 		if (resource == null)
@@ -218,6 +224,90 @@ public class UrlNamespace {
         return str;
 	}
 	
+	private static LRUMap sApptSummariesMap = new LRUMap(100);
+	
+	private static class RemoteFolder {
+	    static final long AGE = 10L * 60L * 1000L;
+	    RemoteCollection folder;
+	    long ts;
+	    boolean isStale(long now) {
+	        return (ts + AGE) < now;
+	    }
+	}
+	
+    private static DavResource getMailItemResource(DavContext ctxt, String user, String path) throws ServiceException, DavException {
+        Provisioning prov = Provisioning.getInstance();
+        Account account = prov.get(AccountBy.name, user);
+        if (account == null)
+            throw new DavException("no such accout "+user, HttpServletResponse.SC_NOT_FOUND, null);
+
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        String id = null;
+        int index = path.indexOf('?');
+        if (index > 0) {
+            Map<String, String> params = HttpUtil.getURIParams(path.substring(index+1));
+            path = path.substring(0, index);
+            id = params.get("id");
+        }
+        Mailbox.OperationContext octxt = ctxt.getOperationContext();
+        MailItem item = null;
+        
+        // simple case.  root folder or if id is specified.
+        if (path.equals("/"))
+            item = mbox.getFolderByPath(octxt, "/");
+        else if (id != null)
+            item = mbox.getItemById(octxt, Integer.parseInt(id), MailItem.TYPE_UNKNOWN);
+
+        if (item != null)
+            return getResourceFromMailItem(ctxt, item);
+        
+        // look up the item from path
+        index = path.lastIndexOf('/');
+        String folderPath = path.substring(0, index);
+        Folder f = null;
+        if (index != -1) {
+            try {
+                f = mbox.getFolderByPath(octxt, folderPath);
+            } catch (MailServiceException.NoSuchItemException e) {
+            }
+        }
+        if (f != null && path.endsWith(CalendarObject.CAL_EXTENSION)) {
+            String uid = path.substring(index + 1, path.length() - CalendarObject.CAL_EXTENSION.length());
+            if (f.getType() == MailItem.TYPE_MOUNTPOINT) {
+                Mountpoint mp = (Mountpoint)f;
+                // if the folder is a mountpoint instantiate a remote object.
+                // the only information we have is the calendar UID and remote account folder id.
+                // we need the itemId for the calendar appt in order to query from the remote server.
+                // so we'll need to do getApptSummaries on the remote folder, then cache the result.
+                ItemId remoteId = new ItemId(mp.getOwnerId(), mp.getRemoteId());
+                RemoteFolder remoteFolder = null;
+                synchronized (sApptSummariesMap) {
+                    remoteFolder = (RemoteFolder)sApptSummariesMap.get(remoteId);
+                    long now = System.currentTimeMillis();
+                    if (remoteFolder != null && remoteFolder.isStale(now)) {
+                        sApptSummariesMap.remove(remoteId);
+                        remoteFolder = null;
+                    }
+                    if (remoteFolder == null) {
+                        remoteFolder = new RemoteFolder();
+                        remoteFolder.folder = new RemoteCollection(ctxt, mp);
+                        remoteFolder.ts = now;
+                        sApptSummariesMap.put(remoteId, remoteFolder);
+                    }
+                }
+                DavResource res = remoteFolder.folder.getAppointment(ctxt, uid);
+                if (res == null)
+                    throw new DavException("no such appointment "+user+", "+uid, HttpServletResponse.SC_NOT_FOUND, null);
+                return res;
+            }
+            item = mbox.getCalendarItemByUid(octxt, uid);
+        }
+        if (item == null)
+            item = mbox.getItemByPath(octxt, path);
+        
+        return getResourceFromMailItem(ctxt, item);
+    }
+    
 	/* Returns DavResource for the MailItem. */
 	public static MailItemResource getResourceFromMailItem(DavContext ctxt, MailItem item) throws DavException {
 		MailItemResource resource = null;
@@ -227,8 +317,10 @@ public class UrlNamespace {
 		
 		try {
 			switch (itemType) {
+            case MailItem.TYPE_MOUNTPOINT :
+                resource = new RemoteCollection(ctxt, (Mountpoint)item);
+                break;
 			case MailItem.TYPE_FOLDER :
-			case MailItem.TYPE_MOUNTPOINT :
 				Folder f = (Folder) item;
 				byte viewType = f.getDefaultView();
 				if (f.getId() == Mailbox.ID_FOLDER_INBOX)
@@ -246,7 +338,7 @@ public class UrlNamespace {
 				break;
 			case MailItem.TYPE_APPOINTMENT :
 			case MailItem.TYPE_TASK :
-				resource = new CalendarObject(ctxt, (CalendarItem)item);
+				resource = new CalendarObject.LocalCalendarObject(ctxt, (CalendarItem)item);
 				break;
 			case MailItem.TYPE_MESSAGE :
 				Message msg = (Message)item;
@@ -331,46 +423,6 @@ public class UrlNamespace {
 		
 		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 		return mbox.getItemById(ctxt.getOperationContext(), id, MailItem.TYPE_UNKNOWN);
-	}
-	
-	private static MailItem getMailItem(DavContext ctxt, String user, String path) throws DavException {
-		try {
-			Provisioning prov = Provisioning.getInstance();
-			Account account = prov.get(AccountBy.name, user);
-			if (account == null)
-				throw new DavException("no such accout "+user, HttpServletResponse.SC_NOT_FOUND, null);
-			
-			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-			String id = null;
-			int index = path.indexOf('?');
-			if (index > 0) {
-				Map<String, String> params = HttpUtil.getURIParams(path.substring(index+1));
-				path = path.substring(0, index);
-				id = params.get("id");
-			}
-			Mailbox.OperationContext octxt = ctxt.getOperationContext();
-
-			if (path.equals("/"))
-			    return mbox.getFolderByPath(octxt, "/");
-			if (id != null)
-				return mbox.getItemById(octxt, Integer.parseInt(id), MailItem.TYPE_UNKNOWN);
-
-			index = path.lastIndexOf('/');
-			Folder f = null;
-			if (index != -1) {
-				try {
-					f = mbox.getFolderByPath(octxt, path.substring(0, index));
-				} catch (MailServiceException.NoSuchItemException e) {
-				}
-			}
-			if (f != null && path.endsWith(CalendarObject.CAL_EXTENSION)) {
-				String uid = path.substring(index + 1, path.length() - CalendarObject.CAL_EXTENSION.length());
-				return mbox.getCalendarItemByUid(octxt, uid);
-			}
-			return mbox.getItemByPath(octxt, path);
-		} catch (ServiceException e) {
-			throw new DavException("cannot get item", HttpServletResponse.SC_NOT_FOUND, e);
-		}
 	}
 	
 	public static Account getPrincipal(String principalUrl) throws ServiceException {

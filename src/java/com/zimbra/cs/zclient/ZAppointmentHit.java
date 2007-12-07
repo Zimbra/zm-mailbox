@@ -130,6 +130,9 @@ public class ZAppointmentHit implements ZSearchHit {
     private boolean mIsException;
 
     private String mFolderId;
+    private String mUid;
+    private long mModifiedSeq;
+    private long mModifiedDate;
 
     ZAppointmentHit() {
 
@@ -169,6 +172,9 @@ public class ZAppointmentHit implements ZSearchHit {
 
         Element fragmentEl = e.getOptionalElement(MailConstants.E_FRAG);
         String fragment = (fragmentEl != null) ? fragmentEl.getText() : null;
+        String uid = e.getAttribute(MailConstants.A_UID, null);
+        long ms = e.getAttributeLong(MailConstants.A_MODIFIED_SEQUENCE, 0);
+        long md = e.getAttributeLong(MailConstants.A_MODIFIED_DATE, 0);
 
         List<Element> instances = e.listElements(MailConstants.E_INSTANCE);
         // if empty, add self as only instance
@@ -232,6 +238,9 @@ public class ZAppointmentHit implements ZSearchHit {
 
             Element instFragmentEl = inst.getOptionalElement(MailConstants.E_FRAG);
             appt.mFragment = (instFragmentEl != null) ? instFragmentEl.getText() : fragment;
+            appt.mUid = inst.getAttribute(MailConstants.A_UID, uid);
+            appt.mModifiedSeq = inst.getAttributeLong(MailConstants.A_MODIFIED_SEQUENCE, ms);
+            appt.mModifiedDate = inst.getAttributeLong(MailConstants.A_MODIFIED_DATE, md);
             appts.add(appt);
         }
     }
@@ -427,6 +436,12 @@ public class ZAppointmentHit implements ZSearchHit {
     public String getFragment() { return mFragment; }
 
     public String getTagIds() { return mTags; }
+    
+    public String getUid() { return mUid; }
+    
+    public long getModifiedSeq() { return mModifiedSeq; }
+    
+    public long getModifiedDate() { return mModifiedDate; }
 
     public boolean hasFlags() {
         return mFlags != null && mFlags.length() > 0;
