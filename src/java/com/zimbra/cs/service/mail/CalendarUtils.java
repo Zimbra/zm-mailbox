@@ -212,10 +212,6 @@ public class CalendarUtils {
 
         attendeesToCancel.addAll(getRemovedAttendees(oldInv, mod));
 
-        // Don't allow changing organizer in modify request.
-        mod.setOrganizer(oldInv.hasOrganizer() ? new ZOrganizer(oldInv.getOrganizer()) : null);
-        mod.setIsOrganizer(account);
-
         ZVCalendar iCal = mod.newToICalendar(true);
 
         String summaryStr = "";
