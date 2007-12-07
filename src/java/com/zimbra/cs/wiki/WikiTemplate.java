@@ -76,6 +76,10 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		touch();
 	}
 	
+	public String getRaw() {
+	    return mTemplate;
+	}
+	
 	public static WikiTemplate findTemplate(Context ctxt, String name)
 	throws ServiceException {
     	Wiki wiki = Wiki.getInstance(ctxt.wctxt, ctxt.item);
@@ -106,8 +110,8 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		return buf.toString();
 	}
 	
-	public Token getToken(int i) {
-		return mTokens.get(i);
+	private List<Token> getTokens() {
+		return mTokens;
 	}
 
 	public long getModifiedTime() {
@@ -986,6 +990,11 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 			if (template == null) {
 			    WikiItem wiki = (WikiItem) ctxt.item;
 			    template = WikiTemplate.findTemplate(ctxt, wiki.getWikiWord());
+			}
+			for (Token t : template.getTokens()) {
+			    Wiklet w = Wiklet.get(t);
+			    if (w == null || w.getName().equals(getName()))
+			        return template.getRaw();
 			}
 			return template.toString(ctxt);
 		}
