@@ -66,7 +66,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
     }
 
     protected static class CalSendData extends ParseMimeMessage.MimeMessageData {
-        int mOrigId; // orig id if this is a reply
+        ItemId mOrigId; // orig id if this is a reply
         String mReplyType;
         String mIdentityId;
         MimeMessage mMm;
@@ -96,7 +96,8 @@ public abstract class CalendarRequest extends MailDocumentHandler {
 
         // check to see if this message is a reply -- if so, then we'll want to note that so 
         // we can more-correctly match the conversations up
-        csd.mOrigId = (int) msgElem.getAttributeLong(MailConstants.A_ORIG_ID, 0);
+        String origId = msgElem.getAttribute(MailConstants.A_ORIG_ID, null);
+        csd.mOrigId = origId == null ? null : new ItemId(origId, zsc);
         csd.mReplyType = msgElem.getAttribute(MailConstants.A_REPLY_TYPE, MailSender.MSGTYPE_REPLY);
         csd.mIdentityId = msgElem.getAttribute(MailConstants.A_IDENTITY_ID, null);
 
@@ -373,7 +374,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             if (rcpts.size() > 0) {
                 CalSendData csd = new CalSendData();
                 csd.mInvite = inv;
-                csd.mOrigId = inv.getMailItemId();
+                csd.mOrigId = new ItemId(mbox, inv.getMailItemId());
                 csd.mMm = CalendarMailSender.createOrganizerChangeMessage(acct, authAccount, calItem, csd.mInvite, rcpts);
                 sendCalendarMessageInternal(zsc, octxt, calItem.getFolderId(), acct, mbox, csd,
                                             response, true, true, false);
@@ -405,7 +406,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         Locale locale = !onBehalfOf ? acct.getLocale() : authAcct.getLocale();
 
         CalSendData dat = new CalSendData();
-        dat.mOrigId = inv.getMailItemId();
+        dat.mOrigId = new ItemId(mbox, inv.getMailItemId());
         dat.mReplyType = MailSender.MSGTYPE_REPLY;
 
         String text = L10nUtil.getMessage(MsgKey.calendarCancelRemovedFromAttendeeList, locale);

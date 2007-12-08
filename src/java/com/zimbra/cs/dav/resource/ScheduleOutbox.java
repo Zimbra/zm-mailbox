@@ -245,7 +245,7 @@ public class ScheduleOutbox extends Collection {
         try {
             MimeMessage mm = CalendarMailSender.createCalendarMessage(from, from, recipients, subject, text, uid, cal);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(ctxt.getAuthAccount());
-            mbox.getMailSender().sendMimeMessage(ctxt.getOperationContext(), mbox, true, mm, null, null, 0, null, null, true, false);
+            mbox.getMailSender().sendMimeMessage(ctxt.getOperationContext(), mbox, true, mm, null, null, null, null, null, true, false);
         } catch (ServiceException e) {
             resp.addElement(DavElements.E_RECIPIENT).setText(rcpt);
             resp.addElement(DavElements.E_REQUEST_STATUS).setText("5.1");

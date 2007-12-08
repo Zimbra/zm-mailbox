@@ -103,7 +103,8 @@ public class SendMsg extends MailDocumentHandler {
         boolean needCalendarSentByFixup = request.getAttributeBool(MailConstants.A_NEED_CALENDAR_SENTBY_FIXUP, false);
         boolean noSaveToSent = request.getAttributeBool(MailConstants.A_NO_SAVE_TO_SENT, false);
 
-        int origId = (int) msgElem.getAttributeLong(MailConstants.A_ORIG_ID, 0);
+        String origId = msgElem.getAttribute(MailConstants.A_ORIG_ID, null);
+        ItemId iidOrigId = origId == null ? null : new ItemId(origId, zsc);
         String replyType = msgElem.getAttribute(MailConstants.A_REPLY_TYPE, MailSender.MSGTYPE_REPLY);
         String identityId = msgElem.getAttribute(MailConstants.A_IDENTITY_ID, null);
 
@@ -146,7 +147,7 @@ public class SendMsg extends MailDocumentHandler {
                     mm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem, null, mimeData);
                 }
 
-                savedMsgId = doSendMessage(octxt, mbox, mm, mimeData.newContacts, mimeData.uploads,origId,
+                savedMsgId = doSendMessage(octxt, mbox, mm, mimeData.newContacts, mimeData.uploads, iidOrigId,
                     replyType, identityId, noSaveToSent, false, needCalendarSentByFixup);
 
                 // and record it in the table in case the client retries the send
@@ -170,7 +171,7 @@ public class SendMsg extends MailDocumentHandler {
     
     public static ItemId doSendMessage(OperationContext oc, Mailbox mbox,
         MimeMessage mm, List<InternetAddress> newContacts,  List<Upload> uploads,
-        int origMsgId, String replyType, String identityId, boolean noSaveToSent,
+        ItemId origMsgId, String replyType, String identityId, boolean noSaveToSent,
         boolean ignoreFailedAddresses, boolean needCalendarSentByFixup) throws ServiceException {
         
         if (needCalendarSentByFixup)

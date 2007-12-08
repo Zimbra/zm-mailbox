@@ -101,7 +101,7 @@ public class MailSender {
 
     public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, MimeMessage mm,
                                   List<InternetAddress> newContacts, List<Upload> uploads,
-                                  int origMsgId, String replyType, String identityId,
+                                  ItemId origMsgId, String replyType, String identityId,
                                   boolean ignoreFailedAddresses, boolean replyToSender)
     throws ServiceException {
         Account authuser = octxt == null ? null : octxt.getAuthenticatedUser();
@@ -162,7 +162,7 @@ public class MailSender {
 
     public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, boolean saveToSent, MimeMessage mm,
                                   List<InternetAddress> newContacts, List<Upload> uploads,
-                                  int origMsgId, String replyType, Identity identity,
+                                  ItemId origMsgId, String replyType, Identity identity,
                                   boolean ignoreFailedAddresses, boolean replyToSender)
     throws ServiceException {
         try {
@@ -177,8 +177,8 @@ public class MailSender {
 
             // slot the message in the parent's conversation if subjects match
             int convId = Mailbox.ID_AUTO_INCREMENT;
-            if (origMsgId > 0 && !isDelegatedRequest)
-                convId = mbox.getConversationIdFromReferent(mm, origMsgId);
+            if (origMsgId != null && !isDelegatedRequest && origMsgId.belongsTo(mbox))
+                convId = mbox.getConversationIdFromReferent(mm, origMsgId.getId());
 
             // set the From, Sender, Date, Reply-To, etc. headers
             updateHeaders(mm, acct, authuser, octxt, octxt != null ? octxt.getRequestIP() : null, replyToSender);
@@ -254,12 +254,12 @@ public class MailSender {
             sendMessage(mm, ignoreFailedAddresses, rollback);
 
             // check if this is a reply, and if so flag the msg appropriately
-            if (origMsgId > 0) {
+            if (origMsgId != null && !isDelegatedRequest && origMsgId.belongsTo(mbox)) {
                 try {
                     if (MSGTYPE_REPLY.equals(replyType))
-                        mbox.alterTag(octxt, origMsgId, MailItem.TYPE_MESSAGE, Flag.ID_FLAG_REPLIED, true);
+                        mbox.alterTag(octxt, origMsgId.getId(), MailItem.TYPE_MESSAGE, Flag.ID_FLAG_REPLIED, true);
                     else if (MSGTYPE_FORWARD.equals(replyType))
-                        mbox.alterTag(octxt, origMsgId, MailItem.TYPE_MESSAGE, Flag.ID_FLAG_FORWARDED, true);
+                        mbox.alterTag(octxt, origMsgId.getId(), MailItem.TYPE_MESSAGE, Flag.ID_FLAG_FORWARDED, true);
                 } catch (ServiceException e) {
                     // this is not an error case:
                     //   - the original message may be gone when accepting/declining an appointment
@@ -316,7 +316,7 @@ public class MailSender {
         }
     }
 
-    private void logMessage(MimeMessage mm, int origMsgId, List<Upload> uploads, String replyType) {
+    private void logMessage(MimeMessage mm, ItemId origMsgId, List<Upload> uploads, String replyType) {
         // Log sent message info
         if (ZimbraLog.smtp.isInfoEnabled()) {
             StringBuilder msg = new StringBuilder("Sending message: ");
@@ -325,7 +325,7 @@ public class MailSender {
             } catch (MessagingException e) {
                 msg.append(e);
             }
-            if (origMsgId > 0)
+            if (origMsgId != null)
                 msg.append(", origMsgId=" + origMsgId);
             if (uploads != null && uploads.size() > 0)
                 msg.append(", uploads=" + uploads);

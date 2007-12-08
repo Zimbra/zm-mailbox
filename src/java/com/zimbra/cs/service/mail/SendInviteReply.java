@@ -168,7 +168,7 @@ public class SendInviteReply extends CalendarRequest {
                     CalendarMailSender.getReplySubject(verb, subject, locale);
 
                 CalSendData csd = new CalSendData();
-                csd.mOrigId = oldInv.getMailItemId();
+                csd.mOrigId = new ItemId(mbox, oldInv.getMailItemId());
                 csd.mReplyType = MailSender.MSGTYPE_REPLY;
                 csd.mInvite = CalendarMailSender.replyToInvite(acct, authAcct, onBehalfOf, oldInv, verb, replySubject, exceptDt);
                 
