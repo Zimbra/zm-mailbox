@@ -3843,7 +3843,7 @@ public class LdapProvisioning extends Provisioning {
 
     private Identity getIdentityByName(LdapEntry entry, String name,  DirContext ctxt) throws ServiceException {
         name = LdapUtil.escapeSearchFilterArg(name);
-        List<Identity> result = getIdentitiesByQuery(entry, "(&(zimbraPrefIdentityName="+name+")(objectclass=zimbraIdentity))", ctxt); 
+        List<Identity> result = getIdentitiesByQuery(entry, "(&(objectclass=zimbraIdentity)(zimbraPrefIdentityName="+name+"))", ctxt); 
         return result.isEmpty() ? null : result.get(0);
     }
 
@@ -4081,7 +4081,7 @@ public class LdapProvisioning extends Provisioning {
 
     private Signature getSignatureById(Account acct, LdapEntry entry, String id,  DirContext ctxt) throws ServiceException {
         id = LdapUtil.escapeSearchFilterArg(id);
-        List<Signature> result = getSignaturesByQuery(acct, entry, "(&(" + Provisioning.A_zimbraSignatureId + "=" + id +")(objectclass=zimbraSignature))", ctxt, null); 
+        List<Signature> result = getSignaturesByQuery(acct, entry, "(&(objectclass=zimbraSignature)(" + Provisioning.A_zimbraSignatureId + "=" + id +"))", ctxt, null); 
         return result.isEmpty() ? null : result.get(0);
     }
 
@@ -4350,13 +4350,13 @@ public class LdapProvisioning extends Provisioning {
 
     private DataSource getDataSourceById(LdapEntry entry, String id,  DirContext ctxt) throws ServiceException {
         id= LdapUtil.escapeSearchFilterArg(id);
-        List<DataSource> result = getDataSourcesByQuery(entry, "(&(zimbraDataSourceId="+id+")(objectclass=zimbraDataSource))", ctxt); 
+        List<DataSource> result = getDataSourcesByQuery(entry, "(&(objectclass=zimbraDataSource)(zimbraDataSourceId="+id+"))", ctxt); 
         return result.isEmpty() ? null : result.get(0);
     }
 
     private DataSource getDataSourceByName(LdapEntry entry, String name,  DirContext ctxt) throws ServiceException {
         name = LdapUtil.escapeSearchFilterArg(name);
-        List<DataSource> result = getDataSourcesByQuery(entry, "(&(zimbraDataSourceName="+name+")(objectclass=zimbraDataSource))", ctxt); 
+        List<DataSource> result = getDataSourcesByQuery(entry, "(&(objectclass=zimbraDataSource)(zimbraDataSourceName="+name+"))", ctxt); 
         return result.isEmpty() ? null : result.get(0);
     }    
 
