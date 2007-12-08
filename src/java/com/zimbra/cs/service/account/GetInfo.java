@@ -31,6 +31,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeFlag;
 import com.zimbra.cs.account.AttributeManager;
@@ -40,6 +41,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.util.BuildInfo;
@@ -95,6 +97,7 @@ public class GetInfo extends AccountDocumentHandler  {
         response.addAttribute(AccountConstants.E_LIFETIME, lifetime, Element.Disposition.CONTENT);
 
         if (sections.contains(Section.MBOX) && Provisioning.onLocalServer(account)) {
+            response.addAttribute(MailConstants.A_REST_URL, UserServlet.getRestUrl(account), Element.Disposition.CONTENT);
             try {
                 Mailbox mbox = getRequestedMailbox(zsc);
                 response.addAttribute(AccountConstants.E_QUOTA_USED, mbox.getSize(), Element.Disposition.CONTENT);

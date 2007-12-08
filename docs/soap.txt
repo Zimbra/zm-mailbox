@@ -403,7 +403,8 @@ an authToken can be passed instead of account/password/preauth to validate an ex
    <id>{account-id}</id>
    <name>{account-name}</name>
    <lifetime>...</lifetime>   
-   [<used>{used}</used>
+   [<rest>{account-base-REST-url}</rest>
+    <used>{used}</used>
     <prevSession>{previous-SOAP-session}</prevSession>
     <accessed>{last-SOAP-access}</accessed>
     <recent>{recent-messages}</recent>
@@ -464,6 +465,7 @@ an authToken can be passed instead of account/password/preauth to validate an ex
   {version} = server version: <major>[.<minor>[.<maintenance>]][build] <release> <date>[ <type>]
   {account-name} = email address (user@domain)
   {life-time} = number of milliseconds until auth token expires
+  {account-base-REST-url} = base REST URL for the requested account
 
   returned only if the command successfully executes on the target user's home mail server:
     {used} = mailbox quota used in bytes
