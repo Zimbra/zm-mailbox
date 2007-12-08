@@ -35,6 +35,7 @@ import javax.mail.MessagingException;
 import org.apache.commons.collections.map.LRUMap;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -221,97 +222,6 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                 msgId==null?"":msgId);
         }
     }
-
-    /**
-     * Reads up to <tt>limit</tt> bytes from the <tt>InputStream</tt>.
-     * @param in the data stream
-     * @param sizeHint used to allocate the byte array that is returned.  Used for
-     *   optimizing memory allocation.  Does not affect the behavior of this method.
-     *   If unknown, set this value to <tt>0</tt>.
-     * @param limit maximum number of bytes to read
-     */
-    public static byte[] readData(InputStream in, int sizeHint, int limit)
-    throws IOException {
-        if (limit <= 0) {
-            return new byte[0];
-        }
-        if (sizeHint > limit) {
-            sizeHint = limit;
-        }
-        byte[] data = null;
-        int bytesRead = 0; // Index of next insertion and also the length of data read
-        
-        if (sizeHint > 0) {
-            // Size hint is specified.  Try reading directly into the byte array.
-            // If the size hint is correct, we avoid the extra arraycopy calls that
-            // ByteArrayOutputStream would do.
-            data = new byte[sizeHint];
-
-            // Read until we've hit the end of the stream or filled the byte array.
-            while (true) {
-                int numToRead = data.length - bytesRead;
-                if (numToRead <= 0) {
-                    break;
-                }
-                int numRead = in.read(data, bytesRead, numToRead);
-                if (numRead < 0) {
-                    break;
-                }
-                bytesRead += numRead;
-            }
-            
-            if (bytesRead >= limit) {
-                return data;
-            }
-
-            if (bytesRead < data.length) {
-                // Size hint was too big.
-                byte[] truncated = new byte[bytesRead];
-                System.arraycopy(data, 0, truncated, 0, bytesRead);
-                return truncated;
-            }
-        }
-        
-        // See if there's more data available.  Note that we use read() instead
-        // of available() because available() will sometimes return 0 when there's
-        // actually more data to read.
-        int oneMoreByte = in.read();
-        if (oneMoreByte < 0) {
-            // No more data to read.  Return what we've already read.
-            if (data == null) {
-                return new byte[0];
-            } else {
-                return data;
-            }
-        } else {
-            bytesRead++;
-        }
-        
-        // Size hint was 0 or low.  Read the remaining data into a ByteArrayOutputStream.
-        ByteArrayOutputStream buf = null;
-        if (data != null) {
-            buf = new ByteArrayOutputStream(data.length * 2);
-            buf.write(data);
-        } else {
-            buf = new ByteArrayOutputStream(1024);
-        }
-        buf.write((byte) oneMoreByte);
-        
-        byte[] chunk = new byte[1024];
-        while (true) {
-            int numToRead = Math.min(limit - bytesRead, chunk.length);
-            if (numToRead <= 0) {
-                break;
-            }
-            int numRead = in.read(chunk, 0, numToRead);
-            if (numRead < 0) {
-                break;
-            }
-            buf.write(chunk, 0, numRead);
-            bytesRead += numRead;
-        }
-        return buf.toByteArray();
-    }
     
     private void deliverMessageToLocalMailboxes(InputStream in,
                                                 LmtpEnvelope env, 
@@ -336,7 +246,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
             if (sizeHint <= diskThreshold) {
                 // Try to read the message into memory, up to the threshold
                 ZimbraLog.lmtp.debug("Reading message into memory.  sizeHint=%d", sizeHint);
-                data = readData(in, sizeHint, diskThreshold + 1);
+                data = ByteUtil.readInput(in, sizeHint, diskThreshold + 1);
                 if (data.length == 0) {
                     throw new MessagingException("Empty message not allowed");
                 }

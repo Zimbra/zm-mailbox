@@ -157,10 +157,11 @@ public class FileBlobStore extends StoreManager {
         if (baos != null) {
             blob.setData(baos.toByteArray());
         }
+        blob.setRawSize(totalRead);
 
         if (mLog.isDebugEnabled()) {
             mLog.debug("Stored %s: data size=%d bytes, file size=%d bytes, volumeId=%d, isCompressed=%b",
-                path, blob.getFile().length(), file.length(), volumeId, blob.isCompressed());
+                path, totalRead, blob.getFile().length(), file.length(), volumeId, blob.isCompressed());
         }
         return blob;
     }

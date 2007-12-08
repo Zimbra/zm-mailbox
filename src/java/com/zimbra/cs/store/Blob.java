@@ -39,6 +39,8 @@ public class Blob {
     private boolean mIsCompressed = false;
     private byte[] mData;
     private String mDigest;
+    
+    private int mRawSize; //can be 0 if not set
 
     public Blob(File file, short volumeId) {
         mFile = file;
@@ -74,6 +76,10 @@ public class Blob {
         return mData;
     }
     
+    public int getRawSize() {
+    	return mData != null ? mData.length : mRawSize;
+    }
+    
     public void setCompressed(boolean isCompressed) {
         mIsCompressed = isCompressed;
     }
@@ -87,6 +93,10 @@ public class Blob {
     
     public void setDigest(String digest) {
         mDigest = digest;
+    }
+    
+    public void setRawSize(int rawSize) {
+    	mRawSize = rawSize;
     }
 
     public String toString() {

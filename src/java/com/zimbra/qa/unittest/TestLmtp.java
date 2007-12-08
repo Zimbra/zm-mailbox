@@ -26,6 +26,7 @@ import java.util.Map;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.lmtpserver.LmtpMessageInputStream;
@@ -89,7 +90,7 @@ extends TestCase {
         System.arraycopy(data, 0, expected, 0, numToRead);
         InputStream in = new ByteArrayInputStream(data);
         
-        byte[] bytesRead = ZimbraLmtpBackend.readData(in, sizeHint, limit);
+        byte[] bytesRead = ByteUtil.readInput(in, sizeHint, limit);
         assertEquals(numToRead, bytesRead.length);
         assertEquals(numRemaining, in.available());
         assertEquals(new String(expected), new String(bytesRead));
