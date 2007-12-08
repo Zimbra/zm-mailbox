@@ -1137,7 +1137,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
     }
 
-    /** Returns whether the an item type is a "subclass" of another item type.
+    /** Returns whether an item type is a "subclass" of another item type.
      *  For instance, returns <tt>true</tt> if you have an item of type
      *  {@link #TYPE_FLAG} and you wanted things of type {@link #TYPE_TAG}.
      *  The exception to this rule is that a desired {@link #TYPE_UNKNOWN}
@@ -1169,6 +1169,19 @@ public abstract class MailItem implements Comparable<MailItem> {
         // failure: found something, but it's not the type you were looking for
         else
             return false;
+    }
+
+    /** Returns whether the item is a "subclass" of another item type.  For
+     *  instance, returns <tt>true</tt> if the item is a {@link Flag} and you
+     *  wanted things of type {@link #TYPE_TAG}.  The exception to this rule
+     *  is that a desired {@link #TYPE_UNKNOWN} matches any actual item type.
+     * 
+     * @param desired  The type of item that you wanted.
+     * @return <tt>true</tt> if the types match, if <tt>desired</tt> is
+     *         {@link #TYPE_UNKNOWN}, or if the item is a subclass of the
+     *         <tt>desired</tt> class. */
+    public boolean isAcceptableType(byte desired) {
+        return isAcceptableType(desired, getType());
     }
     
     boolean checkChangeID() throws ServiceException {
