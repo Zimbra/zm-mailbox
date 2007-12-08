@@ -181,6 +181,13 @@ public interface CalendarObject {
             addProperty(CalDavProperty.getCalendarData(this));
 	    }
 
+	    public RemoteCalendarObject(String uri, String owner, String etag) {
+	        super(uri, owner);
+	        mEtag = etag;
+            setProperty(DavElements.P_GETCONTENTTYPE, Mime.CT_TEXT_CALENDAR);
+            setProperty(DavElements.P_GETETAG, mEtag);
+	    }
+	    
         public static String getEtag(ZAppointmentHit item) {
             return "\""+Long.toString(item.getModifiedSeq())+"-"+Long.toString(item.getModifiedDate())+"\"";
         }
@@ -205,6 +212,11 @@ public interface CalendarObject {
 	    @Override
 	    public boolean isCollection() {
 	        return false;
+	    }
+	    
+	    @Override
+	    public boolean hasContent(DavContext ctxt) {
+	        return true;
 	    }
 	    
 	    public String getUid() {

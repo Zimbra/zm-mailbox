@@ -37,13 +37,16 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
+import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.HttpURL;
 import org.apache.commons.httpclient.HttpsURL;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.PutMethod;
 
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.service.ServiceException;
@@ -71,6 +74,7 @@ import com.zimbra.cs.service.formatter.*;
 import com.zimbra.cs.service.mail.GetItem;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.util.NetUtil;
 
 /**
  * 
@@ -1016,12 +1020,6 @@ public class UserServlet extends ZimbraServlet {
         // fetch from remote store
         Provisioning prov = Provisioning.getInstance();
         Server server = (target == null ? prov.getLocalServer() : prov.getServer(target));
-        int port = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
-        boolean useHTTP = port > 0;
-        if (!useHTTP)
-            port = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
-        if (port <= 0)
-            throw ServiceException.FAILURE("remote server " + server.getName() + " has neither http nor https port enabled", null);
         String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
 
         if (folder == null) {
@@ -1033,10 +1031,8 @@ public class UserServlet extends ZimbraServlet {
                 folder = folder.substring(1);
         }
 
-        StringBuffer url = new StringBuffer(useHTTP ? "http" : "https");
-        url.append("://").append(hostname).append(':').append(port).append(SERVLET_PATH);
-        url.append('/').append(target == null ? "~" : target.getName());
-        url.append('/').append(folder).append("/?");
+        StringBuffer url = new StringBuffer(UserServlet.getRestUrl(target));
+        url.append("/").append(folder).append("/?");
         url.append(QP_AUTH).append('=').append(AUTH_COOKIE);
         if (params != null) {
             for (Map.Entry<String, String> param : params.entrySet())
@@ -1049,12 +1045,12 @@ public class UserServlet extends ZimbraServlet {
     //Helper class so that we can close connection upon stream close
     public static class HttpInputStream extends  InputStream {
 
-		private GetMethod get;
+		private HttpMethod method;
     	private InputStream in;
     	
-    	HttpInputStream(GetMethod getmethod) throws IOException {
-    		this.get = getmethod;
-    		in = getmethod.getResponseBodyAsStream();
+    	HttpInputStream(HttpMethod m) throws IOException {
+    		this.method = m;
+    		in = m.getResponseBodyAsStream();
     	}
     	
     	@Override
@@ -1064,7 +1060,7 @@ public class UserServlet extends ZimbraServlet {
 
     	@Override
     	public void close() {
-    		get.releaseConnection();
+    		method.releaseConnection();
     	}
 
 		@Override
@@ -1109,7 +1105,7 @@ public class UserServlet extends ZimbraServlet {
     
     public static Pair<Header[], HttpInputStream> getRemoteResourceAsStream(String authToken, String hostname, String url,
     		String proxyHost, int proxyPort, String proxyUser, String proxyPass) throws ServiceException, IOException {
-    	Pair<Header[], GetMethod> pair = getRemoteResourceInternal(authToken, hostname, url, proxyHost, proxyPort, proxyUser, proxyPass);
+    	Pair<Header[], HttpMethod> pair = getRemoteResourceInternal(authToken, hostname, url, proxyHost, proxyPort, proxyUser, proxyPass);
     	return new Pair<Header[], HttpInputStream>(pair.getFirst(), new HttpInputStream(pair.getSecond()));
     }
     
@@ -1119,9 +1115,9 @@ public class UserServlet extends ZimbraServlet {
     
     public static Pair<Header[], byte[]> getRemoteResource(String authToken, String hostname, String url,
     		String proxyHost, int proxyPort, String proxyUser, String proxyPass) throws ServiceException {
-    	GetMethod get = null;
+    	HttpMethod get = null;
     	try {
-    		Pair<Header[], GetMethod> pair = getRemoteResourceInternal(authToken, hostname, url, proxyHost, proxyPort, proxyUser, proxyPass);
+    		Pair<Header[], HttpMethod> pair = getRemoteResourceInternal(authToken, hostname, url, proxyHost, proxyPort, proxyUser, proxyPass);
     		get = pair.getSecond();
     		return new Pair<Header[], byte[]>(pair.getFirst(), get.getResponseBody());
     	} catch (IOException x) {
@@ -1132,10 +1128,43 @@ public class UserServlet extends ZimbraServlet {
     		}
         }
     }
+
+    public static Pair<Header[], HttpInputStream> putRemoteResource(String authToken, String url, Account target,
+            byte[] req, Header[] headers) throws ServiceException, IOException {
+        Provisioning prov = Provisioning.getInstance();
+        Server server = (target == null ? prov.getLocalServer() : prov.getServer(target));
+        String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
+
+        StringBuilder u = new StringBuilder(url);
+        u.append("?").append(QP_AUTH).append('=').append(AUTH_COOKIE);
+        PutMethod method = new PutMethod(u.toString());
+        String contentType = "application/octet-stream";
+        if (headers != null) {
+            for (Header hdr : headers) {
+                String name = hdr.getName();
+                method.addRequestHeader(hdr);
+                if (name.equals("Content-Type"))
+                    contentType = hdr.getValue();
+            }
+        }
+        method.setRequestEntity(new ByteArrayRequestEntity(req, contentType));
+        Pair<Header[], HttpMethod> pair = doHttpOp(authToken, hostname, null, 0, null, null, method);
+        return new Pair<Header[], HttpInputStream>(pair.getFirst(), new HttpInputStream(pair.getSecond()));
+    }
     
-    private static Pair<Header[], GetMethod> getRemoteResourceInternal(String authToken, String hostname, String url,
+    private static Pair<Header[], HttpMethod> getRemoteResourceInternal(String authToken, String hostname, String url,
     		String proxyHost, int proxyPort, String proxyUser, String proxyPass) throws ServiceException {
+        return doHttpOp(authToken, hostname, proxyHost, proxyPort, proxyUser, proxyPass, new GetMethod(url));
+    }
+    
+    private static Pair<Header[], HttpMethod> doHttpOp(String authToken, String hostname,
+            String proxyHost, int proxyPort, String proxyUser, String proxyPass, HttpMethod method) throws ServiceException {
         // create an HTTP client with the same cookies
+        String url = "";
+        try {
+            url = method.getURI().toString();
+        } catch (IOException e) {
+        }
         HttpState state = new HttpState();
         state.addCookie(new org.apache.commons.httpclient.Cookie(hostname, COOKIE_ZM_AUTH_TOKEN, authToken, "/", null, false));
         HttpClient client = new HttpClient();
@@ -1145,18 +1174,19 @@ public class UserServlet extends ZimbraServlet {
     		if (proxyUser != null && proxyPass != null) {
     			client.getState().setProxyCredentials(new AuthScope(proxyHost, proxyPort), new UsernamePasswordCredentials(proxyUser, proxyPass));
     		}
+    	} else {
+    	    NetUtil.configureProxy(client);
     	}
         
-        GetMethod get = new GetMethod(url);
         try {
-            int statusCode = client.executeMethod(get);
+            int statusCode = client.executeMethod(method);
             if (statusCode == HttpStatus.SC_NOT_FOUND)
                 throw MailServiceException.NO_SUCH_ITEM(-1);
-            else if (statusCode != HttpStatus.SC_OK)
-                throw ServiceException.RESOURCE_UNREACHABLE(get.getStatusText(), null);
+            else if (statusCode != HttpStatus.SC_OK && statusCode != HttpStatus.SC_CREATED)
+                throw ServiceException.RESOURCE_UNREACHABLE(method.getStatusText(), null);
 
-            Header[] headers = get.getResponseHeaders();
-            return new Pair<Header[], GetMethod>(headers, get);
+            Header[] headers = method.getResponseHeaders();
+            return new Pair<Header[], HttpMethod>(headers, method);
         } catch (HttpException e) {
             throw ServiceException.RESOURCE_UNREACHABLE("HttpException while fetching " + url, e);
         } catch (IOException e) {
