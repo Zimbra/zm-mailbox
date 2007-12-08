@@ -27,6 +27,7 @@ import java.io.DataOutput;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -624,7 +625,7 @@ public class ByteUtil {
     }
 
     public static class TeeOutputStream extends OutputStream {
-        OutputStream stream1, stream2;
+        private OutputStream stream1, stream2;
 
         public TeeOutputStream(OutputStream one, OutputStream two) {
             if (one == two)
@@ -645,6 +646,81 @@ public class ByteUtil {
         @Override public void write(byte b[], int off, int len) throws IOException {
             if (stream1 != null)  stream1.write(b, off, len);
             if (stream2 != null)  stream2.write(b, off, len);
+        }
+    }
+
+    public static class PositionInputStream extends FilterInputStream {
+        private long position = 0, mark = 0;
+
+        public PositionInputStream(InputStream is) {
+            super(is);
+        }
+
+        @Override public int read() throws IOException {
+            int c = super.read();
+            if (c != -1)
+                position++;
+            return c;
+        }
+
+        @Override public int read(byte[] b, int off, int len) throws IOException {
+            int count = super.read(b, off, len);
+            position += count;
+            return count;
+        }
+
+        @Override public synchronized void mark(int readlimit) {
+            super.mark(readlimit);
+            mark = position;
+        }
+
+        @Override public synchronized void reset() throws IOException {
+            super.reset();
+            position = mark;
+        }
+
+        @Override public long skip(long n) throws IOException {
+            long delta = super.skip(n);
+            position += delta;
+            return delta;
+        }
+
+        public long getPosition() {
+            return position;
+        }
+    }
+
+    public static class SegmentInputStream extends PositionInputStream {
+        private final long mLimit;
+
+        public static SegmentInputStream create(InputStream is, long start, long end) throws IOException {
+            if (start != 0)
+                is.skip(start);
+            return new SegmentInputStream(is, Math.max(0L, end - start));
+        }
+
+        public SegmentInputStream(InputStream is, long limit) {
+            super(is);  mLimit = limit;
+        }
+
+        private long actualAvailable() {
+            return mLimit - getPosition();
+        }
+
+        @Override public int available() {
+            return (int) Math.min(actualAvailable(), Integer.MAX_VALUE);
+        }
+
+        @Override public int read() throws IOException {
+            return available() <= 0 ? -1 : super.read();
+        }
+
+        @Override public int read(byte[] b, int off, int len) throws IOException {
+            return available() <= 0 ? -1 : super.read(b, off, Math.min(len, available()));
+        }
+
+        @Override public long skip(long n) throws IOException {
+            return super.skip(Math.max(Math.min(n, actualAvailable()), 0L));
         }
     }
 }
