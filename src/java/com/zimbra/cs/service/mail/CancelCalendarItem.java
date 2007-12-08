@@ -124,7 +124,7 @@ public class CancelCalendarItem extends CalendarRequest {
 
         Invite cancelInvite = CalendarUtils.buildCancelInstanceCalendar(acct, authAcct, onBehalfOf, defaultInv, text, recurId);
         CalSendData dat = new CalSendData();
-        dat.mOrigId = defaultInv.getMailItemId();
+        dat.mOrigId = new ItemId(mbox, defaultInv.getMailItemId());
         dat.mReplyType = MailSender.MSGTYPE_REPLY;
         dat.mInvite = cancelInvite;
 
@@ -178,7 +178,7 @@ public class CancelCalendarItem extends CalendarRequest {
             sLog.debug("Sending cancellation message for \"" + inv.getName() + "\" for " + inv.toString());
         
         CalSendData csd = new CalSendData();
-        csd.mOrigId = inv.getMailItemId();
+        csd.mOrigId = new ItemId(mbox, inv.getMailItemId());
         csd.mReplyType = MailSender.MSGTYPE_REPLY;
         csd.mInvite = CalendarUtils.buildCancelInviteCalendar(acct, authAcct, onBehalfOf, inv, text);
         

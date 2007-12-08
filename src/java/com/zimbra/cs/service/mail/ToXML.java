@@ -699,8 +699,8 @@ public class ToXML {
                 m.addAttribute(MailConstants.E_MSG_ID_HDR, StringUtil.stripControlCharacters(messageID), Element.Disposition.CONTENT);
 
             if (wholeMessage && msg.isDraft()) {
-                if (msg.getDraftOrigId() > 0)
-                    m.addAttribute(MailConstants.A_ORIG_ID, ifmt.formatItemId(msg.getDraftOrigId()));
+                if (!msg.getDraftOrigId().equals(""))
+                    m.addAttribute(MailConstants.A_ORIG_ID, ifmt.formatItemId(new ItemId(msg.getDraftOrigId(), msg.getMailbox().getAccountId())));
                 if (!msg.getDraftReplyType().equals(""))
                     m.addAttribute(MailConstants.A_REPLY_TYPE, msg.getDraftReplyType());
                 if (!msg.getDraftIdentityId().equals(""))

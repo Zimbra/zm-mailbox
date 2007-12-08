@@ -56,16 +56,16 @@ public class Message extends MailItem {
     static class DraftInfo {
         String identityId;
         String replyType;
-        int    origId = -1;
+        String origId;
 
         public DraftInfo()  { }
-        public DraftInfo(String ident)                     { identityId = ident; }
-        public DraftInfo(String rt, int id)                { replyType = rt;  origId = id; }
-        public DraftInfo(String rt, int id, String ident)  { replyType = rt;  origId = id;  identityId = ident; }
-        public DraftInfo(Metadata meta) throws ServiceException {
+        public DraftInfo(String ident)                        { identityId = ident; }
+        public DraftInfo(String rt, String id)                { replyType = rt;  origId = id; }
+        public DraftInfo(String rt, String id, String ident)  { replyType = rt;  origId = id;  identityId = ident; }
+        public DraftInfo(Metadata meta) {
             identityId = meta.get(Metadata.FN_IDENTITY_ID, null);
             replyType = meta.get(Metadata.FN_REPLY_TYPE, null);
-            origId = (int) meta.getLong(Metadata.FN_REPLY_ORIG, -1);
+            origId = meta.get(Metadata.FN_REPLY_ORIG, null);
         }
     }
 
@@ -201,8 +201,8 @@ public class Message extends MailItem {
      * @return The ID of the Message that this draft message is in reply to,
      *         or -1 for Messages that are not drafts or not replies/forwards.
      * @see #getDraftReplyType */
-    public int getDraftOrigId() {
-        return (mDraftInfo == null ? -1 : mDraftInfo.origId);
+    public String getDraftOrigId() {
+        return (mDraftInfo == null || mDraftInfo.origId == null ? "" : mDraftInfo.origId);
     }
 
     /** Returns the "reply type" for a draft message.

@@ -562,9 +562,8 @@ public class CalendarMailSender {
         MimeMessage mm = createDefaultReply(acct, authAcct, onBehalfOf, calItem, inv, mmInv,
                                             replySubject, verb, additionalMsgBody, iCal);
 
-        ItemId replyMsgId = mbox.getMailSender().sendMimeMessage(octxt, mbox, saveToSent, mm, null, null,
-                                                              inv.getMailItemId(), replyType, null, false, true);
-        return replyMsgId;
+        return mbox.getMailSender().sendMimeMessage(octxt, mbox, saveToSent, mm, null, null,
+                                                    new ItemId(mbox, inv.getMailItemId()), replyType, null, false, true);
     }
 
     private static class HtmlPartDataSource implements DataSource {

@@ -51,13 +51,13 @@ public class SaveDraft extends MailDocumentHandler {
     private static final String[] TARGET_DRAFT_PATH = new String[] { MailConstants.E_MSG, MailConstants.A_ID };
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.E_MSG, MailConstants.A_FOLDER };
     private static final String[] RESPONSE_ITEM_PATH = new String[] { };
-    protected String[] getProxiedIdPath(Element request) {
+    @Override protected String[] getProxiedIdPath(Element request) {
         return getXPath(request, TARGET_DRAFT_PATH) != null ? TARGET_DRAFT_PATH : TARGET_FOLDER_PATH;
     }
-    protected boolean checkMountpointProxy(Element request) {
+    @Override protected boolean checkMountpointProxy(Element request) {
         return getXPath(request, TARGET_DRAFT_PATH) == null;
     }
-    protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
+    @Override protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -68,7 +68,8 @@ public class SaveDraft extends MailDocumentHandler {
         Element msgElem = request.getElement(MailConstants.E_MSG);
 
         int id = (int) msgElem.getAttributeLong(MailConstants.A_ID, Mailbox.ID_AUTO_INCREMENT);
-        int origId = (int) msgElem.getAttributeLong(MailConstants.A_ORIG_ID, 0);
+        String origId = msgElem.getAttribute(MailConstants.A_ORIG_ID, null);
+        ItemId iidOrigid = origId == null ? null : new ItemId(origId, zsc);
         String replyType = msgElem.getAttribute(MailConstants.A_REPLY_TYPE, null);
         String identity = msgElem.getAttribute(MailConstants.A_IDENTITY_ID, null);
 
@@ -110,7 +111,7 @@ public class SaveDraft extends MailDocumentHandler {
 
         Message msg;
         try {
-            msg = mbox.saveDraft(octxt, pm, id, origId, replyType, identity);
+            msg = mbox.saveDraft(octxt, pm, id, iidOrigid.toString(mbox.getAccountId()), replyType, identity);
         } catch (IOException e) {
             throw ServiceException.FAILURE("IOException while saving draft", e);
         }
