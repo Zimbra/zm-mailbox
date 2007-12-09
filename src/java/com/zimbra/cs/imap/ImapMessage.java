@@ -149,7 +149,7 @@ public class ImapMessage implements Comparable<ImapMessage> {
         } else if (item instanceof Contact) {
             try {
                 VCard vcard = VCard.formatContact((Contact) item);
-                QCodec qcodec = new QCodec();
+                QCodec qcodec = new QCodec();  qcodec.setEncodeBlanks(true);
                 StringBuilder header = new StringBuilder();
                 header.append("Subject: ").append(qcodec.encode(vcard.fn, Mime.P_CHARSET_UTF8)).append(ImapHandler.LINE_SEPARATOR);
                 synchronized (GMT_DATE_FORMAT) {
