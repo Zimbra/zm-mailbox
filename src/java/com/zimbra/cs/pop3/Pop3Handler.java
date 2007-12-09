@@ -505,6 +505,10 @@ public abstract class Pop3Handler extends ProtocolHandler {
             sendERR("command only valid in AUTHORIZATION state");
             return;
         }
+        if (arg == null || arg.length() == 0) {
+            sendERR("mechanism not specified");
+            return;
+        }
         int i = arg.indexOf(' ');
         String mechanism = i > 0 ? arg.substring(0, i) : arg;
         String initialResponse = i > 0 ? arg.substring(i + 1) : null;
