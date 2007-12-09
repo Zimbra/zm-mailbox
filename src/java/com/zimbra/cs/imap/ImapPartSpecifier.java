@@ -83,7 +83,10 @@ class ImapPartSpecifier {
         return response.toString();
     }
 
-    String getSectionSpec()  { return getSectionPart(null); }
+    String getSectionSpec() {
+        return getSectionPart(null);
+    }
+
     private String getSectionPart(StringBuilder sb) {
         if (sb == null)
             sb = new StringBuilder();
@@ -98,22 +101,34 @@ class ImapPartSpecifier {
         return sb.toString();
     }
 
-    void write(PrintStream ps, OutputStream os, MimeMessage mm) throws IOException, BinaryDecodingException {
-        write(ps, os, getContent(mm));
-    }
-
-    void writeMessage(PrintStream ps, OutputStream os, byte[] msg) throws IOException, ServiceException {
+    void writeMessage(PrintStream ps, OutputStream os, InputStream is, long length) throws IOException, ServiceException {
         if (!isEntireMessage())
             throw ServiceException.FAILURE("called writeMessage on non-toplevel part", null);
 
-        byte[] content = msg;
-        if (mOctetStart >= 0) {
-            int length = Math.max(0, Math.min(msg.length, mOctetEnd) - mOctetStart);
-            content = new byte[length];
-            if (length > 0)
-                System.arraycopy(msg, mOctetStart, content, 0, length);
+        if (mOctetStart >= 0)
+            length = Math.max(0, Math.min(length, mOctetEnd) - mOctetStart);
+        write(ps, os, ByteUtil.SegmentInputStream.create(is, mOctetStart, mOctetStart + length), length);
+    }
+
+    private void write(PrintStream ps, OutputStream os, InputStream is, long length) throws IOException {
+        ps.print(this);  ps.write(' ');
+
+        if (is == null) {
+            ps.print("NIL");
+        } else if (mCommand.equals("BINARY.SIZE")) {
+            ps.print(length);
+        } else {
+            // FIXME: need to check for NUL bytes in message content
+            // boolean binary = mCommand.startsWith("BINARY") && hasNULs(content);
+            ps.print("{");  ps.print(length);  ps.write('}');
+            if (os != null) {
+                os.write(ImapHandler.LINE_SEPARATOR_BYTES);  ByteUtil.copy(is, false, os, false);
+            }
         }
-        write(ps, os, content);
+    }
+
+    void write(PrintStream ps, OutputStream os, MimeMessage mm) throws IOException, BinaryDecodingException {
+        write(ps, os, getContent(mm));
     }
 
     private void write(PrintStream ps, OutputStream os, byte[] content) throws IOException {

@@ -18,6 +18,7 @@ package com.zimbra.cs.imap;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -41,6 +42,8 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 
 class ImapURL {
@@ -222,16 +225,18 @@ class ImapURL {
                     if (i4msg == null || i4msg.isExpunged())
                         throw new ImapUrlException(tag, mURL, "no such message");
                     MailItem item = i4folder.getMailbox().getItemById(octxt, i4msg.msgId, i4msg.getType());
-                    content = ImapMessage.getContent(item);
+                    Pair<Long, InputStream> stream = ImapMessage.getContent(item);
+                    content = ByteUtil.getContent(stream.getSecond(), (int) Math.min(stream.getFirst(), Integer.MAX_VALUE));
                 }
             }
             // if not, have to fetch by IMAP UID if we're local
             if (content == null && mPath.onLocalServer()) {
                 Mailbox mbox = (Mailbox) mPath.getOwnerMailbox();
                 MailItem item = mbox.getItemByImapId(octxt, mUid, mPath.asItemId().getId());
-                if (item.getType() != MailItem.TYPE_MESSAGE && item.getType() != MailItem.TYPE_CONTACT)
+                if (!ImapMessage.SUPPORTED_TYPES.contains(item.getType()))
                     throw new ImapUrlException(tag, mURL, "no such message");
-                content = ImapMessage.getContent(item);
+                Pair<Long, InputStream> stream = ImapMessage.getContent(item);
+                content = ByteUtil.getContent(stream.getSecond(), (int) Math.min(stream.getFirst(), Integer.MAX_VALUE));
             }
             // last option: handle off-server URLs
             if (content == null) {
@@ -255,20 +260,18 @@ class ImapURL {
 
         } catch (AuthTokenException e) {
             ZimbraLog.imap.info("auth token error", e);
-            throw new ImapUrlException(tag, mURL, "error fetching IMAP URL content");
         } catch (NoSuchItemException e) {
             ZimbraLog.imap.info("no such message", e);
-            throw new ImapUrlException(tag, mURL, "error fetching IMAP URL content");
         } catch (ServiceException e) {
             ZimbraLog.imap.info("can't fetch content from IMAP URL", e);
-            throw new ImapUrlException(tag, mURL, "error fetching IMAP URL content");
         } catch (MessagingException e) {
             ZimbraLog.imap.info("can't fetch content from IMAP URL", e);
-            throw new ImapUrlException(tag, mURL, "error fetching IMAP URL content");
+        } catch (IOException e) {
+            ZimbraLog.imap.info("error reading content from IMAP URL", e);
         } catch (BinaryDecodingException e) {
             ZimbraLog.imap.info("can't fetch content from IMAP URL", e);
-            throw new ImapUrlException(tag, mURL, "error fetching IMAP URL content");
         }
+        throw new ImapUrlException(tag, mURL, "error fetching IMAP URL content");
     }
 
     public String toString() {

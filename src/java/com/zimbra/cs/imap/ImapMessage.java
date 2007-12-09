@@ -26,17 +26,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.TreeSet;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MailDateFormat;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
@@ -51,6 +54,7 @@ import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeCompoundHeader;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.Pair;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Flag;
@@ -110,7 +114,7 @@ public class ImapMessage implements Comparable<ImapMessage> {
         if (item instanceof Message)
             return item.getSize();
         // FIXME: need to generate the representation of the item to do this correctly...
-        return getContent(item).length;
+        return getContent(item).getFirst();
     }
 
     boolean isExpunged()  { return (sflags & FLAG_EXPUNGED) != 0; }
@@ -134,18 +138,23 @@ public class ImapMessage implements Comparable<ImapMessage> {
     }
 
 
+    private static final DateFormat GMT_DATE_FORMAT = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z (z)", Locale.US);
+        static { GMT_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT")); }
+
     private static final byte[] EMPTY_CONTENT = new byte[0];
 
-    static byte[] getContent(MailItem item) throws ServiceException {
+    static Pair<Long, InputStream> getContent(MailItem item) throws ServiceException {
         if (item instanceof Message) {
-            return ((Message) item).getContent();
+            return new Pair<Long, InputStream>(item.getSize(), item.getContentStream());
         } else if (item instanceof Contact) {
             try {
                 VCard vcard = VCard.formatContact((Contact) item);
                 QCodec qcodec = new QCodec();
                 StringBuilder header = new StringBuilder();
                 header.append("Subject: ").append(qcodec.encode(vcard.fn, Mime.P_CHARSET_UTF8)).append(ImapHandler.LINE_SEPARATOR);
-                header.append("Date: ").append(new MailDateFormat().format(new Date(item.getDate()))).append(ImapHandler.LINE_SEPARATOR);
+                synchronized (GMT_DATE_FORMAT) {
+                    header.append("Date: ").append(GMT_DATE_FORMAT.format(new Date(item.getDate()))).append(ImapHandler.LINE_SEPARATOR);
+                }
                 header.append("Content-Type: text/x-vcard; charset=\"utf-8\"").append(ImapHandler.LINE_SEPARATOR);
                 header.append("Content-Transfer-Encoding: 8bit").append(ImapHandler.LINE_SEPARATOR);
 
@@ -153,24 +162,22 @@ public class ImapMessage implements Comparable<ImapMessage> {
                 baos.write(header.toString().getBytes(Mime.P_CHARSET_ASCII));
                 baos.write(ImapHandler.LINE_SEPARATOR_BYTES);
                 baos.write(vcard.formatted.getBytes(Mime.P_CHARSET_UTF8));
-                return baos.toByteArray();
+                return new Pair<Long, InputStream>((long) baos.size(), new ByteArrayInputStream(baos.toByteArray()));
             } catch (Exception e) {
                 throw ServiceException.FAILURE("problems serializing contact " + item.getId(), e);
             }
         } else {
-            return EMPTY_CONTENT;
+            return new Pair<Long, InputStream>(0L, new ByteArrayInputStream(EMPTY_CONTENT));
         }
     }
 
-    static MimeMessage getMimeMessage(MailItem item, byte[] raw) throws ServiceException {
+    static MimeMessage getMimeMessage(MailItem item) throws ServiceException {
         if (item instanceof Message)
             return ((Message) item).getMimeMessage(false);
 
-        InputStream is = null;
+        InputStream is = getContent(item).getSecond();
         try {
-            is = raw != null ? new ByteArrayInputStream(raw) : new ByteArrayInputStream(getContent(item));
-            MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), is);
-            return mm;
+            return new Mime.FixedMimeMessage(JMSession.getSession(), is);
         } catch (MessagingException e) {
             throw ServiceException.FAILURE("error creating MimeMessage for " + MailItem.getNameForType(item.getType()) + ' ' + item.getId(), e);
         } finally {
