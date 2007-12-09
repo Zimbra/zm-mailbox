@@ -21,7 +21,6 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
@@ -335,15 +334,12 @@ public abstract class MimePart {
                 start = Math.max(0, Math.min(start, fileLength));
                 end = end < 0 ? mBodyContent.length : Math.max(start, Math.min(end, fileLength));
                 FileInputStream fis = new FileInputStream(mBodyFile);
-                if (start != 0) {
-                    try {
-                        fis.skip(start);
-                    } catch (IOException ioe) {
-                        ByteUtil.closeStream(fis);
-                        throw ioe;
-                    }
+                try {
+                    return start == 0 && end == fileLength ? fis : ByteUtil.SegmentInputStream.create(fis, start, end);
+                } catch (IOException ioe) {
+                    ByteUtil.closeStream(fis);
+                    throw ioe;
                 }
-                return end == fileLength ? fis : new FileSegmentInputStream(fis, end - start);
             } else {
                 return null;
             }
@@ -444,72 +440,7 @@ public abstract class MimePart {
         }
     }
 
-    private static class PositionInputStream extends FilterInputStream {
-        private long position = 0, mark = 0;
-
-        PositionInputStream(InputStream is) {
-            super(is);
-        }
-
-        @Override public int read() throws IOException {
-            int c = super.read();
-            if (c != -1)
-                position++;
-            return c;
-        }
-
-        @Override public int read(byte[] b, int off, int len) throws IOException {
-            int count = super.read(b, off, len);
-            position += count;
-            return count;
-        }
-
-        @Override public synchronized void mark(int readlimit) {
-            super.mark(readlimit);
-            mark = position;
-        }
-
-        @Override public synchronized void reset() throws IOException {
-            super.reset();
-            position = mark;
-        }
-
-        @Override public long skip(long n) throws IOException {
-            long delta = super.skip(n);
-            position += delta;
-            return delta;
-        }
-
-        long getPosition() {
-            return position;
-        }
-    }
-
-    private static class FileSegmentInputStream extends PositionInputStream {
-        private final long mLimit;
-
-        FileSegmentInputStream(FileInputStream fis, long limit) {
-            super(fis);  mLimit = limit;
-        }
-
-        @Override public int available() {
-            return (int) Math.min(mLimit - getPosition(), Integer.MAX_VALUE);
-        }
-
-        @Override public int read() throws IOException {
-            return available() <= 0 ? -1 : super.read();
-        }
-
-        @Override public int read(byte[] b, int off, int len) throws IOException {
-            return available() <= 0 ? -1 : super.read(b, off, Math.min(len, available()));
-        }
-
-        @Override public long skip(long n) throws IOException {
-            return super.skip(Math.max(0, Math.min(n, available())));
-        }
-    }
-
-    static class PeekAheadInputStream extends PositionInputStream {
+    static class PeekAheadInputStream extends ByteUtil.PositionInputStream {
         PeekAheadInputStream(BufferedInputStream bis)    { super(bis); }
         PeekAheadInputStream(ByteArrayInputStream bais)  { super(bais); }
         PeekAheadInputStream(InputStream is)             { super(new BufferedInputStream(is, 8192)); }
