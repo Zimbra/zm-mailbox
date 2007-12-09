@@ -75,6 +75,7 @@ import javax.mail.internet.MimeMessage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.URLEncoder;
@@ -2899,7 +2900,6 @@ public abstract class ImapHandler extends ProtocolHandler {
         	try {
                 boolean markMessage = markRead && (i4msg.flags & Flag.BITMASK_UNREAD) != 0;
                 boolean empty = true;
-                byte[] raw = null;
                 MailItem item = null;
                 MimeMessage mm = null;
 
@@ -2924,14 +2924,18 @@ public abstract class ImapHandler extends ProtocolHandler {
 
                 if (!fullMessage.isEmpty()) {
                     // FIXME: fetching the entire body into memory even for a partial fetch
-                    raw = ImapMessage.getContent(item);
                     for (ImapPartSpecifier pspec : fullMessage) {
-                        result.print(empty ? "" : " ");  pspec.writeMessage(result, os, raw);  empty = false;
+                        Pair<Long, InputStream> contents = ImapMessage.getContent(item);
+                        try {
+                            result.print(empty ? "" : " ");  pspec.writeMessage(result, os, contents.getSecond(), contents.getFirst());  empty = false;
+                        } finally {
+                            ByteUtil.closeStream(contents.getSecond());
+                        }
                     }
                 }
 
                 if ((parts != null && !parts.isEmpty()) || (attributes & FETCH_FROM_MIME) != 0) {
-                    mm = ImapMessage.getMimeMessage(item, raw);
+                    mm = ImapMessage.getMimeMessage(item);
                     if ((attributes & FETCH_BODY) != 0) {
                         result.print(empty ? "" : " ");  result.print("BODY ");
                         i4msg.serializeStructure(result, mm, false);  empty = false;
