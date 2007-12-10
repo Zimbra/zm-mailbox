@@ -2958,9 +2958,6 @@ public class Mailbox {
                     calItem.processNewInvite(sad.mPm, sad.mInv, sad.mForce, folderId, volumeId);
             }
             
-            if (calItem != null)
-                queueForIndexing(calItem, !calItemIsNew, null);
-
             success = true;
             return calItem.getId();
         } finally {

@@ -1774,6 +1774,9 @@ public final class MailboxIndex
         switch (itemType) {
             case MailItem.TYPE_APPOINTMENT:
             case MailItem.TYPE_TASK:
+                // Calendar item indexing is not implemented in 4.5.x.  Just commit the redo op
+                // to avoid IndexItem ops piling up in the redo log.
+                redo.commit();
                 break;
             case MailItem.TYPE_DOCUMENT:
             case MailItem.TYPE_WIKI:
