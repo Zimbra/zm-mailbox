@@ -94,6 +94,7 @@ public class ZRecur {
      */
     private static final int MAXIMUM_INSTANCES_RETURNED = 366;
     private static final int MAXIMUM_INSTANCES_EXPANDED = 1200;
+    private static final int MAXIMUM_TIME_RANGE_YEARS = 30;
     
     public static String listAsStr(List<? extends Object> l) {
         StringBuffer toRet = new StringBuffer();
@@ -520,6 +521,13 @@ public class ZRecur {
                 rangeEndDate = until;
         }
 
+        // Check hard limit of expansion time range.  (bug 21989)
+        GregorianCalendar hardEnd = dtStart.getCalendarCopy();
+        hardEnd.add(Calendar.YEAR, MAXIMUM_TIME_RANGE_YEARS);
+        Date hardEndDate = hardEnd.getTime();
+        if (hardEndDate.before(rangeEndDate))
+            rangeEndDate = hardEndDate;
+        
         if (rangeEndDate.before(earliestDate))
             return toRet;
 
