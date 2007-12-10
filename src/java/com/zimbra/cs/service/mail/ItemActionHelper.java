@@ -223,7 +223,7 @@ public class ItemActionHelper {
         if (mOperation == Op.COLOR || mOperation == Op.UPDATE)
             toRet.append(" Color=").append(mColor);
 
-        if (mOperation == Op.MOVE || mOperation == Op.UPDATE || mOperation == Op.COPY || mOperation == Op.RENAME || mOperation == Op.SPAM) 
+        if (mOperation == Op.MOVE || mOperation == Op.SPAM || mOperation == Op.COPY || mOperation == Op.RENAME || mOperation == Op.UPDATE) 
             toRet.append(" iidFolder=").append(mIidFolder);
 
         if (mOperation == Op.UPDATE) {
@@ -248,7 +248,7 @@ public class ItemActionHelper {
         mName = name; 
     }
     public void setIidFolder(ItemId iidFolder)  { 
-        assert(mOperation == Op.MOVE || mOperation == Op.COPY || mOperation == Op.RENAME || mOperation == Op.UPDATE);
+        assert(mOperation == Op.MOVE || mOperation == Op.SPAM || mOperation == Op.COPY || mOperation == Op.RENAME || mOperation == Op.UPDATE);
         mIidFolder = iidFolder; 
     }
     public void setFlags(String flags) {
