@@ -34,6 +34,7 @@ import com.zimbra.common.util.FileUtil;
 import junit.framework.TestCase;
 
 public class TestFileUtil extends TestCase {
+    private File TEST_DIR;
 
     private File genFile(String path, int numBytes) throws Exception {
         File file = new File(path);
@@ -78,19 +79,36 @@ public class TestFileUtil extends TestCase {
             return false;
     }
 
+    protected void setUp() throws Exception {
+        String tempdir = System.getProperty("java.io.tmpdir");
+        TEST_DIR = new File(tempdir + "/" + "testFileUtil");
+        FileUtil.ensureDirExists(TEST_DIR);
+    }
+    
+    protected void tearDown() throws Exception {
+        FileUtil.deleteDir(TEST_DIR);
+    }
+    
+    private File newFile(String fileName) {
+        return new File(newFileName(fileName));
+    }
+    
+    private String newFileName(String fileName) {
+        return TEST_DIR.getAbsolutePath() + "/" + fileName;
+    }
     
     public void testCompress() throws Exception {
-        File orig = genFile("/tmp/junk.txt", 1024);
+        File orig = genFile(newFileName("junk.txt"), 1024);
         // printFile(orig);
         
         // compress it
-        File compressed = new File("/tmp/junk.compressed");
+        File compressed = newFile("junk.compressed");
         FileUtil.compress(orig, compressed, true);
         byte[] compressedBytes = ByteUtil.getContent(compressed);
         assertTrue(isGzip(compressed));
         
         // uncompress it
-        File uncompressed = new File("/tmp/junk.uncompressed");
+        File uncompressed = newFile("junk.uncompressed");
         FileUtil.uncompress(compressed, uncompressed, true);
         
         // uncompressed file shpuld be identical to the original file
@@ -98,4 +116,6 @@ public class TestFileUtil extends TestCase {
         byte[] uncompressedBytes = ByteUtil.getContent(uncompressed);
         assertTrue(Arrays.equals(origBytes, uncompressedBytes));
     }
+    
+    
 }
