@@ -44,8 +44,8 @@ public class ProxyPurgeUtil
         int                 numServers;
         boolean             purge = false;
         Provisioning        prov;
-        List                proxyServers;
-        final String        proxyService = "imapproxy";
+        List                memcachedServers;
+        final String        memcachedService = "memcached";
         final String        memcachedPort = "11211";
         String              logLevel = "INFO";
 
@@ -64,21 +64,23 @@ public class ProxyPurgeUtil
             System.exit (1);
         }
 
-        /* Initialize the logging system and the zimbra environment 
-           Also opportunistically discover memcached servers
-           It is useful to assume that all servers running imapproxy are also running memcached
-         */
+        /* Initialize the logging system and the zimbra environment */
         prov = Provisioning.getInstance();
-        proxyServers = prov.getAllServers(proxyService);
+
+        /* Get the list of servers running the memcached service
+           this is equivalent to the $(zmprov gamcs) command
+         */
+        memcachedServers = prov.getAllServers(memcachedService);
         servers = new ArrayList <String> ();
 
         if (commandLine.hasOption("v")) { logLevel = "DEBUG"; }
         ZimbraLog.toolSetupLog4j (logLevel, null, false);
 
-        for (Iterator it=proxyServers.iterator(); it.hasNext();) {
+        for (Iterator it=memcachedServers.iterator(); it.hasNext();) {
             Server s = (Server) it.next();
-            String serverName = s.getAttr ("cn");
-            servers.add (serverName + ":" + memcachedPort);
+            String serverName = s.getAttr (Provisioning.A_zimbraServiceHostname, "localhost");
+            String servicePort = s.getAttr (Provisioning.A_zimbraMemcachedBindPort, memcachedPort);
+            servers.add (serverName + ":" + servicePort);
         }
 
         accounts = getAccounts (commandLine);
@@ -258,7 +260,7 @@ public class ProxyPurgeUtil
     {
         System.err.println (" ");
         System.err.println (" Purges POP/IMAP routing information from one or more memcached servers");
-        System.err.println (" It is assumed that all servers running the imapproxy service are also running memcached on port 11211");
+        System.err.println (" Available Memcached servers are discovered by the 'zmprov gamcs' function, others can be specified");
         System.err.println (" If necessary, please specify additional memcached servers in the form of server:port at the end of the command line");
         System.err.println (" ");
         System.err.println (" Usage: ProxyPurgeUtil [-v] [-i] -a account [-L accountlist] [cache1 [cache2 ... ]]");
