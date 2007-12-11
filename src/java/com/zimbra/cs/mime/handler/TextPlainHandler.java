@@ -22,15 +22,18 @@
 package com.zimbra.cs.mime.handler;
 
 import java.io.IOException;
+import java.io.Reader;
 
 import javax.activation.DataSource;
 
 import org.apache.lucene.document.Document;
 
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.convert.AttachmentInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeHandler;
 import com.zimbra.cs.mime.MimeHandlerException;
+import com.zimbra.cs.mime.MimeHandlerManager;
 
 /**
  * @author schemers
@@ -54,8 +57,8 @@ public class TextPlainHandler extends MimeHandler {
             DataSource source = getDataSource();
             String ctype = source.getContentType();
             try {
-                // decodeText always closes the input stream
-                mContent = Mime.decodeText(source.getInputStream(), ctype, null);
+                Reader reader = Mime.getTextReader(source.getInputStream(), ctype, null);
+                mContent = ByteUtil.getContent(reader, MimeHandlerManager.getIndexedTextLimit(), true);
             } catch (IOException e) {
                 throw new MimeHandlerException(e);
             }

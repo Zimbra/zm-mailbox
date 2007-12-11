@@ -19,6 +19,7 @@ package com.zimbra.qa.unittest;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,9 +33,13 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.lmtpserver.LmtpMessageInputStream;
 import com.zimbra.cs.lmtpserver.ZimbraLmtpBackend;
 import com.zimbra.cs.lmtpserver.utils.LmtpClient;
+import com.zimbra.cs.mime.handler.MessageRFC822Handler;
+import com.zimbra.cs.zclient.ZEmailAddress;
 import com.zimbra.cs.zclient.ZGetMessageParams;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMessage;
+import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage;
+import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.MessagePart;
 
 public class TestLmtp
 extends TestCase {
@@ -277,6 +282,47 @@ extends TestCase {
             // Check contains instead of equality, since we prepend Received and Return-Path during LMTP.
             assertTrue("Unexpected message: " + msg.getContent(), msg.getContent().contains(messageString));
         }
+    }
+    
+    /**
+     * Sends a message with another message attached and confirms that the subject
+     * of the attached message is indexed.
+     * @see MessageRFC822Handler
+     */
+    public void testAttachedMessage()
+    throws Exception {
+        String outerSubject = NAME_PREFIX + " testAttachedMessage outer";
+        String innerSubject = NAME_PREFIX + " testAttachedMessage inner";
+        
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        
+        // Assemble outer message
+        ZOutgoingMessage msg = new ZOutgoingMessage();
+        List<ZEmailAddress> addresses = new ArrayList<ZEmailAddress>();
+        addresses.add(new ZEmailAddress(TestUtil.getAddress(USER_NAME),
+            null, null, ZEmailAddress.EMAIL_TYPE_TO));
+        msg.setAddresses(addresses);
+        msg.setSubject(outerSubject);
+
+        // Assemble body and inner message
+        String attachedMessageString = TestUtil.getTestMessage(innerSubject, USER_NAME, USER_NAME, null);
+        MessagePart attachedMessage = new MessagePart("message/rfc822", attachedMessageString);
+        MessagePart body = new MessagePart("text/plain", "This is the outer message");
+        msg.setMessagePart(new MessagePart("multipart/mixed", body, attachedMessage));
+        
+        // Send and wait for it to arrive
+        mbox.sendMessage(msg, null, false);
+        TestUtil.waitForMessage(mbox, "in:inbox " + outerSubject);
+        
+        // Test search for inner message subject
+        List<ZMessage> msgs = TestUtil.search(mbox, "in:inbox " + innerSubject);
+        assertEquals(1, msgs.size());
+        msgs = TestUtil.search(mbox, "in:sent " + innerSubject);
+        assertEquals(1, msgs.size());
+        
+        // Test search for inner message body
+        msgs = TestUtil.search(mbox, NAME_PREFIX + " waves");
+        assertEquals(1, msgs.size()); 
     }
     
     public void tearDown()

@@ -172,6 +172,10 @@ public abstract class MimeHandler {
     private boolean mDrainedContent = false;
     private static byte[] sDrainBuffer = new byte[4096];
 
+    /**
+     * Returns the content for this MIME part.  Length of content returned
+     * cannot exceed the value returned by {@link MimeHandlerManager#getMaxContentLength}.
+     */
     protected abstract String getContentImpl() throws MimeHandlerException;
 
     @SuppressWarnings("unused")

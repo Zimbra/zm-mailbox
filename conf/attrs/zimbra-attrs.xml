@@ -2760,5 +2760,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>interface address(es) on which memcached server</desc>
 </attr>
 
-</attrs>
+<attr id="582" name="zimbraAttachmentsIndexedTextLimit" type="integer" cardinality="single" min="0" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>1048576</globalConfigValue>
+  <desc>Maximum number of characters that will be indexed for a given MIME part.</desc>
+</attr>
 
+</attrs>

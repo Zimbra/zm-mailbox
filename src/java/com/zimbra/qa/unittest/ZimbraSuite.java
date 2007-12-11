@@ -80,6 +80,7 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestBlobInputStream.class);
         sClasses.add(TestRedoLog.class);
         sClasses.add(TestFileUtil.class);
+        sClasses.add(TestIndex.class);
     };
     
     /**
