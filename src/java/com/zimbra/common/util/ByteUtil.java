@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PipedInputStream;
+import java.io.Reader;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.zip.GZIPInputStream;
@@ -154,6 +155,49 @@ public class ByteUtil {
         }
     }
 
+    /**
+     * Reads a <tt>String</tt> from the given <tt>Reader</tt>.  Reads
+     * until the either end of the stream is hit or until <tt>length</tt> characters
+     * are read.
+     * @return the content or an empty <tt>String</tt> if no content is available
+     */
+    public static String getContent(Reader reader, int length, boolean close)
+    throws IOException {
+        if (reader == null || length == 0) {
+            return "";
+        }
+        if (length < 0) {
+            length = Integer.MAX_VALUE;
+        }
+        char[] buf = new char[Math.min(1024, length)];
+        int totalRead = 0;
+        StringBuilder retVal = new StringBuilder(buf.length);
+        
+        try {
+            while (true) {
+                int numToRead = Math.min(buf.length, length - totalRead);
+                if (numToRead <= 0) {
+                    break;
+                }
+                int numRead = reader.read(buf);
+                if (numRead < 0) {
+                    break;
+                }
+                retVal.append(buf, 0, numRead);
+                totalRead += numRead;
+            }
+            return retVal.toString();
+        } finally {
+            if (close) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    ZimbraLog.misc.warn("Unable to close Reader", e);
+                }
+            }
+        }
+    }
+    
     // When this method is called from SendMsg SOAP command path
     // the getDataSource().getInputStream() call descends into
     // Java Activation Framework to set up the input stream as
