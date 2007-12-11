@@ -1978,8 +1978,13 @@ public class ZMailbox {
      */
     public URI getRestURI(String relativePath) throws ServiceException {
         try {
-            URI uri = new URI(mTransport.getURI());
-            return  uri.resolve("/home/" + getName() + (relativePath.startsWith("/") ? "" : "/") + relativePath);
+            String restURI = getAccountInfo(false).getRestURLBase();
+            if (restURI == null) {
+                URI uri = new URI(mTransport.getURI());
+                return  uri.resolve("/home/" + getName() + (relativePath.startsWith("/") ? "" : "/") + relativePath);
+            } else {
+                return new URI(restURI + "/" + relativePath);
+            }
         } catch (URISyntaxException e) {
             throw ZClientException.CLIENT_ERROR("unable to parse URI: "+mTransport.getURI(), e);
         }

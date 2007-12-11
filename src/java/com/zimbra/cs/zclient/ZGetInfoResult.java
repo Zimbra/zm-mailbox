@@ -35,6 +35,7 @@ public class ZGetInfoResult {
     private String mVersion;
     private String mId;
     private String mName;
+    private String mRestURLBase;
     private long mLifetime;
     private long mExpiration;
     private long mMailboxQuotaUsed;
@@ -76,7 +77,10 @@ public class ZGetInfoResult {
         mPrefAttrs = getMap(e, AccountConstants.E_PREFS, AccountConstants.E_PREF);
         mPrefs = new ZPrefs(mPrefAttrs);
         mFeatures = new ZFeatures(mAttrs);
-        
+
+        Element rest = e.getOptionalElement(AccountConstants.E_REST);
+        if (rest != null) mRestURLBase = rest.getText();
+
         mMailURLs = new ArrayList<String>();
         for (Element urlEl: e.listElements(AccountConstants.E_SOAP_URL)) {
             mMailURLs.add(urlEl.getText());
@@ -182,12 +186,17 @@ public class ZGetInfoResult {
     public ZFeatures getFeatures() {
         return mFeatures; 
     }
-    
+
+    public String getRestURLBase() {
+        return mRestURLBase;
+    }
+
     public String toString() {
         ZSoapSB sb = new ZSoapSB();
         sb.beginStruct();
         sb.add("id", mId);        
         sb.add("name", mName);
+        sb.add("rest", mRestURLBase);
         sb.addDate("expiration", mExpiration);
         sb.add("lifetime", mLifetime);
         sb.add("mailboxQuotaUsed", mMailboxQuotaUsed);
