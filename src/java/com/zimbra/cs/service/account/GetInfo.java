@@ -97,7 +97,7 @@ public class GetInfo extends AccountDocumentHandler  {
         response.addAttribute(AccountConstants.E_LIFETIME, lifetime, Element.Disposition.CONTENT);
 
         if (sections.contains(Section.MBOX) && Provisioning.onLocalServer(account)) {
-            response.addAttribute(MailConstants.A_REST_URL, UserServlet.getRestUrl(account), Element.Disposition.CONTENT);
+            response.addAttribute(AccountConstants.E_REST, UserServlet.getRestUrl(account), Element.Disposition.CONTENT);
             try {
                 Mailbox mbox = getRequestedMailbox(zsc);
                 response.addAttribute(AccountConstants.E_QUOTA_USED, mbox.getSize(), Element.Disposition.CONTENT);

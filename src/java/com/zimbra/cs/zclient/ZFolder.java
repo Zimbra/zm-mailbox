@@ -56,7 +56,6 @@ public class ZFolder implements ZItem, Comparable {
     private int mMessageCount;
     private String mParentId;
     private int mContentSequence;
-    private String mRestURL;
     private String mRemoteURL;
     private String mEffectivePerms;
     private List<ZGrant> mGrants;
@@ -183,7 +182,6 @@ public class ZFolder implements ZItem, Comparable {
         mMessageCount = (int) e.getAttributeLong(MailConstants.A_NUM, 0);
         mDefaultView = View.fromString(e.getAttribute(MailConstants.A_DEFAULT_VIEW, View.conversation.name()));
         mContentSequence = (int) e.getAttributeLong(MailConstants.A_REVISION, -1);
-        mRestURL = e.getAttribute(MailConstants.A_REST_URL, null);
         mRemoteURL = e.getAttribute(MailConstants.A_URL, null);
         mEffectivePerms = e.getAttribute(MailConstants.A_RIGHTS, null);
         mSize = e.getAttributeLong(MailConstants.A_SIZE, 0);
@@ -240,7 +238,6 @@ public class ZFolder implements ZItem, Comparable {
                 mMessageCount = fevent.getMessageCount(mMessageCount);
                 mDefaultView = fevent.getDefaultView(mDefaultView);
                 mContentSequence = fevent.getContentSequence(mContentSequence);
-                mRestURL = fevent.getRestURL(mRestURL);
                 mRemoteURL = fevent.getRemoteURL(mRemoteURL);
                 mEffectivePerms = fevent.getEffectivePerm(mEffectivePerms);
                 mGrants = fevent.getGrants(mGrants);
@@ -406,15 +403,6 @@ public class ZFolder implements ZItem, Comparable {
     }
     
     /**
-     * url to the folder on rest interface for rest-enabled apps (such as wiki and notebook)
-     * 
-     * @return URL, if returned from server.
-     */
-    public String getRestURL() {
-        return mRestURL;
-    }
-    
-    /**
      * return grants or empty list if no grants
      */
     public List<ZGrant> getGrants() {
@@ -465,7 +453,6 @@ public class ZFolder implements ZItem, Comparable {
         sb.add("unreadCount", mUnreadCount);
         sb.add("messageCount", mMessageCount);
         sb.add("view", mDefaultView.name());
-        sb.add("restURL", mRestURL);
         sb.add("url", mRemoteURL);
         sb.add("effectivePermissions", mEffectivePerms);
         sb.add("grants", mGrants, false, false);
