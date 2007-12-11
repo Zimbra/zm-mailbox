@@ -18,6 +18,8 @@ package com.zimbra.cs.account.callback;
 
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
@@ -38,9 +40,30 @@ public class MailboxPurge extends AttributeCallback {
         if (!Provisioning.A_zimbraMailPurgeSleepInterval.equals(attrName)) {
             return;
         }
+        
+        Server localServer = null;
+        
+        try {
+            localServer = Provisioning.getInstance().getLocalServer();
+        } catch (ServiceException e) {
+            ZimbraLog.misc.warn("unable to get local server");
+            return;
+        }
+        
+        boolean hasMailboxService = localServer.getMultiAttrSet(Provisioning.A_zimbraServiceEnabled).contains("mailbox");
+        
+        if (!hasMailboxService)
+            return;
+        
+        if (entry instanceof Server) {
+            Server server = (Server)entry;
+            // sanity check, this should not happen because modifyServer is proxied to the the right server
+            if (server.getId() != localServer.getId())
+                return;
+        }
 
-        Server server = (Server) entry;
-        long interval = server.getTimeInterval(Provisioning.A_zimbraMailPurgeSleepInterval, 0);
+        
+        long interval = localServer.getTimeInterval(Provisioning.A_zimbraMailPurgeSleepInterval, 0);
         if (interval > 0 && !PurgeThread.isRunning()) {
             PurgeThread.startup();
         }
