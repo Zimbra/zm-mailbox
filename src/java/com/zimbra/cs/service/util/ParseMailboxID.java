@@ -270,6 +270,11 @@ public class ParseMailboxID
         return byEmailAddress(idStr, false);
     }
     
+    public static ParseMailboxID byAccountId(String idStr) throws ServiceException {
+        mLog.debug("byAccountId %s", idStr);
+        return byAccountId(idStr, false);
+    }
+    
     private static ParseMailboxID byEmailAddress(String idStr, boolean forceRemote) throws ServiceException {
         
         Account acct = Provisioning.getInstance().get(AccountBy.name, idStr);

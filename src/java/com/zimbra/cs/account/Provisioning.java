@@ -2316,4 +2316,14 @@ public abstract class Provisioning {
             throw ServiceException.INVALID_REQUEST("invalid domain name " + domain, null);
         }
     }
+    
+    public static boolean isUUID(String value) {
+        if (value.length() == 36 &&
+            value.charAt(8) == '-' &&
+            value.charAt(13) == '-' &&
+            value.charAt(18) == '-' &&
+            value.charAt(23) == '-')
+            return true;
+        return false;
+    }
 }
