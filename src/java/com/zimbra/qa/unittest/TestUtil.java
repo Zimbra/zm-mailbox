@@ -533,6 +533,20 @@ extends Assert {
         prov.modifyAttrs(server, attrs);
     }
     
+    public static String getConfigAttr(String attrName)
+    throws ServiceException {
+        return Provisioning.getInstance().getConfig().getAttr(attrName, null);
+    }
+    
+    public static void setConfigAttr(String attrName, String attrValue)
+    throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        Config config = prov.getConfig();
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(attrName, attrValue);
+        prov.modifyAttrs(config, attrs);
+    }
+    
     /**
      * Verifies that a message is tagged.
      */

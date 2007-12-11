@@ -330,6 +330,10 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         Blob blob = null;
         int diskThreshold = Provisioning.getInstance().getLocalServer().getIntAttr(
             Provisioning.A_zimbraMailDiskStreamingThreshold, Integer.MAX_VALUE);
+        if (diskThreshold == Integer.MAX_VALUE) {
+            // Don't exceed max value when reading (diskThreshold + 1) bytes
+            diskThreshold--;
+        }
         byte[] data = null;
         
         try {
@@ -349,12 +353,20 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                     ByteArrayInputStream firstChunk = new ByteArrayInputStream(data); 
                     SequenceInputStream jointStream = new SequenceInputStream(firstChunk, in);
                     blob = StoreManager.getInstance().storeIncoming(jointStream, diskThreshold, null, volume.getId());
+                    if (blob.getFile().length() == 0) {
+                        throw new MessagingException("Empty message not allowed for "
+                            + blob.getFile().getPath());
+                    }
                     data = blob.getData();
                     ZimbraLog.lmtp.debug("Wrote message to %s.", blob.getPath());
                 }
             } else {
                 ZimbraLog.lmtp.debug("Streaming message of size %d to disk.", sizeHint);
                 blob = StoreManager.getInstance().storeIncoming(in, sizeHint, null, volume.getId());
+                if (blob.getFile().length() == 0) {
+                    throw new MessagingException("Empty message not allowed for "
+                        + blob.getFile().getPath());
+                }
                 data = blob.getData();
                 ZimbraLog.lmtp.debug("Wrote message to %s.", blob.getPath());
             }
