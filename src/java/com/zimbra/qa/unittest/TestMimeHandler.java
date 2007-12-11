@@ -16,21 +16,25 @@
  */
 package com.zimbra.qa.unittest;
 
+import junit.framework.TestCase;
+
 import com.zimbra.cs.mime.MimeHandler;
 import com.zimbra.cs.mime.MimeHandlerManager;
 import com.zimbra.cs.mime.handler.TextEnrichedHandler;
 import com.zimbra.cs.mime.handler.TextHtmlHandler;
 import com.zimbra.cs.mime.handler.UnknownTypeHandler;
 
-import junit.framework.TestCase;
-
-
+/**
+ * Tests lookups and other server-side operations
+ * related to <tt>MimeHandler</tt>s.  This test cannot run on the client
+ * side.
+ */
 public class TestMimeHandler extends TestCase {
 
     /**
      * Confirms <tt>MimeHandler</tt> lookups return the correct instance.
      */
-    public void testMimeHandler()
+    public void testMimeHandlerLookup()
     throws Exception {
         checkHandler("text/html", "html", TextHtmlHandler.class);
         checkHandler("text/html", "htm", TextHtmlHandler.class);
@@ -68,4 +72,5 @@ public class TestMimeHandler extends TestCase {
             assertEquals(context, handlerClass.getName(), handler.getClass().getName());
         }
     }
+    
 }

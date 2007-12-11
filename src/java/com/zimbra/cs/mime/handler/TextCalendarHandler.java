@@ -31,6 +31,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeHandler;
 import com.zimbra.cs.mime.MimeHandlerException;
+import com.zimbra.cs.mime.MimeHandlerManager;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -60,11 +61,13 @@ public class TextCalendarHandler extends MimeHandler {
 
         DataSource source = getDataSource();
         InputStream is = null;
+        int maxLength = MimeHandlerManager.getIndexedTextLimit();
         try {
             Reader reader = Mime.getTextReader(is = source.getInputStream(), source.getContentType(), null);
             miCalendar = ZCalendarBuilder.build(reader);
 
             mContent = "";
+            StringBuilder buf = new StringBuilder(1024);
             for (ICalTok type : COMPONENT_TYPES) {
                 ZComponent comp = miCalendar.getComponent(type);
                 if (comp == null)
@@ -76,10 +79,15 @@ public class TextCalendarHandler extends MimeHandler {
                 if (content.equals(""))
                     continue;
 
-                if (!mContent.equals(""))
-                    mContent += " ";
-                mContent += content;
+                if (buf.length() > 0)
+                    buf.append(' ');
+                if (buf.length() + content.length() > maxLength) {
+                    buf.append(content.substring(0, maxLength - buf.length()));
+                    break;
+                }
+                buf.append(content);
             }
+            mContent = buf.toString();
         } catch (Exception e) {
             mContent = "";
             ZimbraLog.index.warn("error reading text/calendar mime part", e);

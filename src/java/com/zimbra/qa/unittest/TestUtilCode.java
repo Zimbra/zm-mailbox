@@ -18,6 +18,9 @@
 package com.zimbra.qa.unittest;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
@@ -191,6 +194,28 @@ public class TestUtilCode extends TestCase
         
         assertEquals(expected, ByteUtil.getSHA1Digest(new ByteArrayInputStream(data), false));
         assertEquals(expectedBase64, ByteUtil.getSHA1Digest(new ByteArrayInputStream(data), true));
+    }
+    
+    /**
+     * Tests {@link ByteUtil#getContent(Reader, int, boolean)}.
+     */
+    public void testGetReaderContent()
+    throws Exception {
+        String s = "12345";
+        assertEquals("", ByteUtil.getContent(new StringReader(s), 0, true));
+        assertEquals("123", ByteUtil.getContent(new StringReader(s), 3, true));
+        assertEquals("12345", ByteUtil.getContent(new StringReader(s), 5, true));
+        assertEquals("12345", ByteUtil.getContent(new StringReader(s), 10, true));
+        assertEquals("12345", ByteUtil.getContent(new StringReader(s), -1, true));
+        
+        Reader reader = new StringReader(s);
+        ByteUtil.getContent(reader, 3, false);
+        assertEquals("4", ByteUtil.getContent(reader, 1, true));
+        try {
+            ByteUtil.getContent(reader, 1, false);
+            fail("IOException was not thrown");
+        } catch (IOException e) {
+        }
     }
     
     private static <E> boolean compareLists(List<E> list, List<List<E>> listOfLists) {

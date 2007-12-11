@@ -29,6 +29,7 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.extension.ExtensionUtil;
 
 
@@ -85,6 +86,23 @@ public class MimeHandlerManager {
             sLog.debug("Returning MIME handler: %s", handler.getClass().getName());
         }
         return handler;
+    }
+    
+    /**
+     * Returns the maximum number of characters that can be returned by
+     * {@link MimeHandler#getContent}.
+     * @see Provisioning#A_zimbraAttachmentsIndexedTextLimit
+     */
+    public static int getIndexedTextLimit() {
+        int length = 1024 * 1024;
+        try {
+            Provisioning prov = Provisioning.getInstance();
+            Server server = prov.getLocalServer();
+            length = server.getIntAttr(Provisioning.A_zimbraAttachmentsIndexedTextLimit, length);
+        } catch (ServiceException e) {
+            sLog.warn("Unable to determine maximum indexed content length", e);
+        }
+        return length;
     }
     
     private static synchronized HandlerInfo loadHandler(String mimeType, String extension) {

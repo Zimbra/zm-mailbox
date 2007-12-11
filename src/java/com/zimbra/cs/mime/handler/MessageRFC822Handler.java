@@ -25,8 +25,7 @@ package com.zimbra.cs.mime.handler;
 
 import java.io.InputStream;
 
-import javax.activation.DataSource;
-import javax.mail.internet.MimeMessage;
+import javax.mail.internet.InternetHeaders;
 
 import org.apache.lucene.document.Document;
 
@@ -34,7 +33,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.convert.AttachmentInfo;
 import com.zimbra.cs.mime.MimeHandler;
 import com.zimbra.cs.mime.MimeHandlerException;
-import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.mime.MimeHandlerManager;
 
 /**
  * @author schemers
@@ -50,19 +49,35 @@ public class MessageRFC822Handler extends MimeHandler {
     @Override public void addFields(Document doc) {
     }
 
+    /**
+     * Returns the subject of the attached message.
+     */
     @Override protected String getContentImpl() throws MimeHandlerException {
-        DataSource source = getDataSource();
         InputStream is = null;
+        String content = null;
         try {
-            // FIXME: should just read headers, not entire message
-            MimeMessage mm = new MimeMessage(JMSession.getSession(), is = source.getInputStream());
-            String subject = mm.getSubject();
-            return (subject != null ? subject : "");
+            is = getDataSource().getInputStream();
+            if (is == null) {
+                return null;
+            }
+            InternetHeaders headers = new InternetHeaders(is);
+            String[] subject = headers.getHeader("Subject");
+            if (subject == null || subject.length == 0 || subject[0] == null) {
+                return null;
+            }
+            int maxLength = MimeHandlerManager.getIndexedTextLimit();
+            if (subject[0].length() > maxLength) {
+                content = subject[0].substring(0, maxLength);
+            } else {
+                content = subject[0];
+            }
         } catch (Exception e) {
             throw new MimeHandlerException(e);
         } finally {
             ByteUtil.closeStream(is);
         }
+        
+        return content;
     }
 
     @Override public boolean doConversion() {

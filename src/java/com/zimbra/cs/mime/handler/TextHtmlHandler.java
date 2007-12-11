@@ -34,6 +34,7 @@ import com.zimbra.cs.convert.AttachmentInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeHandler;
 import com.zimbra.cs.mime.MimeHandlerException;
+import com.zimbra.cs.mime.MimeHandlerManager;
 
 /**
  * @author schemers
@@ -45,14 +46,19 @@ public class TextHtmlHandler extends MimeHandler {
     String mContent;
 
     private class ContentExtractor extends org.xml.sax.helpers.DefaultHandler {
-        private StringBuffer sb = new StringBuffer();
+        private StringBuilder sb = new StringBuilder(1024);
         private String title = null;
         boolean inTitle = false;
         boolean inCharacters = false;
         int skipping = 0;
+        int maxLength = MimeHandlerManager.getIndexedTextLimit();
 
         @Override public void startDocument() { sb.setLength(0); }
         @Override public void startElement(String uri, String localName, String qName, org.xml.sax.Attributes attributes) {
+            if (sb.length() >= maxLength) {
+                return;
+            }
+            
             String element = localName.toUpperCase();
             if ("TITLE".equals(element)) {
                 inTitle = true;
@@ -69,7 +75,7 @@ public class TextHtmlHandler extends MimeHandler {
             inCharacters = false;
         }
         @Override public void characters(char[] ch, int offset, int length) {
-            if (skipping > 0 || length == 0) {
+            if (skipping > 0 || length == 0 || sb.length() >= maxLength) {
                 return;
             } else if (inTitle) {
                 String content = new String(ch, offset, length);
@@ -92,12 +98,20 @@ public class TextHtmlHandler extends MimeHandler {
                 if (length > 0) {
                     if (sb.length() > 0 && (!inCharacters || original != offset))
                         sb.append(' ');
-                    sb.append(ch, offset, length);
+                    if (sb.length() + length > maxLength) {
+                        sb.append(ch, offset, maxLength - sb.length());
+                    } else {
+                        sb.append(ch, offset, length);
+                    }
                 }
             }
             inCharacters = (length > 0);
         }
         @Override public void endElement(String uri, String localName, String qName) {
+            if (sb.length() > maxLength) {
+                return;
+            }
+            
             String element = localName.toUpperCase();
             if ("TITLE".equals(element))
                 inTitle = false;

@@ -1084,7 +1084,8 @@ public abstract class Provisioning {
     
     public static final String A_zimbraAttachmentsBlocked = "zimbraAttachmentsBlocked";
     public static final String A_zimbraAttachmentsViewInHtmlOnly = "zimbraAttachmentsViewInHtmlOnly";
-    public static final String A_zimbraAttachmentsIndexingEnabled = "zimbraAttachmentsIndexingEnabled";    
+    public static final String A_zimbraAttachmentsIndexingEnabled = "zimbraAttachmentsIndexingEnabled";
+    public static final String A_zimbraAttachmentsIndexedTextLimit = "zimbraAttachmentsIndexedTextLimit";
     
     public static final String A_zimbraAttachmentsScanEnabled = "zimbraAttachmentsScanEnabled";
     public static final String A_zimbraAttachmentsScanClass = "zimbraAttachmentsScanClass";
