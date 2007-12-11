@@ -937,7 +937,7 @@ public class LC {
         zimbra_class_provisioning =
             new KnownKey("zimbra_class_provisioning", "com.zimbra.cs.account.ldap.LdapProvisioning", "Provisioning interface class");
         zimbra_class_accessmanager =
-            new KnownKey("zimbra_class_accessmanager", "com.zimbra.cs.account.AccessManager", "Access manager interface class");
+            new KnownKey("zimbra_class_accessmanager", "com.zimbra.cs.account.DomainAccessManager", "Access manager interface class");
         zimbra_class_mboxmanager =
             new KnownKey("zimbra_class_mboxmanager", "com.zimbra.cs.mailbox.MailboxManager", "Mailbox manager interface class");
         zimbra_class_database =
