@@ -76,11 +76,14 @@ public class GetFreeBusy extends MailDocumentHandler {
 
         Element response = getResponseElement(zc);
         
-        String idParam = request.getAttribute(MailConstants.A_UID);
+        // MailConstants.A_UID should be deprecated at some point, bug 21776, comment #14
+        String idParam = request.getAttribute(MailConstants.A_UID, null);    // comma-separated list of account emails or zimbraId GUIDs that *must* match UUID format
+        String uidParam = request.getAttribute(MailConstants.A_ID, null);    // comma-separated list of account zimbraId GUIDs
+        String nameParam = request.getAttribute(MailConstants.A_NAME, null); // comma-separated list of account emails
         
         List<ParseMailboxID> local = new ArrayList<ParseMailboxID>();
         Map<String, StringBuilder> remote = new HashMap<String, StringBuilder>();
-        partitionItems(zc, response, rangeStart, rangeEnd, idParam, local, remote);
+        partitionItems(zc, response, rangeStart, rangeEnd, idParam, uidParam, nameParam, local, remote);
         proxyRemoteItems(context, zc, response, rangeStart, rangeEnd, remote);
         
         if (!local.isEmpty()) {
@@ -132,32 +135,72 @@ public class GetFreeBusy extends MailDocumentHandler {
     }
     
     protected static void partitionItems(ZimbraSoapContext zc, Element response, long rangeStart, long rangeEnd,
-                                         String idParam, List<ParseMailboxID> local, Map<String, StringBuilder> remote) {
-        String[] idStrs = idParam.split(",");
-        for (int i = 0; i < idStrs.length; i++) {
-            try {
-                ParseMailboxID id = ParseMailboxID.parse(idStrs[i]);
-                if (id != null) {
-                    if (id.isLocal()) {
-                        local.add(id);
-                    } else {
-                        String serverId = id.getServer();
-                        
-                        assert(serverId != null);
-                            
-                        StringBuilder remoteStr = remote.get(serverId);
-                        if (remoteStr == null) {
-                            remoteStr = new StringBuilder(idStrs[i]);
-                            remote.put(serverId, remoteStr);
-                        } else {
-                            remoteStr.append(",").append(idStrs[i]);
-                        }
-                    }
+                                         String idParam, String uidParam, String nameParam, List<ParseMailboxID> local, Map<String, StringBuilder> remote) {
+        
+        String[] idStrs = null;
+        
+        // idParam should be deprecated at some point, bug 21776 comment #14
+        if (idParam != null) {
+            idStrs = idParam.split(",");
+            for (int i = 0; i < idStrs.length; i++) {
+                try {
+                    ParseMailboxID id = null;
+                    if (Provisioning.isUUID(idStrs[i]))
+                        id = ParseMailboxID.byAccountId(idStrs[i]);
+                    else
+                        id = ParseMailboxID.byEmailAddress(idStrs[i]);
+                    partitionItems(zc, response, rangeStart, rangeEnd, id, local, remote);
+                } catch (ServiceException e) {
+                    addFailureInfo(response, rangeStart, rangeEnd, idStrs[i], e);
                 }
-            } catch (ServiceException e) {
-                addFailureInfo(response, rangeStart, rangeEnd, idStrs[i], e);
             }
+        }
+        
+        if (uidParam != null) {
+            idStrs = uidParam.split(",");
+            for (int i = 0; i < idStrs.length; i++) {
+                try {
+                    ParseMailboxID id = ParseMailboxID.byAccountId(idStrs[i]);
+                    partitionItems(zc, response, rangeStart, rangeEnd, id, local, remote);
+                } catch (ServiceException e) {
+                    addFailureInfo(response, rangeStart, rangeEnd, idStrs[i], e);
+                }
+            }
+        }
+        
+        if (nameParam != null) {
+            idStrs = nameParam.split(",");
+            for (int i = 0; i < idStrs.length; i++) {
+                try {
+                    ParseMailboxID id = ParseMailboxID.byEmailAddress(idStrs[i]);
+                    partitionItems(zc, response, rangeStart, rangeEnd, id, local, remote);
+                } catch (ServiceException e) {
+                    addFailureInfo(response, rangeStart, rangeEnd, idStrs[i], e);
+                }
+            }
+        }
+    }
+    
+    protected static void partitionItems(ZimbraSoapContext zc, Element response, long rangeStart, long rangeEnd,
+                                         ParseMailboxID id, List<ParseMailboxID> local, Map<String, StringBuilder> remote) {
+        String idStr = id.getString();
             
+        if (id != null) {
+            if (id.isLocal()) {
+                local.add(id);
+            } else {
+                String serverId = id.getServer();
+                        
+                assert(serverId != null);
+                        
+                StringBuilder remoteStr = remote.get(serverId);
+                if (remoteStr == null) {
+                    remoteStr = new StringBuilder(idStr);
+                    remote.put(serverId, remoteStr);
+                } else {
+                    remoteStr.append(",").append(idStr);
+                }
+            }
         }
     }
 

@@ -1456,7 +1456,7 @@ public class ProvUtil implements DebugListener {
     }
     
     private String lookupDataSourceId(Account account, String key) throws ServiceException {
-        if (isUUID(key)) {
+        if (Provisioning.isUUID(key)) {
             return key;
         }
         DataSource ds = mProv.get(account, DataSourceBy.name, key);
@@ -1486,54 +1486,44 @@ public class ProvUtil implements DebugListener {
         return lookupDistributionList(key, true);
     }
 
-    private static boolean isUUID(String value) {
-        if (value.length() == 36 &&
-            value.charAt(8) == '-' &&
-            value.charAt(13) == '-' &&
-            value.charAt(18) == '-' &&
-            value.charAt(23) == '-')
-            return true;
-        return false;
-    }
-
     public static AccountBy guessAccountBy(String value) {
-        if (isUUID(value))
+        if (Provisioning.isUUID(value))
             return AccountBy.id;
         return AccountBy.name;
     }
     
     public static CosBy guessCosBy(String value) {
-        if (isUUID(value))
+        if (Provisioning.isUUID(value))
             return CosBy.id;
         return CosBy.name;
     }
     
     public static DomainBy guessDomainBy(String value) {
-        if (isUUID(value))
+        if (Provisioning.isUUID(value))
             return DomainBy.id;
         return DomainBy.name;
     }
 
     public static ServerBy guessServerBy(String value) {
-        if (isUUID(value))
+        if (Provisioning.isUUID(value))
             return ServerBy.id;
         return ServerBy.name;
     }
 
     public static CalendarResourceBy guessCalendarResourceBy(String value) {
-        if (isUUID(value))
+        if (Provisioning.isUUID(value))
             return CalendarResourceBy.id;
         return CalendarResourceBy.name;
     }
 
     public static DistributionListBy guessDistributionListBy(String value) {
-        if (isUUID(value))
+        if (Provisioning.isUUID(value))
             return DistributionListBy.id;
         return DistributionListBy.name;
     }
     
     public static SignatureBy guessSignatureBy(String value) {
-        if (isUUID(value))
+        if (Provisioning.isUUID(value))
             return SignatureBy.id;
         return SignatureBy.name;
     }
@@ -1712,7 +1702,7 @@ public class ProvUtil implements DebugListener {
             entries = new CacheEntry[args.length - 2];
             for (int i=2; i<args.length; i++) {
                 CacheEntryBy entryBy;
-                if (isUUID(args[i]))
+                if (Provisioning.isUUID(args[i]))
                     entryBy = CacheEntryBy.id;
                 else
                     entryBy = CacheEntryBy.name;
