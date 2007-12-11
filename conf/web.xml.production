@@ -236,7 +236,7 @@
     <servlet-class>com.zimbra.cs.zimlet.ZimletResources</servlet-class>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>80, 443, 7070, 7443, 7071</param-value>
+      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, 7070, 7443, 7071</param-value>
     </init-param>
   </servlet>
 
