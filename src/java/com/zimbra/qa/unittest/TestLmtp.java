@@ -52,7 +52,8 @@ extends TestCase {
     private Account mAccount;
     private String mOriginalWarnInterval;
     private int mOriginalWarnPercent;
-    private String mOriginalDiskStreamingThreshold;
+    private String mOriginalServerDiskThreshold;
+    private String mOriginalConfigDiskThreshold;
     
     public void setUp()
     throws Exception {
@@ -60,8 +61,10 @@ extends TestCase {
         mAccount = TestUtil.getAccount("user1");
         mOriginalWarnInterval = mAccount.getAttr(Provisioning.A_zimbraQuotaWarnInterval);
         mOriginalWarnPercent = mAccount.getIntAttr(Provisioning.A_zimbraQuotaWarnPercent, 0);
-        mOriginalDiskStreamingThreshold =
+        mOriginalServerDiskThreshold =
             TestUtil.getServerAttr(Provisioning.A_zimbraMailDiskStreamingThreshold);
+        mOriginalConfigDiskThreshold = TestUtil.getConfigAttr(
+            Provisioning.A_zimbraMailDiskStreamingThreshold);
         cleanUp();
     }
     
@@ -325,11 +328,26 @@ extends TestCase {
         assertEquals(1, msgs.size()); 
     }
     
+    /**
+     * Confirms that delivery succeeds when <tt>zimbraMailDiskStreamingThreshold</tt>
+     * isn't set (bug 22536).
+     */
+    public void testMissingDiskThreshold()
+    throws Exception {
+        TestUtil.setServerAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, "");
+        TestUtil.setConfigAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, "");
+        String subject = NAME_PREFIX + " testMissingDiskThreshold";
+        TestUtil.addMessageLmtp(subject, USER_NAME, USER_NAME);
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
+    }
+    
     public void tearDown()
     throws Exception {
         setQuotaWarnPercent(mOriginalWarnPercent);
         setQuotaWarnInterval(mOriginalWarnInterval);
-        TestUtil.setServerAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, mOriginalDiskStreamingThreshold);
+        TestUtil.setServerAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, mOriginalServerDiskThreshold);
+        TestUtil.setConfigAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, mOriginalConfigDiskThreshold);
         cleanUp();
     }
     
