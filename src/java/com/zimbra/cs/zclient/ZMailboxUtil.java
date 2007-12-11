@@ -27,6 +27,8 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.soap.SoapAccountInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning;
@@ -597,16 +599,6 @@ public class ZMailboxUtil implements DebugListener {
         if (tag == null) tag = mMbox.getTagById(idOrName);
         if (tag == null) throw ZClientException.CLIENT_ERROR("unknown tag: "+idOrName, null);
         return tag;
-    }
-
-    private static boolean isUUID(String value) {
-        if (value.length() == 36 &&
-            value.charAt(8) == '-' &&
-            value.charAt(13) == '-' &&
-            value.charAt(18) == '-' &&
-            value.charAt(23) == '-')
-            return true;
-        return false;
     }
 
     /**
@@ -1342,18 +1334,19 @@ public class ZMailboxUtil implements DebugListener {
         boolean revoke = (perms != null && (perms.equalsIgnoreCase("none") || perms.length() == 0));        
         
         if (revoke) {
-            if (!isId(grantee)) {
-                ZFolder f = lookupFolder(folderId);
-                String zid = null;
-                for (ZGrant g : f.getGrants()) {
-                    if (grantee.equalsIgnoreCase(g.getGranteeName())) {
-                        zid = g.getGranteeId();
-                        break;
-                    }
+            // convert grantee to grantee id if it is a name
+            ZFolder f = lookupFolder(folderId);
+            String zid = null;
+            for (ZGrant g : f.getGrants()) {
+                if (grantee.equalsIgnoreCase(g.getGranteeName()) ||
+                    grantee.equalsIgnoreCase(g.getGranteeId())) {
+                    zid = g.getGranteeId();
+                    break;
                 }
-                if (zid == null) throw ZClientException.CLIENT_ERROR("unablle to resolve zimbra id for: "+grantee, null);
-                else grantee = zid;
             }
+            if (zid == null) throw ZClientException.CLIENT_ERROR("unablle to resolve zimbra id for: "+grantee, null);
+            else grantee = zid;
+            
             
             mMbox.modifyFolderRevokeGrant(folderId, grantee);
         } else {
@@ -1462,7 +1455,7 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     private String lookupSignatureId(String idOrName) throws ServiceException {
-        if (isUUID(idOrName)) {
+        if (Provisioning.isUUID(idOrName)) {
             return idOrName;
         } else {
             for (ZSignature sig : mMbox.getSignatures()) {
@@ -1490,15 +1483,26 @@ public class ZMailboxUtil implements DebugListener {
         String cmOwner = args[1];
         String cmItem = args[2];
         
+        OwnerBy ownerBy = OwnerBy.BY_ID;
+        Account ownerAcct = mProv.getAccount(cmOwner);
+        if (ownerAcct != null) {
+            if (cmOwner.equals(ownerAcct.getId()))
+                ownerBy = OwnerBy.BY_ID;
+            else
+                ownerBy = OwnerBy.BY_NAME;
+        } else {
+            // account is not found, still let it go to server (default to OwnerBy.BY_ID) and let server return us the error
+        }
+        
         ZMountpoint cm = mMbox.createMountpoint(
                     lookupFolderId(cmPath, true), 
                     ZMailbox.getBasePath(cmPath),
                     folderViewOpt(),
                     folderColorOpt(),
                     flagsOpt(),
-                    (isId(cmOwner) ? OwnerBy.BY_ID : OwnerBy.BY_NAME),
+                    ownerBy,
                     cmOwner,
-                    (isId(cmItem) ? SharedItemBy.BY_ID : SharedItemBy.BY_PATH),
+                    (Provisioning.isUUID(cmItem) ? SharedItemBy.BY_ID : SharedItemBy.BY_PATH),
                     cmItem);
         System.out.println(cm.getId());
     }

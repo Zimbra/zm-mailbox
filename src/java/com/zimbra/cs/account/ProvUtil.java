@@ -1408,7 +1408,8 @@ public class ProvUtil implements DebugListener {
     }
     
     private Account lookupAccount(String key, boolean mustFind) throws ServiceException {
-        Account a = mProv.get(guessAccountBy(key), key);
+        Account a = mProv.getAccount(key);
+        
         if (mustFind && a == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(key);
         else
@@ -1491,6 +1492,7 @@ public class ProvUtil implements DebugListener {
             return AccountBy.id;
         return AccountBy.name;
     }
+  
     
     public static CosBy guessCosBy(String value) {
         if (Provisioning.isUUID(value))

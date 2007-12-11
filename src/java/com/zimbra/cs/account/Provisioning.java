@@ -1623,6 +1623,21 @@ public abstract class Provisioning {
     public Account get(AccountBy keyType, String key, boolean loadFromMaster) throws ServiceException {
         return get(keyType, key);
     }
+    
+    /**
+     * get account by id first, if not found, get by name
+     * @param key account id or name
+     * @return
+     */
+    public Account getAccount(String key) throws ServiceException {
+        Account acct = null;
+        
+        acct = get(AccountBy.id, key);
+        if (acct ==null)
+            acct = get(AccountBy.name, key);
+        
+        return acct;
+    }
 
     /**
      * return regular accounts from searchAccounts;
