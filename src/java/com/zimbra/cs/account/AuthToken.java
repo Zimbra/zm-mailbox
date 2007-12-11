@@ -26,6 +26,8 @@ import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
 import java.net.InetAddress;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.UnknownHostException;
 
 import javax.crypto.Mac;
@@ -85,7 +87,7 @@ public class AuthToken {
     private String mType;
     private String mExternalUserEmail;
     private String mDigest;
-    private String[] mMailHostAddrs;
+    private String mMailHostRoute;
     
     public String toString() {
         return "AuthToken(acct="+mAccountId+" admin="+mAdminAccountId+" exp="
@@ -164,10 +166,7 @@ public class AuthToken {
             mType = (String)map.get(C_TYPE);
             mExternalUserEmail = (String)map.get(C_EXTERNAL_USER_EMAIL);
             mDigest = (String)map.get(C_DIGEST);
-            String mailhostAddrs = (String)map.get(C_MAILHOST);
-            if (mailhostAddrs != null) {
-            	mMailHostAddrs = mailhostAddrs.split (",");
-            }
+            mMailHostRoute = (String)map.get(C_MAILHOST);
         } catch (ServiceException e) {
             throw new AuthTokenException("service exception", e);
         } catch (DecoderException e) {
@@ -215,24 +214,32 @@ public class AuthToken {
         } else
             mType = C_TYPE_ZIMBRA_USER;
 		
-		/* build up the server:port strings for the account's mailhost */
+		/* Build up mMailHostRoute to contain the IP:PORT where this account's
+           (HTTP) web client can be located -- This will be used by the HTTP proxy
+           to route HTTP traffic to this location
+
+           For example, mMailHostRoute might be 127.0.0.1:7070
+         */
 		String mailhost = acct.getAttr(Provisioning.A_zimbraMailHost);
 		if (mailhost != null) {
-			List<String> mailHostAddrs = new ArrayList <String> ();
 			try {
 				Server server = Provisioning.getInstance().getServer(acct);
 				String serverPort = server.getAttr(Provisioning.A_zimbraMailPort);
 				InetAddress[] serverAddrs = InetAddress.getAllByName(mailhost);
 				for (InetAddress serverAddr: serverAddrs) {
-					mailHostAddrs.add(serverAddr.getHostAddress() + ":" + serverPort);
+                    /* we will use only the first ipv4 address returned by dns
+                       we assume that this ip will be reachable (by the http proxy)
+                     */
+                    if (serverAddr instanceof Inet4Address) {
+                        mMailHostRoute = serverAddr.getHostAddress() + ":" + serverPort;
+                        break;
+                    }
 				}
 			} catch (ServiceException e) {
 				// cannot get server object
 			} catch (UnknownHostException e) {
 				// cannot look up server name
 			}
-			
-			mMailHostAddrs = mailHostAddrs.toArray(new String[0]); 
 		}
 	}
 
@@ -309,8 +316,8 @@ public class AuthToken {
             BlobMetaData.encodeMetaData(C_TYPE, mType, encodedBuff);
             BlobMetaData.encodeMetaData(C_EXTERNAL_USER_EMAIL, mExternalUserEmail, encodedBuff);
             BlobMetaData.encodeMetaData(C_DIGEST, mDigest, encodedBuff);
-            if ((mMailHostAddrs != null) && (mMailHostAddrs.length > 0)) {
-            	BlobMetaData.encodeMetaData(C_MAILHOST, StringUtil.join(",", mMailHostAddrs), encodedBuff);
+            if ((mMailHostRoute != null) && (mMailHostRoute.length() > 0)) {
+            	BlobMetaData.encodeMetaData(C_MAILHOST, mMailHostRoute, encodedBuff);
             }
             
             String data = new String(Hex.encodeHex(encodedBuff.toString().getBytes()));
