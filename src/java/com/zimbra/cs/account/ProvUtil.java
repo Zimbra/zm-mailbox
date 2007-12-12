@@ -1805,7 +1805,7 @@ public class ProvUtil implements DebugListener {
     }
 
     private void doGetAllMemcachedServers(String[] args) throws ServiceException {
-        List<Server> servers = mProv.getAllServers("memcached");
+        List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_MEMCACHED);
         for (Server server : servers ) {
             System.out.print(server.getAttr(Provisioning.A_zimbraServiceHostname, "") + ":" +
                              server.getAttr(Provisioning.A_zimbraMemcachedBindPort, "") + " ");
