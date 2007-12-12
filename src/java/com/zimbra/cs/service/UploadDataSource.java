@@ -26,6 +26,7 @@ import java.io.OutputStream;
 
 import javax.activation.DataSource;
 
+import com.zimbra.common.mime.ContentType;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 
 /**
@@ -34,6 +35,7 @@ import com.zimbra.cs.service.FileUploadServlet.Upload;
 public class UploadDataSource implements DataSource {
 
     private Upload mUpload;
+    private ContentType mContentType;
 
 	/**
 	 * 
@@ -42,30 +44,25 @@ public class UploadDataSource implements DataSource {
 		mUpload = up;
 	}
 
-	/* (non-Javadoc)
-	 * @see javax.activation.DataSource#getContentType()
-	 */
+    public void setContentType(ContentType ctype) {
+        mContentType = ctype;
+    }
+
 	public String getContentType() {
-        return mUpload.getContentType();
+        if (mContentType == null)
+            return new ContentType(mUpload.getContentType()).toString();
+        else
+            return mContentType.toString();
 	}
 
-	/* (non-Javadoc)
-	 * @see javax.activation.DataSource#getInputStream()
-	 */
 	public InputStream getInputStream() throws IOException {
 		return mUpload.getInputStream(); 
 	}
 
-	/* (non-Javadoc)
-	 * @see javax.activation.DataSource#getName()
-	 */
 	public String getName() {
 		return mUpload.getName();
 	}
 
-	/* (non-Javadoc)
-	 * @see javax.activation.DataSource#getOutputStream()
-	 */
 	public OutputStream getOutputStream() {
 		return null;
 	}

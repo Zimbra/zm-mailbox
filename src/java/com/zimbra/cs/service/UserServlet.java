@@ -17,8 +17,8 @@
 
 package com.zimbra.cs.service;
 
+import java.io.FilterInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -48,6 +48,7 @@ import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
 
+import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -1016,12 +1017,7 @@ public class UserServlet extends ZimbraServlet {
         return getRemoteResource(authToken, target, null, pcopy);
     }
 
-    public static Pair<Header[], byte[]> getRemoteResource(String authToken, Account target, String folder, Map<String,String> params) throws ServiceException {
-        // fetch from remote store
-        Provisioning prov = Provisioning.getInstance();
-        Server server = (target == null ? prov.getLocalServer() : prov.getServer(target));
-        String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
-
+    private static String getRemoteUrl(Account target, String folder, Map<String, String> params) throws ServiceException {
         if (folder == null) {
             folder = "";
         } else {
@@ -1038,65 +1034,83 @@ public class UserServlet extends ZimbraServlet {
             for (Map.Entry<String, String> param : params.entrySet())
                 url.append('&').append(param.getKey()).append('=').append(param.getValue());
         }
-
-        return getRemoteResource(authToken, hostname, url.toString());
+        return url.toString();
     }
-    
+
+    public static Pair<Header[], byte[]> getRemoteResource(String authToken, Account target, String folder, Map<String,String> params) throws ServiceException {
+        // fetch from remote store
+        Provisioning prov = Provisioning.getInstance();
+        Server server = (target == null ? prov.getLocalServer() : prov.getServer(target));
+        String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
+        String url = getRemoteUrl(target, folder, params);
+
+        return getRemoteResource(authToken, hostname, url);
+    }
+
+    public static Pair<Header[], byte[]> getRemoteResource(String authToken, String hostname, String url) throws ServiceException {
+        return getRemoteResource(authToken, hostname, url, null, 0, null, null);
+    }
+
+    public static Pair<Header[], byte[]> getRemoteResource(String authToken, String hostname, String url,
+            String proxyHost, int proxyPort, String proxyUser, String proxyPass) throws ServiceException {
+        HttpMethod get = null;
+        try {
+            Pair<Header[], HttpMethod> pair = getRemoteResourceInternal(authToken, hostname, url, proxyHost, proxyPort, proxyUser, proxyPass);
+            get = pair.getSecond();
+            return new Pair<Header[], byte[]>(pair.getFirst(), get.getResponseBody());
+        } catch (IOException x) {
+            throw ServiceException.FAILURE("Can't read response body " + url, x);
+        } finally {
+            if (get != null) {
+                get.releaseConnection();
+            }
+        }
+    }
+
+
+    public static FileUploadServlet.Upload getRemoteResourceAsUpload(AuthToken at, ItemId iid, Map<String,String> params)
+    throws ServiceException, IOException, AuthTokenException {
+        Map<String, String> pcopy = new HashMap<String, String>(params);
+        pcopy.put(QP_ID, iid.toString());
+
+        // fetch from remote store
+        Provisioning prov = Provisioning.getInstance();
+        Account target = prov.get(AccountBy.id, iid.getAccountId());
+        String url = getRemoteUrl(target, null, pcopy);
+        Server server = (target == null ? prov.getLocalServer() : prov.getServer(target));
+        String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
+
+        Pair<Header[], HttpInputStream> response = getRemoteResourceAsStream(at.getEncoded(), hostname, url);
+
+        // and save the result as an upload
+        String ctype = "text/plain", filename = null;
+        for (Header hdr : response.getFirst()) {
+            String hname = hdr.getName().toLowerCase();
+            if (hname.equals("content-type"))
+                ctype = hdr.getValue();
+            else if (hname.equals("content-disposition"))
+                filename = new ContentDisposition(hdr.getValue()).getParameter("filename");
+        }
+        if (filename == null || filename.equals(""))
+            filename = new ContentType(ctype).getParameter("name");
+        if (filename == null || filename.equals(""))
+            filename = "unknown";
+        return FileUploadServlet.saveUpload(response.getSecond(), filename, ctype, at.getAccountId());
+    }
+
+
     //Helper class so that we can close connection upon stream close
-    public static class HttpInputStream extends  InputStream {
-
+    public static class HttpInputStream extends FilterInputStream {
 		private HttpMethod method;
-    	private InputStream in;
-    	
-    	HttpInputStream(HttpMethod m) throws IOException {
-    		this.method = m;
-    		in = m.getResponseBodyAsStream();
-    	}
-    	
-    	@Override
-		public int read() throws IOException {
-    		return in.read();
-		}
 
-    	@Override
-    	public void close() {
+    	HttpInputStream(HttpMethod m) throws IOException {
+    		super(m.getResponseBodyAsStream());
+    		this.method = m;
+    	}
+
+    	@Override public void close() {
     		method.releaseConnection();
     	}
-
-		@Override
-		public int available() throws IOException {
-			return in.available();
-		}
-
-		@Override
-		public synchronized void mark(int arg0) {
-			in.mark(arg0);
-		}
-
-		@Override
-		public boolean markSupported() {
-			return in.markSupported();
-		}
-
-		@Override
-		public int read(byte[] arg0, int arg1, int arg2) throws IOException {
-			return in.read(arg0, arg1, arg2);
-		}
-
-		@Override
-		public int read(byte[] arg0) throws IOException {
-			return in.read(arg0);
-		}
-
-		@Override
-		public synchronized void reset() throws IOException {
-			in.reset();
-		}
-
-		@Override
-		public long skip(long arg0) throws IOException {
-			return in.skip(arg0);
-		}
     }
     
     public static Pair<Header[], HttpInputStream> getRemoteResourceAsStream(String authToken, String hostname, String url) throws ServiceException, IOException {
@@ -1108,26 +1122,7 @@ public class UserServlet extends ZimbraServlet {
     	Pair<Header[], HttpMethod> pair = getRemoteResourceInternal(authToken, hostname, url, proxyHost, proxyPort, proxyUser, proxyPass);
     	return new Pair<Header[], HttpInputStream>(pair.getFirst(), new HttpInputStream(pair.getSecond()));
     }
-    
-    public static Pair<Header[], byte[]> getRemoteResource(String authToken, String hostname, String url) throws ServiceException {
-    	return getRemoteResource(authToken, hostname, url, null, 0, null, null);
-    }
-    
-    public static Pair<Header[], byte[]> getRemoteResource(String authToken, String hostname, String url,
-    		String proxyHost, int proxyPort, String proxyUser, String proxyPass) throws ServiceException {
-    	HttpMethod get = null;
-    	try {
-    		Pair<Header[], HttpMethod> pair = getRemoteResourceInternal(authToken, hostname, url, proxyHost, proxyPort, proxyUser, proxyPass);
-    		get = pair.getSecond();
-    		return new Pair<Header[], byte[]>(pair.getFirst(), get.getResponseBody());
-    	} catch (IOException x) {
-    		throw ServiceException.FAILURE("Can't read response body " + url, x);
-    	} finally {
-    		if (get != null) {
-    			get.releaseConnection();
-    		}
-        }
-    }
+
 
     public static Pair<Header[], HttpInputStream> putRemoteResource(String authToken, String url, Account target,
             byte[] req, Header[] headers) throws ServiceException, IOException {
@@ -1151,12 +1146,13 @@ public class UserServlet extends ZimbraServlet {
         Pair<Header[], HttpMethod> pair = doHttpOp(authToken, hostname, null, 0, null, null, method);
         return new Pair<Header[], HttpInputStream>(pair.getFirst(), new HttpInputStream(pair.getSecond()));
     }
-    
+
+
     private static Pair<Header[], HttpMethod> getRemoteResourceInternal(String authToken, String hostname, String url,
     		String proxyHost, int proxyPort, String proxyUser, String proxyPass) throws ServiceException {
         return doHttpOp(authToken, hostname, proxyHost, proxyPort, proxyUser, proxyPass, new GetMethod(url));
     }
-    
+
     private static Pair<Header[], HttpMethod> doHttpOp(String authToken, String hostname,
             String proxyHost, int proxyPort, String proxyUser, String proxyPass, HttpMethod method) throws ServiceException {
         // create an HTTP client with the same cookies

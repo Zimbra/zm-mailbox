@@ -26,23 +26,24 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ExceptionToString;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.Fragment;
-import com.zimbra.cs.mailbox.CalendarItem;
-import com.zimbra.cs.mailbox.MailSender.SafeSendFailedException;
-import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.MailSender.SafeSendFailedException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mime.BlobDataSource;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.service.ContentServlet;
 import com.zimbra.cs.service.FileUploadServlet;
+import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.UploadDataSource;
 import com.zimbra.cs.service.formatter.VCard;
@@ -59,14 +60,15 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.mail.Header;
-import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.SendFailedException;
@@ -81,7 +83,6 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.MailConstants;
-
 
 /**
  * @author tim
@@ -149,13 +150,22 @@ public class ParseMimeMessage {
     };
 
 
-    /**
-     * Wrapper class for data parsed out of the mime message
-     */
+    /** Wrapper class for data parsed out of the mime message */
     public static class MimeMessageData {
         public List<InternetAddress> newContacts = new ArrayList<InternetAddress>();
-        public List<Upload> uploads = null;    // NULL unless there are attachments
+        public List<Upload> fetches = null;    // NULL unless we fetched messages from another server
+        public List<Upload> uploads = null;    // NULL unless there are uploaded attachments
         public String iCalUUID = null;         // NULL unless there is an iCal part
+
+        void addUpload(Upload up) {
+            if (uploads == null)  uploads = new ArrayList<Upload>(4);
+            uploads.add(up);
+        }
+
+        void addFetch(Upload up) {
+            if (fetches == null)  fetches = new ArrayList<Upload>(4);
+            fetches.add(up);
+        }
     }
 
     public static MimeMessage parseMimeMsgSoap(ZimbraSoapContext zsc, OperationContext octxt, Mailbox mbox,
@@ -390,34 +400,27 @@ public class ParseMimeMessage {
 
         String attachIds = attachElem.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
         if (attachIds != null) {
-            List<Upload> uploads = attachUploads(mmp, attachIds, contentID, ctxt);
-            if (ctxt.out.uploads == null)
-                ctxt.out.uploads = uploads;
-            else
-                ctxt.out.uploads.addAll(uploads);
+            for (String uploadId : attachIds.split(FileUploadServlet.UPLOAD_DELIMITER)) {
+                Upload up = FileUploadServlet.fetchUpload(ctxt.zsc.getAuthtokenAccountId(), uploadId, ctxt.zsc.getRawAuthToken());
+                if (up == null)
+                    throw MailServiceException.NO_SUCH_UPLOAD(uploadId);
+                attachUpload(mmp, up, contentID, ctxt, null);
+                ctxt.out.addUpload(up);
+            }
         }
 
         for (Element elem : attachElem.listElements()) {
             String eName = elem.getName();
             if (eName.equals(MailConstants.E_MIMEPART)) {
-                ItemId iid = new ItemId(elem.getAttribute(MailConstants.A_MESSAGE_ID), (String) null);
+                ItemId iid = new ItemId(elem.getAttribute(MailConstants.A_MESSAGE_ID), ctxt.zsc);
                 String part = elem.getAttribute(MailConstants.A_PART);
-                if (!iid.hasSubpart()) {
-                    attachPart(mmp, ctxt.mbox.getMessageById(ctxt.octxt, iid.getId()), part, contentID, ctxt);
-                } else {
-                    CalendarItem calItem = ctxt.mbox.getCalendarItemById(ctxt.octxt, iid.getId());
-                    MimeMessage calMm = calItem.getSubpartMessage(iid.getSubpartId());
-                    MimePart calMp = Mime.getMimePart(calMm, part);
-                    if (calMp == null)
-                        throw MailServiceException.NO_SUCH_PART(part);
-                    attachPart(mmp, calMp, contentID, ctxt);
-                }
+                attachPart(mmp, iid, part, contentID, ctxt);
             } else if (eName.equals(MailConstants.E_MSG)) {
-                int messageId = (int) elem.getAttributeLong(MailConstants.A_ID);
-                attachMessage(mmp, ctxt.mbox.getMessageById(ctxt.octxt, messageId), contentID, ctxt);
+                ItemId iid = new ItemId(elem.getAttribute(MailConstants.A_ID), ctxt.zsc);
+                attachMessage(mmp, iid, contentID, ctxt);
             } else if (eName.equals(MailConstants.E_CONTACT)) {
-                int contactId = (int) elem.getAttributeLong(MailConstants.A_ID);
-                attachContact(mmp, ctxt.mbox.getContactById(ctxt.octxt, contactId), contentID, ctxt);
+                ItemId iid = new ItemId(elem.getAttribute(MailConstants.A_ID), ctxt.zsc);
+                attachContact(mmp, iid, contentID, ctxt);
             }
         }
     }
@@ -552,59 +555,92 @@ public class ParseMimeMessage {
         }
     }
 
-    private static List<Upload> attachUploads(MimeMultipart mmp, String attachIds, String contentID, ParseMessageContext ctxt)
+    private static void attachUpload(MimeMultipart mmp, Upload up, String contentID, ParseMessageContext ctxt, ContentType ctypeOverride)
     throws ServiceException, MessagingException {
-        List<Upload> uploads = new ArrayList<Upload>();
-        String[] uploadIds = attachIds.split(FileUploadServlet.UPLOAD_DELIMITER);
+        // make sure we haven't exceeded the max size
+        ctxt.incrementSize((long) (up.getSize() * 1.33));
 
-        for (int i = 0; i < uploadIds.length; i++) {
-            Upload up = FileUploadServlet.fetchUpload(ctxt.zsc.getAuthtokenAccountId(), uploadIds[i], ctxt.zsc.getRawAuthToken());
-            if (up == null)
-                throw MailServiceException.NO_SUCH_UPLOAD(uploadIds[i]);
-            
-            // Make sure we haven't exceeded the max size
-            ctxt.incrementSize((long) (up.getSize() * 1.33));
-            uploads.add(up);
+        // scan upload for viruses
+        StringBuffer info = new StringBuffer();
+        UploadScanner.Result result = UploadScanner.accept(up, info);
+        if (result == UploadScanner.REJECT)
+            throw MailServiceException.UPLOAD_REJECTED(up.getName(), info.toString());
+        if (result == UploadScanner.ERROR)
+            throw MailServiceException.SCAN_ERROR(up.getName());
+        String filename = up.getName();
 
-            // scan upload for viruses
-            StringBuffer info = new StringBuffer();
-            UploadScanner.Result result = UploadScanner.accept(up, info);
-            if (result == UploadScanner.REJECT)
-                throw MailServiceException.UPLOAD_REJECTED(up.getName(), info.toString());
-            if (result == UploadScanner.ERROR)
-                throw MailServiceException.SCAN_ERROR(up.getName());
-            String filename = up.getName();
+        // create the part and override the DataSource's default ctype, if required
+        MimeBodyPart mbp = new MimeBodyPart();
+        UploadDataSource uds = new UploadDataSource(up);
+        if (ctypeOverride != null && !ctypeOverride.equals(""))
+            uds.setContentType(ctypeOverride);
+        mbp.setDataHandler(new DataHandler(uds));
 
-            MimeBodyPart mbp = new MimeBodyPart();
-            mbp.setDataHandler(new DataHandler(new UploadDataSource(up)));
-
-            String ctype = up.getContentType() == null ? Mime.CT_APPLICATION_OCTET_STREAM : up.getContentType();
-            mbp.setHeader("Content-Type", new ContentType(ctype, ctxt.use2231).setParameter("name", filename).toString());
-            mbp.setHeader("Content-Disposition", new ContentDisposition(Part.ATTACHMENT, ctxt.use2231).setParameter("filename", filename).toString());
-            mbp.setContentID(contentID);
-
-            mmp.addBodyPart(mbp);
+        // set headers -- ctypeOverride non-null has magical properties that I'm going to regret tomorrow
+        ContentType ctype = ctypeOverride;
+        ContentDisposition cdisp = new ContentDisposition(Part.ATTACHMENT, ctxt.use2231);
+        if (ctype == null) {
+            ctype = new ContentType(up.getContentType() == null ? Mime.CT_APPLICATION_OCTET_STREAM : up.getContentType()).setParameter("name", filename);
+            cdisp.setParameter("filename", filename);
         }
-        return uploads;
+        mbp.setHeader("Content-Type", ctype.toString());
+        mbp.setHeader("Content-Disposition", cdisp.toString());
+        mbp.setContentID(contentID);
+
+        // add to the parent part
+        mmp.addBodyPart(mbp);
     }
 
-    private static void attachMessage(MimeMultipart mmp, com.zimbra.cs.mailbox.Message message, String contentID, ParseMessageContext ctxt)
+    private static void attachRemoteItem(MimeMultipart mmp, ItemId iid, String contentID, ParseMessageContext ctxt, Map<String, String> params, ContentType ctypeOverride)
+    throws ServiceException, MessagingException {
+        try {
+            Upload up = UserServlet.getRemoteResourceAsUpload(ctxt.zsc.getAuthToken(), iid, params);
+            attachUpload(mmp, up, contentID, ctxt, ctypeOverride);
+            ctxt.out.addFetch(up);
+            return;
+        } catch (IOException ioe) {
+            throw ServiceException.FAILURE("can't serialize remote contact", ioe);
+        } catch (AuthTokenException ate) {
+            throw ServiceException.FAILURE("can't serialize remote contact", ate);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void attachMessage(MimeMultipart mmp, ItemId iid, String contentID, ParseMessageContext ctxt)
     throws MessagingException, ServiceException {
-        ctxt.incrementSize(message.getSize());
-        MailboxBlob blob = message.getBlob();
+        if (!iid.isLocal()) {
+            attachRemoteItem(mmp, iid, contentID, ctxt, Collections.EMPTY_MAP, new ContentType(Mime.CT_MESSAGE_RFC822));
+            return;
+        }
+
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(iid.getAccountId());
+        Message msg = mbox.getMessageById(ctxt.octxt, iid.getId());
+        ctxt.incrementSize(msg.getSize());
 
         MimeBodyPart mbp = new MimeBodyPart();
-        mbp.setDataHandler(new DataHandler(new BlobDataSource(blob)));
-        mbp.setHeader("Content-Type", blob.getMimeType());
+        mbp.setDataHandler(new DataHandler(new BlobDataSource(msg.getBlob())));
+        mbp.setHeader("Content-Type", Mime.CT_MESSAGE_RFC822);
         mbp.setHeader("Content-Disposition", Part.ATTACHMENT);
         mbp.setContentID(contentID);
         mmp.addBodyPart(mbp);
     }
 
-    private static void attachContact(MimeMultipart mmp, com.zimbra.cs.mailbox.Contact contact, String contentID, ParseMessageContext ctxt)
-    throws MessagingException, MailServiceException {
-        ctxt.incrementSize(contact.getSize());
-        VCard vcf = VCard.formatContact(contact);
+    private static final Map<String, String> FETCH_CONTACT_PARAMS = new HashMap<String, String>(3);
+        static {
+            FETCH_CONTACT_PARAMS.put(UserServlet.QP_FMT, "vcf");
+        }
+
+    private static void attachContact(MimeMultipart mmp, ItemId iid, String contentID, ParseMessageContext ctxt)
+    throws MessagingException, ServiceException {
+        if (!iid.isLocal()) {
+            attachRemoteItem(mmp, iid, contentID, ctxt, FETCH_CONTACT_PARAMS, null);
+            return;
+        }
+
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(iid.getAccountId());
+        VCard vcf = VCard.formatContact(mbox.getContactById(ctxt.octxt, iid.getId()));
+
+        ctxt.incrementSize(vcf.formatted.length());
         String filename = vcf.fn + ".vcf";
         String charset = StringUtil.checkCharset(vcf.formatted, ctxt.defaultCharset);
 
@@ -648,34 +684,26 @@ public class ParseMimeMessage {
         }
     }
 
-    private static void attachPart(MimeMultipart mmp, com.zimbra.cs.mailbox.Message message, String part, String contentID, ParseMessageContext ctxt)
+    private static void attachPart(MimeMultipart mmp, ItemId iid, String part, String contentID, ParseMessageContext ctxt)
     throws IOException, MessagingException, ServiceException {
-        MimePart mp = ContentServlet.getMimePart(message, part);
+        if (!iid.isLocal()) {
+            Map<String, String> params = new HashMap<String, String>(3);
+            params.put(UserServlet.QP_PART, part);
+            attachRemoteItem(mmp, iid, contentID, ctxt, params, null);
+            return;
+        }
+
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(iid.getAccountId());
+        MimeMessage mm;
+        if (iid.hasSubpart()) {
+            mm = mbox.getCalendarItemById(ctxt.octxt, iid.getId()).getSubpartMessage(iid.getSubpartId());
+        } else {
+            mm = mbox.getMessageById(ctxt.octxt, iid.getId()).getMimeMessage();
+        }
+        MimePart mp = Mime.getMimePart(mm, part);
         if (mp == null)
             throw MailServiceException.NO_SUCH_PART(part);
-        ctxt.incrementSize((long) (mp.getSize() * 1.33));
-        String filename = Mime.getFilename(mp);
 
-        MimeBodyPart mbp = new MimeBodyPart();
-        mbp.setDataHandler(new DataHandler(new FixedMimePartDataSource(mp)));
-
-        String ctype = mp.getContentType();
-        if (ctype != null)
-            mbp.setHeader("Content-Type", new ContentType(ctype, ctxt.use2231).setParameter("name", filename).toString());
-
-        mbp.setHeader("Content-Disposition", new ContentDisposition(Part.ATTACHMENT, ctxt.use2231).setParameter("filename", filename).toString());
-
-        String desc = mp.getDescription();
-        if (desc != null)
-            mbp.setHeader("Content-Description", desc);
-
-        mbp.setContentID(contentID);
-
-        mmp.addBodyPart(mbp);
-    }
-
-    private static void attachPart(MimeMultipart mmp, MimePart mp, String contentID, ParseMessageContext ctxt)
-    throws MessagingException, MailServiceException {
         ctxt.incrementSize((long) (mp.getSize() * 1.33));
         String filename = Mime.getFilename(mp);
 
@@ -753,19 +781,19 @@ public class ParseMimeMessage {
     throws MessagingException {
         InternetAddress[] addrs = maddrs.get(EmailType.TO.toString());
         if (addrs != null) {
-            mm.addRecipients(Message.RecipientType.TO, addrs);
+            mm.addRecipients(javax.mail.Message.RecipientType.TO, addrs);
             mLog.debug("\t\tTO: " + Arrays.toString(addrs));
         }
 
         addrs = maddrs.get(EmailType.CC.toString());
         if (addrs != null) {
-            mm.addRecipients(Message.RecipientType.CC, addrs);
+            mm.addRecipients(javax.mail.Message.RecipientType.CC, addrs);
             mLog.debug("\t\tCC: " + Arrays.toString(addrs));
         }
 
         addrs = maddrs.get(EmailType.BCC.toString());
         if (addrs != null) {
-            mm.addRecipients(Message.RecipientType.BCC, addrs);
+            mm.addRecipients(javax.mail.Message.RecipientType.BCC, addrs);
             mLog.debug("\t\tBCC: " + Arrays.toString(addrs));
         }
 
