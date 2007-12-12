@@ -189,6 +189,10 @@ public class DataSource extends NamedEntry implements Comparable {
         return getAttr(Provisioning.A_zimbraPrefFromDisplay);
     }  
     
+    public String getFromAddress() {
+        return getAttr(Provisioning.A_zimbraPrefFromAddress);
+    }
+    
     public String getReplyToAddress() {
         return getAttr(Provisioning.A_zimbraPrefReplyToAddress);
     } 
