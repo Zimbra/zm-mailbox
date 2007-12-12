@@ -137,8 +137,13 @@ public class ParseMailboxID
     /**
      * @return true if the specifier was a "*"ed wildcard which means ALL servers.
      */
-    public boolean isAllServers() { return mAllServers; };
+    public boolean isAllServers() { return mAllServers; }
     
+    /**
+     * @return the account email address, if we have one.  Account email address is available only if the 
+     * object is instanciated from an email address or account's zimbraId.
+     */
+    public String getEmailAddress() { return mEmailAddress; }
     
     protected String mHostName = null; // if not localhost
     protected Mailbox mMailbox = null;
@@ -147,6 +152,7 @@ public class ParseMailboxID
     protected boolean mAllMailboxIds = false;
     protected boolean mAllServers = false;
     protected String mInitialString;
+    protected String mEmailAddress = null;
     
     protected ParseMailboxID(Account account, boolean forceRemote) throws ServiceException, IllegalArgumentException {
         this.initFromAccount(account, null, forceRemote);
@@ -154,7 +160,8 @@ public class ParseMailboxID
     
     protected void initFromAccount(Account account, String idStr, boolean forceRemote) throws ServiceException, IllegalArgumentException {
         mHostName = account.getAttr(Provisioning.A_zimbraMailHost);
-        mInitialString = (idStr==null)?account.getId():idStr;             
+        mInitialString = (idStr==null)?account.getId():idStr;
+        mEmailAddress = account.getName();
     	if (!forceRemote &&  Provisioning.onLocalServer(account)) {
     		ZimbraLog.misc.info("Account %s is local", account.getId());
             mIsLocal = true;
