@@ -1843,7 +1843,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>personal part of email address put in from header</desc>
 </attr>
 
-<attr id="403" name="zimbraPrefFromAddress" type="string" max="256" cardinality="single" optionalIn="account,identity" flags="domainAdminModifiable">
+<attr id="403" name="zimbraPrefFromAddress" type="string" max="256" cardinality="single" optionalIn="account,identity,dataSource" flags="domainAdminModifiable">
   <desc>email address to put in from header</desc>
 </attr>
 

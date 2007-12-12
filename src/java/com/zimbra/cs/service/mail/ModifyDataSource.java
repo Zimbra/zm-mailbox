@@ -151,6 +151,10 @@ public class ModifyDataSource extends MailDocumentHandler {
         if (value != null)
             dsAttrs.put(Provisioning.A_zimbraPrefFromDisplay, value);
   
+        value = eDataSource.getAttribute(MailConstants.A_DS_FROM_ADDRESS, null);
+        if (value != null)
+            dsAttrs.put(Provisioning.A_zimbraPrefFromAddress, value);
+  
         value = eDataSource.getAttribute(MailConstants.A_DS_REPLYTO_ADDRESS, null);
         if (value != null)
             dsAttrs.put(Provisioning.A_zimbraPrefReplyToAddress, value);
