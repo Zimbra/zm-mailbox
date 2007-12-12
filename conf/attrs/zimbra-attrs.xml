@@ -2309,7 +2309,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="498" name="zimbraFeatureBriefcasesEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
-  <defaultCOSValue>FALSE</defaultCOSValue>
+  <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether to allow use of briefcase feature</desc>
 </attr>
 
