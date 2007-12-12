@@ -23,7 +23,7 @@ import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 
-public class CalendarScheduleMessage extends CalendarObject {
+public class CalendarScheduleMessage extends CalendarObject.LocalCalendarObject {
 
 	public CalendarScheduleMessage(DavContext ctxt, Message msg) throws ServiceException, DavException {
 		super(ctxt, getPath(ctxt, msg), getAssociatedCalendarItem(ctxt, msg));
@@ -37,6 +37,6 @@ public class CalendarScheduleMessage extends CalendarObject {
 	
 	private static String getPath(DavContext ctxt, Message msg) throws ServiceException, DavException {
 		CalendarItem calItem = getAssociatedCalendarItem(ctxt, msg);
-		return getCalendarPath(msg.getPath(), calItem.getUid());
+		return CalendarPath.generate(msg.getPath(), calItem.getUid());
 	}
 }

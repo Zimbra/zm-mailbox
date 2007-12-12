@@ -40,8 +40,8 @@ import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.DavProtocol.Compliance;
-import com.zimbra.cs.dav.property.CalDavProperty;
 import com.zimbra.cs.dav.caldav.TimeRange;
+import com.zimbra.cs.dav.property.CalDavProperty;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.dav.service.DavServlet;
 import com.zimbra.cs.mailbox.CalendarItem;
@@ -113,11 +113,7 @@ public class CalendarCollection extends Collection {
 	/* Returns all the appoinments stored in the calendar as DavResource. */
 	public java.util.Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
 		try {
-			java.util.Collection<CalendarItem> calItems = get(ctxt, sAllCalItems);
-			ArrayList<DavResource> children = new ArrayList<DavResource>();
-			for (CalendarItem calItem : calItems)
-				children.add(new CalendarObject(ctxt, calItem));
-			return children;
+			return get(ctxt, sAllCalItems);
 		} catch (ServiceException se) {
 			ZimbraLog.dav.error("can't get calendar items", se);
 		}
@@ -125,9 +121,13 @@ public class CalendarCollection extends Collection {
 	}
 
 	/* Returns the appoinments in the specified time range. */
-	public java.util.Collection<CalendarItem> get(DavContext ctxt, TimeRange range) throws ServiceException, DavException {
+	public java.util.Collection<DavResource> get(DavContext ctxt, TimeRange range) throws ServiceException, DavException {
 		Mailbox mbox = getMailbox(ctxt);
-		return mbox.getCalendarItemsForRange(ctxt.getOperationContext(), range.getStart(), range.getEnd(), mId, null);
+		java.util.Collection<CalendarItem> calItems = mbox.getCalendarItemsForRange(ctxt.getOperationContext(), range.getStart(), range.getEnd(), mId, null);
+        ArrayList<DavResource> children = new ArrayList<DavResource>();
+        for (CalendarItem calItem : calItems)
+            children.add(new CalendarObject.LocalCalendarObject(ctxt, calItem));
+        return children;
 	}
 	
 	private String findSummary(ZVCalendar cal) {
@@ -217,7 +217,7 @@ public class CalendarCollection extends Collection {
 				throw new DavException("event not found", HttpServletResponse.SC_NOT_FOUND, null);
 			
 			if (useEtag) {
-				String itemEtag = CalendarObject.getEtag(calItem);
+				String itemEtag = MailItemResource.getEtag(calItem);
 				if (!itemEtag.equals(etag))
 					throw new DavException("event has different etag ("+itemEtag+") vs "+etag, HttpServletResponse.SC_CONFLICT, null);
 			}
@@ -260,7 +260,7 @@ public class CalendarCollection extends Collection {
 				mbox.addInvite(ctxt.getOperationContext(), i, mId, false, null);
 			}
 			calItem = mbox.getCalendarItemByUid(ctxt.getOperationContext(), uid);
-			return new CalendarObject(ctxt, calItem);
+			return new CalendarObject.LocalCalendarObject(ctxt, calItem);
 		} catch (ServiceException e) {
 			throw new DavException("cannot create icalendar item", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
 		}
