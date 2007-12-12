@@ -50,6 +50,8 @@ public abstract class Provisioning {
 
     public static final String DEFAULT_COS_NAME = "default";
 
+    public static final String SERVICE_MEMCACHED = "imapproxy";
+
     /**
      * generate appts that try to be compatible with exchange
      */

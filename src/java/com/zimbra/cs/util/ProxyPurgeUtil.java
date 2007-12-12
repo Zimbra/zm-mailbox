@@ -45,7 +45,6 @@ public class ProxyPurgeUtil
         boolean             purge = false;
         Provisioning        prov;
         List                memcachedServers;
-        final String        memcachedService = "memcached";
         final String        memcachedPort = "11211";
         String              logLevel = "INFO";
 
@@ -70,7 +69,7 @@ public class ProxyPurgeUtil
         /* Get the list of servers running the memcached service
            this is equivalent to the $(zmprov gamcs) command
          */
-        memcachedServers = prov.getAllServers(memcachedService);
+        memcachedServers = prov.getAllServers(Provisioning.SERVICE_MEMCACHED);
         servers = new ArrayList <String> ();
 
         if (commandLine.hasOption("v")) { logLevel = "DEBUG"; }
