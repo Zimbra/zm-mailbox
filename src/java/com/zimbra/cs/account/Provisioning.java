@@ -1625,7 +1625,12 @@ public abstract class Provisioning {
     }
     
     /**
-     * get account by id first, if not found, get by name
+     * Get account by id first, if not found, get by name.
+     * 
+     * Note, this function might do an extra LDAP search, it should only be called from the edge of 
+     * CLI tools where is call rate is very low.  
+     * 
+     * 
      * @param key account id or name
      * @return
      */

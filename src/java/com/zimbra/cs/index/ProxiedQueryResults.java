@@ -265,7 +265,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
                 for (ParseMailboxID id : mMailboxes) {
                     // assert(!id.isLocal());
                     // assert(id.getServer().equals(serverID));
-                    searchElt.addElement(MailConstants.E_MAILBOX).addAttribute(MailConstants.A_ID, id.getString());
+                    searchElt.addElement(MailConstants.E_MAILBOX).addAttribute(MailConstants.A_NAME, id.getEmailAddress());
                 }
             }
         }
