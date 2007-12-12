@@ -174,7 +174,7 @@ public class ZAppointmentHit implements ZSearchHit {
         String fragment = (fragmentEl != null) ? fragmentEl.getText() : null;
         String uid = e.getAttribute(MailConstants.A_UID, null);
         long ms = e.getAttributeLong(MailConstants.A_MODIFIED_SEQUENCE, 0);
-        long md = e.getAttributeLong(MailConstants.A_MODIFIED_DATE, 0);
+        long md = e.getAttributeLong(MailConstants.A_DATE, 0);
 
         List<Element> instances = e.listElements(MailConstants.E_INSTANCE);
         // if empty, add self as only instance

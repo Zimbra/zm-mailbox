@@ -261,6 +261,11 @@ public class UrlNamespace {
         if (item != null)
             return getResourceFromMailItem(ctxt, item);
         
+        try {
+            return getResourceFromMailItem(ctxt, mbox.getItemByPath(octxt, path));
+        } catch (MailServiceException.NoSuchItemException e) {
+        }
+        
         // look up the item from path
         index = path.lastIndexOf('/');
         String folderPath = path.substring(0, index);
@@ -302,10 +307,15 @@ public class UrlNamespace {
             }
             item = mbox.getCalendarItemByUid(octxt, uid);
         }
-        if (item == null)
-            item = mbox.getItemByPath(octxt, path);
         
         return getResourceFromMailItem(ctxt, item);
+    }
+    
+    public static void invalidateApptSummariesCache(String acctId, int itemId) {
+        ItemId remoteId = new ItemId(acctId, itemId);
+        synchronized (sApptSummariesMap) {
+            sApptSummariesMap.remove(remoteId);
+        }
     }
     
 	/* Returns DavResource for the MailItem. */
