@@ -171,16 +171,6 @@
     <load-on-startup>5</load-on-startup>
   </servlet>
 
-<servlet>
-    <servlet-name>YCalJSONServlet</servlet-name>
-    <servlet-class>com.zimbra.cs.service.YCalJSONServlet</servlet-class>
-    <init-param>
-      <param-name>allowed.ports</param-name>
-      <param-value>80, 443, 7070, 7443, 7071</param-value>
-    </init-param>
-    <load-on-startup>5</load-on-startup>
-  </servlet>
-
   <servlet>
     <servlet-name>FileUploadServlet</servlet-name>
     <servlet-class>com.zimbra.cs.service.FileUploadServlet</servlet-class>
@@ -209,7 +199,7 @@
       <param-value>7071</param-value>
     </init-param>
   </servlet>
-  
+
   <servlet>
     <servlet-name>CollectLDAPConfigZimbra</servlet-name>
     <servlet-class>com.zimbra.cs.service.admin.CollectLDAPConfigZimbra</servlet-class>
@@ -218,7 +208,7 @@
       <param-value>7071</param-value>
     </init-param>
   </servlet>
-    
+
   <servlet>
     <servlet-name>ProxyServlet</servlet-name>
     <servlet-class>com.zimbra.cs.zimlet.ProxyServlet</servlet-class>
@@ -271,11 +261,6 @@
   <servlet-mapping>
     <servlet-name>PublicICalServlet</servlet-name>
     <url-pattern>/pubcal/*</url-pattern>
-  </servlet-mapping>
-
- <servlet-mapping>
-    <servlet-name>YCalJSONServlet</servlet-name>
-    <url-pattern>/yjson/*</url-pattern>
   </servlet-mapping>
 
   <servlet-mapping>
