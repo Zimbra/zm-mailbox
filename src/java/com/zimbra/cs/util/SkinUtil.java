@@ -162,8 +162,8 @@ public class SkinUtil {
 			return cosSkin;
 		}
 
-		// Nothing in ldap has a valid skin. Since sand seens to be our most stable skin, try it.
-		String usuallyAvailableSkin = "sand";
+		// Nothing in ldap has a valid skin. Since beach seens to be our most stable skin, try it.
+		String usuallyAvailableSkin = "beach";
 		if (accountSkin != usuallyAvailableSkin && cosSkin != usuallyAvailableSkin) {
 			if (checkSkin(usuallyAvailableSkin, installedSkins, allowedSkins)) {
 				ZimbraLog.webclient.debug("Loading default skin "+usuallyAvailableSkin );

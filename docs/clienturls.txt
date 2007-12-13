@@ -21,12 +21,13 @@ AjxDebug.DBG3 = 3; // anything goes
   load specified skin:
   
     bare
+    beach
     sand
     sky
     steel
 	...
 
- http://server/zimbra/?skin=sand
+ http://server/zimbra/?skin=beach
  
 ----------------------------------------
 

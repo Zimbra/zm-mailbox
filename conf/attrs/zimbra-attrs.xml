@@ -1644,7 +1644,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="355" name="zimbraPrefSkin" type="string" max="80" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
-  <defaultCOSValue>sand</defaultCOSValue>
+  <defaultCOSValue>beach</defaultCOSValue>
   <desc>Skin to use for this account</desc>
 </attr>
 
