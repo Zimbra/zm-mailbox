@@ -368,7 +368,7 @@ public class TestAccess extends TestCase {
         XMLElement req = new XMLElement(AccountConstants.MODIFY_PREFS_REQUEST);
         Element p = req.addElement(AccountConstants.E_PREF);
         p.addAttribute(AccountConstants.A_NAME, Provisioning.A_zimbraPrefSkin);
-        p.setText("sand");
+        p.setText("beach");
         accessTest(role, perm, req);
     }
     
