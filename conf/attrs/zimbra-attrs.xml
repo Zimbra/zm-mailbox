@@ -2718,8 +2718,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>LDAP attribute that contains user name for the principal</desc>
 </attr>
 
-<attr id="579" name="zimbraJunkMessagesIndexingEnabled" type="boolean" cardinality="single" optionalIn="globalConfig">
-  <globalConfigValue>TRUE</globalConfigValue>
+<attr id="579" name="zimbraJunkMessagesIndexingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Whether to index junk messages</desc>
 </attr>
 
