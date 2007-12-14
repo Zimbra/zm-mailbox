@@ -229,12 +229,12 @@ public class ZCalendar {
      */
     public static class ZComponent
     {
-        ZComponent(String name) {
+        public ZComponent(String name) {
             mName = name.toUpperCase();
             mTok = ICalTok.lookup(mName);
         }
         
-        ZComponent(ICalTok tok) {
+        public ZComponent(ICalTok tok) {
             mTok = tok;
             mName = tok.toString();
         }
