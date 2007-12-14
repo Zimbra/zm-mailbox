@@ -346,6 +346,8 @@ public class ParsedMessage {
             int size = mMimeMessage.getSize();
             if (size < 0) {
                 return getRawData().length;
+            } else {
+                return size;
             }
         }
         ZimbraLog.mailbox.warn("%s.getRawSize(): Unable to get MIME message data..",
