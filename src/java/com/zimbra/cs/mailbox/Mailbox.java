@@ -5694,6 +5694,11 @@ public class Mailbox {
         boolean allGood = false;
         try {
             if (indexingNeeded) {
+                
+                // See bug 15072 - we need to clear mCurrentChange.indexItems (it is stored in a temporary)
+                // here, just in case item.reindex() recurses into a new transaction...
+                mCurrentChange.indexItems = new HashMap<MailItem, MailboxChange.IndexItemEntry>();
+                
                 for (Map.Entry<MailItem, MailboxChange.IndexItemEntry> entry : itemsToIndex.entrySet()) {
                     MailItem item = entry.getKey();
 
