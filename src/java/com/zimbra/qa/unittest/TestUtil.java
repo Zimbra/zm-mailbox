@@ -259,12 +259,12 @@ extends Assert {
         lmtp.close();
     }
     
-    public static String addMessage(ZMailbox mbox, int messageNum, String subject)
+    public static String addMessage(ZMailbox mbox, String subject)
     throws ServiceException {
-        return addMessage(mbox, messageNum, subject, Integer.toString(Mailbox.ID_FOLDER_INBOX));
+        return addMessage(mbox, subject, Integer.toString(Mailbox.ID_FOLDER_INBOX));
     }
     
-    public static String addMessage(ZMailbox mbox, int messageNum, String subject, String folderId)
+    public static String addMessage(ZMailbox mbox, String subject, String folderId)
     throws ServiceException {
         String message = getTestMessage(subject);
         return mbox.addMessage(folderId, null, null, 0, message, true);
