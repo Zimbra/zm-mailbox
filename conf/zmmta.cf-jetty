@@ -21,7 +21,7 @@ SECTION amavis
 	VAR zimbraSpamSubjectTag
   RESTART archiving antispam antivirus mta
 
-SECTION antivirus DEPENDS antispam archiving amavis
+SECTION antivirus DEPENDS amavis
   REWRITE conf/clamd.conf.in conf/clamd.conf
   REWRITE conf/freshclam.conf.in conf/freshclam.conf
 	VAR zimbraVirusWarnAdmin
@@ -30,12 +30,12 @@ SECTION antivirus DEPENDS antispam archiving amavis
   VAR zimbraMtaMaxMessageSize
   RESTART antivirus mta
 
-SECTION antispam DEPENDS antivirus amavis
+SECTION antispam DEPENDS amavis
   REWRITE conf/salocal.cf.in conf/salocal.cf
   VAR zimbraMtaMyNetworks
   RESTART antispam mta
 
-SECTION archiving DEPENDS antispam antivirus amavis
+SECTION archiving DEPENDS amavis
   RESTART archiving mta
 
 SECTION mta DEPENDS amavis
