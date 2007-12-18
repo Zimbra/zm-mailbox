@@ -1553,6 +1553,7 @@ public class LdapProvisioning extends Provisioning {
         allAttrs.remove(Provisioning.A_objectClass);
         allAttrs.remove(Provisioning.A_zimbraId);
         allAttrs.remove(Provisioning.A_cn);
+        allAttrs.remove(Provisioning.A_description);
         if (cosAttrs != null) {
             for (Map.Entry<String, Object> e : cosAttrs.entrySet()) {
                 allAttrs.put(e.getKey(), e.getValue());
