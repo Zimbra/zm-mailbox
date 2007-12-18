@@ -438,14 +438,29 @@ public class TestProvisioning extends TestCase {
     private Domain[] domainTest() throws Exception {
         System.out.println("Testing domain");
         
+        int numVirtualHosts = 500;
+        
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraPreAuthKey, PRE_AUTH_KEY);
+        // test lots of zimbraVirtualHostname on a domain
+        Set<String> virtualHosts = new HashSet<String>();
+        for (int i=0; i<numVirtualHosts; i++) {
+            String virtualHostName = "vhost-" + i + ".com";
+            virtualHosts.add(virtualHostName);
+        }
+        attrs.put(Provisioning.A_zimbraVirtualHostname, virtualHosts.toArray(new String[0]));
         Domain entry = mProv.createDomain(DOMAIN_NAME, attrs);
         
         Domain entryGot = mProv.get(Provisioning.DomainBy.id, entry.getId());
         TestProvisioningUtil.verifySameEntry(entry, entryGot);
         entryGot = mProv.get(Provisioning.DomainBy.name, DOMAIN_NAME);
         TestProvisioningUtil.verifySameEntry(entry, entryGot);
+        for (int i=0; i<numVirtualHosts; i++) {
+            String virtualHostName = "vhost-" + i + ".com";
+            entryGot = mProv.get(Provisioning.DomainBy.virtualHostname, virtualHostName);
+            TestProvisioningUtil.verifySameEntry(entry, entryGot);
+        }
+        
         
         Domain otherEntry = mProv.createDomain(OTHER_DOMAIN_NAME, attrs);
         Domain specialCharEntry = mProv.createDomain(DOMAIN_NAME_SPECIAL_CHARS, attrs);
@@ -534,12 +549,12 @@ public class TestProvisioning extends TestCase {
         attrsToMod.put(Provisioning.A_zimbraAuthKerberos5Realm, "PHOEBE.LOCAL");
         mProv.modifyAttrs(domain, attrsToMod, true);
         // by domain realm mapping    acct-1@PHOEBE.LOCAL has to be created (sudo /usr/local/sbin/kadmin.local addprinc command)
-        mProv.authAccount(account, PASSWORD, "unittest");
+        // mProv.authAccount(account, PASSWORD, "unittest"); uncomment after krb5 server is fixed
         attrsToMod.clear();
         attrsToMod.put(Provisioning.A_zimbraForeignPrincipal, "kerberos5:user1@PHOEBE.LOCAL");
         mProv.modifyAttrs(account, attrsToMod, true);
         // by specific foreignPrincipal   user1-1@PHOEBE.LOCAL has to be created (sudo /usr/local/sbin/kadmin.local addprinc command)
-        mProv.authAccount(account, PASSWORD, "unittest");
+        // mProv.authAccount(account, PASSWORD, "unittest");  uncomment after krb5 server is fixed
         
         // skip these tests, as there could be multiple domain with PHOEBE.LOCAL in zimbraAuthKerberos5Realm  from previous test
         // to test, remove all previous test domains and uncomment the following.
