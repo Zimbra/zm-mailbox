@@ -22,6 +22,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
@@ -52,11 +53,15 @@ import javax.naming.directory.ModificationItem;
 import javax.naming.directory.SchemaViolationException;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
+import javax.naming.ldap.Control;
 import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
+import javax.naming.ldap.PagedResultsControl;
+import javax.naming.ldap.PagedResultsResponseControl;
 import javax.naming.ldap.Rdn;
 import javax.security.auth.login.LoginException;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
 import java.security.MessageDigest;
@@ -830,7 +835,89 @@ public class LdapUtil {
          
          return LdapProvisioning.expandStr(bindDnRule, vars);
       }
+      
+      public static byte[] getCookie(LdapContext lctxt) throws NamingException {
+          Control[] controls = lctxt.getResponseControls();
+          if (controls != null) {
+              for (int i = 0; i < controls.length; i++) {
+                  if (controls[i] instanceof PagedResultsResponseControl) {
+                      PagedResultsResponseControl prrc =
+                          (PagedResultsResponseControl)controls[i];
+                      return prrc.getCookie();
+                  }
+              }
+          }
+          return null;
+      }
 
+      public static void searchGal(DirContext ctxt,
+                                   int pageSize,
+                                   String base, 
+                                   String query, 
+                                   int maxResults,
+                                   LdapGalMapRules rules,
+                                   String token,
+                                   SearchGalResult result) throws ServiceException {
+
+        result.token = token != null && !token.equals("")? token : EARLIEST_SYNC_TOKEN;
+        
+        SearchControls sc = new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, rules.getLdapAttrs(), false, false);
+        NamingEnumeration ne = null;
+        int total = 0;
+        byte[] cookie = null;
+        
+        LdapContext lctxt = null;
+        
+        try {
+            try {
+                // need a new instance otherwise the paged control in previous search would interfere with this new search,
+                // unless connection pooling is disaled - even if lctxt.setRequestControls(null) was called in the finally 
+                // block of this try block.  JNDI bug ???
+                //
+                // creating a new instance of ctxt would *not* result in a new connection (bind) request to the ldap server, 
+                // it is only a JNDI object and is cheap.
+                lctxt = ((LdapContext)ctxt).newInstance(null); 
+                do {
+                    if (pageSize > 0)
+                        lctxt.setRequestControls(new Control[]{new PagedResultsControl(pageSize, cookie, Control.NONCRITICAL)});
+                    
+                    ne = LdapUtil.searchDir(ctxt, base, query, sc);
+                    while (ne != null && ne.hasMore()) {
+                        if (maxResults > 0 && total++ > maxResults) {
+                            result.hadMore = true;
+                            break;
+                        }
+                        
+                        SearchResult sr = (SearchResult) ne.next();
+                        String dn = sr.getNameInNamespace();
+                        GalContact lgc = new GalContact(dn, rules.apply(sr.getAttributes()));
+                        String mts = (String) lgc.getAttrs().get("modifyTimeStamp");
+                        result.token = getLaterTimestamp(result.token, mts);
+                        String cts = (String) lgc.getAttrs().get("createTimeStamp");
+                        result.token = getLaterTimestamp(result.token, cts);
+                        result.matches.add(lgc);
+                    }
+                    if (pageSize > 0)
+                        cookie = getCookie(lctxt);
+                } while (cookie != null);
+            } finally {
+                if (ne != null) 
+                    ne.close();
+                
+                closeContext(lctxt);
+            }    
+        } catch (SizeLimitExceededException sle) {
+            result.hadMore = true;
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to search gal", e);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("unable to search gal", e);     
+        } finally {
+            // do it in the caller where the context was obtained
+            // closeContext(ctxt);
+        }
+    }
+  
       
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#searchGal(java.lang.String)
@@ -838,6 +925,7 @@ public class LdapUtil {
     public static SearchGalResult searchLdapGal(
             String url[],
             LdapGalCredential credential,
+            int pageSize,
             String base,
             String filter, 
             String n,
@@ -887,12 +975,13 @@ public class LdapUtil {
         
         String authMech = credential.getAuthMech();
         if (authMech.equals(Provisioning.LDAP_AM_KERBEROS5))
-            searchLdapGalKrb5(url, credential, base, query, maxResults, rules, token, result);
+            searchLdapGalKrb5(url, credential, pageSize, base, query, maxResults, rules, token, result);
         else    
-            searchLdapGal(url, credential, base, query, maxResults, rules, token, result);
+            searchLdapGal(url, credential, pageSize, base, query, maxResults, rules, token, result);
         return result;
     }
     
+    /* original
     private static void searchLdapGal(String url[],
                                       LdapGalCredential credential,
                                       String base, 
@@ -929,9 +1018,37 @@ public class LdapUtil {
             closeEnumContext(ne);
         }
     }
+    */
+    
+    private static void searchLdapGal(String url[],
+            LdapGalCredential credential,
+            int pageSize,
+            String base, 
+            String query, 
+            int maxResults,
+            LdapGalMapRules rules,
+            String token,
+            SearchGalResult result) throws ServiceException, NamingException {
+        
+        DirContext ctxt = null;
+        try {
+            ctxt = getDirContext(url, credential);
+            searchGal(ctxt,
+                      pageSize,
+                      base, 
+                      query, 
+                      maxResults,
+                      rules,
+                      token,
+                      result);
+        } finally {
+            closeContext(ctxt);
+        }
+    }
     
     private static void searchLdapGalKrb5(String url[],
             LdapGalCredential credential,
+            int pageSize,
             String base, 
             String query, 
             int maxResults,
@@ -941,7 +1058,7 @@ public class LdapUtil {
         
         try {
             Krb5Login.performAs(credential.getKrb5Principal(), credential.getKrb5Keytab(),
-                                new SearchGalAction(url, credential, base, query, maxResults, rules, token, result));
+                                new SearchGalAction(url, credential, pageSize, base, query, maxResults, rules, token, result));
         } catch (LoginException le) {
             throw ServiceException.FAILURE("login failed, unable to search GAL", le);
         } catch (PrivilegedActionException pae) {
@@ -959,6 +1076,7 @@ public class LdapUtil {
         
         String[] url;
         LdapGalCredential credential;
+        int pageSize;
         String base;
         String query;
         int maxResults;
@@ -968,6 +1086,7 @@ public class LdapUtil {
         
         SearchGalAction(String arg_url[],
                         LdapGalCredential arg_credential,
+                        int arg_pageSize,
                         String arg_base, 
                         String arg_query, 
                         int arg_maxResults,
@@ -976,6 +1095,7 @@ public class LdapUtil {
                         SearchGalResult arg_result) {
             url = arg_url;
             credential = arg_credential;
+            pageSize = arg_pageSize;
             base = arg_base;
             query = arg_query;
             maxResults = arg_maxResults;
@@ -985,8 +1105,8 @@ public class LdapUtil {
         }
             
         
-        public Object run() throws NamingException {
-            searchLdapGal(url, credential, base, query, maxResults, rules, token, result);
+        public Object run() throws NamingException, ServiceException {
+            searchLdapGal(url, credential, pageSize, base, query, maxResults, rules, token, result);
             return null;
         }
     }

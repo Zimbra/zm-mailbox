@@ -35,6 +35,7 @@ import com.zimbra.cs.account.Account.CalendarUserType;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
@@ -966,7 +967,7 @@ public class LdapProvisioning extends Provisioning {
                         else if (objectclass.contains(C_zimbraMailList)) visitor.visit(makeDistributionList(dn, attrs, this));
                         else if (objectclass.contains(C_zimbraDomain)) visitor.visit(new LdapDomain(dn, attrs, getConfig().getDomainDefaults()));                        
                     }
-                    cookie = getCookie(lctxt);
+                    cookie = LdapUtil.getCookie(lctxt);
                 } while (cookie != null);
             } finally {
                 if (ne != null) ne.close();
@@ -985,20 +986,6 @@ public class LdapProvisioning extends Provisioning {
         } finally {
             LdapUtil.closeContext(ctxt);
         }
-    }
-
-    private byte[] getCookie(LdapContext lctxt) throws NamingException {
-        Control[] controls = lctxt.getResponseControls();
-        if (controls != null) {
-            for (int i = 0; i < controls.length; i++) {
-                if (controls[i] instanceof PagedResultsResponseControl) {
-                    PagedResultsResponseControl prrc =
-                        (PagedResultsResponseControl)controls[i];
-                    return prrc.getCookie();
-                }
-            }
-        }
-        return null;
     }
 
     /**
@@ -3727,6 +3714,7 @@ public class LdapProvisioning extends Provisioning {
         return searchZimbraWithQuery(d, query, maxResults, token);
     }
 
+    /*  === original ===
     private SearchGalResult searchZimbraWithQuery(Domain d, String query, int maxResults, String token)
         throws ServiceException 
     {
@@ -3780,7 +3768,51 @@ public class LdapProvisioning extends Provisioning {
         //Collections.sort(result);
         return result;
     }
+    */
 
+    private SearchGalResult searchZimbraWithQuery(Domain d, String query, int maxResults, String token)
+    throws ServiceException 
+    {
+        LdapDomain ld = (LdapDomain) d;
+        SearchGalResult result = new SearchGalResult();
+        result.matches = new ArrayList<GalContact>();
+        if (query == null)
+            return result;
+    
+        // filter out hidden entries
+        query = "(&("+query+")(!(zimbraHideInGal=TRUE)))";
+    
+        LdapGalMapRules rules = getGalRules(d);
+        
+        String searchBase = d.getAttr(Provisioning.A_zimbraGalInternalSearchBase, "DOMAIN");
+        if (searchBase.equalsIgnoreCase("DOMAIN"))
+            searchBase = mDIT.domainDNToAccountSearchDN(ld.getDN());
+        else if (searchBase.equalsIgnoreCase("SUBDOMAINS"))
+            searchBase = ld.getDN();
+        else if (searchBase.equalsIgnoreCase("ROOT"))
+            searchBase = "";
+        
+        int pageSize = d.getIntAttr(Provisioning.A_zimbraGalLdapPageSize, 0); 
+        
+        DirContext ctxt = null;
+        try {
+            ctxt = LdapUtil.getDirContext(false);
+            LdapUtil.searchGal(ctxt,
+                               pageSize,
+                               searchBase, 
+                               query, 
+                               maxResults,
+                               rules,
+                               token,
+                               result);
+        } finally {
+            LdapUtil.closeContext(ctxt);
+        }
+
+        //Collections.sort(result);
+        return result;
+    }
+    
     private SearchGalResult searchLdapGal(Domain d,
                                           String n,
                                           int maxResults,
@@ -3793,12 +3825,13 @@ public class LdapProvisioning extends Provisioning {
         String krb5Principal = d.getAttr(Provisioning.A_zimbraGalLdapKerberos5Principal);
         String krb5Keytab = d.getAttr(Provisioning.A_zimbraGalLdapKerberos5Keytab);
         String searchBase = d.getAttr(Provisioning.A_zimbraGalLdapSearchBase, "");
+        int pageSize = d.getIntAttr(Provisioning.A_zimbraGalLdapPageSize, 0);
         LdapGalMapRules rules = getGalRules(d);
         String filter = d.getAttr(autoComplete ? Provisioning.A_zimbraGalAutoCompleteLdapFilter : Provisioning.A_zimbraGalLdapFilter);
         String[] galAttrList = rules.getLdapAttrs();
         try {
             LdapGalCredential credential = LdapGalCredential.init(authMech, bindDn, bindPassword, krb5Principal, krb5Keytab);
-            return LdapUtil.searchLdapGal(url, credential, searchBase, filter, n, maxResults, rules, token);
+            return LdapUtil.searchLdapGal(url, credential, pageSize, searchBase, filter, n, maxResults, rules, token);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to search GAL", e);
         }

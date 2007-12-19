@@ -491,6 +491,10 @@ public abstract class Provisioning {
     public static final String A_zimbraGalLdapKerberos5Principal = "zimbraGalLdapKerberos5Principal";
     public static final String A_zimbraGalLdapKerberos5Keytab = "zimbraGalLdapKerberos5Keytab";
     
+    /**
+     * 
+     */
+    public static final String A_zimbraGalLdapPageSize = "zimbraGalLdapPageSize";
     
     /**
      * set to true if an account is an admin account

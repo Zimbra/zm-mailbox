@@ -45,7 +45,10 @@ public class TestProvisioningUtil extends TestCase {
     }
     
     public static String baseDomainName(String testName, String testId) {
-        return testName + "-" + testId + "." + NAME_ROOT_DOMAIN;
+        if (testId == null)
+            return testName + "." + NAME_ROOT_DOMAIN;
+        else
+            return testName + "-" + testId + "." + NAME_ROOT_DOMAIN;
     }
 
     public static void verifySameId(NamedEntry entry1, NamedEntry entry2) throws Exception {
