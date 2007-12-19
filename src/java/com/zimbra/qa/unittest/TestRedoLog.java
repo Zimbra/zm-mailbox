@@ -61,7 +61,7 @@ extends TestCase {
         cleanUp();
     }
     
-    public void xtestRedoLogVerify()
+    public void testRedoLogVerify()
     throws Exception {
         RedoLogVerify verify = new RedoLogVerify(false, false, new DevNullOutputStream());
         assertTrue(verify.verifyFile(getRedoLogFile()));
