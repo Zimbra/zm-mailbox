@@ -518,32 +518,27 @@ public class StringUtil {
     //
     // HTML methods
     //
-    private static final Pattern PAT_AMP = Pattern.compile("&", Pattern.MULTILINE);
-    private static final Pattern PAT_LT = Pattern.compile("<", Pattern.MULTILINE);
-    private static final Pattern PAT_GT = Pattern.compile(">", Pattern.MULTILINE);
-    private static final Pattern PAT_DBLQT = Pattern.compile("\"", Pattern.MULTILINE);    
 
     /**
      * Escapes special characters with their HTML equivalents.
      */
     public static String escapeHtml(String text) {
         if (text == null || text.length() == 0) return "";
-        String s = replaceAll(text, PAT_AMP, "&amp;");
-        s = replaceAll(s, PAT_LT, "&lt;");
-        s = replaceAll(s, PAT_GT, "&gt;");
-        s = replaceAll(s, PAT_DBLQT, "&quot;");
-        return s;
-    }
-
-    private static String replaceAll(String text, Pattern pattern, String replace) {
-        Matcher m = pattern.matcher(text);
-        StringBuffer sb = null;
-        while (m.find()) {
-            if (sb == null) sb = new StringBuffer();
-            m.appendReplacement(sb, replace);
-        }
-        if (sb != null) m.appendTail(sb);
-        return sb == null ? text : sb.toString();
+		StringBuilder result = new StringBuilder(text.length());
+		for (int i = 0; i < text.length(); i++) {
+			char c = text.charAt(i);
+			switch (c) {
+				case '<' : result.append("&lt;"); break;
+				case '>' : result.append("&gt;"); break;
+				case '&' : result.append("&amp;"); break;
+				case '\"' : result.append("&quot;"); break;
+				case '\'' : result.append("&#039;"); break;
+				case 0x0a : // Follow through...
+				case 0x0d : result.append(" "); break;
+				default: result.append(c); break;
+			}
+		}
+		return result.toString();
     }
 
     /**
