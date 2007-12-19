@@ -3942,7 +3942,7 @@ public class Mailbox {
                 // it's not already there.
                 Blob preexisting = sharedDeliveryCtxt.getPreexistingBlob();
                 if (preexisting == null) {
-                    InputStream in = pm.getInputStream();
+                    InputStream in = pm.getRawInputStream();
                     if (!isRedo) {
                         blob = sm.storeIncoming(in, msgSize, null, msg.getVolumeId());
                     } else {

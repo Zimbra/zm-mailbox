@@ -179,7 +179,7 @@ extends Assert {
         "Jeff"
     };
 
-    private static String MESSAGE_TEMPLATE = StringUtil.join("\n", MESSAGE_TEMPLATE_LINES);
+    private static String MESSAGE_TEMPLATE = StringUtil.join("\r\n", MESSAGE_TEMPLATE_LINES);
 
     public static Message addMessage(Mailbox mbox, String subject)
     throws Exception {

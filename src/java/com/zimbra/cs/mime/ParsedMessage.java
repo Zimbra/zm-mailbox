@@ -67,6 +67,11 @@ import com.zimbra.cs.store.BlobInputStream;
 import com.zimbra.cs.util.JMSession;
 
 /**
+ * Instantiates a JavaMail <tt>MimeMessage</tt> from a <tt>byte[]</tt> or
+ * file on disk.  Converts or mutates the message as necessary by calling
+ * registered instances of {@link MimeVisitor}.  Conversion modifies the in-
+ * memory message without affecting the raw version.  Mutation modifies the
+ * raw version and affects results returned by the <tt>getRawXXX</tt> methods.
  * @author jhahm
  */
 public class ParsedMessage {
@@ -120,6 +125,9 @@ public class ParsedMessage {
     }
 
     public ParsedMessage(byte[] rawData, Long receivedDate, boolean indexAttachments) throws MessagingException {
+        if (rawData == null || rawData.length == 0) {
+            throw new MessagingException("Message data cannot be null or empty.");
+        }
         mIndexAttachments = indexAttachments;
         InputStream is = new SharedByteArrayInputStream(rawData);
         mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), is);
@@ -151,6 +159,12 @@ public class ParsedMessage {
      */
     public ParsedMessage(File file, Long receivedDate, boolean indexAttachments)
     throws MessagingException, IOException {
+        if (file == null) {
+            throw new IOException("File cannot be null.");
+        }
+        if (file.length() == 0) {
+            throw new IOException("File " + file.getPath() + " is empty.");
+        }
         mIndexAttachments = indexAttachments;
         BlobInputStream in = new BlobInputStream(file);
         mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), in);
@@ -199,9 +213,9 @@ public class ParsedMessage {
     }
     
     /**
-     * Allows the caller to set the digest.  This avoids rereading the file,
-     * in the case where the caller has already read it once and calculated
-     * the digest.
+     * Allows the caller to set the digest of the raw message.  This avoids
+     * rereading the file, in the case where the caller has already read it
+     * once and calculated the digest.
      */
     public void setRawDigest(String digest) {
         mRawDigest = digest;
@@ -251,6 +265,28 @@ public class ParsedMessage {
             }
         }
     }
+    
+    /**
+     * Copies the <tt>MimeMessage</tt> if a converter would want 
+     * to make a change, but doesn't alter the original MimeMessage.
+     */
+    private class ForkMimeMessage
+    implements MimeVisitor.ModificationCallback {
+        private boolean mForked = false;
+
+        public boolean onModification() {
+            if (mForked) {
+                return false;
+            }
+            try {
+                mForked = true;
+                mExpandedMessage = new Mime.FixedMimeMessage(mMimeMessage);
+            } catch (Exception e) {
+                sLog.warn("Unable to fork MimeMessage.", e);
+            }
+            return false;
+        }
+    }
 
     /** Applies all registered on-the-fly MIME converters to a copy of the
      *  encapsulated message, forking it from the original MimeMessage if any
@@ -263,14 +299,9 @@ public class ParsedMessage {
      *         
      * @see MimeVisitor#registerConverter */
     private boolean runMimeConverters() {
-        // this callback copies the MimeMessage if a converter would want 
-        //   to make a change, but doesn't alter the original MimeMessage
-        MimeVisitor.ModificationCallback forkCallback = new MimeVisitor.ModificationCallback() {
-            public boolean onModification() {
-                try { forkMimeMessage(); } catch (Exception e) { }  return false;
-            } };
-
         try {
+            MimeVisitor.ModificationCallback forkCallback = new ForkMimeMessage();
+            
             // first, find out if *any* of the converters would be triggered (but don't change the message)
             for (Class<? extends MimeVisitor> vclass : MimeVisitor.getConverters()) {
                 if (mExpandedMessage == mMimeMessage)
@@ -300,9 +331,12 @@ public class ParsedMessage {
         return this;
     }
 
+    /**
+     * Returns the <tt>MimeMessage</tt>.  Affected by both conversion and mutation.  
+     */
     public MimeMessage getMimeMessage() {
-        if (mMimeMessage != null) {
-            return mMimeMessage;
+        if (mExpandedMessage != null) {
+            return mExpandedMessage;
         }
         // Reference to MimeMessage was dropped by close().
         try {
@@ -325,15 +359,12 @@ public class ParsedMessage {
         } catch (MessagingException e) {
             ZimbraLog.mailbox.warn("Unable to create MimeMessage.", e);
         }
-        return mMimeMessage;
-    }
-
-    void forkMimeMessage() throws MessagingException {
-        mExpandedMessage = new Mime.FixedMimeMessage(mMimeMessage);
+        return mExpandedMessage;
     }
 
     /**
-     * Returns the size of the original MIME message.
+     * Returns the size of the raw MIME message.  Affected by mutation but
+     * not conversion.
      */
     public int getRawSize() throws IOException, MessagingException {
         if (mRawData != null) {
@@ -356,7 +387,8 @@ public class ParsedMessage {
     }
 
     /**
-     * Returns the original MIME message data.
+     * Returns the raw MIME data.  Affected by mutation but
+     * not conversion.
      */
     public byte[] getRawData() throws IOException, MessagingException {
         if (mRawData != null) {
@@ -386,7 +418,8 @@ public class ParsedMessage {
     }
 
     /**
-     * Returns the SHA1 digest of the original MIME message data, encoded as base64.
+     * Returns the SHA1 digest of the raw MIME message data, encoded as base64.  Affected by mutation but
+     * not conversion.
      */
     public String getRawDigest() throws IOException, MessagingException {
         if (mRawDigest != null) {
@@ -408,7 +441,11 @@ public class ParsedMessage {
         return mRawDigest;
     }
     
-    public InputStream getInputStream() throws ServiceException {
+    /**
+     * Returns a stream to the raw MIME message.  Affected by mutation but
+     * not conversion.
+     */
+    public InputStream getRawInputStream() throws ServiceException {
         if (mRawData != null) {
             return new ByteArrayInputStream(mRawData);
         }
@@ -580,6 +617,11 @@ public class ParsedMessage {
         return mRecipients;
     }
 
+    /**
+     * Returns the value of the <tt>From</tt> header.  If not available,
+     * returns the value of the <tt>Sender</tt> header.  Returns an empty
+     * <tt>String</tt> if neither header is available.
+     */
     public String getSender() {
         if (mSender == null) {
             String sender = null;
@@ -602,6 +644,10 @@ public class ParsedMessage {
         return mSender;
     }
 
+    /**
+     * Returns the email address of the first <tt>From</tt> or
+     * <tt>Sender</tt> header.
+     */
     public String getSenderEmail() {
         try {
             Address[] froms = getMimeMessage().getFrom();

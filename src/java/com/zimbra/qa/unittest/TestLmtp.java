@@ -283,7 +283,8 @@ extends TestCase {
             params.setId(msg.getId());
             msg = mbox.getMessage(params);
             // Check contains instead of equality, since we prepend Received and Return-Path during LMTP.
-            assertTrue("Unexpected message: " + msg.getContent(), msg.getContent().contains(messageString));
+            String content = msg.getContent().replaceAll("\n", "\r\n");
+            assertTrue("Message:\n" + content + " does not contain:\n" + messageString, content.contains(messageString));
         }
     }
     
