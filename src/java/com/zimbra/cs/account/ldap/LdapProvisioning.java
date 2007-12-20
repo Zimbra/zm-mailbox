@@ -726,6 +726,8 @@ public class LdapProvisioning extends Provisioning {
             
             LdapUtil.createEntry(ctxt, dn, attrs, "createAccount");
             Account acct = getAccountById(zimbraIdStr, ctxt, true);
+            if (acct == null)
+                throw ServiceException.FAILURE("unable to get account after creating LDAP account entry: "+emailAddress+", check ldap log for possible BDB deadlock", null);
             AttributeManager.getInstance().postModify(acctAttrs, acct, attrManagerContext, true);
 
             return acct;
