@@ -31,12 +31,12 @@ import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.servlet.ZimbraServlet;
 
-public class TestSoapProv extends TestCase {
+public class TestCreateAccount extends TestCase {
     private String TEST_ID = TestProvisioningUtil.genTestId();;
     private static String TEST_NAME = "test-soap-prov";
     private static String PASSWORD = "test123";
     private static int NUM_THREADS = 10;
-    private static int NUM_ACCTS_PER_THREAD = 1;
+    private static int NUM_ACCTS_PER_THREAD = 500;
 
     private String DOMAIN_NAME = null;
    
@@ -187,7 +187,7 @@ public class TestSoapProv extends TestCase {
     public static void main(String[] args) throws Exception {
         CliUtil.toolSetup();
         try {
-            TestUtil.runTest(new TestSuite(TestSoapProv.class));
+            TestUtil.runTest(new TestSuite(TestCreateAccount.class));
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
