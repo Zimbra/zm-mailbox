@@ -2525,6 +2525,9 @@ public class LdapProvisioning extends Provisioning {
         String computedPreAuth = PreAuthKey.computePreAuth(params, domainPreAuthKey);
         if (!computedPreAuth.equalsIgnoreCase(preAuth))
             throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "preauth mismatch");
+        
+        // update/check last logon
+        updateLastLogon(acct);
     }
     
     /* (non-Javadoc)
