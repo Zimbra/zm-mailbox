@@ -59,6 +59,33 @@ public class IMGlobalProperties implements PropertyProvider {
         if (LC.im_dnsutil_dnsoverride.value() != null && LC.im_dnsutil_dnsoverride.value().length() > 0) {
             mLocalConfigMap.put("dnsutil.dnsOverride", LC.im_dnsutil_dnsoverride.value());
         }
+        
+
+        /////////////////
+        // Socket listener configuration:
+        
+        // xmpp.socket.plain.active - client listener (not SSL)
+        // xmpp.socket.ssl.active - client listener (SSL)
+        // xmpp.component.active - external components
+        // xmpp.server.active - S2S port
+        // mLocalConfigMap.put("xmpp.cloudrouting.active", "true"); // - local cloud routing
+        // xmpp.socket.multiplex.active - connection server
+        
+        // ***no setting uses default local IP***
+        // xmpp.socket.plain.address
+        // xmpp.socket.ssl.address
+        // xmpp.component.address
+        // xmpp.server.address
+        // xmpp.cloudrouting.address
+        // xmpp.socket.multiplex.address
+        
+        // "xmpp.socket.plain.port"  // default 5222
+        // "xmpp.socket.ssl.port"  // defaul 5223
+        // "xmpp.component.socket.port" // 10015
+        // "xmpp.server.socket.port" // 5269
+        mLocalConfigMap.put("xmpp.cloudrouting.port", "7335"); 
+        // "xmpp.multiplex.socket.port" // 5262
+        
     }
     
     public String get(String key) {
