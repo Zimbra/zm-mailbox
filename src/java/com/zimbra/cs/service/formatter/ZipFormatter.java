@@ -29,7 +29,6 @@ import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
-import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.CalendarItem;
@@ -40,7 +39,6 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.UserServlet;
-import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -206,11 +204,5 @@ public class ZipFormatter extends Formatter {
         } catch (MessagingException e) {
             throw MailServiceException.MESSAGE_PARSE_ERROR(e);
         }
-    }
-
-    // FIXME: should add each item to the specified folder...
-    @Override
-    public void saveCallback(byte[] body, Context context, String contentType, Folder folder, String filename) throws UserServletException {
-        throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "format not supported for save");
     }
 }

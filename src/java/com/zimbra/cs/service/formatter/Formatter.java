@@ -23,6 +23,7 @@ import java.util.Iterator;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -126,8 +127,14 @@ public abstract class Formatter {
     public abstract void formatCallback(UserServlet.Context context)
     throws UserServletException, ServiceException, IOException, ServletException;
 
-    public abstract void saveCallback(byte[] body, UserServlet.Context context, String contentType, Folder folder, String filename)
-    throws UserServletException, ServiceException, IOException, ServletException;
+    public void saveCallback(byte[] body, UserServlet.Context context, String contentType, Folder folder, String filename)
+    throws UserServletException, ServiceException, IOException, ServletException {
+        throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "format not supported for save");
+    }
+
+    public boolean supportsSave() {
+        return false;
+    }
 
     // Caller is responsible for filtering out Appointments/Tasks marked private if the requester
     // is not the mailbox owner.

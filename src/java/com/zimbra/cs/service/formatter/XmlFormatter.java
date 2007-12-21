@@ -19,14 +19,10 @@ package com.zimbra.cs.service.formatter;
 import java.io.IOException;
 import java.util.Iterator;
 
-import javax.servlet.http.HttpServletResponse;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.index.MailboxIndex;
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.service.util.ItemIdFormatter;
@@ -69,10 +65,4 @@ public class XmlFormatter extends Formatter {
     Element.ElementFactory getFactory() {
         return Element.XMLElement.mFactory;
     }
-
-    @Override
-    public void saveCallback(byte[] body, Context context, String contentType, Folder folder, String filename) throws UserServletException {
-        throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "format not supported for save");
-    }
-
 }

@@ -22,16 +22,12 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 
-import javax.servlet.http.HttpServletResponse;
-
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Document;
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
-import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
@@ -156,9 +152,5 @@ public class RssFormatter extends Formatter {
 
     public boolean canBeBlocked() {
         return false;
-    }
-
-    public void saveCallback(byte[] body, Context context, String contentType, Folder folder, String filename) throws UserServletException {
-        throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "format not supported for save");
     }
 }

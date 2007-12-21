@@ -216,6 +216,7 @@ public class UserServlet extends ZimbraServlet {
         addFormatter(new AtomFormatter());
         addFormatter(new NativeFormatter());
         addFormatter(new ZipFormatter());
+        addFormatter(new FreeBusyFormatter());
         addFormatter(new IfbFormatter());
         addFormatter(new SyncFormatter());
         addFormatter(new WikiFormatter());
@@ -246,11 +247,7 @@ public class UserServlet extends ZimbraServlet {
         try {
             mbox = context.targetMailbox = MailboxManager.getInstance().getMailboxByAccount(context.targetAccount);
         } catch (Exception e) {
-            // ignore IllegalArgumentException or ServiceException being thrown,
-            // as we'll throw PERM_DENIED for any error.
-        } finally {
-            if (mbox == null)
-                throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
+            // ignore IllegalArgumentException or ServiceException being thrown.
         }
         return mbox;
     }
@@ -416,9 +413,6 @@ public class UserServlet extends ZimbraServlet {
 
     private void doAuthGet(HttpServletRequest req, HttpServletResponse resp, Context context)
     throws ServletException, IOException, ServiceException, UserServletException {
-        Mailbox mbox = getTargetMailbox(context);
-        ZimbraLog.addMboxToContext(mbox.getId());
-
         if (ZimbraLog.mailbox.isDebugEnabled()) {
             StringBuffer reqURL = context.req.getRequestURL();
             String queryParam = context.req.getQueryString();
@@ -427,19 +421,29 @@ public class UserServlet extends ZimbraServlet {
         }
 
         context.opContext = new OperationContext(context.authAccount, isAdminRequest(context));
-
-        if (context.reqListIds != null) {
-        	resolveItems(context);
-        } else {
-	        MailItem item = resolveItem(context, true);
-	        if (item instanceof Mountpoint) {
-	            // if the target is a mountpoint, proxy the request on to the resolved target
-	            proxyOnMountpoint(req, resp, context, (Mountpoint) item);
-	            return;
-	        }
+        Mailbox mbox = getTargetMailbox(context);
+        if (mbox != null) {
+            ZimbraLog.addMboxToContext(mbox.getId());
+            if (context.reqListIds != null) {
+            	resolveItems(context);
+            } else {
+    	        MailItem item = resolveItem(context, true);
+    	        if (item instanceof Mountpoint) {
+    	            // if the target is a mountpoint, proxy the request on to the resolved target
+    	            proxyOnMountpoint(req, resp, context, (Mountpoint) item);
+    	            return;
+    	        }
+            }
         }
         
         resolveFormatter(context);
+
+        // Prevent harvest attacks.  If mailbox doesn't exist for a request requiring authentication,
+        // return auth error instead of "no such mailbox".  If request/formatter doesn't require
+        // authentication, call the formatter and let it deal with preventing harvest attacks.
+        if (mbox == null && context.formatter.requiresAuth())
+            throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
+
         if (context.formatter.canBeBlocked()) {
             if (Formatter.checkGlobalOverride(Provisioning.A_zimbraAttachmentsBlocked, context.authAccount)) {
                 sendbackBlockMessage(context.req, context.resp);
@@ -478,43 +482,46 @@ public class UserServlet extends ZimbraServlet {
                 ZimbraLog.addAccountNameToContext(context.authAccount.getName());
             addRemoteIpToLoggingContext(req);
 
-            Mailbox mbox = getTargetMailbox(context);
-            ZimbraLog.addMboxToContext(mbox.getId());
-
-            ZimbraLog.mailbox.info("UserServlet (POST): " + context.req.getRequestURL().toString());
-
-            context.opContext = new OperationContext(context.authAccount, isAdminRequest(context));
-
+            Folder folder = null;
             String filename = null;
-            try {
-                context.target = resolveItem(context, false);
-            } catch (NoSuchItemException nsie) {
-                // perhaps it's a POST to "Notebook/new-file-name" -- find the parent folder and proceed from there
-                if (context.itemPath == null)
-                    throw nsie;
-                int separator = context.itemPath.lastIndexOf('/');
-                if (separator <= 0)
-                    throw nsie;
-                filename = context.itemPath.substring(separator + 1);
-                context.itemPath = context.itemPath.substring(0, separator);
-                context.target = resolveItem(context, false);
-            }
-
-            Folder folder = (context.target instanceof Folder ? (Folder) context.target : mbox.getFolderById(context.opContext, context.target.getFolderId()));
-
-            if (context.target != folder) {
-                if (filename == null)
-                    filename = context.target.getName();
-                else
-                    // need to fail on POST to "Notebook/existing-file/random-cruft"
-                    throw MailServiceException.NO_SUCH_FOLDER(context.itemPath);
-            }
-
-            if (folder instanceof Mountpoint) {
-                // if the target is a mountpoint, proxy the request on to the resolved target
-                context.extraPath = filename;
-                proxyOnMountpoint(req, resp, context, (Mountpoint) folder);
-                return;
+            Mailbox mbox = getTargetMailbox(context);
+            if (mbox != null) {
+                ZimbraLog.addMboxToContext(mbox.getId());
+    
+                ZimbraLog.mailbox.info("UserServlet (POST): " + context.req.getRequestURL().toString());
+    
+                context.opContext = new OperationContext(context.authAccount, isAdminRequest(context));
+    
+                try {
+                    context.target = resolveItem(context, false);
+                } catch (NoSuchItemException nsie) {
+                    // perhaps it's a POST to "Notebook/new-file-name" -- find the parent folder and proceed from there
+                    if (context.itemPath == null)
+                        throw nsie;
+                    int separator = context.itemPath.lastIndexOf('/');
+                    if (separator <= 0)
+                        throw nsie;
+                    filename = context.itemPath.substring(separator + 1);
+                    context.itemPath = context.itemPath.substring(0, separator);
+                    context.target = resolveItem(context, false);
+                }
+    
+                folder = (context.target instanceof Folder ? (Folder) context.target : mbox.getFolderById(context.opContext, context.target.getFolderId()));
+    
+                if (context.target != folder) {
+                    if (filename == null)
+                        filename = context.target.getName();
+                    else
+                        // need to fail on POST to "Notebook/existing-file/random-cruft"
+                        throw MailServiceException.NO_SUCH_FOLDER(context.itemPath);
+                }
+    
+                if (folder instanceof Mountpoint) {
+                    // if the target is a mountpoint, proxy the request on to the resolved target
+                    context.extraPath = filename;
+                    proxyOnMountpoint(req, resp, context, (Mountpoint) folder);
+                    return;
+                }
             }
 
             // if they specified a filename, default to the native formatter
@@ -537,6 +544,15 @@ public class UserServlet extends ZimbraServlet {
 
             context.target = folder;
             resolveFormatter(context);
+            if (!context.formatter.supportsSave())
+                sendError(context, req, resp, "format not supported for save");
+
+            // Prevent harvest attacks.  If mailbox doesn't exist for a request requiring authentication,
+            // return auth error instead of "no such mailbox".  If request/formatter doesn't require
+            // authentication, call the formatter and let it deal with preventing harvest attacks.
+            if (mbox == null && context.formatter.requiresAuth())
+                throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
+
             context.formatter.save(body, context, ctype, folder, filename);
         } catch (NoSuchItemException e) {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND, "no such item");
@@ -751,6 +767,8 @@ public class UserServlet extends ZimbraServlet {
                 throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "invalid path");
             int pos = pathInfo.indexOf('/', 1);
             if (pos == -1)
+                pos = pathInfo.length();
+            if (pos < 1)
                 throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "invalid path");
 
             String checkInternalDispatch = (String) request.getAttribute("zimbra-internal-dispatch");
@@ -768,9 +786,13 @@ public class UserServlet extends ZimbraServlet {
             }
             this.accountPath = pathInfo.substring(1, pos);
 
-            this.itemPath = pathInfo.substring(pos + 1);
-            if (itemPath.equals(""))
-            	itemPath = "/";
+            if (pos < pathInfo.length()) {
+                this.itemPath = pathInfo.substring(pos + 1);
+                if (itemPath.equals(""))
+                	itemPath = "/";
+            } else {
+                itemPath = "/";
+            }
             this.extraPath = this.params.get(QP_NAME);
             this.format = this.params.get(QP_FMT);
             String id = this.params.get(QP_ID);

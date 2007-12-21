@@ -218,6 +218,11 @@ public class WikiFormatter extends Formatter {
 	}
 
 	@Override
+    public boolean supportsSave() {
+        return true;
+    }
+
+    @Override
 	public void saveCallback(byte[] body, Context context, String contentType, Folder folder, String filename) throws UserServletException, ServiceException {
         Mailbox mbox = folder.getMailbox();
 

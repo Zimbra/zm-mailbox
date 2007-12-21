@@ -20,9 +20,9 @@ import java.io.IOException;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.cs.account.IDNUtil;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.MailboxIndex;
-import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.calendar.FreeBusy;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.UserServletException;
@@ -62,9 +62,18 @@ public class IfbFormatter extends Formatter {
         if (days > MAX_PERIOD_SIZE_IN_DAYS)
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "Requested range is too large (Maximum "+MAX_PERIOD_SIZE_IN_DAYS+" days)");
 
-        FreeBusy fb = context.targetMailbox.getFreeBusy(rangeStart, rangeEnd);
         String url = context.req.getRequestURL() + "?" + context.req.getQueryString();
-        String fbMsg = fb.toVCalendar(FreeBusy.Method.PUBLISH, context.targetMailbox.getAccount().getName(), null, url);
+        String acctName = null;
+        FreeBusy fb = null;
+        if (context.targetMailbox != null) {
+            fb = context.targetMailbox.getFreeBusy(rangeStart, rangeEnd);
+            acctName = context.targetMailbox.getAccount().getName();
+        } else {
+            // Unknown mailbox.  Fake an always-free response, to avoid harvest attacks.
+            fb = FreeBusy.createDummyFreeBusy(rangeStart, rangeEnd);
+            acctName = fixupAccountName(context.accountPath);
+        }
+        String fbMsg = fb.toVCalendar(FreeBusy.Method.PUBLISH, acctName, null, url);
         context.resp.getOutputStream().write(fbMsg.getBytes("UTF-8"));
     }
     
@@ -81,7 +90,17 @@ public class IfbFormatter extends Formatter {
         return false;
     }
 
-    public void saveCallback(byte[] body, Context context, String contentType, Folder folder, String filename) throws UserServletException {
-        throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "format not supported for save");
+    private String fixupAccountName(String emailAddress) throws ServiceException {
+        int index = emailAddress.indexOf('@');
+        String domain = null;
+        if (index == -1) {
+            // domain is already in ASCII name
+            domain = Provisioning.getInstance().getConfig().getAttr(Provisioning.A_zimbraDefaultDomainName, null);
+            if (domain != null)
+                emailAddress = emailAddress + "@" + domain;            
+        } else
+            emailAddress = IDNUtil.toAsciiEmail(emailAddress);
+
+        return emailAddress;
     }
 }

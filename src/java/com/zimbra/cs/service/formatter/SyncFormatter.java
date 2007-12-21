@@ -33,7 +33,6 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.UserServletException;
@@ -188,6 +187,10 @@ public class SyncFormatter extends Formatter {
     }
 
     public boolean canBeBlocked() {
+        return true;
+    }
+
+    public boolean supportsSave() {
         return true;
     }
 
