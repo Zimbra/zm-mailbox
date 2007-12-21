@@ -2773,4 +2773,14 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
+<attr id="584" name="zimbraFeatureComposeInNewWindowEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether or not compose messages in a new windows is allowed</desc>
+</attr>
+
+<attr id="585" name="zimbraFeatureOpenMailInNewWindowEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether or not open a new msg/conv in a new windows is allowed</desc>
+</attr>
+
 </attrs>
