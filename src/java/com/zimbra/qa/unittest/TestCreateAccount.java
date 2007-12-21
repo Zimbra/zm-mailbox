@@ -33,9 +33,9 @@ import com.zimbra.cs.servlet.ZimbraServlet;
 
 public class TestCreateAccount extends TestCase {
     private String TEST_ID = TestProvisioningUtil.genTestId();;
-    private static String TEST_NAME = "test-soap-prov";
+    private static String TEST_NAME = "test-accounts";
     private static String PASSWORD = "test123";
-    private static int NUM_THREADS = 10;
+    private static int NUM_THREADS = 20;
     private static int NUM_ACCTS_PER_THREAD = 500;
 
     private String DOMAIN_NAME = null;
@@ -162,6 +162,9 @@ public class TestCreateAccount extends TestCase {
         }
     }
     
+    /*
+     * bug 22933
+     */
     public void testCreateAccount() throws Exception {
         
         setUpDomain();
