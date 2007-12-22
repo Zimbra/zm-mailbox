@@ -23,6 +23,7 @@ import com.zimbra.cs.zclient.event.ZModifyAppointmentEvent;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.ZInvite.ZComponent;
 import com.zimbra.cs.zclient.ZInvite.ZStatus;
+import com.zimbra.cs.zclient.ZMailbox.ZFreeBusyTimeSlot;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -134,8 +135,30 @@ public class ZAppointmentHit implements ZSearchHit {
     private long mModifiedSeq;
     private long mModifiedDate;
 
+    private boolean mIsFromFreeBusy;
+
     ZAppointmentHit() {
 
+    }
+
+    ZAppointmentHit(ZFreeBusyTimeSlot slot) {
+        switch (slot.getType()) {
+            case BUSY:
+                mFreeBusyActual = FBA_BUSY;
+                break;
+            case TENTATIVE:
+                mFreeBusyActual = FBA_TENTATIVE;
+                break;
+            case UNAVAILABLE:
+                mFreeBusyActual = FBA_UNAVAILABLE;
+                break;
+            default:
+                mFreeBusyActual = FBA_FREE;
+        }
+        mStartTime = slot.getStartTime();
+        mEndTime = slot.getEndTime();
+        mDuration = mEndTime - mStartTime;
+        mIsFromFreeBusy = true;
     }
 
     static void addInstances(Element e, List<ZSearchHit> appts, TimeZone timeZone, boolean isTask) throws ServiceException {
@@ -276,6 +299,9 @@ public class ZAppointmentHit implements ZSearchHit {
         }
 	}
 
+
+    public boolean getIsFromFreeBusy() { return mIsFromFreeBusy; }
+    
     public String getId() {
         return mId;
     }

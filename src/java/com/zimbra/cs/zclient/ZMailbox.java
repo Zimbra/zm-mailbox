@@ -3487,6 +3487,94 @@ public class ZMailbox {
     	return new ZImportAppointmentsResult(invoke(req).getElement(MailConstants.E_APPOINTMENT));
     }
 
+    public static class ZGetFreeBusyResult {
+        private String mId;
+        private List<ZFreeBusyTimeSlot> mTimeSlots;
+
+        public ZGetFreeBusyResult(String id, List<ZFreeBusyTimeSlot> timeSlots) {
+            mId = id;
+            mTimeSlots = timeSlots;
+        }
+
+        public String getId() { return mId; }
+        public List<ZFreeBusyTimeSlot> getTimeSlots() { return mTimeSlots; }
+    }
+
+    public enum ZFreeBusySlotType {
+        FREE, BUSY, TENTATIVE, UNAVAILABLE, NO_DATA;
+
+        public static ZFreeBusySlotType fromString(String s) throws ServiceException {
+            try {
+                return ZFreeBusySlotType.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ZClientException.CLIENT_ERROR("invalid free busy slot type: "+s+", valid values: "+Arrays.asList(ZFreeBusySlotType.values()), e);
+            }
+        }
+    }
+
+    public static class ZFreeBusyTimeSlot {
+        private ZFreeBusySlotType mType;
+        private long mStart;
+        private long mEnd;
+
+        public ZFreeBusyTimeSlot(ZFreeBusySlotType type, long start, long end) {
+            mType = type;
+            mStart = start;
+            mEnd = end;
+        }
+
+        public ZFreeBusySlotType getType() { return mType; }
+        public long getStartTime() { return mStart; }
+        public long getEndTime() { return mEnd; }
+    }
+
+    public List<ZGetFreeBusyResult> getFreeBusy(String id, long startTime, long endTime) throws ServiceException {
+        XMLElement req = new XMLElement(MailConstants.GET_FREE_BUSY_REQUEST);
+        req.addAttribute(MailConstants.A_UID, id);
+        req.addAttribute(MailConstants.A_CAL_START_TIME, startTime);
+        req.addAttribute(MailConstants.A_CAL_END_TIME, endTime);
+        Element resp = invoke(req);
+        List<ZGetFreeBusyResult> result = new ArrayList<ZGetFreeBusyResult>();
+        for (Element user : resp.listElements(MailConstants.E_FREEBUSY_USER)) {
+            String userId = user.getAttribute(MailConstants.A_ID);
+            List<ZFreeBusyTimeSlot> slots = new ArrayList<ZFreeBusyTimeSlot>();
+            for (Element slot : user.listElements()) {
+                ZFreeBusySlotType type;
+                if (slot.getName().equals(MailConstants.E_FREEBUSY_FREE)) {
+                    type = ZFreeBusySlotType.FREE;
+                } else if (slot.getName().equals(MailConstants.E_FREEBUSY_BUSY)) {
+                    type = ZFreeBusySlotType.BUSY;
+                } else if (slot.getName().equals(MailConstants.E_FREEBUSY_BUSY_TENTATIVE)) {
+                    type = ZFreeBusySlotType.TENTATIVE;
+                } else if (slot.getName().equals(MailConstants.E_FREEBUSY_BUSY_UNAVAILABLE)) {
+                    type = ZFreeBusySlotType.UNAVAILABLE;
+                } else {
+                    type = ZFreeBusySlotType.NO_DATA;
+                }
+                slots.add(new ZFreeBusyTimeSlot(
+                        type,
+                        slot.getAttributeLong(MailConstants.A_CAL_START_TIME),
+                        slot.getAttributeLong(MailConstants.A_CAL_END_TIME)));
+            }
+            result.add(new ZGetFreeBusyResult(userId, slots));
+        }
+        return result;
+    }
+
+    public List<ZAppointmentHit> createAppointmentHits(List<ZFreeBusyTimeSlot> slots) {
+        List<ZAppointmentHit> result = new ArrayList<ZAppointmentHit>();
+        for (ZFreeBusyTimeSlot slot : slots) {
+            switch (slot.getType()) {
+                case BUSY:
+                case TENTATIVE:
+                case UNAVAILABLE:
+                    result.add(new ZAppointmentHit(slot));
+                    break;
+            }
+        }
+        return result;
+    }
+
     /* tasks */
 
     public ZAppointmentResult createTask(String folderId, String flags, ZOutgoingMessage message, ZInvite invite, String optionalUid) throws ServiceException {

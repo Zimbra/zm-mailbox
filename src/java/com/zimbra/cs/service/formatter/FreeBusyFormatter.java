@@ -43,7 +43,7 @@ public class FreeBusyFormatter extends Formatter {
 
     public void formatCallback(Context context)
     throws IOException, ServiceException, UserServletException, ServletException {
-        context.req.setAttribute(ATTR_FREEBUSY, "yes");
+        context.req.setAttribute(ATTR_FREEBUSY, "true");
         HtmlFormatter.dispatchJspRest(getServlet(), context);
     }
 
