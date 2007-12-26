@@ -2347,7 +2347,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         if (!checkState(tag, State.AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
-        StringBuilder i4acl = new StringBuilder("ACL ").append(path.asImapPath());
+        StringBuilder i4acl = new StringBuilder("ACL ").append(path.asUtf7String());
 
         try {
             // make sure the requester has sufficient permissions to make the request

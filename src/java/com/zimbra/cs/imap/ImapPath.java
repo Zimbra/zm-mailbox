@@ -43,7 +43,7 @@ import com.zimbra.cs.zclient.ZMountpoint;
 import com.zimbra.cs.zclient.ZSearchFolder;
 
 public class ImapPath {
-    static enum Scope { UNPARSED, NAME, CONTENT, REFERENCE };
+    enum Scope { UNPARSED, NAME, CONTENT, REFERENCE };
 
     static final String NAMESPACE_PREFIX = "/home/";
 
@@ -559,16 +559,10 @@ public class ImapPath {
         return mItemId;
     }
 
-    @Override
-    public String toString() {
+    @Override public String toString() {
         return asImapPath();
     }
 
-    /** Formats a folder path as an IMAP-UTF-7 quoted-string.  Applies all
-     *  special hack-specific path transforms.
-     * @param mPath         The Zimbra-local folder pathname.
-     * @param mCredentials  The authenticated user's credentials.
-     * @see #importPath(String, ImapCredentials) */
     String asImapPath() {
         String path = mPath, lcpath = path.toLowerCase();
         // make sure that the Inbox is called "INBOX", regardless of how we capitalize it
@@ -584,6 +578,11 @@ public class ImapPath {
         return path;
     }
 
+    /** Formats a folder path as an IMAP-UTF-7 quoted-string.  Applies all
+     *  special hack-specific path transforms.
+     * @param mPath         The Zimbra-local folder pathname.
+     * @param mCredentials  The authenticated user's credentials.
+     * @see #importPath(String, ImapCredentials) */
     String asUtf7String() {
         String path = asImapPath();
         try {
