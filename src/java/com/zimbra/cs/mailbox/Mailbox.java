@@ -5305,7 +5305,7 @@ public class Mailbox {
         return Math.min(t1, t2);
     }
 
-    public void purgeImapDeleted(OperationContext octxt) throws ServiceException {
+    public synchronized void purgeImapDeleted(OperationContext octxt) throws ServiceException {
         PurgeImapDeleted redoRecorder = new PurgeImapDeleted(mId);
         boolean success = false;
         try {
