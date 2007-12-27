@@ -35,7 +35,10 @@ import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.params.HttpClientParams;
 import org.apache.commons.httpclient.params.HttpMethodParams;
 
+import com.zimbra.common.util.ByteUtil;
+
 import java.io.IOException;
+import java.io.InputStream;
 
 /**
  */
@@ -236,8 +239,9 @@ public class SoapHttpTransport extends SoapTransport {
                 }
             }
 
-            // Read the response body.
-            byte[] responseBody = method.getResponseBody();
+            // Read the response body.  Use the stream API instead of the byte[] one
+            // to avoid HTTPClient whining about a large response.
+            byte[] responseBody = ByteUtil.getContent(method.getResponseBodyAsStream(), (int) method.getResponseContentLength());
 
             // Deal with the response.
             // Use caution: ensure correct character encoding and is not binary data
