@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.mail.Address;
@@ -198,6 +199,7 @@ public class MailSender {
 
             // #0 is the authenticated user's, #1 is the send-as user's
             RollbackData[] rollback = new RollbackData[2];
+            Object authMailbox = isDelegatedRequest ? null : mbox;
 
             // if requested, save a copy of the message to the Sent Mail folder
             ParsedMessage pm = null;
@@ -206,34 +208,26 @@ public class MailSender {
                     identity = Provisioning.getInstance().getDefaultIdentity(authuser);
 
                 // figure out where to save the save-to-sent copy
-                Mailbox mboxSave = isDelegatedRequest ? null : mbox;
-                if (isDelegatedRequest && Provisioning.onLocalServer(authuser))
-                    mboxSave = MailboxManager.getInstance().getMailboxByAccount(authuser);
+                if (authMailbox == null)
+                    authMailbox = getAuthenticatedMailbox(authuser, isAdminRequest);
 
-                if (mboxSave != null) {
+                if (authMailbox instanceof Mailbox) {
+                    Mailbox mboxSave = (Mailbox) authMailbox;
                     int flags = Flag.BITMASK_FROM_ME;
                     pm = new ParsedMessage(mm, mm.getSentDate().getTime(), mboxSave.attachmentsIndexingEnabled());
+
                     // save it to the requested folder
                     int sentFolderId = getSentFolderId(mboxSave, identity);
                     Message msg = mboxSave.addMessage(octxt, pm, sentFolderId, true, flags, null, convId);
                     rollback[0] = new RollbackData(msg);
-                } else {
-                    // delegated request, not local
-                    String uri = AccountUtil.getSoapUri(authuser);
-                    if (uri != null) {
-                        try {
-                            ZMailbox.Options options = new ZMailbox.Options(new AuthToken(authuser, isAdminRequest).getEncoded(), uri);
-                            options.setNoSession(true);
-                            ZMailbox zmbox = ZMailbox.getMailbox(options);
-                            String sentFolder = identity.getAttr(Provisioning.A_zimbraPrefSentMailFolder, "" + Mailbox.ID_FOLDER_SENT);
-                            pm = new ParsedMessage(mm, mm.getSentDate().getTime(), mbox.attachmentsIndexingEnabled());
+                } else if (authMailbox instanceof ZMailbox) {
+                    ZMailbox zmbxSave = (ZMailbox) authMailbox;
+                    pm = new ParsedMessage(mm, mm.getSentDate().getTime(), mbox.attachmentsIndexingEnabled());
 
-                            String msgId = zmbox.addMessage(sentFolder, "s", null, mm.getSentDate().getTime(), pm.getRawData(), true);
-                            rollback[0] = new RollbackData(zmbox, authuser, msgId);
-                        } catch (Exception e) {
-                            ZimbraLog.smtp.warn("could not save to remote sent folder (perm denied); continuing", e);
-                        }
-                    }
+                    // save it to the requested folder
+                    String sentFolder = identity.getAttr(Provisioning.A_zimbraPrefSentMailFolder, "" + Mailbox.ID_FOLDER_SENT);
+                    String msgId = zmbxSave.addMessage(sentFolder, "s", null, mm.getSentDate().getTime(), pm.getRawData(), true);
+                    rollback[0] = new RollbackData(zmbxSave, authuser, msgId);
                 }
             }
 
@@ -273,12 +267,18 @@ public class MailSender {
                 FileUploadServlet.deleteUploads(uploads);
 
             // add any new contacts to the personal address book
-            if (newContacts != null) {
+            if (newContacts != null && !newContacts.isEmpty()) {
+                if (authMailbox == null)
+                    authMailbox = getAuthenticatedMailbox(authuser, isAdminRequest);
                 for (InternetAddress inetaddr : newContacts) {
-                    ParsedAddress addr = new ParsedAddress(inetaddr);
+                    Map<String, String> fields = new ParsedAddress(inetaddr).getAttributes();
                     try {
-                        ParsedContact pc = new ParsedContact(addr.getAttributes());
-                        mbox.createContact(octxt, pc, Mailbox.ID_FOLDER_AUTO_CONTACTS, null);
+                        if (authMailbox instanceof Mailbox) {
+                            ParsedContact pc = new ParsedContact(fields);
+                            ((Mailbox) authMailbox).createContact(octxt, pc, Mailbox.ID_FOLDER_AUTO_CONTACTS, null);
+                        } else if (authMailbox instanceof ZMailbox) {
+                            ((ZMailbox) authMailbox).createContact("" + Mailbox.ID_FOLDER_AUTO_CONTACTS, null, fields);
+                        }
                     } catch (ServiceException e) {
                         ZimbraLog.smtp.warn("ignoring error while auto-adding contact", e);
                     }
@@ -313,6 +313,24 @@ public class MailSender {
         } catch (MessagingException me) {
             ZimbraLog.smtp.warn("exception occurred during SendMsg", me);
             throw ServiceException.FAILURE("MessagingException", me);
+        }
+    }
+
+    private Object getAuthenticatedMailbox(Account authuser, boolean isAdminRequest) {
+        try {
+            if (Provisioning.onLocalServer(authuser)) {
+                return MailboxManager.getInstance().getMailboxByAccount(authuser);
+            } else {
+                String uri = AccountUtil.getSoapUri(authuser);
+                if (uri == null)
+                    return null;
+                ZMailbox.Options options = new ZMailbox.Options(new AuthToken(authuser, isAdminRequest).getEncoded(), uri);
+                options.setNoSession(true);
+                return ZMailbox.getMailbox(options);
+            }
+        } catch (Exception e) {
+            ZimbraLog.smtp.info("could not fetch home mailbox for delegated send", e);
+            return null;
         }
     }
 
