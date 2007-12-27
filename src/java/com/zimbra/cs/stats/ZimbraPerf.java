@@ -18,28 +18,26 @@
 package com.zimbra.cs.stats;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.stats.StatUtil;
+import com.zimbra.common.stats.Accumulator;
+import com.zimbra.common.stats.Counter;
+import com.zimbra.common.stats.RealtimeStats;
+import com.zimbra.common.stats.RealtimeStatsCallback;
+import com.zimbra.common.stats.StatsDumper;
+import com.zimbra.common.stats.StatsDumperDataSource;
+import com.zimbra.common.stats.StopWatch;
+import com.zimbra.common.stats.SystemStats;
+import com.zimbra.common.stats.ThreadStats;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.TaskScheduler;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbUtil;
 
 /**
  * A collection of methods for keeping track of server performance statistics.
@@ -47,8 +45,6 @@ import com.zimbra.cs.db.DbUtil;
 public class ZimbraPerf {
 
     static Log sLog = LogFactory.getLog(ZimbraPerf.class);
-    private static final com.zimbra.common.util.Log sZimbraStats = LogFactory.getLog("zimbra.stats");
-    private static TaskScheduler<Void> sTaskScheduler = new TaskScheduler<Void>("ZimbraStats", 1, 1);
 
     public static final String RTS_DB_POOL_SIZE = "db_pool_size";
     public static final String RTS_INNODB_BP_HIT_RATE = "innodb_bp_hit_rate";
@@ -80,6 +76,10 @@ public class ZimbraPerf {
     public static Counter COUNTER_IDX_WRT = new Counter("idx_wrt");
     public static Counter COUNTER_IDX_WRT_OPENED = new Counter("idx_wrt_opened");
     public static Counter COUNTER_IDX_WRT_OPENED_CACHE_HIT = new Counter("idx_wrt_opened_cache_hit");
+    
+    public static ActivityTracker SOAP_TRACKER;
+    public static ActivityTracker IMAP_TRACKER;
+    public static ActivityTracker POP_TRACKER;
     
     private static RealtimeStats sRealtimeStats = 
         new RealtimeStats(new String[] {
@@ -149,25 +149,24 @@ public class ZimbraPerf {
         sRealtimeStats.addCallback(callback);
     }
     
-    /**
-     * Returns the names of the columns for zimbrastats.csv.
-     */
-    public static List<String> getZimbraStatsColumns() {
-        List<String> columns = new ArrayList<String>();
-        columns.add("timestamp");
-        synchronized (sAccumulators) {
-            for (Accumulator a : sAccumulators) {
-                for (String column : a.getNames()) {
-                    columns.add(column);
-                }
-            }
-        }
-        return columns;
-    }
-    
     private static final long CSV_DUMP_FREQUENCY = Constants.MILLIS_PER_MINUTE;
     private static boolean sIsInitialized = false;
 
+    private static final String[] THREAD_NAME_PREFIXES = new String[] { 
+        "btpool",
+        "pool",
+        "LmtpHandler",
+        "ImapHandler",
+        "Pop3Handler",
+        "ScheduledTask",
+        "Timer",
+        "AnonymousIoService",
+        "FLAP processor",
+        "GC",
+        "SocketAcceptor",
+        "Thread"
+    };
+    
     public synchronized static void initialize() {
         if (sIsInitialized) {
             sLog.warn("Detected a second call to ZimbraPerf.initialize()", new Exception());
@@ -196,20 +195,45 @@ public class ZimbraPerf {
         COUNTER_IDX_WRT.setShowCount(false);
         COUNTER_IDX_WRT.setShowTotal(false);
 
-        sTaskScheduler.schedule("ZimbraStats", new ZimbraStatsDumper(), true, CSV_DUMP_FREQUENCY, 0);
+        StatsDumper.schedule(new MailboxdStats(), CSV_DUMP_FREQUENCY);
+        ThreadStats threadStats = new ThreadStats(THREAD_NAME_PREFIXES,
+            new File(LC.zimbra_log_directory.value() + "/threads.csv")); 
+        StatsDumper.schedule(threadStats, CSV_DUMP_FREQUENCY);
         sIsInitialized = true;
+
+        SOAP_TRACKER = new ActivityTracker(LC.zimbra_log_directory.value() + "/soap.csv");
+        StatsDumper.schedule(SOAP_TRACKER, CSV_DUMP_FREQUENCY);
+        IMAP_TRACKER = new ActivityTracker(LC.zimbra_log_directory.value() + "/imap.csv");
+        StatsDumper.schedule(IMAP_TRACKER, CSV_DUMP_FREQUENCY);
+        POP_TRACKER = new ActivityTracker(LC.zimbra_log_directory.value() + "/pop3.csv");
+        StatsDumper.schedule(POP_TRACKER, CSV_DUMP_FREQUENCY);
     }
 
     /**
      * Scheduled task that writes a row to zimbrastats.csv with the latest
      * <tt>Accumulator</tt> data.
      */
-    private static final class ZimbraStatsDumper
-    implements Callable<Void>
+    private static final class MailboxdStats
+    implements StatsDumperDataSource
     {
-        public Void call() {
+        private static File MAILBOXD_CSV_FILE = new File(LC.zmstat_log_directory.value() + "/mailboxd.csv");
+        
+        public File getFile() {
+            return MAILBOXD_CSV_FILE; 
+        }
+        
+        public String getHeader() {
+            List<String> columns = new ArrayList<String>();
+            for (Accumulator a : sAccumulators) {
+                for (String column : a.getNames()) {
+                    columns.add(column);
+                }
+            }
+            return StringUtil.join(",", columns);
+        }
+
+        public Collection<String> getDataLines() {
             List<Object> data = new ArrayList<Object>();
-            data.add(StatUtil.getTimestampString());
             for (Accumulator a : sAccumulators) {
                 synchronized (a) {
                     data.addAll(a.getData());
@@ -223,8 +247,16 @@ public class ZimbraPerf {
                     data.set(i, "");
                 }
             }
-            sZimbraStats.info(StringUtil.join(",", data));
-            return null;
+            
+            // Return data
+            String line = StringUtil.join(",", data);
+            List<String> retVal = new ArrayList<String>(1);
+            retVal.add(line);
+            return retVal;
+        }
+
+        public boolean hasTimestampColumn() {
+            return true;
         }
     }
 }

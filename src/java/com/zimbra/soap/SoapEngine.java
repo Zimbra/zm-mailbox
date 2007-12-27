@@ -37,9 +37,9 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -48,7 +48,7 @@ import com.zimbra.cs.service.admin.AdminDocumentHandler;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
-import com.zimbra.cs.stats.ActivityTracker;
+import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.ZimbraSoapContext.SessionInfo;
@@ -81,17 +81,12 @@ public class SoapEngine {
     /** context name of IP of the origin client */
     public static final String ORIG_REQUEST_IP = "orig.request.ip";
     
-    private static ActivityTracker sActivityTracker;
-    
 	private static Log mLog = LogFactory.getLog(SoapEngine.class);
 
 	private DocumentDispatcher mDispatcher;
     
     public SoapEngine() {
         mDispatcher = new DocumentDispatcher();
-        if (sActivityTracker == null) {
-            sActivityTracker = ActivityTracker.getInstance("soap.csv");
-        }
     }
 
     public Element dispatch(String path, byte[] soapMessage, Map<String, Object> context, boolean loggedRequest) {
@@ -348,7 +343,7 @@ public class SoapEngine {
                 } finally {
                     handler.postHandle(userObj);
                 }
-                sActivityTracker.addStat(request.getName(), startTime);
+                ZimbraPerf.SOAP_TRACKER.addStat(request.getName(), startTime);
             }
         } catch (SoapFaultException e) {
             response = e.getFault() != null ? e.getFault().detach() : soapProto.soapFault(ServiceException.FAILURE(e.toString(), e)); 

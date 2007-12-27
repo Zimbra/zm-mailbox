@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-import com.zimbra.cs.stats.RealtimeStatsCallback;
+import com.zimbra.common.stats.RealtimeStatsCallback;
 import com.zimbra.cs.stats.ZimbraPerf;
 
 /**

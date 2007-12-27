@@ -25,7 +25,7 @@ import com.zimbra.common.util.NetUtil;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mina.MinaThreadFactory;
 import com.zimbra.cs.server.Server;
-import com.zimbra.cs.stats.RealtimeStatsCallback;
+import com.zimbra.common.stats.RealtimeStatsCallback;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.tcpserver.TcpServer;
