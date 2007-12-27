@@ -659,12 +659,12 @@ abstract class ImapRequest {
             else if (key.equals("SUBJECT"))     { skipSpace(); child = new ContentSearch(ContentSearch.Relation.subject, readAstring(charset)); }
             else if (key.equals("TEXT"))        { skipSpace(); child = new ContentSearch(ContentSearch.Relation.body, readAstring(charset)); }
             else if (key.equals("TO"))          { skipSpace(); child = new ContentSearch(ContentSearch.Relation.to, readAstring(charset)); }
-            else if (key.equals("UID"))         { skipSpace(); child = new SequenceSearch(readSequence(), true); }
+            else if (key.equals("UID"))         { skipSpace(); child = new SequenceSearch(mTag, readSequence(), true); }
             else if (key.equals("UNKEYWORD"))   { skipSpace(); child = new NotOperation(new FlagSearch(readAtom())); }
             else if (key.equals("YOUNGER") && extensionEnabled("WITHIN"))  { skipSpace(); child = new RelativeDateSearch(DateSearch.Relation.after, parseInteger(readNumber())); }
             else if (key.equals(SUBCLAUSE))     { skipChar('(');  child = readSearchClause(charset, MULTIPLE_CLAUSES, new AndOperation());  skipChar(')'); }
             else if (Character.isDigit(key.charAt(0)) || key.charAt(0) == '*' || key.charAt(0) == '$')
-                child = new SequenceSearch(validateSequence(key, true), false);
+                child = new SequenceSearch(mTag, validateSequence(key, true), false);
             else if (key.equals("OR")) {
                 skipSpace(); child = readSearchClause(charset, SINGLE_CLAUSE, new OrOperation());
                 skipSpace(); readSearchClause(charset, SINGLE_CLAUSE, (LogicalOperation) child);

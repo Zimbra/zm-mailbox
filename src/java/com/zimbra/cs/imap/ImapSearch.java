@@ -28,8 +28,8 @@ import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
 
 abstract class ImapSearch {
     abstract boolean canBeRunLocally();
-    abstract String toZimbraSearch(ImapFolder i4folder);
-    abstract ImapMessageSet evaluate(ImapFolder i4folder);
+    abstract String toZimbraSearch(ImapFolder i4folder) throws ImapParseException;
+    abstract ImapMessageSet evaluate(ImapFolder i4folder) throws ImapParseException;
     boolean requiresMODSEQ()  { return false; }
 
     static boolean isAllMessages(ImapFolder i4folder, Set<ImapMessage> i4set) {
@@ -87,14 +87,14 @@ abstract class ImapSearch {
     static class AndOperation extends LogicalOperation {
         AndOperation(ImapSearch... children)  { super();  for (ImapSearch i4search : children) addChild(i4search); }
 
-        String toZimbraSearch(ImapFolder i4folder) {
+        String toZimbraSearch(ImapFolder i4folder) throws ImapParseException {
             StringBuilder search = new StringBuilder("(");
             for (ImapSearch i4search : mChildren)
                 search.append(search.length() == 1 ? "" : " ").append(i4search.toZimbraSearch(i4folder));
             return search.append(')').toString();
         }
 
-        ImapMessageSet evaluate(ImapFolder i4folder) {
+        ImapMessageSet evaluate(ImapFolder i4folder) throws ImapParseException {
             ImapMessageSet matched = null;
             for (ImapSearch i4search : mChildren) {
                 if (matched == null)
@@ -111,14 +111,14 @@ abstract class ImapSearch {
     static class OrOperation extends LogicalOperation {
         OrOperation(ImapSearch... children)  { super();  for (ImapSearch i4search : children) addChild(i4search); }
 
-        String toZimbraSearch(ImapFolder i4folder) {
+        String toZimbraSearch(ImapFolder i4folder) throws ImapParseException {
             StringBuilder search = new StringBuilder("(");
             for (ImapSearch i4search : mChildren)
                 search.append(search.length() == 1 ? "(" : " or (").append(i4search.toZimbraSearch(i4folder)).append(')');
             return search.append(')').toString();
         }
 
-        ImapMessageSet evaluate(ImapFolder i4folder) {
+        ImapMessageSet evaluate(ImapFolder i4folder) throws ImapParseException {
             ImapMessageSet matched = null;
             for (ImapSearch i4search : mChildren) {
                 if (matched == null)
@@ -136,11 +136,11 @@ abstract class ImapSearch {
         NotOperation()                  { super(); }
         NotOperation(ImapSearch child)  { super();  addChild(child); }
 
-        String toZimbraSearch(ImapFolder i4folder) {
+        String toZimbraSearch(ImapFolder i4folder) throws ImapParseException {
             return '-' + mChildren.get(0).toZimbraSearch(i4folder);
         }
 
-        ImapMessageSet evaluate(ImapFolder i4folder) {
+        ImapMessageSet evaluate(ImapFolder i4folder) throws ImapParseException {
             ImapMessageSet matches = i4folder.getAllMessages();
             matches.removeAll(mChildren.get(0).evaluate(i4folder));
             return matches;
@@ -160,13 +160,20 @@ abstract class ImapSearch {
     }
 
     static class SequenceSearch extends ImapSearch {
+        private String mTag;
         private String mSubSequence;
         private boolean mIsUidSearch;
-        SequenceSearch(String subSequence, boolean byUID)  { mSubSequence = subSequence;  mIsUidSearch = byUID; }
+        SequenceSearch(String tag, String subSequence, boolean byUID)  { mTag = tag;  mSubSequence = subSequence;  mIsUidSearch = byUID; }
 
-        boolean canBeRunLocally()                     { return true; }
-        String toZimbraSearch(ImapFolder i4folder)    { return sequenceAsSearchTerm(i4folder, evaluate(i4folder), true); }
-        ImapMessageSet evaluate(ImapFolder i4folder)  { return i4folder.getSubsequence(mSubSequence, mIsUidSearch); }
+        boolean canBeRunLocally()  { return true; }
+
+        String toZimbraSearch(ImapFolder i4folder) throws ImapParseException {
+            return sequenceAsSearchTerm(i4folder, evaluate(i4folder), true);
+        }
+
+        ImapMessageSet evaluate(ImapFolder i4folder) throws ImapParseException {
+            return i4folder.getSubsequence(mTag, mSubSequence, mIsUidSearch);
+        }
     }
 
     static class FlagSearch extends ImapSearch {

@@ -1166,8 +1166,8 @@ public abstract class ImapHandler extends ProtocolHandler {
             String knownUIDs = qri.knownUIDs == null ? "1:" + (i4folder.getInitialUIDNEXT() - 1) : qri.knownUIDs;
             if (qri.seqMilestones != null && qri.uidMilestones != null) {
                 int lowwater = 1;
-                ImapMessageSet seqset = i4folder.getSubsequence(qri.seqMilestones, false);
-                ImapMessageSet uidset = i4folder.getSubsequence(qri.uidMilestones, true);
+                ImapMessageSet seqset = i4folder.getSubsequence(tag, qri.seqMilestones, false);
+                ImapMessageSet uidset = i4folder.getSubsequence(tag, qri.uidMilestones, true);
                 seqset.remove(null);  uidset.remove(null);
                 for (Iterator<ImapMessage> itseq = seqset.iterator(), ituid = uidset.iterator(); itseq.hasNext() && ituid.hasNext(); ) {
                     ImapMessage i4msg;
@@ -2510,7 +2510,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         return CONTINUE_PROCESSING;
     }
 
-    boolean doCLOSE(String tag) throws IOException {
+    boolean doCLOSE(String tag) throws IOException, ImapParseException {
         if (!checkState(tag, State.SELECTED))
             return CONTINUE_PROCESSING;
 
@@ -2523,7 +2523,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             //         No messages are removed, and no error is given, if the mailbox is
             //         selected by an EXAMINE command or is otherwise selected read-only."
             if (mSelectedFolder.isWritable() && mSelectedFolder.getPath().isWritable(ACL.RIGHT_DELETE))
-                expunged = expungeMessages(mSelectedFolder, null);
+                expunged = expungeMessages(tag, mSelectedFolder, null);
         } catch (ServiceException e) {
             // log the error but keep going...
             ZimbraLog.imap.warn("error during CLOSE", e);
@@ -2559,7 +2559,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     
     private final int SUGGESTED_DELETE_BATCH_SIZE = 30;
 
-    boolean doEXPUNGE(String tag, boolean byUID, String sequenceSet) throws IOException {
+    boolean doEXPUNGE(String tag, boolean byUID, String sequenceSet) throws IOException, ImapParseException {
         if (!checkState(tag, State.SELECTED)) {
             return CONTINUE_PROCESSING;
         } else if (!mSelectedFolder.isWritable()) {
@@ -2573,7 +2573,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             if (!mSelectedFolder.getPath().isWritable(ACL.RIGHT_DELETE))
                 throw ServiceException.PERM_DENIED("you do not have permission to delete messages from this folder");
 
-            expunged = expungeMessages(mSelectedFolder, sequenceSet);
+            expunged = expungeMessages(tag, mSelectedFolder, sequenceSet);
         } catch (ServiceException e) {
             ZimbraLog.imap.warn(command + " failed", e);
             sendNO(tag, command + " failed");
@@ -2593,10 +2593,10 @@ public abstract class ImapHandler extends ProtocolHandler {
         return CONTINUE_PROCESSING;
     }
 
-    boolean expungeMessages(ImapFolder i4folder, String sequenceSet) throws ServiceException, IOException {
+    boolean expungeMessages(String tag, ImapFolder i4folder, String sequenceSet) throws ServiceException, IOException, ImapParseException {
         Set<ImapMessage> i4set;
         synchronized (mSelectedFolder.getMailbox()) {
-            i4set = (sequenceSet == null ? null : i4folder.getSubsequence(sequenceSet, true));
+            i4set = (sequenceSet == null ? null : i4folder.getSubsequence(tag, sequenceSet, true));
         }
         List<Integer> ids = new ArrayList<Integer>(SUGGESTED_DELETE_BATCH_SIZE);
 
@@ -2704,7 +2704,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                     try {
                         for (ZimbraHit hit = zqr.getFirstHit(); hit != null; hit = zqr.getNext()) {
                             ImapMessage i4msg = mSelectedFolder.getById(hit.getItemId());
-                            if (i4msg == null)
+                            if (i4msg == null || i4msg.isExpunged())
                                 continue;
                             hits.add(i4msg);
                             if (requiresMODSEQ)
@@ -2786,7 +2786,8 @@ public abstract class ImapHandler extends ProtocolHandler {
     static final int FETCH_ALL  = FETCH_FAST  | FETCH_ENVELOPE;
     static final int FETCH_FULL = FETCH_ALL   | FETCH_BODY;
 
-    boolean doFETCH(String tag, String sequenceSet, int attributes, List<ImapPartSpecifier> parts, boolean byUID, int changedSince) throws IOException, ImapParseException {
+    boolean doFETCH(String tag, String sequenceSet, int attributes, List<ImapPartSpecifier> parts, boolean byUID, int changedSince)
+    throws IOException, ImapParseException {
         return fetch(tag, sequenceSet, attributes, parts, byUID, changedSince, true);
     }
 
@@ -2839,7 +2840,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         ImapMessageSet i4set;
         Mailbox mbox = i4folder.getMailbox();
         synchronized (mbox) {
-            i4set = i4folder.getSubsequence(sequenceSet, byUID);
+            i4set = i4folder.getSubsequence(tag, sequenceSet, byUID);
         }
         boolean allPresent = byUID || !i4set.contains(null);
         i4set.remove(null);
@@ -3011,7 +3012,8 @@ public abstract class ImapHandler extends ProtocolHandler {
     
     private final int SUGGESTED_BATCH_SIZE = 100;
 
-    boolean doSTORE(String tag, String sequenceSet, List<String> flagNames, StoreAction operation, boolean silent, int modseq, boolean byUID) throws IOException, ImapParseException {
+    boolean doSTORE(String tag, String sequenceSet, List<String> flagNames, StoreAction operation, boolean silent, int modseq, boolean byUID)
+    throws IOException, ImapParseException {
         if (!checkState(tag, State.SELECTED)) {
             return CONTINUE_PROCESSING;
         } else if (!mSelectedFolder.isWritable()) {
@@ -3037,7 +3039,7 @@ public abstract class ImapHandler extends ProtocolHandler {
 
         Set<ImapMessage> i4set;
         synchronized (mbox) {
-            i4set = mSelectedFolder.getSubsequence(sequenceSet, byUID);
+            i4set = mSelectedFolder.getSubsequence(tag, sequenceSet, byUID);
         }
         boolean allPresent = byUID || !i4set.contains(null);
         i4set.remove(null);
@@ -3199,7 +3201,7 @@ public abstract class ImapHandler extends ProtocolHandler {
 
     private final int SUGGESTED_COPY_BATCH_SIZE = 50;
 
-    boolean doCOPY(String tag, String sequenceSet, ImapPath path, boolean byUID) throws IOException {
+    boolean doCOPY(String tag, String sequenceSet, ImapPath path, boolean byUID) throws IOException, ImapParseException {
         if (!checkState(tag, State.SELECTED))
             return CONTINUE_PROCESSING;
 
@@ -3210,7 +3212,7 @@ public abstract class ImapHandler extends ProtocolHandler {
 
         Set<ImapMessage> i4set;
         synchronized (mbox) {
-            i4set = mSelectedFolder.getSubsequence(sequenceSet, byUID);
+            i4set = mSelectedFolder.getSubsequence(tag, sequenceSet, byUID);
         }
         // RFC 2180 4.4.1: "The server MAY disallow the COPY of messages in a multi-
         //                  accessed mailbox that contains expunged messages."
