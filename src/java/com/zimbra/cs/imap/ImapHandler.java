@@ -2679,6 +2679,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             synchronized (mbox) {
                 if (i4search.canBeRunLocally()) {
                     hits = i4search.evaluate(mSelectedFolder);
+                    hits.remove(null);
                 } else {
                     String search = i4search.toZimbraSearch(mSelectedFolder);
                     if (!mSelectedFolder.isVirtual())
