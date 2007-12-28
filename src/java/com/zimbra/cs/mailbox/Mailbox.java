@@ -3543,7 +3543,7 @@ public class Mailbox {
         }
     }
 
-    synchronized CalendarItem getCalendarItemByUid(String uid) throws ServiceException {
+    public synchronized CalendarItem getCalendarItemByUid(String uid) throws ServiceException {
         return getCalendarItemByUid(null, uid);
     }
     public synchronized CalendarItem getCalendarItemByUid(OperationContext octxt, String uid) throws ServiceException {
