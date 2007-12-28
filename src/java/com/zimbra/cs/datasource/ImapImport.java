@@ -118,6 +118,7 @@ public class ImapImport implements MailItemImport {
         } catch (MessagingException e) {
             ZimbraLog.datasource.info("Testing connection to data source", e);
             error = SystemUtil.getInnermostException(e).getMessage();
+            error = error != null ? error : e.toString();
         }
         return error;
     }
