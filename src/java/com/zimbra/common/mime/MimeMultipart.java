@@ -28,7 +28,7 @@ public class MimeMultipart extends MimePart implements Iterable<MimePart> {
     static final String UNSET_BOUNDARY = "";
 
     private String mBoundary;
-    private MimePart mPrologue, mEpilogue;
+    private MimePart mPreamble, mEpilogue;
     private List<MimePart> mChildren = new ArrayList<MimePart>(3);
 
     public MimeMultipart(String subtype) {
@@ -41,11 +41,17 @@ public class MimeMultipart extends MimePart implements Iterable<MimePart> {
         mBoundary = ctype.getParameter("boundary");
         if (mBoundary == null || mBoundary.trim().equals(""))
             mBoundary = UNSET_BOUNDARY;
+        // RFC 2046 5.1.1: "The only mandatory global parameter for the "multipart" media type is
+        //                  the boundary parameter, which consists of 1 to 70 characters from a
+        //                  set of characters known to be very robust through mail gateways, and
+        //                  NOT ending with white space."
+        while (mBoundary.length() > 0 && Character.isWhitespace(mBoundary.charAt(mBoundary.length() - 1)))
+            mBoundary = mBoundary.substring(0, mBoundary.length() - 1);
     }
 
     private static String generateBoundary() {
-        // "A good strategy is to choose a boundary that includes a character
-        //  sequence such as "=_" which can never appear in a quoted-printable body."
+        // RFC 1521 5.1: "A good strategy is to choose a boundary that includes a character
+        //                sequence such as "=_" which can never appear in a quoted-printable body."
         return "=_" + UUID.randomUUID().toString();
     }
 
@@ -54,7 +60,7 @@ public class MimeMultipart extends MimePart implements Iterable<MimePart> {
         return mChildren.size();
     }
 
-    public MimePart getPrologue()  { return mPrologue; }
+    public MimePart getPreamble()  { return mPreamble; }
     public MimePart getEpilogue()  { return mEpilogue; }
 
     /** Returns the (1-based) <tt>index</tt>th child of this multipart. */
@@ -144,8 +150,8 @@ public class MimeMultipart extends MimePart implements Iterable<MimePart> {
 
         byte[] startBoundary = ("\r\n--" + mBoundary + "\r\n").getBytes();
         List<Object> sources = new ArrayList<Object>(mChildren.size() * 2 + 3);
-        if (mPrologue != null)
-            sources.add(mPrologue);
+        if (mPreamble != null)
+            sources.add(mPreamble);
         for (MimePart mp : mChildren) {
             sources.add(sources.isEmpty() ? ("--" + mBoundary + "\r\n").getBytes() : startBoundary);
             sources.add(mp);
@@ -165,20 +171,20 @@ public class MimeMultipart extends MimePart implements Iterable<MimePart> {
     }
 
     @Override MimePart readContent(PeekAheadInputStream pais) throws IOException {
-        // first read the MIME prologue
-        MimePart prologue = new MimeBodyPart(new ContentType(ContentType.TEXT_PLAIN), this, getBodyOffset(), pais.getPosition(), null).readContent(pais);
+        // first read the MIME preamble
+        MimePart preamble = new MimeBodyPart(new ContentType(ContentType.TEXT_PLAIN), this, getBodyOffset(), pais.getPosition(), null).readContent(pais);
         PeekAheadInputStream.BoundaryTerminator bterm = pais.getBoundaryTerminator();
 
-        // if the Content-Type didn't define the multipart boundary, pick it up from the prologue terminator
+        // if the Content-Type didn't define the multipart boundary, pick it up from the preamble terminator
         if (mBoundary == UNSET_BOUNDARY && bterm != null && !bterm.mWasEndBoundary && !getActiveBoundaries().contains(bterm.mBoundary))
             mBoundary = bterm.mBoundary;
 
         if (bterm == null || bterm.mWasEndBoundary || mBoundary == null || mBoundary.equals(UNSET_BOUNDARY) || !mBoundary.equals(bterm.mBoundary)) {
-            // if there's no boundary match or we're otherwise fucked, the prologue becomes the only content part
-            mChildren.add(prologue);
+            // if there's no boundary match or we're otherwise fucked, the preamble becomes the only content part
+            mChildren.add(preamble);
         } else {
-            if (prologue.getSize() > 0)
-                mPrologue = prologue;
+            if (preamble.getSize() > 0)
+                mPreamble = preamble;
 
             // read parts until we hit our end boundary, a parent's boundary, or EOF
             String defaultContentType = getContentType().getSubType().equals("digest") ? ContentType.MESSAGE_RFC822 : ContentType.TEXT_PLAIN;

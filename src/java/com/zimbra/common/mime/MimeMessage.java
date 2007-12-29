@@ -108,14 +108,20 @@ public class MimeMessage extends MimePart {
         return mm;
     }
 
-    /** Returns the {@link MimePart} that forms the "body" of this message.  For a
-     *  <tt>multipart/*<tt> message, this will be a {@link MimeMultipart}, and in
-     *  almost all other cases it will be a non-<code>MimeMessage</code>
-     *  <code>MimePart</code>. */
+    /** Returns the {@link MimePart} that forms the "body" of this message.  For
+     *  a <tt>multipart/*<tt> message, this will be a {@link MimeMultipart}, and
+     *  in almost all other cases it will be a {@link MimeBodyPart}.
+     * @see #setBodyPart(MimePart) */
     public MimePart getBodyPart() {
         return mBody;
     }
 
+    /** Sets the given part as this <code>MimeMessage</code>'s body part.  The
+     *  part is removed from its previous parent, and its new parent is set to
+     *  this message.  The old body part is detached from this message, and its
+     *  message headers (those other than the standard MIME "<tt>Content-*</tt>"
+     *  headers) are transferred to the new one.
+     * @see #getBodyPart() */
     public void setBodyPart(MimePart body) {
         transferMessageHeaders(body);
         mBody.detach();
@@ -131,6 +137,7 @@ public class MimeMessage extends MimePart {
         for (Iterator<MimeHeaderBlock.MimeHeader> it = mBody.mimeHeaderIterator(); it.hasNext(); ) {
             MimeHeaderBlock.MimeHeader header = it.next();
             if (!header.getName().toLowerCase().startsWith("content-")) {
+                // FIXME: want to have the new body's old headers at the *end* of the resulting list, not at the beginning
                 newBody.addMimeHeader(header.getName(), header);
                 it.remove();
             }
@@ -139,7 +146,7 @@ public class MimeMessage extends MimePart {
     }
 
     @Override Properties getProperties() {
-        return getParent() == null || mProperties == null ? mProperties : getParent().getProperties();
+        return mProperties != null || getParent() == null ? mProperties : getParent().getProperties();
     }
 
 
@@ -194,6 +201,10 @@ public class MimeMessage extends MimePart {
         mBody.setMimeHeader(name, value);
     }
 
+//    public void addHeader(String name, String value) {
+//        mBody.addMimeHeader(name, value);
+//    }
+
     @Override public void setContentType(ContentType ctype) {
         if (ctype == null)
             ctype = new ContentType(ContentType.MESSAGE_RFC822);
@@ -226,14 +237,17 @@ public class MimeMessage extends MimePart {
 
     public static void main(String[] args) throws FileNotFoundException, IOException {
         MimeMessage mm = new MimeMessage(new File("C:\\Temp\\mail\\nested"));
-        dumpParts(mm);
+//        dumpParts(mm);
         mm.setHeader("X-Mailer", "Zimbra 5.0 RC2");
-        ((MimeBodyPart) mm.getSubpart("1.1")).setTransferEncoding(ContentTransferEncoding.BASE64);
+//        ((MimeBodyPart) mm.getSubpart("1.1")).setTransferEncoding(ContentTransferEncoding.BASE64);
 //        ByteUtil.copy(mm.getSubpart("1").getRawContentStream(), true, System.out, false);
 //        ByteUtil.copy(mm.getInputStream(), true, System.out, false);
-        System.out.write(mm.getSubpart("1").getRawContent());
+//        System.out.write(mm.getSubpart("1").getRawContent());
 //        ByteUtil.copy(mm.getSubpart("1").getInputStream(), true, System.out, false);
 //        System.out.write(mm.getSubpart("1").getContent());
+
+        mm = new MimeMessage(new File("C:\\Temp\\mail\\digest-attachment-16771"));
+//        dumpParts(mm);
 
         mm = new MimeMessage(new File("C:\\Temp\\mail\\bad-ctype-params-11946"));
 //        dumpParts(mm);
@@ -241,6 +255,45 @@ public class MimeMessage extends MimePart {
 //        ((MimeBodyPart) mm.getSubpart("1")).setTransferEncoding(ContentTransferEncoding.QUOTED_PRINTABLE);
 //        ByteUtil.copy(mm.getSubpart("1").getRawContentStream(), true, System.out, false);
 //        ByteUtil.copy(mm.getInputStream(), true, System.out, false);
+
+        mm = new MimeMessage(new File("C:\\Temp\\blank-base64-ellen"));
+        dumpParts(mm);
+//        InputStream in1 = mm.getSubpart("2").getContentStream(), in2 = null;
+//        try {
+//            javax.mail.Session jsession = javax.mail.Session.getInstance(new Properties());
+//            javax.mail.internet.MimeMessage jmm = new javax.mail.internet.MimeMessage(jsession, new FileInputStream("C:\\Temp\\blank-base64-ellen"));
+//            in2 = Mime.getMimePart(jmm, "2").getInputStream();
+//        } catch (javax.mail.MessagingException me) { }
+//        int pos = 0, c1 = 0, c2 = 0;
+////        while ((c1 = in1.read()) == (c2 = in2.read()) && c1 != -1)
+////            pos++;
+//        byte[] body1 = ByteUtil.getContent(in1, -1), body2 = ByteUtil.getContent(in2, -1);
+//        if (body1.length != body2.length)
+//            System.out.println("difference in lengths (new = " + body1.length + ", old = " + body2.length + ")");
+//        for (pos = 0; pos < Math.min(body1.length, body2.length) && (c1 = body1[pos]) == (c2 = body2[pos]); pos++)
+//            ;
+//        if (c1 != c2)
+//            System.out.println("divergence at decoded position " + pos + " (new = " + c1 + ", old = " + c2 + ")");
+        InputStream in1 = mm.getSubpart("TEXT").getContentStream(), in2 = null;
+        try {
+            javax.mail.Session jsession = javax.mail.Session.getInstance(new Properties());
+            javax.mail.internet.MimeMessage jmm = new javax.mail.internet.MimeMessage(jsession, new FileInputStream("C:\\Temp\\blank-base64-ellen"));
+            java.util.List<MPartInfo> mpis = Mime.getParts(jmm);
+            for (MPartInfo mpi : mpis)
+                if (mpi.mPartName.equals("TEXT"))
+                    in2 = mpi.mPart.getInputStream();
+        } catch (javax.mail.MessagingException me) { }
+        int pos = 0, c1 = 0, c2 = 0;
+        while ((c1 = in1.read()) == (c2 = in2.read()) && c1 != -1)
+            pos++;
+        if (c1 != c2)
+            System.out.println("divergence at decoded position " + pos + " (new = " + c1 + ", old = " + c2 + ")");
+//        ByteUtil.copy(mm.getSubpart("4").getInputStream(), true, System.out, false);
+        ((MimeMultipart) mm.getBodyPart()).setContentType(((MimeMultipart) mm.getBodyPart()).getContentType().setParameter("boundary", "b*o*u*n*d*a*r*y"));
+//        System.out.write(mm.getContent());
+
+        mm = new MimeMessage(new File("C:\\Temp\\mail\\partial-multipart-5775"));
+//        dumpParts(mm);
 
         mm = new MimeMessage(new File("C:\\Temp\\mail\\zimbra-accent"));
 //        dumpParts(mm);
@@ -302,6 +355,8 @@ public class MimeMessage extends MimePart {
         for (Map.Entry<String, MimePart> mpi : mm.listMimeParts().entrySet()) {
             MimePart part = mpi.getValue();
             System.out.println('"' + mpi.getKey() + "\": " + part.getContentType().getValue() + (part.getFilename() == null ? "" : " [" + part.getFilename() + "]"));
+            if (part.getMimeHeader("Content-Description") != null)
+                System.out.println("   {" + part.getMimeHeader("Content-Description") + "}");
             if (mm.getSubpart(mpi.getKey()) != mpi.getValue())
                 System.out.println("  MISMATCH!");
 //            if (mpi.getValue().getContentType().getValue().equals("text/plain"))
