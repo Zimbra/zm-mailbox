@@ -274,20 +274,20 @@ public class MimeMessage extends MimePart {
 //            ;
 //        if (c1 != c2)
 //            System.out.println("divergence at decoded position " + pos + " (new = " + c1 + ", old = " + c2 + ")");
-        InputStream in1 = mm.getSubpart("TEXT").getContentStream(), in2 = null;
-        try {
-            javax.mail.Session jsession = javax.mail.Session.getInstance(new Properties());
-            javax.mail.internet.MimeMessage jmm = new javax.mail.internet.MimeMessage(jsession, new FileInputStream("C:\\Temp\\blank-base64-ellen"));
-            java.util.List<MPartInfo> mpis = Mime.getParts(jmm);
-            for (MPartInfo mpi : mpis)
-                if (mpi.mPartName.equals("TEXT"))
-                    in2 = mpi.mPart.getInputStream();
-        } catch (javax.mail.MessagingException me) { }
-        int pos = 0, c1 = 0, c2 = 0;
-        while ((c1 = in1.read()) == (c2 = in2.read()) && c1 != -1)
-            pos++;
-        if (c1 != c2)
-            System.out.println("divergence at decoded position " + pos + " (new = " + c1 + ", old = " + c2 + ")");
+//        InputStream in1 = mm.getSubpart("TEXT").getContentStream(), in2 = null;
+//        try {
+//            javax.mail.Session jsession = javax.mail.Session.getInstance(new Properties());
+//            javax.mail.internet.MimeMessage jmm = new javax.mail.internet.MimeMessage(jsession, new FileInputStream("C:\\Temp\\blank-base64-ellen"));
+//            java.util.List<MPartInfo> mpis = Mime.getParts(jmm);
+//            for (MPartInfo mpi : mpis)
+//                if (mpi.mPartName.equals("TEXT"))
+//                    in2 = mpi.mPart.getInputStream();
+//        } catch (javax.mail.MessagingException me) { }
+//        int pos = 0, c1 = 0, c2 = 0;
+//        while ((c1 = in1.read()) == (c2 = in2.read()) && c1 != -1)
+//            pos++;
+//        if (c1 != c2)
+//            System.out.println("divergence at decoded position " + pos + " (new = " + c1 + ", old = " + c2 + ")");
 //        ByteUtil.copy(mm.getSubpart("4").getInputStream(), true, System.out, false);
         ((MimeMultipart) mm.getBodyPart()).setContentType(((MimeMultipart) mm.getBodyPart()).getContentType().setParameter("boundary", "b*o*u*n*d*a*r*y"));
 //        System.out.write(mm.getContent());
