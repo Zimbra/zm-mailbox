@@ -32,7 +32,7 @@ public abstract class ChangePasswordListener {
     
     public synchronized static ChangePasswordListener getHandler(Account acct) throws ServiceException {
         Domain domain = Provisioning.getInstance().getDomain(acct);
-        String listenerName = domain.getAttr(Provisioning.A_zimbraChangePasswordListener);
+        String listenerName = domain.getAttr(Provisioning.A_zimbraPasswordChangeListener);
         
         if (listenerName == null)
             return null;
@@ -93,14 +93,14 @@ public abstract class ChangePasswordListener {
         // setup domain for testing
         Domain domain = prov.getDomain(acct);
         Map attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraChangePasswordListener, "dummy");
+        attrs.put(Provisioning.A_zimbraPasswordChangeListener, "dummy");
         prov.modifyAttrs(domain, attrs);
         
         prov.changePassword(acct, "test123", "test123-new");
         
         // done testing, remove listener from the domain
         attrs.clear();
-        attrs.put(Provisioning.A_zimbraChangePasswordListener, "");
+        attrs.put(Provisioning.A_zimbraPasswordChangeListener, "");
         prov.modifyAttrs(domain, attrs);
         
         // change password back

@@ -2783,7 +2783,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether or not open a new msg/conv in a new windows is allowed</desc>
 </attr>
 
-<attr id="586" name="zimbraChangePasswordListener" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited">
+<attr id="586" name="zimbraPasswordChangeListener" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited">
   <desc>registered change password listener name</desc>
 </attr>
 

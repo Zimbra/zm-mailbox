@@ -932,7 +932,7 @@ public abstract class Provisioning {
     /**
      * Change password listener.  If set, the listener must be registered by ChangePasswordListener.register()
      */
-    public static final String A_zimbraChangePasswordListener = "zimbraChangePasswordListener";
+    public static final String A_zimbraPasswordChangeListener = "zimbraPasswordChangeListener";
     
     /**
      * the mail .signature value
