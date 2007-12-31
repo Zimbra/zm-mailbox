@@ -930,6 +930,11 @@ public abstract class Provisioning {
     public static final String A_zimbraPasswordLockoutFailureTime = "zimbraPasswordLockoutFailureTime";
     
     /**
+     * Change password listener.  If set, the listener must be registered by ChangePasswordListener.register()
+     */
+    public static final String A_zimbraChangePasswordListener = "zimbraChangePasswordListener";
+    
+    /**
      * the mail .signature value
      */
     public static final String A_zimbraPrefMailSignature = "zimbraPrefMailSignature";

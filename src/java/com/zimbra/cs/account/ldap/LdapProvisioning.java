@@ -2981,7 +2981,17 @@ public class LdapProvisioning extends Provisioning {
         attrs.put(Provisioning.A_userPassword, encodedPassword);
         attrs.put(Provisioning.A_zimbraPasswordModifiedTime, DateUtil.toGeneralizedTime(new Date()));
         
+        ChangePasswordListener cpListener = ChangePasswordListener.getHandler(acct);
+        HashMap context = null; 
+        if (cpListener != null) {
+            context = new HashMap();
+            cpListener.preModify(acct, newPassword, context, attrs);
+        }
+            
         modifyAttrs(acct, attrs);
+        
+        if (cpListener != null)
+            cpListener.postModify(acct, newPassword, context);
     }
     
     public Zimlet getZimlet(String name) throws ServiceException {
