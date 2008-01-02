@@ -149,7 +149,7 @@ public class ZimbraPerf {
         sRealtimeStats.addCallback(callback);
     }
     
-    private static final long CSV_DUMP_FREQUENCY = Constants.MILLIS_PER_MINUTE;
+    private static final long CSV_DUMP_FREQUENCY = Constants.MILLIS_PER_MINUTE / 6;
     private static boolean sIsInitialized = false;
 
     private static final String[] THREAD_NAME_PREFIXES = new String[] { 
@@ -196,17 +196,17 @@ public class ZimbraPerf {
         COUNTER_IDX_WRT.setShowTotal(false);
 
         StatsDumper.schedule(new MailboxdStats(), CSV_DUMP_FREQUENCY);
-        ThreadStats threadStats = new ThreadStats(THREAD_NAME_PREFIXES,
-            new File(LC.zimbra_log_directory.value() + "/threads.csv")); 
+        ThreadStats threadStats = new ThreadStats(THREAD_NAME_PREFIXES, "threads.csv");
         StatsDumper.schedule(threadStats, CSV_DUMP_FREQUENCY);
-        sIsInitialized = true;
 
-        SOAP_TRACKER = new ActivityTracker(LC.zimbra_log_directory.value() + "/soap.csv");
+        SOAP_TRACKER = new ActivityTracker("soap.csv");
         StatsDumper.schedule(SOAP_TRACKER, CSV_DUMP_FREQUENCY);
-        IMAP_TRACKER = new ActivityTracker(LC.zimbra_log_directory.value() + "/imap.csv");
+        IMAP_TRACKER = new ActivityTracker("imap.csv");
         StatsDumper.schedule(IMAP_TRACKER, CSV_DUMP_FREQUENCY);
-        POP_TRACKER = new ActivityTracker(LC.zimbra_log_directory.value() + "/pop3.csv");
+        POP_TRACKER = new ActivityTracker("pop3.csv");
         StatsDumper.schedule(POP_TRACKER, CSV_DUMP_FREQUENCY);
+
+        sIsInitialized = true;
     }
 
     /**
@@ -216,10 +216,8 @@ public class ZimbraPerf {
     private static final class MailboxdStats
     implements StatsDumperDataSource
     {
-        private static File MAILBOXD_CSV_FILE = new File(LC.zmstat_log_directory.value() + "/mailboxd.csv");
-        
-        public File getFile() {
-            return MAILBOXD_CSV_FILE; 
+        public String getFilename() {
+            return "mailboxd.csv"; 
         }
         
         public String getHeader() {

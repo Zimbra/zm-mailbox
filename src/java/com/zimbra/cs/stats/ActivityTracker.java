@@ -16,7 +16,6 @@
  */
 package com.zimbra.cs.stats;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -29,12 +28,12 @@ import com.zimbra.common.stats.StatsDumperDataSource;
 public class ActivityTracker
 implements StatsDumperDataSource {
 
-    private File mCsvFile;
+    private String mFilename;
     private ConcurrentHashMap<String, Counter> mCounterMap =
         new ConcurrentHashMap<String, Counter>();
     
-    public ActivityTracker(String csvFile) {
-        mCsvFile = new File(csvFile);
+    public ActivityTracker(String filename) {
+        mFilename = filename;
     }
     
     public void addStat(String commandName, long startTime) {
@@ -82,8 +81,8 @@ implements StatsDumperDataSource {
         return dataLines;
     }
 
-    public File getFile() {
-        return mCsvFile;
+    public String getFilename() {
+        return mFilename;
     }
 
     public String getHeader() {
