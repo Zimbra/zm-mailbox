@@ -1318,6 +1318,14 @@ public class TestProvisioning extends TestCase {
                                             true,
                                             Provisioning.SA_ACCOUNT_FLAG); 
             TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{acct}, true);
+            
+            // testing get all accounts on local server, used by BackupManager
+            String serverName = mProv.getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
+            list = mProv.searchAccounts(
+                        "(zimbraMailHost=" + serverName + ")",
+                        new String[] { Provisioning.A_zimbraId }, null, false,
+                        Provisioning.SA_ACCOUNT_FLAG | Provisioning.SA_CALENDAR_RESOURCE_FLAG);
+
         }
         
         if (!Flag.needLdapPaging("searchAccounts_domain")) {
