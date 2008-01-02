@@ -27,7 +27,6 @@
  */
 package com.zimbra.common.stats;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -44,7 +43,7 @@ import com.zimbra.common.util.StringUtil;
 public class ThreadStats
 implements StatsDumperDataSource
 {
-    private File mThreadsCsvFile;
+    private String mFilename;
     private String[] mThreadNamePrefixes;
 
     /**
@@ -53,13 +52,13 @@ implements StatsDumperDataSource
      * @param threadNamePrefixes known thread name prefixes
      * @param threadsCsvFile CSV file that stats are written to 
      */
-    public ThreadStats(String[] threadNamePrefixes, File threadsCsvFile) {
+    public ThreadStats(String[] threadNamePrefixes, String filename) {
         mThreadNamePrefixes = threadNamePrefixes;
-        mThreadsCsvFile = threadsCsvFile;
+        mFilename = filename;
     }
     
-    public File getFile() {
-        return mThreadsCsvFile; 
+    public String getFilename() {
+        return mFilename; 
     }
     
     public String getHeader() {

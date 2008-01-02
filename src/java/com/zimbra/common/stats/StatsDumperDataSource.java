@@ -24,15 +24,16 @@
  */
 package com.zimbra.common.stats;
 
-import java.io.File;
 import java.util.Collection;
 
 public interface StatsDumperDataSource {
 
     /**
-     * Returns the <tt>File</tt> that stats will be written to.
+     * Returns the name of the file that stats are written to.  This is a
+     * simple filename with no directory path.  All stats files are currently
+     * written to /opt/zimbra/zmstat.
      */
-    public File getFile();
+    public String getFilename();
     
     /**
      * Returns the first line logged in a new stats file, or <tt>null</tt>

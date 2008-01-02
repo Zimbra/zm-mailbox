@@ -26,9 +26,13 @@ package com.zimbra.common.stats;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.concurrent.Callable;
 
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.TaskScheduler;
 
 /**
@@ -38,12 +42,31 @@ import com.zimbra.common.util.TaskScheduler;
 public class StatsDumper
 implements Callable<Void> {
     
+    private static final File STATS_DIR = new File(LC.zmstat_log_directory.value());
+
     private static TaskScheduler<Void> sTaskScheduler = new TaskScheduler<Void>("StatsDumper", 1, 3);
     
     private StatsDumperDataSource mDataSource;
-    
+    private Calendar mLastRollover = Calendar.getInstance();
     private StatsDumper(StatsDumperDataSource dataSource) {
         mDataSource = dataSource;
+    }
+    
+    private File getFile()
+    throws IOException {
+        FileUtil.ensureDirExists(STATS_DIR);
+        return new File(STATS_DIR, mDataSource.getFilename());
+    }
+
+    /**
+     * Return the archive directory, based on {@link #mLastRollover}.
+     */
+    private File getArchiveDir()
+    throws IOException {
+        String dirName = String.format("%1$tY-%1$tm-%1$td", mLastRollover);
+        File dir = new File(STATS_DIR, dirName);
+        FileUtil.ensureDirExists(dir);
+        return dir;
     }
 
     /**
@@ -55,7 +78,16 @@ implements Callable<Void> {
      */
     public static void schedule(StatsDumperDataSource dataSource, long intervalMillis) {
         StatsDumper dumper = new StatsDumper(dataSource);
-        sTaskScheduler.schedule(dataSource.getFile().getPath(), dumper, true, intervalMillis, intervalMillis);
+        sTaskScheduler.schedule(dataSource.getFilename(), dumper, true, intervalMillis, intervalMillis);
+    }
+    
+    private void rollover()
+    throws IOException {
+        File sourceFile = getFile();
+        File archiveDir = getArchiveDir();
+        File archiveFile = new File(archiveDir, mDataSource.getFilename() + ".gz");
+        FileUtil.compress(sourceFile, archiveFile, true);
+        sourceFile.delete();
     }
 
     /**
@@ -77,10 +109,17 @@ implements Callable<Void> {
             }
             buf.append(line).append("\n");
         }
+
+        // Rollover is necessary
+        File file = getFile();
+        Calendar now = Calendar.getInstance();
+        if (file.exists() && (now.get(Calendar.YEAR) != mLastRollover.get(Calendar.YEAR) ||
+            now.get(Calendar.DAY_OF_YEAR) != mLastRollover.get(Calendar.DAY_OF_YEAR))) {
+            rollover();
+        }
         
-        // Write header
+        // Determine if header needs to be written
         boolean writeHeader = false;
-        File file = mDataSource.getFile();
         if (!file.exists()) {
             writeHeader = true;
         }
