@@ -259,7 +259,7 @@ public class ZimletResources
             out.print(commentContinue);
             out.print("File: ");
             // NOTE: Show entire path for easy debugging, comments are stripped in prod mode
-            out.println(filename);
+            out.println(filename.replaceAll("^.*/webapps/",""));
             out.println(commentEnd);
             out.println();
 
@@ -268,7 +268,7 @@ public class ZimletResources
                 printFile(out, file, file.zimletName, isCSS);
             } else {
                 out.print(commentStart);
-                out.print("Error: file doesn't exist " + filename);
+                out.print("Error: file doesn't exist " + filename.replaceAll("^.*/webapps/",""));
                 out.println(commentEnd);
             }
             out.println();
