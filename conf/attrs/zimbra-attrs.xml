@@ -2787,9 +2787,14 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>registered change password listener name</desc>
 </attr>
 
-<attr id="587" name="zimbraReverseProxySendOriginatingIP" type="boolean" cardinality="single" optionalIn="globalConfig">
+<attr id="587" name="zimbraReverseProxySendPop3Xoip" type="boolean" cardinality="single" optionalIn="globalConfig">
   <globalConfigValue>TRUE</globalConfigValue>
-  <desc>whether nginx should send originating IP commands for pop3 and imap</desc>
+  <desc>whether nginx should send XOIP command for pop3</desc>
+</attr>
+
+<attr id="588" name="zimbraReverseProxySendImapId" type="boolean" cardinality="single" optionalIn="globalConfig">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>whether nginx should send ID command for imap</desc>
 </attr>
 
 </attrs>
