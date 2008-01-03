@@ -113,9 +113,9 @@ implements Callable<Void> {
         // Rollover is necessary
         File file = getFile();
         Calendar now = Calendar.getInstance();
-        if (file.exists() && (now.get(Calendar.YEAR) != mLastRollover.get(Calendar.YEAR) ||
-            now.get(Calendar.DAY_OF_YEAR) != mLastRollover.get(Calendar.DAY_OF_YEAR))) {
+        if (file.exists() && now.get(Calendar.DAY_OF_YEAR) != mLastRollover.get(Calendar.DAY_OF_YEAR)) {
             rollover();
+            mLastRollover = now;
         }
         
         // Determine if header needs to be written
