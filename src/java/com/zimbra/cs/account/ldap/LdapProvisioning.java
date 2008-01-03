@@ -33,6 +33,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Account.CalendarUserType;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.account.AccountCache;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
@@ -155,8 +156,8 @@ public class LdapProvisioning extends Provisioning {
     private static final String FILTER_DISTRIBUTION_LIST_OBJECTCLASS =
         "(objectclass=zimbraDistributionList)";
 
-    private static NamedEntryCache<Account> sAccountCache =
-        new NamedEntryCache<Account>(
+    private static AccountCache sAccountCache =
+        new AccountCache(
                 LC.ldap_cache_account_maxsize.intValue(),
                 LC.ldap_cache_account_maxage.intValue() * Constants.MILLIS_PER_MINUTE); 
 
@@ -507,12 +508,17 @@ public class LdapProvisioning extends Provisioning {
     }
 
     private Account getAccountByForeignPrincipal(String foreignPrincipal, boolean loadFromMaster) throws ServiceException {
-        foreignPrincipal = LdapUtil.escapeSearchFilterArg(foreignPrincipal);
-        return getAccountByQuery(
-                mDIT.mailBranchBaseDN(),
-                "(&(zimbraForeignPrincipal=" + foreignPrincipal + ")" +
-                FILTER_ACCOUNT_OBJECTCLASS + ")",
-                null, loadFromMaster);
+        Account a = sAccountCache.getByForeignPrincipal(foreignPrincipal);
+        if (a == null) {
+            foreignPrincipal = LdapUtil.escapeSearchFilterArg(foreignPrincipal);
+            a = getAccountByQuery(
+                    mDIT.mailBranchBaseDN(),
+                    "(&(zimbraForeignPrincipal=" + foreignPrincipal + ")" +
+                    FILTER_ACCOUNT_OBJECTCLASS + ")",
+                    null, loadFromMaster);
+            sAccountCache.put(a);
+        }
+        return a;
     }
 
     private Account getAdminAccountByName(String name, boolean loadFromMaster) throws ServiceException {
@@ -1596,7 +1602,7 @@ public class LdapProvisioning extends Provisioning {
             ctxt = LdapUtil.getDirContext(true);
             String newDn = mDIT.cosNametoDN(newName);
             LdapUtil.renameEntry(ctxt, cos.getDN(), newDn);
-            // remove old account from cache
+            // remove old cos from cache
             sCosCache.remove(cos);
         } catch (NameAlreadyBoundException nabe) {
             throw AccountServiceException.COS_EXISTS(newName);            
@@ -1734,7 +1740,7 @@ public class LdapProvisioning extends Provisioning {
             
             LdapUtil.deleteChildren(ctxt, entry.getDN());
             LdapUtil.unbindEntry(ctxt, entry.getDN());
-            sAccountCache.remove(acc.getName(), acc.getId());
+            sAccountCache.remove(acc);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to purge account: "+zimbraId, e);
         } finally {
@@ -1836,10 +1842,8 @@ public class LdapProvisioning extends Provisioning {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to rename account: "+zimbraId, e);
         } finally {
-            // prune cache, prune in finally instead of end of the try block because
-            // in case exceptions were thrown, the cache might have been updated to the 
-            // new values which are not actually committed to the LDAP store.
-            sAccountCache.remove(oldEmail, acct.getId());
+            // prune cache
+            sAccountCache.remove(acct);
             LdapUtil.closeContext(ctxt);
         }
     }
@@ -4816,7 +4820,6 @@ public class LdapProvisioning extends Provisioning {
         
         switch (type) {
         case account:
-            cache = sAccountCache;
             if (entries != null) {
                 namedEntries = new HashSet<NamedEntry>();
                 for (CacheEntry entry : entries) {
@@ -4828,7 +4831,15 @@ public class LdapProvisioning extends Provisioning {
                         namedEntries.add(account);
                 }
             }
-            break;
+            
+            if (entries == null) {
+                sAccountCache.clear();
+            } else {    
+                for (NamedEntry entry : namedEntries) {
+                    reload(entry);
+                }
+            }
+            return;
         case config:
             if (entries != null)
                 throw ServiceException.INVALID_REQUEST("cannot specify entry for flushing global config", null);
@@ -4866,7 +4877,7 @@ public class LdapProvisioning extends Provisioning {
                 sDomainCache.clear();
             } else {    
                 for (NamedEntry entry : namedEntries) {
-                    sDomainCache.remove((Domain)entry);
+                    reload(entry);
                 }
             }
             return;
