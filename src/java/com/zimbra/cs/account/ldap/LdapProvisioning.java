@@ -4284,6 +4284,18 @@ public class LdapProvisioning extends Provisioning {
 
     private void renameSignature(LdapEntry entry, LdapSignature signature, String newSignatureName) throws ServiceException {
         
+        /*
+         * check if the signature name already exists
+         * 
+         * We check if the signatureName is the same as the signature on the account.  
+         * For signatures that are in the signature LDAP entries, JNDI will throw 
+         * NameAlreadyBoundException for duplicate names.
+         * 
+         */ 
+        Signature acctSig = LdapSignature.getAccountSignature(this, (Account)entry);
+        if (acctSig != null && newSignatureName.equals(acctSig.getName()))
+            throw AccountServiceException.SIGNATURE_EXISTS(newSignatureName);
+        
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext(true);
