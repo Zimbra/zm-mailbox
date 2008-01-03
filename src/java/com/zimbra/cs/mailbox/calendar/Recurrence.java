@@ -1244,7 +1244,7 @@ public class Recurrence
         public List<Instance> expandInstances(CalendarItem calItem, long start, long end) {
             long startAdjusted = start;
             long endAdjusted = end;
-            // Expand the start/end times to ensure all exception instances are included.
+            // Stretch the start/end times to ensure all exception instances are included.
             for (IException except : mExceptions) {
                 if (except != null) {
                     RecurId rid = except.getRecurId();
@@ -1282,82 +1282,57 @@ public class Recurrence
             // get the list of instances that THIS rule expands into
             List<Instance> stdInstances = super.expandInstances(calItem, startAdjusted, endAdjusted);
 
-            List<Instance> exceptInstances[] = new List[mExceptions.size()]; // as big as we might need
-            int numActiveExceptions = 0;
-            
-            // now, iterate through the instances in THIS rule and for each one,
-            // check all the EXCEPTION rules to see if they have a RECURRENCE_ID that
-            // matches.  If they do, then this instance is REMOVED from *our* set,
-            // and the EXCEPTION's output is added into the set of lists to add. 
-            for (Iterator stdIter = stdInstances.iterator(); stdIter.hasNext();) {
-                CalendarItem.Instance cur = (CalendarItem.Instance)stdIter.next();
-                CalendarItem.Instance origCur = cur;
-            
-                int exceptNum = 0;
-                for (Iterator exceptIter = mExceptions.iterator(); exceptIter.hasNext();exceptNum++) {
-                    IException except = (IException)exceptIter.next();
-                    
-                    if (except != null) {
-                
-                        if (cur == null && except.matches(origCur.getStart())) {
-                            // hmm - there must be two different exceptions that both match this
-                            // original instance!  What do we do here?  TODO read more to see
-                            // what the RFC says -- for now we'll log and add the extra instances...
-                            if (exceptInstances[exceptNum] == null) {
-                                numActiveExceptions++;                            
-                                exceptInstances[exceptNum] = except.expandInstances(calItem, startAdjusted, endAdjusted);
-                            }
-                        }
-                        if (cur != null && except.matches(cur.getStart())) {
-                            stdIter.remove(); // matched!  remove the current instance from our list
-                            
-                            cur = null;
-                            if (exceptInstances[exceptNum] == null) {
-                                numActiveExceptions++;                            
-                                exceptInstances[exceptNum] = except.expandInstances(calItem, startAdjusted, endAdjusted);
+            // Iterate the expanded instances and eliminate instances whose start time:
+            // 1) lies outside the [start, end) range
+            // 2) or matches RECURRENCE-ID of one of the exceptions.
+            for (Iterator<Instance> iter = stdInstances.iterator(); iter.hasNext(); ) {
+                Instance inst = iter.next();
+                if (inst != null) {
+                    long st = inst.getStart();
+                    if (st < start || st >= end) {
+                        // Restrict to [start, end) range.
+                        iter.remove();
+                    } else {
+                        for (IException except : mExceptions) {
+                            if (except != null && except.matches(inst.getStart())) {
+                                iter.remove();
                             }
                         }
                     }
                 }
             }
 
-            // Restrict to [start, end) range.
-            for (Iterator<Instance> iter = stdInstances.iterator(); iter.hasNext(); ) {
-                Instance inst = iter.next();
-                if (inst == null) continue;
-                long st = inst.getStart();
-                if (st < start || st >= end)
-                    iter.remove();
-            }
-            for (int i = 0; i < exceptInstances.length; i++) {
-                List<Instance> instances = exceptInstances[i];
-                if (instances == null) continue;
-                for (Iterator<Instance> iter = instances.iterator(); iter.hasNext(); ) {
-                    Instance inst = iter.next();
-                    if (inst == null) continue;
-                    long st = inst.getStart();
-                    if (st < start || st >= end)
-                        iter.remove();
+            // Expand and add all exceptions in the range.
+            List<List<Instance>> exceptionInstancesList = new ArrayList<List<Instance>>();
+            for (IException except : mExceptions) {
+                if (except != null) {
+                    List<Instance> instances = except.expandInstances(calItem, startAdjusted, endAdjusted);
+                    // Restrict to [start, end) range.
+                    for (Iterator<Instance> iter = instances.iterator(); iter.hasNext(); ) {
+                        Instance inst = iter.next();
+                        if (inst != null) {
+                            long st = inst.getStart();
+                            if (st < start || st >= end)
+                                iter.remove();
+                        }
+                    }
+                    if (!instances.isEmpty())
+                        exceptionInstancesList.add(instances);
                 }
             }
 
+            // Combine all rule and exception instances.
             List<Instance> toRet;
-            if (numActiveExceptions == 0){
+            if (exceptionInstancesList.isEmpty()) {
                 toRet = stdInstances;
             } else {
                 toRet = new ArrayList<Instance>();
-                List toAdd[] = new List[numActiveExceptions + 1];
+                List<Instance> toAdd[] = new List[exceptionInstancesList.size() + 1];
                 toAdd[0] = stdInstances;
-                int off = 1;
-                for (int i = 0; i < exceptInstances.length; i++) {
-                    if (exceptInstances[i] != null) {
-                        toAdd[off++] = exceptInstances[i];
-                    }
+                int offset = 1;
+                for (List<Instance> except : exceptionInstancesList) {
+                    toAdd[offset++] = except;
                 }
-                
-                // WTF does this mean?
-                 assert(off == numActiveExceptions+1);
-                
                 ListUtil.mergeSortedLists(toRet, toAdd, true);
             }
 
