@@ -439,9 +439,10 @@ public class Folder extends MailItem {
             return;
         // if we go negative, that's OK!  just pretend we're at 0.
         markItemModified(Change.MODIFIED_SIZE);
-        if (countDelta > 0) {
-            updateUIDNEXT();  updateHighestMODSEQ();
-        }
+        if (countDelta > 0)
+            updateUIDNEXT();
+        if (countDelta != 0)
+            updateHighestMODSEQ();
         mData.size = Math.max(0, mData.size + countDelta);
         mTotalSize = Math.max(0, mTotalSize + sizeDelta);
     }
@@ -453,9 +454,10 @@ public class Folder extends MailItem {
         if (!trackSize() || (count == 0 && totalSize == 0))
             return;
         markItemModified(Change.MODIFIED_SIZE);
-        if (count > mData.size) {
-            updateUIDNEXT();  updateHighestMODSEQ();
-        }
+        if (count > mData.size)
+            updateUIDNEXT();
+        if (count != mData.size)
+            updateHighestMODSEQ();
         mData.size = count;
         mTotalSize = totalSize;
     }
