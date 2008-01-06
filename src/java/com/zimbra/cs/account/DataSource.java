@@ -223,6 +223,25 @@ public class DataSource extends NamedEntry implements Comparable {
     	return null;
     }
     
+    /**
+     * Initialize a local folder for sync with remote folder
+     * 
+     * @param localPath
+     */
+    public void initializedLocalFolder(String localPath) {
+    	//do nothing
+    }
+    
+    /**
+     * Check if a local folder is setup to sync with remote folder
+     * 
+     * @param localPath
+     * @return
+     */
+    public boolean isSyncEnabled(String localPath) {
+    	return true;
+    }
+    
     private static byte[] randomSalt() {
         SecureRandom random = new SecureRandom();
         byte[] pad = new byte[SALT_SIZE_BYTES];

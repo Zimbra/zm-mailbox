@@ -260,6 +260,7 @@ public class ImapImport implements MailItemImport {
 	                        localFolder = mbox.createFolder(null, zimbraPath, (byte) 0,
 	                            MailItem.TYPE_UNKNOWN);
 	                    }
+	                    ds.initializedLocalFolder(zimbraPath); //offline can disable sync this way
 	                    folderTracker = DbImapFolder.createImapFolder(mbox, ds, localFolder.getId(),
 	                        localFolder.getPath(), remoteFolder.getFullName(), remoteUvv);
 	                    imapFolders.add(folderTracker);
@@ -319,6 +320,9 @@ public class ImapImport implements MailItemImport {
 
             // Import data for all ImapFolders that exist on both sides
             for (ImapFolder imapFolder : imapFolders) {
+            	if (!ds.isSyncEnabled(imapFolder.getLocalPath()))
+            		continue;
+            	
                 ZimbraLog.datasource.info("Importing from IMAP folder %s to local folder %s",
                     imapFolder.getRemotePath(), imapFolder.getLocalPath());
                 if (imapFolder.getUidValidity() != 0) {
