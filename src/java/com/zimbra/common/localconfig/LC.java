@@ -236,6 +236,7 @@ public class LC {
     public static final KnownKey zimbra_class_accessmanager;
     public static final KnownKey zimbra_class_mboxmanager;
     public static final KnownKey zimbra_class_database;
+    public static final KnownKey zimbra_class_application;
     
     public static final KnownKey data_source_trust_self_signed_certs;
 
@@ -941,7 +942,10 @@ public class LC {
             new KnownKey("zimbra_class_mboxmanager", "com.zimbra.cs.mailbox.MailboxManager", "Mailbox manager interface class");
         zimbra_class_database =
             new KnownKey("zimbra_class_database", "com.zimbra.cs.db.MySQL", "Database configuration class");
-
+        zimbra_class_application =
+        	new KnownKey("zimbra_class_application", "com.zimbra.cs.util.ZimbraApplication", "Zimbra application interface class");
+        
+        
         data_source_trust_self_signed_certs =
             new KnownKey("data_source_trust_self_signed_certs", "false",
             "Allow self-signed certificates when connecting to a data source over SSL.");

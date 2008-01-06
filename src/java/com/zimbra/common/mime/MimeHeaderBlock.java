@@ -16,8 +16,10 @@
  */
 package com.zimbra.common.mime;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -99,13 +101,20 @@ public class MimeHeaderBlock implements Iterable<MimeHeaderBlock.MimeHeader> {
 
     @Override public String toString()  { return new String(toByteArray()); }
 
-    public MimeHeaderBlock parse(MimePart.PeekAheadInputStream pais) throws IOException {
+    public MimeHeaderBlock parse(InputStream is) throws IOException {
+        return parse(new MimePart.PeekAheadInputStream(is), null);
+    }
+
+    MimeHeaderBlock parse(MimePart.PeekAheadInputStream pais, List<String> boundaries) throws IOException {
+        pais.clearBoundary();
+
         StringBuilder name = new StringBuilder(25);
         ByteArrayOutputStream content = new ByteArrayOutputStream(80);
         int c;
         do {
+            long linestart = pais.getPosition();
             name.setLength(0);  content.reset();
-    
+
             // read the field name
             for (c = pais.read(); c != -1; c = pais.read()) {
                 content.write(c);
@@ -116,18 +125,21 @@ public class MimeHeaderBlock implements Iterable<MimeHeaderBlock.MimeHeader> {
                 }
                 name.append((char) c);
             }
-    
-            // FIXME: need to check to see if a MIME boundary appears in the middle of the headers!
-    
+
+            boolean dashdash = name.length() > 2 && name.charAt(0) == '-' && name.charAt(1) == '-';
+
             if (c != ':') {
                 // check for the CRLF CRLF that terminates the headers
                 if (name.length() == 0)
                     break;
+                // check for incorrectly-located boundary delimiter
+                if (dashdash && MimeBodyPart.checkBoundary(new ByteArrayInputStream(content.toByteArray(), 2, content.size() - 2), pais, boundaries, linestart))
+                    return this;
                 // no colon, so abort now rather than reading more data
                 continue;
             }
             int valuestart = content.size();  boolean colon = true;
-    
+
             // read the field value, including extra lines from folding
             for (c = pais.read(); c != -1; c = pais.read()) {
                 content.write(c);
@@ -142,11 +154,17 @@ public class MimeHeaderBlock implements Iterable<MimeHeaderBlock.MimeHeader> {
                 }
                 colon = false;
             }
-    
+
+            // check for incorrectly-located boundary delimiter
+            if (dashdash && MimeBodyPart.checkBoundary(new ByteArrayInputStream(content.toByteArray(), 2, content.size() - 2), pais, boundaries, linestart))
+                return this;
+
             // if the name was valid, save the header to the hash
             String key = name.toString().trim();
             if (!key.equals(""))
                 mHeaders.add(new MimeHeader(key, content.toByteArray(), valuestart));
+
+            // FIXME: note that the first multipart/* Content-Type header needs to add a new boundary to the <code>boundaries</code> list
         } while (c != -1);
 
         return this;
@@ -182,7 +200,7 @@ public class MimeHeaderBlock implements Iterable<MimeHeaderBlock.MimeHeader> {
         }
 
         MimeHeader(String name, MimeCompoundHeader mch) {
-            mName = name;  mContent = mch.toString(name).getBytes();  mValueStart = mName.length() + 2;
+            mName = name;  mContent = (mch.toString(name) + "\r\n").getBytes();  mValueStart = mName.length() + 2;
         }
 
         String getName()       { return mName; }

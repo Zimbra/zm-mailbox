@@ -63,16 +63,24 @@ public abstract class MimePart {
     static MimePart parse(PeekAheadInputStream pais, MimePart parent, String defaultContentType) throws IOException {
         long start = pais.getPosition();
 
-        MimeHeaderBlock headers = new MimeHeaderBlock(parent instanceof MimeMessage).parse(pais);
+        MimeHeaderBlock headers = new MimeHeaderBlock(parent instanceof MimeMessage).parse(pais, parent == null ? null : parent.getActiveBoundaries());
         String defaultCharset = parent == null ? null : parent.getDefaultCharset();
         ContentType ctype = new ContentType(headers.getHeader("Content-Type", defaultCharset), defaultContentType);
 
+        MimePart mp;
         if (ctype.getValue().equals(ContentType.MESSAGE_RFC822))
-            return new MimeMessage(ctype, parent, start, pais.getPosition(), headers).readContent(pais);
+            mp = new MimeMessage(ctype, parent, start, pais.getPosition(), headers);
         else if (ctype.getPrimaryType().equals("multipart"))
-            return new MimeMultipart(ctype, parent, start, pais.getPosition(), headers).readContent(pais);
+            mp = new MimeMultipart(ctype, parent, start, pais.getPosition(), headers);
         else
-            return new MimeBodyPart(ctype, parent, start, pais.getPosition(), headers).readContent(pais);
+            mp = new MimeBodyPart(ctype, parent, start, pais.getPosition(), headers);
+
+        PeekAheadInputStream.BoundaryTerminator bterm = pais.getBoundaryTerminator();
+        if (bterm == null)
+            mp.readContent(pais);
+        else
+            mp.recordEndpoint(bterm.mBoundaryStart);
+        return mp;
     }
 
     MimePart getParent() {
@@ -332,7 +340,7 @@ public abstract class MimePart {
                 // FIXME: check for GZIPped content
                 int fileLength = (int) mBodyFile.length();
                 start = Math.max(0, Math.min(start, fileLength));
-                end = end < 0 ? mBodyContent.length : Math.max(start, Math.min(end, fileLength));
+                end = end < 0 ? fileLength : Math.max(start, Math.min(end, fileLength));
                 FileInputStream fis = new FileInputStream(mBodyFile);
                 try {
                     return start == 0 && end == fileLength ? fis : ByteUtil.SegmentInputStream.create(fis, start, end);
@@ -365,7 +373,7 @@ public abstract class MimePart {
                 // FIXME: check for GZIPped content
                 int fileLength = (int) raf.length();
                 start = Math.max(0, Math.min(start, fileLength));
-                end = end < 0 ? mBodyContent.length : Math.max(start, Math.min(end, fileLength));
+                end = end < 0 ? fileLength : Math.max(start, Math.min(end, fileLength));
                 raf.seek(start);
                 byte[] content = new byte[(int) (end - start)];
                 raf.readFully(content);

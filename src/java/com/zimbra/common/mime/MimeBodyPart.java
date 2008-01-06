@@ -221,38 +221,9 @@ public class MimeBodyPart extends MimePart {
             // we're at the start of a line
             if ((c = pais.read()) == '-' && (c = pais.read()) == '-') {
                 // found a leading "--", so check to see if the rest of the line matches an active MIME boundary
-                pais.mark(boundarymax + 1000);
-
-                for (int i = 0; i < boundaries.size(); i++) {
-                    String boundary = boundaries.get(i);
-                    // FIXME: should be doing boundary autodetect if boundary is unset
-                    if (boundary == MimeMultipart.UNSET_BOUNDARY)
-                        continue;
-
-                    int pos = 0, bndlen = boundary.length();
-                    while (pos < bndlen && boundary.charAt(pos) == (c = pais.read()))
-                        pos++;
-                    // if the line matched the boundary, the part's content may be done!
-                    if (pos == bndlen) {
-                        boolean isEndBoundary = (c = pais.read()) == '-' && (c = pais.read()) == '-';
-                        if (isEndBoundary)
-                            c = pais.read();
-                        // anything trailing must be whitespace
-                        do {
-                            if (c == '\n' || c == '\r' || c == -1) {
-                                if (c == '\r' && pais.peek() == '\n')
-                                    pais.read();
-                                pais.recordBoundary(boundary, isEndBoundary, linestart);
-                                recordEndpoint(linestart);
-                                return this;
-                            } else if (!Character.isWhitespace(c)) {
-                                break;
-                            }
-                        } while ((c = pais.read()) != -1);
-                    }
-
-                    if (i != boundaries.size() - 1)
-                        pais.reset();
+                if (checkBoundary(pais, pais, boundaries, linestart)) {
+                    recordEndpoint(linestart);
+                    return this;
                 }
             }
 
@@ -270,5 +241,52 @@ public class MimeBodyPart extends MimePart {
         pais.clearBoundary();
         recordEndpoint(pais.getPosition());
         return this;
+    }
+
+    static boolean checkBoundary(InputStream is, PeekAheadInputStream pais, List<String> boundaries, long linestart) throws IOException {
+        // found a leading "--", so check to see if the rest of the line matches an active MIME boundary
+        is.mark(1024);
+
+        for (int i = 0; i < boundaries.size(); i++) {
+            String boundary = boundaries.get(i);
+            // FIXME: should be doing boundary autodetect if boundary is unset
+            if (boundary == MimeMultipart.UNSET_BOUNDARY)
+                continue;
+
+            int pos = 0, bndlen = boundary.length(), c;
+            // RFC 2046 5.1.1: "Boundary delimiters must not appear within the encapsulated material, and
+            //                  must be no longer than 70 characters, not counting the two leading hyphens."
+            if (bndlen > 512)
+                continue;
+
+            while (pos < bndlen && boundary.charAt(pos) == (c = is.read()))
+                pos++;
+            // if the line matched the boundary, the part's content may be done!
+            if (pos == bndlen) {
+                boolean isEndBoundary = (c = is.read()) == '-' && (c = is.read()) == '-';
+                if (isEndBoundary)
+                    c = is.read();
+                // anything trailing must be whitespace
+                do {
+                    if (c == '\n' || c == '\r' || c == -1) {
+                        if (c == '\r') {
+                            is.mark(1);
+                            if (is.read() != '\n')
+                                is.reset();
+                        }
+                        pais.recordBoundary(boundary, isEndBoundary, linestart);
+                        return true;
+                    } else if (!Character.isWhitespace(c)) {
+                        break;
+                    }
+                } while ((c = is.read()) != -1);
+            }
+
+            if (i != boundaries.size() - 1)
+                is.reset();
+        }
+
+        pais.clearBoundary();
+        return false;
     }
 }
