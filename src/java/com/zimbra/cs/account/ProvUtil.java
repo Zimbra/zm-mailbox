@@ -1795,7 +1795,7 @@ public class ProvUtil implements DebugListener {
         
         List<Server> servers = mProv.getAllServers();
         for (Server server : servers ) {
-            boolean isTarget = server.getBooleanAttr(Provisioning.A_zimbraReverseProxyLookupTarget, true);
+            boolean isTarget = server.getBooleanAttr(Provisioning.A_zimbraReverseProxyLookupTarget, false);
             if (isTarget) {
                 String serviceName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
                 System.out.print(REVERSE_PROXY_PROTO + serviceName + ":" + REVERSE_PROXY_PORT + REVERSE_PROXY_PATH + " ");

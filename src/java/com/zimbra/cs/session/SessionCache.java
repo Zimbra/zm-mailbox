@@ -30,7 +30,7 @@ import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.stats.RealtimeStatsCallback;
+import com.zimbra.common.stats.RealtimeStatsCallback;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.Zimbra;
 
@@ -255,7 +255,7 @@ public final class SessionCache {
     }
     
     private static final class StatsCallback implements RealtimeStatsCallback {
-        /* @see com.zimbra.cs.stats.RealtimeStatsCallback#getStatData() */
+        /* @see com.zimbra.common.stats.RealtimeStatsCallback#getStatData() */
         public Map<String, Object> getStatData() {
             Map<String, Object> data = new HashMap<String, Object>();
             SessionMap soapMap = getSessionMap(Session.Type.SOAP);

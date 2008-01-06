@@ -167,7 +167,8 @@ public class ContactCSV {
                 buf.append(v);
             }
         }
-        contact.put(field, buf.toString());
+        if (buf.length() > 0)
+        	contact.put(field, buf.toString());
     }
     
     private void addNameField(String colName, List<String> csv, String field, Map<String,String> contact) {

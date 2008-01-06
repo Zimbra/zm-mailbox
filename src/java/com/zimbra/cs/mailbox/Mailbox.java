@@ -3543,7 +3543,7 @@ public class Mailbox {
         }
     }
 
-    synchronized CalendarItem getCalendarItemByUid(String uid) throws ServiceException {
+    public synchronized CalendarItem getCalendarItemByUid(String uid) throws ServiceException {
         return getCalendarItemByUid(null, uid);
     }
     public synchronized CalendarItem getCalendarItemByUid(OperationContext octxt, String uid) throws ServiceException {
@@ -3942,7 +3942,7 @@ public class Mailbox {
                 // it's not already there.
                 Blob preexisting = sharedDeliveryCtxt.getPreexistingBlob();
                 if (preexisting == null) {
-                    InputStream in = pm.getInputStream();
+                    InputStream in = pm.getRawInputStream();
                     if (!isRedo) {
                         blob = sm.storeIncoming(in, msgSize, null, msg.getVolumeId());
                     } else {
@@ -5305,7 +5305,7 @@ public class Mailbox {
         return Math.min(t1, t2);
     }
 
-    public void purgeImapDeleted(OperationContext octxt) throws ServiceException {
+    public synchronized void purgeImapDeleted(OperationContext octxt) throws ServiceException {
         PurgeImapDeleted redoRecorder = new PurgeImapDeleted(mId);
         boolean success = false;
         try {

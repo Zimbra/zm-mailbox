@@ -1061,7 +1061,7 @@ Tags:
   [<cursor id="prevId" sortVal="prevSortValue" endSortVal="endSortValue"/> ] 
           // sortVal should be set to the value of the 'sf' (SortField) attribute of the last
           // hit on the previous 'page' of search results.
-          // end val is NON-INCLUSIVE
+          // endSortVal is NON-INCLUSIVE and optional (used for ranges)
 
   [   // OPTIONAL: client timezone identification (necessary to time-correct a user-specified date/time query)
   

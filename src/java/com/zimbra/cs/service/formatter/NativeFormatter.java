@@ -239,6 +239,10 @@ public class NativeFormatter extends Formatter {
         return true;
     }
 
+    public boolean supportsSave() {
+        return true;
+    }
+
     public void saveCallback(byte[] body, Context context, String contentType, Folder folder, String filename) throws IOException, ServiceException, UserServletException {
         Mailbox mbox = folder.getMailbox();
         if (filename == null) {

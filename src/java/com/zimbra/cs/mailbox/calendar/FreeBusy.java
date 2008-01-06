@@ -51,7 +51,12 @@ import com.zimbra.cs.mailbox.CalendarItem.Instance;
 public class FreeBusy implements Iterable<FreeBusy.Interval> {
 
     private static Log sLog = LogFactory.getLog(FreeBusy.class);
-    
+
+    public static FreeBusy createDummyFreeBusy(long start, long end) {
+        IntervalList ilist = new IntervalList(start, end);
+        return new FreeBusy(ilist, start, end);
+    }
+
     private FreeBusy(IntervalList list, long start, long end) {
         mList = list;
         mStart = start;

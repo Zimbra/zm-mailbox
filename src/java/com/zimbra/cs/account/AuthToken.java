@@ -55,46 +55,46 @@ import com.zimbra.common.util.StringUtil;
  */
 public class AuthToken {
 
-    private static final long DEFAULT_AUTH_LIFETIME = 60*60*12;
+	protected static final long DEFAULT_AUTH_LIFETIME = 60*60*12;
     
     // TODO: config
-    private static final int AUTHTOKEN_CACHE_SIZE = 5000;
+    protected static final int AUTHTOKEN_CACHE_SIZE = 5000;
     
-    private static final String C_ID  = "id";
+    protected static final String C_ID  = "id";
     // original admin id
-    private static final String C_AID  = "aid";    
-	private static final String C_EXP = "exp";
-    private static final String C_ADMIN = "admin";
-    private static final String C_DOMAIN = "domain";    
-    private static final String C_TYPE = "type";
-    private static final String C_TYPE_ZIMBRA_USER = "zimbra";
-    private static final String C_TYPE_EXTERNAL_USER = "external";
-    private static final String C_EXTERNAL_USER_EMAIL = "email";
-    private static final String C_DIGEST = "digest";
-    private static final String C_MAILHOST = "mailhost";
+    protected static final String C_AID  = "aid";    
+    protected static final String C_EXP = "exp";
+    protected static final String C_ADMIN = "admin";
+    protected static final String C_DOMAIN = "domain";    
+    protected static final String C_TYPE = "type";
+    protected static final String C_TYPE_ZIMBRA_USER = "zimbra";
+    protected static final String C_TYPE_EXTERNAL_USER = "external";
+    protected static final String C_EXTERNAL_USER_EMAIL = "email";
+    protected static final String C_DIGEST = "digest";
+    protected static final String C_MAILHOST = "mailhost";
     
-	private static LRUMap mCache = new LRUMap(AUTHTOKEN_CACHE_SIZE);
+    protected static LRUMap mCache = new LRUMap(AUTHTOKEN_CACHE_SIZE);
     
-    private static Log mLog = LogFactory.getLog(AuthToken.class); 
+    protected static Log mLog = LogFactory.getLog(AuthToken.class); 
     
-    private String mAccountId;
-    private String mAdminAccountId;    
-	private long mExpires;
-	private String mEncoded;
-    private boolean mIsAdmin;
-    private boolean mIsDomainAdmin;    
+    protected String mAccountId;
+    protected String mAdminAccountId;    
+    protected long mExpires;
+    protected String mEncoded;
+    protected boolean mIsAdmin;
+    protected boolean mIsDomainAdmin;    
 //	private static AuthTokenKey mTempKey;
-    private String mType;
-    private String mExternalUserEmail;
-    private String mDigest;
-    private String mMailHostRoute;
+    protected String mType;
+    protected String mExternalUserEmail;
+    protected String mDigest;
+    protected String mMailHostRoute;
     
     public String toString() {
         return "AuthToken(acct="+mAccountId+" admin="+mAdminAccountId+" exp="
         +mExpires+" isAdm="+mIsAdmin+" isDomAd="+mIsDomainAdmin+")";
     }
     
-    private static AuthTokenKey getCurrentKey() throws AuthTokenException {
+    protected static AuthTokenKey getCurrentKey() throws AuthTokenException {
         try {
             AuthTokenKey key = AuthTokenKey.getCurrentKey();
             return key;
@@ -130,7 +130,11 @@ public class AuthToken {
         return new AuthToken(acct, true);
     }
     
-	private AuthToken(String encoded) throws AuthTokenException {
+    protected AuthToken() {
+    	 
+    }
+    
+	protected AuthToken(String encoded) throws AuthTokenException {
         try {
             mEncoded = encoded;
             int pos = encoded.indexOf('_');

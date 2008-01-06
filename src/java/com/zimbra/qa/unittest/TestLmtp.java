@@ -27,6 +27,7 @@ import java.util.Map;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.lmtpserver.LmtpMessageInputStream;
@@ -97,7 +98,7 @@ extends TestCase {
         System.arraycopy(data, 0, expected, 0, numToRead);
         InputStream in = new ByteArrayInputStream(data);
         
-        byte[] bytesRead = ZimbraLmtpBackend.readData(in, sizeHint, limit);
+        byte[] bytesRead = ByteUtil.readInput(in, sizeHint, limit);
         assertEquals(numToRead, bytesRead.length);
         assertEquals(numRemaining, in.available());
         assertEquals(new String(expected), new String(bytesRead));
@@ -282,7 +283,8 @@ extends TestCase {
             params.setId(msg.getId());
             msg = mbox.getMessage(params);
             // Check contains instead of equality, since we prepend Received and Return-Path during LMTP.
-            assertTrue("Unexpected message: " + msg.getContent(), msg.getContent().contains(messageString));
+            String content = msg.getContent().replaceAll("\n", "\r\n");
+            assertTrue("Message:\n" + content + " does not contain:\n" + messageString, content.contains(messageString));
         }
     }
     

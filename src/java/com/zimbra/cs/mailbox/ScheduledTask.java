@@ -26,7 +26,6 @@ public abstract class ScheduledTask
 implements Callable<Void> {
 
     private int mMailboxId;
-    private int mItemId;
     private Map<String, String> mProperties = new HashMap<String, String>();
     private long mIntervalMillis;
     private Date mExecTime;
@@ -45,18 +44,6 @@ implements Callable<Void> {
     public void setMailboxId(int mailboxId) {
         mMailboxId = mailboxId;
     }
-    
-    /**
-     * Returns the mail item id, or <tt>0</tt> if this task is not
-     * specific to a mail item.
-     */
-    /*
-    public int getItemId() { return mItemId; }
-
-    public void setItemId(int itemId) {
-        mItemId = itemId;
-    }
-    */
     
     /**
      * Returns the timestamp at which this task will execute next.
@@ -104,7 +91,7 @@ implements Callable<Void> {
     }
     
     public String toString() {
-        return String.format("%s: { name=%s, mailboxId=%d, mailItemId=%d, execTime=%s, intervalMillis=%d }",
-            this.getClass().getSimpleName(), getName(), mMailboxId, mItemId, mExecTime, mIntervalMillis);
+        return String.format("%s: { name=%s, mailboxId=%d, execTime=%s, intervalMillis=%d }",
+            this.getClass().getSimpleName(), getName(), mMailboxId, mExecTime, mIntervalMillis);
     }
 }

@@ -132,7 +132,11 @@ public class IcsFormatter extends Formatter {
             // and add the invite to the calendar!
             mFolder.getMailbox().addInvite(mCtxt.opContext, inv, mFolder.getId(), false, null);
         }
-        }
+    }
+
+    public boolean supportsSave() {
+        return true;
+    }
 
     public void saveCallback(byte[] body, Context context, String contentType, Folder folder, String filename) throws ServiceException, IOException {
         boolean continueOnError = context.ignoreAndContinueOnError();

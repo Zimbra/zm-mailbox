@@ -20,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.CharArrayWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -91,6 +92,19 @@ public interface CalendarObject {
             setProperty(DavElements.P_GETCONTENTLENGTH, Long.toString(calItem.getSize()));
             addProperty(CalDavProperty.getCalendarData(this));
             mAccount = calItem.getAccount();
+            if (mInvites[0].hasRecurId()) {
+            	// put the main series to be the first invite, otherwise iCal won't like it.
+            	ArrayList<Invite> newList = new ArrayList<Invite>();
+            	ArrayList<Invite> exceptions = new ArrayList<Invite>();
+            	for (Invite i : mInvites) {
+            		if (i.hasRecurId())
+            			exceptions.add(i);
+            		else
+            			newList.add(i);
+            	}
+            	newList.addAll(exceptions);
+            	mInvites = newList.toArray(new Invite[0]);
+            }
         }
 
         private String mUid;

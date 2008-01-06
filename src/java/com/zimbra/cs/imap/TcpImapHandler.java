@@ -154,7 +154,7 @@ public class TcpImapHandler extends ImapHandler {
 
             ZimbraPerf.STOPWATCH_IMAP.stop(start);
             if (mLastCommand != null) {
-                sActivityTracker.addStat(mLastCommand.toUpperCase(), start);
+                ZimbraPerf.IMAP_TRACKER.addStat(mLastCommand.toUpperCase(), start);
             }
         } catch (TcpImapRequest.ImapContinuationException ice) {
             mIncompleteRequest = req.rewind();

@@ -16,6 +16,36 @@
  */
 package com.zimbra.cs.imap;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.net.URLEncoder;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ArrayUtil;
@@ -43,13 +73,13 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.security.sasl.Authenticator;
 import com.zimbra.cs.security.sasl.AuthenticatorUser;
@@ -59,7 +89,6 @@ import com.zimbra.cs.security.sasl.PlainAuthenticator;
 import com.zimbra.cs.service.mail.FolderAction;
 import com.zimbra.cs.service.mail.ItemActionHelper;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.stats.ActivityTracker;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.BuildInfo;
@@ -67,36 +96,6 @@ import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZGrant;
 import com.zimbra.cs.zclient.ZMailbox;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.net.URLEncoder;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Pattern;
 
 /**
  * @author dkarp
@@ -130,23 +129,14 @@ public abstract class ImapHandler extends ProtocolHandler {
     protected boolean         mGoodbyeSent;
     private   Set<ActivatedExtension> mActivatedExtensions;
 
-    protected static ActivityTracker sActivityTracker;
-
-    private static synchronized void initActivityTracker() {
-        if (sActivityTracker == null)
-            sActivityTracker = ActivityTracker.getInstance("imap.csv");
-    }
-
     ImapHandler(MinaImapServer server) {
         super(null);
         mConfig = (ImapConfig) server.getConfig();
-        initActivityTracker();
     }
 
     ImapHandler(ImapServer server) {
         super(server);
         mConfig = (ImapConfig) server.getConfig();
-        initActivityTracker();
     }
 
     DateFormat getTimeFormat()   { return mTimeFormat; }
@@ -1166,8 +1156,8 @@ public abstract class ImapHandler extends ProtocolHandler {
             String knownUIDs = qri.knownUIDs == null ? "1:" + (i4folder.getInitialUIDNEXT() - 1) : qri.knownUIDs;
             if (qri.seqMilestones != null && qri.uidMilestones != null) {
                 int lowwater = 1;
-                ImapMessageSet seqset = i4folder.getSubsequence(qri.seqMilestones, false);
-                ImapMessageSet uidset = i4folder.getSubsequence(qri.uidMilestones, true);
+                ImapMessageSet seqset = i4folder.getSubsequence(tag, qri.seqMilestones, false);
+                ImapMessageSet uidset = i4folder.getSubsequence(tag, qri.uidMilestones, true);
                 seqset.remove(null);  uidset.remove(null);
                 for (Iterator<ImapMessage> itseq = seqset.iterator(), ituid = uidset.iterator(); itseq.hasNext() && ituid.hasNext(); ) {
                     ImapMessage i4msg;
@@ -2347,7 +2337,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         if (!checkState(tag, State.AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
-        StringBuilder i4acl = new StringBuilder("ACL ").append(path.asImapPath());
+        StringBuilder i4acl = new StringBuilder("ACL ").append(path.asUtf7String());
 
         try {
             // make sure the requester has sufficient permissions to make the request
@@ -2510,7 +2500,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         return CONTINUE_PROCESSING;
     }
 
-    boolean doCLOSE(String tag) throws IOException {
+    boolean doCLOSE(String tag) throws IOException, ImapParseException {
         if (!checkState(tag, State.SELECTED))
             return CONTINUE_PROCESSING;
 
@@ -2523,7 +2513,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             //         No messages are removed, and no error is given, if the mailbox is
             //         selected by an EXAMINE command or is otherwise selected read-only."
             if (mSelectedFolder.isWritable() && mSelectedFolder.getPath().isWritable(ACL.RIGHT_DELETE))
-                expunged = expungeMessages(mSelectedFolder, null);
+                expunged = expungeMessages(tag, mSelectedFolder, null);
         } catch (ServiceException e) {
             // log the error but keep going...
             ZimbraLog.imap.warn("error during CLOSE", e);
@@ -2559,7 +2549,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     
     private final int SUGGESTED_DELETE_BATCH_SIZE = 30;
 
-    boolean doEXPUNGE(String tag, boolean byUID, String sequenceSet) throws IOException {
+    boolean doEXPUNGE(String tag, boolean byUID, String sequenceSet) throws IOException, ImapParseException {
         if (!checkState(tag, State.SELECTED)) {
             return CONTINUE_PROCESSING;
         } else if (!mSelectedFolder.isWritable()) {
@@ -2573,7 +2563,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             if (!mSelectedFolder.getPath().isWritable(ACL.RIGHT_DELETE))
                 throw ServiceException.PERM_DENIED("you do not have permission to delete messages from this folder");
 
-            expunged = expungeMessages(mSelectedFolder, sequenceSet);
+            expunged = expungeMessages(tag, mSelectedFolder, sequenceSet);
         } catch (ServiceException e) {
             ZimbraLog.imap.warn(command + " failed", e);
             sendNO(tag, command + " failed");
@@ -2593,10 +2583,10 @@ public abstract class ImapHandler extends ProtocolHandler {
         return CONTINUE_PROCESSING;
     }
 
-    boolean expungeMessages(ImapFolder i4folder, String sequenceSet) throws ServiceException, IOException {
+    boolean expungeMessages(String tag, ImapFolder i4folder, String sequenceSet) throws ServiceException, IOException, ImapParseException {
         Set<ImapMessage> i4set;
         synchronized (mSelectedFolder.getMailbox()) {
-            i4set = (sequenceSet == null ? null : i4folder.getSubsequence(sequenceSet, true));
+            i4set = (sequenceSet == null ? null : i4folder.getSubsequence(tag, sequenceSet, true));
         }
         List<Integer> ids = new ArrayList<Integer>(SUGGESTED_DELETE_BATCH_SIZE);
 
@@ -2679,6 +2669,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             synchronized (mbox) {
                 if (i4search.canBeRunLocally()) {
                     hits = i4search.evaluate(mSelectedFolder);
+                    hits.remove(null);
                 } else {
                     String search = i4search.toZimbraSearch(mSelectedFolder);
                     if (!mSelectedFolder.isVirtual())
@@ -2703,7 +2694,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                     try {
                         for (ZimbraHit hit = zqr.getFirstHit(); hit != null; hit = zqr.getNext()) {
                             ImapMessage i4msg = mSelectedFolder.getById(hit.getItemId());
-                            if (i4msg == null)
+                            if (i4msg == null || i4msg.isExpunged())
                                 continue;
                             hits.add(i4msg);
                             if (requiresMODSEQ)
@@ -2785,7 +2776,8 @@ public abstract class ImapHandler extends ProtocolHandler {
     static final int FETCH_ALL  = FETCH_FAST  | FETCH_ENVELOPE;
     static final int FETCH_FULL = FETCH_ALL   | FETCH_BODY;
 
-    boolean doFETCH(String tag, String sequenceSet, int attributes, List<ImapPartSpecifier> parts, boolean byUID, int changedSince) throws IOException, ImapParseException {
+    boolean doFETCH(String tag, String sequenceSet, int attributes, List<ImapPartSpecifier> parts, boolean byUID, int changedSince)
+    throws IOException, ImapParseException {
         return fetch(tag, sequenceSet, attributes, parts, byUID, changedSince, true);
     }
 
@@ -2838,7 +2830,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         ImapMessageSet i4set;
         Mailbox mbox = i4folder.getMailbox();
         synchronized (mbox) {
-            i4set = i4folder.getSubsequence(sequenceSet, byUID);
+            i4set = i4folder.getSubsequence(tag, sequenceSet, byUID);
         }
         boolean allPresent = byUID || !i4set.contains(null);
         i4set.remove(null);
@@ -3010,7 +3002,8 @@ public abstract class ImapHandler extends ProtocolHandler {
     
     private final int SUGGESTED_BATCH_SIZE = 100;
 
-    boolean doSTORE(String tag, String sequenceSet, List<String> flagNames, StoreAction operation, boolean silent, int modseq, boolean byUID) throws IOException, ImapParseException {
+    boolean doSTORE(String tag, String sequenceSet, List<String> flagNames, StoreAction operation, boolean silent, int modseq, boolean byUID)
+    throws IOException, ImapParseException {
         if (!checkState(tag, State.SELECTED)) {
             return CONTINUE_PROCESSING;
         } else if (!mSelectedFolder.isWritable()) {
@@ -3036,7 +3029,7 @@ public abstract class ImapHandler extends ProtocolHandler {
 
         Set<ImapMessage> i4set;
         synchronized (mbox) {
-            i4set = mSelectedFolder.getSubsequence(sequenceSet, byUID);
+            i4set = mSelectedFolder.getSubsequence(tag, sequenceSet, byUID);
         }
         boolean allPresent = byUID || !i4set.contains(null);
         i4set.remove(null);
@@ -3198,7 +3191,7 @@ public abstract class ImapHandler extends ProtocolHandler {
 
     private final int SUGGESTED_COPY_BATCH_SIZE = 50;
 
-    boolean doCOPY(String tag, String sequenceSet, ImapPath path, boolean byUID) throws IOException {
+    boolean doCOPY(String tag, String sequenceSet, ImapPath path, boolean byUID) throws IOException, ImapParseException {
         if (!checkState(tag, State.SELECTED))
             return CONTINUE_PROCESSING;
 
@@ -3209,7 +3202,7 @@ public abstract class ImapHandler extends ProtocolHandler {
 
         Set<ImapMessage> i4set;
         synchronized (mbox) {
-            i4set = mSelectedFolder.getSubsequence(sequenceSet, byUID);
+            i4set = mSelectedFolder.getSubsequence(tag, sequenceSet, byUID);
         }
         // RFC 2180 4.4.1: "The server MAY disallow the COPY of messages in a multi-
         //                  accessed mailbox that contains expunged messages."

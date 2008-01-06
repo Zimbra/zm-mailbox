@@ -108,7 +108,7 @@ public class AuthTokenKey {
      * @return
      * @throws ServiceException
      */
-    static AuthTokenKey getVersion(String version) throws ServiceException {
+    public static AuthTokenKey getVersion(String version) throws ServiceException {
         AuthTokenKey key = mCache.get(version);
         // if not found, refresh our map. The config object will get reloaded if it is older
         // then the TTL

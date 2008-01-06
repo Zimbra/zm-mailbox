@@ -173,14 +173,14 @@ public class Check {
         String krb5Keytab = (String) attrs.get(Provisioning.A_zimbraGalLdapKerberos5Keytab);
         String searchBase = getRequiredAttr(attrs, Provisioning.A_zimbraGalLdapSearchBase);
         String filter = getRequiredAttr(attrs, Provisioning.A_zimbraGalLdapFilter);
-
+        int pageSize =  0;
 
         String[] galAttrs = Provisioning.getInstance().getConfig().getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap);
         LdapGalMapRules rules = new LdapGalMapRules(galAttrs);
 
         try {
             LdapGalCredential credential = LdapGalCredential.init(authMech, bindDn, bindPassword, krb5Principal, krb5Keytab);
-            SearchGalResult result = LdapUtil.searchLdapGal(url, credential, searchBase, filter, query, limit, rules, null); 
+            SearchGalResult result = LdapUtil.searchLdapGal(url, credential, pageSize, searchBase, filter, query, limit, rules, null); 
             List contacts = result.matches;
             return new Result(STATUS_OK, "", contacts);
         } catch (NamingException e) {

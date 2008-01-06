@@ -71,7 +71,7 @@ public final class MailboxIndex
         if (ZimbraLog.index.isDebugEnabled()) {
             ZimbraLog.index.debug("SearchRequest: "+params.getQueryStr());
         }
-        
+
         //
         // Testing hacks
         // 
@@ -94,10 +94,10 @@ public final class MailboxIndex
                 MailboxManager.getInstance().endMaintenance(lock, true, false);
             } else {
                 throw ServiceException.FAILURE("Usage: \"$im_reg service name password\" or \"$im_unreg service\"", null); 
-            }
+        }
                 
             return new EmptyQueryResults(params.getTypes(), params.getSortBy(), params.getMode());
-        }
+            }			
         
         //
         // calendar expansions
@@ -142,10 +142,10 @@ public final class MailboxIndex
                 isTaskSort = true;
                 params.setSortBy(SortBy.DATE_DESCENDING);
                 break;
-        }
+    }
         
         ZimbraQuery zq = new ZimbraQuery(mbox, params);
-        
+
         if (ZimbraLog.searchstats.isDebugEnabled()) {
             int textCount = zq.countSearchTextParts();
             ZimbraLog.searchstats.debug("Executing search with ["+textCount+"] text parts");
@@ -156,7 +156,7 @@ public final class MailboxIndex
             
             if (isTaskSort) {
                 results = new TaskSortingQueryResults(results, originalSort);
-            }
+            }			
             return results;
         } catch (IOException e) {
             zq.doneWithQuery();
@@ -169,7 +169,7 @@ public final class MailboxIndex
             throw ServiceException.FAILURE("Caught "+t.getMessage(), t);
         }
     }
-    
+
     /**
      * @param fieldName - a lucene field (e.g. LuceneFields.L_H_CC)
      * @param collection - Strings which correspond to all of the domain terms stored in a given field.
@@ -221,13 +221,13 @@ public final class MailboxIndex
         ret.append(")");
         return ret.toString();
     }
-    
+
     public MailboxIndex(Mailbox mbox, String root) throws ServiceException {
         int mailboxId = mbox.getId();
-        
+
         mMailboxId = mailboxId;
         mMailbox = mbox;
-        
+
         Volume indexVol = Volume.getById(mbox.getIndexVolume());
         String idxParentDir = indexVol.getMailboxDir(mailboxId, Volume.TYPE_INDEX);
 
@@ -235,7 +235,7 @@ public final class MailboxIndex
         mTextIndex = mLucene;
 
         String analyzerName = mbox.getAccount().getAttr(Provisioning.A_zimbraTextAnalyzer, null);
-        
+
         if (analyzerName != null)
             mAnalyzer = ZimbraAnalyzer.getAnalyzer(analyzerName);
         else
@@ -243,18 +243,18 @@ public final class MailboxIndex
         
         sLog.info("Initialized Index for mailbox " + mailboxId+" directory: "+mTextIndex.toString()+" Analyzer="+mAnalyzer.toString());
     }
-    
+
     TextQueryOperation createTextQueryOperation() {
         return LuceneQueryOperation.doCreate();
-    }
+        }
     
     LuceneIndex getLuceneIndex() {
         return mLucene;
     }
-    
+
     private LuceneIndex mLucene;
     private ITextIndex mTextIndex;
-    
+
     private int mMailboxId;
     private Mailbox mMailbox;
     private static Log sLog = LogFactory.getLog(MailboxIndex.class);
@@ -262,9 +262,9 @@ public final class MailboxIndex
     public static void startup() {
         if (DebugConfig.disableIndexing)
             return;
-        
+
         LuceneIndex.startup();
-    }
+        }
 
     public static void shutdown() {
         if (DebugConfig.disableIndexing)
@@ -272,16 +272,16 @@ public final class MailboxIndex
 
         LuceneIndex.shutdown();
     }
-
+    
     public static void flushAllWriters() {
         if (DebugConfig.disableIndexing)
             return;
         
         LuceneIndex.flushAllWriters();
     }
-
+        
     private Analyzer mAnalyzer = null;
-    
+        
     boolean curThreadHoldsLock() {
         return Thread.holdsLock(getLock());
     }
@@ -429,7 +429,7 @@ public final class MailboxIndex
     public void deleteIndex() throws IOException
     {
         mTextIndex.deleteIndex();
-    }
+            }
 
     /**
      * Entry point for Redo-logging system only.  Everybody else should use MailItem.reindex()
@@ -468,7 +468,7 @@ public final class MailboxIndex
             case MailItem.TYPE_DOCUMENT:
             case MailItem.TYPE_WIKI:
                 try {
-                    com.zimbra.cs.mailbox.Document document = (com.zimbra.cs.mailbox.Document) item;
+                    com.zimbra.cs.mailbox.Document document = (com.zimbra.cs.mailbox.Document)item;
                     ParsedDocument pd = new ParsedDocument(document.getBlob(),
                                 document.getName(), 
                                 document.getContentType(),
@@ -513,10 +513,10 @@ public final class MailboxIndex
             default:
                 if (redo != null)
                     redo.abort();
-                throw ServiceException.FAILURE("Invalid item type for indexing: type=" + itemType, null);
+            throw ServiceException.FAILURE("Invalid item type for indexing: type=" + itemType, null);
         }
     }
-    
+
     public void indexCalendarItem(Mailbox mbox, IndexItem redo, boolean deleteFirst, 
         CalendarItem item, List<Document> docList, long date) throws ServiceException {
         
@@ -591,12 +591,12 @@ public final class MailboxIndex
                 Map<String, String> m = contact.getFields();
                 for (Map.Entry<String, String> entry : m.entrySet()) {
                     contentText.append(entry.getValue()).append(' ');
-                    
+
                     String fieldTextToAdd = entry.getKey() + ":" + entry.getValue() + "\n";
 //                    fieldText.append(entry.getKey()).append(':').append(entry.getValue()).append('\n');
                     fieldText.append(fieldTextToAdd);
                 }
-                
+
                 Document doc = new Document();
 
                 StringBuilder searchText = new StringBuilder();
@@ -618,7 +618,7 @@ public final class MailboxIndex
                 
                 /* put the email addresses in the "To" field so they can be more easily searched */
                 doc.add(new Field(LuceneFields.L_H_TO, emailStr,  Field.Store.NO, Field.Index.TOKENIZED));
-                
+
                 /* put the name in the "From" field since the MailItem table uses 'Sender'*/
                 doc.add(new Field(LuceneFields.L_H_FROM, contact.getSender(),  Field.Store.NO, Field.Index.TOKENIZED));
                 /* bug 11831 - put contact searchable data in its own field so wildcard search works better  */
@@ -626,10 +626,10 @@ public final class MailboxIndex
                 doc.add(new Field(LuceneFields.L_CONTENT, contentText.toString(), Field.Store.NO, Field.Index.TOKENIZED));
                 doc.add(new Field(LuceneFields.L_H_SUBJECT, contact.getSubject(), Field.Store.NO, Field.Index.TOKENIZED));
                 doc.add(new Field(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_CONTACT, Field.Store.YES, Field.Index.UN_TOKENIZED));
-                
+
                 /* add key:value pairs to the structured FIELD lucene field */
                 doc.add(new Field(LuceneFields.L_FIELD, fieldText.toString(), Field.Store.NO, Field.Index.TOKENIZED));
-                
+
                 mTextIndex.addDocument(redo, doc, indexId, contact.getDate(), contact, deleteFirst);
 
             } catch (IOException ioe) {
@@ -671,7 +671,7 @@ public final class MailboxIndex
     }    
 
     public void indexDocument(Mailbox mbox, IndexItem redo, boolean deleteFirst, 
-        ParsedDocument pd, com.zimbra.cs.mailbox.Document doc)  throws ServiceException {
+                ParsedDocument pd, com.zimbra.cs.mailbox.Document doc)  throws ServiceException {
         initAnalyzer(mbox);
         synchronized(getLock()) {        
             try {
@@ -683,20 +683,20 @@ public final class MailboxIndex
         }
     }
     
-    /**
+        /**
      * @return TRUE if all tokens were expanded or FALSE if no more tokens could be expanded
-     */
+         */
     boolean expandWildcardToken(Collection<String> toRet, String field, String token, int maxToReturn) throws ServiceException 
     {
         return mTextIndex.expandWildcardToken(toRet, field, token, maxToReturn);
-    }
-    
+        }
+        
     List<SpellSuggestQueryInfo.Suggestion> suggestSpelling(String field, String token) throws ServiceException {
         return mTextIndex.suggestSpelling(field, token);
-    }
-    
-    
+                    }
+
+                
     final Object getLock() {
             return mMailbox;
-    }
+                        }
 }

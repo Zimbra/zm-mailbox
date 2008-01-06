@@ -199,7 +199,7 @@
       <param-value>7071</param-value>
     </init-param>
   </servlet>
-  
+
   <servlet>
     <servlet-name>CollectLDAPConfigZimbra</servlet-name>
     <servlet-class>com.zimbra.cs.service.admin.CollectLDAPConfigZimbra</servlet-class>
@@ -208,7 +208,7 @@
       <param-value>7071</param-value>
     </init-param>
   </servlet>
-    
+
   <servlet>
     <servlet-name>ProxyServlet</servlet-name>
     <servlet-class>com.zimbra.cs.zimlet.ProxyServlet</servlet-class>

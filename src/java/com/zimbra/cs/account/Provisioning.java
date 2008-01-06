@@ -491,6 +491,10 @@ public abstract class Provisioning {
     public static final String A_zimbraGalLdapKerberos5Principal = "zimbraGalLdapKerberos5Principal";
     public static final String A_zimbraGalLdapKerberos5Keytab = "zimbraGalLdapKerberos5Keytab";
     
+    /**
+     * 
+     */
+    public static final String A_zimbraGalLdapPageSize = "zimbraGalLdapPageSize";
     
     /**
      * set to true if an account is an admin account
@@ -924,6 +928,11 @@ public abstract class Provisioning {
      * zimbraPasswordFailureTime entries are removed.
      */
     public static final String A_zimbraPasswordLockoutFailureTime = "zimbraPasswordLockoutFailureTime";
+    
+    /**
+     * Change password listener.  If set, the listener must be registered by ChangePasswordListener.register()
+     */
+    public static final String A_zimbraPasswordChangeListener = "zimbraPasswordChangeListener";
     
     /**
      * the mail .signature value
@@ -1374,6 +1383,16 @@ public abstract class Provisioning {
      * Voice mail
      */
     public static final String A_zimbraPrefVoiceItemsPerPage = "zimbraPrefVoiceItemsPerPage";
+
+    /*
+     * Calendar reminder preferences
+     */
+    public static final String A_zimbraPrefCalendarReminderDuration1  = "zimbraPrefCalendarReminderDuration1";
+    public static final String A_zimbraPrefCalendarReminderDuration2  = "zimbraPrefCalendarReminderDuration2";
+    public static final String A_zimbraPrefCalendarReminderEmail      = "zimbraPrefCalendarReminderEmail";
+    public static final String A_zimbraPrefCalendarReminderSendEmail  = "zimbraPrefCalendarReminderSendEmail";    
+    public static final String A_zimbraPrefCalendarReminderMobile     = "zimbraPrefCalendarReminderMobile";
+    public static final String A_zimbraPrefCalendarReminderYMessenger = "zimbraPrefCalendarReminderYMessenger";
     
     /*
      * junk messages

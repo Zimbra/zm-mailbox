@@ -19,9 +19,14 @@ package com.zimbra.cs.im;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.dom4j.Element;
 import org.jivesoftware.util.JiveGlobals;
+import org.jivesoftware.wildfire.Session;
 import org.jivesoftware.wildfire.XMPPServer;
 import org.jivesoftware.wildfire.interceptor.InterceptorManager;
+import org.jivesoftware.wildfire.net.CloudRoutingSocketReader;
+import org.jivesoftware.wildfire.net.SocketConnection;
+import org.jivesoftware.wildfire.net.CloudRoutingSocketReader.CloudRoutingSessionFactory;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -31,6 +36,7 @@ import com.zimbra.cs.account.Provisioning;
 //import com.zimbra.cs.im.interop.Interop;
 import com.zimbra.cs.im.provider.IMGlobalProperties;
 import com.zimbra.cs.im.provider.IMLocalProperties;
+import com.zimbra.cs.im.provider.CloudRoute;
 
 public class ZimbraIM {
     
@@ -55,7 +61,14 @@ public class ZimbraIM {
             
             // set the special msgs ClassLoader -- so that WF looks in our conf/msgs directory
             // for its localization .properties bundles.
-            org.jivesoftware.util.LocaleUtils.sMsgsClassLoader = com.zimbra.cs.util.L10nUtil.getMsgClassLoader();             
+            org.jivesoftware.util.LocaleUtils.sMsgsClassLoader = com.zimbra.cs.util.L10nUtil.getMsgClassLoader();
+            
+            CloudRoutingSocketReader.setSessionFactory(new CloudRoutingSessionFactory() { 
+                public Session createSession(String hostname, CloudRoutingSocketReader reader, SocketConnection connection, Element streamElt) {
+                    return CloudRoute.create(hostname, reader, connection, streamElt);
+                }
+            });
+            
             
             XMPPServer srv = new XMPPServer(domainStrs, new IMLocalProperties(), new IMGlobalProperties());
             InterceptorManager.getInstance().addInterceptor(new com.zimbra.cs.im.PacketInterceptor());

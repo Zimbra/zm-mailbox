@@ -33,8 +33,10 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Account.CalendarUserType;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.account.AccountCache;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
@@ -154,8 +156,8 @@ public class LdapProvisioning extends Provisioning {
     private static final String FILTER_DISTRIBUTION_LIST_OBJECTCLASS =
         "(objectclass=zimbraDistributionList)";
 
-    private static NamedEntryCache<Account> sAccountCache =
-        new NamedEntryCache<Account>(
+    private static AccountCache sAccountCache =
+        new AccountCache(
                 LC.ldap_cache_account_maxsize.intValue(),
                 LC.ldap_cache_account_maxage.intValue() * Constants.MILLIS_PER_MINUTE); 
 
@@ -506,12 +508,17 @@ public class LdapProvisioning extends Provisioning {
     }
 
     private Account getAccountByForeignPrincipal(String foreignPrincipal, boolean loadFromMaster) throws ServiceException {
-        foreignPrincipal = LdapUtil.escapeSearchFilterArg(foreignPrincipal);
-        return getAccountByQuery(
-                mDIT.mailBranchBaseDN(),
-                "(&(zimbraForeignPrincipal=" + foreignPrincipal + ")" +
-                FILTER_ACCOUNT_OBJECTCLASS + ")",
-                null, loadFromMaster);
+        Account a = sAccountCache.getByForeignPrincipal(foreignPrincipal);
+        if (a == null) {
+            foreignPrincipal = LdapUtil.escapeSearchFilterArg(foreignPrincipal);
+            a = getAccountByQuery(
+                    mDIT.mailBranchBaseDN(),
+                    "(&(zimbraForeignPrincipal=" + foreignPrincipal + ")" +
+                    FILTER_ACCOUNT_OBJECTCLASS + ")",
+                    null, loadFromMaster);
+            sAccountCache.put(a);
+        }
+        return a;
     }
 
     private Account getAdminAccountByName(String name, boolean loadFromMaster) throws ServiceException {
@@ -725,6 +732,8 @@ public class LdapProvisioning extends Provisioning {
             
             LdapUtil.createEntry(ctxt, dn, attrs, "createAccount");
             Account acct = getAccountById(zimbraIdStr, ctxt, true);
+            if (acct == null)
+                throw ServiceException.FAILURE("unable to get account after creating LDAP account entry: "+emailAddress+", check ldap log for possible BDB deadlock", null);
             AttributeManager.getInstance().postModify(acctAttrs, acct, attrManagerContext, true);
 
             return acct;
@@ -966,7 +975,7 @@ public class LdapProvisioning extends Provisioning {
                         else if (objectclass.contains(C_zimbraMailList)) visitor.visit(makeDistributionList(dn, attrs, this));
                         else if (objectclass.contains(C_zimbraDomain)) visitor.visit(new LdapDomain(dn, attrs, getConfig().getDomainDefaults()));                        
                     }
-                    cookie = getCookie(lctxt);
+                    cookie = LdapUtil.getCookie(lctxt);
                 } while (cookie != null);
             } finally {
                 if (ne != null) ne.close();
@@ -985,20 +994,6 @@ public class LdapProvisioning extends Provisioning {
         } finally {
             LdapUtil.closeContext(ctxt);
         }
-    }
-
-    private byte[] getCookie(LdapContext lctxt) throws NamingException {
-        Control[] controls = lctxt.getResponseControls();
-        if (controls != null) {
-            for (int i = 0; i < controls.length; i++) {
-                if (controls[i] instanceof PagedResultsResponseControl) {
-                    PagedResultsResponseControl prrc =
-                        (PagedResultsResponseControl)controls[i];
-                    return prrc.getCookie();
-                }
-            }
-        }
-        return null;
     }
 
     /**
@@ -1553,6 +1548,7 @@ public class LdapProvisioning extends Provisioning {
         allAttrs.remove(Provisioning.A_objectClass);
         allAttrs.remove(Provisioning.A_zimbraId);
         allAttrs.remove(Provisioning.A_cn);
+        allAttrs.remove(Provisioning.A_description);
         if (cosAttrs != null) {
             for (Map.Entry<String, Object> e : cosAttrs.entrySet()) {
                 allAttrs.put(e.getKey(), e.getValue());
@@ -1606,7 +1602,7 @@ public class LdapProvisioning extends Provisioning {
             ctxt = LdapUtil.getDirContext(true);
             String newDn = mDIT.cosNametoDN(newName);
             LdapUtil.renameEntry(ctxt, cos.getDN(), newDn);
-            // remove old account from cache
+            // remove old cos from cache
             sCosCache.remove(cos);
         } catch (NameAlreadyBoundException nabe) {
             throw AccountServiceException.COS_EXISTS(newName);            
@@ -1744,7 +1740,7 @@ public class LdapProvisioning extends Provisioning {
             
             LdapUtil.deleteChildren(ctxt, entry.getDN());
             LdapUtil.unbindEntry(ctxt, entry.getDN());
-            sAccountCache.remove(acc.getName(), acc.getId());
+            sAccountCache.remove(acc);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to purge account: "+zimbraId, e);
         } finally {
@@ -1846,10 +1842,8 @@ public class LdapProvisioning extends Provisioning {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to rename account: "+zimbraId, e);
         } finally {
-            // prune cache, prune in finally instead of end of the try block because
-            // in case exceptions were thrown, the cache might have been updated to the 
-            // new values which are not actually committed to the LDAP store.
-            sAccountCache.remove(oldEmail, acct.getId());
+            // prune cache
+            sAccountCache.remove(acct);
             LdapUtil.closeContext(ctxt);
         }
     }
@@ -2535,6 +2529,9 @@ public class LdapProvisioning extends Provisioning {
         String computedPreAuth = PreAuthKey.computePreAuth(params, domainPreAuthKey);
         if (!computedPreAuth.equalsIgnoreCase(preAuth))
             throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "preauth mismatch");
+        
+        // update/check last logon
+        updateLastLogon(acct);
     }
     
     /* (non-Javadoc)
@@ -2988,7 +2985,17 @@ public class LdapProvisioning extends Provisioning {
         attrs.put(Provisioning.A_userPassword, encodedPassword);
         attrs.put(Provisioning.A_zimbraPasswordModifiedTime, DateUtil.toGeneralizedTime(new Date()));
         
+        ChangePasswordListener cpListener = ChangePasswordListener.getHandler(acct);
+        HashMap context = null; 
+        if (cpListener != null) {
+            context = new HashMap();
+            cpListener.preModify(acct, newPassword, context, attrs);
+        }
+            
         modifyAttrs(acct, attrs);
+        
+        if (cpListener != null)
+            cpListener.postModify(acct, newPassword, context);
     }
     
     public Zimlet getZimlet(String name) throws ServiceException {
@@ -3726,6 +3733,7 @@ public class LdapProvisioning extends Provisioning {
         return searchZimbraWithQuery(d, query, maxResults, token);
     }
 
+    /*  === original ===
     private SearchGalResult searchZimbraWithQuery(Domain d, String query, int maxResults, String token)
         throws ServiceException 
     {
@@ -3779,7 +3787,51 @@ public class LdapProvisioning extends Provisioning {
         //Collections.sort(result);
         return result;
     }
+    */
 
+    private SearchGalResult searchZimbraWithQuery(Domain d, String query, int maxResults, String token)
+    throws ServiceException 
+    {
+        LdapDomain ld = (LdapDomain) d;
+        SearchGalResult result = new SearchGalResult();
+        result.matches = new ArrayList<GalContact>();
+        if (query == null)
+            return result;
+    
+        // filter out hidden entries
+        query = "(&("+query+")(!(zimbraHideInGal=TRUE)))";
+    
+        LdapGalMapRules rules = getGalRules(d);
+        
+        String searchBase = d.getAttr(Provisioning.A_zimbraGalInternalSearchBase, "DOMAIN");
+        if (searchBase.equalsIgnoreCase("DOMAIN"))
+            searchBase = mDIT.domainDNToAccountSearchDN(ld.getDN());
+        else if (searchBase.equalsIgnoreCase("SUBDOMAINS"))
+            searchBase = ld.getDN();
+        else if (searchBase.equalsIgnoreCase("ROOT"))
+            searchBase = "";
+        
+        int pageSize = d.getIntAttr(Provisioning.A_zimbraGalLdapPageSize, 0); 
+        
+        DirContext ctxt = null;
+        try {
+            ctxt = LdapUtil.getDirContext(false);
+            LdapUtil.searchGal(ctxt,
+                               pageSize,
+                               searchBase, 
+                               query, 
+                               maxResults,
+                               rules,
+                               token,
+                               result);
+        } finally {
+            LdapUtil.closeContext(ctxt);
+        }
+
+        //Collections.sort(result);
+        return result;
+    }
+    
     private SearchGalResult searchLdapGal(Domain d,
                                           String n,
                                           int maxResults,
@@ -3792,12 +3844,13 @@ public class LdapProvisioning extends Provisioning {
         String krb5Principal = d.getAttr(Provisioning.A_zimbraGalLdapKerberos5Principal);
         String krb5Keytab = d.getAttr(Provisioning.A_zimbraGalLdapKerberos5Keytab);
         String searchBase = d.getAttr(Provisioning.A_zimbraGalLdapSearchBase, "");
+        int pageSize = d.getIntAttr(Provisioning.A_zimbraGalLdapPageSize, 0);
         LdapGalMapRules rules = getGalRules(d);
         String filter = d.getAttr(autoComplete ? Provisioning.A_zimbraGalAutoCompleteLdapFilter : Provisioning.A_zimbraGalLdapFilter);
         String[] galAttrList = rules.getLdapAttrs();
         try {
             LdapGalCredential credential = LdapGalCredential.init(authMech, bindDn, bindPassword, krb5Principal, krb5Keytab);
-            return LdapUtil.searchLdapGal(url, credential, searchBase, filter, n, maxResults, rules, token);
+            return LdapUtil.searchLdapGal(url, credential, pageSize, searchBase, filter, n, maxResults, rules, token);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to search GAL", e);
         }
@@ -4230,6 +4283,18 @@ public class LdapProvisioning extends Provisioning {
     }
 
     private void renameSignature(LdapEntry entry, LdapSignature signature, String newSignatureName) throws ServiceException {
+        
+        /*
+         * check if the signature name already exists
+         * 
+         * We check if the signatureName is the same as the signature on the account.  
+         * For signatures that are in the signature LDAP entries, JNDI will throw 
+         * NameAlreadyBoundException for duplicate names.
+         * 
+         */ 
+        Signature acctSig = LdapSignature.getAccountSignature(this, (Account)entry);
+        if (acctSig != null && newSignatureName.equals(acctSig.getName()))
+            throw AccountServiceException.SIGNATURE_EXISTS(newSignatureName);
         
         DirContext ctxt = null;
         try {
@@ -4767,7 +4832,6 @@ public class LdapProvisioning extends Provisioning {
         
         switch (type) {
         case account:
-            cache = sAccountCache;
             if (entries != null) {
                 namedEntries = new HashSet<NamedEntry>();
                 for (CacheEntry entry : entries) {
@@ -4779,7 +4843,15 @@ public class LdapProvisioning extends Provisioning {
                         namedEntries.add(account);
                 }
             }
-            break;
+            
+            if (entries == null) {
+                sAccountCache.clear();
+            } else {    
+                for (NamedEntry entry : namedEntries) {
+                    reload(entry);
+                }
+            }
+            return;
         case config:
             if (entries != null)
                 throw ServiceException.INVALID_REQUEST("cannot specify entry for flushing global config", null);
@@ -4817,7 +4889,7 @@ public class LdapProvisioning extends Provisioning {
                 sDomainCache.clear();
             } else {    
                 for (NamedEntry entry : namedEntries) {
-                    sDomainCache.remove((Domain)entry);
+                    reload(entry);
                 }
             }
             return;

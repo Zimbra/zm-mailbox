@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.zimbra.cs.stats.RealtimeStatsCallback;
+import com.zimbra.common.stats.RealtimeStatsCallback;
 import com.zimbra.cs.stats.ZimbraPerf;
 
 /**
@@ -252,7 +252,7 @@ public final class MemoryStats implements RealtimeStatsCallback {
     }
     
     /* (non-Javadoc)
-     * @see com.zimbra.cs.stats.RealtimeStatsCallback#getStatData()
+     * @see com.zimbra.common.stats.RealtimeStatsCallback#getStatData()
      */
     public Map<String, Object> getStatData() {
         Map<String, Object> toRet = new HashMap<String, Object>();

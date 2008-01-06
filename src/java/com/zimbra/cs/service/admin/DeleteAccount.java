@@ -21,11 +21,14 @@
 package com.zimbra.cs.service.admin;
 
 import java.util.Map;
+import java.util.List;
 
+import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.SearchOptions;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.common.service.ServiceException;
@@ -68,6 +71,16 @@ public class DeleteAccount extends AdminDocumentHandler {
             throw ServiceException.PERM_DENIED("can not access account");
 
         Mailbox mbox = Provisioning.onLocalServer(account) ? MailboxManager.getInstance().getMailboxByAccount(account) : null;
+        //check if domain-level wiki account
+        SearchOptions options = new SearchOptions();
+        options.setFlags(Provisioning.SA_DOMAIN_FLAG);
+        options.setMaxResults(1);
+        options.setQuery(String.format("(%s=%s)",Provisioning.A_zimbraNotebookAccount,account.getName()));
+        List domains = prov.searchDirectory(options);
+        if(!domains.isEmpty() && domains.get(0) != null) {
+        	throw  ServiceException.INVALID_REQUEST(String.format("Can not delete account %s because it is a domain-level wiki account for domain %s.",account.getName(),((NamedEntry)domains.get(0)).getName()) ,null);
+        }
+        
         prov.deleteAccount(id);
         if (mbox != null)
             mbox.deleteMailbox();

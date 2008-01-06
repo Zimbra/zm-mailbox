@@ -24,6 +24,12 @@ import org.jivesoftware.wildfire.container.BasicModule;
 import org.jivesoftware.wildfire.server.OutgoingSessionPromise;
 import org.xmpp.packet.JID;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.Provisioning.AccountBy;
+
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -87,6 +93,26 @@ public class ZimbraRoutingTableImpl extends BasicModule implements RoutingTable 
         return getRoute(node.toString(), node.getNode() == null ? "" : node.getNode(),
                 node.getDomain(), node.getResource() == null ? "" : node.getResource());
     }
+    
+    protected RoutableChannelHandler getCloudRoute(String node, String domain) {
+        try {
+            Account acct = Provisioning.getInstance().get(AccountBy.name, node+"@"+domain);
+            if (!Provisioning.onLocalServer(acct)) {
+                Server acctServer = Provisioning.getInstance().getServer(acct);
+                
+                CloudRoute route = CloudRouteManager.get(acctServer);
+                if (route == null)
+                    return CloudRouteManager.getInstance();
+                else
+                    return route;
+            }
+            
+        } catch (ServiceException ex) {
+            return null;
+        }
+        
+        return null;
+    }
 
     private ChannelHandler getRoute(String jid, String node, String domain, String resource) {
         RoutableChannelHandler route = null;
@@ -99,6 +125,10 @@ public class ZimbraRoutingTableImpl extends BasicModule implements RoutingTable 
             return OutgoingSessionPromise.getInstance();
         }
 
+        RoutableChannelHandler remoteInThisCloud = getCloudRoute(node, domain);
+        if (remoteInThisCloud != null)
+            return remoteInThisCloud;
+        
         try {
             Object nameRoutes = routes.get(domain);
             if (nameRoutes instanceof ChannelHandler) {
@@ -138,6 +168,13 @@ public class ZimbraRoutingTableImpl extends BasicModule implements RoutingTable 
             return list;
         }
 
+        RoutableChannelHandler remoteInThisCloud = getCloudRoute(node.getNode(), node.getDomain());
+        if (remoteInThisCloud != null) {
+            List<ChannelHandler> list = new ArrayList<ChannelHandler>();
+            list.add(remoteInThisCloud);
+            return list;
+        }
+        
         LinkedList list = null;
         Object nameRoutes = routes.get(node.getDomain());
         if (nameRoutes != null) {

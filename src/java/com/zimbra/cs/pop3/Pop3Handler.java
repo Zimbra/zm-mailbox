@@ -90,25 +90,15 @@ public abstract class Pop3Handler extends ProtocolHandler {
     private String mCurrentCommandLine;
     private int mExpire;
 
-    private static ActivityTracker sActivityTracker;
-
-    private static synchronized void initActivityTracker() {
-        if (sActivityTracker == null) {
-            sActivityTracker = ActivityTracker.getInstance("pop3.csv");
-        }
-    }
-    
     Pop3Handler(Pop3Server server) {
         super(server);
         mConfig = (Pop3Config) server.getConfig();
-        initActivityTracker();
     }
 
     
     Pop3Handler(MinaPop3Server server) {
         super(null);
         mConfig = (Pop3Config) server.getConfig();
-        initActivityTracker();
     }
 
     protected String getOrigRemoteIpAddr() { return mOrigRemoteAddress; }
@@ -158,7 +148,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
             if (mStartTime > 0) {
                 ZimbraPerf.STOPWATCH_POP.stop(mStartTime);
                 if (mCommand != null) {
-                    sActivityTracker.addStat(mCommand.toUpperCase(), mStartTime);
+                    ZimbraPerf.POP_TRACKER.addStat(mCommand.toUpperCase(), mStartTime);
                 }
             }
 

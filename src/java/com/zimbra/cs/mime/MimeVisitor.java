@@ -55,6 +55,11 @@ public abstract class MimeVisitor {
     public static void registerConverter(Class<? extends MimeVisitor> vclass) {
         sMimeConverters.add(vclass);
     }
+    
+    /** Removes a <tt>MimeVisitor</tt> from the list of converters. */
+    public static void unregisterConverter(Class<? extends MimeVisitor> vclass) {
+        sMimeConverters.remove(vclass);
+    }
 
     /** Retrieves the list of all registered MimeVisitor converter classes.
      * @see #registerConverter(Class) */
@@ -66,6 +71,11 @@ public abstract class MimeVisitor {
      *  message is saved to disk or sent via SMTP. */
     public static void registerMutator(Class<? extends MimeVisitor> vclass) {
         sMimeMutators.add(vclass);
+    }
+    
+    /** Removes a <tt>MimeVisitor</tt> from the list of mutators. */
+    public static void unregisterMutator(Class<? extends MimeVisitor> vclass) {
+        sMimeMutators.remove(vclass);
     }
 
     /** Retrieves the list of all registered MimeVisitor mutator classes.

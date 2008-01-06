@@ -201,5 +201,12 @@ public class ZPrefs {
     public boolean getForwardReplySameFormat() { return "same".equals(getForwardReplyFormat()); }
 
     public String getForwardReplyPrefixChar() { return get(Provisioning.A_zimbraPrefForwardReplyPrefixChar); }
-    
+
+    public String getCalendarReminderDuration1() { return get(Provisioning.A_zimbraPrefCalendarReminderDuration1); }
+    public String getCalendarReminderDuration2() { return get(Provisioning.A_zimbraPrefCalendarReminderDuration2); }
+    public String getCalendarReminderEmail() { return get(Provisioning.A_zimbraPrefCalendarReminderEmail); }
+    public boolean getCalendarReminderSendEmail() { return getBool(Provisioning.A_zimbraPrefCalendarReminderSendEmail); }
+    public boolean getCalendarReminderMobile() { return getBool(Provisioning.A_zimbraPrefCalendarReminderMobile); }
+    public boolean getCalendarReminderYMessenger() { return getBool(Provisioning.A_zimbraPrefCalendarReminderYMessenger); }
+
 }

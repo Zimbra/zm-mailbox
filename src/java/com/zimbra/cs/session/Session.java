@@ -349,11 +349,8 @@ public abstract class Session {
         return !mAuthenticatedAccountId.equalsIgnoreCase(mTargetAccountId);
     }
 
-    private SimpleDateFormat mDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS");
-
-    @Override
-    public String toString() {
-        String dateString = mDateFormat.format(new Date(mLastAccessed));
+    @Override public String toString() {
+        String dateString = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS").format(new Date(mLastAccessed));
         return StringUtil.getSimpleClassName(this) + ": {sessionId: " + mSessionId +
             ", accountId: " + mAuthenticatedAccountId + ", lastAccessed: " + dateString + "}";
     }
