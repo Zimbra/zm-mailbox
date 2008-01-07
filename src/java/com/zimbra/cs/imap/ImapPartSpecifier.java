@@ -105,9 +105,12 @@ class ImapPartSpecifier {
         if (!isEntireMessage())
             throw ServiceException.FAILURE("called writeMessage on non-toplevel part", null);
 
-        if (mOctetStart >= 0)
+        if (mOctetStart < 0) {
+            write(ps, os, is, length);
+        } else {
             length = Math.max(0, Math.min(length, mOctetEnd) - mOctetStart);
-        write(ps, os, ByteUtil.SegmentInputStream.create(is, mOctetStart, mOctetStart + length), length);
+            write(ps, os, ByteUtil.SegmentInputStream.create(is, mOctetStart, mOctetStart + length), length);
+        }
     }
 
     private void write(PrintStream ps, OutputStream os, InputStream is, long length) throws IOException {
