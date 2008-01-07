@@ -76,7 +76,12 @@ public class ParsedDocument {
             handler.setPartName(LuceneFields.L_PARTNAME_TOP);
             handler.setMessageDigest(mDigest);
             
-            mFragment = Fragment.getFragment(handler.getContent(), false);
+            String textContent = "";
+            try {
+            	textContent = handler.getContent();
+            } catch (Exception e) {
+            }
+            mFragment = Fragment.getFragment(textContent, false);
             mDocument = handler.getDocument();
             mDocument.add(new Field(LuceneFields.L_SIZE, Integer.toString(mSize), Field.Store.YES, Field.Index.NO));
             mDocument.add(new Field(LuceneFields.L_H_SUBJECT, filename, Field.Store.NO, Field.Index.TOKENIZED));
