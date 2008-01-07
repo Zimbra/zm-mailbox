@@ -88,19 +88,17 @@ public class GetWiki extends WikiDocumentHandler {
         	throw ServiceException.FAILURE("missing attribute w or id", null);
         }
 
-        Element wikiElem = ToXML.encodeWiki(response, ifmt, octxt, wikiItem, version);
+        WikiItem rev = wikiItem;
+        if (version > 0)
+        	rev = (WikiItem) mbox.getItemRevision(octxt, wikiItem.getId(), wikiItem.getType(), version);
+        Element wikiElem = ToXML.encodeWiki(response, ifmt, octxt, rev);
         
         if (count > 1) {
-    		count--;  // head version was already printed
-        	if (version <= 0) {
+        	if (version <= 0)
         		version = wikiItem.getVersion();
-        	}
-        	while (--version > 0) {
-                ToXML.encodeWiki(response, ifmt, octxt, wikiItem, version);
-        		count--;
-        		if (count == 0) {
-        			break;
-        		}
+        	while (--version > 0 && --count > 0) {
+            	rev = (WikiItem) mbox.getItemRevision(octxt, wikiItem.getId(), wikiItem.getType(), version);
+                ToXML.encodeWiki(response, ifmt, octxt, rev);
         	}
         } else {
         	Document revision = (version > 0 ? (Document) mbox.getItemRevision(octxt, wikiItem.getId(), wikiItem.getType(), version) : wikiItem); 
