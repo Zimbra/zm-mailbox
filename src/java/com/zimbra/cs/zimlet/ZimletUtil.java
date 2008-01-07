@@ -1143,7 +1143,7 @@ public class ZimletUtil {
 				
 				// deploy
 				soapDeployZimlet();
-				ZimbraLog.zimlet.info("Deploy successful");
+				ZimbraLog.zimlet.info("Deploy initiated.  (check the servers mailbox.log for the status)");
 				if (listener != null)
 					listener.markFinished(server);
 			} catch (Exception e) {
@@ -1180,7 +1180,7 @@ public class ZimletUtil {
 				
 				// undeploy
 				soapUndeployZimlet(zimlet);
-				ZimbraLog.zimlet.info("Undeploy successful");
+				ZimbraLog.zimlet.info("Undeploy initiated.  (check the servers mailbox.log for the status)");
 			} catch (Exception e) {
 				if (e instanceof ServiceException)
 					throw (ServiceException)e;
@@ -1216,7 +1216,7 @@ public class ZimletUtil {
                 
                 // configure
                 soapConfigureZimlet();
-                ZimbraLog.zimlet.info("Configure successful");
+                ZimbraLog.zimlet.info("Configure initiated.  (check the servers mailbox.log for the status)");
             } catch (Exception e) {
                 if (e instanceof ServiceException)
                     throw (ServiceException)e;
