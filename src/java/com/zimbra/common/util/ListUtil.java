@@ -210,18 +210,30 @@ public class ListUtil {
      * Splits a <code>Collection</code> into <i>n</i> <code>List</code>s.
      * Lists <i>1</i> through <i>n-1</i> are of size <code>listSize</code>.  List <i>n</i>
      * contains the remaining elements.
+     * 
+     * @return the split lists.  Returns <tt>null</tt> if <tt>c</tt> is <tt>null</tt>
+     * or an empty <tt>List</tt> if <tt>c</tt> is empty.
      */
     public static <E> List<List<E>> split(Collection<E> c, int listSize) {
-        List<E> curList = new ArrayList<E>(listSize);
+        if (c == null) {
+            return null;
+        }
         List<List<E>> splitLists = new ArrayList<List<E>>();
+        if (c.size() == 0) {
+            return splitLists;
+        }
+        
+        List<E> curList = new ArrayList<E>(listSize);
         int i = 0;
 
         for (E item : c) {
             if (i == listSize) {
                 splitLists.add(curList);
                 curList = new ArrayList<E>(listSize);
+                i = 0;
             }
             curList.add(item);
+            i++;
         }
         splitLists.add(curList);
 
