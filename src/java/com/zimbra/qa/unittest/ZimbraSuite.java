@@ -106,6 +106,7 @@ public class ZimbraSuite extends TestSuite
                     for (Class<?> c : ZimbraSuite.sClasses) {
                         if (test.equals(c.getSimpleName())) {
                             suite.addTest(new TestSuite(c));
+                            found = true;
                         }
                     }
                     if (!found) {

@@ -162,6 +162,23 @@ public class TestUtilCode extends TestCase
                 list.add(j);
             }
             List<List<Integer>> listOfLists = ListUtil.split(list, 10);
+
+            // Check number of splits
+            int expectedSize = 0;
+            if (list.size() > 0) {
+                expectedSize = ((list.size() - 1) / 10) + 1;
+            }
+            assertEquals("Unexpected number of splits for list of size " + list.size(),
+                expectedSize, listOfLists.size());
+
+            // Check sublist elements
+            for (int j = 0; j < i; j++) {
+                int listNum = j / 10;
+                int index = j % 10;
+                String context = String.format("j=%d, listNum=%d, index=%d", j, listNum, index);
+                assertEquals(context, list.get(j), listOfLists.get(listNum).get(index));
+            }
+            
             ZimbraLog.test.debug(String.format("Split a list of %d items into %d lists", list.size(), listOfLists.size()));
             assertTrue("Lists don't match: " + StringUtil.join(",", list), compareLists(list, listOfLists));
         }

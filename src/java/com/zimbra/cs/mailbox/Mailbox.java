@@ -1240,8 +1240,9 @@ public class Mailbox {
      *  caches.  There may be some collateral damage: purging non-tag,
      *  non-folder types will drop the entire item cache.
      * 
-     * @param type  The type of item to completely uncache. */
-    void purge(byte type) {
+     * @param type  The type of item to completely uncache.  {@link MailItem#TYPE_UNKNOWN}
+     * uncaches all items. */
+    public synchronized void purge(byte type) {
         switch (type) {
             case MailItem.TYPE_FOLDER:
             case MailItem.TYPE_MOUNTPOINT:

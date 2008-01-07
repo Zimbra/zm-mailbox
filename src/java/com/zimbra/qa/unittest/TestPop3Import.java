@@ -31,7 +31,6 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.db.DbPop3Message;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -236,13 +235,8 @@ public class TestPop3Import extends TestCase {
             DbPop3Message.deleteUids(mbox, ds.getId());
             prov.deleteDataSource(account, ds.getId());
         }
-        
-        // Delete temporary account
-        Account account = prov.get(AccountBy.name, TestUtil.getAddress(TEMP_USER_NAME));
-        if (account != null) {
-            prov.deleteAccount(account.getId());
-        }
-        
         TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
+        
+        TestUtil.deleteAccount(TEMP_USER_NAME);
     }
 }
