@@ -33,13 +33,16 @@ public class ZTag implements Comparable, ZItem {
         
     public enum Color {
         
-        orange(0),
+        defaultColor(0),
         blue(1),
         cyan(2), 
         green(3),
         purple(4),
         red(5),
-        yellow(6);
+        yellow(6),
+        pink(7),
+        gray(8),
+        orange(9);
         
         private int mValue;
 
