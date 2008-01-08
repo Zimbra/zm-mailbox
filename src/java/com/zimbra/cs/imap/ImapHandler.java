@@ -1139,16 +1139,16 @@ public abstract class ImapHandler extends ProtocolHandler {
         sendUntagged(i4folder.getSize() + " EXISTS");
         sendUntagged(i4folder.getRecentCount() + " RECENT");
         if (i4folder.getFirstUnread() > 0)
-        	sendUntagged("OK [UNSEEN " + i4folder.getFirstUnread() + ']');
-        sendUntagged("OK [UIDVALIDITY " + i4folder.getUIDValidity() + ']');
+        	sendUntagged("OK [UNSEEN " + i4folder.getFirstUnread() + "] mailbox contains unseen messages");
+        sendUntagged("OK [UIDVALIDITY " + i4folder.getUIDValidity() + "] UIDs are valid for this mailbox");
         if (!i4folder.isVirtual())
-            sendUntagged("OK [UIDNEXT " + i4folder.getInitialUIDNEXT() + ']');
+            sendUntagged("OK [UIDNEXT " + i4folder.getInitialUIDNEXT() + "] next expected UID is " + i4folder.getInitialUIDNEXT());
         sendUntagged("FLAGS (" + StringUtil.join(" ", i4folder.getFlagList(false)) + ')');
-        sendUntagged("OK [PERMANENTFLAGS (" + StringUtil.join(" ", permflags) + ")]");
+        sendUntagged("OK [PERMANENTFLAGS (" + StringUtil.join(" ", permflags) + ")] junk-related flags are not permanent");
         if (!i4folder.isVirtual())
-            sendUntagged("OK [HIGHESTMODSEQ " + i4folder.getInitialMODSEQ() + ']');
+            sendUntagged("OK [HIGHESTMODSEQ " + i4folder.getInitialMODSEQ() + "] modseq tracked on this mailbox");
         else
-            sendUntagged("OK [NOMODSEQ]");
+            sendUntagged("OK [NOMODSEQ] modseq not supported on search folders");
 
         // handle any QRESYNC stuff if the UVVs match
         if (qri != null && qri.uvv == i4folder.getUIDValidity() && !i4folder.isVirtual()) {
