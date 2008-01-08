@@ -2340,7 +2340,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="504" name="zimbraReverseProxyLookupTarget" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
-  <globalConfigValue>TRUE</globalConfigValue>
+  <globalConfigValue>FALSE</globalConfigValue>
   <desc>whether this server is a reverse proxy lookup target</desc>
 </attr>
 
