@@ -71,7 +71,6 @@ import com.zimbra.cs.zclient.event.ZModifyTaskEvent;
 import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemEvent;
 import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemFolderEvent;
 import com.zimbra.cs.zclient.event.ZRefreshEvent;
-import com.zimbra.cs.mailbox.Contact;
 import org.apache.commons.collections.map.LRUMap;
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
@@ -2401,6 +2400,16 @@ public class ZMailbox {
      */
     public ZActionResult syncFolder(String ids) throws ServiceException {
         return doAction(folderAction("sync", ids));
+    }
+    
+    /** sets or unsets the folder's sync flag
+     * @param id folder id
+     * @param syncon turn sync flag on
+     * @throws ServiceException on error
+     * @return action result
+     */
+    public ZActionResult modifyFolderSyncFlag(String id, boolean syncon) throws ServiceException {
+        return doAction(folderAction(syncon ? "syncon" : "!syncon", id));
     }
 
     // ------------------------

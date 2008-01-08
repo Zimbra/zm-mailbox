@@ -111,6 +111,10 @@ public class Flag extends Tag {
     public static final int ID_FLAG_INVITE = -24;
     public static final int BITMASK_INVITE = 1 << getIndex(ID_FLAG_INVITE); // 8388608
         static { FLAG_REP[getIndex(ID_FLAG_INVITE)] = 'v'; }
+    
+    public static final int ID_FLAG_SYNC = -25;
+    public static final int BITMASK_SYNC = 1 << getIndex(ID_FLAG_SYNC); // 16777216
+        static { FLAG_REP[getIndex(ID_FLAG_SYNC)] = 'j'; }
 
     public static final int ID_FLAG_UNCACHED = -31;
     public static final int BITMASK_UNCACHED = 1 << getIndex(ID_FLAG_UNCACHED); // 4096
@@ -123,7 +127,7 @@ public class Flag extends Tag {
                                           BITMASK_DRAFT   | BITMASK_UNCACHED  | BITMASK_LOW_PRIORITY |
                                           BITMASK_INVITE  | BITMASK_VERSIONED | BITMASK_HIGH_PRIORITY;
 
-    public static final int FLAGS_FOLDER  = BITMASK_CHECKED | BITMASK_SUBSCRIBED | BITMASK_EXCLUDE_FREEBUSY | BITMASK_NO_INHERIT;
+    public static final int FLAGS_FOLDER  = BITMASK_CHECKED | BITMASK_SUBSCRIBED | BITMASK_EXCLUDE_FREEBUSY | BITMASK_NO_INHERIT | BITMASK_SYNC;
 
     public static final int FLAGS_MESSAGE = BITMASK_FROM_ME | BITMASK_REPLIED      | BITMASK_FORWARDED |
                                             BITMASK_DRAFT   | BITMASK_NOTIFIED     | BITMASK_UNREAD |
