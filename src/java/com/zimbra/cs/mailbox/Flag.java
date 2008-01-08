@@ -114,7 +114,7 @@ public class Flag extends Tag {
     
     public static final int ID_FLAG_SYNC = -25;
     public static final int BITMASK_SYNC = 1 << getIndex(ID_FLAG_SYNC); // 16777216
-        static { FLAG_REP[getIndex(ID_FLAG_SYNC)] = 'j'; }
+        static { FLAG_REP[getIndex(ID_FLAG_SYNC)] = 'y'; }
 
     public static final int ID_FLAG_UNCACHED = -31;
     public static final int BITMASK_UNCACHED = 1 << getIndex(ID_FLAG_UNCACHED); // 4096
