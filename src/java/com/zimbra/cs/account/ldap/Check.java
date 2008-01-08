@@ -165,6 +165,7 @@ public class Check {
         if (!mode.equals(Provisioning.GM_LDAP))
             throw ServiceException.INVALID_REQUEST("gal mode must be: "+Provisioning.GM_LDAP, null);
 
+        // TODO: change to ExteralGalParams, and need admin console work
         String url[] = getRequiredMultiAttr(attrs, Provisioning.A_zimbraGalLdapURL);
         String authMech = (String)attrs.get(Provisioning.A_zimbraGalLdapAuthMech);
         String bindDn = (String) attrs.get(Provisioning.A_zimbraGalLdapBindDn);
@@ -179,7 +180,7 @@ public class Check {
         LdapGalMapRules rules = new LdapGalMapRules(galAttrs);
 
         try {
-            LdapGalCredential credential = LdapGalCredential.init(authMech, bindDn, bindPassword, krb5Principal, krb5Keytab);
+            LdapGalCredential credential = new LdapGalCredential(authMech, bindDn, bindPassword, krb5Principal, krb5Keytab);
             SearchGalResult result = LdapUtil.searchLdapGal(url, credential, pageSize, searchBase, filter, query, limit, rules, null); 
             List contacts = result.matches;
             return new Result(STATUS_OK, "", contacts);

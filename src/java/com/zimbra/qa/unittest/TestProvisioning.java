@@ -1270,7 +1270,7 @@ public class TestProvisioning extends TestCase {
         assertEquals(1, matches.size());
         assertEquals(ACCT_FULL_NAME, matches.get(0).getAttrs().get("fullName"));
         
-        // search  gal
+        // search gal
         galResult = mProv.searchGal(domain, 
                                     query,
                                     Provisioning.GAL_SEARCH_TYPE.ALL, 
@@ -1283,7 +1283,6 @@ public class TestProvisioning extends TestCase {
         Map<String, String> attrs = new HashMap<String, String>();
         attrs.put(Provisioning.A_zimbraGalMode, Provisioning.AM_LDAP);
         attrs.put(Provisioning.A_zimbraGalLdapURL, "ldap://localhost:389");
-        // attrs.put(Provisioning.A_zimbraGalLdapBindDn, "uid=zimbra,cn=admins,cn=zimbra");
         attrs.put(Provisioning.A_zimbraGalLdapBindDn, LC.zimbra_ldap_userdn.value());
         attrs.put(Provisioning.A_zimbraGalLdapBindPassword, "zimbra");
         attrs.put(Provisioning.A_zimbraGalLdapFilter, "(mail=*%s*)");
@@ -1300,6 +1299,7 @@ public class TestProvisioning extends TestCase {
         matches = galResult.matches;
         assertEquals(1, matches.size());
         assertEquals(ACCT_FULL_NAME, matches.get(0).getAttrs().get("fullName"));
+
     }
     
     private void searchTest(Domain domain) throws Exception {

@@ -453,6 +453,18 @@ public abstract class Provisioning {
     public static final String A_zimbraGalAutoCompleteLdapFilter = "zimbraGalAutoCompleteLdapFilter";
     
     public static final String A_zimbraGalLdapAttrMap = "zimbraGalLdapAttrMap";    
+    
+    /**
+     * external GAL sync params
+     */
+    public static final String A_zimbraGalSyncLdapURL                = "zimbraGalSyncLdapURL";
+    public static final String A_zimbraGalSyncLdapAuthMech           = "zimbraGalSyncLdapAuthMech";
+    public static final String A_zimbraGalSyncLdapBindDn             = "zimbraGalSyncLdapBindDn";
+    public static final String A_zimbraGalSyncLdapBindPassword       = "zimbraGalSyncLdapBindPassword";
+    public static final String A_zimbraGalSyncLdapKerberos5Principal = "zimbraGalSyncLdapKerberos5Principal";
+    public static final String A_zimbraGalSyncLdapKerberos5Keytab    = "zimbraGalSyncLdapKerberos5Keytab";
+    public static final String A_zimbraGalSyncLdapSearchBase         = "zimbraGalSyncLdapSearchBase";
+    public static final String A_zimbraGalSyncLdapFilter             = "zimbraGalSyncLdapFilter";
 
     /**
      * global filters defs. Should be in the format: name:{filter-str}

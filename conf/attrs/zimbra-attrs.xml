@@ -375,7 +375,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="51" name="zimbraGalLdapFilter" type="string" max="4096" cardinality="single" optionalIn="domain">
-  <desc>LDAP search filter for external GAL queries</desc>
+  <desc>LDAP search filter for external GAL search queries</desc>
 </attr>
 
 <attr id="52" name="zimbraGalLdapFilterDef" type="string" max="4096" cardinality="multi" optionalIn="globalConfig">
@@ -2795,6 +2795,44 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="588" name="zimbraReverseProxySendImapId" type="boolean" cardinality="single" optionalIn="globalConfig">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>whether nginx should send ID command for imap</desc>
+</attr>
+
+<attr id="589" name="zimbraGalSyncLdapURL"  type="string" max="256" cardinality="multi" optionalIn="domain">
+  <desc>LDAP URL for external GAL sync, if not set fallback to zimbraGalLdapURL</desc>
+</attr>
+
+<attr id="590" name="zimbraGalSyncLdapSearchBase"  type="string" max="256" cardinality="single" optionalIn="domain">
+  <desc>LDAP search base for external GAL sync queries, if not set fallback to zimbraGalLdapSearchBase</desc>
+</attr>
+
+<attr id="591" name="zimbraGalSyncLdapFilter" type="string" max="4096" cardinality="single" optionalIn="domain">
+  <desc>LDAP search filter for external GAL sync queries, if not set fallback to zimbraGalLdapFilter</desc>
+</attr>
+
+<attr id="592" name="zimbraGalSyncLdapAuthMech" type="enum" value="none,simple,kerberos5" cardinality="single" optionalIn="domain">
+  <desc>external LDAP GAL authentication mechanism for GAL sync
+        none: anonymous binding
+        simple: zimbraGalLdapBindDn and zimbraGalLdapBindPassword has to be set
+        kerberos5: zimbraGalLdapKerberos5Principal and zimbraGalLdapKerberos5Keytab has to be set
+        
+        if not set fallback to zimbraGalLdapAuthMech
+  </desc>
+</attr>
+
+<attr id="593" name="zimbraGalSyncLdapBindDn" type="string" max="256" cardinality="single" optionalIn="domain">
+  <desc>LDAP bind dn for external GAL sync queries, if not set fallback to zimbraGalLdapBindDn</desc>
+</attr>
+
+<attr id="594" name="zimbraGalSyncLdapBindPassword" type="string" max="256" cardinality="single" optionalIn="domain">
+  <desc>LDAP bind password for external GAL sync queries, if not set fallback to zimbraGalLdapBindPassword</desc>
+</attr>
+
+<attr id="595" name="zimbraGalSyncLdapKerberos5Principal" type="string" max="256" cardinality="single" optionalIn="domain">
+  <desc>kerberos5 principal for external GAL sync queries, if not set fallback to zimbraGalLdapKerberos5Principal</desc>
+</attr>
+
+<attr id="596" name="zimbraGalSyncLdapKerberos5Keytab" type="string" max="256" cardinality="single" optionalIn="domain">
+  <desc>kerberos5 keytab file path for external GAL sync queries, if not set fallback to zimbraGalLdapKerberos5Keytab</desc>
 </attr>
 
 </attrs>

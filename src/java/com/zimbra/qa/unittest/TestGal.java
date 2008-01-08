@@ -168,15 +168,29 @@ public class TestGal extends TestCase {
             attrs.put(Provisioning.A_zimbraGalLdapBindDn, LC.zimbra_ldap_userdn.value());
             attrs.put(Provisioning.A_zimbraGalLdapBindPassword, LC.zimbra_ldap_password.value());
             attrs.put(Provisioning.A_zimbraGalLdapSearchBase, "dc=test-gal,dc=ldaptest");
+            attrs.put(Provisioning.A_zimbraGalLdapFilter, "zimbraAccounts");
             
+            attrs.put(Provisioning.A_zimbraGalSyncLdapURL, "ldap://localhost:389");
+            attrs.put(Provisioning.A_zimbraGalSyncLdapBindDn, LC.zimbra_ldap_userdn.value());
+            attrs.put(Provisioning.A_zimbraGalSyncLdapBindPassword, LC.zimbra_ldap_password.value());
+            attrs.put(Provisioning.A_zimbraGalSyncLdapSearchBase, "dc=test-gal,dc=ldaptest");
+            attrs.put(Provisioning.A_zimbraGalSyncLdapFilter, "zimbraAccounts");
             mDomain = mProv.createDomain(DOMAIN_NAME, attrs);
         }
         assertNotNull(mDomain);
+        
         assertEquals(mDomain.getAttr(Provisioning.A_zimbraGalLdapURL), "ldap://localhost:389");
         assertEquals(mDomain.getAttr(Provisioning.A_zimbraGalLdapBindDn), LC.zimbra_ldap_userdn.value());
         assertEquals(mDomain.getAttr(Provisioning.A_zimbraGalLdapBindPassword), LC.zimbra_ldap_password.value());
         assertEquals(mDomain.getAttr(Provisioning.A_zimbraGalLdapSearchBase), "dc=test-gal,dc=ldaptest");
+        assertEquals(mDomain.getAttr(Provisioning.A_zimbraGalLdapFilter), "zimbraAccounts");
         
+        assertEquals(mDomain.getAttr(Provisioning.A_zimbraGalSyncLdapURL), "ldap://localhost:389");
+        assertEquals(mDomain.getAttr(Provisioning.A_zimbraGalSyncLdapBindDn), LC.zimbra_ldap_userdn.value());
+        assertEquals(mDomain.getAttr(Provisioning.A_zimbraGalSyncLdapBindPassword), LC.zimbra_ldap_password.value());
+        assertEquals(mDomain.getAttr(Provisioning.A_zimbraGalSyncLdapSearchBase), "dc=test-gal,dc=ldaptest");
+        assertEquals(mDomain.getAttr(Provisioning.A_zimbraGalSyncLdapFilter), "zimbraAccounts");
+    
         if (SKIP_ACCT_CHECKING)
             return;
         
@@ -216,7 +230,6 @@ public class TestGal extends TestCase {
         // set domain limit to be larger than total number of accounts so test parameters 
         // in autoComplete tests can be effective instead of being limited by the domain limit.
         attrs.put(Provisioning.A_zimbraGalMaxResults, ""+more(NUM_ACCOUNTS));
-        attrs.put(Provisioning.A_zimbraGalLdapFilter, "zimbraAccounts");
         mProv.modifyAttrs(domain, attrs);
     }
     
@@ -228,7 +241,6 @@ public class TestGal extends TestCase {
         attrs.put(Provisioning.A_zimbraGalMode, galMode);
         attrs.put(Provisioning.A_zimbraGalLdapPageSize, ""+pageSize);
         attrs.put(Provisioning.A_zimbraGalMaxResults, ""+domainLimit);
-        attrs.put(Provisioning.A_zimbraGalLdapFilter, "zimbraAccounts");
         mProv.modifyAttrs(domain, attrs);
     }
     
