@@ -47,7 +47,20 @@ public final class ResultsPager
         // request and used something else...
         params.setSortBy(results.getSortBy());
         
-        if (!params.hasCursor()) {
+        // bug: 23427 -- TASK sorts are incompatible with CURSORS, since cursors require
+        //               real (db-visible) sort fields
+        boolean dontUseCursor = false;
+        switch (params.getSortBy()) {
+            case TASK_DUE_ASCENDING:
+            case TASK_DUE_DESCENDING:
+            case TASK_PERCENT_COMPLETE_ASCENDING:
+            case TASK_PERCENT_COMPLETE_DESCENDING:
+            case TASK_STATUS_ASCENDING:
+            case TASK_STATUS_DESCENDING:
+                dontUseCursor = true;
+        }
+        
+        if (dontUseCursor || !params.hasCursor()) {
             toRet = new ResultsPager(results, params, false, true);
         } else {
             // are we paging FORWARD or BACKWARD?  If requested starting-offset is the same or bigger then the cursor's offset, 
