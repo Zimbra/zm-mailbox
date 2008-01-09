@@ -999,7 +999,7 @@ Folders:
   {folder-name}  = name of folder; max length 128; whitespace is trimmed by server;
                    cannot contain ':', '"', '/', or any character below 0x20
   {parent-id}    = id of parent folder (absent for root folder)
-  {flags}        = checked in UI (#), exclude free/(b)usy info, IMAP subscribed (*), does not (i)nherit rights from parent, s(y)nc on/off with IMAP source
+  {flags}        = checked in UI (#), exclude free/(b)usy info, IMAP subscribed (*), does not (i)nherit rights from parent, is a s(y)nc folder with external data source, sync is turned on(~)
   {color}        = numeric; range 0-127; defaults to 0 if not present; client can display only 0-7
   {unread}       = number of unread messages in folder
   {msg-count}    = number of non-subfolder items in folder

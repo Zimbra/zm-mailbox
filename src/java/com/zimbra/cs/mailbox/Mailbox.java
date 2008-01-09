@@ -404,6 +404,8 @@ public class Mailbox {
     public Flag mCheckedFlag;
     /** flag: whether a folder does not inherit permissions from its parent */
     public Flag mNoInheritFlag;
+    /** flag: whether a folder is a sync folder paired with source folder on server */
+    public Flag mSyncFolderFlag;
     /** flag: whether a folder is to sync with its counterpart on server */
     public Flag mSyncFlag;
 
@@ -1335,6 +1337,7 @@ public class Mailbox {
         mExcludeFBFlag = Flag.instantiate(this, "\\ExcludeFB",  Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_EXCLUDE_FREEBUSY);
         mCheckedFlag   = Flag.instantiate(this, "\\Checked",    Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_CHECKED);
         mNoInheritFlag  = Flag.instantiate(this, "\\NoInherit",  Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_NO_INHERIT);
+        mSyncFolderFlag = Flag.instantiate(this, "\\SyncFolder", Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_SYNCFOLDER);
         mSyncFlag		= Flag.instantiate(this, "\\Sync",       Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_SYNC);
     }
 
