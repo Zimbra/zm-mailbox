@@ -36,7 +36,7 @@ import com.zimbra.cs.account.Provisioning;
 //import com.zimbra.cs.im.interop.Interop;
 import com.zimbra.cs.im.provider.IMGlobalProperties;
 import com.zimbra.cs.im.provider.IMLocalProperties;
-import com.zimbra.cs.im.provider.CloudRoute;
+import com.zimbra.cs.im.provider.CloudRouteSession;
 
 public class ZimbraIM {
     
@@ -65,7 +65,7 @@ public class ZimbraIM {
             
             CloudRoutingSocketReader.setSessionFactory(new CloudRoutingSessionFactory() { 
                 public Session createSession(String hostname, CloudRoutingSocketReader reader, SocketConnection connection, Element streamElt) {
-                    return CloudRoute.create(hostname, reader, connection, streamElt);
+                    return CloudRouteSession.create(hostname, reader, connection, streamElt);
                 }
             });
             
