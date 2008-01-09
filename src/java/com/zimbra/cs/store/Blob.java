@@ -69,10 +69,11 @@ public class Blob {
     }
     
     /**
-     * Returns the in-memory data for this blob, or <tt>null</tt> if the
-     * blob is being streamed to/from disk.
+     * Returns the blob data if either (1) the blob size did not exceed the disk
+     * streaming threshold or (2) the blob was compressed.  Otherwise returns
+     * <tt>null</tt>.
      */
-    public byte[] getData() {
+    public byte[] getInMemoryData() {
         return mData;
     }
     
@@ -87,7 +88,7 @@ public class Blob {
     /**
      * Sets the in-memory data for this blob.
      */
-    public void setData(byte[] data) {
+    public void setInMemoryData(byte[] data) {
         mData = data;
     }
     

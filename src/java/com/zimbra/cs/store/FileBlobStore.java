@@ -155,7 +155,7 @@ public class FileBlobStore extends StoreManager {
         // Set the blob's digest and data.
         blob.setDigest(ByteUtil.encodeFSSafeBase64(digest.digest()));
         if (baos != null) {
-            blob.setData(baos.toByteArray());
+            blob.setInMemoryData(baos.toByteArray());
         }
         blob.setRawSize(totalRead);
 

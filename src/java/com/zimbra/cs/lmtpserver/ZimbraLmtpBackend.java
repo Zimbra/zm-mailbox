@@ -17,11 +17,8 @@
 
 package com.zimbra.cs.lmtpserver;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.SequenceInputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,7 +32,6 @@ import javax.mail.MessagingException;
 import org.apache.commons.collections.map.LRUMap;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -43,6 +39,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.IncomingBlob;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxBlob;
@@ -55,7 +52,6 @@ import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.store.Volume;
 import com.zimbra.cs.util.Zimbra;
 
 public class ZimbraLmtpBackend implements LmtpBackend {
@@ -236,54 +232,11 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 
         Map<LmtpAddress, RecipientDetail> rcptMap = new HashMap<LmtpAddress, RecipientDetail>(recipients.size());
 
-        Volume volume = Volume.getCurrentMessageVolume();
-        Blob blob = null;
         int diskThreshold = Provisioning.getInstance().getLocalServer().getIntAttr(
             Provisioning.A_zimbraMailDiskStreamingThreshold, Integer.MAX_VALUE);
-        if (diskThreshold == Integer.MAX_VALUE) {
-            // Don't exceed max value when reading (diskThreshold + 1) bytes
-            diskThreshold--;
-        }
-        byte[] data = null;
+        IncomingBlob incoming = IncomingBlob.create(in, sizeHint, diskThreshold);
+        Blob blob = incoming.getBlob();
         
-        try {
-            if (sizeHint <= diskThreshold) {
-                // Try to read the message into memory, up to the threshold
-                ZimbraLog.lmtp.debug("Reading message into memory.  sizeHint=%d", sizeHint);
-                data = ByteUtil.readInput(in, sizeHint, diskThreshold + 1);
-                if (data.length == 0) {
-                    throw new MessagingException("Empty message not allowed");
-                }
-                
-                if (data.length > diskThreshold) {
-                    // More data available.  Stream to disk instead.
-                    ZimbraLog.lmtp.info(
-                        "Message with size hint %d exceeded threshold of %d.  Streaming message to disk.",
-                        sizeHint, diskThreshold);
-                    ByteArrayInputStream firstChunk = new ByteArrayInputStream(data); 
-                    SequenceInputStream jointStream = new SequenceInputStream(firstChunk, in);
-                    blob = StoreManager.getInstance().storeIncoming(jointStream, diskThreshold, null, volume.getId());
-                    if (blob.getFile().length() == 0) {
-                        throw new MessagingException("Empty message not allowed for "
-                            + blob.getFile().getPath());
-                    }
-                    data = blob.getData();
-                    ZimbraLog.lmtp.debug("Wrote message to %s.", blob.getPath());
-                }
-            } else {
-                ZimbraLog.lmtp.debug("Streaming message of size %d to disk.", sizeHint);
-                blob = StoreManager.getInstance().storeIncoming(in, sizeHint, null, volume.getId());
-                if (blob.getFile().length() == 0) {
-                    throw new MessagingException("Empty message not allowed for "
-                        + blob.getFile().getPath());
-                }
-                data = blob.getData();
-                ZimbraLog.lmtp.debug("Wrote message to %s.", blob.getPath());
-            }
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("Unable to process incoming message.", e);
-        }
-
         try {
             // Examine attachments indexing option for all recipients and
             // prepare ParsedMessage versions needed.  Parsing is done before
@@ -336,33 +289,13 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                     if (attachmentsIndexingEnabled) {
                         if (pmAttachIndex == null) {
                             ZimbraLog.lmtp.debug("Creating ParsedMessage with attachment indexing enabled.");
-                            if (data != null) {
-                                pmAttachIndex = new ParsedMessage(data, true).analyze();
-                            } else {
-                                try {
-                                    pmAttachIndex = new ParsedMessage(blob.getFile(), null, true);
-                                    pmAttachIndex.setRawDigest(blob.getDigest());
-                                    pmAttachIndex.analyze();
-                                } catch (IOException e) {
-                                    throw ServiceException.FAILURE("Unable to parse message.", e);
-                                }
-                            }
+                            pmAttachIndex = incoming.createParsedMessage(true).analyze();
                         }
                         pm = pmAttachIndex;
                     } else {
                         if (pmNoAttachIndex == null) {
                             ZimbraLog.lmtp.debug("Creating ParsedMessage with attachment indexing disabled.");
-                            if (data != null) {
-                                pmNoAttachIndex = new ParsedMessage(data, false).analyze();
-                            } else {
-                                try {
-                                    pmNoAttachIndex = new ParsedMessage(blob.getFile(), null, false);
-                                    pmNoAttachIndex.setRawDigest(blob.getDigest());
-                                    pmNoAttachIndex.analyze();
-                                } catch (IOException e) {
-                                    throw ServiceException.FAILURE("Unable to parse message.", e);
-                                }
-                            }
+                            pmNoAttachIndex = incoming.createParsedMessage(false).analyze();
                         }
                         pm = pmNoAttachIndex;
                     }
