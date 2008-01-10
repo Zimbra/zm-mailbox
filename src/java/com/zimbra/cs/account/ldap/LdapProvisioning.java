@@ -683,18 +683,22 @@ public class LdapProvisioning extends Provisioning {
                 if (cos == null) cos = getCosByName(Provisioning.DEFAULT_COS_NAME, ctxt);
             }
 
-            // if zimbraMailHost is not specified, and we have a COS, see if there is a pool to
-            // pick from.
-            if (cos != null && attrs.get(Provisioning.A_zimbraMailHost) == null) {
-                String mailHostPool[] = cos.getMultiAttr(Provisioning.A_zimbraMailHostPool);
-                addMailHost(attrs, mailHostPool, cos.getName());
-            }
-
-            // if zimbraMailHost still not specified, default to local server's zimbraServiceHostname if it has 
-            // the mailbox service enabled, otherwise look through all servers and pick first with the service enabled.
-            // this means every account will always have a mailbox
-            if (attrs.get(Provisioning.A_zimbraMailHost) == null) {
-                addDefaultMailHost(attrs);
+            boolean hasMailTransport = (attrs.get(Provisioning.A_zimbraMailTransport) == null)?false:true;
+            
+            // if zimbraMailTransport is NOT provided, pick a server and add zimbraMailHost(and zimbraMailTransport) if it is not specified
+            if (!hasMailTransport) {
+                // if zimbraMailHost is not specified, and we have a COS, see if there is a pool to pick from.
+                if (cos != null && attrs.get(Provisioning.A_zimbraMailHost) == null) {
+                    String mailHostPool[] = cos.getMultiAttr(Provisioning.A_zimbraMailHostPool);
+                    addMailHost(attrs, mailHostPool, cos.getName());
+                }
+    
+                // if zimbraMailHost still not specified, default to local server's zimbraServiceHostname if it has 
+                // the mailbox service enabled, otherwise look through all servers and pick first with the service enabled.
+                // this means every account will always have a mailbox
+                if (attrs.get(Provisioning.A_zimbraMailHost) == null) {
+                    addDefaultMailHost(attrs);
+                }
             }
 
             // set all the mail-related attrs if zimbraMailHost was specified
@@ -793,11 +797,11 @@ public class LdapProvisioning extends Provisioning {
             if (s != null) {
                 String mailHost = s.getAttr(Provisioning.A_zimbraServiceHostname);
                 if (mailHost != null) {
-                	attrs.put(Provisioning.A_zimbraMailHost, mailHost);
-                	int lmtpPort = s.getIntAttr(Provisioning.A_zimbraLmtpBindPort, com.zimbra.cs.util.Config.D_LMTP_BIND_PORT);
-                	String transport = "lmtp:" + mailHost + ":" + lmtpPort;
-                	attrs.put(Provisioning.A_zimbraMailTransport, transport);
-                	return mailHost;
+                    attrs.put(Provisioning.A_zimbraMailHost, mailHost);
+                    int lmtpPort = s.getIntAttr(Provisioning.A_zimbraLmtpBindPort, com.zimbra.cs.util.Config.D_LMTP_BIND_PORT);
+                    String transport = "lmtp:" + mailHost + ":" + lmtpPort;
+                    attrs.put(Provisioning.A_zimbraMailTransport, transport);
+                    return mailHost;
                 } else {
                     ZimbraLog.account.warn("cos("+cosName+") mailHostPool server("+s.getName()+") has no service hostname");
                 }
