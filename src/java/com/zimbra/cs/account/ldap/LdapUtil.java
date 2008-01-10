@@ -866,17 +866,10 @@ public class LdapUtil {
         int total = 0;
         byte[] cookie = null;
         
-        LdapContext lctxt = null;
+        LdapContext lctxt = (LdapContext)ctxt; 
         
         try {
             try {
-                // need a new instance otherwise the paged control in previous search would interfere with this new search,
-                // unless connection pooling is disaled - even if lctxt.setRequestControls(null) was called in the finally 
-                // block of this try block.  JNDI bug ???
-                //
-                // creating a new instance of ctxt would *not* result in a new connection (bind) request to the ldap server, 
-                // it is only a JNDI object and is cheap.
-                lctxt = ((LdapContext)ctxt).newInstance(null); 
                 do {
                     if (pageSize > 0)
                         lctxt.setRequestControls(new Control[]{new PagedResultsControl(pageSize, cookie, Control.NONCRITICAL)});
@@ -903,8 +896,6 @@ public class LdapUtil {
             } finally {
                 if (ne != null) 
                     ne.close();
-                
-                closeContext(lctxt);
             }    
         } catch (SizeLimitExceededException sle) {
             result.hadMore = true;

@@ -2835,4 +2835,14 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>kerberos5 keytab file path for external GAL sync queries, if not set fallback to zimbraGalLdapKerberos5Keytab</desc>
 </attr>
 
+<attr id="597" name="zimbraGalSyncLdapPageSize" type="integer" max="1000" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited">
+  <globalConfigValue>0</globalConfigValue>
+  <desc>LDAP page size for paged search control while accessing LDAP server for GAL sync.  
+        This apples to both Zimbra and external LDAP servers.
+        A value of 0 means paging is not enabled. 
+        If not set fallback to zimbraGalLdapPageSize
+  </desc>
+</attr>
+
+
 </attrs>

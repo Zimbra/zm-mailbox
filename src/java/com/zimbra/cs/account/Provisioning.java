@@ -440,16 +440,31 @@ public abstract class Provisioning {
      */
     public static final String A_zimbraVirtualHostname = "zimbraVirtualHostname";
 
+    public static final String LDAP_AM_NONE = "none";
+    public static final String LDAP_AM_SIMPLE = "simple";
+    public static final String LDAP_AM_KERBEROS5 = "kerberos5";
+
+    
+    /**
+     * GAL attributes
+     */
     public static final String A_zimbraGalLdapURL = "zimbraGalLdapURL";
     
-    public static final String A_zimbraGalLdapSearchBase = "zimbraGalLdapSearchBase";
+    /**
+     *  external LDAP GAL authentication mechanism
+     *      none: anonymous binding
+     *      simple: zimbraGalLdapBindDn and zimbraGalLdapBindPassword has to be set
+     *      kerberos5: zimbraGalLdapKerberos5Principal and zimbraGalLdapKerberos5Keytab has to be set
+     */
+    public static final String A_zimbraGalLdapAuthMech = "zimbraGalLdapAuthMech";
     
     public static final String A_zimbraGalLdapBindDn = "zimbraGalLdapBindDn";
-
     public static final String A_zimbraGalLdapBindPassword = "zimbraGalLdapBindPassword";
+    public static final String A_zimbraGalLdapKerberos5Principal = "zimbraGalLdapKerberos5Principal";
+    public static final String A_zimbraGalLdapKerberos5Keytab = "zimbraGalLdapKerberos5Keytab";
 
+    public static final String A_zimbraGalLdapSearchBase = "zimbraGalLdapSearchBase";
     public static final String A_zimbraGalLdapFilter = "zimbraGalLdapFilter";
-    
     public static final String A_zimbraGalAutoCompleteLdapFilter = "zimbraGalAutoCompleteLdapFilter";
     
     public static final String A_zimbraGalLdapAttrMap = "zimbraGalLdapAttrMap";    
@@ -489,24 +504,11 @@ public abstract class Provisioning {
     public static final String A_zimbraGalMode = "zimbraGalMode";
     
     /**
-     *  external LDAP GAL authentication mechanism
-     *      none: anonymous binding
-     *      simple: zimbraGalLdapBindDn and zimbraGalLdapBindPassword has to be set
-     *      kerberos5: zimbraGalLdapKerberos5Principal and zimbraGalLdapKerberos5Keytab has to be set
+     * GAL paging size
      */
-    public static final String A_zimbraGalLdapAuthMech = "zimbraGalLdapAuthMech";
-    
-    public static final String LDAP_AM_NONE = "none";
-    public static final String LDAP_AM_SIMPLE = "simple";
-    public static final String LDAP_AM_KERBEROS5 = "kerberos5";
-    
-    public static final String A_zimbraGalLdapKerberos5Principal = "zimbraGalLdapKerberos5Principal";
-    public static final String A_zimbraGalLdapKerberos5Keytab = "zimbraGalLdapKerberos5Keytab";
-    
-    /**
-     * 
-     */
-    public static final String A_zimbraGalLdapPageSize = "zimbraGalLdapPageSize";
+    public static final String A_zimbraGalLdapPageSize      = "zimbraGalLdapPageSize";
+    public static final String A_zimbraGalSyncLdapPageSize  = "zimbraGalSyncLdapPageSize";
+
     
     /**
      * set to true if an account is an admin account

@@ -60,7 +60,7 @@ public class TestGal extends TestCase {
     private Domain mDomain;
     
     private boolean DEBUG = true;
-    private boolean SKIP_ACCT_CHECKING = false;  // to save time if we are sure accounts are OK
+    private boolean SKIP_ACCT_CHECKING = true;  // to save time if we are sure accounts are OK
     
     // too bad SyncGal does not work with SoapProvisioning, because it calls searchGal but that does not return token.  :(
     // don't run SOAP for now.
@@ -200,6 +200,9 @@ public class TestGal extends TestCase {
             if (acct == null)
                 acct = mProv.createAccount(acctName, PASSWORD, new HashMap<String, Object>());
             assertNotNull(acct);
+            
+            if ((i+1)%100 == 0)
+                System.out.println("Created/checked " + (i+1) + " accounts");
         }
         
         /* following won't work because we set LDAP_SERVER_SIZE_LIMIT to too small when it is LIMITED
@@ -234,6 +237,7 @@ public class TestGal extends TestCase {
     }
     
     private void setupSearch(String galMode, int pageSize, int domainLimit) throws Exception {
+        System.out.format("   setupSearch: galMode=%s, pageSize=%d, domainLimit=%d\n", galMode, pageSize, domainLimit);
         Domain domain = mProv.get(DomainBy.name, DOMAIN_NAME);
         assertNotNull(domain);
         
@@ -262,7 +266,7 @@ public class TestGal extends TestCase {
     private void autoCompleteGal(int numResultsExpected, int maxWanted) throws Exception {
         SearchGalResult galResult = mProv.autoCompleteGal(mDomain, 
                                                           QUERY,
-                                                          Provisioning.GAL_SEARCH_TYPE.ALL, 
+                                                          Provisioning.GAL_SEARCH_TYPE.USER_ACCOUNT, // Provisioning.GAL_SEARCH_TYPE.ALL, 
                                                           maxWanted);
         if (numResultsExpected != galResult.matches.size())
             dumpResult(galResult);
@@ -334,7 +338,7 @@ public class TestGal extends TestCase {
      */
     private void autoCompleteGal(String galMode, int pageSize) throws Exception {
         if (DEBUG)
-            System.out.format("autoCompleteGal: %s, %d\n", galMode, pageSize);
+            System.out.format("autoCompleteGal: %s, page size = %d\n", galMode, pageSize);
         
         setupAutoComplete(galMode, pageSize);
         
@@ -361,7 +365,7 @@ public class TestGal extends TestCase {
      */
     private void searchGal(String galMode, int pageSize) throws Exception {
         if (DEBUG)
-            System.out.format("searchGal: %s, %d\n", galMode, pageSize);
+            System.out.format("searchGal: %s, page size = %d\n", galMode, pageSize);
         
         if (LDAP_SERVER_SIZE_LIMIT == UNLIMITED) {
             setupSearch(galMode, pageSize, UNLIMITED);
@@ -386,7 +390,7 @@ public class TestGal extends TestCase {
     
     private void syncGal(String galMode, int pageSize) throws Exception {
         if (DEBUG)
-            System.out.format("syncGal: %s, %d\n", galMode, pageSize);
+            System.out.format("syncGal: %s, page size = %d\n", galMode, pageSize);
         
         if (LDAP_SERVER_SIZE_LIMIT == UNLIMITED) {
             setupSearch(galMode, pageSize, UNLIMITED);

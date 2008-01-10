@@ -61,7 +61,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.callback.MailSignature;
-import com.zimbra.cs.account.ldap.gal.ExternalGalParams;
+import com.zimbra.cs.account.ldap.gal.GalParams;
 import com.zimbra.cs.account.ldap.gal.GalOp;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mime.MimeTypeInfo;
@@ -2979,7 +2979,7 @@ public class LdapProvisioning extends Provisioning {
         }
 
         String encodedPassword = LdapUtil.generateSSHA(newPassword, null);
-
+        
         // unset it so it doesn't take up space...
         if (mustChange)
             attrs.put(Provisioning.A_zimbraPasswordMustChange, "");
@@ -3805,7 +3805,13 @@ public class LdapProvisioning extends Provisioning {
     
         LdapGalMapRules rules = getGalRules(d);
         
-        String searchBase = d.getAttr(Provisioning.A_zimbraGalInternalSearchBase, "DOMAIN");
+        GalOp galOp;
+        if (token != null)
+            galOp = GalOp.sync;
+        else
+            galOp = GalOp.search;
+        GalParams.ZimbraGalParams galParams = new GalParams.ZimbraGalParams(d, galOp);
+        String searchBase = galParams.getSearchBase();
         if (searchBase.equalsIgnoreCase("DOMAIN"))
             searchBase = mDIT.domainDNToAccountSearchDN(ld.getDN());
         else if (searchBase.equalsIgnoreCase("SUBDOMAINS"))
@@ -3813,13 +3819,11 @@ public class LdapProvisioning extends Provisioning {
         else if (searchBase.equalsIgnoreCase("ROOT"))
             searchBase = "";
         
-        int pageSize = d.getIntAttr(Provisioning.A_zimbraGalLdapPageSize, 0); 
-        
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext(false);
             LdapUtil.searchGal(ctxt,
-                               pageSize,
+                               galParams.getPageSize(),
                                searchBase, 
                                query, 
                                maxResults,
@@ -3846,13 +3850,20 @@ public class LdapProvisioning extends Provisioning {
             galOp = GalOp.sync;
         else
             galOp = GalOp.search;
-        ExternalGalParams galParams = new ExternalGalParams(domain, galOp);
-        int pageSize = domain.getIntAttr(Provisioning.A_zimbraGalLdapPageSize, 0);
+        GalParams.ExternalGalParams galParams = new GalParams.ExternalGalParams(domain, galOp);
         
         LdapGalMapRules rules = getGalRules(domain);
         String[] galAttrList = rules.getLdapAttrs();
         try {
-            return LdapUtil.searchLdapGal(galParams.getUrl(), galParams.getCredential(), pageSize, galParams.getSearchBase(), galParams.getFilter(), n, maxResults, rules, token);
+            return LdapUtil.searchLdapGal(galParams.getUrl(), 
+                                          galParams.getCredential(), 
+                                          galParams.getPageSize(), 
+                                          galParams.getSearchBase(), 
+                                          galParams.getFilter(), 
+                                          n, 
+                                          maxResults, 
+                                          rules, 
+                                          token);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to search GAL", e);
         }
