@@ -89,7 +89,7 @@
   </Call>
 
   <Set name="startServerAsPrivileged">false</Set>
-  <Set name="umask">2</Set>
+  <Set name="umask">23</Set><!--decimal, equivalent to octal 027-->
   <Set name="uid"><Property name="zimbra_uid"/></Set>
   <Set name="gid"><Property name="zimbra_gid"/></Set>
 </Configure>
