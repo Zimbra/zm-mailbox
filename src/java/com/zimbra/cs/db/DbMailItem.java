@@ -2648,6 +2648,57 @@ public class DbMailItem {
         }
     }
 
+
+     public static List<UnderlyingData> getCalendarItemsAll(Mailbox mbox, byte type,
+                                                            int folderId, int[] excludeFolderIds) 
+    throws ServiceException {
+        Connection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            boolean folderSpecified = folderId != Mailbox.ID_AUTO_INCREMENT;
+
+            String excludeFolderPart = "";
+            if (excludeFolderIds != null) 
+                excludeFolderPart = " AND folder_id NOT IN" + DbUtil.suitableNumberOfVariables(excludeFolderIds);
+
+            String typeList;
+            if (type == MailItem.TYPE_APPOINTMENT)
+                typeList = APPOINTMENT_TYPE;
+            else if (type == MailItem.TYPE_TASK)
+                typeList = TASK_TYPE;
+            else
+                typeList = CALENDAR_TYPES;
+            stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
+                        " FROM " + getCalendarItemTableName(mbox, "ci") + ", " + getMailItemTableName(mbox, "mi") +
+                        " WHERE mi.id = ci.item_id AND mi.type IN " + typeList +
+                        " AND ci.mailbox_id = ? AND mi.mailbox_id = ci.mailbox_id" +
+                        (folderSpecified ? " AND folder_id = ?" : "") + excludeFolderPart);
+
+            int param = 1;
+
+            stmt.setInt(param++, mbox.getId());
+            if (folderSpecified)
+                stmt.setInt(param++, folderId);
+            if (excludeFolderIds != null) {
+                for (int id : excludeFolderIds)
+                    stmt.setInt(param++, id);
+            }
+
+            rs = stmt.executeQuery();
+
+            List<UnderlyingData> result = new ArrayList<UnderlyingData>();
+            while (rs.next())
+                result.add(constructItem(rs));
+            return result;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("fetching calendar items for mailbox " + mbox.getId(), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+
     public static void addToCalendarItemTable(CalendarItem calItem) throws ServiceException {
         Mailbox mbox = calItem.getMailbox();
         Connection conn = mbox.getOperationConnection();

@@ -3059,6 +3059,43 @@ public class Mailbox {
                 MailItem.TYPE_UNKNOWN, octxt, start, end, folderId, excludeFolders);
     }
 
+    
+     public synchronized Collection<CalendarItem> getCalendarItemsAll(
+            byte type,
+            OperationContext octxt,
+            int folderId, int[] excludeFolders)
+            throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("getCalendarItemsAll", octxt);
+
+            // if they specified a folder, make sure it actually exists
+            if (folderId != ID_AUTO_INCREMENT)
+                getFolderById(folderId);
+
+            // get the list of all visible calendar items in the specified folder
+            List<CalendarItem> calItems = new ArrayList<CalendarItem>();
+            List<UnderlyingData> invData = DbMailItem.getCalendarItemsAll(this, type, folderId, excludeFolders);
+            for (MailItem.UnderlyingData data : invData) {
+                try {
+                    CalendarItem calItem = getCalendarItem(data);
+                    if (folderId == calItem.getFolderId() || (folderId == ID_AUTO_INCREMENT && calItem.inMailbox()))
+                        if (calItem.canAccess(ACL.RIGHT_READ))
+                            calItems.add(calItem);
+                } catch (ServiceException e) {
+                    ZimbraLog.calendar.warn(
+                            "Error while retrieving calendar item " +
+                            data.id + " in mailbox " + mId +
+                            "; skipping item", e);
+                }
+            }
+            success = true;
+            return calItems;
+        } finally {
+            endTransaction(success);
+        }
+    }
+    
     /**
      * Specifies the type of result we want from the call to search()
      */
