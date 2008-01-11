@@ -281,6 +281,8 @@ public class SoapSession extends Session {
     private QueuedNotifications mChanges = new QueuedNotifications(1);
 
     private PushChannel mPushChannel = null;
+
+    private boolean mUnregistered;
     private Map<String, DelegateSession> mDelegateSessions = new HashMap<String, DelegateSession>(3);
     private Map<String, RemoteSessionInfo> mRemoteSessions;
 
@@ -300,6 +302,7 @@ public class SoapSession extends Session {
         super.register();
         mRecentMessages = mMailbox.getRecentMessageCount();
         mPreviousAccess = mMailbox.getLastSoapAccessTime();
+        mUnregistered = false;
         return this;
     }
 
@@ -315,14 +318,13 @@ public class SoapSession extends Session {
 
         // unloading a SoapSession also must unload all its delegates
         List<DelegateSession> delegates;
-        synchronized (this) {
-            delegates = mDelegateSessions == null ? null : new ArrayList<DelegateSession>(mDelegateSessions.values());
-            mDelegateSessions = null;
+        synchronized (mDelegateSessions) {
+            delegates = new ArrayList<DelegateSession>(mDelegateSessions.values());
+            mDelegateSessions.clear();
+            mUnregistered = true;
         }
-        if (delegates != null) {
-            for (DelegateSession ds : delegates)
-                ds.unregister();
-        }
+        for (DelegateSession ds : delegates)
+            ds.unregister();
 
         // note that Session.unregister() unsets mMailbox...
         super.unregister();
@@ -354,9 +356,9 @@ public class SoapSession extends Session {
 
     public DelegateSession getDelegateSession(String targetAccountId) {
         targetAccountId = targetAccountId.toLowerCase();
-        synchronized (this) {
+        synchronized (mDelegateSessions) {
             // don't return delegate sessions after an unregister()
-            if (mDelegateSessions == null)
+            if (mUnregistered)
                 return null;
 
             DelegateSession ds = mDelegateSessions.get(targetAccountId);
@@ -370,8 +372,8 @@ public class SoapSession extends Session {
     }
 
     void removeDelegateSession(DelegateSession ds) {
-        synchronized (this) {
-            if (mDelegateSessions == null || mDelegateSessions.isEmpty())
+        synchronized (mDelegateSessions) {
+            if (mUnregistered || mDelegateSessions.isEmpty())
                 return;
             boolean removed = mDelegateSessions.remove(ds.mTargetAccountId.toLowerCase()) != null;
             if (!removed)
