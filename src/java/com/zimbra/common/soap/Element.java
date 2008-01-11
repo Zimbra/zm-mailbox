@@ -42,7 +42,7 @@ import com.zimbra.common.soap.MailConstants;
 /**
  * @author dkarp
  */
-public abstract class Element {
+public abstract class Element implements Cloneable {
     protected String  mName;
     protected String  mPrefix = "";
     protected Element mParent;
@@ -145,12 +145,14 @@ public abstract class Element {
         return this;
     }
 
+    @Override public abstract Element clone();
+
     // reading from the element hierarchy
     public String getName()           { return mName; }
     public String getQualifiedName()  { return (mPrefix != null && !mPrefix.equals("") ? mPrefix + ':' + mName : mName); }
-    public QName getQName()           { String uri = getNamespaceURI(mPrefix); return (uri == null ? QName.get(mName) : QName.get(mName, uri)); }
+    public QName getQName()           { String uri = getNamespaceURI(mPrefix);  return (uri == null ? QName.get(mName) : QName.get(getQualifiedName(), uri)); }
 
-    public QName getQName(String qualifiedName) { String[] parts = qualifiedName.split("\\."); return new QName(parts[parts.length - 1]); }
+    public QName getQName(String qualifiedName)  { String[] parts = qualifiedName.split("\\.");  return new QName(parts[parts.length - 1]); }
 
     public Element getParent()        { return mParent; }
 
@@ -457,15 +459,15 @@ public abstract class Element {
         private static final String A_CONTENT   = "_content";
         private static final String A_NAMESPACE = "_jsns";
 
-        public JSONElement(String name)  { mName = name; mAttributes = new HashMap<String, Object>(); }
-        public JSONElement(QName qname)  { this(qname.getName()); setNamespace("", qname.getNamespaceURI()); }
+        public JSONElement(String name)  { mName = name;  mAttributes = new HashMap<String, Object>(); }
+        public JSONElement(QName qname)  { this(qname.getName());  setNamespace("", qname.getNamespaceURI()); }
 
         private static final class JSONFactory implements ElementFactory {
             public Element createElement(String name)  { return new JSONElement(name); }
             public Element createElement(QName qname)  { return new JSONElement(qname); }
         }
 
-        private final class JSONKeyValuePair implements KeyValuePair {
+        private static final class JSONKeyValuePair implements KeyValuePair, Cloneable {
             private final JSONElement mTarget;
             JSONKeyValuePair(String key, String value)  { (mTarget = new JSONElement(key)).setText(value); }
 
@@ -478,7 +480,13 @@ public abstract class Element {
             public String getKey() throws ContainerException    { return mTarget.getName(); }
             public String getValue() throws ContainerException  { return mTarget.getRawText(); }
 
-            public String toString() {
+            @Override public JSONKeyValuePair clone() {
+                JSONKeyValuePair clone = new JSONKeyValuePair(getKey(), getValue());
+                clone.mTarget.mAttributes.putAll(mTarget.mAttributes);
+                return clone;
+            }
+
+            @Override public String toString() {
                 if (mTarget.mAttributes.isEmpty())
                     return "null";
                 else if (mTarget.mAttributes.size() == 1 && mTarget.mAttributes.containsKey(A_CONTENT))
@@ -493,14 +501,14 @@ public abstract class Element {
             }
         }
 
-        public ElementFactory getFactory()  { return mFactory; }
+        @Override public ElementFactory getFactory()  { return mFactory; }
 
-        public Element addElement(String name) throws ContainerException  { return addElement(new JSONElement(name)); }
+        @Override public Element addElement(String name) throws ContainerException  { return addElement(new JSONElement(name)); }
 
-        public Element addElement(QName qname) throws ContainerException  { return addElement(new JSONElement(qname)); }
+        @Override public Element addElement(QName qname) throws ContainerException  { return addElement(new JSONElement(qname)); }
 
         @SuppressWarnings("unchecked")
-        public Element addElement(Element elt) throws ContainerException {
+        @Override public Element addElement(Element elt) throws ContainerException {
             if (elt == null || elt.mParent == this)
                 return elt;
             else if (elt.mParent != null)
@@ -521,11 +529,11 @@ public abstract class Element {
             return elt.collapseNamespace();
         }
 
-        public Element addUniqueElement(String name) throws ContainerException  { return addUniqueElement(new JSONElement(name)); }
+        @Override public Element addUniqueElement(String name) throws ContainerException  { return addUniqueElement(new JSONElement(name)); }
 
-        public Element addUniqueElement(QName qname) throws ContainerException  { return addUniqueElement(new JSONElement(qname)); }
+        @Override public Element addUniqueElement(QName qname) throws ContainerException  { return addUniqueElement(new JSONElement(qname)); }
 
-        public Element addUniqueElement(Element elt) throws ContainerException {
+        @Override public Element addUniqueElement(Element elt) throws ContainerException {
             if (elt == null)
                 return null;
             String name = elt.getName();
@@ -546,9 +554,9 @@ public abstract class Element {
             return elt;
         }
 
-        public Element setText(String content) throws ContainerException  { return addAttribute(A_CONTENT, content); }
+        @Override public Element setText(String content) throws ContainerException  { return addAttribute(A_CONTENT, content); }
 
-        public Element addAttribute(String key, String value, Disposition disp) throws ContainerException {
+        @Override public Element addAttribute(String key, String value, Disposition disp) throws ContainerException {
             if (value == null)
                 return this;
             checkNamingConflict(key);
@@ -556,19 +564,19 @@ public abstract class Element {
             return this;
         }
 
-        public Element addAttribute(String key, long value, Disposition disp) throws ContainerException {
+        @Override public Element addAttribute(String key, long value, Disposition disp) throws ContainerException {
             checkNamingConflict(key);
             mAttributes.put(key, new Long(value));
             return this;
         }
 
-        public Element addAttribute(String key, double value, Disposition disp) throws ContainerException {
+        @Override public Element addAttribute(String key, double value, Disposition disp) throws ContainerException {
             checkNamingConflict(key);
             mAttributes.put(key, new Double(value));
             return this;
         }
 
-        public Element addAttribute(String key, boolean value, Disposition disp) throws ContainerException {
+        @Override public Element addAttribute(String key, boolean value, Disposition disp) throws ContainerException {
             checkNamingConflict(key);
             mAttributes.put(key, new Boolean(value));
             return this;
@@ -581,10 +589,10 @@ public abstract class Element {
         }
 
         @SuppressWarnings("unchecked")
-        public KeyValuePair addKeyValuePair(String key, String value, String eltname, String attrname) {
+        @Override public KeyValuePair addKeyValuePair(String key, String value, String eltname, String attrname) {
             JSONElement attrs = (JSONElement) addUniqueElement(E_ATTRS);
             Object existing = attrs.mAttributes.get(key);
-            KeyValuePair kvp = attrs.new JSONKeyValuePair(key, value);
+            KeyValuePair kvp = new JSONKeyValuePair(key, value);
 
             if (existing == null) {
                 attrs.mAttributes.put(key, kvp);
@@ -598,7 +606,7 @@ public abstract class Element {
             return kvp;
         }
 
-        protected void detach(Element elt) throws ContainerException {
+        @Override protected void detach(Element elt) throws ContainerException {
             if (elt == null)
                 return;
             super.detach(elt);
@@ -612,7 +620,7 @@ public abstract class Element {
             }
         }
 
-        public Element getOptionalElement(String name) {
+        @Override public Element getOptionalElement(String name) {
             Object obj = mAttributes.get(name);
             if (obj instanceof Element)
                 return (Element) obj;
@@ -622,7 +630,7 @@ public abstract class Element {
             return null;
         }
 
-        public Set<Attribute> listAttributes() {
+        @Override public Set<Attribute> listAttributes() {
             if (mAttributes.isEmpty())
                 return Collections.emptySet();
             HashSet<Attribute> set = new HashSet<Attribute>();
@@ -635,7 +643,7 @@ public abstract class Element {
         }
 
         @SuppressWarnings("unchecked")
-        public List<Element> listElements(String name) {
+        @Override public List<Element> listElements(String name) {
             if (mAttributes.isEmpty())
                 return Collections.emptyList();
 
@@ -661,7 +669,7 @@ public abstract class Element {
             return list;
         }
 
-        public List<KeyValuePair> listKeyValuePairs(String eltname, String attrname) {
+        @Override public List<KeyValuePair> listKeyValuePairs(String eltname, String attrname) {
             Element attrs = getOptionalElement(E_ATTRS);
             if (attrs == null || !(attrs instanceof JSONElement))
                 return Collections.emptyList();
@@ -679,16 +687,53 @@ public abstract class Element {
             return pairs;
         }
 
-        public String getText()  { return getAttribute(A_CONTENT, ""); }
-        String getRawText()      { return getAttribute(A_CONTENT, null); }
+        @Override public String getText()  { return getAttribute(A_CONTENT, ""); }
+        String getRawText()                { return getAttribute(A_CONTENT, null); }
 
-        public String getAttribute(String key, String defaultValue) {
+        @Override public String getAttribute(String key, String defaultValue) {
             Object obj = mAttributes.get(key);
             if (obj != null)
                 return obj.toString();
             Element attrs = getOptionalElement(E_ATTRS);
             obj = (attrs == null ? null : attrs.mAttributes.get(key));
             return (obj == null ? defaultValue : obj.toString());
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override public JSONElement clone() {
+            JSONElement clone = new JSONElement(getQName());
+            if (mNamespaces != null) {
+                if (clone.mNamespaces == null)
+                    clone.mNamespaces = new HashMap<String, String>(mNamespaces);
+                else
+                    clone.mNamespaces.putAll(mNamespaces);
+            }
+            for (Map.Entry<String, Object> entry : mAttributes.entrySet()) {
+                String key = entry.getKey();  Object value = entry.getValue();
+                if (value instanceof Element) {
+                    clone.addUniqueElement(((Element) value).clone());
+                } else if (value instanceof JSONKeyValuePair) {
+                    clone.mAttributes.put(key, ((JSONKeyValuePair) value).clone());
+                } else if (value instanceof List) {
+                    for (Object child : (List) value) {
+                        if (child instanceof Element) {
+                            clone.addElement(((Element) child).clone());
+                        } else {
+                            Object childclone = child instanceof JSONKeyValuePair ? ((JSONKeyValuePair) child).clone() : child;
+                            List<Object> children = (List<Object>) clone.mAttributes.get(key);
+                            if (children == null) {
+                                (children = new ArrayList<Object>(((List) value).size())).add(childclone);
+                                clone.mAttributes.put(key, children);
+                            } else {
+                                children.add(childclone);
+                            }
+                        }
+                    }
+                } else {
+                    clone.mAttributes.put(key, value);
+                }
+            }
+            return clone;
         }
 
         private static final class JSRequest {
@@ -866,10 +911,10 @@ public abstract class Element {
             return elt;
         }
 
-        public String toString() {
+        @Override public String toString() {
             StringBuffer sb = new StringBuffer();  toString(sb, -1);  return sb.toString();
         }
-        public String prettyPrint() {
+        @Override public String prettyPrint() {
             StringBuffer sb = new StringBuffer();  toString(sb, 0);  return sb.toString();
         }
 
@@ -965,16 +1010,16 @@ public abstract class Element {
             public String getKey() throws ContainerException    { return mTarget.getAttribute(mAttrName, null); }
             public String getValue() throws ContainerException  { return mTarget.getRawText(); }
 
-            public String toString()  { return mTarget.toString(); }
+            @Override public String toString()  { return mTarget.toString(); }
         }
 
-        public ElementFactory getFactory()  { return mFactory; }
+        @Override public ElementFactory getFactory()  { return mFactory; }
 
-        public Element addElement(String name) throws ContainerException { return addElement(new XMLElement(name)); }
+        @Override public Element addElement(String name) throws ContainerException { return addElement(new XMLElement(name)); }
 
-        public Element addElement(QName qname) throws ContainerException { return addElement(new XMLElement(qname)); }
+        @Override public Element addElement(QName qname) throws ContainerException { return addElement(new XMLElement(qname)); }
 
-        public Element addElement(Element elt) throws ContainerException {
+        @Override public Element addElement(Element elt) throws ContainerException {
             if (elt == null || elt.mParent == this)
                 return elt;
             else if (elt.mParent != null)
@@ -989,7 +1034,7 @@ public abstract class Element {
             return elt.collapseNamespace();
         }
 
-        public Element setText(String content) throws ContainerException {
+        @Override public Element setText(String content) throws ContainerException {
             if (content != null && !content.trim().equals("")) {
                 if (mChildren != null)
                     throw new ContainerException("cannot set text on element with children");
@@ -1000,7 +1045,7 @@ public abstract class Element {
             return this;
         }
 
-        public Element addAttribute(String key, String value, Disposition disp) throws ContainerException {
+        @Override public Element addAttribute(String key, String value, Disposition disp) throws ContainerException {
             validateName(key);
             if (value == null) {
                 return this;
@@ -1014,7 +1059,7 @@ public abstract class Element {
             return this;
         }
 
-        public KeyValuePair addKeyValuePair(String key, String value, String eltname, String attrname) throws ContainerException {
+        @Override public KeyValuePair addKeyValuePair(String key, String value, String eltname, String attrname) throws ContainerException {
             return new XMLKeyValuePair(key, value, eltname == null ? E_ATTRIBUTE : validateName(eltname), attrname == null ? A_ATTR_NAME : validateName(attrname));
         }
 
@@ -1040,7 +1085,7 @@ public abstract class Element {
             return name;
         }
 
-        protected void detach(Element elt) throws ContainerException {
+        @Override protected void detach(Element elt) throws ContainerException {
             super.detach(elt);
             if (mChildren != null) {
                 mChildren.remove(elt);
@@ -1049,7 +1094,7 @@ public abstract class Element {
             }
         }
 
-        public Element getOptionalElement(String name) {
+        @Override public Element getOptionalElement(String name) {
             if (mChildren != null && name != null)
                 for (Element elt : mChildren)
                     if (elt.getName().equals(name))
@@ -1057,7 +1102,7 @@ public abstract class Element {
             return null;
         }
 
-        public Element getOptionalElement(QName qname) {
+        @Override public Element getOptionalElement(QName qname) {
             if (mChildren != null && qname != null) {
                 for (Element elt : mChildren)
                     if (elt.getQName().equals(qname))
@@ -1066,7 +1111,7 @@ public abstract class Element {
             return null;
         }
 
-        public Set<Attribute> listAttributes() {
+        @Override public Set<Attribute> listAttributes() {
             if (mAttributes == null || mAttributes.isEmpty())
                 return Collections.emptySet();
             HashSet<Attribute> set = new HashSet<Attribute>();
@@ -1075,7 +1120,7 @@ public abstract class Element {
             return set;
         }
 
-        public List<Element> listElements(String name) {
+        @Override public List<Element> listElements(String name) {
             if (mChildren == null)
                 return Collections.emptyList();
             ArrayList<Element> list = new ArrayList<Element>();
@@ -1089,7 +1134,7 @@ public abstract class Element {
             return list;
         }
 
-        public List<KeyValuePair> listKeyValuePairs(String eltname, String attrname) {
+        @Override public List<KeyValuePair> listKeyValuePairs(String eltname, String attrname) {
             eltname = eltname == null ? E_ATTRIBUTE : validateName(eltname);
             attrname = attrname == null ? A_ATTR_NAME : validateName(attrname);
 
@@ -1102,10 +1147,10 @@ public abstract class Element {
             return pairs;
         }
 
-        public String getText()  { return (mText == null ? "" : mText); }
-        String getRawText()      { return mText; }
+        @Override public String getText()  { return (mText == null ? "" : mText); }
+        String getRawText()                { return mText; }
 
-        public String getAttribute(String key, String defaultValue) {
+        @Override public String getAttribute(String key, String defaultValue) {
             if (key == null)
                 return defaultValue;
             // also need to check downcased version of attribute names because of safari bug
@@ -1153,10 +1198,29 @@ public abstract class Element {
             return (sb == null ? str : sb.append(str.substring(last, i)).toString());
         }
 
-        public String toString() {
+        @Override public XMLElement clone() {
+            XMLElement clone = new XMLElement(getQName());
+            clone.mText = mText;
+            if (mAttributes != null) {
+                clone.mAttributes = new HashMap<String, Object>(mAttributes);
+            }
+            if (mNamespaces != null) {
+                if (clone.mNamespaces == null)
+                    clone.mNamespaces = new HashMap<String, String>(mNamespaces);
+                else
+                    clone.mNamespaces.putAll(mNamespaces);
+            }
+            if (mChildren != null) {
+                for (Element child : mChildren)
+                    clone.addElement(child.clone());
+            }
+            return clone;
+        }
+
+        @Override public String toString() {
             StringBuffer sb = new StringBuffer();  toString(sb, -1);  return sb.toString();
         }
-        public String prettyPrint() {
+        @Override public String prettyPrint() {
             StringBuffer sb = new StringBuffer();  toString(sb, 0);  return sb.toString();
         }
 
@@ -1244,6 +1308,8 @@ public abstract class Element {
            .addUniqueElement(qm).addAttribute("id", 1115).addAttribute("f", "aw").addAttribute("t", "64,67").addAttribute("score", 0.953)
            .addAttribute("s", "Subject of the message has a \"\\\" in it", Disposition.CONTENT).addAttribute("mid", "<kashdfgiai67r3wtuwfg@goo.com>", Disposition.CONTENT)
            .addElement("mp").addAttribute("part", "TEXT").addAttribute("ct", "multipart/mixed").addAttribute("s", 3718);
+        String orig = env.toString(), clone = env.clone().toString();
+        System.out.println("< " + orig);  System.out.println("> " + clone);
         return env;
     }
 
@@ -1262,6 +1328,8 @@ public abstract class Element {
         cn.addKeyValuePair("firstName", "Satish");
         cn.addKeyValuePair("lastName", "Dharmaraj");
         cn.addKeyValuePair("foo=bar", "baz=whop");
+        if (!parent.toString().equals(parent.clone().toString()))
+            System.out.println("error: clone diverges from parent");
         return parent;
     }
 
