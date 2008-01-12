@@ -9,7 +9,12 @@ public abstract class GalParams {
     
     int mPageSize;
     
+    
     GalParams(Domain domain, GalOp galOp) {
+        
+        /*
+         * page size
+         */
         String pageSize = null;
         if (galOp == GalOp.sync) {
             pageSize = domain.getAttr(Provisioning.A_zimbraGalSyncLdapPageSize);
@@ -28,10 +33,10 @@ public abstract class GalParams {
         } catch (NumberFormatException e) {
             mPageSize = 0;
         }
-
+        
     }
     
-    public int getPageSize() { return mPageSize; }
+    public int pageSize() { return mPageSize; }
     
     /*
      * ZimbraGalParams
@@ -43,10 +48,16 @@ public abstract class GalParams {
         public ZimbraGalParams(Domain domain, GalOp galOp) throws ServiceException {
             super(domain, galOp); 
             
-            mSearchBase = domain.getAttr(Provisioning.A_zimbraGalInternalSearchBase, "DOMAIN");
+            if (galOp == GalOp.sync) {
+                mSearchBase = domain.getAttr(Provisioning.A_zimbraGalSyncInternalSearchBase, "DOMAIN");
+                if (mSearchBase == null)
+                    mSearchBase = domain.getAttr(Provisioning.A_zimbraGalInternalSearchBase, "DOMAIN");
+            } else {
+                mSearchBase = domain.getAttr(Provisioning.A_zimbraGalInternalSearchBase, "DOMAIN");
+            }
         }
         
-        public String getSearchBase() { return mSearchBase; }
+        public String searchBase() { return mSearchBase; }
     }
     
     public static class ExternalGalParams extends GalParams {
@@ -113,10 +124,10 @@ public abstract class GalParams {
             mCredential = new LdapGalCredential(authMech, bindDn, bindPassword, krb5Principal, krb5Keytab);
         }
         
-        public String[] getUrl() { return mUrl; }
-        public String getSearchBase() { return mSearchBase; }
-        public String getFilter() { return mFilter; }
-        public LdapGalCredential getCredential() { return mCredential; }
+        public String[] url() { return mUrl; }
+        public String searchBase() { return mSearchBase; }
+        public String filter() { return mFilter; }
+        public LdapGalCredential credential() { return mCredential; }
 
     }
 }

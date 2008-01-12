@@ -497,6 +497,7 @@ public abstract class Provisioning {
      * 
      */
     public static final String A_zimbraGalInternalSearchBase = "zimbraGalInternalSearchBase";
+    public static final String A_zimbraGalSyncInternalSearchBase = "zimbraGalSyncInternalSearchBase";
 
     /**
      * GAL mode. should be internal, external, or both. 
