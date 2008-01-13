@@ -73,7 +73,7 @@ public class TestImap extends TestCase {
 
     public void testLiteral() throws Exception {
         connect(false);
-        Object[] parts = new Object[] { " ", USER, " ", PASS.getBytes() };
+        Object[] parts = new Object[] { USER, " ", PASS.getBytes() };
         mClient.sendCommand("LOGIN", parts, false);
     }
 
@@ -89,11 +89,12 @@ public class TestImap extends TestCase {
         connect(false);
         byte[] lit1 = fill(new byte[13000000], 'x');
         byte[] lit2 = fill(new byte[100], 'y');
-        Object[] parts = new Object[] { " ", USER, " ", lit1, " ", lit2, "FOO"};
+        Object[] parts = new Object[] { USER, " ", lit1, " ", lit2, "FOO"};
         try {
             mClient.sendCommand("LOGIN", parts, sync);
         } catch (MailException e) {
-            assertTrue("Expected [TOOBIG] response", mClient.getMessage().contains("[TOOBIG]"));
+            String msg = mClient.getResponse();
+            assertTrue("Expected [TOOBIG] response", msg.contains("[TOOBIG]"));
             return;
         }
         throw new AssertionError("Expected LOGIN command to fail");
