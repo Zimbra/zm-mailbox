@@ -200,7 +200,7 @@ public class ProvUtil implements DebugListener {
         GET_IDENTITIES("getIdentities", "gid", "{name@domain|id} [arg1 [arg...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
         GET_SIGNATURES("getSignatures", "gsig", "{name@domain|id} [arg1 [arg...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
         GET_ACCOUNT_MEMBERSHIP("getAccountMembership", "gam", "{name@domain|id}", Category.ACCOUNT, 1, 2),
-        GET_ALL_ACCOUNTS("getAllAccounts","gaa", "[-v] [{domain}]", Category.ACCOUNT, 0, 2),
+        GET_ALL_ACCOUNTS("getAllAccounts","gaa", "[-v] [{domain}] [-s server]", Category.ACCOUNT, 0, 4),
         GET_ACCOUNT_LOGGERS("getAccountLoggers", "gal", "{name@domain|id}", Category.MISC, 1, 1),
         GET_ALL_ACCOUNT_LOGGERS("getAllAccountLoggers", "gaal", "{server}", Category.MISC, 1, 1),
         GET_ALL_ADMIN_ACCOUNTS("getAllAdminAccounts", "gaaa", "[-v]", Category.ACCOUNT, 0, 1),
@@ -891,7 +891,7 @@ public class ProvUtil implements DebugListener {
         }
     }
 
-    private void doGetAllAccounts(Provisioning prov, Domain domain, final boolean verbose, final Set<String> attrNames) throws ServiceException {
+    private void doGetAllAccounts(Provisioning prov, Domain domain, Server server, final boolean verbose, final Set<String> attrNames) throws ServiceException {
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
             public void visit(com.zimbra.cs.account.NamedEntry entry) throws ServiceException {
                 if (verbose)
@@ -900,25 +900,56 @@ public class ProvUtil implements DebugListener {
                     System.out.println(entry.getName());                        
             }
         };
-         prov.getAllAccounts(domain, visitor);
+         prov.getAllAccounts(domain, server, visitor);
     }
     
     private void doGetAllAccounts(String[] args) throws ServiceException {
         boolean verbose = false;
         String d = null;
+        String s = null;
         if (args.length == 2) {
             if (args[1].equals("-v")) 
                 verbose = true;
             else 
                 d = args[1];
+
         } else if (args.length == 3) {
-            if (args[1].equals("-v")) 
+            if (args[1].equals("-v")) {
                 verbose = true;
-            else  {
+                d = args[2];
+            } else if (args[1].equals("-s")) {
+                s = args[2];
+            } else {
                 usage();
                 return;
             }
-            d = args[2];            
+        } else if (args.length == 4) {
+            if (args[1].equals("-v")) 
+                verbose = true;
+            else 
+                d = args[1];
+            
+            if (args[2].equals("-s"))
+                s = args[3];
+            else {
+                usage();
+                return;
+            }
+        } else if (args.length == 5) {
+            if (args[1].equals("-v")) {
+                verbose = true;
+                d = args[2];
+            } else {
+                usage();
+                return;
+            }
+            
+            if (args[3].equals("-s")) {
+                s = args[4];
+            } else {
+                usage();
+                return;
+            }
         } else if (args.length != 1) {
             usage();
             return;
@@ -927,15 +958,19 @@ public class ProvUtil implements DebugListener {
         // always use LDAP
         Provisioning prov = Provisioning.getInstance();
 
+        Server server = null;
+        if (s != null)
+            server = lookupServer(s);
+                
         if (d == null) {
             List domains = prov.getAllDomains();
             for (Iterator dit=domains.iterator(); dit.hasNext(); ) {
                 Domain domain = (Domain) dit.next();
-                doGetAllAccounts(prov, domain, verbose, null);
+                doGetAllAccounts(prov, domain, server, verbose, null);
             }
         } else {
             Domain domain = lookupDomain(d, prov);
-            doGetAllAccounts(prov, domain, verbose, null);
+            doGetAllAccounts(prov, domain, server, verbose, null);
         }
     }    
 
