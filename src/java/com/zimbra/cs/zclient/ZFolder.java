@@ -26,6 +26,8 @@ import com.zimbra.cs.zclient.event.ZModifyFolderEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.net.URLEncoder;
+import java.io.UnsupportedEncodingException;
 
 public class ZFolder implements ZItem, Comparable {
     
@@ -285,11 +287,42 @@ public class ZFolder implements ZItem, Comparable {
         }
     }
 
+    /** Returns the folder's absolute path, url-encoded.  Paths are UNIX-style with
+     *  <code>'/'</code> as the path delimiter.  Paths are relative to
+     *  the user root folder,
+     *  which has the path <code>"/"</code>.  So the Inbox's path is
+     *  <code>"/Inbox"</code>, etc.
+     */
+    public String getPathURLEncoded() {
+        // TODO: CACHE? compute upfront?
+        if (mParent == null)
+            return ZMailbox.PATH_SEPARATOR;
+        else {
+            String pp = mParent.getPath();
+            String n = null;
+            try {
+                n = URLEncoder.encode(mName, "utf-8").replace("+", "%20");
+            } catch (UnsupportedEncodingException e) {
+                n = mName;
+            }
+            return pp.length() == 1 ? (pp + n) : (pp + ZMailbox.PATH_SEPARATOR + n);
+        }
+    }
+
      /** Returns the folder's  path relative to the root
      * @return path
      */
     public String getRootRelativePath() {
         String path = getPath();
+        if (path.startsWith(ZMailbox.PATH_SEPARATOR)) {
+            return path.substring(ZMailbox.PATH_SEPARATOR.length());
+        } else {
+            return path;
+        }
+    }
+
+    public String getRootRelativePathURLEncoded() {
+        String path = getPathURLEncoded();
         if (path.startsWith(ZMailbox.PATH_SEPARATOR)) {
             return path.substring(ZMailbox.PATH_SEPARATOR.length());
         } else {
