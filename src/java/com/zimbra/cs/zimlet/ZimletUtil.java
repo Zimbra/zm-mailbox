@@ -1436,8 +1436,13 @@ public class ZimletUtil {
 				installZimlet(new ZimletFile(zimlet));
 				break;
 			case UNINSTALL_ZIMLET:
-				ZimletSoapUtil su = new ZimletSoapUtil();
-				su.undeployZimlet(zimlet);
+				if (localInstall) {
+					Server localServer = Provisioning.getInstance().getLocalServer();
+					undeployZimletOnServer(zimlet, localServer);
+				} else {
+					ZimletSoapUtil su = new ZimletSoapUtil();
+					su.undeployZimlet(zimlet);
+				}
 				break;
 			case LDAP_DEPLOY:
 				ldapDeploy(zimlet);
