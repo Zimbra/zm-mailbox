@@ -66,6 +66,7 @@ import com.zimbra.cs.account.callback.MailSignature;
 import com.zimbra.cs.account.ldap.gal.GalNamedFilter;
 import com.zimbra.cs.account.ldap.gal.GalOp;
 import com.zimbra.cs.account.ldap.gal.GalParams;
+import com.zimbra.cs.account.ldap.gal.GalUtil;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -3584,10 +3585,10 @@ public class LdapProvisioning extends Provisioning {
         if (mode == null || mode.equals(Provisioning.GM_ZIMBRA)) {
             results = searchZimbraGal(d, n, maxResults, token, galOp);
         } else if (mode.equals(Provisioning.GM_LDAP)) {
-            results = searchLdapGal(d, n, maxResults, token, false);
+            results = searchLdapGal(d, n, maxResults, token, galOp);
         } else if (mode.equals(Provisioning.GM_BOTH)) {
             results = searchZimbraGal(d, n, maxResults/2, token, galOp);
-            SearchGalResult ldapResults = searchLdapGal(d, n, maxResults/2, token, false);
+            SearchGalResult ldapResults = searchLdapGal(d, n, maxResults/2, token, galOp);
             if (ldapResults != null) {
                 results.matches.addAll(ldapResults.matches);
                 results.token = LdapUtil.getLaterTimestamp(results.token, ldapResults.token);
@@ -3656,10 +3657,10 @@ public class LdapProvisioning extends Provisioning {
         if (mode == null || mode.equals(Provisioning.GM_ZIMBRA)) {
             results = searchZimbraGal(d, n, maxResults, null, galOp);
         } else if (mode.equals(Provisioning.GM_LDAP)) {
-            results = searchLdapGal(d, n, maxResults, null, true);
+            results = searchLdapGal(d, n, maxResults, null, galOp);
         } else if (mode.equals(Provisioning.GM_BOTH)) {
             results = searchZimbraGal(d, n, maxResults/2, null, galOp);
-            SearchGalResult ldapResults = searchLdapGal(d, n, maxResults/2, null, true);
+            SearchGalResult ldapResults = searchLdapGal(d, n, maxResults/2, null, galOp);
             if (ldapResults != null) {
                 results.matches.addAll(ldapResults.matches);
                 results.token = LdapUtil.getLaterTimestamp(results.token, ldapResults.token);
@@ -3723,37 +3724,30 @@ public class LdapProvisioning extends Provisioning {
     }
 
     private SearchGalResult searchZimbraWithNamedFilter(
-        Domain d,
+        Domain domain,
         GalOp galOp,
         String filterName,
         String n,
         int maxResults,
         String token)
     throws ServiceException {
+        GalParams.ZimbraGalParams galParams = new GalParams.ZimbraGalParams(domain, galOp);
+        
         String queryExpr = getFilterDef(filterName);
         String query = null;
         if (queryExpr != null) {
-            if (token != null) n = "";
+            if (token != null) 
+                n = "";
     
-            Map<String, String> vars = new HashMap<String, String>();
-            vars.put("s", n);
-            query = LdapProvisioning.expandStr(queryExpr, vars);
-            if (token != null) {
-                if (token.equals(""))
-                    query = query.replaceAll("\\*\\*", "*");
-                else {
-                    String arg = LdapUtil.escapeSearchFilterArg(token);
-                    query = "(&(|(modifyTimeStamp>="+arg+")(createTimeStamp>="+arg+"))"+query.replaceAll("\\*\\*", "*")+")";
-                }
-            }
+            query = GalUtil.expandFilter(galParams, galOp, queryExpr, n, token, true);
         }
-        return searchZimbraWithQuery(d, galOp, query, maxResults, token);
+        return searchZimbraWithQuery(domain, galParams, galOp, query, maxResults, token);
     }
 
-    private SearchGalResult searchZimbraWithQuery(Domain d, GalOp galOp, String query, int maxResults, String token)
+    private SearchGalResult searchZimbraWithQuery(Domain domain, GalParams.ZimbraGalParams galParams, GalOp galOp, String query, int maxResults, String token)
     throws ServiceException 
     {
-        LdapDomain ld = (LdapDomain) d;
+        LdapDomain ld = (LdapDomain) domain;
         SearchGalResult result = new SearchGalResult();
         result.matches = new ArrayList<GalContact>();
         if (query == null)
@@ -3762,9 +3756,8 @@ public class LdapProvisioning extends Provisioning {
         // filter out hidden entries
         query = "(&("+query+")(!(zimbraHideInGal=TRUE)))";
     
-        LdapGalMapRules rules = getGalRules(d);
+        LdapGalMapRules rules = getGalRules(domain);
 
-        GalParams.ZimbraGalParams galParams = new GalParams.ZimbraGalParams(d, galOp);
         String searchBase = galParams.searchBase();
         if (searchBase.equalsIgnoreCase("DOMAIN"))
             searchBase = mDIT.domainDNToAccountSearchDN(ld.getDN());
@@ -3795,25 +3788,17 @@ public class LdapProvisioning extends Provisioning {
     private SearchGalResult searchLdapGal(Domain domain,
                                           String n,
                                           int maxResults,
-                                          String token, boolean autoComplete)
+                                          String token,
+                                          GalOp galOp)
     throws ServiceException {
-        GalOp galOp;
-        if (autoComplete)
-            galOp = GalOp.autocomplete;
-        else if (token != null)
-            galOp = GalOp.sync;
-        else
-            galOp = GalOp.search;
+
         GalParams.ExternalGalParams galParams = new GalParams.ExternalGalParams(domain, galOp);
         
         LdapGalMapRules rules = getGalRules(domain);
         String[] galAttrList = rules.getLdapAttrs();
         try {
-            return LdapUtil.searchLdapGal(galParams.url(), 
-                                          galParams.credential(), 
-                                          galParams.pageSize(), 
-                                          galParams.searchBase(), 
-                                          galParams.filter(), 
+            return LdapUtil.searchLdapGal(galParams,
+                                          galOp,
                                           n, 
                                           maxResults, 
                                           rules, 

@@ -35,6 +35,8 @@ import javax.net.ssl.SSLHandshakeException;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
+import com.zimbra.cs.account.ldap.gal.GalOp;
+import com.zimbra.cs.account.ldap.gal.GalParams;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ExceptionToString;
 import com.zimbra.common.util.ZimbraLog;
@@ -174,14 +176,22 @@ public class Check {
         String krb5Keytab = (String) attrs.get(Provisioning.A_zimbraGalLdapKerberos5Keytab);
         String searchBase = getRequiredAttr(attrs, Provisioning.A_zimbraGalLdapSearchBase);
         String filter = getRequiredAttr(attrs, Provisioning.A_zimbraGalLdapFilter);
-        int pageSize =  0;
+        GalParams.ExternalGalParams galParams = new GalParams.ExternalGalParams(url,
+                                                                                authMech,
+                                                                                bindDn,
+                                                                                bindPassword,
+                                                                                krb5Principal,
+                                                                                krb5Keytab,
+                                                                                searchBase,
+                                                                                filter,
+                                                                                null);
 
         String[] galAttrs = Provisioning.getInstance().getConfig().getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap);
         LdapGalMapRules rules = new LdapGalMapRules(galAttrs);
 
         try {
             LdapGalCredential credential = new LdapGalCredential(authMech, bindDn, bindPassword, krb5Principal, krb5Keytab);
-            SearchGalResult result = LdapUtil.searchLdapGal(url, credential, pageSize, searchBase, filter, query, limit, rules, null); 
+            SearchGalResult result = LdapUtil.searchLdapGal(galParams, GalOp.search, query, limit, rules, null); 
             List contacts = result.matches;
             return new Result(STATUS_OK, "", contacts);
         } catch (NamingException e) {

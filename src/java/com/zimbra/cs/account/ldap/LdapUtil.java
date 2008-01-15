@@ -27,6 +27,9 @@ import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.krb5.Krb5Login;
+import com.zimbra.cs.account.ldap.gal.GalOp;
+import com.zimbra.cs.account.ldap.gal.GalParams;
+import com.zimbra.cs.account.ldap.gal.GalUtil;
 import com.zimbra.cs.stats.ZimbraPerf;
 import org.apache.commons.codec.binary.Base64;
 
@@ -914,15 +917,16 @@ public class LdapUtil {
      * @see com.zimbra.cs.account.Provisioning#searchGal(java.lang.String)
      */
     public static SearchGalResult searchLdapGal(
-            String url[],
-            LdapGalCredential credential,
-            int pageSize,
-            String base,
-            String filter, 
+            GalParams.ExternalGalParams galParams, 
+            GalOp galOp,
             String n,
             int maxResults,
             LdapGalMapRules rules,
             String token) throws NamingException, ServiceException {
+        
+        String url[] = galParams.url();
+        String base = galParams.searchBase();
+        String filter = galParams.filter();
     
         SearchGalResult result = new SearchGalResult();
         result.matches = new ArrayList<GalContact>();
@@ -943,18 +947,7 @@ public class LdapUtil {
                 filter = queryExpr;
         }
                 
-
-        Map<String, String> vars = new HashMap<String, String>();
-        vars.put("s", n);
-        String query = LdapProvisioning.expandStr(filter, vars);
-        if (token != null) {
-            if (token.equals(""))
-                query = query.replaceAll("\\*\\*", "*");
-            else  {
-                String arg = LdapUtil.escapeSearchFilterArg(token);                
-                query = "(&(|(modifyTimeStamp>="+arg+")(createTimeStamp>="+arg+")(whenModified>="+arg+")(whenCreated>="+arg+"))"+query.replaceAll("\\*\\*", "*")+")";                
-            }                
-        }
+        String query = GalUtil.expandFilter(galParams, galOp, filter, n, token, false);
 
         if (ZimbraLog.misc.isDebugEnabled()) {
             ZimbraLog.misc.debug("searchLdapGal query:"+query);
@@ -964,11 +957,12 @@ public class LdapUtil {
             }
         }
         
-        String authMech = credential.getAuthMech();
+        
+        String authMech = galParams.credential().getAuthMech();
         if (authMech.equals(Provisioning.LDAP_AM_KERBEROS5))
-            searchLdapGalKrb5(url, credential, pageSize, base, query, maxResults, rules, token, result);
+            searchLdapGalKrb5(galParams, query, maxResults, rules, token, result);
         else    
-            searchLdapGal(url, credential, pageSize, base, query, maxResults, rules, token, result);
+            searchLdapGal(galParams, query, maxResults, rules, token, result);
         return result;
     }
     
@@ -1011,10 +1005,8 @@ public class LdapUtil {
     }
     */
     
-    private static void searchLdapGal(String url[],
-            LdapGalCredential credential,
-            int pageSize,
-            String base, 
+    private static void searchLdapGal(
+            GalParams.ExternalGalParams galParams,
             String query, 
             int maxResults,
             LdapGalMapRules rules,
@@ -1023,10 +1015,10 @@ public class LdapUtil {
         
         DirContext ctxt = null;
         try {
-            ctxt = getDirContext(url, credential);
+            ctxt = getDirContext(galParams.url(), galParams.credential());
             searchGal(ctxt,
-                      pageSize,
-                      base, 
+                      galParams.pageSize(),
+                      galParams.searchBase(), 
                       query, 
                       maxResults,
                       rules,
@@ -1037,10 +1029,8 @@ public class LdapUtil {
         }
     }
     
-    private static void searchLdapGalKrb5(String url[],
-            LdapGalCredential credential,
-            int pageSize,
-            String base, 
+    private static void searchLdapGalKrb5(
+            GalParams.ExternalGalParams galParams,
             String query, 
             int maxResults,
             LdapGalMapRules rules,
@@ -1048,8 +1038,9 @@ public class LdapUtil {
             SearchGalResult result) throws NamingException, ServiceException {
         
         try {
+            LdapGalCredential credential = galParams.credential();
             Krb5Login.performAs(credential.getKrb5Principal(), credential.getKrb5Keytab(),
-                                new SearchGalAction(url, credential, pageSize, base, query, maxResults, rules, token, result));
+                                new SearchGalAction(galParams, query, maxResults, rules, token, result));
         } catch (LoginException le) {
             throw ServiceException.FAILURE("login failed, unable to search GAL", le);
         } catch (PrivilegedActionException pae) {
@@ -1065,29 +1056,20 @@ public class LdapUtil {
     
     static class SearchGalAction implements PrivilegedExceptionAction {
         
-        String[] url;
-        LdapGalCredential credential;
-        int pageSize;
-        String base;
+        GalParams.ExternalGalParams galParams;
         String query;
         int maxResults;
         LdapGalMapRules rules;
         String token;
         SearchGalResult result;
         
-        SearchGalAction(String arg_url[],
-                        LdapGalCredential arg_credential,
-                        int arg_pageSize,
-                        String arg_base, 
+        SearchGalAction(GalParams.ExternalGalParams arg_galParams,
                         String arg_query, 
                         int arg_maxResults,
                         LdapGalMapRules arg_rules,
                         String arg_token,
                         SearchGalResult arg_result) {
-            url = arg_url;
-            credential = arg_credential;
-            pageSize = arg_pageSize;
-            base = arg_base;
+            galParams = arg_galParams;
             query = arg_query;
             maxResults = arg_maxResults;
             rules = arg_rules;
@@ -1095,9 +1077,8 @@ public class LdapUtil {
             result = arg_result;
         }
             
-        
         public Object run() throws NamingException, ServiceException {
-            searchLdapGal(url, credential, pageSize, base, query, maxResults, rules, token, result);
+            searchLdapGal(galParams, query, maxResults, rules, token, result);
             return null;
         }
     }
