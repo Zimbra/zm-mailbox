@@ -116,7 +116,7 @@ public class RemoteCollection extends CalendarCollection {
             DavResource res = mAppointments.get(appt.getUid().toLowerCase());
             if (res != null)
                 continue;
-            res = new CalendarObject.RemoteCalendarObject(mUri, mOwner, appt);
+            res = new CalendarObject.RemoteCalendarObject(mUri, mOwner, appt, this);
             mChildren.add(res);
             mAppointments.put(appt.getUid().toLowerCase(), res);
         }
@@ -152,7 +152,7 @@ public class RemoteCollection extends CalendarCollection {
             for (Header h : response.getFirst())
                 if (h.getName().equals(DavProtocol.HEADER_ETAG)) {
                     UrlNamespace.invalidateApptSummariesCache(mRemoteId, mItemId);
-                    return new CalendarObject.RemoteCalendarObject(ctxt.getPath(), ctxt.getUser(), h.getValue());
+                    return new CalendarObject.RemoteCalendarObject(ctxt.getPath(), ctxt.getUser(), h.getValue(), this);
                 }
         } catch (AuthTokenException e) {
             ZimbraLog.dav.warn("can't generate authToken for "+ctxt.getAuthAccount().getName(), e);
@@ -167,5 +167,23 @@ public class RemoteCollection extends CalendarCollection {
             getChildren(ctxt);
         }
         return mAppointments.get(uid.toLowerCase());
+    }
+    
+    public void deleteAppointment(DavContext ctxt, int id) throws DavException {
+        try {
+            String authToken = null;
+            authToken = new AuthToken(ctxt.getAuthAccount()).getEncoded();
+            Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteId);
+            ZMailbox.Options zoptions = new ZMailbox.Options(authToken, AccountUtil.getSoapUri(target));
+            zoptions.setNoSession(true);
+            zoptions.setTargetAccount(mRemoteId);
+            zoptions.setTargetAccountBy(Provisioning.AccountBy.id);
+            ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
+            zmbx.deleteItem(Integer.toString(id), null);
+        } catch (AuthTokenException e) {
+            throw new DavException("can't delete", HttpServletResponse.SC_FORBIDDEN, e);
+        } catch (ServiceException e) {
+            throw new DavException("can't delete", HttpServletResponse.SC_FORBIDDEN, e);
+        }
     }
 }

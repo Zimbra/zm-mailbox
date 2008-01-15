@@ -227,7 +227,7 @@ public class UrlNamespace {
 	private static LRUMap sApptSummariesMap = new LRUMap(100);
 	
 	private static class RemoteFolder {
-	    static final long AGE = 10L * 60L * 1000L;
+	    static final long AGE = 60L * 1000L;
 	    RemoteCollection folder;
 	    long ts;
 	    boolean isStale(long now) {

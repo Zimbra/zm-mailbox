@@ -178,8 +178,9 @@ public interface CalendarObject {
 	
 	public static class RemoteCalendarObject extends DavResource implements CalendarObject {
 
-	    public RemoteCalendarObject(String uri, String owner, ZAppointmentHit appt) {
+	    public RemoteCalendarObject(String uri, String owner, ZAppointmentHit appt, RemoteCollection parent) {
 	        super(CalendarPath.generate(uri, appt.getUid()), owner);
+	        mParent = parent;
 	        mUid = appt.getUid();
             ItemId iid;
             try {
@@ -195,8 +196,9 @@ public interface CalendarObject {
             addProperty(CalDavProperty.getCalendarData(this));
 	    }
 
-	    public RemoteCalendarObject(String uri, String owner, String etag) {
+	    public RemoteCalendarObject(String uri, String owner, String etag, RemoteCollection parent) {
 	        super(uri, owner);
+	        mParent = parent;
 	        mEtag = etag;
             setProperty(DavElements.P_GETCONTENTTYPE, Mime.CT_TEXT_CALENDAR);
             setProperty(DavElements.P_GETETAG, mEtag);
@@ -205,6 +207,7 @@ public interface CalendarObject {
         public static String getEtag(ZAppointmentHit item) {
             return "\""+Long.toString(item.getModifiedSeq())+"-"+Long.toString(item.getModifiedDate())+"\"";
         }
+		private RemoteCollection mParent;
 	    private String mRemoteId;
 	    private int mItemId;
 	    private String mUid;
@@ -212,7 +215,7 @@ public interface CalendarObject {
 	    
 	    @Override
 	    public void delete(DavContext ctxt) throws DavException {
-	        throw new DavException("cannot delete this resource", HttpServletResponse.SC_FORBIDDEN, null);
+	    	mParent.deleteAppointment(ctxt, mItemId);
 	    }
 
 	    @Override
