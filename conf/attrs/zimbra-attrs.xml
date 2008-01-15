@@ -2797,4 +2797,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether nginx should send ID command for imap</desc>
 </attr>
 
+<attr id="601" name="zimbraIsCustomerCareAccount" type="boolean" cardinality="single" optionalIn="account" flags="accountInfo">
+  <desc>set to true for customer care accounts</desc>
+</attr>
 </attrs>
