@@ -1436,11 +1436,11 @@ public class ZimletUtil {
 				installZimlet(new ZimletFile(zimlet));
 				break;
 			case UNINSTALL_ZIMLET:
+				ZimletSoapUtil su = new ZimletSoapUtil();
 				if (localInstall) {
 					Server localServer = Provisioning.getInstance().getLocalServer();
-					undeployZimletOnServer(zimlet, localServer);
+					su.undeployZimletOnServer(zimlet, localServer);
 				} else {
-					ZimletSoapUtil su = new ZimletSoapUtil();
 					su.undeployZimlet(zimlet);
 				}
 				break;
