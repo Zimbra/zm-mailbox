@@ -497,6 +497,12 @@ public abstract class Provisioning {
      */
     public static final String A_zimbraGalLdapPageSize      = "zimbraGalLdapPageSize";
     public static final String A_zimbraGalSyncLdapPageSize  = "zimbraGalSyncLdapPageSize";
+    
+    /**
+     * GAL tokenize search key
+     */
+    public static final String A_zimbraGalTokenizeAutoCompleteKey = "zimbraGalTokenizeAutoCompleteKey";
+    public static final String A_zimbraGalTokenizeSearchKey = "zimbraGalTokenizeSearchKey";
 
     
     /**

@@ -8,9 +8,10 @@ import com.zimbra.cs.account.ldap.LdapGalCredential;
 public abstract class GalParams {
     
     int mPageSize;
+    String mTokenizeAutoCompleteKey;
+    String mTokenizeSearchKey;
     
-    
-    GalParams(Domain domain, GalOp galOp) {
+    GalParams(Domain domain, GalOp galOp) throws ServiceException {
         
         /*
          * page size
@@ -25,6 +26,18 @@ public abstract class GalParams {
             pageSize = domain.getAttr(Provisioning.A_zimbraGalLdapPageSize);
         }
         
+        setPageSize(pageSize);
+        
+        mTokenizeAutoCompleteKey = domain.getAttr(Provisioning.A_zimbraGalTokenizeAutoCompleteKey);
+        mTokenizeSearchKey = domain.getAttr(Provisioning.A_zimbraGalTokenizeSearchKey);
+        
+    }
+    
+    GalParams(String pageSize) {
+        setPageSize(pageSize);
+    }
+    
+    private void setPageSize(String pageSize) {
         if (pageSize == null)
             pageSize = "0";
         
@@ -37,6 +50,8 @@ public abstract class GalParams {
     }
     
     public int pageSize() { return mPageSize; }
+    public String tokenizeAutoCompleteKey() { return mTokenizeAutoCompleteKey; }
+    public String tokenizeSearchKey() { return mTokenizeSearchKey; } 
     
     /*
      * ZimbraGalParams
@@ -120,6 +135,29 @@ public abstract class GalParams {
                 krb5Principal = domain.getAttr(Provisioning.A_zimbraGalLdapKerberos5Principal);
                 krb5Keytab = domain.getAttr(Provisioning.A_zimbraGalLdapKerberos5Keytab);
             }
+            
+            mCredential = new LdapGalCredential(authMech, bindDn, bindPassword, krb5Principal, krb5Keytab);
+        }
+        
+        
+        /*
+         * called from Check, where there isn't a domain object
+         */
+        public ExternalGalParams(String[] url,
+                                 String authMech,
+                                 String bindDn,
+                                 String bindPassword,
+                                 String krb5Principal,
+                                 String krb5Keytab,
+                                 String searchBase,
+                                 String filter,
+                                 String pageSize) throws ServiceException {
+            
+            super(pageSize);
+            
+            mUrl= url;
+            mSearchBase = searchBase;
+            mFilter = filter;
             
             mCredential = new LdapGalCredential(authMech, bindDn, bindPassword, krb5Principal, krb5Keytab);
         }
