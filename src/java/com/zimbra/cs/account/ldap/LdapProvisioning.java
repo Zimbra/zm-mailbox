@@ -61,6 +61,8 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.callback.MailSignature;
+import com.zimbra.cs.account.ldap.gal.GalParams;
+import com.zimbra.cs.account.ldap.gal.GalOp;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -2977,7 +2979,7 @@ public class LdapProvisioning extends Provisioning {
         }
 
         String encodedPassword = LdapUtil.generateSSHA(newPassword, null);
-
+        
         // unset it so it doesn't take up space...
         if (mustChange)
             attrs.put(Provisioning.A_zimbraPasswordMustChange, "");
@@ -3803,7 +3805,13 @@ public class LdapProvisioning extends Provisioning {
     
         LdapGalMapRules rules = getGalRules(d);
         
-        String searchBase = d.getAttr(Provisioning.A_zimbraGalInternalSearchBase, "DOMAIN");
+        GalOp galOp;
+        if (token != null)
+            galOp = GalOp.sync;
+        else
+            galOp = GalOp.search;
+        GalParams.ZimbraGalParams galParams = new GalParams.ZimbraGalParams(d, galOp);
+        String searchBase = galParams.getSearchBase();
         if (searchBase.equalsIgnoreCase("DOMAIN"))
             searchBase = mDIT.domainDNToAccountSearchDN(ld.getDN());
         else if (searchBase.equalsIgnoreCase("SUBDOMAINS"))
@@ -3811,13 +3819,11 @@ public class LdapProvisioning extends Provisioning {
         else if (searchBase.equalsIgnoreCase("ROOT"))
             searchBase = "";
         
-        int pageSize = d.getIntAttr(Provisioning.A_zimbraGalLdapPageSize, 0); 
-        
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext(false);
             LdapUtil.searchGal(ctxt,
-                               pageSize,
+                               galParams.getPageSize(),
                                searchBase, 
                                query, 
                                maxResults,
@@ -3832,25 +3838,32 @@ public class LdapProvisioning extends Provisioning {
         return result;
     }
     
-    private SearchGalResult searchLdapGal(Domain d,
+    private SearchGalResult searchLdapGal(Domain domain,
                                           String n,
                                           int maxResults,
                                           String token, boolean autoComplete)
     throws ServiceException {
-        String url[] = d.getMultiAttr(Provisioning.A_zimbraGalLdapURL);
-        String authMech = d.getAttr(Provisioning.A_zimbraGalLdapAuthMech);
-        String bindDn = d.getAttr(Provisioning.A_zimbraGalLdapBindDn);
-        String bindPassword = d.getAttr(Provisioning.A_zimbraGalLdapBindPassword);
-        String krb5Principal = d.getAttr(Provisioning.A_zimbraGalLdapKerberos5Principal);
-        String krb5Keytab = d.getAttr(Provisioning.A_zimbraGalLdapKerberos5Keytab);
-        String searchBase = d.getAttr(Provisioning.A_zimbraGalLdapSearchBase, "");
-        int pageSize = d.getIntAttr(Provisioning.A_zimbraGalLdapPageSize, 0);
-        LdapGalMapRules rules = getGalRules(d);
-        String filter = d.getAttr(autoComplete ? Provisioning.A_zimbraGalAutoCompleteLdapFilter : Provisioning.A_zimbraGalLdapFilter);
+        GalOp galOp;
+        if (autoComplete)
+            galOp = GalOp.autocomplete;
+        else if (token != null)
+            galOp = GalOp.sync;
+        else
+            galOp = GalOp.search;
+        GalParams.ExternalGalParams galParams = new GalParams.ExternalGalParams(domain, galOp);
+        
+        LdapGalMapRules rules = getGalRules(domain);
         String[] galAttrList = rules.getLdapAttrs();
         try {
-            LdapGalCredential credential = LdapGalCredential.init(authMech, bindDn, bindPassword, krb5Principal, krb5Keytab);
-            return LdapUtil.searchLdapGal(url, credential, pageSize, searchBase, filter, n, maxResults, rules, token);
+            return LdapUtil.searchLdapGal(galParams.getUrl(), 
+                                          galParams.getCredential(), 
+                                          galParams.getPageSize(), 
+                                          galParams.getSearchBase(), 
+                                          galParams.getFilter(), 
+                                          n, 
+                                          maxResults, 
+                                          rules, 
+                                          token);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to search GAL", e);
         }
