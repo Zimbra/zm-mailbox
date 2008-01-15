@@ -647,4 +647,12 @@ public class Alarm {
         else
             return mTriggerRelative.addToTime(instStart);
     }
+    
+    public ParsedDuration getTriggerRelative() {
+    	return mTriggerRelative;
+    }
+    
+    public ParsedDuration getTriggerAbsolute() {
+    	return mTriggerAbsolute;
+    }
 }
