@@ -38,9 +38,48 @@ import com.zimbra.common.soap.Element;
  */
 public class Alarm {
 
-    private static enum Action { DISPLAY, AUDIO, EMAIL, PROCEDURE };
-    private static enum TriggerType { RELATIVE, ABSOLUTE };
-    private static enum TriggerRelated { START, END };
+    private static enum Action {
+        DISPLAY, AUDIO, EMAIL, PROCEDURE,
+        // Yahoo calendar reminder custom actions
+        X_YAHOO_ACTION_IM, X_YAHOO_ACTION_MOBILE;
+
+        public static Action lookup(String str) {
+            if (str != null) {
+                try {
+                    str = str.replace('-', '_').toUpperCase();
+                    return Action.valueOf(str);
+                } catch (IllegalArgumentException e) {}
+            }
+            return null;
+        }
+    };
+    private static enum TriggerType {
+        RELATIVE, ABSOLUTE;
+
+        public static TriggerType lookup(String str) {
+            if (str != null) {
+                try {
+                    str = str.replace('-', '_').toUpperCase();
+                    return TriggerType.valueOf(str);
+                } catch (IllegalArgumentException e) {}
+            }
+            return null;
+        }
+    };
+
+    private static enum TriggerRelated {
+        START, END;
+    
+        public static TriggerRelated lookup(String str) {
+            if (str != null) {
+                try {
+                    str = str.replace('-', '_').toUpperCase();
+                    return TriggerRelated.valueOf(str);
+                } catch (IllegalArgumentException e) {}
+            }
+            return null;
+        }
+    };
 
     // ACTION
     private Action mAction;
@@ -172,7 +211,9 @@ public class Alarm {
         }
         if (mAttach != null)
             mAttach.toXml(alarm);
-        if (Action.EMAIL.equals(mAction)) {
+        if (Action.EMAIL.equals(mAction) ||
+            Action.X_YAHOO_ACTION_IM.equals(mAction) ||
+            Action.X_YAHOO_ACTION_MOBILE.equals(mAction)) {
             Element summary = alarm.addElement(MailConstants.E_CAL_ALARM_SUMMARY);
             if (mSummary != null)
                 summary.setText(mSummary);
@@ -218,12 +259,10 @@ public class Alarm {
 
         String val;
         val = alarmElem.getAttribute(MailConstants.A_CAL_ALARM_ACTION);
-        try {
-            action = Action.valueOf(val);
-        } catch (IllegalArgumentException e) {
+        action = Action.lookup(val);
+        if (action == null)
             throw ServiceException.INVALID_REQUEST(
-                    "Invalid " + MailConstants.A_CAL_ALARM_ACTION + " value " + val, e);
-        }
+                    "Invalid " + MailConstants.A_CAL_ALARM_ACTION + " value " + val, null);
         if (!actionAllowed(action))
             return null;
 
@@ -232,12 +271,11 @@ public class Alarm {
         if (triggerRelativeElem != null) {
             triggerType = TriggerType.RELATIVE;
             String related = triggerRelativeElem.getAttribute(MailConstants.A_CAL_ALARM_RELATED, null);
-            try {
-                if (related != null)
-                    triggerRelated = TriggerRelated.valueOf(related);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST(
-                        "Invalid " + MailConstants.A_CAL_ALARM_RELATED + " value " + val, e);
+            if (related != null) {
+                triggerRelated = TriggerRelated.lookup(related);
+                if (triggerRelated == null)
+                    throw ServiceException.INVALID_REQUEST(
+                            "Invalid " + MailConstants.A_CAL_ALARM_RELATED + " value " + val, null);
             }
             triggerRelative = ParsedDuration.parse(triggerRelativeElem);
         } else {
@@ -329,7 +367,9 @@ public class Alarm {
         if (mAttach != null)
             comp.addProperty(mAttach.toZProperty());
 
-        if (Action.EMAIL.equals(mAction)) {
+        if (Action.EMAIL.equals(mAction) ||
+                Action.X_YAHOO_ACTION_IM.equals(mAction) ||
+                Action.X_YAHOO_ACTION_MOBILE.equals(mAction)) {
             String s = mSummary;
             if (s == null)
                 s = "Reminder";
@@ -376,11 +416,9 @@ public class Alarm {
             switch (tok) {
             case ACTION:
                 if (val != null) {
-                    try {
-                        action = Action.valueOf(val);
-                    } catch (IllegalArgumentException e) {
-                        throw ServiceException.INVALID_REQUEST("Invalid ACTION value " + val, e);
-                    }
+                    action = Action.lookup(val);
+                    if (action == null)
+                        throw ServiceException.INVALID_REQUEST("Invalid ACTION value " + val, null);
                     if (!actionAllowed(action))
                         return null;
                 }
@@ -396,11 +434,10 @@ public class Alarm {
                     ZParameter related = prop.getParameter(ICalTok.RELATED);
                     if (related != null) {
                         String rel = related.getValue();
-                        try {
-                            if (val != null)
-                                triggerRelated = TriggerRelated.valueOf(rel);
-                        } catch (IllegalArgumentException e) {
-                            throw ServiceException.INVALID_REQUEST("Invalid RELATED value " + rel, e);
+                        if (rel != null) {
+                            triggerRelated = TriggerRelated.lookup(rel);
+                            if (triggerRelated == null)
+                                throw ServiceException.INVALID_REQUEST("Invalid RELATED value " + rel, null);
                         }
                     }
                     triggerRelative = ParsedDuration.parse(val);
@@ -481,7 +518,7 @@ public class Alarm {
         case AUDIO: str = "a"; break;
         case EMAIL: str = "e"; break;
         case PROCEDURE: str = "p"; break;
-        default: str = "d";
+        default: str = action.toString();
         }
         return str;
     }
@@ -496,7 +533,10 @@ public class Alarm {
         case 'a': action = Action.AUDIO; break;
         case 'e': action = Action.EMAIL; break;
         case 'p': action = Action.PROCEDURE; break;
-        default: action = Action.DISPLAY;
+        default:
+            action = Action.lookup(abbrev);
+            if (action == null)
+                action = Action.DISPLAY;
         }
         return action;
     }
@@ -652,7 +692,7 @@ public class Alarm {
     	return mTriggerRelative;
     }
     
-    public ParsedDuration getTriggerAbsolute() {
+    public ParsedDateTime getTriggerAbsolute() {
     	return mTriggerAbsolute;
     }
 }

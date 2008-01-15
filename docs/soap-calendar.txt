@@ -285,7 +285,7 @@
              </alarm>
            ]*
            [
-             <alarm action="EMAIL">
+             <alarm action="EMAIL | X-YAHOO-ACTION-IM | X-YAHOO-ACTION-MOBILE">
                <trigger/>      // same as in DISPLAY alarm
                [<repeat/>]     // same as in DISPLAY alarm
                <desc>{email body}</desc>
