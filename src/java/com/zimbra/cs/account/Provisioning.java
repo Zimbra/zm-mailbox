@@ -2015,6 +2015,8 @@ public abstract class Provisioning {
     public abstract List getAllAccounts(Domain d) throws ServiceException;
     
     public abstract void getAllAccounts(Domain d, NamedEntry.Visitor visitor) throws ServiceException;
+    
+    public abstract void getAllAccounts(Domain d, Server s, NamedEntry.Visitor visitor) throws ServiceException;
 
     public abstract List getAllCalendarResources(Domain d) throws ServiceException;
 

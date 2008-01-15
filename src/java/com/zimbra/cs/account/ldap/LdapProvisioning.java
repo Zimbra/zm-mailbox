@@ -29,6 +29,7 @@ import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Account.CalendarUserType;
@@ -37,6 +38,7 @@ import com.zimbra.cs.account.AccountCache;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
+import com.zimbra.cs.account.Provisioning.SearchOptions;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
@@ -2738,7 +2740,7 @@ public class LdapProvisioning extends Provisioning {
        * @param vars should have a key which is a String, and a value which is also a String.
        * @return the formatted string
        */
-      static String expandStr(String fmt, Map vars) {
+      public static String expandStr(String fmt, Map vars) {
          if (fmt == null || fmt.equals(""))
              return fmt;
          
@@ -3479,6 +3481,20 @@ public class LdapProvisioning extends Provisioning {
     public void getAllAccounts(Domain d, NamedEntry.Visitor visitor) throws ServiceException {
         LdapDomain ld = (LdapDomain) d;
         searchObjects(mDIT.filterAccountsByDomain(d, false), null, mDIT.domainDNToAccountSearchDN(ld.getDN()), Provisioning.SA_ACCOUNT_FLAG, visitor, 0);
+    }
+    
+    @Override
+    public void getAllAccounts(Domain d, Server s, NamedEntry.Visitor visitor) throws ServiceException {
+        LdapDomain ld = (LdapDomain) d;
+        String filter = mDIT.filterAccountsByDomain(d, false);
+        if (s != null) {
+            String serverFilter = "(" + Provisioning.A_zimbraMailHost + "=" + s.getAttr(Provisioning.A_zimbraServiceHostname) + ")";
+            if (StringUtil.isNullOrEmpty(filter))
+                filter = serverFilter;
+            else
+                filter = "(&" + serverFilter + filter + ")";
+        }
+        searchObjects(filter, null, mDIT.domainDNToAccountSearchDN(ld.getDN()), Provisioning.SA_ACCOUNT_FLAG, visitor, 0);
     }
 
     @Override

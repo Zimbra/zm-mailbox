@@ -207,6 +207,7 @@ public class TestProvisioning extends TestCase {
             sNeedLdapPaging.add("getAllAdminAccounts");
             sNeedLdapPaging.add("getAllAccounts_domain");
             sNeedLdapPaging.add("getAllAccounts_domain_visitor");
+            sNeedLdapPaging.add("getAllAccounts_domain_server_visitor");
             sNeedLdapPaging.add("getAllCalendarResources_domain");
             sNeedLdapPaging.add("getAllCalendarResources_domain_visitor");
             sNeedLdapPaging.add("getAllDistributionLists");
@@ -411,7 +412,7 @@ public class TestProvisioning extends TestCase {
         return entry;
     }
     
-    private Cos cosTest() throws Exception {
+    private String cosTest() throws Exception {
         System.out.println("Testing cos");
         
         Cos entry = mProv.createCos(COS_NAME, new HashMap<String, Object>());
@@ -432,10 +433,10 @@ public class TestProvisioning extends TestCase {
         mProv.renameCos(entry.getId(), NEW_NAME);
         mProv.renameCos(entry.getId(), COS_NAME);
                         
-        return entry;
+        return entry.getName();
     }
     
-    private Domain[] domainTest() throws Exception {
+    private String[] domainTest() throws Exception {
         System.out.println("Testing domain");
         
         int numVirtualHosts = 500;
@@ -445,7 +446,7 @@ public class TestProvisioning extends TestCase {
         // test lots of zimbraVirtualHostname on a domain
         Set<String> virtualHosts = new HashSet<String>();
         for (int i=0; i<numVirtualHosts; i++) {
-            String virtualHostName = "vhost-" + i + ".com";
+            String virtualHostName = "vhost-" + i + "-" + TEST_ID + ".com";
             virtualHosts.add(virtualHostName);
         }
         attrs.put(Provisioning.A_zimbraVirtualHostname, virtualHosts.toArray(new String[0]));
@@ -456,7 +457,7 @@ public class TestProvisioning extends TestCase {
         entryGot = mProv.get(Provisioning.DomainBy.name, DOMAIN_NAME);
         TestProvisioningUtil.verifySameEntry(entry, entryGot);
         for (int i=0; i<numVirtualHosts; i++) {
-            String virtualHostName = "vhost-" + i + ".com";
+            String virtualHostName = "vhost-" + i + "-" + TEST_ID + ".com";
             entryGot = mProv.get(Provisioning.DomainBy.virtualHostname, virtualHostName);
             TestProvisioningUtil.verifySameEntry(entry, entryGot);
         }
@@ -471,7 +472,7 @@ public class TestProvisioning extends TestCase {
         // set our domain as the default domain
         setDefaultDomain(DOMAIN_NAME);
                 
-        return new Domain[]{entry, otherEntry, specialCharEntry};
+        return new String[]{entry.getName(), otherEntry.getName(), specialCharEntry.getName()};
     }
     
     private void mimeTest() throws Exception {
@@ -721,6 +722,14 @@ public class TestProvisioning extends TestCase {
         if (!Flag.needLdapPaging("getAllAccounts_domain_visitor")) {
             TestVisitor visitor = new TestVisitor();
             mProv.getAllAccounts(domain, visitor);
+            TestProvisioningUtil.verifyEntries(visitor.visited(), new NamedEntry[]{entry, adminAcct}, mCustomProvTester.verifyAccountCountForDomainBasedSearch());
+        }
+        
+        // get all accounts in a domain and on a server, visitor version
+        if (!Flag.needLdapPaging("getAllAccounts_domain_server_visitor")) {
+            TestVisitor visitor = new TestVisitor();
+            Server server = mProv.getLocalServer();
+            mProv.getAllAccounts(domain, server, visitor);
             TestProvisioningUtil.verifyEntries(visitor.visited(), new NamedEntry[]{entry, adminAcct}, mCustomProvTester.verifyAccountCountForDomainBasedSearch());
         }
         
@@ -1648,30 +1657,30 @@ public class TestProvisioning extends TestCase {
         
         healthTest();
         Config config = configTest();
-        Cos cos = cosTest();
-        Domain[] domains = domainTest();
-        Domain domain = domains[0];
-        Domain otherDomain = domains[1];
-        Domain specialCharDomain = domains[2];
+        String cosName = cosTest();
+        String[] domainNames = domainTest();
+        String domainName = domainNames[0];
+        String otherDomainName = domainNames[1];
+        String specialCharDomainName = domainNames[2];
         mimeTest();
         Server server = serverTest();
         Zimlet zimlet = zimletTest();    
         
         Account adminAccount = adminAccountTest();
-        Account accounts[] = accountTest(adminAccount, cos, domain, otherDomain);
+        Account accounts[] = accountTest(adminAccount, mProv.get(Provisioning.CosBy.name, cosName), mProv.get(Provisioning.DomainBy.name, domainName), mProv.get(Provisioning.DomainBy.name, otherDomainName));
         Account account = accounts[0];
         authTest(account);
         passwordTest(account);
-        CalendarResource calendarResource = calendarResourceTest(cos, domain);
+        CalendarResource calendarResource = calendarResourceTest(mProv.get(Provisioning.CosBy.name, cosName), mProv.get(Provisioning.DomainBy.name, domainName));
         
-        DistributionList[] distributionLists = distributionListTest(domain);
+        DistributionList[] distributionLists = distributionListTest(mProv.get(Provisioning.DomainBy.name, domainName));
         DataSource dataSource = dataSourceTest(account);
         Identity identity = identityTest(account);
         signatureTest(account);
         
         entryTest(account);
-        galTest(domain);
-        searchTest(domain);
+        galTest(mProv.get(Provisioning.DomainBy.name, domainName));
+        searchTest(mProv.get(Provisioning.DomainBy.name, domainName));
         
         Domain aliasTestDomain = aliasTest();
         familyTest();
@@ -1712,11 +1721,11 @@ public class TestProvisioning extends TestCase {
             mProv.deleteAccount(acct.getId());
         mProv.deleteAccount(adminAccount.getId());
         
-        mProv.deleteDomain(domain.getId());
-        mProv.deleteDomain(otherDomain.getId());
-        mProv.deleteDomain(specialCharDomain.getId());
+        mProv.deleteDomain(mProv.get(Provisioning.DomainBy.name, domainName).getId());
+        mProv.deleteDomain(mProv.get(Provisioning.DomainBy.name, otherDomainName).getId());
+        mProv.deleteDomain(mProv.get(Provisioning.DomainBy.name, specialCharDomainName).getId());
         mProv.deleteDomain(aliasTestDomain.getId());
-        mProv.deleteCos(cos.getId());
+        mProv.deleteCos(mProv.get(Provisioning.CosBy.name, cosName).getId());
         
         System.out.println("\nAll done");
         return TEST_ID;

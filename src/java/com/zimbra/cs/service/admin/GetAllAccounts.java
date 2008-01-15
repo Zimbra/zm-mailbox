@@ -35,6 +35,8 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.account.Provisioning.ServerBy;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -60,6 +62,22 @@ public class GetAllAccounts extends AdminDocumentHandler {
 	    
         Element response = null;
 
+        Element s = request.getOptionalElement(AdminConstants.E_SERVER);
+        Server server = null;
+        if (s != null) {
+            String key = s.getAttribute(AdminConstants.A_BY);
+            String value = s.getText();
+            if (key.equals(BY_NAME)) 
+                server = prov.get(ServerBy.name, value);
+            else if (key.equals(BY_ID))
+                server = prov.get(ServerBy.id, value);
+            else
+                throw ServiceException.INVALID_REQUEST("unknown value for server by: "+key, null);
+                
+            if (server == null)
+                throw AccountServiceException.NO_SUCH_SERVER(value);
+        }
+        
         Element d = request.getOptionalElement(AdminConstants.E_DOMAIN);
         if (d != null || isDomainAdminOnly(lc)) {
             
@@ -73,7 +91,7 @@ public class GetAllAccounts extends AdminDocumentHandler {
             } else if (key.equals(BY_ID)) {
                 domain = prov.get(DomainBy.id, value);
             } else {
-                throw ServiceException.INVALID_REQUEST("unknown value for by: "+key, null);
+                throw ServiceException.INVALID_REQUEST("unknown value for domain by: "+key, null);
             }
 	    
             if (domain == null)
@@ -83,7 +101,7 @@ public class GetAllAccounts extends AdminDocumentHandler {
                 throw ServiceException.PERM_DENIED("can not access domain"); 
 
             response = lc.createElement(getResponseQName());
-            doDomain(response, domain);
+            doDomain(response, domain, server);
 
         } else {
             response = lc.createElement(getResponseQName());
@@ -91,10 +109,10 @@ public class GetAllAccounts extends AdminDocumentHandler {
             if (domains != null) {
 	            for (Iterator dit=domains.iterator(); dit.hasNext(); ) {
 	                Domain domain = (Domain) dit.next();
-	                doDomain(response, domain);                
+	                doDomain(response, domain, server);                
 	            }
             } else { //domains not supported, for now only offline
-            	doDomain(response, null);
+            	doDomain(response, null, server);
             }
         }
         return response;        
@@ -104,12 +122,12 @@ public class GetAllAccounts extends AdminDocumentHandler {
         return AdminConstants.GET_ALL_ACCOUNTS_RESPONSE;
     }
 
-    protected void doDomain(final Element e, Domain d) throws ServiceException {
+    protected void doDomain(final Element e, Domain d, Server s) throws ServiceException {
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
             public void visit(com.zimbra.cs.account.NamedEntry entry) {
                 ToXML.encodeAccountOld(e, (Account) entry);
             }
         };
-        Provisioning.getInstance().getAllAccounts(d, visitor);
+        Provisioning.getInstance().getAllAccounts(d, s, visitor);
     }
 }
