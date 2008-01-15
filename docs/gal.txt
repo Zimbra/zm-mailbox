@@ -1,0 +1,53 @@
+GAL attributes usage
+
+Attribute                                 scope                  For              GAL op
+                                                                 - zimbra         - autocomplete
+                                                                 - external       - serarch
+                                                                 - both           - sync
+                                                                                  - all
+======================================================================================================================================================================
+zimbraHideInGal                           account,DL,CR          zimbra           all
+zimbraFeatureGalEnabled                   account,cos            both             search,sync
+zimbraFeatureGalAutoCompleteEnabled       account,cos            both             autocomplete
+zimbraPrefGalAutoCompleteEnabled          account,cos            both             autocomplete
+zimbraGalMode                             domain                 both             all
+zimbraGalLdapFilterDef                    globalConfig           both             all
+zimbraGalLdapAttrMap                      domain,globalConfig    both             all
+zimbraGalMaxResults                       domain,globalConfig    both             autocomplete, search (for sync, system does not specify a max when searching LDAP)
+
+zimbraGalLdapPageSize                     domain,globalConfig    both             autocomplete, search, (sync if zimbraGalSyncLdapPageSize is not set)
+zimbraGalSyncLdapPageSize                 domain,globalConfig    both             sync
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+zimbraGalInternalSearchBase               domain,globalConfig    zimbra           autocomplete, search, (sync if zimbraGalSyncInternalSearchBase is not set)
+zimbraGalSyncInternalSearchBase           domain,globalConfig    zimbra           sync
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+zimbraGalLdapURL                          domain                 external         autocomplete, search, (sync if zimbraGalSyncLdapURL is not set)
+zimbraGalSyncLdapURL                      domain                 external         sync
+
+zimbraGalLdapSearchBase                   domain                 external         autocomplete, search, (sync if zimbraGalSyncLdapSearchBase is not set)
+zimbraGalSyncLdapSearchBase               domain                 external         sync
+
+zimbraGalLdapAuthMech                     domain                 external         autocomplete, search, (sync if zimbraGalSyncLdapAuthMech is not set)
+zimbraGalSyncLdapAuthMech                 domain                 external         sync
+
+zimbraGalLdapBindDn                       domain                 external         autocomplete, search, (sync if zimbraGalSyncLdapBindDn is not set)
+zimbraGalSyncLdapBindDn                   domain                 external         sync
+
+zimbraGalLdapBindPassword                 domain                 external         autocomplete, search, (sync if zimbraGalSyncLdapBindPassword is not set)
+zimbraGalSyncLdapBindPassword             domain                 external         sync
+
+zimbraGalLdapKerberos5Principal           domain                 external         autocomplete, search, (sync if zimbraGalSyncLdapKerberos5Principal is not set)
+zimbraGalSyncLdapKerberos5Principal       domain                 external         sync
+
+zimbraGalLdapKerberos5Keytab              domain                 external         autocomplete, search, (sync if zimbraGalSyncLdapKerberos5Keytab is not set)
+zimbraGalSyncLdapKerberos5Keytab          domain                 external         sync
+
+zimbraGalAutoCompleteLdapFilter           domain,globalConfig    external         autocomplete
+zimbraGalLdapFilter                       domain                 external         search, (sync if zimbraGalLdapSyncFilter is not set)
+zimbraGalSyncLdapFilter                   domain                 external         sync
+
+
+
+

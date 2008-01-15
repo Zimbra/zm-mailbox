@@ -60,7 +60,7 @@ public class TestGal extends TestCase {
     private Domain mDomain;
     
     private boolean DEBUG = true;
-    private boolean SKIP_ACCT_CHECKING = true;  // to save time if we are sure accounts are OK
+    private boolean SKIP_ACCT_CHECKING = false;  // to save time if we are sure accounts are OK
     
     // too bad SyncGal does not work with SoapProvisioning, because it calls searchGal but that does not return token.  :(
     // don't run SOAP for now.
@@ -224,7 +224,7 @@ public class TestGal extends TestCase {
     }
     
     private void setupSearch(String galMode, int pageSize, int domainLimit) throws Exception {
-        System.out.format("   setupSearch: galMode=%s, pageSize=%d, domainLimit=%d\n", galMode, pageSize, domainLimit);
+        // System.out.format("   setupSearch: galMode=%s, pageSize=%d, domainLimit=%d\n", galMode, pageSize, domainLimit);
         Domain domain = mProv.get(DomainBy.name, DOMAIN_NAME);
         assertNotNull(domain);
         
@@ -233,6 +233,18 @@ public class TestGal extends TestCase {
         attrs.put(Provisioning.A_zimbraGalLdapPageSize, ""+pageSize);
         attrs.put(Provisioning.A_zimbraGalMaxResults, ""+domainLimit);
         attrs.put(Provisioning.A_zimbraGalLdapFilter, "zimbraAccounts");
+        mProv.modifyAttrs(domain, attrs);
+    }
+    
+    private void setupSync(String galMode, int pageSize, int domainLimit) throws Exception {
+        // System.out.format("   setupSync: galMode=%s, pageSize=%d, domainLimit=%d\n", galMode, pageSize, domainLimit);
+        Domain domain = mProv.get(DomainBy.name, DOMAIN_NAME);
+        assertNotNull(domain);
+        
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraGalMode, galMode);
+        attrs.put(Provisioning.A_zimbraGalSyncLdapPageSize, ""+pageSize);
+        attrs.put(Provisioning.A_zimbraGalMaxResults, ""+domainLimit);
         mProv.modifyAttrs(domain, attrs);
     }
     
@@ -381,22 +393,22 @@ public class TestGal extends TestCase {
             System.out.format("syncGal: %s, page size = %d\n", galMode, pageSize);
         
         if (LDAP_SERVER_SIZE_LIMIT == UNLIMITED) {
-            setupSearch(galMode, pageSize, UNLIMITED);
+            setupSync(galMode, pageSize, UNLIMITED);
             syncGal(NUM_ACCOUNTS);
             
-            setupSearch(galMode, pageSize, more(NUM_ACCOUNTS));
+            setupSync(galMode, pageSize, more(NUM_ACCOUNTS));
             syncGal(NUM_ACCOUNTS);
             
-            setupSearch(galMode, pageSize, less(NUM_ACCOUNTS));
+            setupSync(galMode, pageSize, less(NUM_ACCOUNTS));
             syncGal(less(NUM_ACCOUNTS));
         } else {
-            setupSearch(galMode, pageSize, LDAP_SERVER_SIZE_LIMIT);
+            setupSync(galMode, pageSize, LDAP_SERVER_SIZE_LIMIT);
             syncGal(LDAP_SERVER_SIZE_LIMIT);
             
-            setupSearch(galMode, pageSize, more(LDAP_SERVER_SIZE_LIMIT));
+            setupSync(galMode, pageSize, more(LDAP_SERVER_SIZE_LIMIT));
             syncGal(LDAP_SERVER_SIZE_LIMIT);
             
-            setupSearch(galMode, pageSize, less(LDAP_SERVER_SIZE_LIMIT));
+            setupSync(galMode, pageSize, less(LDAP_SERVER_SIZE_LIMIT));
             syncGal(less(LDAP_SERVER_SIZE_LIMIT));
         }
     }
