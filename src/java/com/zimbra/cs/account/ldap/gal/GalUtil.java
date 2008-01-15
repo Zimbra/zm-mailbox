@@ -41,7 +41,7 @@ public class GalUtil {
         String query = null;
         
         Map<String, String> vars = new HashMap<String, String>();
-        vars.put("s", key);
+        
         
         String tokenize = null;
         if (galOp == GalOp.autocomplete)
@@ -61,6 +61,8 @@ public class GalUtil {
                     throw ServiceException.FAILURE("invalid attribute value for tokenize key: " + tokenize, null);
                     
                 for (String t : tokens) {
+                    vars.clear();
+                    vars.put("s", t);
                     q = q + LdapProvisioning.expandStr(filterTemplate, vars);
                 }
                 q = q + ")";
@@ -68,8 +70,10 @@ public class GalUtil {
             }
         }
         
-        if (query == null)
+        if (query == null) {
+            vars.put("s", key);
             query = LdapProvisioning.expandStr(filterTemplate, vars);
+        }
         
         return query;
     }
