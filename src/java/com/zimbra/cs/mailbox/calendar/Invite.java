@@ -1723,6 +1723,7 @@ public class Invite {
                     } catch (ParseException e) {
                         throw ServiceException.PARSE_ERROR(
                             "Unable to parse iCalendar data: " + e.getMessage(), e);
+                      
                     }
                     
                     break;
@@ -1932,6 +1933,13 @@ public class Invite {
     public Iterator<Alarm> alarmsIterator() { return mAlarms.iterator(); }
     public void addAlarm(Alarm alarm) {
         mAlarms.add(alarm);
+    }
+    
+    /**
+     * Clear this Invite's alarms
+     */
+    public void clearAlarms() {
+    	mAlarms.clear();
     }
 
     public Iterator<ZProperty> xpropsIterator() { return mXProps.iterator(); }
