@@ -112,9 +112,9 @@ public class ToXML {
         } else if (item instanceof Conversation) {
             return encodeConversationSummary(parent, ifmt, octxt, (Conversation) item, null, OutputParticipants.PUT_SENDERS, fields, false);
         } else if (item instanceof WikiItem) {
-            return encodeWiki(parent, ifmt, octxt, (WikiItem) item, fields, -1);
+            return encodeWiki(parent, ifmt, octxt, (WikiItem) item, fields);
         } else if (item instanceof Document) {
-            return encodeDocument(parent, ifmt, octxt, (Document) item, fields, -1);
+            return encodeDocument(parent, ifmt, octxt, (Document) item, fields);
         } else if (item instanceof Message) {
             OutputParticipants output = (fields == NOTIFY_FIELDS ? OutputParticipants.PUT_BOTH : OutputParticipants.PUT_SENDERS);
             return encodeMessageSummary(parent, ifmt, octxt, (Message) item, output, fields);
@@ -1688,28 +1688,28 @@ public class ToXML {
         return elem;
     }
 
-    public static Element encodeWiki(Element parent, ItemIdFormatter ifmt, OperationContext octxt, WikiItem wiki, int rev) {
-        return encodeWiki(parent, ifmt, octxt, wiki, NOTIFY_FIELDS, rev);
+    public static Element encodeWiki(Element parent, ItemIdFormatter ifmt, OperationContext octxt, WikiItem wiki) {
+        return encodeWiki(parent, ifmt, octxt, wiki, NOTIFY_FIELDS);
     }
 
-    public static Element encodeWiki(Element parent, ItemIdFormatter ifmt, OperationContext octxt, WikiItem wiki, int fields, int rev) {
+    public static Element encodeWiki(Element parent, ItemIdFormatter ifmt, OperationContext octxt, WikiItem wiki, int fields) {
         Element m = parent.addElement(MailConstants.E_WIKIWORD);
-        encodeDocumentCommon(m, ifmt, octxt, wiki, fields, rev);
+        encodeDocumentCommon(m, ifmt, octxt, wiki, fields);
         return m;
     }
 
-    public static Element encodeDocument(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Document doc, int rev) {
-        return encodeDocument(parent, ifmt, octxt, doc, NOTIFY_FIELDS, rev);
+    public static Element encodeDocument(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Document doc) {
+        return encodeDocument(parent, ifmt, octxt, doc, NOTIFY_FIELDS);
     }
 
-    public static Element encodeDocument(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Document doc, int fields, int rev) {
+    public static Element encodeDocument(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Document doc, int fields) {
         Element m = parent.addElement(MailConstants.E_DOC);
-        encodeDocumentCommon(m, ifmt, octxt, doc, fields, rev);
+        encodeDocumentCommon(m, ifmt, octxt, doc, fields);
         m.addAttribute(MailConstants.A_CONTENT_TYPE, doc.getContentType());
         return m;
     }
 
-    public static Element encodeDocumentCommon(Element m, ItemIdFormatter ifmt, OperationContext octxt, Document doc, int fields, int version) {
+    public static Element encodeDocumentCommon(Element m, ItemIdFormatter ifmt, OperationContext octxt, Document doc, int fields) {
         m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(doc));
         if (needToOutput(fields, Change.MODIFIED_NAME)) {
         	m.addAttribute(MailConstants.A_NAME, doc.getName());

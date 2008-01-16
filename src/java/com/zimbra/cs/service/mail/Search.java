@@ -358,11 +358,10 @@ public class Search extends MailDocumentHandler  {
     }
 
     Element addDocumentHit(DocumentHit dh, Element response, OperationContext octxt, ItemIdFormatter ifmt) throws ServiceException {
-        int ver = dh.getVersion();
         if (dh.getItemType() == MailItem.TYPE_DOCUMENT)
-            return ToXML.encodeDocument(response, ifmt, octxt, dh.getDocument(), ver);
+            return ToXML.encodeDocument(response, ifmt, octxt, dh.getDocument());
         else if (dh.getItemType() == MailItem.TYPE_WIKI)
-            return ToXML.encodeWiki(response, ifmt, octxt, (WikiItem)dh.getDocument(), ver);
+            return ToXML.encodeWiki(response, ifmt, octxt, (WikiItem)dh.getDocument());
         throw ServiceException.UNKNOWN_DOCUMENT("invalid document type "+dh.getItemType(), null);
     }
 
