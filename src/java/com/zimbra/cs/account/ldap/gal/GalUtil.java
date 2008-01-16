@@ -53,9 +53,9 @@ public class GalUtil {
             String tokens[] = key.split("\\s+");
             if (tokens.length > 1) {
                 String q;
-                if (Gal.TOKENIZE_KEY_AND.equals(tokenize)) {
+                if (GalConstants.TOKENIZE_KEY_AND.equals(tokenize)) {
                     q = "(&";
-                } else if (Gal.TOKENIZE_KEY_OR.equals(tokenize)) {
+                } else if (GalConstants.TOKENIZE_KEY_OR.equals(tokenize)) {
                     q = "(|";
                 } else
                     throw ServiceException.FAILURE("invalid attribute value for tokenize key: " + tokenize, null);
