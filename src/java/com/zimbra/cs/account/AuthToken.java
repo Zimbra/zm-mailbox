@@ -55,43 +55,45 @@ import com.zimbra.common.util.StringUtil;
  */
 public class AuthToken {
 
-	protected static final long DEFAULT_AUTH_LIFETIME = 60*60*12;
+	private static final long DEFAULT_AUTH_LIFETIME = 60*60*12;
     
     // TODO: config
-    protected static final int AUTHTOKEN_CACHE_SIZE = 5000;
+    private static final int AUTHTOKEN_CACHE_SIZE = 5000;
     
-    protected static final String C_ID  = "id";
+    private static final String C_ID  = "id";
     // original admin id
-    protected static final String C_AID  = "aid";    
-    protected static final String C_EXP = "exp";
-    protected static final String C_ADMIN = "admin";
-    protected static final String C_DOMAIN = "domain";    
-    protected static final String C_TYPE = "type";
-    protected static final String C_TYPE_ZIMBRA_USER = "zimbra";
-    protected static final String C_TYPE_EXTERNAL_USER = "external";
-    protected static final String C_EXTERNAL_USER_EMAIL = "email";
-    protected static final String C_DIGEST = "digest";
-    protected static final String C_MAILHOST = "mailhost";
+    private static final String C_AID  = "aid";    
+    private static final String C_EXP = "exp";
+    private static final String C_ADMIN = "admin";
+    private static final String C_DOMAIN = "domain";    
+    private static final String C_TYPE = "type";
+    private static final String C_TYPE_ZIMBRA_USER = "zimbra";
+    private static final String C_TYPE_EXTERNAL_USER = "external";
+    private static final String C_EXTERNAL_USER_EMAIL = "email";
+    private static final String C_DIGEST = "digest";
+    private static final String C_MAILHOST = "mailhost";
+    private static final String C_CC_ADMIN = "cc_admin";
     
-    protected static LRUMap mCache = new LRUMap(AUTHTOKEN_CACHE_SIZE);
+    private static LRUMap mCache = new LRUMap(AUTHTOKEN_CACHE_SIZE);
     
-    protected static Log mLog = LogFactory.getLog(AuthToken.class); 
+    private static Log mLog = LogFactory.getLog(AuthToken.class); 
     
-    protected String mAccountId;
-    protected String mAdminAccountId;    
-    protected long mExpires;
-    protected String mEncoded;
-    protected boolean mIsAdmin;
-    protected boolean mIsDomainAdmin;    
+    private String mAccountId;
+    private String mAdminAccountId;    
+    private long mExpires;
+    private String mEncoded;
+    private boolean mIsAdmin;
+    private boolean mIsDomainAdmin;
+    private boolean mIsCCAdmin;       
 //	private static AuthTokenKey mTempKey;
-    protected String mType;
-    protected String mExternalUserEmail;
-    protected String mDigest;
-    protected String mMailHostRoute;
+    private String mType;
+    private String mExternalUserEmail;
+    private String mDigest;
+    private String mMailHostRoute;
     
     public String toString() {
         return "AuthToken(acct="+mAccountId+" admin="+mAdminAccountId+" exp="
-        +mExpires+" isAdm="+mIsAdmin+" isDomAd="+mIsDomainAdmin+")";
+        +mExpires+" isAdm="+mIsAdmin+" isDomAd="+mIsDomainAdmin+" isCCAdmin="+mIsCCAdmin+")";
     }
     
     protected static AuthTokenKey getCurrentKey() throws AuthTokenException {
@@ -171,6 +173,8 @@ public class AuthToken {
             mExternalUserEmail = (String)map.get(C_EXTERNAL_USER_EMAIL);
             mDigest = (String)map.get(C_DIGEST);
             mMailHostRoute = (String)map.get(C_MAILHOST);
+            String icc = (String) map.get(C_CC_ADMIN);
+            mIsCCAdmin = "1".equals(icc);            
         } catch (ServiceException e) {
             throw new AuthTokenException("service exception", e);
         } catch (DecoderException e) {
@@ -209,7 +213,8 @@ public class AuthToken {
 		mExpires = expires;
         mIsAdmin = isAdmin && "TRUE".equals(acct.getAttr(Provisioning.A_zimbraIsAdminAccount));
         mIsDomainAdmin = isAdmin && "TRUE".equals(acct.getAttr(Provisioning.A_zimbraIsDomainAdminAccount));
-		mEncoded = null;
+        mIsCCAdmin = "TRUE".equals(acct.getAttr(Provisioning.A_zimbraIsCustomerCareAccount));
+        mEncoded = null;
 		if (acct instanceof ACL.GuestAccount) {
             mType = C_TYPE_EXTERNAL_USER;
             GuestAccount g = (ACL.GuestAccount) acct;
@@ -294,6 +299,10 @@ public class AuthToken {
         return mIsDomainAdmin;
     }
     
+    public boolean isCCAdmin() {
+        return mIsCCAdmin;
+    }
+    
     public boolean isZimbraUser() {
         return mType == null || mType.compareTo(C_TYPE_ZIMBRA_USER) == 0;
     }
@@ -317,6 +326,9 @@ public class AuthToken {
                 BlobMetaData.encodeMetaData(C_ADMIN, "1", encodedBuff);
             if (mIsDomainAdmin)
                 BlobMetaData.encodeMetaData(C_DOMAIN, "1", encodedBuff);
+            if (mIsCCAdmin)
+                BlobMetaData.encodeMetaData(C_CC_ADMIN, "1", encodedBuff);
+
             BlobMetaData.encodeMetaData(C_TYPE, mType, encodedBuff);
             BlobMetaData.encodeMetaData(C_EXTERNAL_USER_EMAIL, mExternalUserEmail, encodedBuff);
             BlobMetaData.encodeMetaData(C_DIGEST, mDigest, encodedBuff);
