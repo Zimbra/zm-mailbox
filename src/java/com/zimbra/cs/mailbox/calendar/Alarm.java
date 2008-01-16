@@ -214,8 +214,8 @@ public class Alarm {
         if (mAttach != null)
             mAttach.toXml(alarm);
         if (Action.EMAIL.equals(mAction) ||
-            Action.X_YAHOO_ACTION_IM.equals(mAction) ||
-            Action.X_YAHOO_ACTION_MOBILE.equals(mAction)) {
+            Action.X_YAHOO_CALENDAR_ACTION_IM.equals(mAction) ||
+            Action.X_YAHOO_CALENDAR_ACTION_MOBILE.equals(mAction)) {
             Element summary = alarm.addElement(MailConstants.E_CAL_ALARM_SUMMARY);
             if (mSummary != null)
                 summary.setText(mSummary);
@@ -370,8 +370,8 @@ public class Alarm {
             comp.addProperty(mAttach.toZProperty());
 
         if (Action.EMAIL.equals(mAction) ||
-                Action.X_YAHOO_ACTION_IM.equals(mAction) ||
-                Action.X_YAHOO_ACTION_MOBILE.equals(mAction)) {
+                Action.X_YAHOO_CALENDAR_ACTION_IM.equals(mAction) ||
+                Action.X_YAHOO_CALENDAR_ACTION_MOBILE.equals(mAction)) {
             String s = mSummary;
             if (s == null)
                 s = "Reminder";
