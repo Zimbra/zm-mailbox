@@ -186,7 +186,7 @@ public class DomainAccessManager extends AccessManager {
         return false;
     }
     
-    private void accessDomain(Account acct) throws ServiceException {
+    protected void accessDomain(Account acct) throws ServiceException {
         Domain domain = Provisioning.getInstance().getDomain(acct);
         accessDomain(domain);
     }
