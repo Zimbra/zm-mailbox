@@ -38,7 +38,7 @@ import com.zimbra.common.soap.Element;
  */
 public class Alarm {
 
-    private static enum Action {
+    public static enum Action {
         DISPLAY, AUDIO, EMAIL, PROCEDURE,
         // Yahoo calendar reminder custom actions
         X_YAHOO_ACTION_IM, X_YAHOO_ACTION_MOBILE;
@@ -53,7 +53,7 @@ public class Alarm {
             return null;
         }
     };
-    private static enum TriggerType {
+    public static enum TriggerType {
         RELATIVE, ABSOLUTE;
 
         public static TriggerType lookup(String str) {
@@ -67,7 +67,7 @@ public class Alarm {
         }
     };
 
-    private static enum TriggerRelated {
+    public static enum TriggerRelated {
         START, END;
     
         public static TriggerRelated lookup(String str) {
@@ -109,7 +109,9 @@ public class Alarm {
 
     public String getDescription() { return mDescription; }
     public int getRepeatCount() { return mRepeatCount; }
-
+    public Action getAction() { return mAction; }
+    public List<ZAttendee> getAttendees() { return mAttendees; }
+    
     public long getRepeatMillis() {
         if (mRepeatDuration == null)
             return mRepeatDuration.getDurationAsMsecs(new Date());
@@ -117,7 +119,7 @@ public class Alarm {
             return 0;
     }
 
-    private Alarm(Action action,
+    public Alarm(Action action,
                   TriggerType triggerType, TriggerRelated related,
                   ParsedDuration triggerRelative, ParsedDateTime triggerAbsolute,
                   ParsedDuration repeatDuration, int repeatCount,
