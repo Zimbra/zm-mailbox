@@ -228,7 +228,7 @@ public class UrlNamespace {
 	
 	private static class RemoteFolder {
 	    static final long AGE = 60L * 1000L;
-	    RemoteCollection folder;
+	    RemoteCalendarCollection folder;
 	    long ts;
 	    boolean isStale(long now) {
 	        return (ts + AGE) < now;
@@ -295,7 +295,7 @@ public class UrlNamespace {
                     }
                     if (remoteFolder == null) {
                         remoteFolder = new RemoteFolder();
-                        remoteFolder.folder = new RemoteCollection(ctxt, mp);
+                        remoteFolder.folder = new RemoteCalendarCollection(ctxt, mp);
                         remoteFolder.ts = now;
                         sApptSummariesMap.put(remoteId, remoteFolder);
                     }
@@ -326,13 +326,19 @@ public class UrlNamespace {
 		byte itemType = item.getType();
 		
 		try {
+			byte viewType;
 			switch (itemType) {
             case MailItem.TYPE_MOUNTPOINT :
-                resource = new RemoteCollection(ctxt, (Mountpoint)item);
+				Mountpoint mp = (Mountpoint) item;
+            	viewType = mp.getDefaultView();
+            	if (viewType == MailItem.TYPE_APPOINTMENT)
+            		resource = new RemoteCalendarCollection(ctxt, mp);
+            	else
+            		resource = new RemoteCollection(ctxt, mp);
                 break;
 			case MailItem.TYPE_FOLDER :
 				Folder f = (Folder) item;
-				byte viewType = f.getDefaultView();
+				viewType = f.getDefaultView();
 				if (f.getId() == Mailbox.ID_FOLDER_INBOX)
 					resource = new ScheduleInbox(ctxt, f);
 				else if (f.getId() == Mailbox.ID_FOLDER_SENT)

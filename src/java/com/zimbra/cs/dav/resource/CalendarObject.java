@@ -24,8 +24,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import javax.servlet.http.HttpServletResponse;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -178,7 +176,7 @@ public interface CalendarObject {
 	
 	public static class RemoteCalendarObject extends DavResource implements CalendarObject {
 
-	    public RemoteCalendarObject(String uri, String owner, ZAppointmentHit appt, RemoteCollection parent) {
+	    public RemoteCalendarObject(String uri, String owner, ZAppointmentHit appt, RemoteCalendarCollection parent) {
 	        super(CalendarPath.generate(uri, appt.getUid()), owner);
 	        mParent = parent;
 	        mUid = appt.getUid();
@@ -196,7 +194,7 @@ public interface CalendarObject {
             addProperty(CalDavProperty.getCalendarData(this));
 	    }
 
-	    public RemoteCalendarObject(String uri, String owner, String etag, RemoteCollection parent) {
+	    public RemoteCalendarObject(String uri, String owner, String etag, RemoteCalendarCollection parent) {
 	        super(uri, owner);
 	        mParent = parent;
 	        mEtag = etag;
@@ -207,7 +205,7 @@ public interface CalendarObject {
         public static String getEtag(ZAppointmentHit item) {
             return "\""+Long.toString(item.getModifiedSeq())+"-"+Long.toString(item.getModifiedDate())+"\"";
         }
-		private RemoteCollection mParent;
+		private RemoteCalendarCollection mParent;
 	    private String mRemoteId;
 	    private int mItemId;
 	    private String mUid;
