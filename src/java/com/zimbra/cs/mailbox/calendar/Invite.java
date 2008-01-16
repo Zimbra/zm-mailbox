@@ -1316,6 +1316,10 @@ public class Invite {
         return mAttendees;
     }
     
+    public void clearAttendees() {
+    	mAttendees.clear();
+    }
+    
     public void addAttendee(ZAttendee at) {
         mAttendees.add(at);
     }

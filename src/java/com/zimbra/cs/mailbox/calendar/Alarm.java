@@ -41,7 +41,7 @@ public class Alarm {
     public static enum Action {
         DISPLAY, AUDIO, EMAIL, PROCEDURE,
         // Yahoo calendar reminder custom actions
-        X_YAHOO_ACTION_IM, X_YAHOO_ACTION_MOBILE;
+        X_YAHOO_CALENDAR_ACTION_IM, X_YAHOO_CALENDAR_ACTION_MOBILE;
 
         public static Action lookup(String str) {
             if (str != null) {
