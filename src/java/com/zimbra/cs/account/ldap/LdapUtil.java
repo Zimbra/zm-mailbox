@@ -27,9 +27,9 @@ import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.krb5.Krb5Login;
-import com.zimbra.cs.account.ldap.gal.GalOp;
-import com.zimbra.cs.account.ldap.gal.GalParams;
-import com.zimbra.cs.account.ldap.gal.GalUtil;
+import com.zimbra.cs.account.gal.GalOp;
+import com.zimbra.cs.account.gal.GalParams;
+import com.zimbra.cs.account.gal.GalUtil;
 import com.zimbra.cs.stats.ZimbraPerf;
 import org.apache.commons.codec.binary.Base64;
 

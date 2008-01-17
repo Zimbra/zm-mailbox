@@ -1,4 +1,4 @@
-package com.zimbra.cs.account.ldap.gal;
+package com.zimbra.cs.account.gal;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Domain;
