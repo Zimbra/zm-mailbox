@@ -40,6 +40,8 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
+import com.zimbra.cs.account.ldap.gal.GalConstants;
+import com.zimbra.cs.mailbox.Contact;
 
 public class TestGal extends TestCase {
     private String TEST_ID = TestProvisioningUtil.genTestId();
@@ -56,8 +58,8 @@ public class TestGal extends TestCase {
     // set LDAP_SERVER_SIZE_LIMIT to either UNLIMITED or LIMITED and set slapd.conf accordingly, then restart ldap server
     private static int LDAP_SERVER_SIZE_LIMIT = UNLIMITED; 
     private String DOMAIN_NAME = TestProvisioningUtil.baseDomainName(TEST_NAME, null);
+    private String TOKENIZE_TEST_DOMAIN_NAME = TestProvisioningUtil.baseDomainName(TEST_NAME + "-tokenize", null);
     private Provisioning mProv;
-    private Domain mDomain;
     
     private boolean DEBUG = true;
     private boolean SKIP_ACCT_CHECKING = false;  // to save time if we are sure accounts are OK
@@ -156,40 +158,75 @@ public class TestGal extends TestCase {
         return ACCT_NAME_PREFIX + "-" + index + "@" + DOMAIN_NAME;
     }
     
-    public TestGal() throws Exception {
-        mProv = Provisioning.getInstance();
-        
+    /*
+     * create a domain and make it ready for external GAL uisng Zimbra LDAP
+     */
+    private void setupDomain(String domainName, String domainBaseDn) throws Exception {
         // create the domain and accounts if they have not been created yet
-        mDomain = mProv.get(DomainBy.name, DOMAIN_NAME);
-        if (mDomain == null) {
+        Domain domain = mProv.get(DomainBy.name, domainName);
+        if (domain == null) {
             Map<String, Object> attrs = new HashMap<String, Object>();
             // setup zimbra OpenLDAP for external GAL
             attrs.put(Provisioning.A_zimbraGalLdapURL, "ldap://localhost:389");
             attrs.put(Provisioning.A_zimbraGalLdapBindDn, LC.zimbra_ldap_userdn.value());
             attrs.put(Provisioning.A_zimbraGalLdapBindPassword, LC.zimbra_ldap_password.value());
-            attrs.put(Provisioning.A_zimbraGalLdapSearchBase, "dc=test-gal,dc=ldaptest");
+            attrs.put(Provisioning.A_zimbraGalLdapSearchBase, domainBaseDn);
             attrs.put(Provisioning.A_zimbraGalLdapFilter, "zimbraAccounts");
             
             attrs.put(Provisioning.A_zimbraGalSyncLdapURL, "ldap://localhost:389");
             attrs.put(Provisioning.A_zimbraGalSyncLdapBindDn, LC.zimbra_ldap_userdn.value());
             attrs.put(Provisioning.A_zimbraGalSyncLdapBindPassword, LC.zimbra_ldap_password.value());
-            attrs.put(Provisioning.A_zimbraGalSyncLdapSearchBase, "dc=test-gal,dc=ldaptest");
+            attrs.put(Provisioning.A_zimbraGalSyncLdapSearchBase, domainBaseDn);
             attrs.put(Provisioning.A_zimbraGalSyncLdapFilter, "zimbraAccounts");
-            mDomain = mProv.createDomain(DOMAIN_NAME, attrs);
+            domain = mProv.createDomain(domainName, attrs);
         }
-        assertNotNull(mDomain);
+        assertNotNull(domain);
         
-        assertEquals(mDomain.getAttr(Provisioning.A_zimbraGalLdapURL), "ldap://localhost:389");
-        assertEquals(mDomain.getAttr(Provisioning.A_zimbraGalLdapBindDn), LC.zimbra_ldap_userdn.value());
-        assertEquals(mDomain.getAttr(Provisioning.A_zimbraGalLdapBindPassword), LC.zimbra_ldap_password.value());
-        assertEquals(mDomain.getAttr(Provisioning.A_zimbraGalLdapSearchBase), "dc=test-gal,dc=ldaptest");
-        assertEquals(mDomain.getAttr(Provisioning.A_zimbraGalLdapFilter), "zimbraAccounts");
+        assertEquals(domain.getAttr(Provisioning.A_zimbraGalLdapURL), "ldap://localhost:389");
+        assertEquals(domain.getAttr(Provisioning.A_zimbraGalLdapBindDn), LC.zimbra_ldap_userdn.value());
+        assertEquals(domain.getAttr(Provisioning.A_zimbraGalLdapBindPassword), LC.zimbra_ldap_password.value());
+        assertEquals(domain.getAttr(Provisioning.A_zimbraGalLdapSearchBase), domainBaseDn);
+        assertEquals(domain.getAttr(Provisioning.A_zimbraGalLdapFilter), "zimbraAccounts");
         
-        assertEquals(mDomain.getAttr(Provisioning.A_zimbraGalSyncLdapURL), "ldap://localhost:389");
-        assertEquals(mDomain.getAttr(Provisioning.A_zimbraGalSyncLdapBindDn), LC.zimbra_ldap_userdn.value());
-        assertEquals(mDomain.getAttr(Provisioning.A_zimbraGalSyncLdapBindPassword), LC.zimbra_ldap_password.value());
-        assertEquals(mDomain.getAttr(Provisioning.A_zimbraGalSyncLdapSearchBase), "dc=test-gal,dc=ldaptest");
-        assertEquals(mDomain.getAttr(Provisioning.A_zimbraGalSyncLdapFilter), "zimbraAccounts");
+        assertEquals(domain.getAttr(Provisioning.A_zimbraGalSyncLdapURL), "ldap://localhost:389");
+        assertEquals(domain.getAttr(Provisioning.A_zimbraGalSyncLdapBindDn), LC.zimbra_ldap_userdn.value());
+        assertEquals(domain.getAttr(Provisioning.A_zimbraGalSyncLdapBindPassword), LC.zimbra_ldap_password.value());
+        assertEquals(domain.getAttr(Provisioning.A_zimbraGalSyncLdapSearchBase), domainBaseDn);
+        assertEquals(domain.getAttr(Provisioning.A_zimbraGalSyncLdapFilter), "zimbraAccounts");
+        
+        setupTokenize(domainName, null, null);
+        domain = mProv.get(DomainBy.name, domainName);
+        assertNotNull(domain);
+        assertEquals(domain.getAttr(Provisioning.A_zimbraGalTokenizeAutoCompleteKey), null);
+        assertEquals(domain.getAttr(Provisioning.A_zimbraGalTokenizeSearchKey), null);
+    }
+    
+    private void createAccount(String userName, String firstName, String lastName) throws Exception {
+        String acctName = userName +"@" + TOKENIZE_TEST_DOMAIN_NAME;
+        
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        if (firstName != null)
+            attrs.put(Provisioning.A_givenName, firstName);
+        if (lastName != null)
+            attrs.put(Provisioning.A_sn, lastName);
+        
+        Account acct = mProv.get(AccountBy.name, acctName);
+        if (acct == null)
+            acct = mProv.createAccount(acctName, PASSWORD, attrs);
+        
+        assertEquals(acct.getName(), acctName);
+        if (firstName != null)
+            assertEquals(acct.getAttr(Provisioning.A_givenName), firstName);
+        if (lastName != null)
+        assertEquals(acct.getAttr(Provisioning.A_sn), lastName);
+    }
+    
+    public TestGal() throws Exception {
+        mProv = Provisioning.getInstance();
+        
+        // create the domain and accounts if they have not been created yet
+        setupDomain(DOMAIN_NAME, "dc=test-gal,dc=ldaptest");
+        
     
         if (SKIP_ACCT_CHECKING)
             return;
@@ -204,6 +241,13 @@ public class TestGal extends TestCase {
             if ((i+1)%100 == 0)
                 System.out.println("Created/checked " + (i+1) + " accounts");
         }
+        
+        // test domain and accounts for tokenize testing
+        setupDomain(TOKENIZE_TEST_DOMAIN_NAME, "dc=test-gal-tokenize,dc=ldaptest");
+        createAccount("user1", "phoebe",      "shao");
+        createAccount("user2", "phoebe shao",  null);
+        createAccount("user3", null,           "phoebe shao");
+        
         
         /* following won't work because we set LDAP_SERVER_SIZE_LIMIT to too small when it is LIMITED
         Provisioning.SearchOptions options = new Provisioning.SearchOptions();
@@ -275,8 +319,10 @@ public class TestGal extends TestCase {
             System.out.println(contact.getId());
         }
     }
+    
     private void autoCompleteGal(int numResultsExpected, int maxWanted) throws Exception {
-        SearchGalResult galResult = mProv.autoCompleteGal(mDomain, 
+        Domain domain = mProv.get(DomainBy.name, DOMAIN_NAME);
+        SearchGalResult galResult = mProv.autoCompleteGal(domain, 
                                                           QUERY,
                                                           Provisioning.GAL_SEARCH_TYPE.USER_ACCOUNT, // Provisioning.GAL_SEARCH_TYPE.ALL, 
                                                           maxWanted);
@@ -289,7 +335,8 @@ public class TestGal extends TestCase {
     }
     
     private void searchGal(int numResultsExpected) throws Exception {
-        SearchGalResult galResult = mProv.searchGal(mDomain, 
+        Domain domain = mProv.get(DomainBy.name, DOMAIN_NAME);
+        SearchGalResult galResult = mProv.searchGal(domain, 
                                                     QUERY,
                                                     Provisioning.GAL_SEARCH_TYPE.ALL, 
                                                     null);
@@ -299,7 +346,8 @@ public class TestGal extends TestCase {
     }
     
     private String syncGal(int numResultsExpected, int numTotal, String token) throws Exception {
-        SearchGalResult galResult = mProv.searchGal(mDomain, 
+        Domain domain = mProv.get(DomainBy.name, DOMAIN_NAME);
+        SearchGalResult galResult = mProv.searchGal(domain, 
                                                     QUERY,
                                                     Provisioning.GAL_SEARCH_TYPE.ALL, 
                                                     token);
@@ -456,6 +504,122 @@ public class TestGal extends TestCase {
     public void testSyncGal() throws Exception {
         syncGal(Provisioning.GM_ZIMBRA);
         syncGal(Provisioning.GM_LDAP);
+    }
+    
+    private void setupTokenize(String domainName, String galMode, String andOr) throws Exception {
+        Domain domain = mProv.get(DomainBy.name, domainName);
+        assertNotNull(domain);
+        
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        
+        if (galMode != null)
+            attrs.put(Provisioning.A_zimbraGalMode, galMode);
+        
+        if (andOr == null) {
+            attrs.put(Provisioning.A_zimbraGalTokenizeAutoCompleteKey, "");
+            attrs.put(Provisioning.A_zimbraGalTokenizeSearchKey, "");
+        } else {
+            attrs.put(Provisioning.A_zimbraGalTokenizeAutoCompleteKey, andOr);
+            attrs.put(Provisioning.A_zimbraGalTokenizeSearchKey, andOr);
+        }
+
+        mProv.modifyAttrs(domain, attrs);
+    }
+    
+    private void tokenizeTest(GalOp galOp, String key, String[] expectedUsers) throws Exception {
+        Domain domain = mProv.get(DomainBy.name, TOKENIZE_TEST_DOMAIN_NAME);
+        SearchGalResult galResult = null;
+        
+        if (galOp == GalOp.GOP_AUTOCOMPLETE)
+            galResult = mProv.autoCompleteGal(domain, 
+                                              key,
+                                              Provisioning.GAL_SEARCH_TYPE.USER_ACCOUNT, // Provisioning.GAL_SEARCH_TYPE.ALL, 
+                                              10);
+        else if (galOp == GalOp.GOP_SEARCH)
+            galResult = mProv.searchGal(domain, 
+                                        key,
+                                        Provisioning.GAL_SEARCH_TYPE.USER_ACCOUNT, 
+                                        null);
+        else
+            fail();
+        
+        System.out.println("tokenizeTest: key=" + key);
+        
+        Set<String> results = new HashSet<String>();
+        for (GalContact gc : galResult.matches) {
+            String r = (String)gc.getAttrs().get(Contact.A_email);
+            System.out.println("    " + r);
+            results.add(r);
+        }
+        
+        for (String mail : expectedUsers)
+            assertTrue(results.contains(mail+"@"+TOKENIZE_TEST_DOMAIN_NAME));
+        
+        List<String> expectedUsersList = Arrays.asList(expectedUsers); 
+        for (String mail : results)
+            assertTrue(expectedUsersList.contains((mail.split("@"))[0]));
+        
+        assertEquals(expectedUsers.length, galResult.matches.size());
+
+    }
+    
+    
+    /*
+      Reminder:
+          createAccount("user1", "phoebe",      "shao");
+          createAccount("user2", "phoebe shao",  null);
+          createAccount("user3", null,           "phoebe shao");
+    */
+    public void autoCompleteWithTokenizeAND(String galMode) throws Exception {
+        setupTokenize(TOKENIZE_TEST_DOMAIN_NAME, galMode, GalConstants.TOKENIZE_KEY_AND);
+        
+        tokenizeTest(GalOp.GOP_AUTOCOMPLETE, "phoebe", new String[]{"user1", "user2", "user3"});
+        tokenizeTest(GalOp.GOP_AUTOCOMPLETE, "shao", new String[]{"user1"});
+        tokenizeTest(GalOp.GOP_AUTOCOMPLETE, "phoebe shao", new String[]{"user1"});
+        tokenizeTest(GalOp.GOP_AUTOCOMPLETE, "phoebe blah", new String[0]);
+        tokenizeTest(GalOp.GOP_AUTOCOMPLETE, "blah shao", new String[0]);
+    }
+    
+    public void autoCompleteWithTokenizeOR(String galMode) throws Exception {
+        setupTokenize(TOKENIZE_TEST_DOMAIN_NAME, galMode, GalConstants.TOKENIZE_KEY_OR);
+        
+        tokenizeTest(GalOp.GOP_AUTOCOMPLETE, "phoebe", new String[]{"user1", "user2", "user3"});
+        tokenizeTest(GalOp.GOP_AUTOCOMPLETE, "shao", new String[]{"user1"});
+        tokenizeTest(GalOp.GOP_AUTOCOMPLETE, "phoebe shao", new String[]{"user1", "user2", "user3"});
+        tokenizeTest(GalOp.GOP_AUTOCOMPLETE, "phoebe blah", new String[]{"user1", "user2", "user3"});
+        tokenizeTest(GalOp.GOP_AUTOCOMPLETE, "blah shao", new String[]{"user1"});
+    }
+    
+    public void searchWithTokenizeAND(String galMode) throws Exception {
+        setupTokenize(TOKENIZE_TEST_DOMAIN_NAME, galMode, GalConstants.TOKENIZE_KEY_AND);
+        
+        tokenizeTest(GalOp.GOP_SEARCH, "phoebe", new String[]{"user1", "user2", "user3"});
+        tokenizeTest(GalOp.GOP_SEARCH, "shao", new String[]{"user1", "user2", "user3"}); // (gn=*%s*)
+        tokenizeTest(GalOp.GOP_SEARCH, "phoebe shao", new String[]{"user1", "user2", "user3"});  // (gn=*%s*)
+        tokenizeTest(GalOp.GOP_SEARCH, "phoebe blah", new String[0]);
+        tokenizeTest(GalOp.GOP_SEARCH, "blah shao", new String[0]);
+    }
+    
+    public void searchWithTokenizeOR(String galMode) throws Exception {
+        setupTokenize(TOKENIZE_TEST_DOMAIN_NAME, galMode, GalConstants.TOKENIZE_KEY_OR);
+        
+        tokenizeTest(GalOp.GOP_SEARCH, "phoebe", new String[]{"user1", "user2", "user3"});
+        tokenizeTest(GalOp.GOP_SEARCH, "shao", new String[]{"user1", "user2", "user3"}); // (gn=*%s*)
+        tokenizeTest(GalOp.GOP_SEARCH, "phoebe shao", new String[]{"user1", "user2", "user3"});
+        tokenizeTest(GalOp.GOP_SEARCH, "phoebe blah", new String[]{"user1", "user2", "user3"});
+        tokenizeTest(GalOp.GOP_SEARCH, "blah shao", new String[]{"user1", "user2", "user3"}); // (gn=*%s*)
+    }
+    
+    public void testTokenizeKey() throws Exception {
+        autoCompleteWithTokenizeAND("zimbra");
+        autoCompleteWithTokenizeAND("ldap");
+        autoCompleteWithTokenizeOR("zimbra");
+        autoCompleteWithTokenizeOR("ldap");
+        
+        searchWithTokenizeAND("zimbra");
+        searchWithTokenizeAND("ldap");
+        searchWithTokenizeOR("zimbra");
+        searchWithTokenizeOR("ldap");
     }
     
     public void disable_testPageSizeEnum() throws Exception {
