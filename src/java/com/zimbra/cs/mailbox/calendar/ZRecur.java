@@ -1257,8 +1257,8 @@ public class ZRecur {
     
     private void parse(String str, TimeZoneMap tzmap) throws ServiceException {
         try {
-            for (String tok : str.split(";")) {
-                String[] s = tok.split("=");
+            for (String tok : str.split("\\s*;\\s*")) {
+                String[] s = tok.split("\\s*=\\s*");
                 if (s.length != 2) {
                     if (ZimbraLog.calendar.isDebugEnabled())
                         ZimbraLog.calendar.debug(new Formatter().format("Parse error for recur: \"%s\" at token \"%s\"", str, tok));
@@ -1359,7 +1359,7 @@ public class ZRecur {
     }
 
     private void parseByDayList(String str, List<ZWeekDayNum> list) {
-        for (String s : str.split(",")) {
+        for (String s : str.split("\\s*,\\s*")) {
             ZWeekDayNum wdn = new ZWeekDayNum();
             
             String dayStr = s;
@@ -1379,7 +1379,7 @@ public class ZRecur {
     }
 
     private void parseIntList(String str, List<Integer> list, int min, int max, boolean signed) {
-        for (String s : str.split(","))
+        for (String s : str.split("\\s*,\\s*"))
             try {
                 int readInt;
                 if (signed)
