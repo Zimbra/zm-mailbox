@@ -2191,7 +2191,7 @@ public abstract class CalendarItem extends MailItem {
             instances = expandInstances(nextAlarm, getEndTime(), false);
         for (Instance inst : instances) {
             long instStart = inst.getStart();
-            if (instStart < nextAlarm)
+            if (instStart < nextAlarm && !inst.isTimeless())
                 continue;
             InviteInfo invId = inst.getInviteInfo();
             Invite inv = getInvite(invId.getMsgId(), invId.getComponentId());

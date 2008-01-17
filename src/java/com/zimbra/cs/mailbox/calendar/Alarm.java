@@ -670,16 +670,14 @@ public class Alarm {
     }
 
     /**
-     * Returns the alarm trigger time in millis.  Only display alarm will return a meaningful
-     * trigger time.  Other alarm types will return Long.MAX_VALUE.
-     * Both start and end times of the appointment/task instance is required because the alarm
+     * Returns the alarm trigger time in millis.
+     * Both start and end times of the appointment/task instance are required because the alarm
      * may be specified relative to either start or end time.
      * @param instStart start time of the appointment/task instance
      * @param instEnd end time of the appointment/task instance
      * @return
      */
     public long getTriggerTime(long instStart, long instEnd) {
-//        if (!Action.DISPLAY.equals(mAction)) return Long.MAX_VALUE;
         if (TriggerType.ABSOLUTE.equals(mTriggerType)) {
             assert(mTriggerAbsolute != null);
             return mTriggerAbsolute.getUtcTime();
