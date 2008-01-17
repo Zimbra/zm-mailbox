@@ -210,6 +210,8 @@ public abstract class Provisioning {
 
     public static final String A_zimbraServiceEnabled = "zimbraServiceEnabled";
 
+    public static final String A_zimbraServiceInstalled = "zimbraServiceInstalled";
+
     public static final String A_dc = "dc";
         
     /**
