@@ -2864,4 +2864,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="601" name="zimbraIsCustomerCareAccount" type="boolean" cardinality="single" optionalIn="account" flags="accountInfo">
   <desc>set to true for customer care accounts</desc>
 </attr>
+
+<attr id="602" name="zimbraFeatureWebSearchEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether web search feature is enabled</desc>
+</attr>
+
 </attrs>
+
+
