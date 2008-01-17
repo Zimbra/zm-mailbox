@@ -1720,21 +1720,13 @@ public abstract class CalendarItem extends MailItem {
                         if (cur.mAttendee.hasRole()) {
                             roleStr = cur.mAttendee.getRole();
                         }
-                        
-                        ZAttendee newAt = new ZAttendee(
-                                cur.mAttendee.getAddress(),
-                                cnStr,
-                                cur.mAttendee.getSentBy(),
-                                cur.mAttendee.getDir(),
-                                cur.mAttendee.getLanguage(),
-                                cutypeStr,
-                                roleStr,
-                                partStatStr,
-                                needsReply,
-                                cur.mAttendee.getMember(),
-                                cur.mAttendee.getDelegatedTo(),
-                                cur.mAttendee.getDelegatedFrom()
-                                );
+
+                        ZAttendee newAt = new ZAttendee(cur.mAttendee);
+                        newAt.setCn(cnStr);
+                        newAt.setCUType(cutypeStr);
+                        newAt.setRole(roleStr);
+                        newAt.setPartStat(partStatStr);
+                        newAt.setRsvp(needsReply);
                         
                         cur.mAttendee = newAt;
                         cur.mSeqNo = seqNo;
@@ -1748,7 +1740,7 @@ public abstract class CalendarItem extends MailItem {
             ZAttendee at =
                 new ZAttendee(addressStr, cnStr, null, null, null,
                               cutypeStr, roleStr, partStatStr, needsReply,
-                              null, null, null);
+                              null, null, null, null);
             ReplyInfo ri = new ReplyInfo(at, seqNo, dtStamp, recurId);
             mReplies.add(ri);
         }

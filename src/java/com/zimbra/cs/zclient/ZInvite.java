@@ -20,11 +20,15 @@ package com.zimbra.cs.zclient;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
+import com.zimbra.cs.service.mail.CalendarUtils;
+import com.zimbra.cs.service.mail.ToXML;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 public class ZInvite {
@@ -1009,18 +1013,20 @@ public class ZInvite {
         private String mSentBy;
         private String mDirectoryUrl;
         private String mLanguage;
+        private List<ZParameter> mXParams;
 
         public ZCalendarUser() {
-
+            mXParams = new ArrayList<ZParameter>();
         }
 
-        public ZCalendarUser(Element e) {
+        public ZCalendarUser(Element e) throws ServiceException {
             mAddress = e.getAttribute(MailConstants.A_ADDRESS, null);
             mUrl = e.getAttribute(MailConstants.A_URL, null);
             mPersonalName = e.getAttribute(MailConstants.A_DISPLAY, null);
             mSentBy = e.getAttribute(MailConstants.A_CAL_SENTBY, null);
             mDirectoryUrl = e.getAttribute(MailConstants.A_CAL_DIR, null);
             mLanguage = e.getAttribute(MailConstants.A_CAL_LANGUAGE, null);
+            mXParams = CalendarUtils.parseXParams(e);
         }
 
         public String getAddress() {
@@ -1079,6 +1085,10 @@ public class ZInvite {
             mLanguage = language;
         }
 
+        public Iterator<ZParameter> xparamsIterator() {
+            return mXParams.iterator();
+        }
+
         void toString(ZSoapSB sb) {
             sb.add("address", mAddress);
             sb.add("url", mUrl);
@@ -1108,7 +1118,7 @@ public class ZInvite {
             setAddress(address);
         }
 
-        public ZOrganizer(Element e) {
+        public ZOrganizer(Element e) throws ServiceException {
             super(e);
         }
 
@@ -1121,7 +1131,7 @@ public class ZInvite {
             if (getSentBy() != null) orEl.addAttribute(MailConstants.A_CAL_SENTBY, getSentBy());
             if (getDirectoryUrl() != null) orEl.addAttribute(MailConstants.A_CAL_DIR, getDirectoryUrl());
             if (getLanguage() != null) orEl.addAttribute(MailConstants.A_CAL_LANGUAGE, getLanguage());
-            
+            ToXML.encodeXParams(orEl, xparamsIterator());
             return orEl;
         }
 
@@ -1167,6 +1177,7 @@ public class ZInvite {
             if (mMember != null) attEl.addAttribute(MailConstants.A_CAL_MEMBER, mMember);
             if (mDelegatedTo != null) attEl.addAttribute(MailConstants.A_CAL_DELEGATED_TO, mDelegatedTo);
             if (mDelegatedFrom != null) attEl.addAttribute(MailConstants.A_CAL_DELEGATED_FROM, mDelegatedFrom);
+            ToXML.encodeXParams(attEl, xparamsIterator());
             return attEl;
         }
 

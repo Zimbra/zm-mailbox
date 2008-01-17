@@ -296,7 +296,6 @@ public class Invite {
     private static final String FN_METHOD          = "mthd";
     private static final String FN_NAME            = "n";
     private static final String FN_NUM_ATTENDEES   = "numAt";
-    private static final String FN_NUM_XPROPS_OR_XPARAMS = "numX";
     private static final String FN_ORGANIZER       = "org";
     private static final String FN_IS_ORGANIZER    = "isOrg";
     private static final String FN_PARTSTAT        = "ptst";
@@ -311,10 +310,8 @@ public class Invite {
     private static final String FN_UID             = "u";
     private static final String FN_PRIORITY        = "prio";
     private static final String FN_PCT_COMPLETE    = "pctcompl";
-    private static final String FN_VALUE           = "v";
     private static final String FN_NUM_ALARMS      = "numAl";
     private static final String FN_ALARM           = "al";
-    private static final String FN_XPROP_OR_XPARAM = "x";
     private static final String FN_DONT_INDEX_MM   = "noidxmm";
 
     /**
@@ -393,48 +390,11 @@ public class Invite {
         }
 
         if (inv.mXProps.size() > 0)
-            encodeXPropsAsMetadata(meta, inv.xpropsIterator());
+            Util.encodeXPropsAsMetadata(meta, inv.xpropsIterator());
         
         if (inv.mDontIndexMimeMessage)
             meta.put(FN_DONT_INDEX_MM, true);
         return meta;
-    }
-
-    private static void encodeXPropsAsMetadata(Metadata meta,
-                                               Iterator<ZProperty> xpropsIter) {
-        int xpropCount = 0;
-        for (; xpropsIter.hasNext(); ) {
-            ZProperty xprop = xpropsIter.next();
-            String propName = xprop.getName();
-            if (propName == null) continue;
-            Metadata propMeta = new Metadata();
-            propMeta.put(FN_NAME, propName);
-            String propValue = xprop.getValue();
-            if (propValue != null)
-                propMeta.put(FN_VALUE, propValue);
-
-            int xparamCount = 0;
-            for (Iterator<ZParameter> paramIter = xprop.parameterIterator();
-                 paramIter.hasNext(); ) {
-                ZParameter xparam = paramIter.next();
-                String paramName = xparam.getName();
-                if (paramName == null) continue;
-                Metadata paramMeta = new Metadata();
-                paramMeta.put(FN_NAME, paramName);
-                String paramValue = xparam.getValue();
-                if (paramValue != null)
-                    paramMeta.put(FN_VALUE, paramValue);
-                propMeta.put(FN_XPROP_OR_XPARAM + xparamCount, paramMeta);
-                xparamCount++;
-            }
-            if (xparamCount > 0)
-                propMeta.put(FN_NUM_XPROPS_OR_XPARAMS, xparamCount);
-
-            meta.put(FN_XPROP_OR_XPARAM + xpropCount, propMeta);
-            xpropCount++;
-        }
-        if (xpropCount > 0)
-            meta.put(FN_NUM_XPROPS_OR_XPARAMS, xpropCount);
     }
 
     public static ICalTok lookupMethod(String methodName) {
@@ -615,7 +575,7 @@ public class Invite {
             }
         }
 
-        List<ZProperty> xprops = decodeXPropsFromMetadata(meta);
+        List<ZProperty> xprops = Util.decodeXPropsFromMetadata(meta);
         if (xprops != null) {
             for (ZProperty xprop : xprops) {
                 invite.addXProp(xprop);
@@ -625,39 +585,6 @@ public class Invite {
         invite.setDontIndexMimeMessage(meta.getBool(FN_DONT_INDEX_MM, false));
 
         return invite;
-    }
-
-    private static List<ZProperty> decodeXPropsFromMetadata(Metadata meta)
-    throws ServiceException {
-        int xpropCount = (int) meta.getLong(FN_NUM_XPROPS_OR_XPARAMS, 0);
-        if (xpropCount > 0) {
-            List<ZProperty> list = new ArrayList<ZProperty>(xpropCount);
-            for (int propNum = 0; propNum < xpropCount; propNum++) {
-                Metadata propMeta = meta.getMap(FN_XPROP_OR_XPARAM + propNum, true);
-                if (propMeta == null) continue;
-                String propName = propMeta.get(FN_NAME, null);
-                if (propName == null) continue;
-                ZProperty xprop = new ZProperty(propName);
-                String propValue = propMeta.get(FN_VALUE, null);
-                if (propValue != null)
-                    xprop.setValue(propValue);
-                int xparamCount = (int) propMeta.getLong(FN_NUM_XPROPS_OR_XPARAMS, 0);
-                if (xparamCount > 0) {
-                    for (int paramNum = 0; paramNum < xparamCount; paramNum++) {
-                        Metadata paramMeta = propMeta.getMap(FN_XPROP_OR_XPARAM + paramNum, true);
-                        if (paramMeta == null) continue;
-                        String paramName = paramMeta.get(FN_NAME, null);
-                        if (paramName == null) continue;
-                        String paramValue = paramMeta.get(FN_VALUE, null);
-                        ZParameter xparam = new ZParameter(paramName, paramValue);
-                        xprop.addParameter(xparam);
-                    }
-                }
-                list.add(xprop);
-            }
-            return list;
-        } else
-            return null;
     }
 
 
@@ -1512,7 +1439,7 @@ public class Invite {
                         for (ZProperty prop : comp.mProperties) {
                             if (prop.mTok == null) {
                                 String name = prop.getName();
-                                if (name.startsWith("X-")) {
+                                if (name.startsWith("X-") || name.startsWith("x-")) {
                                     newInv.addXProp(prop);
                                 }
                                 continue;
@@ -1949,6 +1876,13 @@ public class Invite {
     public Iterator<ZProperty> xpropsIterator() { return mXProps.iterator(); }
     public void addXProp(ZProperty prop) {
         mXProps.add(prop);
+    }
+    public ZProperty getXProperty(String xpropName) {
+        for (ZProperty prop : mXProps) {
+            if (prop.getName().equalsIgnoreCase(xpropName))
+                return prop;
+        }
+        return null;
     }
 
     /**

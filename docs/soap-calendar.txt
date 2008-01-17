@@ -129,6 +129,7 @@
                [sentBy="sent-by"]  // SENT-BY
                [dir="dir"]         // DIR
                [lang="language"]   // LANGUAGE (e.g. "en-US")
+               [<xparam name="x-name" [value="text"]/>]*  // non-standard parameters
            />
            // attendee(s)
            <at a="address"                  // email address (without "MAILTO:")
@@ -143,6 +144,7 @@
                [member="MEMBER"]            // MEMBER
                [delTo="delegated to"]       // DELEGATED-FROM
                [delFrom="delegated from"]   // DELEGATED-TO
+               [<xparam name="x-name" [value="text"]/>]*  // non-standard parameters
            />*
              // role = CHAir, REQuired, OPTional, NON-participant (ie informational)
              // ptst (ParTSTat - participation status) = "NE"eds-action, "TE"ntative, "AC"cept, "DE"clined,
@@ -678,11 +680,8 @@ OR
               OR
               <dur DURATION>
            )   
-           <or d="friendly name" a="address"> // organizer
-           <at d="friendly name" a="address" role="ROLE" ptst="status"" [cutype="CUTYPE"]/>* // attendee
-             // role = CHAir, REQuired, OPTional, NON-participant (ie informational)
-             // ptst = NEeds-action, TEntative, ACcept, DEclined, DG (delegated), COmpleted (todo), IN-process (todo)
-             // cutype (calendar user type) = INDividual, GROup, RESource, ROOm, UNKnown
+           <or ...> // organizer
+           <at ...>* // attendee
            [
              <recur>
                 RECURRENCE PART

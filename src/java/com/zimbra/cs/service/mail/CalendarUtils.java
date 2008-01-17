@@ -21,7 +21,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
 import com.zimbra.cs.mailbox.calendar.Alarm;
@@ -888,20 +887,7 @@ public class CalendarUtils {
                 throw ServiceException.INVALID_REQUEST(
                         "missing organizer when attendees are present", null);
         } else {
-            String address = IDNUtil.toAscii(orgElt.getAttribute(MailConstants.A_ADDRESS, null));
-            if (address == null) {
-            	address = orgElt.getAttribute(MailConstants.A_URL, null); //4.5 back compat
-            	if (address == null) {
-                    throw ServiceException.INVALID_REQUEST(
-                            "missing organizer address", null);
-            	}
-            } 
-            String cn = orgElt.getAttribute(MailConstants.A_DISPLAY, null);
-            String sentBy = orgElt.getAttribute(MailConstants.A_CAL_SENTBY, null);
-            String dir = orgElt.getAttribute(MailConstants.A_CAL_DIR, null);
-            String lang = orgElt.getAttribute(MailConstants.A_CAL_LANGUAGE, null);
-
-            ZOrganizer org = new ZOrganizer(address, cn, sentBy, dir, lang);
+            ZOrganizer org = ZOrganizer.parse(orgElt);
             newInv.setOrganizer(org);
         }
 
@@ -953,8 +939,20 @@ public class CalendarUtils {
     	}
     }
 
-    private static List<ZProperty> parseXProps(Element element)
-    throws ServiceException {
+    public static List<ZParameter> parseXParams(Element element) throws ServiceException {
+        List<ZParameter> params = new ArrayList<ZParameter>();
+        for (Iterator<Element> paramIter = element.elementIterator(MailConstants.E_CAL_XPARAM);
+             paramIter.hasNext(); ) {
+            Element paramElem = paramIter.next();
+            String paramName = paramElem.getAttribute(MailConstants.A_NAME);
+            String paramValue = paramElem.getAttribute(MailConstants.A_VALUE, null);    
+            ZParameter xparam = new ZParameter(paramName, paramValue);
+            params.add(xparam);
+        }
+        return params;
+    }
+
+    public static List<ZProperty> parseXProps(Element element) throws ServiceException {
         List<ZProperty> props = new ArrayList<ZProperty>();
         for (Iterator<Element> propIter = element.elementIterator(MailConstants.E_CAL_XPROP);
              propIter.hasNext(); ) {
@@ -963,12 +961,8 @@ public class CalendarUtils {
             String propValue = propElem.getAttribute(MailConstants.A_VALUE, null);
             ZProperty xprop = new ZProperty(propName);
             xprop.setValue(propValue);
-            for (Iterator<Element> paramIter = propElem.elementIterator(MailConstants.E_CAL_XPARAM);
-                 paramIter.hasNext(); ) {
-                Element paramElem = paramIter.next();
-                String paramName = paramElem.getAttribute(MailConstants.A_NAME);
-                String paramValue = paramElem.getAttribute(MailConstants.A_VALUE, null);
-                ZParameter xparam = new ZParameter(paramName, paramValue);
+            List<ZParameter> xparams = parseXParams(propElem);
+            for (ZParameter xparam : xparams) {
                 xprop.addParameter(xparam);
             }
             props.add(xprop);

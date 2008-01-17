@@ -1296,18 +1296,7 @@ public class ToXML {
             // Organizer
             if (invite.hasOrganizer()) {
                 ZOrganizer org = invite.getOrganizer();
-                Element orgElt = e.addUniqueElement(MailConstants.E_CAL_ORGANIZER);
-                String str = org.getAddress();
-                orgElt.addAttribute(MailConstants.A_ADDRESS, IDNUtil.toUnicode(str));
-                orgElt.addAttribute(MailConstants.A_URL, str);  // for backward compatibility
-                if (org.hasCn())
-                    orgElt.addAttribute(MailConstants.A_DISPLAY, org.getCn());
-                if (org.hasSentBy())
-                    orgElt.addAttribute(MailConstants.A_CAL_SENTBY, org.getSentBy());
-                if (org.hasDir())
-                    orgElt.addAttribute(MailConstants.A_CAL_DIR, org.getDir());
-                if (org.hasLanguage())
-                    orgElt.addAttribute(MailConstants.A_CAL_LANGUAGE, org.getLanguage());
+                org.toXml(e);
             }
 
             boolean isRecurring = false;
@@ -1389,7 +1378,20 @@ public class ToXML {
         return e;
     }
 
-    private static void encodeXProps(Element parent, Iterator<ZProperty> xpropsIterator) {
+    public static void encodeXParams(Element parent, Iterator<ZParameter> xparamsIterator) {
+        for (; xparamsIterator.hasNext(); ) {
+            ZParameter xparam = xparamsIterator.next();
+            String paramName = xparam.getName();
+            if (paramName == null) continue;
+            Element paramElem = parent.addElement(MailConstants.E_CAL_XPARAM);
+            paramElem.addAttribute(MailConstants.A_NAME, paramName);
+            String paramValue = xparam.getValue();
+            if (paramValue != null)
+                paramElem.addAttribute(MailConstants.A_VALUE, paramValue);
+        }
+    }
+
+    public static void encodeXProps(Element parent, Iterator<ZProperty> xpropsIterator) {
         for (; xpropsIterator.hasNext(); ) {
             ZProperty xprop = xpropsIterator.next();
             String propName = xprop.getName();
@@ -1399,16 +1401,7 @@ public class ToXML {
             propElem.addAttribute(MailConstants.A_NAME, propName);
             if (propValue != null)
                 propElem.addAttribute(MailConstants.A_VALUE, propValue);
-            for (Iterator<ZParameter> paramIter = xprop.parameterIterator(); paramIter.hasNext(); ) {
-                ZParameter xparam = paramIter.next();
-                String paramName = xparam.getName();
-                if (paramName == null) continue;
-                Element paramElem = propElem.addElement(MailConstants.E_CAL_XPARAM);
-                paramElem.addAttribute(MailConstants.A_NAME, paramName);
-                String paramValue = xparam.getValue();
-                if (paramValue != null)
-                    paramElem.addAttribute(MailConstants.A_VALUE, paramValue);
-            }
+            encodeXParams(propElem, xprop.parameterIterator());
         }
     }
 

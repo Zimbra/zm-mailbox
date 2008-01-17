@@ -19,6 +19,9 @@ package com.zimbra.cs.mailbox.calendar;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
@@ -45,6 +48,7 @@ public abstract class CalendarUser {
     private String mSentBy;
     private String mDir;
     private String mLanguage;
+    private List<ZParameter> mXParams = new ArrayList<ZParameter>();
 
     public String getAddress() { return mAddress; }
     public void setAddress(String a) { mAddress = getMailToAddress(a); }
@@ -85,15 +89,26 @@ public abstract class CalendarUser {
     }
     
     public CalendarUser(String address,
-                           String cn,
-                           String sentBy,
-                           String dir,
-                           String language) {
+                        String cn,
+                        String sentBy,
+                        String dir,
+                        String language) {
         setAddress(address);
         setCn(cn);
         setSentBy(sentBy);
         setDir(dir);
         setLanguage(language);
+    }
+
+    public CalendarUser(String address,
+                        String cn,
+                        String sentBy,
+                        String dir,
+                        String language,
+                        List<ZParameter> xparams) {
+        this(address, cn, sentBy, dir, language);
+        if (xparams != null)
+            mXParams = xparams;
     }
 
     public CalendarUser(ZProperty prop) {
@@ -102,14 +117,39 @@ public abstract class CalendarUser {
              prop.paramVal(ICalTok.SENT_BY, null),
              prop.paramVal(ICalTok.DIR, null),
              prop.paramVal(ICalTok.LANGUAGE, null));
+
+        for (Iterator<ZParameter> paramIter = prop.parameterIterator(); paramIter.hasNext(); ) {
+            ZParameter param = paramIter.next();
+            if (param.mTok == null) {
+                String name = param.getName();
+                if (name.startsWith("X-") || name.startsWith("x-"))
+                    addXParam(param);
+            }
+        }
     }
 
-    public CalendarUser(Metadata meta) {
+    public CalendarUser(Metadata meta) throws ServiceException {
         this(meta.get(FN_ADDRESS, null),
              meta.get(FN_CN, null),
              meta.get(FN_SENTBY, null),
              meta.get(FN_DIR, null),
              meta.get(FN_LANGUAGE, null));
+
+        List<ZParameter> xparams = Util.decodeXParamsFromMetadata(meta);
+        if (xparams != null) {
+            for (ZParameter xparam : xparams) {
+                mXParams.add(xparam);
+            }
+        }
+    }
+
+    protected CalendarUser(CalendarUser other) {
+        mAddress = other.mAddress;
+        mCn = other.mCn;
+        mSentBy = other.mSentBy;
+        mDir = other.mDir;
+        mLanguage = other.mLanguage;
+        mXParams.addAll(other.mXParams);
     }
 
     Metadata encodeMetadata() {
@@ -119,6 +159,10 @@ public abstract class CalendarUser {
         meta.put(FN_SENTBY, mSentBy);
         meta.put(FN_DIR, mDir);
         meta.put(FN_LANGUAGE, mLanguage);
+
+        if (mXParams.size() > 0)
+            Util.encodeXParamsAsMetadata(meta, xparamsIterator());
+
         return meta;
     }
 
@@ -189,12 +233,31 @@ public abstract class CalendarUser {
     		addr = "mailto:" + addr;
         ZProperty prop = new ZProperty(getPropertyName(), addr);
         setProperty(prop);
+        // x-param
+        for (ZParameter xparam : mXParams) {
+            prop.addParameter(xparam);
+        }
         return prop;
+    }
+
+    public Iterator<ZParameter> xparamsIterator() { return mXParams.iterator(); }
+    public void addXParam(ZParameter param) {
+        mXParams.add(param);
+    }
+    public ZParameter getXParam(String xparamName) {
+        for (ZParameter param : mXParams) {
+            if (param.getName().equalsIgnoreCase(xparamName))
+                return param;
+        }
+        return null;
     }
 
     public String toString() {
         StringBuilder sb = new StringBuilder();
         addToStringBuilder(sb);
+        for (ZParameter xparam : mXParams) {
+            sb.append(", ").append(xparam.toString());
+        }
         return sb.toString();
     }
 

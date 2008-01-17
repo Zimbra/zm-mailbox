@@ -30,7 +30,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -172,13 +171,7 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                             // Organizer
                             if (inv.hasOrganizer()) {
                                 ZOrganizer org = inv.getOrganizer();
-                                Element orgElt = calItemElem.addUniqueElement(MailConstants.E_CAL_ORGANIZER);
-                                String str = org.getAddress();
-                                orgElt.addAttribute(MailConstants.A_ADDRESS, IDNUtil.toUnicode(str));
-                                if (org.hasCn())
-                                    orgElt.addAttribute(MailConstants.A_DISPLAY, org.getCn());
-                                if (org.hasSentBy())
-                                    orgElt.addAttribute(MailConstants.A_CAL_SENTBY, org.getSentBy());
+                                org.toXml(calItemElem);
                             }
 
                             calItemElem.addAttribute("x_uid", calItem.getUid());
@@ -311,13 +304,7 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                     // Organizer
                     if (defaultInvite.hasOrganizer()) {
                         ZOrganizer org = defaultInvite.getOrganizer();
-                        Element orgElt = calItemElem.addUniqueElement(MailConstants.E_CAL_ORGANIZER);
-                        String str = org.getAddress();
-                        orgElt.addAttribute(MailConstants.A_ADDRESS, str);
-                        if (org.hasCn())
-                          orgElt.addAttribute(MailConstants.A_DISPLAY, org.getCn());
-                        if (org.hasSentBy())
-                            orgElt.addAttribute(MailConstants.A_CAL_SENTBY, org.getSentBy());
+                        org.toXml(calItemElem);
                     }
                 }
                 
