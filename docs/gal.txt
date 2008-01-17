@@ -14,6 +14,8 @@ zimbraGalMode                             domain                 both           
 zimbraGalLdapFilterDef                    globalConfig           both             all
 zimbraGalLdapAttrMap                      domain,globalConfig    both             all
 zimbraGalMaxResults                       domain,globalConfig    both             autocomplete, search (for sync, system does not specify a max when searching LDAP)
+zimbraGalTokenizeAutoCompleteKey          domain                 both             autocomplete
+zimbraGalTokenizeSearchKey                domain                 both             search
 
 zimbraGalLdapPageSize                     domain,globalConfig    both             autocomplete, search, (sync if zimbraGalSyncLdapPageSize is not set)
 zimbraGalSyncLdapPageSize                 domain,globalConfig    both             sync
