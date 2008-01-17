@@ -37,6 +37,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.im.provider.IMGlobalProperties;
 import com.zimbra.cs.im.provider.IMLocalProperties;
 import com.zimbra.cs.im.provider.CloudRouteSession;
+import com.zimbra.cs.im.provider.ZimbraLocationManager;
 
 public class ZimbraIM {
     
@@ -68,9 +69,10 @@ public class ZimbraIM {
                     return CloudRouteSession.create(hostname, reader, connection, streamElt);
                 }
             });
+
+            ZimbraLocationManager locMgr = ZimbraLocationManager.getInstance();
             
-            
-            XMPPServer srv = new XMPPServer(domainStrs, new IMLocalProperties(), new IMGlobalProperties());
+            XMPPServer srv = new XMPPServer(locMgr, domainStrs, new IMLocalProperties(), new IMGlobalProperties());
             InterceptorManager.getInstance().addInterceptor(new com.zimbra.cs.im.PacketInterceptor());
             
             sRunning = true;
@@ -88,5 +90,4 @@ public class ZimbraIM {
             sRunning = false;
         }
     }
-
 }

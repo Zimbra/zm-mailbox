@@ -100,6 +100,8 @@ public class CloudRouteSession extends Session {
         JID from = packet.getFrom();
         JID to = packet.getTo();
         
+        ZimbraLog.im.debug("CloudRouteSession.remoteDeliveryFailed for packet "+packet);
+        
         // TODO Send correct error condition: timeout or not_found depending on the real error
         try {
             if (packet instanceof IQ) {
@@ -170,6 +172,7 @@ public class CloudRouteSession extends Session {
     
     public void process(Packet packet) throws UnauthorizedException, PacketException {
         if (conn != null&& !conn.isClosed()) {
+            ZimbraLog.im.debug("CloudRouteSession delivering packet: "+packet);
             conn.deliver(packet);
         } else {
             remoteDeliveryFailed(packet);

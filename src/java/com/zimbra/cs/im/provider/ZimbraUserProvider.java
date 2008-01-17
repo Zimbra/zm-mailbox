@@ -53,6 +53,9 @@ public class ZimbraUserProvider implements UserProvider {
             if (acct == null) 
                 throw new UserNotFoundException("Unknown user: "+username);
             
+            if (!Provisioning.onLocalServer(acct)) 
+                throw new UserNotFoundException("User "+username+" is not local to this server");
+            
             String un = acct.getName();
 //            int atSign = un.indexOf('@');
 //            if (atSign >= 0)

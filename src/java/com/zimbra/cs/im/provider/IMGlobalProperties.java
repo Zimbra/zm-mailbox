@@ -68,7 +68,7 @@ public class IMGlobalProperties implements PropertyProvider {
         // xmpp.socket.ssl.active - client listener (SSL)
         // xmpp.component.active - external components
         // xmpp.server.active - S2S port
-        // mLocalConfigMap.put("xmpp.cloudrouting.active", "true"); // - local cloud routing
+        mLocalConfigMap.put("xmpp.cloudrouting.active", "true"); // - local cloud routing
         // xmpp.socket.multiplex.active - connection server
         
         // ***no setting uses default local IP***

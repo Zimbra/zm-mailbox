@@ -97,8 +97,14 @@ public class ZimbraRoutingTableImpl extends BasicModule implements RoutingTable 
     protected RoutableChannelHandler getCloudRoute(String node, String domain) {
         try {
             Account acct = Provisioning.getInstance().get(AccountBy.name, node+"@"+domain);
+            if (acct == null)
+                return null;
+            
             if (!Provisioning.onLocalServer(acct)) {
                 Server acctServer = Provisioning.getInstance().getServer(acct);
+                
+                if (acctServer == null)
+                    return null;
                 
                 CloudRouteSession route = CloudRouteManager.get(acctServer);
                 if (route == null)
