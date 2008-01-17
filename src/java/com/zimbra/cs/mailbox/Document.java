@@ -120,7 +120,7 @@ public class Document extends MailItem {
         data.id          = id;
         data.type        = type;
         data.folderId    = folder.getId();
-        if (!folder.inSpam() || Provisioning.getInstance().getConfig().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false))
+        if (!folder.inSpam() || mbox.getAccount().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false))
             data.indexId = id;
         data.imapId      = id;
         data.volumeId    = volumeId;
