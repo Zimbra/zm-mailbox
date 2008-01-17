@@ -1,4 +1,4 @@
-package com.zimbra.cs.account.ldap.gal;
+package com.zimbra.cs.account.gal;
 
 import java.util.HashMap;
 import java.util.Map;
