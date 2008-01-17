@@ -758,10 +758,6 @@ public abstract class CalendarItem extends MailItem {
         }
     }
 
-    public void setUid(String uid) {
-        mUid = uid;
-    }
-
     public String getUid() {
         return mUid;
     }
