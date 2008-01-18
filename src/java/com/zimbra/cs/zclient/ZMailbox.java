@@ -122,7 +122,7 @@ public class ZMailbox {
     public final static char PATH_SEPARATOR_CHAR = '/';
 
     public enum SearchSortBy {
-        dateDesc, dateAsc, subjDesc, subjAsc, nameDesc, nameAsc, durDesc, durAsc,
+        dateDesc, dateAsc, subjDesc, subjAsc, nameDesc, nameAsc, durDesc, durAsc, none,
         taskDueAsc, taskDueDesc, taskStatusAsc, taskStatusDesc, taskPercCompletedAsc, taskPercCompletedDesc;
 
         public static SearchSortBy fromString(String s) throws ServiceException {
@@ -3273,13 +3273,17 @@ public class ZMailbox {
             params.setCalExpandInstEnd(endMsec);
             params.setTypes(types);
             params.setLimit(2000);
-            params.setSortBy(SearchSortBy.dateAsc);
+            params.setSortBy(SearchSortBy.none);
             params.setTimeZone(timeZone);
+            
+            int offset = 0;
             int n = 0;
             // really while(true), but add in a safety net?
             while (n++ < 100) {
+                params.setOffset(offset);
                 ZSearchResult result = search(params);
                 for (ZSearchHit hit : result.getHits()) {
+                    offset++;
                     if (hit instanceof ZAppointmentHit) {
                         ZAppointmentHit as = (ZAppointmentHit) hit;
                         String fid = folderIdMapper.get(as.getFolderId());
@@ -3289,8 +3293,7 @@ public class ZMailbox {
                 }
                 List<ZSearchHit> hits = result.getHits();
                 if (result.hasMore() && !hits.isEmpty()) {
-                    ZSearchHit lastHit = hits.get(hits.size()-1);
-                    params.setCursor(new Cursor(lastHit.getId(), lastHit.getSortField()));
+                    params.setOffset(offset);
                 } else {
                     break;
                 }
