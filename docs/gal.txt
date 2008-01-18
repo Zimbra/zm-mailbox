@@ -1,4 +1,4 @@
-GAL attributes usage
+GAL related attributes usage
 
 Attribute                                 scope                  For              GAL op
                                                                  - zimbra         - autocomplete

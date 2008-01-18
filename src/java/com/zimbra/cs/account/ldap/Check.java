@@ -162,36 +162,27 @@ public class Check {
     }
 
     
-    public static Result checkGalConfig(Map attrs, String query, int limit) throws ServiceException {
+    public static Result checkGalConfig(Map attrs, String query, int limit, GalOp galOp) throws ServiceException {
         String mode = getRequiredAttr(attrs, Provisioning.A_zimbraGalMode);
         if (!mode.equals(Provisioning.GM_LDAP))
             throw ServiceException.INVALID_REQUEST("gal mode must be: "+Provisioning.GM_LDAP, null);
 
-        // TODO: change to ExteralGalParams, and need admin console work
-        String url[] = getRequiredMultiAttr(attrs, Provisioning.A_zimbraGalLdapURL);
-        String authMech = (String)attrs.get(Provisioning.A_zimbraGalLdapAuthMech);
-        String bindDn = (String) attrs.get(Provisioning.A_zimbraGalLdapBindDn);
-        String bindPassword = (String) attrs.get(Provisioning.A_zimbraGalLdapBindPassword);
-        String krb5Principal = (String) attrs.get(Provisioning.A_zimbraGalLdapKerberos5Principal);
-        String krb5Keytab = (String) attrs.get(Provisioning.A_zimbraGalLdapKerberos5Keytab);
-        String searchBase = getRequiredAttr(attrs, Provisioning.A_zimbraGalLdapSearchBase);
-        String filter = getRequiredAttr(attrs, Provisioning.A_zimbraGalLdapFilter);
-        GalParams.ExternalGalParams galParams = new GalParams.ExternalGalParams(url,
-                                                                                authMech,
-                                                                                bindDn,
-                                                                                bindPassword,
-                                                                                krb5Principal,
-                                                                                krb5Keytab,
-                                                                                searchBase,
-                                                                                filter,
-                                                                                null);
+        GalParams.ExternalGalParams galParams = new GalParams.ExternalGalParams(attrs, galOp);
 
         String[] galAttrs = Provisioning.getInstance().getConfig().getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap);
         LdapGalMapRules rules = new LdapGalMapRules(galAttrs);
 
         try {
-            LdapGalCredential credential = new LdapGalCredential(authMech, bindDn, bindPassword, krb5Principal, krb5Keytab);
-            SearchGalResult result = LdapUtil.searchLdapGal(galParams, GalOp.search, query, limit, rules, null); 
+            SearchGalResult result = null;
+            if (galOp == GalOp.autocomplete)
+                result = LdapUtil.searchLdapGal(galParams, GalOp.autocomplete, query, limit, rules, null); 
+            else if (galOp == GalOp.search)
+                result = LdapUtil.searchLdapGal(galParams, GalOp.search, query, limit, rules, null); 
+            else if (galOp == GalOp.sync)
+                result = LdapUtil.searchLdapGal(galParams, GalOp.sync, query, limit, rules, ""); 
+            else 
+                throw ServiceException.INVALID_REQUEST("invalid GAL op: "+galOp.toString(), null);
+            
             List contacts = result.matches;
             return new Result(STATUS_OK, "", contacts);
         } catch (NamingException e) {
@@ -250,7 +241,7 @@ public class Check {
         attrs.put(Provisioning.A_zimbraGalLdapSearchBase, "dc=example,dc=zimbra,dc=com");        
         attrs.put(Provisioning.A_zimbraGalLdapFilter, "ad");
         try {
-            Result r = checkGalConfig(attrs, "sam", 10);
+            Result r = checkGalConfig(attrs, "sam", 10, GalOp.search);
             System.out.println(r);
         } catch (ServiceException e) {
             e.printStackTrace();

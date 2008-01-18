@@ -70,8 +70,7 @@ public class TestGal extends TestCase {
     static {
         if (SOAP_PROV) {
             try { 
-                // comment for LdapProvisioning, uncomment for SoapProvisioning
-                TestUtil.cliSetup();  // which will invoke CliUtil.toolSetup();
+                TestUtil.cliSetup();  // which will invoke CliUtil.toolSetup(); and set the Provisioning instance to SoapProvisioning
             } catch (ServiceException e) {
                 e.printStackTrace();
                 System.exit(1);

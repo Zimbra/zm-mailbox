@@ -27,6 +27,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.GalContact;
+import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.ldap.Check;
 import com.zimbra.cs.service.account.SearchGal;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -40,14 +41,24 @@ public class CheckGalConfig extends AdminDocumentHandler {
 
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 
-        Element q = request.getElement(AdminConstants.E_QUERY);
-        String query = q.getText();
-        long limit = q.getAttributeLong(AdminConstants.A_LIMIT, 10);
+        Element q = request.getOptionalElement(AdminConstants.E_QUERY);
+        String query = null;
+        long limit = 0;
+        if (q != null) {
+            query = q.getText();
+            limit = q.getAttributeLong(AdminConstants.A_LIMIT, 10);
+        }
+        
+        Element action = request.getOptionalElement(AdminConstants.E_ACTION);
+        GalOp galOp = GalOp.search;
+        if (action != null)
+            galOp = GalOp.fromString(action.getText());
+                
 	    Map attrs = AdminService.getAttrs(request, true);
 
 
         Element response = lc.createElement(AdminConstants.CHECK_GAL_CONFIG_RESPONSE);
-        Check.Result r = Check.checkGalConfig(attrs, query, (int)limit);
+        Check.Result r = Check.checkGalConfig(attrs, query, (int)limit, galOp);
         
         response.addElement(AdminConstants.E_CODE).addText(r.getCode());
         String message = r.getMessage();
