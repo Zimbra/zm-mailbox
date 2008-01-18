@@ -36,13 +36,22 @@ import com.zimbra.common.util.LogFactory;
  * 
  * Take ZimbraHits which are already sorted by sort-order and additionally
  * sort them by mail-item-id
+ * 
+ * This Grouper has no effect if the current sort mode is "none"
  *
  */
 public class HitIdGrouper extends BufferingResultsGrouper {
     private SortBy mSortOrder;
     private static Log mLog = LogFactory.getLog(HitIdGrouper.class);
     
-    public HitIdGrouper(ZimbraQueryResults hits, SortBy sortOrder) {
+    public static ZimbraQueryResults Create(ZimbraQueryResults hits, SortBy sortOrder) {
+        if (sortOrder == SortBy.NONE)
+            return hits;
+        else
+            return new HitIdGrouper(hits, sortOrder);
+    }
+    
+    private HitIdGrouper(ZimbraQueryResults hits, SortBy sortOrder) {
         super(hits);
         mSortOrder = sortOrder;
     }

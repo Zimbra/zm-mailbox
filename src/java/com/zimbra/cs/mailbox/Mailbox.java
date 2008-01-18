@@ -3163,10 +3163,10 @@ public class Mailbox {
             throw ServiceException.INVALID_REQUEST("The OperationContext must not be null", null);
         
             synchronized (this) {
-            if (mMessagesToIndex.size() > 0) {
-                ZimbraLog.mailbox.debug("DEBUG_BATCH_MESSAGE_INDEXING -- indexing "+mMessagesToIndex.size()+" messages");
-                reIndex(octxt, null, mMessagesToIndex, 0, true);
-                mMessagesToIndex = new HashSet<Integer>();
+                if (mMessagesToIndex.size() > 0) {
+                    ZimbraLog.mailbox.debug("DEBUG_BATCH_MESSAGE_INDEXING -- indexing "+mMessagesToIndex.size()+" messages");
+                    reIndex(octxt, null, mMessagesToIndex, 0, true);
+                    mMessagesToIndex = new HashSet<Integer>();
                 }
             }
         return MailboxIndex.search(proto, octxt, this, params);

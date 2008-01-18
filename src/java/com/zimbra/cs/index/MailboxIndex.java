@@ -89,15 +89,15 @@ public final class MailboxIndex
 //                ServiceName service = ServiceName.valueOf(words[1]);
 //                mbox.getPersona().gatewayUnRegister(service);
 //            } else
-                if ("$maint".equals(words[0])) {
-                MailboxManager.MailboxLock lock = MailboxManager.getInstance().beginMaintenance(mbox.getAccountId(), mbox.getId());
-                MailboxManager.getInstance().endMaintenance(lock, true, false);
-            } else {
-                throw ServiceException.FAILURE("Usage: \"$im_reg service name password\" or \"$im_unreg service\"", null); 
-        }
+//                if ("$maint".equals(words[0])) {
+//                MailboxManager.MailboxLock lock = MailboxManager.getInstance().beginMaintenance(mbox.getAccountId(), mbox.getId());
+//                MailboxManager.getInstance().endMaintenance(lock, true, false);
+//            } else {
+//                throw ServiceException.FAILURE("Usage: \"$im_reg service name password\" or \"$im_unreg service\"", null);
+            throw ServiceException.FAILURE("Unknown $ command", null);
                 
-            return new EmptyQueryResults(params.getTypes(), params.getSortBy(), params.getMode());
-            }			
+//            return new EmptyQueryResults(params.getTypes(), params.getSortBy(), params.getMode());
+        }			
         
         //
         // calendar expansions
@@ -147,7 +147,7 @@ public final class MailboxIndex
         ZimbraQuery zq = new ZimbraQuery(mbox, params);
 
         if (ZimbraLog.searchstats.isDebugEnabled()) {
-            int textCount = zq.countSearchTextParts();
+            int textCount = zq.countSearchTextOperations();
             ZimbraLog.searchstats.debug("Executing search with ["+textCount+"] text parts");
         }
         
@@ -360,6 +360,8 @@ public final class MailboxIndex
         TASK_STATUS_DESCENDING("taskStatusDesc", (byte)0),
         TASK_PERCENT_COMPLETE_ASCENDING("taskPercCompletedAsc", (byte)0),
         TASK_PERCENT_COMPLETE_DESCENDING("taskPercCompletedDesc", (byte)0),
+        
+        NONE("none", (byte)0x10),
         ;
 
         static HashMap<String, SortBy> sNameMap = new HashMap<String, SortBy>();

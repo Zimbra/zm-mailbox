@@ -376,6 +376,8 @@ public final class SearchParams implements Cloneable {
             String addedPart = null;
             
             switch (params.getSortBy()) {
+                case NONE:
+                    throw new IllegalArgumentException("Invalid request: cannot use cursor with SortBy=NONE");
                 case DATE_ASCENDING:
                     addedPart = "date:"+quote(">=", sortVal)+(endSortVal!=null ? " date:"+quote("<", endSortVal) : "");
                     break;

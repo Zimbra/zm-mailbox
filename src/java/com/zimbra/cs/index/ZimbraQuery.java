@@ -2215,25 +2215,45 @@ public final class ZimbraQuery {
         mSortByOverride = sortBy;
     }
 
-    private static final class CountTextParts implements QueryOperation.RecurseCallback {
-        int numTextParts = 0;
-        
+    private static final class CountTextOperations implements QueryOperation.RecurseCallback {
+        int num = 0;
         public void recurseCallback(QueryOperation op) {
             if (op instanceof TextQueryOperation)
-                numTextParts++;
+                num++;
+        }
+    }
+    private static final class CountCombiningOperations implements QueryOperation.RecurseCallback {
+        int num = 0;
+        public void recurseCallback(QueryOperation op) {
+            if (op instanceof CombiningQueryOperation) {
+                if (((CombiningQueryOperation)op).getNumSubOps() > 1)  
+                    num++;
+            }
         }
     }
     
     /**
-     * @return TRUE if this search touches the fulltext database
+     * @return number of Text parts of this query
      */
-    int countSearchTextParts() {
+    int countSearchTextOperations() {
         if (mOp == null)
             return 0;
-        CountTextParts count = new CountTextParts();
+        CountTextOperations count = new CountTextOperations();
         mOp.depthFirstRecurse(count);
-        return count.numTextParts;
+        return count.num;
     }
+    
+    /**
+     * @return number of non-trivial (num sub-ops > 1) Combining operations (joins/unions)
+     */
+    int countNontrivialCombiningOperations() {
+        if (mOp == null)
+            return 0;
+        CountCombiningOperations count =  new CountCombiningOperations();
+        mOp.depthFirstRecurse(count);
+        return count.num;
+    }
+    
     
     public static boolean unitTests(Mailbox mbox) throws ServiceException {
 
@@ -2479,7 +2499,8 @@ public final class ZimbraQuery {
 
             // if we've only got one target, and it is external, then mOp must be a RemoteQueryOp
             mResults = mOp.run(mMbox, mbidx, mParams, mChunkSize);
-            mResults = new HitIdGrouper(mResults, mParams.getSortBy());
+            
+            mResults = HitIdGrouper.Create(mResults, mParams.getSortBy());
             
             if (!mParams.getIncludeTagDeleted()) {
                 FilteredQueryResults filtered = new FilteredQueryResults(mResults);

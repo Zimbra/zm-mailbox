@@ -223,6 +223,9 @@ public class DbSearch {
             return NO_HINT;
 
         int sortBy = sortInfo & SORT_FIELD_MASK;
+        if (sortBy == SORT_NONE)
+            return NO_HINT;
+        
         String index = null;
 
         DbSearchConstraintsNode.NodeType ntype = node.getNodeType();

@@ -31,10 +31,11 @@ import com.zimbra.cs.index.MailboxIndex.SortBy;
 
 
 /**
- * @author tim
- *
  * Take a bunch of QueryResults (each sorted with the same sort-order) and 
  * iterate them in order....kind of like a MergeSort
+ * 
+ * TODO - this class duplicates functionality in UnionQueryOperation, 
+ * they should be combined somehow
  * 
  * The primary use of this class is for cross-mailbox-search, when you need to
  * aggregate search results together from many mailboxes 
@@ -43,7 +44,7 @@ import com.zimbra.cs.index.MailboxIndex.SortBy;
 public class MultiQueryResults implements ZimbraQueryResults
 {
     SortBy mSortOrder;
-    HitIdGrouper[] mGroupedHits;
+    ZimbraQueryResults[] mResults;
     private ZimbraHit mCachedNextHit = null;
     
     public SortBy getSortBy() {
@@ -53,9 +54,9 @@ public class MultiQueryResults implements ZimbraQueryResults
     {
         mSortOrder = sortOrder;
         
-        mGroupedHits = new HitIdGrouper[res.length];
+        mResults = new ZimbraQueryResults[res.length];
         for (int i = 0; i < res.length; i++) {
-            mGroupedHits[i] = new HitIdGrouper(res[i], sortOrder); 
+            mResults[i] = HitIdGrouper.Create(res[i], sortOrder); 
         }
     }
     
@@ -68,31 +69,40 @@ public class MultiQueryResults implements ZimbraQueryResults
     private void internalGetNextHit() throws ServiceException
     {
         if (mCachedNextHit == null) {
-            int i = 0;
+            if (mSortOrder == MailboxIndex.SortBy.NONE) {
+                for (ZimbraQueryResults res : mResults) {
+                    mCachedNextHit = res.getNext();
+                    if (mCachedNextHit != null)
+                        return;
+                }
+                // no more results!
+                
+            } else {
+                // mergesort: loop through QueryOperations and find the "best" hit
             
-            // loop through QueryOperations and find the "best" hit
-            int currentBestHitOffset = -1;
-            ZimbraHit currentBestHit = null;
-            for (i = 0; i < mGroupedHits.length; i++) {
-                ZimbraQueryResults op = mGroupedHits[i]; 
-                if (op.hasNext()) {
-                    if (currentBestHitOffset == -1) {
-                        currentBestHitOffset = i;
-                        currentBestHit = op.peekNext();
-                    } else {
-                        ZimbraHit opNext = op.peekNext();
-                        int result = opNext.compareBySortField(mSortOrder, currentBestHit);
-                        if (result < 0) {
-                            // "before"
+                int currentBestHitOffset = -1;
+                ZimbraHit currentBestHit = null;
+                for (int i = 0; i < mResults.length; i++) {
+                    ZimbraQueryResults op = mResults[i]; 
+                    if (op.hasNext()) {
+                        if (currentBestHitOffset == -1) {
                             currentBestHitOffset = i;
-                            currentBestHit = opNext;
+                            currentBestHit = op.peekNext();
+                        } else {
+                            ZimbraHit opNext = op.peekNext();
+                            int result = opNext.compareBySortField(mSortOrder, currentBestHit);
+                            if (result < 0) {
+                                // "before"
+                                currentBestHitOffset = i;
+                                currentBestHit = opNext;
+                            }
                         }
                     }
                 }
-            }
-            if (currentBestHitOffset > -1) {
-                mCachedNextHit = mGroupedHits[currentBestHitOffset].getNext();
-                assert(mCachedNextHit == currentBestHit);
+                if (currentBestHitOffset > -1) {
+                    mCachedNextHit = mResults[currentBestHitOffset].getNext();
+                    assert(mCachedNextHit == currentBestHit);
+                }
             }
         }
     }
@@ -120,8 +130,8 @@ public class MultiQueryResults implements ZimbraQueryResults
     }
     
     public void resetIterator() throws ServiceException {
-        for (int i = 0; i < mGroupedHits.length; i++) {
-            mGroupedHits[i].resetIterator();
+        for (int i = 0; i < mResults.length; i++) {
+            mResults[i].resetIterator();
         }
     }
     
@@ -139,23 +149,23 @@ public class MultiQueryResults implements ZimbraQueryResults
     }
     
     public void doneWithSearchResults() throws ServiceException {
-        for (int i = 0; i < mGroupedHits.length; i++) {
-            mGroupedHits[i].doneWithSearchResults();
+        for (int i = 0; i < mResults.length; i++) {
+            mResults[i].doneWithSearchResults();
         }
     }
     
     public List<QueryInfo> getResultInfo() { 
         List<QueryInfo> toRet = new ArrayList<QueryInfo>();
-        for (HitIdGrouper grp : mGroupedHits) {
-            toRet.addAll(grp.getResultInfo());
+        for (ZimbraQueryResults results : mResults) {
+            toRet.addAll(results.getResultInfo());
         }
         return toRet;
     }
     
     public int estimateResultSize() throws ServiceException {
         long total = 0;
-        for (HitIdGrouper grp : mGroupedHits) {
-            total += grp.estimateResultSize();
+        for (ZimbraQueryResults results : mResults) {
+            total += results.estimateResultSize();
         }
         if (total > Integer.MAX_VALUE)
             return Integer.MAX_VALUE;
