@@ -704,8 +704,8 @@ public class LdapProvisioning extends Provisioning {
                 }
             }
 
-            // set all the mail-related attrs if zimbraMailHost was specified
-            if (attrs.get(Provisioning.A_zimbraMailHost) != null) {
+            // set all the mail-related attrs if zimbraMailHost or zimbraMailTransport was specified
+            if (attrs.get(Provisioning.A_zimbraMailHost) != null || attrs.get(Provisioning.A_zimbraMailTransport) != null) {
                 // default mail status is enabled
                 if (attrs.get(Provisioning.A_zimbraMailStatus) == null)
                     attrs.put(A_zimbraMailStatus, MAIL_STATUS_ENABLED);
@@ -714,7 +714,8 @@ public class LdapProvisioning extends Provisioning {
                 if (attrs.get(Provisioning.A_zimbraMailDeliveryAddress) == null) {
                     attrs.put(A_zimbraMailDeliveryAddress, emailAddress);
                 }
-            }
+            } else
+                throw ServiceException.INVALID_REQUEST("missing " + Provisioning.A_zimbraMailHost + " or " + Provisioning.A_zimbraMailTransport +  " for CreateAccount: " + emailAddress, null);
 
             // amivisAccount requires the mail attr, so we always add it            
             attrs.put(A_mail, emailAddress);                
