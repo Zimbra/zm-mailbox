@@ -454,7 +454,7 @@ public class CalendarUtils {
                         if (valueType == null) {
                             valueType = dtvalValueType;
                             rexdate.setValueType(valueType);
-                        } else
+                        } else if (valueType != dtvalValueType)
                             throw ServiceException.INVALID_REQUEST(
                                     "Cannot mix different value types in a single <" +
                                     intElt.getName() + "> element", null);
