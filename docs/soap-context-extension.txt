@@ -25,41 +25,26 @@ zdsync extension
 This extension is used by zdesktop to carry sync status information in soap responses so that web client can properly inform user of mailbox sync status.  It is only present when server is running as zdesktop backend.  zdsync usually is added to every single soap response.  It has the following structure:
 
 <zdsync xmlns="urn:zimbraOffline">
-  [*(<account name="{NAME}" [stage="{STAGE}"] state="{STATE}" lastsync="{LASTSYNC}" lasttry="{LASTTRY}">
-    [<error code="{CODE}" [message="{MESSAGE}"]>
+  [(<account name="{NAME}" status="{STATUS}" lastsync="{LASTSYNC}">
+    [<error [message="{MESSAGE}"]>
       [<exception>{EXCEPTION}</exception>]
     </error>]
   </account>)]
-  [*(<datasource name="{NAME}" [stage="{STAGE}"] state="{STATE}" lastsync="{LASTSYNC}" lasttry="{LASTTRY}">
-    [<error code="{CODE}" [message="{MESSAGE}"]>
-      [<exception>{EXCEPTION}</exception>]
-    </error>]
-  </datasource>)]
 </zdsync>
 
 where
 
-{NAME} -- name of account (email) or datasource (user specified).
+{NAME} -- name of account (email)
 
-{STAGE} -- choice of INITIAL|SYNC|RESET, where
-           INITIAL: initial sync has started but has not finished
-           SYNC: initial sync has finished
-           RESET: mailbox is being reset
-           Note to client implementation.  INITIAL and SYNC are the most common, the other two are transient and can be ignored.  The "stage" attribute is optional.  If not present, it means either the sync process has not started or the "stage" attribute is not applicable to this datasource.
-
-{STATE} -- choice of OFFLINE|ONLINE|ERROR|RUNNING, where
-           OFFLINE: can't reach remote server, most likely network connection is down
-           ONLINE: last sync was successful
-           ERROR: last sync encountered an error other than network connection issue
-           RUNNING: a sync with remote server is running
+{STATUS} -- choice of unknown|offline|online|running|authfail|error, where
+           unknown: no sync run yet since last server start
+           offline: can't reach remote server, most likely network connection is down
+           online: last sync was successful
+           running: a sync with remote server is in progress
+           authfail: authentication failed in last sync attempt
+           error: last sync encountered an error other than network or authentication problems
 {LASTSYNC} -- timestamp in epoch milliseconds at the end of the last successful sync which could be initial sync or delta sync. 0 means initial sync is not complete (could be running or have encountered error).
-{LASTTRY} -- timestamp in epoch milliseconds at the end of the last sync attempt. If the last sync attempt was successfully completed, {LASTTRY} is same as {LASTSYNC}.  0 means initial sync has not started or is running.
-{CODE} -- error code that a client could understand.  Currently only has the following choices:
-          REMOTEAUTH: authentication failure with remote server, most likely the password has changed sync account was created in zdesktop.  Client should prompt the user to change password.
-          UNKNONW: unexpected sync error
 {MESSAGE} -- human readable error message in English.  Note, this is more a debugging aid and client is discouraged to display this directly to user.
 {EXCEPTION} -- exception stack trace associated with the last sync error
 
-NOTE: <error> is only present when {STATE} is ERROR, and is cleared when {STATE} changes to anything else such as RUNNING.  It is possible that a client may see the same <error> in multiple soap responses if no sync has been attempted between two client requests.  Client should avoid alerting the user of the same error multiple times. 
-
-NOTE: The zdsync block may contain 0 to many account blocks and 0 to many datasource blocks.  Each account corresponds to a remote server account on a ZCS server, whereas each datasource represent relationship with a third party service (such as POP or IMAP).  When there are multiple accounts and/or data sources, the zdsync block will include status on all accounts and datasources regardless of the target account of the client request.
+NOTE: <error> is only present when {STATUS} is ERROR, and is cleared when {STATUS} changes to anything else such as running.  It is possible that a client may see the same <error> in multiple soap responses if no sync has been attempted between two client requests.  Client should avoid alerting the user of the same error multiple times. 
