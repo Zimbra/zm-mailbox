@@ -848,12 +848,32 @@ checked.
 
 <CheckGalConfigRequest>
   <a n='zimbraGalMode'>ldap</a>
+  
   <a n='zimbraGalLdapURL'>...</a>
   <a n='zimbraGalLdapSearchBase'>...</a>
   <a n='zimbraGalLdapFilter'>...</a>
+  <a n='zimbraGalLdapAuthMech'>...</a>
   <a n='zimbraGalLdapBindDn'>...</a>*
   <a n='zimbraGalLdapBindPassword'>...</a>*
-  <query limit="...">...</query>
+  <a n='zimbraGalLdapKerberos5Principal'>...</a>*
+  <a n='zimbraGalLdapKerberos5Keytab'>...</a>*
+  
+  <a n='zimbraGalSyncLdapURL'>...</a>
+  <a n='zimbraGalSyncLdapSearchBase'>...</a>
+  <a n='zimbraGalSyncLdapFilter'>...</a>
+  <a n='zimbraGalSyncLdapAuthMech'>...</a>
+  <a n='zimbraGalSyncLdapBindDn'>...</a>*
+  <a n='zimbraGalSyncLdapBindPassword'>...</a>*
+  <a n='zimbraGalSyncLdapKerberos5Principal'>...</a>*
+  <a n='zimbraGalSyncLdapKerberos5Keytab'>...</a>*
+  
+  <a n='zimbraGalAutoCompleteLdapFilter'>...</a>
+  
+  <a n='zimbraGalTokenizeAutoCompleteKey'>...</a>
+  <a n='zimbraGalTokenizeSearchKey'>...</a>
+  
+  <query limit="...">...</query>*
+  <action>{GAL-action}</action>*
 </CheckGalConfigRequest>
 
 <CheckGalConfigResponse>
@@ -864,7 +884,12 @@ checked.
 
 notes: 
  - zimbraGalMode must be set to ldap, even if you eventually want to set it to "both".
- - bindDn/bindPassword are optional if server allows anonymous binds
+ - <action> is optional.  GAL-action can be autocomplete|search|sync.  Default is search.
+ - <query> is ignored if <action> is "sync".
+ - BindDn/BindPassword are optional if server allows anonymous binds, and AuthMech is not set or is "simple".
+ - Kerberos5Principal/Kerberos5Keytab are required only if AuthMech is "kerberos5".
+ - zimbraGalSyncLdapXXX attributes are for GAL sync.  They are ignored if <action> is not sync.
+   For GAL sync, if a zimbraGalSyncLdapXXX attribute is not set, server will fallback to the corresponding zimbraGalLdapXXX attribute.
 
 ------------------------------------------------------------
 

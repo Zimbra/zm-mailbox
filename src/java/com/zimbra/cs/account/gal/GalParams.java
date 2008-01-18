@@ -1,5 +1,7 @@
 package com.zimbra.cs.account.gal;
 
+import java.util.Map;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
@@ -13,9 +15,6 @@ public abstract class GalParams {
     
     GalParams(Domain domain, GalOp galOp) throws ServiceException {
         
-        /*
-         * page size
-         */
         String pageSize = null;
         if (galOp == GalOp.sync) {
             pageSize = domain.getAttr(Provisioning.A_zimbraGalSyncLdapPageSize);
@@ -33,8 +32,21 @@ public abstract class GalParams {
         
     }
     
-    GalParams(String pageSize) {
+    GalParams(Map attrs, GalOp galOp) {
+        String pageSize = null;
+        if (galOp == GalOp.sync) {
+            pageSize = (String)attrs.get(Provisioning.A_zimbraGalSyncLdapPageSize);
+            
+            if (pageSize == null)
+                pageSize = (String)attrs.get(Provisioning.A_zimbraGalLdapPageSize);
+        } else {
+            pageSize = (String)attrs.get(Provisioning.A_zimbraGalLdapPageSize);
+        }
+        
         setPageSize(pageSize);
+        
+        mTokenizeAutoCompleteKey = (String)attrs.get(Provisioning.A_zimbraGalTokenizeAutoCompleteKey);
+        mTokenizeSearchKey = (String)attrs.get(Provisioning.A_zimbraGalTokenizeSearchKey);
     }
     
     private void setPageSize(String pageSize) {
@@ -143,23 +155,83 @@ public abstract class GalParams {
         /*
          * called from Check, where there isn't a domain object
          */
-        public ExternalGalParams(String[] url,
-                                 String authMech,
-                                 String bindDn,
-                                 String bindPassword,
-                                 String krb5Principal,
-                                 String krb5Keytab,
-                                 String searchBase,
-                                 String filter,
-                                 String pageSize) throws ServiceException {
+        public ExternalGalParams(Map attrs, GalOp galOp) throws ServiceException {
+            super(attrs, galOp);
             
-            super(pageSize);
+            String authMech;
+            String bindDn;
+            String bindPassword;
+            String krb5Principal;
+            String krb5Keytab;
             
-            mUrl= url;
-            mSearchBase = searchBase;
-            mFilter = filter;
+            if (galOp == GalOp.sync) {
+                mUrl = getMultiAttr(attrs, Provisioning.A_zimbraGalSyncLdapURL, false);
+                mSearchBase = (String)attrs.get(Provisioning.A_zimbraGalSyncLdapSearchBase);
+                mFilter = (String)attrs.get(Provisioning.A_zimbraGalSyncLdapFilter);
+                
+                authMech = (String)attrs.get(Provisioning.A_zimbraGalSyncLdapAuthMech);
+                bindDn = (String)attrs.get(Provisioning.A_zimbraGalSyncLdapBindDn);
+                bindPassword = (String)attrs.get(Provisioning.A_zimbraGalSyncLdapBindPassword);
+                krb5Principal = (String)attrs.get(Provisioning.A_zimbraGalSyncLdapKerberos5Principal);
+                krb5Keytab = (String)attrs.get(Provisioning.A_zimbraGalSyncLdapKerberos5Keytab);
+                
+                // fallback to zimbraGalLdap attrs is sync specific params are not set
+                if (mUrl == null || mUrl.length == 0)
+                    mUrl = getMultiAttr(attrs, Provisioning.A_zimbraGalLdapURL, true);
+                if (mSearchBase == null)
+                    mSearchBase = getRequiredAttr(attrs, Provisioning.A_zimbraGalLdapSearchBase);
+                if (mFilter == null)
+                    mFilter = getRequiredAttr(attrs, Provisioning.A_zimbraGalLdapFilter);
+                
+                if (authMech == null)
+                    authMech = (String)attrs.get(Provisioning.A_zimbraGalLdapAuthMech);
+                if (bindDn == null)
+                    bindDn = (String)attrs.get(Provisioning.A_zimbraGalLdapBindDn);
+                if (bindPassword == null)
+                    bindPassword = (String)attrs.get(Provisioning.A_zimbraGalLdapBindPassword);
+                if (krb5Principal == null)
+                    krb5Principal = (String)attrs.get(Provisioning.A_zimbraGalLdapKerberos5Principal);
+                if (krb5Keytab == null)
+                    krb5Keytab = (String)attrs.get(Provisioning.A_zimbraGalLdapKerberos5Keytab);
+                
+            } else {
+                mUrl = getMultiAttr(attrs, Provisioning.A_zimbraGalLdapURL, true);
+                mSearchBase = getRequiredAttr(attrs, Provisioning.A_zimbraGalLdapSearchBase);
+                
+                if (galOp == GalOp.autocomplete)
+                    mFilter = getRequiredAttr(attrs, Provisioning.A_zimbraGalAutoCompleteLdapFilter);
+                else
+                    mFilter = getRequiredAttr(attrs, Provisioning.A_zimbraGalLdapFilter);
             
+                authMech = (String)attrs.get(Provisioning.A_zimbraGalLdapAuthMech);
+                bindDn = (String)attrs.get(Provisioning.A_zimbraGalLdapBindDn);
+                bindPassword = (String)attrs.get(Provisioning.A_zimbraGalLdapBindPassword);
+                krb5Principal = (String)attrs.get(Provisioning.A_zimbraGalLdapKerberos5Principal);
+                krb5Keytab = (String)attrs.get(Provisioning.A_zimbraGalLdapKerberos5Keytab);
+            }
+                
             mCredential = new LdapGalCredential(authMech, bindDn, bindPassword, krb5Principal, krb5Keytab);
+        }
+        
+        private static String[] getMultiAttr(Map attrs, String name, boolean required) throws ServiceException {
+            Object v = attrs.get(name);
+            if (v instanceof String) return new String[] {(String)v};
+            else if (v instanceof String[]) {
+                String value[] = (String[]) v;
+                if (value != null && value.length > 0)
+                    return value;
+            }
+            if (required)
+                throw ServiceException.INVALID_REQUEST("must specifiy: "+name, null);
+            else
+                return null;
+        }
+        
+        private static String getRequiredAttr(Map attrs, String name) throws ServiceException {
+            String value = (String) attrs.get(name);
+            if (value == null)
+                throw ServiceException.INVALID_REQUEST("must specifiy: "+name, null);
+            return value;
         }
         
         public String[] url() { return mUrl; }
