@@ -269,6 +269,7 @@ public class FileLogWriter implements LogWriter {
      */
     public void log(RedoableOp op, InputStream data, boolean synchronous) throws IOException {
         int seq;
+        boolean sameMboxAsLastOp = false;
 
         synchronized (mLock) {
             if (mRAF == null)
@@ -313,6 +314,9 @@ public class FileLogWriter implements LogWriter {
             }
 
             mLastLogTime = System.currentTimeMillis();
+
+            sameMboxAsLastOp = mLastOpMboxId == op.getMailboxId();
+            mLastOpMboxId = op.getMailboxId();
         }
 
         // cases 1 above
@@ -320,25 +324,35 @@ public class FileLogWriter implements LogWriter {
             return;
 
         if (mFsyncIntervalMS > 0) {
-            // case 2
-            try {
-                // wait for fsync thread to write this entry to disk
-                synchronized (mFsyncCond) {
-                    mFsyncCond.wait(10000);
+            if (!sameMboxAsLastOp) {
+                // case 2
+                try {
+                    // wait for fsync thread to write this entry to disk
+                    synchronized (mFsyncCond) {
+                        mFsyncCond.wait(10000);
+                    }
+                } catch (InterruptedException e) {
+                    mLog.info("Thread interrupted during fsync");
                 }
-            } catch (InterruptedException e) {
-                mLog.info("Thread interrupted during fsync");
-            }
-            synchronized (mLock) {
-                // timed out, so fsync in this thread
-                if (seq > mFsyncSeq)
-                    fsync();
+                synchronized (mLock) {
+                    // timed out, so fsync in this thread
+                    if (seq > mFsyncSeq)
+                        fsync();
+                }
+            } else {
+                // If this op is on same mailbox as last op, let's assume there's a thread issuing
+                // many updates on a single mailbox in a loop, such as when importing a large ics file.
+                // We don't want to pause for mFsyncIntervalMS between every op (because all writes
+                // to a single mailbox are synchronized), so fsync inline and return immediately.
+                fsync();
             }
         } else {
             // case 3
             fsync();
         }
     }
+
+    private int mLastOpMboxId;
 
     public void flush() throws IOException {
         fsync();

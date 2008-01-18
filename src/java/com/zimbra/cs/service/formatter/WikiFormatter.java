@@ -223,7 +223,9 @@ public class WikiFormatter extends Formatter {
     }
 
     @Override
-	public void saveCallback(byte[] body, Context context, String contentType, Folder folder, String filename) throws UserServletException, ServiceException {
+	public void saveCallback(Context context, String contentType, Folder folder, String filename)
+    throws UserServletException, ServiceException, IOException {
+        byte[] body = context.getPostBody();
         Mailbox mbox = folder.getMailbox();
 
         String creator = (context.authAccount == null ? null : context.authAccount.getName());

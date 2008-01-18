@@ -195,7 +195,8 @@ public class SyncFormatter extends Formatter {
     }
 
     // FIXME: need to support tags, flags, date, etc...
-    public void saveCallback(byte[] body, Context context, String contentType, Folder folder, String filename) throws IOException, ServiceException, UserServletException {
+    public void saveCallback(Context context, String contentType, Folder folder, String filename) throws IOException, ServiceException, UserServletException {
+        byte[] body = context.getPostBody();
         try {
             Mailbox mbox = folder.getMailbox();
             ParsedMessage pm = new ParsedMessage(body, mbox.attachmentsIndexingEnabled());

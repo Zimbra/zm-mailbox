@@ -78,7 +78,11 @@ public class CalendarUtils {
 
         String calStr = content.getText();
         StringReader reader = new StringReader(calStr);
-        toRet.mCal = ZCalendarBuilder.build(reader);
+        try {
+            toRet.mCal = ZCalendarBuilder.build(reader);
+        } finally {
+            reader.close();
+        }
 
         List<Invite> invs = Invite.createFromCalendar(account, toRet.mSummary,
                 toRet.mCal, false);

@@ -1358,6 +1358,15 @@ public class Invite {
         return createFromCalendar(account, fragment, cals, sentByMe, false, null);
     }
 
+    public static void createFromCalendar(
+            Account account, String fragment,
+            String method, TimeZoneMap tzmap, Iterator<ZComponent> compIter,
+            boolean sentByMe, boolean continueOnError, InviteVisitor visitor)
+    throws ServiceException {
+        createFromCalendar(null, account, fragment, method, tzmap, compIter, sentByMe, null, 0,
+                           continueOnError, visitor);
+    }
+
     public static List<Invite> createFromCalendar(
             Account account, String fragment, List<ZVCalendar> cals, boolean sentByMe,
             boolean continueOnError, InviteVisitor visitor)
@@ -1375,25 +1384,30 @@ public class Invite {
             Mailbox mbx, int mailItemId,
             boolean continueOnError, InviteVisitor visitor)
     throws ServiceException {
-        TimeZoneMap tzmap = new TimeZoneMap(ICalTimeZone.getAccountTimeZone(account));
+        String method = cal.getPropVal(ICalTok.METHOD, ICalTok.PUBLISH.toString());
         
-        String methodStr = cal.getPropVal(ICalTok.METHOD, ICalTok.PUBLISH.toString());
-        
-        int compNum = 0;
-
         // process the TIMEZONE's first: everything depends on them being there...
+        TimeZoneMap tzmap = new TimeZoneMap(ICalTimeZone.getAccountTimeZone(account));
         for (ZComponent comp : cal.mComponents) {
-            switch(comp.getTok()) {
-            case VTIMEZONE:
+            if (ICalTok.VTIMEZONE.equals(comp.getTok())) {
                 ICalTimeZone tz = ICalTimeZone.fromVTimeZone(comp);
                 tzmap.add(tz);
-                break;
-                
             }
         }
-        
-        // now, process the other components (currently, only VEVENT and VTODO)
-        for (ZComponent comp : cal.mComponents) {
+
+        createFromCalendar(toAdd, account, fragment, method, tzmap, cal.getComponentIterator(),
+                           sentByMe, mbx, mailItemId, continueOnError, visitor);
+    }
+
+    private static void createFromCalendar(
+            List<Invite> toAdd, Account account, String fragment,
+            String method, TimeZoneMap tzmap, Iterator<ZComponent> compIter,
+            boolean sentByMe, Mailbox mbx, int mailItemId,
+            boolean continueOnError, InviteVisitor visitor)
+    throws ServiceException {
+        int compNum = 0;
+        for (; compIter.hasNext(); ) {
+            ZComponent comp = compIter.next();
             Invite newInv = null;
             try {
                 byte type;
@@ -1409,10 +1423,10 @@ public class Invite {
                     boolean isEvent = ICalTok.VEVENT.equals(compTypeTok);
                     boolean isTodo = ICalTok.VTODO.equals(compTypeTok);
                     try {
-                        newInv = new Invite(type, methodStr, tzmap, false);
-    
-                        toAdd.add(newInv);
-    
+                        newInv = new Invite(type, method, tzmap, false);
+                        if (toAdd != null)
+                            toAdd.add(newInv);
+
                         List<Object> addRecurs = new ArrayList<Object>();
                         List<Object> subRecurs = new ArrayList<Object>();
     
