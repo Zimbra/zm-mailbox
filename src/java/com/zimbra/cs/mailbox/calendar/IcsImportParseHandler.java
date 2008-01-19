@@ -84,8 +84,9 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
     public int getNumCals() { return mNumCals; }
 
     public void startComponent(String name) {
+        if (mComponents.isEmpty())
+            mTZIDsSeen.clear();
         mComponents.add(new ZComponent(name));
-        mTZIDsSeen.clear();
     }
 
     public void endComponent(String name) throws ParserException {
