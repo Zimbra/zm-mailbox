@@ -215,6 +215,7 @@ public class LC {
 
     public static final KnownKey calendar_outlook_compatible_allday_events;
     public static final KnownKey calendar_entourage_compatible_timezones;
+    public static final KnownKey calendar_ics_import_full_parse_max_size;
 
     public static final KnownKey nio_enabled;
     public static final KnownKey nio_debug_enabled;
@@ -872,6 +873,12 @@ public class LC {
         calendar_entourage_compatible_timezones.setDefault("true");
         calendar_entourage_compatible_timezones.setDoc(
                 "Quote TZID parameter in iCalendar properties, to workaround bug in MS Entourage.  True by default.");
+
+        calendar_ics_import_full_parse_max_size = new KnownKey("calendar_ics_import_full_parse_max_size");
+        calendar_ics_import_full_parse_max_size.setDefault("131072");  // 128KB
+        calendar_ics_import_full_parse_max_size.setDoc(
+                "During ics import use full parser if ics size is less than or equal to this; " +
+                "larger ics files are parsed with callback parser which doesn't allow forward references to VTIMEZONE TZID");
 
         nio_imap_enabled = new KnownKey("nio_imap_enabled");
         nio_imap_enabled.setDefault("false");
