@@ -105,11 +105,11 @@ public abstract class Formatter {
         }
     }
 
-    public final void save(byte[] body, UserServlet.Context context, String contentType, Folder folder, String filename)
+    public final void save(UserServlet.Context context, String contentType, Folder folder, String filename)
     throws UserServletException, IOException, ServletException, ServiceException {
         BlockingOperation op = BlockingOperation.schedule(this.getClass().getSimpleName()+"(SAVE)", null, context.opContext, context.targetMailbox, Requester.REST, Priority.BATCH, 1);
         try {
-            saveCallback(body, context, contentType, folder, filename);
+            saveCallback(context, contentType, folder, filename);
         } catch (ServiceException e) {
             Throwable cause = e.getCause();
             if (cause instanceof UserServletException)
@@ -123,11 +123,11 @@ public abstract class Formatter {
             op.finish();
         }
     }
-    
+
     public abstract void formatCallback(UserServlet.Context context)
     throws UserServletException, ServiceException, IOException, ServletException;
 
-    public void saveCallback(byte[] body, UserServlet.Context context, String contentType, Folder folder, String filename)
+    public void saveCallback(UserServlet.Context context, String contentType, Folder folder, String filename)
     throws UserServletException, ServiceException, IOException, ServletException {
         throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "format not supported for save");
     }

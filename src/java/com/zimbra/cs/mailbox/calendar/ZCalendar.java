@@ -862,14 +862,20 @@ public class ZCalendar {
 //        
 //    }
 
-    private static class ZContentHandler implements ContentHandler
-    {
+    public interface ZICalendarParseHandler extends ContentHandler {
+        public boolean inZCalendar();
+        public int getNumCals();
+    }
+
+    private static class DefaultContentHandler implements ZICalendarParseHandler {
         List<ZVCalendar> mCals = new ArrayList<ZVCalendar>(1);
         ZVCalendar mCurCal = null;
         List<ZComponent> mComponents = new ArrayList<ZComponent>();
         ZProperty mCurProperty = null;
         private int mNumCals;
         private boolean mInZCalendar;
+
+        public List<ZVCalendar> getCals() { return mCals; }
 
         public void startCalendar() { 
             mInZCalendar = true;
@@ -927,6 +933,7 @@ public class ZCalendar {
     }
 
     public static class ZCalendarBuilder {
+
         public static ZVCalendar build(Reader reader) throws ServiceException {
             List<ZVCalendar> list = buildMulti(reader);
             int len = list.size();
@@ -943,6 +950,13 @@ public class ZCalendar {
         }
 
         public static List<ZVCalendar> buildMulti(Reader reader) throws ServiceException {
+            DefaultContentHandler handler = new DefaultContentHandler();
+            parse(reader, handler);
+            return handler.getCals();
+            
+        }
+
+        public static void parse(Reader reader, ZICalendarParseHandler handler) throws ServiceException {
             BufferedReader br = new BufferedReader(reader);
             reader = br;
             try {
@@ -952,7 +966,6 @@ public class ZCalendar {
             }
 
             CalendarParser parser = new CalendarParserImpl();
-            ZContentHandler handler = new ZContentHandler();
             try {
                 parser.parse(new UnfoldingReader(reader), handler);
             } catch (IOException e) {
@@ -960,11 +973,25 @@ public class ZCalendar {
             } catch (ParserException e) {
                 StringBuilder s = new StringBuilder("Caught ParseException parsing calendar: " + e);
                 try {
-                    reader.reset();
+                    br.reset();
                     s.append('\n');
-                    int charRead;
-                    while ((charRead = reader.read()) != -1)
-                        s.append((char) charRead);
+                    boolean abbreviated = false;
+                    int charsRead = 0;
+                    String line = null;
+                    while ((line = br.readLine()) != null) {
+                        charsRead += line.length();
+                        // Show only the first 32KB of the ics in the log, to avoid running out of heap
+                        // when printing the exception stack trace.
+                        if (charsRead <= 32 * 1024) {
+                            s.append(line).append('\n');
+                        } else if (!abbreviated) {
+                            abbreviated = true;
+                            s.append("...\n");
+                            // QUESTION: Is it okay to break without reading until EOF?
+                            // Will it confuse any code?
+                            break;
+                        }
+                    }
                 } catch (IOException ioe) {
                     ioe.printStackTrace();
                 }
@@ -977,8 +1004,6 @@ public class ZCalendar {
                     ZimbraLog.calendar.warn("Ignoring bad data at the end of text/calendar part: " + s.toString() , e);
                 }
             }
-
-            return handler.mCals;
         }
     }
 
@@ -1020,7 +1045,6 @@ public class ZCalendar {
                     
                 
             }
-            
 
             if (false) {
                 File inFile = new File("c:\\test.ics");
@@ -1028,9 +1052,9 @@ public class ZCalendar {
 
                 CalendarParser parser = new CalendarParserImpl();
 
-                ZContentHandler handler = new ZContentHandler();
+                DefaultContentHandler handler = new DefaultContentHandler();
                 parser.parse(new UnfoldingReader(in), handler);
-                ZVCalendar cal = handler.mCals.get(0);
+                ZVCalendar cal = handler.getCals().get(0);
                 System.out.println(cal.toString());
                 Invite.createFromCalendar(null, null, cal, false);
             }
@@ -1039,6 +1063,5 @@ public class ZCalendar {
             System.out.println("Caught exception: "+e);
             e.printStackTrace();
         }
-
     }
 }

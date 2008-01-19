@@ -19,8 +19,6 @@ package com.zimbra.cs.service;
 
 import java.io.FilterInputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -183,9 +181,6 @@ public class UserServlet extends ZimbraServlet {
 
     protected static final String MSGPAGE_BLOCK = "errorpage.attachment.blocked";
     private String mBlockPage = null;
-
-    /** Default maximum upload size for PUT/POST write ops: 10MB. */
-    private static final long DEFAULT_MAX_SIZE = 10 * 1024 * 1024;
 
     /** Returns the REST URL for the account. */
     public static String getRestUrl(Account acct) throws ServiceException {
@@ -538,10 +533,6 @@ public class UserServlet extends ZimbraServlet {
                     context.format = fmt.getType();
             }
 
-            // get the POST body content
-            long sizeLimit = Provisioning.getInstance().getLocalServer().getLongAttr(Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_SIZE);
-            byte[] body = ByteUtil.getContent(req.getInputStream(), req.getContentLength(), sizeLimit);
-
             context.target = folder;
             resolveFormatter(context);
             if (!context.formatter.supportsSave())
@@ -553,7 +544,7 @@ public class UserServlet extends ZimbraServlet {
             if (mbox == null && context.formatter.requiresAuth())
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
 
-            context.formatter.save(body, context, ctype, folder, filename);
+            context.formatter.save(context, ctype, folder, filename);
         } catch (NoSuchItemException e) {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND, "no such item");
         } catch (ServiceException se) {
@@ -939,6 +930,15 @@ public class UserServlet extends ZimbraServlet {
 
         public boolean isAnonymousRequest() {
             return authAccount.equals(ACL.ANONYMOUS_ACCT);
+        }
+
+        /** Default maximum upload size for PUT/POST write ops: 10MB. */
+        private static final long DEFAULT_MAX_POST_SIZE = 10 * 1024 * 1024;
+
+        public byte[] getPostBody() throws ServiceException, IOException {
+            long sizeLimit = Provisioning.getInstance().getLocalServer().getLongAttr(
+                    Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_POST_SIZE);
+            return ByteUtil.getContent(req.getInputStream(), req.getContentLength(), sizeLimit);
         }
 
         public String toString() {

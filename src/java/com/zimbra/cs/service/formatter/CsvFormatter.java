@@ -17,7 +17,6 @@
 package com.zimbra.cs.service.formatter;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
@@ -88,9 +87,12 @@ public class CsvFormatter extends Formatter {
         return true;
     }
 
-    public void saveCallback(byte[] body, Context context, String contentType, Folder folder, String filename) throws UserServletException, ServiceException {
+    public void saveCallback(Context context, String contentType, Folder folder, String filename)
+    throws UserServletException, ServiceException, IOException {
+        BufferedReader reader = null;
         try {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(body), "UTF-8"));
+            InputStreamReader isr = new InputStreamReader(context.req.getInputStream(), Mime.P_CHARSET_UTF8);
+            reader = new BufferedReader(isr);
             String format = context.req.getParameter(UserServlet.QP_CSVFORMAT);
             List<Map<String, String>> contacts = ContactCSV.getContacts(reader, format);
             ItemId iidFolder = new ItemId(folder);
@@ -99,6 +101,9 @@ public class CsvFormatter extends Formatter {
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "could not parse csv file");
         } catch (UnsupportedEncodingException uee) {
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "could not parse csv file");
+        } finally {
+            if (reader != null)
+                reader.close();
         }
     }
 }

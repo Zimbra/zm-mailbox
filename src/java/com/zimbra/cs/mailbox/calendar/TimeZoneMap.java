@@ -73,12 +73,8 @@ public class TimeZoneMap {
         mLocalTZ = localTZ;
     }
 
-    /**
-     * Returns account's local time zone if requested TZ can't be found.
-     * @param tzid
-     * @return
-     */
     public ICalTimeZone getTimeZone(String tzid) {
+        tzid = sanitizeTZID(tzid);
         Object tz = mTzMap.get(tzid);
         ICalTimeZone toRet = (ICalTimeZone)tz;
         assert(toRet==null || toRet.getID().equals(tzid));
@@ -180,14 +176,19 @@ public class TimeZoneMap {
     	mTzMap.put(tz.getID(), tz);
     }
 
-    public ICalTimeZone lookupAndAdd(String tzId)
-    throws ServiceException {
+    public String sanitizeTZID(String tzid) {
         // Workaround for bug in Outlook, which double-quotes TZID parameter
         // value in properties like DTSTART, DTEND, etc. Use unquoted tzId.
-        int len = tzId.length();
-        if (len >= 2 && tzId.charAt(0) == '"' && tzId.charAt(len - 1) == '"') {
-            tzId = tzId.substring(1, len - 1);
+        int len = tzid.length();
+        if (len >= 2 && tzid.charAt(0) == '"' && tzid.charAt(len - 1) == '"') {
+            return tzid.substring(1, len - 1);
         }
+        return tzid;
+    }
+
+    public ICalTimeZone lookupAndAdd(String tzId)
+    throws ServiceException {
+        tzId = sanitizeTZID(tzId);
         if (tzId.equals(""))
             return null;
 
