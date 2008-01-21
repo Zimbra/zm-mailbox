@@ -178,8 +178,8 @@ public class LdapUtil {
         sEnv.put(Context.SECURITY_CREDENTIALS, LC.zimbra_ldap_password.value());
         sEnv.put(Context.REFERRAL, "follow");
             
-        // wait at most 10 seconds for a connection
         sEnv.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
+        sEnv.put("com.sun.jndi.ldap.read.timeout", LC.ldap_read_timeout.value());
         
         // enable connection pooling
         if (master)
@@ -277,8 +277,8 @@ public class LdapUtil {
         }
         
         env.put(Context.REFERRAL, "follow");
-        // wait at most 10 seconds
         env.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
+        env.put("com.sun.jndi.ldap.read.timeout", LC.ldap_read_timeout.value());
         // enable connection pooling
         env.put("com.sun.jndi.ldap.connect.pool", "true");
         return new InitialLdapContext(env, null);
@@ -289,8 +289,8 @@ public class LdapUtil {
             throw new AuthenticationException("empty password");
 
         Hashtable<String, String> env = new Hashtable<String, String>();
-        // wait at most 10 seconds
-        env.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());        
+        env.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
+        env.put("com.sun.jndi.ldap.read.timeout", LC.ldap_read_timeout.value());
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
         env.put(Context.PROVIDER_URL, joinURLS(urls));
         env.put(Context.SECURITY_AUTHENTICATION, "simple");
