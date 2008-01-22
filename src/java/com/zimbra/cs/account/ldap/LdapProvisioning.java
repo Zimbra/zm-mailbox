@@ -909,8 +909,24 @@ public class LdapProvisioning extends Provisioning {
                 if (byName)
                     comp = a.getName().compareToIgnoreCase(b.getName());
                 else {
-                    String sa = a.getAttr(sortAttr);
-                    String sb = b.getAttr(sortAttr);
+                    String sa = null;
+                    String sb = null;
+                    if (SearchOptions.SORT_BY_TARGET_NAME.equals(sortAttr) && (a instanceof Alias) && (b instanceof Alias)) {
+                        try {
+                            sa = ((Alias)a).getTargetUnicodeName();
+                        } catch (ServiceException e) {
+                            ZimbraLog.account.error("unable to get target name: "+a.getName(), e);
+                        }
+                        try {
+                            sb = ((Alias)b).getTargetUnicodeName();
+                        } catch (ServiceException e) {
+                            ZimbraLog.account.error("unable to get target name: "+b.getName(), e);
+                        }
+                        
+                    } else {
+                        sa = a.getAttr(sortAttr);
+                        sb = b.getAttr(sortAttr);
+                    }
                     if (sa == null) sa = "";
                     if (sb == null) sb = "";
                     comp = sa.compareToIgnoreCase(sb);
