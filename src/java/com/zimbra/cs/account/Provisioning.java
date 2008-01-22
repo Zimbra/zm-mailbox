@@ -1669,16 +1669,20 @@ public abstract class Provisioning {
      * Note, this function might do an extra LDAP search, it should only be called from the edge of 
      * CLI tools where is call rate is very low.  
      * 
-     * 
      * @param key account id or name
      * @return
      */
     public Account getAccount(String key) throws ServiceException {
         Account acct = null;
         
-        acct = get(AccountBy.id, key);
-        if (acct ==null)
+        if (Provisioning.isUUID(key))
+            acct = get(AccountBy.id, key);
+        else {
+            // could be id or name, try name first, if not found then try id
             acct = get(AccountBy.name, key);
+            if (acct == null)
+                acct = get(AccountBy.id, key);
+        }
         
         return acct;
     }
