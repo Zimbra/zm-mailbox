@@ -2065,6 +2065,10 @@ public abstract class Provisioning {
 
 
     public static class SearchOptions {
+        // pseudo attr name for target name
+        // honored only for Alias entries 
+        public static final String SORT_BY_TARGET_NAME = "targetName";
+        
         private Domain mDomain;
         private String mBase;
         private String mQuery;
