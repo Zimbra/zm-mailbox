@@ -35,6 +35,7 @@ import com.zimbra.cs.account.Signature.SignatureContent;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Signature;
+import com.zimbra.cs.util.L10nUtil;
 
 import java.util.Iterator;
 import java.util.Locale;
@@ -227,9 +228,10 @@ public class ToXML {
 
     public static Element encodeLocale(Element parent, Locale locale, Locale inLocale) {
         Element e = parent.addElement(AccountConstants.E_LOCALE);
-        // use inLocale for locale's display name.
-        e.addAttribute(AccountConstants.A_NAME, locale.getDisplayName(inLocale));
-        e.addAttribute(AccountConstants.A_ID, locale.toString());
+		String id = locale.toString();
+		String name = L10nUtil.getMessage(L10nUtil.L10N_MSG_FILE_BASENAME, id, Locale.getDefault());
+		e.addAttribute(AccountConstants.A_ID, id);
+		e.addAttribute(AccountConstants.A_NAME, name != null ? name : id);
         return e;
     }
 

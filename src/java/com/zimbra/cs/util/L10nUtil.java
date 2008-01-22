@@ -118,7 +118,8 @@ public class L10nUtil {
     }
 
 
-    private static final String MSG_FILE_BASENAME = "ZsMsg";
+    public static final String MSG_FILE_BASENAME = "ZsMsg";
+	public static final String L10N_MSG_FILE_BASENAME = "L10nMsg";
 
     // class loader that loads ZsMsg.properties files from
     // /opt/zimbra/conf/msgs directory
@@ -167,21 +168,27 @@ public class L10nUtil {
     public static String getMessage(MsgKey key,
                                     Locale lc,
                                     Object... args) {
-        ResourceBundle rb;
-        try {
-            rb = ResourceBundle.getBundle(MSG_FILE_BASENAME, lc, sMsgClassLoader);
-            String fmt = rb.getString(key.toString());
-            if (fmt != null && args != null && args.length > 0)
-                return MessageFormat.format(fmt, args);
-            else
-                return fmt;
-        } catch (MissingResourceException e) {
-            ZimbraLog.misc.error("Resource bundle \"" + MSG_FILE_BASENAME +
-                                 "\" not found (locale=" + lc.toString() + ")",
-                                 e);
-            return null;
-        }
-    }
+		return getMessage(MSG_FILE_BASENAME, key.toString(), lc, args);
+	}
+
+	public static String getMessage(String basename, String key,
+									Locale lc,
+									Object... args) {
+		ResourceBundle rb;
+		try {
+			rb = ResourceBundle.getBundle(basename, lc, sMsgClassLoader);
+			String fmt = rb.getString(key);
+			if (fmt != null && args != null && args.length > 0)
+				return MessageFormat.format(fmt, args);
+			else
+				return fmt;
+		} catch (MissingResourceException e) {
+			ZimbraLog.misc.error("Resource bundle \"" + basename +
+								 "\" not found (locale=" + lc.toString() + ")",
+								 e);
+			return null;
+		}
+	}
 
     /**
      * Lookup a Locale object from locale string specified in
