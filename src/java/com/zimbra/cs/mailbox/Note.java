@@ -129,7 +129,7 @@ public class Note extends MailItem {
         data.id          = id;
         data.type        = TYPE_NOTE;
         data.folderId    = folder.getId();
-        if (!folder.inSpam() || Provisioning.getInstance().getConfig().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false))
+        if (!folder.inSpam() || mbox.getAccount().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false))
             data.indexId     = id;
         data.volumeId    = volumeId;
         data.date        = mbox.getOperationTimestamp();

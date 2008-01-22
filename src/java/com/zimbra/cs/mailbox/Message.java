@@ -363,7 +363,7 @@ public class Message extends MailItem {
         if (conv != null)
             data.parentId = conv.getId();
         data.folderId    = folder.getId();
-        if (!folder.inSpam() || Provisioning.getInstance().getConfig().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false))
+        if (!folder.inSpam() || mbox.getAccount().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false))
             data.indexId     = id;
         data.volumeId    = volumeId;
         data.imapId      = id;
