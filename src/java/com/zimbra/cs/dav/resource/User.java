@@ -34,7 +34,7 @@ public class User extends DavResource {
 
     public User(String mainUrl, Account owner) throws ServiceException {
         super(mainUrl, owner);
-        String user = owner.getUid();
+        String user = getOwner();
         String url = UrlNamespace.getPrincipalUrl(user);
         addResourceType(DavElements.E_PRINCIPAL);
         addProperty(CalDavProperty.getCalendarHomeSet(user));
