@@ -71,7 +71,7 @@ public class ZGetInfoResult {
     	mVersion = e.getAttribute(AccountConstants.E_VERSION, "unknown");
         mId = e.getAttribute(AccountConstants.E_ID, null); // TODO: ID was just added to GetInfo, remove ,null shortly...
         mName = e.getAttribute(AccountConstants.E_NAME);
-        mCrumb = e.getAttribute(AccountConstants.E_CRUMB);
+        mCrumb = e.getAttribute(AccountConstants.E_CRUMB, null);
         mLifetime = e.getAttributeLong(AccountConstants.E_LIFETIME);
         mMailboxQuotaUsed = e.getAttributeLong(AccountConstants.E_QUOTA_USED, -1);
         mExpiration  = mLifetime + System.currentTimeMillis();
