@@ -886,7 +886,10 @@ notes:
  - zimbraGalMode must be set to ldap, even if you eventually want to set it to "both".
  - <action> is optional.  GAL-action can be autocomplete|search|sync.  Default is search.
  - <query> is ignored if <action> is "sync".
- - BindDn/BindPassword are optional if server allows anonymous binds, and AuthMech is not set or is "simple".
+ - AuthMech can be none|simple|kerberos5.  
+      - Default is simple if both BindDn/BindPassword are provided.
+      - Default is none if not both BindDn/BindPassword are provided.
+ - BindDn/BindPassword are required if AuthMech is "simple".
  - Kerberos5Principal/Kerberos5Keytab are required only if AuthMech is "kerberos5".
  - zimbraGalSyncLdapXXX attributes are for GAL sync.  They are ignored if <action> is not sync.
    For GAL sync, if a zimbraGalSyncLdapXXX attribute is not set, server will fallback to the corresponding zimbraGalLdapXXX attribute.
