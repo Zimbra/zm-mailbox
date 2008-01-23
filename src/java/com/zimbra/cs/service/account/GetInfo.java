@@ -99,7 +99,7 @@ public class GetInfo extends AccountDocumentHandler  {
             response.addAttribute(AccountConstants.E_CRUMB, AuthToken.getCrumb(zsc.getRawAuthToken()), Element.Disposition.CONTENT);
         } catch (AuthTokenException e) {
             // shouldn't happen
-            ZimbraLog.account.warn("can't generate crum", e);
+            ZimbraLog.account.warn("can't generate crumb", e);
         }
         long lifetime = zsc.getAuthToken().getExpires() - System.currentTimeMillis();
         response.addAttribute(AccountConstants.E_LIFETIME, lifetime, Element.Disposition.CONTENT);
