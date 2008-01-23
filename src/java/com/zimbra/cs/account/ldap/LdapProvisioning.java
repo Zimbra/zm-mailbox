@@ -508,6 +508,23 @@ public class LdapProvisioning extends Provisioning {
         }
     }
     
+    public Account getFromCache(AccountBy keyType, String key) throws ServiceException {
+        switch(keyType) {
+        case adminName: 
+            return sAccountCache.getByName(key);
+        case id: 
+            return sAccountCache.getById(key);
+        case foreignPrincipal: 
+            return sAccountCache.getByForeignPrincipal(key);
+        case name: 
+            return sAccountCache.getByName(key);
+        case krb5Principal:
+            throw ServiceException.FAILURE("key type krb5Principal is not supported by getFromCache", null);
+        default:
+            return null;
+        }
+    }
+    
     protected Account getAccountById(String zimbraId) throws ServiceException {
         return getAccountById(zimbraId, null, false);
     }
@@ -3445,8 +3462,8 @@ public class LdapProvisioning extends Provisioning {
         System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "n(%n)u(%u)d(%d)D(%D)(%%)"));
     }
 
-    private static final String DATA_DL_SET = "DL_SET";
-
+    static final String DATA_DL_SET = "DL_SET";
+    
     @Override
     public Set<String> getDistributionLists(Account acct) throws ServiceException {
         Set<String> dls = (Set<String>) acct.getCachedData(DATA_DL_SET);
@@ -3463,7 +3480,7 @@ public class LdapProvisioning extends Provisioning {
         acct.setCachedData(DATA_DL_SET, dls);
         return dls;
     }
-
+    
     @Override
     public boolean inDistributionList(Account acct, String zimbraId) throws ServiceException {
         return getDistributionLists(acct).contains(zimbraId);        
