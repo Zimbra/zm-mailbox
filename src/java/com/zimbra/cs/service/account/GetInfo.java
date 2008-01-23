@@ -40,6 +40,8 @@ import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.session.Session;
@@ -93,6 +95,12 @@ public class GetInfo extends AccountDocumentHandler  {
         response.addAttribute(AccountConstants.E_VERSION, BuildInfo.FULL_VERSION, Element.Disposition.CONTENT);
         response.addAttribute(AccountConstants.E_ID, account.getId(), Element.Disposition.CONTENT);
         response.addAttribute(AccountConstants.E_NAME, account.getUnicodeName(), Element.Disposition.CONTENT);
+        try {
+            response.addAttribute(AccountConstants.E_CRUMB, AuthToken.getCrumb(zsc.getRawAuthToken()), Element.Disposition.CONTENT);
+        } catch (AuthTokenException e) {
+            // shouldn't happen
+            ZimbraLog.account.warn("can't generate crum", e);
+        }
         long lifetime = zsc.getAuthToken().getExpires() - System.currentTimeMillis();
         response.addAttribute(AccountConstants.E_LIFETIME, lifetime, Element.Disposition.CONTENT);
 

@@ -356,8 +356,21 @@ public class AuthToken {
 			throw new RuntimeException("fatal error", e);
 		}
 	}
-	
-	static class ByteKey implements SecretKey {
+
+    public static String getCrumb(String authToken) throws AuthTokenException {
+		try {
+			ByteKey bk = new ByteKey(getCurrentKey().getKey());
+			Mac mac = Mac.getInstance("HmacMD5");
+			mac.init(bk);
+			return new String(Hex.encodeHex(mac.doFinal(authToken.getBytes())));
+		} catch (NoSuchAlgorithmException e) {
+			throw new RuntimeException("fatal error", e);
+		} catch (InvalidKeyException e) {
+			throw new RuntimeException("fatal error", e);
+		}
+	}
+
+    static class ByteKey implements SecretKey {
         private static final long serialVersionUID = -7237091299729195624L;
         private byte[] mKey;
 		
