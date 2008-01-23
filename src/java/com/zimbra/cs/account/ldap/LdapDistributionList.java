@@ -34,8 +34,8 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.EmailUtil;
 
 class LdapDistributionList extends DistributionList implements LdapEntry {
     private String mDn;
@@ -56,6 +56,12 @@ class LdapDistributionList extends DistributionList implements LdapEntry {
         	memberName = IDNUtil.toAsciiEmail(members[i]);
         	if (!existing.contains(memberName)) {
         		mods.add(memberName);
+        		
+        		// clear the DL cache on accounts
+        		// can't do prov.getFromCache because it only caches by primary name 
+        		Account acct = prov.get(AccountBy.name, memberName);
+        		if (acct != null)
+        		    acct.setCachedData(LdapProvisioning.DATA_DL_SET, null);
         	}
         }
 
@@ -88,18 +94,19 @@ class LdapDistributionList extends DistributionList implements LdapEntry {
             //   - the primary address of an account or another DL
             //   - an alias of an account or another DL
             //   - junk (allAddrs will be returned as null)
-            List<String> allAddrs = getAllAddressesOfEntry(prov, memberName);
-            
+            AddrsOfEntry addrsOfEntry = getAllAddressesOfEntry(prov, memberName);
+            List<String> allAddrs = addrsOfEntry.getAll();
+                
             if (mods.contains(memberName)) {
                 // already been added in mods (is the primary or alias of previous entries in members[])
             } else if (existing.contains(memberName)) {
-                if (allAddrs != null)
+                if (allAddrs.size() > 0)
                     mods.addAll(allAddrs);
                 else
                     mods.add(memberName);  // just get rid of it regardless what it is
             } else {
                 boolean inList = false;
-                if (allAddrs != null) {
+                if (allAddrs.size() > 0) {
                     // go through all addresses of the entry see if any is on the DL
                     for (Iterator it = allAddrs.iterator(); it.hasNext() && !inList; ) {
                         String addr = (String)it.next();
@@ -111,6 +118,16 @@ class LdapDistributionList extends DistributionList implements LdapEntry {
                 }
                 if (!inList)
                     failed.add(memberName);
+            }
+            
+            // clear the DL cache on accounts
+            if (addrsOfEntry.isAccount()) {
+                String primary = addrsOfEntry.getPrimary();
+                if (primary != null) {
+                    Account acct = prov.getFromCache(AccountBy.name, primary);
+                    if (acct != null)
+                        acct.setCachedData(LdapProvisioning.DATA_DL_SET, null);
+                }
             }
         }
 
@@ -133,24 +150,66 @@ class LdapDistributionList extends DistributionList implements LdapEntry {
         Map<String,String[]> modmap = new HashMap<String,String[]>();
         modmap.put("-" + Provisioning.A_zimbraMailForwardingAddress, (String[])mods.toArray(new String[0]));
         prov.modifyAttrs(this, modmap);
+
     }
 
     public String getDN() {
         return mDn;
     }
     
+    class AddrsOfEntry {
+        List<String> mAllAddrs = new ArrayList<String>(); // including primary
+        String mPrimary = null;  // primary addr
+        boolean mIsAccount = false;
+        
+        void setPrimary(String primary) {
+            mPrimary = primary;
+            add(primary);
+        }
+        
+        void setIsAccount(boolean isAccount) {
+            mIsAccount = isAccount;
+        }
+
+        void add(String addr) {
+            mAllAddrs.add(addr);
+        }
+        
+        void addAll(String[] addrs) {
+            mAllAddrs.addAll(Arrays.asList(addrs));
+        }
+        
+        List<String> getAll() {
+            return mAllAddrs;
+        }
+        
+        String getPrimary() {
+            return mPrimary;
+        }
+        
+        boolean isAccount() {
+            return mIsAccount;
+        }
+        
+        int size() {
+            return mAllAddrs.size();
+        }
+    }
+    
+    
     //
     // returns the primary address and all aliases of the named account or DL 
     //
-    private List<String> getAllAddressesOfEntry(LdapProvisioning prov, String name) {
+    private AddrsOfEntry getAllAddressesOfEntry(LdapProvisioning prov, String name) {
         
-        List<String> addrs = new ArrayList<String>();
         String primary = null;
         String aliases[] = null;
+        AddrsOfEntry addrs = new AddrsOfEntry();
         
         try {
             Account acct = prov.get(Provisioning.AccountBy.name, name);
             if (acct != null) {
+                addrs.setIsAccount(true);
                 primary = acct.getName();
                 aliases = acct.getAliases();
             } else {
@@ -165,14 +224,11 @@ class LdapDistributionList extends DistributionList implements LdapEntry {
         }
         
         if (primary != null)
-            addrs.add(primary);
+            addrs.setPrimary(primary);
         if (aliases != null)
-            addrs.addAll(Arrays.asList(aliases));
-        
-        if (addrs.size() > 0)
-            return addrs;
-        else
-            return null;
+            addrs.addAll(aliases);
+               
+        return addrs;
     }
 
 }
