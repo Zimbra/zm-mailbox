@@ -10,7 +10,7 @@ error_log  /opt/zimbra/log/nginx.log info;
 
 
 events {
-    worker_connections  1024;
+    worker_connections  10240;
 }
 
 mail {
