@@ -114,5 +114,7 @@ public class ZFeatures {
     public boolean getMailPriority() { return getBool(Provisioning.A_zimbraFeatureMailPriorityEnabled); }
 
     public boolean getPortalEnabled() { return getBool(Provisioning.A_zimbraFeaturePortalEnabled); }
+    
+    public boolean getWebSearchEnabled() { return getBool(Provisioning.A_zimbraFeatureWebSearchEnabled); }
 }
 
