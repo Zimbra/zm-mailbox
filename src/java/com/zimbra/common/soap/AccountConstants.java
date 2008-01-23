@@ -83,6 +83,7 @@ public class AccountConstants {
     
     public static final String E_ACTION = "action";
     public static final String E_AUTH_TOKEN = "authToken";
+    public static final String E_CRUMB = "crumb";
     public static final String E_REFERRAL = "refer";
     public static final String E_LIFETIME = "lifetime";
     public static final String E_ACCOUNT = "account";
