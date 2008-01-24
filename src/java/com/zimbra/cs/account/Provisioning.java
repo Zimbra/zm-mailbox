@@ -396,7 +396,7 @@ public abstract class Provisioning {
     /**
      * optional account descriptive label
      */
-    public static final String A_zimbraLabel = "zimbraLabel";
+    public static final String A_zimbraPrefLabel = "zimbraPrefLabel";
     
     /**
      * Object classes to add to a zimbraAccount
