@@ -733,25 +733,6 @@ public class LdapUtil {
         	}
         return sb.toString();
     }
-
-        
-    /**
-     * Given a dn like "uid=zimbra,cn=admins,cn=zimbra", return the string "zimbra".
-     * @param dn
-     * @return
-     */
-    public static String dnToUid(String dn) {
-        String [] parts = dn.split(",");
-        String uid = null;
-        for (int i = 0; i < parts.length; i++) {
-            if (parts[i].startsWith("uid=")) {
-                uid = unescapeRDNValue(parts[i].substring(4));
-                break;
-            }
-        }
-        return uid;
-    }
-    
     
     /**
      * given a dn like "uid=foo,ou=people,dc=widgets,dc=com", return the String[]
