@@ -26,6 +26,7 @@ import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.service.account.ToXML;
 
 /**
@@ -37,7 +38,11 @@ public class GetAllCalendarResources extends GetAllAccounts {
         return AdminConstants.GET_ALL_CALENDAR_RESOURCES_RESPONSE;
     }
     
-    protected void doDomain(final Element e, Domain d)
+    /*
+     * server s is not used, need to use the same signature as GetAllAccounts.doDomain 
+     * so the overridden doDomain is called.
+     */
+    protected void doDomain(final Element e, Domain d, Server s)
     throws ServiceException {
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
             public void visit(com.zimbra.cs.account.NamedEntry entry) {
