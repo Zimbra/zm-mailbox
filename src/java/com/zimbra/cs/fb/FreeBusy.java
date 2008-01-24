@@ -22,21 +22,8 @@ import java.util.*;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.CalendarResource;
-import com.zimbra.cs.db.DbSearch;
-import com.zimbra.cs.mailbox.Appointment;
-import com.zimbra.cs.mailbox.CalendarItem;
-import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.CalendarItem.Instance;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
-import com.zimbra.cs.mailbox.calendar.Invite;
-import com.zimbra.cs.mailbox.calendar.InviteInfo;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
 
@@ -55,8 +42,9 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar;
  */
 public class FreeBusy implements Iterable<FreeBusy.Interval> {
 
-    private static Log sLog = LogFactory.getLog(FreeBusy.class);
-
+    protected FreeBusy(long start, long end) {
+    	this(new IntervalList(start, end), start, end);
+    }
     protected FreeBusy(IntervalList list, long start, long end) {
         mList = list;
         mStart = start;
