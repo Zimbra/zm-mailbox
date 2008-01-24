@@ -377,6 +377,11 @@ public abstract class CalendarItem extends MailItem {
         }
 
         DbMailItem.addToCalendarItemTable(item);
+
+        Callback cb = getCallback();
+        if (cb != null)
+            cb.created(item);
+
         return item;
     }
 
@@ -1145,12 +1150,38 @@ public abstract class CalendarItem extends MailItem {
 
                     // TIM: modifyBlob will save the metadata for us as a side-effect
 //                    saveMetadata();
+
+                    Callback cb = getCallback();
+                    if (cb != null)
+                        cb.modified(this);
+
                     return true;
                 }
             } else {
                 return false;
             }
         }
+    }
+
+    void delete() throws ServiceException {
+        super.delete();
+        Callback cb = getCallback();
+        if (cb != null)
+            cb.deleted(this);
+    }
+
+    // YCC special
+    public interface Callback {
+        public void created(CalendarItem calItem) throws ServiceException;
+        public void modified(CalendarItem calItem) throws ServiceException;
+        public void deleted(CalendarItem calItem) throws ServiceException;
+    }
+    private static Callback sCallback = null;
+    public static synchronized void registerCallback(Callback cb) {
+        sCallback = cb;
+    }
+    public static synchronized Callback getCallback() {
+        return sCallback;
     }
 
     /**
