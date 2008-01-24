@@ -89,8 +89,7 @@ public abstract class SoapCLI {
     
     protected SoapCLI() throws ServiceException {
         // get admin username from local config
-        String userDn = LC.zimbra_ldap_userdn.value();
-        mUser = LdapUtil.dnToUid(userDn);
+        mUser = LC.zimbra_ldap_user.value();
         // get password from localconfig
         mPassword = LC.zimbra_ldap_password.value();
         // host can be specified

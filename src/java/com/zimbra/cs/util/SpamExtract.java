@@ -152,7 +152,7 @@ public class SpamExtract {
         if (cl.hasOption('a')) {
             optAdminUser = cl.getOptionValue('a'); 
         } else {
-            optAdminUser = LdapUtil.dnToUid(LC.zimbra_ldap_userdn.value());
+            optAdminUser = LC.zimbra_ldap_user.value();
         }
 
         String optAdminPassword;
