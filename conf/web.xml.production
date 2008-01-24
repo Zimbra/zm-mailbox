@@ -20,7 +20,7 @@
 
         <init-param>
             <param-name>mimeTypes</param-name>
-            <param-value>text/javascript,application/x-javascript,application/soap+xml,application/vnd.ms-sync.wbxml</param-value>
+            <param-value>application/soap+xml,application/vnd.ms-sync.wbxml</param-value>
         </init-param>
 
         <init-param>
