@@ -22,8 +22,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.index.MailboxIndex;
-import com.zimbra.cs.mailbox.calendar.FreeBusy;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
@@ -70,7 +70,7 @@ public class IfbFormatter extends Formatter {
             acctName = context.targetMailbox.getAccount().getName();
         } else {
             // Unknown mailbox.  Fake an always-free response, to avoid harvest attacks.
-            fb = FreeBusy.createDummyFreeBusy(rangeStart, rangeEnd);
+            fb = com.zimbra.cs.fb.LocalFreeBusyProvider.createDummyFreeBusy(rangeStart, rangeEnd);
             acctName = fixupAccountName(context.accountPath);
         }
         String fbMsg = fb.toVCalendar(FreeBusy.Method.PUBLISH, acctName, null, url);

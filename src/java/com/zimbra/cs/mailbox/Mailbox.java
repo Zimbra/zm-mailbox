@@ -56,6 +56,7 @@ import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.db.DbSearchConstraints;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.db.DbSearch.SearchResult;
+import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.imap.ImapMessage;
@@ -76,7 +77,6 @@ import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.MailboxManager.MailboxLock;
 import com.zimbra.cs.mailbox.Note.Rectangle;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
-import com.zimbra.cs.mailbox.calendar.FreeBusy;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.RecurId;
@@ -3193,7 +3193,7 @@ public class Mailbox {
     }
     
     public synchronized FreeBusy getFreeBusy(long start, long end) throws ServiceException {
-        return FreeBusy.getFreeBusyList(this, start, end);
+        return com.zimbra.cs.fb.LocalFreeBusyProvider.getFreeBusyList(this, start, end);
     }
 
     private void addDomains(HashMap<String, DomainItem> domainItems, HashSet<String> newDomains, int flag) {
