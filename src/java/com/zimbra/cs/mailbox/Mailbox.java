@@ -6104,7 +6104,7 @@ public class Mailbox {
     private void logCacheActivity(Integer key, byte type, MailItem item) {
         // The global item cache counter always gets updated
         if (!isCachedType(type)) {
-            ZimbraPerf.COUNTER_MBOX_ITEM_CACHE.increment(item == null ? 0 : 1);
+            ZimbraPerf.COUNTER_MBOX_ITEM_CACHE.increment(item == null ? 0 : 100);
         }
 
         // The per-access log only gets updated when cache or perf debug logging

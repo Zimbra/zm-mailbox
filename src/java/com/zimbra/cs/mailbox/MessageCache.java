@@ -142,7 +142,7 @@ public class MessageCache {
                 ZimbraLog.cache.debug("msgcache: found raw content in cache: " + item.getDigest());
         }
         
-        ZimbraPerf.COUNTER_MBOX_MSG_CACHE.increment(cacheHit ? 1 : 0);
+        ZimbraPerf.COUNTER_MBOX_MSG_CACHE.increment(cacheHit ? 100 : 0);
         
         return cnode.mContent;
     }
@@ -258,7 +258,7 @@ public class MessageCache {
                 ZimbraLog.cache.debug("msgcache: found mime message in cache: " + item.getDigest());
         }
 
-        ZimbraPerf.COUNTER_MBOX_MSG_CACHE.increment(cacheHit ? 1 : 0);
+        ZimbraPerf.COUNTER_MBOX_MSG_CACHE.increment(cacheHit ? 100 : 0);
         
         return cnode.mMessage;
     }
