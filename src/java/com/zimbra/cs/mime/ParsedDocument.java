@@ -32,7 +32,6 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.index.Fragment;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.mailbox.MailboxBlob;
-import com.zimbra.cs.object.ObjectHandlerException;
 import com.zimbra.cs.store.StoreManager;
 
 public class ParsedDocument {
@@ -80,18 +79,21 @@ public class ParsedDocument {
             try {
             	textContent = handler.getContent();
             } catch (Exception e) {
+            	// ignore conversion errors
             }
             mFragment = Fragment.getFragment(textContent, false);
-            mDocument = handler.getDocument();
-            mDocument.add(new Field(LuceneFields.L_SIZE, Integer.toString(mSize), Field.Store.YES, Field.Index.NO));
-            mDocument.add(new Field(LuceneFields.L_H_SUBJECT, filename, Field.Store.NO, Field.Index.TOKENIZED));
-            mDocument.add(new Field(LuceneFields.L_CONTENT, filename,  Field.Store.NO, Field.Index.TOKENIZED));
-            mDocument.add(new Field(LuceneFields.L_H_FROM, creator, Field.Store.NO, Field.Index.TOKENIZED));
-            mDocument.add(new Field(LuceneFields.L_FILENAME, filename, Field.Store.YES, Field.Index.TOKENIZED));
+            try {
+            	mDocument = handler.getDocument();
+            	mDocument.add(new Field(LuceneFields.L_SIZE, Integer.toString(mSize), Field.Store.YES, Field.Index.NO));
+            	mDocument.add(new Field(LuceneFields.L_H_SUBJECT, filename, Field.Store.NO, Field.Index.TOKENIZED));
+            	mDocument.add(new Field(LuceneFields.L_CONTENT, filename,  Field.Store.NO, Field.Index.TOKENIZED));
+            	mDocument.add(new Field(LuceneFields.L_H_FROM, creator, Field.Store.NO, Field.Index.TOKENIZED));
+            	mDocument.add(new Field(LuceneFields.L_FILENAME, filename, Field.Store.YES, Field.Index.TOKENIZED));
+            } catch (Exception e) {
+            	// ignore conversion errors
+            }
         } catch (MimeHandlerException mhe) {
             throw ServiceException.FAILURE("cannot create ParsedDocument", mhe);
-        } catch (ObjectHandlerException ohe) {
-            throw ServiceException.FAILURE("cannot create ParsedDocument", ohe);
         }
     }
 
@@ -107,7 +109,7 @@ public class ParsedDocument {
     public String getFilename()     { return mFilename; }
     public String getContentType()  { return mContentType; }
 
-    public Document getDocument()   { return mDocument; }
+    public Document getDocument()   { return mDocument; }  // it could return null if the conversion has failed
     public String getFragment()     { return mFragment; }
 
     public String getCreator()      { return mCreator; }
