@@ -336,6 +336,9 @@ public class ZimletResources
         str.append(getLocale(req).toString());
         str.append(":");
         str.append(type);
+		if (req.getRequestURI().endsWith(COMPRESSED_EXT)) {
+			str.append(COMPRESSED_EXT);
+		}
         str.append(":");
 
 		Iterator<String> iter = zimletNames.iterator();
