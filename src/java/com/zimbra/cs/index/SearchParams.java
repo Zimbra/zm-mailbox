@@ -350,7 +350,11 @@ public final class SearchParams implements Cloneable {
         
         params.setPrefetch(request.getAttributeBool(MailConstants.A_PREFETCH, true));
         params.setMode(Mailbox.SearchResultMode.get(request.getAttribute(MailConstants.A_RESULT_MODE, null)));
-        params.setEstimateSize(request.getAttributeBool(MailConstants.A_ESTIMATE_SIZE, false));
+        
+        if (false) {
+            // tim: disable this feature, too expensive (bug 23926)
+            params.setEstimateSize(request.getAttributeBool(MailConstants.A_ESTIMATE_SIZE, false));
+        }
 
         // field
         String field = request.getAttribute(MailConstants.A_FIELD, null);
