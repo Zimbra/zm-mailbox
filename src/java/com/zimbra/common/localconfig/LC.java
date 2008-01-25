@@ -782,7 +782,7 @@ public class LC {
         postfix_transport_maps.setDoc("postfix_transport_maps");
 
         postfix_version  = new KnownKey("postfix_version");
-        postfix_version.setDefault("2.4.3.3z");
+        postfix_version.setDefault("2.4.3.4z");
         postfix_version.setDoc("postfix_version");
 
         postfix_virtual_alias_domains  = new KnownKey("postfix_virtual_alias_domains");
