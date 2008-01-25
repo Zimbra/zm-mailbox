@@ -34,6 +34,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.CalendarItem.Instance;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
@@ -118,9 +119,9 @@ public class LocalFreeBusyProvider {
 			long defInvEnd = dtEnd != null ? dtEnd.getDate().getTime() : 0;
 			long startAdjusted = start - (defInvEnd - defInvStart) + 1;
 
-			Collection instances = cur.expandInstances(startAdjusted, end, false);
-			for (Iterator instIter = instances.iterator(); instIter.hasNext();) {
-				Appointment.Instance inst = (Appointment.Instance)(instIter.next());
+			Collection<Instance> instances = cur.expandInstances(startAdjusted, end, false);
+			for (Iterator<Instance> instIter = instances.iterator(); instIter.hasNext();) {
+				Appointment.Instance inst = instIter.next();
 				assert(inst.getStart() < end && inst.getEnd() > start);
 				InviteInfo invId = inst.getInviteInfo();
 				try {

@@ -19,9 +19,6 @@ package com.zimbra.cs.fb;
 
 import java.util.*;
 
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
-
 import com.zimbra.cs.mailbox.CalendarItem.Instance;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
@@ -328,8 +325,8 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
 
     public String getBusiest() {
         String val = IcalXmlStrMap.FBTYPE_FREE;
-        for (Iterator iter = iterator(); iter.hasNext(); ) {
-            Interval interval = (Interval) iter.next();
+        for (Iterator<Interval> iter = iterator(); iter.hasNext(); ) {
+            Interval interval = iter.next();
             val = chooseBusier(val, interval.getStatus());
         }
         return val;
@@ -342,8 +339,8 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
      */
     public LinkedHashSet<Instance> getAllInstances() {
         LinkedHashSet<Instance> instances = new LinkedHashSet<Instance>();
-        for (Iterator iter = iterator(); iter.hasNext(); ) {
-            Interval interval = (Interval) iter.next();
+        for (Iterator<Interval> iter = iterator(); iter.hasNext(); ) {
+            Interval interval = iter.next();
             instances.addAll(interval.getInstances());
         }
         return instances;
@@ -442,8 +439,8 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
 //		END:VFREEBUSY
 
 
-		for (Iterator iter = this.iterator(); iter.hasNext(); ) {
-			FreeBusy.Interval cur = (FreeBusy.Interval)iter.next();
+		for (Iterator<Interval> iter = this.iterator(); iter.hasNext(); ) {
+			FreeBusy.Interval cur = iter.next();
 			String status = cur.getStatus();
 
 			if (status.equals(IcalXmlStrMap.FBTYPE_FREE)) {

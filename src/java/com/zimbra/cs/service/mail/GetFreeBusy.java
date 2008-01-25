@@ -144,27 +144,33 @@ public class GetFreeBusy extends MailDocumentHandler {
     	return null;
     }
     private void getFreeBusyForUser(Element response, Account acct, String user, long start, long end, RemoteFreeBusyProvider remote) {
-    	try {
-    		FreeBusy fb = null;
-    		if (acct == null) {
-    			fb = ExchangeFreeBusyProvider.getFreeBusy(user, start, end);
-    		} else if (Provisioning.onLocalServer(acct)) {
-    			fb = LocalFreeBusyProvider.getFreeBusy(acct, start, end);
-    		} else {
-    			remote.addRemoteAccount(acct);
-    		}
-    		if (fb != null) {
-    	        Element mbxResp = response.addElement(MailConstants.E_FREEBUSY_USER);
-    	        mbxResp.addAttribute(MailConstants.A_ID, user);
-    			addFreeBusyToResponse(mbxResp, fb, start, end);
-    		}
-    	} catch (ServiceException e) {
-            addFailureInfo(response, start, end, user, e);
-    	}
+		FreeBusy fb = null;
+		if (acct != null) {
+			// acct in LDAP is either local or remote.
+	    	try {
+	    		if (Provisioning.onLocalServer(acct)) {
+	    			fb = LocalFreeBusyProvider.getFreeBusy(acct, start, end);
+	    		} else {
+	    			// remote lookup can be consolidated in order to save
+	    			// the number of calls.
+	    			remote.addRemoteAccount(acct);
+	    		}
+	    	} catch (ServiceException e) {
+	            addFailureInfo(response, start, end, user, e);
+	    	}
+		} else {
+			// account is not found.  delegate the lookup to 3rd party system.
+			// for now assume it's an exchange user.
+			fb = ExchangeFreeBusyProvider.getFreeBusy(user, start, end);
+		}
+		if (fb != null) {
+	        Element mbxResp = response.addElement(MailConstants.E_FREEBUSY_USER);
+	        mbxResp.addAttribute(MailConstants.A_ID, user);
+			addFreeBusyToResponse(mbxResp, fb, start, end);
+		}
     }
     
-    private void addFreeBusyToResponse(Element mbxResp, FreeBusy fb, long start, long end)
-    	throws ServiceException {
+    private void addFreeBusyToResponse(Element mbxResp, FreeBusy fb, long start, long end) {
         for (Iterator<FreeBusy.Interval> iter = fb.iterator(); iter.hasNext(); ) {
         	FreeBusy.Interval cur = iter.next();
         	String status = cur.getStatus();
