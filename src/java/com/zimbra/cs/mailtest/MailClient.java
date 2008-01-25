@@ -69,7 +69,7 @@ public abstract class MailClient {
     }
     
     protected abstract void processGreeting() throws IOException;
-    protected abstract void sendAuthenticate(boolean ir) throws IOException;
+    protected abstract void sendAuthenticate(boolean ir) throws LoginException, IOException;
     protected abstract void sendStartTLS() throws IOException;
 
     public abstract void login() throws IOException;
@@ -155,7 +155,11 @@ public abstract class MailClient {
             throw e;
         }
     }
-    
+
+    public String getResponse() {
+        return mResponse;
+    }
+
     public MailInputStream getInputStream() {
         return mInputStream;
     }
