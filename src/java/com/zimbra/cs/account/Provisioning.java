@@ -1124,6 +1124,7 @@ public abstract class Provisioning {
 
     public static final String A_zimbraSpamHeader = "zimbraSpamHeader";
     public static final String A_zimbraSpamHeaderValue = "zimbraSpamHeaderValue";
+    public static final String A_zimbraSpamApplyUserFilters = "zimbraSpamApplyUserFilters";
     
     public static final String A_zimbraLastLogonTimestamp = "zimbraLastLogonTimestamp";
     public static final String A_zimbraLastLogonTimestampFrequency = "zimbraLastLogonTimestampFrequency";
