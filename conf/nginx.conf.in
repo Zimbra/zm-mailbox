@@ -1,5 +1,18 @@
+# NGINX POP/IMAP proxy configuration file for use with Zimbra
+# 
+
+# Refer to nginx wiki at http://wiki.codemongers.com/ for configuration syntax
+# 
+
+# change UID/GID to zimbra/zimbra upon startup
 user zimbra zimbra;
-worker_processes  1;
+
+# number of worker processes to start 
+# multiply this by worker_connections to get the maximum number of connections 
+# that can be simultaneously handled by nginx (the product should not exceed
+# 65536, since that is the 16-bit limit of the TCP port range)
+# 
+worker_processes  4;
 
 #error_log  logs/error.log;
 #error_log  logs/error.log  notice;
@@ -10,40 +23,92 @@ error_log  /opt/zimbra/log/nginx.log info;
 
 
 events {
+    # number of simultaneous connections that each worker process can 
+    # handle simultaneously
+    # note that this number should not exceed the hard limit of the 
+    # RLIMIT_NOFILE resource limit that is set for the zimbra user, because
+    # RLIMIT_NOFILE defines the maximum number of open file descriptors that
+    # a process running as a user can have - by default, limits.conf on a 
+    # zimbra system will ensure that the zimbra user has more than 10k file
+    # descriptors allowed for a zimbra process
+
+    # (note) also see worker_rlimit_nofile at 
+    # http://wiki.codemongers.com/NginxMainModule#worker_rlimit_nofile
+    # 
     worker_connections  10240;
 }
 
 mail {
 
-#   Memcache configuration
+    # memcached server configuration
+    # configure one or more memcached servers that will cache the route 
+    # information for pop/imap users
+    # 
 %%uncomment VAR:getAllMemcachedServers%%  memcache_servers %%getAllMemcachedServers%%;
 
-#   The time to live (TTL) for an entry added to the memcached server
-#   This value represents the amount of time that the route information
-#   that is cached into the memcached servers will be available, before
-#   the memcached daemon expires it
-#   Memcached expects the TTL for an entry to be specified in seconds,
-#   therefore any value specified in milliseconds here will be rounded
-#   up to the next integer value in seconds. If not specified, the TTL
-#   defaults to 0, which indicates an infinite time to live for the
-#   routing information
-#    memcache_entry_ttl             3600s;
+    # The time that NGINX will wait for a cached result from a memcached
+    # server, after which the request will be considered timed out,
+    # and NGINX will fall back to an http routing lookup handler
+    # 
+    memcache_timeout              3000ms;
 
-#   Pass error messages
+    # The amount of time that NGINX will wait before attempting to reconnect
+    # to a memcache server that unexpectedly terminated (or shut down) its 
+    # connection with NGINX
+    # 
+    memcache_reconnect_interval   60000ms;
+
+    # The time to live (TTL) for an entry added to the memcached server 
+    # This value represents the amount of time that the route information 
+    # that is cached into the memcached servers will be available, before 
+    # the memcached daemon expires it
+    # Memcached expects the TTL for an entry to be specified in seconds, 
+    # therefore any value specified in milliseconds here will be rounded 
+    # up to the next integer value in seconds. If not specified, the TTL
+    # defaults to 0, which indicates an infinite time to live for the 
+    # routing information
+    # 
+    memcache_entry_ttl             3600s;
+
+    # Whether or not to cache unqualified login names - this is useful in 
+    # deployments where there is only one domain, but many users, so that a 
+    # user may log in without the @domain suffix to the login name. If this
+    # flag is enabled, then no domain is suffixed to the key of the route
+    # information entry in the cache - If this flag is disabled, then the 
+    # IP address of the network interface of the proxy server is suffixed
+    # to the user's unqualified login name, and that is used as the key 
+    # for the route information - this will make sure that in future, the
+    # same user logging in to the same proxy using an unqualified login 
+    # name will benefit from the previously cached route information, if any
+    # By default, this value is off
+    # 
+    memcache_entry_allow_unqualified    off;
+
+    # pass error messages from the backend server to the client
+    # if true, the error messages are passed to the client verbatim, else
+    # nginx logs the original error message in its log file and sends back
+    # a generic error message to the client
+    # 
     proxy_pass_error_message on;
 
-#   http authentication configuration
+    # HTTP lookup handlers that will return the route information for a
+    # pop3/imap login
+    # see http://wiki.codemongers.com/NginxMailCoreModule
+    # 
     auth_http %%getAllReverseProxyURLs%%;
 
 	pop3_capabilities        "TOP" "USER" "UIDL" "STLS" "EXPIRE 31 USER";
 	imap_capabilities        "IMAP4rev1" "STARTTLS" "BINARY" "CHILDREN" "ID" "LITERAL+" "LOGIN-REFERRALS" "NAMESPACE" "QUOTA" "SASL-IR" "UIDPLUS" "UNSELECT";
 
-#   TLS configuration
+    # TLS configuration
+    # 
     starttls on;
     ssl_prefer_server_ciphers on;
     ssl_certificate             /opt/zimbra/conf/nginx.crt;
     ssl_certificate_key         /opt/zimbra/conf/nginx.key;
 
+    # POP3 proxy configuration
+    # 
     server {
         listen %%zimbraPop3ProxyBindPort%%;
         protocol pop3;
@@ -57,7 +122,8 @@ mail {
 		ssl on;
     }
 
-#   IMAP proxy config
+    # IMAP proxy configuration
+    # 
     server {
         listen %%zimbraImapProxyBindPort%%;
         protocol imap;
