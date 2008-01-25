@@ -678,7 +678,9 @@ public final class MailboxIndex
         synchronized(getLock()) {        
             try {
                 int indexId = doc.getIndexId();
-                mTextIndex.addDocument(redo, pd.getDocument(), indexId, pd.getCreatedDate(), doc, deleteFirst);
+                Document d = pd.getDocument();
+                if (d != null)
+                	mTextIndex.addDocument(redo, d, indexId, pd.getCreatedDate(), doc, deleteFirst);
             } catch (IOException e) {
                 throw ServiceException.FAILURE("indexDocument caught Exception", e);
             }
