@@ -93,7 +93,7 @@ class LuceneQueryOperation extends TextQueryOperation
     
         try {
             fetchFirstResults(1000); // some arbitrarily large initial size to fetch
-            if (this.countHits() > DBQueryOperation.MAX_HITS_PER_CHUNK) { // also arbitrary, just to make very small searches run w/o 
+            if (this.countHits() > (3 * DBQueryOperation.MAX_HITS_PER_CHUNK)) { // also arbitrary, just to make very small searches run w/o 
                 int dbHitCount = this.mDBOp.getDbHitCount();
                 
                 if (ZimbraLog.index.isDebugEnabled()) {
