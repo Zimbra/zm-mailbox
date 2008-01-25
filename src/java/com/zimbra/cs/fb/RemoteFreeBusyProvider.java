@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.fb;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -30,23 +31,46 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.soap.ProxyTarget;
-import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class RemoteFreeBusyProvider {
-    public static void proxyRemoteItems(
-            Map<String, Object> context, ZimbraSoapContext zc, Element response,
-            long rangeStart, long rangeEnd, Map<String, StringBuilder> remote) {
+	
+	public RemoteFreeBusyProvider(HttpServletRequest httpReq, ZimbraSoapContext zsc, long start, long end) {
+		mRemoteAccountMap = new HashMap<String,StringBuilder>();
+		mHttpReq = httpReq;
+		mSoapCtxt = zsc;
+		mStart = start;
+		mEnd = end;
+	}
+	
+	private Map<String,StringBuilder> mRemoteAccountMap;
+	private HttpServletRequest mHttpReq;
+	private ZimbraSoapContext mSoapCtxt;
+	private long mStart;
+	private long mEnd;
+	private StringBuilder mFailedAccounts;
+	
+	public void addRemoteAccount(Account account) {
+		String hostname = account.getAttr(Provisioning.A_zimbraMailHost);
+		String id = account.getId();
+		StringBuilder buf = mRemoteAccountMap.get(hostname);
+		if (buf == null)
+			buf = new StringBuilder(id);
+		else
+			buf.append(",").append(id);
+	}
+	
+	public void addResults(Element response) {
         Provisioning prov = Provisioning.getInstance();
-        for (Map.Entry<String, StringBuilder> entry : remote.entrySet()) {
+        for (Map.Entry<String, StringBuilder> entry : mRemoteAccountMap.entrySet()) {
             // String server = entry.getKey();
             String paramStr = entry.getValue().toString();
             String[] idStrs = paramStr.split(",");
 
             try {
-                Element req = zc.getRequestProtocol().getFactory().createElement(MailConstants.GET_FREE_BUSY_REQUEST);
-                req.addAttribute(MailConstants.A_CAL_START_TIME, rangeStart);
-                req.addAttribute(MailConstants.A_CAL_END_TIME, rangeEnd);
+                Element req = mSoapCtxt.getRequestProtocol().getFactory().createElement(MailConstants.GET_FREE_BUSY_REQUEST);
+                req.addAttribute(MailConstants.A_CAL_START_TIME, mStart);
+                req.addAttribute(MailConstants.A_CAL_END_TIME, mEnd);
                 req.addAttribute(MailConstants.A_UID, paramStr);
 
                 // hack: use the ID of the first user
@@ -54,32 +78,34 @@ public class RemoteFreeBusyProvider {
                 if (acct == null)
                     acct = prov.get(AccountBy.id, idStrs[0]);
                 if (acct != null) {
-                    Element remoteResponse = proxyRequest(req, context, acct.getId(), zc);
+                    Element remoteResponse = proxyRequest(req, acct.getId(), mSoapCtxt);
                     for (Element thisElt : remoteResponse.listElements())
                         response.addElement(thisElt.detach());
                 } else {
                     ZimbraLog.calendar.debug("Account " + idStrs[0] + " not found while searching free/busy");
                 }
             } catch (SoapFaultException e) {
-                for (int i = 0; i < idStrs.length; i++)
-                    addFailureInfo(response, rangeStart, rangeEnd, idStrs[i], e);
+            	addFailedAccounts(paramStr);
             } catch (ServiceException e) {
-                for (int i = 0; i < idStrs.length; i++)
-                    addFailureInfo(response, rangeStart, rangeEnd, idStrs[i], e);
+            	addFailedAccounts(paramStr);
             }
         }
-    }
+	}
 
-    protected static void addFailureInfo(Element response, long rangeStart, long rangeEnd, String idStr, Exception e) {
-        //sLog.debug("Could not get FreeBusy data for id " + idStr, e);
-        Element usr = response.addElement(MailConstants.E_FREEBUSY_USER);
-        usr.addAttribute(MailConstants.A_ID, idStr);
-        usr.addElement(MailConstants.E_FREEBUSY_NO_DATA)
-           .addAttribute(MailConstants.A_CAL_START_TIME, rangeStart)
-           .addAttribute(MailConstants.A_CAL_END_TIME, rangeEnd);
-    }
+	private void addFailedAccounts(String accts) {
+		if (mFailedAccounts == null)
+			mFailedAccounts = new StringBuilder(accts);
+		else
+			mFailedAccounts.append(",").append(accts);
+	}
+	
+	public String getFailedAccounts() {
+		if (mFailedAccounts == null)
+			return "";
+		return mFailedAccounts.toString();
+	}
     
-    protected static Element proxyRequest(Element request, Map<String, Object> context, String acctId, ZimbraSoapContext zsc) throws ServiceException {
+    protected Element proxyRequest(Element request, String acctId, ZimbraSoapContext zsc) throws ServiceException {
         // new context for proxied request has a different "requested account"
         ZimbraSoapContext zscTarget = new ZimbraSoapContext(zsc, acctId);
         Provisioning prov = Provisioning.getInstance();
@@ -90,9 +116,8 @@ public class RemoteFreeBusyProvider {
         request.detach();
 
         // executing remotely; find out target and proxy there
-        HttpServletRequest httpreq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
-        ProxyTarget proxy = new ProxyTarget(server.getId(), zsc.getRawAuthToken(), httpreq);
-        response = proxy.dispatch(request, zsc).detach();
+        ProxyTarget proxy = new ProxyTarget(server.getId(), zsc.getRawAuthToken(), mHttpReq);
+        response = proxy.dispatch(request, zscTarget).detach();
 
         return response;
     }

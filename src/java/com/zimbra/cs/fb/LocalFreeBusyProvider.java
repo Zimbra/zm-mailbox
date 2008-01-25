@@ -46,6 +46,10 @@ public class LocalFreeBusyProvider {
         return new FreeBusy(ilist, start, end);
     }
 
+    public static FreeBusy getFreeBusy(Account acct, long start, long end) 
+    	throws ServiceException {
+    	return getFreeBusyList(MailboxManager.getInstance().getMailboxByAccount(acct), start, end);
+    }
 	public static FreeBusy getFreeBusyList(Mailbox mbox, long start, long end)
 		throws ServiceException {
 		return getFreeBusyList(mbox, start, end, null);

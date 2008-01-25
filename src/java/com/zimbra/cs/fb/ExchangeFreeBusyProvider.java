@@ -19,8 +19,8 @@ package com.zimbra.cs.fb;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
+import org.apache.commons.httpclient.auth.AuthPolicy;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
@@ -53,16 +53,16 @@ public class ExchangeFreeBusyProvider {
 		public ServerInfo getServerInfo(String emailAddr);
 	}
 	
-	private static List<ExchangeUserResolver> mResolvers;
-	
+	private static ArrayList<ExchangeUserResolver> mResolvers;
 	static {
 		mResolvers = new ArrayList<ExchangeUserResolver>();
 	}
 
 	public static void registerResolver(ExchangeUserResolver r, int priority) {
-		mResolvers.set(priority, r);
+		mResolvers.ensureCapacity(priority+1);
+		mResolvers.add(priority, r);
 	}
-	public FreeBusy getFreeBusy(String emailAddr, long start, long end) {
+	public static FreeBusy getFreeBusy(String emailAddr, long start, long end) {
 		ServerInfo serverInfo = null;
 		for (ExchangeUserResolver r : mResolvers) {
 			serverInfo = r.getServerInfo(emailAddr);
@@ -82,6 +82,9 @@ public class ExchangeFreeBusyProvider {
 		state.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(serverInfo.authUsername, serverInfo.authPassword));
 		HttpClient client = new HttpClient();
 		client.setState(state);
+        ArrayList<String> authPrefs = new ArrayList<String>();
+        authPrefs.add(AuthPolicy.BASIC);
+        client.getParams().setParameter(AuthPolicy.AUTH_SCHEME_PRIORITY, authPrefs);
 		Element response = null;
 		try {
 			int status = client.executeMethod(method);
@@ -95,11 +98,13 @@ public class ExchangeFreeBusyProvider {
 		} catch (IOException e) {
 			ZimbraLog.misc.warn("error parsing fb response from exchange", e);
 			return LocalFreeBusyProvider.createDummyFreeBusy(start, end);
+		} finally {
+			method.releaseConnection();
 		}
 		return new ExchangeUserFreeBusy(response, emailAddr, FB_INTERVAL, start, end);
 	}
 	
-	private String constructUrl(ServerInfo info, String emailAddr, long start, long end) {
+	private static String constructUrl(ServerInfo info, String emailAddr, long start, long end) {
 		// http://exchange/public/?params..
 		//   cmd      = freebusy
 		//   start    = [ISO8601date]
@@ -153,10 +158,9 @@ public class ExchangeFreeBusyProvider {
 	    	parseInterval(fbxml, emailAddr, interval, start, end);
 	    }
 	    private void parseInterval(Element fbxml, String emailAddr, int interval, long start, long end) {
-	    	long intervalInMillis = interval * 30L * 60L * 1000L;
+	    	long intervalInMillis = interval * 60L * 1000L;
 	    	String fb = getFbString(fbxml, emailAddr);
 	    	for (int i = 0; i < fb.length(); i++) {
-	    		start += intervalInMillis;
 	    		switch (fb.charAt(i)) {
 	    		case TENTATIVE:
 	    			mList.addInterval(new Interval(start, start + intervalInMillis, IcalXmlStrMap.FBTYPE_BUSY_TENTATIVE));
@@ -172,6 +176,7 @@ public class ExchangeFreeBusyProvider {
 	    		default:
 	    			break;
 	    		}
+	    		start += intervalInMillis;
 	    	}
 	    }
 	    private String getFbString(Element fbxml, String emailAddr) {
