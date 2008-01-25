@@ -115,6 +115,8 @@ public class ZFeatures {
 
     public boolean getPortalEnabled() { return getBool(Provisioning.A_zimbraFeaturePortalEnabled); }
     
-    public boolean getWebSearchEnabled() { return getBool(Provisioning.A_zimbraFeatureWebSearchEnabled); }
+    // defaults to TRUE
+    public boolean getWebSearchEnabled() { return get(Provisioning.A_zimbraFeatureWebSearchEnabled) == null ||
+    											  getBool(Provisioning.A_zimbraFeatureWebSearchEnabled); }
 }
 
