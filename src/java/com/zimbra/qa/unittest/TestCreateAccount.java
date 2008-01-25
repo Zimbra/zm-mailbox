@@ -35,8 +35,8 @@ public class TestCreateAccount extends TestCase {
     private String TEST_ID = TestProvisioningUtil.genTestId();;
     private static String TEST_NAME = "test-accounts";
     private static String PASSWORD = "test123";
-    private static int NUM_THREADS = 20;
-    private static int NUM_ACCTS_PER_THREAD = 500;
+    private static int NUM_THREADS = 1; // 20;
+    private static int NUM_ACCTS_PER_THREAD = 100000; // 500;
 
     private String DOMAIN_NAME = null;
    
@@ -95,11 +95,12 @@ public class TestCreateAccount extends TestCase {
     
     private void createAccount(Provisioning prov, int threadIdx) throws Exception {
         for (int i=0; i<NUM_ACCTS_PER_THREAD; i++) {
-            System.out.println("createAccount: " + threadIdx + ", " + i);
             String acctName = makeAcctName(threadIdx, i);
             try {
                 Account acct = prov.createAccount(acctName, PASSWORD, new HashMap<String, Object>());
                 assertNotNull(acct);
+                // if ((i+1)%100 == 0)
+                    System.out.println("createAccount: " + threadIdx + ", " + i);
             } catch (Exception e) {
                 System.out.println("createAccount caught exception: " + threadIdx + ", " + i);
                 throw e;
