@@ -350,7 +350,7 @@ public class MailboxManager {
             Object cached = retrieveFromCache(mailboxId, true);
             if (cached instanceof Mailbox) {
                 ZimbraPerf.STOPWATCH_MBOX_GET.stop(startTime);
-                ZimbraPerf.COUNTER_MBOX_CACHE.increment(1);
+                ZimbraPerf.COUNTER_MBOX_CACHE.increment(100);
                 return (Mailbox) cached;
             }
         }
