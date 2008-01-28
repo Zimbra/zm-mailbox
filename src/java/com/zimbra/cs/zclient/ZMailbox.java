@@ -2876,6 +2876,45 @@ public class ZMailbox {
         return new ZMessage(invoke(req, requestedAccountId).getElement(MailConstants.E_MSG));
     }
 
+	public static class CheckSpellingResult {
+		private boolean mAvailable;
+		private List<Misspelling> mMisspellings;
+
+		public CheckSpellingResult(Element response) throws ServiceException  {
+			mAvailable = response.getAttributeBool(MailConstants.A_AVAILABLE);
+			List<Element> list = response.listElements(MailConstants.E_MISSPELLED);
+			mMisspellings = new ArrayList<Misspelling>(list.size());
+			for (Element misspelled : list) {
+				mMisspellings.add(new Misspelling(misspelled));
+			}
+		}
+
+		public boolean getIsAvailable() { return mAvailable; }
+		public List<Misspelling> getMisspellings() { return mMisspellings; }
+	}
+	public static class Misspelling {
+		private String mWord;
+		private String[] mSuggestions;
+		public Misspelling(Element element) throws ServiceException {
+			mWord = element.getAttribute(MailConstants.A_WORD);
+			String suggestions = element.getAttribute(MailConstants.A_SUGGESTIONS);
+			mSuggestions = suggestions.length() > 0 ? sCOMMA.split(suggestions) : new String[0];
+		}
+		public String getWord() {
+			return mWord;
+		}
+		public String[] getSuggestions() {
+			return mSuggestions;
+		}
+	}
+
+	public synchronized CheckSpellingResult checkSpelling(String text) throws ServiceException {
+		XMLElement req = new XMLElement(MailConstants.CHECK_SPELLING_REQUEST);
+		req.setText(text);
+		Element response = invoke(req);
+		return new CheckSpellingResult(response);
+	}
+
     public void createIdentity(ZIdentity identity) throws ServiceException {
         XMLElement req = new XMLElement(AccountConstants.CREATE_IDENTITY_REQUEST);
         identity.toElement(req);
