@@ -121,3 +121,37 @@ Entry for principal imap/macpro.local@MACPRO.LOCAL with kvno 3, encryption type 
 15. Set ZIMBRA_KERBEROS_REALM environment variable
 
 This is used by the build script to automatically provision zimbraForeignPrinciple for the 'user1' test user account. Otherwise, the default is to use the ZIMBRA.COM realm.
+
+
+===================================================================================
+Provisioning Tasks on the Zimbra side:
+
+(A) Prepare a domain fpr kerberos5 auth:
+    1. Set domain auth mechanism to kerberos5
+           zmprov md example.com zimbraAuthMech kerberos5
+
+    2. Set domain zimbraAuthKerberos5Realm to the kerberos5 realm in which users in this Zimbra domain are created in the kerberos database
+           zmprov md example.com zimbraAuthKerberos5Realm EXAMPLE.COM
+
+
+(B) Provisioning Zimbra account.  
+    When a user attemps to login to Zimbra as user/password, and when the domain's zimbraAuthMech is kerberos5, system will auth to kerberos KDC;
+    with a kerberos principal and the password entered by user.
+    The kerberos principal can be resolved by one of the two ways:
+
+    1.  {localpart-of-Zimbra-email-address}@{zimbraAuthKerberos5Realm} 
+        For example, for user1@example.com, the kerberos5 principal will be user1@EXAMPLE.COM
+
+    or
+
+    2. Kerberos5 principal can also be resolved on a per-account basis, instead of grabbing the realm from zimbraAuthKerberos5Realm.
+       This allows accounts in the same Zimbra domain to be mapped to different kerberos realms.  
+       To do this, Set the account's zimbraForeignPrincipal as kerberos5:{kerberos5-principal}.  
+       When user login to Zimbra as user/password, and when the domain's zimbraAuthMech is kerberos5, and if zimbraForeignPrincipal starts with "kerberos5:", 
+       system will auth to kerberos using the credential appear after the "kerberos5:" in zimbraForeignPrincipal.
+
+       For example:
+           zmprov ma user2@example.com +zimbraForeignPrincipal kerberos5:pshao@MYREALM.COM
+
+       In the above example, for user2@example.com, the kerberos5 principal will be pshao@MYREALM.COM
+
