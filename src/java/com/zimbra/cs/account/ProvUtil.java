@@ -22,6 +22,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.AccountLogger;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
@@ -128,6 +129,7 @@ public class ProvUtil implements DebugListener {
         System.out.println("  -f/--file                      use file as input stream");        
         System.out.println("  -s/--server   {host}[:{port}]  server hostname and optional port");
         System.out.println("  -l/--ldap                      provision via LDAP instead of SOAP");
+        System.out.println("  -L/--logpropertyfile           log4j property file, valid only with -l");
         System.out.println("  -a/--account  {name}           account name to auth as");
         System.out.println("  -p/--password {pass}           password for account");
         System.out.println("  -P/--passfile {file}           read password from file");
@@ -1652,6 +1654,7 @@ public class ProvUtil implements DebugListener {
         options.addOption("f", "file", true, "use file as input stream");
         options.addOption("s", "server", true, "host[:port] of server to connect to");
         options.addOption("l", "ldap", false, "provision via LDAP");
+        options.addOption("L", "logpropertyfile", true, "log4j property file");
         options.addOption("a", "account", true, "account name (not used with --ldap)");
         options.addOption("p", "password", true, "password for account");
         options.addOption("P", "passfile", true, "filename with password in it");
@@ -1680,6 +1683,16 @@ public class ProvUtil implements DebugListener {
         
         pu.setVerbose(cl.hasOption('v'));
         if (cl.hasOption('l')) pu.setUseLdap(true);
+        
+        if (cl.hasOption('L')) {
+            if (cl.hasOption('l'))
+                ZimbraLog.toolSetupLog4j("INFO", cl.getOptionValue('L'));
+            else {
+                printError("error: cannot specify -L when -l is not specified");
+                System.exit(2);
+            }
+        }
+        
         if (cl.hasOption('z')) {
             pu.setAccount(LC.zimbra_ldap_user.value());
             pu.setPassword(LC.zimbra_ldap_password.value());
