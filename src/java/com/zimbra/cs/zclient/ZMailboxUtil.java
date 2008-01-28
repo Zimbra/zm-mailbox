@@ -1285,7 +1285,7 @@ public class ZMailboxUtil implements DebugListener {
             
             for (ZGrant g : f.getGrants()) {
                 GranteeType gt = g.getGranteeType();
-                String dn = (gt == GranteeType.all || gt == GranteeType.pub) ? "" : g.getGranteeName(); 
+                String dn = (gt == GranteeType.all || gt == GranteeType.pub) ? "" : (gt == GranteeType.guest ? g.getGranteeId() : g.getGranteeName()); 
                 System.out.format(format, g.getPermissions(), getGranteeDisplay(g.getGranteeType()), dn);
             }
         }
@@ -1344,9 +1344,12 @@ public class ZMailboxUtil implements DebugListener {
                     break;
                 }
             }
-            if (zid == null) throw ZClientException.CLIENT_ERROR("unablle to resolve zimbra id for: "+grantee, null);
-            else grantee = zid;
-            
+            if (zid == null) {
+                if (type != GranteeType.all && type != GranteeType.pub)
+                    throw ZClientException.CLIENT_ERROR("unablle to resolve zimbra id for: "+grantee, null);
+            } else {
+                grantee = zid;
+            }
             
             mMbox.modifyFolderRevokeGrant(folderId, grantee);
         } else {
