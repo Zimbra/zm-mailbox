@@ -39,6 +39,8 @@ import com.zimbra.common.util.ZimbraLog;
 public class BlobInputStream extends InputStream
 implements SharedInputStream {
     
+	private static final int BUFFER_SIZE = 1024;
+	
     private File mFile;
     private RandomAccessFile mRAF;
     private Long mMarkPos;
@@ -47,6 +49,10 @@ implements SharedInputStream {
     private long mStart;
     private long mEnd;
     private Set<BlobInputStream> mSubStreams;
+    
+    private byte[] mBuf = new byte[BUFFER_SIZE];
+    private int mBufPos = 0;
+    private int mBufSize = 0;
     
     /**
      * Constructs a <tt>BlobInputStream</tt> that reads an entire file.
@@ -97,6 +103,7 @@ implements SharedInputStream {
         }
         mRAF = new RandomAccessFile(mFile, "r");
         mRAF.seek(mPos);
+        resetBuffer();
     }
 
     /**
@@ -108,7 +115,13 @@ implements SharedInputStream {
         if (mRAF != null) {
             mRAF.close();
             mRAF = null;
+            resetBuffer();
         }
+    }
+    
+    private void resetBuffer() {
+    	mBufPos = 0;
+    	mBufSize = 0;
     }
     
     /**
@@ -172,15 +185,22 @@ implements SharedInputStream {
         }
         openFile();
         
-        int c = mRAF.read();
-        if (c >= 0) {
-            mPos++;
-        } else {
-            closeMyFile();
+        if (mBufPos >= mBufSize) {
+        	// Read next chunk into buffer
+        	int numRead = mRAF.read(mBuf);
+        	if (numRead < 0) {
+        		closeMyFile();
+        		resetBuffer();
+        		return numRead;
+        	}
+        	mBufPos = 0;
+        	mBufSize = numRead;
         }
-        return c;
-    }
 
+        mPos++;
+        return mBuf[mBufPos++];
+    }
+    
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
         if (mPos >= mEnd) {
@@ -188,16 +208,41 @@ implements SharedInputStream {
             return -1;
         }
         openFile();
-
+        
         // Make sure we don't read past the endpoint passed to the constructor
         len = (int) Math.min(len, mEnd - mPos);
-        int numRead = mRAF.read(b, off, len);
-        if (numRead >= 0) {
-            mPos += numRead;
-        } else {
-            closeMyFile();
+
+        // Copy from buffer first
+        int numReadFromBuffer = Math.min(mBufSize - mBufPos, len);
+        if (numReadFromBuffer > 0) {
+        	System.arraycopy(mBuf, mBufPos, b, off, numReadFromBuffer);
+        	mBufPos += len;
+        	mPos += len;
         }
-        return numRead;
+
+        int numReadFromFile = 0;
+        if (numReadFromBuffer < len) {
+        	// Read additional chunk
+        	numReadFromFile = mRAF.read(b, off + numReadFromBuffer, len - numReadFromBuffer);
+        	if (numReadFromFile >= 0) {
+        		mPos += numReadFromFile;
+        	} else {
+        		closeMyFile();
+        	}
+        }
+
+        if (numReadFromFile >= 0) {
+        	// Read from file, possibly from buffer too 
+        	return numReadFromBuffer + numReadFromFile;
+        } else {
+        	if (numReadFromBuffer > 0) {
+        		// Read from buffer, hit EOF in file
+        		return numReadFromBuffer;
+        	} else {
+        		// Didn't read from buffer, hit EOF in file
+        		return numReadFromFile;
+        	}
+        }
     }
 
     @Override
@@ -211,6 +256,7 @@ implements SharedInputStream {
         openFile();
         mRAF.seek(mMarkPos);
         mPos = mMarkPos;
+        resetBuffer();
     }
 
     @Override
@@ -224,10 +270,13 @@ implements SharedInputStream {
         }
         openFile();
         
-        n = (int) Math.min(n, mEnd - mPos);
-        int numSkipped = mRAF.skipBytes((int) n);
-        if (numSkipped > 0) {
-            mPos += numSkipped;
+        long newPos = Math.min(mPos + n, mEnd);
+        long numSkipped = 0;
+        if (newPos != mPos) {
+        	mRAF.seek(newPos);
+        	numSkipped = newPos - mPos;
+        	mPos = newPos;
+        	resetBuffer();
         } else {
             closeMyFile();
         }

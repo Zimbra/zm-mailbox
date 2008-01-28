@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Random;
 
 import javax.mail.internet.SharedInputStream;
 
@@ -40,18 +41,15 @@ import com.zimbra.cs.store.BlobInputStream;
 public class TestBlobInputStream extends TestCase {
 
     private File mFile;
-    private String CONTENT = "0123456789";
     
     public void setUp()
     throws Exception {
-        mFile = File.createTempFile("TestBlobInputStream", ".txt");
-        FileWriter writer = new FileWriter(mFile);
-        writer.write(CONTENT);
-        writer.close();
     }
     
     public void testBlobInputStream()
     throws Exception {
+        String CONTENT = "0123456789";
+        createFile(CONTENT);
         BlobInputStream in = new BlobInputStream(mFile);
         
         // Test reading all content
@@ -161,6 +159,58 @@ public class TestBlobInputStream extends TestCase {
         // Test sub-substream
         InputStream subsub = ((BlobInputStream) sub).newStream(1, 3);
         assertEquals("45", getContent(subsub, 100));
+        
+        // Test position after reading 1 character
+        in.close();
+        in = new BlobInputStream(mFile);
+        assertEquals(0, in.getPosition());
+        in.read();
+        assertEquals(1, in.getPosition());
+        in.close();
+    }
+
+    /**
+     * Tests reading a large file.  Exercises the buffering code.
+     */
+    public void testLargeFile()
+    throws Exception {
+    	String content = createFile(5000);
+    	BlobInputStream in = new BlobInputStream(mFile);
+    	assertEquals(content, getContent(in, 5000));
+    	in.close();
+    	
+    	// Test reading 1 char at a time, then a byte array.  This tests
+    	// the section of BlobInputStream.read(byte[]), where it reads
+    	// part of the data from the buffer and part from the file.
+    	in = new BlobInputStream(mFile);
+    	String firstChunk = getContent(in, 1000);
+    	assertEquals(content.substring(0, 1000), firstChunk);
+    	byte[] secondChunk = new byte[2000];
+    	in.read(secondChunk);
+    	assertEquals(content.substring(1000, 3000), new String(secondChunk));
+    	in.close();
+    }
+    
+    private String createFile(int numBytes)
+    throws Exception {
+    	StringBuilder buf = new StringBuilder();
+    	Random random = new Random();
+    	for (int i = 0; i < numBytes; i++) {
+    		char c = 'a';
+    		c += random.nextInt(26);
+    		buf.append(c);
+    	}
+    	String s = buf.toString();
+    	createFile(s);
+    	return s;
+    }
+    
+    private void createFile(String data)
+    throws Exception {
+        mFile = File.createTempFile("TestBlobInputStream", ".txt");
+        FileWriter writer = new FileWriter(mFile);
+        writer.write(data);
+        writer.close();
     }
     
     private String getContent(InputStream in, int maxBytes)
@@ -186,7 +236,9 @@ public class TestBlobInputStream extends TestCase {
     
     public void tearDown()
     throws Exception {
-        mFile.delete();
+    	if (mFile != null) {
+    		mFile.delete();
+    	}
     }
 
     public static void main(String[] args)
