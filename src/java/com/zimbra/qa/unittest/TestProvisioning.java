@@ -499,7 +499,7 @@ public class TestProvisioning extends TestCase {
         List list = mProv.getAllServers();
         TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{localeServer, entry}, false);
         
-        list = mProv.getAllServers("mailbox");
+        list = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
         TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{localeServer}, false);
         
         return entry;

@@ -57,12 +57,14 @@ class RenameDomain {
     private DirContext mDirCtxt;
     private LdapProvisioning mProv;
     private Domain mOldDomain;
+    private String mOldDomainId; // save old domain id because we still need it after the old domain is deleted
     private String mNewDomainName;
     
     RenameDomain(DirContext dirCtxt, LdapProvisioning prov, Domain oldDomain, String newDomainName) {
         mDirCtxt = dirCtxt;
         mProv = prov;
         mOldDomain = oldDomain;
+        mOldDomainId = mOldDomain.getId();
         mNewDomainName = newDomainName;
     }
     
@@ -73,8 +75,9 @@ class RenameDomain {
     
     public void execute() throws ServiceException {
         String oldDomainName = mOldDomain.getName();
-        String oldDomainId = mOldDomain.getId();
            
+        debug("Renaming domain %s(%s) to %s", oldDomainName, mOldDomainId, mNewDomainName);
+        
         RenameInfo renameInfo = beginRenameDomain();
         RenamePhase startingPhase = renameInfo.phase();
         RenamePhase phase = RenamePhase.PHASE_FIX_FOREIGN_DL_MEMBERS;
@@ -83,6 +86,7 @@ class RenameDomain {
          * 1. create the new domain
          */ 
         Domain newDomain = createNewDomain();
+        debug("new domain: %s(%s)", newDomain.getName(), newDomain.getId());
             
         /*
          * 2. move all accounts, DLs, and aliases
@@ -94,6 +98,7 @@ class RenameDomain {
         // first phase, go thru DLs and accounts and their aliases that are in the old domain into the new domain
         phase = RenamePhase.PHASE_RENAME_ENTRIES;
         if (phase.ordinal() >= startingPhase.ordinal()) {
+            debug("Entering phase " + phase.toString());
             // don't need to setPhase for the first first, it was set or got from beginRenameDomain
             visitor = getVisitor(phase);
             flags = Provisioning.SA_ACCOUNT_FLAG + Provisioning.SA_CALENDAR_RESOURCE_FLAG + Provisioning.SA_DISTRIBUTION_LIST_FLAG;
@@ -103,6 +108,7 @@ class RenameDomain {
         // second phase, go thru aliases that have not been moved yet, by now aliases left in the domain should be aliases with target in other domains
         phase = RenamePhase.PHASE_FIX_FOREIGN_ALIASES;
         if (phase.ordinal() >= startingPhase.ordinal()) {
+            debug("Entering phase " + phase.toString());
             renameInfo.setPhase(phase);
             renameInfo.write(mProv, mOldDomain);
             visitor = getVisitor(phase);
@@ -116,6 +122,7 @@ class RenameDomain {
         //       have been updated in first pass.
         phase = RenamePhase.PHASE_FIX_FOREIGN_DL_MEMBERS;
         if (phase.ordinal() >= startingPhase.ordinal()) {
+            debug("Entering phase " + phase.toString());
             renameInfo.setPhase(phase);
             renameInfo.write(mProv, mOldDomain);
             visitor = getVisitor(phase);
@@ -127,25 +134,20 @@ class RenameDomain {
         /*
          * 3. Delete the old domain
          */ 
-        mProv.deleteDomain(oldDomainId);
-            
-        /*
-         * 4. restore zimbraId to the id of the old domain, erase rename info, and 
-         *    actiavte/enable the new(renamed) domain.
-         */ 
-        LdapProvisioning.flushDomainCache(mProv, newDomain.getId());
-        HashMap<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraId, oldDomainId);
-        attrs.put(Provisioning.A_zimbraDomainRenameInfo, "");
-        attrs.put(Provisioning.A_zimbraDomainStatus, Provisioning.DOMAIN_STATUS_ACTIVE);
-        attrs.put(Provisioning.A_zimbraMailStatus, Provisioning.MAIL_STATUS_ENABLED);
-        mProv.modifyAttrsInternal(newDomain, mDirCtxt, attrs);  // skip callback
+        debug("Deleting old domain %s(%s)", mOldDomain.getName(), mOldDomainId);
+        mProv.deleteDomain(mOldDomainId);
         
         /*
-         * 5. inform all servers that the domain is now active/enabled
+         * 4. activate the new domain
+         *    - restore zimbraId to the id of the old domain on the new domain
+         *    - activate/enable the new domain
          */
-        mProv.flushDomainCacheOnAllServers(oldDomainId);
+        endRenameDomain(newDomain, mOldDomainId);
         
+        /*
+         * 5. flush account cache on all servers
+         */
+        mProv.flushCacheOnAllServers(CacheEntryType.account);
     }
     
     public static enum RenamePhase {
@@ -222,8 +224,11 @@ class RenameDomain {
              */
             
             String renameInfo = domain.getAttr(Provisioning.A_zimbraDomainRenameInfo);
-            if (StringUtil.isNullOrEmpty(renameInfo))
+            if (StringUtil.isNullOrEmpty(renameInfo)) {
+                debug("RenameInfo.load: domain=%s(%s), %s=not set", domain.getName(), domain.getId(), Provisioning.A_zimbraDomainRenameInfo);
                 return null;
+            }
+            debug("RenameInfo.load: domain=%s(%s), %s=%s", domain.getName(), domain.getId(), Provisioning.A_zimbraDomainRenameInfo, renameInfo);
             
             int idx = renameInfo.indexOf(COLON);
             if (idx == -1)
@@ -264,6 +269,8 @@ class RenameDomain {
             else
                 renameInfoStr = encodeDest();
             attrs.put(Provisioning.A_zimbraDomainRenameInfo, renameInfoStr);
+            
+            debug("RenameInfo.write: domain=%s(%s), %s=%s", domain.getName(), domain.getId(), Provisioning.A_zimbraDomainRenameInfo, renameInfoStr);
             prov.modifyAttrs(domain, attrs);
         }
     }
@@ -286,6 +293,7 @@ class RenameDomain {
         
         // mark domain shutdown and rejecting mails
         // mProv.modifyDomainStatus(mOldDomain, Provisioning.DOMAIN_STATUS_SHUTDOWN);
+        debug("Locking old domain %s(%s)", mOldDomain.getName(), mOldDomain.getId());
         Map<String, String> attrs = new HashMap<String, String>();
         attrs.put(Provisioning.A_zimbraDomainStatus, Provisioning.DOMAIN_STATUS_SHUTDOWN);
         attrs.put(Provisioning.A_zimbraMailStatus, Provisioning.MAIL_STATUS_DISABLED);
@@ -302,7 +310,7 @@ class RenameDomain {
             phase = renameInfo.phase();
         }
         
-        mProv.flushDomainCacheOnAllServers(mOldDomain.getId());
+        mProv.flushCacheOnAllServers(CacheEntryType.domain);
         
         return renameInfo;
     }
@@ -328,6 +336,7 @@ class RenameDomain {
         
         Domain newDomain = null;
         try {
+            debug("Creating new domain %s", mNewDomainName);
             newDomain = mProv.createDomain(mNewDomainName, domainAttrs);
         } catch (AccountServiceException e) {
             if (e.getCode().equals(AccountServiceException.DOMAIN_EXISTS)) {
@@ -337,6 +346,14 @@ class RenameDomain {
                 
                 // the new domain already exists, make sure it is the one that was being renamed to
                 RenameInfo renameInfo = RenameInfo.load(newDomain, false);
+                
+                if (renameInfo == null) {
+                    // no rename info, indicating that the new domain already exists, and was NOT created 
+                    // by a previous rename domain.  reactivate the old domain and throw an exception
+                    endRenameDomain(mOldDomain, null);
+                    throw ServiceException.INVALID_REQUEST("domain " + mNewDomainName + " already exists", null);
+                }
+                
                 if (!renameInfo.srcDomainName().equals(mOldDomain.getName()))
                     throw ServiceException.INVALID_REQUEST("domain " + mNewDomainName + " was being renamed from " + renameInfo.srcDomainName() + 
                             " it cannot be renamed from " + mOldDomain.getName() + " until the previous rename is finished" , null);
@@ -349,6 +366,27 @@ class RenameDomain {
         RenameInfo renameInfo = new RenameInfo(mOldDomain.getName(), null, null);
         renameInfo.write(mProv, newDomain);
         return newDomain;
+    }
+    
+    /*
+     * activate the domain.
+     * if domainId is not null, set domain's zimbraId to the id.
+     */
+    private void endRenameDomain(Domain domain, String domainId) throws ServiceException {
+        
+        debug("endRenameDomain domain=%s(%s), domainId=%s", domain.getName(), domain.getId(), domainId==null?"null":domainId);
+        
+        String curId = domain.getId();
+        
+        HashMap<String, Object> attrs = new HashMap<String, Object>();
+        if (domainId != null)
+            attrs.put(Provisioning.A_zimbraId, domainId);
+        attrs.put(Provisioning.A_zimbraDomainRenameInfo, "");
+        attrs.put(Provisioning.A_zimbraDomainStatus, Provisioning.DOMAIN_STATUS_ACTIVE);
+        attrs.put(Provisioning.A_zimbraMailStatus, Provisioning.MAIL_STATUS_ENABLED);
+        mProv.modifyAttrsInternal(domain, mDirCtxt, attrs);  // skip callback
+        
+        mProv.flushCacheOnAllServers(CacheEntryType.domain);
     }
     
     static class RenameDomainVisitor implements NamedEntry.Visitor {
@@ -766,23 +804,12 @@ class RenameDomain {
 
     private static void warn(Throwable t, String funcName, String desc, String format, Object ... objects) {
         if (sRenameDomainLog.isWarnEnabled())
-            // mRenameDomainLog.warn(String.format(funcName + "(" + desc + "):" + format, objects), t);
             sRenameDomainLog.warn(String.format(funcName + "(" + desc + "):" + format, objects));
     }
-
+    
     private static void debug(String format, Object ... objects) {
         if (sRenameDomainLog.isDebugEnabled())
             sRenameDomainLog.debug(String.format(format, objects));
     }
 
-    private static void debug(String funcName, String desc, String format, Object ... objects) {
-        debug(null, funcName,  desc,  format, objects);
-    }
-
-    private static void debug(Throwable t, String funcName, String desc, String format, Object ... objects) {
-        if (sRenameDomainLog.isDebugEnabled())
-            // mRenameDomainLog.warn(String.format(funcName + "(" + desc + "):" + format, objects), t);
-            sRenameDomainLog.debug(String.format(funcName + "(" + desc + "):" + format, objects));
-    }
-    
 }

@@ -50,6 +50,7 @@ public abstract class Provisioning {
 
     public static final String DEFAULT_COS_NAME = "default";
 
+    public static final String SERVICE_MAILBOX   = "mailbox";
     public static final String SERVICE_MEMCACHED = "imapproxy";
 
     /**
@@ -1910,6 +1911,21 @@ public abstract class Provisioning {
     public abstract Zimlet createZimlet(String name, Map<String, Object> attrs) throws ServiceException;
     
     public abstract void deleteZimlet(String name) throws ServiceException;
+    
+    public static enum ZimletBy {
+        
+        // case must match protocol
+        id, name;
+        
+        public static ZimletBy fromString(String s) throws ServiceException {
+            try {
+                return ZimletBy.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
+            }
+        }
+    
+    }
     
     /**
      * Creates the specified calendar resource. The A_zimbraId and A_uid attributes are automatically

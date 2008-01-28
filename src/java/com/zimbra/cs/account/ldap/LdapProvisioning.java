@@ -1452,6 +1452,22 @@ public class LdapProvisioning extends Provisioning {
         }
     }
     
+    private Domain getFromCache(DomainBy keyType, String key) throws ServiceException {
+        switch(keyType) {
+            case name: 
+                String asciiName = IDNUtil.toAsciiDomainName(key);
+                return sDomainCache.getByName(asciiName);
+            case id: 
+                return sDomainCache.getById(key);
+            case virtualHostname:
+                return sDomainCache.getByVirtualHostname(key);
+            case krb5Realm:    
+                return sDomainCache.getByKrb5Realm(key);
+            default:
+                return null;
+        }
+    }
+    
     private Domain getDomainById(String zimbraId, DirContext ctxt) throws ServiceException {
         if (zimbraId == null)
             return null;
@@ -1705,6 +1721,17 @@ public class LdapProvisioning extends Provisioning {
                 return getCosById(key, null);                
             default:
                     return null;
+        }
+    }
+    
+    private Cos getFromCache(CosBy keyType, String key) throws ServiceException {
+        switch(keyType) {
+            case name:
+                return sCosCache.getByName(key);           
+            case id:
+                return sCosCache.getById(key);                
+            default:
+                return null;
         }
     }
 
@@ -2106,6 +2133,17 @@ public class LdapProvisioning extends Provisioning {
                 return null;
             default:
                     return null;
+        }
+    }
+    
+    private Server getFromCache(ServerBy keyType, String key) throws ServiceException {
+        switch(keyType) {
+            case name: 
+                return sServerCache.getByName(key);
+            case id: 
+                return sServerCache.getById(key);
+            default:
+                return null;
         }
     }
 
@@ -3043,6 +3081,17 @@ public class LdapProvisioning extends Provisioning {
     
     public Zimlet getZimlet(String name) throws ServiceException {
     	return getZimlet(name, null, true);
+    }
+        
+    private Zimlet getFromCache(ZimletBy keyType, String key) throws ServiceException {
+        switch(keyType) {
+        case name:
+            return sZimletCache.getByName(key);           
+        case id:
+            return sZimletCache.getById(key);                
+        default:
+            return null;
+        }
     }
 
     Zimlet lookupZimlet(String name, DirContext ctxt) throws ServiceException {
@@ -4778,19 +4827,11 @@ public class LdapProvisioning extends Provisioning {
             throw ServiceException.FAILURE("not a ldap entry", null);
     }
     
-
-    
-    static void flushDomainCache(Provisioning prov, String domainId) throws ServiceException {
-        CacheEntry[] cacheEntries = new CacheEntry[1];
-        cacheEntries[0] = new CacheEntry(CacheEntryBy.id, domainId);
-        prov.flushCache(CacheEntryType.domain, cacheEntries);
-    }
-    
-    void flushDomainCacheOnAllServers(String domainId) throws ServiceException {
+    void flushCacheOnAllServers(CacheEntryType type) throws ServiceException {
         SoapProvisioning soapProv = new SoapProvisioning();
         String adminUrl = null;
         
-        for (Server server : getAllServers()) {
+        for (Server server : getAllServers(Provisioning.SERVICE_MAILBOX)) {
             
             try {
                 adminUrl = URLUtil.getAdminURL(server, ZimbraServlet.ADMIN_SERVICE_URI, true);
@@ -4803,7 +4844,13 @@ public class LdapProvisioning extends Provisioning {
             
             try {
                 soapProv.soapZimbraAdminAuthenticate();
-                flushDomainCache(soapProv, domainId);
+                if (type == CacheEntryType.account)
+                    soapProv.flushCache(CacheEntryType.account, null);
+                else if (type == CacheEntryType.domain)
+                    soapProv.flushCache(CacheEntryType.domain, null);
+                else
+                    assert(false);
+                
             } catch (ServiceException e) {
                 ZimbraLog.account.warn("flushDomainCacheOnAllServers: domain cache not flushed on server " + server.getName(), e);
             }
@@ -4813,30 +4860,17 @@ public class LdapProvisioning extends Provisioning {
     @Override
     public void flushCache(CacheEntryType type, CacheEntry[] entries) throws ServiceException {
         
-        NamedEntryCache cache = null;
-        Set<NamedEntry> namedEntries = null;
-        
         switch (type) {
         case account:
             if (entries != null) {
-                namedEntries = new HashSet<NamedEntry>();
                 for (CacheEntry entry : entries) {
                     AccountBy accountBy = (entry.mEntryBy==CacheEntryBy.id)? AccountBy.id : AccountBy.name;
-                    Account account = get(accountBy, entry.mEntryIdentity);
-                    if (account == null)
-                        throw AccountServiceException.NO_SUCH_ACCOUNT(entry.mEntryIdentity);
-                    else    
-                        namedEntries.add(account);
+                    Account account = getFromCache(accountBy, entry.mEntryIdentity);
+                    if (account != null)
+                        reload(account);
                 }
-            }
-            
-            if (entries == null) {
+            } else
                 sAccountCache.clear();
-            } else {    
-                for (NamedEntry entry : namedEntries) {
-                    reload(entry);
-                }
-            }
             return;
         case config:
             if (entries != null)
@@ -4845,81 +4879,51 @@ public class LdapProvisioning extends Provisioning {
             reload(config);
             return;
         case cos:
-            cache = sCosCache;
             if (entries != null) {
-                namedEntries = new HashSet<NamedEntry>();
                 for (CacheEntry entry : entries) {
                     CosBy cosBy = (entry.mEntryBy==CacheEntryBy.id)? CosBy.id : CosBy.name;
-                    Cos cos = get(cosBy, entry.mEntryIdentity);
-                    if (cos == null)
-                        throw AccountServiceException.NO_SUCH_COS(entry.mEntryIdentity);
-                    else    
-                        namedEntries.add(cos);
+                    Cos cos = getFromCache(cosBy, entry.mEntryIdentity);
+                    if (cos != null)
+                        reload(cos);
                 }
-            }
-            break;
+            } else
+                sCosCache.clear();
+            return;
         case domain:
             if (entries != null) {
-                namedEntries = new HashSet<NamedEntry>();
                 for (CacheEntry entry : entries) {
                     DomainBy domainBy = (entry.mEntryBy==CacheEntryBy.id)? DomainBy.id : DomainBy.name;
-                    Domain domain = get(domainBy, entry.mEntryIdentity);
-                    if (domain == null)
-                        throw AccountServiceException.NO_SUCH_DOMAIN(entry.mEntryIdentity);
-                    else    
-                        namedEntries.add(domain);
+                    Domain domain = getFromCache(domainBy, entry.mEntryIdentity);
+                    if (domain != null)
+                        reload(domain);
                 }
-            }
-            
-            if (entries == null) {
+            } else
                 sDomainCache.clear();
-            } else {    
-                for (NamedEntry entry : namedEntries) {
-                    reload(entry);
-                }
-            }
             return;
         case server:
-            cache = sServerCache;
             if (entries != null) {
-                namedEntries = new HashSet<NamedEntry>();
                 for (CacheEntry entry : entries) {
                     ServerBy serverBy = (entry.mEntryBy==CacheEntryBy.id)? ServerBy.id : ServerBy.name;
                     Server server = get(serverBy, entry.mEntryIdentity);
-                    if (server == null)
-                        throw AccountServiceException.NO_SUCH_SERVER(entry.mEntryIdentity);
-                    else    
-                        namedEntries.add(server);
+                    if (server != null)
+                        reload(server);
                 }
-            }
-            break;
+            } else
+                sServerCache.clear();
+            return;
         case zimlet:
-            cache = sZimletCache;
             if (entries != null) {
-                namedEntries = new HashSet<NamedEntry>();
                 for (CacheEntry entry : entries) {
-                    if (entry.mEntryBy==CacheEntryBy.id)
-                        throw ServiceException.INVALID_REQUEST("zimlet by id is not supported "+type, null);
-                    Zimlet zimlet = getZimlet(entry.mEntryIdentity);
-                    if (zimlet == null)
-                        throw AccountServiceException.NO_SUCH_ZIMLET(entry.mEntryIdentity);
-                    else    
-                        namedEntries.add(zimlet);
+                    ZimletBy zimletBy = (entry.mEntryBy==CacheEntryBy.id)? ZimletBy.id : ZimletBy.name;
+                    Zimlet zimlet = getFromCache(zimletBy, entry.mEntryIdentity);
+                    if (zimlet != null)
+                        reload(zimlet);
                 }
-            }
-            break;
+            } else
+                sZimletCache.clear();
+            return;
         default:
             throw ServiceException.INVALID_REQUEST("invalid cache type "+type, null);
-        }
-        
-        if (namedEntries == null)  // clear all entries
-            cache.clear();
-        else {
-            for (NamedEntry entry : namedEntries) {
-                // reload selected entries
-                // cache.remove(entry);
-                reload(entry);
-            }
         }
         
     }

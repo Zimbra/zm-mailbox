@@ -29,10 +29,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.SetUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.DataSource;
@@ -44,6 +47,8 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.qa.unittest.TestProvisioningUtil.IDNName;
 
 import junit.framework.AssertionFailedError;
@@ -51,6 +56,8 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 public class TestRenameDomain  extends TestCase {
+    private LdapProvisioning mLdapProv;
+    private SoapProvisioning mSoapProv;
     private Provisioning mProv;
     private String TEST_ID;
     
@@ -146,15 +153,31 @@ public class TestRenameDomain  extends TestCase {
         throw new Exception();
     }
     
-    public void setUp() throws Exception {
+    private void setLdapProv() {
+        mProv = mLdapProv;
+    }
+    
+    private void setSoapProv() {
+        mProv = mSoapProv;
+    }
+    
+    private void init() throws Exception {
         
         TEST_ID = TestProvisioningUtil.genTestId();
         
-        System.out.println("\nTest " + TEST_ID + " setting up...\n");
+        System.out.println("\nTest " + TEST_ID + "\n");
         
-        mProv = Provisioning.getInstance();
-        assertTrue(mProv instanceof LdapProvisioning);
+        Provisioning prov = Provisioning.getInstance();
+        assertTrue(prov instanceof LdapProvisioning);
+        mLdapProv = (LdapProvisioning)prov;
         
+        mSoapProv = new SoapProvisioning();
+        mSoapProv.soapSetURI("https://localhost:7071" + ZimbraServlet.ADMIN_SERVICE_URI);
+        mSoapProv.soapZimbraAdminAuthenticate();
+    }
+    
+    private void prepareDomain() throws Exception {    
+        setLdapProv();
          
         /*
          * Create NUM_DOMAINS domains: one domain(the first one) to be renamed, and NUM_DOMAINS-1 other domains.  
@@ -579,6 +602,17 @@ public class TestRenameDomain  extends TestCase {
         throw new Exception();
     }
     
+    private void verifyDomainStatus(String domainName) throws Exception {
+        
+        Domain domain = mProv.get(Provisioning.DomainBy.name, domainName);
+        assertTrue(domain != null);
+        
+        String domainStatus = domain.getAttr(Provisioning.A_zimbraDomainStatus);
+        assertEquals("active", domainStatus);
+        String mailStatus = domain.getAttr(Provisioning.A_zimbraMailStatus);
+        assertEquals("enabled", mailStatus);
+    }
+    
     private Domain verifyNewDomainBasic(String domainId) throws Exception {
         // get by name
         Domain domainByName = mProv.get(Provisioning.DomainBy.name, DOMAIN_NAME(NEW_DOMAIN));
@@ -589,6 +623,8 @@ public class TestRenameDomain  extends TestCase {
         assertTrue(domainById != null);
         
         TestProvisioningUtil.verifySameEntry(domainByName, domainById);
+        
+        verifyDomainStatus(DOMAIN_NAME(NEW_DOMAIN));
         
         return domainById;
     }
@@ -660,21 +696,21 @@ public class TestRenameDomain  extends TestCase {
             IDNName name = new IDNName(ACCOUNT_NAME(a, domainIdx));
             Account entry = mProv.get(Provisioning.AccountBy.name, name.uName());
             assertNotNull(entry);
-            expectedEntries.add(name.aName());
+            expectedEntries.add(name.uName());
         }
             
         for (int nd = 0; nd < NUM_DLS_NESTED; nd++) {
             IDNName name = new IDNName(NESTED_DL_NAME(nd, domainIdx));
             DistributionList entry = mProv.get(Provisioning.DistributionListBy.name, name.uName());
             assertNotNull(entry);
-            expectedEntries.add(name.aName());
+            expectedEntries.add(name.uName());
         }
             
         for (int td = 0; td < NUM_DLS_NESTED; td++){
             IDNName name = new IDNName(TOP_DL_NAME(td, domainIdx));
             DistributionList entry = mProv.get(Provisioning.DistributionListBy.name, name.uName());
             assertNotNull(entry);
-            expectedEntries.add(name.aName());
+            expectedEntries.add(name.uName());
         }
        
         // verify all our aliases are there
@@ -703,13 +739,13 @@ public class TestRenameDomain  extends TestCase {
         Set<String> expectedAliases = new HashSet<String>();
         for (int d = 0; d < NUM_DOMAINS; d++) {
             for (int a = 0; a < NUM_ACCOUNTS; a++)
-                expectedAliases.add(new IDNName(ACCOUNT_ALIAS_NAME(a, d, domainIdx)).aName());
+                expectedAliases.add(new IDNName(ACCOUNT_ALIAS_NAME(a, d, domainIdx)).uName());
             
             for (int nd = 0; nd < NUM_DLS_NESTED; nd++)
-                expectedAliases.add(new IDNName(NESTED_DL_ALIAS_NAME(nd, d, domainIdx)).aName());
+                expectedAliases.add(new IDNName(NESTED_DL_ALIAS_NAME(nd, d, domainIdx)).uName());
             
             for (int td = 0; td < NUM_DLS_NESTED; td++)
-                expectedAliases.add(new IDNName(TOP_DL_ALIAS_NAME(td, d, domainIdx)).aName());
+                expectedAliases.add(new IDNName(TOP_DL_ALIAS_NAME(td, d, domainIdx)).uName());
         }
         
         
@@ -811,7 +847,7 @@ public class TestRenameDomain  extends TestCase {
                     for (int i = 0; i < NUM_ACCOUNTS; i++) {
                         Set<String> names = ACCOUNT_NAMES(i, dIdx, true);
                         for (String n : names)
-                            expectedNames.add(new IDNName(n).aName());
+                            expectedNames.add(new IDNName(n).uName());
                     }
                 } 
                 
@@ -819,7 +855,7 @@ public class TestRenameDomain  extends TestCase {
                     for (int i = 0; i < NUM_DLS_NESTED; i++) {
                         Set<String> names = NESTED_DL_NAMES(i, dIdx, true);
                         for (String n : names)
-                            expectedNames.add(new IDNName(n).aName());
+                            expectedNames.add(new IDNName(n).uName());
                     }
                 } 
 
@@ -827,7 +863,7 @@ public class TestRenameDomain  extends TestCase {
                     for (int i = 0; i < NUM_DLS_TOP; i++) {
                         Set<String> names = TOP_DL_NAMES(i, dIdx, true);
                         for (String n : names)
-                            expectedNames.add(new IDNName(n).aName());
+                            expectedNames.add(new IDNName(n).uName());
                     }
                 } 
             }
@@ -882,9 +918,9 @@ public class TestRenameDomain  extends TestCase {
     //  - stop the rename at different stages and test the restart
    
 
-    private void execute() throws Exception {
+    private void renameDomainTest() throws Exception {
         
-        // setup
+        prepareDomain();
         Domain oldDomain = mProv.get(Provisioning.DomainBy.name, DOMAIN_NAME(OLD_DOMAIN));
         String oldDomainId = oldDomain.getId();
         Map<String, Object> oldDomainAttrs = oldDomain.getAttrs(false);
@@ -895,16 +931,46 @@ public class TestRenameDomain  extends TestCase {
         ((LdapProvisioning)mProv).renameDomain(oldDomain.getId(), DOMAIN_NAME(NEW_DOMAIN));
         
         // verify
+        // switch to SoapProvisioning, because the new domain is still cached under the wrong id
+        // instead of the old domain's id in the LdapProvisioning instance, and verifyNewDomainBasic 
+        // would fail if we use the LdapProvisioning instance or verifying.  We did not remove it 
+        // from cache in RenameDomain.endRenameDomain, we could though...
+        setSoapProv();
         verifyOldDomain();
         verifyNewDomain(oldDomainId, oldDomainAttrs);
         verifyOtherDomains();        
         
     }
     
+    private void renameToExistingDomainTest() throws Exception {
+        setLdapProv();
+        String srcDomainName = DOMAIN_NAME("src");
+        String tgtDomainName = DOMAIN_NAME("target");
+        Domain srcDomain = mProv.createDomain(srcDomainName, new HashMap<String, Object>());
+        assertNotNull(srcDomain);
+        Domain tgtDomain = mProv.createDomain(tgtDomainName, new HashMap<String, Object>());
+        assertNotNull(tgtDomain);
+        
+        boolean ok = false;
+        try {
+            ((LdapProvisioning)mProv).renameDomain(srcDomain.getId(), tgtDomainName);
+        } catch (ServiceException e) {
+            assertEquals(ServiceException.INVALID_REQUEST, e.getCode());
+            assertEquals("invalid request: domain " + new IDNName(tgtDomainName).aName() + " already exists", e.getMessage());
+        }
+        
+        verifyDomainStatus(srcDomainName);
+        verifyDomainStatus(tgtDomainName);
+    }
+    
     public void testRenameDomain() throws Exception {
         try {
             System.out.println("\nTest " + TEST_ID + " starting\n");
-            execute();
+            init();
+            
+            renameDomainTest();
+            renameToExistingDomainTest();
+            
             System.out.println("\nTest " + TEST_ID + " done!");
         } catch (ServiceException e) {
             Throwable cause = e.getCause();
@@ -918,11 +984,15 @@ public class TestRenameDomain  extends TestCase {
             e.printStackTrace(System.out);
         }
     }
-   
+    
+    
     public static void main(String[] args) throws Exception {
-        CliUtil.toolSetup("DEBUG");
-        
+        CliUtil.toolSetup("INFO");
+        // ZimbraLog.toolSetupLog4j("INFO", "/Users/pshao/p4/main/ZimbraServer/conf/log4j.properties.cli");
+        ZimbraLog.toolSetupLog4j("INFO", "/opt/zimbra/conf/log4j.properties");
+
         TestUtil.runTest(new TestSuite(TestRenameDomain.class));
+
         
         /*
         TestRenameDomain t = new TestRenameDomain();
