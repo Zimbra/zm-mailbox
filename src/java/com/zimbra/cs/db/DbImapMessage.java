@@ -29,6 +29,7 @@ import com.zimbra.cs.datasource.ImapFolder;
 import com.zimbra.cs.datasource.ImapMessage;
 import com.zimbra.cs.datasource.ImapMessageCollection;
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 
@@ -143,7 +144,7 @@ public class DbImapMessage {
         try {
             conn = DbPool.getConnection();
             stmt = conn.prepareStatement(
-                "SELECT imap.uid, imap.item_id, mi.flags " +
+                "SELECT imap.uid, imap.item_id, mi.unread, mi.flags " +
                 "FROM " + getTableName(mbox) + " imap " +
                 "  LEFT OUTER JOIN " + DbMailItem.getMailItemTableName(mbox) + " mi " +
                 "  ON imap.mailbox_id = mi.mailbox_id AND imap.item_id = mi.id " + 
@@ -157,6 +158,8 @@ public class DbImapMessage {
                 long uid = rs.getLong("uid");
                 int itemId = rs.getInt("item_id");
                 int flags = rs.getInt("flags");
+                int unread = rs.getInt("unread");
+                flags = unread > 0 ? (flags | Flag.BITMASK_UNREAD) : (flags & ~Flag.BITMASK_UNREAD);
                 imapMessages.add(new ImapMessage(uid, itemId, flags));
             }
             rs.close();
