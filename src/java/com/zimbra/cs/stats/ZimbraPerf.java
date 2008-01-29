@@ -147,7 +147,7 @@ public class ZimbraPerf {
         sRealtimeStats.addCallback(callback);
     }
     
-    private static final long CSV_DUMP_FREQUENCY = Constants.MILLIS_PER_MINUTE / 6;
+    private static final long CSV_DUMP_FREQUENCY = Constants.MILLIS_PER_MINUTE;
     private static boolean sIsInitialized = false;
 
     private static final String[] THREAD_NAME_PREFIXES = new String[] { 
