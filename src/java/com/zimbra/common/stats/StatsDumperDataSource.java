@@ -42,7 +42,7 @@ public interface StatsDumperDataSource {
     public String getHeader();
     
     /**
-     * Returns a set of data lines.
+     * Returns the latest set of data lines and resets counters.
      */
     public Collection<String> getDataLines();
     
