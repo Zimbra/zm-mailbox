@@ -762,7 +762,8 @@ public class SoapProvisioning extends Provisioning {
         a.setText(key);
         a.addAttribute(AdminConstants.A_BY, keyType.name());
         try {
-            return new SoapDomain(invoke(req).getElement(AdminConstants.E_DOMAIN));
+            Element d = invoke(req).getOptionalElement(AdminConstants.E_DOMAIN);
+            return d == null ? null : new SoapDomain(d);
         } catch (ServiceException e) {
             if (e.getCode().equals(AccountServiceException.NO_SUCH_DOMAIN))
                 return null;
