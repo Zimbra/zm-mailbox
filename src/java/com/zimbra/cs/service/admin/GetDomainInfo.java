@@ -45,16 +45,14 @@ public class GetDomainInfo extends AdminDocumentHandler {
         
         Domain domain = prov.get(DomainBy.fromString(key), value);
 
-        if (domain == null)
-            throw AccountServiceException.NO_SUCH_DOMAIN(value);
-
         /* 
-        if (!canAccessDomain(lc, domain))
+        if (domain != null && !canAccessDomain(lc, domain))
             throw ServiceException.PERM_DENIED("can not access domain");
         */
         
         Element response = lc.createElement(AdminConstants.GET_DOMAIN_INFO_RESPONSE);
-        doDomain(response, domain, applyConfig);
+        if (domain != null)
+            doDomain(response, domain, applyConfig);
 
         return response;
     }

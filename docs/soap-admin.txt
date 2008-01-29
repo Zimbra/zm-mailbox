@@ -453,6 +453,11 @@ This call does *not* require an auth token.  It returuns attributes that are per
 for cases when the user is not authenticated.  For example, URL to direct the user to upon loggin out or when 
 auth token is expired.
 
+If the domain doesn't exist, this call returns an empty body:
+
+<GetDomainInfoResponse/>
+
+
 {apply-config} = 0|1 (1 is default)
 
  if {apply-config} is 1, then certain unset attrs on a domain will get their value from the global config.
