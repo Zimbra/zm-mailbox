@@ -98,7 +98,7 @@ public class ZimbraMailAdapter implements MailAdapter
      * true if the system spam detector finds this mail to be spam
      * false otherwise
      */
-    private boolean mSpam;
+    private boolean mIsSpam;
     
     static {
         try {
@@ -151,16 +151,20 @@ public class ZimbraMailAdapter implements MailAdapter
             if (val != null) {
                 if (sSpamHeaderValue != null) {
                     Matcher m = sSpamHeaderValue.matcher(val);
-                    mSpam = m.matches();
+                    mIsSpam = m.matches();
                 } else {
                     // no expected header value is configured; 
                     // presence of the header (regardless of its value) indicates spam
-                    mSpam = true;
+                    mIsSpam = true;
                 }
             }
         }
     }    
 
+    public boolean isSpam() {
+    	return mIsSpam;
+    }
+    
     public ParsedMessage getParsedMessage() {
         return mParsedMessage;
     }
@@ -338,7 +342,7 @@ public class ZimbraMailAdapter implements MailAdapter
     }
 
     Message doDefaultFiling() throws IOException, ServiceException {
-        int folderId = mSpam ? Mailbox.ID_FOLDER_SPAM : Mailbox.ID_FOLDER_INBOX;
+        int folderId = mIsSpam ? Mailbox.ID_FOLDER_SPAM : Mailbox.ID_FOLDER_INBOX;
         return addMessage(folderId);
     }
 

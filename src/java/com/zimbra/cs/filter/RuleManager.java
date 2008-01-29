@@ -178,10 +178,21 @@ public class RuleManager {
         Message msg = null;
         try {
             Node node = getRulesNode(account);
-            
             ZimbraMailAdapter mailAdapter = new ZimbraMailAdapter(
                     mailbox, pm, recipient, sharedDeliveryCtxt);
-            if (node != null) {
+            
+            // Determine whether to apply rules
+            boolean applyRules = true;
+            if (node == null) {
+            	applyRules = false;
+            }
+            if (mailAdapter.isSpam() &&
+            		!account.getBooleanAttr(Provisioning.A_zimbraSpamApplyUserFilters, false)) {
+            	// Don't apply user filters to spam by default
+            	applyRules = false;
+            }
+            
+            if (applyRules) {
                 SieveFactory.getInstance().evaluate(mailAdapter, node);
                 // multiple fileinto may result in multiple copies of the messages in different folders
                 Message[] msgs = mailAdapter.getProcessedMessages();

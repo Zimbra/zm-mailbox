@@ -19,13 +19,14 @@ package com.zimbra.qa.unittest;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.mail.internet.MimeMessage;
-
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import com.zimbra.common.soap.SoapFaultException;
-import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.zclient.ZFilterAction;
 import com.zimbra.cs.zclient.ZFilterCondition;
 import com.zimbra.cs.zclient.ZFilterRule;
@@ -58,6 +59,7 @@ extends TestCase {
     
     private ZMailbox mMbox;
     private ZFilterRules mOriginalRules;
+    private String mOriginalSpamApplyUserFilters;
 
     public void setUp()
     throws Exception {
@@ -65,6 +67,9 @@ extends TestCase {
         cleanUp();
         mOriginalRules = mMbox.getFilterRules();
         mMbox.saveFilterRules(getRules());
+        
+        Account account = TestUtil.getAccount(USER_NAME);
+        mOriginalSpamApplyUserFilters = account.getAttr(Provisioning.A_zimbraSpamApplyUserFilters);
     }
     
     public void testQuoteValidation()
@@ -142,6 +147,51 @@ extends TestCase {
     }
     
     /**
+     * Confirms that spam filtering takes a higher precedence than 
+     * custom user filtering (bug 23886).
+     */
+    public void testSpam()
+    throws Exception {
+    	ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+    	String sender = TestUtil.getAddress(USER_NAME);
+    	String[] recipients = new String[] { sender };
+    	String message = TestUtil.getTestMessage(NAME_PREFIX + " testSpam", USER_NAME, USER_NAME, null);
+    	Config config = Provisioning.getInstance().getConfig();
+    	message = config.getAttr(Provisioning.A_zimbraSpamHeader) + ": " +
+    		config.getAttr(Provisioning.A_zimbraSpamHeaderValue) + "\r\n" + message;
+    	
+    	// Make sure spam message doesn't already exist
+    	assertEquals(0, TestUtil.search(mbox, "in:junk subject:testSpam").size());
+    	assertEquals(0, TestUtil.search(mbox, "in:" + FOLDER1_PATH + " subject:testSpam").size());
+    	
+    	// Deliver spam message without matching rule, make sure it gets delivered
+    	// to the junk folder, and delete. 
+    	TestUtil.addMessageLmtp(recipients, sender, message);
+    	ZMessage msg = TestUtil.waitForMessage(mbox, "in:junk subject:testSpam");
+    	mbox.deleteMessage(msg.getId());
+    	
+    	// Add matching filter rule: if subject contains "testSpam", file into folder1
+    	ZFilterRules rules = getRules();
+        List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
+        List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
+        conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "testSpam"));
+        actions.add(new ZFileIntoAction(FOLDER1_PATH));
+        rules.getRules().add(new ZFilterRule("testBug5455", true, false, conditions, actions));
+        mbox.saveFilterRules(rules);
+        
+        // Set "apply user rules" attribute to TRUE and make sure the message gets filed into folder1
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraSpamApplyUserFilters, LdapUtil.LDAP_TRUE);
+    	TestUtil.addMessageLmtp(recipients, sender, message);
+    	msg = TestUtil.waitForMessage(mbox, "in:" + FOLDER1_PATH + " subject:testSpam");
+    	mbox.deleteMessage(msg.getId());
+        
+    	// Set "apply user rules" attribute to FALSE and make sure the message gets filed into junk
+    	TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraSpamApplyUserFilters, LdapUtil.LDAP_FALSE);
+    	TestUtil.addMessageLmtp(recipients, sender, message);
+    	TestUtil.waitForMessage(mbox, "in:junk subject:testSpam");
+    }
+    
+    /**
      * Verifies the fix to bug 5455.  Tests sending a message that matches
      * two filter rules, each of which has a tag action and a flag action.   
      */
@@ -160,12 +210,9 @@ extends TestCase {
         TestUtil.verifyTag(mMbox, msg, TAG1_NAME);
     }
 
-    public void testMultipleReceivedHeaders()
-    throws Exception {
-    }
-    
     protected void tearDown() throws Exception {
         mMbox.saveFilterRules(mOriginalRules);
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraSpamApplyUserFilters, mOriginalSpamApplyUserFilters);
         cleanUp();
     }
 

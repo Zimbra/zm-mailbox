@@ -253,7 +253,13 @@ extends Assert {
     public static void addMessageLmtp(String subject, String[] recipients, String sender)
     throws Exception {
         String message = getTestMessage(subject, recipients[0], sender, null);
-        LmtpClient lmtp = new LmtpClient("localhost", 7025);
+        addMessageLmtp(recipients, sender, message);
+    }
+    
+    public static void addMessageLmtp(String[] recipients, String sender, String message)
+    throws Exception {
+        Provisioning prov = Provisioning.getInstance();
+        LmtpClient lmtp = new LmtpClient("localhost", prov.getLocalServer().getIntAttr(Provisioning.A_zimbraLmtpBindPort, 7025));
         byte[] data = message.getBytes();
         lmtp.sendMessage(new ByteArrayInputStream(data), recipients, sender, "TestUtil", (long) data.length);
         lmtp.close();
@@ -531,6 +537,15 @@ extends Assert {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(attrName, attrValue);
         prov.modifyAttrs(server, attrs);
+    }
+    
+    public static void setAccountAttr(String userName, String attrName, String attrValue)
+    throws ServiceException {
+    	Provisioning prov = Provisioning.getInstance();
+    	Account account = prov.get(AccountBy.name, getAddress(userName));
+    	Map<String, Object> attrs = new HashMap<String, Object>();
+    	attrs.put(attrName, attrValue);
+    	prov.modifyAttrs(account, attrs);
     }
     
     public static String getConfigAttr(String attrName)
