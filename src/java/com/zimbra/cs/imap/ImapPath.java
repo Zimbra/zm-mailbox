@@ -375,6 +375,7 @@ public class ImapPath {
                 return mReferent;
             }
         } else {
+            // FIXME: are there any cases where we'd need to implement this branch?
             iidRemote = null;
             subpathRemote = null;
         }
@@ -407,7 +408,9 @@ public class ImapPath {
                 options.setTargetAccount(target.getName());
                 options.setNoSession(true);
                 ZMailbox zmbx = ZMailbox.getMailbox(options);
-                ZFolder zfolder = zmbx.getFolderById(iidRemote.getId() + "");
+                ZFolder zfolder = zmbx.getFolderById(iidRemote.toString(mCredentials.getAccountId()));
+                if (zfolder == null)
+                    return mReferent;
                 if (subpathRemote == null)
                     mReferent = new ImapPath(owner, zmbx, zfolder, mCredentials);
                 else
@@ -528,8 +531,7 @@ public class ImapPath {
                 return false;
         } else {
             ZFolder zfolder = (ZFolder) mFolder;
-            // FIXME: not a problem if it's the terminus of a mountpoint
-            if (asItemId().getId() == Mailbox.ID_FOLDER_USER_ROOT)
+            if (asItemId().getId() == Mailbox.ID_FOLDER_USER_ROOT && mScope != Scope.REFERENCE)
                 return false;
             ZFolder.View view = zfolder.getDefaultView();
             if (view == ZFolder.View.appointment || view == ZFolder.View.task || view == ZFolder.View.wiki || view == ZFolder.View.document)

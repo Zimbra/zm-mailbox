@@ -86,7 +86,7 @@ public class GetFolder extends MailDocumentHandler {
         if (node.mFolder != null)
             eFolder = ToXML.encodeFolder(parent, ifmt, octxt, node.mFolder);
         else
-            eFolder = parent.addElement(MailConstants.E_FOLDER).addAttribute(MailConstants.A_ID, node.mId).addAttribute(MailConstants.A_NAME, node.mName);
+            eFolder = parent.addElement(MailConstants.E_FOLDER).addAttribute(MailConstants.A_ID, ifmt.formatItemId(node.mId)).addAttribute(MailConstants.A_NAME, node.mName);
 
 		for (FolderNode subNode : node.mSubfolders)
 			encodeFolderNode(ifmt, octxt, eFolder, subNode);
@@ -94,31 +94,8 @@ public class GetFolder extends MailDocumentHandler {
 		return eFolder;
 	}
 
-//	public static Element handleFolder(Mailbox mbox, Folder folder, Element response, ZimbraSoapContext lc, OperationContext octxt)
-//    throws ServiceException {
-//		Element respFolder = ToXML.encodeFolder(response, lc, folder);
-//
-//        for (Folder subfolder : folder.getSubfolders(octxt))
-//        	if (subfolder != null)
-//       		handleFolder(mbox, subfolder, respFolder, lc, octxt);
-//       return respFolder;
-//	}
 
-//	public static Element handleFolder(Mailbox mbox, Folder folder, Element response, ZimbraSoapContext lc, OperationContext octxt)
-//	throws ServiceException {
-//		Element respFolder = ToXML.encodeFolder(response, lc, folder);
-//		
-//		List subfolders = folder.getSubfolders(octxt);
-//		if (subfolders != null)
-//			for (Iterator it = subfolders.iterator(); it.hasNext(); ) {
-//				Folder subfolder = (Folder) it.next();
-//				if (subfolder != null)
-//					handleFolder(mbox, subfolder, respFolder, lc, octxt);
-//			}
-//		return respFolder;
-//	}
-	
-	private void handleMountpoint(Element request, Map<String, Object> context, ItemId iidLocal, Mountpoint mpt, Element eRoot)
+    private void handleMountpoint(Element request, Map<String, Object> context, ItemId iidLocal, Mountpoint mpt, Element eRoot)
 	throws ServiceException, SoapFaultException {
 		ItemId iidRemote = new ItemId(mpt.getOwnerId(), mpt.getRemoteId());
 		Element proxied = proxyRequest(request, context, iidLocal, iidRemote);
@@ -139,7 +116,6 @@ public class GetFolder extends MailDocumentHandler {
         public int mId;
         public String mName;
         public Folder mFolder;
-        public boolean mVisible;
         public List<FolderNode> mSubfolders = new ArrayList<FolderNode>();
     }
     
