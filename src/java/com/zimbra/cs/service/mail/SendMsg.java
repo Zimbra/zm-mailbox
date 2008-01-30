@@ -142,7 +142,7 @@ public class SendMsg extends MailDocumentHandler {
                 MimeMessageData mimeData = new MimeMessageData();
                 MimeMessage mm;
                 if (attachId != null) {
-                    mm = parseUploadedMessage(zsc, attachId, mimeData);
+                    mm = parseUploadedMessage(zsc, attachId, mimeData, needCalendarSentByFixup);
                 } else {
                     mm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem, null, mimeData);
                 }
