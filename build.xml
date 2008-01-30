@@ -629,7 +629,9 @@
         <delete dir="${jetty.home.dir}"/>
         <gunzip src="${jetty.src.dir}/jetty-${jetty.version}.tar.gz" dest="${build.dir}/jetty-${jetty.version}.tar"/>
         <untar src="${build.dir}/jetty-${jetty.version}.tar" dest="${zimbra.home.dir}" overwrite="true"/>
-        <move file="${zimbra.home.dir}/jetty-${jetty.version}" tofile="${jetty.home.dir}"/>
+        <move  toDir="${jetty.home.dir}">
+	    <fileset dir="${zimbra.home.dir}/jetty-${jetty.version}" />
+	</move>
         <delete file="${build.dir}/jetty-${jetty.version}.tar"/>
         <mkdir dir="${jetty.home.dir}/logs"/>
         <mkdir dir="${jetty.home.dir}/webapps"/>
