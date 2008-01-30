@@ -579,11 +579,11 @@ class IntersectionQueryOperation extends CombiningQueryOperation {
 
     
     /**
-     * If this is set, then we always transform
+     * If this is set, then we always transform the query into DNF:
      *       a AND (b OR c)
      * into
      *       (a AND b) OR (a AND c)
-     *
+     *       
      * If b or c have different targets (servers they execute on) then we *must* distribute
      * but otherwise we have a choice.
      * 
@@ -594,8 +594,10 @@ class IntersectionQueryOperation extends CombiningQueryOperation {
      * which is always faster.
      * 
      * The ideal solution would be to try both ways and compare the final # of executable 
-     * ops.  TODO, maybe. 
-     *       
+     * ops.  TODO, maybe.
+     * 
+     * tim 1/2008: SortBy="none" requires this setting, and so if you want to disable it you will
+     *      need to pass down and check the requested Sort.  
      */
     private static final boolean ALWAYS_DISTRIBUTE_AND_OVER_OR = true;
     
