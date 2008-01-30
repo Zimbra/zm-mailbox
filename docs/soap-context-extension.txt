@@ -25,16 +25,17 @@ zdsync extension
 This extension is used by zdesktop to carry sync status information in soap responses so that web client can properly inform user of mailbox sync status.  It is only present when server is running as zdesktop backend.  zdsync usually is added to every single soap response.  It has the following structure:
 
 <zdsync xmlns="urn:zimbraOffline">
-  [(<account name="{NAME}" status="{STATUS}" lastsync="{LASTSYNC}">
+  [(<account name="{NAME}" id="{ID}" status="{STATUS}" lastsync="{LASTSYNC}">
     [<error [message="{MESSAGE}"]>
       [<exception>{EXCEPTION}</exception>]
     </error>]
-  </account>)]
+  </account>)*]
 </zdsync>
 
 where
 
 {NAME} -- name of account (email)
+{ID} -- account ID
 
 {STATUS} -- choice of unknown|offline|online|running|authfail|error, where
            unknown: no sync run yet since last server start
@@ -43,8 +44,13 @@ where
            running: a sync with remote server is in progress
            authfail: authentication failed in last sync attempt
            error: last sync encountered an error other than network or authentication problems
+
 {LASTSYNC} -- timestamp in epoch milliseconds at the end of the last successful sync which could be initial sync or delta sync. 0 means initial sync is not complete (could be running or have encountered error).
+
 {MESSAGE} -- human readable error message in English.  Note, this is more a debugging aid and client is discouraged to display this directly to user.
+
 {EXCEPTION} -- exception stack trace associated with the last sync error
 
 NOTE: <error> is only present when {STATUS} is ERROR, and is cleared when {STATUS} changes to anything else such as running.  It is possible that a client may see the same <error> in multiple soap responses if no sync has been attempted between two client requests.  Client should avoid alerting the user of the same error multiple times. 
+
+NOTE: The <zdsync> block may contain status of more than one account.  If an account is not present, client should assume that account remains the previous status.
