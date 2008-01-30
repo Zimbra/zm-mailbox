@@ -3831,6 +3831,11 @@ public class Mailbox {
             }
         }
 
+        // caller can't set system flags other than \Draft and \Sent
+        flags &= ~Flag.FLAG_SYSTEM | Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME;
+        // caller can't specify non-message flags
+        flags &= Flag.FLAGS_GENERIC | Flag.FLAGS_MESSAGE;
+
         String digest;
         int msgSize;
         try {
@@ -3847,7 +3852,7 @@ public class Mailbox {
 
         // strip out unread flag for internal storage (don't do this before redoRecorder initialization)
         boolean unread = (flags & Flag.BITMASK_UNREAD) > 0;
-        flags = flags & ~Flag.BITMASK_UNREAD;
+        flags &= ~Flag.BITMASK_UNREAD;
 
         boolean isSpam = folderId == ID_FOLDER_SPAM;
         boolean isDraft = ((flags & Flag.BITMASK_DRAFT) != 0);
