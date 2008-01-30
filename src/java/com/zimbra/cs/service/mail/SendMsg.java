@@ -168,31 +168,52 @@ public class SendMsg extends MailDocumentHandler {
             respElement.addAttribute(MailConstants.A_ID, ifmt.formatItemId(savedMsgId));
         return response;
     }
-    
-    public static ItemId doSendMessage(OperationContext oc, Mailbox mbox,
-        MimeMessage mm, List<InternetAddress> newContacts,  List<Upload> uploads,
-        ItemId origMsgId, String replyType, String identityId, boolean noSaveToSent,
-        boolean ignoreFailedAddresses, boolean needCalendarSentByFixup) throws ServiceException {
+
+    public static ItemId doSendMessage(OperationContext oc, Mailbox mbox, MimeMessage mm, List<InternetAddress> newContacts,
+                                       List<Upload> uploads, ItemId origMsgId, String replyType, String identityId,
+                                       boolean noSaveToSent, boolean ignoreFailedAddresses, boolean needCalendarSentByFixup)
+    throws ServiceException {
         
         if (needCalendarSentByFixup)
             fixupICalendarFromOutlook(mbox, mm);
 
         if (noSaveToSent)
             return mbox.getMailSender().sendMimeMessage(oc, mbox, false, mm, newContacts, uploads,
-                                                          origMsgId, replyType, null,
-                                                          ignoreFailedAddresses, false);
+                                                        origMsgId, replyType, null, ignoreFailedAddresses, false);
         else
             return mbox.getMailSender().sendMimeMessage(oc, mbox, mm, newContacts, uploads,
-                origMsgId, replyType, identityId, ignoreFailedAddresses, false);
+                                                        origMsgId, replyType, identityId, ignoreFailedAddresses, false);
     }
 
-    static MimeMessage parseUploadedMessage(ZimbraSoapContext zsc, String attachId, MimeMessageData mimeData)
+    static MimeMessage parseUploadedMessage(ZimbraSoapContext zsc, String attachId, MimeMessageData mimeData) throws ServiceException {
+        return parseUploadedMessage(zsc, attachId, mimeData, false);
+    }
+
+    static MimeMessage parseUploadedMessage(ZimbraSoapContext zsc, String attachId, MimeMessageData mimeData, boolean calendarSentByFixup)
     throws ServiceException {
+        boolean anySystemMutators = MimeVisitor.anyMutatorsRegistered();
+
         Upload up = FileUploadServlet.fetchUpload(zsc.getAuthtokenAccountId(), attachId, zsc.getRawAuthToken());
         if (up == null)
             throw MailServiceException.NO_SUCH_UPLOAD(attachId);
         (mimeData.uploads = new ArrayList<Upload>(1)).add(up);
         try {
+            // if we may need to mutate the message, we can't use the "updateHeaders" hack...
+            if (anySystemMutators || calendarSentByFixup) {
+                MimeMessage mm = new MimeMessage(JMSession.getSession(), up.getInputStream());
+                if (anySystemMutators)
+                    return mm;
+
+                OutlookICalendarFixupMimeVisitor.ICalendarModificationCallback callback = new OutlookICalendarFixupMimeVisitor.ICalendarModificationCallback();
+                MimeVisitor mv = new OutlookICalendarFixupMimeVisitor(getRequestedAccount(zsc)).setCallback(callback);
+                try {
+                    mv.accept(mm);
+                } catch (MessagingException e) { }
+                if (callback.wouldCauseModification())
+                    return mm;
+            }
+
+            // ... but in general, for most installs this is safe
             return new MimeMessage(JMSession.getSession(), up.getInputStream()) {
                 @Override protected void updateHeaders() throws MessagingException {
                     setHeader("MIME-Version", "1.0");  if (getMessageID() == null) updateMessageID();
@@ -276,14 +297,19 @@ public class SendMsg extends MailDocumentHandler {
         private String mSentBy;
         private String mDefaultCharset;
 
+        static class ICalendarModificationCallback implements MimeVisitor.ModificationCallback {
+            private boolean mWouldModify;
+            public boolean wouldCauseModification()  { return mWouldModify; }
+            public boolean onModification()          { mWouldModify = true;  return false; }
+        }
+
         OutlookICalendarFixupMimeVisitor(Account acct) {
             mNeedFixup = false;
             mMsgDepth = 0;
             mDefaultCharset = (acct == null ? null : acct.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null));
         }
 
-        @Override
-        protected boolean visitMessage(MimeMessage mm, VisitPhase visitKind) throws MessagingException {
+        @Override protected boolean visitMessage(MimeMessage mm, VisitPhase visitKind) throws MessagingException {
             if (VisitPhase.VISIT_BEGIN.equals(visitKind)) {
                 mMsgDepth++;
                 if (mMsgDepth == 1) {
@@ -391,6 +417,10 @@ public class SendMsg extends MailDocumentHandler {
             }
 
             if (modified) {
+                // check to make sure that the caller's OK with altering the message
+                if (mCallback != null && !mCallback.onModification())
+                    return false;
+
                 String filename = bp.getFileName();
                 if (filename == null)
                     filename = "meeting.ics";

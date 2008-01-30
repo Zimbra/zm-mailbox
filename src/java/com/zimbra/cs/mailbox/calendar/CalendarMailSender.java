@@ -348,14 +348,8 @@ public class CalendarMailSender {
         if (text == null)
             text = "";
         try {
-            MimeMessage mm = new MimeMessage(JMSession.getSession()) {
-                protected void updateHeaders() throws MessagingException {
-                    String msgid = getMessageID();
-                    super.updateHeaders();
-                    if (msgid != null)
-                        setHeader("Message-ID", msgid);
-                }
-            };
+            MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
+
             MimeMultipart mmp = new MimeMultipart("alternative");
             mm.setContent(mmp);
 
