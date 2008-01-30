@@ -67,6 +67,12 @@ public abstract class MimeVisitor {
         return new ArrayList<Class<? extends MimeVisitor>>(sMimeConverters);
     }
 
+    /** Returns whether there are any registered MimeVisitor converter classes.
+     * @see #registerConverter(Class) */
+    public static boolean anyConvertersRegistered() {
+        return !sMimeConverters.isEmpty();
+    }
+
     /** Adds a MimeVisitor class to the list of mutators invoked before a
      *  message is saved to disk or sent via SMTP. */
     public static void registerMutator(Class<? extends MimeVisitor> vclass) {
@@ -82,6 +88,12 @@ public abstract class MimeVisitor {
      * @see #registerMutator(Class) */
     public static List<Class<? extends MimeVisitor>> getMutators() {
         return new ArrayList<Class<? extends MimeVisitor>>(sMimeMutators);
+    }
+
+    /** Returns whether there are any registered MimeVisitor mutator classes.
+     * @see #registerMutator(Class) */
+    public static boolean anyMutatorsRegistered() {
+        return !sMimeMutators.isEmpty();
     }
 
 
