@@ -1151,9 +1151,16 @@ if recip="1" is specified
 
   {sort-by}  = default is "dateDesc"
                Valid choices:
-                    dateDesc|dateAsc|subjDesc|subjAsc|nameDesc|nameAsc
-               SPECIAL SORTING FOR TASKS, valid only if types="task" (and task alone):
-                    taskDueAsc|taskDueDesc|taskStatusAsc|taskStatusDesc|taskPercCompletedAsc|taskPercCompletedDesc
+                    dateDesc|dateAsc|subjDesc|subjAsc|nameDesc|nameAsc|none(*)
+                    * - If sort-by is "none" then cursors MUST NOT be
+                        used, and some searches are impossible
+                        (searches that require intersection of complex
+                        sub-ops).  Server will throw an
+                        IllegalArgumentException if the search is
+                        invalid.
+                        
+               ADDITIONAL SORT MODES FOR TASKS: valid only if types="task" (and task alone):
+                        taskDueAsc|taskDueDesc|taskStatusAsc|taskStatusDesc|taskPercCompletedAsc|taskPercCompletedDesc
 
   {more-flag} = 1 if there are more search results remaining. 
   {content-matched} = 1 if the content of the message matched
@@ -1178,17 +1185,18 @@ calExpandInstStart and calExpandInstEnd:
    with no date specified) are included, but with no instance
    information***
    
-            
   
 For the optional <cursor> element:
  -- The required parameters are (prevMailItemId, prevSortValue): these
- correspond to the last hit on the current page (assuming you're
- going forward -- if you're backing up then they should be the first
- hit on the current page)....the server uses those parameters to find
- the spot in the new results that corresponds to your old position:
- even if some entries have been removed or added to the search results
- (e.g. if you are searching is:unread and you read some).
- The endSortVal paramater tells the cursor where to stop returning values
+    correspond to the last hit on the current page (assuming you're
+    going forward -- if you're backing up then they should be the first
+    hit on the current page)....the server uses those parameters to
+    find the spot in the new results that corresponds to your old
+    position: even if some entries have been removed or added to the
+    search results (e.g. if you are searching is:unread and you read
+    some).  The endSortVal paramater tells the cursor where to stop
+    returning values
+ -- Cursors are NOT legal if SortBy="none"
  
  
 conversation result:

@@ -215,7 +215,7 @@ public class IndexEditor {
                 ZimbraQuery zq = new ZimbraQuery(mbox, params);
                 res[i] = zq.execute(null, SoapProtocol.Soap12);
             }
-            return new HitIdGrouper(new MultiQueryResults(res, sortBy), sortBy);
+            return HitIdGrouper.Create(new MultiQueryResults(res, sortBy), sortBy);
         }
     }
 

@@ -837,6 +837,8 @@ class LuceneIndex implements ITextIndex {
         synchronized(getLock()) {
             if (searchOrder != mLatestSortBy) { 
                 switch (searchOrder) {
+                    case NONE:
+                        return null;
                     case DATE_DESCENDING:
                         mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_DATE, SortField.STRING, true));
                         mLatestSortBy = searchOrder;

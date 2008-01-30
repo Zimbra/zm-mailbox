@@ -44,7 +44,7 @@ import com.zimbra.common.util.LogFactory;
  * -- a list of query operations which are unioned together.
  * 
  ***********************************************************************/
-class UnionQueryOperation extends QueryOperation
+class UnionQueryOperation extends CombiningQueryOperation
 {
     private static Log mLog = LogFactory.getLog(UnionQueryOperation.class);
 
@@ -77,7 +77,7 @@ class UnionQueryOperation extends QueryOperation
     }
 
     private ZimbraHit mCachedNextHit = null;
-
+    
     public ZimbraHit getNext() throws ServiceException {
         atStart = false;
         ZimbraHit toRet = mCachedNextHit;
@@ -97,31 +97,40 @@ class UnionQueryOperation extends QueryOperation
     private void internalGetNext() throws ServiceException
     {
         if (mCachedNextHit == null) {
-            int i = 0;
+            
+            if (getResultsSet().getSortBy() == MailboxIndex.SortBy.NONE) {
+                for (QueryOperation op : mQueryOperations) {
+                    mCachedNextHit = op.getNext();
+                    if (mCachedNextHit != null)
+                        return;
+                }
+                // no more results!
 
-            // loop through QueryOperations and find the "best" hit
-            int currentBestHitOffset = -1;
-            ZimbraHit currentBestHit = null;
-            for (i = 0; i < mQueryOperations.size(); i++) {
-                QueryOperation op = (QueryOperation)(mQueryOperations.get(i));
-                if (op.hasNext()) {
-                    if (currentBestHitOffset == -1) {
-                        currentBestHitOffset = i;
-                        currentBestHit = op.peekNext();
-                    } else {
-                        ZimbraHit opNext = op.peekNext();
-                        int result = opNext.compareBySortField(getResultsSet().getSortBy(), currentBestHit);
-                        if (result < 0) {
-                            // "before"
+            } else {
+                // mergesort: loop through QueryOperations and find the "best" hit
+                int currentBestHitOffset = -1;
+                ZimbraHit currentBestHit = null;
+                for (int i = 0; i < mQueryOperations.size(); i++) {
+                    QueryOperation op = (QueryOperation)(mQueryOperations.get(i));
+                    if (op.hasNext()) {
+                        if (currentBestHitOffset == -1) {
                             currentBestHitOffset = i;
-                            currentBestHit = opNext;
+                            currentBestHit = op.peekNext();
+                        } else {
+                            ZimbraHit opNext = op.peekNext();
+                            int result = opNext.compareBySortField(getResultsSet().getSortBy(), currentBestHit);
+                            if (result < 0) {
+                                // "before"
+                                currentBestHitOffset = i;
+                                currentBestHit = opNext;
+                            }
                         }
                     }
                 }
-            }
-            if (currentBestHitOffset > -1) {
-                mCachedNextHit = ((QueryOperation)(mQueryOperations.get(currentBestHitOffset))).getNext();
-                assert(mCachedNextHit == currentBestHit);
+                if (currentBestHitOffset > -1) {
+                    mCachedNextHit = ((QueryOperation)(mQueryOperations.get(currentBestHitOffset))).getNext();
+                    assert(mCachedNextHit == currentBestHit);
+                }
             }
         }
     }
@@ -135,7 +144,7 @@ class UnionQueryOperation extends QueryOperation
         }
     }
 
-    ArrayList<QueryOperation>mQueryOperations = new ArrayList<QueryOperation>();
+//    ArrayList<QueryOperation>mQueryOperations = new ArrayList<QueryOperation>();
 
     public boolean hasSpamTrashSetting() {
         boolean hasAll = true;

@@ -44,7 +44,7 @@ import com.zimbra.common.util.LogFactory;
  *    Set of query results ANDed together
  *  
  ******************************************************************************/
-class IntersectionQueryOperation extends QueryOperation {
+class IntersectionQueryOperation extends CombiningQueryOperation {
     boolean noHits = false;
     private static Log mLog = LogFactory.getLog(IntersectionQueryOperation.class);
 
@@ -433,10 +433,7 @@ class IntersectionQueryOperation extends QueryOperation {
      *  
      **************************************************************************/
 
-    /**
-     * a SORTED (sorted at add time) list of query operations which are ANDed together
-     */
-    List<QueryOperation>mQueryOperations = null;
+//    List<QueryOperation>mQueryOperations = null;
 
     boolean hasSpamTrashSetting() {
         boolean hasOne = false;
@@ -557,9 +554,6 @@ class IntersectionQueryOperation extends QueryOperation {
 
     void addQueryOp(QueryOperation op) {
         assert(op!=null);
-        if (mQueryOperations == null) {
-            mQueryOperations = new ArrayList<QueryOperation>();
-        }
         mQueryOperations.add(op);
     }
 
