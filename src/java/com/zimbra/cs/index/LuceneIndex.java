@@ -1316,7 +1316,6 @@ class LuceneIndex implements ITextIndex {
             if (mIndexWriter == null) {
                 mIndexWriterMutex.unlock();
                 assert(!mIndexWriterMutex.isHeldByCurrentThread());
-                throw new IOException("Uknown error opening IndexWriter");
             }
         }
     }
