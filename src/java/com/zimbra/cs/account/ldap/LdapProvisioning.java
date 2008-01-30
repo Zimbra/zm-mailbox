@@ -476,7 +476,7 @@ public class LdapProvisioning extends Provisioning {
         if (a == null) {
             zimbraId= LdapUtil.escapeSearchFilterArg(zimbraId);
             a = getAccountByQuery(
-                    mDIT.mailBranchBaseDN(),
+                    mDIT.zimbraBaseDN(),
                     "(&(zimbraId=" + zimbraId + ")" +
                     FILTER_ACCOUNT_OBJECTCLASS + ")",
                     ctxt, loadFromMaster);
