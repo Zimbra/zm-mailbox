@@ -57,6 +57,8 @@ import com.zimbra.cs.stats.ZimbraPerf;
  */
 class LuceneIndex implements ITextIndex {
     
+    private static final boolean sBatchIndexing = (LC.debug_batch_message_indexing.intValue() > 0);
+    
     static void flushAllWriters() {
         if (DebugConfig.disableIndexing)
             return;
@@ -1293,14 +1295,16 @@ class LuceneIndex implements ITextIndex {
                 /////////////////////////////////////////////////////
 
 
-                // tim: these are set based on an expectation of ~25k msgs/mbox and assuming that
-                // 11 fragment files are OK.  25k msgs with these settings (mf=3, mmd=33) means that
-                // each message gets written 9 times to disk...as opposed to 12.5 times with the default
-                // lucene settings of 10 and 100....
-                mIndexWriter.setMergeFactor(3);// should be > 1, otherwise segment sizes are effectively limited to
-                // minMergeDocs documents: and this is probably bad (too many files!)
-
-                mIndexWriter.setMaxBufferedDocs(33); // we expect 11 index fragment files
+                if (!sBatchIndexing) {
+                    // tim: these are set based on an expectation of ~25k msgs/mbox and assuming that
+                    // 11 fragment files are OK.  25k msgs with these settings (mf=3, mmd=33) means that
+                    // each message gets written 9 times to disk...as opposed to 12.5 times with the default
+                    // lucene settings of 10 and 100....
+                    mIndexWriter.setMergeFactor(3);// should be > 1, otherwise segment sizes are effectively limited to
+                    // minMergeDocs documents: and this is probably bad (too many files!)
+                    
+                    mIndexWriter.setMaxBufferedDocs(33); // we expect 11 index fragment files
+                }
             } else {
                 ZimbraPerf.COUNTER_IDX_WRT_OPENED_CACHE_HIT.increment();
             }
