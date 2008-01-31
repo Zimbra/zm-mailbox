@@ -559,12 +559,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="110" name="zimbraMailMinPollingInterval" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
   <defaultCOSValue>2m</defaultCOSValue>
-  <desc>minimum allowed mail polling interval (nnnnn[hmsd])</desc>
+  <desc>minimum allowed value for zimbraPrefMailPollingInterval (nnnnn[hmsd])</desc>
 </attr>
 
 <attr id="111" name="zimbraPrefMailPollingInterval" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>5m</defaultCOSValue>
-  <desc>configured mail polling interval (nnnnn[hmsd])</desc>
+  <desc>interval at which the web client polls the server for new messages (nnnnn[hmsd])</desc>
 </attr>
 
 <attr id="112" name="zimbraAccountClientAttr" type="string" max="1024" cardinality="multi" optionalIn="globalConfig">
