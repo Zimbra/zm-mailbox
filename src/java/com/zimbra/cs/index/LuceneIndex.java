@@ -309,7 +309,7 @@ class LuceneIndex implements ITextIndex {
                 // can use default analyzer here since it is easier, and since we aren't actually
                 // going to do any indexing...
 //                sLog.info("MI"+this.toString()+" Opening IndexWriter(3) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-                writer = new IndexWriter(mIdxDirectory, ZimbraAnalyzer.getDefaultAnalyzer(), true);
+                writer = new IndexWriter(mIdxDirectory, false, ZimbraAnalyzer.getDefaultAnalyzer(), true);
 //                sLog.info("MI"+this.toString()+" Opened IndexWriter(3) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
             } finally {
                 if (writer != null) {
@@ -1239,7 +1239,7 @@ class LuceneIndex implements ITextIndex {
             if (mIndexWriter == null) {
                 try {
 //                  sLog.debug("MI"+this.toString()+" Opening IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-                    mIndexWriter = new IndexWriter(mIdxDirectory, mMbidx.getAnalyzer(), false);
+                    mIndexWriter = new IndexWriter(mIdxDirectory, false, mMbidx.getAnalyzer(), false);
 //                  sLog.debug("MI"+this.toString()+" Opened IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
 
                 } catch (IOException e1) {
@@ -1247,7 +1247,7 @@ class LuceneIndex implements ITextIndex {
                     File indexDir  = mIdxDirectory.getFile();
                     if (indexDirIsEmpty(indexDir)) {
 //                      sLog.debug("MI"+this.toString()+" Opening IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-                        mIndexWriter = new IndexWriter(mIdxDirectory, mMbidx.getAnalyzer(), true);
+                        mIndexWriter = new IndexWriter(mIdxDirectory, false, mMbidx.getAnalyzer(), true);
 //                      sLog.debug("MI"+this.toString()+" Opened IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
                         if (mIndexWriter == null) 
                             throw new IOException("Failed to open IndexWriter in directory "+indexDir.getAbsolutePath());
