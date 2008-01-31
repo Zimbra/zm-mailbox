@@ -402,7 +402,13 @@ public class Message extends MailItem {
         // and see if it updates an existing CalendarItem in the database table, or whatever...
         boolean updatedMetadata = false;
 
+        // Ignore alarms set by organizer.
+        boolean ignoreOrganizerAlarm = false;
+
         for (Invite cur : invites) {
+            if (ignoreOrganizerAlarm)
+                cur.clearAlarms();
+
             boolean calItemIsNew = false;
             boolean modifiedCalItem = false;
             CalendarItem calItem = null;
@@ -424,7 +430,7 @@ public class Message extends MailItem {
                         // When updating an existing calendar item, ignore the
                         // passed-in folderId which will usually be Inbox.  Leave
                         // the calendar item in the folder it's currently in.
-                        modifiedCalItem = calItem.processNewInvite(pm, cur, false, calItem.getFolderId(), volumeId);
+                        modifiedCalItem = calItem.processNewInvite(pm, cur, calItem.getFolderId(), volumeId);
                     }
                 }
                 

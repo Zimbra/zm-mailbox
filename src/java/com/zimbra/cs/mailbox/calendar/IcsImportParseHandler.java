@@ -55,14 +55,22 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
     private TimeZoneMap mTimeZoneMap;
     private Set<String> mTZIDsSeen;
 
-    private ImportInviteVisitor mInviteVisitor;
+    private InviteVisitor mInviteVisitor;
 
-    public IcsImportParseHandler(
-            OperationContext ctxt, Account account, Folder folder, boolean continueOnError) {
+    public IcsImportParseHandler(OperationContext ctxt, Account account, Folder folder,
+                                 boolean continueOnError, boolean removeAlarms) {
         mAccount = account;
         mContinueOnError = continueOnError;
         mTZIDsSeen = new HashSet<String>();
-        mInviteVisitor = new ImportInviteVisitor(ctxt, folder);
+        mInviteVisitor = new ImportInviteVisitor(ctxt, folder, removeAlarms);
+    }
+
+    public IcsImportParseHandler(OperationContext ctxt, Account account, InviteVisitor visitor,
+                                 boolean continueOnError, boolean removeAlarms) {
+        mAccount = account;
+        mContinueOnError = continueOnError;
+        mTZIDsSeen = new HashSet<String>();
+        mInviteVisitor = visitor;
     }
 
     public void startCalendar() throws ParserException {
@@ -172,10 +180,12 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
     public static class ImportInviteVisitor implements InviteVisitor {
         private OperationContext mCtxt;
         private Folder mFolder;
+        private boolean mRemoveAlarms;
 
-        public ImportInviteVisitor(OperationContext ctxt, Folder folder) {
+        public ImportInviteVisitor(OperationContext ctxt, Folder folder, boolean removeAlarms) {
             mCtxt = ctxt;
             mFolder = folder;
+            mRemoveAlarms = removeAlarms;
         }
 
         public void visit(Invite inv) throws ServiceException {
@@ -183,7 +193,7 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
             if (inv.getUid() == null)
                 inv.setUid(LdapUtil.generateUUID());
             // and add the invite to the calendar!
-            mFolder.getMailbox().addInvite(mCtxt, inv, mFolder.getId(), false, null);
+            mFolder.getMailbox().addInvite(mCtxt, inv, mFolder.getId(), false, null, mRemoveAlarms);
             if (ZimbraLog.calendar.isDebugEnabled()) {
                 if (inv.isEvent())
                     ZimbraLog.calendar.debug("Appointment imported: UID=" + inv.getUid());

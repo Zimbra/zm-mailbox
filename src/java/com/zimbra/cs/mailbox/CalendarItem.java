@@ -179,16 +179,9 @@ public abstract class CalendarItem extends MailItem {
         if (DebugConfig.disableIndexing)
             return;
         
-        long start = System.currentTimeMillis();
         List<org.apache.lucene.document.Document> docs = getLuceneDocuments();
-        long split1 = System.currentTimeMillis();
-
         mMailbox.getMailboxIndex().indexCalendarItem(mMailbox, redo, deleteFirst, this, 
             docs, getDate());
-        long split2 = System.currentTimeMillis();
-        long time1 = split1-start;
-        long time2 = split2-split1;
-//        ZimbraLog.index.info("CalendarItem.reindex("+time1+", "+time2+")");
     }
     
     protected List<org.apache.lucene.document.Document> getLuceneDocuments() throws ServiceException {
@@ -854,16 +847,16 @@ public abstract class CalendarItem extends MailItem {
         return getAccount().allowPrivateAccess(authAccount);
     }
 
-    boolean processNewInvite(ParsedMessage pm, Invite invite, boolean force,
+    boolean processNewInvite(ParsedMessage pm, Invite invite,
                              int folderId, short volumeId)
     throws ServiceException {
-        return processNewInvite(pm, invite, force, folderId, volumeId, 0, false);
+        return processNewInvite(pm, invite, false, folderId, volumeId, 0, true, false);
     }
 
     boolean processNewInvite(ParsedMessage pm, Invite invite, boolean force,
                              int folderId, short volumeId, long nextAlarm)
     throws ServiceException {
-        return processNewInvite(pm, invite, force, folderId, volumeId, nextAlarm, false);
+        return processNewInvite(pm, invite, force, folderId, volumeId, nextAlarm, false, false);
     }
 
     /**
@@ -882,6 +875,7 @@ public abstract class CalendarItem extends MailItem {
                              Invite invite,
                              boolean force, int folderId, short volumeId,
                              long nextAlarm,
+                             boolean preserveAlarms,
                              boolean replaceExistingInvites)
     throws ServiceException {
         invite.setHasAttachment(pm.hasAttachments());
@@ -891,7 +885,8 @@ public abstract class CalendarItem extends MailItem {
             method.equals(ICalTok.CANCEL.toString()) ||
             method.equals(ICalTok.PUBLISH.toString())) {
             return processNewInviteRequestOrCancel(pm, invite, force, folderId, volumeId,
-                                                   nextAlarm, replaceExistingInvites);
+                                                   nextAlarm, preserveAlarms,
+                                                   replaceExistingInvites);
         } else if (method.equals("REPLY")) {
             return processNewInviteReply(invite, force);
         }
@@ -900,16 +895,42 @@ public abstract class CalendarItem extends MailItem {
         return false;
     }
 
+    /**
+     * Returns true if RECURRENCE-ID of two invites are equal or null.
+     * @param inv1
+     * @param inv2
+     * @return
+     */
+    private static boolean recurrenceIdsMatch(Invite inv1, Invite inv2) {
+        RecurId r1 = inv1.getRecurId();
+        RecurId r2 = inv2.getRecurId();
+        if (r1 != null)
+            return r1.equals(r2);
+        else
+            return r2 == null;
+    }
+
+    /**
+     * Returns true if newInv is a newer version than oldInv based on SEQUENCE and DTSTAMP.
+     * @param newInv
+     * @param oldInv
+     * @return
+     */
+    private static boolean isNewerVersion(Invite oldInv, Invite newInv) {
+        int oldSeq = oldInv.getSeqNo();
+        int newSeq = newInv.getSeqNo();
+        return oldSeq < newSeq || (oldSeq == newSeq && oldInv.getDTStamp() <= newInv.getDTStamp());
+    }
+
     private boolean processNewInviteRequestOrCancel(ParsedMessage pm,
                                                     Invite newInvite,
                                                     boolean force,
                                                     int folderId,
                                                     short volumeId,
                                                     long nextAlarm,
-                                                    boolean replaceExistingInvites)
+                                                    boolean preserveAlarms,
+                                                    boolean discardExistingInvites)
     throws ServiceException {
-        // Remove everyone that is made obsolete by this request
-        boolean addNewOne = true;
         boolean isCancel = newInvite.isCancel();
 
         if (!canAccess(isCancel ? ACL.RIGHT_DELETE : ACL.RIGHT_WRITE))
@@ -934,7 +955,7 @@ public abstract class CalendarItem extends MailItem {
         ParsedDateTime oldDtStart = null;
         ParsedDuration dtStartMovedBy = null;
         ArrayList<Invite> toUpdate = new ArrayList<Invite>();
-        if (!replaceExistingInvites && !isCancel && newInvite.isRecurrence()) {
+        if (!discardExistingInvites && !isCancel && newInvite.isRecurrence()) {
             Invite defInv = getDefaultInviteOrNull();
             if (defInv != null) {
                 oldDtStart = defInv.getStartTime();
@@ -946,74 +967,149 @@ public abstract class CalendarItem extends MailItem {
             }
         }
 
+        // Inherit alarms from the invite with matching RECURRENCE-ID.  If no matching invite is
+        // found, inherit from the series invite.
+        if (!discardExistingInvites && preserveAlarms) {
+            Invite localSeries = null;
+            Invite alarmSourceInv = null;
+            for (Invite inv : mInvites) {
+                if (recurrenceIdsMatch(inv, newInvite)) {
+                    alarmSourceInv = inv;
+                    break;
+                }
+                if (!inv.hasRecurId())
+                    localSeries = inv;
+            }
+            if (alarmSourceInv == null)
+                alarmSourceInv = localSeries;
+            if (alarmSourceInv != null) {
+                newInvite.clearAlarms();
+                for (Iterator<Alarm> alarmIter = alarmSourceInv.alarmsIterator(); alarmIter.hasNext(); ) {
+                    newInvite.addAlarm(alarmIter.next());
+                }
+            }
+        }
+
+        boolean addNewOne = true;
+        boolean replaceExceptionBodyWithSeriesBody = false;
         boolean modifiedCalItem = false;
-        Invite prev = null; // (the first) invite which has been made obsolete by the new one coming in
-        
+        Invite prev = null; // the invite which has been made obsolete by the new one coming in
         ArrayList<Invite> toRemove = new ArrayList<Invite>(); // Invites to remove from our blob store
-
         ArrayList<Integer> idxsToRemove = new ArrayList<Integer>(); // indexes to remove from mInvites
-        
-        for (int i = 0; i < numInvites(); i++) {
-            Invite cur = getInvite(i);
+        int numInvitesCurrent = mInvites.size();  // get current size because we may add to the list in the loop
+        for (int i = 0; i < numInvitesCurrent; i++) {
+            Invite cur = mInvites.get(i);
 
-            // UID already matches...next check if RecurId matches
-            // if so, then seqNo is next
-            // finally use DTStamp
-            //
-            // See RFC2446: 2.1.5 Message Sequencing
-            //
-            if (replaceExistingInvites ||
-                (cur.getRecurId() != null && cur.getRecurId().equals(newInvite.getRecurId())) ||
-                (cur.getRecurId() == null && newInvite.getRecurId() == null)) {
-                if (replaceExistingInvites || force ||
-                    (cur.getSeqNo() < newInvite.getSeqNo()) ||
-                    (cur.getSeqNo() == newInvite.getSeqNo() && cur.getDTStamp() <= newInvite.getDTStamp())) 
-                {
-                    Invite inf = mInvites.get(i);
-                    toRemove.add(inf);
-                    
+            boolean matchingRecurId = recurrenceIdsMatch(cur, newInvite);
+            if (discardExistingInvites || matchingRecurId) {
+                if (discardExistingInvites || isNewerVersion(cur, newInvite)) {
+                    toRemove.add(cur);
                     // add to FRONT of list, so when we iterate for the removals we go from HIGHER TO LOWER
                     // that way the numbers all match up as the list contracts!
                     idxsToRemove.add(0, new Integer(i));
                     
                     // clean up any old REPLYs that have been made obsolete by this new invite
-                    mReplyList.removeObsoleteEntries(newInvite.getRecurId(), newInvite.getSeqNo(), newInvite.getDTStamp());
-                    
+                    mReplyList.removeObsoleteEntries(newInvite.getRecurId(), newInvite.getSeqNo(),
+                                                     newInvite.getDTStamp());
+
                     prev = cur;
                     modifiedCalItem = true;
                     if (isCancel && !newInvite.hasRecurId()) {
-                        addNewOne = false; // can't CANCEL just the recurId=0 entry -- we must be deleting the whole series
+                        // can't CANCEL just the recurId=null entry -- we must delete the whole appointment
+                        addNewOne = false;
                     }
                 } else {
-                    // found a more-recent invite already here -- so don't add
-                    // the passed-in one!
+                    // Appointment already has a newer version of the Invite.  The passed-in one is outdated,
+                    // perhaps delivered out of order.  Ignore it.
+                    modifiedCalItem = false;
                     addNewOne = false;
+                    break;
                 }
-//              break; // don't stop here!  new Invite *could* obsolete multiple existing ones! 
-            } else if (needRecurrenceIdUpdate || organizerChanged) {
+            } else if (!isCancel) {
                 modifiedCalItem = true;
-                
-                // If organizer is changing on any invite, change it on all invites.
-                boolean added = false;
+
+                boolean addToUpdateList = false;
                 if (organizerChanged) {
+                    // If organizer is changing on any invite, change it on all invites.
                     cur.setOrganizer(newOrganizer);
-                    toUpdate.add(cur);
-                    added = true;
+                    addToUpdateList = true;
                 }
-                // Translate the date/time in RECURRENCE-ID to the timezone in
-                // original recurrence DTSTART.  If they have the same HHMMSS
-                // part, the RECURRENCE-ID need to be adjusted by the diff of
-                // old and new recurrence DTSTART.
-                RecurId rid = cur.getRecurId();
-                if (rid != null && rid.getDt() != null && oldDtStart != null) {
-                    ParsedDateTime ridDt = (ParsedDateTime) rid.getDt().clone();
-                    ICalTimeZone oldTz = oldDtStart.getTimeZone();
-                    if (oldTz != null) {
-                        ridDt.toTimeZone(oldTz);
-                        if (ridDt.sameTime(oldDtStart) && !added)
-                            toUpdate.add(cur);
+
+                if (needRecurrenceIdUpdate) {
+                    // Adjust RECURRENCE-ID by the delta in series DTSTART, if recurrence id value has the
+                    // same time of day as old DTSTART.
+                    RecurId rid = cur.getRecurId();
+                    if (rid != null && rid.getDt() != null && oldDtStart != null) {
+                        ParsedDateTime ridDt = rid.getDt();
+                        if (ridDt.sameTime(oldDtStart)) {
+                            ParsedDateTime dt = rid.getDt().add(dtStartMovedBy);
+                            RecurId newRid = new RecurId(dt, rid.getRange());
+                            cur.setRecurId(newRid);
+                            // For CANCELLED instances, set DTSTART to the same time
+                            // used in RECURRENCE-ID.
+                            if (cur.isCancel())
+                                cur.setDtStart(dt);
+                            addToUpdateList = true;
+                        }
                     }
                 }
+
+                // If updating series, copy the series data to the exception, preserving only the alarm info.
+                if (!newInvite.hasRecurId() && cur.hasRecurId()) {
+                    if (cur.isCancel()) {
+                        // Cancellations are undone by update to the series.
+                        toRemove.add(cur);
+                        // add to FRONT of list, so when we iterate for the removals we go from HIGHER TO LOWER
+                        // that way the numbers all match up as the list contracts!
+                        idxsToRemove.add(0, new Integer(i));
+                        
+                        // clean up any old REPLYs that have been made obsolete by this new invite
+                        mReplyList.removeObsoleteEntries(newInvite.getRecurId(), newInvite.getSeqNo(),
+                                                         newInvite.getDTStamp());
+
+                        addToUpdateList = false;
+                    } else {
+                        replaceExceptionBodyWithSeriesBody = true;
+                        // Recreate invite with data from newInvite, but preserve alarm info.
+                        Invite copy = newInvite.newCopy();
+                        copy.setMailItemId(cur.getMailItemId());
+                        copy.setComponentNum(cur.getComponentNum());
+                        copy.setSeqNo(cur.getSeqNo());
+                        copy.setDtStamp(cur.getDTStamp());
+                        copy.setRecurId(cur.getRecurId());
+                        copy.setRecurrence(null);  // because we're only dealing with exceptions
+                        ParsedDateTime start = cur.getRecurId().getDt();
+                        if (start != null) {
+                            copy.setDtStart(start);
+                            ParsedDuration dur = cur.getDuration();
+                            if (dur != null) {
+                                copy.setDtEnd(null);
+                                copy.setDuration(dur);
+                            } else {
+                                copy.setDuration(null);
+                                dur = cur.getEffectiveDuration();
+                                ParsedDateTime end = null;
+                                if (dur != null)
+                                    end = start.add(dur);
+                                copy.setDtEnd(end);
+                            }
+                        } else {
+                            copy.setDtStart(null);
+                            copy.setDtEnd(cur.getEndTime());
+                            copy.setDuration(null);
+                        }
+                        copy.clearAlarms();
+                        for (Iterator<Alarm> iter = cur.alarmsIterator(); iter.hasNext(); ) {
+                            copy.addAlarm(iter.next());
+                        }
+
+                        mInvites.set(i, copy);
+                        addToUpdateList = true;
+                    }
+                }
+
+                if (addToUpdateList)
+                    toUpdate.add(cur);
             }
         }
 
@@ -1058,24 +1154,6 @@ public abstract class CalendarItem extends MailItem {
             // this might give us problems if we had two invites with conflicting TZ
             // defs....should be very unlikely
             mTzMap.add(newInvite.getTimeZoneMap());
-
-            // Adjust DTSTART of RECURRENCE-ID for exceptions if DTSTART of
-            // series is changing.  Notice we're only doing this when
-            // addNewOne is true.  We don't want to make any updates if the
-            // new invite ends up getting ignored due to older SEQUENCE.
-            if (needRecurrenceIdUpdate) {
-                for (Invite inv: toUpdate) {
-                    RecurId rid = inv.getRecurId();
-                    ParsedDateTime dt = rid.getDt().add(dtStartMovedBy);
-                    RecurId newRid = new RecurId(dt, rid.getRange());
-                    inv.setRecurId(newRid);
-
-                    // For CANCELLED instances, set DTSTART to the same time
-                    // used in RECURRENCE-ID.
-                    if (inv.isCancel())
-                        inv.setDtStart(dt);
-                }
-            }
 
             // TIM: don't write the blob until the end of the function (so we only do one write for the update)
 //            modifyBlob(toRemove, replaceExistingInvites, toUpdate, pm, newInvite, volumeId, isCancel, !denyPrivateAccess);
@@ -1144,9 +1222,11 @@ public abstract class CalendarItem extends MailItem {
                     }
                     
                     if (addNewOne) 
-                        modifyBlob(toRemove, replaceExistingInvites, toUpdate, pm, newInvite, volumeId, isCancel, !denyPrivateAccess, true);
+                        modifyBlob(toRemove, discardExistingInvites, toUpdate, pm, newInvite, volumeId,
+                                   isCancel, !denyPrivateAccess, true, replaceExceptionBodyWithSeriesBody);
                     else 
-                        modifyBlob(toRemove, replaceExistingInvites, toUpdate, null, null, volumeId, isCancel, !denyPrivateAccess, true);
+                        modifyBlob(toRemove, discardExistingInvites, toUpdate, null, null, volumeId,
+                                   isCancel, !denyPrivateAccess, true, replaceExceptionBodyWithSeriesBody);
 
                     // TIM: modifyBlob will save the metadata for us as a side-effect
 //                    saveMetadata();
@@ -1409,6 +1489,8 @@ public abstract class CalendarItem extends MailItem {
      * @param isCancel if the method is being called while processing a cancel request
      * @param allowPrivateAccess
      * @param forceSave if TRUE then this call is guaranteed to save the current metadata state
+     * @param replaceExceptionBodyWithSeriesBody if TRUE bodies of exceptions are replaced with series body
+     *                                           for invites in toUpdate list
      * @throws ServiceException
      */
     private void modifyBlob(List<Invite> toRemove,
@@ -1419,7 +1501,8 @@ public abstract class CalendarItem extends MailItem {
                             short volumeId,
                             boolean isCancel,
                             boolean allowPrivateAccess,
-                            boolean forceSave)
+                            boolean forceSave,
+                            boolean replaceExceptionBodyWithSeriesBody)
     throws ServiceException
     {
         // TODO - as an optimization, should check to see if the invite's MM is already in here! (ie
@@ -1501,6 +1584,16 @@ public abstract class CalendarItem extends MailItem {
                 }
                 if (mbpInv == null)
                     continue;
+
+                if (replaceExceptionBodyWithSeriesBody) {
+                    // Throw away the existing part.  Replace it with body from new invite.
+                    mmp.removeBodyPart(mbpInv);
+                    mbpInv = new MimeBodyPart();
+                    mbpInv.setDataHandler(new DataHandler(new PMDataSource(invPm)));
+                    mmp.addBodyPart(mbpInv);
+                    mbpInv.addHeader("invId", Integer.toString(inv.getMailItemId()));
+                    mm.saveChanges();  // required by JavaMail for some magical reason
+                }
 
                 // Find the text/calendar part and replace it.
                 String mbpInvCt = mbpInv.getContentType();

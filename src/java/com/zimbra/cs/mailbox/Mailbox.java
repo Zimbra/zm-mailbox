@@ -3339,25 +3339,25 @@ public class Mailbox {
                     first = false;
                     calItem = getCalendarItemByUid(scid.mInv.getUid());
                     calItemIsNew = calItem == null;
-            if (calItemIsNew) {
-                // ONLY create an calendar item if this is a REQUEST method...otherwise don't.
+                    if (calItemIsNew) {
+                        // ONLY create an calendar item if this is a REQUEST method...otherwise don't.
                         String method = scid.mInv.getMethod();
                         if ("REQUEST".equals(method) || "PUBLISH".equals(method)) {
                             calItem = createCalendarItem(
                                     folderId, volumeId, flags, tags,
                                     scid.mInv.getUid(), scid.mPm, scid.mInv, 0);
-                } else {
-                    return 0; // for now, just ignore this Invitation
-                }
-            } else {
+                        } else {
+                            return 0; // for now, just ignore this Invitation
+                        }
+                    } else {
                         // Preserve alarm time before any modification is made to the item.
                         AlarmData alarmData = calItem.getAlarmData();
                         if (alarmData != null)
                             oldNextAlarm = alarmData.getNextAt();
 
-                calItem.setTags(flags, tags);
+                        calItem.setTags(flags, tags);
                         calItem.processNewInvite(scid.mPm, scid.mInv, scid.mForce, folderId, volumeId,
-                                                 nextAlarm, true);
+                                                 nextAlarm, false, true);
                     }
                     redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId(), volumeId);
                 } else {
@@ -3513,9 +3513,15 @@ public class Mailbox {
         }
     }
 
+    public synchronized int[] addInvite(OperationContext octxt, Invite inv, int folderId,
+                                        boolean force, ParsedMessage pm, boolean removeAlarms)
+    throws ServiceException {
+        return addInvite(octxt, inv, folderId, force, pm, 0, removeAlarms);
+    }
+
     public synchronized int[] addInvite(OperationContext octxt, Invite inv, int folderId, boolean force, ParsedMessage pm)
     throws ServiceException {
-        return addInvite(octxt, inv, folderId, force, pm, 0);
+        return addInvite(octxt, inv, folderId, force, pm, 0, false);
     }
 
     /**
@@ -3526,12 +3532,14 @@ public class Mailbox {
      * @param inv
      * @param force if true, then force override the existing calendar item, false use normal RFC2446 sequencing rules
      * @param pm NULL is OK here
+     * @param removeAlarms if true, remove alarms from the invite
      * 
      * @return int[2] = { calendar-item-id, invite-mail-item-id }  Note that even though the invite has a mail-item-id, that mail-item does not really exist, it can ONLY be referenced through the calendar item "calItemId-invMailItemId"
      * @throws ServiceException
      */
-    public synchronized int[] addInvite(OperationContext octxt, Invite inv, int folderId, boolean force, ParsedMessage pm,
-                                        long nextAlarm)
+    public synchronized int[] addInvite(OperationContext octxt, Invite inv, int folderId,
+                                        boolean force, ParsedMessage pm, long nextAlarm,
+                                        boolean removeAlarms)
     throws ServiceException {
         if (pm == null) {
             inv.setDontIndexMimeMessage(true); // the MimeMessage is fake, so we don't need to index it
@@ -3559,6 +3567,10 @@ public class Mailbox {
             if (redoPlayer == null || redoPlayer.getCalendarItemId() == 0) {
                 inv.setInviteId(getNextItemId(Mailbox.ID_AUTO_INCREMENT));
             }
+
+            // Clear alarms if requested. (but not during a redo)
+            if (removeAlarms && redoPlayer == null)
+                inv.clearAlarms();
 
             boolean calItemIsNew = false;
             CalendarItem calItem = getCalendarItemByUid(inv.getUid());
@@ -5148,11 +5160,12 @@ public class Mailbox {
         // disable modification conflict checks, as we've already wiped the folder and we may hit an appoinment >1 times
         OperationContext octxtNoConflicts = new OperationContext(octxt).unsetChangeConstraint();
 
+        boolean removeAlarms = false;
         // add the newly-fetched items to the folder
         for (Object obj : sdata.items) {
             try {
                 if (obj instanceof Invite)
-                    addInvite(octxtNoConflicts, (Invite) obj, folderId, true, null);
+                    addInvite(octxtNoConflicts, (Invite) obj, folderId, true, null, removeAlarms);
                 else if (obj instanceof ParsedMessage)
                     addMessage(octxtNoConflicts, (ParsedMessage) obj, folderId, true, Flag.BITMASK_UNREAD, null);
             } catch (IOException e) {

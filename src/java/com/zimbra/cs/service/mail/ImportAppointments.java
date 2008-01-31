@@ -80,12 +80,13 @@ public class ImportAppointments extends MailDocumentHandler  {
 
             StringBuilder ids = new StringBuilder();
 
+            boolean removeAlarms = false;
             for (Invite inv : invites) {
                 // handle missing UIDs on remote calendars by generating them as needed
                 if (inv.getUid() == null)
                     inv.setUid(LdapUtil.generateUUID());
                 // and add the invite to the calendar!
-                int[] invIds = mbox.addInvite(octxt, inv, iidFolder.getId(), false, null);
+                int[] invIds = mbox.addInvite(octxt, inv, iidFolder.getId(), false, null, removeAlarms);
                 if (ids.length() > 0) ids.append(",");
                 ids.append(invIds[0]).append("-").append(invIds[1]);
             }

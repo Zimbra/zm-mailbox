@@ -799,7 +799,7 @@ public class Invite {
         }
     }
     public int getComponentNum() { return mComponentNum; }
-    void setComponentNum(int num) { mComponentNum = num; }
+    public void setComponentNum(int num) { mComponentNum = num; }
     void setMailboxId(int id) { mMailboxId = id; }
     public void setMailItemId(int id) { mMailItemId = id; }
     public int getFlags() { return mFlags; }
