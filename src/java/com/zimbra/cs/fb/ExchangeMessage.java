@@ -60,7 +60,7 @@ public class ExchangeMessage {
      * http://exchange/public/NON_IPM_SUBTREE/SCHEDULE%2B%20FREE%20BUSY/EX:_xF8FF_o=First%20Organization_xF8FF_ou=First%20Administrative%20Group/USER-_xF8FF_cn=RECIPIENTS_xF8FF_cn=USER1.EML
 	 */
 	public static final String PUBURL_FIRST_PART = "/public/NON_IPM_SUBTREE/SCHEDULE+ FREE BUSY/EX:";
-	public static final String PUBURL_SECOND_PART = "/USER-";
+	public static final String PUBURL_SECOND_PART = "USER-";
 	public static final String PUBURL_RCPT = "/cn=RECIPIENTS/cn=";
 	public static final String PUBURL_EML = ".EML";
 	public static final String ENCODED_SLASH = "_xF8FF_";
@@ -72,10 +72,10 @@ public class ExchangeMessage {
 	
 	public static final int MINS_IN_DAY = 60 * 24;
 	
-    public static final Namespace NS_DAV = Namespace.get("DAV:");
-    public static final Namespace NS_XML = Namespace.get("xml:");
-    public static final Namespace NS_MSFT = Namespace.get("http://schemas.microsoft.com/mapi/proptag/");
-    public static final Namespace NS_WEB_FOLDERS = Namespace.get("urn:uuid:c2f41010-65b3-11d1-a29f-00aa00c14882/");
+    public static final Namespace NS_DAV = Namespace.get("D", "DAV:");
+    public static final Namespace NS_XML = Namespace.get("c", "xml:");
+    public static final Namespace NS_MSFT = Namespace.get("b", "http://schemas.microsoft.com/mapi/proptag/");
+    public static final Namespace NS_WEB_FOLDERS = Namespace.get("e", "urn:uuid:c2f41010-65b3-11d1-a29f-00aa00c14882/");
 	
     public static final QName EL_SET = QName.get("set", NS_DAV);
     public static final QName EL_PROP = QName.get("prop", NS_DAV);
@@ -128,7 +128,7 @@ public class ExchangeMessage {
     public String getUrl() {
     	StringBuilder buf = new StringBuilder(PUBURL_FIRST_PART);
     	buf.append(SLASH.matcher(mOu).replaceAll(ENCODED_SLASH));
-    	buf.append(PUBURL_SECOND_PART);
+    	buf.append("/").append(PUBURL_SECOND_PART);
     	buf.append(SLASH.matcher(PUBURL_RCPT).replaceAll(ENCODED_SLASH));
     	buf.append(mMail);
     	buf.append(PUBURL_EML);
@@ -141,10 +141,13 @@ public class ExchangeMessage {
     
     public Document createRequest(FreeBusy fb) {
     	Element root = DocumentHelper.createElement(EL_PROPERTYUPDATE);
+    	root.add(NS_XML);
+    	root.add(NS_MSFT);
+    	root.add(NS_WEB_FOLDERS);
     	Element prop = root.addElement(EL_SET).addElement(EL_PROP);
-    	addElement(prop, PR_SUBJECT_A, PUBURL_RCPT + mMail);
-    	addElement(prop, PR_FREEBUSY_START_RANGE, "");
-    	addElement(prop, PR_FREEBUSY_END_RANGE, "");
+    	addElement(prop, PR_SUBJECT_A, PUBURL_SECOND_PART + PUBURL_RCPT + mMail);
+    	addElement(prop, PR_FREEBUSY_START_RANGE, minutesSinceMsEpoch(fb.getStartTime()));
+    	addElement(prop, PR_FREEBUSY_END_RANGE, minutesSinceMsEpoch(fb.getEndTime()));
     	addElement(prop, PR_FREEBUSY_EMAIL_ADDRESS, mOu + PUBURL_RCPT + mMail);
     	
     	
@@ -162,6 +165,9 @@ public class ExchangeMessage {
     	addElement(prop, PR_6843000B, "1");
     	addElement(prop, PR_6846000B, "1");
     	addElement(prop, PR_684B000B, "1");
+    	addElement(prop, PR_PROCESS_MEETING_REQUESTS, "0");
+    	addElement(prop, PR_DECLINE_RECURRING_MEETING_REQUESTS, "0");
+    	addElement(prop, PR_DECLINE_CONFLICTING_MEETING_REQUESTS, "0");
     	
     	Iterator<FreeBusy.Interval> iter = fb.iterator();
     	while (iter.hasNext()) {
@@ -195,6 +201,14 @@ public class ExchangeMessage {
     			}
     		}
     	}
+    	if (allMonths.elements().size() == 0) allMonths.detach();
+    	if (allEvents.elements().size() == 0) allEvents.detach();
+    	if (busyMonths.elements().size() == 0) busyMonths.detach();
+    	if (busyEvents.elements().size() == 0) busyEvents.detach();
+    	if (tentativeMonths.elements().size() == 0) tentativeMonths.detach();
+    	if (tentativeEvents.elements().size() == 0) tentativeEvents.detach();
+    	if (oofMonths.elements().size() == 0) oofMonths.detach();
+    	if (oofEvents.elements().size() == 0) oofEvents.detach();
     	return new DefaultDocument(root);
     }
     
@@ -253,5 +267,24 @@ public class ExchangeMessage {
     	Calendar c = new GregorianCalendar();
     	c.setTime(new Date(millis));
     	return c.get(Calendar.YEAR) * 16 + c.get(Calendar.MONTH) + 1;  // january is 0
+    }
+    private static char[] HEX = { 
+    	'0', '1', '2', '3', '4', '5', '6', '7',
+    	'8', '9', 'a', 'b', 'c', 'd', 'e', 'f'			
+    };
+    private String minutesSinceMsEpoch(long millis) {
+    	// filetime or ms epoch is calculated as minutes since Jan 1 1601
+    	// standard epoch is Jan 1 1970.  the offset in seconds is
+    	// 11644473600
+    	long mins = (millis / 1000 + 11644473600L) / 60;
+    	
+    	// convert to hex in little endian.
+    	StringBuilder buf = new StringBuilder();
+    	for (int i = 0; i < 8; i++) {
+        	buf.insert(0, HEX[(int)(mins & 0xF)]);
+        	mins >>= 4;
+    	}
+    	buf.insert(0, "0x");
+    	return buf.toString();
     }
 }

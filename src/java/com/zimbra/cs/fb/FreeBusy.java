@@ -468,4 +468,7 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
     }
 
     public String toString() { return mList.toString(); };
+    
+    public long getStartTime() { return mStart; }
+    public long getEndTime() { return mEnd; }
 }

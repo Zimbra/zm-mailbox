@@ -49,6 +49,7 @@ public class ExchangeFreeBusyProvider {
 	
 	public static final String USER_AGENT = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322)";
 	public static final int FB_INTERVAL = 30;
+	public static final int MULTI_STATUS = 207;
 	
 	public static class ServerInfo {
 		enum Scheme { http, https };
@@ -282,9 +283,9 @@ public class ExchangeFreeBusyProvider {
 					HttpMethod method = msg.createMethod(url, mFb);
 					try {
 						int status = sendRequest(method, cred);
-						if (status != HttpServletResponse.SC_OK) {
+						if (status != MULTI_STATUS) {
 							method = new PutMethod(url);
-							retry = true;
+							retry = !retry;
 							status = sendRequest(method, cred);
 							if (status != HttpServletResponse.SC_CREATED &&
 									status != HttpServletResponse.SC_OK) {
