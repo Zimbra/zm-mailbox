@@ -251,41 +251,4 @@ public enum ContentTransferEncoding {
             return i == 0 ? -1 : i;
         }
     }
-
-//    static class Base64OutputStream extends FilterOutputStream {
-//        private static final int CHUNK_SIZE = 76;
-//        private static final byte[] BASE64_TABLE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".getBytes();
-//
-//        private int column, bytes, accumulator, buf[] = new int[6];
-//
-//        Base64OutputStream(OutputStream os)  { super(os);  buf[4] = '\r';  buf[5] = '\n'; }
-//
-//        @Override public void write(int b) throws IOException {
-//            accumulator = (accumulator << 8) | (b & 0xFF);
-//            if (++bytes == 3) {
-//                buf[0] = BASE64_TABLE[(accumulator >> 18) & 0x3F];
-//                buf[1] = BASE64_TABLE[(accumulator >> 12) & 0x3F];
-//                buf[2] = BASE64_TABLE[(accumulator >> 6) & 0x3F];
-//                buf[3] = BASE64_TABLE[accumulator & 0x3F];
-//                super.write(buf, 0, (column = column + 4) >= CHUNK_SIZE ? 6 : 4);
-//
-//                accumulator = bytes = 0;
-//                if (column >= CHUNK_SIZE)
-//                    column = 0;
-//            }
-//            super.write(b);
-//        }
-//
-//        @Override public void close() throws IOException {
-//            if (bytes > 0) {
-//                accumulator = accumulator << (8 * (3 - bytes));
-//                buf[0] = BASE64_TABLE[(accumulator >> 18) & 0x3F];
-//                buf[1] = BASE64_TABLE[(accumulator >> 12) & 0x3F];
-//                buf[2] = bytes == 1 ? (byte) '=' : BASE64_TABLE[(accumulator >> 6) & 0x3F];
-//                buf[3] = (byte) '=';
-//                super.write(buf, 0, (column = column + 4) >= CHUNK_SIZE ? 6 : 4);
-//            }
-//            super.close();
-//        }
-//    }
 }
