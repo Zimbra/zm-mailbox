@@ -12,12 +12,17 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.UIDFolder;
+import javax.mail.internet.MailDateFormat;
+
 import java.io.EOFException;
 import java.io.IOException;
+import java.util.Date;
 import java.util.Iterator;
 
 public class UidFetch {
     private static final boolean DEBUG = false;
+    
+    private static MailDateFormat mailDataFormat = new MailDateFormat();
 
     public static void fetch(IMAPFolder folder, final String seq,
                              final Handler handler) throws IOException {
@@ -38,13 +43,13 @@ public class UidFetch {
     }
 
     public static interface Handler {
-        void handleResponse(Literal literal, long uid) throws Exception;
+        void handleResponse(Literal literal, long uid, Date receivedDate) throws Exception;
     }
 
     private static Object doFETCH(IMAPProtocol protocol, String seq, Handler handler)
             throws IOException, ProtocolException {
         String tag = protocol.writeCommand(
-            "UID FETCH " + seq + " (BODY.PEEK[] UID)", null);
+            "FETCH " + seq + " (BODY.PEEK[] UID INTERNALDATE)", null);
         ImapParser parser =
             new ImapParser(protocol.getInputStream().getRealInputStream());
         while (true) {
@@ -77,6 +82,7 @@ public class UidFetch {
             throw new IOException("Not a fetch response");
         }
         long uid = 0;
+        Date date = null;
         Literal lit = null;
         try {
             ImapData data = ir.getData()[0];
@@ -86,6 +92,8 @@ public class UidFetch {
                     uid = ((ImapData) it.next()).getLongValue();
                 } else if (d.isAtom("BODY[]")) {
                     lit = ((ImapData) it.next()).getLiteralValue();
+                } else if (d.isAtom(Atom.INTERNALDATE)) {
+                	date = mailDataFormat.parse(((ImapData)it.next()).getStringValue());
                 }
             }
             if (DEBUG) pd("fetched: uid = %s, data = %s", uid, data);
@@ -94,7 +102,7 @@ public class UidFetch {
             throw new IOException("Invalid FETCH request");
         }
         try {
-            handler.handleResponse(lit, uid);
+            handler.handleResponse(lit, uid, date);
         } catch (Exception e) {
             throw (IOException)
                 new IOException("FETCH handler failed").initCause(e);
@@ -126,8 +134,8 @@ public class UidFetch {
             pd("msg %s: %s", im.getMessageID(), im.getSentDate());
         }
         UidFetch.fetch(folder, "1:*", new Handler() {
-            public void handleResponse(Literal l, long uid) {
-                pd("Fetched message: uid = %d, size = %d", uid, l.getSize());
+            public void handleResponse(Literal l, long uid, Date receivedDate) {
+                pd("Fetched message: uid = %d, size = %d, received = %s", uid, l.getSize(), receivedDate.toString());
             }
         });
     }

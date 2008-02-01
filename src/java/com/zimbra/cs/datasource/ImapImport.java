@@ -19,6 +19,7 @@ package com.zimbra.cs.datasource;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -68,8 +69,6 @@ import com.zimbra.cs.mailtest.Literal;
 
 public class ImapImport implements MailItemImport {
 
-    private static final long TIMEOUT = 20 * Constants.MILLIS_PER_SECOND;
-
     private static Session sSession;
     private static Session sSelfSignedCertSession;
     private static FetchProfile FETCH_PROFILE;
@@ -77,15 +76,19 @@ public class ImapImport implements MailItemImport {
     private static final boolean FAST_FETCH =
         LC.data_source_fast_fetch.booleanValue();
     
+    private static final int FETCH_SIZE = LC.data_source_fetch_size.intValue();
+    
     static {
     	String idExt = "(\"vendor\" \"Zimbra\" \"os\" \"" + System.getProperty("os.name") +
     	               "\" \"os-version\" \"" + System.getProperty("os.version") + "\" \"guid\" \"" + BuildInfo.TYPE + "\")";
     	
+    	long timeout = LC.javamail_imap_timeout.longValue() * Constants.MILLIS_PER_SECOND;
+    	
         Properties props = new Properties();
-        props.setProperty("mail.imap.connectiontimeout", Long.toString(TIMEOUT));
-        props.setProperty("mail.imap.timeout", Long.toString(TIMEOUT));
-        props.setProperty("mail.imaps.connectiontimeout", Long.toString(TIMEOUT));
-        props.setProperty("mail.imaps.timeout", Long.toString(TIMEOUT));    	
+        props.setProperty("mail.imap.connectiontimeout", Long.toString(timeout));
+        props.setProperty("mail.imap.timeout", Long.toString(timeout));
+        props.setProperty("mail.imaps.connectiontimeout", Long.toString(timeout));
+        props.setProperty("mail.imaps.timeout", Long.toString(timeout));    	
 		props.setProperty("mail.imaps.socketFactory.class", CustomSSLSocketFactory.class.getName());
         props.setProperty("mail.imaps.socketFactory.fallback", "false");
         if (idExt != null) {
@@ -97,8 +100,8 @@ public class ImapImport implements MailItemImport {
         	sSession.setDebug(true);
 
         Properties sscProps = new Properties();
-        sscProps.setProperty("mail.imaps.connectiontimeout", Long.toString(TIMEOUT));
-        sscProps.setProperty("mail.imaps.timeout", Long.toString(TIMEOUT));    	
+        sscProps.setProperty("mail.imaps.connectiontimeout", Long.toString(timeout));
+        sscProps.setProperty("mail.imaps.timeout", Long.toString(timeout));    	
         sscProps.setProperty("mail.imaps.socketFactory.class", DummySSLSocketFactory.class.getName());
         sscProps.setProperty("mail.imaps.socketFactory.fallback", "false");
         if (idExt != null)
@@ -110,7 +113,8 @@ public class ImapImport implements MailItemImport {
         FETCH_PROFILE = new FetchProfile();
         FETCH_PROFILE.add(UIDFolder.FetchProfileItem.UID);
         FETCH_PROFILE.add(UIDFolder.FetchProfileItem.FLAGS);
-        FETCH_PROFILE.add(UIDFolder.FetchProfileItem.ENVELOPE);
+        if (!FAST_FETCH)
+        	FETCH_PROFILE.add(UIDFolder.FetchProfileItem.ENVELOPE);
     }
 
     public String test(DataSource ds) throws ServiceException {
@@ -536,7 +540,7 @@ public class ImapImport implements MailItemImport {
                 ImapMessage trackedMsg = trackedMsgs.getByUid(uid);
                 
                 if (localIds.contains(trackedMsg.getItemId())) {
-                    ZimbraLog.datasource.debug("Found message with UID %d on both sides.  Syncing flags.", uid);
+                    //ZimbraLog.datasource.debug("Found message with UID %d on both sides.  Syncing flags.", uid);
                     // We currently only sync flags from remote to local, not in both directions.
                     int appliedFlags = applyFlagsToBitfield(remoteMsg, trackedMsg.getFlags());
                     if (appliedFlags != trackedMsg.getFlags()) {
@@ -575,33 +579,52 @@ public class ImapImport implements MailItemImport {
         }
 
         if (FAST_FETCH) {
-            // Check for new messages using batch UID FETCH
-            long fromUid = trackedMsgs.getMaxUid() + 1;
-            long toUid = remoteFolder.getUIDNext();
-            final AtomicInteger fetchCount = new AtomicInteger();
-
-            UidFetch.fetch(remoteFolder, fromUid + ":" + toUid, new UidFetch.Handler() {
-                public void handleResponse(Literal lit, long uid) throws Exception {
-                    ZimbraLog.datasource.debug("Found new remote message %d.  Creating local copy.", uid);
-                    if (trackedMsgs.getByUid(uid) != null) {
-                        ZimbraLog.datasource.warn("Skipped message with uid = %d because it already exists locally", uid);
-                        return;
-                    }
-                    IMAPMessage msg = remoteMsgs.get(uid);
-                    if (msg == null) return;
-                    Long date = msg.getSentDate() != null ? (Long) msg.getSentDate().getTime() : null;
-                    boolean indexingEnabled = mbox.attachmentsIndexingEnabled();
-                    ParsedMessage pm = lit.getFile() != null ?
-                        new ParsedMessage(lit.getFile(), date, indexingEnabled) :
-                        new ParsedMessage(lit.getBytes(), date, indexingEnabled);
-                    int flags = applyFlagsToBitfield(msg, 0);
-                    com.zimbra.cs.mailbox.Message zimbraMsg =
-                        mbox.addMessage(null, pm, localFolder.getId(), false, flags, null);
-                    fetchCount.incrementAndGet();
-                    DbImapMessage.storeImapMessage(mbox, trackedFolder.getItemId(), uid, zimbraMsg.getId());
+            long lastUid = trackedMsgs.getMaxUid();
+        	int startSequence = 0;
+        	int endSequence = msgArray.length;
+        	for (int i = 0; i < msgArray.length; ++i) { //messages are in sequence order and in UID order
+                IMAPMessage imapMsg = (IMAPMessage)msgArray[i];
+                long uid = remoteFolder.getUID(imapMsg);
+                if (uid > lastUid) {
+                	startSequence = i + 1;
+                	break;
                 }
-            });
-            numAddedLocally = fetchCount.intValue();
+        	}
+        	startSequence = startSequence == 0 ? endSequence + 1 : startSequence;
+        	
+        	while (startSequence <= endSequence) {
+        		int stopSequence = startSequence + FETCH_SIZE - 1;
+        		stopSequence = stopSequence < endSequence ? stopSequence : endSequence;
+        	
+	            // Check for new messages using batch FETCH
+	            final AtomicInteger fetchCount = new AtomicInteger();
+	
+	            UidFetch.fetch(remoteFolder, startSequence + ":" + stopSequence, new UidFetch.Handler() {
+	                public void handleResponse(Literal lit, long uid, Date receivedDate) throws Exception {
+	                    ZimbraLog.datasource.debug("Found new remote message %d.  Creating local copy.", uid);
+	                    if (trackedMsgs.getByUid(uid) != null) {
+	                        ZimbraLog.datasource.warn("Skipped message with uid = %d because it already exists locally", uid);
+	                        return;
+	                    }
+	                    IMAPMessage msg = remoteMsgs.get(uid);
+	                    if (msg == null) return;
+	                    Long time = receivedDate != null ? (Long)receivedDate.getTime() : null;
+	                    boolean indexingEnabled = mbox.attachmentsIndexingEnabled();
+	                    ParsedMessage pm = lit.getFile() != null ?
+	                        new ParsedMessage(lit.getFile(), time, indexingEnabled) :
+	                        new ParsedMessage(lit.getBytes(), time, indexingEnabled);
+	                    int flags = applyFlagsToBitfield(msg, 0);
+	                    com.zimbra.cs.mailbox.Message zimbraMsg =
+	                        mbox.addMessage(null, pm, localFolder.getId(), false, flags, null);
+	                    fetchCount.incrementAndGet();
+	                    DbImapMessage.storeImapMessage(mbox, trackedFolder.getItemId(), uid, zimbraMsg.getId());
+	                }
+	            });
+	            assert (fetchCount.intValue() == stopSequence - startSequence + 1);
+	            numAddedLocally = fetchCount.intValue();
+	            
+	            startSequence = stopSequence + 1;
+        	}
         }
 
         // Remaining local ID's are messages that were not found on the remote server

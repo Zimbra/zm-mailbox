@@ -35,7 +35,6 @@ import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
-import com.zimbra.cs.util.Zimbra;
 
 
 /**
