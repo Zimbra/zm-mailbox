@@ -89,10 +89,15 @@ public class SoapEngine {
         mDispatcher = new DocumentDispatcher();
     }
 
+    private Element soapFault(SoapProtocol soapProto, String msg, ServiceException e) {
+        mLog.warn(msg, e);
+        return soapProto.soapEnvelope(soapProto.soapFault(e));
+    }
+    
     public Element dispatch(String path, byte[] soapMessage, Map<String, Object> context, boolean loggedRequest) {
         if (soapMessage == null || soapMessage.length == 0) {
             SoapProtocol soapProto = SoapProtocol.Soap12;
-            return soapProto.soapEnvelope(soapProto.soapFault(ServiceException.PARSE_ERROR("empty request payload", null)));
+            return soapFault(soapProto, "SOAP exception", ServiceException.PARSE_ERROR("empty request payload", null));
         }
 
         InputStream in = new ByteArrayInputStream(soapMessage);
@@ -105,10 +110,10 @@ public class SoapEngine {
         } catch (DocumentException de) {
             // FIXME: have to pick 1.1 or 1.2 since we can't parse any
             SoapProtocol soapProto = SoapProtocol.Soap12;
-            return soapProto.soapEnvelope(soapProto.soapFault(ServiceException.PARSE_ERROR(de.getMessage(), de)));
+            return soapFault(soapProto, "SOAP exception", ServiceException.PARSE_ERROR(de.getMessage(), de));
         } catch (SoapParseException e) {
             SoapProtocol soapProto = SoapProtocol.SoapJS;
-            return soapProto.soapEnvelope(soapProto.soapFault(ServiceException.PARSE_ERROR(e.getMessage(), e)));
+            return soapFault(soapProto, "SOAP exception", ServiceException.PARSE_ERROR(e.getMessage(), e));
         }
         return dispatch(path, document, context, loggedRequest);
     }
@@ -132,7 +137,7 @@ public class SoapEngine {
         if (soapProto == null) {
             // FIXME: have to pick 1.1 or 1.2 since we can't parse any
             soapProto = SoapProtocol.Soap12;
-            return soapProto.soapEnvelope(soapProto.soapFault(ServiceException.INVALID_REQUEST("unable to determine SOAP version", null)));
+            return soapFault(soapProto, "SOAP exception", ServiceException.INVALID_REQUEST("unable to determine SOAP version", null));
         }
 
         // if (mLog.isDebugEnabled()) mLog.debug("dispatch: soapProto = " + soapProto.getVersion());
@@ -142,7 +147,7 @@ public class SoapEngine {
         try {
             zsc = new ZimbraSoapContext(ectxt, context, soapProto);
         } catch (ServiceException e) {
-            return soapProto.soapEnvelope(soapProto.soapFault(e));
+            return soapFault(soapProto, "unable to construct SOAP context", e);
         }
         SoapProtocol responseProto = zsc.getResponseProtocol();
 
@@ -257,28 +262,28 @@ public class SoapEngine {
         SoapProtocol soapProto = zsc.getResponseProtocol();
 
         if (request == null)
-            return soapProto.soapFault(ServiceException.INVALID_REQUEST("no document specified", null));
+            return soapFault(soapProto, "cannot dispatch request", ServiceException.INVALID_REQUEST("no document specified", null));
 
         DocumentHandler handler = mDispatcher.getHandler(request);
         if (handler == null) 
-            return soapProto.soapFault(ServiceException.UNKNOWN_DOCUMENT(request.getQualifiedName(), null));
+            return soapFault(soapProto, "cannot dispatch request", ServiceException.UNKNOWN_DOCUMENT(request.getQualifiedName(), null));
 
         if (RedoLogProvider.getInstance().isSlave() && !handler.isReadOnly())
-            return soapProto.soapFault(ServiceException.NON_READONLY_OPERATION_DENIED());
+            return soapFault(soapProto, "cannot dispatch request", ServiceException.NON_READONLY_OPERATION_DENIED());
 
         if (!Config.userServicesEnabled() && !(handler instanceof AdminDocumentHandler))
-            return soapProto.soapFault(ServiceException.TEMPORARILY_UNAVAILABLE());
+            return soapFault(soapProto, "cannot dispatch request", ServiceException.TEMPORARILY_UNAVAILABLE());
 
         AuthToken at = zsc.getAuthToken();
         boolean needsAuth = handler.needsAuth(context);
         boolean needsAdminAuth = handler.needsAdminAuth(context);
         if ((needsAuth || needsAdminAuth) && at == null)
-            return soapProto.soapFault(ServiceException.AUTH_REQUIRED());
+            return soapFault(soapProto, "cannot dispatch request", ServiceException.AUTH_REQUIRED());
 
         if (needsAdminAuth && !at.isAdmin()) {
             boolean ok = handler.domainAuthSufficient(context) && at.isDomainAdmin();
             if (!ok)
-                return soapProto.soapFault(ServiceException.PERM_DENIED("need admin token"));
+                return soapFault(soapProto, "cannot dispatch request", ServiceException.PERM_DENIED("need admin token"));
         }
 
         Element response = null;
