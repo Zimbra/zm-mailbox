@@ -242,6 +242,7 @@ public class LC {
     
     public static final KnownKey data_source_trust_self_signed_certs;
     public static final KnownKey data_source_fast_fetch;
+    public static final KnownKey data_source_fetch_size;
 
     public static final KnownKey timezone_file;
 
@@ -280,6 +281,10 @@ public class LC {
     public static final KnownKey javamail_pop3_debug;
     public static final KnownKey javamail_imap_debug;
     public static final KnownKey javamail_smtp_debug;
+    
+    public static final KnownKey javamail_pop3_timeout;
+    public static final KnownKey javamail_imap_timeout;
+    public static final KnownKey javamail_smtp_timeout;
     
     static {
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  " +
@@ -964,7 +969,9 @@ public class LC {
             "Allow self-signed certificates when connecting to a data source over SSL.");
         data_source_fast_fetch =
             new KnownKey("data_source_fast_fetch", "false", "Enable faster downloads in imap folder import (EXPERIMENTAL)");
-
+        data_source_fetch_size =
+            new KnownKey("data_source_fetch_size", "100", "maximum number of imap messages to FETCH in each request (EXPERIMENTAL)");
+        
         timezone_file = new KnownKey("timezone_file");
         timezone_file.setDefault("${zimbra_home}" + FS + "conf" + FS + "timezones.ics");
         timezone_file.setDoc("iCalendar file listing well-known time zones");
@@ -1040,5 +1047,17 @@ public class LC {
         javamail_smtp_debug = new KnownKey("javamail_smtp_debug");
         javamail_smtp_debug.setDefault("false");
         javamail_smtp_debug.setDoc("Whether to enable javamail debug for SMTP.");
+        
+        javamail_pop3_timeout = new KnownKey("javamail_pop3_timeout");
+        javamail_pop3_timeout.setDefault("30");
+        javamail_pop3_timeout.setDoc("POP3 timeout in seconds.");
+        
+        javamail_imap_timeout = new KnownKey("javamail_imap_timeout");
+        javamail_imap_timeout.setDefault("30");
+        javamail_imap_timeout.setDoc("IMAP timeout in seconds.");
+        
+        javamail_smtp_timeout = new KnownKey("javamail_smtp_timeout");
+        javamail_smtp_timeout.setDefault("30");
+        javamail_smtp_timeout.setDoc("SMTP timeout in seconds.");
     }
 }
