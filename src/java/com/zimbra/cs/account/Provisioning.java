@@ -534,12 +534,19 @@ public abstract class Provisioning {
      * set to true if an account is an domain admin account
      */
     public static final String A_zimbraIsDomainAdminAccount = "zimbraIsDomainAdminAccount";    
-
+    
+    /* Zimbra Customer Care*/
 	/**
      * set to true if an account is a customer care (AKA read-only admin) account
      */
     public static final String A_zimbraIsCustomerCareAccount= "zimbraIsCustomerCareAccount";
 
+    /**
+     * defines tier level for a customer care account
+     */
+    public static final String A_zimbraCustomerCareTier ="zimbraCustomerCareTier";
+    /* Zimbra Customer Care*/
+   
     /**
      * Set for entries (accounts/lists) in the directory that have an alias
      */
