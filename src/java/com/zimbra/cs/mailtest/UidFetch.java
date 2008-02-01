@@ -49,7 +49,7 @@ public class UidFetch {
     private static Object doFETCH(IMAPProtocol protocol, String seq, Handler handler)
             throws IOException, ProtocolException {
         String tag = protocol.writeCommand(
-            "FETCH " + seq + " (BODY.PEEK[] UID INTERNALDATE)", null);
+            "UID FETCH " + seq + " (BODY.PEEK[] UID INTERNALDATE)", null);
         ImapParser parser =
             new ImapParser(protocol.getInputStream().getRealInputStream());
         while (true) {

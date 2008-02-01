@@ -580,26 +580,23 @@ public class ImapImport implements MailItemImport {
 
         if (FAST_FETCH) {
             long lastUid = trackedMsgs.getMaxUid();
-        	int startSequence = 0;
-        	int endSequence = msgArray.length;
-        	for (int i = 0; i < msgArray.length; ++i) { //messages are in sequence order and in UID order
-                IMAPMessage imapMsg = (IMAPMessage)msgArray[i];
-                long uid = remoteFolder.getUID(imapMsg);
-                if (uid > lastUid) {
-                	startSequence = i + 1;
-                	break;
+        	int startIndex = 0;
+        	int endIndex = msgArray.length - 1;
+        	while (startIndex <= endIndex) {
+                long startUid = remoteFolder.getUID((IMAPMessage)msgArray[startIndex]);
+                if (startUid <= lastUid) {
+                	++startIndex;
+                	continue;
                 }
-        	}
-        	startSequence = startSequence == 0 ? endSequence + 1 : startSequence;
+                
+            	int stopIndex = startIndex + FETCH_SIZE - 1;
+            	stopIndex = stopIndex < endIndex ? stopIndex : endIndex;
+                long stopUid = remoteFolder.getUID((IMAPMessage)msgArray[stopIndex]);
         	
-        	while (startSequence <= endSequence) {
-        		int stopSequence = startSequence + FETCH_SIZE - 1;
-        		stopSequence = stopSequence < endSequence ? stopSequence : endSequence;
-        	
-	            // Check for new messages using batch FETCH
 	            final AtomicInteger fetchCount = new AtomicInteger();
 	
-	            UidFetch.fetch(remoteFolder, startSequence + ":" + stopSequence, new UidFetch.Handler() {
+	            // Check for new messages using batch FETCH
+	            UidFetch.fetch(remoteFolder, startUid + ":" + stopUid, new UidFetch.Handler() {
 	                public void handleResponse(Literal lit, long uid, Date receivedDate) throws Exception {
 	                    ZimbraLog.datasource.debug("Found new remote message %d.  Creating local copy.", uid);
 	                    if (trackedMsgs.getByUid(uid) != null) {
@@ -620,10 +617,9 @@ public class ImapImport implements MailItemImport {
 	                    DbImapMessage.storeImapMessage(mbox, trackedFolder.getItemId(), uid, zimbraMsg.getId());
 	                }
 	            });
-	            assert (fetchCount.intValue() == stopSequence - startSequence + 1);
 	            numAddedLocally = fetchCount.intValue();
 	            
-	            startSequence = stopSequence + 1;
+	            startIndex = stopIndex + 1;
         	}
         }
 
