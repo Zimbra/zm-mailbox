@@ -310,8 +310,7 @@ public class Contact extends MailItem {
             throw new IllegalArgumentException();
     }
 
-    @Override
-    public String getSender() {
+    @Override public String getSender() {
         try {
             return getFileAsString();
         } catch (ServiceException e) {
@@ -562,13 +561,13 @@ public class Contact extends MailItem {
         
         return result;
     }
-    
-    boolean isTaggable()      { return true; }
-    boolean isCopyable()      { return true; }
-    boolean isMovable()       { return true; }
-    boolean isMutable()       { return true; }
-    boolean isIndexed()       { return true; }
-    boolean canHaveChildren() { return false; }
+
+    @Override boolean isTaggable()      { return true; }
+    @Override boolean isCopyable()      { return true; }
+    @Override boolean isMovable()       { return true; }
+    @Override boolean isMutable()       { return true; }
+    @Override boolean isIndexed()       { return true; }
+    @Override boolean canHaveChildren() { return false; }
 
 
     /** Creates a new <tt>Contact</tt> and persists it to the database.
@@ -624,16 +623,14 @@ public class Contact extends MailItem {
         return con;
     }
 
-    @Override
-    public void reindex(IndexItem redo, boolean deleteFirst, Object indexData) throws ServiceException {
+    @Override public void reindex(IndexItem redo, boolean deleteFirst, Object indexData) throws ServiceException {
         // FIXME: need to note this as dirty so we can reindex if things fail
         MailboxIndex mi = mMailbox.getMailboxIndex();
         if (mi != null)
             mi.indexContact(mMailbox, redo, deleteFirst, this);
     }
 
-    @Override
-    void reanalyze(Object data) throws ServiceException {
+    @Override void reanalyze(Object data) throws ServiceException {
         if (!(data instanceof ParsedContact))
             throw ServiceException.FAILURE("cannot reanalyze non-ParsedContact object", null);
 
@@ -693,31 +690,27 @@ public class Contact extends MailItem {
 
     /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *         {@link ACL#RIGHT_READ} on the original item */
-    @Override
-    MailItem copy(Folder folder, int id, short destVolumeId) throws IOException, ServiceException {
+    @Override MailItem copy(Folder folder, int id, int parentId, short destVolumeId) throws IOException, ServiceException {
         mMailbox.updateContactCount(1);
-        return super.copy(folder, id, destVolumeId);
+        return super.copy(folder, id, parentId, destVolumeId);
     }
 
     /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *         {@link ACL#RIGHT_READ} on the original item */
-    @Override
-    MailItem icopy(Folder folder, int copyId, short destVolumeId) throws IOException, ServiceException {
+    @Override MailItem icopy(Folder folder, int copyId, short destVolumeId) throws IOException, ServiceException {
         mMailbox.updateContactCount(1);
         return super.icopy(folder, copyId, destVolumeId);
     }
 
     /** @perms {@link ACL#RIGHT_DELETE} on the item */
-    @Override
-    PendingDelete getDeletionInfo() throws ServiceException {
+    @Override PendingDelete getDeletionInfo() throws ServiceException {
         PendingDelete info = super.getDeletionInfo();
         info.contacts = 1;
         return info;
     }
 
 
-    @Override
-    void decodeMetadata(Metadata meta) throws ServiceException {
+    @Override void decodeMetadata(Metadata meta) throws ServiceException {
         Metadata metaAttrs;
         if (meta.getVersion() <= 8) {
             // old version: metadata is just the fields
@@ -742,8 +735,7 @@ public class Contact extends MailItem {
         }
     }
 
-    @Override
-    Metadata encodeMetadata(Metadata meta) {
+    @Override Metadata encodeMetadata(Metadata meta) {
         return encodeMetadata(meta, mColor, mVersion, mFields, mAttachments);
     }
 
@@ -763,8 +755,7 @@ public class Contact extends MailItem {
     }
 
 
-    @Override
-    public String toString() {
+    @Override public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("contact: {");
         appendCommonMembers(sb);

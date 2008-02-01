@@ -152,8 +152,7 @@ public class Conversation extends MailItem {
         return super.getSubject();
     }
 
-    @Override
-    public String getSender() {
+    @Override public String getSender() {
         return "";
     }
 
@@ -172,8 +171,7 @@ public class Conversation extends MailItem {
         return Math.max(0, getMessageCount() - mInheritedTagSet.count(Flag.ID_FLAG_DELETED));
     }
 
-    @Override
-    public int getInternalFlagBitmask() {
+    @Override public int getInternalFlagBitmask() {
         return 0;
     }
 
@@ -286,13 +284,11 @@ public class Conversation extends MailItem {
         return msgs;
     }
 
-    @Override
-    boolean canAccess(short rightsNeeded) {
+    @Override boolean canAccess(short rightsNeeded) {
         return true;
     }
 
-    @Override
-    boolean canAccess(short rightsNeeded, Account authuser, boolean asAdmin) {
+    @Override boolean canAccess(short rightsNeeded, Account authuser, boolean asAdmin) {
         return true;
     }
 
@@ -360,8 +356,7 @@ public class Conversation extends MailItem {
         DbMailItem.closeConversation(hash, this);
     }
 
-    @Override
-    void detach() throws ServiceException {
+    @Override void detach() throws ServiceException {
         close(Mailbox.getHash(getSubject()));
     }
 
@@ -383,8 +378,7 @@ public class Conversation extends MailItem {
      *  marked read/unread.
      * 
      * @perms {@link ACL#RIGHT_WRITE} on all the messages */
-    @Override
-    void alterUnread(boolean unread) throws ServiceException {
+    @Override void alterUnread(boolean unread) throws ServiceException {
         markItemModified(Change.MODIFIED_UNREAD);
 
         boolean excludeAccess = false;
@@ -436,8 +430,7 @@ public class Conversation extends MailItem {
      *  tagged/untagged.
      * 
      * @perms {@link ACL#RIGHT_WRITE} on all the messages */
-    @Override
-    void alterTag(Tag tag, boolean add) throws ServiceException {
+    @Override void alterTag(Tag tag, boolean add) throws ServiceException {
         if (tag == null)
             throw ServiceException.FAILURE("missing tag argument", null);
         if ((add ? mData.size : 0) == mInheritedTagSet.count(tag))
@@ -481,8 +474,7 @@ public class Conversation extends MailItem {
         }
     }
 
-    @Override
-    protected void inheritedTagChanged(Tag tag, boolean add) {
+    @Override protected void inheritedTagChanged(Tag tag, boolean add) {
         if (tag == null)
             return;
         markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
@@ -511,8 +503,7 @@ public class Conversation extends MailItem {
      * 
      * @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *        {@link ACL#RIGHT_DELETE} on the messages' source folders */
-    @Override
-    boolean move(Folder target) throws ServiceException {
+    @Override boolean move(Folder target) throws ServiceException {
         if (!target.canContain(TYPE_MESSAGE))
             throw MailServiceException.CANNOT_CONTAIN();
         markItemModified(Change.UNMODIFIED);
@@ -601,8 +592,7 @@ public class Conversation extends MailItem {
     }
 
     /** please call this *after* adding the child row to the DB */
-    @Override
-    void addChild(MailItem child) throws ServiceException {
+    @Override void addChild(MailItem child) throws ServiceException {
         super.addChild(child);
 
         // update inherited tags, if applicable
@@ -650,8 +640,7 @@ public class Conversation extends MailItem {
         }
     }
 
-    @Override
-    void removeChild(MailItem child) throws ServiceException {
+    @Override void removeChild(MailItem child) throws ServiceException {
         // superclass removeChild() updates the unread count and child list
         super.removeChild(child);
 
@@ -753,8 +742,7 @@ public class Conversation extends MailItem {
      *        change number of the <code>Message</code> is greater
      *    <li><code>service.FAILURE</code> - if there's a database
      *        failure fetching the message list</ul> */
-    @Override
-    PendingDelete getDeletionInfo() throws ServiceException {
+    @Override PendingDelete getDeletionInfo() throws ServiceException {
         PendingDelete info = new PendingDelete();
         info.rootId = mId;
         info.itemIds.add(getType(), mId);
@@ -790,8 +778,7 @@ public class Conversation extends MailItem {
         return info;
     }
 
-    @Override
-    void purgeCache(PendingDelete info, boolean purgeItem) throws ServiceException {
+    @Override void purgeCache(PendingDelete info, boolean purgeItem) throws ServiceException {
         if (info.incomplete) {
             // *some* of the messages remain; recalculate the data based on this
             int oldSize = getMessageCount(), remaining = oldSize - info.itemIds.size();
@@ -808,8 +795,7 @@ public class Conversation extends MailItem {
     }
 
 
-    @Override
-    void decodeMetadata(String metadata) {
+    @Override void decodeMetadata(String metadata) {
         // when a folder is deleted, DbMailItem.markDeletionTargets() nulls out metadata for all affected conversations
         //   in that case, leave mSenderList unset and fault it in as necessary
         if (metadata != null) {
@@ -823,14 +809,12 @@ public class Conversation extends MailItem {
         }
     }
 
-    @Override
-    void decodeMetadata(Metadata meta) throws ServiceException {
+    @Override void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
         mEncodedSenders = meta.get(Metadata.FN_PARTICIPANTS, null);
     }
 
-    @Override
-    Metadata encodeMetadata(Metadata meta) {
+    @Override Metadata encodeMetadata(Metadata meta) {
         String encoded = mEncodedSenders;
         if (encoded == null && mSenderList != null)
             encoded = mSenderList.toString();
@@ -849,8 +833,7 @@ public class Conversation extends MailItem {
 
     private static final String CN_INHERITED_TAGS = "inherited";
 
-    @Override
-    public String toString() {
+    @Override public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("conversation: {");
         appendCommonMembers(sb);
