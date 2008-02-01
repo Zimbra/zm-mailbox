@@ -42,11 +42,6 @@ import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 
 public class LocalFreeBusyProvider {
 
-    public static FreeBusy createDummyFreeBusy(long start, long end) {
-        IntervalList ilist = new IntervalList(start, end);
-        return new FreeBusy(ilist, start, end);
-    }
-
     public static FreeBusy getFreeBusy(Account acct, long start, long end) 
     	throws ServiceException {
     	return getFreeBusyList(MailboxManager.getInstance().getMailboxByAccount(acct), start, end);
@@ -74,7 +69,7 @@ public class LocalFreeBusyProvider {
 			CalendarResource resource = (CalendarResource) acct;
 			if (resource.autoAcceptDecline() && !resource.autoDeclineIfBusy()) {
 				IntervalList intervals = new IntervalList(start, end);
-				return new FreeBusy(intervals, start, end);
+				return new FreeBusy(acct.getName(), intervals, start, end);
 			}
 		}
 
@@ -139,7 +134,7 @@ public class LocalFreeBusyProvider {
 				}
 			}
 		}
-		return new FreeBusy(intervals, start, end);
+		return new FreeBusy(acct.getName(), intervals, start, end);
 	}
 
     public static void main(String[] args) {

@@ -70,8 +70,8 @@ public class IfbFormatter extends Formatter {
             acctName = context.targetMailbox.getAccount().getName();
         } else {
             // Unknown mailbox.  Fake an always-free response, to avoid harvest attacks.
-            fb = com.zimbra.cs.fb.LocalFreeBusyProvider.createDummyFreeBusy(rangeStart, rangeEnd);
             acctName = fixupAccountName(context.accountPath);
+            fb = FreeBusy.emptyFreeBusy(acctName, rangeStart, rangeEnd);
         }
         String fbMsg = fb.toVCalendar(FreeBusy.Method.PUBLISH, acctName, null, url);
         context.resp.getOutputStream().write(fbMsg.getBytes("UTF-8"));

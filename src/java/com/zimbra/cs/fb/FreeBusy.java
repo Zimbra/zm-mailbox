@@ -39,14 +39,19 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar;
  */
 public class FreeBusy implements Iterable<FreeBusy.Interval> {
 
-    protected FreeBusy(long start, long end) {
-    	this(new IntervalList(start, end), start, end);
+	public static FreeBusy emptyFreeBusy(String name, long start, long end) {
+		return new FreeBusy(name, start, end);
+	}
+    protected FreeBusy(String name, long start, long end) {
+    	this(name, new IntervalList(start, end), start, end);
     }
-    protected FreeBusy(IntervalList list, long start, long end) {
+    protected FreeBusy(String name, IntervalList list, long start, long end) {
+    	mName = name;
         mList = list;
         mStart = start;
         mEnd = end;
     }
+    private String mName;
     IntervalList mList; 
     
     private long mStart;
@@ -66,6 +71,10 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
         public void remove() {
             throw new IllegalArgumentException("Unsupported");
         }
+    }
+    
+    public String getName() {
+    	return mName;
     }
     
     public Iterator<Interval> iterator() {

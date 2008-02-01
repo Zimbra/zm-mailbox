@@ -16,8 +16,10 @@
  */
 package com.zimbra.cs.fb;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -30,10 +32,11 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.soap.ProxyTarget;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class RemoteFreeBusyProvider {
+public class RemoteFreeBusyProvider extends FreeBusyProvider {
 	
 	public RemoteFreeBusyProvider(HttpServletRequest httpReq, ZimbraSoapContext zsc, long start, long end) {
 		mRemoteAccountMap = new HashMap<String,StringBuilder>();
@@ -43,14 +46,16 @@ public class RemoteFreeBusyProvider {
 		mEnd = end;
 	}
 	
-	private Map<String,StringBuilder> mRemoteAccountMap;
-	private HttpServletRequest mHttpReq;
-	private ZimbraSoapContext mSoapCtxt;
-	private long mStart;
-	private long mEnd;
-	private StringBuilder mFailedAccounts;
-	
-	public void addRemoteAccount(Account account) {
+	public FreeBusyProvider getInstance() {
+		// special case this class as it's used to get free/busy of zimbra accounts
+		// on a remote mailbox host, and we can perform some shortcuts i.e.
+		// returning the proxied response straight to the main response.
+		// plus it requires additional resources such as original
+		// HttpServletRequest and ZimbraSoapContext.
+		return null;
+	}
+	public void addFreeBusyRequest(Request req) {
+		Account account = (Account) req.data;
 		String hostname = account.getAttr(Provisioning.A_zimbraMailHost);
 		String id = account.getId();
 		StringBuilder buf = mRemoteAccountMap.get(hostname);
@@ -58,6 +63,28 @@ public class RemoteFreeBusyProvider {
 			buf = new StringBuilder(id);
 		else
 			buf.append(",").append(id);
+	}
+	public void addFreeBusyRequest(Account acct, String id, long start, long end) {
+		Request req = new Request(id, start, end);
+		req.data = acct;
+		addFreeBusyRequest(req);
+	}
+	public Set<FreeBusy> getResults() {
+		// XXX unused, and not implemented
+		return Collections.emptySet();
+	}
+	
+	public boolean canCacheZimbraUserFreeBusy() {
+		return false;
+	}
+	public long cachedFreeBusyStartTime() {
+		return 0;
+	}
+	public long cachedFreeBusyEndTime() {
+		return 0;
+	}
+	public void setFreeBusyForZimbraUser(String email, FreeBusy fb) {
+		// XXX unused, and not implemented
 	}
 	
 	public void addResults(Element response) {
@@ -85,26 +112,27 @@ public class RemoteFreeBusyProvider {
                     ZimbraLog.calendar.debug("Account " + idStrs[0] + " not found while searching free/busy");
                 }
             } catch (SoapFaultException e) {
-            	addFailedAccounts(paramStr);
+                ZimbraLog.calendar.error("cannot get free/busy for "+idStrs[0], e);
+            	addFailedAccounts(response, idStrs);
             } catch (ServiceException e) {
-            	addFailedAccounts(paramStr);
+                ZimbraLog.calendar.error("cannot get free/busy for "+idStrs[0], e);
+            	addFailedAccounts(response, idStrs);
             }
         }
 	}
 
-	private void addFailedAccounts(String accts) {
-		if (mFailedAccounts == null)
-			mFailedAccounts = new StringBuilder(accts);
-		else
-			mFailedAccounts.append(",").append(accts);
+	private Map<String,StringBuilder> mRemoteAccountMap;
+	private HttpServletRequest mHttpReq;
+	private ZimbraSoapContext mSoapCtxt;
+	private long mStart;
+	private long mEnd;
+	
+	private void addFailedAccounts(Element response, String[] idStrs) {
+		for (String id : idStrs) {
+			ToXML.encodeFreeBusy(response, FreeBusy.emptyFreeBusy(id, mStart, mEnd));
+		}
 	}
 	
-	public String getFailedAccounts() {
-		if (mFailedAccounts == null)
-			return "";
-		return mFailedAccounts.toString();
-	}
-    
     protected Element proxyRequest(Element request, String acctId, ZimbraSoapContext zsc) throws ServiceException {
         // new context for proxied request has a different "requested account"
         ZimbraSoapContext zscTarget = new ZimbraSoapContext(zsc, acctId);

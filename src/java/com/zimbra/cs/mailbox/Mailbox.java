@@ -57,6 +57,7 @@ import com.zimbra.cs.db.DbSearchConstraints;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.db.DbSearch.SearchResult;
 import com.zimbra.cs.fb.FreeBusy;
+import com.zimbra.cs.fb.FreeBusyProvider;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.imap.ImapMessage;
@@ -6010,6 +6011,14 @@ public class Mailbox {
             change.reset();
         }
 
+        // if the calendar items has changed in the mailbox,
+        // recalculate the free/busy for the user and propogate to
+        // other system.
+    	if (dirty != null && dirty.hasNotifications() 
+    			&& (dirty.changedTypes & MailItem.typeToBitmask(MailItem.TYPE_APPOINTMENT)) != 0) {
+    		FreeBusyProvider.mailboxChanged(this);
+    	}
+    	
         // committed changes, so notify any listeners
         if (!mListeners.isEmpty() && dirty != null && dirty.hasNotifications()) {
             for (Session session : new ArrayList<Session>(mListeners)) {
