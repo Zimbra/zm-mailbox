@@ -20,16 +20,20 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.lucene.document.DateField;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.index.IndexCommitPoint;
+import org.apache.lucene.index.IndexDeletionPolicy;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
@@ -55,7 +59,7 @@ import com.zimbra.cs.stats.ZimbraPerf;
 /**
  * 
  */
-class LuceneIndex implements ITextIndex {
+class LuceneIndex implements ITextIndex, IndexDeletionPolicy  {
     
     private static final boolean sBatchIndexing = (LC.debug_batch_message_indexing.intValue() > 0);
     
@@ -340,10 +344,10 @@ class LuceneIndex implements ITextIndex {
     
     private void enumerateTermsForField(Term firstTerm, TermEnumInterface callback) throws IOException
     {
-        synchronized(getLock()) {        
-            RefCountedIndexReader reader = this.getCountedIndexReader();
+        synchronized(getLock()) {
+            RefCountedIndexSearcher searcher = this.getCountedIndexSearcher();
             try {
-                IndexReader iReader = reader.getReader();
+                IndexReader iReader = searcher.getReader();
 
                 TermEnum terms = iReader.terms(firstTerm);
                 boolean hasDeletions = iReader.hasDeletions();
@@ -364,7 +368,7 @@ class LuceneIndex implements ITextIndex {
                     }
                 } while (terms.next());
             } finally {
-                reader.release();
+                searcher.release();
             }
         }
         
@@ -379,11 +383,11 @@ class LuceneIndex implements ITextIndex {
         token = token.toLowerCase();
 
         try {
-            RefCountedIndexReader reader = this.getCountedIndexReader();
+            RefCountedIndexSearcher searcher = this.getCountedIndexSearcher();
             try {
                 Term firstTerm = new Term(field, token);
 
-                IndexReader iReader = reader.getReader();
+                IndexReader iReader = searcher.getReader();
 
                 TermEnum terms = iReader.terms(firstTerm);
 
@@ -411,7 +415,7 @@ class LuceneIndex implements ITextIndex {
 
                 return true;
             } finally {
-                reader.release();
+                searcher.release();
             }
         } catch (IOException e) {
             throw ServiceException.FAILURE("Caught IOException opening index", e);
@@ -882,9 +886,9 @@ class LuceneIndex implements ITextIndex {
         token = token.toLowerCase();
 
         try {
-            RefCountedIndexReader reader = this.getCountedIndexReader();
+            RefCountedIndexSearcher searcher = this.getCountedIndexSearcher();
             try {
-                IndexReader iReader = reader.getReader();
+                IndexReader iReader = searcher.getReader();
 
                 Term term = new Term(field, token);
                 int freq = iReader.docFreq(term);
@@ -915,7 +919,7 @@ class LuceneIndex implements ITextIndex {
                     }
                 }
             } finally {
-                reader.release();
+                searcher.release();
             }
         } catch (IOException e) {
             throw ServiceException.FAILURE("Caught IOException opening index", e);
@@ -1080,35 +1084,38 @@ class LuceneIndex implements ITextIndex {
             if (toRet != null)
                 return toRet;
             
-            IndexReader reader = null;
-            try {
-                if (isIndexWriterOpen())
-                    closeIndexWriter();
-                reader = IndexReader.open(mIdxDirectory);
-            } catch(IOException e) {
-                // Handle the special case of trying to open a not-yet-created
-                // index, by opening for write and immediately closing.  Index
-                // directory should get initialized as a result.
-                File indexDir = mIdxDirectory.getFile();
-                if (indexDirIsEmpty(indexDir)) {
-                    openIndexWriter();
-                    mIndexWriterMutex.unlock();
-                    closeIndexWriter();
-                    try {
-                        reader = IndexReader.open(mIdxDirectory);
-                    } catch (IOException e1) {
+            synchronized(mOpenReaders) {
+                IndexReader reader = null;
+                try {
+                    if (isIndexWriterOpen())
+                        closeIndexWriter();
+                    reader = IndexReader.open(mIdxDirectory);
+                } catch(IOException e) {
+                    // Handle the special case of trying to open a not-yet-created
+                    // index, by opening for write and immediately closing.  Index
+                    // directory should get initialized as a result.
+                    File indexDir = mIdxDirectory.getFile();
+                    if (indexDirIsEmpty(indexDir)) {
+                        openIndexWriter();
+                        mIndexWriterMutex.unlock();
+                        closeIndexWriter();
+                        try {
+                            reader = IndexReader.open(mIdxDirectory);
+                        } catch (IOException e1) {
+                            if (reader != null)
+                                reader.close();
+                            throw e1;
+                        }
+                    } else {
                         if (reader != null)
                             reader.close();
-                        throw e1;
+                        throw e;
                     }
-                } else {
-                    if (reader != null)
-                        reader.close();
-                    throw e;
                 }
+                toRet = new RefCountedIndexReader(this, reader); // refcount starts at 1
+                mOpenReaders.add(toRet);
             }
-            
-            toRet = new RefCountedIndexReader(reader); // refcount starts at 1 
+                
             sIndexReadersCache.putIndexReader(this, toRet); // addrefs if put in cache
             return toRet; 
         }
@@ -1239,7 +1246,7 @@ class LuceneIndex implements ITextIndex {
             if (mIndexWriter == null) {
                 try {
 //                  sLog.debug("MI"+this.toString()+" Opening IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-                    mIndexWriter = new IndexWriter(mIdxDirectory, false, mMbidx.getAnalyzer(), false);
+                    mIndexWriter = new IndexWriter(mIdxDirectory, false, mMbidx.getAnalyzer(), false, this);
 //                  sLog.debug("MI"+this.toString()+" Opened IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
 
                 } catch (IOException e1) {
@@ -1247,7 +1254,7 @@ class LuceneIndex implements ITextIndex {
                     File indexDir  = mIdxDirectory.getFile();
                     if (indexDirIsEmpty(indexDir)) {
 //                      sLog.debug("MI"+this.toString()+" Opening IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-                        mIndexWriter = new IndexWriter(mIdxDirectory, false, mMbidx.getAnalyzer(), true);
+                        mIndexWriter = new IndexWriter(mIdxDirectory, false, mMbidx.getAnalyzer(), true, this);
 //                      sLog.debug("MI"+this.toString()+" Opened IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
                         if (mIndexWriter == null) 
                             throw new IOException("Failed to open IndexWriter in directory "+indexDir.getAbsolutePath());
@@ -1360,83 +1367,6 @@ class LuceneIndex implements ITextIndex {
     
     private static IndexWritersSweeper sSweeper = null;
     
-//  public AdminInterface getAdminInterface() {
-//  return new AdminInterface(this); 
-//}
-//
-//public static class AdminInterface {
-//  MailboxIndex mIdx;
-//  private AdminInterface(MailboxIndex idx) {
-//      mIdx = idx;
-//  }
-//  void close() { };
-//
-//  public synchronized Spans getSpans(SpanQuery q) throws IOException {
-//      return mIdx.getSpans(q);
-//  }
-//
-//  void deleteIndex() {
-//      try {
-//          mIdx.deleteIndex();
-//      } catch(IOException e) {
-//          e.printStackTrace();
-//      }
-//  }
-//
-//  public static class TermInfo {
-//      /* (non-Javadoc)
-//       * @see java.lang.Object#equals(java.lang.Object)
-//       */
-//      public Term mTerm;
-//      public int mFreq; 
-//
-//      public static class FreqComparator implements Comparator 
-//      {
-//          public int compare(Object o1, Object o2) {
-//              TermInfo lhs = (TermInfo)o1;
-//              TermInfo rhs = (TermInfo)o2;
-//
-//              if (lhs.mFreq != rhs.mFreq) {
-//                  return lhs.mFreq - rhs.mFreq;
-//              } else {
-//                  return lhs.mTerm.text().compareTo(rhs.mTerm.text());
-//              }
-//          }
-//      }
-//  }
-//
-//  private static class TermEnumCallback implements MailboxIndex.TermEnumInterface {
-//      private Collection<TermInfo> mCollection;
-//      
-//      TermEnumCallback(Collection<TermInfo> collection) {
-//          mCollection = collection;
-//      }
-//      public void onTerm(Term term, int docFreq) {
-//          if (term != null) {
-//              TermInfo info = new TermInfo();
-//              info.mTerm = term;
-//              info.mFreq = docFreq;
-//              mCollection.add(info);
-//          }
-//      }
-//  }
-//
-//  public void enumerateTerms(Collection<TermInfo>collection, String field) throws IOException {
-//      TermEnumCallback cb = new TermEnumCallback(collection);
-//      mIdx.enumerateTermsForField(new Term(field,""), cb);
-//  }
-//
-//  public int numDocs() throws IOException {
-//      return mIdx.numDocs();
-//  }
-//
-//  public int countTermOccurences(String fieldName, String term) throws IOException {
-//      return mIdx.countTermOccurences(fieldName, term);
-//  }
-//}
-
-
-
     /**
      * How often do we walk the list of open IndexWriters looking for idle writers
      * to close.  On very busy systems, the default time might be too long.
@@ -1601,4 +1531,56 @@ class LuceneIndex implements ITextIndex {
         
         private boolean mShutdown = false;
     }
+
+    /**
+     * See {@link IndexDeletionPolicy.onCommit(List)}
+     */
+    public void onCommit(List c) throws IOException {
+        List<IndexCommitPoint> commits = (List<IndexCommitPoint>)c;
+        
+        synchronized(mOpenReaders) {
+            mCurrentCommitPoint = commits.get(commits.size()-1);
+            if (commits.size() == 1)
+                return;
+            
+            IndexCommitPoint oldestCommitPoint = commits.get(0);
+            
+            Set<String> toSave = new HashSet<String>(); 
+            
+            for (RefCountedIndexReader or : mOpenReaders) {
+                IndexCommitPoint orPoint = or.getCommitPoint();
+                if (orPoint == null)
+                    orPoint = oldestCommitPoint;
+                if (orPoint != null)
+                    toSave.add(orPoint.getSegmentsFileName());
+            }
+            
+            int commitsSize = commits.size();
+            for (int i = 0; i < commitsSize-1; i++) {
+                IndexCommitPoint cur = commits.get(i);
+                if (!toSave.contains(cur.getSegmentsFileName())) {
+                    cur.delete();
+                    ZimbraLog.index.info(this.toString()+ " Deleting commit point: "+cur.getSegmentsFileName()+" because it is referenced by open IndexReader");
+                } else
+                    ZimbraLog.index.info(this.toString()+ " Saving commit point: "+cur.getSegmentsFileName()+" because it is referenced by open IndexReader");
+            }
+        }
+    }
+
+    /**
+     * See {@link IndexDeletionPolicy.onInit(List)}
+     */
+    public void onInit(List c) throws IOException {
+        onCommit(c);
+    }
+    
+    IndexCommitPoint getCurrentCommitPoint() { return mCurrentCommitPoint; }
+    void onClose(RefCountedIndexReader ref) {
+        synchronized(mOpenReaders) {
+            mOpenReaders.remove(ref);
+        }
+    }
+    
+    private IndexCommitPoint mCurrentCommitPoint = null;
+    List<RefCountedIndexReader> mOpenReaders = new ArrayList<RefCountedIndexReader>();
 }
