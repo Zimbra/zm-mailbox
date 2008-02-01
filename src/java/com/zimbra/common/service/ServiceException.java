@@ -21,6 +21,13 @@
  */
 package com.zimbra.common.service;
 
+import java.security.SecureRandom;
+
+import org.apache.commons.codec.binary.Hex;
+
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.ExceptionToString;
+
 /**
  * @author schemers
  *
@@ -48,6 +55,7 @@ public class ServiceException extends Exception {
     
     protected String mCode;
     protected Argument[] mArgs = null;
+    private String mId;
     
     public static final String HOST            = "host";
     public static final String URL             = "url"; 
@@ -58,11 +66,12 @@ public class ServiceException extends Exception {
     
     public String toString() {
         StringBuilder toRet = new StringBuilder(super.toString());
+        toRet.append("\nExceptionId:").append(mId);
         toRet.append("\nCode:").append(mCode);
         if (mArgs != null) {
             for (Argument arg : mArgs) {
                 toRet.append(" Arg:").append(arg.toString()).append("");
-                }
+            }
         }
         
         return toRet.toString();
@@ -142,6 +151,19 @@ public class ServiceException extends Exception {
     public static final boolean SENDERS_FAULT = false; // client's fault
     private boolean mReceiver;
     
+    private static String genId() {
+        SecureRandom random = new SecureRandom();
+        byte[] key = new byte[8];
+        random.nextBytes(key);
+        String k = new String(Hex.encodeHex(key));
+        
+        String id = LC.zimbra_server_hostname.value() + ":" + Thread.currentThread().getName() + ":"+ System.currentTimeMillis() + ":" + k;
+        return id;
+    }
+    
+    private void setId() {
+        mId = genId();
+    }
     
     protected ServiceException(String message, String code, boolean isReceiversFault, Throwable cause, Argument... arguments)
     {
@@ -150,6 +172,8 @@ public class ServiceException extends Exception {
         mReceiver = isReceiversFault;
         
         mArgs = arguments;
+        
+        setId();
     }
     
     protected ServiceException(String message, String code, boolean isReceiversFault, Argument... arguments)
@@ -159,6 +183,8 @@ public class ServiceException extends Exception {
         mReceiver = isReceiversFault;
         
         mArgs = arguments;
+        
+        setId();
     }
 
     public String getCode() {
@@ -167,6 +193,14 @@ public class ServiceException extends Exception {
     
     public Argument[] getArgs() {
         return mArgs;
+    }
+    
+    public String getId() {
+        // return mId;
+        
+        // called by soapFault to fill the <trace> tag
+        // still returns the stack for now, will switch to return the mId when all the missing logs are added - bug 22927, comment 6, 10.
+        return ExceptionToString.ToString(this);
     }
     
     /**
