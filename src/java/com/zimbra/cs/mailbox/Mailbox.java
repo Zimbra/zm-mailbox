@@ -5998,9 +5998,10 @@ public class Mailbox {
 
             // accumulate all the info about deleted items; don't care about committed changes to external items
             MailItem.PendingDelete deleted = null;
-            for (Object obj : change.mOtherDirtyStuff)
+            for (Object obj : change.mOtherDirtyStuff) {
                 if (obj instanceof MailItem.PendingDelete)
                     deleted = ((MailItem.PendingDelete) obj).add(deleted);
+            }
 
             // delete any index entries associated with items deleted from db
             if (deleted != null && deleted.indexIds != null && deleted.indexIds.size() > 0 && mMailboxIndex != null) {
@@ -6026,7 +6027,7 @@ public class Mailbox {
                     } catch (IOException e) {
                         ZimbraLog.mailbox.warn("could not delete blob " + blob.getPath() + " during commit");
                     }
-            }
+                }
             }
         } catch (RuntimeException e) {
             ZimbraLog.mailbox.error("ignoring error during cache commit", e);
@@ -6044,7 +6045,7 @@ public class Mailbox {
     			&& (dirty.changedTypes & MailItem.typeToBitmask(MailItem.TYPE_APPOINTMENT)) != 0) {
     		FreeBusyProvider.mailboxChanged(this);
     	}
-    	
+
         // committed changes, so notify any listeners
         if (!mListeners.isEmpty() && dirty != null && dirty.hasNotifications()) {
             for (Session session : new ArrayList<Session>(mListeners)) {
@@ -6053,8 +6054,8 @@ public class Mailbox {
                 } catch (RuntimeException e) {
                     ZimbraLog.mailbox.error("ignoring error during notification", e);
                 }
+            }
         }
-    }
     }
 
     private void rollbackCache(MailboxChange change) {
