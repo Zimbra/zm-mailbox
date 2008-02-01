@@ -40,14 +40,12 @@ public class VirtualConversation extends Conversation {
         return -mId;
     }
 
-    @Override
-    boolean loadSenderList() throws ServiceException {
+    @Override boolean loadSenderList() throws ServiceException {
         mSenderList = new SenderList(getMessage());
         return false;
     }
 
-    @Override
-    SenderList recalculateMetadata(List<Message> msgs) throws ServiceException {
+    @Override SenderList recalculateMetadata(List<Message> msgs) throws ServiceException {
         Message msg = msgs.get(0);
         mData = wrapMessage(msg);
         mInheritedTagSet = new TagSet().updateFlags(msg.getFlagBitmask(), true).updateTags(msg.getTagBitmask(), true);
@@ -59,8 +57,7 @@ public class VirtualConversation extends Conversation {
         return mMailbox.getMessageById(getMessageId());
     }
 
-    @Override
-    List<Message> getMessages(byte sort) throws ServiceException {
+    @Override List<Message> getMessages(byte sort) throws ServiceException {
         List<Message> msgs = new ArrayList<Message>(1);
         msgs.add(getMessage());
         return msgs;
@@ -93,28 +90,23 @@ public class VirtualConversation extends Conversation {
         return data;
     }
 
-    @Override
-    void open(String hash) throws ServiceException {
+    @Override void open(String hash) throws ServiceException {
         DbMailItem.openConversation(hash, getMessage());
     }
 
-    @Override
-    void close(String hash) throws ServiceException {
+    @Override void close(String hash) throws ServiceException {
         DbMailItem.closeConversation(hash, getMessage());
     }
 
-    @Override
-    void alterTag(Tag tag, boolean add) throws ServiceException {
+    @Override void alterTag(Tag tag, boolean add) throws ServiceException {
         getMessage().alterTag(tag, add);
     }
 
-    @Override
-    void addChild(MailItem child) throws ServiceException {
+    @Override void addChild(MailItem child) throws ServiceException {
         throw MailServiceException.CANNOT_PARENT();
     }
 
-    @Override
-    void removeChild(MailItem child) throws ServiceException {
+    @Override void removeChild(MailItem child) throws ServiceException {
         if (child.getId() != getMessageId())
             throw MailServiceException.IS_NOT_CHILD();
         markItemDeleted();

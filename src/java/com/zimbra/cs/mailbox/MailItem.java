@@ -22,7 +22,16 @@ package com.zimbra.cs.mailbox;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -1657,6 +1666,7 @@ public abstract class MailItem implements Comparable<MailItem> {
      * 
      * @param folder        The folder to copy the item to.
      * @param id            The item id for the newly-created copy.
+     * @param parentId      The target parent ID for the new copy.
      * @param destVolumeId  The id of the Volume to put the copied blob in.
      * @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *        {@link ACL#RIGHT_READ} on the original item
@@ -1668,7 +1678,7 @@ public abstract class MailItem implements Comparable<MailItem> {
      *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
      *        permissions</ul>
      * @see com.zimbra.cs.store.Volume#getCurrentMessageVolume() */
-    MailItem copy(Folder folder, int id, short destVolumeId) throws IOException, ServiceException {
+    MailItem copy(Folder folder, int id, int parentId, short destVolumeId) throws IOException, ServiceException {
         if (!isCopyable())
             throw MailServiceException.CANNOT_COPY(mId);
         if (!folder.canContain(this))
@@ -1680,31 +1690,29 @@ public abstract class MailItem implements Comparable<MailItem> {
             throw ServiceException.PERM_DENIED("you do not have the required rights on the target folder");
 
         // we'll share the index entry if this item can't change out from under us
-        if (isIndexed() && !isMutable() && mData.indexId > 0)
-            alterTag(mMailbox.mCopiedFlag, true);
-
-        // if the copy or original is in Spam, put the copy in its own conversation
-        boolean detach = getParentId() <= 0 || isTagged(mMailbox.mDraftFlag) || inSpam() != folder.inSpam();
-
-        UnderlyingData data = mData.duplicate(id, folder.getId(), destVolumeId);
-        if (detach)
-            data.parentId = -1;
-
+        int indexId = mData.indexId;
         if (isIndexed()) {
-            if (data.indexId <= 0) { 
-                // if prev item wasn't indexed, index us if we aren't in spam.
-                if (!folder.inSpam()) 
-                    data.indexId = id;
-            } else if (isMutable()) {
-                // if prev item wasn't indexed AND is mutable, then split index 
-                if (folder.inSpam()) {
-                    data.indexId = -1;
-                } else {
-                    data.indexId = id;
-                }
-            }
+            // reindex the copy if existing item (a) wasn't indexed or (b) is mutable
+            if (indexId <= 0 || isMutable())
+                indexId = folder.inSpam() ? -1 : id;
+        }
+        boolean shared = indexId > 0 && indexId == mData.indexId;
+
+        // FIXME: can't use MailItem.alterTag() directly because it's a change to a system tag
+        if (shared && !isTagged(mMailbox.mCopiedFlag)) {
+            DbMailItem.alterTag(this, mMailbox.mCopiedFlag, true);
+            tagChanged(mMailbox.mCopiedFlag, true);
+            if (mData.parentId > 0)
+                getParent().inheritedTagChanged(mMailbox.mCopiedFlag, true);
         }
 
+        // if the copy or original is in Spam, put the copy in its own conversation
+        boolean detach = parentId <= 0 || isTagged(mMailbox.mDraftFlag) || inSpam() != folder.inSpam();
+
+        UnderlyingData data = mData.duplicate(id, folder.getId(), destVolumeId);
+        data.parentId = detach ? -1 : parentId;
+        data.indexId  = indexId;
+        data.flags   &= shared ? ~0 : ~Flag.BITMASK_COPIED; 
         data.metadata = encodeMetadata();
         data.contentChanged(mMailbox);
         DbMailItem.copy(this, id, folder, data.indexId, data.parentId, data.volumeId, data.metadata);
@@ -1722,14 +1730,14 @@ public abstract class MailItem implements Comparable<MailItem> {
         // if we're not sharing the index entry, we need to index the new item
         if (copy.getIndexId() == copy.getId())
             mMailbox.queueForIndexing(copy, false, null);
-        
+
         return copy;
     }
 
     /** Copies the item to the target folder.  Persists the new item to the
      *  database and the in-memory cache.  Copies to the same folder as the
      *  original item will succeed, but it is strongly suggested that
-     *  {@link #copy(Folder, int, short)} be used in that case.<p>
+     *  {@link #copy(Folder, int, int, short)} be used in that case.<p>
      * 
      *  Immutable copied items (both the original and the target) share the
      *  same entry in the index and get the {@link Flag#BITMASK_COPIED} flag to
@@ -1784,24 +1792,14 @@ public abstract class MailItem implements Comparable<MailItem> {
         data.metadata = encodeMetadata();
         data.imapId = copyId;
         
+        // we'll share the index entry if this item can't change out from under us
         if (isIndexed()) {
-            if (data.indexId <= 0) { 
-                // if prev item wasn't indexed, index us if we aren't in spam.
-                if (!target.inSpam()) 
-                    data.indexId = copyId;
-            } else if (isMutable()) {
-                // if prev item wasn't indexed AND is mutable, then split index 
-                if (target.inSpam()) {
-                    data.indexId = -1;
-                } else {
-                    data.indexId = copyId;
-                }
-            }
+            // reindex the copy if existing item (a) wasn't indexed or (b) is mutable
+            if (data.indexId <= 0 || isMutable())
+                data.indexId = target.inSpam() ? -1 : copyId;
         }
+        boolean shared = data.indexId > 0 && data.indexId == mData.indexId;  
 
-        // we've shared this index entry if we're using the old index entry and it is valid
-        boolean shared = (data.indexId == mData.indexId) && (data.indexId > 0);  
-        
         data.contentChanged(mMailbox);
         DbMailItem.icopy(this, data, shared);
 

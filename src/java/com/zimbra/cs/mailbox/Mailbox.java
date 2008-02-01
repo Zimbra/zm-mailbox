@@ -171,14 +171,14 @@ public class Mailbox {
         OperationContext octxt = null;
         TargetConstraint tcon  = null;
 
-        Integer  sync     = null;
-        Boolean  imap     = null;
-        long     size     = NO_CHANGE;
-        int      itemId   = NO_CHANGE;
-        int      changeId = NO_CHANGE;
-        int      contacts = NO_CHANGE;
+        Integer sync     = null;
+        Boolean imap     = null;
+        long    size     = NO_CHANGE;
+        int     itemId   = NO_CHANGE;
+        int     changeId = NO_CHANGE;
+        int     contacts = NO_CHANGE;
         int     accessed = NO_CHANGE;
-        int     recent  = NO_CHANGE;
+        int     recent   = NO_CHANGE;
         Pair<String,Metadata> config = null;
 
         PendingModifications mDirty = new PendingModifications();
@@ -4342,6 +4342,8 @@ public class Mailbox {
             beginTransaction("alterTag", octxt, redoRecorder);
             setOperationTargetConstraint(tcon);
 
+            Tag tag = (tagId < 0 ? getFlagById(tagId) : getTagById(tagId));
+
             MailItem[] items = getItemById(itemIds, type);
             for (MailItem item : items) {
                 if (!(item instanceof Conversation))
@@ -4355,7 +4357,6 @@ public class Mailbox {
                 if (tagId == Flag.ID_FLAG_UNREAD) {
                     item.alterUnread(addTag);
                 } else {
-                    Tag tag = (tagId < 0 ? getFlagById(tagId) : getTagById(tagId));
                     item.alterTag(tag, addTag);
                 }
             }
@@ -4439,16 +4440,41 @@ public class Mailbox {
 
             List<MailItem> result = new ArrayList<MailItem>();
 
+            Folder folder = getFolderById(folderId);
+
             MailItem[] items = getItemById(itemIds, type);
             for (MailItem item : items)
-            checkItemChangeID(item);
+                checkItemChangeID(item);
 
             for (MailItem item : items) {
-                int srcId = item.getId();
-                int newId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getDestId(srcId));
+                MailItem copy;
 
-                MailItem copy = item.copy(getFolderById(folderId), newId, item.getVolumeId() == -1 ? -1 : volumeId);
-                redoRecorder.setDestId(srcId, newId);
+                if (item instanceof Conversation) {
+                    // this should be done in Conversation.copy(), but redolog issues make that impossible
+                    Conversation conv = (Conversation) item;
+                    List<Message> msgs = new ArrayList<Message>((int) conv.getSize());
+                    for (Message original : conv.getMessages(DbSearch.SORT_NONE)) {
+                        if (!original.canAccess(ACL.RIGHT_READ))
+                            continue;
+                        int newId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getDestId(original.getId()));
+                        Message msg = (Message) original.copy(folder, newId, ID_AUTO_INCREMENT, volumeId);
+                        msgs.add(msg);
+                        redoRecorder.setDestId(original.getId(), newId);
+                    }
+                    if (msgs.isEmpty()) {
+                        throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
+                    } else if (msgs.size() == 1) {
+                        copy = msgs.get(0).getParent();
+                    } else {
+                        int newId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getDestId(conv.getId()));
+                        copy = Conversation.create(this, newId, msgs.toArray(new Message[msgs.size()]));
+                        redoRecorder.setDestId(conv.getId(), newId);
+                    }
+                } else {
+                    int newId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getDestId(item.getId()));
+                    copy = item.copy(folder, newId, item.getParentId(), item.getVolumeId() == -1 ? -1 : volumeId);
+                    redoRecorder.setDestId(item.getId(), newId);
+                }
 
                 result.add(copy);
             }

@@ -158,26 +158,22 @@ public class Message extends MailItem {
 
     /** Returns the raw subject of the message.  This is taken directly from
      *  the <tt>Subject:</tt> header with no processing. */
-    @Override
-    public String getSubject() {
+    @Override public String getSubject() {
         return (mRawSubject == null ? "" : mRawSubject);
     }
 
     /** Returns the <tt>From:</tt> header of the message if available;
      *  if not, returns the <tt>Sender:</tt> header. */
-    @Override
-    public String getSender() {
+    @Override public String getSender() {
         return (mSender == null ? "" : mSender);
     }
 
-    @Override
-    public String getSortSubject() {
+    @Override public String getSortSubject() {
         String subject = getNormalizedSubject();
         return subject.toUpperCase().substring(0, Math.min(DbMailItem.MAX_SUBJECT_LENGTH, subject.length()));
     }
 
-    @Override
-    public String getSortSender() {
+    @Override public String getSortSender() {
         String sender = new ParsedAddress(getSender()).getSortString();
         return sender.toUpperCase().substring(0, Math.min(DbMailItem.MAX_SENDER_LENGTH, sender.length()));
     }
@@ -468,8 +464,7 @@ public class Message extends MailItem {
      *  uncached {@link Conversation}s when a {@link Message} changes state.
      * 
      * @param delta  The change in unread count for this item. */
-    @Override
-    protected void updateUnread(int delta) throws ServiceException {
+    @Override protected void updateUnread(int delta) throws ServiceException {
         if (delta == 0 || !trackUnread())
             return;
         markItemModified(Change.MODIFIED_UNREAD);
@@ -493,12 +488,11 @@ public class Message extends MailItem {
 
     /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *         {@link ACL#RIGHT_READ} on the original item */
-    @Override
-    MailItem copy(Folder folder, int id, short destVolumeId) throws IOException, ServiceException {
-        Message copy = (Message) super.copy(folder, id, destVolumeId);
+    @Override MailItem copy(Folder folder, int id, int parentId, short destVolumeId) throws IOException, ServiceException {
+        Message copy = (Message) super.copy(folder, id, parentId, destVolumeId);
 
         Conversation parent = (Conversation) getParent();
-        if (parent instanceof VirtualConversation && !isDraft() && inSpam() == folder.inSpam()) {
+        if (parent instanceof VirtualConversation && parent.getId() == parentId && !isDraft() && inSpam() == folder.inSpam()) {
             Conversation conv = mMailbox.createConversation(new Message[] { this, copy }, Mailbox.ID_AUTO_INCREMENT);
             DbMailItem.changeOpenTarget(Mailbox.getHash(getNormalizedSubject()), this, conv.getId());
             parent.removeChild(this);
@@ -506,8 +500,7 @@ public class Message extends MailItem {
         return copy;
     }
 
-    @Override
-    public void reindex(IndexItem redo, boolean deleteFirst, Object indexData) throws ServiceException {
+    @Override public void reindex(IndexItem redo, boolean deleteFirst, Object indexData) throws ServiceException {
         MailboxIndex mi = mMailbox.getMailboxIndex();
         if (mi == null)
             return;
@@ -533,8 +526,7 @@ public class Message extends MailItem {
         reanalyze(pm);
     }
 
-    @Override
-    void reanalyze(Object data) throws ServiceException {
+    @Override void reanalyze(Object data) throws ServiceException {
         if (!(data instanceof ParsedMessage))
             throw ServiceException.FAILURE("cannot reanalyze non-ParsedMessage object", null);
 
@@ -605,8 +597,7 @@ public class Message extends MailItem {
             ((VirtualConversation) parent).recalculateMetadata(Arrays.asList(new Message[] { this } ));
     }
 
-    @Override
-    void detach() throws ServiceException {
+    @Override void detach() throws ServiceException {
         MailItem parent = getParent();
         if (!(parent instanceof Conversation))
             return;
@@ -624,8 +615,7 @@ public class Message extends MailItem {
     }
 
 
-    @Override
-    void delete(DeleteScope scope, boolean writeTombstones) throws ServiceException {
+    @Override void delete(DeleteScope scope, boolean writeTombstones) throws ServiceException {
         MailItem parent = getParent();
         if (parent instanceof Conversation && ((Conversation) parent).getMessageCount() == 1)
             parent.delete(DeleteScope.ENTIRE_ITEM, writeTombstones);
@@ -634,8 +624,7 @@ public class Message extends MailItem {
     }
 
 
-    @Override
-    void decodeMetadata(Metadata meta) throws ServiceException {
+    @Override void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
 
         mSender = meta.get(Metadata.FN_SENDER, null);
@@ -664,8 +653,7 @@ public class Message extends MailItem {
             mRawSubject = rawSubject;
     }
 
-    @Override
-    Metadata encodeMetadata(Metadata meta) {
+    @Override Metadata encodeMetadata(Metadata meta) {
         return encodeMetadata(meta, mColor, mVersion, mSender, mRecipients, mFragment, mData.subject, mRawSubject, mDraftInfo, mCalendarItemInfos);
     }
 
@@ -714,8 +702,7 @@ public class Message extends MailItem {
     private static final String CN_RECIPIENTS = "to";
     private static final String CN_FRAGMENT   = "fragment";
 
-    @Override
-    public String toString() {
+    @Override public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("message: {");
         appendCommonMembers(sb);
