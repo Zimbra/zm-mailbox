@@ -545,9 +545,6 @@ public class ImapImport implements MailItemImport {
                     int trackedFlags = trackedMsg.getTrackedFlags();
                     int remoteFlags = getZimbraFlags(remoteMsg.getFlags());
                     int flags = getNewFlags(localFlags, trackedFlags, remoteFlags);
-                    ZimbraLog.datasource.debug("Found message with UID %d on both sides; syncing flags: local=%s, tracked=%s, remote=%s, new=%s",
-                        uid, Flag.bitmaskToFlags(localFlags), Flag.bitmaskToFlags(trackedFlags),
-                        Flag.bitmaskToFlags(remoteFlags), Flag.bitmaskToFlags(flags));
                     boolean updated = false;
                     if (flags != localFlags) {
                         // Local flags changed
@@ -565,6 +562,9 @@ public class ImapImport implements MailItemImport {
                     }
                     if (updated) {
                         numUpdated++;
+                        ZimbraLog.datasource.debug("Found message with UID %d on both sides; syncing flags: local=%s, tracked=%s, remote=%s, new=%s",
+                            uid, Flag.bitmaskToFlags(localFlags), Flag.bitmaskToFlags(trackedFlags),
+                            Flag.bitmaskToFlags(remoteFlags), Flag.bitmaskToFlags(flags));
                     } else {
                         numMatched++;
                     }
