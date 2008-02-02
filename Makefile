@@ -22,7 +22,7 @@ JAVA_BINARY = /usr/bin/java
 PUSHED_EXT := jnilib.MacOSX.ppc
 endif
 
-ifeq ($(BUILD_PLATFORM), MACOSXx86)
+ifeq (MACOSXx86,$(findstring MACOSXx86,$(BUILD_PLATFORM)))   
 JAVAINC := -I/System/Library/Frameworks/JavaVM.framework/Headers
 SHARED := -dynamiclib
 MACDEF := -DDARWIN
