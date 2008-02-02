@@ -1049,15 +1049,15 @@ public class LC {
         javamail_smtp_debug.setDoc("Whether to enable javamail debug for SMTP.");
         
         javamail_pop3_timeout = new KnownKey("javamail_pop3_timeout");
-        javamail_pop3_timeout.setDefault("30");
+        javamail_pop3_timeout.setDefault("60");
         javamail_pop3_timeout.setDoc("POP3 timeout in seconds.");
         
         javamail_imap_timeout = new KnownKey("javamail_imap_timeout");
-        javamail_imap_timeout.setDefault("30");
+        javamail_imap_timeout.setDefault("60");
         javamail_imap_timeout.setDoc("IMAP timeout in seconds.");
         
         javamail_smtp_timeout = new KnownKey("javamail_smtp_timeout");
-        javamail_smtp_timeout.setDefault("30");
+        javamail_smtp_timeout.setDefault("60");
         javamail_smtp_timeout.setDoc("SMTP timeout in seconds.");
     }
 }
