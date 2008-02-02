@@ -968,7 +968,7 @@ public class LC {
             new KnownKey("data_source_trust_self_signed_certs", "false",
             "Allow self-signed certificates when connecting to a data source over SSL.");
         data_source_fast_fetch =
-            new KnownKey("data_source_fast_fetch", "false", "Enable faster downloads in imap folder import (EXPERIMENTAL)");
+            new KnownKey("data_source_fast_fetch", "true", "Enable faster downloads in imap folder import (EXPERIMENTAL)");
         data_source_fetch_size =
             new KnownKey("data_source_fetch_size", "100", "maximum number of imap messages to FETCH in each request (EXPERIMENTAL)");
         
