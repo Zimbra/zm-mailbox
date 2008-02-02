@@ -33,6 +33,7 @@ import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZImapDataSource;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMessage;
+import com.zimbra.cs.mailbox.Mailbox;
 
 public class TestImapImport
 extends TestCase {
@@ -102,38 +103,54 @@ extends TestCase {
     
     public void testImapImport()
     throws Exception {
+        List<ZMessage> msgs;
+        ZMessage msg;
         // Remote: add 1 message
         ZimbraLog.test.info("Testing adding message to remote inbox.");
         String remoteQuery = "in:inbox msg1";
-        TestUtil.addMessage(mRemoteMbox, NAME_PREFIX + " msg1");
+        TestUtil.addMessage(mRemoteMbox, NAME_PREFIX + " msg1", Integer.toString(Mailbox.ID_FOLDER_INBOX), "u");
         checkMsgCount(mRemoteMbox, remoteQuery, 1);
         assertNull(mLocalMbox.getFolderByPath(LOCAL_PATH_INBOX));
+        msgs = TestUtil.search(mRemoteMbox, remoteQuery);
+        assertEquals("Message count in remote inbox", 1, msgs.size());
+        msg = msgs.get(0);
+        assertTrue("Remote message is read", msg.isUnread());
 
         importImap();
 
         String localInboxQuery = "in:" + LOCAL_PATH_INBOX;
         checkMsgCount(mLocalMbox, localInboxQuery, 1);
+        msgs = TestUtil.search(mRemoteMbox, remoteQuery);
+        msg = msgs.get(0);
+        assertTrue("Remote message is read", msg.isUnread());
         compare();
-        
+
         
         // Remote: flag message
         ZimbraLog.test.info("Testing flag.");
-        List<ZMessage> msgs = TestUtil.search(mRemoteMbox, remoteQuery);
+        msgs = TestUtil.search(mRemoteMbox, remoteQuery);
         assertEquals("Message count in remote inbox", 1, msgs.size());
-        String remoteId = msgs.get(0).getId();
+        msg = msgs.get(0);
+        assertTrue("Remote message is read", msg.isUnread());
+        String remoteId = msg.getId();
         mRemoteMbox.flagMessage(remoteId, true);
         
-        // Make sure local copy is not flagged
+        // Make sure local copy is not flagged or read
         msgs = TestUtil.search(mLocalMbox, localInboxQuery);
         assertEquals("Message count in local inbox", 1, msgs.size());
-        assertFalse("Local message is flagged", msgs.get(0).isFlagged());
-        
+        msg = msgs.get(0);
+        assertFalse("Local message is flagged", msg.isFlagged());
+        assertTrue("Local message is read", msg.isUnread());
+
         importImap();
         
-        // Make sure that local copy is now flagged
+        // Make sure that local copy is now flagged but still unread
         msgs = TestUtil.search(mLocalMbox, localInboxQuery);
         assertEquals("Message count in local inbox", 1, msgs.size());
-        assertTrue("Local message is flagged", msgs.get(0).isFlagged());
+        msg = msgs.get(0);
+        assertTrue("Local message is flagged", msg.isFlagged());
+        assertTrue("Local message is read", msg.isUnread());
+
         compare();
         
         
@@ -306,7 +323,9 @@ extends TestCase {
             ZMessage msg1 = msgMap.remove(id);
             assertNotNull("Found message '" + msg2.getSubject() + "' in mbox2 but not in mbox1", msg1);
             assertEquals("Message content", msg1.getContent(), msg2.getContent());
-            assertEquals("Flags for message '" + msg1.getSubject() + "' don't match", msg1.getFlags(), msg2.getFlags());
+            String f1 = msg1.getFlags() != null ? msg1.getFlags() : "";
+            String f2 = msg2.getFlags() != null ? msg2.getFlags() : "";
+            assertEquals("Flags for message '" + msg1.getSubject() + "' don't match", f1, f2);
         }
         
         // Fail if there are any remaining messages

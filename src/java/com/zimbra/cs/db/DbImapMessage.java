@@ -41,26 +41,27 @@ public class DbImapMessage {
     /**
      * Stores IMAP message tracker data.
      */
-    public static void storeImapMessage(Mailbox mbox, int localFolderId, long remoteUid, int localItemId)
+    public static void storeImapMessage(Mailbox mbox, int localFolderId, long remoteUid, int localItemId, int flags)
     throws ServiceException
     {
         Connection conn = null;
         PreparedStatement stmt = null;
         
         ZimbraLog.datasource.debug(
-            "Storing IMAP message tracker: mboxId=%d, localFolderId=%d, remoteUid=%d, localItemId=%d",
-            mbox.getId(), localFolderId, remoteUid, localItemId);
+            "Storing IMAP message tracker: mboxId=%d, localFolderId=%d, remoteUid=%d, localItemId=%d flags=%s",
+            mbox.getId(), localFolderId, remoteUid, localItemId, Flag.bitmaskToFlags(flags));
 
         try {
             conn = DbPool.getConnection();
             stmt = conn.prepareStatement(
                 "INSERT INTO " + getTableName(mbox) +
-                " (mailbox_id, imap_folder_id, uid, item_id) " +
-                "VALUES (?, ?, ?, ?)");
+                " (mailbox_id, imap_folder_id, uid, item_id, flags) " +
+                "VALUES (?, ?, ?, ?, ?)");
             stmt.setInt(1, mbox.getId());
             stmt.setInt(2, localFolderId);
             stmt.setLong(3, remoteUid);
             stmt.setInt(4, localItemId);
+            stmt.setInt(5, flags);
             stmt.executeUpdate();
             conn.commit();
         } catch (SQLException e) {
@@ -71,6 +72,31 @@ public class DbImapMessage {
         }
     }
 
+    public static void setFlags(Mailbox mbox, int itemId, int flags)
+        throws ServiceException
+    {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ZimbraLog.datasource.debug(
+            "Updating IMAP message tracker flags: mboxId=%d, localItemId=%d flags=%s",
+            mbox.getId(), itemId, Flag.bitmaskToFlags(flags));
+        try {
+            conn = DbPool.getConnection();
+            stmt = conn.prepareStatement(
+                "UPDATE " + getTableName(mbox) + " SET flags = ?" +
+                " WHERE mailbox_id = ? AND item_id = ?");
+            stmt.setInt(1, flags);
+            stmt.setInt(2, mbox.getId());
+            stmt.setInt(3, itemId);
+            stmt.executeUpdate();
+            conn.commit();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Unable to update IMAP message data", e);
+        } finally {
+            if (stmt != null) DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+    }
     /**
      * Deletes IMAP message tracker data.
      */
@@ -144,7 +170,7 @@ public class DbImapMessage {
         try {
             conn = DbPool.getConnection();
             stmt = conn.prepareStatement(
-                "SELECT imap.uid, imap.item_id, mi.unread, mi.flags " +
+                "SELECT imap.uid, imap.item_id, imap.flags as tflags, mi.unread, mi.flags " +
                 "FROM " + getTableName(mbox) + " imap " +
                 "  LEFT OUTER JOIN " + DbMailItem.getMailItemTableName(mbox) + " mi " +
                 "  ON imap.mailbox_id = mi.mailbox_id AND imap.item_id = mi.id " + 
@@ -159,8 +185,9 @@ public class DbImapMessage {
                 int itemId = rs.getInt("item_id");
                 int flags = rs.getInt("flags");
                 int unread = rs.getInt("unread");
+                int tflags = rs.getInt("tflags");
                 flags = unread > 0 ? (flags | Flag.BITMASK_UNREAD) : (flags & ~Flag.BITMASK_UNREAD);
-                imapMessages.add(new ImapMessage(uid, itemId, flags));
+                imapMessages.add(new ImapMessage(uid, itemId, flags, tflags));
             }
             rs.close();
             stmt.close();
