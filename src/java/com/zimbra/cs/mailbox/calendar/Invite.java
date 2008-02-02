@@ -1879,6 +1879,7 @@ public class Invite {
     public void addAlarm(Alarm alarm) {
         mAlarms.add(alarm);
     }
+    public List<Alarm> getAlarms() { return mAlarms; }
     
     /**
      * Clear this Invite's alarms

@@ -25,8 +25,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
@@ -2356,5 +2358,120 @@ public abstract class CalendarItem extends MailItem {
             return new Pair<Long, Alarm>(triggerAt, theAlarm);
         else
             return null;
+    }
+
+    public static class NextAlarms {
+        private Map<Integer, Long> mTriggerMap;
+        private Map<Integer, Long> mInstStartMap;
+        public NextAlarms() {
+            mTriggerMap = new HashMap<Integer, Long>();
+            mInstStartMap = new HashMap<Integer, Long>();
+        }
+        public void add(int pos, long triggerAt, long instStart) {
+            mTriggerMap.put(pos, triggerAt);
+            mInstStartMap.put(pos, instStart);
+        }
+        public long getTriggerTime(int pos) {
+            Long triggerAt = mTriggerMap.get(pos);
+            if (triggerAt != null)
+                return triggerAt.longValue();
+            else
+                return 0;
+        }
+        public long getInstStart(int pos) {
+            Long start = mInstStartMap.get(pos);
+            if (start != null)
+                return start.longValue();
+            else
+                return 0;
+        }
+        public Iterator<Integer> posIterator() {
+            return mTriggerMap.keySet().iterator();
+        }
+    }
+
+    /**
+     * Returns the next trigger times for all alarms defined on the given Invite.
+     * @param inv
+     * @param lastAt Last trigger time for the alarms.  Next trigger times are later than this value.
+     * @return NextAlarms object that tells trigger time and instance start time by alarm position.
+     *         It will not contain alarm position if that alarm doesn't have next trigger time later
+     *         than its last trigger time.
+     */
+    public NextAlarms computeNextAlarms(Invite inv, long lastAt) {
+        int numAlarms = inv.getAlarms().size();
+        Map<Integer, Long> lastAlarmsAt = new HashMap<Integer, Long>(numAlarms);
+        for (int i = 0; i < numAlarms; i++) {
+            lastAlarmsAt.put(i, lastAt);
+        }
+        return computeNextAlarms(inv, lastAlarmsAt);
+    }
+
+    /**
+     * Returns the next trigger times for alarms defined on the given Invite.
+     * @param inv
+     * @param lastAlarmsAt Map key is the 0-based alarm position and value is the last trigger time
+     *                     for that alarm.
+     * @return NextAlarms object that tells trigger time and instance start time by alarm position.
+     *         It will not contain alarm position if that alarm doesn't have next trigger time later
+     *         than its last trigger time.
+     */
+    public NextAlarms computeNextAlarms(Invite inv, Map<Integer, Long> lastAlarmsAt) {
+        NextAlarms result = new NextAlarms();
+
+        if (inv.getRecurrence() == null) {
+            // non-recurring appointment or exception instance
+            long instStart = 0, instEnd = 0;
+            ParsedDateTime dtstart = inv.getStartTime();
+            if (dtstart != null)
+                instStart = dtstart.getUtcTime();
+            ParsedDateTime dtend = inv.getEffectiveEndTime();
+            if (dtend != null)
+                instEnd = dtend.getUtcTime();
+            List<Alarm> alarms = inv.getAlarms();
+            int index = 0;
+            for (Iterator<Alarm> iter = alarms.iterator(); iter.hasNext(); index++) {
+                Alarm alarm = iter.next();
+                Long lastAtLong = lastAlarmsAt.get(index);
+                if (lastAtLong != null) {
+                    long lastAt = lastAtLong.longValue();
+                    long triggerAt = alarm.getTriggerTime(instStart, instEnd);
+                    if (lastAt < triggerAt)
+                        result.add(index, triggerAt, instStart);
+                }
+            }
+        } else {
+            // series invite of recurring appointment
+            long oldest;
+            oldest = Long.MAX_VALUE;
+            for (long lastAt : lastAlarmsAt.values()) {
+                oldest = Math.min(oldest, lastAt);
+            }
+            Collection<Instance> instances = expandInstances(oldest, getEndTime(), false);
+
+            List<Alarm> alarms = inv.getAlarms();
+            int index = 0;
+            for (Iterator<Alarm> iter = alarms.iterator(); iter.hasNext(); index++) {
+                Alarm alarm = iter.next();
+                Long lastAtLong = lastAlarmsAt.get(index);
+                if (lastAtLong != null) {
+                    long lastAt = lastAtLong.longValue();
+                    for (Instance inst : instances) {
+                        if (inst.isException())  // only look at non-exception instances
+                            continue;
+                        long instStart = inst.getStart();
+                        if (instStart < lastAt && !inst.isTimeless())
+                            continue;
+                        long triggerAt = alarm.getTriggerTime(instStart, inst.getEnd());
+                        if (lastAt < triggerAt) {
+                            result.add(index, triggerAt, instStart);
+                            // We can break now because we know alarms on later instances are even later.
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return result;
     }
 }

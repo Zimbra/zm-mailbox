@@ -62,6 +62,13 @@ public final class ParsedDateTime {
         return new ParsedDateTime(new java.util.Date(utc));
     }
     
+    public static ParsedDateTime fromUTCTime(long millis, ICalTimeZone tz) {
+        GregorianCalendar cal = new GregorianCalendar();
+        cal.setTimeInMillis(millis);
+        cal.setTimeZone(tz);
+        return new ParsedDateTime(cal, tz, true);
+    }
+
     public static ParsedDateTime parseUtcOnly(String str) throws ParseException {
         return parse(str, null, null, null, true);
     }    
