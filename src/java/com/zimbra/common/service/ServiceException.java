@@ -26,7 +26,6 @@ import java.security.SecureRandom;
 import org.apache.commons.codec.binary.Hex;
 
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.util.ExceptionToString;
 
 /**
  * @author schemers
@@ -151,7 +150,7 @@ public class ServiceException extends Exception {
     public static final boolean SENDERS_FAULT = false; // client's fault
     private boolean mReceiver;
     
-    private static String genId() {
+    private String genId() {
         SecureRandom random = new SecureRandom();
         byte[] key = new byte[8];
         random.nextBytes(key);
@@ -159,6 +158,22 @@ public class ServiceException extends Exception {
         
         String id = LC.zimbra_server_hostname.value() + ":" + Thread.currentThread().getName() + ":"+ System.currentTimeMillis() + ":" + k;
         return id;
+    }
+    
+    /**
+     * This is for exceptions that are usually not logged and thus need to include an unique "label" 
+     * in the exception id so the thrown location can be identified by the exception id alone
+     * (without referencing the log - the stack won't be in the log).
+     * 
+     * @param callSite call site of the stack where the caller wants include in the exception id
+     */
+    public void setIdLabel(StackTraceElement callSite) {
+        String fileName = callSite.getFileName();
+        int i = fileName.lastIndexOf('.');
+        if (i != -1)
+            fileName = fileName.substring(0, i);
+        
+        mId = mId + ":" + fileName + callSite.getLineNumber();
     }
     
     private void setId() {
@@ -196,11 +211,7 @@ public class ServiceException extends Exception {
     }
     
     public String getId() {
-        // return mId;
-        
-        // called by soapFault to fill the <trace> tag
-        // still returns the stack for now, will switch to return the mId when all the missing logs are added - bug 22927, comment 6, 10.
-        return ExceptionToString.ToString(this);
+        return mId;
     }
     
     /**
