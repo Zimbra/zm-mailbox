@@ -286,6 +286,10 @@ public class LC {
     public static final KnownKey javamail_imap_timeout;
     public static final KnownKey javamail_smtp_timeout;
     
+    public static final KnownKey javamail_pop3_enable_starttls;
+    public static final KnownKey javamail_imap_enable_starttls;
+    public static final KnownKey javamail_smtp_enable_starttls;
+    
     static {
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  " +
                 "Changing this setting does not immediately reflect in MySQL server.  " +
@@ -1059,5 +1063,17 @@ public class LC {
         javamail_smtp_timeout = new KnownKey("javamail_smtp_timeout");
         javamail_smtp_timeout.setDefault("60");
         javamail_smtp_timeout.setDoc("SMTP timeout in seconds.");
+        
+        javamail_pop3_enable_starttls = new KnownKey("javamail_pop3_enable_starttls");
+        javamail_pop3_enable_starttls.setDefault("false");
+        javamail_pop3_enable_starttls.setDoc("Whether to enable STARTTLS POP3.");
+        
+        javamail_imap_enable_starttls = new KnownKey("javamail_imap_enable_starttls");
+        javamail_imap_enable_starttls.setDefault("false");
+        javamail_imap_enable_starttls.setDoc("Whether to enable STARTTLS for IMAP.");
+        
+        javamail_smtp_enable_starttls = new KnownKey("javamail_smtp_enable_starttls");
+        javamail_smtp_enable_starttls.setDefault("false");
+        javamail_smtp_enable_starttls.setDoc("Whether to enable STARTTLS for SMTP.");
     }
 }
