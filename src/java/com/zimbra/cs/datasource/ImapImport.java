@@ -95,6 +95,10 @@ public class ImapImport implements MailItemImport {
         	props.setProperty("mail.imap.idextension", idExt);
         	props.setProperty("mail.imaps.idextension", idExt);
         }
+        if (LC.javamail_imap_enable_starttls.booleanValue()) {
+        	props.setProperty("mail.imap.starttls.enable", "true");
+        	props.setProperty("mail.imaps.starttls.enable", "true");
+        }
         sSession = Session.getInstance(props);
         if (LC.javamail_imap_debug.booleanValue())
         	sSession.setDebug(true);
@@ -105,7 +109,10 @@ public class ImapImport implements MailItemImport {
         sscProps.setProperty("mail.imaps.socketFactory.class", DummySSLSocketFactory.class.getName());
         sscProps.setProperty("mail.imaps.socketFactory.fallback", "false");
         if (idExt != null)
-        	props.setProperty("mail.imaps.idextension", idExt);
+        	sscProps.setProperty("mail.imaps.idextension", idExt);
+        if (LC.javamail_imap_enable_starttls.booleanValue()) {
+        	sscProps.setProperty("mail.imaps.starttls.enable", "true");
+        }
         sSelfSignedCertSession = Session.getInstance(sscProps);
         if (LC.javamail_imap_debug.booleanValue())
         	sSelfSignedCertSession.setDebug(true);
@@ -393,6 +400,8 @@ public class ImapImport implements MailItemImport {
         	imapPath = folderPath;
         if (imapPath != null && separator != '/') {
             String[] parts = localFolder.getPath().split("/");
+            for (int i = 0; i < parts.length; ++i)
+            	parts[i] = parts[i].replace(separator, '/');
             imapPath = StringUtil.join("" + separator, parts);
         }
         return imapPath;
@@ -427,12 +436,14 @@ public class ImapImport implements MailItemImport {
         String relativePath = jmFolder.getFullName();
 
         // Change folder path to use our separator
-        if (separator != '/') {
-            // Make sure none of the elements in the path uses our path
-            // separator
-            char replaceChar = (separator == '-' ? 'x' : '-');
-            relativePath.replace('/', replaceChar);
-            relativePath.replace(separator, '/');
+        if (separator != '/' && (relativePath.indexOf(separator) >=0 || relativePath.indexOf('/') >= 0)) {
+            // Make sure none of the elements in the path uses our path separator
+        	String[] parts = relativePath.split("\\" + separator);
+        	for (int i = 0; i < parts.length; ++i) {
+        		//TODO: we need to deal with the case when the separator is not valid in zimbra folder name
+        		parts[i] = parts[i].replace('/', separator);
+        	}
+        	relativePath = StringUtil.join("/", parts);
         }
         
         String zimbraPath = ds.matchKnownLocalPath(relativePath);
@@ -562,9 +573,9 @@ public class ImapImport implements MailItemImport {
                     }
                     if (updated) {
                         numUpdated++;
-                        ZimbraLog.datasource.debug("Found message with UID %d on both sides; syncing flags: local=%s, tracked=%s, remote=%s, new=%s",
-                            uid, Flag.bitmaskToFlags(localFlags), Flag.bitmaskToFlags(trackedFlags),
-                            Flag.bitmaskToFlags(remoteFlags), Flag.bitmaskToFlags(flags));
+//                        ZimbraLog.datasource.debug("Found message with UID %d on both sides; syncing flags: local=%s, tracked=%s, remote=%s, new=%s",
+//                            uid, Flag.bitmaskToFlags(localFlags), Flag.bitmaskToFlags(trackedFlags),
+//                            Flag.bitmaskToFlags(remoteFlags), Flag.bitmaskToFlags(flags));
                     } else {
                         numMatched++;
                     }

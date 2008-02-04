@@ -73,6 +73,10 @@ implements MailItemImport {
         props.setProperty("mail.pop3s.timeout", Long.toString(timeout));    	
 		props.setProperty("mail.pop3s.socketFactory.class", CustomSSLSocketFactory.class.getName());
         props.setProperty("mail.pop3s.socketFactory.fallback", "false");
+        if (LC.javamail_pop3_enable_starttls.booleanValue()) {
+        	props.setProperty("mail.pop3.starttls.enable", "true");
+        	props.setProperty("mail.pop3s.starttls.enable", "true");
+        }
         sSession = Session.getInstance(props);
         if (LC.javamail_pop3_debug.booleanValue())
         	sSession.setDebug(true);
@@ -83,6 +87,8 @@ implements MailItemImport {
         sscProps.setProperty("mail.pop3s.socketFactory.class", DummySSLSocketFactory.class.getName());
         sscProps.setProperty("mail.pop3s.socketFactory.fallback", "false");
         sSelfSignedCertSession = Session.getInstance(sscProps);
+        if (LC.javamail_pop3_enable_starttls.booleanValue())
+        	sscProps.setProperty("mail.pop3s.starttls.enable", "true");
         if (LC.javamail_pop3_debug.booleanValue())
         	sSelfSignedCertSession.setDebug(true);
         
