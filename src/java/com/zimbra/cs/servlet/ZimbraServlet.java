@@ -160,8 +160,9 @@ public class ZimbraServlet extends HttpServlet {
         boolean allowed = isRequestOnAllowedPort(request);
         if (!allowed) {
         	SoapProtocol soapProto = SoapProtocol.Soap12;
-        	Element fault = SoapProtocol.Soap12.soapFault(
-        			ServiceException.FAILURE("Request not allowed on port " + request.getLocalPort(), null));
+        	ServiceException e = ServiceException.FAILURE("Request not allowed on port " + request.getLocalPort(), null);
+        	ZimbraLog.soap.warn(null, e);
+        	Element fault = SoapProtocol.Soap12.soapFault(e);
         	Element envelope = SoapProtocol.Soap12.soapEnvelope(fault);
         	byte[] soapBytes = envelope.toUTF8();
         	response.setContentType(soapProto.getContentType());
