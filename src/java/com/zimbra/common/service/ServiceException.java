@@ -63,6 +63,17 @@ public class ServiceException extends Exception {
     
     public static final String PROXIED_FROM_ACCT  = "proxiedFromAcct"; // exception proxied from remote account
     
+    // to ensure that exception id is unique across multiple servers.
+    private static String ID_KEY = null;
+    
+    static {
+        SecureRandom random = new SecureRandom();
+        byte[] key = new byte[8];
+        random.nextBytes(key);
+        ID_KEY = new String(Hex.encodeHex(key));
+    }
+    
+    
     public String toString() {
         StringBuilder toRet = new StringBuilder(super.toString());
         toRet.append("\nExceptionId:").append(mId);
@@ -150,22 +161,12 @@ public class ServiceException extends Exception {
     public static final boolean SENDERS_FAULT = false; // client's fault
     private boolean mReceiver;
     
-    private String genId() {
-        SecureRandom random = new SecureRandom();
-        byte[] key = new byte[8];
-        random.nextBytes(key);
-        String k = new String(Hex.encodeHex(key));
-        
-        String id = LC.zimbra_server_hostname.value() + ":" + Thread.currentThread().getName() + ":"+ System.currentTimeMillis() + ":" + k;
-        return id;
-    }
-    
     /**
      * This is for exceptions that are usually not logged and thus need to include an unique "label" 
-     * in the exception id so the thrown location can be identified by the exception id alone
+     * in the exception id so the thrown(or instantiation) location can be identified by the exception id alone
      * (without referencing the log - the stack won't be in the log).
      * 
-     * @param callSite call site of the stack where the caller wants include in the exception id
+     * @param callSite call site of the stack where the caller wants to include in the exception id
      */
     public void setIdLabel(StackTraceElement callSite) {
         String fileName = callSite.getFileName();
@@ -177,7 +178,7 @@ public class ServiceException extends Exception {
     }
     
     private void setId() {
-        mId = genId();
+        mId = Thread.currentThread().getName() + ":"+ System.currentTimeMillis() + ":" + ID_KEY;
     }
     
     protected ServiceException(String message, String code, boolean isReceiversFault, Throwable cause, Argument... arguments)
