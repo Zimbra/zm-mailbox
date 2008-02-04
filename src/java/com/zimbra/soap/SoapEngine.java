@@ -89,8 +89,29 @@ public class SoapEngine {
         mDispatcher = new DocumentDispatcher();
     }
 
+    /*
+     * This is for callers that need to:
+     *    - enclose a SOAP fault in the envelope and return (without throwing the exception)
+     *    - log the exception at info level
+     */
     private Element soapFault(SoapProtocol soapProto, String msg, ServiceException e) {
         mLog.warn(msg, e);
+        return soapProto.soapEnvelope(soapProto.soapFault(e));
+    }
+    
+    /*
+     * This is for callers that need to:
+     *    - enclose a SOAP fault in the envelope and return (without throwing the exception)
+     *    - log the exception at debug level, which is not normally turned on
+     *    - append a unique label to the exception id (exception id is always included in the <trace> 
+     *      tag in the fault) so in the case when exception logging is not turned on we can identify 
+     *      the location where the exception was thrown.
+     */
+    private Element soapFaultWithNotes(SoapProtocol soapProto, String msg, ServiceException e) {
+        StackTraceElement[] s = Thread.currentThread().getStackTrace();
+        StackTraceElement callSite = s[3]; // third frame from top is the caller
+        e.setIdLabel(callSite);
+        mLog.debug(msg, e);
         return soapProto.soapEnvelope(soapProto.soapFault(e));
     }
     
@@ -303,21 +324,26 @@ public class SoapEngine {
                     // make sure that the authenticated account is still active and has not been deleted since the last request
                     //   note that delegated auth allows access unless the account's in maintenance mode
                     Account account = Provisioning.getInstance().get(AccountBy.id, acctId);
-                    if (!isGuestAccount &&
-                            (account == null || 
-                                    (delegatedAuth && account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE)) ||
-                                    (!delegatedAuth && !account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))))
-                        return soapProto.soapFault(ServiceException.AUTH_EXPIRED());
-
+                    if (account == null)
+                        return soapFaultWithNotes(soapProto, "acount " + acctId + " not found", ServiceException.AUTH_EXPIRED());
+                    
+                    if (delegatedAuth && account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE))
+                        return soapFaultWithNotes(soapProto, "delegated account in MAINTENANCE mode", ServiceException.AUTH_EXPIRED());
+                    
+                    if (!delegatedAuth && !account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
+                        return soapFaultWithNotes(soapProto, "account not active", ServiceException.AUTH_EXPIRED());
+                    
                     // if using delegated auth, make sure the "admin" is really an active admin account
                     if (delegatedAuth) {
                         Account admin = Provisioning.getInstance().get(AccountBy.id, at.getAdminAccountId());
                         if (admin == null)
-                            return soapProto.soapFault(ServiceException.AUTH_EXPIRED());
+                            return soapFaultWithNotes(soapProto, "delegating account " + at.getAdminAccountId() + " not found", ServiceException.AUTH_EXPIRED());
                         boolean isAdmin = admin.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false) ||
                         admin.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);
-                        if (!isAdmin || !admin.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
-                            return soapProto.soapFault(ServiceException.AUTH_EXPIRED());
+                        if (!isAdmin)
+                            return soapFaultWithNotes(soapProto, "delegating account is not an admin account", ServiceException.AUTH_EXPIRED());
+                        if (!admin.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
+                            return soapFaultWithNotes(soapProto, "delegating account is not active", ServiceException.AUTH_EXPIRED());
                     }
 
                     // also, make sure that the target account (if any) is active
@@ -328,7 +354,7 @@ public class SoapEngine {
                         if (!inactive && (!at.isAdmin() || !AccessManager.getInstance().canAccessAccount(at, target)))
                             inactive = !target.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE);
                         if (inactive)
-                            return soapProto.soapFault(AccountServiceException.ACCOUNT_INACTIVE(target == null ? zsc.getRequestedAccountId() : target.getName()));
+                            return soapFaultWithNotes(soapProto, "target account is not active", AccountServiceException.ACCOUNT_INACTIVE(target == null ? zsc.getRequestedAccountId() : target.getName()));
                     }
                 }
 
