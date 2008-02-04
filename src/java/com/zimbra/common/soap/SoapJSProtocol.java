@@ -83,7 +83,7 @@ public class SoapJSProtocol extends SoapProtocol {
         // FIXME: should really be a qualified "attribute"
         Element eError = eFault.addUniqueElement(DETAIL).addUniqueElement(ZimbraNamespace.E_ERROR);
         eError.addAttribute(ZimbraNamespace.E_CODE.getName(), e.getCode());
-        eError.addAttribute(ZimbraNamespace.E_TRACE.getName(), ExceptionToString.ToString(e));
+        eError.addAttribute(ZimbraNamespace.E_TRACE.getName(), e.getId());
         
         if (e.getArgs() != null) {
             for (ServiceException.Argument arg : e.getArgs()) {
