@@ -143,12 +143,14 @@ public class CalendarCollection extends Collection {
 	
 	private String findEventUid(List<Invite> invites) throws DavException {
 		String uid = null;
-		for (Invite i : invites)
-            if (i.getItemType() == MailItem.TYPE_APPOINTMENT) {
+		for (Invite i : invites) {
+			byte type = i.getItemType();
+            if (type == MailItem.TYPE_APPOINTMENT || type == MailItem.TYPE_TASK) {
 				if (uid != null && uid.compareTo(i.getUid()) != 0)
 					throw new DavException("too many events", HttpServletResponse.SC_BAD_REQUEST, null);
 				uid = i.getUid();
 			}
+		}
 		if (uid == null)
 			throw new DavException("no event in the request", HttpServletResponse.SC_BAD_REQUEST, null);
 		return uid;
