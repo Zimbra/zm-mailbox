@@ -3268,13 +3268,11 @@ public class Mailbox {
 
     public static class SetCalendarItemData {
         public Invite mInv;
-        public boolean mForce;
         public ParsedMessage mPm;
 
         public String toString() {
             StringBuilder toRet = new StringBuilder();
             toRet.append("inv:").append(mInv.toString()).append("\n");
-            toRet.append("force:").append(mForce ? "true\n" : "false\n");
             return toRet.toString();
         }
     }
@@ -3357,13 +3355,13 @@ public class Mailbox {
                             oldNextAlarm = alarmData.getNextAt();
 
                         calItem.setTags(flags, tags);
-                        calItem.processNewInvite(scid.mPm, scid.mInv, scid.mForce, folderId, volumeId,
+                        calItem.processNewInvite(scid.mPm, scid.mInv, folderId, volumeId,
                                                  nextAlarm, false, true);
                     }
                     redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId(), volumeId);
                 } else {
                     // exceptions
-                    calItem.processNewInvite(scid.mPm, scid.mInv, scid.mForce, folderId, volumeId, 0);
+                    calItem.processNewInvite(scid.mPm, scid.mInv, folderId, volumeId, 0);
                 }
             }
 
@@ -3514,15 +3512,19 @@ public class Mailbox {
         }
     }
 
-    public synchronized int[] addInvite(OperationContext octxt, Invite inv, int folderId,
-                                        boolean force, ParsedMessage pm, boolean removeAlarms)
+    public synchronized int[] addInvite(OperationContext octxt, Invite inv, int folderId)
     throws ServiceException {
-        return addInvite(octxt, inv, folderId, force, pm, 0, removeAlarms);
+        return addInvite(octxt, inv, folderId, null, false);
     }
 
-    public synchronized int[] addInvite(OperationContext octxt, Invite inv, int folderId, boolean force, ParsedMessage pm)
+    public synchronized int[] addInvite(OperationContext octxt, Invite inv, int folderId, ParsedMessage pm)
     throws ServiceException {
-        return addInvite(octxt, inv, folderId, force, pm, 0, false);
+        return addInvite(octxt, inv, folderId, pm, false);
+    }
+
+    public synchronized int[] addInvite(OperationContext octxt, Invite inv, int folderId, boolean removeAlarms)
+    throws ServiceException {
+        return addInvite(octxt, inv, folderId, null, removeAlarms);
     }
 
     /**
@@ -3531,7 +3533,6 @@ public class Mailbox {
      * message.
      * @param octxt
      * @param inv
-     * @param force if true, then force override the existing calendar item, false use normal RFC2446 sequencing rules
      * @param pm NULL is OK here
      * @param removeAlarms if true, remove alarms from the invite
      * 
@@ -3539,8 +3540,7 @@ public class Mailbox {
      * @throws ServiceException
      */
     public synchronized int[] addInvite(OperationContext octxt, Invite inv, int folderId,
-                                        boolean force, ParsedMessage pm, long nextAlarm,
-                                        boolean removeAlarms)
+                                        ParsedMessage pm, boolean removeAlarms)
     throws ServiceException {
         if (pm == null) {
             inv.setDontIndexMimeMessage(true); // the MimeMessage is fake, so we don't need to index it
@@ -3557,7 +3557,7 @@ public class Mailbox {
             throw ServiceException.FAILURE("Caught IOException", ioe);
         }
 
-        CreateInvite redoRecorder = new CreateInvite(mId, inv, folderId, data, force);
+        CreateInvite redoRecorder = new CreateInvite(mId, inv, folderId, data);
 
         boolean success = false;
         try {
@@ -3587,7 +3587,7 @@ public class Mailbox {
             } else {
                 if (!checkItemChangeID(calItem))
                     throw MailServiceException.MODIFY_CONFLICT();
-                calItem.processNewInvite(pm, inv, force, folderId, volumeId, nextAlarm);
+                calItem.processNewInvite(pm, inv, folderId, volumeId, 0, !removeAlarms, false);
             }
             if (calItem != null)
                 queueForIndexing(calItem, !calItemIsNew, null);
@@ -3673,7 +3673,7 @@ public class Mailbox {
                         "Unknown calendar item UID " + uid + " in mailbox " + getId());
                 return;
             }
-            if (calItem.processNewInviteReply(inv, false)) {
+            if (calItem.processNewInviteReply(inv)) {
                 queueForIndexing(calItem, false, null);
             }
             success = true;
@@ -5192,7 +5192,7 @@ public class Mailbox {
         for (Object obj : sdata.items) {
             try {
                 if (obj instanceof Invite)
-                    addInvite(octxtNoConflicts, (Invite) obj, folderId, true, null, removeAlarms);
+                    addInvite(octxtNoConflicts, (Invite) obj, folderId, removeAlarms);
                 else if (obj instanceof ParsedMessage)
                     addMessage(octxtNoConflicts, (ParsedMessage) obj, folderId, true, Flag.BITMASK_UNREAD, null);
             } catch (IOException e) {

@@ -38,18 +38,16 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
     private String mCalendarItemPartStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
     private Invite mInvite;
     private int mFolderId;
-    private boolean mForce;
     private byte[] mData;
     private short mVolumeId = -1;
     
     public CreateInvite() { }
 
     public CreateInvite(int mailboxId, Invite inv, int folderId,
-    					byte[] data, boolean force) {
+    					byte[] data) {
         setMailboxId(mailboxId);
         mInvite = inv;
         mFolderId = folderId;
-        mForce = force;
         mData = data;
     }
 
@@ -63,7 +61,6 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
         sb.append(", folder=").append(mFolderId);
     	if (getVersion().atLeast(1, 0))
 	        sb.append(", vol=").append(mVolumeId);
-        sb.append(", force=").append(mForce);
         sb.append(", dataLen=").append(mData != null ? mData.length : 0);
         ICalTimeZone localTz = mInvite.getTimeZoneMap().getLocalTimeZone();
         sb.append(", localTZ=").append(localTz.encodeAsMetadata().toString());
@@ -78,7 +75,8 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
         out.writeInt(mFolderId);
         if (getVersion().atLeast(1, 0))
             out.writeShort(mVolumeId);
-        out.writeBoolean(mForce);
+        out.writeBoolean(true);  // keep this for backward compatibility when there was mForce field
+                                 // in this class
         
         int dataLen = mData != null ? mData.length : 0;
         out.writeInt(dataLen);
@@ -98,7 +96,8 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
         mFolderId = in.readInt();
         if (getVersion().atLeast(1, 0))
             mVolumeId = in.readShort();
-        mForce = in.readBoolean();
+        in.readBoolean();  // keep this for backward compatibility when there was mForce field
+                           // in this class
         
         int dataLen = in.readInt();
         if (dataLen > 0) {
@@ -151,6 +150,6 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
     public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
 		ParsedMessage pm = new ParsedMessage(mData, getTimestamp(), mbox.attachmentsIndexingEnabled());
-		mbox.addInvite(getOperationContext(), mInvite, mFolderId, mForce, pm);
+		mbox.addInvite(getOperationContext(), mInvite, mFolderId, pm);
     }
 }

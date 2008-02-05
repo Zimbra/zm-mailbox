@@ -193,7 +193,7 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
             if (inv.getUid() == null)
                 inv.setUid(LdapUtil.generateUUID());
             // and add the invite to the calendar!
-            mFolder.getMailbox().addInvite(mCtxt, inv, mFolder.getId(), false, null, mRemoveAlarms);
+            mFolder.getMailbox().addInvite(mCtxt, inv, mFolder.getId(), mRemoveAlarms);
             if (ZimbraLog.calendar.isDebugEnabled()) {
                 if (inv.isEvent())
                     ZimbraLog.calendar.debug("Appointment imported: UID=" + inv.getUid());

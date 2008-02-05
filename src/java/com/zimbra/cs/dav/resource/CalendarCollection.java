@@ -257,7 +257,7 @@ public class CalendarCollection extends Collection {
 					}
 					*/
 				}
-				mbox.addInvite(ctxt.getOperationContext(), i, mId, false, null);
+				mbox.addInvite(ctxt.getOperationContext(), i, mId);
 			}
 			calItem = mbox.getCalendarItemByUid(ctxt.getOperationContext(), uid);
 			return new CalendarObject.LocalCalendarObject(ctxt, calItem);

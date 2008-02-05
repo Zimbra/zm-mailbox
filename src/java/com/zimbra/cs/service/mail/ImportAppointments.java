@@ -86,7 +86,7 @@ public class ImportAppointments extends MailDocumentHandler  {
                 if (inv.getUid() == null)
                     inv.setUid(LdapUtil.generateUUID());
                 // and add the invite to the calendar!
-                int[] invIds = mbox.addInvite(octxt, inv, iidFolder.getId(), false, null, removeAlarms);
+                int[] invIds = mbox.addInvite(octxt, inv, iidFolder.getId(), removeAlarms);
                 if (ids.length() > 0) ids.append(",");
                 ids.append(invIds[0]).append("-").append(invIds[1]);
             }

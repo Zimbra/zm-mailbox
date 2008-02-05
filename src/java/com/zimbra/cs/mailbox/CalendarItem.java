@@ -852,13 +852,13 @@ public abstract class CalendarItem extends MailItem {
     boolean processNewInvite(ParsedMessage pm, Invite invite,
                              int folderId, short volumeId)
     throws ServiceException {
-        return processNewInvite(pm, invite, false, folderId, volumeId, 0, true, false);
+        return processNewInvite(pm, invite, folderId, volumeId, 0, true, false);
     }
 
-    boolean processNewInvite(ParsedMessage pm, Invite invite, boolean force,
+    boolean processNewInvite(ParsedMessage pm, Invite invite,
                              int folderId, short volumeId, long nextAlarm)
     throws ServiceException {
-        return processNewInvite(pm, invite, force, folderId, volumeId, nextAlarm, false, false);
+        return processNewInvite(pm, invite, folderId, volumeId, nextAlarm, false, false);
     }
 
     /**
@@ -867,18 +867,13 @@ public abstract class CalendarItem extends MailItem {
      * CalendarItem table.
      * 
      * @param invite
-     * @param force if true, then force update to this appointment/task,
-     *              otherwise use RFC2446 sequencing rules
      * @return 
      *            TRUE if an update calendar was written, FALSE if the CalendarItem is 
      *            unchanged or deleted 
      */
-    boolean processNewInvite(ParsedMessage pm,
-                             Invite invite,
-                             boolean force, int folderId, short volumeId,
-                             long nextAlarm,
-                             boolean preserveAlarms,
-                             boolean replaceExistingInvites)
+    boolean processNewInvite(ParsedMessage pm, Invite invite,
+                             int folderId, short volumeId, long nextAlarm,
+                             boolean preserveAlarms, boolean replaceExistingInvites)
     throws ServiceException {
         invite.setHasAttachment(pm.hasAttachments());
 
@@ -886,11 +881,10 @@ public abstract class CalendarItem extends MailItem {
         if (method.equals(ICalTok.REQUEST.toString()) ||
             method.equals(ICalTok.CANCEL.toString()) ||
             method.equals(ICalTok.PUBLISH.toString())) {
-            return processNewInviteRequestOrCancel(pm, invite, force, folderId, volumeId,
-                                                   nextAlarm, preserveAlarms,
-                                                   replaceExistingInvites);
+            return processNewInviteRequestOrCancel(pm, invite, folderId, volumeId, nextAlarm,
+                                                   preserveAlarms, replaceExistingInvites);
         } else if (method.equals("REPLY")) {
-            return processNewInviteReply(invite, force);
+            return processNewInviteReply(invite);
         }
 
         ZimbraLog.calendar.warn("Unsupported METHOD " + method);
@@ -926,7 +920,6 @@ public abstract class CalendarItem extends MailItem {
 
     private boolean processNewInviteRequestOrCancel(ParsedMessage pm,
                                                     Invite newInvite,
-                                                    boolean force,
                                                     int folderId,
                                                     short volumeId,
                                                     long nextAlarm,
@@ -2023,7 +2016,7 @@ public abstract class CalendarItem extends MailItem {
         mReplyList.modifyPartStat(acctOrNull, recurId, cnStr, addressStr, cutypeStr, roleStr, partStatStr, needsReply, seqNo, dtStamp);
     }
     
-    public boolean processNewInviteReply(Invite reply, boolean force)
+    public boolean processNewInviteReply(Invite reply)
     throws ServiceException {
         if (!canAccess(ACL.RIGHT_ACTION))
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions to change this appointment/task's state");
