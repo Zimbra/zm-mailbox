@@ -83,10 +83,11 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
 	public long cachedFreeBusyEndTime() {
 		return 0;
 	}
-	public void setFreeBusyForZimbraUser(String email, FreeBusy fb) {
-		// XXX unused, and not implemented
+
+	public boolean propogateFreeBusy(String email, FreeBusy fb) {
+		return true;
 	}
-	
+
 	public void addResults(Element response) {
         Provisioning prov = Provisioning.getInstance();
         for (Map.Entry<String, StringBuilder> entry : mRemoteAccountMap.entrySet()) {
@@ -121,6 +122,10 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
         }
 	}
 
+	private static final String REMOTE = "REMOTE";
+	public String getName() {
+		return REMOTE;
+	}
 	private Map<String,StringBuilder> mRemoteAccountMap;
 	private HttpServletRequest mHttpReq;
 	private ZimbraSoapContext mSoapCtxt;

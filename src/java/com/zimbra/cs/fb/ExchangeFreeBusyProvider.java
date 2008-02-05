@@ -16,8 +16,6 @@
  */
 package com.zimbra.cs.fb;
 
-import javax.servlet.http.HttpServletResponse;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -37,7 +35,6 @@ import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PutMethod;
 
 import org.dom4j.DocumentException;
 
@@ -108,6 +105,12 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		return ret;
 	}
 	
+	private static final String EXCHANGE = "EXCHANGE";
+	
+	public String getName() {
+		return EXCHANGE;
+	}
+	
 	public boolean canCacheZimbraUserFreeBusy() {
 		return mResolvers.size() > 0;
 	}
@@ -140,12 +143,54 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		return cal.getTimeInMillis();
 	}
 	
-	public void setFreeBusyForZimbraUser(String email, FreeBusy fb) {
-		Thread t = new Thread(new ExchangeFreeBusySyncThread(email, fb));
-		t.start();
+	public boolean propogateFreeBusy(String email, FreeBusy fb) {
+		ServerInfo serverInfo = getServerInfo(email);
+		if (serverInfo == null) {
+			ZimbraLog.misc.warn("no exchange server info for user "+email);
+			return true;  // no retry
+		}
+		ExchangeMessage msg = new ExchangeMessage(serverInfo.ou, email);
+		String url = constructUrl(serverInfo) + msg.getUrl();
+		Credentials cred = new UsernamePasswordCredentials(serverInfo.authUsername, serverInfo.authPassword);
+
+		HttpMethod method = null;
+		try {
+			method = msg.createMethod(url, fb);
+			int status = sendRequest(method, cred);
+			if (status != MULTI_STATUS) {
+				ZimbraLog.misc.error("cannot create resource at "+url);
+				return false;  // retry
+			}
+		} catch (IOException ioe) {
+			ZimbraLog.misc.error("error commucating to "+serverInfo.hostname, ioe);
+			return false;  // retry
+		} finally {
+			if (method != null)
+				method.releaseConnection();
+		}
+		return true;
 	}
 	
-	public ExchangeFreeBusyProvider() {
+	private int sendRequest(HttpMethod method, Credentials credential) throws IOException {
+		int status = 0;
+		method.setDoAuthentication(true);
+		method.setRequestHeader("User-Agent", USER_AGENT);
+		HttpState state = new HttpState();
+		state.setCredentials(AuthScope.ANY, credential);
+		HttpClient client = new HttpClient();
+		client.setState(state);
+		ArrayList<String> authPrefs = new ArrayList<String>();
+		authPrefs.add(AuthPolicy.BASIC);
+		client.getParams().setParameter(AuthPolicy.AUTH_SCHEME_PRIORITY, authPrefs);
+		try {
+			status = client.executeMethod(method);
+		} finally {
+			method.releaseConnection();
+		}
+		return status;
+	}
+	
+	ExchangeFreeBusyProvider() {
 		mRequests = new HashMap<String,ArrayList<Request>>();
 	}
 	
@@ -234,7 +279,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
     	return ret;
     }
     
-	private static String constructUrl(ServerInfo info) {
+	private String constructUrl(ServerInfo info) {
 		StringBuilder buf = new StringBuilder();
 		if (info.scheme == ServerInfo.Scheme.http)
 			buf.append("http://");
@@ -248,7 +293,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		return buf.toString();
 	}
 	
-	public static ServerInfo getServerInfo(String emailAddr) {
+	public ServerInfo getServerInfo(String emailAddr) {
 		ServerInfo serverInfo = null;
 		for (ExchangeUserResolver r : mResolvers) {
 			serverInfo = r.getServerInfo(emailAddr);
@@ -307,79 +352,5 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 	    		start += intervalInMillis;
 	    	}
 	    }
-	}
-	
-	public static class ExchangeFreeBusySyncThread implements Runnable {
-		private String mEmail;
-		private FreeBusy mFb;
-		private boolean mShutdown;
-		
-		ExchangeFreeBusySyncThread(String email, FreeBusy fb) {
-			mEmail = email;
-			mFb = fb;
-			mShutdown = false;
-		}
-		public void run() {
-			boolean retry = false;
-			while (!mShutdown) {
-				try {
-					ServerInfo serverInfo = getServerInfo(mEmail);
-					if (serverInfo == null) {
-						ZimbraLog.misc.warn("no exchange server info for user "+mEmail);
-						shutdown();
-						continue;
-					}
-					ExchangeMessage msg = new ExchangeMessage(serverInfo.ou, mEmail);
-					String url = constructUrl(serverInfo) + msg.getUrl();
-					Credentials cred = new UsernamePasswordCredentials(serverInfo.authUsername, serverInfo.authPassword);
-
-					HttpMethod method = msg.createMethod(url, mFb);
-					try {
-						int status = sendRequest(method, cred);
-						if (status != MULTI_STATUS) {
-							method = new PutMethod(url);
-							retry = !retry;
-							status = sendRequest(method, cred);
-							if (status != HttpServletResponse.SC_CREATED &&
-									status != HttpServletResponse.SC_OK) {
-								retry = false;
-								ZimbraLog.misc.error("cannot create resource at "+url);
-							}
-						}
-					} catch (IOException e) {
-						ZimbraLog.misc.warn("error parsing fb response from exchange", e);
-					} finally {
-						method.releaseConnection();
-					}
-
-					if (!retry)
-						shutdown();
-				} catch (Exception e) {
-					ZimbraLog.misc.error("error while syncing freebusy to exchange", e);
-					shutdown();
-				}
-			}
-		}
-		public void shutdown() {
-			mShutdown = true;
-		}
-		private int sendRequest(HttpMethod method, Credentials credential) throws IOException {
-			int status = 0;
-			method.setDoAuthentication(true);
-			method.setRequestHeader("User-Agent", USER_AGENT);
-			HttpState state = new HttpState();
-			state.setCredentials(AuthScope.ANY, credential);
-			HttpClient client = new HttpClient();
-			client.setState(state);
-	        ArrayList<String> authPrefs = new ArrayList<String>();
-	        authPrefs.add(AuthPolicy.BASIC);
-	        client.getParams().setParameter(AuthPolicy.AUTH_SCHEME_PRIORITY, authPrefs);
-			try {
-				status = client.executeMethod(method);
-			} finally {
-				method.releaseConnection();
-			}
-			return status;
-		}
 	}
 }

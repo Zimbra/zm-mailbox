@@ -16,14 +16,25 @@
  */
 package com.zimbra.cs.fb;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.mail.ToXML;
 
 public abstract class FreeBusyProvider {
@@ -46,27 +57,40 @@ public abstract class FreeBusyProvider {
 	public abstract boolean canCacheZimbraUserFreeBusy();
 	public abstract long cachedFreeBusyStartTime();
 	public abstract long cachedFreeBusyEndTime();
-	public abstract void setFreeBusyForZimbraUser(String email, FreeBusy fb);
+	public abstract String getName();
+	public abstract boolean propogateFreeBusy(String email, FreeBusy fb);
 	
 	public static void register(FreeBusyProvider p) {
 		sPROVIDERS.add(p);
-		if (p.canCacheZimbraUserFreeBusy())
-			sNEEDSPUSH = true;
+		if (p.canCacheZimbraUserFreeBusy()) {
+			String name = p.getName();
+			FreeBusySyncQueue queue = sPUSHQUEUES.get(name);
+			if (queue != null) {
+				ZimbraLog.misc.warn("free/busy provider "+name+" has been already registered.");
+			}
+			queue = new FreeBusySyncQueue(p);
+			sPUSHQUEUES.put(name, queue);
+			new Thread(queue).start();
+		}
 	}
 	
 	public static void mailboxChanged(Mailbox mbox) {
-		if (!sNEEDSPUSH)
+		if (sPUSHQUEUES.size() == 0)
 			return;
-		// XXX use publish / subscribe persistent queue
+
 		for (FreeBusyProvider prov : sPROVIDERS)
-			if (prov.canCacheZimbraUserFreeBusy())
-				try {
-					FreeBusy fb = mbox.getFreeBusy(prov.cachedFreeBusyStartTime(), prov.cachedFreeBusyEndTime());
-					String name = mbox.getAccount().getName();
-					prov.setFreeBusyForZimbraUser(name, fb);
-				} catch (ServiceException se) {
-					ZimbraLog.misc.error("can't get free/busy for user "+mbox.getAccountId(), se);
+			if (prov.canCacheZimbraUserFreeBusy()) {
+				FreeBusySyncQueue queue = sPUSHQUEUES.get(prov.getName());
+				synchronized (queue) {
+					queue.addLast(mbox.getAccountId());
+					try {
+						queue.writeToDisk();
+					} catch (IOException e) {
+						ZimbraLog.misc.error("can't write to the queue "+queue.getFilename());
+					}
+					queue.notify();
 				}
+			}
 	}
 	
 	public void addResults(Element response) {
@@ -98,6 +122,19 @@ public abstract class FreeBusyProvider {
 		}
 	}
 	
+	protected FreeBusy getFreeBusy(String accountId) throws ServiceException {
+		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(accountId);
+		if (mbox == null)
+			return null;
+		return mbox.getFreeBusy(cachedFreeBusyStartTime(), cachedFreeBusyEndTime());
+	}
+	
+	protected String getEmailAddress(String accountId) throws ServiceException {
+		Account acct = Provisioning.getInstance().get(Provisioning.AccountBy.id, accountId);
+		if (acct == null)
+			return null;
+		return acct.getName();
+	}
 	private static Set<FreeBusyProvider> getProviders() {
 		HashSet<FreeBusyProvider> ret = new HashSet<FreeBusyProvider>();
 		for (FreeBusyProvider p : sPROVIDERS)
@@ -105,11 +142,140 @@ public abstract class FreeBusyProvider {
 		return ret;
 	}
 	private static HashSet<FreeBusyProvider> sPROVIDERS;
-	private static boolean sNEEDSPUSH;
+	private static HashMap<String,FreeBusySyncQueue> sPUSHQUEUES;
+	
+	public static final String QUEUE_FILENAME = "/opt/zimbra/syncqueue";
 	
 	static {
 		sPROVIDERS = new HashSet<FreeBusyProvider>();
-		sNEEDSPUSH = false;
+		sPUSHQUEUES = new HashMap<String,FreeBusySyncQueue>();
 		register(new ExchangeFreeBusyProvider());
+	}
+	
+	@SuppressWarnings("serial")
+	public static class FreeBusySyncQueue extends LinkedList<String> implements Runnable {
+
+		FreeBusySyncQueue(FreeBusyProvider prov) {
+			mProvider = prov;
+			mLastFailed = 0;
+			mShutdown = false;
+			mFilename = QUEUE_FILENAME + "-" + prov.getName();
+			try {
+				readFromDisk();
+			} catch (IOException e) {
+				ZimbraLog.misc.error("error reading from the queue", e);
+			}
+		}
+		public void run() {
+			Thread.currentThread().setName(mProvider.getName() + " Free/Busy Sync Queue");
+			while (!mShutdown) {
+				try {
+					String acctId = null;
+					synchronized (this) {
+						if (size() > 0) {
+							// wait for some interval when we detect a failure
+							// such that we don't spin loop and keep hammering a down server.
+							long now = System.currentTimeMillis();
+							if (now < mLastFailed + RETRY_INTERVAL) {
+								ZimbraLog.misc.debug("wait for a while..");
+								wait(RETRY_INTERVAL);
+								continue;
+							}
+							acctId = removeFirst();
+						} else
+							wait();
+
+					}
+					if (acctId == null)
+						continue;
+
+					String email = mProvider.getEmailAddress(acctId);
+					FreeBusy fb = mProvider.getFreeBusy(acctId);
+					
+					if (email == null || fb == null) {
+						ZimbraLog.misc.warn("cannot fetch mailbox and/or free/busy for account "+acctId);
+						continue;
+					}
+					
+					boolean success = mProvider.propogateFreeBusy(email, fb);
+					
+					if (!success) {
+						synchronized (this) {
+							addLast(acctId);
+						}
+						mLastFailed = System.currentTimeMillis();
+					}
+
+					writeToDisk();
+				} catch (Exception e) {
+					ZimbraLog.misc.error("error while syncing freebusy for "+mProvider.getName(), e);
+				}
+			}
+		}
+		public void shutdown() {
+			mShutdown = true;
+		}
+		
+		private boolean mShutdown;
+		private long mLastFailed;
+		private static final int RETRY_INTERVAL = 10 * 1000; // 10 sec
+		private static final int MAX_FILE_SIZE = 10240;  // for sanity check
+		private String mFilename;
+		private FreeBusyProvider mProvider;
+		
+		public synchronized void writeToDisk() throws IOException {
+			StringBuilder buf = new StringBuilder(Integer.toString(size()+1));
+			for (String id : this)
+				buf.append(",").append(id);
+			if (buf.length() > MAX_FILE_SIZE) {
+				ZimbraLog.misc.error("The free/busy replication queue is too large. #elem="+size());
+				return;
+			}
+			FileOutputStream out = null;
+			try {
+				out = new FileOutputStream(mFilename);
+				out.write(buf.toString().getBytes());
+				out.getFD().sync();
+			} finally {
+				if (out != null)
+					out.close();
+			}
+		}
+		
+		public synchronized void readFromDisk() throws IOException {
+			File f = new File(mFilename);
+			if (!f.exists())
+				f.createNewFile();
+			long len = f.length();
+			if (len > MAX_FILE_SIZE) {
+				ZimbraLog.misc.error("The free/busy replication queue is too large: "+mFilename+" ("+len+")");
+				return;
+			}
+			FileInputStream in = null;
+			String[] tokens = null;
+			try {
+				in = new FileInputStream(f);
+				byte[] buf = ByteUtil.readInput(in, (int)len, MAX_FILE_SIZE);
+				tokens = new String(buf, "UTF-8").split(",");
+			} finally {
+				if (in != null)
+					in.close();
+			}
+			if (tokens.length < 2)
+				return;
+			int numTokens = Integer.parseInt(tokens[0]);
+			if (numTokens != tokens.length) {
+				ZimbraLog.misc.error("The free/busy replication queue is inconsistent: "
+						+"numTokens="+numTokens+", actual="+tokens.length);
+				return;
+			}
+			clear();
+			Collections.addAll(this, tokens);
+			removeFirst();
+		}
+		
+		public String getFilename() {
+			return mFilename;
+		}
 	}
 }
