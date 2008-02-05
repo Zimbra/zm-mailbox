@@ -855,12 +855,6 @@ public abstract class CalendarItem extends MailItem {
         return processNewInvite(pm, invite, folderId, volumeId, 0, true, false);
     }
 
-    boolean processNewInvite(ParsedMessage pm, Invite invite,
-                             int folderId, short volumeId, long nextAlarm)
-    throws ServiceException {
-        return processNewInvite(pm, invite, folderId, volumeId, nextAlarm, false, false);
-    }
-
     /**
      * A new Invite has come in, take a look at it and see what needs to happen.
      * Maybe we need to send updates out. Maybe we need to modify the

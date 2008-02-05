@@ -3361,7 +3361,7 @@ public class Mailbox {
                     redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId(), volumeId);
                 } else {
                     // exceptions
-                    calItem.processNewInvite(scid.mPm, scid.mInv, folderId, volumeId, 0);
+                    calItem.processNewInvite(scid.mPm, scid.mInv, folderId, volumeId, nextAlarm, false, false);
                 }
             }
 
@@ -5176,13 +5176,25 @@ public class Mailbox {
         Folder.SyncData fsd = subscription ? folder.getSyncData() : null;
         FeedManager.SubscriptionData sdata = FeedManager.retrieveRemoteDatasource(getAccount(), url, fsd);
 
-        // clear out the folder if we're replacing the previous content
-        if (subscription && (folder.getDefaultView() == MailItem.TYPE_APPOINTMENT || folder.getDefaultView() == MailItem.TYPE_TASK))
-            emptyFolder(octxt, folderId, false);
+        // If syncing a folder with calendar items, remember the current items.  After applying the new
+        // appointments/tasks, we need to remove ones that were not updated because they are apparently
+        // deleted from the source feed.
+        boolean isCalendar = folder.getDefaultView() == MailItem.TYPE_APPOINTMENT ||
+                             folder.getDefaultView() == MailItem.TYPE_TASK;
+        Set<Integer> existingCalItems = new HashSet<Integer>();
+        if (subscription && isCalendar) {
+            int[] itemIds = listItemIds(octxt, MailItem.TYPE_UNKNOWN, folderId);
+            for (int i : itemIds) {
+                existingCalItems.add(i);
+            }
+        }
 
         // if there's nothing to add, we can short-circuit here
-        if (sdata.items.isEmpty())
+        if (sdata.items.isEmpty()) {
+            if (subscription && isCalendar)
+                emptyFolder(octxt, folderId, false);
             return;
+        }
 
         // disable modification conflict checks, as we've already wiped the folder and we may hit an appoinment >1 times
         OperationContext octxtNoConflicts = new OperationContext(octxt).unsetChangeConstraint();
@@ -5191,13 +5203,21 @@ public class Mailbox {
         // add the newly-fetched items to the folder
         for (Object obj : sdata.items) {
             try {
-                if (obj instanceof Invite)
-                    addInvite(octxtNoConflicts, (Invite) obj, folderId, removeAlarms);
-                else if (obj instanceof ParsedMessage)
+                if (obj instanceof Invite) {
+                    int calIds[] = addInvite(octxtNoConflicts, (Invite) obj, folderId, removeAlarms);
+                    if (calIds != null && calIds.length > 0)
+                        existingCalItems.remove(calIds[0]);
+                } else if (obj instanceof ParsedMessage) {
                     addMessage(octxtNoConflicts, (ParsedMessage) obj, folderId, true, Flag.BITMASK_UNREAD, null);
+                }
             } catch (IOException e) {
                 throw ServiceException.FAILURE("IOException", e);
             }
+        }
+
+        // Delete calendar items that have been deleted in the source feed.
+        for (int toRemove : existingCalItems) {
+            delete(octxtNoConflicts, toRemove, MailItem.TYPE_UNKNOWN);
         }
 
         // update the subscription to avoid downloading items twice
