@@ -1560,7 +1560,7 @@ class LuceneIndex implements ITextIndex, IndexDeletionPolicy  {
                 IndexCommitPoint cur = commits.get(i);
                 if (!toSave.contains(cur.getSegmentsFileName())) {
                     cur.delete();
-                    ZimbraLog.index.info(this.toString()+ " Deleting commit point: "+cur.getSegmentsFileName()+" because it is referenced by open IndexReader");
+                    ZimbraLog.index.debug(this.toString()+ " Deleting commit point: "+cur.getSegmentsFileName()+" because it is not referenced by open IndexReader");
                 } else
                     ZimbraLog.index.info(this.toString()+ " Saving commit point: "+cur.getSegmentsFileName()+" because it is referenced by open IndexReader");
             }
