@@ -92,7 +92,7 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
     		return;
         }
 
-		boolean isAdminAuth = authToken.isAdmin() || authToken.isDomainAdmin();
+		boolean isAdminAuth = authToken.isAdmin() || authToken.isDomainAdmin() ||  authToken.isCCAdmin();
 //		ZimbraLog.zimlet.info(">>> isAdminAuth: "+isAdminAuth);
 
         // get list of allowed zimlets
