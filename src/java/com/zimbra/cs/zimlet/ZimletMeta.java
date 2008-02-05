@@ -61,6 +61,7 @@ public abstract class ZimletMeta {
 	public static final String ZIMLET_TAG_HOST             = "host";
 	public static final String ZIMLET_TAG_PROPERTY         = "property";
 
+	public static final String ZIMLET_TAG_TARGET		   = "target";
 	protected Element mTopElement;
 	
 	protected String mName;

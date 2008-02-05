@@ -17,6 +17,7 @@
 package com.zimbra.cs.account;
 
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.cs.zimlet.ZimletHandler;
 import com.zimbra.cs.zimlet.ZimletUtil;
@@ -65,4 +66,11 @@ public class Zimlet extends NamedEntry {
     public String getServerIndexRegex() {
         return getAttr(Provisioning.A_zimbraZimletServerIndexRegex);
     }
+    
+	
+	public boolean checkTarget(String target) {
+		Set<String> lTiers = getMultiAttrSet(Provisioning.A_zimbraZimletTarget); 
+		return ((lTiers == null) ? false : lTiers.contains(target));
+	}
+
 }

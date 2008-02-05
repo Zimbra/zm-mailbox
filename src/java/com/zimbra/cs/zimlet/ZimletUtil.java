@@ -552,7 +552,7 @@ public class ZimletUtil {
 		ZimletDescription zd = zf.getZimletDescription();
 		String zimletName = zd.getName();
 		Map<String,Object> attrs = descToMap(zd);
-		
+		attrs.put(Provisioning.A_zimbraZimletTarget, zd.getTargets());
 		ZimbraLog.zimlet.info("Deploying Zimlet " + zimletName + " in LDAP.");
 
 		// add zimlet entry to ldap

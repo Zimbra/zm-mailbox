@@ -678,7 +678,15 @@ public class LdapUtil {
                 for (int i=0; i < sa.length; i++)
                         a.add(sa[i]);
                 attrs.put(a);
+            } else if (v instanceof Collection) {
+                Collection c = (Collection) v;
+                BasicAttribute a = new BasicAttribute((String)me.getKey());
+                for (Object o : c) {
+                	a.add(o.toString());
+                }
+                attrs.put(a);
             }
+                
         }
     }
 

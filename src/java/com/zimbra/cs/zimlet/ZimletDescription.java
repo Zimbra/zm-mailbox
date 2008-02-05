@@ -37,6 +37,7 @@ public class ZimletDescription extends ZimletMeta {
 	private String mExtensionClass;
 	private String mKeyword;
 	private String mRegexString;
+	private List<String> mTargets;
 	
 	public ZimletDescription(File desc) throws ZimletException {
 		super(desc);
@@ -48,6 +49,7 @@ public class ZimletDescription extends ZimletMeta {
 	
 	protected void initialize() {
 		mScripts = new ArrayList<String>();
+		mTargets = new ArrayList<String>();
 	}
 
 	protected void validateElement(Element elem) throws ZimletException {
@@ -59,6 +61,8 @@ public class ZimletDescription extends ZimletMeta {
 			parseServerExtension(elem);
 		} else if (elem.getName().equals(ZIMLET_TAG_SCRIPT)) {
 			parseResource(elem);
+		} else if (elem.getName().equals(ZIMLET_TAG_TARGET)) {
+			mTargets.add(elem.getText());
 		}
 	}
 
@@ -124,5 +128,13 @@ public class ZimletDescription extends ZimletMeta {
 	
 	public String getRegexString() {
 		return mRegexString;
+	}
+	
+	public boolean checkTarget(String target) {
+		return (mTargets.contains(target));
+	}
+	
+	public List<String> getTargets() {
+		return mTargets;
 	}
 }
