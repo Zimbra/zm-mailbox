@@ -28,6 +28,7 @@ import java.util.Locale;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
+import javax.servlet.Servlet;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -176,8 +177,8 @@ public class UserServlet extends ZimbraServlet {
 
     public static final String AUTH_DEFAULT = "co,ba,qp"; // all three
 
-    private HashMap<String, Formatter> mFormatters;
-    private HashMap<String, Formatter> mDefaultFormatters;
+    private static HashMap<String, Formatter> mFormatters;
+    private static HashMap<String, Formatter> mDefaultFormatters;
 
     protected static final String MSGPAGE_BLOCK = "errorpage.attachment.blocked";
     private String mBlockPage = null;
@@ -199,35 +200,36 @@ public class UserServlet extends ZimbraServlet {
 
     	return url;
     }
-    	    
-    
 
     public UserServlet() {
-        mFormatters = new HashMap<String, Formatter>();
-        addFormatter(new CsvFormatter());
-        addFormatter(new VcfFormatter());
-        addFormatter(new IcsFormatter());
-        addFormatter(new RssFormatter());
-        addFormatter(new AtomFormatter());
-        addFormatter(new NativeFormatter());
-        addFormatter(new ZipFormatter());
-        addFormatter(new FreeBusyFormatter());
-        addFormatter(new IfbFormatter());
-        addFormatter(new SyncFormatter());
-        addFormatter(new WikiFormatter());
-        addFormatter(new XmlFormatter());
-        addFormatter(new JsonFormatter());
-        addFormatter(new HtmlFormatter());
-
-        mDefaultFormatters = new HashMap<String, Formatter>();
-        for (Formatter fmt : mFormatters.values())
-            for (String mimeType : fmt.getDefaultMimeTypes())
-                mDefaultFormatters.put(mimeType, fmt);
+        initFormatters();
     }
 
-    private void addFormatter(Formatter f) {
-        f.setServlet(this);
+    private synchronized static void initFormatters() {
+        if (mFormatters == null) {
+            mFormatters = new HashMap<String, Formatter>();
+            mDefaultFormatters = new HashMap<String, Formatter>();
+            addFormatter(new CsvFormatter());
+            addFormatter(new VcfFormatter());
+            addFormatter(new IcsFormatter());
+            addFormatter(new RssFormatter());
+            addFormatter(new AtomFormatter());
+            addFormatter(new NativeFormatter());
+            addFormatter(new ZipFormatter());
+            addFormatter(new FreeBusyFormatter());
+            addFormatter(new IfbFormatter());
+            addFormatter(new SyncFormatter());
+            addFormatter(new WikiFormatter());
+            addFormatter(new XmlFormatter());
+            addFormatter(new JsonFormatter());
+            addFormatter(new HtmlFormatter());
+        }
+    }
+
+    public synchronized static void addFormatter(Formatter f) {
         mFormatters.put(f.getType(), f);
+        for (String mimeType : f.getDefaultMimeTypes())
+                mDefaultFormatters.put(mimeType, f);
     }
 
     public Formatter getFormatter(String type) {
@@ -705,6 +707,7 @@ public class UserServlet extends ZimbraServlet {
     public static class Context {
         public HttpServletRequest req;
         public HttpServletResponse resp;
+        public Servlet servlet;
         public Map<String, String> params;
         public String format;
         public Formatter formatter;        
@@ -735,6 +738,7 @@ public class UserServlet extends ZimbraServlet {
 
             this.req = request;
             this.resp = response;
+            this.servlet = servlet;
             this.params = HttpUtil.getURIParams(request);
             
             //rest url override for locale
@@ -816,6 +820,8 @@ public class UserServlet extends ZimbraServlet {
             targetAccount = prov.get(AccountBy.name, accountPath);                
         }
 
+        public Servlet getServlet() { return servlet; }
+        
         public long getStartTime() {
             if (mStartTime == -2) {
                 String st = params.get(QP_START);

@@ -71,7 +71,7 @@ public class HtmlFormatter extends Formatter {
     @Override
     public void formatCallback(Context context) throws UserServletException,
             ServiceException, IOException, ServletException {
-        dispatchJspRest(getServlet(), context);
+        dispatchJspRest(context.getServlet(), context);
     }
 
     @Override
