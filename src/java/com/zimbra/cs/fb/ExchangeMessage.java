@@ -30,6 +30,7 @@ import org.dom4j.tree.DefaultDocument;
 
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DomUtil;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 
 import java.io.IOException;
@@ -118,10 +119,12 @@ public class ExchangeMessage {
     private static Pattern PLUS  = Pattern.compile("\\+");
     
     private String mOu;
+    private String mCn;
     private String mMail;
     
-    public ExchangeMessage(String ou, String mail) {
+    public ExchangeMessage(String ou, String cn, String mail) {
     	mOu = ou;
+    	mCn = cn;
     	mMail = mail;
     }
     
@@ -130,7 +133,7 @@ public class ExchangeMessage {
     	buf.append(SLASH.matcher(mOu).replaceAll(ENCODED_SLASH));
     	buf.append("/").append(PUBURL_SECOND_PART);
     	buf.append(SLASH.matcher(PUBURL_RCPT).replaceAll(ENCODED_SLASH));
-    	buf.append(mMail);
+    	buf.append(mCn);
     	buf.append(PUBURL_EML);
     	
     	String ret = buf.toString();
@@ -145,10 +148,10 @@ public class ExchangeMessage {
     	root.add(NS_MSFT);
     	root.add(NS_WEB_FOLDERS);
     	Element prop = root.addElement(EL_SET).addElement(EL_PROP);
-    	addElement(prop, PR_SUBJECT_A, PUBURL_SECOND_PART + PUBURL_RCPT + mMail);
+    	addElement(prop, PR_SUBJECT_A, PUBURL_SECOND_PART + PUBURL_RCPT + mCn);
     	addElement(prop, PR_FREEBUSY_START_RANGE, minutesSinceMsEpoch(fb.getStartTime()));
     	addElement(prop, PR_FREEBUSY_END_RANGE, minutesSinceMsEpoch(fb.getEndTime()));
-    	addElement(prop, PR_FREEBUSY_EMAIL_ADDRESS, mOu + PUBURL_RCPT + mMail);
+    	addElement(prop, PR_FREEBUSY_EMAIL_ADDRESS, mOu + PUBURL_RCPT + mCn);
     	
     	
     	Element allMonths = addElement(prop, PR_FREEBUSY_ALL_MONTHS, null, ATTR_DT, MV_INT);
@@ -256,6 +259,7 @@ public class ExchangeMessage {
     private int millisToMinutes(long millis) throws IOException {
     	// millis since epoch to minutes since 1st of the month
     	Calendar c = new GregorianCalendar();
+    	c.setTimeZone(ICalTimeZone.getUTC());
     	c.setTime(new Date(millis));
     	int days = c.get(Calendar.DAY_OF_MONTH) - 1;
     	int hours =  24 * days + c.get(Calendar.HOUR_OF_DAY);

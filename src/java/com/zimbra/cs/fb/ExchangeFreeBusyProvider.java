@@ -55,6 +55,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		public String hostname;
 		public int port;
 		public String ou;
+		public String cn;
 		public String authUsername;
 		public String authPassword;
 	}
@@ -106,6 +107,8 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 	}
 	
 	private static final String EXCHANGE = "EXCHANGE";
+	private static final String HEADER_USER_AGENT = "User-Agent";
+	private static final String HEADER_TRANSLATE  = "Translate";
 	
 	public String getName() {
 		return EXCHANGE;
@@ -149,7 +152,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 			ZimbraLog.misc.warn("no exchange server info for user "+email);
 			return true;  // no retry
 		}
-		ExchangeMessage msg = new ExchangeMessage(serverInfo.ou, email);
+		ExchangeMessage msg = new ExchangeMessage(serverInfo.ou, serverInfo.cn, email);
 		String url = constructUrl(serverInfo) + msg.getUrl();
 		Credentials cred = new UsernamePasswordCredentials(serverInfo.authUsername, serverInfo.authPassword);
 
@@ -174,7 +177,8 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 	private int sendRequest(HttpMethod method, Credentials credential) throws IOException {
 		int status = 0;
 		method.setDoAuthentication(true);
-		method.setRequestHeader("User-Agent", USER_AGENT);
+		method.setRequestHeader(HEADER_USER_AGENT, USER_AGENT);
+		method.setRequestHeader(HEADER_TRANSLATE, "f");
 		HttpState state = new HttpState();
 		state.setCredentials(AuthScope.ANY, credential);
 		HttpClient client = new HttpClient();
