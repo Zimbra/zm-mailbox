@@ -66,17 +66,18 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.mailtest.UidFetch;
 import com.zimbra.cs.mailtest.Literal;
+import com.zimbra.cs.mailtest.ImapConfig;
 
 public class ImapImport implements MailItemImport {
-
+    private final UidFetch mUidFetch;
+    
     private static Session sSession;
     private static Session sSelfSignedCertSession;
     private static FetchProfile FETCH_PROFILE;
 
-    private static final boolean FAST_FETCH =
-        LC.data_source_fast_fetch.booleanValue();
-    
+    private static final boolean FAST_FETCH = LC.data_source_fast_fetch.booleanValue();
     private static final int FETCH_SIZE = LC.data_source_fetch_size.intValue();
+    private static final int MAX_LITERAL_MEM_SIZE = LC.data_source_max_literal_mem_size.intValue();
     
     static {
     	String idExt = "(\"vendor\" \"Zimbra\" \"os\" \"" + System.getProperty("os.name") +
@@ -124,6 +125,12 @@ public class ImapImport implements MailItemImport {
         	FETCH_PROFILE.add(UIDFolder.FetchProfileItem.ENVELOPE);
     }
 
+    public ImapImport() {
+        ImapConfig config = new ImapConfig();
+        config.setMaxLiteralMemSize(MAX_LITERAL_MEM_SIZE);
+        mUidFetch = new UidFetch(config);
+    }
+    
     public String test(DataSource ds) throws ServiceException {
         String error = null;
 
@@ -573,9 +580,9 @@ public class ImapImport implements MailItemImport {
                     }
                     if (updated) {
                         numUpdated++;
-//                        ZimbraLog.datasource.debug("Found message with UID %d on both sides; syncing flags: local=%s, tracked=%s, remote=%s, new=%s",
-//                            uid, Flag.bitmaskToFlags(localFlags), Flag.bitmaskToFlags(trackedFlags),
-//                            Flag.bitmaskToFlags(remoteFlags), Flag.bitmaskToFlags(flags));
+                        ZimbraLog.datasource.debug("Found message with UID %d on both sides; syncing flags: local=%s, tracked=%s, remote=%s, new=%s",
+                           uid, Flag.bitmaskToFlags(localFlags), Flag.bitmaskToFlags(trackedFlags),
+                           Flag.bitmaskToFlags(remoteFlags), Flag.bitmaskToFlags(flags));
                     } else {
                         numMatched++;
                     }
@@ -611,7 +618,7 @@ public class ImapImport implements MailItemImport {
                 int startIndex = 0;
                 int endIndex = msgArray.length - 1;
                 while (startIndex <= endIndex) {
-                long startUid = remoteFolder.getUID((IMAPMessage)msgArray[startIndex]);
+                long startUid = remoteFolder.getUID(msgArray[startIndex]);
                 if (startUid <= lastUid) {
                         ++startIndex;
                         continue;
@@ -619,12 +626,12 @@ public class ImapImport implements MailItemImport {
 
                 int stopIndex = startIndex + FETCH_SIZE - 1;
                 stopIndex = stopIndex < endIndex ? stopIndex : endIndex;
-                long stopUid = remoteFolder.getUID((IMAPMessage)msgArray[stopIndex]);
+                long stopUid = remoteFolder.getUID(msgArray[stopIndex]);
 
                     final AtomicInteger fetchCount = new AtomicInteger();
 
                     // Check for new messages using batch FETCH
-                    UidFetch.fetch(remoteFolder, startUid + ":" + stopUid, new UidFetch.Handler() {
+                    mUidFetch.fetch(remoteFolder, startUid + ":" + stopUid, new UidFetch.Handler() {
                         public void handleResponse(Literal lit, long uid, Date receivedDate) throws Exception {
                             ZimbraLog.datasource.debug("Found new remote message %d.  Creating local copy.", uid);
                             if (trackedMsgs.getByUid(uid) != null) {
@@ -633,7 +640,7 @@ public class ImapImport implements MailItemImport {
                             }
                             IMAPMessage msg = remoteMsgs.get(uid);
                             if (msg == null) return;
-                            Long time = receivedDate != null ? (Long)receivedDate.getTime() : null;
+                            Long time = receivedDate != null ? receivedDate.getTime() : null;
                             boolean indexingEnabled = mbox.attachmentsIndexingEnabled();
                             ParsedMessage pm = lit.getFile() != null ?
                                 new ParsedMessage(lit.getFile(), time, indexingEnabled) :

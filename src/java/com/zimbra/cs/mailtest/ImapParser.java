@@ -17,15 +17,13 @@ public class ImapParser {
     private InputStream mInputStream;
     private int mNextChar = -1;
     private StringBuilder mBuffer = new StringBuilder();
+    private ImapConfig mConfig;
 
     private static final boolean DEBUG = false;
 
-    // Maximum literal size that can be stored in memory. Otherwise, large
-    // literal data will be store in a temporary file.
-    private static final int MAX_LITERAL_MEM_SIZE = Integer.MAX_VALUE;
-
-    public ImapParser(InputStream is) {
+    public ImapParser(InputStream is, ImapConfig config) {
         mInputStream = is;
+        mConfig = config;
     }
 
     public ImapData readAtom() throws IOException {
@@ -142,36 +140,29 @@ public class ImapParser {
         }
         skipChar('}');
         skipCRLF();
-        Literal lit;
-        if (len <= MAX_LITERAL_MEM_SIZE) {
-            byte[] b = new byte[(int) len];
-            new DataInputStream(mInputStream).readFully(b);
-            lit = new Literal(b);
-        } else {
-            File f = File.createTempFile("lit", null);
-            f.deleteOnExit();
-            OutputStream os = new FileOutputStream(f);
-            try {
-                copyBytes(mInputStream, os, (int) len);
-            } finally {
-                os.close();
-            }
-            lit = new Literal(f);
-        }
-        return ImapData.literal(lit);
+        return ImapData.literal(readLiteral((int) len));
     }
 
-    private static void copyBytes(InputStream is, OutputStream os, int len)
-        throws IOException {
-        byte[] b = new byte[4096];
-        while (len > 0) {
-            int n = is.read(b);
-            if (n == -1) {
-                throw new EOFException("Unexpected end of stream");
-            }
-            os.write(b, 0, n);
+    private Literal readLiteral(int len) throws IOException {
+        if (len <= mConfig.getMaxLiteralMemSize()) {
+            // Cache literal data in memory
+            byte[] b = new byte[len];
+            Io.readFully(mInputStream, b);
+            return new Literal(b);
         }
+        // Otherwise, use temporary file for literal data, which will be
+        // automatically cleaned up when the ImapResponse is finished.
+        File f = File.createTempFile("lit", null, mConfig.getLiteralDataDir());
+        f.deleteOnExit();
+        OutputStream os = new FileOutputStream(f);
+        try {
+            Io.copyBytes(mInputStream, os, len);
+        } finally {
+            os.close();
+        }
+        return new Literal(f);
     }
+
 
     public ImapData readText() throws IOException {
         return ImapData.text(readChars(Chars.TEXT_CHARS));

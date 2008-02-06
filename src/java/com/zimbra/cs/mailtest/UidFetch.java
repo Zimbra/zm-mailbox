@@ -20,12 +20,22 @@ import java.util.Date;
 import java.util.Iterator;
 
 public class UidFetch {
+    private ImapConfig mConfig;
+
     private static final boolean DEBUG = false;
     
     private static MailDateFormat mailDataFormat = new MailDateFormat();
 
-    public static void fetch(IMAPFolder folder, final String seq,
-                             final Handler handler) throws IOException {
+    public UidFetch(ImapConfig config) {
+        mConfig = config;
+    }
+
+    public UidFetch() {
+        mConfig = new ImapConfig();
+    }
+
+    public void fetch(IMAPFolder folder, final String seq,
+                      final Handler handler) throws IOException {
         try {
             folder.doCommand(new IMAPFolder.ProtocolCommand() {
                 public Object doCommand(final IMAPProtocol protocol) throws ProtocolException {
@@ -46,12 +56,12 @@ public class UidFetch {
         void handleResponse(Literal literal, long uid, Date receivedDate) throws Exception;
     }
 
-    private static Object doFETCH(IMAPProtocol protocol, String seq, Handler handler)
+    private Object doFETCH(IMAPProtocol protocol, String seq, Handler handler)
             throws IOException, ProtocolException {
         String tag = protocol.writeCommand(
             "UID FETCH " + seq + " (BODY.PEEK[] UID INTERNALDATE)", null);
         ImapParser parser =
-            new ImapParser(protocol.getInputStream().getRealInputStream());
+            new ImapParser(protocol.getInputStream().getRealInputStream(), mConfig);
         while (true) {
             ImapResponse ir = ImapResponse.read(parser);
             if (ir == null) throw new EOFException();
@@ -116,11 +126,10 @@ public class UidFetch {
     }
     
     public static void main(String[] args) throws Exception {
-          Session session = Session.getDefaultInstance(System.getProperties());
+        Session session = Session.getDefaultInstance(System.getProperties());
         session.setDebug(false);
         Store store = session.getStore("imap");
-        // store.connect("mail.mac.com", 143, "dwconnelly", "lorx1246");
-        store.connect("localhost", 7143, "testimapimportremote", "test123");
+        // store.connect("imap.mail.yahoo.com", 143, "jjztest", "test1234");
         IMAPFolder folder = (IMAPFolder) store.getFolder("INBOX");
         folder.open(Folder.READ_WRITE);
         FetchProfile fp = new FetchProfile();
@@ -133,7 +142,11 @@ public class UidFetch {
             IMAPMessage im = (IMAPMessage) msg;
             pd("msg %s: %s", im.getMessageID(), im.getSentDate());
         }
-        UidFetch.fetch(folder, "1:*", new Handler() {
+        ImapConfig config = new ImapConfig();
+        if (args.length > 0) {
+            config.setMaxLiteralMemSize(Integer.parseInt(args[0]));
+        }
+        new UidFetch(config).fetch(folder, "1:*", new Handler() {
             public void handleResponse(Literal l, long uid, Date receivedDate) {
                 pd("Fetched message: uid = %d, size = %d, received = %s", uid, l.getSize(), receivedDate.toString());
             }
