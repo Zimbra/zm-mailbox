@@ -472,5 +472,9 @@ public class AdminConstants {
     public static final String E_ACCOUNT_LOGGER = "accountLogger";
     public static final String A_CATEGORY = "category";
     public static final String A_LEVEL = "level";
+    
+    //extension targets
+    public static final String T_ADMIN_MAIN = "admin-main";
+    public static final String T_ADMIN_DOMAIN = "admin-domain"; 
 
 }
