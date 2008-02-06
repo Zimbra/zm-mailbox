@@ -23,6 +23,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.zimlet.ZimletUtil;
@@ -36,21 +37,21 @@ public class GetAdminExtensionZimlets extends AdminDocumentHandler  {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
-		
+		AuthToken at = lc.getAuthToken();
         Element response = lc.createElement(AdminConstants.GET_ADMIN_EXTENSION_ZIMLETS_RESPONSE);
         Element zimlets = response.addUniqueElement(AccountConstants.E_ZIMLETS);
-        doExtensionZimlets(zimlets);
+        doExtensionZimlets(zimlets, (at.isDomainAdmin() ? AdminConstants.T_ADMIN_DOMAIN : AdminConstants.T_ADMIN_MAIN));
         
         return response;
     }
 
-	private void doExtensionZimlets(Element response) throws ServiceException {
+	private void doExtensionZimlets(Element response, String target) throws ServiceException {
 		Iterator<Zimlet> zimlets = Provisioning.getInstance().listAllZimlets().iterator();
 		while (zimlets.hasNext()) {
 			Zimlet z = (Zimlet) zimlets.next();
-			if (z.isExtension()) {
+			if (z.isExtension() && z.checkTarget(target)) {
 				ZimletUtil.listZimlet(response, z, -1);
 			}
-		}
-    }
+		}    
+	}
 }

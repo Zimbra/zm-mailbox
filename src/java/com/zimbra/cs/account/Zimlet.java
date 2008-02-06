@@ -69,8 +69,8 @@ public class Zimlet extends NamedEntry {
     
 	
 	public boolean checkTarget(String target) {
-		Set<String> lTiers = getMultiAttrSet(Provisioning.A_zimbraZimletTarget); 
-		return ((lTiers == null) ? false : lTiers.contains(target));
+		Set<String> lTargets = getMultiAttrSet(Provisioning.A_zimbraZimletTarget); 
+		return ((lTargets == null || lTargets.size() < 1) ? true : lTargets.contains(target)); //default is all targets
 	}
 
 }
