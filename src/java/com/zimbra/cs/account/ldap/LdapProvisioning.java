@@ -4285,14 +4285,23 @@ public class LdapProvisioning extends Provisioning {
         if (ldapEntry == null) 
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
 
-        // clear cache 
-        account.setCachedData(SIGNATURE_LIST_CACHE_KEY, null);
-        
         String newName = (String) signatureAttrs.get(A_zimbraSignatureName);
         
         // do not allow name to be wiped
         if (newName!= null && newName.length()==0)
             throw ServiceException.INVALID_REQUEST("empty signature name is not allowed", null);
+        
+        // check for duplicate names
+        if (newName != null) {
+            List<Signature> sigs = getAllSignatures(account);
+            for (Signature sig : sigs) {
+                if (sig.getName().equals(newName) && !sig.getId().equals(signatureId))
+                    throw AccountServiceException.SIGNATURE_EXISTS(newName);
+            }
+        }
+        
+        // clear cache 
+        account.setCachedData(SIGNATURE_LIST_CACHE_KEY, null);
         
         if (LdapSignature.isAccountSignature(account, signatureId)) {
             LdapSignature.modifyAccountSignature(this, account, signatureAttrs);
@@ -4318,19 +4327,6 @@ public class LdapProvisioning extends Provisioning {
     }
 
     private void renameSignature(LdapEntry entry, LdapSignature signature, String newSignatureName) throws ServiceException {
-        
-        /*
-         * check if the signature name already exists
-         * 
-         * We check if the signatureName is the same as the signature on the account.  
-         * For signatures that are in the signature LDAP entries, JNDI will throw 
-         * NameAlreadyBoundException for duplicate names.
-         * 
-         */ 
-        Signature acctSig = LdapSignature.getAccountSignature(this, (Account)entry);
-        if (acctSig != null && newSignatureName.equals(acctSig.getName()))
-            throw AccountServiceException.SIGNATURE_EXISTS(newSignatureName);
-        
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext(true);
