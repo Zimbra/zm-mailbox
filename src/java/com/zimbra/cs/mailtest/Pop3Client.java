@@ -1,6 +1,5 @@
 package com.zimbra.cs.mailtest;
 
-import javax.security.auth.login.LoginException;
 import java.io.IOException;
 
 public class Pop3Client extends MailClient {
@@ -40,20 +39,13 @@ public class Pop3Client extends MailClient {
         sendCommand("QUIT");
     }
     
-    protected void sendAuthenticate(boolean ir) throws LoginException, IOException {
+    protected void sendAuthenticate(boolean ir) throws IOException {
         StringBuffer sb = new StringBuffer(mMechanism);
         if (ir) {
             byte[] response = mAuthenticator.getInitialResponse();
             sb.append(' ').append(encodeBase64(response));
         }
-        try {
-            sendCommand("AUTH", sb.toString());
-        } catch (MailException e) {
-            if (STATUS_ERR.equals(mStatus)) {
-                throw new LoginException(getResponse());
-            }
-            throw e;
-        }
+        sendCommand("AUTH", sb.toString());
     }
 
     protected void sendStartTLS() throws IOException {
