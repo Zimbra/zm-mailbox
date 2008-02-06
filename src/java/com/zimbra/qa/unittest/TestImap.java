@@ -17,9 +17,9 @@
 
 package com.zimbra.qa.unittest;
 
-import com.zimbra.cs.mailtest.ImapClient;
-import com.zimbra.cs.mailtest.MailException;
-import com.zimbra.cs.mailtest.SSLUtil;
+import com.zimbra.cs.mailclient.ImapClient;
+import com.zimbra.cs.mailclient.MailException;
+import com.zimbra.cs.mailclient.SSLUtil;
 import junit.framework.TestCase;
 
 import javax.security.auth.login.LoginException;

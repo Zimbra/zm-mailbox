@@ -1,4 +1,4 @@
-package com.zimbra.cs.mailtest;
+package com.zimbra.cs.mailclient;
 
 import com.zimbra.cs.security.sasl.SaslInputStream;
 import com.zimbra.cs.security.sasl.SaslOutputStream;

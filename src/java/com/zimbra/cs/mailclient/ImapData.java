@@ -1,4 +1,4 @@
-package com.zimbra.cs.mailtest;
+package com.zimbra.cs.mailclient;
 
 import java.io.IOException;
 import java.io.OutputStream;

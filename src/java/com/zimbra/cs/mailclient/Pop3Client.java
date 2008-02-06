@@ -1,4 +1,4 @@
-package com.zimbra.cs.mailtest;
+package com.zimbra.cs.mailclient;
 
 import javax.security.auth.login.LoginException;
 import java.io.IOException;

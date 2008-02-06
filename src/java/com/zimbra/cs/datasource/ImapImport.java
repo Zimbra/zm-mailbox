@@ -64,9 +64,9 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.BuildInfo;
-import com.zimbra.cs.mailtest.UidFetch;
-import com.zimbra.cs.mailtest.Literal;
-import com.zimbra.cs.mailtest.ImapConfig;
+import com.zimbra.cs.mailclient.UidFetch;
+import com.zimbra.cs.mailclient.Literal;
+import com.zimbra.cs.mailclient.ImapConfig;
 
 public class ImapImport implements MailItemImport {
     private final UidFetch mUidFetch;
