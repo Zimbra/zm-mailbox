@@ -2895,6 +2895,22 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Zimlet target apps</desc>
 </attr>
 
+<attr id="607" name="zimbraFreebusyExchangeURL" type="string" max="256" cardinality="single" optionalIn="globalConfig">
+  <desc>URL to Exchange server for free/busy lookup and propogation</desc>
+</attr>
+
+<attr id="608" name="zimbraFreebusyExchangeAuthUsername" type="string" max="256" cardinality="single" optionalIn="globalConfig">
+  <desc>Exchange username for free/busy lookup and propogation</desc>
+</attr>
+
+<attr id="609" name="zimbraFreebusyExchangeAuthPassword" type="string" max="256" cardinality="single" optionalIn="globalConfig">
+  <desc>Exchange user password for free/busy lookup and propogation</desc>
+</attr>
+
+<attr id="610" name="zimbraFreebusyExchangeUserOU" type="string" max="256" cardinality="single" optionalIn="globalConfig">
+  <desc>OU used for the users legacyExchangeDN attribute</desc>
+</attr>
+
 </attrs>
 
 

@@ -38,9 +38,12 @@ import org.apache.commons.httpclient.methods.GetMethod;
 
 import org.dom4j.DocumentException;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 
 public class ExchangeFreeBusyProvider extends FreeBusyProvider {
@@ -50,10 +53,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 	public static final int MULTI_STATUS = 207;
 	
 	public static class ServerInfo {
-		enum Scheme { http, https };
-		public Scheme scheme;
-		public String hostname;
-		public int port;
+		public String url;
 		public String ou;
 		public String cn;
 		public String authUsername;
@@ -63,9 +63,45 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		public ServerInfo getServerInfo(String emailAddr);
 	}
 	
+	private static class BasicUserResolver implements ExchangeUserResolver {
+		private String url;
+		private String user;
+		private String pass;
+		private String ou;
+		private BasicUserResolver(String url, String user, String pass, String ou) {
+			this.url = url;
+			this.user = user;
+			this.pass = pass;
+			this.ou = ou;
+		}
+		public ServerInfo getServerInfo(String emailAddr) {
+			ServerInfo info = new ServerInfo();
+			info.url = url;
+			info.ou = ou;
+			info.cn = emailAddr;
+			if (emailAddr.indexOf('@') > 0)
+				info.cn = emailAddr.substring(0, emailAddr.indexOf('@'));
+			info.authUsername = user;
+			info.authPassword = pass;
+			return info;
+		}
+	}
+	
 	private static ArrayList<ExchangeUserResolver> mResolvers;
 	static {
 		mResolvers = new ArrayList<ExchangeUserResolver>();
+		
+		try {
+			Config config = Provisioning.getInstance().getConfig();
+			String url = config.getAttr(Provisioning.A_zimbraFreebusyExchangeURL, null);
+			String user = config.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthUsername, null);
+			String pass = config.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthPassword, null);
+			String ou = config.getAttr(Provisioning.A_zimbraFreebusyExchangeUserOU, null);
+			if (url != null && user != null && pass != null && ou != null)
+				registerResolver(new BasicUserResolver(url, user, pass, ou), 0);
+		} catch (ServiceException se) {
+			ZimbraLog.misc.warn("cannot fetch exchange server info", se);
+		}
 	}
 
 	public static void registerResolver(ExchangeUserResolver r, int priority) {
@@ -89,10 +125,10 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 	}
 	
 	private void addRequest(ServerInfo info, Request req) {
-		ArrayList<Request> r = mRequests.get(info.hostname);
+		ArrayList<Request> r = mRequests.get(info.url);
 		if (r == null) {
 			r = new ArrayList<Request>();
-			mRequests.put(info.hostname, r);
+			mRequests.put(info.url, r);
 		}
 		req.data = info;
 		r.add(req);
@@ -153,7 +189,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 			return true;  // no retry
 		}
 		ExchangeMessage msg = new ExchangeMessage(serverInfo.ou, serverInfo.cn, email);
-		String url = constructUrl(serverInfo) + msg.getUrl();
+		String url = serverInfo.url + msg.getUrl();
 		Credentials cred = new UsernamePasswordCredentials(serverInfo.authUsername, serverInfo.authPassword);
 
 		HttpMethod method = null;
@@ -165,7 +201,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 				return false;  // retry
 			}
 		} catch (IOException ioe) {
-			ZimbraLog.misc.error("error commucating to "+serverInfo.hostname, ioe);
+			ZimbraLog.misc.error("error commucating to "+serverInfo.url, ioe);
 			return false;  // retry
 		} finally {
 			if (method != null)
@@ -255,7 +291,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		//   end      = [ISO8601date]
 		//   interval = [minutes]
 		//   u        = SMTP:[emailAddr]
-		StringBuilder buf = new StringBuilder(constructUrl(info));
+		StringBuilder buf = new StringBuilder(info.url);
 		buf.append("/public/?cmd=freebusy");
 		buf.append("&start=").append(DateUtil.toISO8601(new Date(req.get(0).start)));
 		buf.append("&endt=").append(DateUtil.toISO8601(new Date(req.get(0).end)));
@@ -283,20 +319,6 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
     	return ret;
     }
     
-	private String constructUrl(ServerInfo info) {
-		StringBuilder buf = new StringBuilder();
-		if (info.scheme == ServerInfo.Scheme.http)
-			buf.append("http://");
-		else
-			buf.append("https://");
-		buf.append(info.hostname);
-		if (info.scheme == ServerInfo.Scheme.http && info.port != 80 ||
-			info.scheme == ServerInfo.Scheme.https && info.port != 443) {
-			buf.append(":").append(info.port);
-		}
-		return buf.toString();
-	}
-	
 	public ServerInfo getServerInfo(String emailAddr) {
 		ServerInfo serverInfo = null;
 		for (ExchangeUserResolver r : mResolvers) {
