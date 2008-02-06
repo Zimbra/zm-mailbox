@@ -1,4 +1,6 @@
-package com.zimbra.cs.mailclient;
+package com.zimbra.cs.mailclient.imap;
+
+import com.zimbra.cs.mailclient.MailConfig;
 
 import java.io.File;
 

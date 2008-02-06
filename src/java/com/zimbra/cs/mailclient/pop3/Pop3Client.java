@@ -1,4 +1,7 @@
-package com.zimbra.cs.mailclient;
+package com.zimbra.cs.mailclient.pop3;
+
+import com.zimbra.cs.mailclient.MailClient;
+import com.zimbra.cs.mailclient.MailException;
 
 import javax.security.auth.login.LoginException;
 import java.io.IOException;

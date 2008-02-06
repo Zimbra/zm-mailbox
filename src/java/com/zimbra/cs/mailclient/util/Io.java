@@ -1,4 +1,4 @@
-package com.zimbra.cs.mailclient;
+package com.zimbra.cs.mailclient.util;
 
 import java.io.InputStream;
 import java.io.OutputStream;

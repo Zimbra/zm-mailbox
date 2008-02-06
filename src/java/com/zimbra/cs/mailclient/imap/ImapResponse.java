@@ -1,4 +1,6 @@
-package com.zimbra.cs.mailclient;
+package com.zimbra.cs.mailclient.imap;
+
+import com.zimbra.cs.mailclient.ParseException;
 
 import java.io.IOException;
 import java.io.File;

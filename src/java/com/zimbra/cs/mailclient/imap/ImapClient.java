@@ -1,6 +1,8 @@
-package com.zimbra.cs.mailclient;
+package com.zimbra.cs.mailclient.imap;
 
 import com.zimbra.cs.mina.MinaUtil;
+import com.zimbra.cs.mailclient.MailClient;
+import com.zimbra.cs.mailclient.MailException;
 
 import javax.security.auth.login.LoginException;
 import java.io.EOFException;

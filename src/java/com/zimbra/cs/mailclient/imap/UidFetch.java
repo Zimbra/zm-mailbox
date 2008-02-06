@@ -1,4 +1,4 @@
-package com.zimbra.cs.mailclient;
+package com.zimbra.cs.mailclient.imap;
 
 import com.sun.mail.iap.ProtocolException;
 import com.sun.mail.imap.IMAPFolder;

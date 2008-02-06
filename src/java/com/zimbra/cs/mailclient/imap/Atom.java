@@ -1,4 +1,4 @@
-package com.zimbra.cs.mailclient;
+package com.zimbra.cs.mailclient.imap;
 
 import java.util.Map;
 import java.util.HashMap;

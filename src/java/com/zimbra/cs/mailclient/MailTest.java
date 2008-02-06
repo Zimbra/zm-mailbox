@@ -1,6 +1,7 @@
 package com.zimbra.cs.mailclient;
 
 import static com.zimbra.cs.mailclient.ClientAuthenticator.*;
+import com.zimbra.cs.mailclient.util.SSLUtil;
 
 import javax.security.sasl.Sasl;
 import java.io.IOException;
