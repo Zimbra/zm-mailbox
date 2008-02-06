@@ -313,7 +313,7 @@ class LuceneIndex implements ITextIndex, IndexDeletionPolicy  {
                 // can use default analyzer here since it is easier, and since we aren't actually
                 // going to do any indexing...
 //                sLog.info("MI"+this.toString()+" Opening IndexWriter(3) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-                writer = new IndexWriter(mIdxDirectory, false, ZimbraAnalyzer.getDefaultAnalyzer(), true);
+                writer = new IndexWriter(mIdxDirectory, true, ZimbraAnalyzer.getDefaultAnalyzer(), true);
 //                sLog.info("MI"+this.toString()+" Opened IndexWriter(3) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
             } finally {
                 if (writer != null) {
@@ -1084,34 +1084,35 @@ class LuceneIndex implements ITextIndex, IndexDeletionPolicy  {
             if (toRet != null)
                 return toRet;
             
-            synchronized(mOpenReaders) {
-                IndexReader reader = null;
-                try {
-                    if (isIndexWriterOpen())
-                        closeIndexWriter();
-                    reader = IndexReader.open(mIdxDirectory);
-                } catch(IOException e) {
-                    // Handle the special case of trying to open a not-yet-created
-                    // index, by opening for write and immediately closing.  Index
-                    // directory should get initialized as a result.
-                    File indexDir = mIdxDirectory.getFile();
-                    if (indexDirIsEmpty(indexDir)) {
-                        openIndexWriter();
-                        mIndexWriterMutex.unlock();
-                        closeIndexWriter();
-                        try {
-                            reader = IndexReader.open(mIdxDirectory);
-                        } catch (IOException e1) {
-                            if (reader != null)
-                                reader.close();
-                            throw e1;
-                        }
-                    } else {
+            IndexReader reader = null;
+            try {
+                if (isIndexWriterOpen())
+                    closeIndexWriter();
+                reader = IndexReader.open(mIdxDirectory);
+            } catch(IOException e) {
+                // Handle the special case of trying to open a not-yet-created
+                // index, by opening for write and immediately closing.  Index
+                // directory should get initialized as a result.
+                File indexDir = mIdxDirectory.getFile();
+                if (indexDirIsEmpty(indexDir)) {
+                    openIndexWriter();
+                    mIndexWriterMutex.unlock();
+                    closeIndexWriter();
+                    try {
+                        reader = IndexReader.open(mIdxDirectory);
+                    } catch (IOException e1) {
                         if (reader != null)
                             reader.close();
-                        throw e;
+                        throw e1;
                     }
+                } else {
+                    if (reader != null)
+                        reader.close();
+                    throw e;
                 }
+            }
+            
+            synchronized(mOpenReaders) {
                 toRet = new RefCountedIndexReader(this, reader); // refcount starts at 1
                 mOpenReaders.add(toRet);
             }
@@ -1246,7 +1247,7 @@ class LuceneIndex implements ITextIndex, IndexDeletionPolicy  {
             if (mIndexWriter == null) {
                 try {
 //                  sLog.debug("MI"+this.toString()+" Opening IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-                    mIndexWriter = new IndexWriter(mIdxDirectory, false, mMbidx.getAnalyzer(), false, this);
+                    mIndexWriter = new IndexWriter(mIdxDirectory, true, mMbidx.getAnalyzer(), false, this);
 //                  sLog.debug("MI"+this.toString()+" Opened IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
 
                 } catch (IOException e1) {
@@ -1254,7 +1255,7 @@ class LuceneIndex implements ITextIndex, IndexDeletionPolicy  {
                     File indexDir  = mIdxDirectory.getFile();
                     if (indexDirIsEmpty(indexDir)) {
 //                      sLog.debug("MI"+this.toString()+" Opening IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-                        mIndexWriter = new IndexWriter(mIdxDirectory, false, mMbidx.getAnalyzer(), true, this);
+                        mIndexWriter = new IndexWriter(mIdxDirectory, true, mMbidx.getAnalyzer(), true, this);
 //                      sLog.debug("MI"+this.toString()+" Opened IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
                         if (mIndexWriter == null) 
                             throw new IOException("Failed to open IndexWriter in directory "+indexDir.getAbsolutePath());
