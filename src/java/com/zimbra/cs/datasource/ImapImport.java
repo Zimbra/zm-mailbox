@@ -640,7 +640,7 @@ public class ImapImport implements MailItemImport {
                             }
                             IMAPMessage msg = remoteMsgs.get(uid);
                             if (msg == null) return;
-                            Long time = receivedDate != null ? receivedDate.getTime() : null;
+                            Long time = receivedDate != null ? (Long) receivedDate.getTime() : null;
                             boolean indexingEnabled = mbox.attachmentsIndexingEnabled();
                             ParsedMessage pm = lit.getFile() != null ?
                                 new ParsedMessage(lit.getFile(), time, indexingEnabled) :
