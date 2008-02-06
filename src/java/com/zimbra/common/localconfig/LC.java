@@ -271,6 +271,8 @@ public class LC {
     
     public static final KnownKey zimbra_csv_mapping_file;
     
+    public static final KnownKey zimbra_auth_provider;
+    
     public static final KnownKey debug_update_config_use_old_scheme;
     
     public static final KnownKey debug_batch_message_indexing;
@@ -1033,6 +1035,10 @@ public class LC {
         zimbra_csv_mapping_file = new KnownKey("zimbra_csv_mapping_file");
         zimbra_csv_mapping_file.setDefault("${zimbra_home}" + FS + "conf" + FS + "zimbra-contact-fields.xml");
         zimbra_csv_mapping_file.setDoc("Contact field mapping for CSV import and export");
+        
+        zimbra_auth_provider = new KnownKey("zimbra_auth_provider");
+        zimbra_auth_provider.setDefault("zimbra");
+        zimbra_auth_provider.setDoc("An ordered comma-seperated list of auth providers");
         
         debug_update_config_use_old_scheme = new KnownKey("debug_update_config_use_old_scheme");
         debug_update_config_use_old_scheme.setDefault("false");
