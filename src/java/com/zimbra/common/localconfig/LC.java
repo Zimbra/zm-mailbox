@@ -243,6 +243,7 @@ public class LC {
     public static final KnownKey data_source_trust_self_signed_certs;
     public static final KnownKey data_source_fast_fetch;
     public static final KnownKey data_source_fetch_size;
+    public static final KnownKey data_source_max_literal_mem_size;
 
     public static final KnownKey timezone_file;
 
@@ -972,9 +973,13 @@ public class LC {
             new KnownKey("data_source_trust_self_signed_certs", "false",
             "Allow self-signed certificates when connecting to a data source over SSL.");
         data_source_fast_fetch =
-            new KnownKey("data_source_fast_fetch", "true", "Enable faster downloads in imap folder import (EXPERIMENTAL)");
+            new KnownKey("data_source_fast_fetch", "true", "Enable faster downloads in imap folder import");
         data_source_fetch_size =
-            new KnownKey("data_source_fetch_size", "100", "maximum number of imap messages to FETCH in each request (EXPERIMENTAL)");
+            new KnownKey("data_source_fetch_size", "100", "maximum number of imap messages to FETCH in each request");
+        data_source_max_literal_mem_size =
+            new KnownKey("data_source_max_literal_mem_size",
+                "2097152", // 2 megabytes
+                "Maximum literal data size (in bytes) that will be cached in memory. Larger data will be stored in a temporary file.");
         
         timezone_file = new KnownKey("timezone_file");
         timezone_file.setDefault("${zimbra_home}" + FS + "conf" + FS + "timezones.ics");
