@@ -3349,6 +3349,11 @@ public class Mailbox {
                             return 0; // for now, just ignore this Invitation
                         }
                     } else {
+                        // Preserve invId.  (bug 19868)
+                        Invite currInv = calItem.getInvite(scid.mInv.getRecurId());
+                        if (currInv != null)
+                            scid.mInv.setInviteId(currInv.getMailItemId());
+
                         // Preserve alarm time before any modification is made to the item.
                         AlarmData alarmData = calItem.getAlarmData();
                         if (alarmData != null)
@@ -3360,6 +3365,11 @@ public class Mailbox {
                     }
                     redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId(), volumeId);
                 } else {
+                    // Preserve invId.  (bug 19868)
+                    Invite currInv = calItem.getInvite(scid.mInv.getRecurId());
+                    if (currInv != null)
+                        scid.mInv.setInviteId(currInv.getMailItemId());
+
                     // exceptions
                     calItem.processNewInvite(scid.mPm, scid.mInv, folderId, volumeId, nextAlarm, false, false);
                 }
@@ -3587,6 +3597,12 @@ public class Mailbox {
             } else {
                 if (!checkItemChangeID(calItem))
                     throw MailServiceException.MODIFY_CONFLICT();
+                if (inv.getMethod().equals("REQUEST") || inv.getMethod().equals("PUBLISH")) {
+                    // Preserve invId.  (bug 19868)
+                    Invite currInv = calItem.getInvite(inv.getRecurId());
+                    if (currInv != null)
+                        inv.setInviteId(currInv.getMailItemId());
+                }
                 calItem.processNewInvite(pm, inv, folderId, volumeId, 0, !removeAlarms, false);
             }
             if (calItem != null)

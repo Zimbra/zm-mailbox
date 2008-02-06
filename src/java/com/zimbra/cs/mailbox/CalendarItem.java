@@ -803,7 +803,27 @@ public abstract class CalendarItem extends MailItem {
     public Invite getInvite(int index) {
         return mInvites.get(index);
     }
-    
+
+    /**
+     * Returns the Invite with matching RecurId, or null.
+     * @param rid
+     * @return
+     */
+    public Invite getInvite(RecurId rid) {
+        if (rid == null) {
+            for (Invite inv : mInvites) {
+                if (inv.getRecurId() == null)
+                    return inv;
+            }
+        } else {
+            for (Invite inv: mInvites) {
+                if (rid.equals(inv.getRecurId()))
+                    return inv;
+            }
+        }
+        return null;
+    }
+
     public Invite getDefaultInviteOrNull() {
         Invite first = null;
         for (Invite cur : mInvites) {
