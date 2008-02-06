@@ -828,7 +828,7 @@ public class LC {
                     " maximum Java heap size (-Xmx) of the JVM running Mailboxd.");
 
         mailboxd_java_options = new KnownKey("mailboxd_java_options");
-        mailboxd_java_options.setDefault("-client -XX:NewRatio=2 -Djava.awt.headless=true -XX:MaxPermSize=128m -XX:SoftRefLRUPolicyMSPerMB=1");
+        mailboxd_java_options.setDefault("-client -XX:NewRatio=2 -Djava.awt.headless=true -XX:MaxPermSize=128m -XX:SoftRefLRUPolicyMSPerMB=1 -Xss256k");
         mailboxd_java_options.setDoc("JVM options to use when launching Mailboxd.");
 
         mailboxd_java_home = new KnownKey("mailboxd_java_home");
