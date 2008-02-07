@@ -103,86 +103,88 @@ public abstract class AuthProvider {
         return sLog;
     }
     
-    
     /**
-     * invoked by implementations to determine if the request requires admin auth
+     * Returns an AuthToken based from auth data in http request
      * 
-     * @param req
-     * @return
-     * @throws ServiceException
-     */
-    /*
-    protected boolean isAdminRequest(HttpServletRequest req) throws ServiceException  {
-        int adminPort = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, -1);
-        return (req.getLocalPort() == adminPort);
-    }
-    */
-    
-    /**
-     * invoked by implementations to determine if the request requires admin auth
-     * 
-     * @param engineCtxt
-     * @return
-     * @throws ServiceException
-     */
-    /*
-    protected boolean isAdminRequest(Map engineCtxt) throws ServiceException  {
-        return isAdminRequest((HttpServletRequest)engineCtxt.get(SoapServlet.SERVLET_REQUEST));
-    }
-    */
-    
-    /**
-     * Returns an AuthToken based on http request
+     * Should never return null.
+     * Throws AuthProviderException.NO_AUTH_TOKEN if auth data for the provider is not present 
+     * Throws AuthTokenException if auth data for the provider is present but cannot be resolved into a valid AuthToken
      * 
      * @param req
      * @param isAdmin
      * @return
      * @throws AuthTokenException
      */
-    protected abstract AuthToken authToken(HttpServletRequest req, boolean isAdmin) throws AuthTokenException;
+    protected abstract AuthToken authToken(HttpServletRequest req, boolean isAdminReq) throws AuthProviderException, AuthTokenException;
 
     /**
-     * Returns an AuthToken based on SOAP conext header
+     * Returns an AuthToken based from auth data in http request
+     * 
+     * Should never return null.
+     * Throws AuthProviderException.NO_AUTH_TOKEN if auth data for the provider is not present 
+     * Throws AuthTokenException if auth data for the provider is present but cannot be resolved into a valid AuthToken
      * 
      * @param soapCtxt
      * @param engineCtxt
      * @param isAdmin
-     * @return
+     * @return 
      * @throws AuthTokenException
      */
-    protected abstract AuthToken authToken(Element soapCtxt, Map engineCtxt) throws AuthTokenException;
+    protected abstract AuthToken authToken(Element soapCtxt, Map engineCtxt) throws AuthProviderException, AuthTokenException;
     
     
     /**
-     * goes through all the providers, trying them in order until one returns a non-null auth token.
-     * could return null if no provider can construct an AuthToken from req.
+     * The following two static methods go through all the providers, trying them in order until one returns an AuthToken
+     * Return null when there is no auth data for any of the enabled providers
+     * Throw AuthTokenException if any provider in the chain throws an AuthTokenException.
      * 
+     * Note: 1. we proceed to try the next provider only if the provider throws AuthProviderException.NO_AUTH_TOKEN.
+     *       2. in all other cases, we stop processing and throws an AuthTokenException to our caller.
+     *             like when a provider:
+     *             - returns null -> it should not.  Treat it as a provider error and throws AuthTokenException
+     *             - throws AuthTokenException, this means auth data is present for a provider but it cannot be 
+     *               resolved into a valid AuthToken.
+     *             - Any non NO_AUTH_TOKEN AuthProviderException.  (Currently there is not such codes defined yet)
+     * 
+     */
+    
+    /** 
      * @param req http request
-     * @return
+     * @return an AuthToken object, or null if auth data is not present for any of the enabled providers
      * @throws ServiceException
      */
-    public static AuthToken getAuthToken(HttpServletRequest req, boolean isAdmin) throws ServiceException {
+    public static AuthToken getAuthToken(HttpServletRequest req, boolean isAdminReq) throws AuthTokenException {
         AuthToken at = null;
         List<AuthProvider> providers = getProviders();
         for (AuthProvider ap : providers) {
             try {
-                at = ap.authToken(req, isAdmin);
+                at = ap.authToken(req, isAdminReq);
+                // sanity check, should not be null, if a provider returns null we throw AuthTokenException here
+                if (at == null)
+                    throw new AuthTokenException("auth provider " + ap.getName() + " returned null");
+                else
+                    return at;
+            } catch (AuthProviderException e) {
+                // if there is no auth data for this provider, log and continue with next provider
+                if (AuthProviderException.NO_AUTH_DATA.equals(e.getCode()))
+                    logger().debug("getAuthToken no auth data for provider " + ap.getName());
+                else
+                    throw new AuthTokenException("auth provider error", e);
             } catch (AuthTokenException e) {
-                // log and continue with next provider
+                // log and rethrow
                 logger().debug("getAuthToken error: provider=" + ap.getName() + ", err=" + e.getMessage(), e);
+                throw e;
             }
-            if (at != null)
-                return at;
         }
+        
+        // there is no auth data for any of the enabled providers
         return null;
     }
 
     /**
-     * goes through all the providers, trying them in order until one returns a non-null auth token.
-     * could return null if no provider can construct an AuthToken from soapCtxt/engineCtxt
      * 
      * AP-TODO-2:
-     * For SOAP, we currently do not pass in isAdmin, because with the current flow in SoapEngine, 
+     * For SOAP, we currently do not pass in isAdminReq, because with the current flow in SoapEngine, 
      * at the point when the SOAP context(ZimbraSoapContext) is examined, we haven't looked at the SOAP 
      * body yet.  Whether admin auth is required is based on the SOAP command, which has to be extracted 
      * from the body.  Zimbra auth provider always retrieves the raw auth token from the fixed tag, so 
@@ -190,22 +192,34 @@ public abstract class AuthProvider {
      *    
      * @param soapCtxt <context> element in SOAP header
      * @param engineCtxt soap engine context
-     * @return
-     * @throws ServiceException
+     * @return an AuthToken object, or null if auth data is not present for any of the enabled providers
+     * @throws AuthTokenException
      */
-    public static AuthToken getAuthToken(Element soapCtxt, Map engineCtxt) throws ServiceException {
+    public static AuthToken getAuthToken(Element soapCtxt, Map engineCtxt) throws AuthTokenException {
         AuthToken at = null;
         List<AuthProvider> providers = getProviders();
         for (AuthProvider ap : providers) {
             try {
                 at = ap.authToken(soapCtxt, engineCtxt);
+                // sanity check, should not be null, if a provider returns null we throw AuthTokenException here
+                if (at == null)
+                    throw new AuthTokenException("auth provider " + ap.getName() + " returned null");
+                else
+                    return at;
+            } catch (AuthProviderException e) {
+                // if there is no auth data for this provider, log and continue with next provider
+                if (AuthProviderException.NO_AUTH_DATA.equals(e.getCode()))
+                    logger().debug("getAuthToken no auth data for provider " + ap.getName());
+                else
+                    throw new AuthTokenException("auth provider error", e);
             } catch (AuthTokenException e) {
-                // log and continue with next provider
+                // log and rethrow
                 logger().debug("getAuthToken error: provider=" + ap.getName() + ", err=" + e.getMessage(), e);
+                throw e;
             }
-            if (at != null)
-                return at;
         }
+        
+        // there is no auth data for any of the enabled providers
         return null;
     }
     

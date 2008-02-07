@@ -59,6 +59,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -177,48 +178,39 @@ public class ZimbraServlet extends HttpServlet {
 
     public static AuthToken getAuthTokenFromCookie(HttpServletRequest req, HttpServletResponse resp)
     throws IOException {
-        return getAuthTokenFromCookieImpl(req, resp, COOKIE_ZM_AUTH_TOKEN, false);
+        return getAuthTokenFromCookieImpl(req, resp, false, false);
     }
 
     public static AuthToken getAuthTokenFromCookie(HttpServletRequest req, HttpServletResponse resp, boolean doNotSendHttpError)
     throws IOException {
-        return getAuthTokenFromCookieImpl(req, resp, COOKIE_ZM_AUTH_TOKEN, doNotSendHttpError);
+        return getAuthTokenFromCookieImpl(req, resp, false, doNotSendHttpError);
     }
 
     public static AuthToken getAdminAuthTokenFromCookie(HttpServletRequest req, HttpServletResponse resp)
     throws IOException {
-        return getAuthTokenFromCookieImpl(req, resp, COOKIE_ZM_ADMIN_AUTH_TOKEN, false);
+        return getAuthTokenFromCookieImpl(req, resp, true, false);
     }
 
     public static AuthToken getAdminAuthTokenFromCookie(HttpServletRequest req, HttpServletResponse resp, boolean doNotSendHttpError)
     throws IOException {
-        return getAuthTokenFromCookieImpl(req, resp, COOKIE_ZM_ADMIN_AUTH_TOKEN, doNotSendHttpError);
+        return getAuthTokenFromCookieImpl(req, resp, true, doNotSendHttpError);
     }
 
     private static AuthToken getAuthTokenFromCookieImpl(HttpServletRequest req,
                                                         HttpServletResponse resp,
-                                                        String cookieName,
+                                                        boolean isAdminReq,
                                                         boolean doNotSendHttpError)
     throws IOException {
-        String authTokenStr = null;
-        javax.servlet.http.Cookie cookies[] =  req.getCookies();
-        if (cookies != null) {
-            for (int i = 0; i < cookies.length; i++) {
-                if (cookies[i].getName().equals(cookieName)) {
-                    authTokenStr = cookies[i].getValue();
-                    break;
-                }
-            }
-        }
-
-        if (authTokenStr == null) {
-            if (!doNotSendHttpError)
-                resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "no authtoken cookie");
-            return null;
-        }
-
+        
+        AuthToken authToken = null;
         try {
-            AuthToken authToken = AuthToken.getAuthToken(authTokenStr);
+            authToken = AuthProvider.getAuthToken(req, isAdminReq);
+            if (authToken == null) {
+                if (!doNotSendHttpError)
+                    resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "no authtoken cookie");
+                return null;
+            }
+            
             if (authToken.isExpired()) {
                 if (!doNotSendHttpError)
                     resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "authtoken expired");
@@ -232,6 +224,7 @@ public class ZimbraServlet extends HttpServlet {
         }
     }
 
+    
     protected void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, String accountId)
     throws IOException, ServiceException {
     	Provisioning prov = Provisioning.getInstance();

@@ -21,12 +21,12 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.soap.SoapServlet;
 
 public class ZimbraAuthProvider extends AuthProvider{
@@ -35,23 +35,36 @@ public class ZimbraAuthProvider extends AuthProvider{
         super(ZIMBRA_AUTH_PROVIDER);
     }
     
-    protected AuthToken authToken(HttpServletRequest req, boolean isAdmin) throws AuthTokenException {
-        throw new AuthTokenException("not yet implemented");
+    protected AuthToken authToken(HttpServletRequest req, boolean isAdminReq) throws AuthProviderException, AuthTokenException {
+        String cookieName = isAdminReq? ZimbraServlet.COOKIE_ZM_ADMIN_AUTH_TOKEN : ZimbraServlet.COOKIE_ZM_AUTH_TOKEN;
+        String rawAuthToken = null;
+        javax.servlet.http.Cookie cookies[] =  req.getCookies();
+        if (cookies != null) {
+            for (int i = 0; i < cookies.length; i++) {
+                if (cookies[i].getName().equals(cookieName)) {
+                    rawAuthToken = cookies[i].getValue();
+                    break;
+                }
+            }
+        }
+        
+        return authToken(rawAuthToken);
     }
 
-    /*
-     * isAdmin is not looked at by the zimbra auth provider
-     */
-    protected AuthToken authToken(Element soapCtxt, Map engineCtxt) throws AuthTokenException  {
+    protected AuthToken authToken(Element soapCtxt, Map engineCtxt) throws AuthProviderException, AuthTokenException  {
         String rawAuthToken = (soapCtxt == null ? null : soapCtxt.getAttribute(HeaderConstants.E_AUTH_TOKEN, null));
         
         // check for auth token in engine context if not in header  
         if (rawAuthToken == null)
             rawAuthToken = (String) engineCtxt.get(SoapServlet.ZIMBRA_AUTH_TOKEN);
         
-        if (!StringUtil.isNullOrEmpty(rawAuthToken))
-            return AuthToken.getAuthToken(rawAuthToken);
-        else
-            return null;
+        return authToken(rawAuthToken);
+    }
+    
+    private AuthToken authToken(String rawAuthToken) throws AuthProviderException, AuthTokenException {
+        if (StringUtil.isNullOrEmpty(rawAuthToken))
+            throw AuthProviderException.NO_AUTH_DATA();
+        
+        return AuthToken.getAuthToken(rawAuthToken);
     }
 }
