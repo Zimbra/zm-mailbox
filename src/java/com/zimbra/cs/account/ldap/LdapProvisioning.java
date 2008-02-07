@@ -4710,7 +4710,7 @@ public class LdapProvisioning extends Provisioning {
                 String newDn = getDataSourceDn(ldapEntry, name);            
                 LdapUtil.renameEntry(ctxt, ds.getDN(), newDn);
             } catch (NamingException e) {
-                throw ServiceException.FAILURE("unable to rename datasource: "+newName, e);
+                throw ServiceException.FAILURE("unable to rename datasource: "+name, e);
             } finally {
                 LdapUtil.closeContext(ctxt);
             }
