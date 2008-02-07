@@ -208,10 +208,9 @@ public class ZimbraSoapContext {
             mRequestedAccountId = null;
         }
 
-                
-        mAuthToken = AuthProvider.getAuthToken(ctxt, context);
-        if (mAuthToken != null) {
-            try {
+        try {
+            mAuthToken = AuthProvider.getAuthToken(ctxt, context);
+            if (mAuthToken != null) {
                 /*
                  * AP-TODO-1:
                  * Note, there is a behavior change on setting the mRawAuthToken.
@@ -236,13 +235,18 @@ public class ZimbraSoapContext {
                  *          
                  */
                 mRawAuthToken = mAuthToken.getEncoded();
-            } catch (AuthTokenException e) {
-                sLog.info("ZimbraSoapContext AuthToken error, unable to get encoded auth token: " + e.getMessage(), e);
+            
+                if (mAuthToken.isExpired())
+                    throw ServiceException.AUTH_EXPIRED();
+                mAuthTokenAccountId = mAuthToken.getAccountId();
             }
-            if (mAuthToken.isExpired())
-                throw ServiceException.AUTH_EXPIRED();
-            mAuthTokenAccountId = mAuthToken.getAccountId();
+        } catch (AuthTokenException e) {
+            // ignore and leave null
+            mAuthToken = null;
+            if (sLog.isDebugEnabled())
+                sLog.debug("ZimbraContext AuthToken error: " + e.getMessage(), e);
         }
+                
         
         // constrain operations if we know the max change number the client knows about
         Element change = (ctxt == null ? null : ctxt.getOptionalElement(HeaderConstants.E_CHANGE));
