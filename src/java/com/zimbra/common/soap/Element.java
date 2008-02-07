@@ -190,6 +190,7 @@ public abstract class Element implements Cloneable {
     public Iterator<Element> elementIterator(String name)  { return listElements(name).iterator(); }
 
     public abstract String getText();
+    abstract String getRawText();
     public String getTextTrim()  { return getText().trim().replaceAll("\\s+", " "); }
 
     public String getAttribute(String key) throws ServiceException        { return checkNull(key, getAttribute(key, null)); }
@@ -688,14 +689,21 @@ public abstract class Element implements Cloneable {
         }
 
         @Override public String getText()  { return getAttribute(A_CONTENT, ""); }
-        String getRawText()                { return getAttribute(A_CONTENT, null); }
+        @Override String getRawText()      { return getAttribute(A_CONTENT, null); }
 
         @Override public String getAttribute(String key, String defaultValue) {
             Object obj = mAttributes.get(key);
-            if (obj != null)
-                return obj.toString();
-            Element attrs = getOptionalElement(E_ATTRS);
-            obj = (attrs == null ? null : attrs.mAttributes.get(key));
+            if (obj != null) {
+                if (obj instanceof List)
+                    obj = ((List) obj).isEmpty() ? null : ((List) obj).get(0);
+                if (obj instanceof Element)
+                    obj = ((Element) obj).getRawText();
+                else if (obj instanceof KeyValuePair)
+                    obj = ((KeyValuePair) obj).getValue();
+            } else {
+                Element attrs = getOptionalElement(E_ATTRS);
+                obj = (attrs == null ? null : attrs.mAttributes.get(key));
+            }
             return (obj == null ? defaultValue : obj.toString());
         }
 
@@ -1148,7 +1156,7 @@ public abstract class Element implements Cloneable {
         }
 
         @Override public String getText()  { return (mText == null ? "" : mText); }
-        String getRawText()                { return mText; }
+        @Override String getRawText()      { return mText; }
 
         @Override public String getAttribute(String key, String defaultValue) {
             if (key == null)
@@ -1267,6 +1275,10 @@ public abstract class Element implements Cloneable {
         QName qm = new QName("m", bogusNS);
 
         SoapProtocol proto = SoapProtocol.SoapJS;
+        Element ctxt = new JSONElement(proto.getHeaderQName()).addUniqueElement(HeaderConstants.E_CONTEXT);
+        ctxt.addElement(HeaderConstants.E_SESSION_ID).setText("3").addAttribute(HeaderConstants.A_ID, 3);
+        System.out.println(ctxt.getAttribute(HeaderConstants.E_SESSION_ID, null));
+
         Element env = testMessage(new JSONElement(proto.getEnvelopeQName()), proto, qm);
         System.out.println(env);
         System.out.println(Element.parseJSON(env.toString()));
