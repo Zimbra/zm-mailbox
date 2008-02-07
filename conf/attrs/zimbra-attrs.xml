@@ -1888,7 +1888,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>address that we will bcc when using sending mail with this identity (deprecatedSince 5.0 in identity)</desc>
 </attr>
 
-<attr id="412" name="zimbraPrefIdentityName" type="cstring" max="128" cardinality="single" requiredIn="identity" optionalIn="account" flags="domainAdminModifiable">
+<attr id="412" name="zimbraPrefIdentityName" type="string" max="128" cardinality="single" requiredIn="identity" optionalIn="account" flags="domainAdminModifiable">
     <desc>name of the identity</desc>
 </attr>
 
@@ -1916,7 +1916,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Unique ID for a data source</desc>
 </attr>
 
-<attr id="418" name="zimbraDataSourceName" type="cstring" max="128" cardinality="single" requiredIn="dataSource" flags="domainAdminModifiable">
+<attr id="418" name="zimbraDataSourceName" type="string" max="128" cardinality="single" requiredIn="dataSource" flags="domainAdminModifiable">
   <desc>Descriptive name of the data source</desc>
 </attr>
 
@@ -2283,7 +2283,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     <desc>Unique ID for an signature</desc>
 </attr>
 
-<attr id="491" name="zimbraSignatureName" type="cstring" max="128" cardinality="single" requiredIn="signature" optionalIn="account" flags="domainAdminModifiable">
+<attr id="491" name="zimbraSignatureName" type="string" max="128" cardinality="single" requiredIn="signature" optionalIn="account" flags="domainAdminModifiable">
     <desc>name of the signature</desc>
 </attr>
 
