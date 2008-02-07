@@ -48,7 +48,7 @@ public abstract class MimePart {
         mContentType = new ContentType(ctype);
         checkContentType(mContentType);
         mMimeHeaders = new MimeHeaderBlock(this instanceof MimeMessage);
-        setMimeHeader("Content-Type", new MimeHeaderBlock.MimeHeader("Content-Type", mContentType));
+        setMimeHeader("Content-Type", new MimeHeader("Content-Type", mContentType));
         mDirty = true;
     }
 
@@ -159,14 +159,15 @@ public abstract class MimePart {
         return mMimeHeaders == null ? null : mMimeHeaders.getRawHeader(name);
     }
 
-    public void setMimeHeader(String name, String value) {
+    public MimePart setMimeHeader(String name, String value) {
         if (name.equalsIgnoreCase("Content-Type"))
             setContentType(new ContentType(value));
         else
-            setMimeHeader(name, value == null ? null : new MimeHeaderBlock.MimeHeader(name, value));
+            setMimeHeader(name, value == null ? null : new MimeHeader(name, value));
+        return this;
     }
 
-    void setMimeHeader(String name, MimeHeaderBlock.MimeHeader header) {
+    void setMimeHeader(String name, MimeHeader header) {
         if (mMimeHeaders == null)
             mMimeHeaders = new MimeHeaderBlock(false);
         mMimeHeaders.setHeader(name, header);
@@ -175,7 +176,7 @@ public abstract class MimePart {
         mStartOffset = -1;
     }
 
-    void addMimeHeader(String name, MimeHeaderBlock.MimeHeader header) {
+    void addMimeHeader(String name, MimeHeader header) {
         if (mMimeHeaders == null)
             mMimeHeaders = new MimeHeaderBlock(false);
         mMimeHeaders.addHeader(name, header);
@@ -184,7 +185,7 @@ public abstract class MimePart {
         mStartOffset = -1;
     }
 
-    Iterator<MimeHeaderBlock.MimeHeader> mimeHeaderIterator() {
+    Iterator<MimeHeader> mimeHeaderIterator() {
         if (mMimeHeaders == null)
             mMimeHeaders = new MimeHeaderBlock(false);
         return mMimeHeaders.iterator();
@@ -200,7 +201,7 @@ public abstract class MimePart {
 
     public void setContentType(ContentType ctype) {
         mContentType = new ContentType(ctype);
-        setMimeHeader("Content-Type", ctype == null ? null : new MimeHeaderBlock.MimeHeader("Content-Type", ctype));
+        setMimeHeader("Content-Type", ctype == null ? null : new MimeHeader("Content-Type", ctype));
     }
 
     abstract void checkContentType(ContentType ctype);
@@ -270,11 +271,11 @@ public abstract class MimePart {
         return getRawContent();
     }
 
-    public void setContent(byte[] content) {
-        setContent(content, true);
+    public MimePart setContent(byte[] content) {
+        return setContent(content, true);
     }
 
-    void setContent(byte[] content, boolean markDirty) {
+    MimePart setContent(byte[] content, boolean markDirty) {
         if (markDirty && mParent != null)
             mParent.markDirty(true);
 
@@ -282,13 +283,14 @@ public abstract class MimePart {
         mStartOffset = -1;
         mBodyOffset  = content == null ? -1 : 0;
         mEndOffset   = content == null ? -1 : content.length;
+        return this;
     }
 
-    public void setContent(File file) {
-        setContent(file, true);
+    public MimePart setContent(File file) {
+        return setContent(file, true);
     }
 
-    void setContent(File file, boolean markDirty) {
+    MimePart setContent(File file, boolean markDirty) {
         if (markDirty && mParent != null)
             mParent.markDirty(true);
         if (!file.exists())
@@ -298,6 +300,7 @@ public abstract class MimePart {
         mStartOffset = -1;
         mBodyOffset  = file == null ? -1 : 0;
         mEndOffset   = file == null ? -1 : file.length();
+        return this;
     }
 
     /** Marks the item as "dirty" so that we regenerate the part when

@@ -16,6 +16,7 @@
  */
 package com.zimbra.common.mime;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -147,11 +148,11 @@ public class MimeBodyPart extends MimePart {
      *  and sets the part's content to the given text using the default
      *  charset.
      * @throws UnsupportedEncodingException */
-    public void setText(String text) throws UnsupportedEncodingException {
-        setText(text, null, null, null);
+    public MimeBodyPart setText(String text) throws UnsupportedEncodingException {
+        return setText(text, null, null, null);
     }
 
-    public void setText(String text, String charset, String subtype, ContentTransferEncoding cte) throws UnsupportedEncodingException {
+    public MimeBodyPart setText(String text, String charset, String subtype, ContentTransferEncoding cte) throws UnsupportedEncodingException {
         // default the subtype and charset appropriately
         ContentType ctype = getContentType();
         if (subtype == null || subtype.trim().equals(""))
@@ -193,18 +194,19 @@ public class MimeBodyPart extends MimePart {
         setContent(content);
         mEncoding = (cte == ContentTransferEncoding.BINARY ? ContentTransferEncoding.BINARY : ContentTransferEncoding.EIGHT_BIT);
         mTargetEncoding = cte;
+        return this;
     }
 
 
     @Override MimePart readContent(PeekAheadInputStream pais) throws IOException {
         List<String> boundaries = getActiveBoundaries();
+        pais.clearBoundary();
 
         // if there's no pending multipart, we can just consume the remainder of the input
         if (boundaries == null) {
             byte[] buffer = new byte[8192];
             while (pais.read(buffer) > -1)
                 ;
-            pais.clearBoundary();
             recordEndpoint(pais.getPosition());
             return this;
         }
@@ -238,9 +240,12 @@ public class MimeBodyPart extends MimePart {
             } while ((c = pais.read()) != -1);
         } while (c != -1);
 
-        pais.clearBoundary();
         recordEndpoint(pais.getPosition());
         return this;
+    }
+
+    static boolean checkBoundary(byte[] content, int offset, PeekAheadInputStream pais, List<String> boundaries, long linestart) throws IOException {
+        return checkBoundary(new ByteArrayInputStream(content, offset, content.length - offset), pais, boundaries, linestart);
     }
 
     static boolean checkBoundary(InputStream is, PeekAheadInputStream pais, List<String> boundaries, long linestart) throws IOException {
@@ -286,7 +291,6 @@ public class MimeBodyPart extends MimePart {
                 is.reset();
         }
 
-        pais.clearBoundary();
         return false;
     }
 }

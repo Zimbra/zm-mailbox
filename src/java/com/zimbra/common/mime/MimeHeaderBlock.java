@@ -16,17 +16,15 @@
  */
 package com.zimbra.common.mime;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class MimeHeaderBlock implements Iterable<MimeHeaderBlock.MimeHeader> {
-    private final List<MimeHeader> mHeaders;
+public class MimeHeaderBlock implements Iterable<MimeHeader> {
+    private final ArrayList<MimeHeader> mHeaders;
 
     public MimeHeaderBlock(boolean isMessage) {
         mHeaders = new ArrayList<MimeHeader>(isMessage ? 20 : 5);
@@ -38,18 +36,27 @@ public class MimeHeaderBlock implements Iterable<MimeHeaderBlock.MimeHeader> {
 
     /** Returns the value of the first header matching the given
      *  <tt>name</tt>. */
+    public String getHeader(String name) {
+        return getHeader(null);
+    }
+
+    /** Returns the value of the last header matching the given <tt>name</tt>.
+     *  Header content not encoded with RFC 2047 encoded-words or RFC 2231
+     *  encoding is decoded using the specified default charset. */
     public String getHeader(String name, String defaultCharset) {
-        for (MimeHeader hdr : mHeaders) {
+        for (int i = mHeaders.size() - 1; i >= 0; i--) {
+            MimeHeader hdr = mHeaders.get(i);
             if (hdr.getName().equalsIgnoreCase(name))
                 return hdr.getValue(defaultCharset);
         }
         return null;
     }
 
-    /** Returns the raw (byte array) value of the first header matching
+    /** Returns the raw (byte array) value of the last header matching
      *  the given <tt>name</tt>. */
     public byte[] getRawHeader(String name) {
-        for (MimeHeader hdr : mHeaders) {
+        for (int i = mHeaders.size() - 1; i >= 0; i--) {
+            MimeHeader hdr = mHeaders.get(i);
             if (hdr.getName().equalsIgnoreCase(name))
                 return hdr.getRawHeader();
         }
@@ -133,7 +140,7 @@ public class MimeHeaderBlock implements Iterable<MimeHeaderBlock.MimeHeader> {
                 if (name.length() == 0)
                     break;
                 // check for incorrectly-located boundary delimiter
-                if (dashdash && MimeBodyPart.checkBoundary(new ByteArrayInputStream(content.toByteArray(), 2, content.size() - 2), pais, boundaries, linestart))
+                if (dashdash && MimeBodyPart.checkBoundary(content.toByteArray(), 2, pais, boundaries, linestart))
                     return this;
                 // no colon, so abort now rather than reading more data
                 continue;
@@ -141,6 +148,7 @@ public class MimeHeaderBlock implements Iterable<MimeHeaderBlock.MimeHeader> {
             int valuestart = content.size();  boolean colon = true;
 
             // read the field value, including extra lines from folding
+            boolean folded = false;
             for (c = pais.read(); c != -1; c = pais.read()) {
                 content.write(c);
                 if (c == ' ' && colon) {
@@ -149,14 +157,19 @@ public class MimeHeaderBlock implements Iterable<MimeHeaderBlock.MimeHeader> {
                 } else if (c == '\n' || c == '\r') {
                     if (c == '\r' && pais.peek() == '\n') 
                         content.write(pais.read());
+                    // unless the first char on the next line is whitespace (i.e. folding), this header is complete
                     if (pais.peek() != ' ' && pais.peek() != '\t')
                         break;
+                    // check for incorrectly-located boundary delimiter
+                    if (dashdash && !folded && MimeBodyPart.checkBoundary(content.toByteArray(), 2, pais, boundaries, linestart))
+                        return this;
+                    folded = true;
                 }
                 colon = false;
             }
 
             // check for incorrectly-located boundary delimiter
-            if (dashdash && MimeBodyPart.checkBoundary(new ByteArrayInputStream(content.toByteArray(), 2, content.size() - 2), pais, boundaries, linestart))
+            if (dashdash && !folded && MimeBodyPart.checkBoundary(content.toByteArray(), 2, pais, boundaries, linestart))
                 return this;
 
             // if the name was valid, save the header to the hash
@@ -168,64 +181,5 @@ public class MimeHeaderBlock implements Iterable<MimeHeaderBlock.MimeHeader> {
         } while (c != -1);
 
         return this;
-    }
-
-
-    static class MimeHeader {
-        private final String mName;
-        private final byte[] mContent;
-        private final int mValueStart;
-
-        /** Constructor for pre-analyzed header line read from message source.
-         * @param name    Header field name.
-         * @param content Complete raw header line, with folding and trailing CRLF
-         *                and 2047-encoding intact.
-         * @param start   The position within <code>content</code> where the header
-         *                field value begins (after the ":"/": "). */
-        MimeHeader(String name, byte[] content, int start) {
-            mName = name;  mContent = content;  mValueStart = start;
-        }
-
-        /** Constructor for new header lines.  Header will be serialized as
-         *  <tt>{name}: {value}CRLF</tt>.  <i>Note: No folding or 2047-encoding
-         *  is done at present.</i> */
-        MimeHeader(String name, String value) {
-            ByteArrayOutputStream content = new ByteArrayOutputStream();
-            byte[] bname = name.getBytes(), bvalue = value.getBytes();
-            content.write(bname, 0, bname.length);  content.write(':');  content.write(' ');
-            int start = content.size();
-            content.write(bvalue, 0, bvalue.length);  content.write('\r');  content.write('\n');
-
-            mName = name;  mContent = content.toByteArray();  mValueStart = start;
-        }
-
-        MimeHeader(String name, MimeCompoundHeader mch) {
-            mName = name;  mContent = (mch.toString(name) + "\r\n").getBytes();  mValueStart = mName.length() + 2;
-        }
-
-        String getName()       { return mName; }
-        byte[] getRawHeader()  { return mContent; }
-        String getValue()      { return unfold(new String(mContent, mValueStart, mContent.length - mValueStart)); }
-        String getValue(String charset) {
-            if (charset == null || charset.equals(""))
-                return getValue();
-            try {
-                return unfold(new String(mContent, mValueStart, mContent.length - mValueStart, charset));
-            } catch (UnsupportedEncodingException e) {
-                return getValue();
-            }
-        }
-        private String unfold(final String folded) {
-            int length = folded.length();
-            StringBuilder unfolded = new StringBuilder(length);
-            for (int i = 0; i < length; i++) {
-                char c = folded.charAt(i);
-                if (c != '\r' && c != '\n')
-                    unfolded.append(c);
-            }
-            return unfolded.toString();
-        }
-
-        @Override public String toString()  { return new String(mContent); }
     }
 }
