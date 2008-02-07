@@ -48,8 +48,11 @@ public class MimeCompoundHeader {
 
         for (int i = 0, count = header.length(); i < count; i++) {
             char c = header.charAt(i);
-            if (rfc2231.state == RFC2231State.SLOP) {
-                if (c == ';' || c == '\n' || c == '\r') {
+            if (c == '\r' || c == '\n') {
+                // ignore folding, even where it's not actually permitted
+                escaped = false;
+            } else if (rfc2231.state == RFC2231State.SLOP) {
+                if (c == ';') {
                     rfc2231.setState(RFC2231State.PARAM);
                 } else if (c == '(') {
                     escaped = false;  rfc2231.comment++;
@@ -61,15 +64,9 @@ public class MimeCompoundHeader {
                 } else if (!escaped && c == '"') {
                     rfc2231.saveParameter(mParams);
                     rfc2231.setState(RFC2231State.SLOP);
-                } else if (c != '\n' && c != '\r') {
+                } else {
                     rfc2231.addValueChar(c);  escaped = false;
                 }
-            } else if (c == '\r' || c == '\n') {
-                if (!mParams.isEmpty() || rfc2231.value.length() > 0) {
-                    rfc2231.saveParameter(mParams);
-                    rfc2231.setState(RFC2231State.PARAM);
-                }
-                // otherwise, it's just folding and we can effectively just ignore the CR/LF
             } else if (rfc2231.state == RFC2231State.PARAM) {
                 if (c == '=') {
                     rfc2231.setState(RFC2231State.EQUALS);

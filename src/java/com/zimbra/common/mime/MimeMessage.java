@@ -134,8 +134,8 @@ public class MimeMessage extends MimePart {
     }
 
     private MimePart transferMessageHeaders(MimePart newBody) {
-        for (Iterator<MimeHeaderBlock.MimeHeader> it = mBody.mimeHeaderIterator(); it.hasNext(); ) {
-            MimeHeaderBlock.MimeHeader header = it.next();
+        for (Iterator<MimeHeader> it = mBody.mimeHeaderIterator(); it.hasNext(); ) {
+            MimeHeader header = it.next();
             if (!header.getName().toLowerCase().startsWith("content-")) {
                 // FIXME: want to have the new body's old headers at the *end* of the resulting list, not at the beginning
                 newBody.addMimeHeader(header.getName(), header);

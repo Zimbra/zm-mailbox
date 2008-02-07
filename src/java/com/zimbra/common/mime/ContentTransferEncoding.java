@@ -128,7 +128,7 @@ public enum ContentTransferEncoding {
         }
     }
 
-    static class QuotedPrintableDecoderStream extends TransferEncodingStream {
+    static class QuotedPrintableDecoderStream extends QuotedPrintableStream {
         private static final int[] QP_DECODE = new int[128];
             static {
                 for (int i = 0; i < 128; i++)
@@ -139,18 +139,9 @@ public enum ContentTransferEncoding {
                 }
             }
 
-        private int peek1 = -1, peek2 = -1;
-
         QuotedPrintableDecoderStream(ByteArrayInputStream bais)  { super(bais); }
         QuotedPrintableDecoderStream(BufferedInputStream is)     { super(is); }
         QuotedPrintableDecoderStream(InputStream is)             { super(new BufferedInputStream(is, 4096)); }
-
-        private int nextByte() throws IOException {
-            if (peek1 == -1)  { return super.read(); }
-            else              { int c = peek1;  peek1 = peek2;  peek2 = -1;  return c; }
-        }
-
-        private void unread(int c)  { peek2 = peek1;  peek1 = c; }
 
         @Override public int read() throws IOException {
             int c = nextByte();
@@ -171,11 +162,11 @@ public enum ContentTransferEncoding {
         }
     }
 
-    static class QuotedPrintableEncoderStream extends TransferEncodingStream {
+    static class QuotedPrintableEncoderStream extends QuotedPrintableStream {
         static final byte[] QP_TABLE = "0123456789ABCDEF".getBytes();
 
-        private int column, valid, peek1 = -1, peek2 = -1, out1, out2;
-        private boolean text;
+        private int column, valid, out1, out2;
+        private boolean text, force[];
 
         QuotedPrintableEncoderStream(ByteArrayInputStream bais, ContentType ctype)  { super(bais);  setContentType(ctype); }
         QuotedPrintableEncoderStream(BufferedInputStream is, ContentType ctype)     { super(is);    setContentType(ctype); }
@@ -185,12 +176,11 @@ public enum ContentTransferEncoding {
             text = ctype == null || ctype.getPrimaryType().equals("text");  return this;
         }
 
-        private int nextByte() throws IOException {
-            if (peek1 == -1)  { return super.read(); }
-            else              { int c = peek1;  peek1 = peek2;  peek2 = -1;  return c; }
+        void setForceEncode(boolean[] characters) {
+            if (characters == null || characters.length != 128)
+                throw new IllegalArgumentException("invalid force-encode array length");
+            force = characters;
         }
-
-        private void unread(int c)  { peek2 = peek1;  peek1 = c; }
 
         @Override public int read() throws IOException {
             if (valid == 0) {
@@ -208,9 +198,9 @@ public enum ContentTransferEncoding {
                 }
                 if (c == ' ' || c == '\t') {
                     unread(p1 = nextByte());
-                    if (p1 != '\r')
+                    if (p1 != '\r' && (force == null || !force[c]))
                         return c;
-                } else if (c > 0x20 && c < 0x7F && c != '=') {
+                } else if (c > 0x20 && c < 0x7F && c != '=' && (force == null || !force[c])) {
                     return c;
                 }
                 if (column >= CHUNK_SIZE - 3) {
@@ -225,6 +215,19 @@ public enum ContentTransferEncoding {
             }
         }
     }
+
+    private static class QuotedPrintableStream extends TransferEncodingStream {
+        private int peek1 = -1, peek2 = -1;
+
+        QuotedPrintableStream(InputStream is)  { super(is); }
+
+        protected int nextByte() throws IOException {
+            if (peek1 == -1)  { return super.read(); }
+            else              { int c = peek1;  peek1 = peek2;  peek2 = -1;  return c; }
+        }
+
+        protected void unread(int c)  { peek2 = peek1;  peek1 = c; }
+}
 
     private static class TransferEncodingStream extends FilterInputStream {
         static final int CHUNK_SIZE = 76;
