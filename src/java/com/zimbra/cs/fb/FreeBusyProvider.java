@@ -58,7 +58,7 @@ public abstract class FreeBusyProvider {
 	public abstract long cachedFreeBusyStartTime();
 	public abstract long cachedFreeBusyEndTime();
 	public abstract String getName();
-	public abstract boolean propogateFreeBusy(String email, FreeBusy fb);
+	public abstract boolean propagateFreeBusy(String email, FreeBusy fb);
 	
 	public static void register(FreeBusyProvider p) {
 		sPROVIDERS.add(p);
@@ -197,7 +197,7 @@ public abstract class FreeBusyProvider {
 						continue;
 					}
 					
-					boolean success = mProvider.propogateFreeBusy(email, fb);
+					boolean success = mProvider.propagateFreeBusy(email, fb);
 					
 					if (!success) {
 						synchronized (this) {

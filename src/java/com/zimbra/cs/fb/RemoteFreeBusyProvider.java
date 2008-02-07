@@ -84,7 +84,7 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
 		return 0;
 	}
 
-	public boolean propogateFreeBusy(String email, FreeBusy fb) {
+	public boolean propagateFreeBusy(String email, FreeBusy fb) {
 		return true;
 	}
 

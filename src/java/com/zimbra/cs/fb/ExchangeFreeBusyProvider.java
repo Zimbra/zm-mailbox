@@ -182,7 +182,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		return cal.getTimeInMillis();
 	}
 	
-	public boolean propogateFreeBusy(String email, FreeBusy fb) {
+	public boolean propagateFreeBusy(String email, FreeBusy fb) {
 		ServerInfo serverInfo = getServerInfo(email);
 		if (serverInfo == null) {
 			ZimbraLog.misc.warn("no exchange server info for user "+email);
