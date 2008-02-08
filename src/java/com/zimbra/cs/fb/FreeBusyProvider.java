@@ -75,6 +75,9 @@ public abstract class FreeBusyProvider {
 	}
 	
 	public static void mailboxChanged(Mailbox mbox) {
+		mailboxChanged(mbox.getAccountId());
+	}
+	public static void mailboxChanged(String accountId) {
 		if (sPUSHQUEUES.size() == 0)
 			return;
 
@@ -82,7 +85,7 @@ public abstract class FreeBusyProvider {
 			if (prov.canCacheZimbraUserFreeBusy()) {
 				FreeBusySyncQueue queue = sPUSHQUEUES.get(prov.getName());
 				synchronized (queue) {
-					queue.addLast(mbox.getAccountId());
+					queue.addLast(accountId);
 					try {
 						queue.writeToDisk();
 					} catch (IOException e) {
@@ -135,7 +138,17 @@ public abstract class FreeBusyProvider {
 			return null;
 		return acct.getName();
 	}
-	private static Set<FreeBusyProvider> getProviders() {
+	
+	public FreeBusySyncQueue getSyncQueue() {
+		return sPUSHQUEUES.get(getName());
+	}
+	public static FreeBusyProvider getProvider(String name) {
+		for (FreeBusyProvider p : sPROVIDERS)
+			if (p.getName().equals(name))
+				return p;
+		return null;
+	}
+	public static Set<FreeBusyProvider> getProviders() {
 		HashSet<FreeBusyProvider> ret = new HashSet<FreeBusyProvider>();
 		for (FreeBusyProvider p : sPROVIDERS)
 			ret.add(p.getInstance());
