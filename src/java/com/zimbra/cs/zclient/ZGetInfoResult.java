@@ -21,6 +21,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.Element.KeyValuePair;
 import com.zimbra.cs.account.Provisioning;
 
 import java.util.ArrayList;
@@ -50,18 +51,20 @@ public class ZGetInfoResult {
     private List<String> mMailURLs;
     private Set<String> mEmailAddresses;
 
-    static Map<String, List<String>> getMap(Element e, String root, String child) throws ServiceException {
+    static Map<String, List<String>> getMap(Element e, String root, String elName) throws ServiceException {
         Map<String, List<String>> result = new HashMap<String, List<String>>();
         Element attrsEl = e.getOptionalElement(root);
         if (attrsEl != null) {
-            for (Element attrEl : attrsEl.listElements(child)) {
-                String name = attrEl.getAttribute(AccountConstants.A_NAME);
+
+            for (KeyValuePair pair : attrsEl.listKeyValuePairs(elName, AccountConstants.A_NAME)) {
+            //StringUtil.addToMultiMap(mAttrs, pair.getKey(), pair.getValue());
+                String name = pair.getKey();
                 List<String> list = result.get(name);
                 if (list == null) {
                     list = new ArrayList<String>();
                     result.put(name, list);
                 }
-                list.add(attrEl.getText());
+                list.add(pair.getValue());
             }
         }
         return result;
@@ -80,13 +83,13 @@ public class ZGetInfoResult {
         mPrefs = new ZPrefs(mPrefAttrs);
         mFeatures = new ZFeatures(mAttrs);
 
-        Element rest = e.getOptionalElement(AccountConstants.E_REST);
-        if (rest != null) mRestURLBase = rest.getText();
+        mRestURLBase = e.getAttribute(AccountConstants.E_REST, null);
 
         mMailURLs = new ArrayList<String>();
-        for (Element urlEl: e.listElements(AccountConstants.E_SOAP_URL)) {
-            mMailURLs.add(urlEl.getText());
-        }
+        String mailUrl = e.getAttribute(AccountConstants.E_SOAP_URL, null);
+        if (mailUrl != null)
+            mMailURLs.add(mailUrl);
+
         mIdentities = new ArrayList<ZIdentity>();
         Element identities = e.getOptionalElement(AccountConstants.E_IDENTITIES);
         if (identities != null) {

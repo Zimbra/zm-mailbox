@@ -21,6 +21,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.KeyValuePair;
 import com.zimbra.cs.account.Provisioning;
 
 import java.util.HashMap;
@@ -37,8 +38,8 @@ public class ZIdentity  {
         mName = e.getAttribute(AccountConstants.A_NAME);
         mId = e.getAttribute(AccountConstants.A_ID, null);
         mAttrs = new HashMap<String, Object>();
-        for (Element a : e.listElements(AccountConstants.E_A)) {
-            StringUtil.addToMultiMap(mAttrs, a.getAttribute(AccountConstants.A_NAME), a.getText());
+        for (KeyValuePair pair : e.listKeyValuePairs(AccountConstants.E_A, AccountConstants.A_NAME)) {
+            StringUtil.addToMultiMap(mAttrs, pair.getKey(), pair.getValue());
         }
     }
 

@@ -89,8 +89,7 @@ public class ZCreateMessageEvent implements ZCreateItemEvent {
      * @return new subject or defaultValue if unchanged
      */
     public String getSubject(String defaultValue) {
-        Element sub = mMessageEl.getOptionalElement(MailConstants.E_SUBJECT);
-        return sub == null ? defaultValue : sub.getText();
+        return mMessageEl.getAttribute(MailConstants.E_SUBJECT, defaultValue);
     }
 
     /**
@@ -98,8 +97,7 @@ public class ZCreateMessageEvent implements ZCreateItemEvent {
      * @return new fragment or defaultValue if unchanged
      */
     public String getFragment(String defaultValue) {
-        Element frag = mMessageEl.getOptionalElement(MailConstants.E_FRAG);
-        return frag == null ? defaultValue : frag.getText();
+        return mMessageEl.getAttribute(MailConstants.E_FRAG, defaultValue);
     }
 
     /**
