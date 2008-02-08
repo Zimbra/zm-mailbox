@@ -17,13 +17,11 @@
 
 package com.zimbra.cs.stats;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.stats.Accumulator;
 import com.zimbra.common.stats.Counter;
 import com.zimbra.common.stats.RealtimeStats;
@@ -77,9 +75,9 @@ public class ZimbraPerf {
     public static Counter COUNTER_IDX_WRT_OPENED = new Counter("idx_wrt_opened");
     public static Counter COUNTER_IDX_WRT_OPENED_CACHE_HIT = new Counter("idx_wrt_opened_cache_hit");
     
-    public static ActivityTracker SOAP_TRACKER;
-    public static ActivityTracker IMAP_TRACKER;
-    public static ActivityTracker POP_TRACKER;
+    public static ActivityTracker SOAP_TRACKER = new ActivityTracker("soap.csv");
+    public static ActivityTracker IMAP_TRACKER = new ActivityTracker("imap.csv");
+    public static ActivityTracker POP_TRACKER = new ActivityTracker("pop3.csv");
     
     private static RealtimeStats sRealtimeStats = 
         new RealtimeStats(new String[] {
@@ -199,11 +197,8 @@ public class ZimbraPerf {
         ThreadStats threadStats = new ThreadStats(THREAD_NAME_PREFIXES, "threads.csv");
         StatsDumper.schedule(threadStats, CSV_DUMP_FREQUENCY);
 
-        SOAP_TRACKER = new ActivityTracker("soap.csv");
         StatsDumper.schedule(SOAP_TRACKER, CSV_DUMP_FREQUENCY);
-        IMAP_TRACKER = new ActivityTracker("imap.csv");
         StatsDumper.schedule(IMAP_TRACKER, CSV_DUMP_FREQUENCY);
-        POP_TRACKER = new ActivityTracker("pop3.csv");
         StatsDumper.schedule(POP_TRACKER, CSV_DUMP_FREQUENCY);
 
         sIsInitialized = true;

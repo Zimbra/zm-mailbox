@@ -339,7 +339,7 @@ public class SoapEngine {
                         if (admin == null)
                             return soapFaultWithNotes(soapProto, "delegating account " + at.getAdminAccountId() + " not found", ServiceException.AUTH_EXPIRED());
                         boolean isAdmin = admin.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false) ||
-                        admin.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false) || admin.getBooleanAttr(Provisioning.A_zimbraIsCustomerCareAccount, false);
+                        admin.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);
                         if (!isAdmin)
                             return soapFaultWithNotes(soapProto, "delegating account is not an admin account", ServiceException.AUTH_EXPIRED());
                         if (!admin.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
@@ -450,7 +450,7 @@ public class SoapEngine {
                     // put <notify> blocks back for any SoapSession objects
                     soap.putNotifications(ctxt, zsc, sinfo.sequence);
                     // add any extension headers
-                    SoapContextExtension.addExtensionHeaders(ctxt, zsc, session);
+                    SoapContextExtension.addExtensionHeaders(ctxt, zsc, requestedAccountId != null ? requestedAccountId : session.getTargetAccountId());
                 }
             }
             

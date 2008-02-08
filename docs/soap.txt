@@ -999,7 +999,7 @@ Folders:
   {folder-name}  = name of folder; max length 128; whitespace is trimmed by server;
                    cannot contain ':', '"', '/', or any character below 0x20
   {parent-id}    = id of parent folder (absent for root folder)
-  {flags}        = checked in UI (#), exclude free/(b)usy info, IMAP subscribed (*), does not (i)nherit rights from parent
+  {flags}        = checked in UI (#), exclude free/(b)usy info, IMAP subscribed (*), does not (i)nherit rights from parent, is a s(y)nc folder with external data source, sync is turned on(~)
   {color}        = numeric; range 0-127; defaults to 0 if not present; client can display only 0-7
   {unread}       = number of unread messages in folder
   {msg-count}    = number of non-subfolder items in folder
@@ -1665,7 +1665,7 @@ origid/rt/irt are present only on drafts
 ---------
 
 <FolderActionRequest>
-  <action id="{list}" op="read|delete|rename|move|trash|empty|color|grant|url|import|sync|fb|[!]check|update" [l="{target-folder}"]
+  <action id="{list}" op="read|delete|rename|move|trash|empty|color|grant|url|import|sync|fb|[!]check|update|[!]syncon" [l="{target-folder}"]
                       [name="{new-name}"] [color="{new-color}"] [zid="{grantee-zimbra-id}"] [url="{target-url}"]
                       [excludeFreeBusy="{exclude-free-busy-boolean}">
     [<grant perm="..." gt="..." d="..." [args="..."]/>]
@@ -1725,6 +1725,9 @@ Actions:
 
   <action op="[!]check" id="{list}"/>
     - set or unset the "checked" state of the folder in the UI
+
+  <action op="[!]syncon" id="{list}"/>
+    - set or unset the "sync" flag of the folder to sync a local folder with a remote source
 
   <action op="update" id="{list}" [f="{new-flags}"] [name="{new-name}"] [l="{target-folder}"] [color="{new-color}"]>
     [<acl><grant .../>*</acl>]

@@ -172,7 +172,6 @@ public class SetCalendarItem extends CalendarRequest {
         SetCalendarItemData sadata = new SetCalendarItemData();
         sadata.mInv = inv;
         sadata.mPm = pm;
-        sadata.mForce = true;
         return sadata;
     }
 

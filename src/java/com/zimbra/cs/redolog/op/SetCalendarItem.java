@@ -64,7 +64,8 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
     
     private static void serializeSetCalendarItemData(RedoLogOutput out, Mailbox.SetCalendarItemData data)
     throws IOException, MessagingException {
-        out.writeBoolean(data.mForce);
+        out.writeBoolean(true);  // keep this for backward compatibility with when SetCalendarItemData
+                                 // used to have mForce field
         
         ICalTimeZone localTz = data.mInv.getTimeZoneMap().getLocalTimeZone();
         out.writeUTF(localTz.encodeAsMetadata().toString());
@@ -87,7 +88,8 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
 
         int mboxId = getMailboxId();
         try {
-            toRet.mForce = in.readBoolean();
+            in.readBoolean();  // keep this for backward compatibility with when SetCalendarItemData
+                               // used to have mForce field
         
             ICalTimeZone localTz = ICalTimeZone.decodeFromMetadata(new Metadata(in.readUTF()));
             

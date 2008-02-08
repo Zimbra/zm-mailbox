@@ -16,11 +16,15 @@
  */
 package com.zimbra.cs.mailbox.calendar;
 
+import java.util.List;
+
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
+import com.zimbra.cs.service.mail.CalendarUtils;
+import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.soap.MailConstants;
@@ -87,6 +91,17 @@ public class ZAttendee extends CalendarUser {
     public String getDelegatedFrom() { return mDelegatedFrom; }
     public void setDelegatedFrom(String delFrom) { mDelegatedFrom = getMailToAddress(delFrom); }
 
+    public ZAttendee(ZAttendee other) {
+        super(other);
+        mCUType = other.mCUType;
+        mRole = other.mRole;
+        mPartStat = other.mPartStat;
+        mRsvp = other.mRsvp;
+        mMember = other.mMember;
+        mDelegatedTo = other.mDelegatedTo;
+        mDelegatedFrom = other.mDelegatedFrom;
+    }
+
     public ZAttendee(String address,
                      String cn,
                      String sentBy,
@@ -98,9 +113,9 @@ public class ZAttendee extends CalendarUser {
                      Boolean rsvp,
                      String member,
                      String delegatedTo,
-                     String delegatedFrom
-                     ) {
-        super(address, cn, sentBy, dir, language);
+                     String delegatedFrom,
+                     List<ZParameter> xparams) {
+        super(address, cn, sentBy, dir, language, xparams);
         setCUType(cutype);
         setRole(role);
         setPartStat(ptst);
@@ -112,7 +127,7 @@ public class ZAttendee extends CalendarUser {
 
     public ZAttendee(String address) {
         this(address, null, null, null, null,
-             null, null, null, null, null, null, null);
+             null, null, null, null, null, null, null, null);
     }
 
     public ZAttendee(ZProperty prop) {
@@ -278,6 +293,9 @@ public class ZAttendee extends CalendarUser {
         // DELEGATED-FROM
         if (hasDelegatedFrom())
             atElt.addAttribute(MailConstants.A_CAL_DELEGATED_FROM, getDelegatedFrom());
+
+        ToXML.encodeXParams(atElt, xparamsIterator());
+
         return atElt;
     }
 
@@ -315,11 +333,14 @@ public class ZAttendee extends CalendarUser {
 //        if (partStat.equals(IcalXmlStrMap.PARTSTAT_NEEDS_ACTION))
 //            rsvp = true;
 
+        List<ZParameter> xparams = CalendarUtils.parseXParams(element);
+
         ZAttendee at =
             new ZAttendee(address, cn, sentBy, dir, lang,
                           cutype, role, partStat,
                           rsvp ? Boolean.TRUE : Boolean.FALSE,
-                          member, delTo, delFrom);
+                          member, delTo, delFrom, xparams);
+
         return at;
     }
 

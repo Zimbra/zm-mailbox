@@ -32,9 +32,9 @@ import javax.mail.internet.MimeMessage;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
+import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
-import com.zimbra.cs.mailbox.calendar.FreeBusy;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -207,7 +207,7 @@ public class Appointment extends CalendarItem {
             long start = inst.getStart();
             long end = inst.getEnd();
             FreeBusy fb =
-                FreeBusy.getFreeBusyList(getMailbox(), start, end, this);
+                com.zimbra.cs.fb.LocalFreeBusyProvider.getFreeBusyList(getMailbox(), start, end, this);
             String status = fb.getBusiest();
             if (!IcalXmlStrMap.FBTYPE_FREE.equals(status)) {
                 list.add(new Availability(start, end, status, fb));

@@ -47,14 +47,14 @@ import com.zimbra.cs.account.Server;
  * This class represents a route in the *LOCAL* cloud, ie between trusted servers
  * in the same backend.
  */
-public class CloudRoute extends Session {
+public class CloudRouteSession extends Session {
 
-    static public CloudRoute create(String hostname, CloudRoutingSocketReader reader, SocketConnection connection, Element streamElt) {
-        CloudRoute toRet = new CloudRoute(connection, XMPPServer.getInstance().getSessionManager().nextStreamID());
+    static public CloudRouteSession create(String hostname, CloudRoutingSocketReader reader, SocketConnection connection, Element streamElt) {
+        CloudRouteSession toRet = new CloudRouteSession(connection, XMPPServer.getInstance().getSessionManager().nextStreamID());
         return toRet;
     }
 
-    static CloudRoute connect(Server targetServer) throws Exception {
+    static CloudRouteSession connect(Server targetServer) throws Exception {
         String hostname = targetServer.getAttr(Provisioning.A_zimbraServiceHostname);
         int port = 7335;
         
@@ -86,7 +86,7 @@ public class CloudRoute extends Session {
             readerThread.setDaemon(true);
             readerThread.start();
              
-            CloudRoute toRet = new CloudRoute(targetServer, connection, XMPPServer.getInstance().getSessionManager().nextStreamID());
+            CloudRouteSession toRet = new CloudRouteSession(targetServer, connection, XMPPServer.getInstance().getSessionManager().nextStreamID());
             ssReader.setSession(toRet);
             return toRet;
         }
@@ -99,6 +99,8 @@ public class CloudRoute extends Session {
     private static void remoteDeliveryFailed(Packet packet) {
         JID from = packet.getFrom();
         JID to = packet.getTo();
+        
+        ZimbraLog.im.debug("CloudRouteSession.remoteDeliveryFailed for packet "+packet);
         
         // TODO Send correct error condition: timeout or not_found depending on the real error
         try {
@@ -146,14 +148,14 @@ public class CloudRoute extends Session {
         }
     } 
 
-    private CloudRoute(Connection conn, StreamID streamID) {
+    private CloudRouteSession(Connection conn, StreamID streamID) {
         super("cloudroute.fake.domain.com", conn, streamID);
         mServer = null;
     }
     /**
      * 
      */
-    private CloudRoute(Server targetServer, Connection conn, StreamID streamID) {
+    private CloudRouteSession(Server targetServer, Connection conn, StreamID streamID) {
         super(targetServer.getName(), conn, streamID);
         mServer = targetServer;
     }
@@ -170,6 +172,7 @@ public class CloudRoute extends Session {
     
     public void process(Packet packet) throws UnauthorizedException, PacketException {
         if (conn != null&& !conn.isClosed()) {
+            ZimbraLog.im.debug("CloudRouteSession delivering packet: "+packet);
             conn.deliver(packet);
         } else {
             remoteDeliveryFailed(packet);

@@ -559,12 +559,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="110" name="zimbraMailMinPollingInterval" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
   <defaultCOSValue>2m</defaultCOSValue>
-  <desc>minimum allowed mail polling interval (nnnnn[hmsd])</desc>
+  <desc>minimum allowed value for zimbraPrefMailPollingInterval (nnnnn[hmsd])</desc>
 </attr>
 
 <attr id="111" name="zimbraPrefMailPollingInterval" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>5m</defaultCOSValue>
-  <desc>configured mail polling interval (nnnnn[hmsd])</desc>
+  <desc>interval at which the web client polls the server for new messages (nnnnn[hmsd])</desc>
 </attr>
 
 <attr id="112" name="zimbraAccountClientAttr" type="string" max="1024" cardinality="multi" optionalIn="globalConfig">
@@ -2893,6 +2893,22 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="606" name="zimbraZimletTarget" type="cstring" max="1024" cardinality="multi" optionalIn="zimletEntry">
   <desc>Zimlet target apps</desc>
+</attr>
+
+<attr id="607" name="zimbraFreebusyExchangeURL" type="string" max="256" cardinality="single" optionalIn="globalConfig">
+  <desc>URL to Exchange server for free/busy lookup and propagation</desc>
+</attr>
+
+<attr id="608" name="zimbraFreebusyExchangeAuthUsername" type="string" max="256" cardinality="single" optionalIn="globalConfig">
+  <desc>Exchange username for free/busy lookup and propagation</desc>
+</attr>
+
+<attr id="609" name="zimbraFreebusyExchangeAuthPassword" type="string" max="256" cardinality="single" optionalIn="globalConfig">
+  <desc>Exchange user password for free/busy lookup and propagation</desc>
+</attr>
+
+<attr id="610" name="zimbraFreebusyExchangeUserOU" type="string" max="256" cardinality="single" optionalIn="globalConfig">
+  <desc>OU used for the users legacyExchangeDN attribute</desc>
 </attr>
 
 </attrs>

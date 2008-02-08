@@ -895,6 +895,8 @@ class DBQueryOperation extends QueryOperation
                     
                     boolean hasMore = true;
                     
+                    boolean printedQuery = false;
+                    
                     // we have to get ALL of the lucene hits for these ids.  There can very likely be more
                     // hits from Lucene then there are DB id's, so we just ask for a large number.
                     while(hasMore) {
@@ -906,7 +908,17 @@ class DBQueryOperation extends QueryOperation
                         } 
                         for (int indexId : indexIds) {
                             List<SearchResult> l = mailItemToResultsMap.get(indexId);
-                            for (SearchResult sr : l) {
+                            
+                            if (l == null) {
+                                if (mLog.isDebugEnabled()) {
+                                    if (!printedQuery) {
+                                        mLog.debug("DBQueryOperation.dbFirstGetNextChunk: LuceneQuery is \""+mLuceneOp.getCurrentQuery().toString()+"\"");
+                                        printedQuery = true;
+                                    }
+                                }
+                                mLog.warn("DBQueryOperation.dbFirstGetNextChunk: Lucene returned item ID "+indexId+" but wasn't in resultMap");
+                                throw ServiceException.FAILURE("Inconsistent DB/Index query results: Text Index returned item ID "+indexId+" but wasn't in resultMap", null);
+                            } else for (SearchResult sr : l) {
                                 mDBHits.add(sr);
                             }
                         }

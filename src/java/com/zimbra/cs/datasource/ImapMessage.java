@@ -21,14 +21,17 @@ public class ImapMessage {
     private long mUid;
     private int mItemId;
     private int mFlags;
+    private int mTrackedFlags;
     
-    public ImapMessage(long uid, int itemId, int flags) {
+    public ImapMessage(long uid, int itemId, int flags, int trackedFlags) {
         mUid = uid;
         mItemId = itemId;
         mFlags = flags;
+        mTrackedFlags = trackedFlags;
     }
     
     public long getUid() { return mUid; }
     public int getItemId() { return mItemId; }
     public int getFlags() { return mFlags; }
+    public int getTrackedFlags() { return mTrackedFlags; }
 }

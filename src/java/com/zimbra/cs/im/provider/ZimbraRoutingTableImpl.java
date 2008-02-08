@@ -106,7 +106,7 @@ public class ZimbraRoutingTableImpl extends BasicModule implements RoutingTable 
                 if (acctServer == null)
                     return null;
                 
-                CloudRoute route = CloudRouteManager.get(acctServer);
+                CloudRouteSession route = CloudRouteManager.get(acctServer);
                 if (route == null)
                     return CloudRouteManager.getInstance();
                 else

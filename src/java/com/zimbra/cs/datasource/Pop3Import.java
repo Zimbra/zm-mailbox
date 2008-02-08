@@ -55,9 +55,6 @@ import com.zimbra.cs.mime.ParsedMessage;
 
 public class Pop3Import
 implements MailItemImport {
-
-    private static final long TIMEOUT = 20 * Constants.MILLIS_PER_SECOND;
-    
     // (item id).(blob digest)
     private static final Pattern PAT_ZIMBRA_UIDL = Pattern.compile("(\\d+)\\.([^\\.]+)");
     
@@ -66,23 +63,32 @@ implements MailItemImport {
     private static FetchProfile UID_PROFILE;
     
     static {
+    	
+    	long timeout = LC.javamail_pop3_timeout.longValue() * Constants.MILLIS_PER_SECOND;
+    	
         Properties props = new Properties();
-        props.setProperty("mail.pop3.connectiontimeout", Long.toString(TIMEOUT));
-        props.setProperty("mail.pop3.timeout", Long.toString(TIMEOUT));
-        props.setProperty("mail.pop3s.connectiontimeout", Long.toString(TIMEOUT));
-        props.setProperty("mail.pop3s.timeout", Long.toString(TIMEOUT));    	
+        props.setProperty("mail.pop3.connectiontimeout", Long.toString(timeout));
+        props.setProperty("mail.pop3.timeout", Long.toString(timeout));
+        props.setProperty("mail.pop3s.connectiontimeout", Long.toString(timeout));
+        props.setProperty("mail.pop3s.timeout", Long.toString(timeout));    	
 		props.setProperty("mail.pop3s.socketFactory.class", CustomSSLSocketFactory.class.getName());
         props.setProperty("mail.pop3s.socketFactory.fallback", "false");
+        if (LC.javamail_pop3_enable_starttls.booleanValue()) {
+        	props.setProperty("mail.pop3.starttls.enable", "true");
+        	props.setProperty("mail.pop3s.starttls.enable", "true");
+        }
         sSession = Session.getInstance(props);
         if (LC.javamail_pop3_debug.booleanValue())
         	sSession.setDebug(true);
         
         Properties sscProps = new Properties();
-        sscProps.setProperty("mail.pop3s.connectiontimeout", Long.toString(TIMEOUT));
-        sscProps.setProperty("mail.pop3s.timeout", Long.toString(TIMEOUT));    	
+        sscProps.setProperty("mail.pop3s.connectiontimeout", Long.toString(timeout));
+        sscProps.setProperty("mail.pop3s.timeout", Long.toString(timeout));    	
         sscProps.setProperty("mail.pop3s.socketFactory.class", DummySSLSocketFactory.class.getName());
         sscProps.setProperty("mail.pop3s.socketFactory.fallback", "false");
         sSelfSignedCertSession = Session.getInstance(sscProps);
+        if (LC.javamail_pop3_enable_starttls.booleanValue())
+        	sscProps.setProperty("mail.pop3s.starttls.enable", "true");
         if (LC.javamail_pop3_debug.booleanValue())
         	sSelfSignedCertSession.setDebug(true);
         

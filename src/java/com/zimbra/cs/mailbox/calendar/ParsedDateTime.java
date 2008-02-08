@@ -62,6 +62,13 @@ public final class ParsedDateTime {
         return new ParsedDateTime(new java.util.Date(utc));
     }
     
+    public static ParsedDateTime fromUTCTime(long millis, ICalTimeZone tz) {
+        GregorianCalendar cal = new GregorianCalendar();
+        cal.setTimeInMillis(millis);
+        cal.setTimeZone(tz);
+        return new ParsedDateTime(cal, tz, true);
+    }
+
     public static ParsedDateTime parseUtcOnly(String str) throws ParseException {
         return parse(str, null, null, null, true);
     }    
@@ -303,18 +310,22 @@ public final class ParsedDateTime {
     }
 
     /**
-     * Checks if two ParsedDateTime objects have the same hour, minute, second
-     * and millisecond values.  Returns false regardless of time values if the
-     * two objects have different time zones. 
+     * Checks if the other ParsedDateTime object has the same hour, minute, second
+     * and millisecond values, in the timezone of this object.
      * @param other
      * @return
      */
     public boolean sameTime(ParsedDateTime other) {
+        if (other == null) return false;
         ICalTimeZone thisTZ = getTimeZone();
         ICalTimeZone otherTZ = other.getTimeZone();
-        if (!thisTZ.equals(otherTZ))
-            return false;
-        GregorianCalendar otherCal = other.mCal;
+        GregorianCalendar otherCal;
+        if (thisTZ.equals(otherTZ)) {
+            otherCal = other.mCal;
+        } else {
+            otherCal = new GregorianCalendar(thisTZ);
+            otherCal.setTimeInMillis(mCal.getTimeInMillis());
+        }
         return
             mCal.get(java.util.Calendar.HOUR_OF_DAY)
             == otherCal.get(java.util.Calendar.HOUR_OF_DAY) &&

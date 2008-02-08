@@ -44,12 +44,12 @@ import com.zimbra.cs.dav.caldav.TimeRange;
 import com.zimbra.cs.dav.property.CalDavProperty;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.dav.service.DavServlet;
+import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.calendar.FreeBusy;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
@@ -259,7 +259,7 @@ public class CalendarCollection extends Collection {
 					}
 					*/
 				}
-				mbox.addInvite(ctxt.getOperationContext(), i, mId, false, null);
+				mbox.addInvite(ctxt.getOperationContext(), i, mId);
 			}
 			calItem = mbox.getCalendarItemByUid(ctxt.getOperationContext(), uid);
 			return new CalendarObject.LocalCalendarObject(ctxt, calItem);

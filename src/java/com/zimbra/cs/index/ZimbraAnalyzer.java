@@ -133,7 +133,7 @@ public class ZimbraAnalyzer extends StandardAnalyzer
 
             for (Token cur = stream.next(); cur != null; cur = stream.next()) 
             {
-                toReturn.append(cur.termText());
+                toReturn.append(cur.termBuffer(), 0, cur.termLength());
                 toReturn.append(" ");
             }
         } catch(IOException e) {
@@ -186,6 +186,9 @@ public class ZimbraAnalyzer extends StandardAnalyzer
         }
     }
     
+    public TokenStream reusableTokenStream(String fieldName, Reader reader) throws IOException {
+        return tokenStream(fieldName, reader);
+    }
     
     /**
      * Special Analyzer for structured-data field (see LuceneFields.L_FIELD )
@@ -596,7 +599,7 @@ public class ZimbraAnalyzer extends StandardAnalyzer
             do {
                 t = nextInternal();
             } while (t != null &&
-                        t.termText().length() <= 1); 
+                        t.termLength() <= 1); 
             return t;
         }
     }
@@ -804,7 +807,7 @@ public class ZimbraAnalyzer extends StandardAnalyzer
     {
         MultiTokenFilter.sPrintNewTokens = true;
         ZimbraAnalyzer la = new ZimbraAnalyzer();
-        String str = "tim@foo.com \"Test Address\" <test.address@mail.nnnn.com>, image/jpeg, text/plain, text/foo/bar, tim (tim@foo.com),bugzilla-daemon@eric.example.zimbra.com, zug zug [zug@gug.com], Foo.gub, \"My Mom\" <mmm@nnnn.com>,asd foo bar aaa/bbb ccc/ddd/eee fff@ggg.com hhh@iiii";
+        String str = "DONOTREPLY@zimbra.com tim@foo.com \"Tester Address\" <test.address@mail.nnnn.com>, image/jpeg, text/plain, text/foo/bar, tim (tim@foo.com),bugzilla-daemon@eric.example.zimbra.com, zug zug [zug@gug.com], Foo.gub, \"My Mom\" <mmm@nnnn.com>,asd foo bar aaa/bbb ccc/ddd/eee fff@ggg.com hhh@iiii";
         {
             System.out.print("AddressTokenFilter:\n-------------------------");
             StringReader reader = new StringReader(str);

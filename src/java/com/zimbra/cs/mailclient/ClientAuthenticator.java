@@ -1,8 +1,9 @@
-package com.zimbra.cs.mailtest;
+package com.zimbra.cs.mailclient;
 
 import com.zimbra.cs.security.sasl.SaslInputStream;
 import com.zimbra.cs.security.sasl.SaslOutputStream;
 import com.zimbra.cs.security.sasl.SaslSecurityLayer;
+import com.zimbra.cs.mailclient.util.Password;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;

@@ -33,6 +33,7 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SearchParams.ExpandResults;
@@ -47,6 +48,7 @@ import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.Alarm;
+import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.ParsedDuration;
@@ -1296,18 +1298,7 @@ public class ToXML {
             // Organizer
             if (invite.hasOrganizer()) {
                 ZOrganizer org = invite.getOrganizer();
-                Element orgElt = e.addUniqueElement(MailConstants.E_CAL_ORGANIZER);
-                String str = org.getAddress();
-                orgElt.addAttribute(MailConstants.A_ADDRESS, IDNUtil.toUnicode(str));
-                orgElt.addAttribute(MailConstants.A_URL, str);  // for backward compatibility
-                if (org.hasCn())
-                    orgElt.addAttribute(MailConstants.A_DISPLAY, org.getCn());
-                if (org.hasSentBy())
-                    orgElt.addAttribute(MailConstants.A_CAL_SENTBY, org.getSentBy());
-                if (org.hasDir())
-                    orgElt.addAttribute(MailConstants.A_CAL_DIR, org.getDir());
-                if (org.hasLanguage())
-                    orgElt.addAttribute(MailConstants.A_CAL_LANGUAGE, org.getLanguage());
+                org.toXml(e);
             }
 
             boolean isRecurring = false;
@@ -1389,7 +1380,20 @@ public class ToXML {
         return e;
     }
 
-    private static void encodeXProps(Element parent, Iterator<ZProperty> xpropsIterator) {
+    public static void encodeXParams(Element parent, Iterator<ZParameter> xparamsIterator) {
+        for (; xparamsIterator.hasNext(); ) {
+            ZParameter xparam = xparamsIterator.next();
+            String paramName = xparam.getName();
+            if (paramName == null) continue;
+            Element paramElem = parent.addElement(MailConstants.E_CAL_XPARAM);
+            paramElem.addAttribute(MailConstants.A_NAME, paramName);
+            String paramValue = xparam.getValue();
+            if (paramValue != null)
+                paramElem.addAttribute(MailConstants.A_VALUE, paramValue);
+        }
+    }
+
+    public static void encodeXProps(Element parent, Iterator<ZProperty> xpropsIterator) {
         for (; xpropsIterator.hasNext(); ) {
             ZProperty xprop = xpropsIterator.next();
             String propName = xprop.getName();
@@ -1399,16 +1403,7 @@ public class ToXML {
             propElem.addAttribute(MailConstants.A_NAME, propName);
             if (propValue != null)
                 propElem.addAttribute(MailConstants.A_VALUE, propValue);
-            for (Iterator<ZParameter> paramIter = xprop.parameterIterator(); paramIter.hasNext(); ) {
-                ZParameter xparam = paramIter.next();
-                String paramName = xparam.getName();
-                if (paramName == null) continue;
-                Element paramElem = propElem.addElement(MailConstants.E_CAL_XPARAM);
-                paramElem.addAttribute(MailConstants.A_NAME, paramName);
-                String paramValue = xparam.getValue();
-                if (paramValue != null)
-                    paramElem.addAttribute(MailConstants.A_VALUE, paramValue);
-            }
+            encodeXParams(propElem, xprop.parameterIterator());
         }
     }
 
@@ -1849,5 +1844,32 @@ public class ToXML {
         if (alarmObj != null)
             alarmObj.toXml(alarmElem);
         return alarmElem;
+    }
+    
+    public static Element encodeFreeBusy(Element parent, FreeBusy fb) {
+        Element resp = parent.addElement(MailConstants.E_FREEBUSY_USER);
+        resp.addAttribute(MailConstants.A_ID, fb.getName());
+        for (Iterator<FreeBusy.Interval> iter = fb.iterator(); iter.hasNext(); ) {
+        	FreeBusy.Interval cur = iter.next();
+        	String status = cur.getStatus();
+        	Element elt;
+        	if (status.equals(IcalXmlStrMap.FBTYPE_FREE)) {
+        		elt = resp.addElement(MailConstants.E_FREEBUSY_FREE);
+        	} else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY)) {
+        		elt = resp.addElement(MailConstants.E_FREEBUSY_BUSY);
+        	} else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY_TENTATIVE)) {
+        		elt = resp.addElement(MailConstants.E_FREEBUSY_BUSY_TENTATIVE);
+        	} else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY_UNAVAILABLE)) {
+        		elt = resp.addElement(MailConstants.E_FREEBUSY_BUSY_UNAVAILABLE);
+        	} else {
+        		assert(false);
+        		elt = null;
+        	}
+
+        	elt.addAttribute(MailConstants.A_CAL_START_TIME, cur.getStart());
+        	elt.addAttribute(MailConstants.A_CAL_END_TIME, cur.getEnd());
+        }
+    	
+        return resp;
     }
 }

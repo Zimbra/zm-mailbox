@@ -55,13 +55,13 @@ public class MailboxManager {
      */
     public static interface Listener {
         /** Called whenever a mailbox has left Maintenance mode */
-        public void mailboxAvailable(Mailbox mbox);
+        public void mailboxAvailable(Mailbox mbox) throws ServiceException;
         
         /** Called whenever a mailbox is loaded */
-        public void mailboxLoaded(Mailbox mbox);
+        public void mailboxLoaded(Mailbox mbox) throws ServiceException;
         
         /** Called whenever a mailbox is created */
-        public void mailboxCreated(Mailbox mbox);
+        public void mailboxCreated(Mailbox mbox) throws ServiceException;
         
     }
 
@@ -118,17 +118,17 @@ public class MailboxManager {
         mListeners.remove(listener); 
     }
 
-    private void notifyMailboxAvailable(Mailbox mbox) {
+    private void notifyMailboxAvailable(Mailbox mbox) throws ServiceException {
         for (Listener listener : mListeners) 
             listener.mailboxAvailable(mbox);
     }
     
-    private void notifyMailboxLoaded(Mailbox mbox) {
+    private void notifyMailboxLoaded(Mailbox mbox) throws ServiceException {
         for (Listener listener : mListeners) 
             listener.mailboxLoaded(mbox);
     }
     
-    private void notifyMailboxCreated(Mailbox mbox) {
+    private void notifyMailboxCreated(Mailbox mbox) throws ServiceException {
         for (Listener listener : mListeners) 
             listener.mailboxCreated(mbox);
     }

@@ -33,7 +33,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
  */
 public class CloudRouteManager extends OutgoingSessionPromise {
     
-    public static CloudRoute get(Server server) {
+    public static CloudRouteSession get(Server server) {
         return localServers.get(server);
     }
     
@@ -41,7 +41,7 @@ public class CloudRouteManager extends OutgoingSessionPromise {
         return sInstance;
     }
     
-    static void remove(Server server, CloudRoute route) {
+    static void remove(Server server, CloudRouteSession route) {
         localServers.remove(server, route);
     }
     
@@ -58,12 +58,12 @@ public class CloudRouteManager extends OutgoingSessionPromise {
         if (!Provisioning.onLocalServer(acct)) {
             Server acctServer = Provisioning.getInstance().getServer(acct);
             
-            CloudRoute route = localServers.get(acctServer);
+            CloudRouteSession route = localServers.get(acctServer);
             if (route == null) {
                 synchronized(this) {
                     route = localServers.get(acctServer);
                     if (route == null) {
-                        route = CloudRoute.connect(acctServer);
+                        route = CloudRouteSession.connect(acctServer);
                         localServers.put(acctServer, route);
                         route.getConnection().registerCloseListener(sCloseListener, route);
                     }
@@ -77,7 +77,7 @@ public class CloudRouteManager extends OutgoingSessionPromise {
         }
     }
     
-    private static ConcurrentHashMap<Server, CloudRoute> localServers = new ConcurrentHashMap<Server, CloudRoute>();
+    private static ConcurrentHashMap<Server, CloudRouteSession> localServers = new ConcurrentHashMap<Server, CloudRouteSession>();
     
     private static final CloudConnectionCloseListener sCloseListener = new CloudConnectionCloseListener();
     
@@ -85,7 +85,7 @@ public class CloudRouteManager extends OutgoingSessionPromise {
     
     private static final class CloudConnectionCloseListener implements ConnectionCloseListener {
         public void onConnectionClose(Object handback) {
-            CloudRoute route = (CloudRoute)handback;
+            CloudRouteSession route = (CloudRouteSession)handback;
             Server server = route.getServer();
             if (server != null)
                 CloudRouteManager.remove(server, route);

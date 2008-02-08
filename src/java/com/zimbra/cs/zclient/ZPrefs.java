@@ -67,6 +67,8 @@ public class ZPrefs {
 
     public String getLocale() { return get(Provisioning.A_zimbraPrefLocale); }
 
+    public String getYintl() { return get(Provisioning.A_zimbraPrefLocale); }
+
     public boolean getUseTimeZoneListInCalendar() { return getBool(Provisioning.A_zimbraPrefUseTimeZoneListInCalendar); }
 
     public boolean getReadingPaneEnabled() { return getBool(Provisioning.A_zimbraPrefReadingPaneEnabled); }
@@ -208,5 +210,6 @@ public class ZPrefs {
     public boolean getCalendarReminderSendEmail() { return getBool(Provisioning.A_zimbraPrefCalendarReminderSendEmail); }
     public boolean getCalendarReminderMobile() { return getBool(Provisioning.A_zimbraPrefCalendarReminderMobile); }
     public boolean getCalendarReminderYMessenger() { return getBool(Provisioning.A_zimbraPrefCalendarReminderYMessenger); }
+
 
 }

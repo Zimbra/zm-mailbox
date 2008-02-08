@@ -23,6 +23,7 @@ package com.zimbra.cs.mailbox.calendar;
 import java.util.HashMap;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 

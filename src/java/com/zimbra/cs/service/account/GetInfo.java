@@ -241,7 +241,7 @@ public class GetInfo extends AccountDocumentHandler  {
         }
     }
  
-    private static void doChildAccounts(Element response, Account acct) throws ServiceException {
+    protected void doChildAccounts(Element response, Account acct) throws ServiceException {
         String[] childAccounts = acct.getMultiAttr(Provisioning.A_zimbraChildAccount);
         String[] visibleChildAccounts = acct.getMultiAttr(Provisioning.A_zimbraPrefChildVisibleAccount);
 
@@ -270,7 +270,7 @@ public class GetInfo extends AccountDocumentHandler  {
         }
     }
 
-    private static void encodeChildAccount(Element parent, Account child, boolean isVisible) {
+    protected Element encodeChildAccount(Element parent, Account child, boolean isVisible) {
         Element elem = parent.addElement(AccountConstants.E_CHILD_ACCOUNT);
         elem.addAttribute(AccountConstants.A_ID, child.getId());
         elem.addAttribute(AccountConstants.A_NAME, child.getUnicodeName());
@@ -281,5 +281,6 @@ public class GetInfo extends AccountDocumentHandler  {
             Element attrsElem = elem.addUniqueElement(AccountConstants.E_ATTRS);
             attrsElem.addKeyValuePair(Provisioning.A_displayName, displayName, AccountConstants.E_ATTR, AccountConstants.A_NAME);
         }
+        return elem;
     }
 }

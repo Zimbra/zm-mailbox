@@ -27,7 +27,7 @@ import org.dom4j.io.XMLWriter;
 import com.zimbra.common.util.ZimbraLog;
 
 public class DomUtil {
-	public static void writeDocumentToStream(Document doc, OutputStream out) throws IOException {
+	public static byte[] getBytes(Document doc) throws IOException {
 		OutputFormat format = OutputFormat.createPrettyPrint();
 		format.setTrimText(false);
 		format.setOmitEncoding(false);
@@ -37,6 +37,9 @@ public class DomUtil {
 		byte[] msg = baos.toByteArray();
 		if (ZimbraLog.dav.isDebugEnabled())
 			ZimbraLog.dav.debug(new String(msg, "UTF-8"));
-		out.write(msg);
+		return msg;
+	}
+	public static void writeDocumentToStream(Document doc, OutputStream out) throws IOException {
+		out.write(getBytes(doc));
 	}
 }

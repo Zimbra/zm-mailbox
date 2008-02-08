@@ -51,43 +51,6 @@ public class SkinUtil {
         sSkins = null;
     }
     
-    private static String findSkin(ClassLoader classLoader, File dir) throws ServiceException {
-        String skinName = null;
-        String version = null;
-        
-        String relResName = "./" + dir.getName() + "/" + "skin.properties";
-        
-        URL url = classLoader.getResource(relResName);
-        
-        if (url != null) {
-            Properties props = new Properties();
-            try {
-				FileInputStream stream;
-				stream = new FileInputStream(new File(url.getFile()));
-				try {
-					props.load(stream);
-					skinName = props.getProperty("SkinName");
-					
-					// check SkinVersion -- we only allow SkinVersion=2 skins
-//					version = props.getProperty("SkinVersion");
-//	ZimbraLog.webclient.debug("checking skin '"+dir.getName()+"' version="+version );
-//					if ("2".equals(version)) {
-//						skinName = null;
-//						throw new IOException("skin.properties file is incompatible with this release (missing SkinVersion=2)");
-//					}
-				} finally {
-					stream.close();
-				}
-				ZimbraLog.webclient.debug("Loaded skin '"+dir.getName()+"'" );
-			} catch (IOException e) {
-				ZimbraLog.webclient.warn("Error loading skin '"+dir.getName()+"':" + e.getMessage() );
-                // no such property
-            }
-        }
-        
-        return skinName;
-    }
-    
     private static String[] loadSkins() throws ServiceException {
 		ZimbraLog.webclient.debug("Loading skins..." );
         String skinsDir = LC.skins_directory.value();
@@ -103,13 +66,12 @@ public class SkinUtil {
         File[] files = dir.listFiles();
         
         if (files != null)  {
-            for (File f : files) {
-                if (f.isDirectory()) {
-                    String skin = findSkin(classLoader, f);
-                    if (skin != null)
-                        skins.add(skin);
-                }
-            }
+            for (File f: files) {
+				String fname = f.getName();
+				if (!fname.startsWith("_") && new File(f, "manifest.xml").exists()) {
+					skins.add(fname);
+				}
+			}
         }
         
         String[] sortedSkins = skins.toArray(new String[skins.size()]);

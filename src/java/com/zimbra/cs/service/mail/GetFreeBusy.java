@@ -18,13 +18,11 @@
 package com.zimbra.cs.service.mail;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
+import javax.servlet.http.HttpServletRequest;
+
+import com.zimbra.soap.SoapServlet;
 import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.common.service.ServiceException;
@@ -33,11 +31,10 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.calendar.FreeBusy;
-import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
-import com.zimbra.cs.service.util.ParseMailboxID;
-import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.cs.fb.FreeBusyProvider;
+import com.zimbra.cs.fb.LocalFreeBusyProvider;
+import com.zimbra.cs.fb.RemoteFreeBusyProvider;
+import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetFreeBusy extends MailDocumentHandler {
@@ -54,8 +51,6 @@ public class GetFreeBusy extends MailDocumentHandler {
 //    <GetFreeBusyResponse>
 //
 //    (f)ree (b)usy (t)entative and (o)ut-of-office
-    
-    private static Log sLog = LogFactory.getLog(GetFreeBusy.class);
     
     private static final long MSEC_PER_DAY = 1000*60*60*24;
     
@@ -77,171 +72,91 @@ public class GetFreeBusy extends MailDocumentHandler {
         Element response = getResponseElement(zc);
         
         // MailConstants.A_UID should be deprecated at some point, bug 21776, comment #14
-        String idParam = request.getAttribute(MailConstants.A_UID, null);    // comma-separated list of account emails or zimbraId GUIDs that *must* match UUID format
-        String uidParam = request.getAttribute(MailConstants.A_ID, null);    // comma-separated list of account zimbraId GUIDs
+        String uidParam = request.getAttribute(MailConstants.A_UID, null);    // comma-separated list of account emails or zimbraId GUIDs that *must* match UUID format
+        String idParam = request.getAttribute(MailConstants.A_ID, null);    // comma-separated list of account zimbraId GUIDs
         String nameParam = request.getAttribute(MailConstants.A_NAME, null); // comma-separated list of account emails
-        
-        List<ParseMailboxID> local = new ArrayList<ParseMailboxID>();
-        Map<String, StringBuilder> remote = new HashMap<String, StringBuilder>();
-        partitionItems(zc, response, rangeStart, rangeEnd, idParam, uidParam, nameParam, local, remote);
-        proxyRemoteItems(context, zc, response, rangeStart, rangeEnd, remote);
-        
-        if (!local.isEmpty()) {
-            for (ParseMailboxID id : local) {
-                try {
-                    getForOneMailbox(zc, response, id, rangeStart, rangeEnd);
-                } catch (ServiceException e) {
-                    addFailureInfo(response, rangeStart, rangeEnd, id.toString(), e);
-                }
-            }
-        }
+
+    	RemoteFreeBusyProvider remote = new RemoteFreeBusyProvider((HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST), zc, rangeStart, rangeEnd);
+    	ArrayList<String> nonZimbraIds = new ArrayList<String>();
+
+        String[] idStrs = null;
+    	Account acct = null;
+
+        // uidParam should be deprecated at some point, bug 21776 comment #14
+    	if (uidParam != null) {
+    		idStrs = uidParam.split(",");
+    		for (String idStr : idStrs) {
+    			acct = getAccountFromUid(idStr);
+    			if (acct == null)
+    				nonZimbraIds.add(idStr);
+    			else
+    				getFreeBusyForZimbraUser(response, acct, idStr, rangeStart, rangeEnd, remote);
+    		}
+    	}
+    	if (idParam != null) {
+    		idStrs = idParam.split(",");
+    		for (String idStr : idStrs) {
+    			acct = getAccountFromId(idStr);
+    			if (acct == null)
+    				nonZimbraIds.add(idStr);
+    			else
+    				getFreeBusyForZimbraUser(response, acct, idStr, rangeStart, rangeEnd, remote);
+    		}
+    	}
+    	if (nameParam != null) {
+    		idStrs = nameParam.split(",");
+    		for (String idStr : idStrs) {
+    			acct = getAccountFromName(idStr);
+    			if (acct == null)
+    				nonZimbraIds.add(idStr);
+    			else
+    				getFreeBusyForZimbraUser(response, acct, idStr, rangeStart, rangeEnd, remote);
+    		}
+    	}
+    	remote.addResults(response);
+        FreeBusyProvider.getRemoteFreeBusy(response, nonZimbraIds, rangeStart, rangeEnd);
         return response;
     }
-
-    protected static void proxyRemoteItems(
-            Map<String, Object> context, ZimbraSoapContext zc, Element response,
-            long rangeStart, long rangeEnd, Map<String, StringBuilder> remote) {
-        Provisioning prov = Provisioning.getInstance();
-        for (Map.Entry<String, StringBuilder> entry : remote.entrySet()) {
-            // String server = entry.getKey();
-            String paramStr = entry.getValue().toString();
-            String[] idStrs = paramStr.split(",");
-
-            try {
-                Element req = zc.getRequestProtocol().getFactory().createElement(MailConstants.GET_FREE_BUSY_REQUEST);
-                req.addAttribute(MailConstants.A_CAL_START_TIME, rangeStart);
-                req.addAttribute(MailConstants.A_CAL_END_TIME, rangeEnd);
-                req.addAttribute(MailConstants.A_UID, paramStr);
-
-                // hack: use the ID of the first user
-                Account acct = prov.get(AccountBy.name, idStrs[0]);
-                if (acct == null)
-                    acct = prov.get(AccountBy.id, idStrs[0]);
-                if (acct != null) {
-                    Element remoteResponse = proxyRequest(req, context, acct.getId());
-                    for (Element thisElt : remoteResponse.listElements())
-                        response.addElement(thisElt.detach());
-                } else {
-                    ZimbraLog.calendar.debug("Account " + idStrs[0] + " not found while searching free/busy");
-                }
-            } catch (SoapFaultException e) {
-                for (int i = 0; i < idStrs.length; i++)
-                    addFailureInfo(response, rangeStart, rangeEnd, idStrs[i], e);
-            } catch (ServiceException e) {
-                for (int i = 0; i < idStrs.length; i++)
-                    addFailureInfo(response, rangeStart, rangeEnd, idStrs[i], e);
-            }
-        }
-    }
     
-    protected static void partitionItems(ZimbraSoapContext zc, Element response, long rangeStart, long rangeEnd,
-                                         String idParam, String uidParam, String nameParam, List<ParseMailboxID> local, Map<String, StringBuilder> remote) {
-        
-        String[] idStrs = null;
-        
-        // idParam should be deprecated at some point, bug 21776 comment #14
-        if (idParam != null) {
-            idStrs = idParam.split(",");
-            for (int i = 0; i < idStrs.length; i++) {
-                try {
-                    ParseMailboxID id = null;
-                    if (Provisioning.isUUID(idStrs[i]))
-                        id = ParseMailboxID.byAccountId(idStrs[i]);
-                    else
-                        id = ParseMailboxID.byEmailAddress(idStrs[i]);
-                    partitionItems(zc, response, rangeStart, rangeEnd, id, local, remote);
-                } catch (ServiceException e) {
-                    addFailureInfo(response, rangeStart, rangeEnd, idStrs[i], e);
-                }
-            }
-        }
-        
-        if (uidParam != null) {
-            idStrs = uidParam.split(",");
-            for (int i = 0; i < idStrs.length; i++) {
-                try {
-                    ParseMailboxID id = ParseMailboxID.byAccountId(idStrs[i]);
-                    partitionItems(zc, response, rangeStart, rangeEnd, id, local, remote);
-                } catch (ServiceException e) {
-                    addFailureInfo(response, rangeStart, rangeEnd, idStrs[i], e);
-                }
-            }
-        }
-        
-        if (nameParam != null) {
-            idStrs = nameParam.split(",");
-            for (int i = 0; i < idStrs.length; i++) {
-                try {
-                    ParseMailboxID id = ParseMailboxID.byEmailAddress(idStrs[i]);
-                    partitionItems(zc, response, rangeStart, rangeEnd, id, local, remote);
-                } catch (ServiceException e) {
-                    addFailureInfo(response, rangeStart, rangeEnd, idStrs[i], e);
-                }
-            }
-        }
+    private Account getAccountFromUid(String uid) {
+    	Provisioning prov = Provisioning.getInstance();
+    	Account acct = null;
+    	try {
+    		if (Provisioning.isUUID(uid))
+    			acct = prov.get(AccountBy.id, uid);
+    		else
+    			acct = prov.get(AccountBy.name, uid);
+    	} catch (ServiceException e) {
+    		acct = null;
+    	}
+    	return acct;
     }
-    
-    protected static void partitionItems(ZimbraSoapContext zc, Element response, long rangeStart, long rangeEnd,
-                                         ParseMailboxID id, List<ParseMailboxID> local, Map<String, StringBuilder> remote) {
-        String idStr = id.getString();
-            
-        if (id != null) {
-            if (id.isLocal()) {
-                local.add(id);
-            } else {
-                String serverId = id.getServer();
-                        
-                assert(serverId != null);
-                        
-                StringBuilder remoteStr = remote.get(serverId);
-                if (remoteStr == null) {
-                    remoteStr = new StringBuilder(idStr);
-                    remote.put(serverId, remoteStr);
-                } else {
-                    remoteStr.append(",").append(idStr);
-                }
-            }
-        }
+    private Account getAccountFromId(String id) {
+    	try {
+    		return Provisioning.getInstance().get(AccountBy.id, id);
+    	} catch (ServiceException e) {
+    	}
+    	return null;
     }
-
-    protected static void addFailureInfo(Element response, long rangeStart, long rangeEnd, String idStr, Exception e) {
-        sLog.debug("Could not get FreeBusy data for id " + idStr, e);
-        Element usr = response.addElement(MailConstants.E_FREEBUSY_USER);
-        usr.addAttribute(MailConstants.A_ID, idStr);
-        usr.addElement(MailConstants.E_FREEBUSY_NO_DATA)
-           .addAttribute(MailConstants.A_CAL_START_TIME, rangeStart)
-           .addAttribute(MailConstants.A_CAL_END_TIME, rangeEnd);
+    private Account getAccountFromName(String name) {
+    	try {
+    		return Provisioning.getInstance().get(AccountBy.name, name);
+    	} catch (ServiceException e) {
+    	}
+    	return null;
     }
-    
-    protected static void getForOneMailbox(ZimbraSoapContext zc, Element response, ParseMailboxID id, long start, long end)
-    throws ServiceException {
-        if (id.isLocal()) {
-            Element mbxResp = response.addElement(MailConstants.E_FREEBUSY_USER);
-            mbxResp.addAttribute(MailConstants.A_ID,id.getString());
-            
-            Mailbox mbox = id.getMailbox();
-
-            FreeBusy fb = mbox.getFreeBusy(start, end);
-            for (Iterator<FreeBusy.Interval> iter = fb.iterator(); iter.hasNext(); ) {
-                FreeBusy.Interval cur = iter.next();
-                String status = cur.getStatus();
-                Element elt;
-                if (status.equals(IcalXmlStrMap.FBTYPE_FREE)) {
-                    elt = mbxResp.addElement(MailConstants.E_FREEBUSY_FREE);
-                } else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY)) {
-                    elt = mbxResp.addElement(MailConstants.E_FREEBUSY_BUSY);
-                } else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY_TENTATIVE)) {
-                    elt = mbxResp.addElement(MailConstants.E_FREEBUSY_BUSY_TENTATIVE);
-                } else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY_UNAVAILABLE)) {
-                    elt = mbxResp.addElement(MailConstants.E_FREEBUSY_BUSY_UNAVAILABLE);
-                } else {
-                    assert(false);
-                    elt = null;
-                }
-                
-                elt.addAttribute(MailConstants.A_CAL_START_TIME, cur.getStart());
-                elt.addAttribute(MailConstants.A_CAL_END_TIME, cur.getEnd());
-            }
-        }
+    private void getFreeBusyForZimbraUser(Element response, Account acct, String user, long start, long end, RemoteFreeBusyProvider remote) {
+    	// acct in LDAP is either local or remote.
+    	try {
+    		if (Provisioning.onLocalServer(acct)) {
+    			FreeBusy fb = LocalFreeBusyProvider.getFreeBusy(acct, start, end);
+    			ToXML.encodeFreeBusy(response, fb);
+    			return;
+    		} else {
+    			remote.addFreeBusyRequest(acct, user, start, end);
+    		}
+    	} catch (ServiceException e) {
+            ZimbraLog.misc.error("cannot get free/busy for "+user, e);
+    	}
     }
 }

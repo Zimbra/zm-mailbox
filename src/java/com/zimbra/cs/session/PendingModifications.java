@@ -62,7 +62,7 @@ public final class PendingModifications {
         Change(Object thing, int reason)  { what = thing;  why = reason; }
     }
 
-    static final class ModificationKey extends Pair<String, Integer> {
+    public static final class ModificationKey extends Pair<String, Integer> {
         public ModificationKey(String first, Integer second) {
             super(first, second);
         }

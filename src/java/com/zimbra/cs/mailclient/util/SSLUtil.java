@@ -1,4 +1,4 @@
-package com.zimbra.cs.mailtest;
+package com.zimbra.cs.mailclient.util;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;

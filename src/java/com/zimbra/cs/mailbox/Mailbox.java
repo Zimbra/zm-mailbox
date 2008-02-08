@@ -56,6 +56,8 @@ import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.db.DbSearchConstraints;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.db.DbSearch.SearchResult;
+import com.zimbra.cs.fb.FreeBusy;
+import com.zimbra.cs.fb.FreeBusyProvider;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.imap.ImapMessage;
@@ -76,7 +78,6 @@ import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.MailboxManager.MailboxLock;
 import com.zimbra.cs.mailbox.Note.Rectangle;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
-import com.zimbra.cs.mailbox.calendar.FreeBusy;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.RecurId;
@@ -404,6 +405,10 @@ public class Mailbox {
     public Flag mCheckedFlag;
     /** flag: whether a folder does not inherit permissions from its parent */
     public Flag mNoInheritFlag;
+    /** flag: whether a folder is a sync folder paired with source folder on server */
+    public Flag mSyncFolderFlag;
+    /** flag: whether a folder is to sync with its counterpart on server */
+    public Flag mSyncFlag;
 
     /** the full set of message flags, in order */
     final Flag[] mFlags = new Flag[31];
@@ -1240,8 +1245,9 @@ public class Mailbox {
      *  caches.  There may be some collateral damage: purging non-tag,
      *  non-folder types will drop the entire item cache.
      * 
-     * @param type  The type of item to completely uncache. */
-    void purge(byte type) {
+     * @param type  The type of item to completely uncache.  {@link MailItem#TYPE_UNKNOWN}
+     * uncaches all items. */
+    public synchronized void purge(byte type) {
         switch (type) {
             case MailItem.TYPE_FOLDER:
             case MailItem.TYPE_MOUNTPOINT:
@@ -1332,6 +1338,8 @@ public class Mailbox {
         mExcludeFBFlag = Flag.instantiate(this, "\\ExcludeFB",  Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_EXCLUDE_FREEBUSY);
         mCheckedFlag   = Flag.instantiate(this, "\\Checked",    Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_CHECKED);
         mNoInheritFlag  = Flag.instantiate(this, "\\NoInherit",  Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_NO_INHERIT);
+        mSyncFolderFlag = Flag.instantiate(this, "\\SyncFolder", Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_SYNCFOLDER);
+        mSyncFlag		= Flag.instantiate(this, "\\Sync",       Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_SYNC);
     }
 
     private void loadFoldersAndTags() throws ServiceException {
@@ -3052,6 +3060,43 @@ public class Mailbox {
                 MailItem.TYPE_UNKNOWN, octxt, start, end, folderId, excludeFolders);
     }
 
+    
+     public synchronized Collection<CalendarItem> getCalendarItemsAll(
+            byte type,
+            OperationContext octxt,
+            int folderId, int[] excludeFolders)
+            throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("getCalendarItemsAll", octxt);
+
+            // if they specified a folder, make sure it actually exists
+            if (folderId != ID_AUTO_INCREMENT)
+                getFolderById(folderId);
+
+            // get the list of all visible calendar items in the specified folder
+            List<CalendarItem> calItems = new ArrayList<CalendarItem>();
+            List<UnderlyingData> invData = DbMailItem.getCalendarItemsAll(this, type, folderId, excludeFolders);
+            for (MailItem.UnderlyingData data : invData) {
+                try {
+                    CalendarItem calItem = getCalendarItem(data);
+                    if (folderId == calItem.getFolderId() || (folderId == ID_AUTO_INCREMENT && calItem.inMailbox()))
+                        if (calItem.canAccess(ACL.RIGHT_READ))
+                            calItems.add(calItem);
+                } catch (ServiceException e) {
+                    ZimbraLog.calendar.warn(
+                            "Error while retrieving calendar item " +
+                            data.id + " in mailbox " + mId +
+                            "; skipping item", e);
+                }
+            }
+            success = true;
+            return calItems;
+        } finally {
+            endTransaction(success);
+        }
+    }
+    
     /**
      * Specifies the type of result we want from the call to search()
      */
@@ -3149,7 +3194,7 @@ public class Mailbox {
     }
     
     public synchronized FreeBusy getFreeBusy(long start, long end) throws ServiceException {
-        return FreeBusy.getFreeBusyList(this, start, end);
+        return com.zimbra.cs.fb.LocalFreeBusyProvider.getFreeBusyList(this, start, end);
     }
 
     private void addDomains(HashMap<String, DomainItem> domainItems, HashSet<String> newDomains, int flag) {
@@ -3223,13 +3268,11 @@ public class Mailbox {
 
     public static class SetCalendarItemData {
         public Invite mInv;
-        public boolean mForce;
         public ParsedMessage mPm;
 
         public String toString() {
             StringBuilder toRet = new StringBuilder();
             toRet.append("inv:").append(mInv.toString()).append("\n");
-            toRet.append("force:").append(mForce ? "true\n" : "false\n");
             return toRet.toString();
         }
     }
@@ -3295,30 +3338,40 @@ public class Mailbox {
                     first = false;
                     calItem = getCalendarItemByUid(scid.mInv.getUid());
                     calItemIsNew = calItem == null;
-            if (calItemIsNew) {
-                // ONLY create an calendar item if this is a REQUEST method...otherwise don't.
+                    if (calItemIsNew) {
+                        // ONLY create an calendar item if this is a REQUEST method...otherwise don't.
                         String method = scid.mInv.getMethod();
                         if ("REQUEST".equals(method) || "PUBLISH".equals(method)) {
                             calItem = createCalendarItem(
                                     folderId, volumeId, flags, tags,
                                     scid.mInv.getUid(), scid.mPm, scid.mInv, 0);
-                } else {
-                    return 0; // for now, just ignore this Invitation
-                }
-            } else {
+                        } else {
+                            return 0; // for now, just ignore this Invitation
+                        }
+                    } else {
+                        // Preserve invId.  (bug 19868)
+                        Invite currInv = calItem.getInvite(scid.mInv.getRecurId());
+                        if (currInv != null)
+                            scid.mInv.setInviteId(currInv.getMailItemId());
+
                         // Preserve alarm time before any modification is made to the item.
                         AlarmData alarmData = calItem.getAlarmData();
                         if (alarmData != null)
                             oldNextAlarm = alarmData.getNextAt();
 
-                calItem.setTags(flags, tags);
-                        calItem.processNewInvite(scid.mPm, scid.mInv, scid.mForce, folderId, volumeId,
-                                                 nextAlarm, true);
+                        calItem.setTags(flags, tags);
+                        calItem.processNewInvite(scid.mPm, scid.mInv, folderId, volumeId,
+                                                 nextAlarm, false, true);
                     }
                     redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId(), volumeId);
                 } else {
+                    // Preserve invId.  (bug 19868)
+                    Invite currInv = calItem.getInvite(scid.mInv.getRecurId());
+                    if (currInv != null)
+                        scid.mInv.setInviteId(currInv.getMailItemId());
+
                     // exceptions
-                    calItem.processNewInvite(scid.mPm, scid.mInv, scid.mForce, folderId, volumeId, 0);
+                    calItem.processNewInvite(scid.mPm, scid.mInv, folderId, volumeId, nextAlarm, false, false);
                 }
             }
 
@@ -3469,9 +3522,19 @@ public class Mailbox {
         }
     }
 
-    public synchronized int[] addInvite(OperationContext octxt, Invite inv, int folderId, boolean force, ParsedMessage pm)
+    public synchronized int[] addInvite(OperationContext octxt, Invite inv, int folderId)
     throws ServiceException {
-        return addInvite(octxt, inv, folderId, force, pm, 0);
+        return addInvite(octxt, inv, folderId, null, false);
+    }
+
+    public synchronized int[] addInvite(OperationContext octxt, Invite inv, int folderId, ParsedMessage pm)
+    throws ServiceException {
+        return addInvite(octxt, inv, folderId, pm, false);
+    }
+
+    public synchronized int[] addInvite(OperationContext octxt, Invite inv, int folderId, boolean removeAlarms)
+    throws ServiceException {
+        return addInvite(octxt, inv, folderId, null, removeAlarms);
     }
 
     /**
@@ -3480,14 +3543,14 @@ public class Mailbox {
      * message.
      * @param octxt
      * @param inv
-     * @param force if true, then force override the existing calendar item, false use normal RFC2446 sequencing rules
      * @param pm NULL is OK here
+     * @param removeAlarms if true, remove alarms from the invite
      * 
      * @return int[2] = { calendar-item-id, invite-mail-item-id }  Note that even though the invite has a mail-item-id, that mail-item does not really exist, it can ONLY be referenced through the calendar item "calItemId-invMailItemId"
      * @throws ServiceException
      */
-    public synchronized int[] addInvite(OperationContext octxt, Invite inv, int folderId, boolean force, ParsedMessage pm,
-                                        long nextAlarm)
+    public synchronized int[] addInvite(OperationContext octxt, Invite inv, int folderId,
+                                        ParsedMessage pm, boolean removeAlarms)
     throws ServiceException {
         if (pm == null) {
             inv.setDontIndexMimeMessage(true); // the MimeMessage is fake, so we don't need to index it
@@ -3504,7 +3567,7 @@ public class Mailbox {
             throw ServiceException.FAILURE("Caught IOException", ioe);
         }
 
-        CreateInvite redoRecorder = new CreateInvite(mId, inv, folderId, data, force);
+        CreateInvite redoRecorder = new CreateInvite(mId, inv, folderId, data);
 
         boolean success = false;
         try {
@@ -3515,6 +3578,10 @@ public class Mailbox {
             if (redoPlayer == null || redoPlayer.getCalendarItemId() == 0) {
                 inv.setInviteId(getNextItemId(Mailbox.ID_AUTO_INCREMENT));
             }
+
+            // Clear alarms if requested. (but not during a redo)
+            if (removeAlarms && redoPlayer == null)
+                inv.clearAlarms();
 
             boolean calItemIsNew = false;
             CalendarItem calItem = getCalendarItemByUid(inv.getUid());
@@ -3530,7 +3597,13 @@ public class Mailbox {
             } else {
                 if (!checkItemChangeID(calItem))
                     throw MailServiceException.MODIFY_CONFLICT();
-                calItem.processNewInvite(pm, inv, force, folderId, volumeId, nextAlarm);
+                if (inv.getMethod().equals("REQUEST") || inv.getMethod().equals("PUBLISH")) {
+                    // Preserve invId.  (bug 19868)
+                    Invite currInv = calItem.getInvite(inv.getRecurId());
+                    if (currInv != null)
+                        inv.setInviteId(currInv.getMailItemId());
+                }
+                calItem.processNewInvite(pm, inv, folderId, volumeId, 0, !removeAlarms, false);
             }
             if (calItem != null)
                 queueForIndexing(calItem, !calItemIsNew, null);
@@ -3616,7 +3689,7 @@ public class Mailbox {
                         "Unknown calendar item UID " + uid + " in mailbox " + getId());
                 return;
             }
-            if (calItem.processNewInviteReply(inv, false)) {
+            if (calItem.processNewInviteReply(inv)) {
                 queueForIndexing(calItem, false, null);
             }
             success = true;
@@ -5119,27 +5192,48 @@ public class Mailbox {
         Folder.SyncData fsd = subscription ? folder.getSyncData() : null;
         FeedManager.SubscriptionData sdata = FeedManager.retrieveRemoteDatasource(getAccount(), url, fsd);
 
-        // clear out the folder if we're replacing the previous content
-        if (subscription && (folder.getDefaultView() == MailItem.TYPE_APPOINTMENT || folder.getDefaultView() == MailItem.TYPE_TASK))
-            emptyFolder(octxt, folderId, false);
+        // If syncing a folder with calendar items, remember the current items.  After applying the new
+        // appointments/tasks, we need to remove ones that were not updated because they are apparently
+        // deleted from the source feed.
+        boolean isCalendar = folder.getDefaultView() == MailItem.TYPE_APPOINTMENT ||
+                             folder.getDefaultView() == MailItem.TYPE_TASK;
+        Set<Integer> existingCalItems = new HashSet<Integer>();
+        if (subscription && isCalendar) {
+            int[] itemIds = listItemIds(octxt, MailItem.TYPE_UNKNOWN, folderId);
+            for (int i : itemIds) {
+                existingCalItems.add(i);
+            }
+        }
 
         // if there's nothing to add, we can short-circuit here
-        if (sdata.items.isEmpty())
+        if (sdata.items.isEmpty()) {
+            if (subscription && isCalendar)
+                emptyFolder(octxt, folderId, false);
             return;
+        }
 
         // disable modification conflict checks, as we've already wiped the folder and we may hit an appoinment >1 times
         OperationContext octxtNoConflicts = new OperationContext(octxt).unsetChangeConstraint();
 
+        boolean removeAlarms = false;
         // add the newly-fetched items to the folder
         for (Object obj : sdata.items) {
             try {
-                if (obj instanceof Invite)
-                    addInvite(octxtNoConflicts, (Invite) obj, folderId, true, null);
-                else if (obj instanceof ParsedMessage)
+                if (obj instanceof Invite) {
+                    int calIds[] = addInvite(octxtNoConflicts, (Invite) obj, folderId, removeAlarms);
+                    if (calIds != null && calIds.length > 0)
+                        existingCalItems.remove(calIds[0]);
+                } else if (obj instanceof ParsedMessage) {
                     addMessage(octxtNoConflicts, (ParsedMessage) obj, folderId, true, Flag.BITMASK_UNREAD, null);
+                }
             } catch (IOException e) {
                 throw ServiceException.FAILURE("IOException", e);
             }
+        }
+
+        // Delete calendar items that have been deleted in the source feed.
+        for (int toRemove : existingCalItems) {
+            delete(octxtNoConflicts, toRemove, MailItem.TYPE_UNKNOWN);
         }
 
         // update the subscription to avoid downloading items twice
@@ -5940,9 +6034,10 @@ public class Mailbox {
 
             // accumulate all the info about deleted items; don't care about committed changes to external items
             MailItem.PendingDelete deleted = null;
-            for (Object obj : change.mOtherDirtyStuff)
+            for (Object obj : change.mOtherDirtyStuff) {
                 if (obj instanceof MailItem.PendingDelete)
                     deleted = ((MailItem.PendingDelete) obj).add(deleted);
+            }
 
             // delete any index entries associated with items deleted from db
             if (deleted != null && deleted.indexIds != null && deleted.indexIds.size() > 0 && mMailboxIndex != null) {
@@ -5968,7 +6063,7 @@ public class Mailbox {
                     } catch (IOException e) {
                         ZimbraLog.mailbox.warn("could not delete blob " + blob.getPath() + " during commit");
                     }
-            }
+                }
             }
         } catch (RuntimeException e) {
             ZimbraLog.mailbox.error("ignoring error during cache commit", e);
@@ -5979,6 +6074,14 @@ public class Mailbox {
             change.reset();
         }
 
+        // if the calendar items has changed in the mailbox,
+        // recalculate the free/busy for the user and propogate to
+        // other system.
+    	if (dirty != null && dirty.hasNotifications() 
+    			&& (dirty.changedTypes & MailItem.typeToBitmask(MailItem.TYPE_APPOINTMENT)) != 0) {
+    		FreeBusyProvider.mailboxChanged(this);
+    	}
+
         // committed changes, so notify any listeners
         if (!mListeners.isEmpty() && dirty != null && dirty.hasNotifications()) {
             for (Session session : new ArrayList<Session>(mListeners)) {
@@ -5987,8 +6090,8 @@ public class Mailbox {
                 } catch (RuntimeException e) {
                     ZimbraLog.mailbox.error("ignoring error during notification", e);
                 }
+            }
         }
-    }
     }
 
     private void rollbackCache(MailboxChange change) {

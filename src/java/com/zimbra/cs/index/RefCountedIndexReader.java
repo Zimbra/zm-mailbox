@@ -18,19 +18,30 @@ package com.zimbra.cs.index;
 
 import java.io.IOException;
 
+import org.apache.lucene.index.IndexCommitPoint;
 import org.apache.lucene.index.IndexReader;
+
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * Ref Counting wrapper around a Lucene IndexReader
  */
 final class RefCountedIndexReader {
+    private LuceneIndex mIdx;
+    private IndexCommitPoint mCommitPoint;
     private IndexReader mReader;
     private int mCount = 1;
     private long mAccessTime;
 
-    RefCountedIndexReader(IndexReader reader) {
+    RefCountedIndexReader(LuceneIndex idx, IndexReader reader) {
+        mIdx = idx;
+        mCommitPoint = mIdx.getCurrentCommitPoint();
         mReader= reader;
         mAccessTime = System.currentTimeMillis();
+    }
+    
+    IndexCommitPoint getCommitPoint() {
+        return mCommitPoint;
     }
     
     public synchronized IndexReader getReader() { return mReader; }
@@ -60,9 +71,10 @@ final class RefCountedIndexReader {
         try {
             mReader.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            ZimbraLog.im.debug("Caught exception while closing IndexReader: ", e);
         } finally {
             mReader= null;
+            mIdx.onClose(this);
         }
     }
 

@@ -1,7 +1,10 @@
-package com.zimbra.cs.mailtest;
+package com.zimbra.cs.mailclient.imap;
 
 import com.zimbra.cs.mina.MinaUtil;
+import com.zimbra.cs.mailclient.MailClient;
+import com.zimbra.cs.mailclient.MailException;
 
+import javax.security.auth.login.LoginException;
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -11,6 +14,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class ImapClient extends MailClient {
+    private String mCommand;
     private String mTag;
     private Set<String> mCapability = new HashSet<String>();
     private boolean mReceivedBYE;
@@ -58,13 +62,20 @@ public class ImapClient extends MailClient {
         sendCommand("LOGOUT");
     }
 
-    protected void sendAuthenticate(boolean ir) throws IOException {
+    protected void sendAuthenticate(boolean ir) throws LoginException, IOException {
         StringBuilder sb = new StringBuilder(mMechanism);
         if (ir) {
             byte[] response = mAuthenticator.getInitialResponse();
             sb.append(' ').append(encodeBase64(response));
         }
+        try {
         sendCommand("AUTHENTICATE", sb.toString());
+        } catch (MailException e) {
+            if (STATUS_NO.equals(mStatus)) {
+                throw new LoginException(getResponse());
+            }
+            throw e;
+        }
     }
 
     protected void sendStartTLS() throws IOException {
@@ -80,10 +91,11 @@ public class ImapClient extends MailClient {
     }
 
     public void sendCommand(String cmd, String args) throws IOException {
-        sendCommand(cmd, new String[] { args }, false);
+        sendCommand(cmd, args != null ? new String[] { args } : null, false);
     }
     
     public void sendCommand(String cmd, Object[] parts, boolean sync) throws IOException {
+        mCommand = cmd;
         mTag = createTag();
         mStatus = null;
         mResponse = null;
@@ -127,6 +139,12 @@ public class ImapClient extends MailClient {
         if (sync) {
             String line = readLine();
             if (!line.startsWith("+ ")) {
+                if (line.startsWith(TAG_PREFIX)) {
+                    processTagged(line);
+                    if (!STATUS_OK.equals(mStatus)) {
+                        throw new MailException(mCommand + " failed: " + mResponse);
+                    }
+                }
                 throw new MailException("Expected literal continuation, but got: " + line);
             }
         }
@@ -143,11 +161,7 @@ public class ImapClient extends MailClient {
         throw new IllegalArgumentException(
             "Invalid argument type: " + part.getClass());
     }
-    
-    public String getMessage() {
-        return mResponse;
-    }
-    
+
     private void processLine(String line) throws IOException {
         if (line.startsWith("+ ")) {
             processContinuation(line);

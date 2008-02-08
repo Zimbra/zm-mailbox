@@ -276,6 +276,12 @@ extends Assert {
         return mbox.addMessage(folderId, null, null, 0, message, true);
     }
 
+    public static String addMessage(ZMailbox mbox, String subject, String folderId, String flags)
+    throws ServiceException {
+        String message = getTestMessage(subject);
+        return mbox.addMessage(folderId, flags, null, 0, message, true);
+    }
+
     public static void sendMessage(ZMailbox senderMbox, String recipientName, String subject, String body)
     throws Exception {
         sendMessage(senderMbox, recipientName, subject, body, null);

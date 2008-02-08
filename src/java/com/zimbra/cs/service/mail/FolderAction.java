@@ -78,9 +78,11 @@ public class FolderAction extends ItemAction {
     public static final String OP_REVOKE   = '!' + OP_GRANT;
     public static final String OP_UNFLAG   = '!' + OP_FLAG;
     public static final String OP_UNTAG    = '!' + OP_TAG;
+    public static final String OP_SYNCON   = "syncon";
+    public static final String OP_SYNCOFF  = '!' + OP_SYNCON;
 
     private static final Set<String> FOLDER_OPS = new HashSet<String>(Arrays.asList(new String[] {
-        OP_EMPTY, OP_REFRESH, OP_SET_URL, OP_IMPORT, OP_FREEBUSY, OP_CHECK, OP_UNCHECK, OP_GRANT, OP_REVOKE, OP_UPDATE
+        OP_EMPTY, OP_REFRESH, OP_SET_URL, OP_IMPORT, OP_FREEBUSY, OP_CHECK, OP_UNCHECK, OP_GRANT, OP_REVOKE, OP_UPDATE, OP_SYNCON, OP_SYNCOFF
     }));
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
@@ -210,6 +212,8 @@ public class FolderAction extends ItemAction {
                 mbox.rename(octxt, iid.getId(), MailItem.TYPE_FOLDER, newName, iidFolder.getId());
             else if (iidFolder.getId() > 0)
                 mbox.move(octxt, iid.getId(), MailItem.TYPE_FOLDER, iidFolder.getId(), null);
+        } else if (operation.equals(OP_SYNCON) || operation.equals(OP_SYNCOFF)) {
+            mbox.alterTag(octxt, iid.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_SYNC, operation.equals(OP_SYNCON));
         } else {
             throw ServiceException.INVALID_REQUEST("unknown operation: " + operation, null);
         }

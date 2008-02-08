@@ -47,6 +47,8 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.im.IMChat.Participant;
 import com.zimbra.cs.im.IMMessage.Lang;
 import com.zimbra.cs.im.IMPresence.Show;
+import com.zimbra.cs.im.interop.Interop;
+import com.zimbra.cs.im.interop.UserStatus;
 //import com.zimbra.cs.im.interop.Interop;
 //import com.zimbra.cs.im.interop.Interop.ServiceName;
 //import com.zimbra.cs.im.interop.Interop.UserStatus;
@@ -336,12 +338,12 @@ public class IMPersona extends ClassLogger {
     }
     
     public void gatewayReconnect(String serviceName) throws ServiceException {
-        if (sInterop == null)
+        if (!interopAvailable())
             throw ServiceException.FAILURE("Interop not available", null);
         
         synchronized(getLock()) {
             try {
-                sInterop.reconnectUser(serviceName, mAddr.makeFullJID(getResource()));            
+                reconnectInteropUser(serviceName, mAddr.makeFullJID(getResource()));            
             } catch (Exception e) {
                 throw ServiceException.FAILURE("Exception calling gatewayReconnect("+serviceName, e);
             }
@@ -351,16 +353,16 @@ public class IMPersona extends ClassLogger {
     public void gatewayRegister(String serviceName, String username, String password)
                 throws ServiceException {
         
-        if (sInterop == null)
+        if (!interopAvailable())
             throw ServiceException.FAILURE("Interop not available", null);
         
         synchronized(getLock()) {
             try {
-                sInterop.connectUser(serviceName, mAddr.makeFullJID(getResource()), username, password);
+                connectInteropUser(serviceName, mAddr.makeFullJID(getResource()), username, password);
             } catch (ServiceException ace) {
                 try {
-                    sInterop.disconnectUser(serviceName, mAddr.makeFullJID(getResource()));
-                    sInterop.connectUser(serviceName, mAddr.makeFullJID(getResource()), username, password);
+                    disconnectInteropUser(serviceName, mAddr.makeFullJID(getResource()));
+                    connectInteropUser(serviceName, mAddr.makeFullJID(getResource()), username, password);
                 } catch (Exception e) {
                     throw ServiceException.FAILURE("Exception calling Interop.connectUser("
                         + username + "," + password, e);
@@ -393,12 +395,12 @@ public class IMPersona extends ClassLogger {
     }
 
     public void gatewayUnRegister(String serviceName) throws ServiceException {
-        if (sInterop == null)
+        if (!interopAvailable())
             throw ServiceException.FAILURE("Interop not available", null);
         
         synchronized(getLock()) {
             try {
-                sInterop.disconnectUser(serviceName, mAddr.makeFullJID(getResource()));
+                disconnectInteropUser(serviceName, mAddr.makeFullJID(getResource()));
             } catch (Exception e) {
                 throw ServiceException.FAILURE("Exception calling Interop.disconnectUser()", e);
             }
@@ -429,11 +431,56 @@ public class IMPersona extends ClassLogger {
         return mAddr.getDomain();
     }
     
-    private static InteropProvider sInterop = null;
-    
-    public static void setInteropProvider(InteropProvider provider) {
-        sInterop = provider;
+    private boolean interopAvailable() { 
+        return Interop.getInstance() != null;
     }
+    
+    private List<String> getAvailableInteropServices() {
+        return Interop.getInstance().getAvailableServices();
+    }
+    
+    private void disconnectInteropUser(String serviceName, JID jid) throws ServiceException {
+        try {
+            Interop.getInstance().disconnectUser(serviceName, jid);
+        } catch (Exception e) {
+            throw ServiceException.FAILURE("Caught exception from component", e);
+        }
+    }
+    
+    private void connectInteropUser(String serviceName, JID jid, String username, String password) throws ServiceException {
+        try {
+            Interop.getInstance().connectUser(serviceName, jid, username, password);
+        } catch (Exception e) {
+            throw ServiceException.FAILURE("Caught exception from component", e);
+        }
+    }
+    
+    private void reconnectInteropUser(String serviceName, JID jid) throws ServiceException {
+        try {
+            Interop.getInstance().reconnectUser(serviceName, jid);
+        } catch (Exception e) {
+            throw ServiceException.FAILURE("Caught exception from component", e);
+        }
+    }
+    
+    public GatewayRegistrationStatus getRegistrationStatus(String serviceName, JID jid) throws ServiceException {
+        try {
+            UserStatus us = Interop.getInstance().getRegistrationStatus(serviceName, jid);
+            
+            if (us != null) {
+                GatewayRegistrationStatus toRet = new GatewayRegistrationStatus();
+                toRet.username = us.username;
+                toRet.password = us.password;
+                toRet.state = us.state.name().toLowerCase();
+                toRet.nextConnectAttemptTime = us.nextConnectAttemptTime;
+                return toRet;
+            } 
+            return null;
+        } catch (Exception e) {
+            throw ServiceException.FAILURE("Caught exception fetching status", e);
+        }
+    }
+    
     
     /**
      * @return The set of gateways this user has access to
@@ -441,11 +488,10 @@ public class IMPersona extends ClassLogger {
     public List<Pair<String, GatewayRegistrationStatus>> getAvailableGateways() {
         synchronized(getLock()) {
             List<Pair<String, GatewayRegistrationStatus>>  ret = new LinkedList<Pair<String, GatewayRegistrationStatus>>();
-            if (sInterop != null) {
-                List<String> services = sInterop.getAvailableServices();
-                for (String service : services) {
+            if (interopAvailable()) {
+                for (String service : getAvailableInteropServices()) {
                     try {
-                        ret.add(new Pair<String, GatewayRegistrationStatus>(service, sInterop.getRegistrationStatus(service, mAddr.makeFullJID(getResource()))));
+                        ret.add(new Pair<String, GatewayRegistrationStatus>(service, getRegistrationStatus(service, mAddr.makeFullJID(getResource()))));
                     } catch (ServiceException ex) {
                         debug("Caught component exception trying to get registration status for "+service+" jid="+mAddr.makeFullJID(getResource())+": ", ex);
                     }

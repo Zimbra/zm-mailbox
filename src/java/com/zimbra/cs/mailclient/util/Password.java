@@ -1,4 +1,4 @@
-package com.zimbra.cs.mailtest;
+package com.zimbra.cs.mailclient.util;
 
 import java.io.IOException;
 import java.lang.reflect.Method;

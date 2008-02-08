@@ -339,7 +339,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             int[] ids = null;
             // First, update my own appointment.
             if (updateOwnAppointment)
-                ids = mbox.addInvite(octxt, csd.mInvite, apptFolderId, false, pm);
+                ids = mbox.addInvite(octxt, csd.mInvite, apptFolderId, pm);
 
             // Next, notify any attendees.
             if (!csd.mDontNotifyAttendees)

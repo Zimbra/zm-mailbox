@@ -35,7 +35,7 @@ import com.zimbra.common.util.ZimbraLog;
 public class Domain extends NamedEntry {
     private String mUnicodeName;
  
-    protected Domain(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults) {
+    public Domain(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults) {
         super(name, id, attrs, defaults);
         if (name == null)
             mUnicodeName = name;

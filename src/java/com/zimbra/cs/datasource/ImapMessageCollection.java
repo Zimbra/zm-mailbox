@@ -69,4 +69,12 @@ implements Iterable<ImapMessage>
     public Set<Integer> getItemIds() {
         return mByItemId.keySet();
     }
+
+    public long getMaxUid() {
+        long maxUid = 0;
+        for (long uid : mByUid.keySet()) {
+            if (uid > maxUid) maxUid = uid;
+        }
+        return maxUid;
+    }
 }

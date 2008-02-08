@@ -94,7 +94,7 @@ public class CompleteTaskInstance extends CalendarRequest {
 
             // Create a new single-instance task for completed date.
             Invite completed = createCompletedInstanceInvite(inv, exceptDt);
-            mbox.addInvite(octxt, completed, calItem.getFolderId(), false, null);
+            mbox.addInvite(octxt, completed, calItem.getFolderId());
 
             // Update recurrence's start date to the next instance start date.
             long oldStart = recurStart.getUtcTime();
@@ -120,7 +120,7 @@ public class CompleteTaskInstance extends CalendarRequest {
                 inv.setDtStart(newStartDt);
                 inv.setSeqNo(inv.getSeqNo() + 1);
                 inv.setDtStamp(System.currentTimeMillis());
-                mbox.addInvite(octxt, inv, calItem.getFolderId(), false, null);
+                mbox.addInvite(octxt, inv, calItem.getFolderId());
             } else {
                 // No more instance left.  Delete the recurring task.
                 mbox.delete(octxt, calItem.getId(), calItem.getType());
