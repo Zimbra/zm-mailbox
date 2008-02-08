@@ -230,7 +230,7 @@ public class Alarm {
 
     public static boolean actionAllowed(Action action) {
         if (!DebugConfig.calendarAllowNonDisplayAlarms) {
-            if (Action.DISPLAY.equals(action))
+            if (action != null && !Action.AUDIO.equals(action) && !Action.PROCEDURE.equals(action))
                 return true;
             ZimbraLog.calendar.warn(
                     "Action " + (action != null ? action.toString() : "null") +
