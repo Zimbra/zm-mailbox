@@ -66,9 +66,10 @@ public class ExtensionUtil {
         } else {
             sExtParentClassLoader = new URLClassLoader(extCommonURLs, ExtensionUtil.class.getClassLoader());    
         }
+        loadAll();
     }
 
-    public static synchronized void loadAll() {
+    private static synchronized void loadAll() {
         File extDir = new File(LC.zimbra_extensions_directory.value());
         if (extDir == null) {
             ZimbraLog.extensions.info(LC.zimbra_extensions_directory.key() + " is null, no extensions loaded");

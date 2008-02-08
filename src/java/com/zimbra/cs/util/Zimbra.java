@@ -101,7 +101,6 @@ public class Zimbra {
         ZimbraApplication app = ZimbraApplication.getInstance();
         	
         if (app.supports(ExtensionUtil.class.getName())) {
-	    	ExtensionUtil.loadAll();
 	    	ExtensionUtil.initAll();
         }
 
