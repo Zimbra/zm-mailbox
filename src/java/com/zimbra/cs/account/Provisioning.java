@@ -28,6 +28,7 @@ import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.L10nUtil;
+import com.zimbra.cs.extension.ExtensionUtil;
 
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.AddressException;
@@ -1461,7 +1462,7 @@ public abstract class Provisioning {
             String className = LC.zimbra_class_provisioning.value();
             if (className != null && !className.equals("")) {
                 try {
-                    sProvisioning = (Provisioning) Class.forName(className).newInstance();
+                    sProvisioning = (Provisioning) ExtensionUtil.findClass(className).newInstance();
                 } catch (Exception e) {
                     ZimbraLog.account.error("could not instantiate Provisioning interface of class '" + className + "'; defaulting to LdapProvisioning", e);
                 }

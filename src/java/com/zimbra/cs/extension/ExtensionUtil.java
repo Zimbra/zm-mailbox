@@ -33,7 +33,7 @@ import com.zimbra.common.util.ZimbraLog;
 
 public class ExtensionUtil {
 
-    private static List sClassLoaders = new ArrayList();
+    private static List<ZimbraExtensionClassLoader> sClassLoaders = new ArrayList();
 
     private static URL[] dirListToURLs(File dir) {
         File[] files = dir.listFiles();
@@ -100,11 +100,9 @@ public class ExtensionUtil {
 
     public static synchronized void initAll() {
         ZimbraLog.extensions.info("Initializing extensions");
-        for (Iterator clIter = sClassLoaders.iterator(); clIter.hasNext();) {
-            ZimbraExtensionClassLoader zcl = (ZimbraExtensionClassLoader)clIter.next();
+        for (ZimbraExtensionClassLoader zcl : sClassLoaders) {
             List classes = zcl.getExtensionClassNames();
-            for (Iterator nameIter = classes.iterator(); nameIter.hasNext();) {
-                String name = (String)nameIter.next();
+            for (String name : zcl.getExtensionClassNames()) {
                 Class clz;
                 try {
                     clz = zcl.loadClass(name);
@@ -172,6 +170,30 @@ public class ExtensionUtil {
         ClassLoader loader = ext.getClass().getClassLoader();
         return loader.loadClass(className);
     }
+
+    /**
+     * look for the specified class on our class path then across all extension class loaders and return first match.
+     *
+     * @param name class name to load
+     * @return class
+     * @throws ClassNotFoundException if class is not found
+     */
+    public static synchronized Class findClass(String name) throws ClassNotFoundException {
+        try {
+            return ExtensionUtil.class.getClassLoader().loadClass(name);
+        } catch (ClassNotFoundException e) {
+            // ignore and look through extensions
+        }
+        for (ZimbraExtensionClassLoader zcl : sClassLoaders) {
+            try {
+                return zcl.loadClass(name);
+            } catch (ClassNotFoundException e) {
+                // ignore and keep looking
+            }
+        }
+        throw new ClassNotFoundException(name);
+    }
+
 
     public static synchronized ZimbraExtension getExtension(String name) {
         return (ZimbraExtension) sInitializedExtensions.get(name);

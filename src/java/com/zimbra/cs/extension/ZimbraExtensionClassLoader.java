@@ -37,7 +37,7 @@ public class ZimbraExtensionClassLoader extends URLClassLoader {
 	
 	public static final String ZIMBRA_EXTENSION_CLASS = "Zimbra-Extension-Class";
 	
-	private List mExtensionClassNames = new ArrayList();
+	private List<String> mExtensionClassNames = new ArrayList();
 
 	/**
 	 * Load classes from all jar files or directories in the directory
@@ -63,7 +63,7 @@ public class ZimbraExtensionClassLoader extends URLClassLoader {
 		return mExtensionClassNames.size() > 0;
 	}
 	
-	public List getExtensionClassNames() {
+	public List<String> getExtensionClassNames() {
 		return mExtensionClassNames;
 	}
 	
