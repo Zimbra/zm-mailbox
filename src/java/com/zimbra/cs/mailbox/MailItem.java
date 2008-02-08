@@ -86,8 +86,6 @@ public abstract class MailItem implements Comparable<MailItem> {
     public static final byte TYPE_TASK         = 15;
     /** Item is a {@link Chat} */
     public static final byte TYPE_CHAT         = 16;
-    /** Calendar Item */
-    public static final byte TYPE_CALENDAR     = 17;
 
     public static final byte TYPE_MAX = TYPE_CHAT;
 
