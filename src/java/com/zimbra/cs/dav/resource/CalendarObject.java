@@ -252,7 +252,7 @@ public interface CalendarObject {
         public byte[] getRawContent(DavContext ctxt) throws IOException {
             String authToken;
             try {
-                authToken = new AuthToken(ctxt.getAuthAccount()).getEncoded();
+                authToken = AuthToken.getAuthToken(ctxt.getAuthAccount()).getEncoded();
             } catch (AuthTokenException e) {
                 ZimbraLog.dav.warn("can't generate authToken for "+ctxt.getAuthAccount().getName());
                 return null;

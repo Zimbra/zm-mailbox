@@ -86,7 +86,7 @@ class RemoteQueryOperation extends FilterQueryOperation {
 
         params.setQueryStr(mOp.toQueryString());
         try {
-            mResults = new ProxiedQueryResults(proto, new AuthToken(authenticatedAccount, isAdmin).getEncoded(), 
+            mResults = new ProxiedQueryResults(proto, AuthToken.getAuthToken(authenticatedAccount, isAdmin).getEncoded(), 
                 mTarget.toString(), remoteServer.getName(), params, params.getMode());
         } catch (AuthTokenException e) {
             throw ServiceException.FAILURE("AuthTokenException getting auth token: " + e.toString(), e);

@@ -853,7 +853,7 @@ public class ParseMimeMessage {
 
         Account acct = Provisioning.getInstance().get(Provisioning.AccountBy.name, "user1");
         HashMap<String, Object> context = new HashMap<String, Object>();
-        context.put(com.zimbra.soap.SoapServlet.ZIMBRA_AUTH_TOKEN, new com.zimbra.cs.account.AuthToken(acct).getEncoded());
+        context.put(com.zimbra.soap.SoapServlet.ZIMBRA_AUTH_TOKEN, com.zimbra.cs.account.AuthToken.getAuthToken(acct).getEncoded());
         ZimbraSoapContext zsc = new ZimbraSoapContext(null, context, com.zimbra.common.soap.SoapProtocol.SoapJS);
         OperationContext octxt = new OperationContext(acct);
 

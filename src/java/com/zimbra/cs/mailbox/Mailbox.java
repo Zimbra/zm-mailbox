@@ -3748,7 +3748,7 @@ public class Mailbox {
                                 sr.close();
                         }
                         Options options = new Options();
-                        options.setAuthToken(new AuthToken(authuser, isAdminRequest).getEncoded());
+                        options.setAuthToken(AuthToken.getAuthToken(authuser, isAdminRequest).getEncoded());
                         options.setTargetAccount(orgAccount.getName());
                         options.setTargetAccountBy(AccountBy.name);
                         options.setUri(uri);

@@ -89,7 +89,7 @@ public class DelegateAuth extends AdminDocumentHandler {
         if (adminAcct == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(lc.getAuthtokenAccountId());
 
-        AuthToken at = new AuthToken(account, expires, false, adminAcct); 
+        AuthToken at = AuthToken.getAuthToken(account, expires, false, adminAcct); 
         try {
             token = at.getEncoded();
         } catch (AuthTokenException e) {

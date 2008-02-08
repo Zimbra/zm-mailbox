@@ -86,13 +86,13 @@ public class HtmlFormatter extends Formatter {
         if (context.basicAuthHappened) {
             Account acc = context.authAccount;
             if (acc instanceof ACL.GuestAccount)
-                auth = new AuthToken(acc.getId(), acc.getName(), null, ((ACL.GuestAccount)acc).getDigest(), expiration);
+                auth = AuthToken.getAuthToken(acc.getId(), acc.getName(), null, ((ACL.GuestAccount)acc).getDigest(), expiration);
             else
-                auth = new AuthToken(context.authAccount, expiration);
+                auth = AuthToken.getAuthToken(context.authAccount, expiration);
         } else if (context.cookieAuthHappened) {
             auth = UserServlet.getAuthTokenFromCookie(context.req, context.resp, true);
         } else {
-            auth = new AuthToken(ACL.GUID_PUBLIC, null, null, null, expiration);
+            auth = AuthToken.getAuthToken(ACL.GUID_PUBLIC, null, null, null, expiration);
         }
 
         String authString = null;
@@ -140,7 +140,7 @@ public class HtmlFormatter extends Formatter {
             return;
         SoapHttpTransport tr;
         //AuthToken auth = new AuthToken(ACL.GUID_PUBLIC, "foo@bar.com", "test123", null, System.currentTimeMillis() + AUTH_EXPIRATION);
-        AuthToken auth = new AuthToken(ACL.GUID_PUBLIC, null, null, null, System.currentTimeMillis() + AUTH_EXPIRATION);
+        AuthToken auth = AuthToken.getAuthToken(ACL.GUID_PUBLIC, null, null, null, System.currentTimeMillis() + AUTH_EXPIRATION);
         String url = "http://localhost:7070/service/soap";
         tr = new SoapHttpTransport(url);
         tr.setAuthToken(auth.getEncoded());

@@ -324,7 +324,7 @@ public class MailSender {
                 String uri = AccountUtil.getSoapUri(authuser);
                 if (uri == null)
                     return null;
-                ZMailbox.Options options = new ZMailbox.Options(new AuthToken(authuser, isAdminRequest).getEncoded(), uri);
+                ZMailbox.Options options = new ZMailbox.Options(AuthToken.getAuthToken(authuser, isAdminRequest).getEncoded(), uri);
                 options.setNoSession(true);
                 return ZMailbox.getMailbox(options);
             }

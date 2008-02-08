@@ -153,7 +153,7 @@ public class SearchConv extends Search {
                     // now create a soap transport to talk to the remote account
                     Account target = Provisioning.getInstance().get(AccountBy.id, cid.getAccountId());
                     SoapHttpTransport soapTransp = new SoapHttpTransport(AccountUtil.getSoapUri(target));
-                    soapTransp.setAuthToken(new AuthToken(acct).getEncoded());
+                    soapTransp.setAuthToken(AuthToken.getAuthToken(acct).getEncoded());
                     soapTransp.setTargetAcctId(target.getId());
                     soapTransp.setRequestProtocol(zsc.getResponseProtocol());
 

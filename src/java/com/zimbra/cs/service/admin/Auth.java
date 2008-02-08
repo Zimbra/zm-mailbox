@@ -107,7 +107,7 @@ public class Auth extends AdminDocumentHandler {
 
         Element response = zsc.createElement(AdminConstants.AUTH_RESPONSE);
         String token;
-        AuthToken at = new AuthToken(acct, true);
+        AuthToken at = AuthToken.getAuthToken(acct, true);
         try {
             token = at.getEncoded();
         } catch (AuthTokenException e) {
