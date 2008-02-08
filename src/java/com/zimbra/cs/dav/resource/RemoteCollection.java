@@ -70,7 +70,7 @@ public class RemoteCollection extends Collection {
         
         String authToken = null;
         try {
-            authToken = new AuthToken(ctxt.getAuthAccount()).getEncoded();
+            authToken = AuthToken.getAuthToken(ctxt.getAuthAccount()).getEncoded();
         } catch (AuthTokenException e) {
             return Collections.emptyList();
         }

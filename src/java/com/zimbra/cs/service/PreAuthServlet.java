@@ -126,7 +126,7 @@ public class PreAuthServlet extends ZimbraServlet {
                 
                 prov.preAuthAccount(acct, account, accountBy, timestamp, expires, preAuth);
             
-                AuthToken at = (expires ==  0) ? new AuthToken(acct) : new AuthToken(acct, expires);
+                AuthToken at = (expires ==  0) ? AuthToken.getAuthToken(acct) : AuthToken.getAuthToken(acct, expires);
                 try {
                     authToken = at.getEncoded();
                     if (Provisioning.onLocalServer(acct)) {

@@ -96,7 +96,7 @@ public class GetInfo extends AccountDocumentHandler  {
         response.addAttribute(AccountConstants.E_ID, account.getId(), Element.Disposition.CONTENT);
         response.addAttribute(AccountConstants.E_NAME, account.getUnicodeName(), Element.Disposition.CONTENT);
         try {
-            response.addAttribute(AccountConstants.E_CRUMB, AuthToken.getCrumb(zsc.getRawAuthToken()), Element.Disposition.CONTENT);
+            response.addAttribute(AccountConstants.E_CRUMB, zsc.getAuthToken().getCrumb(), Element.Disposition.CONTENT);
         } catch (AuthTokenException e) {
             // shouldn't happen
             ZimbraLog.account.warn("can't generate crumb", e);

@@ -89,7 +89,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
         mAppointments = new HashMap<String,DavResource>();
         String authToken = null;
         try {
-            authToken = new AuthToken(ctxt.getAuthAccount()).getEncoded();
+            authToken = AuthToken.getAuthToken(ctxt.getAuthAccount()).getEncoded();
         } catch (AuthTokenException e) {
             return Collections.emptyList();
         }
@@ -128,7 +128,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
     public DavResource createItem(DavContext ctxt, String name) throws DavException, IOException {
         String authToken;
         try {
-            authToken = new AuthToken(ctxt.getAuthAccount()).getEncoded();
+            authToken = AuthToken.getAuthToken(ctxt.getAuthAccount()).getEncoded();
             
             Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteId);
             ZMailbox.Options zoptions = new ZMailbox.Options(authToken, AccountUtil.getSoapUri(target));
@@ -172,7 +172,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
     public void deleteAppointment(DavContext ctxt, int id) throws DavException {
         try {
             String authToken = null;
-            authToken = new AuthToken(ctxt.getAuthAccount()).getEncoded();
+            authToken = AuthToken.getAuthToken(ctxt.getAuthAccount()).getEncoded();
             Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteId);
             ZMailbox.Options zoptions = new ZMailbox.Options(authToken, AccountUtil.getSoapUri(target));
             zoptions.setNoSession(true);

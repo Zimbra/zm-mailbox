@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -35,7 +36,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.SoapServlet;
 
 public abstract class AuthProvider {
-    protected static final String ZIMBRA_AUTH_PROVIDER = "zimbra";
+    public static final String ZIMBRA_AUTH_PROVIDER = "zimbra";
     
     private static Log sLog = LogFactory.getLog(AuthProvider.class);
   
@@ -134,7 +135,7 @@ public abstract class AuthProvider {
     
     
     /**
-     * The following two static methods go through all the providers, trying them in order until one returns an AuthToken
+     * The two static getAuthToken methods go through all the providers, trying them in order until one returns an AuthToken
      * Return null when there is no auth data for any of the enabled providers
      * Throw AuthTokenException if any provider in the chain throws an AuthTokenException.
      * 
@@ -187,7 +188,7 @@ public abstract class AuthProvider {
      * For SOAP, we currently do not pass in isAdminReq, because with the current flow in SoapEngine, 
      * at the point when the SOAP context(ZimbraSoapContext) is examined, we haven't looked at the SOAP 
      * body yet.  Whether admin auth is required is based on the SOAP command, which has to be extracted 
-     * from the body.  Zimbra auth provider always retrieves the raw auth token from the fixed tag, so 
+     * from the body.  ZimbraAuthProvider always retrieves the encoded auth token from the fixed tag, so 
      * does YahooYT auth.  This should be fine for now.
      *    
      * @param soapCtxt <context> element in SOAP header

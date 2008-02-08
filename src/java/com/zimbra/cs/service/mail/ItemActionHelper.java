@@ -417,7 +417,7 @@ public class ItemActionHelper {
     private void executeRemote() throws ServiceException, IOException {
         String authtoken;
         try {
-            authtoken = new AuthToken(mAuthenticatedAccount).getEncoded();
+            authtoken = AuthToken.getAuthToken(mAuthenticatedAccount).getEncoded();
         } catch (AuthTokenException e) {
             throw ServiceException.FAILURE("could not get auth token", e);
         }

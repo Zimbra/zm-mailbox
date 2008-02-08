@@ -291,7 +291,7 @@ public class UserServlet extends ZimbraServlet {
                     // send cookie back if need be. 
                     if (!context.noSetCookie()) {
                         try {
-                            context.authTokenCookie = new AuthToken(context.authAccount, isAdminRequest).getEncoded();
+                            context.authTokenCookie = AuthToken.getAuthToken(context.authAccount, isAdminRequest).getEncoded();
                             context.resp.addCookie(new Cookie(isAdminRequest ? COOKIE_ZM_ADMIN_AUTH_TOKEN : COOKIE_ZM_AUTH_TOKEN, context.authTokenCookie));
                         } catch (AuthTokenException e) {
                         }
@@ -396,7 +396,7 @@ public class UserServlet extends ZimbraServlet {
         if (context.targetAccount != null && !Provisioning.onLocalServer(context.targetAccount)) {
             try {
                 if (context.basicAuthHappened && context.authTokenCookie == null)
-                    context.authTokenCookie = new AuthToken(context.authAccount, isAdminRequest(context)).getEncoded();
+                    context.authTokenCookie = AuthToken.getAuthToken(context.authAccount, isAdminRequest(context)).getEncoded();
                 Provisioning prov = Provisioning.getInstance();                
                 proxyServletRequest(req, resp, prov.getServer(context.targetAccount), context.basicAuthHappened ? context.authTokenCookie : null);
                 return true;
@@ -691,7 +691,7 @@ public class UserServlet extends ZimbraServlet {
 
         try {
             if (context.basicAuthHappened && context.authTokenCookie == null) 
-                context.authTokenCookie = new AuthToken(context.authAccount, isAdminRequest(context)).getEncoded();
+                context.authTokenCookie = AuthToken.getAuthToken(context.authAccount, isAdminRequest(context)).getEncoded();
         } catch (AuthTokenException e) {
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "cannot generate auth token");
         }

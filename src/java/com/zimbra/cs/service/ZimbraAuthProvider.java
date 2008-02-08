@@ -26,6 +26,7 @@ import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.account.ZimbraAuthToken;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.soap.SoapServlet;
 
@@ -37,34 +38,34 @@ public class ZimbraAuthProvider extends AuthProvider{
     
     protected AuthToken authToken(HttpServletRequest req, boolean isAdminReq) throws AuthProviderException, AuthTokenException {
         String cookieName = isAdminReq? ZimbraServlet.COOKIE_ZM_ADMIN_AUTH_TOKEN : ZimbraServlet.COOKIE_ZM_AUTH_TOKEN;
-        String rawAuthToken = null;
+        String encodedAuthToken = null;
         javax.servlet.http.Cookie cookies[] =  req.getCookies();
         if (cookies != null) {
             for (int i = 0; i < cookies.length; i++) {
                 if (cookies[i].getName().equals(cookieName)) {
-                    rawAuthToken = cookies[i].getValue();
+                    encodedAuthToken = cookies[i].getValue();
                     break;
                 }
             }
         }
         
-        return authToken(rawAuthToken);
+        return authToken(encodedAuthToken);
     }
 
     protected AuthToken authToken(Element soapCtxt, Map engineCtxt) throws AuthProviderException, AuthTokenException  {
-        String rawAuthToken = (soapCtxt == null ? null : soapCtxt.getAttribute(HeaderConstants.E_AUTH_TOKEN, null));
+        String encodedAuthToken = (soapCtxt == null ? null : soapCtxt.getAttribute(HeaderConstants.E_AUTH_TOKEN, null));
         
         // check for auth token in engine context if not in header  
-        if (rawAuthToken == null)
-            rawAuthToken = (String) engineCtxt.get(SoapServlet.ZIMBRA_AUTH_TOKEN);
+        if (encodedAuthToken == null)
+            encodedAuthToken = (String) engineCtxt.get(SoapServlet.ZIMBRA_AUTH_TOKEN);
         
-        return authToken(rawAuthToken);
+        return authToken(encodedAuthToken);
     }
     
-    private AuthToken authToken(String rawAuthToken) throws AuthProviderException, AuthTokenException {
-        if (StringUtil.isNullOrEmpty(rawAuthToken))
+    private AuthToken authToken(String encodedAuthToken) throws AuthProviderException, AuthTokenException {
+        if (StringUtil.isNullOrEmpty(encodedAuthToken))
             throw AuthProviderException.NO_AUTH_DATA();
         
-        return AuthToken.getAuthToken(rawAuthToken);
+        return ZimbraAuthToken.getAuthToken(encodedAuthToken);
     }
 }

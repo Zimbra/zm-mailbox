@@ -72,7 +72,7 @@ public class TestZimbraId extends TestCase {
     }
     
     private String authToken(Account acct) throws Exception {
-        AuthToken at = new AuthToken(acct);
+        AuthToken at = AuthToken.getAuthToken(acct);
         return at.getEncoded();
     }
     

@@ -241,7 +241,7 @@ class ImapURL {
             // last option: handle off-server URLs
             if (content == null) {
                 Account authacct = Provisioning.getInstance().get(AccountBy.id, creds.getAccountId());
-                AuthToken auth = new AuthToken(authacct, System.currentTimeMillis() + 60 * 1000);
+                AuthToken auth = AuthToken.getAuthToken(authacct, System.currentTimeMillis() + 60 * 1000);
                 HashMap<String, String> params = new HashMap<String, String>();
                 params.put(UserServlet.QP_IMAP_ID, Integer.toString(mUid));
                 content = UserServlet.getRemoteContent(auth.getEncoded(), acct, mPath.asResolvedPath(), params);

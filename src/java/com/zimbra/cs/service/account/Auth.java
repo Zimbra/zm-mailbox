@@ -117,7 +117,7 @@ public class Auth extends AccountDocumentHandler {
                 throw ServiceException.INVALID_REQUEST("must specify "+AccountConstants.E_PASSWORD, null);
             }
 
-            AuthToken at = expires ==  0 ? new AuthToken(acct) : new AuthToken(acct, expires);
+            AuthToken at = expires ==  0 ? AuthToken.getAuthToken(acct) : AuthToken.getAuthToken(acct, expires);
             return doResponse(request, at, zsc, acct);
         }
     }
