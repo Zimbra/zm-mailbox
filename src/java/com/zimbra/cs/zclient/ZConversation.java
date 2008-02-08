@@ -78,8 +78,7 @@ public class ZConversation implements ZItem {
         mId = e.getAttribute(MailConstants.A_ID);
         mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
         mTags = e.getAttribute(MailConstants.A_TAGS, null);
-        Element sub = e.getOptionalElement(MailConstants.E_SUBJECT);
-        if (sub != null) mSubject = sub.getText();        
+        mSubject = e.getAttribute(MailConstants.E_SUBJECT, null);
         mMessageCount = (int) e.getAttributeLong(MailConstants.A_NUM);
         
         mMessageSummaries = new ArrayList<ZMessageSummary>();
@@ -158,8 +157,7 @@ public class ZConversation implements ZItem {
             mDate = e.getAttributeLong(MailConstants.A_DATE);
             mTags = e.getAttribute(MailConstants.A_TAGS, null);
             mFolderId = e.getAttribute(MailConstants.A_FOLDER, null);
-            Element fr = e.getOptionalElement(MailConstants.E_FRAG);
-            if (fr != null) mFragment = fr.getText();        
+            mFragment = e.getAttribute(MailConstants.E_FRAG, null);
             mSize = e.getAttributeLong(MailConstants.A_SIZE);
             Element emailEl = e.getOptionalElement(MailConstants.E_EMAIL);
             if (emailEl != null) mSender = new ZEmailAddress(emailEl);

@@ -46,10 +46,8 @@ public class ZConversationHit implements ZSearchHit {
         mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
         mDate = e.getAttributeLong(MailConstants.A_DATE);
         mTags = e.getAttribute(MailConstants.A_TAGS, null);
-        Element fr = e.getOptionalElement(MailConstants.E_FRAG);
-        if (fr != null) mFragment = fr.getText();
-        Element su = e.getOptionalElement(MailConstants.E_SUBJECT);
-        if (su != null) mSubject = su.getText();
+        mFragment = e.getAttribute(MailConstants.E_FRAG, null);
+        mSubject = e.getAttribute(MailConstants.E_SUBJECT, null);
         mSortField = e.getAttribute(MailConstants.A_SORT_FIELD, null);
         mMessageCount = (int) e.getAttributeLong(MailConstants.A_NUM);
         mScore = (float) e.getAttributeDouble(MailConstants.A_SCORE, 0);

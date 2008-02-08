@@ -18,14 +18,15 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.KeyValuePair;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.event.ZModifyContactEvent;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
-import com.zimbra.common.soap.Element;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
 
 public class ZContact implements ZItem {
 
@@ -98,8 +99,9 @@ public class ZContact implements ZItem {
         mRevision = e.getAttribute(MailConstants.A_REVISION, null);
         mMetaDataChangedDate = e.getAttributeLong(MailConstants.A_MODIFIED_DATE, 0) * 1000;
         mAttrs = new HashMap<String, String>();
-        for (Element a : e.listElements(MailConstants.E_ATTRIBUTE)) {
-            mAttrs.put(a.getAttribute(MailConstants.A_ATTRIBUTE_NAME), a.getText());
+
+        for (KeyValuePair pair : e.listKeyValuePairs(MailConstants.E_ATTRIBUTE, MailConstants.A_ATTRIBUTE_NAME)) {
+            mAttrs.put(pair.getKey(), pair.getValue());
         }
     }
 

@@ -97,16 +97,11 @@ public class ZMessage implements ZItem {
         mTags = e.getAttribute(MailConstants.A_TAGS, null);
         mReplyType = e.getAttribute(MailConstants.A_REPLY_TYPE, null);
         mOrigId = e.getAttribute(MailConstants.A_ORIG_ID, null);
-        Element sub = e.getOptionalElement(MailConstants.E_SUBJECT);
-        if (sub != null) mSubject = sub.getText();
-        Element fr = e.getOptionalElement(MailConstants.E_FRAG);
-        if (fr != null) mFragment = fr.getText();
-        Element mid = e.getOptionalElement(MailConstants.E_MSG_ID_HDR);
-        if (mid != null) mMessageIdHeader = mid.getText();
-        
-        Element irt = e.getOptionalElement(MailConstants.E_IN_REPLY_TO);
-        if (irt != null) mInReplyTo = irt.getText();
-        
+        mSubject = e.getAttribute(MailConstants.E_SUBJECT, null);
+        mFragment = e.getAttribute(MailConstants.E_FRAG, null);
+        mMessageIdHeader = e.getAttribute(MailConstants.E_MSG_ID_HDR, null);
+        mInReplyTo = e.getAttribute(MailConstants.E_IN_REPLY_TO, null);
+
         mReceivedDate = e.getAttributeLong(MailConstants.A_DATE, 0);
         mSentDate = e.getAttributeLong(MailConstants.A_SENT_DATE, 0);
         mFolderId = e.getAttribute(MailConstants.A_FOLDER, null);
@@ -325,11 +320,7 @@ public class ZMessage implements ZItem {
             mContentLocation = e.getAttribute(MailConstants.A_CONTENT_LOCATION, null);
             mIsBody = e.getAttributeBool(MailConstants.A_BODY, false);
             mSize = e.getAttributeLong(MailConstants.A_SIZE, 0);
-            Element content = e.getOptionalElement(MailConstants.E_CONTENT);
-            if (content != null) {
-                mContent = content.getText();
-            }
-            
+            mContent = e.getAttribute(MailConstants.E_CONTENT, null);
             mChildren = new ArrayList<ZMimePart>();
             for (Element mpEl: e.listElements(MailConstants.E_MIMEPART)) {
                 mChildren.add(new ZMimePart(this, mpEl));

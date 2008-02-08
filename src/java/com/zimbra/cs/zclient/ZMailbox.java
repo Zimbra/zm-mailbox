@@ -173,7 +173,7 @@ public class ZMailbox {
         private String mUserAgentVersion;
         private int mTimeout = -1;
         private int mRetryCount = -1;
-        private SoapProtocol mResponseProtocol = SoapProtocol.Soap12;
+        private SoapProtocol mResponseProtocol = SoapProtocol.SoapJS; //12; //JS;
         private SoapTransport.DebugListener mDebugListener;
         private String mTargetAccount;
         private AccountBy mTargetAccountBy = AccountBy.name;

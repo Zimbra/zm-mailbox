@@ -35,17 +35,13 @@ public class ZAuthResult {
 	private String mSkin;
 
     public ZAuthResult(Element e) throws ServiceException {
-        mAuthToken = e.getElement(AccountConstants.E_AUTH_TOKEN).getText();
+        mAuthToken = e.getAttribute(AccountConstants.E_AUTH_TOKEN);
         mLifetime = e.getAttributeLong(AccountConstants.E_LIFETIME);
         mExpires = System.currentTimeMillis() + mLifetime;
-        Element re = e.getOptionalElement(AccountConstants.E_REFERRAL);
-        if (re != null) mRefer = re.getText();
+        mRefer = e.getAttribute(AccountConstants.E_REFERRAL, null);
         mAttrs = ZGetInfoResult.getMap(e, AccountConstants.E_ATTRS, AccountConstants.E_ATTR);
         mPrefs = ZGetInfoResult.getMap(e, AccountConstants.E_PREFS, AccountConstants.E_PREF);
-		Element skinEl = e.getOptionalElement(AccountConstants.E_SKIN);
-		if (skinEl != null) {
-			mSkin = skinEl.getText();
-		}
+        mSkin = e.getAttribute(AccountConstants.E_SKIN, null);
 	}
 
     public String getAuthToken() {

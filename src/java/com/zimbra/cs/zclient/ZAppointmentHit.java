@@ -193,8 +193,7 @@ public class ZAppointmentHit implements ZSearchHit {
         float score = (float) e.getAttributeDouble(MailConstants.A_SCORE, 0);
         String folderId = e.getAttribute(MailConstants.A_FOLDER, null);
 
-        Element fragmentEl = e.getOptionalElement(MailConstants.E_FRAG);
-        String fragment = (fragmentEl != null) ? fragmentEl.getText() : null;
+        String fragment = e.getAttribute(MailConstants.E_FRAG, null);
         String uid = e.getAttribute(MailConstants.A_UID, null);
         long ms = e.getAttributeLong(MailConstants.A_MODIFIED_SEQUENCE, 0);
         long md = e.getAttributeLong(MailConstants.A_DATE, 0);
@@ -258,9 +257,7 @@ public class ZAppointmentHit implements ZSearchHit {
             appt.mDuration = inst.getAttributeLong(MailConstants.A_CAL_DURATION, duration);
 
             appt.mEndTime = appt.mStartTime + appt.mDuration;
-
-            Element instFragmentEl = inst.getOptionalElement(MailConstants.E_FRAG);
-            appt.mFragment = (instFragmentEl != null) ? instFragmentEl.getText() : fragment;
+            appt.mFragment = inst.getAttribute(MailConstants.E_FRAG, fragment);
             appt.mUid = inst.getAttribute(MailConstants.A_UID, uid);
             appt.mModifiedSeq = inst.getAttributeLong(MailConstants.A_MODIFIED_SEQUENCE, ms);
             appt.mModifiedDate = inst.getAttributeLong(MailConstants.A_MODIFIED_DATE, md);

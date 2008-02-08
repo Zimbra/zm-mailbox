@@ -20,6 +20,9 @@ package com.zimbra.cs.zclient.event;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.Element.KeyValuePair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.zclient.ZSoapSB;
 
@@ -88,9 +91,10 @@ public class ZContactEvent {
 
     public Map<String, String> getAttrs(Map<String, String> defaultValue) throws ServiceException {
     	Map<String, String> attrs = null;
-        for (Element a : mContactEl.listElements(MailConstants.E_ATTRIBUTE)) {
-        	if (attrs == null) attrs = new HashMap<String, String>();
-            attrs.put(a.getAttribute(MailConstants.A_ATTRIBUTE_NAME), a.getText());
+        for (KeyValuePair pair : mContactEl.listKeyValuePairs(MailConstants.E_ATTRIBUTE, MailConstants.A_ATTRIBUTE_NAME)) {
+            if (attrs == null) attrs = new HashMap<String, String>();
+            attrs.put(pair.getKey(), pair.getValue());
+
         }
         return attrs != null ? attrs : defaultValue;
     }
