@@ -279,7 +279,7 @@ public class ImapPath {
             throw AccountServiceException.NO_SUCH_ACCOUNT(mCredentials.getUsername());
 
         try {
-            ZMailbox.Options options = new ZMailbox.Options(new AuthToken(acct).getEncoded(), AccountUtil.getSoapUri(target));
+            ZMailbox.Options options = new ZMailbox.Options(AuthToken.getAuthToken(acct).getEncoded(), AccountUtil.getSoapUri(target));
             options.setTargetAccount(target.getName());
             options.setNoSession(true);
             return ZMailbox.getMailbox(options);
@@ -404,7 +404,7 @@ public class ImapPath {
             if (acct == null)
                 return mReferent;
             try {
-                ZMailbox.Options options = new ZMailbox.Options(new AuthToken(acct).getEncoded(), AccountUtil.getSoapUri(target));
+                ZMailbox.Options options = new ZMailbox.Options(AuthToken.getAuthToken(acct).getEncoded(), AccountUtil.getSoapUri(target));
                 options.setTargetAccount(target.getName());
                 options.setNoSession(true);
                 ZMailbox zmbx = ZMailbox.getMailbox(options);
