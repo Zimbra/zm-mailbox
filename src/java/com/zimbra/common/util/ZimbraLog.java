@@ -116,6 +116,11 @@ public class ZimbraLog {
     public static final Log index = LogFactory.getLog("zimbra.index");
     
     /**
+     * the "zimbra.index.lucene" logger. For logging of low-level lucene operations (debug-level only)
+     */
+    public static final Log index_lucene = LogFactory.getLog("zimbra.index.lucene");
+    
+    /**
      * Fhe "zimbra.searchstat" logger.  For logging statistics about what kinds of searches are run
      */
     public static final Log searchstats = LogFactory.getLog("zimbra.searchstats");
