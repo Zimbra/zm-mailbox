@@ -1,5 +1,4 @@
-/*
- * ***** BEGIN LICENSE BLOCK *****
+/* ***** BEGIN LICENSE BLOCK *****
  * 
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007 Zimbra, Inc.
@@ -18,6 +17,7 @@ package com.zimbra.cs.index;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -32,16 +32,17 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.apache.lucene.document.DateField;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.index.IndexCommitPoint;
-import org.apache.lucene.index.IndexDeletionPolicy;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.FuzzyTermEnum;
+import org.apache.lucene.search.Hits;
+import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.SingleInstanceLockFactory;
 
@@ -59,7 +60,7 @@ import com.zimbra.cs.stats.ZimbraPerf;
 /**
  * 
  */
-class LuceneIndex implements ITextIndex, IndexDeletionPolicy  {
+class Lucene21Index implements ILuceneIndex, ITextIndex  {
     
     private static final boolean sBatchIndexing = (LC.debug_batch_message_indexing.intValue() > 0);
     
@@ -67,20 +68,25 @@ class LuceneIndex implements ITextIndex, IndexDeletionPolicy  {
         if (DebugConfig.disableIndexing)
             return;
         
-        List<LuceneIndex> toFlush;
+        List<Lucene21Index> toFlush;
         synchronized(sOpenIndexWriters) {
-            toFlush = new ArrayList<LuceneIndex>(sOpenIndexWriters.size());
+            toFlush = new ArrayList<Lucene21Index>(sOpenIndexWriters.size());
             toFlush.addAll(sOpenIndexWriters.keySet());
         }
         
-        for (LuceneIndex idx : toFlush) {
+        for (Lucene21Index idx : toFlush) {
             idx.closeIndexWriter(); 
         }
     }
 
     static void shutdown() {
-        if (DebugConfig.disableIndexing)
+        if (DebugConfig.disableIndexing) {
+            ZimbraLog.index.info("Indexing is disabled by the localconfig 'debug_disable_indexing' flag");
             return;
+        }
+        
+        if (!DebugConfig.luceneUseCompoundFile)
+            ZimbraLog.index.info("NOT Using Lucene CompoundFile");
 
         sSweeper.signalShutdown();
         try {
@@ -130,7 +136,7 @@ class LuceneIndex implements ITextIndex, IndexDeletionPolicy  {
         return (t < c) ? t : c;
     }
     
-    LuceneIndex(MailboxIndex mbidx, String idxParentDir, int mailboxId) throws ServiceException {
+    Lucene21Index(MailboxIndex mbidx, String idxParentDir, int mailboxId) throws ServiceException {
         mMbidx = mbidx;
         mIndexWriter = null;
         
@@ -233,6 +239,14 @@ class LuceneIndex implements ITextIndex, IndexDeletionPolicy  {
                         
                         if (redoOp != null)
                             mUncommittedRedoOps.add(redoOp);
+                        
+//                        Field[] fs = doc.getFields(LuceneFields.L_MAILBOX_BLOB_ID);
+//                        for (Field f : fs) {
+////                            sLog.warn("IndexId of "+indexId+" for field: "+f.toString()+" in Document "+doc);
+//                            if (!f.stringValue().equals(Integer.toString(indexId))) {
+//                                sLog.warn("IndexId of "+indexId+" doesn't match field: "+f.toString());
+//                            }
+//                        }
                     }
                 }
                 
@@ -248,6 +262,7 @@ class LuceneIndex implements ITextIndex, IndexDeletionPolicy  {
                 if (sLog.isDebugEnabled()) {
                     sLog.debug("Flushing " + toString() + " because of too many uncommitted redo ops");
                 }
+//                this.checkBlobIds();
                 flush();
             }
         }
@@ -255,7 +270,7 @@ class LuceneIndex implements ITextIndex, IndexDeletionPolicy  {
         if (sLog.isDebugEnabled()) {
             long end = System.currentTimeMillis();
             long elapsed = end - start;
-            sLog.debug("LuceneIndex.addDocument took " + elapsed + " msec");
+            sLog.debug("Lucene21Index.addDocument took " + elapsed + " msec");
         }
     }
     
@@ -313,7 +328,14 @@ class LuceneIndex implements ITextIndex, IndexDeletionPolicy  {
                 // can use default analyzer here since it is easier, and since we aren't actually
                 // going to do any indexing...
 //                sLog.info("MI"+this.toString()+" Opening IndexWriter(3) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-                writer = new IndexWriter(mIdxDirectory, true, ZimbraAnalyzer.getDefaultAnalyzer(), true);
+                writer = new IndexWriter(mIdxDirectory, ZimbraAnalyzer.getDefaultAnalyzer(), true);
+                
+                if (ZimbraLog.index_lucene.isDebugEnabled())
+                    writer.setInfoStream(new PrintStream(new LoggingOutputStream(ZimbraLog.index_lucene, Log.Level.debug)));
+                
+                if (!DebugConfig.luceneUseCompoundFile)
+                    writer.setUseCompoundFile(false);
+                
 //                sLog.info("MI"+this.toString()+" Opened IndexWriter(3) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
             } finally {
                 if (writer != null) {
@@ -341,6 +363,31 @@ class LuceneIndex implements ITextIndex, IndexDeletionPolicy  {
 //        }        
 //    }
 ////    
+    
+    public void checkBlobIds() throws IOException {
+        sLog.warn("Starting blob ID check for index "+this.toString());
+        List<String> l = new LinkedList<String>();
+        enumerateTermsForField(new Term(LuceneFields.L_MAILBOX_BLOB_ID, ""),new TermEnumCallback(l));
+        
+        for (String s : l) {
+            RefCountedIndexSearcher searcher = this.getCountedIndexSearcher();
+            try {
+                Query q = new TermQuery(new Term(LuceneFields.L_MAILBOX_BLOB_ID, s));
+                Hits hits = searcher.getSearcher().search(q);
+                for (int i = 0; i < hits.length(); i++) {
+                    Document d = hits.doc(i);
+                    String blobId = d.get(LuceneFields.L_MAILBOX_BLOB_ID);
+                    if (blobId == null || !blobId.equals(s)) {
+                        sLog.warn("Stored IndexId does not match indexed ItemId (stored="+blobId+" indexed="+s);
+                    }
+                }
+                    
+            } finally {
+                searcher.release();
+            }
+        }
+        sLog.warn("Completed blob ID check for index "+this.toString());
+    }
     
     private void enumerateTermsForField(Term firstTerm, TermEnumInterface callback) throws IOException
     {
@@ -811,7 +858,7 @@ class LuceneIndex implements ITextIndex, IndexDeletionPolicy  {
      * 
      * @throws IOException
      */
-    RefCountedIndexSearcher getCountedIndexSearcher() throws IOException
+    public RefCountedIndexSearcher getCountedIndexSearcher() throws IOException
     {
         synchronized(getLock()) {        
             RefCountedIndexSearcher searcher = null;
@@ -821,7 +868,7 @@ class LuceneIndex implements ITextIndex, IndexDeletionPolicy  {
         }
     }
 
-    public String toString() { return "LuceneIndex at "+mIdxDirectory.toString(); }
+    public String toString() { return "Lucene21Index at "+mIdxDirectory.toString(); }
 
 //    Collection getFieldNames() throws IOException {
 //        synchronized(getLock()) {        
@@ -839,7 +886,7 @@ class LuceneIndex implements ITextIndex, IndexDeletionPolicy  {
 
     private final Object getLock() { return mMbidx.getLock(); }
 
-    Sort getSort(SortBy searchOrder) {
+    public Sort getSort(SortBy searchOrder) {
         synchronized(getLock()) {
             if (searchOrder != mLatestSortBy) { 
                 switch (searchOrder) {
@@ -1003,7 +1050,7 @@ class LuceneIndex implements ITextIndex, IndexDeletionPolicy  {
             writer.close();
         } catch (IOException e) {
             success = false;
-            sLog.error("Caught Exception " + e + " in LuceneIndex.closeIndexWriter", e);
+            sLog.error("Caught Exception " + e + " in Lucene21Index.closeIndexWriter", e);
             // TODO: Is it okay to eat up the exception?
         } finally {
             // Write commit entries to redo log for all IndexItem entries
@@ -1188,7 +1235,7 @@ class LuceneIndex implements ITextIndex, IndexDeletionPolicy  {
             //
             //       - We just closed a writer, and we reserved a spot
             //         so we know there will be room this time.
-            LuceneIndex toClose;
+            Lucene21Index toClose;
             synchronized(sOpenIndexWriters) {
                 toClose = null;
                 mustSleep = false;
@@ -1247,15 +1294,23 @@ class LuceneIndex implements ITextIndex, IndexDeletionPolicy  {
             if (mIndexWriter == null) {
                 try {
 //                  sLog.debug("MI"+this.toString()+" Opening IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-                    mIndexWriter = new IndexWriter(mIdxDirectory, true, mMbidx.getAnalyzer(), false, this);
+                    mIndexWriter = new IndexWriter(mIdxDirectory, mMbidx.getAnalyzer(), false);
+                    if (ZimbraLog.index_lucene.isDebugEnabled())
+                        mIndexWriter.setInfoStream(new PrintStream(new LoggingOutputStream(ZimbraLog.index_lucene, Log.Level.debug)));
+                    if (!DebugConfig.luceneUseCompoundFile)
+                        mIndexWriter.setUseCompoundFile(false);
 //                  sLog.debug("MI"+this.toString()+" Opened IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-
                 } catch (IOException e1) {
 //                    mLog.debug("****Creating new index in " + mIdxPath + " for mailbox " + mMailboxId);
                     File indexDir  = mIdxDirectory.getFile();
                     if (indexDirIsEmpty(indexDir)) {
 //                      sLog.debug("MI"+this.toString()+" Opening IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-                        mIndexWriter = new IndexWriter(mIdxDirectory, true, mMbidx.getAnalyzer(), true, this);
+                        mIndexWriter = new IndexWriter(mIdxDirectory, mMbidx.getAnalyzer(), true);
+                        if (ZimbraLog.index_lucene.isDebugEnabled())
+                            mIndexWriter.setInfoStream(new PrintStream(new LoggingOutputStream(ZimbraLog.index_lucene, Log.Level.debug)));
+                        if (!DebugConfig.luceneUseCompoundFile)
+                            mIndexWriter.setUseCompoundFile(false);
+                        
 //                      sLog.debug("MI"+this.toString()+" Opened IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
                         if (mIndexWriter == null) 
                             throw new IOException("Failed to open IndexWriter in directory "+indexDir.getAbsolutePath());
@@ -1302,16 +1357,18 @@ class LuceneIndex implements ITextIndex, IndexDeletionPolicy  {
                 // 
                 /////////////////////////////////////////////////////
 
-
                 if (!sBatchIndexing) {
                     // tim: these are set based on an expectation of ~25k msgs/mbox and assuming that
                     // 11 fragment files are OK.  25k msgs with these settings (mf=3, mmd=33) means that
                     // each message gets written 9 times to disk...as opposed to 12.5 times with the default
                     // lucene settings of 10 and 100....
-                    mIndexWriter.setMergeFactor(3);// should be > 1, otherwise segment sizes are effectively limited to
-                    // minMergeDocs documents: and this is probably bad (too many files!)
+                    mIndexWriter.setMergeFactor(DebugConfig.luceneMergeFactor);// must be >=2
                     
-                    mIndexWriter.setMaxBufferedDocs(33); // we expect 11 index fragment files
+                    if (DebugConfig.luceneMaxBufferedDocs > 0)
+                        mIndexWriter.setMaxBufferedDocs(DebugConfig.luceneMaxBufferedDocs); 
+                    if (!DebugConfig.luceneUseCompoundFile)
+                        mIndexWriter.setUseCompoundFile(false);
+                    
                 }
             } else {
                 ZimbraPerf.COUNTER_IDX_WRT_OPENED_CACHE_HIT.increment();
@@ -1336,8 +1393,7 @@ class LuceneIndex implements ITextIndex, IndexDeletionPolicy  {
      * "real" system, instead the indexes will be flushed via timeout or # ops -- but this value is here so
      * that the # open file descriptors is controlled.
      */
-    static int sLRUSize;
-    
+    private static int sLRUSize;
     
     /**
      * After we add a document to it, how long do we hold an index open for writing before closing it 
@@ -1361,8 +1417,8 @@ class LuceneIndex implements ITextIndex, IndexDeletionPolicy  {
      */
     private static int sMaxUncommittedOps;
     
-    private static LinkedHashMap<LuceneIndex, LuceneIndex> sOpenIndexWriters =
-        new LinkedHashMap<LuceneIndex, LuceneIndex>(200, 0.75f, true);
+    private static LinkedHashMap<Lucene21Index, Lucene21Index> sOpenIndexWriters =
+        new LinkedHashMap<Lucene21Index, Lucene21Index>(200, 0.75f, true);
     
     private static int sReservedWriterSlots = 0;
     
@@ -1461,7 +1517,7 @@ class LuceneIndex implements ITextIndex, IndexDeletionPolicy  {
                 
 
                 // Flush out index writers that have been idle too long.
-                LuceneIndex toRemove = null;
+                Lucene21Index toRemove = null;
                 int removed = 0;
                 int sizeAfter = 0;
                 int sizeBefore = -1;
@@ -1474,7 +1530,7 @@ class LuceneIndex implements ITextIndex, IndexDeletionPolicy  {
                             long cutoffTime = startTime - sIdleWriterFlushTimeMS;
                             for (Iterator it = sOpenIndexWriters.entrySet().iterator(); toRemove==null && it.hasNext(); ) {
                                 Map.Entry entry = (Map.Entry) it.next();
-                                LuceneIndex mi = (LuceneIndex) entry.getKey();
+                                Lucene21Index mi = (Lucene21Index) entry.getKey();
                                 if (mi.getLastWriteTime() < cutoffTime) {
                                     removed++;
                                     toRemove = mi;
@@ -1533,55 +1589,13 @@ class LuceneIndex implements ITextIndex, IndexDeletionPolicy  {
         private boolean mShutdown = false;
     }
 
-    /**
-     * See {@link IndexDeletionPolicy.onCommit(List)}
-     */
-    public void onCommit(List c) throws IOException {
-        List<IndexCommitPoint> commits = (List<IndexCommitPoint>)c;
-        
-        synchronized(mOpenReaders) {
-            mCurrentCommitPoint = commits.get(commits.size()-1);
-            if (commits.size() == 1)
-                return;
-            
-            IndexCommitPoint oldestCommitPoint = commits.get(0);
-            
-            Set<String> toSave = new HashSet<String>(); 
-            
-            for (RefCountedIndexReader or : mOpenReaders) {
-                IndexCommitPoint orPoint = or.getCommitPoint();
-                if (orPoint == null)
-                    orPoint = oldestCommitPoint;
-                if (orPoint != null)
-                    toSave.add(orPoint.getSegmentsFileName());
-            }
-            
-            int commitsSize = commits.size();
-            for (int i = 0; i < commitsSize-1; i++) {
-                IndexCommitPoint cur = commits.get(i);
-                if (!toSave.contains(cur.getSegmentsFileName())) {
-                    cur.delete();
-                    ZimbraLog.index.debug(this.toString()+ " Deleting commit point: "+cur.getSegmentsFileName()+" because it is not referenced by open IndexReader");
-                } else
-                    ZimbraLog.index.info(this.toString()+ " Saving commit point: "+cur.getSegmentsFileName()+" because it is referenced by open IndexReader");
-            }
-        }
-    }
-
-    /**
-     * See {@link IndexDeletionPolicy.onInit(List)}
-     */
-    public void onInit(List c) throws IOException {
-        onCommit(c);
-    }
+    public Object getCurrentCommitPoint() { return null; }
     
-    IndexCommitPoint getCurrentCommitPoint() { return mCurrentCommitPoint; }
-    void onClose(RefCountedIndexReader ref) {
+    public void onClose(RefCountedIndexReader ref) {
         synchronized(mOpenReaders) {
             mOpenReaders.remove(ref);
         }
     }
     
-    private IndexCommitPoint mCurrentCommitPoint = null;
-    List<RefCountedIndexReader> mOpenReaders = new ArrayList<RefCountedIndexReader>();
+    List<RefCountedIndexReader> mOpenReaders = new ArrayList<RefCountedIndexReader>();    
 }
