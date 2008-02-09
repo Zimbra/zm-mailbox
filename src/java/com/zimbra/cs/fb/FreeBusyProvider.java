@@ -85,6 +85,8 @@ public abstract class FreeBusyProvider {
 			if (prov.canCacheZimbraUserFreeBusy()) {
 				FreeBusySyncQueue queue = sPUSHQUEUES.get(prov.getName());
 				synchronized (queue) {
+					if (queue.contains(accountId))
+						continue;
 					queue.addLast(accountId);
 					try {
 						queue.writeToDisk();
@@ -157,7 +159,7 @@ public abstract class FreeBusyProvider {
 	private static HashSet<FreeBusyProvider> sPROVIDERS;
 	private static HashMap<String,FreeBusySyncQueue> sPUSHQUEUES;
 	
-	public static final String QUEUE_FILENAME = "/opt/zimbra/syncqueue";
+	public static final String QUEUE_DIR = "/opt/zimbra/fbqueue";
 	
 	static {
 		sPROVIDERS = new HashSet<FreeBusyProvider>();
@@ -172,7 +174,11 @@ public abstract class FreeBusyProvider {
 			mProvider = prov;
 			mLastFailed = 0;
 			mShutdown = false;
-			mFilename = QUEUE_FILENAME + "-" + prov.getName();
+			mFilename = QUEUE_DIR + "/" + "queue-" + prov.getName();
+			File f = new File(mFilename);
+			if (!f.exists()) {
+				f.getParentFile().mkdirs();
+			}
 			try {
 				readFromDisk();
 			} catch (IOException e) {
@@ -194,7 +200,7 @@ public abstract class FreeBusyProvider {
 								wait(RETRY_INTERVAL);
 								continue;
 							}
-							acctId = removeFirst();
+							acctId = getFirst();
 						} else
 							wait();
 
@@ -212,14 +218,17 @@ public abstract class FreeBusyProvider {
 					
 					boolean success = mProvider.propagateFreeBusy(email, fb);
 					
+					synchronized (this) {
+						removeFirst();
+					}
 					if (!success) {
 						synchronized (this) {
 							addLast(acctId);
 						}
 						mLastFailed = System.currentTimeMillis();
 					}
-
 					writeToDisk();
+
 				} catch (Exception e) {
 					ZimbraLog.misc.error("error while syncing freebusy for "+mProvider.getName(), e);
 				}
@@ -239,7 +248,7 @@ public abstract class FreeBusyProvider {
 		public synchronized void writeToDisk() throws IOException {
 			StringBuilder buf = new StringBuilder(Integer.toString(size()+1));
 			for (String id : this)
-				buf.append(",").append(id);
+				buf.append("\n").append(id);
 			if (buf.length() > MAX_FILE_SIZE) {
 				ZimbraLog.misc.error("The free/busy replication queue is too large. #elem="+size());
 				return;
@@ -269,7 +278,7 @@ public abstract class FreeBusyProvider {
 			try {
 				in = new FileInputStream(f);
 				byte[] buf = ByteUtil.readInput(in, (int)len, MAX_FILE_SIZE);
-				tokens = new String(buf, "UTF-8").split(",");
+				tokens = new String(buf, "UTF-8").split("\n");
 			} finally {
 				if (in != null)
 					in.close();
