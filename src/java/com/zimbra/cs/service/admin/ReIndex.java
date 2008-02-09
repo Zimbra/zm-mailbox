@@ -136,7 +136,7 @@ public class ReIndex extends AdminDocumentHandler {
         private Set<Byte> mTypes = null;
         private Set<Integer> mItemIds = null;
         
-        ReIndexThread(Mailbox mbox, OperationContext octxt, byte[] types, Set<Integer> itemIds) {
+        public ReIndexThread(Mailbox mbox, OperationContext octxt, byte[] types, Set<Integer> itemIds) {
             mMbox = mbox;
             mOctxt = octxt;
 

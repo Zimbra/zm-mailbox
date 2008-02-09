@@ -92,7 +92,13 @@ public class DebugConfig {
     public static boolean calendarForceUTC;
 
     public static final int numMailboxGroups;
-
+    
+    public static final int luceneMergeFactor;
+    public static final int luceneMaxBufferedDocs;
+    public static final int luceneRAMBufferSizeMB;
+    public static final boolean luceneUseCompoundFile;
+    public static final boolean luceneUseSingleMergeScheduler;
+    
     static {
         calendarAllowNonDisplayAlarms = booleanValue("debug_calendar_allow_non_display_alarms", false);
         calendarForceUTC = booleanValue("debug_calendar_force_utc", false);
@@ -119,6 +125,12 @@ public class DebugConfig {
         disableMessageStoreFsync = booleanValue("debug_disable_message_store_fsync", false);
 
         numMailboxGroups = Math.max(LC.zimbra_mailbox_groups.intValue(), 1);
+        
+        luceneMergeFactor = intValue("debug_lucene_merge_factor", 3);
+        luceneMaxBufferedDocs = intValue("debug_lucene_max_buffered_docs", 30);
+        luceneRAMBufferSizeMB = intValue("debug_lucene_ram_buffer_size_mb", 0);
+        luceneUseCompoundFile = booleanValue("debug_lucene_use_compound_file", true);
+        luceneUseSingleMergeScheduler = booleanValue("debug_lucene_use_single_merge_scheduler", true);
     }
 
     private static boolean booleanValue(String key, boolean defaultValue) {

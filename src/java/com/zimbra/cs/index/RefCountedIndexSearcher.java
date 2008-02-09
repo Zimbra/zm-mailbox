@@ -23,7 +23,7 @@ import org.apache.lucene.search.Searcher;
 /**
  * Ref Counting Wrapper around Lucene IndexSearcher
  */
-class RefCountedIndexSearcher {
+public class RefCountedIndexSearcher {
     private Searcher mSearcher;
     private RefCountedIndexReader mReader;
     private int mCount = 1;

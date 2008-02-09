@@ -30,7 +30,7 @@ class IndexReadersCache extends Thread {
     private static Log sLog = LogFactory.getLog(IndexReadersCache.class);
 
     private final int mMaxOpenReaders;
-    private LinkedHashMap<LuceneIndex,RefCountedIndexReader> mOpenIndexReaders;
+    private LinkedHashMap<ILuceneIndex,RefCountedIndexReader> mOpenIndexReaders;
     private boolean mShutdown;
     private long mSweepIntervalMS;
     private long mMaxReaderOpenTimeMS;
@@ -43,7 +43,7 @@ class IndexReadersCache extends Thread {
             sweepIntervalMS = 100;
         mMaxReaderOpenTimeMS = maxReaderOpenTime;
         mMaxOpenReaders = maxOpenReaders;
-        mOpenIndexReaders = new LinkedHashMap<LuceneIndex,RefCountedIndexReader>(mMaxOpenReaders);
+        mOpenIndexReaders = new LinkedHashMap<ILuceneIndex,RefCountedIndexReader>(mMaxOpenReaders);
         mShutdown = false;
         mSweepIntervalMS = sweepIntervalMS;
     }
@@ -63,7 +63,7 @@ class IndexReadersCache extends Thread {
      * @param idx
      * @param reader
      */
-    synchronized void putIndexReader(LuceneIndex idx, RefCountedIndexReader reader) {
+    synchronized void putIndexReader(ILuceneIndex idx, RefCountedIndexReader reader) {
         // special case disabled index reader cache:
         if (mMaxOpenReaders <= 0) {
             return;
@@ -72,8 +72,8 @@ class IndexReadersCache extends Thread {
         int toRemove = ((mOpenIndexReaders.size()+1) - mMaxOpenReaders); 
         if (toRemove > 0) {
             // remove extra (above our limit) readers
-            for (Iterator<Entry<LuceneIndex,RefCountedIndexReader>> iter = mOpenIndexReaders.entrySet().iterator(); toRemove > 0; toRemove--) {
-                Entry<LuceneIndex,RefCountedIndexReader> entry = iter.next();
+            for (Iterator<Entry<ILuceneIndex,RefCountedIndexReader>> iter = mOpenIndexReaders.entrySet().iterator(); toRemove > 0; toRemove--) {
+                Entry<ILuceneIndex,RefCountedIndexReader> entry = iter.next();
                 entry.getValue().release();
                 if (sLog.isDebugEnabled())
                     sLog.debug("Releasing index reader for index: "+entry.getKey().toString()+" from cache (too many open)");
@@ -91,7 +91,7 @@ class IndexReadersCache extends Thread {
      * 
      * @param idx
      */
-    synchronized void removeIndexReader(LuceneIndex idx) {
+    synchronized void removeIndexReader(ILuceneIndex idx) {
         if (mMaxOpenReaders <= 0)
             return;
         RefCountedIndexReader removed = mOpenIndexReaders.remove(idx);
@@ -106,7 +106,7 @@ class IndexReadersCache extends Thread {
      * @param idx
      * @return an ALREADY ADDREFED IndexReader, or NULL if there is not one cached
      */
-    synchronized RefCountedIndexReader getIndexReader(LuceneIndex idx) {
+    synchronized RefCountedIndexReader getIndexReader(ILuceneIndex idx) {
         RefCountedIndexReader toRet = mOpenIndexReaders.get(idx);
         if (toRet != null)
             toRet.addRef();
@@ -117,7 +117,7 @@ class IndexReadersCache extends Thread {
      * @param idx
      * @return
      */
-    synchronized boolean containsKey(LuceneIndex idx) {
+    synchronized boolean containsKey(ILuceneIndex idx) {
         return mOpenIndexReaders.containsKey(idx);
     }
     
@@ -153,8 +153,8 @@ class IndexReadersCache extends Thread {
                         long now = System.currentTimeMillis();
                         long cutoff = now - mMaxReaderOpenTimeMS; 
                         
-                        for (Iterator<Entry<LuceneIndex,RefCountedIndexReader>> iter = mOpenIndexReaders.entrySet().iterator(); iter.hasNext(); ) {
-                            Entry<LuceneIndex,RefCountedIndexReader> entry = iter.next();
+                        for (Iterator<Entry<ILuceneIndex,RefCountedIndexReader>> iter = mOpenIndexReaders.entrySet().iterator(); iter.hasNext(); ) {
+                            Entry<ILuceneIndex,RefCountedIndexReader> entry = iter.next();
                             if (entry.getValue().getAccessTime() < cutoff) {
                                 if (sLog.isDebugEnabled())
                                     sLog.debug("Releasing cached index reader for index: "+entry.getKey().toString()+" (timed out)");

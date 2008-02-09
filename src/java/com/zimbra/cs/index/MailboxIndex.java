@@ -57,6 +57,7 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.op.IndexItem;
+import com.zimbra.cs.service.admin.ReIndex;
 import com.zimbra.cs.store.Volume;
 import com.zimbra.cs.util.JMSession;
 
@@ -78,6 +79,12 @@ public final class MailboxIndex
         String qs = params.getQueryStr();
         if (qs.startsWith("$")) {
             String[] words = qs.split(" ");
+            if ("$chkblobs".equals(words[0].toLowerCase())) {
+                mbox.getMailboxIndex().mLucene.checkBlobIds();
+            } else if ("$reindex_all".equals(words[0].toLowerCase())) {
+                Thread t = new ReIndex.ReIndexThread(mbox, null, null, null);
+                t.start();
+            } else
 //            if ("$im_reg".equals(words[0])) {
 //                if (words.length < 4)
 //                    throw ServiceException.FAILURE("USAGE: \"$im_reg service service_login_name service_login_password\"", null);
@@ -231,7 +238,7 @@ public final class MailboxIndex
         Volume indexVol = Volume.getById(mbox.getIndexVolume());
         String idxParentDir = indexVol.getMailboxDir(mailboxId, Volume.TYPE_INDEX);
 
-        mLucene = new LuceneIndex(this, idxParentDir, mMailboxId);
+        mLucene = sLuceneFactory.create(this, idxParentDir, mMailboxId);
         mTextIndex = mLucene;
 
         String analyzerName = mbox.getAccount().getAttr(Provisioning.A_zimbraTextAnalyzer, null);
@@ -248,11 +255,48 @@ public final class MailboxIndex
         return LuceneQueryOperation.doCreate();
         }
     
-    LuceneIndex getLuceneIndex() {
+    ILuceneIndex getLuceneIndex() {
         return mLucene;
     }
 
-    private LuceneIndex mLucene;
+    private static ILuceneFactory sLuceneFactory = null;
+    
+    static {
+        try {
+            Class serialMergeScheduler = Class.forName("org.apache.lucene.index.SerialMergeScheduler");
+            if (serialMergeScheduler != null) {
+                Class fact = Class.forName("com.zimbra.cs.index.Lucene23Factory");
+                if (fact != null) {
+                    sLuceneFactory = (ILuceneFactory)fact.newInstance();
+                    ZimbraLog.index.info("Using Lucene Jar version 2.3 or higher");
+                }
+            }
+        } catch (ClassNotFoundException e) {
+        } catch (Exception e) {
+            ZimbraLog.index.info("Caught exception initializing Lucene Factory: ", e);
+        }
+        
+        if (sLuceneFactory == null) {
+            // couldn't find the SerialMergeFactory class, must be older Lucene jar
+            try {
+                Class fact = Class.forName("com.zimbra.cs.index.Lucene21Factory");
+                if (fact != null) {
+                    sLuceneFactory = (ILuceneFactory)fact.newInstance();
+                    ZimbraLog.index.info("Using Lucene version before 2.3");
+                }
+            } catch (ClassNotFoundException e) {
+            } catch (Exception e) {
+                ZimbraLog.index.info("Caught exception initializing Lucene Factory: ", e);
+            }
+        }
+        
+        if (sLuceneFactory == null) {
+            ZimbraLog.index.fatal("Fatal error - could not find Lucene Index factory");
+        }
+    }
+    
+    
+    private ILuceneIndex mLucene;
     private ITextIndex mTextIndex;
 
     private int mMailboxId;
@@ -263,21 +307,21 @@ public final class MailboxIndex
         if (DebugConfig.disableIndexing)
             return;
 
-        LuceneIndex.startup();
-        }
+        sLuceneFactory.startup();
+    }
 
     public static void shutdown() {
         if (DebugConfig.disableIndexing)
             return;
 
-        LuceneIndex.shutdown();
+        sLuceneFactory.shutdown();
     }
     
     public static void flushAllWriters() {
         if (DebugConfig.disableIndexing)
             return;
         
-        LuceneIndex.flushAllWriters();
+        sLuceneFactory.flushAllWriters();
     }
         
     private Analyzer mAnalyzer = null;
@@ -548,18 +592,23 @@ public final class MailboxIndex
     public void indexMessage(Mailbox mbox, IndexItem redo, boolean deleteFirst, ParsedMessage pm, Message msg)
     throws ServiceException {
         initAnalyzer(mbox);
-        synchronized(getLock()) {
-            int indexId = msg.getIndexId();
-
-            try {
-                List<Document> docList = pm.getLuceneDocuments();
-                if (docList != null) {
-                    Document[] docs = new Document[docList.size()];
-                    docs = docList.toArray(docs);
-                    mTextIndex.addDocument(redo, docs, indexId, pm.getReceivedDate(), msg, deleteFirst);
+        int num = 2;
+        if (deleteFirst)
+            num = 1;
+        for (; num > 0; num--) {
+            synchronized(getLock()) {
+                int indexId = msg.getIndexId();
+                
+                try {
+                    List<Document> docList = pm.getLuceneDocuments();
+                    if (docList != null) {
+                        Document[] docs = new Document[docList.size()];
+                        docs = docList.toArray(docs);
+                        mTextIndex.addDocument(redo, docs, indexId, pm.getReceivedDate(), msg, deleteFirst);
+                    }
+                } catch (IOException e) {
+                    throw ServiceException.FAILURE("indexMessage caught IOException", e);
                 }
-            } catch (IOException e) {
-                throw ServiceException.FAILURE("indexMessage caught IOException", e);
             }
         }
     }

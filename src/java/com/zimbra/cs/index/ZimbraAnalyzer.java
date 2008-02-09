@@ -133,7 +133,7 @@ public class ZimbraAnalyzer extends StandardAnalyzer
 
             for (Token cur = stream.next(); cur != null; cur = stream.next()) 
             {
-                toReturn.append(cur.termBuffer(), 0, cur.termLength());
+                toReturn.append(cur.termText());
                 toReturn.append(" ");
             }
         } catch(IOException e) {
@@ -598,8 +598,7 @@ public class ZimbraAnalyzer extends StandardAnalyzer
             org.apache.lucene.analysis.Token t;
             do {
                 t = nextInternal();
-            } while (t != null &&
-                        t.termLength() <= 1); 
+            } while (t != null && t.termText().length() <= 1); 
             return t;
         }
     }
