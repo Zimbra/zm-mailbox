@@ -552,8 +552,8 @@ public class StringUtil {
     public static String checkCharset(String data, String requestedCharset) {
         if (data == null)
             return "us-ascii";
-    
-        if (!requestedCharset.equalsIgnoreCase("utf-8")) {
+
+        if (requestedCharset != null && !requestedCharset.equalsIgnoreCase("utf-8")) {
             try {
                 Charset cset = Charset.forName(requestedCharset);
                 if (cset.canEncode() && cset.newEncoder().canEncode(data))
