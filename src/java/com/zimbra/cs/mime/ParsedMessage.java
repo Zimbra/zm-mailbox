@@ -791,18 +791,20 @@ public class ParsedMessage {
                 String pn = mpi.getPartName();
                 String ctype = mpi.getContentType();
                 String msgid = getMessageID();
-                sLog.warn("Parse error on MIME part " + pn +
-                            " (" + ctype + ", Message-ID: " + msgid + ")", e);
+                sLog.warn("Unable to parse part %s (%s, %s) of message with Message-ID %s.",
+                    pn, mpi.getFilename(), ctype, msgid, e);
                 if (ConversionException.isTemporaryCauseOf(e) && conversionError == null) {
                     conversionError = ServiceException.FAILURE("failed to analyze part", e.getCause());
                 }
+                sLog.warn("Attachment will not be indexed.");
             } catch (ObjectHandlerException e) {
                 numParseErrors++;
                 String pn = mpi.getPartName();
                 String ct = mpi.getContentType();
                 String msgid = getMessageID();
-                sLog.warn("Parse error on MIME part " + pn +
-                            " (" + ct + ", Message-ID: " + msgid + ")", e);
+                sLog.warn("Unable to parse part %s (%s, %s) of message with Message-ID %s." +
+                    "  Object will not be indexed.",
+                    pn, mpi.getFilename(), ct, msgid, e);
             }
         }
         if (miCalendar != null) {
