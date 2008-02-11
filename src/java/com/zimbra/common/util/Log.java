@@ -172,6 +172,18 @@ public class Log {
         }
     }
     
+    public void debug(String format, Object o1, Object o2, Object o3, Object o4, Throwable t) {
+        if (isDebugEnabled()) {
+            getLogger().debug(String.format(format, o1, o2, o3, o4), t);
+        }
+    }
+    
+    public void debug(String format, Object o1, Object o2, Object o3, Object o4, Object o5, Throwable t) {
+        if (isDebugEnabled()) {
+            getLogger().debug(String.format(format, o1, o2, o3, o4, o5), t);
+        }
+    }
+    
 
     public void info(Object o) {
         getLogger().info(o);
@@ -205,6 +217,19 @@ public class Log {
         }
     }
     
+    public void info(String format, Object o1, Object o2, Object o3, Object o4, Throwable t) {
+        if (isInfoEnabled()) {
+            getLogger().info(String.format(format, o1, o2, o3, o4), t);
+        }
+    }
+    
+    public void info(String format, Object o1, Object o2, Object o3, Object o4, Object o5, Throwable t) {
+        if (isInfoEnabled()) {
+            getLogger().info(String.format(format, o1, o2, o3, o4, o5), t);
+        }
+    }
+    
+
 
     public void warn(Object o) {
         getLogger().warn(o);
@@ -235,6 +260,18 @@ public class Log {
     public void warn(String format, Object o1, Object o2, Object o3, Throwable t) {
         if (isWarnEnabled()) {
             getLogger().warn(String.format(format, o1, o2, o3), t);
+        }
+    }
+    
+    public void warn(String format, Object o1, Object o2, Object o3, Object o4, Throwable t) {
+        if (isWarnEnabled()) {
+            getLogger().warn(String.format(format, o1, o2, o3, o4), t);
+        }
+    }
+    
+    public void warn(String format, Object o1, Object o2, Object o3, Object o4, Object o5, Throwable t) {
+        if (isWarnEnabled()) {
+            getLogger().warn(String.format(format, o1, o2, o3, o4, o5), t);
         }
     }
     
@@ -271,6 +308,18 @@ public class Log {
         }
     }
     
+    public void error(String format, Object o1, Object o2, Object o3, Object o4, Throwable t) {
+        if (isErrorEnabled()) {
+            getLogger().error(String.format(format, o1, o2, o3, o4), t);
+        }
+    }
+    
+    public void error(String format, Object o1, Object o2, Object o3, Object o4, Object o5, Throwable t) {
+        if (isErrorEnabled()) {
+            getLogger().error(String.format(format, o1, o2, o3, o4, o5), t);
+        }
+    }
+    
 
     public void fatal(Object o) {
         getLogger().fatal(o);
@@ -304,6 +353,19 @@ public class Log {
         }
     }
     
+    public void fatal(String format, Object o1, Object o2, Object o3, Object o4, Throwable t) {
+        if (isFatalEnabled()) {
+            getLogger().fatal(String.format(format, o1, o2, o3, o4), t);
+        }
+    }
+    
+    public void fatal(String format, Object o1, Object o2, Object o3, Object o4, Object o5, Throwable t) {
+        if (isFatalEnabled()) {
+            getLogger().fatal(String.format(format, o1, o2, o3, o4, o5), t);
+        }
+    }
+    
+
     public void setLevel(Level level) {
         mLogger.setLevel(ZIMBRA_TO_LOG4J.get(level));
     }
