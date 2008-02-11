@@ -36,7 +36,7 @@ public abstract class SoapTransport {
     private SoapProtocol mRequestProto;
     private SoapProtocol mResponseProto;
     private boolean mPrettyPrint;
-    private String mAuthToken;
+    private String mRawAuthToken;
     private String mTargetAcctId = null;
     private String mTargetAcctName = null;    
     private String mSessionId = null;
@@ -80,8 +80,10 @@ public abstract class SoapTransport {
         return mPrettyPrint;
     }
 
+    // AP-TODO-7: retire this and switch all callsites to setAuthToken(AuthToken) and 
+    //            moving AuthToken to ZimbraCommon
     public void setAuthToken(String authToken) {
-    	mAuthToken = authToken;
+    	mRawAuthToken = authToken;
     }
     
     public void setTargetAcctId(String acctId) {
@@ -97,8 +99,9 @@ public abstract class SoapTransport {
         mTargetAcctName = acctName;
     }
     
+    // AP-TODO-8, retire this after AP-TODO-7 is resolved
     public String getAuthToken() {
-    	return mAuthToken;
+    	return mRawAuthToken;
     }
     
     /**
@@ -184,7 +187,7 @@ public abstract class SoapTransport {
         }
         SoapProtocol responseProto = mResponseProto == null ? proto : mResponseProto;
 
-        Element context = SoapUtil.toCtxt(proto, mAuthToken, mTargetAcctId, mTargetAcctName, noSession);
+        Element context = SoapUtil.toCtxt(proto, mRawAuthToken, mTargetAcctId, mTargetAcctName, noSession);
         SoapUtil.addSessionToCtxt(context, mSessionId);
         SoapUtil.addChangeTokenToCtxt(context, changeToken, tokenType);
         if (mUserAgentName != null)
