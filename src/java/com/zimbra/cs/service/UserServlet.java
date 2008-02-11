@@ -1001,7 +1001,43 @@ public class UserServlet extends ZimbraServlet {
         super.destroy();
     }
 
+    //////////////////////////////////////////// 
+    // AP-TODO-14, remove after callsites in offline is resolved
+    private static AuthToken getAuthToken(String rawAuthToken) throws ServiceException {
+        AuthToken at = null;
+        try {
+            at = AuthProvider.getAuthToken(rawAuthToken);
+            if (at == null)
+                throw ServiceException.FAILURE("cannot get auth token", null);
+        } catch (AuthTokenException e) {
+            throw ServiceException.FAILURE("cannot get auth token", e);
+        }
+        return at;
+    }
 
+    public static byte[] getRemoteContent(String authToken, String hostname, String url) throws ServiceException {
+        return getRemoteContent(getAuthToken(authToken), hostname, url);
+    }
+    
+    public static Pair<Header[], HttpInputStream> getRemoteResourceAsStream(String authToken, String hostname, String url,
+            String proxyHost, int proxyPort, String proxyUser, String proxyPass) throws ServiceException, IOException {
+        
+        return getRemoteResourceAsStream(getAuthToken(authToken), hostname, url,
+                proxyHost, proxyPort, proxyUser, proxyPass);
+    }
+    
+    public static Pair<Header[], byte[]> getRemoteResource(String authToken, String hostname, String url,
+            String proxyHost, int proxyPort, String proxyUser, String proxyPass) throws ServiceException {
+        
+            return getRemoteResource(getAuthToken(authToken), hostname, url,
+                    proxyHost, proxyPort, proxyUser, proxyPass);
+    }
+    
+    // end AP-TODO-14
+    ////////////////////////////////////////////////
+    
+    
+    
     public static byte[] getRemoteContent(AuthToken authToken, ItemId iid, Map<String, String> params) throws ServiceException {
         return getRemoteResource(authToken, iid, params).getSecond();
     }
