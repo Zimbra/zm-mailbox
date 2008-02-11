@@ -36,6 +36,8 @@ import javax.crypto.SecretKey;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.collections.map.LRUMap;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpMethod;
 
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
@@ -91,6 +93,18 @@ public abstract class AuthToken {
     public abstract int getCCTier();
     
     public abstract String getCrumb() throws AuthTokenException;
+    
+    /**
+     * Encode auth info into an outgoing http request.
+     * 
+     * @param client
+     * @param method
+     * @param isAdminReq
+     * @param cookieDomain
+     * @throws ServiceException
+     */
+    public abstract void encode(HttpClient client, HttpMethod method, boolean isAdminReq, String cookieDomain) throws ServiceException;
+
     
     // AP-TODO: REMOVE AFTER CLEANUP
     public abstract String getEncoded() throws AuthTokenException;

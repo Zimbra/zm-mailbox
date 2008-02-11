@@ -110,7 +110,7 @@ public class ImportAppointments extends MailDocumentHandler  {
 
     private static BufferedReader parseUploadedContent(ZimbraSoapContext lc, String attachId, List<Upload> uploads)
     throws ServiceException {
-        Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), attachId, lc.getRawAuthToken());
+        Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), attachId, lc.getAuthToken());
         if (up == null)
             throw MailServiceException.NO_SUCH_UPLOAD(attachId);
         uploads.add(up);

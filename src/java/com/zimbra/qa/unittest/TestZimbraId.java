@@ -71,11 +71,6 @@ public class TestZimbraId extends TestCase {
     public void tearDown() throws Exception {
     }
     
-    private String authToken(Account acct) throws Exception {
-        AuthToken at = AuthToken.getAuthToken(acct);
-        return at.getEncoded();
-    }
-    
     public void createAccountWithZimbraId(Provisioning prov, String note) throws Exception {
         String userName = "acct-with-zimbra-id-" + note + "@" + DOMAIN;
         String zimbraId = ZIMBRA_ID + "-" + note;
@@ -168,7 +163,7 @@ public class TestZimbraId extends TestCase {
         Upload ulSaved = FileUploadServlet.saveUpload(new ByteArrayInputStream(body), "zimbraId-test", "text/plain", acct.getId());
         // System.out.println("Upload id is: " + ulSaved.getId());
         
-        String authToken = authToken(acct);
+        AuthToken authToken = AuthToken.getAuthToken(acct);
         Upload ulFetched = FileUploadServlet.fetchUpload(acct.getId(), ulSaved.getId(), authToken);
         
         assertEquals(ulSaved.getId(), ulFetched.getId());

@@ -38,7 +38,7 @@ public class ConfigureZimlet extends AdminDocumentHandler {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
         Element content = request.getElement(MailConstants.E_CONTENT);
         String attachment = content.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
-        Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), attachment, lc.getRawAuthToken());
+        Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), attachment, lc.getAuthToken());
         if (up == null)
             throw MailServiceException.NO_SUCH_UPLOAD(attachment);
 

@@ -254,7 +254,7 @@ public class ContentServlet extends ZimbraServlet {
                 return;
             }
 
-            Upload up = FileUploadServlet.fetchUpload(authToken.getAccountId(), uploadId, authToken.getEncoded());
+            Upload up = FileUploadServlet.fetchUpload(authToken.getAccountId(), uploadId, authToken);
             if (up == null) {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "no such upload");
                 return;
@@ -270,8 +270,6 @@ public class ContentServlet extends ZimbraServlet {
                 FileUploadServlet.deleteUpload(up);
         } catch (ServiceException e) {
         	returnError(resp, e);
-        } catch (AuthTokenException e) {
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 

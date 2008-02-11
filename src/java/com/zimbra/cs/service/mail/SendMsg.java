@@ -193,7 +193,7 @@ public class SendMsg extends MailDocumentHandler {
     throws ServiceException {
         boolean anySystemMutators = MimeVisitor.anyMutatorsRegistered();
 
-        Upload up = FileUploadServlet.fetchUpload(zsc.getAuthtokenAccountId(), attachId, zsc.getRawAuthToken());
+        Upload up = FileUploadServlet.fetchUpload(zsc.getAuthtokenAccountId(), attachId, zsc.getAuthToken());
         if (up == null)
             throw MailServiceException.NO_SUCH_UPLOAD(attachId);
         (mimeData.uploads = new ArrayList<Upload>(1)).add(up);

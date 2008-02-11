@@ -109,7 +109,7 @@ public class DeployZimlet extends AdminDocumentHandler {
 	}
 	
 	private void deploy(ZimbraSoapContext lc, String aid, String auth) throws ServiceException {
-        Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), aid, lc.getRawAuthToken());
+        Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), aid, lc.getAuthToken());
         if (up == null)
             throw MailServiceException.NO_SUCH_UPLOAD(aid);
 

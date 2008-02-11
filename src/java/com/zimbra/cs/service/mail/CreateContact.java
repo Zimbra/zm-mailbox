@@ -135,7 +135,7 @@ public class CreateContact extends MailDocumentHandler  {
         String attachId = elt.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
         if (attachId != null) {
             try {
-                Upload up = FileUploadServlet.fetchUpload(zsc.getAuthtokenAccountId(), attachId, zsc.getRawAuthToken());
+                Upload up = FileUploadServlet.fetchUpload(zsc.getAuthtokenAccountId(), attachId, zsc.getAuthToken());
                 return new Attachment(ByteUtil.getContent(up.getInputStream(), 0), up.getContentType(), name, up.getName());
             } catch (IOException ioe) {
                 throw ServiceException.FAILURE("error reading uploaded attachment", ioe);
@@ -201,7 +201,7 @@ public class CreateContact extends MailDocumentHandler  {
 
         if (attachId != null) {
             // separately-uploaded vcard attachment
-            Upload up = FileUploadServlet.fetchUpload(zsc.getAuthtokenAccountId(), attachId, zsc.getRawAuthToken());
+            Upload up = FileUploadServlet.fetchUpload(zsc.getAuthtokenAccountId(), attachId, zsc.getAuthToken());
             try {
                 text = new String(ByteUtil.getContent(up.getInputStream(), 0));
             } catch (IOException e) {
