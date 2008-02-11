@@ -133,19 +133,45 @@ public abstract class AuthProvider {
      */
     protected abstract AuthToken authToken(Element soapCtxt, Map engineCtxt) throws AuthProviderException, AuthTokenException;
     
-    
     /**
-     * The two static getAuthToken methods go through all the providers, trying them in order until one returns an AuthToken
+     *
+     * Returns an AuthToken from an encoded String.
+     * 
+     * This API is for servlets that support auth from a non-coookie channel, where it honors a String token from 
+     * a specific element in the request.  e.g. qp auth in UserServlet(REST)
+     * 
+     * By default, an AuthProvider do not need to implement this method.  The default implementation is throwing
+     * AuthProviderException.NOT_SUPPORTED.
+     * 
+     * Should never return null.
+     * Throws AuthProviderException.NO_SUPPORTED if this API is not supported by the auth provider 
+     * Throws AuthProviderException.NO_AUTH_TOKEN if auth data for the provider is not present 
+     * Throws AuthTokenException if auth data for the provider is present but cannot be resolved into a valid AuthToken
+     *
+     * @param encoded
+     * @param isAdminReq
+     * @return
+     * @throws AuthProviderException
+     * @throws AuthTokenException
+     */
+    protected AuthToken authToken(String encoded, boolean isAdminReq) throws AuthProviderException, AuthTokenException {
+        throw AuthProviderException.NOT_SUPPORTED();
+    }
+
+    /**
+     * The static getAuthToken methods go through all the providers, trying them in order until one returns an AuthToken
      * Return null when there is no auth data for any of the enabled providers
      * Throw AuthTokenException if any provider in the chain throws an AuthTokenException.
      * 
-     * Note: 1. we proceed to try the next provider only if the provider throws AuthProviderException.NO_AUTH_TOKEN.
+     * Note: 1. we proceed to try the next provider if the provider throws an AuthProviderException that is ignorable
+     * (AuthProviderException.canIgnore()).  for example: AuthProviderException.NO_AUTH_TOKEN, AuthProviderException.NOT_SUPPORTED.
+     
      *       2. in all other cases, we stop processing and throws an AuthTokenException to our caller.
-     *             like when a provider:
+     *             In particular, when a provider:
      *             - returns null -> it should not.  Treat it as a provider error and throws AuthTokenException
      *             - throws AuthTokenException, this means auth data is present for a provider but it cannot be 
      *               resolved into a valid AuthToken.
-     *             - Any non NO_AUTH_TOKEN AuthProviderException.  (Currently there is not such codes defined yet)
+     *             - Any AuthProviderException that is not ignorable.
      * 
      */
     
@@ -167,8 +193,8 @@ public abstract class AuthProvider {
                     return at;
             } catch (AuthProviderException e) {
                 // if there is no auth data for this provider, log and continue with next provider
-                if (AuthProviderException.NO_AUTH_DATA.equals(e.getCode()))
-                    logger().debug("getAuthToken no auth data for provider " + ap.getName());
+                if (e.canIgnore())
+                    logger().debug(ap.getName() + ":" + e.getMessage());
                 else
                     throw new AuthTokenException("auth provider error", e);
             } catch (AuthTokenException e) {
@@ -209,8 +235,8 @@ public abstract class AuthProvider {
                     return at;
             } catch (AuthProviderException e) {
                 // if there is no auth data for this provider, log and continue with next provider
-                if (AuthProviderException.NO_AUTH_DATA.equals(e.getCode()))
-                    logger().debug("getAuthToken no auth data for provider " + ap.getName());
+                if (e.canIgnore())
+                    logger().debug(ap.getName() + ":" + e.getMessage());
                 else
                     throw new AuthTokenException("auth provider error", e);
             } catch (AuthTokenException e) {
@@ -223,6 +249,43 @@ public abstract class AuthProvider {
         // there is no auth data for any of the enabled providers
         return null;
     }
+    
+    /**
+     * See doc for AuthToken authToken(String encoded, boolean isAdminReq)
+     * 
+     * @param encoded
+     * @param isAdminReq
+     * @return
+     * @throws AuthTokenException
+     */
+    public static AuthToken getAuthToken(String encoded, boolean isAdminReq) throws AuthTokenException {
+        AuthToken at = null;
+        List<AuthProvider> providers = getProviders();
+        for (AuthProvider ap : providers) {
+            try {
+                at = ap.authToken(encoded, isAdminReq);
+                // sanity check, should not be null, if a provider returns null we throw AuthTokenException here
+                if (at == null)
+                    throw new AuthTokenException("auth provider " + ap.getName() + " returned null");
+                else
+                    return at;
+            } catch (AuthProviderException e) {
+                // if there is no auth data for this provider, log and continue with next provider
+                if (e.canIgnore())
+                    logger().debug(ap.getName() + ":" + e.getMessage());
+                else
+                    throw new AuthTokenException("auth provider error", e);
+            } catch (AuthTokenException e) {
+                // log and rethrow
+                logger().debug("getAuthToken error: provider=" + ap.getName() + ", err=" + e.getMessage(), e);
+                throw e;
+            }
+        }
+        
+        // there is no auth data for any of the enabled providers
+        return null;
+    }
+
     
     public static void main(String[] args) throws Exception {
         AuthToken at = getAuthToken(null, null);

@@ -236,14 +236,15 @@ public class ZimbraServlet extends HttpServlet {
     	proxyServletRequest(req, resp, prov.getServer(acct), null);
     }
 
-    protected void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, Server server, String authToken)
+    protected void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, Server server, AuthToken authToken)
     throws IOException, ServiceException {
         String uri = req.getRequestURI(), qs = req.getQueryString();
         if (qs != null)
             uri += '?' + qs;
         proxyServletRequest(req, resp, server, uri, authToken);
     }
-    protected void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, Server server, String uri, String authToken)
+    
+    protected void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, Server server, String uri, AuthToken authToken)
     throws IOException, ServiceException {
         if (server == null) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "cannot find remote server");
@@ -264,7 +265,7 @@ public class ZimbraServlet extends HttpServlet {
         HttpState state = new HttpState();
         String hostname = method.getURI().getHost();
         if (authToken != null)
-        	state.addCookie(new Cookie(hostname, COOKIE_ZM_AUTH_TOKEN, authToken, "/", null, false));                
+            authToken.encode(state, false, hostname);              
 
         try {
         	proxyServletRequest(req, resp, method, state);

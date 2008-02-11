@@ -244,7 +244,7 @@ class ImapURL {
                 AuthToken auth = AuthToken.getAuthToken(authacct, System.currentTimeMillis() + 60 * 1000);
                 HashMap<String, String> params = new HashMap<String, String>();
                 params.put(UserServlet.QP_IMAP_ID, Integer.toString(mUid));
-                content = UserServlet.getRemoteContent(auth.getEncoded(), acct, mPath.asResolvedPath(), params);
+                content = UserServlet.getRemoteContent(auth, acct, mPath.asResolvedPath(), params);
             }
 
             // fetch the content of the message
@@ -258,8 +258,6 @@ class ImapURL {
                 throw new ImapUrlException(tag, mURL, "no such part");
             return part;
 
-        } catch (AuthTokenException e) {
-            ZimbraLog.imap.info("auth token error", e);
         } catch (NoSuchItemException e) {
             ZimbraLog.imap.info("no such message", e);
         } catch (ServiceException e) {

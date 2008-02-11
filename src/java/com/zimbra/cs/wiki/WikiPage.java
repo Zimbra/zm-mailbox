@@ -256,12 +256,13 @@ public abstract class WikiPage {
 			if (mContent != null)
 				return mContent;
 			
-			String auth;
+			AuthToken auth;
 			if (ctxt != null && ctxt.auth != null)
 				auth = ctxt.auth;
 			else {
 				try {
-					auth = AuthToken.getZimbraAdminAuthToken().getEncoded();
+				    // AP-TODO-10: this will not work for Yahoo Y&T
+					auth = AuthToken.getZimbraAdminAuthToken();
 				} catch (Exception ate) {
 					auth = null;
 				}

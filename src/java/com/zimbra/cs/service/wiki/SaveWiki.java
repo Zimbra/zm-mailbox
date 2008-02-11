@@ -61,7 +61,7 @@ public class SaveWiki extends WikiDocumentHandler {
         } catch (IOException ioe) {
         	throw ServiceException.FAILURE("cannot convert", ioe);
         }
-        WikiContext ctxt = new WikiContext(octxt, zsc.getRawAuthToken());
+        WikiContext ctxt = new WikiContext(octxt, zsc.getAuthToken());
         WikiPage page = WikiPage.create(subject, getAuthor(zsc), rawData);
         Wiki.addPage(ctxt, page, itemId, ver, getRequestedFolder(request, zsc));
         Document wikiItem = page.getWikiItem(ctxt);

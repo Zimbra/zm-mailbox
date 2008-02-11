@@ -20,37 +20,16 @@
  */
 package com.zimbra.cs.account;
 
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.util.Map;
-import java.util.List;
-import java.util.ArrayList;
-import java.net.InetAddress;
-import java.net.Inet4Address;
-import java.net.Inet6Address;
-import java.net.UnknownHostException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
-import javax.crypto.Mac;
-import javax.crypto.SecretKey;
-
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.collections.map.LRUMap;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.HttpState;
 
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
-
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.mailbox.ACL;
-import com.zimbra.cs.mailbox.ACL.GuestAccount;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.BlobMetaData;
-import com.zimbra.common.util.BlobMetaDataEncodingException;
-import com.zimbra.common.util.StringUtil;
+
 
 /**
  * @author schemers
@@ -95,7 +74,7 @@ public abstract class AuthToken {
     public abstract String getCrumb() throws AuthTokenException;
     
     /**
-     * Encode auth info into an outgoing http request.
+     * Encode original auth info into an outgoing http request.
      * 
      * @param client
      * @param method
@@ -104,42 +83,66 @@ public abstract class AuthToken {
      * @throws ServiceException
      */
     public abstract void encode(HttpClient client, HttpMethod method, boolean isAdminReq, String cookieDomain) throws ServiceException;
+    
+    /**
+     * AP-TODO-4:
+     *     This API is called only from ZimbraServlet.proxyServletRequest when the first hop is http basic auth(REST basic auth and DAV).  
+     *     For the next hop we encode the String auth token in cookie.  For all other cases, the original cookies are "carbon-copied" "as is" 
+     *     to the next hop.  See ZimbraServlet.proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, HttpMethod method, HttpState state)
+     *     We should clean this after AP-TODO-3 is resolved. 
+     *     
+     * Encode original auth info into an outgoing http request cookie.
+     * 
+     * @param state
+     * @param isAdminReq
+     * @param cookieDomain
+     * @throws ServiceException
+     */
+    public abstract void encode(HttpState state, boolean isAdminReq, String cookieDomain) throws ServiceException;
+
+    /**
+     * Encode original auth info into an HttpServletResponse
+     * 
+     * @param resp
+     * @param isAdminReq
+     */
+    public abstract void encode(HttpServletResponse resp, boolean isAdminReq) throws ServiceException;
 
     
-    // AP-TODO: REMOVE AFTER CLEANUP
+    // AP-TODO-5: REMOVE AFTER CLEANUP
     public abstract String getEncoded() throws AuthTokenException;
     
-    // AP-TODO: REMOVE AFTER CLEANUP
+    // AP-TODO-5: REMOVE AFTER CLEANUP
     public static AuthToken getAuthToken(String encoded) throws AuthTokenException {
         return ZimbraAuthToken.getAuthToken(encoded);
     }
     
-    // AP-TODO: REMOVE AFTER CLEANUP
+    // AP-TODO-5: REMOVE AFTER CLEANUP
     public static AuthToken getAuthToken(Account acct) {
         return new ZimbraAuthToken(acct);
     }
     
-    // AP-TODO: REMOVE AFTER CLEANUP
+    // AP-TODO-5: REMOVE AFTER CLEANUP
     public static AuthToken getAuthToken(Account acct, boolean isAdmin) {
         return new ZimbraAuthToken(acct, isAdmin);
     }
     
-    // AP-TODO: REMOVE AFTER CLEANUP
+    // AP-TODO-5: REMOVE AFTER CLEANUP
     public static AuthToken getAuthToken(Account acct, long expires) {
         return new ZimbraAuthToken(acct, expires);
     }
     
-    // AP-TODO: REMOVE AFTER CLEANUP
+    // AP-TODO-5: REMOVE AFTER CLEANUP
     public static AuthToken getAuthToken(Account acct, long expires, boolean isAdmin, Account adminAcct) {
         return new ZimbraAuthToken(acct, expires, isAdmin, adminAcct);
     }
     
-    // AP-TODO: REMOVE AFTER CLEANUP
+    // AP-TODO-5: REMOVE AFTER CLEANUP
     public static AuthToken getAuthToken(String acctId, String externalEmail, String pass, String digest, long expires) {
         return new ZimbraAuthToken(acctId, externalEmail, pass, digest, expires);
     }
     
-    // AP-TODO: REMOVE AFTER CLEANUP
+    // AP-TODO-5: REMOVE AFTER CLEANUP
     public static AuthToken getZimbraAdminAuthToken() throws ServiceException {
         return ZimbraAuthToken.getZimbraAdminAuthToken();
     }

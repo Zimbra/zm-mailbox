@@ -257,11 +257,8 @@ public class UserServlet extends ZimbraServlet {
                 context.authAccount = cookieAuthRequest(context.req, context.resp, true);
                 if (context.authAccount != null) {
                     context.cookieAuthHappened = true;
-                    try {
-                        AuthToken at = isAdminRequest ? getAdminAuthTokenFromCookie(context.req, context.resp, true) : getAuthTokenFromCookie(context.req, context.resp, true);
-                        context.authTokenCookie = at.getEncoded();
-                    } catch (AuthTokenException e) {
-                    }
+                    AuthToken at = isAdminRequest ? getAdminAuthTokenFromCookie(context.req, context.resp, true) : getAuthTokenFromCookie(context.req, context.resp, true);
+                    context.authToken = at;
                     return;
                 }
             }
@@ -271,10 +268,11 @@ public class UserServlet extends ZimbraServlet {
                 String auth = context.params.get(QP_AUTHTOKEN);
                 if (auth != null) {
                     try {
-                        AuthToken at = AuthToken.getAuthToken(auth);
+                        // qp auth is only supported by the ZimbraAuthProvider for now
+                        AuthToken at = AuthProvider.getAuthToken(auth, isAdminRequest);
                         if (!at.isExpired()) {
                             context.qpAuthHappened = true;
-                            context.authTokenCookie = at.getEncoded();
+                            context.authToken = at;
                             context.authAccount = Provisioning.getInstance().get(AccountBy.id, at.getAccountId());
                         }
                     } catch (AuthTokenException e) {
@@ -283,18 +281,21 @@ public class UserServlet extends ZimbraServlet {
                 }
             }
             
+            /* AP-TODO-3: 
+             *    http auth currently does not work for non-Zimbra auth provider,
+             *    for Yahoo Y&T, will probably need to retrieve Y&T cookies from a 
+             *    site in the basicAuthRequest after authenticating using user/pass.
+             */
             // fallback to basic auth
             if (context.basicAuthAllowed()) {
                 context.authAccount = basicAuthRequest(context.req, context.resp, false);
                 if (context.authAccount != null) {
                     context.basicAuthHappened = true;
+                    context.authToken = AuthToken.getAuthToken(context.authAccount, isAdminRequest);
                     // send cookie back if need be. 
                     if (!context.noSetCookie()) {
-                        try {
-                            context.authTokenCookie = AuthToken.getAuthToken(context.authAccount, isAdminRequest).getEncoded();
-                            context.resp.addCookie(new Cookie(isAdminRequest ? COOKIE_ZM_ADMIN_AUTH_TOKEN : COOKIE_ZM_AUTH_TOKEN, context.authTokenCookie));
-                        } catch (AuthTokenException e) {
-                        }
+                        
+                        context.authToken.encode(context.resp, isAdminRequest);
                     }
                 }
                 // always return
@@ -394,15 +395,9 @@ public class UserServlet extends ZimbraServlet {
         // /user/~/?id={account-id-on-other-server}:id            
 
         if (context.targetAccount != null && !Provisioning.onLocalServer(context.targetAccount)) {
-            try {
-                if (context.basicAuthHappened && context.authTokenCookie == null)
-                    context.authTokenCookie = AuthToken.getAuthToken(context.authAccount, isAdminRequest(context)).getEncoded();
-                Provisioning prov = Provisioning.getInstance();                
-                proxyServletRequest(req, resp, prov.getServer(context.targetAccount), context.basicAuthHappened ? context.authTokenCookie : null);
-                return true;
-            } catch (AuthTokenException e) {
-                throw ServiceException.FAILURE("proxy error", e);
-            }
+            Provisioning prov = Provisioning.getInstance();                
+            proxyServletRequest(req, resp, prov.getServer(context.targetAccount), context.basicAuthHappened ? context.authToken : null);
+            return true;
         }
 
         return false;
@@ -689,19 +684,12 @@ public class UserServlet extends ZimbraServlet {
                 uri += '&' + URLEncoder.encode(qp, "UTF-8") + '=' + URLEncoder.encode(entry.getValue(), "UTF-8");
         }
 
-        try {
-            if (context.basicAuthHappened && context.authTokenCookie == null) 
-                context.authTokenCookie = AuthToken.getAuthToken(context.authAccount, isAdminRequest(context)).getEncoded();
-        } catch (AuthTokenException e) {
-            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "cannot generate auth token");
-        }
-
         Provisioning prov = Provisioning.getInstance();
         Account targetAccount = prov.get(AccountBy.id, mpt.getOwnerId());
         if (targetAccount == null)
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "referenced account not found");
 
-        proxyServletRequest(req, resp, prov.getServer(targetAccount), uri, context.basicAuthHappened ? context.authTokenCookie : null);
+        proxyServletRequest(req, resp, prov.getServer(targetAccount), uri, context.basicAuthHappened ? context.authToken : null);
     }
 
     public static class Context {
@@ -715,7 +703,8 @@ public class UserServlet extends ZimbraServlet {
         public boolean basicAuthHappened;
         public boolean qpAuthHappened;
         public String accountPath;
-        public String authTokenCookie;
+        // public String authTokenCookie;
+        public AuthToken authToken;
         public String itemPath;
         public String extraPath;
         public ItemId itemId;
@@ -1013,19 +1002,19 @@ public class UserServlet extends ZimbraServlet {
     }
 
 
-    public static byte[] getRemoteContent(String authToken, ItemId iid, Map<String, String> params) throws ServiceException {
+    public static byte[] getRemoteContent(AuthToken authToken, ItemId iid, Map<String, String> params) throws ServiceException {
         return getRemoteResource(authToken, iid, params).getSecond();
     }
 
-    public static byte[] getRemoteContent(String authToken, Account target, String folder, Map<String,String> params) throws ServiceException {
+    public static byte[] getRemoteContent(AuthToken authToken, Account target, String folder, Map<String,String> params) throws ServiceException {
         return getRemoteResource(authToken, target, folder, params).getSecond();
     }
 
-    public static byte[] getRemoteContent(String authToken, String hostname, String url) throws ServiceException {
+    public static byte[] getRemoteContent(AuthToken authToken, String hostname, String url) throws ServiceException {
         return getRemoteResource(authToken, hostname, url).getSecond();
     }
 
-    public static Pair<Header[], byte[]> getRemoteResource(String authToken, ItemId iid, Map<String, String> params) throws ServiceException {
+    public static Pair<Header[], byte[]> getRemoteResource(AuthToken authToken, ItemId iid, Map<String, String> params) throws ServiceException {
         Account target = Provisioning.getInstance().get(AccountBy.id, iid.getAccountId());
         Map<String, String> pcopy = new HashMap<String, String>(params);
         pcopy.put(QP_ID, iid.toString());
@@ -1052,7 +1041,7 @@ public class UserServlet extends ZimbraServlet {
         return url.toString();
     }
 
-    public static Pair<Header[], byte[]> getRemoteResource(String authToken, Account target, String folder, Map<String,String> params) throws ServiceException {
+    public static Pair<Header[], byte[]> getRemoteResource(AuthToken authToken, Account target, String folder, Map<String,String> params) throws ServiceException {
         // fetch from remote store
         Provisioning prov = Provisioning.getInstance();
         Server server = (target == null ? prov.getLocalServer() : prov.getServer(target));
@@ -1062,11 +1051,11 @@ public class UserServlet extends ZimbraServlet {
         return getRemoteResource(authToken, hostname, url);
     }
 
-    public static Pair<Header[], byte[]> getRemoteResource(String authToken, String hostname, String url) throws ServiceException {
+    public static Pair<Header[], byte[]> getRemoteResource(AuthToken authToken, String hostname, String url) throws ServiceException {
         return getRemoteResource(authToken, hostname, url, null, 0, null, null);
     }
 
-    public static Pair<Header[], byte[]> getRemoteResource(String authToken, String hostname, String url,
+    public static Pair<Header[], byte[]> getRemoteResource(AuthToken authToken, String hostname, String url,
             String proxyHost, int proxyPort, String proxyUser, String proxyPass) throws ServiceException {
         HttpMethod get = null;
         try {
@@ -1095,7 +1084,7 @@ public class UserServlet extends ZimbraServlet {
         Server server = (target == null ? prov.getLocalServer() : prov.getServer(target));
         String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
 
-        Pair<Header[], HttpInputStream> response = getRemoteResourceAsStream(at.getEncoded(), hostname, url);
+        Pair<Header[], HttpInputStream> response = getRemoteResourceAsStream(at, hostname, url);
 
         // and save the result as an upload
         String ctype = "text/plain", filename = null;
@@ -1128,18 +1117,18 @@ public class UserServlet extends ZimbraServlet {
     	}
     }
     
-    public static Pair<Header[], HttpInputStream> getRemoteResourceAsStream(String authToken, String hostname, String url) throws ServiceException, IOException {
+    public static Pair<Header[], HttpInputStream> getRemoteResourceAsStream(AuthToken authToken, String hostname, String url) throws ServiceException, IOException {
     	return getRemoteResourceAsStream(authToken, hostname, url, null, 0, null, null);
     }
     
-    public static Pair<Header[], HttpInputStream> getRemoteResourceAsStream(String authToken, String hostname, String url,
+    public static Pair<Header[], HttpInputStream> getRemoteResourceAsStream(AuthToken authToken, String hostname, String url,
     		String proxyHost, int proxyPort, String proxyUser, String proxyPass) throws ServiceException, IOException {
     	Pair<Header[], HttpMethod> pair = getRemoteResourceInternal(authToken, hostname, url, proxyHost, proxyPort, proxyUser, proxyPass);
     	return new Pair<Header[], HttpInputStream>(pair.getFirst(), new HttpInputStream(pair.getSecond()));
     }
 
 
-    public static Pair<Header[], HttpInputStream> putRemoteResource(String authToken, String url, Account target,
+    public static Pair<Header[], HttpInputStream> putRemoteResource(AuthToken authToken, String url, Account target,
             byte[] req, Header[] headers) throws ServiceException, IOException {
         Provisioning prov = Provisioning.getInstance();
         Server server = (target == null ? prov.getLocalServer() : prov.getServer(target));
@@ -1163,12 +1152,12 @@ public class UserServlet extends ZimbraServlet {
     }
 
 
-    private static Pair<Header[], HttpMethod> getRemoteResourceInternal(String authToken, String hostname, String url,
+    private static Pair<Header[], HttpMethod> getRemoteResourceInternal(AuthToken authToken, String hostname, String url,
     		String proxyHost, int proxyPort, String proxyUser, String proxyPass) throws ServiceException {
         return doHttpOp(authToken, hostname, proxyHost, proxyPort, proxyUser, proxyPass, new GetMethod(url));
     }
 
-    private static Pair<Header[], HttpMethod> doHttpOp(String authToken, String hostname,
+    private static Pair<Header[], HttpMethod> doHttpOp(AuthToken authToken, String hostname,
             String proxyHost, int proxyPort, String proxyUser, String proxyPass, HttpMethod method) throws ServiceException {
         // create an HTTP client with the same cookies
         String url = "";
@@ -1176,10 +1165,16 @@ public class UserServlet extends ZimbraServlet {
             url = method.getURI().toString();
         } catch (IOException e) {
         }
+        
+        /*
         HttpState state = new HttpState();
         state.addCookie(new org.apache.commons.httpclient.Cookie(hostname, COOKIE_ZM_AUTH_TOKEN, authToken, "/", null, false));
         HttpClient client = new HttpClient();
         client.setState(state);
+        */
+        HttpClient client = new HttpClient();
+        authToken.encode(client, method, false, hostname);
+        
     	if (proxyHost != null && proxyPort > 0) {
     		client.getHostConfiguration().setProxy(proxyHost, proxyPort);
     		if (proxyUser != null && proxyPass != null) {
