@@ -49,7 +49,7 @@ public class ZimbraAuthProvider extends AuthProvider{
             }
         }
         
-        return authToken(encodedAuthToken);
+        return genAuthToken(encodedAuthToken);
     }
 
     protected AuthToken authToken(Element soapCtxt, Map engineCtxt) throws AuthProviderException, AuthTokenException  {
@@ -59,14 +59,14 @@ public class ZimbraAuthProvider extends AuthProvider{
         if (encodedAuthToken == null)
             encodedAuthToken = (String) engineCtxt.get(SoapServlet.ZIMBRA_AUTH_TOKEN);
         
-        return authToken(encodedAuthToken);
+        return genAuthToken(encodedAuthToken);
     }
     
-    protected AuthToken authToken(String encoded, boolean isAdminReq) throws AuthProviderException, AuthTokenException {
-        return authToken(encoded);
+    protected AuthToken authToken(String encoded) throws AuthProviderException, AuthTokenException {
+        return genAuthToken(encoded);
     }
     
-    private AuthToken authToken(String encodedAuthToken) throws AuthProviderException, AuthTokenException {
+    private AuthToken genAuthToken(String encodedAuthToken) throws AuthProviderException, AuthTokenException {
         if (StringUtil.isNullOrEmpty(encodedAuthToken))
             throw AuthProviderException.NO_AUTH_DATA();
         

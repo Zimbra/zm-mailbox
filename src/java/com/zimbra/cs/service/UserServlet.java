@@ -268,8 +268,8 @@ public class UserServlet extends ZimbraServlet {
                 String auth = context.params.get(QP_AUTHTOKEN);
                 if (auth != null) {
                     try {
-                        // qp auth is only supported by the ZimbraAuthProvider for now
-                        AuthToken at = AuthProvider.getAuthToken(auth, isAdminRequest);
+                        // Only supported by ZimbraAuthProvider
+                        AuthToken at = AuthProvider.getAuthToken(auth);
                         if (!at.isExpired()) {
                             context.qpAuthHappened = true;
                             context.authToken = at;

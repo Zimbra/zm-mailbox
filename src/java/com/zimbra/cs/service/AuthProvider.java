@@ -138,7 +138,7 @@ public abstract class AuthProvider {
      * Returns an AuthToken from an encoded String.
      * 
      * This API is for servlets that support auth from a non-coookie channel, where it honors a String token from 
-     * a specific element in the request.  e.g. qp auth in UserServlet(REST)
+     * a specific element in the request, which is neither a cookie nor a SOAP context header.
      * 
      * By default, an AuthProvider do not need to implement this method.  The default implementation is throwing
      * AuthProviderException.NOT_SUPPORTED.
@@ -149,12 +149,11 @@ public abstract class AuthProvider {
      * Throws AuthTokenException if auth data for the provider is present but cannot be resolved into a valid AuthToken
      *
      * @param encoded
-     * @param isAdminReq
      * @return
      * @throws AuthProviderException
      * @throws AuthTokenException
      */
-    protected AuthToken authToken(String encoded, boolean isAdminReq) throws AuthProviderException, AuthTokenException {
+    protected AuthToken authToken(String encoded) throws AuthProviderException, AuthTokenException {
         throw AuthProviderException.NOT_SUPPORTED();
     }
 
@@ -165,7 +164,7 @@ public abstract class AuthProvider {
      * 
      * Note: 1. we proceed to try the next provider if the provider throws an AuthProviderException that is ignorable
      * (AuthProviderException.canIgnore()).  for example: AuthProviderException.NO_AUTH_TOKEN, AuthProviderException.NOT_SUPPORTED.
-     
+     *
      *       2. in all other cases, we stop processing and throws an AuthTokenException to our caller.
      *             In particular, when a provider:
      *             - returns null -> it should not.  Treat it as a provider error and throws AuthTokenException
@@ -251,19 +250,26 @@ public abstract class AuthProvider {
     }
     
     /**
-     * See doc for AuthToken authToken(String encoded, boolean isAdminReq)
+     * 
+     * Note: this API for now is only supported by ZimbraAuthProvider.
+     *      
+     * Callsites of this API:    
+     *     1. qp auth in UserServlet(REST)
+     *     2. authtoken query param in PreAuthServlet
+     *     
+     * Also see doc for AuthToken authToken(String encoded)
      * 
      * @param encoded
      * @param isAdminReq
      * @return
      * @throws AuthTokenException
      */
-    public static AuthToken getAuthToken(String encoded, boolean isAdminReq) throws AuthTokenException {
+    public static AuthToken getAuthToken(String encoded) throws AuthTokenException {
         AuthToken at = null;
         List<AuthProvider> providers = getProviders();
         for (AuthProvider ap : providers) {
             try {
-                at = ap.authToken(encoded, isAdminReq);
+                at = ap.authToken(encoded);
                 // sanity check, should not be null, if a provider returns null we throw AuthTokenException here
                 if (at == null)
                     throw new AuthTokenException("auth provider " + ap.getName() + " returned null");
