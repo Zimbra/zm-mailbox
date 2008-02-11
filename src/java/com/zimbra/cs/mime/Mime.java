@@ -943,7 +943,8 @@ public class Mime {
                 (body = new LinkedHashSet<MPartInfo>(1)).add(mpi);
                 return body;
             } else if (!isAttachment && altTypes.contains(ctype)) {
-                alternative = mpi;
+                if (alternative == null || !alternative.getContentType().equalsIgnoreCase(ctype))
+                    alternative = mpi;
             } else if (ctype.startsWith(CT_MULTIPART_PREFIX)) {
                 if ((body = getBodySubparts(mpi, preferHtml)) != null)
                     return body;
