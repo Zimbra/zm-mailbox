@@ -134,7 +134,7 @@ public class SaveDocument extends WikiDocumentHandler {
         	itemId = iid.getId();
         }
 
-        WikiContext ctxt = new WikiContext(octxt, zsc.getRawAuthToken());
+        WikiContext ctxt = new WikiContext(octxt, zsc.getAuthToken());
         WikiPage page = WikiPage.create(name, getAuthor(zsc), ctype, doc.contents);
         Wiki.addPage(ctxt, page, itemId, ver, getRequestedFolder(request, zsc));
         Document docItem = page.getWikiItem(ctxt);

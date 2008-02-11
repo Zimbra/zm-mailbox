@@ -26,6 +26,8 @@ import java.util.StringTokenizer;
 import org.apache.commons.collections.map.LRUMap;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
@@ -105,17 +107,17 @@ public abstract class Wiki {
 	
 	public static class WikiContext {
 		OperationContext octxt;
-		String           auth;
+		AuthToken        auth;
 		String           view;
 		Locale 			 locale;
 		
-		public WikiContext(OperationContext o, String a) {
+		public WikiContext(OperationContext o, AuthToken a) {
 			octxt = o; auth = a; view = null;
 		}
-		public WikiContext(OperationContext o, String a, String v) {
+		public WikiContext(OperationContext o, AuthToken a, String v) {
 			octxt = o; auth = a; view = v;
 		}
-		public WikiContext(OperationContext o, String a, String v, Locale l) {
+		public WikiContext(OperationContext o, AuthToken a, String v, Locale l) {
 			octxt = o; auth = a; view = v; locale = l;
 		}
 	}
@@ -374,7 +376,12 @@ public abstract class Wiki {
 			Server remoteServer = prov.getServer(acct);
 			String url = URLUtil.getSoapURL(remoteServer, true);
 			SoapHttpTransport transport = new SoapHttpTransport(url);
-			transport.setAuthToken(ctxt.auth);
+			try {
+			    // AP-TODO-9: pass ctxt.auth to setAuthToken after AP-TODO-7 is resolved
+			    transport.setAuthToken(ctxt.auth.getEncoded());
+			} catch (AuthTokenException e) {
+			    throw ServiceException.FAILURE("cannot get raw auth token", e);
+			}
 			transport.setTargetAcctId(mWikiAccount);
 			try {
 				Element req = new Element.XMLElement(MailConstants.GET_WIKI_REQUEST);

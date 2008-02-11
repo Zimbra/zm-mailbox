@@ -32,11 +32,12 @@ import java.net.UnknownHostException;
 
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.collections.map.LRUMap;
-import org.apache.commons.httpclient.Cookie;
+import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpState;
@@ -385,6 +386,9 @@ public class ZimbraAuthToken extends AuthToken {
         }
     }
     
+    private String cookieName(boolean isAdminReq) {
+        return isAdminReq? ZimbraServlet.COOKIE_ZM_ADMIN_AUTH_TOKEN : ZimbraServlet.COOKIE_ZM_AUTH_TOKEN;
+    }
    
     /**
      * 
@@ -394,19 +398,42 @@ public class ZimbraAuthToken extends AuthToken {
      * @throws ServiceException
      */
     public void encode(HttpClient client, HttpMethod method, boolean isAdminReq, String cookieDomain) throws ServiceException {
+        String encoded = null;
+        try {
+            encoded = getEncoded();
+        } catch (AuthTokenException e) {
+            throw ServiceException.FAILURE("unable to get encoded auth token", e);
+        }
         
-        String cookieName = isAdminReq? ZimbraServlet.COOKIE_ZM_ADMIN_AUTH_TOKEN : ZimbraServlet.COOKIE_ZM_AUTH_TOKEN;
         HttpState state = client.getState();
         if (state == null) {
             state = new HttpState();
             client.setState(state);
         }
         
+        state.addCookie(new org.apache.commons.httpclient.Cookie(cookieDomain, cookieName(isAdminReq), encoded, "/", null, false));
+        state.setCookiePolicy(CookiePolicy.COMPATIBILITY);
+    }
+    
+    public void encode(HttpState state, boolean isAdminReq, String cookieDomain) throws ServiceException {
+        String encoded = null;
         try {
-            state.addCookie(new Cookie(cookieDomain, cookieName, getEncoded(), "/", null, false));
+            encoded = getEncoded();
         } catch (AuthTokenException e) {
             throw ServiceException.FAILURE("unable to get encoded auth token", e);
         }
+        
+        state.addCookie(new org.apache.commons.httpclient.Cookie(cookieDomain, cookieName(isAdminReq), encoded, "/", null, false));
+    }
+    
+    public void encode(HttpServletResponse resp, boolean isAdminReq) throws ServiceException {
+        String encoded = null;
+        try {
+            encoded = getEncoded();
+        } catch (AuthTokenException e) {
+            throw ServiceException.FAILURE("unable to get encoded auth token", e);
+        }
+        resp.addCookie(new javax.servlet.http.Cookie(cookieName(isAdminReq), encoded));
     }
 
     static class ByteKey implements SecretKey {

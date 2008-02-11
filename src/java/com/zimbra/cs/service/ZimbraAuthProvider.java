@@ -62,10 +62,15 @@ public class ZimbraAuthProvider extends AuthProvider{
         return authToken(encodedAuthToken);
     }
     
+    protected AuthToken authToken(String encoded, boolean isAdminReq) throws AuthProviderException, AuthTokenException {
+        return authToken(encoded);
+    }
+    
     private AuthToken authToken(String encodedAuthToken) throws AuthProviderException, AuthTokenException {
         if (StringUtil.isNullOrEmpty(encodedAuthToken))
             throw AuthProviderException.NO_AUTH_DATA();
         
         return ZimbraAuthToken.getAuthToken(encodedAuthToken);
     }
+    
 }

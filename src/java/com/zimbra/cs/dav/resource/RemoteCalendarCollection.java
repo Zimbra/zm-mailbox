@@ -126,12 +126,13 @@ public class RemoteCalendarCollection extends CalendarCollection {
     
     @Override
     public DavResource createItem(DavContext ctxt, String name) throws DavException, IOException {
-        String authToken;
+        AuthToken authToken;
         try {
-            authToken = AuthToken.getAuthToken(ctxt.getAuthAccount()).getEncoded();
+            authToken = AuthToken.getAuthToken(ctxt.getAuthAccount());
             
             Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteId);
-            ZMailbox.Options zoptions = new ZMailbox.Options(authToken, AccountUtil.getSoapUri(target));
+            // AP-TODO-11: pass authToken after fixing ZMailbox.Options to take an AuthToken object
+            ZMailbox.Options zoptions = new ZMailbox.Options(authToken.getEncoded(), AccountUtil.getSoapUri(target));
             zoptions.setNoSession(true);
             zoptions.setTargetAccount(mRemoteId);
             zoptions.setTargetAccountBy(Provisioning.AccountBy.id);

@@ -58,7 +58,7 @@ public abstract class WikiDocumentHandler extends MailDocumentHandler {
 		ItemId fid = getRequestedFolder(request, zsc);
 		Account requestedAccount = Provisioning.getInstance().get(AccountBy.id, zsc.getRequestedAccountId());
 		String accountId = requestedAccount.getId();
-		WikiContext ctxt = new WikiContext(octxt, zsc.getRawAuthToken());
+		WikiContext ctxt = new WikiContext(octxt, zsc.getAuthToken());
 		if (fid == null) {
 			return Wiki.getInstance(ctxt, accountId);
 		} else if (!fid.belongsTo(requestedAccount)) {

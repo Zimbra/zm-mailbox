@@ -45,7 +45,7 @@ public class WikiAction extends ItemAction {
     		if (id.indexOf(",") > 0)
     			throw WikiServiceException.ERROR("cannot use more than one id for rename");
     		String name = action.getAttribute(MailConstants.A_NAME);
-    		WikiContext ctxt = new WikiContext(getOperationContext(zsc, context), zsc.getRawAuthToken());
+    		WikiContext ctxt = new WikiContext(getOperationContext(zsc, context), zsc.getAuthToken());
     		Wiki wiki = Wiki.getInstance(ctxt, zsc.getRequestedAccountId());
     		wiki.renameDocument(ctxt, Integer.parseInt(id), name, author.getName());
     		successes = id;
