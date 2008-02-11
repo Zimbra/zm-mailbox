@@ -32,6 +32,7 @@ import java.net.UnknownHostException;
 
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.DecoderException;
@@ -433,7 +434,9 @@ public class ZimbraAuthToken extends AuthToken {
         } catch (AuthTokenException e) {
             throw ServiceException.FAILURE("unable to get encoded auth token", e);
         }
-        resp.addCookie(new javax.servlet.http.Cookie(cookieName(isAdminReq), encoded));
+        javax.servlet.http.Cookie cookie = new javax.servlet.http.Cookie(cookieName(isAdminReq), encoded);
+        cookie.setPath("/");
+        resp.addCookie(cookie);
     }
 
     static class ByteKey implements SecretKey {

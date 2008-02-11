@@ -99,17 +99,20 @@ public class PreAuthServlet extends ZimbraServlet {
             Provisioning prov = Provisioning.getInstance();
             
             String isRedirect = getOptionalParam(req, PARAM_ISREDIRECT, "0");
-            String authToken = getOptionalParam(req, PARAM_AUTHTOKEN, null);            
-            if (isRedirect.equals("1") && authToken != null) {
+            String rawAuthToken = getOptionalParam(req, PARAM_AUTHTOKEN, null);
+            AuthToken authToken = null;
+            if (rawAuthToken != null)
+                authToken = AuthProvider.getAuthToken(rawAuthToken);
+            
+            if (isRedirect.equals("1") && rawAuthToken != null) {
                 setCookieAndRedirect(req, resp, authToken);
-            } else if (authToken != null) {
+            } else if (rawAuthToken != null) {
                 // see if we need a redirect to the correct server
-                AuthToken at = AuthToken.getAuthToken(authToken);
-                Account acct = prov.get(AccountBy.id, at.getAccountId());
+                Account acct = prov.get(AccountBy.id, authToken.getAccountId());
                 if (Provisioning.onLocalServer(acct)) {
                     setCookieAndRedirect(req, resp, authToken);
                 } else {
-                    redirectToCorrectServer(req, resp, acct, authToken);
+                    redirectToCorrectServer(req, resp, acct, rawAuthToken);
                 }
             } else {
                 String preAuth = getRequiredParam(req, resp, PARAM_PREAUTH);            
@@ -128,11 +131,11 @@ public class PreAuthServlet extends ZimbraServlet {
             
                 AuthToken at = (expires ==  0) ? AuthToken.getAuthToken(acct) : AuthToken.getAuthToken(acct, expires);
                 try {
-                    authToken = at.getEncoded();
+                    rawAuthToken = at.getEncoded();
                     if (Provisioning.onLocalServer(acct)) {
-                        setCookieAndRedirect(req, resp, authToken);
+                        setCookieAndRedirect(req, resp, at);
                     } else {
-                        redirectToCorrectServer(req, resp, acct, authToken);
+                        redirectToCorrectServer(req, resp, acct, rawAuthToken);
                     }
                 } catch (AuthTokenException e) {
                     throw  ServiceException.FAILURE("unable to encode auth token", e);
@@ -169,6 +172,7 @@ public class PreAuthServlet extends ZimbraServlet {
         }
     }
     
+    // AP-TODO-13: does not work for Yahoo Y&T cookie
     private void redirectToCorrectServer(HttpServletRequest req, HttpServletResponse resp, Account acct, String token) throws ServiceException, IOException {
         StringBuilder sb = new StringBuilder();
         Provisioning prov = Provisioning.getInstance();        
@@ -181,10 +185,8 @@ public class PreAuthServlet extends ZimbraServlet {
 
     private static final String DEFAULT_MAIL_URL = "/zimbra";
 
-    private void setCookieAndRedirect(HttpServletRequest req, HttpServletResponse resp, String authToken) throws IOException, ServiceException {
-        Cookie c = new Cookie(COOKIE_ZM_AUTH_TOKEN, authToken);
-        c.setPath("/");
-        resp.addCookie(c);
+    private void setCookieAndRedirect(HttpServletRequest req, HttpServletResponse resp, AuthToken authToken) throws IOException, ServiceException {
+        authToken.encode(resp, false);
 
         String redirectURL = getOptionalParam(req, PARAM_REDIRECT_URL, null);
         if (redirectURL != null) {
