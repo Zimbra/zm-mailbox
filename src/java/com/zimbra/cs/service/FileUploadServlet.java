@@ -43,6 +43,7 @@ import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
+import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -152,7 +153,7 @@ public class FileUploadServlet extends ZimbraServlet {
         return Provisioning.getInstance().getLocalServer().getId().equals(serverId);
     }
 
-    public static Upload fetchUpload(String accountId, String uploadId, String authtoken) throws ServiceException {
+    public static Upload fetchUpload(String accountId, String uploadId, AuthToken authtoken) throws ServiceException {
         String context = "accountId=" + accountId + ", uploadId=" + uploadId;
         if (accountId == null || uploadId == null)
             throw ServiceException.FAILURE("fetchUploads(): missing parameter: " + context, null);
@@ -177,7 +178,7 @@ public class FileUploadServlet extends ZimbraServlet {
         }
     }
 
-    private static Upload fetchRemoteUpload(String accountId, String uploadId, String authtoken) throws ServiceException {
+    private static Upload fetchRemoteUpload(String accountId, String uploadId, AuthToken authtoken) throws ServiceException {
         // the first half of the upload id is the server id where it lives
         Server server = Provisioning.getInstance().get(ServerBy.id, getUploadServerId(uploadId));
         String url = AccountUtil.getBaseUri(server);
@@ -189,11 +190,9 @@ public class FileUploadServlet extends ZimbraServlet {
                ContentServlet.PARAM_EXPUNGE + "=true";
 
         // create an HTTP client with auth cookie to fetch the file from the remote ContentServlet
-        HttpState state = new HttpState();
-        state.addCookie(new Cookie(hostname, ZimbraServlet.COOKIE_ZM_AUTH_TOKEN, authtoken, "/", null, false));
         HttpClient client = new HttpClient();
-        client.setState(state);
         GetMethod get = new GetMethod(url);
+        authtoken.encode(client, get, false, hostname);
 
         FileItem fi = null;
         boolean success = false;

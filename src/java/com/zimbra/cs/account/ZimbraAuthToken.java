@@ -36,14 +36,22 @@ import javax.crypto.SecretKey;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.collections.map.LRUMap;
+import org.apache.commons.httpclient.Cookie;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.HttpState;
+import org.apache.commons.httpclient.methods.GetMethod;
 
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.ACL.GuestAccount;
+import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.BlobMetaData;
@@ -374,6 +382,30 @@ public class ZimbraAuthToken extends AuthToken {
             throw new RuntimeException("fatal error", e);
         } catch (InvalidKeyException e) {
             throw new RuntimeException("fatal error", e);
+        }
+    }
+    
+   
+    /**
+     * 
+     * @param client
+     * @param method
+     * @param isAdminReq
+     * @throws ServiceException
+     */
+    public void encode(HttpClient client, HttpMethod method, boolean isAdminReq, String cookieDomain) throws ServiceException {
+        
+        String cookieName = isAdminReq? ZimbraServlet.COOKIE_ZM_ADMIN_AUTH_TOKEN : ZimbraServlet.COOKIE_ZM_AUTH_TOKEN;
+        HttpState state = client.getState();
+        if (state == null) {
+            state = new HttpState();
+            client.setState(state);
+        }
+        
+        try {
+            state.addCookie(new Cookie(cookieDomain, cookieName, getEncoded(), "/", null, false));
+        } catch (AuthTokenException e) {
+            throw ServiceException.FAILURE("unable to get encoded auth token", e);
         }
     }
 

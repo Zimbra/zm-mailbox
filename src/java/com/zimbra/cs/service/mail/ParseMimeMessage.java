@@ -401,7 +401,7 @@ public class ParseMimeMessage {
         String attachIds = attachElem.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
         if (attachIds != null) {
             for (String uploadId : attachIds.split(FileUploadServlet.UPLOAD_DELIMITER)) {
-                Upload up = FileUploadServlet.fetchUpload(ctxt.zsc.getAuthtokenAccountId(), uploadId, ctxt.zsc.getRawAuthToken());
+                Upload up = FileUploadServlet.fetchUpload(ctxt.zsc.getAuthtokenAccountId(), uploadId, ctxt.zsc.getAuthToken());
                 if (up == null)
                     throw MailServiceException.NO_SUCH_UPLOAD(uploadId);
                 attachUpload(mmp, up, contentID, ctxt, null);

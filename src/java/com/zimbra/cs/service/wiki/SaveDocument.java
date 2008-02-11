@@ -81,7 +81,7 @@ public class SaveDocument extends WikiDocumentHandler {
 	}
 	
 	protected Doc getDocumentDataFromUpload(ZimbraSoapContext lc, String aid) throws ServiceException {
-        Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), aid, lc.getRawAuthToken());
+        Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), aid, lc.getAuthToken());
 
         Doc doc = new Doc();
         try {
