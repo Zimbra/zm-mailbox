@@ -20,10 +20,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
-
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.StringUtil;
 
 public class InternetAddress {
     private String mDisplay;
@@ -82,7 +78,9 @@ public class InternetAddress {
             return null;
 
         try {
-            return new String(ByteUtil.readInput(decoder, 0, word.length), charset);
+            byte[] dbuffer = new byte[word.length];
+            int dsize = decoder.read(dbuffer);
+            return new String(dbuffer, 0, dsize, charset);
         } catch (Exception e) {
             return null;
         }
@@ -225,73 +223,8 @@ public class InternetAddress {
         }
     }
 
-    private static class QP2047Encoder extends ContentTransferEncoding.QuotedPrintableEncoderStream {
-        private static final boolean[] FORCE_ENCODE = new boolean[128];
-            static {
-                for (int i = 0; i < FORCE_ENCODE.length; i++)
-                    FORCE_ENCODE[i] = true;
-                for (int c : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!*+-/ ".getBytes())
-                    FORCE_ENCODE[c] = false;
-            }
-
-        QP2047Encoder(byte[] content) {
-            super(new ByteArrayInputStream(content), null);  setForceEncode(FORCE_ENCODE);
-        }
-
-        @Override public int read() throws IOException {
-            int c = super.read();  return c == ' ' ? '_' : c;
-        }
-    }
-
-    private static final boolean[] ATEXT_VALID = new boolean[128];
-        static {
-            for (int c : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&'*+-/=?^_`{|}~".getBytes())
-                ATEXT_VALID[c] = true;
-        }
-
     @Override public String toString() {
-        if (mDisplay == null)
-            return mEmail;
-
-        boolean needs2047 = false, needsQuote = false, wsp = true;
-        for (int i = 0, len = mDisplay.length(); i < len; i++) {
-            char c = mDisplay.charAt(i);
-            if (c > 0x7F || c == '\0' || c == '\r' || c == '\n')
-                needs2047 = true;
-            else if ((c != ' ' && !ATEXT_VALID[c]) || (c == ' ' && wsp))
-                needsQuote = true;
-            wsp = c == ' ';
-        }
-        needsQuote |= wsp;
-
-        String display = mDisplay;
-        if (needs2047) {
-            // FIXME: need to limit encoded-words to 75 bytes
-            String charset = StringUtil.checkCharset(mDisplay, mCharset);
-            byte[] content = null;
-            try {
-                content = mDisplay.getBytes(charset);
-            } catch (Throwable t) {}
-            if (content == null) {
-                content = mDisplay.getBytes();
-                charset = Charset.defaultCharset().displayName();
-            }
-            StringBuilder sb = new StringBuilder("=?").append(charset).append("?Q?");
-            try {
-                sb.append(new String(ByteUtil.readInput(new QP2047Encoder(content), 0, Integer.MAX_VALUE)));
-            } catch (IOException ioe) {}
-            display = sb.append("?=").toString();
-        } else if (needsQuote) {
-            StringBuilder sb = new StringBuilder("\"");
-            for (int i = 0, len = mDisplay.length(); i < len; i++) {
-                char c = mDisplay.charAt(i);
-                if (c == '"' || c == '\\')
-                    sb.append('\\');
-                sb.append(c);
-            }
-            display = sb.append('"').toString();
-        }
-        return display + " <" + mEmail + '>';
+        return mDisplay == null ? mEmail : MimeHeader.escape(mDisplay, mCharset, true) + " <" + mEmail + '>';
     }
 
     public static void main(String[] args) {

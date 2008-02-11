@@ -49,10 +49,13 @@ public enum ContentTransferEncoding {
         static final byte[] BASE64_TABLE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".getBytes();
 
         private int column, buf[] = new int[4];
+        private boolean fold = true;
 
         Base64EncoderStream(ByteArrayInputStream bais)  { super(bais); }
         Base64EncoderStream(BufferedInputStream is)     { super(is); }
         Base64EncoderStream(InputStream is)             { super(new BufferedInputStream(is, 4096)); }
+
+        void disableFolding()  { fold = false; }
 
         @Override public int read() throws IOException {
             if (column < CHUNK_SIZE) {
@@ -60,7 +63,7 @@ public enum ContentTransferEncoding {
                 if (position == 0) {
                     int c1 = super.read(), c2 = super.read(), c3 = super.read();
                     if (c1 == -1) {
-                        if (column == 0)
+                        if (!fold || column == 0)
                             return -1;
                         column = CHUNK_SIZE;  return read();
                     }
@@ -73,7 +76,10 @@ public enum ContentTransferEncoding {
                 int c = buf[position];
                 if (position == 3 && c == '=')
                     column = CHUNK_SIZE - 1;
-                column++;  return c;
+                column++;
+                if (!fold)
+                    column %= 4;
+                return c;
             } else if (column == CHUNK_SIZE) {
                 column++;  return '\r';
             } else {
@@ -166,7 +172,7 @@ public enum ContentTransferEncoding {
         static final byte[] QP_TABLE = "0123456789ABCDEF".getBytes();
 
         private int column, valid, out1, out2;
-        private boolean text, force[];
+        private boolean fold = true, text, force[];
 
         QuotedPrintableEncoderStream(ByteArrayInputStream bais, ContentType ctype)  { super(bais);  setContentType(ctype); }
         QuotedPrintableEncoderStream(BufferedInputStream is, ContentType ctype)     { super(is);    setContentType(ctype); }
@@ -182,9 +188,11 @@ public enum ContentTransferEncoding {
             force = characters;
         }
 
+        void disableFolding()  { fold = false; }
+
         @Override public int read() throws IOException {
             if (valid == 0) {
-                if (++column >= CHUNK_SIZE) {
+                if (++column >= CHUNK_SIZE && fold) {
                     out1 = '\r';  out2 = '\n';  valid = 2;  return '=';
                 }
                 int p1, c = nextByte();
@@ -203,7 +211,7 @@ public enum ContentTransferEncoding {
                 } else if (c > 0x20 && c < 0x7F && c != '=' && (force == null || !force[c])) {
                     return c;
                 }
-                if (column >= CHUNK_SIZE - 3) {
+                if (fold && column >= CHUNK_SIZE - 3) {
                     unread(c);  out1 = '\r';  out2 = '\n';  valid = 2;  return '=';
                 } else {
                     out1 = QP_TABLE[(c >> 4) & 0x0F];  out2 = QP_TABLE[c & 0x0F];  valid = 2;  return '=';
