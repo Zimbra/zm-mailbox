@@ -370,7 +370,6 @@ public class FileBlobStore extends StoreManager {
         if (header == GZIPInputStream.GZIP_MAGIC) {
         	is = new GZIPInputStream(is);
         } else {
-            is.close();
             int diskThreshold = Integer.MAX_VALUE;
             try {
                 diskThreshold = Provisioning.getInstance().getLocalServer().getIntAttr(
@@ -380,9 +379,8 @@ public class FileBlobStore extends StoreManager {
                     Provisioning.A_zimbraMailDiskStreamingThreshold, e);
             }
             if (blob.getFile().length() > diskThreshold) {
+                is.close();
                 is = new BlobInputStream(blob.getFile());
-            } else {
-                is = new SharedByteArrayInputStream(ByteUtil.getContent(blob.getFile()));
             }
         }
         return is;
