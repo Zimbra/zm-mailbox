@@ -1462,7 +1462,12 @@ public abstract class Provisioning {
             String className = LC.zimbra_class_provisioning.value();
             if (className != null && !className.equals("")) {
                 try {
-                    sProvisioning = (Provisioning) ExtensionUtil.findClass(className).newInstance();
+                    try {
+                        sProvisioning = (Provisioning) Class.forName(className).newInstance();
+                    } catch (ClassNotFoundException cnfe) {
+                        // ignore and look in extensions
+                        sProvisioning = (Provisioning) ExtensionUtil.findClass(className).newInstance();
+                    }
                 } catch (Exception e) {
                     ZimbraLog.account.error("could not instantiate Provisioning interface of class '" + className + "'; defaulting to LdapProvisioning", e);
                 }
