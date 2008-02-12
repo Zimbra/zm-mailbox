@@ -1003,43 +1003,6 @@ public class UserServlet extends ZimbraServlet {
         super.destroy();
     }
 
-    //////////////////////////////////////////// 
-    // AP-TODO-14, remove after callsites in offline is resolved
-    private static AuthToken getAuthToken(String rawAuthToken) throws ServiceException {
-        AuthToken at = null;
-        try {
-            at = AuthProvider.getAuthToken(rawAuthToken);
-            if (at == null)
-                throw ServiceException.FAILURE("cannot get auth token", null);
-        } catch (AuthTokenException e) {
-            throw ServiceException.FAILURE("cannot get auth token", e);
-        }
-        return at;
-    }
-
-    public static byte[] getRemoteContent(String authToken, String hostname, String url) throws ServiceException {
-        return getRemoteContent(getAuthToken(authToken), hostname, url);
-    }
-    
-    public static Pair<Header[], HttpInputStream> getRemoteResourceAsStream(String authToken, String hostname, String url,
-            String proxyHost, int proxyPort, String proxyUser, String proxyPass) throws ServiceException, IOException {
-        
-        return getRemoteResourceAsStream(getAuthToken(authToken), hostname, url,
-                proxyHost, proxyPort, proxyUser, proxyPass);
-    }
-    
-    public static Pair<Header[], byte[]> getRemoteResource(String authToken, String hostname, String url,
-            String proxyHost, int proxyPort, String proxyUser, String proxyPass) throws ServiceException {
-        
-            return getRemoteResource(getAuthToken(authToken), hostname, url,
-                    proxyHost, proxyPort, proxyUser, proxyPass);
-    }
-    
-    // end AP-TODO-14
-    ////////////////////////////////////////////////
-    
-    
-    
     public static byte[] getRemoteContent(AuthToken authToken, ItemId iid, Map<String, String> params) throws ServiceException {
         return getRemoteResource(authToken, iid, params).getSecond();
     }
@@ -1237,4 +1200,133 @@ public class UserServlet extends ZimbraServlet {
             throw ServiceException.RESOURCE_UNREACHABLE("IOException while fetching " + url, e);
         }
     }
+    
+    // ===========================================
+    // AP-TODO-14: FOR OFFLINE, need cleanup
+    public static byte[] getRemoteContent(String authToken, ItemId iid, Map<String, String> params) throws ServiceException {
+        return getRemoteResource(authToken, iid, params).getSecond();
+    }
+
+    public static byte[] getRemoteContent(String authToken, Account target, String folder, Map<String,String> params) throws ServiceException {
+        return getRemoteResource(authToken, target, folder, params).getSecond();
+    }
+
+    public static byte[] getRemoteContent(String authToken, String hostname, String url) throws ServiceException {
+        return getRemoteResource(authToken, hostname, url).getSecond();
+    }
+
+    public static Pair<Header[], byte[]> getRemoteResource(String authToken, ItemId iid, Map<String, String> params) throws ServiceException {
+        Account target = Provisioning.getInstance().get(AccountBy.id, iid.getAccountId());
+        Map<String, String> pcopy = new HashMap<String, String>(params);
+        pcopy.put(QP_ID, iid.toString());
+        return getRemoteResource(authToken, target, null, pcopy);
+    }
+
+    public static Pair<Header[], byte[]> getRemoteResource(String authToken, Account target, String folder, Map<String,String> params) throws ServiceException {
+        // fetch from remote store
+        Provisioning prov = Provisioning.getInstance();
+        Server server = (target == null ? prov.getLocalServer() : prov.getServer(target));
+        String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
+        String url = getRemoteUrl(target, folder, params);
+
+        return getRemoteResource(authToken, hostname, url);
+    }
+
+    public static Pair<Header[], byte[]> getRemoteResource(String authToken, String hostname, String url) throws ServiceException {
+        return getRemoteResource(authToken, hostname, url, null, 0, null, null);
+    }
+
+    public static Pair<Header[], byte[]> getRemoteResource(String authToken, String hostname, String url,
+            String proxyHost, int proxyPort, String proxyUser, String proxyPass) throws ServiceException {
+        HttpMethod get = null;
+        try {
+            Pair<Header[], HttpMethod> pair = getRemoteResourceInternal(authToken, hostname, url, proxyHost, proxyPort, proxyUser, proxyPass);
+            get = pair.getSecond();
+            return new Pair<Header[], byte[]>(pair.getFirst(), get.getResponseBody());
+        } catch (IOException x) {
+            throw ServiceException.FAILURE("Can't read response body " + url, x);
+        } finally {
+            if (get != null) {
+                get.releaseConnection();
+            }
+        }
+    }
+
+    public static Pair<Header[], HttpInputStream> getRemoteResourceAsStream(String authToken, String hostname, String url) throws ServiceException, IOException {
+        return getRemoteResourceAsStream(authToken, hostname, url, null, 0, null, null);
+    }
+    
+    public static Pair<Header[], HttpInputStream> getRemoteResourceAsStream(String authToken, String hostname, String url,
+            String proxyHost, int proxyPort, String proxyUser, String proxyPass) throws ServiceException, IOException {
+        Pair<Header[], HttpMethod> pair = getRemoteResourceInternal(authToken, hostname, url, proxyHost, proxyPort, proxyUser, proxyPass);
+        return new Pair<Header[], HttpInputStream>(pair.getFirst(), new HttpInputStream(pair.getSecond()));
+    }
+
+
+    public static Pair<Header[], HttpInputStream> putRemoteResource(String authToken, String url, Account target,
+            byte[] req, Header[] headers) throws ServiceException, IOException {
+        Provisioning prov = Provisioning.getInstance();
+        Server server = (target == null ? prov.getLocalServer() : prov.getServer(target));
+        String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
+
+        StringBuilder u = new StringBuilder(url);
+        u.append("?").append(QP_AUTH).append('=').append(AUTH_COOKIE);
+        PutMethod method = new PutMethod(u.toString());
+        String contentType = "application/octet-stream";
+        if (headers != null) {
+            for (Header hdr : headers) {
+                String name = hdr.getName();
+                method.addRequestHeader(hdr);
+                if (name.equals("Content-Type"))
+                    contentType = hdr.getValue();
+            }
+        }
+        method.setRequestEntity(new ByteArrayRequestEntity(req, contentType));
+        Pair<Header[], HttpMethod> pair = doHttpOp(authToken, hostname, null, 0, null, null, method);
+        return new Pair<Header[], HttpInputStream>(pair.getFirst(), new HttpInputStream(pair.getSecond()));
+    }
+
+
+    private static Pair<Header[], HttpMethod> getRemoteResourceInternal(String authToken, String hostname, String url,
+            String proxyHost, int proxyPort, String proxyUser, String proxyPass) throws ServiceException {
+        return doHttpOp(authToken, hostname, proxyHost, proxyPort, proxyUser, proxyPass, new GetMethod(url));
+    }
+
+    private static Pair<Header[], HttpMethod> doHttpOp(String authToken, String hostname,
+            String proxyHost, int proxyPort, String proxyUser, String proxyPass, HttpMethod method) throws ServiceException {
+        // create an HTTP client with the same cookies
+        String url = "";
+        try {
+            url = method.getURI().toString();
+        } catch (IOException e) {
+        }
+        HttpState state = new HttpState();
+        state.addCookie(new org.apache.commons.httpclient.Cookie(hostname, COOKIE_ZM_AUTH_TOKEN, authToken, "/", null, false));
+        HttpClient client = new HttpClient();
+        client.setState(state);
+        if (proxyHost != null && proxyPort > 0) {
+            client.getHostConfiguration().setProxy(proxyHost, proxyPort);
+            if (proxyUser != null && proxyPass != null) {
+                client.getState().setProxyCredentials(new AuthScope(proxyHost, proxyPort), new UsernamePasswordCredentials(proxyUser, proxyPass));
+            }
+        } else {
+            NetUtil.configureProxy(client);
+        }
+        
+        try {
+            int statusCode = client.executeMethod(method);
+            if (statusCode == HttpStatus.SC_NOT_FOUND)
+                throw MailServiceException.NO_SUCH_ITEM(-1);
+            else if (statusCode != HttpStatus.SC_OK && statusCode != HttpStatus.SC_CREATED)
+                throw ServiceException.RESOURCE_UNREACHABLE(method.getStatusText(), null);
+
+            Header[] headers = method.getResponseHeaders();
+            return new Pair<Header[], HttpMethod>(headers, method);
+        } catch (HttpException e) {
+            throw ServiceException.RESOURCE_UNREACHABLE("HttpException while fetching " + url, e);
+        } catch (IOException e) {
+            throw ServiceException.RESOURCE_UNREACHABLE("IOException while fetching " + url, e);
+        }
+    }
+    // ============== end AP-TODO-14 
 }
