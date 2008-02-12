@@ -33,6 +33,7 @@ import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbMailbox.NewMboxId;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Mailbox.MailboxData;
 import com.zimbra.cs.redolog.op.CreateMailbox;
@@ -167,7 +168,12 @@ public class MailboxManager {
             String className = LC.zimbra_class_mboxmanager.value();
             if (className != null && !className.equals("")) {
                 try {
-                    sInstance = (MailboxManager) Class.forName(className).newInstance();
+                    try {
+                        sInstance = (MailboxManager) Class.forName(className).newInstance();
+                    } catch (ClassNotFoundException cnfe) {
+                        // ignore and look in extensions
+                        sInstance = (MailboxManager) ExtensionUtil.findClass(className).newInstance();
+                    }
                 } catch (Exception e) {
                     ZimbraLog.account.error("could not instantiate MailboxManager interface of class '" + className + "'; defaulting to MailboxManager", e);
                 }
