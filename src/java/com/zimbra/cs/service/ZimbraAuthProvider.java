@@ -36,8 +36,12 @@ public class ZimbraAuthProvider extends AuthProvider{
         super(ZIMBRA_AUTH_PROVIDER);
     }
     
+    public static String cookieName(boolean isAdminReq) {
+        return isAdminReq? ZimbraServlet.COOKIE_ZM_ADMIN_AUTH_TOKEN : ZimbraServlet.COOKIE_ZM_AUTH_TOKEN;
+    }
+    
     protected AuthToken authToken(HttpServletRequest req, boolean isAdminReq) throws AuthProviderException, AuthTokenException {
-        String cookieName = isAdminReq? ZimbraServlet.COOKIE_ZM_ADMIN_AUTH_TOKEN : ZimbraServlet.COOKIE_ZM_AUTH_TOKEN;
+        String cookieName = cookieName(isAdminReq);
         String encodedAuthToken = null;
         javax.servlet.http.Cookie cookies[] =  req.getCookies();
         if (cookies != null) {

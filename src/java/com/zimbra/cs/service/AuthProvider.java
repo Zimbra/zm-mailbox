@@ -105,7 +105,7 @@ public abstract class AuthProvider {
     }
     
     /**
-     * Returns an AuthToken based from auth data in http request
+     * Returns an AuthToken by auth data in http request
      * 
      * Should never return null.
      * Throws AuthProviderException.NO_AUTH_TOKEN if auth data for the provider is not present 
@@ -119,7 +119,7 @@ public abstract class AuthProvider {
     protected abstract AuthToken authToken(HttpServletRequest req, boolean isAdminReq) throws AuthProviderException, AuthTokenException;
 
     /**
-     * Returns an AuthToken based from auth data in http request
+     * Returns an AuthToken by auth data in http request
      * 
      * Should never return null.
      * Throws AuthProviderException.NO_AUTH_TOKEN if auth data for the provider is not present 
@@ -137,8 +137,8 @@ public abstract class AuthProvider {
      *
      * Returns an AuthToken from an encoded String.
      * 
-     * This API is for servlets that support auth from a non-coookie channel, where it honors a String token from 
-     * a specific element in the request, which is neither a cookie nor a SOAP context header.
+     * This API is for servlets that support auth from a non-cookie channel, where it honors a String token from 
+     * a specific element in the request, which is neither a cookie nor a SOAP context header.  e.g. a query param.
      * 
      * By default, an AuthProvider do not need to implement this method.  The default implementation is throwing
      * AuthProviderException.NOT_SUPPORTED.

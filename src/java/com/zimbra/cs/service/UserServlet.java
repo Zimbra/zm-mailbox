@@ -291,10 +291,13 @@ public class UserServlet extends ZimbraServlet {
                 context.authAccount = basicAuthRequest(context.req, context.resp, false);
                 if (context.authAccount != null) {
                     context.basicAuthHappened = true;
-                    context.authToken = AuthToken.getAuthToken(context.authAccount, isAdminRequest);
+                    
+                    // AP-TODO-16: should we set context.authToken only if !context.noSetCookie() ?  IT USED TO
+                    // i.e. move it inside the if
+                    context.authToken = AuthToken.getAuthToken(context.authAccount, isAdminRequest);  
+                    
                     // send cookie back if need be. 
                     if (!context.noSetCookie()) {
-                        
                         context.authToken.encode(context.resp, isAdminRequest);
                     }
                 }
@@ -703,7 +706,6 @@ public class UserServlet extends ZimbraServlet {
         public boolean basicAuthHappened;
         public boolean qpAuthHappened;
         public String accountPath;
-        // public String authTokenCookie;
         public AuthToken authToken;
         public String itemPath;
         public String extraPath;
