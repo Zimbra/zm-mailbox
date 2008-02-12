@@ -180,6 +180,8 @@ public class ServiceException extends Exception {
     private void setId() {
         mId = Thread.currentThread().getName() + ":"+ System.currentTimeMillis() + ":" + ID_KEY;
     }
+
+    protected void setId(String id) { mId = id; }
     
     protected ServiceException(String message, String code, boolean isReceiversFault, Throwable cause, Argument... arguments)
     {
