@@ -57,6 +57,11 @@ public class SoapFaultException extends ServiceException {
         mIsReceiversFault = isReceiversFault;
         mDetail = detail;
         mFault = fault;
+        Element error = detail.getOptionalElement(ZimbraNamespace.E_ERROR);
+        if (error != null) {
+            String traceId = error.getAttribute(ZimbraNamespace.E_TRACE.getName(), null);
+            if (traceId != null) setId(traceId);
+        }
     }
 
     /** used by transports and stub mCode */
