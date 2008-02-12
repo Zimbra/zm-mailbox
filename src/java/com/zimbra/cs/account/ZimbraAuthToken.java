@@ -52,10 +52,14 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.ACL.GuestAccount;
+import com.zimbra.cs.service.ZimbraAuthProvider;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.util.BlobMetaData;
 import com.zimbra.common.util.BlobMetaDataEncodingException;
 import com.zimbra.common.util.StringUtil;
@@ -386,11 +390,20 @@ public class ZimbraAuthToken extends AuthToken {
             throw new RuntimeException("fatal error", e);
         }
     }
-    
-    private String cookieName(boolean isAdminReq) {
-        return isAdminReq? ZimbraServlet.COOKIE_ZM_ADMIN_AUTH_TOKEN : ZimbraServlet.COOKIE_ZM_AUTH_TOKEN;
-    }
    
+    private String getOrigAuthData() throws ServiceException {
+        String origAuthData = null;
+        try {
+            origAuthData = getEncoded();
+            if (origAuthData == null)
+                throw ServiceException.FAILURE("unable to get encoded auth token", null);
+        } catch (AuthTokenException e) {
+            throw ServiceException.FAILURE("unable to get encoded auth token", e);
+        }
+        
+        return origAuthData;
+    }
+    
     /**
      * 
      * @param client
@@ -399,12 +412,7 @@ public class ZimbraAuthToken extends AuthToken {
      * @throws ServiceException
      */
     public void encode(HttpClient client, HttpMethod method, boolean isAdminReq, String cookieDomain) throws ServiceException {
-        String encoded = null;
-        try {
-            encoded = getEncoded();
-        } catch (AuthTokenException e) {
-            throw ServiceException.FAILURE("unable to get encoded auth token", e);
-        }
+        String origAuthData = getOrigAuthData();
         
         HttpState state = client.getState();
         if (state == null) {
@@ -412,32 +420,29 @@ public class ZimbraAuthToken extends AuthToken {
             client.setState(state);
         }
         
-        state.addCookie(new org.apache.commons.httpclient.Cookie(cookieDomain, cookieName(isAdminReq), encoded, "/", null, false));
+        state.addCookie(new org.apache.commons.httpclient.Cookie(cookieDomain, ZimbraAuthProvider.cookieName(isAdminReq), origAuthData, "/", null, false));
         state.setCookiePolicy(CookiePolicy.COMPATIBILITY);
     }
     
     public void encode(HttpState state, boolean isAdminReq, String cookieDomain) throws ServiceException {
-        String encoded = null;
-        try {
-            encoded = getEncoded();
-        } catch (AuthTokenException e) {
-            throw ServiceException.FAILURE("unable to get encoded auth token", e);
-        }
-        
-        state.addCookie(new org.apache.commons.httpclient.Cookie(cookieDomain, cookieName(isAdminReq), encoded, "/", null, false));
+        String origAuthData = getOrigAuthData();
+        state.addCookie(new org.apache.commons.httpclient.Cookie(cookieDomain, ZimbraAuthProvider.cookieName(isAdminReq), origAuthData, "/", null, false));
     }
     
     public void encode(HttpServletResponse resp, boolean isAdminReq) throws ServiceException {
-        String encoded = null;
-        try {
-            encoded = getEncoded();
-        } catch (AuthTokenException e) {
-            throw ServiceException.FAILURE("unable to get encoded auth token", e);
-        }
-        javax.servlet.http.Cookie cookie = new javax.servlet.http.Cookie(cookieName(isAdminReq), encoded);
+        String origAuthData = getOrigAuthData();
+        javax.servlet.http.Cookie cookie = new javax.servlet.http.Cookie(ZimbraAuthProvider.cookieName(isAdminReq), origAuthData);
         cookie.setPath("/");
         resp.addCookie(cookie);
     }
+    
+    /*
+    public void encodeAuthReq(Element authRequest)  throws ServiceException {
+        String origAuthData = getOrigAuthData();
+        Element authTokenEl = authRequest.addElement(AccountConstants.E_AUTH_TOKEN);
+        authTokenEl.setText(origAuthData);
+    }
+    */
 
     static class ByteKey implements SecretKey {
         private static final long serialVersionUID = -7237091299729195624L;
