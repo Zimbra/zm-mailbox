@@ -230,6 +230,7 @@ public abstract class FreeBusyProvider {
 					writeToDisk();
 
 				} catch (Exception e) {
+					mLastFailed = System.currentTimeMillis();
 					ZimbraLog.misc.error("error while syncing freebusy for "+mProvider.getName(), e);
 				}
 			}

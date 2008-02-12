@@ -30,6 +30,8 @@ import org.dom4j.tree.DefaultDocument;
 
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DomUtil;
+import com.zimbra.cs.fb.FreeBusy.Interval;
+import com.zimbra.cs.fb.FreeBusy.IntervalList;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 
@@ -37,7 +39,8 @@ import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.Iterator;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.regex.Pattern;
 
 public class ExchangeMessage {
@@ -163,6 +166,11 @@ public class ExchangeMessage {
     	Element oofMonths = addElement(prop, PR_FREEBUSY_OOF_MONTHS, null, ATTR_DT, MV_INT);
     	Element oofEvents = addElement(prop, PR_FREEBUSY_OOF_EVENTS, null, ATTR_DT, MV_BIN);
     	
+    	// XXX
+    	// some/all of these properties may not be necessary.
+    	// because we aren't sure about the purpose of these
+    	// properties, and the sample codes included them,
+    	// we'll just keep them in here.
     	addElement(prop, PR_68410003, "0");
     	addElement(prop, PR_6842000B, "1");
     	addElement(prop, PR_6843000B, "1");
@@ -171,48 +179,53 @@ public class ExchangeMessage {
     	addElement(prop, PR_PROCESS_MEETING_REQUESTS, "0");
     	addElement(prop, PR_DECLINE_RECURRING_MEETING_REQUESTS, "0");
     	addElement(prop, PR_DECLINE_CONFLICTING_MEETING_REQUESTS, "0");
+
+    	long startMonth, endMonth;
+    	startMonth = millisToMonths(fb.getStartTime());
+    	endMonth = millisToMonths(fb.getEndTime());
     	
-    	Iterator<FreeBusy.Interval> iter = fb.iterator();
-    	while (iter.hasNext()) {
-    		FreeBusy.Interval interval = iter.next();
+    	IntervalList consolidated = new IntervalList(fb.getStartTime(), fb.getEndTime());
+    	encodeIntervals(fb, startMonth, endMonth, IcalXmlStrMap.FBTYPE_BUSY, busyMonths, busyEvents, consolidated);
+    	encodeIntervals(fb, startMonth, endMonth, IcalXmlStrMap.FBTYPE_BUSY_TENTATIVE, tentativeMonths, tentativeEvents, consolidated);
+    	encodeIntervals(fb, startMonth, endMonth, IcalXmlStrMap.FBTYPE_BUSY_UNAVAILABLE, oofMonths, oofEvents, consolidated);
+    	encodeIntervals(consolidated, startMonth, endMonth, IcalXmlStrMap.FBTYPE_BUSY, allMonths, allEvents, null);
+    	return new DefaultDocument(root);
+    }
+
+    private void encodeIntervals(Iterable<Interval> fb, long startMonth, long endMonth, String type, Element months, Element events, IntervalList consolidated) {
+    	HashMap<Long,LinkedList<Byte>> fbMap = new HashMap<Long,LinkedList<Byte>>();
+    	for (long i = startMonth; i <= endMonth; i++)
+    		fbMap.put(i, new LinkedList<Byte>());
+    	for (FreeBusy.Interval interval : fb) {
     		String status = interval.getStatus();
-    		Element elMonth = null;
-    		Element elEvent = null;
-    		if (status.equals(IcalXmlStrMap.FBTYPE_BUSY)) {
-    			elMonth = busyMonths;
-    			elEvent = busyEvents;
-    		} else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY_TENTATIVE)) {
-    			elMonth = tentativeMonths;
-    			elEvent = tentativeEvents;
-    		} else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY_UNAVAILABLE)) {
-    			elMonth = oofMonths;
-    			elEvent = oofEvents;
-    		}
-    		if (elMonth != null) {
+    		if (status.equals(type)) {
     			long start = interval.getStart();
     			long end = interval.getEnd();
-    			try {
-    				String busyMonth = Long.toString(millisToMonths(start));
-    				String busyTime = encodeFb(start, end);
-    				addElement(elMonth, EL_V, busyMonth);
-    				addElement(elEvent, EL_V, busyTime);
-    				addElement(allMonths, EL_V, busyMonth);
-    				addElement(allEvents, EL_V, busyTime);
-    			} catch (IOException e) {
-    				ZimbraLog.misc.warn("error converting millis to minutes "+start+", "+end, e);
-    				continue;
-    			}
+    			long fbMonth = millisToMonths(start);
+    			LinkedList<Byte> buf = fbMap.get(fbMonth);
+    			encodeFb(start, end, buf);
+    			if (consolidated != null)
+    				consolidated.addInterval(new Interval(start, end, IcalXmlStrMap.FBTYPE_BUSY));
     		}
     	}
-    	if (allMonths.elements().size() == 0) allMonths.detach();
-    	if (allEvents.elements().size() == 0) allEvents.detach();
-    	if (busyMonths.elements().size() == 0) busyMonths.detach();
-    	if (busyEvents.elements().size() == 0) busyEvents.detach();
-    	if (tentativeMonths.elements().size() == 0) tentativeMonths.detach();
-    	if (tentativeEvents.elements().size() == 0) tentativeEvents.detach();
-    	if (oofMonths.elements().size() == 0) oofMonths.detach();
-    	if (oofEvents.elements().size() == 0) oofEvents.detach();
-    	return new DefaultDocument(root);
+    	for (long m = startMonth; m <= endMonth; m++) {
+    		String buf = "";
+    		LinkedList<Byte> encodedList = fbMap.get(m);
+    		if (encodedList.size() > 0) {
+    			try {
+    				byte[] raw = new byte[encodedList.size()];
+    				for (int i = 0; i < encodedList.size(); i++)
+    					raw[i] = encodedList.get(i).byteValue();
+    		    	byte[] encoded = Base64.encodeBase64(raw);
+    		    	buf = new String(encoded, "UTF-8");
+    			} catch (IOException e) {
+					ZimbraLog.misc.warn("error converting millis to minutes for month "+m, e);
+					continue;
+    			}
+    		}
+    		addElement(months, EL_V, Long.toString(m));
+    		addElement(events, EL_V, buf);
+    	}
     }
     
     public HttpMethod createMethod(String uri, FreeBusy fb) throws IOException {
@@ -240,35 +253,31 @@ public class ExchangeMessage {
     private Element addElement(Element parent, QName name, String text) {
     	return addElement(parent, name, text, null, null);
     }
-    private String encodeFb(long s, long e) throws IOException {
+    private void encodeFb(long s, long e, LinkedList<Byte> buf) {
     	int start = millisToMinutes(s);
     	int end = millisToMinutes(e);
     	// swap bytes and convert to little endian.  then lay out bytes
     	// two bytes each for start time, then end time
-    	byte[] buf = new byte[4];
-    	int i = 0;
-    	buf[i++] = (byte)(start & 0xFF);
-    	buf[i++] = (byte)(start >> 8 & 0xFF);
-    	buf[i++] = (byte)(end & 0xFF);
-    	buf[i++] = (byte)(end >> 8 & 0xFF);
-    	
-    	// base64 encode
-    	byte[] encoded = Base64.encodeBase64(buf);
-    	return new String(encoded, "UTF-8");
+    	buf.addLast((byte)(start & 0xFF));
+    	buf.addLast((byte)(start >> 8 & 0xFF));
+    	buf.addLast((byte)(end & 0xFF));
+    	buf.addLast((byte)(end >> 8 & 0xFF));
     }
-    private int millisToMinutes(long millis) throws IOException {
+    private int millisToMinutes(long millis) {
     	// millis since epoch to minutes since 1st of the month
     	Calendar c = new GregorianCalendar();
     	c.setTimeZone(ICalTimeZone.getUTC());
     	c.setTime(new Date(millis));
     	int days = c.get(Calendar.DAY_OF_MONTH) - 1;
     	int hours =  24 * days + c.get(Calendar.HOUR_OF_DAY);
-    	return 60 * hours + c.get(Calendar.MINUTE);
+    	int minutes = c.get(Calendar.MINUTE);
+    	return 60 * hours + minutes;
     }
     private long millisToMonths(long millis) {
     	// number of freebusy months = year * 16 + month
     	// why * 16 not * 12, ask msft.
     	Calendar c = new GregorianCalendar();
+    	c.setTimeZone(ICalTimeZone.getUTC());
     	c.setTime(new Date(millis));
     	return c.get(Calendar.YEAR) * 16 + c.get(Calendar.MONTH) + 1;  // january is 0
     }
@@ -285,10 +294,14 @@ public class ExchangeMessage {
     	// convert to hex in little endian.
     	StringBuilder buf = new StringBuilder();
     	for (int i = 0; i < 8; i++) {
-        	buf.insert(0, HEX[(int)(mins & 0xF)]);
+    		int b = (int)(mins & 0xF);
+    		buf.insert(0, HEX[b]);
         	mins >>= 4;
     	}
     	buf.insert(0, "0x");
     	return buf.toString();
+    }
+    public String toString() {
+    	return mMail+", cn="+mCn+", ou="+mOu;
     }
 }

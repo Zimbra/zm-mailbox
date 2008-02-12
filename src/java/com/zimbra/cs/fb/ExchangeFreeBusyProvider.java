@@ -193,6 +193,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		Credentials cred = new UsernamePasswordCredentials(serverInfo.authUsername, serverInfo.authPassword);
 
 		HttpMethod method = null;
+		
 		try {
 			method = msg.createMethod(url, fb);
 			int status = sendRequest(method, cred);
@@ -203,9 +204,6 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		} catch (IOException ioe) {
 			ZimbraLog.misc.error("error commucating to "+serverInfo.url, ioe);
 			return false;  // retry
-		} finally {
-			if (method != null)
-				method.releaseConnection();
 		}
 		return true;
 	}
