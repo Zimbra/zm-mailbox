@@ -66,7 +66,7 @@ import com.zimbra.cs.util.JMSession;
  */
 public final class MailboxIndex 
 {
-    public static ZimbraQueryResults search(SoapProtocol proto, OperationContext octxt, Mailbox mbox, SearchParams params) 
+    public static ZimbraQueryResults search(SoapProtocol proto, OperationContext octxt, Mailbox mbox, SearchParams params, boolean textIndexOutOfSync) 
     throws IOException, ParseException, ServiceException {
         
         if (ZimbraLog.index.isDebugEnabled()) {
@@ -152,6 +152,10 @@ public final class MailboxIndex
     }
         
         ZimbraQuery zq = new ZimbraQuery(mbox, params);
+        
+        if (zq.countSearchTextOperations() > 0 && textIndexOutOfSync) {
+            throw MailServiceException.TEXT_INDEX_OUT_OF_SYNC();
+        }
 
         if (ZimbraLog.searchstats.isDebugEnabled()) {
             int textCount = zq.countSearchTextOperations();
