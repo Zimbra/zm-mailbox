@@ -25,7 +25,6 @@ import org.dom4j.Namespace;
 import org.dom4j.QName;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ExceptionToString;
 import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.soap.SoapFaultException;
 
@@ -45,10 +44,6 @@ class Soap12Protocol extends SoapProtocol {
     private static final QName SENDER_CODE = QName.get("Sender", NS);
     private static final QName RECEIVER_CODE = QName.get("Receiver", NS);
     
-    private static final String ARGUMENT = "a";
-    private static final String ARG_NAME = "n";
-    private static final String ARG_TYPE = "t";
-    
 
     /** empty package-private constructor */
     Soap12Protocol() { 
@@ -59,23 +54,17 @@ class Soap12Protocol extends SoapProtocol {
         return Element.XMLElement.mFactory;
     }
 
-    /**
-     * Return the namespace String
-     */
-    public Namespace getNamespace()
-    {
+    /** Return the namespace String */
+    public Namespace getNamespace() {
         return NS;
     }
 
-    /** 
-     * Given an Element that represents a fault (i.e,. isFault returns 
-     * true on it), construct a SoapFaultException from it. 
+    /** Given an Element that represents a fault (i.e,. isFault returns 
+     *  true on it), construct a SoapFaultException from it. 
      *
      * @return new SoapFaultException
-     * @throws ServiceException
-     */
-    public SoapFaultException soapFault(Element fault)
-    {
+     * @throws ServiceException */
+    public SoapFaultException soapFault(Element fault) {
     	if (!isFault(fault))
     		return new SoapFaultException("not a soap fault ", fault);
     	
@@ -103,17 +92,12 @@ class Soap12Protocol extends SoapProtocol {
      * Given a ServiceException, wrap it in a soap fault return the 
      * soap fault document.
      */
-    public Element soapFault(ServiceException e)
-    {
+    public Element soapFault(ServiceException e) {
         String reason = e.getMessage();
         if (reason == null)
             reason = e.toString();
-        QName code;
         
-        if (e.isReceiversFault())
-            code = RECEIVER_CODE;
-        else 
-            code = SENDER_CODE;
+        QName code = e.isReceiversFault() ? RECEIVER_CODE : SENDER_CODE;
 
         Element eFault = mFactory.createElement(mFaultQName);
         Element eCode = eFault.addUniqueElement(CODE);
@@ -130,9 +114,9 @@ class Soap12Protocol extends SoapProtocol {
         
         if (e.getArgs() != null) {
             for (ServiceException.Argument arg : e.getArgs()) {
-                Element val = error.addElement(ARGUMENT);
-                val.addAttribute(ARG_NAME, arg.mName);
-                val.addAttribute(ARG_TYPE, arg.mType.toString());
+                Element val = error.addElement(ZimbraNamespace.E_ARGUMENT);
+                val.addAttribute(ZimbraNamespace.A_ARG_NAME, arg.mName);
+                val.addAttribute(ZimbraNamespace.A_ARG_TYPE, arg.mType.toString());
                 val.setText(arg.mValue);
             }
         }

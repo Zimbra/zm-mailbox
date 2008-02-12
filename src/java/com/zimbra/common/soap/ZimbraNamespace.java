@@ -48,7 +48,8 @@ public class ZimbraNamespace {
 
     public static final String A_ONERROR = "onerror";
     public static final String A_REQUEST_ID = "requestId";
-    public static final String A_NAME = "n";
+    public static final String A_ARG_NAME = "n";
+    public static final String A_ARG_TYPE = "t";
     public static final String DEF_ONERROR = "continue";
     
     public static final String E_NOTIFY   = "notify";

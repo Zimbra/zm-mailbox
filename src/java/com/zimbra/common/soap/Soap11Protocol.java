@@ -25,7 +25,6 @@ import org.dom4j.Namespace;
 import org.dom4j.QName;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ExceptionToString;
 import com.zimbra.common.soap.ZimbraNamespace;
 
 /**
@@ -42,10 +41,6 @@ class Soap11Protocol extends SoapProtocol {
     private static final QName DETAIL = new QName("detail", NS);
     private static final QName SENDER_CODE = new QName("Client", NS);
     private static final QName RECEIVER_CODE = new QName("Server", NS);
-    
-    private static final String ARGUMENT = "a";
-    private static final String ARG_NAME = "n";
-    private static final String ARG_TYPE = "t";
     
 
     /** empty package-private constructor */
@@ -93,12 +88,8 @@ class Soap11Protocol extends SoapProtocol {
         String reason = e.getMessage();
         if (reason == null)
             reason = e.toString();
-        QName code;
-        
-        if (e.isReceiversFault())
-            code = RECEIVER_CODE;
-        else 
-            code = SENDER_CODE;
+
+        QName code = e.isReceiversFault() ? RECEIVER_CODE : SENDER_CODE;
 
         Element eFault = mFactory.createElement(mFaultQName);
         eFault.addUniqueElement(FAULTCODE).setText(code.getQualifiedName());
@@ -111,9 +102,9 @@ class Soap11Protocol extends SoapProtocol {
         
         if (e.getArgs() != null) {
             for (ServiceException.Argument arg : e.getArgs()) {
-                Element val = error.addElement(ARGUMENT);
-                val.addAttribute(ARG_NAME, arg.mName);
-                val.addAttribute(ARG_TYPE, arg.mType.toString());
+                Element val = error.addElement(ZimbraNamespace.E_ARGUMENT);
+                val.addAttribute(ZimbraNamespace.A_ARG_NAME, arg.mName);
+                val.addAttribute(ZimbraNamespace.A_ARG_TYPE, arg.mType.toString());
                 val.setText(arg.mValue);
             }
         }

@@ -24,7 +24,6 @@ import org.dom4j.Namespace;
 import org.dom4j.QName;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ExceptionToString;
 import com.zimbra.common.soap.ZimbraNamespace;
 
 /**
@@ -41,10 +40,7 @@ public class SoapJSProtocol extends SoapProtocol {
     private static final String VALUE = "Value";
     private static final QName SENDER_CODE = QName.get("Sender", NS);
     private static final QName RECEIVER_CODE = QName.get("Receiver", NS);
-    
-    private static final String ARGUMENT = "a";
-    private static final String ARG_NAME = "n";
-    private static final String ARG_TYPE = "t";
+
 
     SoapJSProtocol()  { super(); }
 
@@ -73,7 +69,8 @@ public class SoapJSProtocol extends SoapProtocol {
         String reason = e.getMessage();
         if (reason == null)
             reason = e.toString();
-        QName code = (e.isReceiversFault() ? RECEIVER_CODE : SENDER_CODE);
+
+        QName code = e.isReceiversFault() ? RECEIVER_CODE : SENDER_CODE;
 
         Element eFault = mFactory.createElement(mFaultQName);
         // FIXME: should really be a qualified "attribute"
@@ -84,12 +81,12 @@ public class SoapJSProtocol extends SoapProtocol {
         Element eError = eFault.addUniqueElement(DETAIL).addUniqueElement(ZimbraNamespace.E_ERROR);
         eError.addAttribute(ZimbraNamespace.E_CODE.getName(), e.getCode());
         eError.addAttribute(ZimbraNamespace.E_TRACE.getName(), e.getId());
-        
+
         if (e.getArgs() != null) {
             for (ServiceException.Argument arg : e.getArgs()) {
-                Element val = eError.addElement(ARGUMENT);
-                val.addAttribute(ARG_NAME, arg.mName);
-                val.addAttribute(ARG_TYPE, arg.mType.toString());
+                Element val = eError.addElement(ZimbraNamespace.E_ARGUMENT);
+                val.addAttribute(ZimbraNamespace.A_ARG_NAME, arg.mName);
+                val.addAttribute(ZimbraNamespace.A_ARG_TYPE, arg.mType.toString());
                 val.setText(arg.mValue);
             }
         }
