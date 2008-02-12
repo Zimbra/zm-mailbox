@@ -395,6 +395,8 @@ public class Mailbox {
     public Flag mUrgentFlag;
     /** flag: low-priority messages */
     public Flag mBulkFlag;
+    /** flag: indexing deferred */
+    public Flag mIndexingDeferredFlag;
     /** flag: items with accessible past revisions */
     public Flag mVersionedFlag;
     /** flag: IMAP-subscribed folders */
@@ -417,8 +419,8 @@ public class Mailbox {
     private boolean mInitializationComplete = false;
 
     /** debug test code -- for batched indexing testing */
-    private Set<Integer> mMessagesToIndex = new HashSet<Integer>();
     private static final int sDebugBatchMessageIndexSize = LC.debug_batch_message_indexing.intValue();
+    private int mDeferredIndexItems = 0;
 
     /**
      * Constructor
@@ -1331,6 +1333,7 @@ public class Mailbox {
         mUnreadFlag    = Flag.instantiate(this, "\\Unread",     Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_UNREAD);
         mInviteFlag     = Flag.instantiate(this, "\\Invite",     Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_INVITE);
         mUrgentFlag     = Flag.instantiate(this, "\\Urgent",     Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_HIGH_PRIORITY);
+        mIndexingDeferredFlag = Flag.instantiate(this, "\\IdxDeferred",     Flag.FLAG_GENERIC, Flag.ID_FLAG_INDEXING_DEFERRED);
         mBulkFlag       = Flag.instantiate(this, "\\Bulk",       Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_LOW_PRIORITY);
         mVersionedFlag  = Flag.instantiate(this, "\\Versioned",  Flag.FLAG_GENERIC,         Flag.ID_FLAG_VERSIONED);
 
@@ -2866,7 +2869,7 @@ public class Mailbox {
         }
     }
 
-
+    
     public WikiItem getWikiById(OperationContext octxt, int id) throws ServiceException {
         return (WikiItem) getItemById(octxt, id, MailItem.TYPE_WIKI);
     }
@@ -3146,6 +3149,63 @@ public class Mailbox {
     }
     
     /**
+     * "Catch-up" the text index by indexing all the items that have the INDEXING_DEFERRED flag set
+     *
+     * @throws ServiceException
+     */
+    private synchronized void indexDeferredItems() throws ServiceException {
+        if (mDeferredIndexItems > 0) { // double-check now that we're synchronized()...
+            
+            long start = System.currentTimeMillis();
+            int numIndexed = 0;
+            
+            DbSearchConstraints c = new DbSearchConstraints();
+            c.mailbox = this;
+            c.tags = new HashSet<Tag>();
+            c.tags.add(this.mIndexingDeferredFlag);
+            Collection<SearchResult>items = new ArrayList<SearchResult>();
+            boolean success = false;
+            
+            beginTransaction("LookupDeferredIndexItems", null, null);
+            try {
+                DbSearch.search(items, getOperationConnection(), c, SearchResult.ExtraData.NONE);
+                success = true;
+            } finally {
+                endTransaction(success);
+            }
+            
+            success = false;
+            List<Integer> itemIds = new ArrayList<Integer>(items.size());
+            for (SearchResult sr : items) {
+                try {
+                    MailItem item = getItemById(null, sr.id, sr.type);
+                    item.reindex(null, false, null);
+                    itemIds.add(sr.id);
+                    numIndexed++;
+                } catch(ServiceException  e) {
+                    mReIndexStatus.mNumFailed++;
+                    ZimbraLog.mailbox.info("Error indexing deferred item id:"+sr.id+".  Item will not be indexed.", e);
+                } catch(java.lang.RuntimeException e) {
+                    ZimbraLog.mailbox.info("Error indexing deferred item id:"+sr.id+".  Item will not be indexed.", e);
+                }
+            }
+            
+            beginTransaction("ClearIndexingDeferredFlag", null, null);
+            try {
+                mDeferredIndexItems -= itemIds.size();
+                DbMailItem.alterTag(mIndexingDeferredFlag, itemIds, false);
+                success = true;
+            } finally {
+                endTransaction(success);
+            }
+            
+            long elapsed = System.currentTimeMillis() - start;
+            double itemsPerMs = (1000.0*numIndexed) / elapsed;
+            ZimbraLog.mailbox.info("Deferred Indexing: indexed "+numIndexed+" items in "+elapsed+"ms ("+itemsPerMs+"/sec)");
+        }
+    }
+    
+    /**
      * This is the preferred form of the API call.
      * 
      * You **MUST** call {@link ZimbraQueryResults#doneWithSearchResults()} when you are done with the search results, otherwise
@@ -3163,15 +3223,15 @@ public class Mailbox {
         if (octxt == null)
             throw ServiceException.INVALID_REQUEST("The OperationContext must not be null", null);
         
-            synchronized (this) {
-                if (mMessagesToIndex.size() > 0) {
-                    ZimbraLog.mailbox.debug("DEBUG_BATCH_MESSAGE_INDEXING -- indexing "+mMessagesToIndex.size()+" messages");
-                    reIndex(octxt, null, mMessagesToIndex, 0, true);
-                    mMessagesToIndex = new HashSet<Integer>();
-                }
-            }
-        return MailboxIndex.search(proto, octxt, this, params);
+        try {
+            return MailboxIndex.search(proto, octxt, this, params, mDeferredIndexItems>0);
+        } catch (MailServiceException e) {
+            if (e.getCode() == MailServiceException.TEXT_INDEX_OUT_OF_SYNC) {
+                indexDeferredItems();
+                return MailboxIndex.search(proto, octxt, this, params, false);
+            } else throw e;
         }
+    }
     
     /**
      * @param octxt
@@ -3906,6 +3966,11 @@ public class Mailbox {
             // priority is calculated from headers
             flags &= ~(Flag.BITMASK_HIGH_PRIORITY | Flag.BITMASK_LOW_PRIORITY);
             flags |= pm.getPriorityBitmask();
+            
+            // batched indexing
+            if (sDebugBatchMessageIndexSize > 0) {
+                flags |= Flag.BITMASK_INDEXING_DEFERRED;
+            }
 
             folder  = getFolderById(folderId);
             String subject = pm.getNormalizedSubject();
@@ -4104,16 +4169,10 @@ public class Mailbox {
             }
             markOtherItemDirty(mboxBlob);
 
-            if (sDebugBatchMessageIndexSize == 0) {
-            queueForIndexing(msg, false, pm);
-            } else {
-                mMessagesToIndex.add(msg.getId());
-                if (mMessagesToIndex.size() > sDebugBatchMessageIndexSize) {
-                    ZimbraLog.mailbox.debug("DEBUG_BATCH_MESSAGE_INDEXING -- indexing "+mMessagesToIndex.size()+" messages");
-                    reIndex(octxt, null, mMessagesToIndex, 0, true);
-                    mMessagesToIndex = new HashSet<Integer>();
-                }
-            }
+            if (sDebugBatchMessageIndexSize == 0)
+                queueForIndexing(msg, false, pm);
+            else
+                mDeferredIndexItems++;
             
             success = true;
         } finally {
@@ -4132,7 +4191,10 @@ public class Mailbox {
                 sharedDeliveryCtxt.setMailboxBlob(mboxBlob);
             }
         }
-
+        
+        if (sDebugBatchMessageIndexSize > 0 && mDeferredIndexItems > sDebugBatchMessageIndexSize)
+            indexDeferredItems();
+        
         // step 6: remember the Message-ID header so that we can avoid receiving duplicates
         if (isSent && checkDuplicates)
             mSentMessageIDs.put(msgidHeader, new Integer(msg.getId()));

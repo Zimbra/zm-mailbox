@@ -90,7 +90,8 @@ public class MailServiceException extends ServiceException {
     public static final String SEND_FAILURE = "mail.SEND_FAILURE";
     public static final String TOO_MANY_QUERY_TERMS_EXPANDED = "mail.TOO_MANY_QUERY_TERMS_EXPANDED";
     public static final String MESSAGE_TOO_BIG = "mail.MESSAGE_TOO_BIG";
-
+    public static final String TEXT_INDEX_OUT_OF_SYNC = "mail.TEXT_INDEX_OUT_OF_SYNC";
+    
     public static final String INVALID_COMMIT_ID = "mail.INVALID_COMMIT_ID";
     
     public static final String ID              = "id";
@@ -449,5 +450,9 @@ public class MailServiceException extends ServiceException {
     public static MailServiceException MESSAGE_TOO_BIG(long maxSize) {
         Argument arg = new Argument("maxSize", maxSize, Argument.Type.NUM);
         return new MailServiceException("Message exceeded allowed size", MESSAGE_TOO_BIG, false, arg);
+    }
+    
+    public static MailServiceException TEXT_INDEX_OUT_OF_SYNC() {
+        return new MailServiceException("Text index is not up to date and query has a text part.", MailServiceException.TEXT_INDEX_OUT_OF_SYNC, RECEIVERS_FAULT); 
     }
 }

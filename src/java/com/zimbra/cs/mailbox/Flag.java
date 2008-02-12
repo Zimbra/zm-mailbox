@@ -30,12 +30,15 @@ public class Flag extends Tag {
 
     /** Array mapping each <tt>Flag</tt> to a character that represents it in
      *  a string encoding.  The <tt>Flag</tt>'s position in this array is the
-     *  same as its "index": <code>-1 - FLAG_ID</code>. */
+     *  same as its "index": <code>-1 - FLAG_ID</code>.
+     *   
+     *  Currently used flags: ~#*!?/2abdefhinrsuvwxy
+     */
     static char[] FLAG_REP = new char[31];
         static {
             for (int i = 0; i < 31; i++)  FLAG_REP[i] = 'X';
         }
-
+        
     public static final int ID_FLAG_FROM_ME = -1;
     public static final int BITMASK_FROM_ME = 1 << getIndex(ID_FLAG_FROM_ME);
         static { FLAG_REP[getIndex(ID_FLAG_FROM_ME)] = 's'; }
@@ -92,6 +95,10 @@ public class Flag extends Tag {
     public static final int BITMASK_VERSIONED = 1 << getIndex(ID_FLAG_VERSIONED); // 4096
         static { FLAG_REP[getIndex(ID_FLAG_VERSIONED)] = '/'; }
 
+    public static final int ID_FLAG_INDEXING_DEFERRED = -14;
+    public static final int BITMASK_INDEXING_DEFERRED = 1 << getIndex(ID_FLAG_INDEXING_DEFERRED); // 8192
+        static { FLAG_REP[getIndex(ID_FLAG_INDEXING_DEFERRED)] = 'e'; }
+
     public static final int ID_FLAG_SUBSCRIBED = -20;
     public static final int BITMASK_SUBSCRIBED = 1 << getIndex(ID_FLAG_SUBSCRIBED); // 524288
         static { FLAG_REP[getIndex(ID_FLAG_SUBSCRIBED)] = '*'; }
@@ -129,7 +136,7 @@ public class Flag extends Tag {
 
     public static final int FLAG_SYSTEM = BITMASK_FROM_ME | BITMASK_ATTACHED  | BITMASK_COPIED |
                                           BITMASK_DRAFT   | BITMASK_UNCACHED  | BITMASK_LOW_PRIORITY |
-                                          BITMASK_INVITE  | BITMASK_VERSIONED | BITMASK_HIGH_PRIORITY;
+                                          BITMASK_INVITE  | BITMASK_VERSIONED | BITMASK_HIGH_PRIORITY | BITMASK_INDEXING_DEFERRED ;
 
     public static final int FLAGS_FOLDER  = BITMASK_CHECKED | BITMASK_SUBSCRIBED | BITMASK_EXCLUDE_FREEBUSY | BITMASK_NO_INHERIT | BITMASK_SYNCFOLDER | BITMASK_SYNC;
 
@@ -138,7 +145,7 @@ public class Flag extends Tag {
                                             BITMASK_INVITE  | BITMASK_LOW_PRIORITY | BITMASK_HIGH_PRIORITY;
 
     public static final int FLAGS_GENERIC = BITMASK_ATTACHED | BITMASK_COPIED    | BITMASK_FLAGGED |
-                                            BITMASK_DELETED  | BITMASK_VERSIONED | BITMASK_UNCACHED;
+                                            BITMASK_DELETED  | BITMASK_VERSIONED | BITMASK_UNCACHED | BITMASK_INDEXING_DEFERRED ;
 
     /** Bitmask of all valid flags <b>except</b> {@link #BITMASK_UNREAD}. */
     public static final int FLAGS_ALL = (FLAGS_FOLDER | FLAGS_MESSAGE | FLAGS_GENERIC) & ~BITMASK_UNREAD;
