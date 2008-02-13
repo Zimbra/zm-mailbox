@@ -104,6 +104,7 @@ import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.Volume;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMailbox.Options;
 
@@ -5925,8 +5926,7 @@ public class Mailbox {
                     // not.  Force the server to abort.  Next restart will
                     // redo the operation to ensure the change is made and
                     // committed.  (bug 2121)
-                    ZimbraLog.mailbox.fatal("Unable to commit database transaction.  Forcing server to abort.", t);
-                    Runtime.getRuntime().exit(1);
+                    Zimbra.halt("Unable to commit database transaction.  Forcing server to abort.", t);
                 }
                 allGood = true;
         } finally {
