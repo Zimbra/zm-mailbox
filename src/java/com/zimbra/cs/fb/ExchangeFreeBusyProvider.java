@@ -45,6 +45,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
+import com.zimbra.cs.util.NetUtil;
 
 public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 	
@@ -227,6 +228,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		HttpState state = new HttpState();
 		state.setCredentials(AuthScope.ANY, credential);
 		HttpClient client = new HttpClient();
+		NetUtil.configureProxy(client);
 		client.setState(state);
 		ArrayList<String> authPrefs = new ArrayList<String>();
 		authPrefs.add(AuthPolicy.BASIC);
