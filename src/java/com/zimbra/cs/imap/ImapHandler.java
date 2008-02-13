@@ -1243,6 +1243,8 @@ public abstract class ImapHandler extends ProtocolHandler {
 
                 if (!folder.hasSubfolders()) {
                     mbox.delete(getContext(), folder.getId(), MailItem.TYPE_FOLDER);
+                    // deleting the folder also unsubscribes from it...
+                    mCredentials.unsubscribe(path);
                 } else {
                     // 6.3.4: "It is permitted to delete a name that has inferior hierarchical
                     //         names and does not have the \Noselect mailbox name attribute.
@@ -1255,10 +1257,13 @@ public abstract class ImapHandler extends ProtocolHandler {
                 ZMailbox zmbx = (ZMailbox) mboxobj;
                 ZFolder zfolder = (ZFolder) path.getFolder();
 
-                if (zfolder.getSubFolders().isEmpty())
+                if (zfolder.getSubFolders().isEmpty()) {
                     zmbx.deleteFolder(zfolder.getId());
-                else
+                    // deleting the folder also unsubscribes from it...
+                    mCredentials.unsubscribe(path);
+                } else {
                     zmbx.emptyFolder(zfolder.getId(), false);
+                }
             } else {
                 throw AccountServiceException.NO_SUCH_ACCOUNT(path.getOwner());
             }
@@ -1396,9 +1401,10 @@ public abstract class ImapHandler extends ProtocolHandler {
                     if (folder.isTagged(mbox.mSubscribedFlag))
                         mbox.alterTag(getContext(), folder.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_SUBSCRIBED, false);
                 } catch (NoSuchItemException nsie) { }
-            } else {
-                mCredentials.unsubscribe(path);
             }
+
+            // always check for remote subscriptions -- the path might be an old mountpoint...
+            mCredentials.unsubscribe(path);
         } catch (MailServiceException.NoSuchItemException nsie) {
             ZimbraLog.imap.info("UNSUBSCRIBE failure skipped: no such folder: " + path);
         } catch (ServiceException e) {
