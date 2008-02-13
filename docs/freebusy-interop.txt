@@ -42,16 +42,16 @@ on the Exchange server.  The propagation of free/busy (Zimbra to Exchange)
 is done via WebDAV interface on the Exchange server.  In both cases, Zimbra
 needs to authenticate to the Exchange server via HTTP basic authentication.
 
-In order to enable Exchange free busy interop, the following conditions
-need to be met.
+In order to enable the default Exchange free busy interop implementation, 
+the following conditions need to be met.
 
-1.  There is no more than Active Directory in the Exchange environment.
+1.  There is no more than one Active Directory in the Exchange environment.
 2.  Zimbra server can access HTTP(S) port of IIS on at least one of the 
     Exchange server.
 3.  The web interface to Exchange public folders (http://server/public/) needs
     to be available via IIS.
-4.  Zimbra users need to be provisioned as a contact on Active Directory on
-    a same administrative group.
+4.  Zimbra users need to be provisioned as a contact on Active Directory using
+    the same administrative group.
 5.  The value of 'cn' in attribute legacyExchangeDN must be the localpart
     of the email address for all Zimbra contacts.
     
@@ -62,10 +62,15 @@ lookup is still possible.
 For condition 4, select the same administrative group in the new contact
 wizard for all Zimbra contacts.  For condition 5, set the alias of the
 contact to be the localpart of the email address.  (if email address is
-james@mycompany.com, set the alias to be james).  After creating the contacts,
-it can be verified by running ADSI Edit tool, open the contact object, and
-look at attribute legacyExchangeDN for the contact.  For example the attribute
-value would be
+james@mycompany.com, set the alias to be james).  That means if there is
+more than one domain on Zimbra server, the default Exchange implementation
+can't be used because localpart alone is ambiguous without the domain.  
+However, it's easy to extend the Exchange provider to handle more complex 
+cases as described in the next section.
+
+After creating the contacts, legacyExchangeDN attribute can be verified by 
+running ADSI Edit tool, open the contact object.  Search for the attribute 
+legacyExchangeDN for the contact.  For example the attribute value would be
 
 legacyExchangeDN : /o=First Organization/ou=First Administrative Group/cn=Recipients/cn=james
 
@@ -100,8 +105,9 @@ with password 'changeme' :
 Complex Exchange environment
 
 If there is more than one AD, or if the Exchange users are partitioned into
-different Exchange servers, the default Exchange provider above needs to be
-extended to work in such environment.  Zimbra provides a Java interface
+different Exchange servers, or if there is more than one Zimbra mail domain, 
+the default Exchange provider above needs to be extended to work in 
+such environment.  Zimbra provides a Java interface
 
     com.zimbra.cs.fb.ExchangeFreeBusyProvider.ExchangeResolver
 
@@ -109,8 +115,8 @@ The interface requires one method
 
     public ServerInfo getServerInfo(String emailAddr);
 
-The resolver implementation should take an email address of a user on Exchange,
-return ServerInfo object.  If the user is not found in the system it would
+The resolver implementation should take an email address of a user on AD,
+then return ServerInfo object.  If the user is not found in AD it should
 return null.  ServerInfo is defined as
 
     public static class ServerInfo {
