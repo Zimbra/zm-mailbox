@@ -74,7 +74,7 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
 		return Collections.emptySet();
 	}
 	
-	public boolean canCacheZimbraUserFreeBusy() {
+	public boolean registerForMailboxChanges() {
 		return false;
 	}
 	public long cachedFreeBusyStartTime() {
@@ -84,7 +84,7 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
 		return 0;
 	}
 
-	public boolean propagateFreeBusy(String email, FreeBusy fb) {
+	public boolean handleMailboxChange(String accountId) {
 		return true;
 	}
 

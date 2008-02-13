@@ -36,11 +36,13 @@ public class PushFreeBusy extends AdminDocumentHandler {
         ZimbraSoapContext lc = getZimbraSoapContext(context);
     	Provisioning prov = Provisioning.getInstance();
         
-        String domainAttr = request.getAttribute(AdminConstants.A_DOMAIN, null);
-        if (domainAttr == null) {
+    	Element domainElem = request.getOptionalElement(AdminConstants.E_DOMAIN);
+        if (domainElem == null) {
         	Iterator<Element> accounts = request.elementIterator(AdminConstants.E_ACCOUNT);
         	while (accounts.hasNext()) {
-        		String accountId = accounts.next().getText();
+        		String accountId = accounts.next().getAttribute(AdminConstants.A_ID, null);
+        		if (accountId == null)
+        			continue;
         		Account acct = prov.get(Provisioning.AccountBy.id, accountId);
         		if (acct == null) {
         			ZimbraLog.misc.warn("invalid accountId: "+accountId);
@@ -53,7 +55,7 @@ public class PushFreeBusy extends AdminDocumentHandler {
             	FreeBusyProvider.mailboxChanged(accountId);
         	}
         } else {
-        	String[] domains = domainAttr.split(",");
+        	String[] domains = domainElem.getAttribute(AdminConstants.A_NAME).split(",");
         	Server s = prov.getLocalServer();
     		NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
     			public void visit(NamedEntry entry) {

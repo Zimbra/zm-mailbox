@@ -81,7 +81,11 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
         return new IntervalIterator(mList);
     }
     
-    protected static class IntervalList {
+    protected static class IntervalList implements Iterable<Interval> {
+        
+        public Iterator<Interval> iterator() {
+        	return new IntervalIterator(this);
+        }
         
         IntervalList(long start, long end) {
             mStart = start;

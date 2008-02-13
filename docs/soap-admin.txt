@@ -1941,3 +1941,47 @@ in soap-waitset.txt
 	<a n="mask">network mask</a>
 	</ni>*
 </GetServerNIfsResponse>
+
+---------------------------------------------------------------------------
+
+# free/busy providers
+
+<GetAllFreeBusyProvidersRequest/>
+
+<GetAllFreeBusyProvidersResponse>
+  [<provider name="{provider-name}" propagate="{1|0}" start="{seconds-since-epoch of free/busy cache start time}" end="{seconds-since-epoch of free/busy cache end time}"/>]+
+</GetAllFreeBusyProvidersResponse>
+
+---------------------------------------------------------------------------
+
+# if the optional element <provider/> is present in the request, the response
+# contains the requested provider only.  if no provider is supplied in the
+# request, the response contains all the providers.
+
+<GetFreeBusyQueueInfoRequest>
+  [<provider name="{provider-name}"/>]
+</GetFreeBusyQueueInfoRequest>
+
+<GetFreeBusyQueueInfoResponse>
+  [
+    <provider name="{provider-name}">
+      [<account id="{account-id}"/>]+
+    </provider>
+  ]+
+</GetFreeBusyQueueInfoResponse>
+
+---------------------------------------------------------------------------
+
+# the request must include either <domain/> or <account/>
+# when <domain/> is specified in the request, the server will push
+# the free/busy for all the accounts in the domain to the configured
+# free/busy providers.
+# when <account/> list is specified, the server will push the free/busy
+# for the listed accounts to the providers.
+
+<PushFreeBusyRequest>
+  [<domain name="{comma separated list of domains}"/>]
+  [<account id="{account-id}"/>]+
+</PushFreeBusyRequest>
+
+<PushFreeBusyResponse/>
