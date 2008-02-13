@@ -83,13 +83,15 @@ Exchange server.
 zimbraFreebusyExchangeAuthUsername
 zimbraFreebusyExchangeAuthPassword
 zimbraFreebusyExchangeURL
-zimbraFreebusyExchangeUserOU
+zimbraFreebusyExchangeUserOrg
 
 zimbraFreebusyExchangeAuthUsername and zimbraFreebusyExchangeAuthPassword are
 used to authenticate against Exchange server on REST and WebDAV interface.
 zimbraFreebusyExchangeURL should be set to the URL of the Exchange server.
-zimbraFreebusyExchangeUserOU is the first part of the administrative group.
-Typically they are set to /o=First Organization/ou=First Administrative Group.
+zimbraFreebusyExchangeUserOrg is the first part of the administrative group.
+Typically they are set to "/o=First Organization/ou=First Administrative Group".
+Note that the value Org is from legacyExchangeDN attribute of the user,
+not the DN of the user object.
 
 Use zmprov tool to set the global config variables.  For example, assuming
 the user zimbra exists on the Exchange server on exchange.mycompany.com
@@ -98,7 +100,7 @@ with password 'changeme' :
 # zmprov mcf zimbraFreebusyExchangeAuthUsername zimbra
 # zmprov mcf zimbraFreebusyExchangeAuthPassword changeme
 # zmprov mcf zimbraFreebusyExchangeURL http://exchange.mycompany.com
-# zmprov mcf zimbraFreebusyExchangeUserOU "/o=First Organization/ou=First Administrative Group"
+# zmprov mcf zimbraFreebusyExchangeUserOrg "/o=First Organization/ou=First Administrative Group"
 
 
 --------------------------
@@ -121,7 +123,7 @@ return null.  ServerInfo is defined as
 
     public static class ServerInfo {
         public String url;
-        public String ou;
+        public String org;
         public String cn;
         public String authUsername;
         public String authPassword;
@@ -139,7 +141,7 @@ can be implemented.
                     info.url = "http://exchange.mycompany.com";
                     info.authUsername = "zimbra";
                     info.authPassword = "changeme";
-                    info.ou = "/o=First Organization/ou=First Administration Group";
+                    info.org = "/o=First Organization/ou=First Administration Group";
                     info.cn = emailAddr;
                     if (emailAddr.indexOf('@') > 0)
                         info.cn = emailAddr.substring(0, emailAddr.indexOf('@'));
