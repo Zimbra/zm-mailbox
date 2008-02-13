@@ -208,7 +208,7 @@ public class ToXML {
     public static Element encodeACL(Element parent, ACL acl) {
         Element eACL = parent.addUniqueElement(MailConstants.E_ACL);
         if (acl == null)
-            return null;
+            return eACL;
 
         for (ACL.Grant grant : acl.getGrants()) {
             NamedEntry nentry = FolderAction.lookupGranteeByZimbraId(grant.getGranteeId(), grant.getGranteeType());
