@@ -175,9 +175,8 @@ public class ToXML {
         if (canAdminister) {
             // return full ACLs for folders we have admin rights on
             if (needToOutput(fields, Change.MODIFIED_ACL)) {
-                ACL acl = folder.getEffectiveACL();
-                if (acl != null || fields != NOTIFY_FIELDS)
-                    encodeACL(elem, acl);
+                if (fields != NOTIFY_FIELDS || folder.isTagged(mbox.mNoInheritFlag))
+                    encodeACL(elem, folder.getEffectiveACL());
             }
         }
         return elem;
@@ -207,10 +206,10 @@ public class ToXML {
     }
 
     public static Element encodeACL(Element parent, ACL acl) {
+        Element eACL = parent.addUniqueElement(MailConstants.E_ACL);
         if (acl == null)
             return null;
 
-        Element eACL = parent.addUniqueElement(MailConstants.E_ACL);
         for (ACL.Grant grant : acl.getGrants()) {
             NamedEntry nentry = FolderAction.lookupGranteeByZimbraId(grant.getGranteeId(), grant.getGranteeType());
             eACL.addElement(MailConstants.E_GRANT)
