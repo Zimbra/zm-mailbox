@@ -54,7 +54,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 	
 	public static class ServerInfo {
 		public String url;
-		public String ou;
+		public String org;
 		public String cn;
 		public String authUsername;
 		public String authPassword;
@@ -67,17 +67,17 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		private String url;
 		private String user;
 		private String pass;
-		private String ou;
-		private BasicUserResolver(String url, String user, String pass, String ou) {
+		private String org;
+		private BasicUserResolver(String url, String user, String pass, String org) {
 			this.url = url;
 			this.user = user;
 			this.pass = pass;
-			this.ou = ou;
+			this.org = org;
 		}
 		public ServerInfo getServerInfo(String emailAddr) {
 			ServerInfo info = new ServerInfo();
 			info.url = url;
-			info.ou = ou;
+			info.org = org;
 			info.cn = emailAddr;
 			if (emailAddr.indexOf('@') > 0)
 				info.cn = emailAddr.substring(0, emailAddr.indexOf('@'));
@@ -96,9 +96,9 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 			String url = config.getAttr(Provisioning.A_zimbraFreebusyExchangeURL, null);
 			String user = config.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthUsername, null);
 			String pass = config.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthPassword, null);
-			String ou = config.getAttr(Provisioning.A_zimbraFreebusyExchangeUserOU, null);
-			if (url != null && user != null && pass != null && ou != null)
-				registerResolver(new BasicUserResolver(url, user, pass, ou), 0);
+			String org = config.getAttr(Provisioning.A_zimbraFreebusyExchangeUserOrg, null);
+			if (url != null && user != null && pass != null && org != null)
+				registerResolver(new BasicUserResolver(url, user, pass, org), 0);
 		} catch (ServiceException se) {
 			ZimbraLog.misc.warn("cannot fetch exchange server info", se);
 		}
@@ -191,14 +191,15 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 			fb = getFreeBusy(accountId);
 		} catch (ServiceException se) {
 			ZimbraLog.misc.warn("can't get freebusy for account "+accountId, se);
-			return false;  // retry
+			// retry the request if it's receivers fault.
+			return !se.isReceiversFault();
 		}
 		ServerInfo serverInfo = getServerInfo(email);
 		if (serverInfo == null) {
 			ZimbraLog.misc.warn("no exchange server info for user "+email);
 			return true;  // no retry
 		}
-		ExchangeMessage msg = new ExchangeMessage(serverInfo.ou, serverInfo.cn, email);
+		ExchangeMessage msg = new ExchangeMessage(serverInfo.org, serverInfo.cn, email);
 		String url = serverInfo.url + msg.getUrl();
 		Credentials cred = new UsernamePasswordCredentials(serverInfo.authUsername, serverInfo.authPassword);
 
