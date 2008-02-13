@@ -86,10 +86,7 @@ public class ZimbraAuthToken extends AuthToken {
     private static final String C_EXTERNAL_USER_EMAIL = "email";
     private static final String C_DIGEST = "digest";
     private static final String C_MAILHOST = "mailhost";
-    /* Zimbra Customer Care*/
-    private static final String C_CC_ADMIN = "cc_admin";
-    private static final String C_CC_TIER = "cc_tier";
-    /* Zimbra Customer Care*/
+
     private static LRUMap mCache = new LRUMap(AUTHTOKEN_CACHE_SIZE);
     
     private static Log mLog = LogFactory.getLog(AuthToken.class); 
@@ -106,14 +103,10 @@ public class ZimbraAuthToken extends AuthToken {
     private String mDigest;
     private String mMailHostRoute;
     
-    /* Zimbra Customer Care*/
-    private boolean mIsCCAdmin;     
-    private int mCCTier;
-    /* Zimbra Customer Care*/
     
     public String toString() {
         return "AuthToken(acct="+mAccountId+" admin="+mAdminAccountId+" exp="
-        +mExpires+" isAdm="+mIsAdmin+" isDomAd="+mIsDomainAdmin+" isCCAdmin="+mIsCCAdmin+")";
+        +mExpires+" isAdm="+mIsAdmin+" isDomAd="+mIsDomainAdmin+")";
     }
     
     protected static AuthTokenKey getCurrentKey() throws AuthTokenException {
@@ -193,11 +186,6 @@ public class ZimbraAuthToken extends AuthToken {
             mExternalUserEmail = (String)map.get(C_EXTERNAL_USER_EMAIL);
             mDigest = (String)map.get(C_DIGEST);
             mMailHostRoute = (String)map.get(C_MAILHOST);
-            /* Zimbra Customer Care*/
-            String icc = (String) map.get(C_CC_ADMIN);
-            mIsCCAdmin = "1".equals(icc);
-            mCCTier = Integer.parseInt((String)map.get(C_CC_TIER));
-            /* Zimbra Customer Care*/
         } catch (ServiceException e) {
             throw new AuthTokenException("service exception", e);
         } catch (DecoderException e) {
@@ -236,10 +224,6 @@ public class ZimbraAuthToken extends AuthToken {
         mExpires = expires;
         mIsAdmin = isAdmin && "TRUE".equals(acct.getAttr(Provisioning.A_zimbraIsAdminAccount));
         mIsDomainAdmin = isAdmin && "TRUE".equals(acct.getAttr(Provisioning.A_zimbraIsDomainAdminAccount));
-        /* Zimbra Customer Care*/
-        mIsCCAdmin = "TRUE".equals(acct.getAttr(Provisioning.A_zimbraIsCustomerCareAccount));
-        mCCTier = acct.getIntAttr(Provisioning.A_zimbraCustomerCareTier,0);
-        /* Zimbra Customer Care*/
         mEncoded = null;
         if (acct instanceof ACL.GuestAccount) {
             mType = C_TYPE_EXTERNAL_USER;
@@ -314,9 +298,6 @@ public class ZimbraAuthToken extends AuthToken {
         return mIsDomainAdmin;
     }
     
-    public boolean isCCAdmin() {
-        return mIsCCAdmin;
-    }
     
     public boolean isZimbraUser() {
         return mType == null || mType.compareTo(C_TYPE_ZIMBRA_USER) == 0;
@@ -328,10 +309,6 @@ public class ZimbraAuthToken extends AuthToken {
     
     public String getDigest() {
         return mDigest;
-    }
-    
-    public int getCCTier() {
-        return mCCTier;
     }
     
     public String getEncoded() throws AuthTokenException {
@@ -351,11 +328,6 @@ public class ZimbraAuthToken extends AuthToken {
             if ((mMailHostRoute != null) && (mMailHostRoute.length() > 0)) {
                 BlobMetaData.encodeMetaData(C_MAILHOST, mMailHostRoute, encodedBuff);
             }
-            /* Zimbra Customer Care*/
-            if (mIsCCAdmin)
-                BlobMetaData.encodeMetaData(C_CC_ADMIN, "1", encodedBuff);
-            BlobMetaData.encodeMetaData(C_CC_TIER, Integer.toString(mCCTier), encodedBuff);
-            /* Zimbra Customer Care*/            
             String data = new String(Hex.encodeHex(encodedBuff.toString().getBytes()));
             AuthTokenKey key = getCurrentKey();
             String hmac = getHmac(data, key.getKey());

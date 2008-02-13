@@ -62,15 +62,11 @@ public abstract class AuthToken {
 
     public abstract boolean isDomainAdmin();
     
-    public abstract boolean isCCAdmin();
-    
     public abstract boolean isZimbraUser();
 
     public abstract String getExternalUserEmail() ;
     
     public abstract String getDigest();
-    
-    public abstract int getCCTier();
     
     public abstract String getCrumb() throws AuthTokenException;
     
