@@ -141,7 +141,7 @@ can be implemented.
                     info.url = "http://exchange.mycompany.com";
                     info.authUsername = "zimbra";
                     info.authPassword = "changeme";
-                    info.org = "/o=First Organization/ou=First Administration Group";
+                    info.org = "/o=First Organization/ou=First Administrative Group";
                     info.cn = emailAddr;
                     if (emailAddr.indexOf('@') > 0)
                         info.cn = emailAddr.substring(0, emailAddr.indexOf('@'));

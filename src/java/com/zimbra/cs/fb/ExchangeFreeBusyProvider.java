@@ -195,8 +195,12 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 			// retry the request if it's receivers fault.
 			return !se.isReceiversFault();
 		}
+		if (email == null || fb == null) {
+			ZimbraLog.misc.warn("can't get freebusy for account "+accountId);
+			return true;  // no retry
+		}
 		ServerInfo serverInfo = getServerInfo(email);
-		if (serverInfo == null) {
+		if (serverInfo == null || serverInfo.org == null || serverInfo.cn == null) {
 			ZimbraLog.misc.warn("no exchange server info for user "+email);
 			return true;  // no retry
 		}
@@ -210,7 +214,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 			method = msg.createMethod(url, fb);
 			int status = sendRequest(method, cred);
 			if (status != MULTI_STATUS) {
-				ZimbraLog.misc.error("cannot create resource at "+url);
+				ZimbraLog.misc.error("cannot modify resource at "+url);
 				return false;  // retry
 			}
 		} catch (IOException ioe) {
