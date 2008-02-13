@@ -353,7 +353,7 @@ public class SoapEngine {
                         if (admin == null)
                             return soapFaultWithNotes(soapProto, "delegating account " + at.getAdminAccountId() + " not found", ServiceException.AUTH_EXPIRED());
                         boolean isAdmin = admin.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false) ||
-                        admin.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);
+                        admin.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false) || admin.getBooleanAttr(Provisioning.A_zimbraIsCustomerCareAccount, false);
                         if (!isAdmin)
                             return soapFaultWithNotes(soapProto, "delegating account is not an admin account", ServiceException.AUTH_EXPIRED());
                         if (!admin.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
