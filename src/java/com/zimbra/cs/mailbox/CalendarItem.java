@@ -1369,6 +1369,15 @@ public abstract class CalendarItem extends MailItem {
                 }
             }
         }
+        if (changed) {
+            String origOrg = originalOrganizer != null ? originalOrganizer.getAddress() : null;
+            ZOrganizer newOrganizer = newInvite.getOrganizer();
+            String newOrg = newOrganizer != null ? newOrganizer.getAddress() : null;
+            boolean wasOrganizer = originalInvite.isOrganizer();
+            boolean isOrganizer = newInvite.isOrganizer();
+            ZimbraLog.calendar.info("Changing organizer: old=" + origOrg + ", new=" + newOrg +
+                                    ", wasOrg=" + wasOrganizer + ", isOrg=" + isOrganizer);
+        }
         return changed;
     }
 
