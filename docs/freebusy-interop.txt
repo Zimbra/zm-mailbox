@@ -1,0 +1,189 @@
+
+--------------------------
+Requirement
+
+In many cases ZCS is deployed in an environment where there is a mix of
+Zimbra server and 3rd party servers.  In such environment, typically the users
+are partitioned into a group using Zimbra server, and a group using 3rd party
+servers.  When a user wants to schedule a meeting with other users, the 
+free/busy schedule of the other users is readily available only if 
+the attendees are in the same group as the organizer.  
+
+Some calendaring software allows limited interop with 3rd party systems.  
+For example Outlook allows downloading free/busy schedule for a user from 
+a web server.  However, configuring URL for each attendees can be a tedious 
+task.  It would be desirable if Zimbra server can provide server to server 
+free/busy sync with 3rd party servers.  Then the Zimbra users will be able to 
+query the free/busy schedule of users on other system, such as Exchange 
+or Domino server, the same way they would query the Zimbra users.  
+
+Zimbra should also support pushing free/busy schedule of Zimbra users to the 
+3rd party server, if the 3rd party server supports such features.
+
+
+--------------------------
+Free/busy Provider Framework
+
+Zimbra provides a framework where the interop with any 3rd party system
+can be added via an extension.  Through the extension, Zimbra server can
+query the free/busy schedule of users on 3rd party system, and also
+propagate free/busy schedule of a Zimbra user to the 3rd party system.
+The mechanism is described later in the document.
+
+
+--------------------------
+Interop with Exchange 2003
+
+Zimbra server has a default implementation of Exchange free busy provider.
+Zimbra server can pull the free/busy schedule of a user on Exchange, and
+also push the free/busy schedule of a Zimbra user to Exchange server.  The
+retrieval of free/busy (Exchange to Zimbra) is done via REST interface
+on the Exchange server.  The propagation of free/busy (Zimbra to Exchange)
+is done via WebDAV interface on the Exchange server.  In both cases, Zimbra
+needs to authenticate to the Exchange server via HTTP basic authentication.
+
+In order to enable Exchange free busy interop, the following conditions
+need to be met.
+
+1.  There is no more than Active Directory in the Exchange environment.
+2.  Zimbra server can access HTTP(S) port of IIS on at least one of the 
+    Exchange server.
+3.  The web interface to Exchange public folders (http://server/public/) needs
+    to be available via IIS.
+4.  Zimbra users need to be provisioned as a contact on Active Directory on
+    a same administrative group.
+5.  The value of 'cn' in attribute legacyExchangeDN must be the localpart
+    of the email address for all Zimbra contacts.
+    
+The condition #4 and #5 are required only for Zimbra -> Exchange free/busy 
+replication.  With the first three condition met, Exchange -> Zimbra free/busy 
+lookup is still possible.
+
+For condition 4, select the same administrative group in the new contact
+wizard for all Zimbra contacts.  For condition 5, set the alias of the
+contact to be the localpart of the email address.  (if email address is
+james@mycompany.com, set the alias to be james).  After creating the contacts,
+it can be verified by running ADSI Edit tool, open the contact object, and
+look at attribute legacyExchangeDN for the contact.  For example the attribute
+value would be
+
+legacyExchangeDN : /o=First Organization/ou=First Administrative Group/cn=Recipients/cn=james
+
+The substring left and right of /cn=Recipients are important, and need to
+be consistent across the Zimbra contacts.
+
+There are four global config variables on Zimbra to enable the interop with
+Exchange server.
+
+zimbraFreebusyExchangeAuthUsername
+zimbraFreebusyExchangeAuthPassword
+zimbraFreebusyExchangeURL
+zimbraFreebusyExchangeUserOU
+
+zimbraFreebusyExchangeAuthUsername and zimbraFreebusyExchangeAuthPassword are
+used to authenticate against Exchange server on REST and WebDAV interface.
+zimbraFreebusyExchangeURL should be set to the URL of the Exchange server.
+zimbraFreebusyExchangeUserOU is the first part of the administrative group.
+Typically they are set to /o=First Organization/ou=First Administrative Group.
+
+Use zmprov tool to set the global config variables.  For example, assuming
+the user zimbra exists on the Exchange server on exchange.mycompany.com
+with password 'changeme' :
+
+# zmprov mcf zimbraFreebusyExchangeAuthUsername zimbra
+# zmprov mcf zimbraFreebusyExchangeAuthPassword changeme
+# zmprov mcf zimbraFreebusyExchangeURL http://exchange.mycompany.com
+# zmprov mcf zimbraFreebusyExchangeUserOU "/o=First Organization/ou=First Administrative Group"
+
+
+--------------------------
+Complex Exchange environment
+
+If there is more than one AD, or if the Exchange users are partitioned into
+different Exchange servers, the default Exchange provider above needs to be
+extended to work in such environment.  Zimbra provides a Java interface
+
+    com.zimbra.cs.fb.ExchangeFreeBusyProvider.ExchangeResolver
+
+The interface requires one method
+
+    public ServerInfo getServerInfo(String emailAddr);
+
+The resolver implementation should take an email address of a user on Exchange,
+return ServerInfo object.  If the user is not found in the system it would
+return null.  ServerInfo is defined as
+
+    public static class ServerInfo {
+        public String url;
+        public String ou;
+        public String cn;
+        public String authUsername;
+        public String authPassword;
+    }
+
+Finally, the bootstrapping of the exchange provider can be done via
+ZimbraExtension.  Following is an example to illustrate how this
+can be implemented.
+
+    public class FbExtension implements ZimbraExtension {
+        public void init() {
+            ExchangeFreeBusyProvider.registerResolver(new ExchangeUserResolver() {
+                public ServerInfo getServerInfo(String emailAddr) {
+                    ServerInfo info = new ServerInfo();
+                    info.url = "http://exchange.mycompany.com";
+                    info.authUsername = "zimbra";
+                    info.authPassword = "changeme";
+                    info.ou = "/o=First Organization/ou=First Administration Group";
+                    info.cn = emailAddr;
+                    if (emailAddr.indexOf('@') > 0)
+                        info.cn = emailAddr.substring(0, emailAddr.indexOf('@'));
+                    return info;
+                }
+            }, 0);
+        }
+    
+        public void destroy() {
+        }
+        
+        public String getName() {
+            return "ExtensionFbProvider";
+        }
+    }
+
+
+--------------------------
+Interop with other non-Exchange systems
+
+Zimbra can handle other 3rd party system by extending the FreeBusyProvider
+framework.  
+
+    public abstract class FreeBusyProvider {
+        public abstract FreeBusyProvider getInstance();
+        public abstract String getName();
+        
+        // free/busy lookup from 3rd party system
+        public abstract void addFreeBusyRequest(Request req) throws FreeBusyUserNotFoundException;
+        public abstract Set<FreeBusy> getResults();
+        
+        // propagation of Zimbra users free/busy to 3rd party system
+        public abstract boolean registerForMailboxChanges();
+        public abstract boolean handleMailboxChange(String accountId);
+        public abstract long cachedFreeBusyStartTime();
+        public abstract long cachedFreeBusyEndTime();
+    }
+
+The API allows batching of lookup requests.  The framework invokes 
+addFreeBusyRequest() for each non-Zimbra users.  The provider implementation
+should throw FreeBusyUserNotFoundException when the user is not found.
+This allows for multiple FreeBusyProviders to co-exist in the system.
+The framework will then call getResults(), and at that point the provider
+returns a set of FreeBusy for the batched requests.
+
+If the provider can handle propagation of Zimbra users free/busy,
+it should declare it so by returning true on registerForMailboxChanges().
+Then the framework will call handleMailboxChange() for each providers
+when a change in the mailbox that could result in recalculation of free/busy
+is detected.  cachedFreeBusyStartTime() and cachedFreeBusyEndTime() are
+millis since epoch to indicate the interval of free/busy that can be cached 
+in the 3rd party system.  For example the basic exchange free/busy provider
+caches free/busy from the beginning of the month, for two months.

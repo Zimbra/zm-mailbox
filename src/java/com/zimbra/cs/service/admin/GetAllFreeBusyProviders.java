@@ -33,7 +33,7 @@ public class GetAllFreeBusyProviders extends AdminDocumentHandler {
         for (FreeBusyProvider prov : FreeBusyProvider.getProviders()) {
             Element provElem = response.addElement(AdminConstants.E_PROVIDER);
             provElem.addAttribute(AdminConstants.A_NAME, prov.getName());
-            provElem.addAttribute(AdminConstants.A_PROPAGATE, prov.canCacheZimbraUserFreeBusy());
+            provElem.addAttribute(AdminConstants.A_PROPAGATE, prov.registerForMailboxChanges());
             provElem.addAttribute(AdminConstants.A_START, prov.cachedFreeBusyStartTime());
             provElem.addAttribute(AdminConstants.A_END, prov.cachedFreeBusyEndTime());
         }

@@ -102,6 +102,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		} catch (ServiceException se) {
 			ZimbraLog.misc.warn("cannot fetch exchange server info", se);
 		}
+		register(new ExchangeFreeBusyProvider());
 	}
 
 	public static void registerResolver(ExchangeUserResolver r, int priority) {
@@ -150,8 +151,8 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		return EXCHANGE;
 	}
 	
-	public boolean canCacheZimbraUserFreeBusy() {
-		return mResolvers.size() > 0;
+	public boolean registerForMailboxChanges() {
+		return true;
 	}
 	
 	public long cachedFreeBusyStartTime() {
@@ -182,7 +183,16 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		return cal.getTimeInMillis();
 	}
 	
-	public boolean propagateFreeBusy(String email, FreeBusy fb) {
+	public boolean handleMailboxChange(String accountId) {
+		String email;
+		FreeBusy fb;
+		try {
+			email = getEmailAddress(accountId);
+			fb = getFreeBusy(accountId);
+		} catch (ServiceException se) {
+			ZimbraLog.misc.warn("can't get freebusy for account "+accountId, se);
+			return false;  // retry
+		}
 		ServerInfo serverInfo = getServerInfo(email);
 		if (serverInfo == null) {
 			ZimbraLog.misc.warn("no exchange server info for user "+email);

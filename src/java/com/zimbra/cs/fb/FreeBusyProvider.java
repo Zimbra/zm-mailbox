@@ -50,19 +50,23 @@ public abstract class FreeBusyProvider {
 	@SuppressWarnings("serial")
 	protected static class FreeBusyUserNotFoundException extends Exception {
 	}
+	
 	public abstract FreeBusyProvider getInstance();
+	public abstract String getName();
+	
+	// free/busy lookup from 3rd party system
 	public abstract void addFreeBusyRequest(Request req) throws FreeBusyUserNotFoundException;
 	public abstract Set<FreeBusy> getResults();
-	
-	public abstract boolean canCacheZimbraUserFreeBusy();
+
+	// propagation of Zimbra users free/busy to 3rd party system
+	public abstract boolean registerForMailboxChanges();
+	public abstract boolean handleMailboxChange(String accountId);
 	public abstract long cachedFreeBusyStartTime();
 	public abstract long cachedFreeBusyEndTime();
-	public abstract String getName();
-	public abstract boolean propagateFreeBusy(String email, FreeBusy fb);
 	
 	public static void register(FreeBusyProvider p) {
 		sPROVIDERS.add(p);
-		if (p.canCacheZimbraUserFreeBusy()) {
+		if (p.registerForMailboxChanges()) {
 			String name = p.getName();
 			FreeBusySyncQueue queue = sPUSHQUEUES.get(name);
 			if (queue != null) {
@@ -82,7 +86,7 @@ public abstract class FreeBusyProvider {
 			return;
 
 		for (FreeBusyProvider prov : sPROVIDERS)
-			if (prov.canCacheZimbraUserFreeBusy()) {
+			if (prov.registerForMailboxChanges()) {
 				FreeBusySyncQueue queue = sPUSHQUEUES.get(prov.getName());
 				synchronized (queue) {
 					if (queue.contains(accountId))
@@ -164,7 +168,7 @@ public abstract class FreeBusyProvider {
 	static {
 		sPROVIDERS = new HashSet<FreeBusyProvider>();
 		sPUSHQUEUES = new HashMap<String,FreeBusySyncQueue>();
-		register(new ExchangeFreeBusyProvider());
+		new ExchangeFreeBusyProvider();  // load the class
 	}
 	
 	@SuppressWarnings("serial")
@@ -208,15 +212,7 @@ public abstract class FreeBusyProvider {
 					if (acctId == null)
 						continue;
 
-					String email = mProvider.getEmailAddress(acctId);
-					FreeBusy fb = mProvider.getFreeBusy(acctId);
-					
-					if (email == null || fb == null) {
-						ZimbraLog.misc.warn("cannot fetch mailbox and/or free/busy for account "+acctId);
-						continue;
-					}
-					
-					boolean success = mProvider.propagateFreeBusy(email, fb);
+					boolean success = mProvider.handleMailboxChange(acctId);
 					
 					synchronized (this) {
 						removeFirst();
