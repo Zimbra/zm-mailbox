@@ -149,7 +149,6 @@ public class DataSourceManager {
             ZimbraLog.datasource.info("Import completed.");
             success = true;
         } catch (ServiceException x) {
-            ZimbraLog.datasource.warn("Import failed", x);
             error = x.getMessage();
             if (error == null) {
                 error = x.toString();
