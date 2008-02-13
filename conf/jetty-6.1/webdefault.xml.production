@@ -265,10 +265,12 @@
         <param-name>checkInterval</param-name>
         <param-value>0</param-value>
     </init-param>
+    <!--  
     <init-param>
-        <param-name>reload-interval</param-name>
-        <param-value>-1</param-value>
+        <param-name>classpath</param-name>
+        <param-value>?</param-value>
     </init-param>
+    -->
     <load-on-startup>0</load-on-startup>
   </servlet>
 
