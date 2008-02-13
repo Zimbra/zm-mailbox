@@ -143,6 +143,7 @@ public class ZInvite {
         private List<ZAttendee> mAttendees;
         private ZRecurrence mRecurrence;
         private String mComponentNum;
+        private List<ZAlarm> mAlarms;
 
         public ZComponent() {
             mStatus = ZStatus.CONF;
@@ -151,6 +152,7 @@ public class ZInvite {
             mTransparency = ZTransparency.O;
             mReplies = new ArrayList<ZReply>();
             mAttendees = new ArrayList<ZAttendee>();
+            mAlarms = new ArrayList<ZAlarm>();
         }
         
         public ZComponent(Element e) throws ServiceException {
@@ -170,6 +172,8 @@ public class ZInvite {
             mCompleted = e.getAttribute(MailConstants.A_TASK_COMPLETED, null);
             mComponentNum = e.getAttribute(MailConstants.A_CAL_COMPONENT_NUM, "0");
             mReplies = new ArrayList<ZReply>();
+            mAlarms = new ArrayList<ZAlarm>();
+            
             Element repliesEl = e.getOptionalElement(MailConstants.E_CAL_REPLIES);
             if (repliesEl != null) {
                 for (Element replyEl : repliesEl.listElements(MailConstants.E_CAL_REPLY)) {
@@ -197,8 +201,12 @@ public class ZInvite {
             Element recurEl = e.getOptionalElement(MailConstants.E_CAL_RECUR);
             if (recurEl != null)
                 mRecurrence = new ZRecurrence(recurEl);
-
-            // TODO alarms
+            Element alarmEl = e.getOptionalElement(MailConstants.A_CAL_ALARM);
+            if (alarmEl != null) {
+                for (Element alarm : e.listElements(MailConstants.A_CAL_ALARM)) {
+                    mAlarms.add(new ZAlarm(alarm));
+                }
+            }
 
         }
 
@@ -241,10 +249,11 @@ public class ZInvite {
             }
 
             if (mRecurrence != null)
-                    mRecurrence.toElement(compEl);
+                mRecurrence.toElement(compEl);
 
-            // TODO alarms when alarms are parsed
-
+            for (ZAlarm alarm : mAlarms)
+                alarm.toElement(compEl);
+            
             return compEl;
         }
 
@@ -259,7 +268,7 @@ public class ZInvite {
         public void setRecurrence(ZRecurrence recurrence) {
             mRecurrence = recurrence;
         }
-        
+
         public ZStatus getStatus() {
             return mStatus;
         }
@@ -429,6 +438,18 @@ public class ZInvite {
 
         public String getComponentNumber() {
             return mComponentNum;
+        }
+
+        public List<ZAlarm> getAlarms(){
+            return mAlarms;
+        }
+
+        public void setAlarms(List <ZAlarm> alarms){
+            this.mAlarms = alarms;
+        }
+
+        public void addAlarm(ZAlarm alarm){
+            this.mAlarms.add(alarm);
         }
 
         ZSoapSB toString(ZSoapSB sb) {
