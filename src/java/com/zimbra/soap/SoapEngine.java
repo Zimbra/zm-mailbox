@@ -90,13 +90,27 @@ public class SoapEngine {
     }
 
     /*
+     * returns a SOAP envelope with soap fault in the body
+     * 
      * This is for callers that need to:
-     *    - enclose a SOAP fault in the envelope and return (without throwing the exception)
+     *    - wrap a exception in a soap fault and wrap the soap fault in a soap envelope (without throwing the exception)
+     *    - log the exception at info level
+     */
+    private Element soapFaultEnv(SoapProtocol soapProto, String msg, ServiceException e) {
+        mLog.warn(msg, e);
+        return soapProto.soapEnvelope(soapProto.soapFault(e));
+    }
+    
+    /*
+     * returns a SOAP fault
+     * 
+     * This is for callers that need to:
+     *    - wrap a exception in a soap fault (without throwing the exception)
      *    - log the exception at info level
      */
     private Element soapFault(SoapProtocol soapProto, String msg, ServiceException e) {
         mLog.warn(msg, e);
-        return soapProto.soapEnvelope(soapProto.soapFault(e));
+        return soapProto.soapFault(e);
     }
     
     /*
@@ -112,15 +126,15 @@ public class SoapEngine {
         StackTraceElement callSite = s[3]; // third frame from top is the caller
         e.setIdLabel(callSite);
         mLog.debug(msg, e);
-        return soapProto.soapEnvelope(soapProto.soapFault(e));
+        return soapProto.soapFault(e);
     }
     
     public Element dispatch(String path, byte[] soapMessage, Map<String, Object> context, boolean loggedRequest) {
         if (soapMessage == null || soapMessage.length == 0) {
             SoapProtocol soapProto = SoapProtocol.Soap12;
-            return soapFault(soapProto, "SOAP exception", ServiceException.PARSE_ERROR("empty request payload", null));
+            return soapFaultEnv(soapProto, "SOAP exception", ServiceException.PARSE_ERROR("empty request payload", null));
         }
-
+        
         InputStream in = new ByteArrayInputStream(soapMessage);
         Element document = null;
         try {
@@ -131,10 +145,10 @@ public class SoapEngine {
         } catch (DocumentException de) {
             // FIXME: have to pick 1.1 or 1.2 since we can't parse any
             SoapProtocol soapProto = SoapProtocol.Soap12;
-            return soapFault(soapProto, "SOAP exception", ServiceException.PARSE_ERROR(de.getMessage(), de));
+            return soapFaultEnv(soapProto, "SOAP exception", ServiceException.PARSE_ERROR(de.getMessage(), de));
         } catch (SoapParseException e) {
             SoapProtocol soapProto = SoapProtocol.SoapJS;
-            return soapFault(soapProto, "SOAP exception", ServiceException.PARSE_ERROR(e.getMessage(), e));
+            return soapFaultEnv(soapProto, "SOAP exception", ServiceException.PARSE_ERROR(e.getMessage(), e));
         }
         return dispatch(path, document, context, loggedRequest);
     }
@@ -158,7 +172,7 @@ public class SoapEngine {
         if (soapProto == null) {
             // FIXME: have to pick 1.1 or 1.2 since we can't parse any
             soapProto = SoapProtocol.Soap12;
-            return soapFault(soapProto, "SOAP exception", ServiceException.INVALID_REQUEST("unable to determine SOAP version", null));
+            return soapFaultEnv(soapProto, "SOAP exception", ServiceException.INVALID_REQUEST("unable to determine SOAP version", null));
         }
 
         // if (mLog.isDebugEnabled()) mLog.debug("dispatch: soapProto = " + soapProto.getVersion());
@@ -168,7 +182,7 @@ public class SoapEngine {
         try {
             zsc = new ZimbraSoapContext(ectxt, context, soapProto);
         } catch (ServiceException e) {
-            return soapFault(soapProto, "unable to construct SOAP context", e);
+            return soapFaultEnv(soapProto, "unable to construct SOAP context", e);
         }
         SoapProtocol responseProto = zsc.getResponseProtocol();
 
