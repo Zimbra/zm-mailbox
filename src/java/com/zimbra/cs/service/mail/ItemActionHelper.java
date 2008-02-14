@@ -437,11 +437,14 @@ public class ItemActionHelper {
         // check for mountpoints before going any further...
         ZFolder zfolder = zmbx.getFolderById(mIidFolder.toString(mAuthenticatedAccount));
         if (zfolder instanceof ZMountpoint) {
-            mIidFolder = new ItemId(((ZMountpoint) zfolder).getCanonicalRemoteId(), mAuthenticatedAccount.getId());
-            if (++mHopCount > com.zimbra.soap.ZimbraSoapContext.MAX_HOP_COUNT)
-                throw ServiceException.TOO_MANY_HOPS();
-            schedule();
-            return;
+            ItemId iidTarget = new ItemId(((ZMountpoint) zfolder).getCanonicalRemoteId(), mAuthenticatedAccount.getId());
+            if (!mIidFolder.equals(iidTarget)) {
+                mIidFolder = iidTarget;
+                if (++mHopCount > com.zimbra.soap.ZimbraSoapContext.MAX_HOP_COUNT)
+                    throw ServiceException.TOO_MANY_HOPS();
+                schedule();
+                return;
+            }
         }
 
         boolean deleteOriginal = mOperation != Op.COPY;
