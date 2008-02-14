@@ -26,6 +26,7 @@ import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.CalendarItem.Instance;
 import com.zimbra.cs.mailbox.calendar.IcsImportParseHandler;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.IcsImportParseHandler.ImportInviteVisitor;
@@ -46,6 +47,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -69,13 +71,19 @@ public class IcsFormatter extends Formatter {
         //ZimbraLog.mailbox.info("start = "+new Date(context.getStartTime()));
         //ZimbraLog.mailbox.info("end = "+new Date(context.getEndTime()));
         try {
-            iterator = getMailItems(context, context.getStartTime(), context.getEndTime(), Integer.MAX_VALUE);
+        	long start = context.getStartTime();
+        	long end = context.getEndTime();
+            iterator = getMailItems(context, start, end, Integer.MAX_VALUE);
 
             // this is lame
             while (iterator.hasNext()) {
                 MailItem item = iterator.next();
-                if (item instanceof CalendarItem)
-                    calItems.add((CalendarItem) item);
+                if (item instanceof CalendarItem) {
+                	CalendarItem calItem = (CalendarItem) item;
+                	Collection<Instance> instances = calItem.expandInstances(start, end, false);
+                	if (!instances.isEmpty())
+                		calItems.add(calItem);
+                }
             }
         } finally {
             if (iterator instanceof QueryResultIterator)
