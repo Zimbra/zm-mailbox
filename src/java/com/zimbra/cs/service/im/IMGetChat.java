@@ -93,7 +93,6 @@ public class IMGetChat extends IMDocumentHandler {
                     TextPart body = msg.getBody(Lang.DEFAULT);
                     if (body != null) {
                         String s = body.toString();
-                        System.out.println("Body is: "+s);
                         me.addElement("body").setText(s);
                     }
                 }
