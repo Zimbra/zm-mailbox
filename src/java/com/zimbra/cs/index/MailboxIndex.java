@@ -596,27 +596,22 @@ public final class MailboxIndex
     public void indexMessage(Mailbox mbox, IndexItem redo, boolean deleteFirst, ParsedMessage pm, Message msg)
     throws ServiceException {
         initAnalyzer(mbox);
-        int num = 2;
-        if (deleteFirst)
-            num = 1;
-        for (; num > 0; num--) {
-            synchronized(getLock()) {
-                int indexId = msg.getIndexId();
-                
-                try {
-                    List<Document> docList = pm.getLuceneDocuments();
-                    if (docList != null) {
-                        Document[] docs = new Document[docList.size()];
-                        docs = docList.toArray(docs);
-                        mTextIndex.addDocument(redo, docs, indexId, pm.getReceivedDate(), msg, deleteFirst);
-                    }
-                } catch (IOException e) {
-                    throw ServiceException.FAILURE("indexMessage caught IOException", e);
+        synchronized(getLock()) {
+            int indexId = msg.getIndexId();
+            
+            try {
+                List<Document> docList = pm.getLuceneDocuments();
+                if (docList != null) {
+                    Document[] docs = new Document[docList.size()];
+                    docs = docList.toArray(docs);
+                    mTextIndex.addDocument(redo, docs, indexId, pm.getReceivedDate(), msg, deleteFirst);
                 }
+            } catch (IOException e) {
+                throw ServiceException.FAILURE("indexMessage caught IOException", e);
             }
         }
     }
-
+    
     private static void appendContactField(StringBuilder sb, Contact contact, String fieldName) {
         String s = contact.get(fieldName);
         if (s!= null) {
