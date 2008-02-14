@@ -19,6 +19,7 @@ package com.zimbra.cs.service.mail;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -435,8 +436,35 @@ public class ItemActionHelper {
         for (MailItem item : mMailbox.getItemById(mOpCtxt, mIds, mItemType)) {
             if (item == null)
                 continue;
-            if (deleteOriginal && (mMailbox.getEffectivePermissions(mOpCtxt, item.getId(), item.getType()) & ACL.RIGHT_DELETE) == 0)
-                throw ServiceException.PERM_DENIED("cannot delete existing copy of " + MailItem.getNameForType(item) + " " + item.getId());
+
+            List<Message> msgs = null;
+            if (item instanceof Conversation)
+                msgs = mMailbox.getMessagesByConversation(mOpCtxt, item.getId(), Conversation.SORT_DATE_ASCENDING);
+
+            if (deleteOriginal) {
+                if (msgs != null) {
+                    // determine which of the conversation's component messages are actually able to be moved
+                    boolean permDenied = false;
+                    for (Iterator<Message> it = msgs.iterator(); it.hasNext(); ) {
+                        Message msg = it.next();
+                        if (!TargetConstraint.checkItem(mTargetConstraint, msg)) {
+                            it.remove();
+                        } else if (!canDelete(msg)) {
+                            it.remove();  permDenied = true;
+                        }
+                    }
+                    // stop here if no messages would be moved...
+                    if (msgs.isEmpty()) {
+                        if (permDenied)
+                            throw ServiceException.PERM_DENIED("cannot delete any messages in " + MailItem.getNameForType(item) + " " + item.getId());
+                        // all messages were excluded by the TargetConstraint, so there's no failure...
+                        continue;
+                    }
+                } else {
+                    if (!canDelete(item))
+                        throw ServiceException.PERM_DENIED("cannot delete existing copy of " + MailItem.getNameForType(item) + " " + item.getId());
+                }
+            }
 
             // since we can't apply tags to a remote object, hardwiring "tags" to null below...
             String flags = (mOperation == Op.UPDATE && mFlags != null ? mFlags : item.getFlagString());
@@ -449,19 +477,14 @@ public class ItemActionHelper {
                     mCreatedIds.add(createdId);
                     break;
 
-                case MailItem.TYPE_VIRTUAL_CONVERSATION:
-                    item = mMailbox.getMessageById(mOpCtxt, ((VirtualConversation) item).getMessageId());
-                    // fall through...
-
                 case MailItem.TYPE_MESSAGE:
                     createdId = zmbx.addMessage(folderStr, flags, null, item.getDate(), ((Message) item).getContent(), true);
                     mCreatedIds.add(createdId);
                     break;
 
+                case MailItem.TYPE_VIRTUAL_CONVERSATION:
                 case MailItem.TYPE_CONVERSATION:
-                    for (Message msg : mMailbox.getMessagesByConversation(mOpCtxt, item.getId(), Conversation.SORT_DATE_ASCENDING)) {
-                        if (!TargetConstraint.checkItem(mTargetConstraint, msg))
-                            continue;
+                    for (Message msg : msgs) {
                         flags = (mOperation == Op.UPDATE && mFlags != null ? mFlags : msg.getFlagString());
                         createdId = zmbx.addMessage(folderStr, flags, null, msg.getDate(), msg.getContent(), true);
                         mCreatedIds.add(createdId);
@@ -523,8 +546,14 @@ public class ItemActionHelper {
             }
 
             try {
-                if (deleteOriginal && !mIdFormatter.formatItemId(item).equals(createdId))
-                    mMailbox.delete(mOpCtxt, item.getId(), item.getType());
+                if (deleteOriginal && !mIdFormatter.formatItemId(item).equals(createdId)) {
+                    if (msgs == null) {
+                        mMailbox.delete(mOpCtxt, item.getId(), item.getType());
+                    } else {
+                        for (Message msg : msgs)
+                            mMailbox.delete(mOpCtxt, msg.getId(), msg.getType());
+                    }
+                }
             } catch (ServiceException e) {
                 if (e.getCode() != ServiceException.PERM_DENIED)
                     throw e;
@@ -567,5 +596,9 @@ public class ItemActionHelper {
 
         // explicitly add the invite metadata here
         ToXML.encodeInvite(m, mIdFormatter, getOpCtxt(), cal, inv, true);
+    }
+
+    private boolean canDelete(MailItem item) throws ServiceException {
+        return (mMailbox.getEffectivePermissions(mOpCtxt, item.getId(), item.getType()) & ACL.RIGHT_DELETE) != 0;
     }
 }
