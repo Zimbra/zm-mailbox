@@ -258,12 +258,9 @@ public final class ParsedDuration
         if (m.matches()) {
             String p = m.group(1);
             String wk = m.group(2);
-            
-            if (p.charAt(0) == '-') {
+            if (p.charAt(0) == '-')
                 retVal.mNegative = true;
-                retVal.mWeeks = Integer.parseInt(wk);
-            }
-            
+            retVal.mWeeks = Integer.parseInt(wk);
         } else {
             m = sDurationDayTimePattern.matcher(durationStr);
             if (m.matches()) {
