@@ -21,6 +21,7 @@
 package com.zimbra.cs.mailbox;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Account;
 
 
 /**
@@ -165,6 +166,7 @@ public class Flag extends Tag {
     @Override public byte getIndex() {
         return getIndex(mId);
     }
+
     public static byte getIndex(int flagId) {
         return (byte) (-flagId - 1);
     }
@@ -181,7 +183,7 @@ public class Flag extends Tag {
         return (mAttributes & FLAG_IS_FOLDER_ONLY) != 0;
     }
 
-    boolean canTag(MailItem item) {
+    @Override boolean canTag(MailItem item) {
         if ((mAttributes & FLAG_IS_FOLDER_ONLY) != 0 && item instanceof Folder)
             return true;
 		if (!item.isTaggable())
@@ -223,9 +225,17 @@ public class Flag extends Tag {
         return sb.toString();
     }
 
+    @Override boolean canAccess(short rightsNeeded) {
+        return true;
+    }
 
-	boolean isMutable()    { return false; }
-	boolean trackUnread()  { return false; }
+    @Override boolean canAccess(short rightsNeeded, Account authuser, boolean asAdmin) {
+        return true;
+    }
+
+
+	@Override boolean isMutable()    { return false; }
+	@Override boolean trackUnread()  { return false; }
 
 
 	static Flag instantiate(Mailbox mbox, String name, byte attributes, int id) throws ServiceException {
@@ -240,6 +250,6 @@ public class Flag extends Tag {
 		return flag;
 	}
 
-	void decodeMetadata(Metadata meta)     { }
-	Metadata encodeMetadata(Metadata meta) { return meta; }
+	@Override void decodeMetadata(Metadata meta)     { }
+	@Override Metadata encodeMetadata(Metadata meta) { return meta; }
 }
