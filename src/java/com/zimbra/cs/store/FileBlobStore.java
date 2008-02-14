@@ -36,8 +36,6 @@ import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import javax.mail.util.SharedByteArrayInputStream;
-
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -532,17 +530,24 @@ public class FileBlobStore extends StoreManager {
 
         				File file = files[i];
                 		if (file.isDirectory()) continue;
-                		long age = startTime - file.lastModified();
-                		if (age >= mMaxAgeMS) {
-                			boolean deleted = file.delete();
-                			if (!deleted) {
-                				mLog.warn("Sweeper unable to delete " +
-                						  file.getAbsolutePath());
-                			} else if (mLog.isDebugEnabled()) {
-                				mLog.debug("Sweeper deleted " +
-                						   file.getAbsolutePath());
-                				numDeleted++;
-                			}
+                		long lastMod = file.lastModified();
+                		// lastModified() returns 0L if file doesn't exist (i.e. deleted by another thread
+                		// after this thread did directory.listFiles())
+                		if (lastMod > 0L) {
+                    		long age = startTime - lastMod;
+                    		if (age >= mMaxAgeMS) {
+                    			boolean deleted = file.delete();
+                    			if (!deleted) {
+                    			    // Let's warn only if delete failure wasn't caused by file having been
+                    			    // by someone else already.
+                    			    if (file.exists())
+                    			        mLog.warn("Sweeper unable to delete " + file.getAbsolutePath());
+                    			} else if (mLog.isDebugEnabled()) {
+                    				mLog.debug("Sweeper deleted " +
+                    						   file.getAbsolutePath());
+                    				numDeleted++;
+                    			}
+                    		}
                 		}
                 	}
                 	synchronized (this) {
