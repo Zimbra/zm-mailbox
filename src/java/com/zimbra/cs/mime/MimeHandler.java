@@ -75,7 +75,7 @@ public abstract class MimeHandler {
     protected abstract boolean runsExternally();
 
     protected String getContentType() {
-        return mContentType;
+        return mContentType != null ? mContentType : "";
     }
     
     protected void setContentType(String contentType) {
@@ -145,7 +145,11 @@ public abstract class MimeHandler {
      */
     public final String getContent() throws MimeHandlerException {
         if (!DebugConfig.disableMimePartExtraction) {
-            return getContentImpl();
+            String toRet = getContentImpl();
+            if (toRet == null)
+                return "";
+            else
+                return toRet;
         } else {
             if (!mDrainedContent) {
                 InputStream is = null;
@@ -226,13 +230,9 @@ public abstract class MimeHandler {
         String content = getContent();
         doc.add(new Field(LuceneFields.L_CONTENT, content, Field.Store.NO, Field.Index.TOKENIZED));
         getObjects(content, doc);
-
-//      if (mPartName.equals("")) {
-//      doc.add(Field.Keyword(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_NONE));
-//      } else {
+        
         doc.add(new Field(LuceneFields.L_PARTNAME, mPartName, Field.Store.YES, Field.Index.UN_TOKENIZED)); 
 
-//      }
         String name = mDataSource.getName();
         if (name != null) 
             doc.add(new Field(LuceneFields.L_FILENAME, name, Field.Store.YES, Field.Index.TOKENIZED));
