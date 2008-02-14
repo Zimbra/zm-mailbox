@@ -48,7 +48,9 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.service.util.SpamHandler;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.cs.zclient.ZMountpoint;
 
 public class ItemActionHelper {
 
@@ -188,6 +190,7 @@ public class ItemActionHelper {
     protected byte mItemType;
     protected boolean mFlagValue;
     protected TargetConstraint mTargetConstraint;
+    protected int mHopCount;
 
     // only when Op=TAG
     protected int mTagId;
@@ -293,26 +296,28 @@ public class ItemActionHelper {
     protected OperationContext getOpCtxt() { return mOpCtxt; }
 
     protected void schedule() throws ServiceException {
-        boolean movable = mOperation == Op.MOVE || mOperation == Op.COPY || mOperation == Op.RENAME || mOperation == Op.UPDATE;
+        if (mOperation == Op.SPAM && mHopCount == 0) {
+            // make sure to always do the spam training before moving to the target folder
+            for (int id : mIds)
+                SpamHandler.getInstance().handle(getMailbox(), id, mItemType, mFlagValue);
+        }
+        
+        boolean targeted = mOperation == Op.MOVE || mOperation == Op.SPAM || mOperation == Op.COPY || mOperation == Op.RENAME || mOperation == Op.UPDATE;
 
         // deal with local mountpoints pointing at local folders here
-        if (movable && mIidFolder.belongsTo(mMailbox) && mIidFolder.getId() > 0) {
+        if (targeted && mIidFolder.belongsTo(mMailbox) && mIidFolder.getId() > 0) {
             Folder folder = mMailbox.getFolderById(mOpCtxt, mIidFolder.getId());
-            if (folder instanceof Mountpoint && !((Mountpoint) folder).getOwnerId().equals(mIidFolder.getAccountId()))
+            if (folder instanceof Mountpoint && !((Mountpoint) folder).getOwnerId().equals(mIidFolder.getAccountId())) {
                 mIidFolder = new ItemId(((Mountpoint) folder).getOwnerId(), ((Mountpoint) folder).getRemoteId());
+                mHopCount++;
+            }
         }
 
         try {
-            if (mOperation == Op.SPAM) {
-                // make sure to always do the spam training before moving to the target folder
-                for (int id : mIds)
-                    SpamHandler.getInstance().handle(getMailbox(), id, mItemType, mFlagValue);
-            }
-
-            if (movable && !mIidFolder.belongsTo(mMailbox))
-                executeRemote();
-            else
+            if (!targeted || mIidFolder.belongsTo(mMailbox))
                 executeLocal();
+            else
+                executeRemote();
         } catch (IOException ioe) {
             throw ServiceException.FAILURE("exception reading item blob", ioe);
         }
@@ -428,6 +433,16 @@ public class ItemActionHelper {
         zoptions.setNoSession(true);
         zoptions.setResponseProtocol(mResponseProtocol);
         ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
+
+        // check for mountpoints before going any further...
+        ZFolder zfolder = zmbx.getFolderById(mIidFolder.toString(mAuthenticatedAccount));
+        if (zfolder instanceof ZMountpoint) {
+            mIidFolder = new ItemId(((ZMountpoint) zfolder).getCanonicalRemoteId(), mAuthenticatedAccount.getId());
+            if (++mHopCount > com.zimbra.soap.ZimbraSoapContext.MAX_HOP_COUNT)
+                throw ServiceException.TOO_MANY_HOPS();
+            schedule();
+            return;
+        }
 
         boolean deleteOriginal = mOperation != Op.COPY;
         String folderStr = mIidFolder.toString();
