@@ -429,7 +429,7 @@ public class Mailbox {
      * @param data
      * @throws ServiceException
      */
-    Mailbox(MailboxData data) throws ServiceException {
+    protected Mailbox(MailboxData data) throws ServiceException {
         mId   = data.id;
         mData = data;
         mData.lastChangeDate = System.currentTimeMillis();
@@ -1206,7 +1206,7 @@ public class Mailbox {
             ZimbraLog.cache.debug("cached " + MailItem.getNameForType(item) + " " + item.getId() + " in mailbox " + getId());
     }
 
-    void uncache(MailItem item) throws ServiceException {
+    protected void uncache(MailItem item) throws ServiceException {
         if (item == null)
             return;
 
@@ -1283,7 +1283,7 @@ public class Mailbox {
      *  tags, or messages into a new mailbox.
      * 
      * @see Folder#create(int, Mailbox, Folder, String, byte, byte, int, byte, String) */
-    synchronized void initialize() throws ServiceException {
+    protected synchronized void initialize() throws ServiceException {
         // the new mailbox's caches are created and the default set of tags are
         // loaded by the earlier call to loadFoldersAndTags in beginTransaction
 
@@ -2623,7 +2623,7 @@ public class Mailbox {
     
     /** Returns the folder with the specified id.
      * @throws NoSuchItemException if the folder does not exist */
-    Folder getFolderById(int id) throws ServiceException {
+    protected Folder getFolderById(int id) throws ServiceException {
         return (Folder) getItemById(id, MailItem.TYPE_FOLDER);
     }
     
