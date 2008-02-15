@@ -451,7 +451,7 @@ public class Mime {
         if (content instanceof InputStream) {
             try {
                 // handle unparsed content due to miscapitalization of content-type value
-                content = new FixedMimeMessage(JMSession.getSession(), (InputStream) content);
+                return new FixedMimeMessage(JMSession.getSession(), (InputStream) content);
             } catch (Exception e) {
             } finally {
                 ByteUtil.closeStream((InputStream) content);
