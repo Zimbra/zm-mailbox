@@ -77,7 +77,8 @@
     <property name="src.dir" location="src"/>
     <property name="src.java.dir" location="${src.dir}/java"/>
     <property name="config.dir" location="conf"/>
-    <property name="zimlet.dir" location="../Zimlet/build/dist"/>
+	<property name='jetty.xml.file' location='${config.dir}/jetty-6.1/jetty.xml' />
+	<property name="zimlet.dir" location="../Zimlet/build/dist"/>
     <property file="${zimlet.dir}/build.properties"/>
 
     <property name="deploy.war" value="${warfile}"/>
@@ -562,7 +563,7 @@
 
         <copy todir="${dist.dir}/jetty/webapps" file="${warfile}" overwrite="true"/>
         <copy tofile="${dist.dir}/jetty/etc/jettyrc" file="${config.dir}/jetty-6.1/jettyrc" overwrite="true"/>
-        <copy tofile="${dist.dir}/jetty/etc/jetty.xml" file="${config.dir}/jetty-6.1/jetty.xml" overwrite="true"/>
+        <copy tofile="${dist.dir}/jetty/etc/jetty.xml" file="${jetty.xml.file}" overwrite="true"/>
         <copy tofile="${dist.dir}/jetty/etc/start.config" file="${config.dir}/jetty-6.1/start.config" overwrite="true"/>
         <copy tofile="${dist.dir}/jetty/etc/webdefault.xml"
               file="${config.dir}/jetty-6.1/webdefault.xml${production.suffix}" overwrite="true"/>
