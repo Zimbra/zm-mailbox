@@ -77,16 +77,21 @@ legacyExchangeDN : /o=First Organization/ou=First Administrative Group/cn=Recipi
 The substring left and right of /cn=Recipients are important, and need to
 be consistent across the Zimbra contacts.
 
-There are four global config variables on Zimbra to enable the interop with
+There are five global config variables on Zimbra to enable the interop with
 Exchange server.
 
 zimbraFreebusyExchangeAuthUsername
 zimbraFreebusyExchangeAuthPassword
+zimbraFreebusyExchangeAuthScheme
 zimbraFreebusyExchangeURL
 zimbraFreebusyExchangeUserOrg
 
 zimbraFreebusyExchangeAuthUsername and zimbraFreebusyExchangeAuthPassword are
 used to authenticate against Exchange server on REST and WebDAV interface.
+zimbraFreebusyExchangeAuthScheme can be set to 'basic' or 'form', depending
+on how Exchange server is configured.  When set to basic, Zimbra will
+attempt HTTP basic authentication.  When set to 'form', it will POST
+HTML form to /exchweb/bin/auth/owaauth.dll to get the auth Cookie set.
 zimbraFreebusyExchangeURL should be set to the URL of the Exchange server.
 zimbraFreebusyExchangeUserOrg is the first part of the administrative group.
 Typically they are set to "/o=First Organization/ou=First Administrative Group".
@@ -99,6 +104,7 @@ with password 'changeme' :
 
 # zmprov mcf zimbraFreebusyExchangeAuthUsername zimbra
 # zmprov mcf zimbraFreebusyExchangeAuthPassword changeme
+# zmprov mcf zimbraFreebusyExchangeAuthScheme basic
 # zmprov mcf zimbraFreebusyExchangeURL http://exchange.mycompany.com
 # zmprov mcf zimbraFreebusyExchangeUserOrg "/o=First Organization/ou=First Administrative Group"
 
@@ -127,6 +133,7 @@ return null.  ServerInfo is defined as
         public String cn;
         public String authUsername;
         public String authPassword;
+        public AuthScheme scheme;  // basic or form
     }
 
 Finally, the bootstrapping of the exchange provider can be done via
@@ -141,6 +148,7 @@ can be implemented.
                     info.url = "http://exchange.mycompany.com";
                     info.authUsername = "zimbra";
                     info.authPassword = "changeme";
+                    info.scheme = AuthScheme.basic;
                     info.org = "/o=First Organization/ou=First Administrative Group";
                     info.cn = emailAddr;
                     if (emailAddr.indexOf('@') > 0)

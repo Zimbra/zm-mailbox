@@ -1451,6 +1451,7 @@ public abstract class Provisioning {
     public static final String A_zimbraFreebusyExchangeURL          = "zimbraFreebusyExchangeURL";
     public static final String A_zimbraFreebusyExchangeAuthUsername = "zimbraFreebusyExchangeAuthUsername";
     public static final String A_zimbraFreebusyExchangeAuthPassword = "zimbraFreebusyExchangeAuthPassword";
+    public static final String A_zimbraFreebusyExchangeAuthScheme   = "zimbraFreebusyExchangeAuthScheme";
     public static final String A_zimbraFreebusyExchangeUserOrg      = "zimbraFreebusyExchangeUserOrg";
     
     public static final int MAX_ZIMBRA_ID_LEN = 127;
