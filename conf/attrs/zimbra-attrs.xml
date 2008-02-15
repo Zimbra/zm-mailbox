@@ -2911,6 +2911,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>O and OU used in legacyExchangeDN attribute</desc>
 </attr>
 
+<attr id="611" name="zimbraFreebusyExchangeAuthScheme" type="enum" value="basic,form" cardinality="single" optionalIn="globalConfig">
+  <desc>auth scheme to use</desc>
+</attr>
+
 </attrs>
 
 
