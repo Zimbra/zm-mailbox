@@ -412,10 +412,11 @@ public class Message extends MailItem {
             try {
                 calItem = mMailbox.getCalendarItemByUid(cur.getUid());
                 if (createCalItem) {
-                    if (calItem == null) { 
+                    if (calItem == null) {
                         // ONLY create a calendar item if this is a REQUEST method...otherwise don't.
                         if (method.equals(ICalTok.REQUEST.toString())) {
-                            calItem = mMailbox.createCalendarItem(Mailbox.ID_FOLDER_CALENDAR, volumeId, 0, 0, cur.getUid(), pm, cur, 0);
+                            int defaultFolder = cur.isTodo() ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;
+                            calItem = mMailbox.createCalendarItem(defaultFolder, volumeId, 0, 0, cur.getUid(), pm, cur, 0);
                             calItemIsNew = true;
                         } else {
                             sLog.info("Mailbox " + getMailboxId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c no CalendarItem could be found");
