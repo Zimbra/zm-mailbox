@@ -87,7 +87,6 @@ public class SetCalendarItem extends CalendarRequest {
         OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
-        ItemId iidFolder = new ItemId(request.getAttribute(MailConstants.A_FOLDER, CreateCalendarItem.DEFAULT_FOLDER), zsc);
         String flagsStr = request.getAttribute(MailConstants.A_FLAGS, null);
         int flags = flagsStr != null ? Flag.flagsToBitmask(flagsStr) : 0;
         String tagsStr = request.getAttribute(MailConstants.A_TAGS, null);
@@ -95,6 +94,10 @@ public class SetCalendarItem extends CalendarRequest {
         
         synchronized (mbox) {
             SetCalendarItemParseResult parsed = parseSetAppointmentRequest(request, zsc, octxt, getItemType(), false);
+            int defaultFolder = parsed.isTodo ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;
+            String defaultFolderStr = Integer.toString(defaultFolder);
+            String folderIdStr = request.getAttribute(MailConstants.A_FOLDER, defaultFolderStr);
+            ItemId iidFolder = new ItemId(folderIdStr, zsc);
             int calItemId = mbox.setCalendarItem(
                     octxt, iidFolder.getId(), flags, tags,
                     parsed.defaultInv, parsed.exceptions, parsed.replies, parsed.nextAlarm);
@@ -114,7 +117,7 @@ public class SetCalendarItem extends CalendarRequest {
             }
             String itemId = ifmt.formatItemId(calItemId);
             response.addAttribute(MailConstants.A_CAL_ID, itemId);
-            if (parsed.isEvent)
+            if (!parsed.isTodo)
                 response.addAttribute(MailConstants.A_APPT_ID_DEPRECATE_ME, itemId);  // for backward compat
             
             return response;
@@ -179,7 +182,7 @@ public class SetCalendarItem extends CalendarRequest {
         public SetCalendarItemData defaultInv;
         public SetCalendarItemData[] exceptions;
         public List<ReplyInfo> replies;
-        public boolean isEvent;
+        public boolean isTodo;
         public long nextAlarm;
     }
 
@@ -228,7 +231,7 @@ public class SetCalendarItem extends CalendarRequest {
         if (repliesElem != null)
             result.replies = CalendarUtils.parseReplyList(repliesElem, defInv.getTimeZoneMap());
 
-        result.isEvent = defInv.isEvent();
+        result.isTodo = defInv.isTodo();
 
         result.nextAlarm = request.getAttributeLong(MailConstants.A_CAL_NEXT_ALARM, 0);
 

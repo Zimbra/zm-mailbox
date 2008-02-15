@@ -47,8 +47,6 @@ public class CreateCalendarItem extends CalendarRequest {
     protected boolean checkMountpointProxy(Element request)  { return true; }
     protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
 
-    static final String DEFAULT_FOLDER = "" + Mailbox.ID_FOLDER_CALENDAR;
-
     // very simple: generate a new UID and send a REQUEST
     protected class CreateCalendarItemInviteParser extends ParseMimeMessage.InviteParser { 
         public ParseMimeMessage.InviteParserResult parseInviteElement(ZimbraSoapContext lc, OperationContext octxt, Account account, Element inviteElem) throws ServiceException 
@@ -65,14 +63,15 @@ public class CreateCalendarItem extends CalendarRequest {
 
         // <M>
         Element msgElem = request.getElement(MailConstants.E_MSG);
-        
-        // no existing calendar item referenced -- this is a new create!
-        String folderIdStr = msgElem.getAttribute(MailConstants.A_FOLDER, DEFAULT_FOLDER);
-        ItemId iidFolder = new ItemId(folderIdStr, zsc);
-        sLog.info("<CreateCalendarItem folder=" + iidFolder.getId() + "> " + zsc.toString());
-        
+
         CreateCalendarItemInviteParser parser = new CreateCalendarItemInviteParser();
         CalSendData dat = handleMsgElement(zsc, octxt, msgElem, acct, mbox, parser);
+
+        int defaultFolder = dat.mInvite.isTodo() ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;
+        String defaultFolderStr = Integer.toString(defaultFolder);
+        String folderIdStr = msgElem.getAttribute(MailConstants.A_FOLDER, defaultFolderStr);
+        ItemId iidFolder = new ItemId(folderIdStr, zsc);
+        sLog.info("<CreateCalendarItem folder=" + iidFolder.getId() + "> " + zsc.toString());
         
         Element response = getResponseElement(zsc);
         return sendCalendarMessage(zsc, octxt, iidFolder.getId(), acct, mbox, dat, response, false);
