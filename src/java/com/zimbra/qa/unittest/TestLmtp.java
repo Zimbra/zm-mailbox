@@ -16,9 +16,11 @@
  */
 package com.zimbra.qa.unittest;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -283,9 +285,40 @@ extends TestCase {
             params.setId(msg.getId());
             msg = mbox.getMessage(params);
             // Check contains instead of equality, since we prepend Received and Return-Path during LMTP.
-            String content = msg.getContent().replaceAll("\n", "\r\n");
-            assertTrue("Message:\n" + content + " does not contain:\n" + messageString, content.contains(messageString));
+            assertContains(msg.getContent(), messageString);
         }
+    }
+    
+    /**
+     * Assert the message contains the given substring, ignoring newlines.
+     */
+    private void assertContains(String message, String substring)
+    throws IOException {
+        BufferedReader msgReader = new BufferedReader(new StringReader(message));
+        BufferedReader subReader = new BufferedReader(new StringReader(substring));
+        String firstLine = subReader.readLine();
+        String line;
+        boolean foundFirstLine = false;
+        
+        while ((line = msgReader.readLine()) != null) {
+            if (line.equals(firstLine)) {
+                foundFirstLine = true;
+                break;
+            }
+        }
+        
+        String context = String.format("Could not find '%s' in message:\n", firstLine, message);
+        assertTrue(context, foundFirstLine);
+        
+        while(true) {
+            line = msgReader.readLine();
+            String subLine = subReader.readLine();
+            if (line == null || subLine == null) {
+                break;
+            }
+            assertEquals(subLine, line);
+        }
+        
     }
     
     /**
