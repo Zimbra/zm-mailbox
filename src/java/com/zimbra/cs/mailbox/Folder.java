@@ -610,7 +610,7 @@ public class Folder extends MailItem {
      * @see #canContain(byte)
      * @see #FOLDER_IS_IMMUTABLE
      * @see #FOLDER_DONT_TRACK_COUNTS */
-    static Folder create(int id, Mailbox mbox, Folder parent, String name, byte attributes, byte view, int flags, byte color, String url)
+    public static Folder create(int id, Mailbox mbox, Folder parent, String name, byte attributes, byte view, int flags, byte color, String url)
     throws ServiceException {
         if (id != Mailbox.ID_FOLDER_ROOT) {
             if (parent == null || !parent.canContain(TYPE_FOLDER))

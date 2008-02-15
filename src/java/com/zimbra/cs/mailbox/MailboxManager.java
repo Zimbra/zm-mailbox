@@ -483,7 +483,7 @@ public class MailboxManager {
         }
     }
 
-    Mailbox instantiateMailbox(MailboxData data) throws ServiceException {
+    protected Mailbox instantiateMailbox(MailboxData data) throws ServiceException {
         return new Mailbox(data);
     }
 
