@@ -683,6 +683,8 @@ public class MailboxManager {
                 int id = (redoPlayer == null ? Mailbox.ID_AUTO_INCREMENT : redoPlayer.getMailboxId());
 
                 NewMboxId newMboxId = DbMailbox.createMailbox(conn, id, data.accountId, account.getName(), -1);
+                ZimbraLog.mailbox.info("Creating mailbox with id %d and group id %d for %s.",
+                    newMboxId.id, newMboxId.groupId, account.getName());
                 data.id = newMboxId.id;
                 data.schemaGroupId = newMboxId.groupId;
                 DbMailbox.createMailboxDatabase(conn, data.id, data.schemaGroupId);
