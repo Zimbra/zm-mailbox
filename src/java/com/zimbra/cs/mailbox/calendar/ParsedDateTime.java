@@ -257,13 +257,13 @@ public final class ParsedDateTime {
 
     public ParsedDateTime add(ParsedDuration dur) {
         GregorianCalendar cal = (GregorianCalendar) mCal.clone();
-
-        cal.add(java.util.Calendar.WEEK_OF_YEAR, dur.getWeeks());
-        cal.add(java.util.Calendar.DAY_OF_YEAR, dur.getDays());
-        cal.add(java.util.Calendar.HOUR_OF_DAY, dur.getHours());
-        cal.add(java.util.Calendar.MINUTE, dur.getMins());
-        cal.add(java.util.Calendar.SECOND, dur.getSecs());
-
+        if (dur != null) {
+            cal.add(java.util.Calendar.WEEK_OF_YEAR, dur.getWeeks());
+            cal.add(java.util.Calendar.DAY_OF_YEAR, dur.getDays());
+            cal.add(java.util.Calendar.HOUR_OF_DAY, dur.getHours());
+            cal.add(java.util.Calendar.MINUTE, dur.getMins());
+            cal.add(java.util.Calendar.SECOND, dur.getSecs());
+        }
         return new ParsedDateTime(cal, mICalTimeZone, mHasTime);
     }
 
