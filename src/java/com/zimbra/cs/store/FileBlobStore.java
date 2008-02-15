@@ -54,8 +54,6 @@ import com.zimbra.znative.IO;
  */
 public class FileBlobStore extends StoreManager {
 
-    private static Log mLog = LogFactory.getLog(FileBlobStore.class);
-
     private UniqueFileNameGenerator mUniqueFilenameGenerator;
 
 	FileBlobStore() throws Exception {
@@ -157,8 +155,8 @@ public class FileBlobStore extends StoreManager {
         }
         blob.setRawSize(totalRead);
 
-        if (mLog.isDebugEnabled()) {
-            mLog.debug("Stored %s: data size=%d bytes, file size=%d bytes, volumeId=%d, isCompressed=%b",
+        if (ZimbraLog.store.isDebugEnabled()) {
+            ZimbraLog.store.debug("Stored %s: data size=%d bytes, file size=%d bytes, volumeId=%d, isCompressed=%b",
                 path, totalRead, blob.getFile().length(), file.length(), volumeId, blob.isCompressed());
         }
         return blob;
@@ -197,8 +195,8 @@ public class FileBlobStore extends StoreManager {
                 FileUtil.copy(src.getFile(), dest, !DebugConfig.disableMessageStoreFsync);
         }
 
-        if (mLog.isDebugEnabled()) {
-            mLog.debug("Copied id=" + destMsgId +
+        if (ZimbraLog.store.isDebugEnabled()) {
+            ZimbraLog.store.debug("Copied id=" + destMsgId +
                       " mbox=" + destMbox.getId() +
                       " oldpath=" + srcPath + 
                       " newpath=" + destPath);
@@ -231,18 +229,18 @@ public class FileBlobStore extends StoreManager {
                 // message gets the ID of uncommited message
                 if (dest.exists()) {
                     File destBak = new File(destPath + ".bak");
-                	mLog.warn("Destination file exists.  Backing up to " + destBak.getAbsolutePath());
+                	ZimbraLog.store.warn("Destination file exists.  Backing up to " + destBak.getAbsolutePath());
                     if (destBak.exists()) {
                         String bak = destBak.getAbsolutePath();
-                    	mLog.warn(bak + " already exists.  Deleting to make room for new backup file");
+                    	ZimbraLog.store.warn(bak + " already exists.  Deleting to make room for new backup file");
                         if (!destBak.delete()) {
-                        	mLog.warn("Unable to delete " + bak);
+                        	ZimbraLog.store.warn("Unable to delete " + bak);
                             throw e;
                         }
                     }
                     File destTmp = new File(destPath);
                     if (!destTmp.renameTo(destBak)) {
-                        mLog.warn("Can't rename " + destTmp.getAbsolutePath() + " to .bak");
+                        ZimbraLog.store.warn("Can't rename " + destTmp.getAbsolutePath() + " to .bak");
                         throw e;
                     }
                     // Existing file is now renamed to <file>.bak.
@@ -257,8 +255,8 @@ public class FileBlobStore extends StoreManager {
             FileUtil.copy(src.getFile(), dest, !DebugConfig.disableMessageStoreFsync);
         }
 
-        if (mLog.isDebugEnabled()) {
-            mLog.debug("Linked id=" + destMsgId +
+        if (ZimbraLog.store.isDebugEnabled()) {
+            ZimbraLog.store.debug("Linked id=" + destMsgId +
                       " mbox=" + destMbox.getId() +
                       " oldpath=" + srcPath + 
                       " newpath=" + destPath);
@@ -299,8 +297,8 @@ public class FileBlobStore extends StoreManager {
             srcFile.delete();
         }
 
-        if (mLog.isDebugEnabled()) {
-            mLog.debug("Renamed id=" + destMsgId +
+        if (ZimbraLog.store.isDebugEnabled()) {
+            ZimbraLog.store.debug("Renamed id=" + destMsgId +
                       " mbox=" + destMbox.getId() +
                       " oldpath=" + srcPath + 
                       " newpath=" + destPath);
@@ -315,17 +313,14 @@ public class FileBlobStore extends StoreManager {
     public boolean delete(MailboxBlob mboxBlob) throws IOException {
         if (mboxBlob == null)
             return false;
-        if (mLog.isDebugEnabled())
-            mLog.debug("deleting blob " + mboxBlob.getMessageId() +
-                      " in mailbox " + mboxBlob.getMailbox().getId());
+        ZimbraLog.store.debug("Deleting %s.", mboxBlob);
         return deleteFile(mboxBlob.getBlob().getFile());
     }
 
     public boolean delete(Blob blob) throws IOException {
         if (blob == null)
             return false;
-        if (mLog.isDebugEnabled())
-            mLog.debug("deleting blob file (" + blob.toString() + ")");
+        ZimbraLog.store.debug("Deleting %s.", blob);
         return deleteFile(blob.getFile());
     }
 
@@ -463,6 +458,8 @@ public class FileBlobStore extends StoreManager {
     private IncomingDirectorySweeper mSweeper;
 
     private static class IncomingDirectorySweeper extends Thread {
+        private Log sLog = LogFactory.getLog(IncomingDirectorySweeper.class);
+        
         private boolean mShutdown = false;
     	private long mSweepIntervalMS;
     	private long mMaxAgeMS;
@@ -484,7 +481,7 @@ public class FileBlobStore extends StoreManager {
         }
 
         public void run() {
-            mLog.info(getName() + " thread starting");
+            sLog.info(getName() + " thread starting");
 
             boolean shutdown = false;
             long startTime = System.currentTimeMillis();
@@ -493,12 +490,12 @@ public class FileBlobStore extends StoreManager {
                 // Sleep until next scheduled wake-up time, or until notified.
                 synchronized (this) {
                     if (!mShutdown) {
-                    	long now = System.currentTimeMillis();
+                        long now = System.currentTimeMillis();
                         long until = startTime + mSweepIntervalMS;
                         if (until > now) {
-                        	try {
-    							wait(until - now);
-    						} catch (InterruptedException e) {}
+                            try {
+                                wait(until - now);
+                            } catch (InterruptedException e) {}
                         }
                     }
                     shutdown = mShutdown;
@@ -511,58 +508,58 @@ public class FileBlobStore extends StoreManager {
                 // Delete old files in incoming directory of each volume.
                 List<Volume> allVolumes = Volume.getAll();
                 for (Volume volume : allVolumes) {
-                	short volType = volume.getType();
-                	if (volType != Volume.TYPE_MESSAGE &&
-                		volType != Volume.TYPE_MESSAGE_SECONDARY)
-                		continue;
-                	File directory = new File(volume.getIncomingMsgDir());
-                	if (!directory.exists()) continue;
-                	File[] files = directory.listFiles();
-                	if (files == null) continue;
-                	for (int i = 0; i < files.length; i++) {
-        				// Check for shutdown after every 100 files.
-                		if (i % 100 == 0) {
-        					synchronized (this) {
-        						shutdown = mShutdown;
-        					}
-        					if (shutdown) break;
-        				}
+                    short volType = volume.getType();
+                    if (volType != Volume.TYPE_MESSAGE &&
+                        volType != Volume.TYPE_MESSAGE_SECONDARY)
+                        continue;
+                    File directory = new File(volume.getIncomingMsgDir());
+                    if (!directory.exists()) continue;
+                    File[] files = directory.listFiles();
+                    if (files == null) continue;
+                    for (int i = 0; i < files.length; i++) {
+                        // Check for shutdown after every 100 files.
+                        if (i % 100 == 0) {
+                            synchronized (this) {
+                                shutdown = mShutdown;
+                            }
+                            if (shutdown) break;
+                        }
 
-        				File file = files[i];
-                		if (file.isDirectory()) continue;
-                		long lastMod = file.lastModified();
-                		// lastModified() returns 0L if file doesn't exist (i.e. deleted by another thread
-                		// after this thread did directory.listFiles())
-                		if (lastMod > 0L) {
-                    		long age = startTime - lastMod;
-                    		if (age >= mMaxAgeMS) {
-                    			boolean deleted = file.delete();
-                    			if (!deleted) {
-                    			    // Let's warn only if delete failure wasn't caused by file having been
-                    			    // by someone else already.
-                    			    if (file.exists())
-                    			        mLog.warn("Sweeper unable to delete " + file.getAbsolutePath());
-                    			} else if (mLog.isDebugEnabled()) {
-                    				mLog.debug("Sweeper deleted " +
-                    						   file.getAbsolutePath());
-                    				numDeleted++;
-                    			}
-                    		}
-                		}
-                	}
-                	synchronized (this) {
-                		shutdown = mShutdown;
-                	}
-                	if (shutdown) break;
+                        File file = files[i];
+                        if (file.isDirectory()) continue;
+                        long lastMod = file.lastModified();
+                        // lastModified() returns 0L if file doesn't exist (i.e. deleted by another thread
+                        // after this thread did directory.listFiles())
+                        if (lastMod > 0L) {
+                            long age = startTime - lastMod;
+                            if (age >= mMaxAgeMS) {
+                                boolean deleted = file.delete();
+                                if (!deleted) {
+                                    // Let's warn only if delete failure wasn't caused by file having been
+                                    // by someone else already.
+                                    if (file.exists())
+                                        sLog.warn("Sweeper unable to delete " + file.getAbsolutePath());
+                                } else if (sLog.isDebugEnabled()) {
+                                    sLog.debug("Sweeper deleted " +
+                                               file.getAbsolutePath());
+                                    numDeleted++;
+                                }
+                            }
+                        }
+                    }
+                    synchronized (this) {
+                        shutdown = mShutdown;
+                    }
+                    if (shutdown) break;
                 }
 
                 long elapsed = System.currentTimeMillis() - startTime;
 
-                mLog.debug("Incoming directory sweep deleted " + numDeleted +
-                		   " files in " + elapsed + "ms");
+                sLog.debug("Incoming directory sweep deleted " + numDeleted +
+                           " files in " + elapsed + "ms");
             }
 
-            mLog.info(getName() + " thread exiting");
+            sLog.info(getName() + " thread exiting");
         }
     }
 }

@@ -101,6 +101,6 @@ public class Blob {
     }
 
     public String toString() {
-        return String.format("path=%s, vol=%d, isCompressed=%b", mPath, mVolumeId, mIsCompressed);
+        return String.format("Blob: { path=%s, vol=%d, isCompressed=%b }", mPath, mVolumeId, mIsCompressed);
     }
 }

@@ -707,7 +707,7 @@ public class Volume {
     }
 
     public String toString() {
-        StringBuffer sb = new StringBuffer("id=").append(mId);
+        StringBuffer sb = new StringBuffer("Volume: { id=").append(mId);
         sb.append(", type=").append(mType);
         sb.append(", name=\"").append(mName);
         sb.append("\", rootpath=").append(mRootPath);
@@ -716,7 +716,7 @@ public class Volume {
         sb.append(", fgbits=").append(mFileGroupBits);
         sb.append(", fbits=").append(mFileBits);
         sb.append(", compressBlobs=").append(mCompressBlobs);
-        sb.append(", compressionThreshold=").append(mCompressionThreshold);
+        sb.append(", compressionThreshold=").append(mCompressionThreshold).append(" }");
         return sb.toString();
     }
 }
