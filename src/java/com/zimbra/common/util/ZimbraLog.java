@@ -301,6 +301,11 @@ public class ZimbraLog {
     public static final Log scheduler = LogFactory.getLog("zimbra.scheduler");
     
     /**
+     * the "zimbra.store" logger.  Logs filesystem storage operations.
+     */
+    public static final Log store = LogFactory.getLog("zimbra.store");
+    
+    /**
      * Keeps track of the account associated with the current thread, for
      * per-user logging settings. 
      */
