@@ -198,7 +198,7 @@ public class ZimbraAuthToken extends AuthToken {
             mIsCCAdmin = "1".equals(icc);
             String ccTier = (String)map.get(C_CC_TIER);
             if (ccTier != null)
-                mCCTier = Integer.parseInt();
+                mCCTier = Integer.parseInt(ccTier);
             /* Zimbra Customer Care*/
         } catch (ServiceException e) {
             throw new AuthTokenException("service exception", e);
