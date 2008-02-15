@@ -98,7 +98,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 			String user = config.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthUsername, null);
 			String pass = config.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthPassword, null);
 			String org = config.getAttr(Provisioning.A_zimbraFreebusyExchangeUserOrg, null);
-			if (url != null && user != null && pass != null && org != null)
+			if (url != null && user != null && pass != null)
 				registerResolver(new BasicUserResolver(url, user, pass, org), 0);
 		} catch (ServiceException se) {
 			ZimbraLog.misc.warn("cannot fetch exchange server info", se);
