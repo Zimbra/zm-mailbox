@@ -42,22 +42,29 @@ public interface AuthenticatorUser {
     void sendBadRequest(String s) throws IOException;
 
     /**
+     * Sends a generic error response to the client indicating that authentication
+     * has failed.
+     *
+     * @throws IOException if an I/O error occurred
+     */
+    void sendFailed() throws IOException;
+
+    /**
      * Sends an error response to the client indicating that authentication
      * has failed.
      *
-     * @param s the error message to be sent
+     * @param msg the error message to be sent
      * @throws IOException if an I/O error occurred
      */
-    void sendFailed(String s) throws IOException;
+    void sendFailed(String msg) throws IOException;
 
     /**
-     * Sends a response to the client indicating that authentication was
+     * Sends a generic response to the client indicating that authentication was
      * successful.
      *
-     * @param s the success message to be sent
      * @throws IOException if an I/O error has occurred
      */
-    void sendSuccessful(String s) throws IOException;
+    void sendSuccessful() throws IOException;
 
     /**
      * Sends a continuation response to the client.
@@ -77,8 +84,7 @@ public interface AuthenticatorUser {
      * @return true if the user was authenticated, false otherwise
      * @throws IOException if an I/O error occurred
      */
-    boolean authenticate(String authorizationId, String authenticationId,
-                         String password, Authenticator auth)
+    boolean authenticate(String authorizationId, String authenticationId, String password, Authenticator auth)
         throws IOException;
 
     /**

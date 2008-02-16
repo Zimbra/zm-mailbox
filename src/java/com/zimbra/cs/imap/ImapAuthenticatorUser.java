@@ -34,33 +34,38 @@ class ImapAuthenticatorUser implements AuthenticatorUser {
         mTag = tag;
     }
 
-    String getTag() { return mTag; }
+    String getTag()  { return mTag; }
 
-    boolean canContinue() { return canContinue; }
+    boolean canContinue()  { return canContinue; }
 
-    public String getProtocol() { return "imap"; }
+    public String getProtocol()  { return "imap"; }
     
     public void sendBadRequest(String s) throws IOException {
         mHandler.sendBAD(mTag, s);
     }
 
-    public void sendFailed(String s) throws IOException {
-        mHandler.sendNO(mTag, s);
+    public void sendFailed() throws IOException {
+        mHandler.sendNO(mTag, "AUTHENTICATE failed");
     }
 
-    public void sendSuccessful(String s) throws IOException {
-        mHandler.sendOK(mTag, s);
+    public void sendFailed(String msg) throws IOException {
+        mHandler.sendNO(mTag, "AUTHENTICATE failed: " + msg);
+    }
+
+    public void sendSuccessful() throws IOException {
+        // 6.2.2: "A server MAY include a CAPABILITY response code in the tagged OK
+        //         response of a successful AUTHENTICATE command in order to send
+        //         capabilities automatically."
+        mHandler.sendOK(mTag, '[' + mHandler.getCapabilityString() + "] AUTHENTICATE completed");
     }
 
     public void sendContinuation(String s) throws IOException {
         mHandler.sendContinuation(s);
     }
 
-    public boolean authenticate(String authorizationId,
-                                String authenticationId, String password,
-                                Authenticator auth) throws IOException {
-        canContinue = mHandler.authenticate(
-            authorizationId, authenticationId, password, mTag, auth.getMechanism());
+    public boolean authenticate(String authorizationId, String authenticationId, String password, Authenticator auth)
+    throws IOException {
+        canContinue = mHandler.authenticate(authorizationId, authenticationId, password, mTag, auth.getMechanism());
         return mHandler.isAuthenticated();
     }
 

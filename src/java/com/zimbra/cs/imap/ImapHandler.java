@@ -760,7 +760,7 @@ public abstract class ImapHandler extends ProtocolHandler {
 
 
     boolean doCAPABILITY(String tag) throws IOException {
-        sendCapability();
+        sendUntagged(getCapabilityString());
         sendOK(tag, "CAPABILITY completed");
         return CONTINUE_PROCESSING;
     }
@@ -771,7 +771,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         "SASL-IR", "UIDPLUS", "UNSELECT", "WITHIN", "X-DRAFT-I05-SEARCHRES", "X-DRAFT-W05-QRESYNC"
     ));
 
-    protected void sendCapability() throws IOException {
+    protected String getCapabilityString() {
         // [IMAP4rev1]        RFC 3501: Internet Message Access Protocol - Version 4rev1
         // [LOGINDISABLED]    RFC 3501: Internet Message Access Protocol - Version 4rev1
         // [STARTTLS]         RFC 3501: Internet Message Access Protocol - Version 4rev1
@@ -811,7 +811,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                 capability.append(' ').append(extension);
         }
 
-        sendUntagged(capability.toString());
+        return capability.toString();
     }
 
     // TODO Remove this debugging option for final release
@@ -981,14 +981,13 @@ public abstract class ImapHandler extends ProtocolHandler {
             sendNO(tag, "cleartext logins disabled");
             return CONTINUE_PROCESSING;
         }
-        return login(username, password, tag);
-    }
 
-    private boolean login(String username, String password, String tag) throws IOException {
         boolean cont = authenticate(username, "", password, tag, null);
         if (isAuthenticated()) {
-            sendCapability();
-            sendOK(tag, "LOGIN completed");
+            // 6.2.3: "A server MAY include a CAPABILITY response code in the tagged OK
+            //         response of a successful LOGIN command in order to send capabilities
+            //         automatically."
+            sendOK(tag, '[' + getCapabilityString() + "] LOGIN completed");
             enableInactivityTimer();
         }
         return cont;
