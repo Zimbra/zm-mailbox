@@ -47,13 +47,14 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
         this.mSession = session;
     }
 
-    @Override
-    boolean doSTARTTLS(String tag) throws IOException {
-        if (!checkState(tag, State.NOT_AUTHENTICATED)) return true;
-        if (mStartedTLS) {
+    @Override boolean doSTARTTLS(String tag) throws IOException {
+        if (!checkState(tag, State.NOT_AUTHENTICATED)) {
+            return true;
+        } else if (mStartedTLS) {
             sendNO(tag, "TLS already started");
             return true;
         }
+
         MinaServer.startTLS(mSession);
         sendOK(tag, "Begin TLS negotiation now");
         mStartedTLS = true;
@@ -62,8 +63,7 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
 
     public void connectionOpened() throws IOException {
         if (!Config.userServicesEnabled()) {
-            ZimbraLog.imap.debug(
-              "Dropping connection (user services are disabled)");
+            ZimbraLog.imap.debug("Dropping connection (user services are disabled)");
             // TODO Is there a better way of handling this?
             dropConnection();
             return;
@@ -71,17 +71,15 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
         mOutputStream = new MinaIoSessionOutputStream(mSession);
         sendUntagged(mConfig.getBanner(), true);
         mStartedTLS = mConfig.isSSLEnabled();
-        mSession.setIdleTime(IdleStatus.BOTH_IDLE,
-                             mConfig.getUnauthMaxIdleSeconds());
+        mSession.setIdleTime(IdleStatus.BOTH_IDLE, mConfig.getUnauthMaxIdleSeconds());
     }
 
-    @Override
-    protected boolean processCommand() {
+    @Override protected boolean processCommand() {
         throw new UnsupportedOperationException();
     }
 
     public void requestReceived(MinaRequest req) throws IOException {
-        assert req instanceof MinaImapRequest;
+        assert(req instanceof MinaImapRequest);
         MinaImapRequest imapReq = (MinaImapRequest) req;
         
         if (imapReq.isMaxRequestSizeExceeded()) {
@@ -107,18 +105,19 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
             if (!processRequest(imapReq)) dropConnection();
         } finally {
             ZimbraPerf.STOPWATCH_IMAP.stop(start);
-            if (mLastCommand != null) {
+            if (mLastCommand != null)
                 ZimbraPerf.IMAP_TRACKER.addStat(mLastCommand.toUpperCase(), start);
-            }
             ZimbraLog.clearContext();
         }
     }
 
     private boolean processRequest(MinaImapRequest req) throws IOException {
-        if (!checkAccountStatus()) return false;
-        if (mAuthenticator != null && !mAuthenticator.isComplete()) {
+        if (!checkAccountStatus())
+            return false;
+
+        if (mAuthenticator != null && !mAuthenticator.isComplete())
             return continueAuthentication(req);
-        }
+
         try {
             return executeRequest(req);
         } catch (ImapParseException e) {
@@ -128,15 +127,14 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
     }
 
     private void handleParseException(ImapParseException e) throws IOException {
-        if (e.mTag == null) {
+        if (e.mTag == null)
             sendUntagged("BAD " + e.getMessage(), true);
-        } else if (e.mCode != null) {
+        else if (e.mCode != null)
             sendNO(e.mTag, '[' + e.mCode + "] " + e.getMessage());
-        } else if (e.mNO) {
+        else if (e.mNO)
             sendNO(e.mTag, e.getMessage());
-        } else {
+        else
             sendBAD(e.mTag, e.getMessage());
-        }
     }
 
     // TODO Consider moving to ImapHandler base class
@@ -146,13 +144,11 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
         try {
             Account account = mCredentials.getAccount();
             if (account == null || !isAccountStatusActive(account)) {
-                ZimbraLog.imap.warn(
-                    "account missing or not active; dropping connection");
+                ZimbraLog.imap.warn("account missing or not active; dropping connection");
                 return false;
             }
         } catch (ServiceException e) {
-            ZimbraLog.imap.warn(
-                "error checking account status; dropping connection", e);
+            ZimbraLog.imap.warn("error checking account status; dropping connection", e);
             return false;
         }
         // Check target folder owner's account status before executing command
@@ -160,16 +156,13 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
         String id = mSelectedFolder.getTargetAccountId();
         if (mCredentials.getAccountId().equalsIgnoreCase(id)) return true;
         try {
-            Account account =
-                Provisioning.getInstance().get(Provisioning.AccountBy.id, id);
+            Account account = Provisioning.getInstance().get(Provisioning.AccountBy.id, id);
             if (account == null || !isAccountStatusActive(account)) {
-                ZimbraLog.imap.warn(
-                    "target account missing or not active; dropping connection");
+                ZimbraLog.imap.warn("target account missing or not active; dropping connection");
                 return false;
             }
         } catch (ServiceException e) {
-            ZimbraLog.imap.warn(
-                "error checking target account status; dropping connection", e);
+            ZimbraLog.imap.warn("error checking target account status; dropping connection", e);
             return false;
         }
         return true;
@@ -177,8 +170,7 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
 
     // TODO Consider adding method to Account base class
     private boolean isAccountStatusActive(Account account) {
-        return account.getAccountStatus().equals(
-            Provisioning.ACCOUNT_STATUS_ACTIVE);
+        return account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE);
     }
     
     /**
@@ -186,13 +178,13 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
      * execution since requests are processed in sequence for any given
      * connection.
      */
-    @Override
-    protected void dropConnection(boolean sendBanner) {
+    @Override protected void dropConnection(boolean sendBanner) {
         dropConnection(sendBanner, WRITE_TIMEOUT);
     }
 
     private void dropConnection(boolean sendBanner, long timeout) {
-        if (!mSession.isConnected()) return; // No longer connected
+        if (!mSession.isConnected())
+            return; // No longer connected
         ZimbraLog.imap.debug("dropConnection: sendBanner = %s\n", sendBanner);
         cleanup();
         try {
@@ -202,9 +194,8 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
             }
             if (timeout >= 0) {
                 // Wait for all remaining bytes to be written
-                if (!((MinaOutputStream) mOutputStream).join(timeout)) {
+                if (!((MinaOutputStream) mOutputStream).join(timeout))
                     ZimbraLog.imap.warn("Force closing session because write timed out: " + mSession);
-                }
             }
             mSession.close();
         } catch (IOException e) {
@@ -233,63 +224,53 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
         notifyIdleConnection();
     }
     
-    @Override
-    protected boolean setupConnection(Socket connection) {
+    @Override protected boolean setupConnection(Socket connection) {
         throw new UnsupportedOperationException();
     }
     
-    @Override
-    protected boolean authenticate() {
+    @Override protected boolean authenticate() {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    protected void notifyIdleConnection() {
+    @Override protected void notifyIdleConnection() {
         ZimbraLog.imap.debug("dropping connection for inactivity");
         dropConnection();
     }
 
-    @Override
-    protected void enableInactivityTimer() {
-        mSession.setIdleTime(IdleStatus.BOTH_IDLE,
-                             ImapFolder.IMAP_IDLE_TIMEOUT_SEC);
+    @Override protected void enableInactivityTimer() {
+        mSession.setIdleTime(IdleStatus.BOTH_IDLE, ImapFolder.IMAP_IDLE_TIMEOUT_SEC);
     }
 
-    @Override
-    protected void completeAuthentication() throws IOException {
-        sendCapability();
-        if (mAuthenticator.isEncryptionEnabled()) {
+    @Override protected void completeAuthentication() throws IOException {
+        if (mAuthenticator.isEncryptionEnabled())
             MinaServer.addSaslFilter(mSession, mAuthenticator.getSaslServer());
-        }
         mAuthenticator.sendSuccess();
     }
 
-    @Override
-    protected void flushOutput() throws IOException {
+    @Override protected void flushOutput() throws IOException {
         mOutputStream.flush();
     }
     
-    @Override
-    void sendLine(String line, boolean flush) throws IOException {
+    @Override void sendLine(String line, boolean flush) throws IOException {
         MinaOutputStream out = (MinaOutputStream) mOutputStream;
         out.write(line);
         out.write("\r\n");
-        if (flush) out.flush();
+        if (flush)
+            out.flush();
     }
 
     private void info(String msg, Throwable e) {
-        if (!ZimbraLog.imap.isInfoEnabled()) return;
+        if (!ZimbraLog.imap.isInfoEnabled())
+            return;
         StringBuilder sb = new StringBuilder(64);
-        sb.append('[').append(mSession.getRemoteAddress()).append("] ")
-          .append(msg);
-        if (e != null) {
+        sb.append('[').append(mSession.getRemoteAddress()).append("] ").append(msg);
+        if (e != null)
             ZimbraLog.imap.info(sb.toString(), e);
-        } else {
+        else
             ZimbraLog.imap.info(sb.toString());
-        }
     }
 
-    private void info(String msg) {
-        info(msg, null);
-    }
+//    private void info(String msg) {
+//        info(msg, null);
+//    }
 }

@@ -31,28 +31,30 @@ class Pop3AuthenticatorUser implements AuthenticatorUser {
         mHandler = handler;
     }
     
-    public String getProtocol() { return "pop"; }
+    public String getProtocol()  { return "pop"; }
 
     public void sendBadRequest(String s) throws IOException {
         mHandler.sendERR(s);
     }
 
-    public void sendFailed(String s) throws IOException {
-        mHandler.sendERR(s);
+    public void sendFailed() throws IOException {
+        mHandler.sendERR("authentication failed");
     }
 
-    public void sendSuccessful(String s) throws IOException {
-        mHandler.sendOK(s);
+    public void sendFailed(String msg) throws IOException {
+        mHandler.sendERR("authentication failed: " + msg);
+    }
+
+    public void sendSuccessful() throws IOException {
+        mHandler.sendOK("authentication successful");
     }
 
     public void sendContinuation(String s) throws IOException {
         mHandler.sendContinuation(s);
     }
 
-    public boolean authenticate(String authorizationId,
-                                String authenticationId,
-                                String password,
-                                Authenticator auth) throws IOException {
+    public boolean authenticate(String authorizationId, String authenticationId, String password, Authenticator auth)
+    throws IOException {
         try {
             mHandler.authenticate(authorizationId, authenticationId, password, auth.getMechanism());
         } catch (Pop3CmdException e) {
@@ -62,7 +64,11 @@ class Pop3AuthenticatorUser implements AuthenticatorUser {
         return true;
     }
 
-    public Log getLog() { return ZimbraLog.pop; }
+    public Log getLog() {
+        return ZimbraLog.pop;
+    }
 
-    public boolean isSSLEnabled() { return mHandler.isSSLEnabled(); }
+    public boolean isSSLEnabled() {
+        return mHandler.isSSLEnabled();
+    }
 }

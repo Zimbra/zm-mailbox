@@ -31,8 +31,7 @@ public abstract class Authenticator {
     protected boolean mComplete;
     protected boolean mAuthenticated;
 
-    protected Authenticator(String mechanism,
-                            AuthenticatorUser authUser) {
+    protected Authenticator(String mechanism, AuthenticatorUser authUser) {
         mProtocol  = authUser.getProtocol();
         mMechanism = mechanism;
         mAuthUser  = authUser;
@@ -73,16 +72,16 @@ public abstract class Authenticator {
     }
     
     public void sendSuccess() throws IOException {
-        mAuthUser.sendSuccessful("authentication successful");
+        mAuthUser.sendSuccessful();
     }
     
     public void sendFailed() throws IOException {
-        mAuthUser.sendFailed("authentication failed");
+        mAuthUser.sendFailed();
         mComplete = true;
     }
 
     public void sendFailed(String msg) throws IOException {
-        mAuthUser.sendFailed("authentication failed: " + msg);
+        mAuthUser.sendFailed(msg);
     }
     
     public void sendBadRequest() throws IOException {
@@ -98,11 +97,9 @@ public abstract class Authenticator {
         return mAuthUser.getLog();
     }
 
-    protected boolean authenticate(String authorizationId,
-                                   String authenticationId, String password)
-            throws IOException {
-        mAuthenticated = mAuthUser.authenticate(authorizationId, authenticationId,
-                                                password, this);
+    protected boolean authenticate(String authorizationId, String authenticationId, String password)
+    throws IOException {
+        mAuthenticated = mAuthUser.authenticate(authorizationId, authenticationId, password, this);
         mComplete = true;
         return mAuthenticated;
     }
