@@ -228,6 +228,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		
 		try {
 			method = msg.createMethod(url, fb);
+			method.setRequestHeader(HEADER_TRANSLATE, "f");
 			int status = sendRequest(method, serverInfo);
 			if (status != MULTI_STATUS) {
 				ZimbraLog.misc.error("cannot modify resource at "+url);
@@ -245,7 +246,6 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 	private int sendRequest(HttpMethod method, ServerInfo info) throws IOException {
 		method.setDoAuthentication(true);
 		method.setRequestHeader(HEADER_USER_AGENT, USER_AGENT);
-		method.setRequestHeader(HEADER_TRANSLATE, "f");
 		HttpClient client = new HttpClient();
 		NetUtil.configureProxy(client);
 		switch (info.scheme) {
