@@ -853,6 +853,36 @@ public class LdapUtil {
 
         result.token = token != null && !token.equals("")? token : EARLIEST_SYNC_TOKEN;
         
+        if (ZimbraLog.gal.isDebugEnabled()) {
+            StringBuffer returnAttrs = new StringBuffer();
+            String attrs[] = rules.getLdapAttrs();
+            for (String a: attrs) {
+                returnAttrs.append(a + ",");
+            }
+            
+            String url = null;
+            String binddn = null;
+            try {
+                Hashtable ctxtEnv = ctxt.getEnvironment();
+                Object urlObj = ctxtEnv.get(ctxt.PROVIDER_URL);
+                if (urlObj != null)
+                    url = urlObj.toString();
+                Object binddnObj = ctxtEnv.get(ctxt.SECURITY_PRINCIPAL);
+                if (binddnObj != null)
+                    binddn = binddnObj.toString();
+            } catch (NamingException e) {
+                ZimbraLog.gal.debug("cannot get DirContext environment for debug");
+            }
+            
+            ZimbraLog.gal.debug("searchGal: " +
+                                "url=" + url +
+                                ", binddn=" + binddn + 
+                                ", page size=" + pageSize + 
+                                ", base=" + base + 
+                                ", query=" + query +
+                                ", attrs=" + returnAttrs);
+        }
+        
         SearchControls sc = new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, rules.getLdapAttrs(), false, false);
         NamingEnumeration ne = null;
         int total = 0;
@@ -875,12 +905,14 @@ public class LdapUtil {
                         
                         SearchResult sr = (SearchResult) ne.next();
                         String dn = sr.getNameInNamespace();
+                        
                         GalContact lgc = new GalContact(dn, rules.apply(sr.getAttributes()));
                         String mts = (String) lgc.getAttrs().get("modifyTimeStamp");
                         result.token = getLaterTimestamp(result.token, mts);
                         String cts = (String) lgc.getAttrs().get("createTimeStamp");
                         result.token = getLaterTimestamp(result.token, cts);
                         result.matches.add(lgc);
+                        ZimbraLog.gal.debug("dn=" + dn + ", modifyTimeStamp=" + mts + ", createTimeStamp" + cts);
                     }
                     if (pageSize > 0)
                         cookie = getCookie(lctxt);

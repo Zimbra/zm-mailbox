@@ -38,10 +38,16 @@ public class GalUtil {
     }
     
     private static String expandKey(GalParams galParams, GalOp galOp, String filterTemplate, String key) throws ServiceException {
+
+        if (!filterTemplate.startsWith("(")) {
+            if (filterTemplate.endsWith(")"))
+                throw ServiceException.INVALID_REQUEST("Unbalanced parenthesis in filter:" + filterTemplate, null);
+            
+            filterTemplate = "(" + filterTemplate + ")";
+        }
+        
         String query = null;
-        
         Map<String, String> vars = new HashMap<String, String>();
-        
         
         String tokenize = null;
         if (galOp == GalOp.autocomplete)
