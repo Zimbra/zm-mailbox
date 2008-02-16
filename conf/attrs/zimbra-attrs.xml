@@ -2895,23 +2895,23 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Zimlet target apps</desc>
 </attr>
 
-<attr id="607" name="zimbraFreebusyExchangeURL" type="string" max="256" cardinality="single" optionalIn="globalConfig">
+<attr id="607" name="zimbraFreebusyExchangeURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
   <desc>URL to Exchange server for free/busy lookup and propagation</desc>
 </attr>
 
-<attr id="608" name="zimbraFreebusyExchangeAuthUsername" type="string" max="256" cardinality="single" optionalIn="globalConfig">
+<attr id="608" name="zimbraFreebusyExchangeAuthUsername" type="string" max="256" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
   <desc>Exchange username for free/busy lookup and propagation</desc>
 </attr>
 
-<attr id="609" name="zimbraFreebusyExchangeAuthPassword" type="string" max="256" cardinality="single" optionalIn="globalConfig">
+<attr id="609" name="zimbraFreebusyExchangeAuthPassword" type="string" max="256" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
   <desc>Exchange user password for free/busy lookup and propagation</desc>
 </attr>
 
-<attr id="610" name="zimbraFreebusyExchangeUserOrg" type="string" max="256" cardinality="single" optionalIn="globalConfig">
+<attr id="610" name="zimbraFreebusyExchangeUserOrg" type="string" max="256" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
   <desc>O and OU used in legacyExchangeDN attribute</desc>
 </attr>
 
-<attr id="611" name="zimbraFreebusyExchangeAuthScheme" type="enum" value="basic,form" cardinality="single" optionalIn="globalConfig">
+<attr id="611" name="zimbraFreebusyExchangeAuthScheme" type="enum" value="basic,form" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
   <desc>auth scheme to use</desc>
 </attr>
 
