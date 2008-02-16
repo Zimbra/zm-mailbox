@@ -176,6 +176,11 @@ public class ZimbraLog {
     public static final Log account = LogFactory.getLog("zimbra.account");
     
     /**
+     * the "zimbra.gal" logger. For account-related events.
+     */
+    public static final Log gal = LogFactory.getLog("zimbra.gal");
+    
+    /**
      * the "zimbra.security" logger. For security-related events
      */
     public static final Log security = LogFactory.getLog("zimbra.security");    
