@@ -134,6 +134,10 @@ public class ZPrefs {
 
     public String getOutOfOfficeReply() { return get(Provisioning.A_zimbraPrefOutOfOfficeReply); }
 
+	public String getOutOfOfficeFromDate() { return get(Provisioning.A_zimbraPrefOutOfOfficeFromDate); }
+
+	public String getOutOfOfficeUntilDate() { return get(Provisioning.A_zimbraPrefOutOfOfficeUntilDate); }
+
     public String getMailSignature() { return get(Provisioning.A_zimbraPrefMailSignature); }
 
     public long getMailItemsPerPage() { return getLong(Provisioning.A_zimbraPrefMailItemsPerPage); }
