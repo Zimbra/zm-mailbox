@@ -123,15 +123,9 @@ public class Auth extends AccountDocumentHandler {
     }
 
     private Element doResponse(Element request, AuthToken at, ZimbraSoapContext zsc, Account acct) throws ServiceException {
-        String token;
-        try {
-            token = at.getEncoded();
-        } catch (AuthTokenException e) {
-            throw  ServiceException.FAILURE("unable to encode auth token", e);
-        }
-
         Element response = zsc.createElement(AccountConstants.AUTH_RESPONSE);
-        response.addAttribute(AccountConstants.E_AUTH_TOKEN, token, Element.Disposition.CONTENT);
+        at.encodeAuthResp(response, false);
+        
         response.addAttribute(AccountConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
         boolean isCorrectHost = Provisioning.onLocalServer(acct);
         if (isCorrectHost) {

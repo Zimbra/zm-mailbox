@@ -105,7 +105,7 @@ public abstract class AuthToken {
      */
     public abstract void encode(HttpServletResponse resp, boolean isAdminReq) throws ServiceException;
 
-    // public abstract void encodeAuthReq(Element authRequest)  throws ServiceException;
+    public abstract void encodeAuthResp(Element parent, boolean isAdmin)  throws ServiceException;
     
     // AP-TODO-5: REMOVE AFTER CLEANUP
     public abstract String getEncoded() throws AuthTokenException;

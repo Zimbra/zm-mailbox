@@ -2271,24 +2271,6 @@ public class ZMailboxUtil implements DebugListener {
         System.out.println(envelope.prettyPrint());
         System.out.println("===============================");
     }
-
-    private void addAuthCookoie(String name, URI uri, HttpState state) {
-        Cookie cookie = new Cookie(uri.getHost(), name, mMbox.getAuthToken(), "/", -1, false);    
-        state.addCookie(cookie);
-    }
-
-    private HttpClient getHttpClient(URI uri) {
-        boolean isAdmin = uri.getPort() == LC.zimbra_admin_service_port.intValue();
-
-        HttpState initialState = new HttpState();
-        if (isAdmin) 
-            addAuthCookoie(ZimbraServlet.COOKIE_ZM_ADMIN_AUTH_TOKEN, uri, initialState);
-        addAuthCookoie(ZimbraServlet.COOKIE_ZM_AUTH_TOKEN, uri, initialState);  
-        HttpClient client = new HttpClient();
-        client.setState(initialState);
-        client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
-        return client;
-    }
     
     private void doGetRestURL(String args[]) throws ServiceException {
         OutputStream os = null;

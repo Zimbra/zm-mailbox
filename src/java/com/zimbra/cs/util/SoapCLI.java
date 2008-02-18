@@ -40,6 +40,7 @@ import com.zimbra.cs.client.LmcSession;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.zclient.ZAuthToken;
 import com.zimbra.common.soap.*;
 
 /**
@@ -179,13 +180,14 @@ public abstract class SoapCLI {
         try {
             Element authResp = mTrans.invokeWithoutSession(authReq);
             String authToken = authResp.getAttribute(AdminConstants.E_AUTH_TOKEN);
+            ZAuthToken zat = new ZAuthToken(null, authToken, null);
             String sessionId = authResp.getAttribute(HeaderConstants.E_SESSION_ID, null);
             mTrans.setAuthToken(authToken);
             if (sessionId != null) {
                 mTrans.setSessionId(sessionId);
             }
             mAuth = true;
-            return new LmcSession(authToken, sessionId);
+            return new LmcSession(zat, sessionId);
         } catch (UnknownHostException e) {
             // UnknownHostException's error message is not clear; rethrow with a more descriptive message
             throw new IOException("Unknown host: " + mHost);

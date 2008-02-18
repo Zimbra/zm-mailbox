@@ -25,6 +25,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.cs.client.*;
+import com.zimbra.cs.zclient.ZAuthToken;
 
 public class LmcAdminAuthRequest extends LmcSoapRequest {
 
@@ -60,11 +61,12 @@ public class LmcAdminAuthRequest extends LmcSoapRequest {
     {
         // get the auth token out, no default, must be present or a service exception is thrown
         String authToken = DomUtil.getString(responseXML, AdminConstants.E_AUTH_TOKEN);
+        ZAuthToken zat = new ZAuthToken(null, authToken, null);
         // get the session id, if not present, default to null
         String sessionId = DomUtil.getString(responseXML, HeaderConstants.E_SESSION_ID, null);
 
         LmcAdminAuthResponse responseObj = new LmcAdminAuthResponse();
-        LmcSession sess = new LmcSession(authToken, sessionId);
+        LmcSession sess = new LmcSession(zat, sessionId);
         responseObj.setSession(sess);
         return responseObj;
     }

@@ -36,6 +36,7 @@ public class ZimbraAuthProvider extends AuthProvider{
         super(ZIMBRA_AUTH_PROVIDER);
     }
     
+    // AP-TODO: dup in ZAuthToken, move to common?
     public static String cookieName(boolean isAdminReq) {
         return isAdminReq? ZimbraServlet.COOKIE_ZM_ADMIN_AUTH_TOKEN : ZimbraServlet.COOKIE_ZM_AUTH_TOKEN;
     }

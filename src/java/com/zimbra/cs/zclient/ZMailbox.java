@@ -161,7 +161,7 @@ public class ZMailbox {
         private AccountBy mAccountBy = AccountBy.name;
         private String mPassword;
         private String mNewPassword;
-        private String mAuthToken;
+        private ZAuthToken mAuthToken;
         private String mVirtualHost;
         private String mUri;
         private String mClientIp;
@@ -194,7 +194,13 @@ public class ZMailbox {
             mUri = uri;
         }
 
+        // AP-TODO-18: find callsites and resolve/retire
         public Options(String authToken, String uri) {
+            mAuthToken = new ZAuthToken(null, authToken, null);
+            mUri = uri;
+        }
+        
+        public Options(ZAuthToken authToken, String uri) {
             mAuthToken = authToken;
             mUri = uri;
         }
@@ -240,8 +246,9 @@ public class ZMailbox {
         public String getVirtualHost() { return mVirtualHost; }
         public void setVirtualHost(String virtualHost) { mVirtualHost = virtualHost; }
 
-        public String getAuthToken() { return mAuthToken; }
-        public void setAuthToken(String authToken) { mAuthToken = authToken; }
+        public ZAuthToken getAuthToken() { return mAuthToken; }
+        public void setAuthToken(ZAuthToken authToken) { mAuthToken = authToken; }
+        public void setAuthToken(String authToken) { mAuthToken = new ZAuthToken(null, authToken, null); } // AP-TODO-20: retire
 
         public String getUri() { return mUri; }
         public void setUri(String uri) { mUri = uri; }
@@ -294,7 +301,7 @@ public class ZMailbox {
 		}
 	}
 
-    private String mAuthToken;
+    private ZAuthToken mAuthToken;
     private SoapHttpTransport mTransport;
     private NotifyPreference mNotifyPreference;
     private Map<String, ZTag> mNameToTag;
@@ -393,9 +400,9 @@ public class ZMailbox {
         return mHandlers.remove(handler);
     }
 
-    private void initAuthToken(String authToken){
+    private void initAuthToken(ZAuthToken authToken){
         mAuthToken = authToken;
-        mTransport.setAuthToken(mAuthToken);
+        mTransport.setAuthToken(mAuthToken.getType(), mAuthToken.getValue(), mAuthToken.getAttrs());
     }
 
     private void initPreAuth(Options options) {
@@ -461,9 +468,11 @@ public class ZMailbox {
     private ZAuthResult authByAuthToken(Options options) throws ServiceException {
         if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling authenticate", null);
         XMLElement req = new XMLElement(AccountConstants.AUTH_REQUEST);
-        Element authTokenEl = req.addElement(AccountConstants.E_AUTH_TOKEN);
-        authTokenEl.setText(options.getAuthToken());
-		if (options.getRequestedSkin() != null) {
+        // Element authTokenEl = req.addElement(AccountConstants.E_AUTH_TOKEN);
+        // authTokenEl.setText(options.getAuthToken());
+        ZAuthToken zat = options.getAuthToken(); // cannot be null here
+        Element authTokenEl = zat.encodeAuthRequest(req);
+        if (options.getRequestedSkin() != null) {
 			req.addElement(AccountConstants.E_REQUESTED_SKIN).setText(options.getRequestedSkin());
 		}
 		addAttrsAndPrefs(req, options);
@@ -476,7 +485,7 @@ public class ZMailbox {
         return mAuthResult;
     }
 
-    public String getAuthToken() {
+    public ZAuthToken getAuthToken() {
         return mAuthToken;
     }
 
@@ -500,7 +509,7 @@ public class ZMailbox {
         if (options.getRetryCount() != -1)
             mTransport.setRetryCount(options.getRetryCount());
         if (mAuthToken != null)
-            mTransport.setAuthToken(mAuthToken);
+            mTransport.setAuthToken(mAuthToken.getType(), mAuthToken.getValue(), mAuthToken.getAttrs());
         if (options.getResponseProtocol() != null)
             mTransport.setResponseProtocol(options.getResponseProtocol());
     }
@@ -893,7 +902,7 @@ public class ZMailbox {
      * @return top-level JSON respsonse
      * @throws ServiceException on error
      */
-    public static Element getBootstrapJSON(String url, String authToken, boolean doSearch, String itemsPerPage, String searchTypes) throws ServiceException {
+    public static Element getBootstrapJSON(String url, ZAuthToken authToken, boolean doSearch, String itemsPerPage, String searchTypes) throws ServiceException {
         ZMailbox.Options options = new ZMailbox.Options(authToken, url);
         JsonDebugListener debug = new JsonDebugListener();
         options.setNoSession(false);
@@ -1711,8 +1720,9 @@ public class ZMailbox {
         throw ZClientException.UPLOAD_FAILED("upload failed, response: " + result, null);
     }
 
+    // AP-TODO-19: RETIRE
     private void addAuthCookie(String name, URI uri, HttpState state) {
-        Cookie cookie = new Cookie(uri.getHost(), name, getAuthToken(), "/", -1, false);
+        Cookie cookie = new Cookie(uri.getHost(), name, getAuthToken().getValue(), "/", -1, false);
         state.addCookie(cookie);
     }
 

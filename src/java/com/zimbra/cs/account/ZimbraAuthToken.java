@@ -58,6 +58,7 @@ import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.util.BlobMetaData;
@@ -406,6 +407,13 @@ public class ZimbraAuthToken extends AuthToken {
         javax.servlet.http.Cookie cookie = new javax.servlet.http.Cookie(ZimbraAuthProvider.cookieName(isAdminReq), origAuthData);
         cookie.setPath("/");
         resp.addCookie(cookie);
+    }
+    
+    public void encodeAuthResp(Element parent, boolean isAdmin)  throws ServiceException {
+        if (isAdmin)
+            parent.addAttribute(AdminConstants.E_AUTH_TOKEN, getOrigAuthData(), Element.Disposition.CONTENT);
+        else
+            parent.addAttribute(AccountConstants.E_AUTH_TOKEN, getOrigAuthData(), Element.Disposition.CONTENT);
     }
     
     /*

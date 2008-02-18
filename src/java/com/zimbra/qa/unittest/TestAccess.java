@@ -36,7 +36,7 @@ import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.soap.SoapProvisioning;
-
+import com.zimbra.cs.zclient.ZAuthToken;
 
 public class TestAccess extends TestCase {
     private String TEST_ID;
@@ -117,7 +117,7 @@ public class TestAccess extends TestCase {
             req.addElement(AccountConstants.E_PASSWORD).setText(PASSWORD);
             Element response = invoke(req);
             String authToken = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
-            setAuthToken(authToken);
+            setAuthToken(new ZAuthToken(authToken));
         }
  
         protected Element invokeOnTargetAccount(Element request, String targetId) throws ServiceException {

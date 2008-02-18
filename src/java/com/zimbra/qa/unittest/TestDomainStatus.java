@@ -48,7 +48,7 @@ import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
 import com.zimbra.cs.lmtpserver.LmtpProtocolException;
-
+import com.zimbra.cs.zclient.ZAuthToken;
 
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
@@ -999,7 +999,7 @@ public class TestDomainStatus extends TestCase {
             req.addElement(AccountConstants.E_PASSWORD).setText(password);
             Element response = invoke(req);
             String authToken = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
-            setAuthToken(authToken);
+            setAuthToken(new ZAuthToken(authToken));
         }     
         
         static SoapClient newInstance(Account acct, AccountType at) throws Exception {

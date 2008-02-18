@@ -106,14 +106,9 @@ public class Auth extends AdminDocumentHandler {
         }
 
         Element response = zsc.createElement(AdminConstants.AUTH_RESPONSE);
-        String token;
         AuthToken at = AuthToken.getAuthToken(acct, true);
-        try {
-            token = at.getEncoded();
-        } catch (AuthTokenException e) {
-            throw  ServiceException.FAILURE("unable to encode auth token", e);
-        }
-        response.addAttribute(AdminConstants.E_AUTH_TOKEN, token, Element.Disposition.CONTENT);
+        at.encodeAuthResp(response, true);
+        
         response.addAttribute(AdminConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
         response.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, Provisioning.A_zimbraIsDomainAdminAccount).setText(isDomainAdmin+"");
         Session session = updateAuthenticatedAccount(zsc, at, true);
