@@ -206,6 +206,10 @@ public class Zimbra {
         sTimer.cancel();
     }
 
+    public static synchronized boolean started() {
+	return sInited;
+    }
+    
     public static Timer sTimer = new Timer(true);
 
     /**
