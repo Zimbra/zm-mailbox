@@ -25,6 +25,7 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.PurgeThread;
+import com.zimbra.cs.util.Zimbra;
 
 /**
  * Starts the mailbox purge thread if it is not running and the purge sleep
@@ -40,6 +41,10 @@ public class MailboxPurge extends AttributeCallback {
         if (!Provisioning.A_zimbraMailPurgeSleepInterval.equals(attrName)) {
             return;
         }
+        
+        // do not run this callback unless inside the server
+        if (!Zimbra.started())
+            return;
         
         Server localServer = null;
         
