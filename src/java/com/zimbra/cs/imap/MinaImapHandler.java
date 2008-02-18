@@ -56,7 +56,7 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
         }
 
         MinaServer.startTLS(mSession);
-        sendOK(tag, "Begin TLS negotiation now");
+        sendOK(tag, "begin TLS negotiation now");
         mStartedTLS = true;
         return true;
     }
@@ -102,7 +102,8 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
         
         long start = ZimbraPerf.STOPWATCH_IMAP.start();
         try {
-            if (!processRequest(imapReq)) dropConnection();
+            if (!processRequest(imapReq))
+                dropConnection();
         } finally {
             ZimbraPerf.STOPWATCH_IMAP.stop(start);
             if (mLastCommand != null)
@@ -152,9 +153,11 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
             return false;
         }
         // Check target folder owner's account status before executing command
-        if (mSelectedFolder == null) return true;
+        if (mSelectedFolder == null)
+            return true;
         String id = mSelectedFolder.getTargetAccountId();
-        if (mCredentials.getAccountId().equalsIgnoreCase(id)) return true;
+        if (mCredentials.getAccountId().equalsIgnoreCase(id))
+            return true;
         try {
             Account account = Provisioning.getInstance().get(Provisioning.AccountBy.id, id);
             if (account == null || !isAccountStatusActive(account)) {

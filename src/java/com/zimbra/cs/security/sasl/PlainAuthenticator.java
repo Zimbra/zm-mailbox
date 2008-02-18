@@ -37,9 +37,8 @@ public class PlainAuthenticator extends Authenticator {
     public SaslServer getSaslServer() { return null; }
 
     public void handle(byte[] data) throws IOException {
-        if (isComplete()) {
+        if (isComplete())
             throw new IllegalStateException("Authentication already completed");
-        }
 
         // RFC 2595 6: "Non-US-ASCII characters are permitted as long as they are
         //              represented in UTF-8 [UTF-8]."
@@ -56,10 +55,12 @@ public class PlainAuthenticator extends Authenticator {
             sendBadRequest();
             return;
         }
+
         String authorizeId = message.substring(0, nul1);
         String authenticateId = message.substring(nul1 + 1, nul2);
         String password = message.substring(nul2 + 1);
-        if (authorizeId.equals("")) authorizeId = authenticateId;
+        if (authorizeId.equals(""))
+            authorizeId = authenticateId;
         authenticate(authorizeId, authenticateId, password);
     }
 }
