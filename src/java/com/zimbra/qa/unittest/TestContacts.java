@@ -34,6 +34,7 @@ import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.zclient.ZAuthToken;
 
 import junit.framework.TestCase;
 
@@ -71,7 +72,8 @@ extends TestCase {
 		Server remoteServer = prov.getServer(acct);
 		String url = URLUtil.getSoapURL(remoteServer, true);
 		SoapHttpTransport transport = new SoapHttpTransport(url);
-		transport.setAuthToken(dar.getAuthToken());
+		ZAuthToken zat = dar.getAuthToken();
+		transport.setAuthToken(zat.getType(), zat.getValue(), zat.getAttrs());
 		transport.setTargetAcctName(username);
 		try {
 			Element req = new Element.XMLElement(MailConstants.CONTACT_ACTION_REQUEST);

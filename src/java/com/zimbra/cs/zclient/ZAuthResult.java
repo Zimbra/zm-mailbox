@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 public class ZAuthResult {
-    private String mAuthToken;
+    private ZAuthToken mAuthToken;
     private long mExpires;
     private long mLifetime;
     private String mRefer;
@@ -35,7 +35,10 @@ public class ZAuthResult {
 	private String mSkin;
 
     public ZAuthResult(Element e) throws ServiceException {
-        mAuthToken = e.getAttribute(AccountConstants.E_AUTH_TOKEN);
+        // mAuthToken = e.getAttribute(AccountConstants.E_AUTH_TOKEN);
+        String authToken = e.getAttribute(AccountConstants.E_AUTH_TOKEN);;
+        mAuthToken = new ZAuthToken(null, authToken, null);
+        
         mLifetime = e.getAttributeLong(AccountConstants.E_LIFETIME);
         mExpires = System.currentTimeMillis() + mLifetime;
         mRefer = e.getAttribute(AccountConstants.E_REFERRAL, null);
@@ -44,7 +47,7 @@ public class ZAuthResult {
         mSkin = e.getAttribute(AccountConstants.E_SKIN, null);
 	}
 
-    public String getAuthToken() {
+    public ZAuthToken getAuthToken() {
         return mAuthToken;
     }
 

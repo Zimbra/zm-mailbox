@@ -27,6 +27,7 @@ import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.GetMethod;
 
 import com.zimbra.cs.client.soap.LmcSoapClientException;
+import com.zimbra.cs.zclient.ZAuthToken;
 
 public class LmcMessage {
     private String mID;
@@ -120,9 +121,11 @@ public class LmcMessage {
         // set the cookie.
         if (session == null)
             System.err.println(System.currentTimeMillis() + " " + Thread.currentThread() + " LmcMessage.downloadAttachment session=null");
-        Cookie cookie = new Cookie(cookieDomain, "ZM_AUTH_TOKEN", session.getAuthToken(), "/", -1, false);
+        ZAuthToken zat = session.getAuthToken();
+        // Cookie cookie = new Cookie(cookieDomain, "ZM_AUTH_TOKEN", session.getAuthToken(), "/", -1, false);
+        Cookie[] cookies = zat.toCookies(cookieDomain, false);
         HttpState initialState = new HttpState();
-        initialState.addCookie(cookie);
+        initialState.addCookies(cookies);
         initialState.setCookiePolicy(CookiePolicy.COMPATIBILITY);
         HttpClient client = new HttpClient();
         client.setState(initialState);

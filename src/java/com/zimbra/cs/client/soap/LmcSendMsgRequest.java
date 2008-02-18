@@ -34,6 +34,7 @@ import com.zimbra.common.soap.DomUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.client.*;
+import com.zimbra.cs.zclient.ZAuthToken;
 
 public class LmcSendMsgRequest extends LmcSoapRequest {
 
@@ -91,9 +92,12 @@ public class LmcSendMsgRequest extends LmcSoapRequest {
         // set the cookie.
         if (session == null)
             System.err.println(System.currentTimeMillis() + " " + Thread.currentThread() + " LmcSendMsgRequest.postAttachment session=null");
-        Cookie cookie = new Cookie(domain, "ZM_AUTH_TOKEN", session.getAuthToken(), "/", -1, false);
+        
+        ZAuthToken zat = session.getAuthToken();
+        // Cookie cookie = new Cookie(domain, "ZM_AUTH_TOKEN", , "/", -1, false);
+        Cookie[] cookies = zat.toCookies(domain, false);
         HttpState initialState = new HttpState();
-        initialState.addCookie(cookie);
+        initialState.addCookies(cookies);
         HttpClient client = new HttpClient();
         client.setState(initialState);
         client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);

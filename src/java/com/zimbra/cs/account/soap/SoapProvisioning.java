@@ -51,6 +51,7 @@ import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mime.MimeTypeInfo;
+import com.zimbra.cs.zclient.ZAuthToken;
 import com.zimbra.cs.zclient.ZClientException;
 
 import java.io.IOException;
@@ -70,7 +71,7 @@ public class SoapProvisioning extends Provisioning {
     private int mTimeout = -1;
     private int mRetryCount;
     private SoapHttpTransport mTransport;
-    private String mAuthToken;
+    private ZAuthToken mAuthToken;
     private long mAuthTokenLifetime;
     private long mAuthTokenExpiration;
     private DebugListener mDebugListener;
@@ -90,7 +91,7 @@ public class SoapProvisioning extends Provisioning {
         if (mRetryCount > 0)
             mTransport.setRetryCount(mRetryCount);
         if (mAuthToken != null)
-            mTransport.setAuthToken(mAuthToken);
+            mTransport.setAuthToken(mAuthToken.getType(), mAuthToken.getValue(), mAuthToken.getAttrs());
         if (mDebugListener != null)
             mTransport.setDebugListener(mDebugListener);
     }
@@ -117,14 +118,14 @@ public class SoapProvisioning extends Provisioning {
             mTransport.setDebugListener(mDebugListener);
     }
     
-    public String getAuthToken() {
+    public ZAuthToken getAuthToken() {
         return mAuthToken;
     }
     
-    public void setAuthToken(String authToken) {
+    public void setAuthToken(ZAuthToken authToken) {
         mAuthToken = authToken;
         if (mTransport != null)
-            mTransport.setAuthToken(authToken);
+            mTransport.setAuthToken(authToken.getType(), authToken.getValue(), authToken.getAttrs());
     }
 
     /**
@@ -141,10 +142,11 @@ public class SoapProvisioning extends Provisioning {
        req.addElement(AdminConstants.E_NAME).setText(name);
        req.addElement(AdminConstants.E_PASSWORD).setText(password);
        Element response = invoke(req);
-       mAuthToken = response.getElement(AdminConstants.E_AUTH_TOKEN).getText();
+       // mAuthToken = response.getElement(AdminConstants.E_AUTH_TOKEN).getText();
+       mAuthToken = new ZAuthToken(response.getElement(AdminConstants.E_AUTH_TOKEN), true);
        mAuthTokenLifetime = response.getAttributeLong(AdminConstants.E_LIFETIME);
        mAuthTokenExpiration = System.currentTimeMillis() + mAuthTokenLifetime;
-       mTransport.setAuthToken(mAuthToken);
+       mTransport.setAuthToken(mAuthToken.getType(), mAuthToken.getValue(), mAuthToken.getAttrs());
     }
 
     /**
@@ -409,18 +411,19 @@ public class SoapProvisioning extends Provisioning {
     }
     
     public static class DelegateAuthResponse {
-        private String mAuthToken;
+        private ZAuthToken mAuthToken;
         private long mExpires;
         private long mLifetime;
 
         DelegateAuthResponse(Element e) throws ServiceException {
-            mAuthToken = e.getElement(AccountConstants.E_AUTH_TOKEN).getText();
+            // mAuthToken = e.getElement(AccountConstants.E_AUTH_TOKEN).getText();
+            mAuthToken = new ZAuthToken(e.getElement(AccountConstants.E_AUTH_TOKEN), false);
             mLifetime = e.getAttributeLong(AccountConstants.E_LIFETIME);
             mExpires = System.currentTimeMillis() + mLifetime;
             Element re = e.getOptionalElement(AccountConstants.E_REFERRAL);
         }
 
-        public String getAuthToken() {
+        public ZAuthToken getAuthToken() {
             return mAuthToken;
         }
         

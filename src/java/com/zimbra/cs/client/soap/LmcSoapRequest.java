@@ -18,6 +18,7 @@
 package com.zimbra.cs.client.soap;
 
 import com.zimbra.cs.client.*;
+import com.zimbra.cs.zclient.ZAuthToken;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -123,7 +124,8 @@ public abstract class LmcSoapRequest {
             // set the auth token and session id in the transport for this request to use
             String curSessionID = null;
             if (mSession != null) {
-                trans.setAuthToken(mSession.getAuthToken());
+                ZAuthToken zat = mSession.getAuthToken();
+                trans.setAuthToken(zat.getType(), zat.getValue(), zat.getAttrs());
                 curSessionID = mSession.getSessionID();
                 trans.setSessionId(curSessionID);
             }

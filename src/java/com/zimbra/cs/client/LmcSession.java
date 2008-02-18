@@ -17,17 +17,19 @@
 
 package com.zimbra.cs.client;
 
+import com.zimbra.cs.zclient.ZAuthToken;
+
 /**
  * Encapsulate the notion of a session, including auth token, session ID, and
  * whatever else is desired...
  */
 public class LmcSession {
 
-	private String mAuthToken;
+	private ZAuthToken mAuthToken;
 
 	private String mSessionID;
 
-	public String getAuthToken() {
+	public ZAuthToken getAuthToken() {
 		return mAuthToken;
 	}
 
@@ -35,7 +37,7 @@ public class LmcSession {
 		return mSessionID;
 	}
 
-	public void setAuthToken(String a) {
+	public void setAuthToken(ZAuthToken a) {
 		mAuthToken = a;
 	}
 
@@ -43,7 +45,7 @@ public class LmcSession {
 		mSessionID = s;
 	}
 
-	public LmcSession(String authToken, String sessionID) {
+	public LmcSession(ZAuthToken authToken, String sessionID) {
 		mAuthToken = authToken;
 		mSessionID = sessionID;
 	}
