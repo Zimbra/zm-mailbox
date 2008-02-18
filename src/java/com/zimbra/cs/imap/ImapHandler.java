@@ -3420,9 +3420,9 @@ public abstract class ImapHandler extends ProtocolHandler {
 
     void sendIdleUntagged() throws IOException                   { sendUntagged("NOOP", true); }
 
-    void sendOK(String tag, String response) throws IOException  { sendResponse(tag, response.equals("") ? "OK" : "OK " + response, true); }
-    void sendNO(String tag, String response) throws IOException  { sendResponse(tag, response.equals("") ? "NO" : "NO " + response, true); }
-    void sendBAD(String tag, String response) throws IOException { sendResponse(tag, response.equals("") ? "BAD" : "BAD " + response, true); }
+    void sendOK(String tag, String response) throws IOException  { sendResponse(tag, "OK " + (response.equals("") ? " " : response), true); }
+    void sendNO(String tag, String response) throws IOException  { sendResponse(tag, "NO " + (response.equals("") ? " " : response), true); }
+    void sendBAD(String tag, String response) throws IOException { sendResponse(tag, "BAD " + (response.equals("") ? " " : response), true); }
     void sendUntagged(String response) throws IOException        { sendResponse("*", response, false); }
     void sendUntagged(String response, boolean flush) throws IOException { sendResponse("*", response, flush); }
     void sendContinuation(String response) throws IOException    { sendResponse("+", response, true); }
