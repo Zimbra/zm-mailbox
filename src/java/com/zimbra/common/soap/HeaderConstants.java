@@ -20,6 +20,7 @@ import org.dom4j.QName;
 
 public class HeaderConstants {
     public static final QName CONTEXT = QName.get("context", ZimbraNamespace.ZIMBRA);
+    public static final String E_A          = "a";
     public static final String E_NO_NOTIFY  = "nonotify";
     public static final String E_FORMAT     = "format";
     public static final String A_TYPE       = "type";
@@ -40,6 +41,7 @@ public class HeaderConstants {
     public static final String A_CHANGE_ID  = "token";
     public static final String E_TARGET_SERVER = "targetServer";
     public static final String E_USER_AGENT = "userAgent";
+    public static final String A_N          = "n";
     public static final String A_NAME       = "name";
     public static final String A_VERSION    = "version";
     public static final String E_CONTEXT    = "context";

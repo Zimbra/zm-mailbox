@@ -16,6 +16,7 @@
  */
 package com.zimbra.common.soap;
 
+import java.util.Map;
 import com.zimbra.common.util.StringUtil;
 
 public class SoapUtil {
@@ -29,8 +30,10 @@ public class SoapUtil {
      * @param authToken  The serialized authorization token for the user.
      * @param noSession  Whether to suppress the default new session creation.
      * @return A new <code>context</code> Element in the appropriate markup. */
-    public static Element toCtxt(SoapProtocol protocol, String authToken, String targetAccountId, String targetAccountName, boolean noSession) {
-        Element ctxt = toCtxt(protocol, authToken, noSession);
+    public static Element toCtxt(SoapProtocol protocol, 
+            String atType, String atValue, Map<String, String> atAttrs,
+            String targetAccountId, String targetAccountName, boolean noSession) {
+        Element ctxt = toCtxt(protocol, atType, atValue, atAttrs, noSession);
 
         if (targetAccountId != null || targetAccountName != null) {
             Element acctElt = ctxt.addUniqueElement(HeaderConstants.E_ACCOUNT);
@@ -51,10 +54,28 @@ public class SoapUtil {
      * @param authToken  The serialized authorization token for the user.
      * @param noSession  Whether to suppress the default new session creation.
      * @return A new <code>context</code> Element in the appropriate markup. */
-    public static Element toCtxt(SoapProtocol protocol, String authToken, boolean noSession) {
+    public static Element toCtxt(SoapProtocol protocol, 
+            String atType, String atValue, Map<String, String> atAttrs,
+            boolean noSession) {
         Element ctxt = protocol.getFactory().createElement(HeaderConstants.CONTEXT);
+        /*
         if (authToken != null)
             ctxt.addAttribute(HeaderConstants.E_AUTH_TOKEN, authToken, Element.Disposition.CONTENT);
+        */
+        Element eAt = null;
+        if (atValue != null) {
+            if (atType == null)
+                ctxt.addAttribute(HeaderConstants.E_AUTH_TOKEN, atValue, Element.Disposition.CONTENT);
+            else
+                eAt = ctxt.addUniqueElement(HeaderConstants.E_AUTH_TOKEN).setText(atValue);
+        } else if (atAttrs != null) {
+            eAt = ctxt.addUniqueElement(HeaderConstants.E_AUTH_TOKEN);
+            for (Map.Entry<String, String> attr : atAttrs.entrySet())
+                eAt.addKeyValuePair(attr.getKey(), attr.getValue(), HeaderConstants.E_A, HeaderConstants.A_N);
+        }
+        if (eAt != null && atType != null)
+            eAt.addAttribute(HeaderConstants.A_TYPE, atType);
+        
         if (noSession)
             ctxt.addUniqueElement(HeaderConstants.E_NO_SESSION);
         return ctxt;
@@ -138,8 +159,10 @@ public class SoapUtil {
      * @param sessionId  The ID of the session to add to the <code>context</code>.
      * @return A new <code>context</code> Element in the appropriate markup.
      * @see #toCtxt(com.zimbra.common.soap.SoapProtocol, String, boolean) */
-    public static Element toCtxt(SoapProtocol protocol, String authToken, String sessionId) {
-        Element ctxt = toCtxt(protocol, authToken, false);
+    public static Element toCtxt(SoapProtocol protocol, 
+            String atType, String atValue, Map<String, String> atAttrs,
+            String sessionId) {
+        Element ctxt = toCtxt(protocol, atType, atValue, atAttrs, false);
         return addSessionToCtxt(ctxt, sessionId);
     }
 }
