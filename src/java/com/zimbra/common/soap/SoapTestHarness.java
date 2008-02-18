@@ -440,7 +440,7 @@ public class SoapTestHarness {
 		if (mAuthToken == null) {
 			mCurrent.mSoapRequest = mSoapProto.soapEnvelope(mCurrent.mDocRequest);
         } else {
-            Element ctxt = SoapUtil.toCtxt(mSoapProto, mAuthToken, mSessionId);
+            Element ctxt = SoapUtil.toCtxt(mSoapProto, null, mAuthToken, null, mSessionId);
             if (mTargetUser != null)
                 ctxt.addUniqueElement(HeaderConstants.E_ACCOUNT).addAttribute(HeaderConstants.A_BY, HeaderConstants.BY_NAME).setText(mTargetUser);
             if (mResponseProto == SoapProtocol.SoapJS)
