@@ -40,6 +40,8 @@ import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.cs.servlet.ZimbraServlet;
 
 public class ZAuthToken {
+    private static final String YAHOO_AUTHTOKEN_TYPE = "YAHOO_CALENDAR_AUTH_PROVIDER";
+
     
     private String mType;
     private String mValue;
@@ -94,19 +96,10 @@ public class ZAuthToken {
      */
     public ZAuthToken(HttpServletRequest request, boolean isAdmin) {
         Cookie[] cookies = request.getCookies();
-        if (cookies == null) return;
-        for (Cookie c : cookies){
-            if (c.getName().equals(ZimbraServlet.COOKIE_ZM_AUTH_TOKEN) && !isAdmin) {
-                init(null, c.getValue(), null);
-                return;
-            } else if (c.getName().equals(ZimbraServlet.COOKIE_ZM_ADMIN_AUTH_TOKEN) && isAdmin) {
-                init(null, c.getValue(), null);
-                return;
-            } else {
-                // AP-TODO-30: what to do with Yahoo Y&T cookies?
-                // which cookies to look for??
-            }
-        }
+        if (cookies == null) 
+            return;
+        
+        initfromCookies(cookies, isAdmin);
     }
     
     // AP-TODO-20: find callsites and retire
@@ -171,58 +164,22 @@ public class ZAuthToken {
      */
     public void encode(HttpClient client, HttpMethod method, boolean isAdminReq, String cookieDomain, 
                 boolean addBothAdminAndUserCookiesIfAdmin) {
-        org.apache.commons.httpclient.Cookie[] cookies = toCookies(cookieDomain, isAdminReq, addBothAdminAndUserCookiesIfAdmin);
+        Map<String, String> cookieMap = toCookieMap(isAdminReq, addBothAdminAndUserCookiesIfAdmin);
         
-        HttpState state = new HttpState();
-        state.addCookies(cookies);
-        client.setState(state);
-        client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
-    }
-
-    /*
-     * AP-TODO: retire the addBothIfAdmin param after the above encode API is retired
-     */
-    private org.apache.commons.httpclient.Cookie[] toCookies(String cookieDomain, boolean isAdmin, boolean addBothIfAdmin) {
-        List<org.apache.commons.httpclient.Cookie> cookies = new ArrayList<org.apache.commons.httpclient.Cookie>();
-        if (mValue != null) {
-            // Zimbra cookies
-            String cookieName = isAdmin? ZimbraServlet.COOKIE_ZM_ADMIN_AUTH_TOKEN : ZimbraServlet.COOKIE_ZM_AUTH_TOKEN;
-            org.apache.commons.httpclient.Cookie cookie = new org.apache.commons.httpclient.Cookie(cookieDomain, cookieName, mValue, "/", -1, false);
-            cookies.add(cookie);
-            
-            if (addBothIfAdmin && isAdmin) {
-                org.apache.commons.httpclient.Cookie ck = new org.apache.commons.httpclient.Cookie(cookieDomain, ZimbraServlet.COOKIE_ZM_AUTH_TOKEN, mValue, "/", -1, false);
-                cookies.add(ck);
-            }
-        } else if (mAttrs != null) {
-            // Custom auth provider cookies
-            for (Map.Entry<String, String> attr : mAttrs.entrySet()) {
-                // AP-TODO-30: should map attr names to cookie namesbase on mType?
-                org.apache.commons.httpclient.Cookie cookie = new org.apache.commons.httpclient.Cookie(cookieDomain, attr.getKey(), attr.getValue(), "/", -1, false);
+        if (cookieMap != null) {
+            List<org.apache.commons.httpclient.Cookie> cookies = new ArrayList<org.apache.commons.httpclient.Cookie>();
+            for (Map.Entry<String, String> ck : cookieMap.entrySet()) {
+                org.apache.commons.httpclient.Cookie cookie = new org.apache.commons.httpclient.Cookie(cookieDomain, ck.getKey(), ck.getValue(), "/", -1, false);
                 cookies.add(cookie);
             }
+           
+            HttpState state = new HttpState();
+            state.addCookies(cookies.toArray(new org.apache.commons.httpclient.Cookie[cookies.size()]));
+            client.setState(state);
+            client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY); 
         }
-        return cookies.toArray(new org.apache.commons.httpclient.Cookie[cookies.size()]);
     }
-    
-    public Cookie[] toCookies(boolean isAdmin) {
-        List<Cookie> cookies = new ArrayList<Cookie>();
-        if (mValue != null) {
-            // Zimbra cookies
-            String CookieName = isAdmin? ZimbraServlet.COOKIE_ZM_ADMIN_AUTH_TOKEN : ZimbraServlet.COOKIE_ZM_AUTH_TOKEN;
-            Cookie cookie = new Cookie(CookieName, mValue);
-            cookies.add(cookie);
-        } else if (mAttrs != null) {
-            // Custom auth provider cookies
-            for (Map.Entry<String, String> attr : mAttrs.entrySet()) {
-                // AP-TODO-30: should map attr names to cookie namesbase on mType?
-                Cookie cookie = new Cookie(attr.getKey(), attr.getValue());
-                cookies.add(cookie);
-            }
-        }
-        return cookies.toArray(new Cookie[cookies.size()]);
-    }
-    
+   
     
     /**
      * 
@@ -249,6 +206,124 @@ public class ZAuthToken {
         authTokenCookie.setPath("/");
         response.addCookie(authTokenCookie);
     }
+    
+    private String zimbraCookieName(boolean isAdmin) {
+        return isAdmin? ZimbraServlet.COOKIE_ZM_ADMIN_AUTH_TOKEN : ZimbraServlet.COOKIE_ZM_AUTH_TOKEN;
+    }
+    
+    
+    /*
+     * AP-TODO: retire the addBothIfAdmin param, cleanup.
+     */
+    private Map<String, String> toZimbraCookieMap(boolean isAdmin, boolean addBothIfAdmin) {
+        Map<String, String> cookieMap = null;
+        if (mValue != null) {
+            String cookieName = zimbraCookieName(isAdmin);
+            cookieMap = new HashMap<String, String>();
+            cookieMap.put(cookieName, mValue);
+            
+            if (addBothIfAdmin && isAdmin)
+                cookieMap.put(ZimbraServlet.COOKIE_ZM_AUTH_TOKEN, mValue);
+        }
+        return cookieMap;  
+    }
+    
+    private boolean fromZimbraCookies(Map<String, String> cookieMap, boolean isAdmin) {
+        String cookieName = zimbraCookieName(isAdmin);
+        String cookieValue = cookieMap.get(cookieName);
+        if (cookieValue != null) {
+            init(null, cookieValue, null);
+            return true;
+        }
+        return false;
+    }
+    
+    static class YahooAuthData {
+        static final String YAHOO_Y_ATTR = "Y"; 
+        static final String YAHOO_T_ATTR = "T";
+        static final String YAHOO_Y_COOKIE = "Y"; 
+        static final String YAHOO_T_COOKIE = "T";
+        
+        static String cookieNameToAttrName(String cookieName) {
+            return cookieName;  // cookie name and attr name are identical for now
+        }
+        
+        static String attrNameToCookieName(String attrName) {
+            return attrName;   // cookie name and attr name are identical for now
+        }
+    }
+    
+    private Map<String, String> toYahooCookieMap(boolean isAdmin) {
+        Map<String, String> cookieMap = null;
+        if (mAttrs != null) {
+            cookieMap = new HashMap<String, String>();
+            
+            String yCookie = mAttrs.get(YahooAuthData.YAHOO_Y_ATTR);
+            if (yCookie != null)
+                cookieMap.put(YahooAuthData.attrNameToCookieName(YahooAuthData.YAHOO_Y_ATTR), yCookie);
+            
+            String tCookie = mAttrs.get(YahooAuthData.YAHOO_T_ATTR);
+            if (tCookie != null)
+                cookieMap.put(YahooAuthData.attrNameToCookieName(YahooAuthData.YAHOO_T_ATTR), tCookie);
+            
+            if (cookieMap.size() == 0)
+                cookieMap = null;
+        }
+        return cookieMap;  
+    }
+    
+    private boolean fromYahooCookies(Map<String, String> cookieMap, boolean isAdmin) {
+        String yCookie = cookieMap.get(YahooAuthData.YAHOO_Y_COOKIE);
+        String tCookie = cookieMap.get(YahooAuthData.YAHOO_T_COOKIE);
+        
+        if (yCookie != null || tCookie != null) {
+            Map<String, String> attrs = new HashMap<String, String>();
+            if (yCookie != null)
+                attrs.put(YahooAuthData.cookieNameToAttrName(YahooAuthData.YAHOO_Y_COOKIE), yCookie);
+            if (tCookie != null)
+                attrs.put(YahooAuthData.cookieNameToAttrName(YahooAuthData.YAHOO_T_COOKIE), tCookie);
+            
+            init(YAHOO_AUTHTOKEN_TYPE, null, attrs);
+            return true;
+        }
+        return false;
+    }
+    
+    /*
+     * AP-TODO: retire the addBothIfAdmin param, cleanup.
+     */
+    private Map<String, String> toCookieMap(boolean isAdmin, boolean addBothIfAdmin) {
+        if (mType == null)
+            return toZimbraCookieMap(isAdmin, addBothIfAdmin);
+        else if (mType.equals(YAHOO_AUTHTOKEN_TYPE))
+            return toYahooCookieMap(isAdmin);
+        else
+            return null;
+    }
+    
+    private void initfromCookies(Cookie[] cookies, boolean isAdmin) {
+        if (cookies == null) return;
+        Map<String, String> cookieMap = new HashMap<String, String>();
+        for (Cookie ck : cookies) {
+            cookieMap.put(ck.getName(), ck.getValue());
+        }
+        
+        // look for zimbra cookie first
+        if (fromZimbraCookies(cookieMap, isAdmin))
+            return;
+        
+        // no Zimbra cookies, look for Yahoo cookies
+        if (fromYahooCookies(cookieMap, isAdmin))
+            return;
+        
+        // fall thru, leave the ZAuthToken empty
+    } 
+    
+    public Map<String, String> toCookieMap(boolean isAdmin) {
+        return toCookieMap(isAdmin, false);
+    }
+    
+
     
     public String getType() { return mType; }
     public String getValue() { return mValue; }  // AP-TODO-20: find callsites and retire
