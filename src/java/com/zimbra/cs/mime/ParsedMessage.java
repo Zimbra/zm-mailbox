@@ -84,6 +84,10 @@ public class ParsedMessage {
     private boolean mParsed = false;
     private boolean mAnalyzed = false;
     private boolean mIndexAttachments = true;
+    
+    /** if TRUE then there was a _temporary_ failure analyzing the message.  We should attempt
+     * to re-index this message at a later time */
+    private boolean mTemporaryAnalysisFailure = false;
 
     private List<MPartInfo> mMessageParts;
     private String mRecipients;
@@ -773,7 +777,6 @@ public class ParsedMessage {
         TopLevelMessageHandler allTextHandler = new TopLevelMessageHandler(mMessageParts);
 
         int numParseErrors = 0;
-        ServiceException conversionError = null;
         String reportRoot = null;
 
         for (MPartInfo mpi : mMessageParts) {
@@ -793,8 +796,8 @@ public class ParsedMessage {
                 String msgid = getMessageID();
                 sLog.warn("Unable to parse part %s (%s, %s) of message with Message-ID %s.",
                     pn, mpi.getFilename(), ctype, msgid, e);
-                if (ConversionException.isTemporaryCauseOf(e) && conversionError == null) {
-                    conversionError = ServiceException.FAILURE("failed to analyze part", e.getCause());
+                if (ConversionException.isTemporaryCauseOf(e)) {
+                    mTemporaryAnalysisFailure = true;
                 }
                 sLog.warn("Attachment will not be indexed.");
             } catch (ObjectHandlerException e) {
@@ -827,11 +830,16 @@ public class ParsedMessage {
         }
 
         mFragment = allTextHandler.getFragment();
-
-        // this is the first conversion error we encountered when analyzing all the parts
-        // raise it at the end so that we have any calendar info parsed 
-        if (conversionError != null)
-            throw conversionError;
+    }
+    
+    /**
+     * @return TRUE if there was a _temporary_ failure detected while analyzing the message.  In
+     *         the case of a temporary failure, the message should be flagged and indexing re-tried
+     *         at some point in the future
+     */
+    public boolean hasTemporaryAnalysisFailure() throws ServiceException {
+        analyze();
+        return this.mTemporaryAnalysisFailure;
     }
 
     private void analyzePart(MPartInfo mpi, Set<MPartInfo> mpiBodies, TopLevelMessageHandler allTextHandler, boolean ignoreCalendar)
