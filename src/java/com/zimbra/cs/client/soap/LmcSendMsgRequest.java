@@ -93,17 +93,11 @@ public class LmcSendMsgRequest extends LmcSoapRequest {
         if (session == null)
             System.err.println(System.currentTimeMillis() + " " + Thread.currentThread() + " LmcSendMsgRequest.postAttachment session=null");
         
-        ZAuthToken zat = session.getAuthToken();
         // Cookie cookie = new Cookie(domain, "ZM_AUTH_TOKEN", , "/", -1, false);
-        Cookie[] cookies = zat.toCookies(domain, false);
-        HttpState initialState = new HttpState();
-        initialState.addCookies(cookies);
         HttpClient client = new HttpClient();
-        client.setState(initialState);
-        client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
-
-        // make the post
         PostMethod post = new PostMethod(uploadURL);
+        ZAuthToken zat = session.getAuthToken();
+        zat.encode(client, post, false, domain);
         client.getHttpConnectionManager().getParams().setConnectionTimeout(msTimeout);
         int statusCode = -1;
         try {
