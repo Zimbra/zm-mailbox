@@ -141,14 +141,10 @@ public class ZIdentity  {
             if (entry.getValue() instanceof String[]) {
                 String[] values = (String[]) entry.getValue();
                 for (String value : values) {
-                    Element a = identity.addElement(AccountConstants.E_A);
-                    a.addAttribute(AccountConstants.A_NAME, entry.getKey());
-                    a.setText(value);
+                    identity.addKeyValuePair(entry.getKey(), value, AccountConstants.E_A,  AccountConstants.A_NAME);
                 }
             } else {
-                Element a = identity.addElement(AccountConstants.E_A);
-                a.addAttribute(AccountConstants.A_NAME, entry.getKey());
-                a.setText(entry.getValue().toString());
+                identity.addKeyValuePair(entry.getKey(), entry.getValue().toString(), AccountConstants.E_A,  AccountConstants.A_NAME);
             }
         }
         return identity;
