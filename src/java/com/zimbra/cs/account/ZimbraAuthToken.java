@@ -387,14 +387,11 @@ public class ZimbraAuthToken extends AuthToken {
     public void encode(HttpClient client, HttpMethod method, boolean isAdminReq, String cookieDomain) throws ServiceException {
         String origAuthData = getOrigAuthData();
         
-        HttpState state = client.getState();
-        if (state == null) {
-            state = new HttpState();
-            client.setState(state);
-        }
+        HttpState state = new HttpState();
+        client.setState(state);
         
         state.addCookie(new org.apache.commons.httpclient.Cookie(cookieDomain, ZimbraAuthProvider.cookieName(isAdminReq), origAuthData, "/", null, false));
-        state.setCookiePolicy(CookiePolicy.COMPATIBILITY);
+        client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
     }
     
     public void encode(HttpState state, boolean isAdminReq, String cookieDomain) throws ServiceException {

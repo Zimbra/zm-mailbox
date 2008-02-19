@@ -471,7 +471,7 @@ public class ZMailbox {
         // Element authTokenEl = req.addElement(AccountConstants.E_AUTH_TOKEN);
         // authTokenEl.setText(options.getAuthToken());
         ZAuthToken zat = options.getAuthToken(); // cannot be null here
-        Element authTokenEl = zat.encodeAuthRequest(req);
+        Element authTokenEl = zat.encodeAuthReq(req, false);
         if (options.getRequestedSkin() != null) {
 			req.addElement(AccountConstants.E_REQUESTED_SKIN).setText(options.getRequestedSkin());
 		}
@@ -1674,10 +1674,14 @@ public class ZMailbox {
         String aid = null;
 
         URI uri = getUploadURI();
-        HttpClient client = getHttpClient(uri);
+        boolean isAdmin = uri.getPort() == LC.zimbra_admin_service_port.intValue();
+        HttpClient client = new HttpClient();
 
         // make the post
         PostMethod post = new PostMethod(uri.toString());
+        ZAuthToken zat = getAuthToken();
+        zat.encode(client, post, isAdmin, uri.getHost(), true);
+        
         client.getHttpConnectionManager().getParams().setConnectionTimeout(msTimeout);
         int statusCode;
         try {
@@ -1718,24 +1722,6 @@ public class ZMailbox {
             throw ZClientException.UPLOAD_SIZE_LIMIT_EXCEEDED("upload size limit exceeded", null);
         }
         throw ZClientException.UPLOAD_FAILED("upload failed, response: " + result, null);
-    }
-
-    // AP-TODO-19: RETIRE
-    private void addAuthCookie(String name, URI uri, HttpState state) {
-        Cookie cookie = new Cookie(uri.getHost(), name, getAuthToken().getValue(), "/", -1, false);
-        state.addCookie(cookie);
-    }
-
-    HttpClient getHttpClient(URI uri) {
-        boolean isAdmin = uri.getPort() == LC.zimbra_admin_service_port.intValue();
-        HttpState initialState = new HttpState();
-        if (isAdmin)
-            addAuthCookie(ZimbraServlet.COOKIE_ZM_ADMIN_AUTH_TOKEN, uri, initialState);
-        addAuthCookie(ZimbraServlet.COOKIE_ZM_AUTH_TOKEN, uri, initialState);
-        HttpClient client = new HttpClient();
-        client.setState(initialState);
-        client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
-        return client;
     }
 
     /**
@@ -2015,12 +2001,15 @@ public class ZMailbox {
         int statusCode;
         try {
             URI uri = getRestURI(relativePath);
-            HttpClient client = getHttpClient(uri);
-
+            boolean isAdmin = uri.getPort() == LC.zimbra_admin_service_port.intValue();
+            
+            HttpClient client = new HttpClient();
             if (msecTimeout > 0)
                 client.getHttpConnectionManager().getParams().setConnectionTimeout(msecTimeout);
 
             get = new GetMethod(uri.toString());
+            ZAuthToken zat = getAuthToken();
+            zat.encode(client, get, isAdmin, uri.getHost(), true);
 
             statusCode = client.executeMethod(get);
             // parse the response
@@ -2066,17 +2055,21 @@ public class ZMailbox {
                     relativePath = relativePath + "&ignore=1";
             }
             URI uri = getRestURI(relativePath);
-            HttpClient client = getHttpClient(uri);
-
+            boolean isAdmin = uri.getPort() == LC.zimbra_admin_service_port.intValue();
+            
+            HttpClient client = new HttpClient();
             if (msecTimeout > 0)
                 client.getHttpConnectionManager().getParams().setConnectionTimeout(msecTimeout);
 
             post = new PostMethod(uri.toString());
+            ZAuthToken zat = getAuthToken();
+            zat.encode(client, post, isAdmin, uri.getHost(), true);
+            
             RequestEntity entity = (length > 0) ?
                     new InputStreamRequestEntity(is, length, contentType != null ? contentType:  "application/octet-stream") :
                     new InputStreamRequestEntity(is, contentType);
             post.setRequestEntity(entity);
-           int statusCode = client.executeMethod(post);
+            int statusCode = client.executeMethod(post);
             // parse the response
             if (statusCode == 200) {
                 //
