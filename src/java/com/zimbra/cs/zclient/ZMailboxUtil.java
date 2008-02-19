@@ -1439,7 +1439,7 @@ public class ZMailboxUtil implements DebugListener {
 
     private void doModifySignature(String args[]) throws ServiceException {
         ZSignature sig = lookupSignature(args[0]);
-        ZSignature modSig = new ZSignature(sig.getName(), args[1]);
+        ZSignature modSig = new ZSignature(sig.getId(), sig.getName(), args[1]);
         mMbox.modifySignature(modSig);
     }
 

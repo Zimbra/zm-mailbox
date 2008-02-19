@@ -22,6 +22,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.Element.JSONElement;
+import com.zimbra.common.soap.Element.Disposition;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
@@ -174,6 +176,7 @@ public class ZMailbox {
         private int mTimeout = -1;
         private int mRetryCount = -1;
         private SoapProtocol mResponseProtocol = SoapProtocol.SoapJS; //12; //JS;
+        private SoapProtocol mRequestProtocol = SoapProtocol.SoapJS; //12; //JS;
         private SoapTransport.DebugListener mDebugListener;
         private String mTargetAccount;
         private AccountBy mTargetAccountBy = AccountBy.name;
@@ -199,7 +202,7 @@ public class ZMailbox {
             mAuthToken = new ZAuthToken(null, authToken, null);
             mUri = uri;
         }
-        
+
         public Options(ZAuthToken authToken, String uri) {
             mAuthToken = authToken;
             mUri = uri;
@@ -268,6 +271,9 @@ public class ZMailbox {
 
         public SoapProtocol getResponseProtocol() { return mResponseProtocol; }
         public void setResponseProtocol(SoapProtocol proto) { mResponseProtocol = proto; }
+
+        public SoapProtocol getRequestProtocol() { return mRequestProtocol; }
+        public void setRequestProtocol(SoapProtocol proto) { mRequestProtocol = proto; }
 
         public SoapTransport.DebugListener getDebugListener() { return mDebugListener; }
         public void setDebugListener(SoapTransport.DebugListener liistener) { mDebugListener = liistener; }
@@ -343,7 +349,7 @@ public class ZMailbox {
      */
     public static void changePassword(Options options) throws ServiceException {
         ZMailbox mailbox = new ZMailbox();
-        mailbox.mClientIp = options.getClientIp(); 
+        mailbox.mClientIp = options.getClientIp();
         mailbox.mNotifyPreference = NotifyPreference.fromOptions(options);
         mailbox.initPreAuth(options);
         mailbox.changePassword(options.getAccount(), options.getAccountBy(), options.getPassword(), options.getNewPassword(), options.getVirtualHost());
@@ -365,7 +371,7 @@ public class ZMailbox {
         mNotifyPreference = NotifyPreference.fromOptions(options);
 
         mClientIp = options.getClientIp();
-        
+
         initPreAuth(options);
         if (options.getAuthToken() != null) {
             if (options.getAuthAuthToken())
@@ -419,16 +425,24 @@ public class ZMailbox {
             mTransport.setTargetAcctName(key);
     }
 
+    private Element newRequestElement(QName name) {
+        if (mTransport.getRequestProtocol() == SoapProtocol.SoapJS) {
+            return new JSONElement(name);
+        } else {
+            return new XMLElement(name);
+        }
+    }
+
     private void changePassword(String key, AccountBy by, String oldPassword, String newPassword, String virtualHost) throws ServiceException {
         if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling changePassword", null);
-        XMLElement req = new XMLElement(AccountConstants.CHANGE_PASSWORD_REQUEST);
-        Element account = req.addElement(AccountConstants.E_ACCOUNT);
+        Element req = newRequestElement(AccountConstants.CHANGE_PASSWORD_REQUEST);
+        Element account = req.addUniqueElement(AccountConstants.E_ACCOUNT);
         account.addAttribute(AccountConstants.A_BY, by.name());
         account.setText(key);
-        req.addElement(AccountConstants.E_OLD_PASSWORD).setText(oldPassword);
-        req.addElement(AccountConstants.E_PASSWORD).setText(newPassword);
+        req.addAttribute(AccountConstants.E_OLD_PASSWORD, oldPassword, Disposition.CONTENT);
+        req.addAttribute(AccountConstants.E_PASSWORD, newPassword, Disposition.CONTENT);
         if (virtualHost != null)
-            req.addElement(AccountConstants.E_VIRTUAL_HOST).setText(virtualHost);
+            req.addAttribute(AccountConstants.E_VIRTUAL_HOST, virtualHost, Disposition.CONTENT);
         invoke(req);
     }
 
@@ -449,7 +463,7 @@ public class ZMailbox {
 
     private ZAuthResult authByPassword(Options options, String password) throws ServiceException {
         if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling authenticate", null);
-        XMLElement req = new XMLElement(AccountConstants.AUTH_REQUEST);
+        Element req = newRequestElement(AccountConstants.AUTH_REQUEST);
         Element account = req.addElement(AccountConstants.E_ACCOUNT);
         account.addAttribute(AccountConstants.A_BY, options.getAccountBy().name());
         account.setText(options.getAccount());
@@ -467,9 +481,7 @@ public class ZMailbox {
 
     private ZAuthResult authByAuthToken(Options options) throws ServiceException {
         if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling authenticate", null);
-        XMLElement req = new XMLElement(AccountConstants.AUTH_REQUEST);
-        // Element authTokenEl = req.addElement(AccountConstants.E_AUTH_TOKEN);
-        // authTokenEl.setText(options.getAuthToken());
+        Element req = newRequestElement(AccountConstants.AUTH_REQUEST);
         ZAuthToken zat = options.getAuthToken(); // cannot be null here
         Element authTokenEl = zat.encodeAuthReq(req, false);
         if (options.getRequestedSkin() != null) {
@@ -512,6 +524,8 @@ public class ZMailbox {
             mTransport.setAuthToken(mAuthToken.getType(), mAuthToken.getValue(), mAuthToken.getAttrs());
         if (options.getResponseProtocol() != null)
             mTransport.setResponseProtocol(options.getResponseProtocol());
+        if (options.getRequestProtocol() != null)
+            mTransport.setRequestProtocol(options.getRequestProtocol());
     }
 
     public Element invoke(Element request) throws ServiceException {
@@ -878,7 +892,7 @@ public class ZMailbox {
 
     public ZGetInfoResult getAccountInfo(boolean refresh) throws ServiceException {
         if (mGetInfoResult == null || refresh) {
-            XMLElement req = new XMLElement(AccountConstants.GET_INFO_REQUEST);
+            Element req = newRequestElement(AccountConstants.GET_INFO_REQUEST);
             mGetInfoResult = new ZGetInfoResult(invoke(req));
         }
         return mGetInfoResult;
@@ -912,13 +926,13 @@ public class ZMailbox {
 
         ZMailbox mbox = getMailbox(options);
         try {
-            XMLElement batch = new XMLElement(ZimbraNamespace.E_BATCH_REQUEST);
+            Element batch = mbox.newRequestElement(ZimbraNamespace.E_BATCH_REQUEST);
             batch.addElement(AccountConstants.GET_INFO_REQUEST);
             if (doSearch) {
                 Element search = batch.addElement(MailConstants.SEARCH_REQUEST);
                 if (itemsPerPage != null && itemsPerPage.length() > 0)
                     search.addAttribute(MailConstants.A_QUERY_LIMIT, itemsPerPage);
-                if (searchTypes != null && searchTypes.length() > 0) 
+                if (searchTypes != null && searchTypes.length() > 0)
                     search.addAttribute(MailConstants.A_SEARCH_TYPES, searchTypes);
             }
             Element resp = mbox.mTransport.invoke(batch);
@@ -978,7 +992,7 @@ public class ZMailbox {
         if (item instanceof ZTag) return (ZTag) item;
         else return null;
     }
-    
+
     private static final Pattern sCOMMA = Pattern.compile(",");
 
     /**
@@ -1001,7 +1015,7 @@ public class ZMailbox {
         }
         return tags;
     }
-    
+
     /**
      * create a new tag with the specified color.
      *
@@ -1012,8 +1026,8 @@ public class ZMailbox {
      *
      */
     public ZTag createTag(String name, ZTag.Color color) throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.CREATE_TAG_REQUEST);
-        Element tagEl = req.addElement(MailConstants.E_TAG);
+        Element req = newRequestElement(MailConstants.CREATE_TAG_REQUEST);
+        Element tagEl = req.addUniqueElement(MailConstants.E_TAG);
         tagEl.addAttribute(MailConstants.A_NAME, name);
         if (color != null) tagEl.addAttribute(MailConstants.A_COLOR, color.getValue());
         Element createdTagEl = invoke(req).getElement(MailConstants.E_TAG);
@@ -1080,8 +1094,8 @@ public class ZMailbox {
     }
 
     private Element tagAction(String op, String id) {
-        XMLElement req = new XMLElement(MailConstants.TAG_ACTION_REQUEST);
-        Element actionEl = req.addElement(MailConstants.E_ACTION);
+        Element req = newRequestElement(MailConstants.TAG_ACTION_REQUEST);
+        Element actionEl = req.addUniqueElement(MailConstants.E_ACTION);
         actionEl.addAttribute(MailConstants.A_ID, id);
         actionEl.addAttribute(MailConstants.A_OPERATION, op);
         return actionEl;
@@ -1117,7 +1131,7 @@ public class ZMailbox {
      * @param attrs specified attrs to return, or null for all.
      */
     public List<ZContact> getAllContacts(String optFolderId, ContactSortBy sortBy, boolean sync, List<String> attrs) throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.GET_CONTACTS_REQUEST);
+        Element req = newRequestElement(MailConstants.GET_CONTACTS_REQUEST);
         if (optFolderId != null)
             req.addAttribute(MailConstants.A_FOLDER, optFolderId);
         if (sortBy != null)
@@ -1139,16 +1153,14 @@ public class ZMailbox {
     }
 
     public String createContact(String folderId, String tags, Map<String, String> attrs) throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.CREATE_CONTACT_REQUEST);
-        Element cn = req.addElement(MailConstants.E_CONTACT);
+        Element req = newRequestElement(MailConstants.CREATE_CONTACT_REQUEST);
+        Element cn = req.addUniqueElement(MailConstants.E_CONTACT);
         if (folderId != null)
             cn.addAttribute(MailConstants.A_FOLDER, folderId);
         if (tags != null)
             cn.addAttribute(MailConstants.A_TAGS, tags);
         for (Map.Entry<String, String> entry : attrs.entrySet()) {
-            Element a = cn.addElement(MailConstants.E_ATTRIBUTE);
-            a.addAttribute(MailConstants.A_ATTRIBUTE_NAME, entry.getKey());
-            a.setText(entry.getValue());
+            cn.addKeyValuePair(entry.getKey(), entry.getValue(), MailConstants.E_ATTRIBUTE,  MailConstants.A_ATTRIBUTE_NAME);
         }
         return invoke(req).getElement(MailConstants.E_CONTACT).getAttribute(MailConstants.A_ID);
     }
@@ -1162,15 +1174,13 @@ public class ZMailbox {
      * @throws ServiceException on error
      */
     public String modifyContact(String id, boolean replace, Map<String, String> attrs) throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.MODIFY_CONTACT_REQUEST);
+        Element req = newRequestElement(MailConstants.MODIFY_CONTACT_REQUEST);
         if (replace)
             req.addAttribute(MailConstants.A_REPLACE, replace);
-        Element cn = req.addElement(MailConstants.E_CONTACT);
+        Element cn = req.addUniqueElement(MailConstants.E_CONTACT);
         cn.addAttribute(MailConstants.A_ID, id);
         for (Map.Entry<String, String> entry : attrs.entrySet()) {
-            Element a = cn.addElement(MailConstants.E_ATTRIBUTE);
-            a.addAttribute(MailConstants.A_ATTRIBUTE_NAME, entry.getKey());
-            a.setText(entry.getValue());
+            cn.addKeyValuePair(entry.getKey(), entry.getValue(), MailConstants.E_ATTRIBUTE,  MailConstants.A_ATTRIBUTE_NAME);
         }
         return invoke(req).getElement(MailConstants.E_CONTACT).getAttribute(MailConstants.A_ID);
     }
@@ -1185,7 +1195,7 @@ public class ZMailbox {
      * @throws ServiceException on error
      */
     public List<ZContact> getContacts(String ids, ContactSortBy sortBy, boolean sync, List<String> attrs) throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.GET_CONTACTS_REQUEST);
+        Element req = newRequestElement(MailConstants.GET_CONTACTS_REQUEST);
 
         if (sortBy != null)
             req.addAttribute(MailConstants.A_SORTBY, sortBy.name());
@@ -1213,7 +1223,7 @@ public class ZMailbox {
     public synchronized ZContact getContact(String id) throws ServiceException {
         ZContact result = (ZContact) mContactCache.get(id);
         if (result == null) {
-            XMLElement req = new XMLElement(MailConstants.GET_CONTACTS_REQUEST);
+            Element req = newRequestElement(MailConstants.GET_CONTACTS_REQUEST);
             req.addAttribute(MailConstants.A_SYNC, true);
             req.addElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, id);
             result = new ZContact(invoke(req).getElement(MailConstants.E_CONTACT));
@@ -1231,8 +1241,8 @@ public class ZMailbox {
     }
 
     private Element contactAction(String op, String id) {
-        XMLElement req = new XMLElement(MailConstants.CONTACT_ACTION_REQUEST);
-        Element actionEl = req.addElement(MailConstants.E_ACTION);
+        Element req = newRequestElement(MailConstants.CONTACT_ACTION_REQUEST);
+        Element actionEl = req.addUniqueElement(MailConstants.E_ACTION);
         actionEl.addAttribute(MailConstants.A_ID, id);
         actionEl.addAttribute(MailConstants.A_OPERATION, op);
         return actionEl;
@@ -1274,7 +1284,7 @@ public class ZMailbox {
 	/**
 	 *
 	 * @param ids comma-separated list of contact ids
-	 * @return true if one of the ids belongs to the my card 
+	 * @return true if one of the ids belongs to the my card
 	 * @throws ServiceException
 	 */
 	public boolean getIsMyCard(String ids) throws ServiceException {
@@ -1325,12 +1335,12 @@ public class ZMailbox {
     }
 
     public static final String CONTACT_IMPORT_TYPE_CSV = "csv";
-    
+
     public ZImportContactsResult importContacts(String folderId, String type, String attachmentId) throws ServiceException {
-    	XMLElement req = new XMLElement(MailConstants.IMPORT_CONTACTS_REQUEST);
+    	Element req = newRequestElement(MailConstants.IMPORT_CONTACTS_REQUEST);
     	req.addAttribute(MailConstants.A_CONTENT_TYPE, type);
     	req.addAttribute(MailConstants.A_FOLDER, folderId);
-    	Element content = req.addElement(MailConstants.E_CONTENT);
+    	Element content = req.addUniqueElement(MailConstants.E_CONTENT);
     	content.addAttribute(MailConstants.A_ATTACHMENT_ID, attachmentId);
     	return new ZImportContactsResult(invoke(req).getElement(MailConstants.E_CONTACT));
     }
@@ -1344,8 +1354,8 @@ public class ZMailbox {
      * @throws ServiceException on error
      */
     public ZConversation getConversation(String id, Fetch fetch) throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.GET_CONV_REQUEST);
-        Element convEl = req.addElement(MailConstants.E_CONV);
+        Element req = newRequestElement(MailConstants.GET_CONV_REQUEST);
+        Element convEl = req.addUniqueElement(MailConstants.E_CONV);
         convEl.addAttribute(MailConstants.A_ID, id);
         if (fetch != null && fetch != Fetch.none && fetch != Fetch.hits) {
             // use "1" for "first" for backward compat until DF is updated
@@ -1367,8 +1377,8 @@ public class ZMailbox {
     public static final String TC_INCLUDE_OTHER = "o";
 
     private Element convAction(String op, String id, String constraints) {
-        XMLElement req = new XMLElement(MailConstants.CONV_ACTION_REQUEST);
-        Element actionEl = req.addElement(MailConstants.E_ACTION);
+        Element req = newRequestElement(MailConstants.CONV_ACTION_REQUEST);
+        Element actionEl = req.addUniqueElement(MailConstants.E_ACTION);
         actionEl.addAttribute(MailConstants.A_ID, id);
         actionEl.addAttribute(MailConstants.A_OPERATION, op);
         if (constraints != null) actionEl.addAttribute(MailConstants.A_TARGET_CONSTRAINT, constraints);
@@ -1483,8 +1493,8 @@ public class ZMailbox {
     }
 
     private Element messageAction(String op, String id) {
-        XMLElement req = new XMLElement(MailConstants.MSG_ACTION_REQUEST);
-        Element actionEl = req.addElement(MailConstants.E_ACTION);
+        Element req = newRequestElement(MailConstants.MSG_ACTION_REQUEST);
+        Element actionEl = req.addUniqueElement(MailConstants.E_ACTION);
         actionEl.addAttribute(MailConstants.A_ID, id);
         actionEl.addAttribute(MailConstants.A_OPERATION, op);
         return actionEl;
@@ -1493,8 +1503,8 @@ public class ZMailbox {
     // ------------------------
 
     private Element itemAction(String op, String id, String constraints) {
-        XMLElement req = new XMLElement(MailConstants.ITEM_ACTION_REQUEST);
-        Element actionEl = req.addElement(MailConstants.E_ACTION);
+        Element req = newRequestElement(MailConstants.ITEM_ACTION_REQUEST);
+        Element actionEl = req.addUniqueElement(MailConstants.E_ACTION);
         actionEl.addAttribute(MailConstants.A_ID, id);
         actionEl.addAttribute(MailConstants.A_OPERATION, op);
         if (constraints != null) actionEl.addAttribute(MailConstants.A_TARGET_CONSTRAINT, constraints);
@@ -1642,11 +1652,11 @@ public class ZMailbox {
 
         return uploadAttachments(new Part[] { part }, msTimeout);
     }
-    
+
     /**
      * Uploads multiple byte arrays to <tt>FileUploadServlet</tt>.
      * @param attachments the attachments.  The key to the <tt>Map</tt> is the attachment
-     * name and the value is the content. 
+     * name and the value is the content.
      * @return the attachment id
      */
     public String uploadAttachments(Map<String, byte[]> attachments, int msTimeout) throws ServiceException {
@@ -1681,7 +1691,7 @@ public class ZMailbox {
         PostMethod post = new PostMethod(uri.toString());
         ZAuthToken zat = getAuthToken();
         zat.encode(client, post, isAdmin, uri.getHost(), true);
-        
+
         client.getHttpConnectionManager().getParams().setConnectionTimeout(msTimeout);
         int statusCode;
         try {
@@ -1737,8 +1747,8 @@ public class ZMailbox {
      * @throws com.zimbra.common.service.ServiceException on error
      */
     public String addMessage(String folderId, String flags, String tags, long receivedDate, String content, boolean noICal) throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.ADD_MSG_REQUEST);
-        Element m = req.addElement(MailConstants.E_MSG);
+        Element req = newRequestElement(MailConstants.ADD_MSG_REQUEST);
+        Element m = req.addUniqueElement(MailConstants.E_MSG);
         m.addAttribute(MailConstants.A_FOLDER, folderId);
         if (flags != null && flags.length() > 0)
             m.addAttribute(MailConstants.A_FLAGS, flags);
@@ -1768,8 +1778,8 @@ public class ZMailbox {
         String aid = uploadAttachment("message", content, "message/rfc822", 5000);
 
         // now, use the returned upload ID to do the message send
-        XMLElement req = new XMLElement(MailConstants.ADD_MSG_REQUEST);
-        Element m = req.addElement(MailConstants.E_MSG);
+        Element req = newRequestElement(MailConstants.ADD_MSG_REQUEST);
+        Element m = req.addUniqueElement(MailConstants.E_MSG);
         m.addAttribute(MailConstants.A_FOLDER, folderId);
         if (flags != null && flags.length() > 0)
             m.addAttribute(MailConstants.A_FLAGS, flags);
@@ -1790,8 +1800,8 @@ public class ZMailbox {
     public synchronized ZMessage getMessage(ZGetMessageParams params) throws ServiceException {
         CachedMessage cm = (CachedMessage) mMessageCache.get(params.getId());
         if (cm == null || !cm.params.equals(params)) {
-            XMLElement req = new XMLElement(MailConstants.GET_MSG_REQUEST);
-            Element msgEl = req.addElement(MailConstants.E_MSG);
+            Element req = newRequestElement(MailConstants.GET_MSG_REQUEST);
+            Element msgEl = req.addUniqueElement(MailConstants.E_MSG);
             msgEl.addAttribute(MailConstants.A_ID, params.getId());
             if (params.getPart() != null) msgEl.addAttribute(MailConstants.A_PART, params.getPart());
             msgEl.addAttribute(MailConstants.A_MARK_READ, params.isMarkRead());
@@ -2002,7 +2012,7 @@ public class ZMailbox {
         try {
             URI uri = getRestURI(relativePath);
             boolean isAdmin = uri.getPort() == LC.zimbra_admin_service_port.intValue();
-            
+
             HttpClient client = new HttpClient();
             if (msecTimeout > 0)
                 client.getHttpConnectionManager().getParams().setConnectionTimeout(msecTimeout);
@@ -2056,7 +2066,7 @@ public class ZMailbox {
             }
             URI uri = getRestURI(relativePath);
             boolean isAdmin = uri.getPort() == LC.zimbra_admin_service_port.intValue();
-            
+
             HttpClient client = new HttpClient();
             if (msecTimeout > 0)
                 client.getHttpConnectionManager().getParams().setConnectionTimeout(msecTimeout);
@@ -2064,7 +2074,7 @@ public class ZMailbox {
             post = new PostMethod(uri.toString());
             ZAuthToken zat = getAuthToken();
             zat.encode(client, post, isAdmin, uri.getHost(), true);
-            
+
             RequestEntity entity = (length > 0) ?
                     new InputStreamRequestEntity(is, length, contentType != null ? contentType:  "application/octet-stream") :
                     new InputStreamRequestEntity(is, contentType);
@@ -2127,8 +2137,8 @@ public class ZMailbox {
      * @param url remote url for rss/atom/ics feeds
      */
     public ZFolder createFolder(String parentId, String name, ZFolder.View defaultView, ZFolder.Color color, String flags, String url) throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.CREATE_FOLDER_REQUEST);
-        Element folderEl = req.addElement(MailConstants.E_FOLDER);
+        Element req = newRequestElement(MailConstants.CREATE_FOLDER_REQUEST);
+        Element folderEl = req.addUniqueElement(MailConstants.E_FOLDER);
         folderEl.addAttribute(MailConstants.A_NAME, name);
         folderEl.addAttribute(MailConstants.A_FOLDER, parentId);
         if (defaultView != null) folderEl.addAttribute(MailConstants.A_DEFAULT_VIEW, defaultView.name());
@@ -2155,8 +2165,8 @@ public class ZMailbox {
      */
     public ZSearchFolder createSearchFolder(String parentId, String name,
                 String query, String types, SearchSortBy sortBy, ZFolder.Color color) throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.CREATE_SEARCH_FOLDER_REQUEST);
-        Element folderEl = req.addElement(MailConstants.E_SEARCH);
+        Element req = newRequestElement(MailConstants.CREATE_SEARCH_FOLDER_REQUEST);
+        Element folderEl = req.addUniqueElement(MailConstants.E_SEARCH);
         folderEl.addAttribute(MailConstants.A_NAME, name);
         folderEl.addAttribute(MailConstants.A_FOLDER, parentId);
         folderEl.addAttribute(MailConstants.A_QUERY, query);
@@ -2179,8 +2189,8 @@ public class ZMailbox {
      * @throws ServiceException on error
      */
     public ZSearchFolder modifySearchFolder(String id, String query, String types, SearchSortBy sortBy) throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.MODIFY_SEARCH_FOLDER_REQUEST);
-        Element folderEl = req.addElement(MailConstants.E_SEARCH);
+        Element req = newRequestElement(MailConstants.MODIFY_SEARCH_FOLDER_REQUEST);
+        Element folderEl = req.addUniqueElement(MailConstants.E_SEARCH);
         folderEl.addAttribute(MailConstants.A_ID, id);
         if (query != null) folderEl.addAttribute(MailConstants.A_QUERY, query);
         if (types != null) folderEl.addAttribute(MailConstants.A_SEARCH_TYPES, types);
@@ -2212,8 +2222,8 @@ public class ZMailbox {
     }
 
     private Element folderAction(String op, String ids) {
-        XMLElement req = new XMLElement(MailConstants.FOLDER_ACTION_REQUEST);
-        Element actionEl = req.addElement(MailConstants.E_ACTION);
+        Element req = newRequestElement(MailConstants.FOLDER_ACTION_REQUEST);
+        Element actionEl = req.addUniqueElement(MailConstants.E_ACTION);
         actionEl.addAttribute(MailConstants.A_ID, ids);
         actionEl.addAttribute(MailConstants.A_OPERATION, op);
         return actionEl;
@@ -2269,7 +2279,7 @@ public class ZMailbox {
 
     /** hard delete all items in folder (doesn't delete the folder itself)
      *  deletes subfolders contained in the specified folder(s) if <tt>subfolders</tt> is set
-     * 
+     *
      * @param ids ids of folders to empty
      * @param subfolders whether to delete subfolders of this folder
      * @return action result
@@ -2342,7 +2352,7 @@ public class ZMailbox {
             String folderId, GranteeType granteeType, String grantreeId,
             String perms, String args) throws ServiceException {
         Element action = folderAction("grant", folderId);
-        Element grant = action.addElement(MailConstants.E_GRANT);
+        Element grant = action.addUniqueElement(MailConstants.E_GRANT);
         grant.addAttribute(MailConstants.A_RIGHTS, perms);
         grant.addAttribute(MailConstants.A_DISPLAY, grantreeId);
         grant.addAttribute(MailConstants.A_GRANT_TYPE, granteeType.name());
@@ -2404,7 +2414,7 @@ public class ZMailbox {
     public ZActionResult syncFolder(String ids) throws ServiceException {
         return doAction(folderAction("sync", ids));
     }
-    
+
     /** sets or unsets the folder's sync flag
      * @param id folder id
      * @param syncon turn sync flag on
@@ -2427,7 +2437,7 @@ public class ZMailbox {
         } else {
         	name = MailConstants.SEARCH_REQUEST;
         }
-		XMLElement req = new XMLElement(name);
+        Element req = newRequestElement(name);
 
         req.addAttribute(MailConstants.A_CONV_ID, convId);
         if (nest) req.addAttribute(MailConstants.A_NEST_MESSAGES, true);
@@ -2441,13 +2451,13 @@ public class ZMailbox {
         }
         if (params.getCalExpandInstStart() != 0) req.addAttribute(MailConstants.A_CAL_EXPAND_INST_START, params.getCalExpandInstStart());
         if (params.getCalExpandInstEnd() != 0) req.addAttribute(MailConstants.A_CAL_EXPAND_INST_END, params.getCalExpandInstEnd());
-        
+
         if (params.isPreferHtml()) req.addAttribute(MailConstants.A_WANT_HTML, params.isPreferHtml());
         if (params.isMarkAsRead()) req.addAttribute(MailConstants.A_MARK_READ, params.isMarkAsRead());
         if (params.isRecipientMode()) req.addAttribute(MailConstants.A_RECIPIENTS, params.isRecipientMode());
         if (params.getField() != null) req.addAttribute(MailConstants.A_FIELD, params.getField());
 
-        req.addElement(MailConstants.E_QUERY).setText(params.getQuery());
+        req.addAttribute(MailConstants.E_QUERY, params.getQuery(), Element.Disposition.CONTENT);
 
         if (params.getCursor() != null) {
             Cursor cursor = params.getCursor();
@@ -2526,7 +2536,7 @@ public class ZMailbox {
 
         List<ZTag> tagList = new ArrayList<ZTag>();
         try {
-            Element response = invoke(new XMLElement(MailConstants.GET_TAG_REQUEST));
+            Element response = invoke(newRequestElement(MailConstants.GET_TAG_REQUEST));
             for (Element t : response.listElements(MailConstants.E_TAG))
                 tagList.add(new ZTag(t));
         } catch (SoapFaultException sfe) {
@@ -2534,7 +2544,7 @@ public class ZMailbox {
                 throw sfe;
         }
 
-        Element response = invoke(new XMLElement(MailConstants.GET_FOLDER_REQUEST).addAttribute(MailConstants.A_VISIBLE, true));
+        Element response = invoke(newRequestElement(MailConstants.GET_FOLDER_REQUEST).addAttribute(MailConstants.A_VISIBLE, true));
         Element eFolder = response.getOptionalElement(MailConstants.E_FOLDER);
         ZFolder userRoot = (eFolder != null ? new ZFolder(eFolder, null) : null);
 
@@ -2550,7 +2560,7 @@ public class ZMailbox {
      * @throws ServiceException on error
      */
     public void noOp() throws ServiceException {
-        invoke(new XMLElement(MailConstants.NO_OP_REQUEST));
+        invoke(newRequestElement(MailConstants.NO_OP_REQUEST));
     }
 
     public enum OwnerBy {
@@ -2596,8 +2606,8 @@ public class ZMailbox {
     public ZMountpoint createMountpoint(String parentId, String name,
             ZFolder.View defaultView, ZFolder.Color color, String flags,
             OwnerBy ownerBy, String owner, SharedItemBy itemBy, String sharedItem) throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.CREATE_MOUNTPOINT_REQUEST);
-        Element linkEl = req.addElement(MailConstants.E_MOUNT);
+        Element req = newRequestElement(MailConstants.CREATE_MOUNTPOINT_REQUEST);
+        Element linkEl = req.addUniqueElement(MailConstants.E_MOUNT);
         linkEl.addAttribute(MailConstants.A_NAME, name);
         linkEl.addAttribute(MailConstants.A_FOLDER, parentId);
         if (defaultView != null) linkEl.addAttribute(MailConstants.A_DEFAULT_VIEW, defaultView.name());
@@ -2616,8 +2626,8 @@ public class ZMailbox {
      * @throws ServiceException on error
      */
     public void iCalReply(String ical) throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.ICAL_REPLY_REQUEST);
-        Element icalElem = req.addElement(MailConstants.E_CAL_ICAL);
+        Element req = newRequestElement(MailConstants.ICAL_REPLY_REQUEST);
+        Element icalElem = req.addUniqueElement(MailConstants.E_CAL_ICAL);
         icalElem.setText(ical);
         invoke(req);
     }
@@ -2771,7 +2781,7 @@ public class ZMailbox {
         if (message.getAddresses() != null) {
             for (ZEmailAddress addr : message.getAddresses()) {
 				if (mountpoint != null && addr.getType().equals(ZEmailAddress.EMAIL_TYPE_FROM)) {
-					//  For on behalf of messages, replace the from: and add a sender: 
+					//  For on behalf of messages, replace the from: and add a sender:
 					Element e = m.addElement(MailConstants.E_EMAIL);
 					e.addAttribute(MailConstants.A_TYPE, ZEmailAddress.EMAIL_TYPE_SENDER);
 					e.addAttribute(MailConstants.A_ADDRESS, addr.getAddress());
@@ -2841,7 +2851,7 @@ public class ZMailbox {
 	}
 
 	public ZSendMessageResponse sendMessage(ZOutgoingMessage message, String sendUid, boolean needCalendarSentByFixup) throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.SEND_MSG_REQUEST);
+        Element req = newRequestElement(MailConstants.SEND_MSG_REQUEST);
 
         if (sendUid != null && sendUid.length() > 0)
             req.addAttribute(MailConstants.A_SEND_UID, sendUid);
@@ -2862,7 +2872,7 @@ public class ZMailbox {
     }
 
     public synchronized ZMessage saveDraft(ZOutgoingMessage message, String existingDraftId, String folderId) throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.SAVE_DRAFT_REQUEST);
+        Element req = newRequestElement(MailConstants.SAVE_DRAFT_REQUEST);
 
 		ZMountpoint mountpoint = getMountpoint(message);
         Element m = getMessageElement(req, message, mountpoint);
@@ -2912,20 +2922,20 @@ public class ZMailbox {
 	}
 
 	public synchronized CheckSpellingResult checkSpelling(String text) throws ServiceException {
-		XMLElement req = new XMLElement(MailConstants.CHECK_SPELLING_REQUEST);
+		Element req = newRequestElement(MailConstants.CHECK_SPELLING_REQUEST);
 		req.setText(text);
 		Element response = invoke(req);
 		return new CheckSpellingResult(response);
 	}
 
     public void createIdentity(ZIdentity identity) throws ServiceException {
-        XMLElement req = new XMLElement(AccountConstants.CREATE_IDENTITY_REQUEST);
+        Element req = newRequestElement(AccountConstants.CREATE_IDENTITY_REQUEST);
         identity.toElement(req);
         invoke(req);
     }
 
     public List<ZIdentity> getIdentities() throws ServiceException {
-        XMLElement req = new XMLElement(AccountConstants.GET_IDENTITIES_REQUEST);
+        Element req = newRequestElement(AccountConstants.GET_IDENTITIES_REQUEST);
         Element resp = invoke(req);
         List<ZIdentity> result = new ArrayList<ZIdentity>();
         for (Element identity : resp.listElements(AccountConstants.E_IDENTITY)) {
@@ -2939,22 +2949,22 @@ public class ZMailbox {
     }
 
     public void deleteIdentity(IdentityBy by, String key) throws ServiceException {
-        XMLElement req = new XMLElement(AccountConstants.DELETE_IDENTITY_REQUEST);
+        Element req = newRequestElement(AccountConstants.DELETE_IDENTITY_REQUEST);
         if (by == IdentityBy.name)
-            req.addElement(AccountConstants.E_IDENTITY).addAttribute(AccountConstants.A_NAME, key);
+            req.addUniqueElement(AccountConstants.E_IDENTITY).addAttribute(AccountConstants.A_NAME, key);
         else if (by == IdentityBy.id)
-            req.addElement(AccountConstants.E_IDENTITY).addAttribute(AccountConstants.A_ID, key);
+            req.addUniqueElement(AccountConstants.E_IDENTITY).addAttribute(AccountConstants.A_ID, key);
         invoke(req);
     }
 
     public void modifyIdentity(ZIdentity identity) throws ServiceException {
-        XMLElement req = new XMLElement(AccountConstants.MODIFY_IDENTITY_REQUEST);
+        Element req = newRequestElement(AccountConstants.MODIFY_IDENTITY_REQUEST);
         identity.toElement(req);
         invoke(req);
     }
 
     public String createDataSource(ZDataSource source) throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.CREATE_DATA_SOURCE_REQUEST);
+        Element req = newRequestElement(MailConstants.CREATE_DATA_SOURCE_REQUEST);
         source.toElement(req);
         return invoke(req).listElements().get(0).getAttribute(MailConstants.A_ID);
     }
@@ -2969,7 +2979,7 @@ public class ZMailbox {
      * @throws ServiceException on error
      */
     public String testPop3DataSource(String host, int port, String username, String password) throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.TEST_DATA_SOURCE_REQUEST);
+        Element req = newRequestElement(MailConstants.TEST_DATA_SOURCE_REQUEST);
         Element pop3 = req.addElement(MailConstants.E_DS_POP3);
         pop3.addAttribute(MailConstants.A_DS_HOST, host);
         pop3.addAttribute(MailConstants.A_DS_PORT, port);
@@ -2985,7 +2995,7 @@ public class ZMailbox {
     }
 
     public List<ZDataSource> getAllDataSources() throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.GET_DATA_SOURCES_REQUEST);
+        Element req = newRequestElement(MailConstants.GET_DATA_SOURCES_REQUEST);
         Element response = invoke(req);
         List<ZDataSource> result = new ArrayList<ZDataSource>();
         for (Element ds : response.listElements()) {
@@ -2999,13 +3009,13 @@ public class ZMailbox {
     }
 
     public void modifyDataSource(ZDataSource source) throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.MODIFY_DATA_SOURCE_REQUEST);
+        Element req = newRequestElement(MailConstants.MODIFY_DATA_SOURCE_REQUEST);
         source.toElement(req);
         invoke(req);
     }
 
     public void deleteDataSource(ZDataSource source) throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.DELETE_DATA_SOURCE_REQUEST);
+        Element req = newRequestElement(MailConstants.DELETE_DATA_SOURCE_REQUEST);
         source.toIdElement(req);
         invoke(req);
     }
@@ -3016,32 +3026,33 @@ public class ZMailbox {
 
     public synchronized ZFilterRules getFilterRules(boolean refresh) throws ServiceException {
         if (mRules == null || refresh) {
-            XMLElement req = new XMLElement(MailConstants.GET_RULES_REQUEST);
+            Element req = newRequestElement(MailConstants.GET_RULES_REQUEST);
             mRules = new ZFilterRules(invoke(req).getElement(MailConstants.E_RULES));
         }
         return new ZFilterRules(mRules);
     }
 
     public synchronized void saveFilterRules(ZFilterRules rules) throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.SAVE_RULES_REQUEST);
+        // TODO: this has to be XML for now, due to logic on server
+        Element req = new XMLElement(MailConstants.SAVE_RULES_REQUEST);
         rules.toElement(req);
         invoke(req);
         mRules = new ZFilterRules(rules);
     }
 
     public void deleteDataSource(DataSourceBy by, String key) throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.DELETE_DATA_SOURCE_REQUEST);
+        Element req = newRequestElement(MailConstants.DELETE_DATA_SOURCE_REQUEST);
         if (by == DataSourceBy.name)
-            req.addElement(MailConstants.E_DS).addAttribute(MailConstants.A_NAME, key);
+            req.addUniqueElement(MailConstants.E_DS).addAttribute(MailConstants.A_NAME, key);
         else if (by == DataSourceBy.id)
-            req.addElement(MailConstants.E_DS).addAttribute(MailConstants.A_ID, key);
+            req.addUniqueElement(MailConstants.E_DS).addAttribute(MailConstants.A_ID, key);
         else
             throw ServiceException.INVALID_REQUEST("must specify data source by id or name", null);
         invoke(req);
     }
 
     public void importData(List<ZDataSource> sources) throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.IMPORT_DATA_REQUEST);
+        Element req = newRequestElement(MailConstants.IMPORT_DATA_REQUEST);
         for (ZDataSource src : sources) {
             src.toIdElement(req);
         }
@@ -3068,7 +3079,7 @@ public class ZMailbox {
     }
 
     public List<ZImportStatus> getImportStatus() throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.GET_IMPORT_STATUS_REQUEST);
+        Element req = newRequestElement(MailConstants.GET_IMPORT_STATUS_REQUEST);
         Element response = invoke(req);
         List<ZImportStatus> result = new ArrayList<ZImportStatus>();
         for (Element status : response.listElements()) {
@@ -3078,8 +3089,8 @@ public class ZMailbox {
     }
 
     public String createDocument(String folderId, String name, String attachmentId) throws ServiceException {
-    	XMLElement req = new XMLElement(MailConstants.SAVE_DOCUMENT_REQUEST);
-    	Element doc = req.addElement(MailConstants.E_DOC);
+    	Element req = newRequestElement(MailConstants.SAVE_DOCUMENT_REQUEST);
+    	Element doc = req.addUniqueElement(MailConstants.E_DOC);
     	doc.addAttribute(MailConstants.A_NAME, name);
     	doc.addAttribute(MailConstants.A_FOLDER, folderId);
     	Element upload = doc.addElement(MailConstants.E_UPLOAD);
@@ -3088,8 +3099,8 @@ public class ZMailbox {
     }
 
     public String createWiki(String folderId, String name, String contents) throws ServiceException {
-    	XMLElement req = new XMLElement(MailConstants.SAVE_WIKI_REQUEST);
-    	Element doc = req.addElement(MailConstants.E_WIKIWORD);
+    	Element req = newRequestElement(MailConstants.SAVE_WIKI_REQUEST);
+    	Element doc = req.addUniqueElement(MailConstants.E_WIKIWORD);
     	doc.addAttribute(MailConstants.A_NAME, name);
     	doc.addAttribute(MailConstants.A_FOLDER, folderId);
     	doc.setText(contents);
@@ -3103,34 +3114,28 @@ public class ZMailbox {
      * @throws ServiceException on error
      */
     public void modifyPrefs(Map<String, ? extends Object> prefs) throws ServiceException {
-        XMLElement req = new XMLElement(AccountConstants.MODIFY_PREFS_REQUEST);
+        Element req = newRequestElement(AccountConstants.MODIFY_PREFS_REQUEST);
         for (Map.Entry<String, ? extends Object> entry : prefs.entrySet()){
             Object vo = entry.getValue();
             if (vo instanceof String[]) {
                 String[] values = (String[]) vo;
                 for (String v : values) {
-                    Element pref = req.addElement(AccountConstants.E_PREF);
-                    pref.addAttribute(AccountConstants.A_NAME, entry.getKey());
-                    pref.setText(v);
+                    req.addKeyValuePair(entry.getKey(), v, AccountConstants.E_PREF,  AccountConstants.A_NAME);
                 }
             } else if (vo instanceof Collection) {
                 Collection values = (Collection) vo;
                 for (Object v : values) {
-                    Element pref = req.addElement(AccountConstants.E_PREF);
-                    pref.addAttribute(AccountConstants.A_NAME, entry.getKey());
-                    pref.setText(v.toString());
+                    req.addKeyValuePair(entry.getKey(), v.toString(), AccountConstants.E_PREF,  AccountConstants.A_NAME);
                 }
             } else {
-                Element pref = req.addElement(AccountConstants.E_PREF);
-                pref.addAttribute(AccountConstants.A_NAME, entry.getKey());
-                pref.setText(vo.toString());
+                req.addKeyValuePair(entry.getKey(), vo.toString(), AccountConstants.E_PREF,  AccountConstants.A_NAME);
             }
         }
         invoke(req);
     }
 
     public List<String> getAvailableSkins() throws ServiceException {
-        XMLElement req = new XMLElement(AccountConstants.GET_AVAILABLE_SKINS_REQUEST);
+        Element req = newRequestElement(AccountConstants.GET_AVAILABLE_SKINS_REQUEST);
         Element resp = invoke(req);
         List<String> result = new ArrayList<String>();
         for (Element skin : resp.listElements(AccountConstants.E_SKIN)) {
@@ -3177,7 +3182,7 @@ public class ZMailbox {
     }
 
     public ZSearchGalResult searchGal(String query, GalEntryType type) throws ServiceException {
-        XMLElement req = new XMLElement(AccountConstants.SEARCH_GAL_REQUEST);
+        Element req = newRequestElement(AccountConstants.SEARCH_GAL_REQUEST);
         if (type != null)
         req.addAttribute(AccountConstants.A_TYPE, type.name());
         req.addElement(AccountConstants.E_NAME).setText(query);
@@ -3190,7 +3195,7 @@ public class ZMailbox {
     }
 
     public ZSearchGalResult autoCompleteGal(String query, GalEntryType type, int limit) throws ServiceException {
-        XMLElement req = new XMLElement(AccountConstants.AUTO_COMPLETE_GAL_REQUEST);
+        Element req = newRequestElement(AccountConstants.AUTO_COMPLETE_GAL_REQUEST);
         if (type != null)
         req.addAttribute(AccountConstants.A_TYPE, type.name());
         req.addAttribute(AccountConstants.A_LIMIT, limit);
@@ -3236,7 +3241,7 @@ public class ZMailbox {
         }
 
         public String getQuery() {
-            return mQuery; 
+            return mQuery;
         }
     }
 
@@ -3264,7 +3269,7 @@ public class ZMailbox {
         if (query == null) query = "";
         if (folderIds == null || folderIds.length == 0)
             folderIds = new String[] { ZFolder.ID_CALENDAR };
-        
+
         List<ZApptSummaryResult> summaries = new ArrayList<ZApptSummaryResult>();
         List<String> idsToFetch = new ArrayList<String>(folderIds.length);
 
@@ -3305,11 +3310,11 @@ public class ZMailbox {
                 }
             }
             searchQuery.append(")");
-            
+
             if (query.length() > 0) {
                 searchQuery.append("AND (").append(query).append(")");
             }
-            
+
             ZSearchParams params = new ZSearchParams(searchQuery.toString());
             params.setCalExpandInstStart(startMsec);
             params.setCalExpandInstEnd(endMsec);
@@ -3317,7 +3322,7 @@ public class ZMailbox {
             params.setLimit(2000);
             params.setSortBy(SearchSortBy.none);
             params.setTimeZone(timeZone);
-            
+
             int offset = 0;
             int n = 0;
             // really while(true), but add in a safety net?
@@ -3364,9 +3369,9 @@ public class ZMailbox {
             return mInviteId;
         }
     }
-    
+
     public ZAppointmentResult createAppointment(String folderId, String flags, ZOutgoingMessage message, ZInvite invite, String optionalUid) throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.CREATE_APPOINTMENT_REQUEST);
+        Element req = newRequestElement(MailConstants.CREATE_APPOINTMENT_REQUEST);
 
         //noinspection UnusedDeclaration
         Element mEl = getMessageElement(req, message, null);
@@ -3385,7 +3390,7 @@ public class ZMailbox {
     }
 
     public ZAppointmentResult createAppointmentException(String id, String component, ZDateTime exceptionId, ZOutgoingMessage message, ZInvite invite, String optionalUid) throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.CREATE_APPOINTMENT_EXCEPTION_REQUEST);
+        Element req = newRequestElement(MailConstants.CREATE_APPOINTMENT_EXCEPTION_REQUEST);
 
         req.addAttribute(MailConstants.A_ID, id);
         req.addAttribute(MailConstants.E_INVITE_COMPONENT, component);
@@ -3403,7 +3408,7 @@ public class ZMailbox {
     }
 
     public ZAppointmentResult modifyAppointment(String id, String component, ZDateTime exceptionId, ZOutgoingMessage message, ZInvite invite) throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.MODIFY_APPOINTMENT_REQUEST);
+        Element req = newRequestElement(MailConstants.MODIFY_APPOINTMENT_REQUEST);
 
         req.addAttribute(MailConstants.A_ID, id);
         req.addAttribute(MailConstants.E_INVITE_COMPONENT, component);
@@ -3423,7 +3428,7 @@ public class ZMailbox {
     public enum CancelRange { THISANDFUTURE, THISANDPRIOR }
 
     public void cancelAppointment(String id, String component, ZTimeZone tz, ZDateTime instance, CancelRange range, ZOutgoingMessage message)  throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.CANCEL_APPOINTMENT_REQUEST);
+        Element req = newRequestElement(MailConstants.CANCEL_APPOINTMENT_REQUEST);
 
         req.addAttribute(MailConstants.A_ID, id);
         req.addAttribute(MailConstants.E_INVITE_COMPONENT, component);
@@ -3435,7 +3440,7 @@ public class ZMailbox {
             if (range != null)
                 instEl.addAttribute(MailConstants.A_CAL_RANGE, range.name());
         }
-        
+
         if (message != null) getMessageElement(req, message, null);
 
         mMessageCache.remove(id);
@@ -3480,7 +3485,7 @@ public class ZMailbox {
     }
 
     public ZSendInviteReplyResult sendInviteReply(String id, String component, ReplyVerb verb, boolean updateOrganizer, ZTimeZone tz, ZDateTime instance, ZOutgoingMessage message)  throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.SEND_INVITE_REPLY_REQUEST);
+        Element req = newRequestElement(MailConstants.SEND_INVITE_REPLY_REQUEST);
 
         req.addAttribute(MailConstants.A_ID, id);
         req.addAttribute(MailConstants.A_CAL_COMPONENT_NUM, component);
@@ -3494,14 +3499,14 @@ public class ZMailbox {
         }
 
         if (message != null) getMessageElement(req, message, null);
-        
+
         mMessageCache.remove(id);
 
         return new ZSendInviteReplyResult(invoke(req));
     }
 
     public ZAppointment getAppointment(String id) throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.GET_APPOINTMENT_REQUEST);
+        Element req = newRequestElement(MailConstants.GET_APPOINTMENT_REQUEST);
         req.addAttribute(MailConstants.A_ID, id);
         req.addAttribute(MailConstants.A_SYNC, true);
         return new ZAppointment(invoke(req));
@@ -3533,7 +3538,7 @@ public class ZMailbox {
     public static final String APPOINTMENT_IMPORT_TYPE_ICS= "ics";
 
     public ZImportAppointmentsResult importAppointments(String folderId, String type, String attachmentId) throws ServiceException {
-    	XMLElement req = new XMLElement(MailConstants.IMPORT_APPOINTMENTS_REQUEST);
+    	Element req = newRequestElement(MailConstants.IMPORT_APPOINTMENTS_REQUEST);
     	req.addAttribute(MailConstants.A_CONTENT_TYPE, type);
     	req.addAttribute(MailConstants.A_FOLDER, folderId);
     	Element content = req.addElement(MailConstants.E_CONTENT);
@@ -3583,7 +3588,7 @@ public class ZMailbox {
     }
 
     public List<ZGetFreeBusyResult> getFreeBusy(String id, long startTime, long endTime) throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.GET_FREE_BUSY_REQUEST);
+        Element req = newRequestElement(MailConstants.GET_FREE_BUSY_REQUEST);
         req.addAttribute(MailConstants.A_UID, id);
         req.addAttribute(MailConstants.A_CAL_START_TIME, startTime);
         req.addAttribute(MailConstants.A_CAL_END_TIME, endTime);
@@ -3632,7 +3637,7 @@ public class ZMailbox {
     /* tasks */
 
     public ZAppointmentResult createTask(String folderId, String flags, ZOutgoingMessage message, ZInvite invite, String optionalUid) throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.CREATE_TASK_REQUEST);
+        Element req = newRequestElement(MailConstants.CREATE_TASK_REQUEST);
 
         //noinspection UnusedDeclaration
         Element mEl = getMessageElement(req, message, null);
@@ -3651,7 +3656,7 @@ public class ZMailbox {
     }
 
     public ZAppointmentResult createTaskException(String id, String component, ZDateTime exceptionId, ZOutgoingMessage message, ZInvite invite, String optionalUid) throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.CREATE_TASK_EXCEPTION_REQUEST);
+        Element req = newRequestElement(MailConstants.CREATE_TASK_EXCEPTION_REQUEST);
 
         req.addAttribute(MailConstants.A_ID, id);
         req.addAttribute(MailConstants.E_INVITE_COMPONENT, component);
@@ -3669,7 +3674,7 @@ public class ZMailbox {
     }
 
     public ZAppointmentResult modifyTask(String id, String component, ZDateTime exceptionId, ZOutgoingMessage message, ZInvite invite) throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.MODIFY_TASK_REQUEST);
+        Element req = newRequestElement(MailConstants.MODIFY_TASK_REQUEST);
 
         req.addAttribute(MailConstants.A_ID, id);
         req.addAttribute(MailConstants.E_INVITE_COMPONENT, component);
@@ -3687,7 +3692,7 @@ public class ZMailbox {
     }
 
     public void cancelTask(String id, String component, ZTimeZone tz, ZDateTime instance, CancelRange range, ZOutgoingMessage message)  throws ServiceException {
-        XMLElement req = new XMLElement(MailConstants.CANCEL_TASK_REQUEST);
+        Element req = newRequestElement(MailConstants.CANCEL_TASK_REQUEST);
 
         req.addAttribute(MailConstants.A_ID, id);
         req.addAttribute(MailConstants.E_INVITE_COMPONENT, component);
@@ -3728,7 +3733,7 @@ public class ZMailbox {
         return mPhoneAccounts;
     }
 
-	private void setVoiceStorePrincipal(XMLElement req) {
+	private void setVoiceStorePrincipal(Element req) {
 		Element el = req.addElement(VoiceConstants.E_STOREPRINCIPAL);
 		el.addAttribute(MailConstants.A_ID, mVoiceStorePrincipal.mId);
 		el.addAttribute(MailConstants.A_NAME, mVoiceStorePrincipal.mName);
@@ -3841,7 +3846,7 @@ public class ZMailbox {
     }
 
     public synchronized String createSignature(ZSignature signature) throws ServiceException {
-        XMLElement req = new XMLElement(AccountConstants.CREATE_SIGNATURE_REQUEST);
+        Element req = newRequestElement(AccountConstants.CREATE_SIGNATURE_REQUEST);
         signature.toElement(req);
         String id = invoke(req).getElement(AccountConstants.E_SIGNATURE).getAttribute(AccountConstants.A_ID);
         updateSigs();
@@ -3849,7 +3854,7 @@ public class ZMailbox {
     }
 
     public List<ZSignature> getSignatures() throws ServiceException {
-        XMLElement req = new XMLElement(AccountConstants.GET_SIGNATURES_REQUEST);
+        Element req = newRequestElement(AccountConstants.GET_SIGNATURES_REQUEST);
         Element resp = invoke(req);
         List<ZSignature> result = new ArrayList<ZSignature>();
         for (Element signature : resp.listElements(AccountConstants.E_SIGNATURE)) {
@@ -3859,14 +3864,14 @@ public class ZMailbox {
     }
 
     public synchronized void deleteSignature(String id) throws ServiceException {
-        XMLElement req = new XMLElement(AccountConstants.DELETE_SIGNATURE_REQUEST);
+        Element req = newRequestElement(AccountConstants.DELETE_SIGNATURE_REQUEST);
         req.addElement(AccountConstants.E_SIGNATURE).addAttribute(AccountConstants.A_ID, id);
         invoke(req);
         updateSigs();
     }
 
     public synchronized void modifySignature(ZSignature signature) throws ServiceException {
-        XMLElement req = new XMLElement(AccountConstants.MODIFY_SIGNATURE_REQUEST);
+        Element req = newRequestElement(AccountConstants.MODIFY_SIGNATURE_REQUEST);
         signature.toElement(req);
         invoke(req);
         updateSigs();

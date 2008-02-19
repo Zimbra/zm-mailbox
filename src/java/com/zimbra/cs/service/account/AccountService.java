@@ -30,6 +30,7 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.DocumentDispatcher;
 import com.zimbra.soap.DocumentService;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.KeyValuePair;
 
 /**
  * @author schemers
@@ -91,9 +92,9 @@ public class AccountService implements DocumentService {
      */
     public static Map<String, Object> getAttrs(Element request, boolean ignoreEmptyValues, String nameAttr) throws ServiceException {
         Map<String, Object> result = new HashMap<String, Object>();
-        for (Element a : request.listElements(AdminConstants.E_A)) {
-            String name = a.getAttribute(nameAttr);
-            String value = a.getText();
+        for (KeyValuePair pair : request.listKeyValuePairs(AdminConstants.E_A, nameAttr)) {
+            String name = pair.getKey();
+            String value = pair.getValue();
             if (!ignoreEmptyValues || (value != null && value.length() > 0))
                 StringUtil.addToMultiMap(result, name, value);
         }
