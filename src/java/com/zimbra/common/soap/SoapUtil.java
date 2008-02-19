@@ -30,7 +30,7 @@ public class SoapUtil {
      * @param authToken  The serialized authorization token for the user.
      * @param noSession  Whether to suppress the default new session creation.
      * @return A new <code>context</code> Element in the appropriate markup. */
-    public static Element toCtxt(SoapProtocol protocol, 
+    public static Element toCtxt(SoapProtocol protocol,
             String atType, String atValue, Map<String, String> atAttrs,
             String targetAccountId, String targetAccountName, boolean noSession) {
         Element ctxt = toCtxt(protocol, atType, atValue, atAttrs, noSession);
@@ -54,7 +54,7 @@ public class SoapUtil {
      * @param authToken  The serialized authorization token for the user.
      * @param noSession  Whether to suppress the default new session creation.
      * @return A new <code>context</code> Element in the appropriate markup. */
-    public static Element toCtxt(SoapProtocol protocol, 
+    public static Element toCtxt(SoapProtocol protocol,
             String atType, String atValue, Map<String, String> atAttrs,
             boolean noSession) {
         Element ctxt = protocol.getFactory().createElement(HeaderConstants.CONTEXT);
@@ -75,7 +75,7 @@ public class SoapUtil {
         }
         if (eAt != null && atType != null)
             eAt.addAttribute(HeaderConstants.A_TYPE, atType);
-        
+
         if (noSession)
             ctxt.addUniqueElement(HeaderConstants.E_NO_SESSION);
         return ctxt;
@@ -97,7 +97,7 @@ public class SoapUtil {
         if (ctxt.getAttribute(HeaderConstants.E_AUTH_TOKEN, null) == null)
             return ctxt;
 
-        ctxt.addElement(HeaderConstants.E_SESSION_ID).addAttribute(HeaderConstants.A_ID, sessionId).setText(sessionId);
+        ctxt.addUniqueElement(HeaderConstants.E_SESSION_ID).addAttribute(HeaderConstants.A_ID, sessionId).setText(sessionId);
         return ctxt;
     }
 
@@ -119,7 +119,7 @@ public class SoapUtil {
             throw new IllegalArgumentException("Invalid element: " + elementName);
         }
 
-        Element eUserAgent = ctxt.addElement(HeaderConstants.E_USER_AGENT);
+        Element eUserAgent = ctxt.addUniqueElement(HeaderConstants.E_USER_AGENT);
         eUserAgent.addAttribute(HeaderConstants.A_NAME, name).setText(name);
         if (!StringUtil.isNullOrEmpty(version)) {
             eUserAgent.addAttribute(HeaderConstants.A_VERSION, version).setText(version);
@@ -143,7 +143,7 @@ public class SoapUtil {
     	if (!elementName.equalsIgnoreCase(HeaderConstants.E_CONTEXT))
     		throw new IllegalArgumentException("Invalid element: " + elementName);
 
-    	Element eChange = ctxt.addElement(HeaderConstants.E_CHANGE);
+    	Element eChange = ctxt.addUniqueElement(HeaderConstants.E_CHANGE);
     	eChange.addAttribute(HeaderConstants.A_CHANGE_ID, token);
     	if (!StringUtil.isNullOrEmpty(type))
     		eChange.addAttribute(HeaderConstants.A_TYPE, type);
@@ -159,7 +159,7 @@ public class SoapUtil {
      * @param sessionId  The ID of the session to add to the <code>context</code>.
      * @return A new <code>context</code> Element in the appropriate markup.
      * @see #toCtxt(com.zimbra.common.soap.SoapProtocol, String, boolean) */
-    public static Element toCtxt(SoapProtocol protocol, 
+    public static Element toCtxt(SoapProtocol protocol,
             String atType, String atValue, Map<String, String> atAttrs,
             String sessionId) {
         Element ctxt = toCtxt(protocol, atType, atValue, atAttrs, false);
