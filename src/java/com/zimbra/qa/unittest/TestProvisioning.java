@@ -656,11 +656,14 @@ public class TestProvisioning extends TestCase {
     private Account[] accountTest(Account adminAcct, Cos cos, Domain domain, Domain otherDomain) throws Exception {
         System.out.println("Testing account");
         
+        String krb5Principal1 = "fp1@FOO.COM";
+        String krb5Principal2 = "fp2@BAR.COM";
         // create an account
         Map<String, Object> acctAttrs = new HashMap<String, Object>();
         mCustomProvTester.addAttr(acctAttrs, BASE_DN_PSEUDO_ATTR, ACCT_BASE_DN);
         mCustomProvTester.addAttr(acctAttrs, ACCT_NAMING_ATTR, ACCT_NAMING_ATTR_VALUE);
         acctAttrs.put(Provisioning.A_zimbraCOSId, cos.getId());
+        acctAttrs.put(Provisioning.A_zimbraForeignPrincipal, new String[]{"kerberos5:"+krb5Principal1,"kerberos5:"+krb5Principal2});
         Account entry = mProv.createAccount(ACCT_EMAIL, PASSWORD, acctAttrs);
         String entryId = entry.getId();
         String acctDn = ACCT_NAMING_ATTR + "=" + ACCT_NAMING_ATTR_VALUE + "," + ACCT_BASE_DN;
@@ -709,7 +712,13 @@ public class TestProvisioning extends TestCase {
             assertEquals(null, entryGot);
         else
             TestProvisioningUtil.verifySameEntry(entry, entryGot);        
-                
+        
+        // get account by krb5Principal
+        entryGot = mProv.get(Provisioning.AccountBy.krb5Principal, krb5Principal1);
+        TestProvisioningUtil.verifySameEntry(entry, entryGot);
+        entryGot = mProv.get(Provisioning.AccountBy.krb5Principal, krb5Principal2);
+        TestProvisioningUtil.verifySameEntry(entry, entryGot);
+        
         List list = null;
         
         // get all accounts in a domain
