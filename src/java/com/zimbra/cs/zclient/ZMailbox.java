@@ -3716,7 +3716,7 @@ public class ZMailbox {
         if (mPhoneAccounts == null) {
 			ArrayList<ZPhoneAccount> accounts = new ArrayList<ZPhoneAccount>();
 			mPhoneAccountMap = new HashMap<String, ZPhoneAccount>();
-            XMLElement req = new XMLElement(VoiceConstants.GET_VOICE_INFO_REQUEST);
+            Element req = newRequestElement(VoiceConstants.GET_VOICE_INFO_REQUEST);
             Element response = invoke(req);
 			Element storePrincipalEl = response.getElement(VoiceConstants.E_STOREPRINCIPAL);
 			String id = storePrincipalEl.getAttribute(VoiceConstants.A_ID);
@@ -3745,7 +3745,7 @@ public class ZMailbox {
     }
 
     public String uploadVoiceMail(String phone, String id) throws ServiceException {
-        XMLElement req = new XMLElement(VoiceConstants.UPLOAD_VOICE_MAIL_REQUEST);
+        Element req = newRequestElement(VoiceConstants.UPLOAD_VOICE_MAIL_REQUEST);
 		setVoiceStorePrincipal(req);
 		Element actionEl = req.addElement(VoiceConstants.E_VOICEMSG);
         actionEl.addAttribute(MailConstants.A_ID, id);
@@ -3755,7 +3755,7 @@ public class ZMailbox {
     }
 
     public void loadCallFeatures(ZCallFeatures features) throws ServiceException {
-        XMLElement req = new XMLElement(VoiceConstants.GET_VOICE_FEATURES_REQUEST);
+        Element req = newRequestElement(VoiceConstants.GET_VOICE_FEATURES_REQUEST);
 		setVoiceStorePrincipal(req);
         Element phoneEl = req.addElement(VoiceConstants.E_PHONE);
         phoneEl.addAttribute(MailConstants.A_NAME, features.getPhone().getName());
@@ -3777,7 +3777,7 @@ public class ZMailbox {
 
     public void saveCallFeatures(ZCallFeatures newFeatures) throws ServiceException {
         // Build up the soap request.
-        XMLElement req = new XMLElement(VoiceConstants.MODIFY_VOICE_FEATURES_REQUEST);
+        Element req = newRequestElement(VoiceConstants.MODIFY_VOICE_FEATURES_REQUEST);
 		setVoiceStorePrincipal(req);
         Element phoneEl = req.addElement(VoiceConstants.E_PHONE);
         phoneEl.addAttribute(MailConstants.A_NAME, newFeatures.getPhone().getName());
