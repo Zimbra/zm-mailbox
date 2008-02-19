@@ -63,6 +63,7 @@ public class DbMailbox {
     public static final int CI_COMMENT;
     public static final int CI_LAST_SOAP_ACCESS;
     public static final int CI_NEW_MESSAGES;
+    public static final int CI_IDX_DEFERRED_COUNT;
 
     static {
         int pos = 1;
@@ -82,6 +83,7 @@ public class DbMailbox {
         CI_COMMENT = pos++;
         CI_LAST_SOAP_ACCESS = pos++;
         CI_NEW_MESSAGES = pos++;
+        CI_IDX_DEFERRED_COUNT = pos++;
         
         // XXX bburtin: remove after bug 19404 has been verified
         ZimbraLog.test.info("%s = %s", LC.debug_update_config_use_old_scheme.key(),
@@ -315,14 +317,16 @@ public class DbMailbox {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("UPDATE mailbox" +
-                    " SET item_id_checkpoint = ?, contact_count = ?, change_checkpoint = ?, size_checkpoint = ?, new_messages = ?" +
+                    " SET item_id_checkpoint = ?, contact_count = ?, change_checkpoint = ?, size_checkpoint = ?, new_messages = ?, idx_deferred_count = ?" +
                     " WHERE id = ?");
-            stmt.setInt(1, mbox.getLastItemId());
-            stmt.setInt(2, mbox.getContactCount());
-            stmt.setInt(3, mbox.getLastChangeID());
-            stmt.setLong(4, mbox.getSize());
-            stmt.setInt(5, mbox.getRecentMessageCount());
-            stmt.setInt(6, mbox.getId());
+            int pos = 1;
+            stmt.setInt(pos++, mbox.getLastItemId());
+            stmt.setInt(pos++, mbox.getContactCount());
+            stmt.setInt(pos++, mbox.getLastChangeID());
+            stmt.setLong(pos++, mbox.getSize());
+            stmt.setInt(pos++, mbox.getRecentMessageCount());
+            stmt.setInt(pos++, mbox.getIndexDeferredCount());
+            stmt.setInt(pos++, mbox.getId());
             int num = stmt.executeUpdate();
             assert(num == 1);
         } catch (SQLException e) {
@@ -517,7 +521,7 @@ public class DbMailbox {
             stmt = conn.prepareStatement(
                     "SELECT account_id, group_id," +
                     " size_checkpoint, contact_count, item_id_checkpoint, change_checkpoint, tracking_sync," +
-                    " tracking_imap, index_volume_id, last_soap_access, new_messages " +
+                    " tracking_imap, index_volume_id, last_soap_access, new_messages, idx_deferred_count " +
                     "FROM mailbox WHERE id = ?");
             stmt.setInt(1, mailboxId);
             rs = stmt.executeQuery();
@@ -542,6 +546,7 @@ public class DbMailbox {
             mbd.indexVolumeId = rs.getShort(pos++);
             mbd.lastWriteDate = rs.getInt(pos++);
             mbd.recentMessages = rs.getInt(pos++);
+            mbd.idxDeferredCount = rs.getInt(pos++);
 
             // round lastItemId and lastChangeId up so that they get written on the next change
             long rounding = mbd.lastItemId % ITEM_CHECKPOINT_INCREMENT;
