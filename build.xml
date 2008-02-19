@@ -423,12 +423,16 @@
             description="Not just war file deployment, but a /opt/zimbra refresh as well!"/>
 
     <target name="deploy-war" depends="stop-jetty,war">
+        <antcall target="copy-war"/>
+        <antcall target="start-jetty"/>
+    </target>
+
+    <target name="copy-war" depends="stop-jetty,war">
         <delete dir="${webserver.root.dir}/webapps/service"/>
         <delete file="${webserver.root.dir}/webapps/service.war"/>
         <copy file="${warfile}" todir="${webserver.root.dir}/webapps"/>
         <mkdir dir='${webserver.root.dir}/webapps/service'/>
         <unzip dest="${webserver.root.dir}/webapps/service" src="${webserver.root.dir}/webapps/${warfilename}"/>
-        <antcall target="start-jetty"/>
     </target>
 
     <target name="init-opt-zimbra" depends="dev-dist,localhost-ssl-cert">
