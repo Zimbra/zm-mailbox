@@ -3824,7 +3824,7 @@ public class ZMailbox {
     }
 
     private Element voiceAction(String op, String phone, String id, int folderId) {
-        XMLElement req = new XMLElement(VoiceConstants.VOICE_MSG_ACTION_REQUEST);
+        Element req = newRequestElement(VoiceConstants.VOICE_MSG_ACTION_REQUEST);
 		setVoiceStorePrincipal(req);
         Element actionEl = req.addElement(MailConstants.E_ACTION);
         actionEl.addAttribute(MailConstants.A_ID, id);
