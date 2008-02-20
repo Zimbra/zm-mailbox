@@ -45,8 +45,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.util.NetUtil;
 
@@ -72,19 +72,22 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 	}
 	
 	private static class BasicUserResolver implements ExchangeUserResolver {
-		private String url;
-		private String user;
-		private String pass;
-		private String org;
-		private AuthScheme scheme;
-		private BasicUserResolver(String url, String user, String pass, String org, String scheme) {
-			this.url = url;
-			this.user = user;
-			this.pass = pass;
-			this.org = org;
-			this.scheme = AuthScheme.valueOf(scheme);
-		}
 		public ServerInfo getServerInfo(String emailAddr) {
+			Server server = null;
+			try {
+				server = Provisioning.getInstance().getLocalServer();
+			} catch (ServiceException se) {
+				ZimbraLog.misc.warn("cannot fetch exchange server info", se);
+				return null;
+			}
+			String url = server.getAttr(Provisioning.A_zimbraFreebusyExchangeURL, null);
+			String user = server.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthUsername, null);
+			String pass = server.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthPassword, null);
+			String org = server.getAttr(Provisioning.A_zimbraFreebusyExchangeUserOrg, null);
+			String scheme = server.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthScheme, null);
+			if (url == null || user == null || pass == null)
+				return null;
+			
 			ServerInfo info = new ServerInfo();
 			info.url = url;
 			info.org = org;
@@ -93,33 +96,24 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 				info.cn = emailAddr.substring(0, emailAddr.indexOf('@'));
 			info.authUsername = user;
 			info.authPassword = pass;
-			info.scheme = scheme;
+			info.scheme = AuthScheme.valueOf(scheme);
 			return info;
 		}
 	}
 	
-	private static ArrayList<ExchangeUserResolver> mResolvers;
+	private static ArrayList<ExchangeUserResolver> sRESOLVERS;
 	static {
-		mResolvers = new ArrayList<ExchangeUserResolver>();
+		sRESOLVERS = new ArrayList<ExchangeUserResolver>();
 		
-		try {
-			Config config = Provisioning.getInstance().getConfig();
-			String url = config.getAttr(Provisioning.A_zimbraFreebusyExchangeURL, null);
-			String user = config.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthUsername, null);
-			String pass = config.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthPassword, null);
-			String org = config.getAttr(Provisioning.A_zimbraFreebusyExchangeUserOrg, null);
-			String scheme = config.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthScheme, null);
-			if (url != null && user != null && pass != null && scheme != null)
-				registerResolver(new BasicUserResolver(url, user, pass, org, scheme), 0);
-		} catch (ServiceException se) {
-			ZimbraLog.misc.warn("cannot fetch exchange server info", se);
-		}
+		registerResolver(new BasicUserResolver(), 0);
 		register(new ExchangeFreeBusyProvider());
 	}
 
 	public static void registerResolver(ExchangeUserResolver r, int priority) {
-		mResolvers.ensureCapacity(priority+1);
-		mResolvers.add(priority, r);
+		synchronized (sRESOLVERS) {
+			sRESOLVERS.ensureCapacity(priority+1);
+			sRESOLVERS.add(priority, r);
+		}
 	}
 
 	public FreeBusyProvider getInstance() {
@@ -127,7 +121,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 	}
 	public void addFreeBusyRequest(Request req) throws FreeBusyUserNotFoundException {
 		ServerInfo info = null;
-		for (ExchangeUserResolver resolver : mResolvers) {
+		for (ExchangeUserResolver resolver : sRESOLVERS) {
 			info = resolver.getServerInfo(req.email);
 			if (info != null)
 				break;
@@ -386,7 +380,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
     
 	public ServerInfo getServerInfo(String emailAddr) {
 		ServerInfo serverInfo = null;
-		for (ExchangeUserResolver r : mResolvers) {
+		for (ExchangeUserResolver r : sRESOLVERS) {
 			serverInfo = r.getServerInfo(emailAddr);
 			if (serverInfo != null)
 				break;
