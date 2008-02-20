@@ -26,8 +26,8 @@ import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.GetMethod;
 
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.cs.client.soap.LmcSoapClientException;
-import com.zimbra.cs.zclient.ZAuthToken;
 
 public class LmcMessage {
     private String mID;

@@ -23,6 +23,7 @@ import java.util.Map;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
@@ -36,7 +37,6 @@ import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.soap.SoapProvisioning;
-import com.zimbra.cs.zclient.ZAuthToken;
 
 public class TestAccess extends TestCase {
     private String TEST_ID;

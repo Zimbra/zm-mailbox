@@ -20,12 +20,12 @@ package com.zimbra.cs.client.soap;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.soap.DomUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.cs.client.*;
-import com.zimbra.cs.zclient.ZAuthToken;
 
 public class LmcAdminAuthRequest extends LmcSoapRequest {
 

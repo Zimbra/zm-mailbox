@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.zclient;
 
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
