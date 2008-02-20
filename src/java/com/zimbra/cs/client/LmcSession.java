@@ -17,7 +17,7 @@
 
 package com.zimbra.cs.client;
 
-import com.zimbra.cs.zclient.ZAuthToken;
+import com.zimbra.common.auth.ZAuthToken;
 
 /**
  * Encapsulate the notion of a session, including auth token, session ID, and

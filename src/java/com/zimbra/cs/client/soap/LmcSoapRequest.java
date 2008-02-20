@@ -18,7 +18,6 @@
 package com.zimbra.cs.client.soap;
 
 import com.zimbra.cs.client.*;
-import com.zimbra.cs.zclient.ZAuthToken;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -29,6 +28,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import org.dom4j.Element;
 
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.soap.DomUtil;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;

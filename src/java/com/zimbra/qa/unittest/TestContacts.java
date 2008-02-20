@@ -16,6 +16,7 @@
  */
 package com.zimbra.qa.unittest;
 
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -34,7 +35,6 @@ import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.zclient.ZAuthToken;
 
 import junit.framework.TestCase;
 

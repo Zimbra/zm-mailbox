@@ -37,10 +37,10 @@ import org.apache.commons.cli.ParseException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.client.LmcSession;
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.cs.zclient.ZAuthToken;
 import com.zimbra.common.soap.*;
 
 /**
