@@ -65,16 +65,18 @@ public abstract class FreeBusyProvider {
 	public abstract long cachedFreeBusyEndTime();
 	
 	public static void register(FreeBusyProvider p) {
-		sPROVIDERS.add(p);
-		if (p.registerForMailboxChanges()) {
-			String name = p.getName();
-			FreeBusySyncQueue queue = sPUSHQUEUES.get(name);
-			if (queue != null) {
-				ZimbraLog.misc.warn("free/busy provider "+name+" has been already registered.");
+		synchronized (sPROVIDERS) {
+			sPROVIDERS.add(p);
+			if (p.registerForMailboxChanges()) {
+				String name = p.getName();
+				FreeBusySyncQueue queue = sPUSHQUEUES.get(name);
+				if (queue != null) {
+					ZimbraLog.misc.warn("free/busy provider "+name+" has been already registered.");
+				}
+				queue = new FreeBusySyncQueue(p);
+				sPUSHQUEUES.put(name, queue);
+				new Thread(queue).start();
 			}
-			queue = new FreeBusySyncQueue(p);
-			sPUSHQUEUES.put(name, queue);
-			new Thread(queue).start();
 		}
 	}
 	
