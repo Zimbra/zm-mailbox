@@ -72,9 +72,11 @@ public class MailboxBlob {
 
     public String toString() {
         StringBuffer sb = new StringBuffer();
+        sb.append("MailboxBlob: {");
         sb.append("mailbox=").append(mMailbox.getId());
         sb.append(", message=").append(mMsgId);
         sb.append(", path=").append(getPath());
+        sb.append("}");
         return sb.toString();
 	}
 }
