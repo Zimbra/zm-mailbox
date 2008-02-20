@@ -15,7 +15,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.zclient;
+package com.zimbra.common.auth;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,9 +37,11 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.Element.XMLElement;
-import com.zimbra.cs.servlet.ZimbraServlet;
 
 public class ZAuthToken {
+    private static final String COOKIE_ZM_AUTH_TOKEN       = "ZM_AUTH_TOKEN";
+    private static final String COOKIE_ZM_ADMIN_AUTH_TOKEN = "ZM_ADMIN_AUTH_TOKEN"; 
+    
     private static final String YAHOO_AUTHTOKEN_TYPE = "YAHOO_CALENDAR_AUTH_PROVIDER";
 
     
@@ -201,14 +203,14 @@ public class ZAuthToken {
      * @param response
      */
     public static void clearCookies(HttpServletResponse response) {
-        javax.servlet.http.Cookie authTokenCookie = new javax.servlet.http.Cookie(ZimbraServlet.COOKIE_ZM_AUTH_TOKEN, "");
+        javax.servlet.http.Cookie authTokenCookie = new javax.servlet.http.Cookie(COOKIE_ZM_AUTH_TOKEN, "");
         authTokenCookie.setMaxAge(0);
         authTokenCookie.setPath("/");
         response.addCookie(authTokenCookie);
     }
     
     private String zimbraCookieName(boolean isAdmin) {
-        return isAdmin? ZimbraServlet.COOKIE_ZM_ADMIN_AUTH_TOKEN : ZimbraServlet.COOKIE_ZM_AUTH_TOKEN;
+        return isAdmin? COOKIE_ZM_ADMIN_AUTH_TOKEN : COOKIE_ZM_AUTH_TOKEN;
     }
     
     
@@ -223,7 +225,7 @@ public class ZAuthToken {
             cookieMap.put(cookieName, mValue);
             
             if (addBothIfAdmin && isAdmin)
-                cookieMap.put(ZimbraServlet.COOKIE_ZM_AUTH_TOKEN, mValue);
+                cookieMap.put(COOKIE_ZM_AUTH_TOKEN, mValue);
         }
         return cookieMap;  
     }
