@@ -22,6 +22,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapTransport;
+import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
@@ -117,6 +118,8 @@ public class ZMailboxUtil implements DebugListener {
     ZSearchParams mConvSearchParams;
     ZSearchResult mConvSearchResult;
     SoapProvisioning mProv;
+    SoapProtocol mRequestProto = SoapProtocol.SoapJS;
+    SoapProtocol mResponseProto = SoapProtocol.SoapJS;
 
     private Map<Integer, String> mIndexToId = new HashMap<Integer, String>();
 
@@ -140,6 +143,23 @@ public class ZMailboxUtil implements DebugListener {
     public void setMailboxName(String account) { mMailboxName = account; }
 
     public void setPassword(String password) { mPassword = password; }
+
+    private SoapProtocol parseProto(String proto) throws ZClientException {
+        if ("soap11".equals(proto)) return SoapProtocol.Soap11;
+        else     if ("soap12".equals(proto)) return SoapProtocol.Soap12;
+        else if ("json".equals(proto)) return SoapProtocol.SoapJS;
+        else throw ZClientException.CLIENT_ERROR("unknown protocol: "+proto, null);
+    }
+
+    public void setProtocol(String proto) throws ZClientException {
+        if (proto.indexOf('/') != -1) {
+            String[] protos = proto.split("/");
+            mRequestProto = parseProto(protos[0]);
+            mResponseProto = parseProto(protos[1]);
+        } else {
+            mRequestProto = mResponseProto = parseProto(proto);
+        }
+    }
 
     public String resolveUrl(String url, boolean isAdmin) throws ZClientException {
         try {
@@ -187,6 +207,7 @@ public class ZMailboxUtil implements DebugListener {
         System.out.println("  -m/--mailbox  {name}                     mailbox to open");
         System.out.println("  -p/--password {pass}                     password for admin account and/or mailbox");
         System.out.println("  -P/--passfile {file}                     read password from file");
+        System.out.println("  -r/--protocol {proto|req-proto/response-proto} specify request/response protocol [soap11,soap12,json]");
         System.out.println("  -v/--verbose                             verbose mode (dumps full exception stack trace)");
         System.out.println("  -d/--debug                               debug mode (dumps SOAP messages)");
         System.out.println("");
@@ -515,6 +536,8 @@ public class ZMailboxUtil implements DebugListener {
         SoapAccountInfo sai = prov.getAccountInfo(AccountBy.name, mMailboxName);
         DelegateAuthResponse dar = prov.delegateAuth(AccountBy.name, mMailboxName, 60*60*24);
         ZMailbox.Options options = new ZMailbox.Options(dar.getAuthToken(), sai.getAdminSoapURL());
+        options.setRequestProtocol(mRequestProto);
+        options.setResponseProtocol(mResponseProto);
         options.setDebugListener(listener);
         mMbox = ZMailbox.getMailbox(options);
         dumpMailboxConnect();
@@ -549,6 +572,8 @@ public class ZMailboxUtil implements DebugListener {
         options.setPassword(mPassword);
         options.setUri(resolveUrl(uri, false));
         options.setDebugListener(mDebug ? this : null);
+        options.setRequestProtocol(mRequestProto);
+        options.setResponseProtocol(mResponseProto);
         mMbox = ZMailbox.getMailbox(options);
         mPrompt = String.format("mbox %s> ", mMbox.getName());
         dumpMailboxConnect();
@@ -2153,6 +2178,7 @@ public class ZMailboxUtil implements DebugListener {
         options.addOption("h", "help", false, "display usage");
         options.addOption("f", "file", true, "use file as input stream"); 
         options.addOption("u", "url", true, "http[s]://host[:port] of server to connect to");
+        options.addOption("r", "protocol", true, "protocol to use for request/response [soap11, soap12, json]");
         options.addOption("m", "mailbox", true, "mailbox to open");
         options.addOption("p", "password", true, "password for admin/mailbox");
         options.addOption("P", "passfile", true, "filename with password in it");
@@ -2189,6 +2215,7 @@ public class ZMailboxUtil implements DebugListener {
         if (cl.hasOption('u')) pu.setUrl(cl.getOptionValue('u'), isAdmin);
         if (cl.hasOption('m')) pu.setMailboxName(cl.getOptionValue('m'));        
         if (cl.hasOption('p')) pu.setPassword(cl.getOptionValue('p'));
+        if (cl.hasOption('r')) pu.setProtocol(cl.getOptionValue('r'));        
         if (cl.hasOption('P')) {
             pu.setPassword(StringUtil.readSingleLineFromFile(cl.getOptionValue('P')));
         }        
