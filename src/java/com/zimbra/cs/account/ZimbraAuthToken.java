@@ -197,9 +197,13 @@ public class ZimbraAuthToken extends AuthToken {
             /* Zimbra Customer Care*/
             String icc = (String) map.get(C_CC_ADMIN);
             mIsCCAdmin = "1".equals(icc);
-            String ccTier = (String)map.get(C_CC_TIER);
-            if (ccTier != null)
-                mCCTier = Integer.parseInt(ccTier);
+            String ccTier;
+            mCCTier=0;
+            if(mIsCCAdmin) {
+            	ccTier = (String)map.get(C_CC_TIER);
+	            if (ccTier != null)
+	                mCCTier = Integer.parseInt(ccTier);
+            } 
             /* Zimbra Customer Care*/
         } catch (ServiceException e) {
             throw new AuthTokenException("service exception", e);
@@ -355,9 +359,10 @@ public class ZimbraAuthToken extends AuthToken {
                 BlobMetaData.encodeMetaData(C_MAILHOST, mMailHostRoute, encodedBuff);
             }
             /* Zimbra Customer Care*/
-            if (mIsCCAdmin)
+            if (mIsCCAdmin) {
                 BlobMetaData.encodeMetaData(C_CC_ADMIN, "1", encodedBuff);
-            BlobMetaData.encodeMetaData(C_CC_TIER, Integer.toString(mCCTier), encodedBuff);
+                BlobMetaData.encodeMetaData(C_CC_TIER, Integer.toString(mCCTier), encodedBuff);
+            }
             /* Zimbra Customer Care*/            
             String data = new String(Hex.encodeHex(encodedBuff.toString().getBytes()));
             AuthTokenKey key = getCurrentKey();
