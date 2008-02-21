@@ -152,7 +152,7 @@ public abstract class CalendarUser {
         mXParams.addAll(other.mXParams);
     }
 
-    Metadata encodeMetadata() {
+    public Metadata encodeMetadata() {
         Metadata meta = new Metadata();
         meta.put(FN_ADDRESS, mAddress);
         meta.put(FN_CN, mCn);

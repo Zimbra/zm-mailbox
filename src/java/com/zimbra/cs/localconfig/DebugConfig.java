@@ -92,12 +92,17 @@ public class DebugConfig {
     public static boolean calendarForceUTC;
 
     public static final int numMailboxGroups;
-    
+
     public static final int luceneMergeFactor;
     public static final int luceneMaxBufferedDocs;
     public static final int luceneRAMBufferSizeMB;
     public static final boolean luceneUseCompoundFile;
     public static final boolean luceneUseSingleMergeScheduler;
+
+    public static boolean calendarEnableCache;
+    public static int calendarCacheLRUSize;
+    public static int calendarCacheRangeMonthFrom;
+    public static int calendarCacheRangeMonths;
     
     static {
         calendarAllowNonDisplayAlarms = booleanValue("debug_calendar_allow_non_display_alarms", false);
@@ -131,6 +136,14 @@ public class DebugConfig {
         luceneRAMBufferSizeMB = intValue("debug_lucene_ram_buffer_size_mb", 0);
         luceneUseCompoundFile = booleanValue("debug_lucene_use_compound_file", true);
         luceneUseSingleMergeScheduler = booleanValue("debug_lucene_use_single_merge_scheduler", true);
+
+        calendarEnableCache = booleanValue("debug_enable_calendar_cache", false);
+        if (calendarEnableCache)
+            calendarCacheLRUSize = intValue("debug_calendar_cache_lru_size", 1000);
+        else
+            calendarCacheLRUSize = 0;
+        calendarCacheRangeMonthFrom = intValue("debug_calendar_cache_range_month_from", 0);
+        calendarCacheRangeMonths = intValue("debug_calendar_cache_range_months", 3);
     }
 
     private static boolean booleanValue(String key, boolean defaultValue) {

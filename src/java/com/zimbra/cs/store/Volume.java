@@ -674,10 +674,7 @@ public class Volume {
     public boolean getCompressBlobs() { return mCompressBlobs; }
     public long getCompressionThreshold() { return mCompressionThreshold; }
 
-    private StringBuffer getMailboxDirStringBuffer(int mboxId, int type,
-                                                   int extraCapacity) {
-        String subdir = type == TYPE_INDEX ? SUBDIR_INDEX : SUBDIR_MESSAGE;
-
+    private StringBuffer getMailboxDirStringBuffer(int mboxId, String subdir, int extraCapacity) {
         StringBuffer sb;
         int capacity;
 
@@ -694,14 +691,19 @@ public class Volume {
     }
 
     public String getMailboxDir(int mboxId, int type) {
-        return getMailboxDirStringBuffer(mboxId, type, 0).toString();
+        String subdir = type == TYPE_INDEX ? SUBDIR_INDEX : SUBDIR_MESSAGE;
+        return getMailboxDirStringBuffer(mboxId, subdir, 0).toString();
     }
 
     public String getBlobDir(int mboxId, int itemId) {
+        return getItemDir(mboxId, itemId, SUBDIR_MESSAGE);
+    }
+
+    public String getItemDir(int mboxId, int itemId, String subdir) {
         long dir = itemId >> mFileBits;
         dir &= mFileGroupBitMask;
 
-        StringBuffer sb = getMailboxDirStringBuffer(mboxId, TYPE_MESSAGE, 10);
+        StringBuffer sb = getMailboxDirStringBuffer(mboxId, subdir, 10);
         sb.append(File.separator).append(dir);
         return sb.toString();
     }
