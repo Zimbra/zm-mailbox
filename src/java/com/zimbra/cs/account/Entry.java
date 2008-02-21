@@ -37,7 +37,8 @@ public abstract class Entry {
     private Map<String,Object> mDefaults;    
     private Map<String, Object> mData;
     private Map<String, Set<String>> mMultiAttrSetCache;
-
+    private Locale mLocale;
+    
     protected static String[] sEmptyMulti = new String[0];
 
     protected Entry(Map<String,Object> attrs, Map<String,Object> defaults) {
@@ -67,6 +68,7 @@ public abstract class Entry {
             mMultiAttrSetCache.clear();
         if (mData != null)
             mData.clear();
+        mLocale = null;
     }
 
     /**
@@ -227,8 +229,6 @@ public abstract class Entry {
         }
     }
 
-    private Locale mLocale;
-    
     public Locale getLocale() throws ServiceException {
         // Don't synchronize the entire method because Provisioning.getLocale
         // can recursively call LdapEntry.getLocale() on multiple entries.
