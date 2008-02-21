@@ -81,7 +81,7 @@ public class ParsedDocument {
             } catch (Exception e) {
             	// ignore conversion errors
             }
-            mFragment = Fragment.getFragment(textContent, false);
+            mFragment = Fragment.getFragment(textContent, Fragment.Source.NOTEBOOK);
             try {
             	mDocument = handler.getDocument();
             	mDocument.add(new Field(LuceneFields.L_SIZE, Integer.toString(mSize), Field.Store.YES, Field.Index.NO));
