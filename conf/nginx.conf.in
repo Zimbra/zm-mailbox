@@ -100,6 +100,26 @@ mail {
 	pop3_capabilities        "TOP" "USER" "UIDL" "STLS" "EXPIRE 31 USER";
 	imap_capabilities        "IMAP4rev1" "STARTTLS" "BINARY" "CHILDREN" "ID" "LITERAL+" "LOGIN-REFERRALS" "NAMESPACE" "QUOTA" "SASL-IR" "UIDPLUS" "UNSELECT";
 
+    # IMAP4 ID Extension support (RFC 2971)
+    # Use the imap_id directive to specify the string that should be sent
+    # back by the proxy server back to the client upon receipt of an 
+    # IMAP ID command as described by RFC 2971
+    # There MUST be an even number of strings specified against 
+    # this directive, because RFC 2971 defines the server response to be 
+    # a list of field-value pairs (refer Formal Syntax, RFC 2971 Section 4)
+    # Each string in this list should be enclosed within double quotes
+    # If not quoted, they will be automatically quoted by nginx, but the 
+    # use of quotes allows the space character to be included within an 
+    # ID field or a value
+    # The odd numbered strings are treated as ID fields, with the following 
+    # even-numbered string considered to be the ID value corresponding to 
+    # the field name
+    # If omitted, the response to the ID command will be nil, which
+    # according to RFC 2971, is permissible in lieu of the field-value list
+    # The imap_id directive may be overridden in a server block
+    # 
+    imap_id     "NAME" "nginx" "VERSION" "0" "RELEASE" "1";
+
     # TLS configuration
     # 
     starttls on;
