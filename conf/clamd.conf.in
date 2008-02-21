@@ -62,14 +62,14 @@ PidFile /opt/zimbra/log/clamd.pid
 
 # Path to the database directory.
 # Default: hardcoded (depends on installation options)
-DatabaseDirectory /opt/zimbra/clamav/db
+DatabaseDirectory /opt/zimbra/data/clamav/db
 
 # The daemon works in a local OR a network mode. Due to security reasons we
 # recommend the local mode.
 
 # Path to a local socket file the daemon will listen on.
 # Default: disabled
-# LocalSocket /opt/zimbra/clamav/clamav.sock
+# LocalSocket /opt/zimbra/data/clamav/clamav.sock
 
 # Remove stale socket after unclean shutdown.
 # Default: disabled
