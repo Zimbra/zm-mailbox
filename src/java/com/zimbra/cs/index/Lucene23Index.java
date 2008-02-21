@@ -1301,7 +1301,8 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
             if (mIndexWriter == null) {
                 try {
 //                  sLog.debug("MI"+this.toString()+" Opening IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-                    mIndexWriter = new IndexWriter(mIdxDirectory, true, mMbidx.getAnalyzer(), false, this);
+//                    mIndexWriter = new IndexWriter(mIdxDirectory, true, mMbidx.getAnalyzer(), false, this);
+                    mIndexWriter = new IndexWriter(mIdxDirectory, true, mMbidx.getAnalyzer(), false);
                     if (ZimbraLog.index_lucene.isDebugEnabled())
                         mIndexWriter.setInfoStream(new PrintStream(new LoggingOutputStream(ZimbraLog.index_lucene, Log.Level.debug)));
                     if (DebugConfig.luceneUseSingleMergeScheduler) {
@@ -1318,7 +1319,8 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
                     File indexDir  = mIdxDirectory.getFile();
                     if (indexDirIsEmpty(indexDir)) {
 //                      sLog.debug("MI"+this.toString()+" Opening IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-                        mIndexWriter = new IndexWriter(mIdxDirectory, true, mMbidx.getAnalyzer(), true, this);
+//                        mIndexWriter = new IndexWriter(mIdxDirectory, true, mMbidx.getAnalyzer(), true, this);
+                        mIndexWriter = new IndexWriter(mIdxDirectory, true, mMbidx.getAnalyzer(), true);
                         if (ZimbraLog.index_lucene.isDebugEnabled())
                             mIndexWriter.setInfoStream(new PrintStream(new LoggingOutputStream(ZimbraLog.index_lucene, Log.Level.debug)));
                         if (DebugConfig.luceneUseSingleMergeScheduler) {
