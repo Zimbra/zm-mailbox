@@ -70,6 +70,10 @@ public abstract class AuthToken {
     
     public abstract String getCrumb() throws AuthTokenException;
     
+    public boolean isDelegatedAuth() {
+        return (getAdminAccountId() != null && !getAdminAccountId().equals(""));
+    }
+    
     /**
      * Encode original auth info into an outgoing http request.
      * 

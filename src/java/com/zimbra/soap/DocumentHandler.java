@@ -172,15 +172,23 @@ public abstract class DocumentHandler {
     }
 
 
-    public static boolean canAccessAccount(ZimbraSoapContext zsc, Account target) throws ServiceException {
+    public boolean canAccessAccount(ZimbraSoapContext zsc, Account target) throws ServiceException {
         if (zsc.getAuthtokenAccountId() == null || target == null)
             return false;
         if (target.getId().equals(zsc.getAuthtokenAccountId()))
             return true;
+        else {
+            // 1. delegated auth case has been logged in SoapEngine
+            // 2. we do not want to log delegated request, where the target account is specified in 
+            //    soap context header.  Usages for that route are family mailboxes and sharing access.
+            //    we only want to log the "admin" accesses.
+            if (!zsc.getAuthToken().isDelegatedAuth() && !zsc.isDelegatedRequest()) 
+                logAuditAccess(null, zsc.getAuthtokenAccountId(), target.getId());
+        }
         return AccessManager.getInstance().canAccessAccount(zsc.getAuthToken(), target);
     }
 
-    public static boolean canModifyOptions(ZimbraSoapContext zsc, Account acct) throws ServiceException {
+    public boolean canModifyOptions(ZimbraSoapContext zsc, Account acct) throws ServiceException {
         if (zsc.isDelegatedRequest()) {
             // if we're modifying someone else's options, we need to have admin access to the account
             //   *and* we need to be able to change our own options (this is a standin for finer-grained access control)
@@ -410,5 +418,47 @@ public abstract class DocumentHandler {
             response = proxy.dispatch(request, zsc).detach();
         }
         return response;
+    }
+    
+    /**
+     * This is for logging usage only:
+     *     returns the account name if the account can be found by acctId,
+     *     otherwise returns the acctId if not null,
+     *     otherwise returns empty string.
+     * 
+     * @param prov
+     * @param acctId
+     * @return
+     */
+    private String getAccountLogName(Provisioning prov, String acctId) {
+        if (acctId != null) {
+            try {
+                Account acct = prov.get(AccountBy.id, acctId);
+                if (acct != null)
+                    return acct.getName();
+            } catch (ServiceException e) {
+                // ignore 
+            }
+            return acctId;
+        }
+        return "";
+    }
+    
+    void logAuditAccess(String delegatingAcctId, String authedAcctId, String targetAcctId) {
+        if (!ZimbraLog.misc.isInfoEnabled())
+            return;
+        
+        // 8 => "Response".length()
+        String reqName = mResponseQName.getQualifiedName().substring(0, mResponseQName.getQualifiedName().length()-8);
+        
+        Provisioning prov = Provisioning.getInstance();
+        String delegatingAcctName = getAccountLogName(prov, delegatingAcctId);
+        String authedAcctName = getAccountLogName(prov, authedAcctId);
+        String targetAcctName = getAccountLogName(prov, targetAcctId);
+        
+        ZimbraLog.misc.info("delegated access: doc=" + reqName +
+            (delegatingAcctId==null?"" : ", delegating account="+delegatingAcctName) +
+            ", authenticated account=" + authedAcctName +
+            ", target account=" + targetAcctName);
     }
 }
