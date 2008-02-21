@@ -1899,7 +1899,7 @@ public class LdapProvisioning extends Provisioning {
                     moveAliases(ctxt, replacedAliases, newDomain, null, oldDn, newDn, oldDomain, newDomain);
                 
                 if (!dnChanged)
-                    modifyAttrs(acct, newAttrs);
+                    modifyAttrs(acct, newAttrs, false, false);
             } catch (ServiceException e) {
                 throw e;
             } finally {
