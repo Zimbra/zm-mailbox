@@ -30,16 +30,22 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
 import com.zimbra.cs.mailbox.calendar.ParsedDuration;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
+import com.zimbra.cs.mailbox.calendar.cache.CacheToXML;
+import com.zimbra.cs.mailbox.calendar.cache.CalendarCache;
+import com.zimbra.cs.mailbox.calendar.cache.CalendarData;
+import com.zimbra.cs.mailbox.calendar.cache.CalendarItemData;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -82,9 +88,34 @@ public class GetCalendarItemSummaries extends CalendarRequest {
      *         temporary HACK - true: SearchRequest, false: GetAppointmentSummaries        
      * @return
      */
-    static EncodeCalendarItemResult encodeCalendarItemInstances(ZimbraSoapContext lc, CalendarItem calItem,
-        Account acct, long rangeStart, long rangeEnd, boolean newFormat) throws ServiceException 
-    {
+    static EncodeCalendarItemResult encodeCalendarItemInstances(
+            ZimbraSoapContext lc, OperationContext octxt, CalendarItem calItem,
+            Account acct, long rangeStart, long rangeEnd, boolean newFormat)
+    throws ServiceException {
+        if (DebugConfig.calendarEnableCache) {
+            EncodeCalendarItemResult toRet = new EncodeCalendarItemResult();
+            CalendarData calData = CalendarCache.getInstance().getCalendarSummary(
+                    octxt, calItem.getMailbox(), calItem.getFolderId(), calItem.getType(),
+                    rangeStart, rangeEnd, false);
+            if (calData != null) {
+                CalendarItemData calItemData = calData.getCalendarItemData(calItem.getId());
+                if (calItemData != null) {
+                    CalendarItemData subRange = calItemData.getSubRange(rangeStart, rangeEnd);
+                    if (subRange != null) {
+                        int numInstances = subRange.getNumInstances();
+                        if (numInstances > 0) {
+                            Account authAcct = getAuthenticatedAccount(lc);
+                            Element calItemElem = CacheToXML.encodeCalendarItemData(
+                                    lc, acct, authAcct, calItemData, !newFormat);
+                            toRet.element = calItemElem;
+                            toRet.numInstancesExpanded = numInstances;
+                        }
+                    }
+                }
+            }
+            return toRet;
+        }
+
         EncodeCalendarItemResult toRet = new EncodeCalendarItemResult();
         ItemIdFormatter ifmt = new ItemIdFormatter(lc);
         Account authAccount = getAuthenticatedAccount(lc);
@@ -388,14 +419,17 @@ public class GetCalendarItemSummaries extends CalendarRequest {
         
         ItemId iidFolder = new ItemId(request.getAttribute(MailConstants.A_FOLDER, DEFAULT_FOLDER), zsc);
         
-        Collection<CalendarItem> calItems = mbox.getCalendarItemsForRange(getItemType(), getOperationContext(zsc, context), rangeStart, rangeEnd, iidFolder.getId(), null);
+        OperationContext octxt = getOperationContext(zsc, context);
+        Collection<CalendarItem> calItems = mbox.getCalendarItemsForRange(
+                getItemType(), octxt, rangeStart, rangeEnd, iidFolder.getId(), null);
 
         Element response = getResponseElement(zsc);
 
         int totalInstancesExpanded = 0;
 
         for (CalendarItem calItem : calItems) {
-            EncodeCalendarItemResult encoded = encodeCalendarItemInstances(zsc, calItem, acct, rangeStart, rangeEnd, false);
+            EncodeCalendarItemResult encoded = encodeCalendarItemInstances(
+                    zsc, octxt, calItem, acct, rangeStart, rangeEnd, false);
 //            assert(encoded.element != null || encoded.numInstancesExpanded==0);
             if (encoded.element != null)
                 response.addElement(encoded.element);

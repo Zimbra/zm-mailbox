@@ -37,7 +37,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbSearch;
-import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -247,7 +246,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         void metadataChanged(Mailbox mbox) throws ServiceException {
             modMetadata = mbox.getOperationChangeID();
             dateChanged = mbox.getOperationTimestamp();
-            if (ImapMessage.SUPPORTED_TYPES.contains(type))
+            if (!isAcceptableType(TYPE_FOLDER, type))
                 mbox.getFolderById(folderId).updateHighestMODSEQ();
         }
 

@@ -26,7 +26,6 @@ import java.util.Map;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
@@ -93,7 +92,7 @@ public class Search extends MailDocumentHandler  {
             results.doneWithSearchResults();
         }
     }
-    
+
     protected ZimbraQueryResults doSearch(ZimbraSoapContext zsc, OperationContext octxt, Mailbox mbox, SearchParams params) throws ServiceException {
         ZimbraQueryResults results;
         try {
@@ -250,7 +249,7 @@ public class Search extends MailDocumentHandler  {
         
         Account acct = getRequestedAccount(zsc);
         EncodeCalendarItemResult encoded = 
-            GetCalendarItemSummaries.encodeCalendarItemInstances(zsc, calItem, acct, params.getCalItemExpandStart(), params.getCalItemExpandEnd(), true);
+            GetCalendarItemSummaries.encodeCalendarItemInstances(zsc, octxt, calItem, acct, params.getCalItemExpandStart(), params.getCalItemExpandEnd(), true);
         
         calElement = encoded.element;
         
