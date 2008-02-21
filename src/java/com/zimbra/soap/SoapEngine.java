@@ -330,7 +330,7 @@ public class SoapEngine {
             if (at != null) {
                 acctId = at.getAccountId();
                 isGuestAccount = acctId.equals(ACL.GUID_PUBLIC);
-                delegatedAuth = at.getAdminAccountId() != null && !at.getAdminAccountId().equals("");
+                delegatedAuth = at.isDelegatedAuth();
             }
             
             if (!isGuestAccount) {
@@ -383,6 +383,8 @@ public class SoapEngine {
             // if no proxy, execute the request locally
             if (response == null) {
                 Object userObj = handler.preHandle(request, context);
+                if (delegatedAuth)
+                    handler.logAuditAccess(at.getAdminAccountId(), acctId, acctId);
                 try {
                     response = handler.handle(request, context);
                 } finally {
