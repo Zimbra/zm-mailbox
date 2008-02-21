@@ -755,7 +755,7 @@ public class LC {
         postfix_newaliases_path.setDoc("postfix_newaliases_path");
 
         postfix_queue_directory  = new KnownKey("postfix_queue_directory");
-        postfix_queue_directory.setDefault("${zimbra_home}" + FS + "postfix-${postfix_version}" + FS + "spool");
+        postfix_queue_directory.setDefault("${zimbra_home}" + FS + "data" + FS + "postfix" + FS + "spool");
         postfix_queue_directory.setDoc("postfix_queue_directory");
 
         postfix_sender_canonical_maps  = new KnownKey("postfix_sender_canonical_maps");
