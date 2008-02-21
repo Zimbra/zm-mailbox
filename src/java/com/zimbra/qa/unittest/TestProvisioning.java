@@ -867,6 +867,29 @@ public class TestProvisioning extends TestCase {
         mProv.setPassword(account, PASSWORD);
     }
     
+    private void doLocaleTest(Account acct, String locale) throws Exception {
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraPrefLocale, locale);
+        mSoapProv.modifyAttrs(acct, attrs, true);
+        
+        String provLocale = mSoapProv.getLocale(acct).toString();
+        assertEquals(locale, provLocale);
+        
+        String entryLocale = acct.getLocale().toString();
+        assertEquals(locale, entryLocale);
+    }
+    
+    private void localeTest() throws Exception {
+        System.out.println("Testing locale"); // bug 23218: entry.getLocale() is not refreshed on modifying locale (zimbraPrefLocale/zimbraLocale)
+        
+        Account acct = mSoapProv.get(Provisioning.AccountBy.name, ACCT_EMAIL);
+        assertNotNull(acct);
+           
+        doLocaleTest(acct, "xxx");
+        doLocaleTest(acct, "yyy");
+        doLocaleTest(acct, "zzz");
+    }
+    
     // calendar resource and calendar resource alias
     private CalendarResource calendarResourceTest(Cos cos, Domain domain) throws Exception {
         System.out.println("Testing calendar resource");
@@ -1644,6 +1667,7 @@ public class TestProvisioning extends TestCase {
         value = config.getAttr(configAttr); // get the attr
         assertEquals(newVal, value); // now we should see the new value
     }
+
     
     private void loadTest() throws Exception {
         System.out.println("Testing load");
@@ -1680,6 +1704,8 @@ public class TestProvisioning extends TestCase {
         Account account = accounts[0];
         authTest(account);
         passwordTest(account);
+        localeTest();
+        
         CalendarResource calendarResource = calendarResourceTest(mProv.get(Provisioning.CosBy.name, cosName), mProv.get(Provisioning.DomainBy.name, domainName));
         
         DistributionList[] distributionLists = distributionListTest(mProv.get(Provisioning.DomainBy.name, domainName));
