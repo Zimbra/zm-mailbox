@@ -13,7 +13,7 @@ ${zimbra_home}/bin/zmlocalconfig -e postfix_queue_directory=${zimbra_home}/data/
 
 if [ -d "${zimbra_home}/postfix-2.4.3.4z/spool" ]; then
 	if [ -d "${zimbra_home}/data/postfix/spool" ]; then
-		rmdir spool 2>/dev/null
+		rmdir ${zimbra_home}/data/postfix/spool 2>/dev/null
 		if [ $? == 1 ]; then
   			echo "Failed to remove ${zimbra_home}/data/postfix/spool."
 			echo "Manually migrate existing postfix spool after upgrade."
