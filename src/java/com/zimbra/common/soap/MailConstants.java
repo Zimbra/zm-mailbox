@@ -150,6 +150,7 @@ public class MailConstants {
     public static final QName GET_ICAL_REQUEST = QName.get("GetICalRequest", NAMESPACE);
     public static final QName ANNOUNCE_ORGANIZER_CHANGE_REQUEST = QName.get("AnnounceOrganizerChangeRequest", NAMESPACE);
     public static final QName DISMISS_CALITEM_ALARM_REQUEST = QName.get("DismissCalendarItemAlarmRequest", NAMESPACE);
+    public static final QName GET_MINI_CAL_REQUEST = QName.get("GetMiniCalRequest", NAMESPACE);
 
     // spell checking
     public static final QName CHECK_SPELLING_REQUEST = QName.get("CheckSpellingRequest", NAMESPACE);
@@ -526,6 +527,8 @@ public class MailConstants {
     public static final String A_CAL_ALARM_COUNT = "count";
     public static final String A_CAL_ATTACH_URI = "uri";
     public static final String A_CAL_ATTACH_CONTENT_TYPE = "ct";
+
+    public static final String E_CAL_MINICAL_DATE = "date";
 
     // spell checking
     public static final String A_AVAILABLE = "available";
