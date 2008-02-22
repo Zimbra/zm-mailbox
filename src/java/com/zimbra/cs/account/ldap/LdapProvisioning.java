@@ -2646,24 +2646,26 @@ public class LdapProvisioning extends Provisioning {
         AuthMechanism authMech = AuthMechanism.makeInstance(acct);
         verifyPassword(acct, password, authMech);
 
-        if (!checkPasswordPolicy || !authMech.checkPasswordAging())
+        if (!checkPasswordPolicy)
             return;
 
-        // below this point, the only fault that may be thrown is CHANGE_PASSWORD
-        int maxAge = acct.getIntAttr(Provisioning.A_zimbraPasswordMaxAge, 0);
-        if (maxAge > 0) {
-            Date lastChange = acct.getGeneralizedTimeAttr(Provisioning.A_zimbraPasswordModifiedTime, null);
-            if (lastChange != null) {
-                long last = lastChange.getTime();
-                long curr = System.currentTimeMillis();
-                if ((last+(ONE_DAY_IN_MILLIS * maxAge)) < curr)
-                    throw AccountServiceException.CHANGE_PASSWORD();
+        if (authMech.checkPasswordAging()) {
+            // below this point, the only fault that may be thrown is CHANGE_PASSWORD
+            int maxAge = acct.getIntAttr(Provisioning.A_zimbraPasswordMaxAge, 0);
+            if (maxAge > 0) {
+                Date lastChange = acct.getGeneralizedTimeAttr(Provisioning.A_zimbraPasswordModifiedTime, null);
+                if (lastChange != null) {
+                    long last = lastChange.getTime();
+                    long curr = System.currentTimeMillis();
+                    if ((last+(ONE_DAY_IN_MILLIS * maxAge)) < curr)
+                        throw AccountServiceException.CHANGE_PASSWORD();
+                }
             }
+    
+            boolean mustChange = acct.getBooleanAttr(Provisioning.A_zimbraPasswordMustChange, false);
+            if (mustChange)
+                throw AccountServiceException.CHANGE_PASSWORD();
         }
-
-        boolean mustChange = acct.getBooleanAttr(Provisioning.A_zimbraPasswordMustChange, false);
-        if (mustChange)
-            throw AccountServiceException.CHANGE_PASSWORD();
 
         // update/check last logon
         updateLastLogon(acct);
