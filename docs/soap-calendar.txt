@@ -929,7 +929,19 @@ OR
   </appt|task>+  // one for each <appt|task> in the request
 </DismissCalendarItemAlarmResponse>
 
+-------------------------------------------------------------------------------
 
+<GetMiniCalRequest s="range start time in millis" e="range end time in millis">
+  <folder id="folder id"/>+  // local and/or remote calendar folders
+</GetMiniCalRequest>
+
+<GetMiniCalResponse>
+  [<date>yyyymmdd</date>]*   // e.g. 20080221
+</GetMiniCalResponse>
+
+Date is returned if there is at least one appointment on that date.  The date computation
+uses the requesting (authenticated) account's time zone, not the time zone of the account
+that owns the calendar folder.
 
 
 
