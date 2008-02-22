@@ -71,6 +71,9 @@ log4j.appender.WBXML.Append=true
 log4j.appender.WBXML.layout=com.zimbra.common.util.ZimbraPatternLayout
 log4j.appender.WBXML.layout.ConversionPattern=%d %-5p [%t] [%z] %c{1} - %m%n
 
+# HttpMethodBase spews out too many WARN on the badly formatted cookies.
+log4j.logger.org.apache.commons.httpclient.HttpMethodBase=ERROR
+
 log4j.additivity.zimbra.sync=false
 log4j.logger.zimbra.sync=DEBUG,SYNC
 log4j.additivity.zimbra.synctrace=false
