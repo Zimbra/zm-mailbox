@@ -485,8 +485,4 @@ public class AdminConstants {
     public static final String A_PROPAGATE = "propagate";
     public static final String A_START = "start";
     public static final String A_END = "end";
-    
-    //extension targets
-    public static final String T_ADMIN_MAIN = "admin-main";
-    public static final String T_ADMIN_DOMAIN = "admin-domain";     
 }
