@@ -129,6 +129,7 @@ public class MailService implements DocumentService {
         dispatcher.registerHandler(MailConstants.GET_ICAL_REQUEST, new GetICal());
         dispatcher.registerHandler(MailConstants.ANNOUNCE_ORGANIZER_CHANGE_REQUEST, new AnnounceOrganizerChange());
         dispatcher.registerHandler(MailConstants.DISMISS_CALITEM_ALARM_REQUEST, new DismissCalendarItemAlarm());
+        dispatcher.registerHandler(MailConstants.GET_MINI_CAL_REQUEST, new GetMiniCal());
 
         // spell check
         dispatcher.registerHandler(MailConstants.CHECK_SPELLING_REQUEST, new CheckSpelling());

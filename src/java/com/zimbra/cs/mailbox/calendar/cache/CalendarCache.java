@@ -273,6 +273,12 @@ public class CalendarCache {
         if (rangeStart >= rangeEnd)
             throw ServiceException.INVALID_REQUEST("End time must be after Start time", null);
 
+        if (!DebugConfig.calendarEnableCache) {
+            ZimbraPerf.COUNTER_CALENDAR_CACHE_HIT.increment(0);
+            ZimbraPerf.COUNTER_CALENDAR_CACHE_MEM_HIT.increment(0);
+            return reloadCalendarOverRange(octxt, mbox, folderId, itemType, rangeStart, rangeEnd);
+        }
+
         CacheLevel dataFrom = CacheLevel.Memory;
 
         SummaryCacheKey key = new SummaryCacheKey(mbox.getId(), folderId);
