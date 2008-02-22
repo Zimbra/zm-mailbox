@@ -2578,7 +2578,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="542" name="zimbraMailPurgeSleepInterval" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited,domainAdminModifiable" callback="MailboxPurge">
-  <globalConfigValue>0</globalConfigValue>
+  <globalConfigValue>1m</globalConfigValue>
   <desc>
     Sleep time between subsequent mailbox purges.  0 means that mailbox purging
     is disabled.
