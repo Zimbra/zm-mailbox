@@ -65,6 +65,37 @@ public class Zimbra {
         }
     }
 
+    private static String getSysProperty(String prop) {
+        try {
+            return System.getProperty(prop);
+        } catch (SecurityException e) {
+            return "(accessing " + prop + " is not allowed by security manager)";
+        }
+    }
+    
+    private static void logVersionAndSysInfo() {
+        ZimbraLog.misc.info("version=" + BuildInfo.VERSION +
+                " release=" + BuildInfo.RELEASE +
+                " builddate=" + BuildInfo.DATE +
+                " buildhost=" + BuildInfo.HOST);
+        
+        ZimbraLog.misc.info("LANG environment is set to: " + System.getenv("LANG"));
+        
+        ZimbraLog.misc.info("System property java.home="            + getSysProperty("java.home"));
+        ZimbraLog.misc.info("System property java.runtime.version=" + getSysProperty("java.runtime.version"));
+        ZimbraLog.misc.info("System property java.version="         + getSysProperty("java.version"));
+        ZimbraLog.misc.info("System property java.vm.info="         + getSysProperty("java.vm.info"));
+        ZimbraLog.misc.info("System property java.vm.name="         + getSysProperty("java.vm.name"));
+        ZimbraLog.misc.info("System property java.vm.version="      + getSysProperty("java.vm.version"));
+        ZimbraLog.misc.info("System property os.arch="              + getSysProperty("os.arch"));
+        ZimbraLog.misc.info("System property os.name="              + getSysProperty("os.name"));
+        ZimbraLog.misc.info("System property os.version="           + getSysProperty("os.version"));
+        ZimbraLog.misc.info("System property sun.arch.data.model="  + getSysProperty("sun.arch.data.model"));
+        ZimbraLog.misc.info("System property sun.cpu.endian="       + getSysProperty("sun.cpu.endian"));
+        ZimbraLog.misc.info("System property sun.cpu.isalist="      + getSysProperty("sun.cpu.isalist"));
+        ZimbraLog.misc.info("System property sun.os.patch.level="   + getSysProperty("sun.os.patch.level"));
+    }
+    
     private static void checkForClasses() {
         checkForClass("javax.activation.DataSource", "activation.jar");
         checkForClass("javax.mail.internet.MimeMessage", "mail.jar");
@@ -77,11 +108,7 @@ public class Zimbra {
         
         FirstServlet.waitForInitialization();
 
-        ZimbraLog.misc.info("version=" + BuildInfo.VERSION +
-                            " release=" + BuildInfo.RELEASE +
-                            " builddate=" + BuildInfo.DATE +
-                            " buildhost=" + BuildInfo.HOST);
-        ZimbraLog.misc.info("LANG environment is set to: " + System.getenv("LANG"));
+        logVersionAndSysInfo();
 
         checkForClasses();
 
