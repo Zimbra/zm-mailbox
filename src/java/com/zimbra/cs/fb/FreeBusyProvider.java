@@ -68,29 +68,30 @@ public abstract class FreeBusyProvider {
 	public static void register(FreeBusyProvider p) {
 		synchronized (sPROVIDERS) {
 			sPROVIDERS.add(p);
-			if (p.registerForMailboxChanges()) {
-				String name = p.getName();
-				FreeBusySyncQueue queue = sPUSHQUEUES.get(name);
-				if (queue != null) {
-					ZimbraLog.misc.warn("free/busy provider "+name+" has been already registered.");
-				}
-				queue = new FreeBusySyncQueue(p);
-				sPUSHQUEUES.put(name, queue);
-				new Thread(queue).start();
-			}
 		}
+	}
+	
+	private static FreeBusySyncQueue startConsumerThread(FreeBusyProvider p) {
+		String name = p.getName();
+		FreeBusySyncQueue queue = sPUSHQUEUES.get(name);
+		if (queue != null) {
+			ZimbraLog.misc.warn("free/busy provider "+name+" has been already registered.");
+		}
+		queue = new FreeBusySyncQueue(p);
+		sPUSHQUEUES.put(name, queue);
+		new Thread(queue).start();
+		return queue;
 	}
 	
 	public static void mailboxChanged(Mailbox mbox) {
 		mailboxChanged(mbox.getAccountId());
 	}
 	public static void mailboxChanged(String accountId) {
-		if (sPUSHQUEUES.size() == 0)
-			return;
-
 		for (FreeBusyProvider prov : sPROVIDERS)
 			if (prov.registerForMailboxChanges()) {
 				FreeBusySyncQueue queue = sPUSHQUEUES.get(prov.getName());
+				if (queue == null)
+					queue = startConsumerThread(prov);
 				synchronized (queue) {
 					if (queue.contains(accountId))
 						continue;
