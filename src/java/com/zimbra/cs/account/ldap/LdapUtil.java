@@ -62,6 +62,8 @@ import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.PagedResultsControl;
 import javax.naming.ldap.PagedResultsResponseControl;
 import javax.naming.ldap.Rdn;
+import javax.naming.PartialResultException;
+import javax.naming.ReferralException;
 import javax.security.auth.login.LoginException;
 
 import java.io.IOException;
@@ -878,6 +880,7 @@ public class LdapUtil {
                                 "url=" + url +
                                 ", binddn=" + binddn + 
                                 ", page size=" + pageSize + 
+                                ", max results=" + maxResults + 
                                 ", base=" + base + 
                                 ", query=" + query +
                                 ", attrs=" + returnAttrs);
@@ -917,6 +920,23 @@ public class LdapUtil {
                     if (pageSize > 0)
                         cookie = getCookie(lctxt);
                 } while (cookie != null);
+            /*    
+            } catch (ReferralException e) {
+                ZimbraLog.gal.debug("caught ReferralException: info=" + e.getReferralInfo().toString() + ", msg=" + e.getMessage());
+                
+                // http://java.sun.com/products/jndi/tutorial/ldap/referral/jndi.html
+                // ignore ReferralException if ldap_referral is set to "throw"
+                if (!LC.ldap_referral.value().equals("throw")) 
+                    throw e;
+                
+            } catch (PartialResultException e) {
+                ZimbraLog.gal.debug("caught PartialResultException: " + e.getMessage());
+                
+                // http://java.sun.com/products/jndi/tutorial/ldap/referral/jndi.html
+                // ignore PartialResultException if ldap_referral is set to "ignore"
+                if (!LC.ldap_referral.value().equals("ignore"))
+                    throw e;
+            */    
             } finally {
                 if (ne != null) 
                     ne.close();
@@ -954,11 +974,11 @@ public class LdapUtil {
     
         if (url == null || url.length == 0 || base == null || filter == null) {
             if (url == null || url.length == 0)
-                ZimbraLog.misc.warn("searchLdapGal url is null");
+                ZimbraLog.gal.warn("searchLdapGal url is null");
             if (base == null)
-                ZimbraLog.misc.warn("searchLdapGal base is null");
+                ZimbraLog.gal.warn("searchLdapGal base is null");
             if (filter == null)
-                ZimbraLog.misc.warn("searchLdapGal queryExpr is null");
+                ZimbraLog.gal.warn("searchLdapGal queryExpr is null");
             return result;
         }
     
@@ -969,15 +989,6 @@ public class LdapUtil {
         }
                 
         String query = GalUtil.expandFilter(galParams, galOp, filter, n, token, false);
-
-        if (ZimbraLog.misc.isDebugEnabled()) {
-            ZimbraLog.misc.debug("searchLdapGal query:"+query);
-            String attrs[] = rules.getLdapAttrs();
-            for (String a: attrs) {
-                ZimbraLog.misc.debug("searchLdapGal attr:"+a);
-            }
-        }
-        
         
         String authMech = galParams.credential().getAuthMech();
         if (authMech.equals(Provisioning.LDAP_AM_KERBEROS5))
