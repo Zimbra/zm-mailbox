@@ -18,8 +18,8 @@ package com.zimbra.cs.fb;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -69,9 +69,9 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
 		req.data = acct;
 		addFreeBusyRequest(req);
 	}
-	public Set<FreeBusy> getResults() {
+	public List<FreeBusy> getResults() {
 		// XXX unused, and not implemented
-		return Collections.emptySet();
+		return Collections.emptyList();
 	}
 	
 	public boolean registerForMailboxChanges() {

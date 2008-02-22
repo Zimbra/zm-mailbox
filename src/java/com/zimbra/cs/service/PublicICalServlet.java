@@ -17,7 +17,9 @@
 package com.zimbra.cs.service;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -33,6 +35,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.fb.FreeBusy;
+import com.zimbra.cs.fb.FreeBusyProvider;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mime.Mime;
@@ -103,25 +106,32 @@ public class PublicICalServlet extends ZimbraServlet {
 
         try {
             Account acct = Provisioning.getInstance().get(AccountBy.name, acctName);
+            FreeBusy fb = null;
+            String email = null;
             if (acct == null) {
-                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "account " + acctName + " not found");
-                return;
+            	ArrayList<String> ids = new ArrayList<String>();
+            	ids.add(acctName);
+            	rangeStart = now - Constants.MILLIS_PER_WEEK;  // exchange doesn't like start date being now - 1 month.
+            	List<FreeBusy> fblist = FreeBusyProvider.getRemoteFreeBusy(ids, rangeStart, rangeEnd);
+            	fb = fblist.get(0);
+            	email = acctName;
             } else if (!Provisioning.onLocalServer(acct)) {
                 // request was sent to incorrect server, so proxy to the right one
                 proxyServletRequest(req, resp, Provisioning.getInstance().getServer(acct), null);
                 return;
-            }
+            } else {
+                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getId());
+                if (mbox == null) {
+                    resp.sendError(HttpServletResponse.SC_NOT_FOUND, "mailbox not found");
+                    return;             
+                }
 
-            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getId());
-            if (mbox == null) {
-                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "mailbox not found");
-                return;             
+                fb = mbox.getFreeBusy(rangeStart, rangeEnd);
+                email = mbox.getAccount().getName();
             }
-
-            FreeBusy fb = mbox.getFreeBusy(rangeStart, rangeEnd);
 
             String url = req.getRequestURL() + "?" + req.getQueryString();
-            String fbMsg = fb.toVCalendar(FreeBusy.Method.PUBLISH, mbox.getAccount().getName(), null, url);
+            String fbMsg = fb.toVCalendar(FreeBusy.Method.PUBLISH, email, null, url);
             resp.getOutputStream().write(fbMsg.getBytes());
 
         } catch (ServiceException e) {

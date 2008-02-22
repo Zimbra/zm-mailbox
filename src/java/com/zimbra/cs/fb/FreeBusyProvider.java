@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.HashMap;
@@ -56,7 +57,7 @@ public abstract class FreeBusyProvider {
 	
 	// free/busy lookup from 3rd party system
 	public abstract void addFreeBusyRequest(Request req) throws FreeBusyUserNotFoundException;
-	public abstract Set<FreeBusy> getResults();
+	public abstract List<FreeBusy> getResults();
 
 	// propagation of Zimbra users free/busy to 3rd party system
 	public abstract boolean registerForMailboxChanges();
@@ -109,27 +110,35 @@ public abstract class FreeBusyProvider {
 			ToXML.encodeFreeBusy(response, fb);
 	}
 	
-	public static void getRemoteFreeBusy(Element response, List<String> remoteIds, long start, long end) {
+	public static List<FreeBusy> getRemoteFreeBusy(List<String> remoteIds, long start, long end) {
 		Set<FreeBusyProvider> providers = getProviders();
+		ArrayList<FreeBusy> ret = new ArrayList<FreeBusy>();
 		for (String emailAddr : remoteIds) {
 			Request req = new Request(emailAddr, start, end);
-			FreeBusyProvider p = null;
+			boolean succeed = false;
 			for (FreeBusyProvider prov : providers) {
 				try {
 					prov.addFreeBusyRequest(req);
-					p = prov;
+					succeed = true;
 					break;
 				} catch (FreeBusyUserNotFoundException e) {
 				}
 			}
-			if (p == null) {
+			if (!succeed) {
 				ZimbraLog.misc.error("can't find free/busy provider for user "+emailAddr);
-				ToXML.encodeFreeBusy(response, FreeBusy.emptyFreeBusy(emailAddr, start, end));
+				ret.add(FreeBusy.emptyFreeBusy(emailAddr, start, end));
 			}
 		}
 		
 		for (FreeBusyProvider prov : providers) {
-			prov.addResults(response);
+			ret.addAll(prov.getResults());
+		}
+		return ret;
+	}
+	
+	public static void getRemoteFreeBusy(Element response, List<String> remoteIds, long start, long end) {
+		for (FreeBusy fb : getRemoteFreeBusy(remoteIds, start, end)) {
+			ToXML.encodeFreeBusy(response, fb);
 		}
 	}
 	
