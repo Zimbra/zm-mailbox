@@ -23,9 +23,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.httpclient.auth.AuthPolicy;
 import org.apache.commons.httpclient.Credentials;
@@ -142,14 +141,14 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 	}
 	private HashMap<String,ArrayList<Request>> mRequests;
 	
-	public Set<FreeBusy> getResults() {
-		HashSet<FreeBusy> ret = new HashSet<FreeBusy>();
+	public List<FreeBusy> getResults() {
+		ArrayList<FreeBusy> ret = new ArrayList<FreeBusy>();
 		for (Map.Entry<String, ArrayList<Request>> entry : mRequests.entrySet()) {
 			try {
 				ret.addAll(this.getFreeBusyForHost(entry.getKey(), entry.getValue()));
 			} catch (IOException e) {
 				ZimbraLog.misc.error("error communicating to "+entry.getKey(), e);
-				return getEmptySet(entry.getValue());
+				return getEmptyList(entry.getValue());
 			}
 		}
 		return ret;
@@ -297,19 +296,19 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		mRequests = new HashMap<String,ArrayList<Request>>();
 	}
 	
-	private Set<FreeBusy> getEmptySet(ArrayList<Request> req) {
-		HashSet<FreeBusy> ret = new HashSet<FreeBusy>();
+	private List<FreeBusy> getEmptyList(ArrayList<Request> req) {
+		ArrayList<FreeBusy> ret = new ArrayList<FreeBusy>();
 		for (Request r : req)
 			ret.add(FreeBusy.emptyFreeBusy(r.email, r.start, r.end));
 		return ret;
 	}
 	
-	public Set<FreeBusy> getFreeBusyForHost(String host, ArrayList<Request> req) throws IOException {
+	public List<FreeBusy> getFreeBusyForHost(String host, ArrayList<Request> req) throws IOException {
 		Request r = req.get(0);
 		ServerInfo serverInfo = (ServerInfo) r.data;
 		if (serverInfo == null) {
 			ZimbraLog.misc.warn("no exchange server info for user "+r.email);
-			return getEmptySet(req);
+			return getEmptyList(req);
 		}
 		String url = constructGetUrl(serverInfo, req);
 		ZimbraLog.misc.debug("fetching fb from url="+url);
@@ -321,21 +320,21 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 			int status = sendRequest(method, serverInfo);
 			Header cl = method.getResponseHeader("Content-Length");
 			if (status != 200 || cl == null)
-				return getEmptySet(req);
+				return getEmptyList(req);
 			//String buf = new String(com.zimbra.common.util.ByteUtil.readInput(method.getResponseBodyAsStream(), 10240, 10240), "UTF-8");
 			//ZimbraLog.misc.debug(buf);
 			//response = Element.parseXML(buf);
 			response = Element.parseXML(method.getResponseBodyAsStream());
 		} catch (DocumentException e) {
 			ZimbraLog.misc.warn("error parsing fb response from exchange", e);
-			return getEmptySet(req);
+			return getEmptyList(req);
 		} catch (IOException e) {
 			ZimbraLog.misc.warn("error parsing fb response from exchange", e);
-			return getEmptySet(req);
+			return getEmptyList(req);
 		} finally {
 			method.releaseConnection();
 		}
-		HashSet<FreeBusy> ret = new HashSet<FreeBusy>();
+		ArrayList<FreeBusy> ret = new ArrayList<FreeBusy>();
 		for (Request re : req) {
 			String fb = getFbString(response, re.email);
 			ret.add(new ExchangeUserFreeBusy(fb, re.email, FB_INTERVAL, re.start, re.end));
@@ -353,7 +352,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		StringBuilder buf = new StringBuilder(info.url);
 		buf.append("/public/?cmd=freebusy");
 		buf.append("&start=").append(DateUtil.toISO8601(new Date(req.get(0).start)));
-		buf.append("&endt=").append(DateUtil.toISO8601(new Date(req.get(0).end)));
+		buf.append("&end=").append(DateUtil.toISO8601(new Date(req.get(0).end)));
 		buf.append("&interval=").append(FB_INTERVAL);
 		for (Request r : req)
 			buf.append("&u=SMTP:").append(r.email);

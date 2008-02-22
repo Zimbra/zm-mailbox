@@ -40,7 +40,8 @@ also push the free/busy schedule of a Zimbra user to Exchange server.  The
 retrieval of free/busy (Exchange to Zimbra) is done via REST interface
 on the Exchange server.  The propagation of free/busy (Zimbra to Exchange)
 is done via WebDAV interface on the Exchange server.  In both cases, Zimbra
-needs to authenticate to the Exchange server via HTTP basic authentication.
+needs to authenticate to the Exchange server via HTTP basic authentication
+or HTML form based authentication ala OWA.
 
 In order to enable the default Exchange free busy interop implementation, 
 the following conditions need to be met.
@@ -179,7 +180,7 @@ framework.
         
         // free/busy lookup from 3rd party system
         public abstract void addFreeBusyRequest(Request req) throws FreeBusyUserNotFoundException;
-        public abstract Set<FreeBusy> getResults();
+        public abstract List<FreeBusy> getResults();
         
         // propagation of Zimbra users free/busy to 3rd party system
         public abstract boolean registerForMailboxChanges();
