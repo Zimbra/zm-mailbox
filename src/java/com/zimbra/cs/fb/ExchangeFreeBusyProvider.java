@@ -161,9 +161,23 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 	public String getName() {
 		return EXCHANGE;
 	}
-	
+
 	public boolean registerForMailboxChanges() {
-		return true;
+		if (sRESOLVERS.size() > 1)
+			return true;
+		Server server = null;
+		try {
+			server = Provisioning.getInstance().getLocalServer();
+		} catch (ServiceException se) {
+			ZimbraLog.misc.warn("cannot fetch local server", se);
+			return false;
+		}
+		String url = server.getAttr(Provisioning.A_zimbraFreebusyExchangeURL, null);
+		String user = server.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthUsername, null);
+		String pass = server.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthPassword, null);
+		String org = server.getAttr(Provisioning.A_zimbraFreebusyExchangeUserOrg, null);
+		String scheme = server.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthScheme, null);
+		return (url != null && user != null && pass != null && org != null && scheme != null);
 	}
 	
 	public long cachedFreeBusyStartTime() {
@@ -336,7 +350,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		}
 		ArrayList<FreeBusy> ret = new ArrayList<FreeBusy>();
 		for (Request re : req) {
-			String fb = getFbString(response, re.email);
+			String fb = getFbString(response, re.email.toLowerCase());
 			ret.add(new ExchangeUserFreeBusy(fb, re.email, FB_INTERVAL, re.start, re.end));
 		}
 		return ret;
