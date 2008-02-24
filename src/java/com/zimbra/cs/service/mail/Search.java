@@ -21,6 +21,8 @@
 package com.zimbra.cs.service.mail;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -30,12 +32,18 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.JSONElement;
+import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.index.*;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.SearchParams.ExpandResults;
 import com.zimbra.cs.index.queryparser.ParseException;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Flag;
@@ -45,11 +53,16 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.calendar.cache.CacheToXML;
+import com.zimbra.cs.mailbox.calendar.cache.CalendarData;
+import com.zimbra.cs.mailbox.calendar.cache.CalendarItemData;
 import com.zimbra.cs.service.mail.GetCalendarItemSummaries.EncodeCalendarItemResult;
 import com.zimbra.cs.service.mail.ToXML.EmailType;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications;
+import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class Search extends MailDocumentHandler  {
@@ -67,6 +80,15 @@ public class Search extends MailDocumentHandler  {
         String query = params.getQueryStr();
 
         params.setQueryStr(query);
+        if (DebugConfig.calendarEnableCache) {
+        	List<String> apptFolderIds = getFolderIdListIfSimpleAppointmentsQuery(params);
+        	if (apptFolderIds != null) {
+        		Account authAcct = getAuthenticatedAccount(zsc);
+	        	Element response = zsc.createElement(MailConstants.SEARCH_RESPONSE);
+	        	runSimpleAppointmentQuery(response, params, octxt, zsc, authAcct, acct, mbox, apptFolderIds);
+	        	return response;
+	        }
+        }
 
         ZimbraQueryResults results = doSearch(zsc, octxt, mbox, params);
 
@@ -367,5 +389,141 @@ public class Search extends MailDocumentHandler  {
     Element addNoteHit(ItemIdFormatter ifmt, Element response, NoteHit nh) throws ServiceException {
         // TODO - does this need to be a summary, instead of the whole note?
         return ToXML.encodeNote(response, ifmt, nh.getNote());
+    }
+
+
+
+    // Calendar summary cache stuff
+    
+    // Returns list of folder id string if the query is a simple appointments query.
+    // Otherwise returns null.
+    private static List<String> getFolderIdListIfSimpleAppointmentsQuery(SearchParams params) {
+        // types = "appointment"
+        byte[] types = params.getTypes();
+        if (types == null || types.length != 1 ||
+            (types[0] != MailItem.TYPE_APPOINTMENT && types[0] != MailItem.TYPE_TASK))
+            return null;
+        // has time range
+        if (params.getCalItemExpandStart() == -1 || params.getCalItemExpandEnd() == -1)
+            return null;
+        // offset = 0
+        if (params.getOffset() != 0)
+            return null;
+        // sortBy = "none"
+        MailboxIndex.SortBy sortBy = params.getSortBy();
+        if (sortBy != null && !sortBy.equals(MailboxIndex.SortBy.NONE))
+            return null;
+
+        // query string is "inid:<folder> [OR inid:<folder>]*"
+        String queryStr = params.getQueryStr();
+        if (queryStr == null)
+            queryStr = "";
+        queryStr = queryStr.toLowerCase();
+        queryStr = removeOuterParens(queryStr);
+        // simple appointment query can't have any ANDed terms
+        if (queryStr.contains("and"))
+            return null;
+        String[] terms = queryStr.split("\\s+or\\s+");
+        List<String> folderIdStrs = new ArrayList<String>();
+        for (String term : terms) {
+            term = term.trim();
+            // remove outermost parentheses (light client does this, e.g. "(inid:10)")
+            term = removeOuterParens(term);
+            if (!term.startsWith("inid:"))
+                return null;
+            String folderId = term.substring(5);  // everything after "inid:"
+            if (folderId.length() > 0)
+                folderIdStrs.add(folderId);
+        }
+        return folderIdStrs;
+    }
+
+    private static String removeOuterParens(String str) {
+        int len = str.length();
+        if (len > 2 && str.charAt(0) == '(' && str.charAt(len - 1) == ')')
+            str = str.substring(1, len - 1);
+        return str;
+    }
+
+    private static void runSimpleAppointmentQuery(Element parent, SearchParams params,
+                                                  OperationContext octxt, ZimbraSoapContext zsc,
+                                                  Account authAcct, Account acct, Mailbox mbox,
+                                                  List<String> folderIdStrs)
+    throws ServiceException {
+        byte itemType = MailItem.TYPE_APPOINTMENT;
+        byte[] types = params.getTypes();
+        if (types != null && types.length == 1)
+            itemType = types[0];
+
+        parent.addAttribute(MailConstants.A_SORTBY, params.getSortByStr());
+        parent.addAttribute(MailConstants.A_QUERY_OFFSET, params.getOffset());
+        parent.addAttribute(MailConstants.A_QUERY_MORE, false);
+
+        String authToken = null;
+
+        List<ItemId> folderIids = new ArrayList<ItemId>(folderIdStrs.size());
+        for (String folderIdStr : folderIdStrs) {
+            folderIids.add(new ItemId(folderIdStr, zsc));
+        }
+        Map<String, List<Integer>> groupedByAcct = ItemId.groupFoldersByAccount(octxt, mbox, folderIids);
+        for (Map.Entry<String, List<Integer>> entry : groupedByAcct.entrySet()) {
+            String acctId = entry.getKey();
+            List<Integer> folderIds = entry.getValue();
+            if (acctId == null) {  // local account
+                for (int folderId : folderIds) {
+                    CalendarData calData = mbox.getCalendarSummaryForRange(
+                            octxt, folderId, itemType, params.getCalItemExpandStart(), params.getCalItemExpandEnd());
+                    if (calData != null) {
+                        for (Iterator<CalendarItemData> itemIter = calData.calendarItemIterator(); itemIter.hasNext(); ) {
+                            CalendarItemData calItemData = itemIter.next();
+                            int numInstances = calItemData.getNumInstances();
+                            if (numInstances > 0) {
+                                Element calItemElem = CacheToXML.encodeCalendarItemData(
+                                        zsc, acct, authAcct, calItemData, false);
+                                parent.addElement(calItemElem);
+                            }
+                        }
+                    }
+                }
+            } else {  // remote account
+                StringBuilder queryStr = new StringBuilder();
+                for (int folderId : folderIds) {
+                    if (queryStr.length() > 0)
+                        queryStr.append(" OR ");
+                    queryStr.append("inid:").append(folderId);
+                }
+                Element req = new JSONElement(MailConstants.SEARCH_REQUEST);
+                req.addAttribute(MailConstants.A_SEARCH_TYPES, params.getTypesStr());
+                req.addAttribute(MailConstants.A_SORTBY, params.getSortByStr());
+                req.addAttribute(MailConstants.A_QUERY_OFFSET, params.getOffset());
+                if (params.getLimit() != 0)
+                    req.addAttribute(MailConstants.A_QUERY_LIMIT, params.getLimit());
+                req.addAttribute(MailConstants.A_CAL_EXPAND_INST_START, params.getCalItemExpandStart());
+                req.addAttribute(MailConstants.A_CAL_EXPAND_INST_END, params.getCalItemExpandEnd());
+                req.addAttribute(MailConstants.E_QUERY, queryStr.toString(), Element.Disposition.CONTENT);
+
+                if (authToken == null) {
+                    try {
+                        authToken = AuthToken.getAuthToken(authAcct).getEncoded();
+                    } catch (AuthTokenException e) {
+                        throw ServiceException.FAILURE("could not get auth token", e);
+                    }
+                }
+                Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, acctId);
+                ZMailbox.Options zoptions = new ZMailbox.Options(authToken, AccountUtil.getSoapUri(target));
+                zoptions.setTargetAccount(acctId);
+                zoptions.setTargetAccountBy(AccountBy.id);
+                zoptions.setNoSession(true);
+                zoptions.setRequestProtocol(SoapProtocol.SoapJS);
+                zoptions.setResponseProtocol(SoapProtocol.SoapJS);
+                ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
+
+                Element resp = zmbx.invoke(req);
+                for (Element hit : resp.listElements()) {
+                    hit.detach();
+                    parent.addElement(hit);
+                }
+            }
+        }
     }
 }

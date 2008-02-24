@@ -19,13 +19,21 @@
  */
 package com.zimbra.cs.service.util;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mountpoint;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -168,6 +176,50 @@ public class ItemId {
     @Override
     public int hashCode() {
         return (mAccountId == null ? 0 : mAccountId.hashCode()) ^ mId;
+    }
+
+    // groups folders by account id
+    // local account has key == null
+    // value is list of folder id integers
+    // mountpoints are fully resolved to real folder ids for local account
+    public static Map<String, List<Integer>> groupFoldersByAccount(
+            OperationContext octxt, Mailbox mbox, List<ItemId> folderIids)
+    throws ServiceException {
+        Map<String, List<Integer>> foldersMap = new HashMap<String, List<Integer>>();
+        for (ItemId iidFolder : folderIids) {
+            int folderId = iidFolder.getId();
+            String targetAccountId = iidFolder.getAccountId();
+            if (mbox.getAccountId().equals(targetAccountId))
+                targetAccountId = null;
+            if (targetAccountId == null) {
+                boolean isMountpoint = true;
+                int hopCount = 0;
+                // resolve local mountpoint to a real folder; deal with possible mountpoint chain
+                while (isMountpoint && hopCount < ZimbraSoapContext.MAX_HOP_COUNT) {
+                    Folder folder = mbox.getFolderById(octxt, folderId);
+                    isMountpoint = folder instanceof Mountpoint;
+                    if (isMountpoint) {
+                        Mountpoint mp = (Mountpoint) folder;
+                        folderId = mp.getRemoteId();
+                        if (!mp.isLocal()) {
+                            // done resolving if pointing to a different account
+                            targetAccountId = mp.getOwnerId();
+                            break;
+                        }
+                        hopCount++;
+                    }
+                }
+                if (hopCount >= ZimbraSoapContext.MAX_HOP_COUNT)
+                    throw ServiceException.TOO_MANY_HOPS();
+            }
+            List<Integer> folderList = foldersMap.get(targetAccountId);
+            if (folderList == null) {
+                folderList = new ArrayList<Integer>();
+                foldersMap.put(targetAccountId, folderList);
+            }
+            folderList.add(folderId);
+        }
+        return foldersMap;
     }
 
     public static void main(String[] args) {

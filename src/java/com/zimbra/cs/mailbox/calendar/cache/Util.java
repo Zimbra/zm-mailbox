@@ -81,6 +81,8 @@ public class Util {
         calEnd.add(Calendar.DAY_OF_YEAR, -1);  // last day of the last month in range
         // go forward to Saturday of the week
         moreDays = Calendar.SATURDAY - calEnd.get(Calendar.DAY_OF_WEEK);
+        // go forward one more week because minical shows 5 weeks all the time
+        moreDays += 7;
         // go forward one more day, for GMT-nnnn timezones
         moreDays++;
         // go forward one more day to cover through the end of the day
