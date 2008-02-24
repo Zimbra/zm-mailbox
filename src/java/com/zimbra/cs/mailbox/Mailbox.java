@@ -87,6 +87,8 @@ import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.cs.mailbox.calendar.cache.CalendarCache;
+import com.zimbra.cs.mailbox.calendar.cache.CalendarData;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -6360,5 +6362,15 @@ public class Mailbox {
         sb.append(CN_SIZE).append(": ").append(mData.size);
         sb.append("}");
         return sb.toString();
+    }
+
+    public synchronized CalendarData getCalendarSummaryForRange(
+            OperationContext octxt, int folderId,
+            byte itemType, long start, long end)
+    throws ServiceException {
+        Folder folder = getFolderById(folderId);
+        if (!folder.canAccess(ACL.RIGHT_READ))
+            throw MailServiceException.PERM_DENIED("you do not have sufficient permissions on folder " + folder.getName());
+        return CalendarCache.getInstance().getCalendarSummary(octxt, this, folderId, itemType, start, end, true);
     }
 }

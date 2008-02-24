@@ -267,8 +267,8 @@ public class CalendarCache {
 
     // get summary for all appts/tasks in a calendar folder
     public CalendarData getCalendarSummary(OperationContext octxt, Mailbox mbox, int folderId,
-                                           byte itemType, long rangeStart, long rangeEnd,
-                                           boolean computeSubRange)
+    									   byte itemType, long rangeStart, long rangeEnd,
+    									   boolean computeSubRange)
     throws ServiceException {
         if (rangeStart >= rangeEnd)
             throw ServiceException.INVALID_REQUEST("End time must be after Start time", null);
@@ -282,9 +282,10 @@ public class CalendarCache {
         CacheLevel dataFrom = CacheLevel.Memory;
 
         SummaryCacheKey key = new SummaryCacheKey(mbox.getId(), folderId);
-        CalendarData calData;
+        CalendarData calData = null;
         synchronized (mSummaryCache) {
-            calData = mSummaryCache.get(key);
+            if (sLRUCapacity > 0)
+                calData = mSummaryCache.get(key);
         }
 
         Folder folder = mbox.getFolderById(octxt, folderId);
@@ -294,7 +295,7 @@ public class CalendarCache {
             // Load from file.
             try {
                 calData = FileStore.loadCalendarData(mbox.getId(), folderId, currentModSeq);
-                if (calData != null) {
+                if (calData != null && sLRUCapacity > 0) {
                     synchronized (mSummaryCache) {
                         mSummaryCache.put(key, calData);
                     }
@@ -330,7 +331,8 @@ public class CalendarCache {
             calData = reloadCalendarOverRange(octxt, mbox, folderId, itemType,
                                               defaultRange.getFirst(), defaultRange.getSecond());
             synchronized (mSummaryCache) {
-                mSummaryCache.put(key, calData);
+                if (sLRUCapacity > 0)
+                    mSummaryCache.put(key, calData);
             }
             dataFrom = CacheLevel.Miss;
             try {
