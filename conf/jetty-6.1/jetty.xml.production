@@ -168,8 +168,14 @@
       <Set name="configurationClasses"><Ref id="plusConfig"/></Set>
       <Set name="defaultsDescriptor"><SystemProperty name="jetty.home" default="."/>/etc/webdefault.xml</Set>
       <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work/service</Set>
+      <Get name="errorHandler">
+        <Call name="addErrorPage">
+          <Arg type="int">500</Arg>
+          <Arg type="int">599</Arg>
+          <Arg type="String">/public/5xx.html</Arg>
+        </Call>
+      </Get>
     </New>
-
     <New id="zimbra" class="org.mortbay.jetty.webapp.WebAppContext">
       <Arg><Ref id="Contexts"/></Arg>
       <Arg><SystemProperty name="jetty.home" default="."/>/webapps/zimbra</Arg>
@@ -177,6 +183,13 @@
       <Set name="configurationClasses"><Ref id="plusConfig"/></Set>
       <Set name="defaultsDescriptor"><SystemProperty name="jetty.home" default="."/>/etc/webdefault.xml</Set>
       <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work/zimbra</Set>
+      <Get name="errorHandler">
+        <Call name="addErrorPage">
+          <Arg type="int">500</Arg>
+          <Arg type="int">599</Arg>
+          <Arg type="String">/public/5xx.html</Arg>
+        </Call>
+      </Get>
     </New>
 
 
@@ -187,6 +200,13 @@
       <Set name="configurationClasses"><Ref id="plusConfig"/></Set>
       <Set name="defaultsDescriptor"><SystemProperty name="jetty.home" default="."/>/etc/webdefault.xml</Set>
       <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work%%zimbraAdminURL%%/</Set>
+      <Get name="errorHandler">
+        <Call name="addErrorPage">
+          <Arg type="int">500</Arg>
+          <Arg type="int">599</Arg>
+          <Arg type="String">/public/5xx.html</Arg>
+        </Call>
+      </Get>
     </New>
 
 
