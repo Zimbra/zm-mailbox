@@ -45,7 +45,6 @@ import com.zimbra.cs.mailbox.calendar.cache.InstanceData;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZMailbox.ZGetMiniCalResult;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /*
@@ -150,9 +149,11 @@ public class GetMiniCal extends CalendarRequest {
         zoptions.setRequestProtocol(SoapProtocol.SoapJS);
         zoptions.setResponseProtocol(SoapProtocol.SoapJS);
         ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
-        ZGetMiniCalResult result = zmbx.getMiniCal(remoteFolders, rangeStart, rangeEnd);
+        String remoteIds[] = new String[remoteFolders.size()];
+        for (int i=0; i < remoteIds.length; i++) remoteIds[i] = remoteFolders.get(i).toString();
+        Set<String> result = zmbx.getMiniCal(rangeStart, rangeEnd, remoteIds);
 
-        for (String datestamp : result.getBusyDates()) {
+        for (String datestamp : result) {
         	busyDates.add(datestamp);
         }
     }

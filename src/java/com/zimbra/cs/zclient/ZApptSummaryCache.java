@@ -1,17 +1,17 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * 
+ *
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * 
+ *
  * ***** END LICENSE BLOCK *****
  */
 
@@ -26,6 +26,8 @@ import com.zimbra.cs.zclient.event.ZDeleteEvent;
 import com.zimbra.cs.zclient.event.ZCreateAppointmentEvent;
 import com.zimbra.cs.zclient.event.ZModifyAppointmentEvent;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.Element;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,6 +36,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.TimeZone;
+import java.util.Arrays;
+import java.util.Collections;
 
 public class ZApptSummaryCache extends ZEventHandler {
 
@@ -48,14 +52,28 @@ public class ZApptSummaryCache extends ZEventHandler {
     // set of all ids in our cache
     private Set<String> mIds;
 
+    // cache of mini-cal results
+    private Map<String, Set<String>> mMiniCalCache;
+
     public ZApptSummaryCache() {
         mResults = new HashMap<String, ZApptSummaryResult>();
         mIds = new HashSet<String>();
+        mMiniCalCache = new HashMap<String, Set<String>>();
     }
 
     private String makeKey(long start, long end, String folderId, TimeZone timezone, String query) {
         if (query == null) query = "";
         return start+":"+end+":"+folderId+":"+timezone.getID() + ":"+ query;
+    }
+
+    private String makeMiniCalKey(long start, long end, String folderIds[]) {
+        if (folderIds.length == 1) {
+            return start+":"+end+":"+folderIds[0];
+        } else {
+            List<String> folders = Arrays.asList(folderIds);
+            Collections.sort(folders);
+            return start+":"+end+":"+folders;
+        }
     }
 
     synchronized void add(ZApptSummaryResult result, TimeZone timezone) {
@@ -84,9 +102,18 @@ public class ZApptSummaryCache extends ZEventHandler {
         return result;
     }
 
+    synchronized void putMiniCal(Set<String> result, long start, long end, String folderIds[]) {
+        mMiniCalCache.put(makeMiniCalKey(start, end, folderIds), result);
+    }
+
+    synchronized Set<String> getMiniCal(long start, long end, String folderIds[]) {
+        return mMiniCalCache.get(makeMiniCalKey(start, end, folderIds));
+    }
+
     public synchronized void clear() {
         mIds.clear();
         mResults.clear();
+        mMiniCalCache.clear();
     }
 
     /**

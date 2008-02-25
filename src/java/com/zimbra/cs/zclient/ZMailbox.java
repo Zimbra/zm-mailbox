@@ -103,6 +103,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeSet;
+import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -3252,6 +3253,27 @@ public class ZMailbox {
         mApptSummaryCache.clear();
     }
 
+    public synchronized Set<String> getMiniCal(long startMsec, long endMsec, String folderIds[]) throws ServiceException {
+       Set<String> result = mApptSummaryCache.getMiniCal(startMsec, endMsec,folderIds);
+
+        if (result == null) {
+            Element req = newRequestElement(MailConstants.GET_MINI_CAL_REQUEST);
+            req.addAttribute(MailConstants.A_CAL_START_TIME, startMsec);
+            req.addAttribute(MailConstants.A_CAL_END_TIME, endMsec);
+            for (String folderId : folderIds) {
+                Element folderElem = req.addElement(MailConstants.E_FOLDER);
+                folderElem.addAttribute(MailConstants.A_ID, folderId);
+            }
+            Element resp = invoke(req);
+            result = new HashSet<String>();
+            for (Element date : resp.listElements(MailConstants.E_CAL_MINICAL_DATE)) {
+                result.add(date.getTextTrim());
+            }
+            mApptSummaryCache.putMiniCal(result, startMsec, endMsec, folderIds);
+        }
+        return result;
+    }
+
     /**
      * @param query optional seach query to limit appts returend
      * @param startMsec starting time of range, in msecs
@@ -3876,31 +3898,4 @@ public class ZMailbox {
         updateSigs();
     }
 
-    public static class ZGetMiniCalResult {
-    	private Set<String> mBusyDates;
-
-        public ZGetMiniCalResult(Set<String> busyDates) {
-        	mBusyDates = busyDates;
-        }
-
-        public Set<String> getBusyDates() { return mBusyDates; }
-    }
-
-    public ZGetMiniCalResult getMiniCal(List<Integer> folderIds, long startTime, long endTime)
-    throws ServiceException {
-        Element req = newRequestElement(MailConstants.GET_MINI_CAL_REQUEST);
-        req.addAttribute(MailConstants.A_CAL_START_TIME, startTime);
-        req.addAttribute(MailConstants.A_CAL_END_TIME, endTime);
-        for (int folderId : folderIds) {
-        	Element folderElem = req.addElement(MailConstants.E_FOLDER);
-        	folderElem.addAttribute(MailConstants.A_ID, folderId);
-        }
-        Element resp = invoke(req);
-        Set<String> busyDates = new TreeSet<String>();
-        for (Element date : resp.listElements(MailConstants.E_CAL_MINICAL_DATE)) {
-        	String datestamp = date.getTextTrim();
-        	busyDates.add(datestamp);
-        }
-        return new ZGetMiniCalResult(busyDates);
-    }
 }
