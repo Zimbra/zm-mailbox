@@ -394,6 +394,11 @@ public class ZimbraServlet extends HttpServlet {
     public static String getServiceUrl(Account acct, String service) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Server server = prov.getServer(acct);
+        
+        if (server == null) {
+        	throw ServiceException.FAILURE("unable to retrieve server for account" + acct.getName(), null);
+        }
+        
         Domain domain = prov.getDomain(acct);
         String uri;
         Config config = prov.getConfig();
