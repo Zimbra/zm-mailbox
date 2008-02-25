@@ -23,16 +23,16 @@ import com.zimbra.cs.mailclient.util.TraceInputStream;
 import com.zimbra.cs.mailclient.util.TraceOutputStream;
 
 public abstract class MailConnection {
-    protected MailConfig mConfig;
-    protected Socket mSocket;
-    protected SSLSocketFactory mSSLSocketFactory;
-    protected ClientAuthenticator mAuthenticator;
-    protected TraceInputStream mTraceInputStream;
-    protected TraceOutputStream mTraceOutputStream;
-    protected MailInputStream mInputStream;
-    protected MailOutputStream mOutputStream;
-    protected boolean mClosed;
-    protected State mState;
+    protected MailConfig config;
+    protected Socket socket;
+    protected SSLSocketFactory sslSocketFactory;
+    protected ClientAuthenticator authenticator;
+    protected TraceInputStream traceIn;
+    protected TraceOutputStream traceOut;
+    protected MailInputStream mailIn;
+    protected MailOutputStream mailOut;
+    protected boolean closed;
+    protected State state;
 
     public static enum State {
         NON_AUTHENTICATED, AUTHENTICATED, SELECTED, LOGOUT
@@ -43,7 +43,7 @@ public abstract class MailConnection {
     protected MailConnection() {}
 
     protected MailConnection(MailConfig config) {
-        mConfig = config;
+        this.config = config;
     }
 
     public static MailConnection getInstance(MailConfig config) {
@@ -58,20 +58,20 @@ public abstract class MailConnection {
     }
 
     public void connect() throws IOException {
-        mSocket = mConfig.createSocket();
-        initStreams(new BufferedInputStream(mSocket.getInputStream()),
-                     new BufferedOutputStream(mSocket.getOutputStream()));
+        socket = config.createSocket();
+        initStreams(new BufferedInputStream(socket.getInputStream()),
+                     new BufferedOutputStream(socket.getOutputStream()));
         processGreeting();
     }
 
     protected void initStreams(InputStream is, OutputStream os)
             throws IOException {
-        if (mConfig.isTrace()) {
-            is = mTraceInputStream = mConfig.getTraceInputStream(is);
-            os = mTraceOutputStream = mConfig.getTraceOutputStream(os);
+        if (config.isTrace()) {
+            is = traceIn = config.getTraceInputStream(is);
+            os = traceOut = config.getTraceOutputStream(os);
         }
-        mInputStream = getMailInputStream(is);
-        mOutputStream = getMailInputStream(os);
+        mailIn = getMailInputStream(is);
+        mailOut = getMailInputStream(os);
     }
 
     protected abstract void processGreeting() throws IOException;
@@ -84,8 +84,8 @@ public abstract class MailConnection {
     public abstract void logout() throws IOException;
 
     public void login() throws IOException {
-        String user = mConfig.getAuthenticationId();
-        String pass = mConfig.getPassword();
+        String user = config.getAuthenticationId();
+        String pass = config.getPassword();
         if (user == null || pass == null) {
             throw new IllegalStateException(
                 "Missing required login username or password");
@@ -94,17 +94,17 @@ public abstract class MailConnection {
     }
     
     public void authenticate(boolean ir) throws LoginException, IOException {
-        String mech = mConfig.getMechanism();
+        String mech = config.getMechanism();
         if (mech == null || mech.equalsIgnoreCase(LOGIN)) {
             login();
             return;
         }
-        mAuthenticator = mConfig.createAuthenticator();
-        mAuthenticator.initialize();
+        authenticator = config.createAuthenticator();
+        authenticator.initialize();
         sendAuthenticate(ir);
-        if (mAuthenticator.isEncryptionEnabled()) {
-            initStreams(mAuthenticator.getUnwrappedInputStream(mSocket.getInputStream()),
-                        mAuthenticator.getWrappedOutputStream(mSocket.getOutputStream()));
+        if (authenticator.isEncryptionEnabled()) {
+            initStreams(authenticator.getUnwrappedInputStream(socket.getInputStream()),
+                        authenticator.getWrappedOutputStream(socket.getOutputStream()));
         }
     }
 
@@ -113,10 +113,10 @@ public abstract class MailConnection {
     }
 
     protected void processContinuation(String s) throws IOException {
-        byte[] response = mAuthenticator.evaluateChallenge(decodeBase64(s));
+        byte[] response = authenticator.evaluateChallenge(decodeBase64(s));
         if (response != null) {
-            mOutputStream.writeLine(encodeBase64(response));
-            mOutputStream.flush();
+            mailOut.writeLine(encodeBase64(response));
+            mailOut.flush();
         }
     }
 
@@ -138,11 +138,11 @@ public abstract class MailConnection {
 
     public void startTLS() throws IOException {
         sendStartTLS();
-        SSLSocket sock = mConfig.createSSLSocket(mSocket);
+        SSLSocket sock = config.createSSLSocket(socket);
         try {
             sock.startHandshake();
-            mInputStream = new MailInputStream(sock.getInputStream());
-            mOutputStream = new MailOutputStream(sock.getOutputStream());
+            mailIn = new MailInputStream(sock.getInputStream());
+            mailOut = new MailOutputStream(sock.getOutputStream());
         } catch (IOException e) {
             close();
             throw e;
@@ -150,49 +150,49 @@ public abstract class MailConnection {
     }
 
     public String getNegotiatedQop() {
-        return mAuthenticator != null ?
-            mAuthenticator.getNegotiatedProperty(Sasl.QOP) : null;
+        return authenticator != null ?
+            authenticator.getNegotiatedProperty(Sasl.QOP) : null;
     }
 
     public void setTraceEnabled(boolean enabled) {
-        if (mTraceInputStream != null) {
-            mTraceInputStream.setEnabled(enabled);
+        if (traceIn != null) {
+            traceIn.setEnabled(enabled);
         }
-        if (mTraceOutputStream != null) {
-            mTraceOutputStream.setEnabled(enabled);
+        if (traceOut != null) {
+            traceOut.setEnabled(enabled);
         }
     }
 
     public MailInputStream getInputStream() {
-        return mInputStream;
+        return mailIn;
     }
 
     public MailOutputStream getOutputStream() {
-        return mOutputStream;
+        return mailOut;
     }
 
     public MailConfig getConfig() {
-        return mConfig;
+        return config;
     }
     
     public void close() {
-        if (mClosed) return;
+        if (closed) return;
         try {
-            mSocket.close();
+            socket.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        if (mAuthenticator != null) {
+        if (authenticator != null) {
             try {
-                mAuthenticator.dispose();
+                authenticator.dispose();
             } catch (SaslException e) {
                 e.printStackTrace();
             }
         }
-        mClosed = true;
+        closed = true;
     }
 
     public boolean isClosed() {
-        return mClosed;
+        return closed;
     }
 }

@@ -26,8 +26,8 @@ import java.io.IOException;
  * IMAP server capabilities
  */
 public class Capabilities {
-    private final List<Atom> mCapabilities = new ArrayList<Atom>();
-    private int mMask;
+    private final List<Atom> capabilities = new ArrayList<Atom>();
+    private int mask;
 
     private static final int MASK_IMAP4 = 0x1;
     private static final int MASK_LITERAL_PLUS = 0x2;
@@ -54,18 +54,18 @@ public class Capabilities {
             addCapability(is.readAtom().getName());
         } while (is.match(' '));
         if (hasCapability(IMAP4)) {
-            mMask |= MASK_IMAP4;
+            mask |= MASK_IMAP4;
         } else if (hasCapability(LITERAL_PLUS)) {
-            mMask |= MASK_LITERAL_PLUS;
+            mask |= MASK_LITERAL_PLUS;
         }
     }
     
     private void addCapability(String cap) {
-        mCapabilities.add(new Atom(cap));
+        capabilities.add(new Atom(cap));
     }
 
     public boolean hasCapability(String cap) {
-        return mCapabilities.contains(new Atom(cap));
+        return capabilities.contains(new Atom(cap));
     }
 
     public boolean hasAuthMethod(String method) {
@@ -73,17 +73,17 @@ public class Capabilities {
     }
 
     public boolean hasImap4() {
-        return (mMask & MASK_IMAP4) != 0;
+        return (mask & MASK_IMAP4) != 0;
     }
     
     public boolean hasLiteralPlus() {
-        return (mMask & MASK_LITERAL_PLUS) != 0;
+        return (mask & MASK_LITERAL_PLUS) != 0;
     }
 
     public String[] getCapabilities() {
-        String[] caps = new String[mCapabilities.size()];
+        String[] caps = new String[capabilities.size()];
         for (int i = 0; i < caps.length; i++) {
-            caps[i] = mCapabilities.get(i).getName();
+            caps[i] = capabilities.get(i).getName();
         }
         return caps;
     }
@@ -98,7 +98,7 @@ public class Capabilities {
         
     public String toString() {
         StringBuilder sb = new StringBuilder("CAPABILITIES[");
-        for (Atom cap : mCapabilities) {
+        for (Atom cap : capabilities) {
             sb.append(' ').append(cap);
         }
         return sb.append(']').toString();

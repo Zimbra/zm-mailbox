@@ -24,18 +24,18 @@ import java.io.PrintStream;
  * Input stream filter for tracing mail client input from server.
  */
 public class TraceInputStream extends InputStream {
-    private final InputStream is;
-    private final PrintStream ps;
+    private final InputStream in;
+    private final PrintStream traceOut;
     private boolean enabled = true;
     private boolean eol = true;
 
-    public TraceInputStream(InputStream is, PrintStream ps) {
-        this.is = is;
-        this.ps = ps;
+    public TraceInputStream(InputStream in, PrintStream traceOut) {
+        this.in = in;
+        this.traceOut = traceOut;
     }
 
-    public TraceInputStream(InputStream is) {
-        this(is, System.out);
+    public TraceInputStream(InputStream in) {
+        this(in, System.out);
     }
 
     public void setEnabled(boolean enabled) {
@@ -44,9 +44,9 @@ public class TraceInputStream extends InputStream {
 
     @Override
     public int read() throws IOException {
-        int b = is.read();
+        int b = in.read();
         if (b != -1 && enabled) {
-            if (eol) ps.print("S: ");
+            if (eol) traceOut.print("S: ");
             printByte((byte) b);
         }
         eol = (b == '\n');
@@ -56,7 +56,7 @@ public class TraceInputStream extends InputStream {
     @Override
     public int read(byte[] buf, int off, int len) throws IOException {
         if (!enabled) {
-            return is.read(buf, off, len);
+            return in.read(buf, off, len);
         }
         int start = off;
         int end = off + len;
@@ -77,10 +77,10 @@ public class TraceInputStream extends InputStream {
         case '\r':
             break;
         case '\n':
-            ps.println();
+            traceOut.println();
             break;
         default:
-            ps.print(Ascii.pp(b));
+            traceOut.print(Ascii.pp(b));
         }
     }
 }

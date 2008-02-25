@@ -24,18 +24,18 @@ import java.io.OutputStream;
  * An output stream filter for tracing mail client output to server.
  */
 public class TraceOutputStream extends OutputStream {
-    private final OutputStream os;
-    private final PrintStream ps;
+    private final OutputStream out;
+    private final PrintStream traceOut;
     private boolean enabled = true;
     private boolean eol = true;
 
-    public TraceOutputStream(OutputStream os, PrintStream ps) {
-        this.os = os;
-        this.ps = ps;
+    public TraceOutputStream(OutputStream out, PrintStream traceOut) {
+        this.out = out;
+        this.traceOut = traceOut;
     }
 
-    public TraceOutputStream(OutputStream os) {
-        this(os, System.out);
+    public TraceOutputStream(OutputStream out) {
+        this(out, System.out);
     }
 
     public void setEnabled(boolean enabled) {
@@ -44,9 +44,9 @@ public class TraceOutputStream extends OutputStream {
 
     @Override
     public void write(int b) throws IOException {
-        os.write(b);
+        out.write(b);
         if (enabled) {
-            if (eol) ps.print("C: ");
+            if (eol) traceOut.print("C: ");
             printByte((byte) b);
             eol = (b == '\n');
         }
@@ -57,13 +57,13 @@ public class TraceOutputStream extends OutputStream {
         if (enabled) {
             while (--len >= 0) write(buf[off++]);
         } else {
-            os.write(buf, off, len);
+            out.write(buf, off, len);
         }
     }
 
     @Override
     public void flush() throws IOException {
-        os.flush();
+        out.flush();
     }
     
     private void printByte(byte b) {
@@ -71,10 +71,10 @@ public class TraceOutputStream extends OutputStream {
         case '\r':
             break;
         case '\n':
-            ps.println();
+            traceOut.println();
             break;
         default:
-            ps.print(Ascii.pp(b));
+            traceOut.print(Ascii.pp(b));
         }
     }
 }

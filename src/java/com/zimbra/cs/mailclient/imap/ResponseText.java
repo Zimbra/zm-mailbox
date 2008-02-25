@@ -35,45 +35,45 @@ import java.util.ArrayList;
  *                   atom [SP 1*<any TEXT-CHAR except "]">]
  */
 public final class ResponseText {
-    private Atom mCode;     // response text code
-    private Object mData;   // optional response text data
-    private String mText;   // response text
+    private Atom code;     // response text code
+    private Object data;   // optional response text data
+    private String text;   // response text
 
     public static ResponseText read(ImapInputStream is) throws IOException {
         ResponseText rt = new ResponseText();
         if (is.peek() == '[') {
             rt.readCode(is);
         }
-        rt.mText = is.readText();
+        rt.text = is.readText();
         return rt;
     }
 
     private void readCode(ImapInputStream is) throws IOException {
         is.skipChar('[');
-        mCode = is.readAtom();
-        switch (mCode.getCAtom()) {
+        code = is.readAtom();
+        switch (code.getCAtom()) {
         case ALERT: case PARSE: case READ_ONLY: case READ_WRITE: case TRYCREATE:
             break;
         case UIDNEXT: case UIDVALIDITY: case UNSEEN:
             is.skipChar(' ');
-            mData = is.readNZNumber();
+            data = is.readNZNumber();
             break;
         case BADCHARSET:
             if (is.match(' ')) {
-                mData = readCharset(is);
+                data = readCharset(is);
             }
             break;
         case PERMANENTFLAGS:
             is.skipChar(' ');
-            mData = Flags.read(is);
+            data = Flags.read(is);
             break;
         case CAPABILITY:
             is.skipChar(' ');
-            mData = Capabilities.read(is);
+            data = Capabilities.read(is);
             break;
         default:
             if (is.match(' ')) {
-                mData = is.readText(']');
+                data = is.readText(']');
             }
         }
         is.skipChar(']');
@@ -89,7 +89,7 @@ public final class ResponseText {
         return cs.toArray(new String[cs.size()]);
     }
            
-    public Atom getCode() { return mCode; }
-    public Object getData() { return mData; }
-    public String getText() { return mText; }
+    public Atom getCode() { return code; }
+    public Object getData() { return data; }
+    public String getText() { return text; }
 }

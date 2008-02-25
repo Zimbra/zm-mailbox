@@ -21,38 +21,38 @@ import java.io.InputStream;
 import java.io.EOFException;
 
 public class MailInputStream extends InputStream {
-    protected final InputStream mInputStream;
-    protected final StringBuilder mBuffer;
-    private int mNextByte = -1;
+    protected final InputStream in;
+    protected final StringBuilder sbuf;
+    private int nextByte = -1;
 
     public MailInputStream(InputStream is) {
-        this.mInputStream = is;
-        mBuffer = new StringBuilder(132);
+        this.in = is;
+        sbuf = new StringBuilder(132);
     }
 
     public int read(byte[] b, int off, int len) throws IOException {
-        if (mNextByte != -1 && len > 0) {
-            b[off++] = (byte) mNextByte;
-            mNextByte = -1;
-            len = mInputStream.read(b, off, len - 1);
+        if (nextByte != -1 && len > 0) {
+            b[off++] = (byte) nextByte;
+            nextByte = -1;
+            len = in.read(b, off, len - 1);
             return len != -1 ? len + 1 : -1;
         }
-        return mInputStream.read(b, off, len);
+        return in.read(b, off, len);
     }
 
     public String readLine() throws IOException {
-        mBuffer.setLength(0);
+        sbuf.setLength(0);
         int c = read();
         if (c == -1) return null;
         while (c != '\n' && c != -1) {
-            mBuffer.append((char) c);
+            sbuf.append((char) c);
             c = read();
         }
-        int len = mBuffer.length();
-        if (len > 0 && mBuffer.charAt(len - 1) == '\r') {
-            mBuffer.setLength(len - 1);
+        int len = sbuf.length();
+        if (len > 0 && sbuf.charAt(len - 1) == '\r') {
+            sbuf.setLength(len - 1);
         }
-        return mBuffer.toString();
+        return sbuf.toString();
     }
 
     public char readChar() throws IOException {
@@ -68,19 +68,19 @@ public class MailInputStream extends InputStream {
     }
 
     public int read() throws IOException {
-        if (mNextByte != -1) {
-            int b = mNextByte;
-            mNextByte = -1;
+        if (nextByte != -1) {
+            int b = nextByte;
+            nextByte = -1;
             return b;
         }
-        return mInputStream.read();
+        return in.read();
     }
 
     public int peek() throws IOException {
-        if (mNextByte == -1) {
-            mNextByte = mInputStream.read();
+        if (nextByte == -1) {
+            nextByte = in.read();
         }
-        return mNextByte;
+        return nextByte;
     }
 
     public boolean isEOF() throws IOException {
@@ -88,6 +88,6 @@ public class MailInputStream extends InputStream {
     }
 
     public void close() throws IOException {
-        mInputStream.close();
+        in.close();
     }
 }

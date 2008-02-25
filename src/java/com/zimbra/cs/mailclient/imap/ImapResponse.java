@@ -25,10 +25,10 @@ import java.util.ArrayList;
  * IMAP response message.
  */
 public final class ImapResponse {
-    private String mTag;        // Response tag
-    private long mNumber = -1;  // Optional message number
-    private CAtom mCode;        // Response code (or status)
-    private Object mData;       // Optional response data
+    private String tag;         // Response tag
+    private long number = -1;   // Optional message number
+    private CAtom code;         // Response code or status
+    private Object data;        // Optional response data
 
     public static final String CONTINUATION = "+";
     public static final String UNTAGGED = "*";
@@ -40,65 +40,65 @@ public final class ImapResponse {
     }
 
     private void readResponse(ImapInputStream is) throws IOException {
-        mTag = is.readText(' ');
+        tag = is.readText(' ');
         is.skipChar(' ');
-        if (mTag.equals(CONTINUATION)) {
-            mData = is.readText();
-        } else if (mTag.equals(UNTAGGED)) {
+        if (tag.equals(CONTINUATION)) {
+            data = is.readText();
+        } else if (tag.equals(UNTAGGED)) {
             readUntagged(is);
-        } else if (Chars.isTag(mTag)) {
+        } else if (Chars.isTag(tag)) {
             readTagged(is);
         } else {
-            throw new ParseException("Invalid response tag: " + mTag);
+            throw new ParseException("Invalid response tag: " + tag);
         }
         is.skipCRLF();
     }
 
     private void readUntagged(ImapInputStream is) throws IOException {
         Atom code = is.readAtom();
-        mNumber = code.getNumber();
-        if (mNumber != -1) {
+        number = code.getNumber();
+        if (number != -1) {
             is.skipChar(' ');
             code = is.readAtom();
         }
-        mCode = code.getCAtom();
-        switch (mCode) {
+        this.code = code.getCAtom();
+        switch (this.code) {
         case OK: case BAD: case NO: case BYE:
             is.skipChar(' ');
-            mData = ResponseText.read(is);
+            data = ResponseText.read(is);
             break;
         case CAPABILITY:
             is.skipChar(' ');
-            mData = Capabilities.read(is);
+            data = Capabilities.read(is);
             break;           
         case FLAGS:
             // "FLAGS" SP flag-list
             is.skipChar(' ');
-            mData = Flags.read(is);
+            data = Flags.read(is);
             break;
         case LIST: case LSUB:
             // "LIST" SP mailbox-list / "LSUB" SP mailbox-list
             // mailbox-list    = "(" [mbx-list-flags] ")" SP
             //                   (DQUOTE QUOTED-CHAR DQUOTE / nil) SP mailbox
             is.skipChar(' ');
-            mData = MailboxList.read(is);
+            data = MailboxList.read(is);
             break;
         case SEARCH:
             // "SEARCH" *(SP nz-number)
             if (is.match(' ')) {
-                mData = readSearchData(is);
+                data = readSearchData(is);
             }
             break;
         case STATUS:
             // "STATUS" SP mailbox SP "(" [status-att-list] ")"
-            mData = MailboxStatus.read(is);
+            data = MailboxStatus.read(is);
             break;
         case FETCH:
             // message-data    = nz-number SP ("EXPUNGE" / ("FETCH" SP msg-att))
             // msg-att         = "(" (msg-att-dynamic / msg-att-static)
             //                    *(SP (msg-att-dynamic / msg-att-static)) ")"
             is.skipChar(' ');
-            mData = MessageData.read(is);
+            data = MessageData.read(is);
             break;
         case EXISTS: case RECENT: case EXPUNGE:
             break;
@@ -116,24 +116,24 @@ public final class ImapResponse {
     }
     
     private void readTagged(ImapInputStream is) throws IOException {
-        Atom code = is.readAtom();
-        mCode = code.getCAtom();
+        Atom atom = is.readAtom();
+        code = atom.getCAtom();
         is.skipChar(' ');
-        switch (mCode) {
+        switch (code) {
         case OK: case NO: case BAD:
-            mData = ResponseText.read(is);
+            data = ResponseText.read(is);
             break;
         default:
-            throw new ParseException("Invalid tagged response code: " + code);
+            throw new ParseException("Invalid tagged response code: " + atom);
         }
     }
 
     public boolean isContinuation() {
-        return CONTINUATION.equals(mTag);
+        return CONTINUATION.equals(tag);
     }
 
     public boolean isUntagged() {
-        return UNTAGGED.equals(mTag);
+        return UNTAGGED.equals(tag);
     }
 
     public boolean isTagged() {
@@ -141,28 +141,28 @@ public final class ImapResponse {
     }
 
     public String getTag() {
-        return mTag;
+        return tag;
     }
 
     public long getNumber() {
-        return mNumber;
+        return number;
     }
 
     public CAtom getCode() {
-        return mCode;
+        return code;
     }
 
     public Object getData() {
-        return mData;
+        return data;
     }
 
-    public boolean isOK()  { return mCode == CAtom.OK; }
-    public boolean isBAD() { return mCode == CAtom.BAD; }
-    public boolean isNO()  { return mCode == CAtom.NO; }
-    public boolean isBYE() { return mCode == CAtom.BYE; }
+    public boolean isOK()  { return code == CAtom.OK; }
+    public boolean isBAD() { return code == CAtom.BAD; }
+    public boolean isNO()  { return code == CAtom.NO; }
+    public boolean isBYE() { return code == CAtom.BYE; }
     
     public boolean isStatus() {
-        switch (mCode) {
+        switch (code) {
         case OK: case BAD: case NO: case BYE:
             return true;
         }
@@ -174,16 +174,16 @@ public final class ImapResponse {
     }
 
     public ResponseText getResponseText() {
-        return isStatus() ? (ResponseText) mData : null;
+        return isStatus() ? (ResponseText) data : null;
     }
 
     public String getContinuation() {
-        return isContinuation() ? (String) mData : null;
+        return isContinuation() ? (String) data : null;
     }
     
     public void dispose() {
-        if (mCode == CAtom.FETCH) {
-            ((MessageData) mData).dispose();
+        if (code == CAtom.FETCH) {
+            ((MessageData) data).dispose();
         }
     }
 }

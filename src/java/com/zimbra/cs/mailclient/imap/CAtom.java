@@ -43,7 +43,7 @@ public enum CAtom {
     F_NOSELECT("\\Noselect"), F_MARKED("\\Marked"), F_UNMARKED("\\Unmarked"),
     F_STAR("\\*"), UNKNOWN(""); 
 
-    private final Atom mAtom;
+    private final Atom atom;
 
     private static final Map<Atom, CAtom> byAtom = new HashMap<Atom, CAtom>();
 
@@ -63,15 +63,15 @@ public enum CAtom {
     }
     
     private CAtom() {
-        mAtom = new Atom(name());
+        atom = new Atom(name());
     }
 
     private CAtom(String s) {
-        mAtom = new Atom(s);
+        atom = new Atom(s);
     }
 
     public Atom atom() {
-        return mAtom;
+        return atom;
     }
     
     public String toString() {

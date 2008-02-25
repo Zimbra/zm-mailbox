@@ -26,61 +26,61 @@ import java.io.EOFException;
  * Input stream for reading POP3 message data.
  */
 public final class ContentInputStream extends InputStream {
-    private final InputStream mInputStream;
-    private final StringBuilder mBuffer;
-    private int mPos;
+    private final InputStream in;
+    private final StringBuilder sbuf;
+    private int pos;
 
     public ContentInputStream(InputStream is) {
-        mInputStream = is;
-        mBuffer = new StringBuilder(132);
-        mBuffer.setLength(0);
+        in = is;
+        sbuf = new StringBuilder(132);
+        sbuf.setLength(0);
     }
 
     public int read() throws IOException {
-        if (mPos == -1) return -1;
-        if (mPos > mBuffer.length()) {
+        if (pos == -1) return -1;
+        if (pos > sbuf.length()) {
             if (!fillBuffer()) return -1;
         }
-        return mBuffer.charAt(mPos++);
+        return sbuf.charAt(pos++);
     }
 
     public String readLine() throws IOException {
-        if (mPos == -1) return null;
-        int len = mBuffer.length();
-        if (mPos >= len) {
+        if (pos == -1) return null;
+        int len = sbuf.length();
+        if (pos >= len) {
             if (!fillBuffer()) return null;
         }
         // Remove trailing '\n' or '\r\n'
-        len -= Math.min(len - mPos, 2);
-        String line = mBuffer.substring(mPos, len);
-        mPos = 0;
+        len -= Math.min(len - pos, 2);
+        String line = sbuf.substring(pos, len);
+        pos = 0;
         return line;
     }
 
     private boolean fillBuffer() throws IOException {
-        mBuffer.setLength(0);
+        sbuf.setLength(0);
         int b;
         do {
-            b = mInputStream.read();
+            b = in.read();
             if (b == -1) {
                 throw new EOFException(
                     "Unexpected end of stream while reading content");
             }
-            mBuffer.append((char) b);
+            sbuf.append((char) b);
         } while (b != '\n');
-        int len = mBuffer.length();
-        if (len < 2 || mBuffer.charAt(len - 2) != '\r') {
+        int len = sbuf.length();
+        if (len < 2 || sbuf.charAt(len - 2) != '\r') {
             throw new ParseException("Invalid end of line character");
         }
-        if (len == 3 && mBuffer.charAt(0) == '.') {
+        if (len == 3 && sbuf.charAt(0) == '.') {
             // Buffer always ends with "\r\n"
-            mPos = -1;
+            pos = -1;
             return false;
         }
-        if (len == 4 && mBuffer.charAt(0) == '.' && mBuffer.charAt(1) == '.') {
-            mBuffer.deleteCharAt(0);
+        if (len == 4 && sbuf.charAt(0) == '.' && sbuf.charAt(1) == '.') {
+            sbuf.deleteCharAt(0);
         }
-        mPos = 0;
+        pos = 0;
         return true;
     }
 
