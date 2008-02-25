@@ -102,10 +102,12 @@ class Soap11Protocol extends SoapProtocol {
         
         if (e.getArgs() != null) {
             for (ServiceException.Argument arg : e.getArgs()) {
-                Element val = error.addElement(ZimbraNamespace.E_ARGUMENT);
-                val.addAttribute(ZimbraNamespace.A_ARG_NAME, arg.mName);
-                val.addAttribute(ZimbraNamespace.A_ARG_TYPE, arg.mType.toString());
-                val.setText(arg.mValue);
+                if (arg.externalVisible()) {
+                    Element val = error.addElement(ZimbraNamespace.E_ARGUMENT);
+                    val.addAttribute(ZimbraNamespace.A_ARG_NAME, arg.mName);
+                    val.addAttribute(ZimbraNamespace.A_ARG_TYPE, arg.mType.toString());
+                    val.setText(arg.mValue);
+                }
             }
         }
         

@@ -107,12 +107,34 @@ public class ServiceException extends Exception {
             mType = type;
         }
         
+        public boolean externalVisible() {
+            return true;
+        }
+        
         public String mName;
         public String mValue;
         public Type mType;
         
         public String toString() {
             return "("+mName+", "+mType.name()+", \""+mValue+"\")";
+        }
+    }
+    
+    /**
+     * Argument that should not be included in SOAP fault.
+     * For example: url
+     */
+    public static class InternalArgument extends Argument {
+        public InternalArgument(String name, String value, Type typ) {
+            super(name, value, typ);
+        }
+        
+        public InternalArgument(String name, long value, Type type) {
+            super(name, value, type);
+        }
+        
+        public boolean externalVisible() {
+            return false;
         }
     }
     
@@ -249,8 +271,8 @@ public class ServiceException extends Exception {
         return new ServiceException("parse error: "+message, PARSE_ERROR, SENDERS_FAULT, cause);
     }
 
-    public static ServiceException RESOURCE_UNREACHABLE(String message, Throwable cause) {
-        return new ServiceException("resource unreachable: " + message, RESOURCE_UNREACHABLE, RECEIVERS_FAULT, cause);
+    public static ServiceException RESOURCE_UNREACHABLE(String message, Throwable cause, Argument... arguments) {
+        return new ServiceException("resource unreachable: " + message, RESOURCE_UNREACHABLE, RECEIVERS_FAULT, cause, arguments);
     }
 
     public static ServiceException TEMPORARILY_UNAVAILABLE() {
@@ -278,8 +300,8 @@ public class ServiceException extends Exception {
     }
 
     public static ServiceException PROXY_ERROR(Throwable cause, String url) {
-        return new ServiceException("error while proxying request to target server (url=" + url + "): " + (cause != null ? cause.getMessage() : "unknown reason"), 
-                PROXY_ERROR, RECEIVERS_FAULT, cause, new Argument(URL, url, Argument.Type.STR));
+        return new ServiceException("error while proxying request to target server " + (cause != null ? cause.getMessage() : "unknown reason"), 
+                PROXY_ERROR, RECEIVERS_FAULT, cause, new InternalArgument(URL, url, Argument.Type.STR));
     }
 
     public static ServiceException TOO_MANY_HOPS() {
