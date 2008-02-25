@@ -22,59 +22,56 @@ import java.io.OutputStream;
 import java.io.IOException;
 
 /**
- * IMAP atom data type.
+ * IMAP quoted string data type.
  */
-public final class Atom extends ImapData {
-    private final String mName;
+public final class Quoted extends ImapData {
+    private final String mString;
 
-    public static final Atom NIL = new Atom("nil");
-    
-    public Atom(String name) {
-        mName = name;
+    public Quoted(String s) {
+        mString = s;
     }
 
     public Type getType() {
-        return Type.ATOM;
-    }
-    
-    public String getName() {
-        return mName;
+        return Type.QUOTED;
     }
 
-    public CAtom getCAtom() {
-        return CAtom.get(this);
-    }
-
-    public boolean isNumber() {
-        return Chars.isNumber(mName);
-    }
-    
-    public long getNumber() {
-        return Chars.getNumber(mName);
+    public String getString() {
+        return mString;
     }
 
     public int getSize() {
-        return mName.length();
+        return mString.length();
     }
 
     public byte[] getBytes() {
-        return Ascii.getBytes(mName);
+        return Ascii.getBytes(mString);
     }
     
     public void write(OutputStream os) throws IOException {
-        Ascii.write(os, mName);
-    }
-    
-    public int hashCode() {
-        return mName.toUpperCase().hashCode();
-    }
-    
-    public boolean equals(Object obj) {
-        return this == obj || obj != null && obj.getClass() == Atom.class &&
-                              mName.equalsIgnoreCase(((Atom) obj).mName);
+        os.write('"');
+        for (int i = 0; i < mString.length(); i++) {
+            char c = mString.charAt(i);
+            switch (c) {
+            case '\\': case '"':
+                os.write('\\');
+            default:
+                os.write(c);
+            }
+        }
+        os.write('"');
     }
 
+    public int hashCode() {
+        return mString.hashCode();
+    }
+
+    public boolean equals(Object obj) {
+        return this == obj ||
+            obj != null && obj.getClass() == Quoted.class &&
+            mString.equals(((Quoted) obj).mString);
+    }
+    
     public String toString() {
-        return mName;
+        return mString;
     }
 }
