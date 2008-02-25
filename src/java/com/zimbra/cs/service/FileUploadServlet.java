@@ -51,6 +51,8 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.service.ServiceException.Argument;
+import com.zimbra.common.service.ServiceException.InternalArgument;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ByteUtil;
@@ -213,7 +215,7 @@ public class FileUploadServlet extends ZimbraServlet {
         } catch (HttpException e) {
             throw ServiceException.PROXY_ERROR(e, url);
         } catch (IOException e) {
-            throw ServiceException.RESOURCE_UNREACHABLE("can't fetch remote upload: " + url, e);
+            throw ServiceException.RESOURCE_UNREACHABLE("can't fetch remote upload", e, new InternalArgument(ServiceException.URL, url, Argument.Type.STR));
         } finally {
             if (!success && fi != null)
                 fi.delete();
