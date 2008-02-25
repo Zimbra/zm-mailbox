@@ -116,6 +116,7 @@ public abstract class MailConnection {
         byte[] response = mAuthenticator.evaluateChallenge(decodeBase64(s));
         if (response != null) {
             mOutputStream.writeLine(encodeBase64(response));
+            mOutputStream.flush();
         }
     }
 
