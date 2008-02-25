@@ -16,9 +16,6 @@
  */
 package com.zimbra.cs.mailclient.imap;
 
-import java.io.OutputStream;
-import java.io.IOException;
-
 /**
  * IMAP character class support:
  *
@@ -39,7 +36,9 @@ public final class Chars {
     public static final boolean[] NUMBER_CHARS = new boolean[256];
     public static final boolean[] TEXT_CHARS = new boolean[256];
 
-    private static final String SPECIALS = "(){%*\"\\";
+    private static final String QUOTED_SPECIALS = "\"\\";
+    private static final String ASTRING_SPECIALS = "(){%*" + QUOTED_SPECIALS;
+    private static final String ATOM_SPECIALS = ASTRING_SPECIALS + "]";
 
     static {
         for (int i = 0x21; i < 0x7f; i++) {
@@ -48,10 +47,10 @@ public final class Chars {
         for (int i = 1; i < 0xff; i++) {
             TEXT_CHARS[i] = true;
         }
-        set(ATOM_CHARS, SPECIALS + "]", false);
-        set(ASTRING_CHARS, SPECIALS, false);
-        set(TAG_CHARS, SPECIALS + "+", false);
-        set(FETCH_CHARS, SPECIALS + "[]", false);
+        set(ATOM_CHARS, ATOM_SPECIALS, false);
+        set(ASTRING_CHARS, ASTRING_SPECIALS, false);
+        set(TAG_CHARS, ASTRING_SPECIALS + "+", false);
+        set(FETCH_CHARS, ATOM_SPECIALS + "[]", false);
         set(NUMBER_CHARS, "0123456789", true);
         set(TEXT_CHARS, "\000\r\n", false);
     }
@@ -69,13 +68,25 @@ public final class Chars {
     public static boolean isText(char c) {
         return TEXT_CHARS[c];
     }
+
+    public static boolean isAString(char c) {
+        return ASTRING_CHARS[c];
+    }
     
+    public static boolean isQuotedSpecial(char c) {
+        return c == '\\' || c == '\"';
+    }
+
     public static boolean isNumber(String s) {
         return isValid(s, NUMBER_CHARS);
     }
 
     public static boolean isTag(String s) {
         return isValid(s, TAG_CHARS);
+    }
+
+    public static boolean isAtom(String s) {
+        return isValid(s, ATOM_CHARS);
     }
 
     public static long getNumber(String s) {
@@ -95,5 +106,4 @@ public final class Chars {
         }
         return true;
     }
-
 }

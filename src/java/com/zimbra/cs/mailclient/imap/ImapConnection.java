@@ -29,11 +29,12 @@ import java.util.Formatter;
 
 public class ImapConnection extends MailConnection {
     private Capabilities capabilities;
+    private Mailbox mailbox;
     private ImapResponse response;
     private int tagCount;
 
     private static final String TAG_FORMAT = "C%02d";
-
+    
     public ImapConnection(ImapConfig config) {
         super(config);
     }
@@ -53,10 +54,11 @@ public class ImapConnection extends MailConnection {
             throw new MailException("Expected greeting, but got: " + err);
         }
     }
-    
+
     protected void sendLogin() throws IOException {
-        sendCommandCheckStatus("LOGIN", config.getAuthenticationId(),
-                               ' ', new Quoted(config.getPassword()));
+        sendCommandCheckStatus("LOGIN",
+            ImapData.asAString(config.getAuthenticationId()), ' ',
+            ImapData.asAString(config.getPassword()));
     }
 
     public void logout() throws IOException {
@@ -74,6 +76,17 @@ public class ImapConnection extends MailConnection {
 
     protected void sendStartTLS() throws IOException {
         sendCommand("STARTTLS");
+    }
+
+    public Mailbox select(String name) throws IOException {
+        mailbox = new Mailbox(name);
+        try {
+            sendCommandCheckStatus("SELECT", ImapData.asAString(mailbox.getName()));
+        } catch (CommandFailedException e) {
+            mailbox = null;
+            throw e;
+        }
+        return mailbox;
     }
     
     public ImapResponse sendCommandCheckStatus(String cmd, Object... args)
@@ -158,6 +171,9 @@ public class ImapConnection extends MailConnection {
             case CAPABILITY:
                 capabilities = (Capabilities) res.getData();
             }
+        }
+        if (mailbox != null) {
+            mailbox.processResponse(res);
         }
     }
 

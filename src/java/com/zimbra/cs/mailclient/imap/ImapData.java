@@ -16,6 +16,8 @@
  */
 package com.zimbra.cs.mailclient.imap;
 
+import com.zimbra.cs.mailclient.util.Ascii;
+
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -26,8 +28,34 @@ import java.io.IOException;
 public abstract class ImapData {
     public static enum Type { ATOM, QUOTED, LITERAL }
 
+    public static ImapData asAString(String s) {
+        switch (getType(s)) {
+        case ATOM:
+            return new Atom(s);
+        case QUOTED:
+            return new Quoted(s);
+        case LITERAL:
+            return new Literal(Ascii.getBytes(s));
+        }
+        return null;
+    }
+
+    private static Type getType(String s) {
+        Type type = Type.ATOM; // Assume it's an atom for now
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (!Chars.isText(c) || Chars.isQuotedSpecial(c)) {
+                return Type.LITERAL;
+            }
+            if (!Chars.isAString(c)) {
+                type = Type.QUOTED;
+            }
+        }
+        return type;
+    }
+        
     public abstract Type getType();
-    
+
     public boolean isAtom() {
         return getType() == Type.ATOM;
     }
