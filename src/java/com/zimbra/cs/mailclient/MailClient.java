@@ -4,6 +4,7 @@ import static com.zimbra.cs.mailclient.ClientAuthenticator.*;
 import com.zimbra.cs.mailclient.util.SSLUtil;
 
 import javax.security.sasl.Sasl;
+import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -23,14 +24,16 @@ public abstract class MailClient {
         sbuf = new StringBuilder(132);
     }
 
-    public void run(String[] args) throws Exception {
-        try {
-            parseArguments(args);
-        } catch (IllegalArgumentException e) {
-            System.err.printf("ERROR: %s\n", e);
-            printUsage(System.err);
-            System.exit(1);
-        }
+    public void run(String[] args) throws LoginException, IOException {
+        config.setTrace(true);
+        parseArguments(args);
+        connect();
+        startCommandLoop();
+    }
+
+    protected abstract void printUsage(PrintStream ps);
+    
+    protected void connect() throws LoginException, IOException {
         if (config.getAuthenticationId() == null) {
             // Authentication id defaults to login username
             config.setAuthenticationId(System.getProperty("user.name"));
@@ -41,15 +44,12 @@ public abstract class MailClient {
         connection.connect();
         if (startTls) connection.startTLS();
         connection.authenticate();
-        connection.setTraceEnabled(false);
         String qop = connection.getNegotiatedQop();
         if (qop != null) System.out.printf("[Negotiated QOP is %s]\n", qop); 
-        startCommandLoop();
     }
 
-    protected abstract void printUsage(PrintStream ps);
-    
     private void startCommandLoop() throws IOException {
+        connection.setTraceEnabled(false);
         Thread t = new ReaderThread();
         t.setDaemon(true);
         t.start();
@@ -90,19 +90,30 @@ public abstract class MailClient {
         return c != -1 ? sbuf.toString() : null;
     }
 
-    protected void parseArguments(String[] args) {
-        ListIterator<String> it = Arrays.asList(args).listIterator();
-        while (it.hasNext() && parseArgument(it)) {}
-        if (!it.hasNext()) {
+    public void parseArguments(String[] args) {
+        try {
+            parseArguments(Arrays.asList(args).listIterator());
+        } catch (IllegalArgumentException e) {
+            System.err.printf("ERROR: %s\n", e);
+            printUsage(System.err);
+            System.exit(1);
+        }
+    }
+
+    private void parseArguments(ListIterator<String> args) {
+        while (args.hasNext() && parseArgument(args)) {
+            // Continue parsing...
+        }
+        if (!args.hasNext()) {
             throw new IllegalArgumentException("Missing required host name");
         }
-        config.setHost(it.next());
-        if (it.hasNext()) {
+        config.setHost(args.next());
+        if (args.hasNext()) {
             throw new IllegalArgumentException();
         }
     }
 
-    private boolean parseArgument(ListIterator<String> args) {
+    protected boolean parseArgument(ListIterator<String> args) {
         String arg = args.next();
         if (!arg.startsWith("-")) {
             args.previous();
@@ -119,26 +130,19 @@ public abstract class MailClient {
                 config.setPort(Integer.parseInt(args.next()));
                 break;
             case 'u':
-                config.setAuthorizationId(args.next());
-                break;
-            case 'a':
                 config.setAuthenticationId(args.next());
+                break;
+            case 'z':
+                config.setAuthorizationId(args.next());
                 break;
             case 'w':
                 config.setPassword(args.next());
                 break;
-            case 'v':
-                config.setDebug(true);
-                config.setTrace(true);
-                break;
-            case 'm':
-                config.setMechanism(args.next().toUpperCase());
-                break;
             case 'r':
                 config.setRealm(args.next());
                 break;
-            case 's':
-                config.setSSLEnabled(true);
+            case 'm':
+                config.setMechanism(args.next().toUpperCase());
                 break;
             case 'k':
                 minQop = parseQop(arg, args.next());
@@ -146,8 +150,17 @@ public abstract class MailClient {
             case 'l':
                 maxQop = parseQop(arg, args.next());
                 break;
+            case 's':
+                config.setSSLEnabled(true);
+                break;
             case 't':
                 startTls = true;
+                break;
+            case 'd':
+                config.setDebug(true);
+                break;
+            case 'q':
+                config.setTrace(false);
                 break;
             case 'h':
                 printUsage(System.out);
