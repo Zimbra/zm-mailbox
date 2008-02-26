@@ -118,7 +118,7 @@ public class FullInstanceData extends InstanceData {
         mRecurrenceId = recurrenceId; mSequence = sequence; mDtStamp = dtStamp;
         mOrganizer = organizer; mIsOrganizer = isOrganizer;
         mAttendees = attendees;
-        mNumAttendees = attendees != null ? attendees.size() : null;
+        mNumAttendees = attendees != null ? (Integer) attendees.size() : null;
         mSummary = summary; mLocation = location; mDescription = description; mFragment = fragment;
         mIsAllDay = isAllDay;
         mStatus = status; mPriority = priority; mClassProp = classProp;
