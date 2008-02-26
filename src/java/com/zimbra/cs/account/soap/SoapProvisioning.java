@@ -272,6 +272,13 @@ public class SoapProvisioning extends Provisioning {
         req.addElement(AccountConstants.E_PASSWORD).setText(password);
         invoke(req);
     }
+    
+    @Override
+    public void authAccount(Account acct, String password, String proto, Map<String, Object> context) 
+            throws ServiceException {
+        throw new UnsupportedOperationException();
+    }
+
 
     @Override
     public void changePassword(Account acct, String currentPassword,
