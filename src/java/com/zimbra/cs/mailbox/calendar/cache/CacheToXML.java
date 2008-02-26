@@ -250,7 +250,7 @@ public class CacheToXML {
         calItemElem.addAttribute(MailConstants.A_UID, calItemData.getUid());
 
         FullInstanceData defaultData = calItemData.getDefaultData();
-        boolean showAll = !acct.allowPrivateAccess(authAcct) || calItemData.isPublic();
+        boolean showAll = acct.allowPrivateAccess(authAcct) || calItemData.isPublic();
         if (showAll) {
             String flags = calItemData.getFlags();
             if (flags != null && !flags.equals(""))
