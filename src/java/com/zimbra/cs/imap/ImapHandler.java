@@ -1010,7 +1010,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         try {
             Account account = MECHANISM_GSSAPI.equals(mechanism) ?
                 AuthenticatorUtil.authenticateKrb5(username, authenticateId) :
-                AuthenticatorUtil.authenticate(username, authenticateId, password, "imap");
+                AuthenticatorUtil.authenticate(username, authenticateId, password, "imap", getOrigRemoteIpAddr());
             if (account == null) {
                 sendNO(tag, type + " failed");
                 return CONTINUE_PROCESSING;
