@@ -371,7 +371,7 @@ public class TestProvisioning extends TestCase {
             mTheOnlyPasswordIKnowAbout = password;
         }
         
-        public void authenticate(Account acct, String password) throws Exception {
+        public void authenticate(Account acct, String password, Map<String, Object> context) throws Exception {
             if (acct.getName().equals(mTheOnlyAcctThatCanAuth.getName()) && 
                 password.equals(mTheOnlyPasswordIKnowAbout))
                 return;

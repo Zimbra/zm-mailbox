@@ -2615,15 +2615,17 @@ public class LdapProvisioning extends Provisioning {
         updateLastLogon(acct);
     }
     
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.account.Account#authAccount(java.lang.String)
-     */
-    @Override    
+    @Override
     public void authAccount(Account acct, String password, String proto) throws ServiceException {
+        authAccount(acct, password, proto, null);
+    }
+    
+    @Override    
+    public void authAccount(Account acct, String password, String proto, Map<String, Object> context) throws ServiceException {
         try {
             if (password == null || password.equals(""))
                 throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "empty password");
-            authAccount(acct, password, true);
+            authAccount(acct, password, true, context);
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                     new String[] {"cmd", "Auth","account", acct.getName(), "protocol", proto}));
         } catch (AuthFailedServiceException e) {
@@ -2640,11 +2642,11 @@ public class LdapProvisioning extends Provisioning {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Account#authAccount(java.lang.String)
      */
-    private void authAccount(Account acct, String password, boolean checkPasswordPolicy) throws ServiceException {
+    private void authAccount(Account acct, String password, boolean checkPasswordPolicy, Map<String, Object> context) throws ServiceException {
         checkAccountStatus(acct);
         
         AuthMechanism authMech = AuthMechanism.makeInstance(acct);
-        verifyPassword(acct, password, authMech);
+        verifyPassword(acct, password, authMech, context);
 
         if (!checkPasswordPolicy)
             return;
@@ -2759,7 +2761,7 @@ public class LdapProvisioning extends Provisioning {
         throw ServiceException.FAILURE(msg, null);
     }
 
-    private void verifyPassword(Account acct, String password, AuthMechanism authMech) throws ServiceException {
+    private void verifyPassword(Account acct, String password, AuthMechanism authMech, Map<String, Object> context) throws ServiceException {
         
         LdapLockoutPolicy lockoutPolicy = new LdapLockoutPolicy(this, acct);
         try {
@@ -2767,7 +2769,7 @@ public class LdapProvisioning extends Provisioning {
                 throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "account lockout");
 
             // attempt to verify the password
-            verifyPasswordInternal(acct, password, authMech);
+            verifyPasswordInternal(acct, password, authMech, context);
 
             lockoutPolicy.successfulLogin();
         } catch (AccountServiceException e) {
@@ -2782,7 +2784,7 @@ public class LdapProvisioning extends Provisioning {
      * authAccount does all the status/mustChange checks, this just takes the
      * password and auths the user
      */
-    private void verifyPasswordInternal(Account acct, String password, AuthMechanism authMech) throws ServiceException {
+    private void verifyPasswordInternal(Account acct, String password, AuthMechanism authMech, Map<String, Object> context) throws ServiceException {
         
         Domain domain = Provisioning.getInstance().getDomain(acct);
         
@@ -2794,7 +2796,7 @@ public class LdapProvisioning extends Provisioning {
                 acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false); 
         
         try {
-            authMech.doAuth(this, domain, acct, password);
+            authMech.doAuth(this, domain, acct, password, context);
             return;
         } catch (ServiceException e) {
             if (!allowFallback || authMech.isZimbraAuth()) 
@@ -2804,7 +2806,7 @@ public class LdapProvisioning extends Provisioning {
         }
         
         // fall back to zimbra default auth
-        AuthMechanism.doDefaultAuth(authMech, this, domain, acct, password);    
+        AuthMechanism.doDefaultAuth(authMech, this, domain, acct, password, context);    
     }
  
      /**
@@ -2850,7 +2852,7 @@ public class LdapProvisioning extends Provisioning {
      * @see com.zimbra.cs.account.Account#changePassword(java.lang.String, java.lang.String)
      */
     public void changePassword(Account acct, String currentPassword, String newPassword) throws ServiceException {
-        authAccount(acct, currentPassword, false);
+        authAccount(acct, currentPassword, false, null);
         boolean locked = acct.getBooleanAttr(Provisioning.A_zimbraPasswordLocked, false);
         if (locked)
             throw AccountServiceException.PASSWORD_LOCKED();

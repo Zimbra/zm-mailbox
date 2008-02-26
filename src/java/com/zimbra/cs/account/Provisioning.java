@@ -1780,6 +1780,8 @@ public abstract class Provisioning {
 
     public abstract void authAccount(Account acct, String password, String proto) throws ServiceException;
     
+    public abstract void authAccount(Account acct, String password, String proto, Map<String, Object> context) throws ServiceException;
+
     public abstract void preAuthAccount(Account acct, String accountName, String accountBy, long timestamp, long expires, String preAuth) throws ServiceException;
     
     public abstract void changePassword(Account acct, String currentPassword, String newPassword) throws ServiceException;

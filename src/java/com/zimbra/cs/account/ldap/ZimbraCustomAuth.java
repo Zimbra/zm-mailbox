@@ -70,7 +70,7 @@ public abstract class ZimbraCustomAuth {
      *  
      * @throws Exception.  If authentication failed, an Exception should be thrown.
      */
-    public abstract void authenticate(Account acct, String password) throws Exception;
+    public abstract void authenticate(Account acct, String password, Map<String, Object> context) throws Exception;
     
     /*
      * This function is called by the framework after a successful authenticate.  If 

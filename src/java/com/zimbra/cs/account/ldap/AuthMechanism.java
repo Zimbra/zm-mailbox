@@ -17,20 +17,20 @@
 
 package com.zimbra.cs.account.ldap;
 
+import java.util.Map;
+
 import javax.naming.AuthenticationException;
 import javax.naming.AuthenticationNotSupportedException;
 import javax.naming.NamingException;
 import javax.security.auth.login.LoginException;
 
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.krb5.Krb5Login;
 import com.zimbra.cs.account.krb5.Krb5Principal;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -70,9 +70,9 @@ abstract class AuthMechanism {
         }
     }
     
-    public static void doDefaultAuth(AuthMechanism authMech, LdapProvisioning prov, Domain domain, Account acct, String password) throws ServiceException {
+    public static void doDefaultAuth(AuthMechanism authMech, LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> context) throws ServiceException {
         ZimbraAuth zimbraAuth = new ZimbraAuth(authMech.getMechanism());
-        zimbraAuth.doAuth(prov, domain, acct, password);
+        zimbraAuth.doAuth(prov, domain, acct, password, context);
     }
 
     public boolean isZimbraAuth() {
@@ -81,8 +81,8 @@ abstract class AuthMechanism {
     
     abstract boolean checkPasswordAging() throws ServiceException;
     
-    abstract void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password) throws ServiceException;
-    
+    abstract void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> context) throws ServiceException;
+
     String getMechanism() {
         return mAuthMech;
     }
@@ -99,7 +99,7 @@ abstract class AuthMechanism {
             return true;
         }
         
-        void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password) throws ServiceException {
+        void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> context) throws ServiceException {
             String encodedPassword = acct.getAttr(Provisioning.A_userPassword);
 
             if (encodedPassword == null)
@@ -140,7 +140,7 @@ abstract class AuthMechanism {
             super(authMech);
         }
         
-        void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password) throws ServiceException {
+        void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> context) throws ServiceException {
             prov.externalLdapAuth(domain, mAuthMech, acct, password);
         }
         
@@ -157,7 +157,7 @@ abstract class AuthMechanism {
             super(authMech);
         }
         
-        void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password) throws ServiceException {
+        void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> context) throws ServiceException {
             String principal = Krb5Principal.getKrb5Principal(domain, acct);
             
             if (principal == null)
@@ -195,13 +195,13 @@ abstract class AuthMechanism {
             }
         }
         
-        void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password) throws ServiceException {
+        void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> context) throws ServiceException {
             
             if (mHandler == null)
                 throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "handler " + mHandlerName + " for custom auth for domain " + domain.getName() + " not found");
             
             try {
-                mHandler.authenticate(acct, password);
+                mHandler.authenticate(acct, password, context);
                 return;
             } catch (Exception e) {
                 if (e instanceof ServiceException) {
