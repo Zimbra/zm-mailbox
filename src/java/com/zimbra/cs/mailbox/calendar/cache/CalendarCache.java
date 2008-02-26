@@ -245,22 +245,32 @@ public class CalendarCache {
     }
 
 
-    private static CalendarCache sInstance = new CalendarCache();
-
+    private static CalendarCache sInstance;
     public static CalendarCache getInstance() { return sInstance; }
 
-    private static final int sRangeMonthFrom = DebugConfig.calendarCacheRangeMonthFrom;
-    private static final int sRangeNumMonths = DebugConfig.calendarCacheRangeMonths;
-    private static final int sLRUCapacity = DebugConfig.calendarCacheLRUSize;
+    private static final int sRangeMonthFrom;
+    private static final int sRangeNumMonths;
+    private static final int sLRUCapacity;
 
     private static final long MSEC_PER_DAY = 1000 * 60 * 60 * 24;
     private static final long MAX_PERIOD_SIZE_IN_DAYS = 366;
 
+    static {
+        sRangeMonthFrom = DebugConfig.calendarCacheRangeMonthFrom;
+        sRangeNumMonths = DebugConfig.calendarCacheRangeMonths;
+        sLRUCapacity = DebugConfig.calendarCacheLRUSize;
+        sInstance = new CalendarCache(sLRUCapacity);
+    }
+
     // LRU cache containing range-limited calendar summary by calendar folder
     private Map<SummaryCacheKey, CalendarData> mSummaryCache;
 
-    public CalendarCache() {
-        mSummaryCache = new LinkedHashMap<SummaryCacheKey, CalendarData>(sLRUCapacity, 0.75f, true);
+    private CalendarCache(final int capacity) {
+        mSummaryCache = new LinkedHashMap<SummaryCacheKey, CalendarData>(capacity, 1.0f, true) {
+            protected boolean removeEldestEntry(Map.Entry<SummaryCacheKey, CalendarData> eldest) {
+                return size() > capacity;
+            }
+        };
     }
 
     private static enum CacheLevel { Memory, File, Miss }
@@ -279,13 +289,16 @@ public class CalendarCache {
             return reloadCalendarOverRange(octxt, mbox, folderId, itemType, rangeStart, rangeEnd);
         }
 
+        int lruSize = 0;
         CacheLevel dataFrom = CacheLevel.Memory;
 
         SummaryCacheKey key = new SummaryCacheKey(mbox.getId(), folderId);
         CalendarData calData = null;
         synchronized (mSummaryCache) {
-            if (sLRUCapacity > 0)
+            if (sLRUCapacity > 0) {
                 calData = mSummaryCache.get(key);
+                lruSize = mSummaryCache.size();
+            }
         }
 
         Folder folder = mbox.getFolderById(octxt, folderId);
@@ -298,6 +311,7 @@ public class CalendarCache {
                 if (calData != null && sLRUCapacity > 0) {
                     synchronized (mSummaryCache) {
                         mSummaryCache.put(key, calData);
+                        lruSize = mSummaryCache.size();
                     }
                 }
                 dataFrom = CacheLevel.File;
@@ -331,8 +345,10 @@ public class CalendarCache {
             calData = reloadCalendarOverRange(octxt, mbox, folderId, itemType,
                                               defaultRange.getFirst(), defaultRange.getSecond());
             synchronized (mSummaryCache) {
-                if (sLRUCapacity > 0)
+                if (sLRUCapacity > 0) {
                     mSummaryCache.put(key, calData);
+                    lruSize = mSummaryCache.size();
+                }
             }
             dataFrom = CacheLevel.Miss;
             try {
@@ -369,10 +385,12 @@ public class CalendarCache {
             ZimbraPerf.COUNTER_CALENDAR_CACHE_MEM_HIT.increment(0);
             break;
         case Miss:
+        default:
             ZimbraPerf.COUNTER_CALENDAR_CACHE_HIT.increment(0);
             ZimbraPerf.COUNTER_CALENDAR_CACHE_MEM_HIT.increment(0);
             break;
         }
+        ZimbraPerf.COUNTER_CALENDAR_CACHE_LRU_SIZE.increment(lruSize);
 
         return retval;
     }
