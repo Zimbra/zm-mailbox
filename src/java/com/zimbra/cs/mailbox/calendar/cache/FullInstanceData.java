@@ -95,9 +95,9 @@ public class FullInstanceData extends InstanceData {
             String partStat, String freeBusyActual, String percentComplete,
             int invId, int compNum,
             long recurrenceId, int sequence, long dtStamp,
-            ZOrganizer organizer, boolean isOrganizer, List<ZAttendee> attendees,
+            ZOrganizer organizer, Boolean isOrganizer, List<ZAttendee> attendees,
             String summary, String location, String description, String fragment,
-            boolean isAllDay,
+            Boolean isAllDay,
             String status, String priority, String classProp,
             String freeBusyIntended, String transparency) {
         super(dtStart, duration, alarmAt, tzOffset, partStat, freeBusyActual, percentComplete);
@@ -109,9 +109,9 @@ public class FullInstanceData extends InstanceData {
     private void init(
             int invId, int compNum,
             long recurrenceId, int sequence, long dtStamp,
-            ZOrganizer organizer, boolean isOrganizer, List<ZAttendee> attendees,
+            ZOrganizer organizer, Boolean isOrganizer, List<ZAttendee> attendees,
             String summary, String location, String description, String fragment,
-            boolean isAllDay,
+            Boolean isAllDay,
             String status, String priority, String classProp,
             String freeBusyIntended, String transparency) {
         mInvId = invId; mCompNum = compNum;

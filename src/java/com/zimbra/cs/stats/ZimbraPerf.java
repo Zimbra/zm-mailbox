@@ -76,6 +76,7 @@ public class ZimbraPerf {
     public static Counter COUNTER_IDX_WRT_OPENED_CACHE_HIT = new Counter("idx_wrt_opened_cache_hit");
     public static Counter COUNTER_CALENDAR_CACHE_HIT = new Counter("calcache_hit");
     public static Counter COUNTER_CALENDAR_CACHE_MEM_HIT = new Counter("calcache_mem_hit");
+    public static Counter COUNTER_CALENDAR_CACHE_LRU_SIZE = new Counter("calcache_lru_size");
     
     public static ActivityTracker SOAP_TRACKER = new ActivityTracker("soap.csv");
     public static ActivityTracker IMAP_TRACKER = new ActivityTracker("imap.csv");
@@ -103,11 +104,12 @@ public class ZimbraPerf {
                         COUNTER_IDX_WRT,
                         COUNTER_IDX_WRT_OPENED,
                         COUNTER_IDX_WRT_OPENED_CACHE_HIT,
-                        COUNTER_CALENDAR_CACHE_HIT, COUNTER_CALENDAR_CACHE_MEM_HIT,
+                        COUNTER_CALENDAR_CACHE_HIT, COUNTER_CALENDAR_CACHE_MEM_HIT, 
+                        COUNTER_CALENDAR_CACHE_LRU_SIZE,
                         sRealtimeStats
                     }
         );
-    
+
     /**
      * This may only be called BEFORE ZimbraPerf.initialize is called, otherwise the column
      * names will not be output correctly into the logs
@@ -201,6 +203,11 @@ public class ZimbraPerf {
         COUNTER_CALENDAR_CACHE_MEM_HIT.setAverageName("calcache_mem_hit");
         COUNTER_CALENDAR_CACHE_MEM_HIT.setShowCount(false);
         COUNTER_CALENDAR_CACHE_MEM_HIT.setShowTotal(false);
+
+        COUNTER_CALENDAR_CACHE_LRU_SIZE.setShowAverage(true);
+        COUNTER_CALENDAR_CACHE_LRU_SIZE.setAverageName("calcache_lru_size");
+        COUNTER_CALENDAR_CACHE_LRU_SIZE.setShowCount(false);
+        COUNTER_CALENDAR_CACHE_LRU_SIZE.setShowTotal(false);
 
         COUNTER_IDX_WRT.setShowAverage(true);
         COUNTER_IDX_WRT.setShowCount(false);
