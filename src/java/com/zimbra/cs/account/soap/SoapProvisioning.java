@@ -276,7 +276,7 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public void authAccount(Account acct, String password, String proto, Map<String, Object> context) 
             throws ServiceException {
-        throw new UnsupportedOperationException();
+	authAccount(acct, password, proto);
     }
 
 
