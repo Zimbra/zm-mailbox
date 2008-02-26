@@ -33,19 +33,13 @@ public final class Flags {
     private int MASK_SEEN       = 0x08;
     private int MASK_DRAFT      = 0x10;
     private int MASK_RECENT     = 0x20;
-
-    public CAtom ANSWERED = CAtom.F_ANSWERED;
-    public CAtom FLAGGED  = CAtom.F_FLAGGED;
-    public CAtom DELETED  = CAtom.F_DELETED;
-    public CAtom SEEN     = CAtom.F_SEEN;
-    public CAtom DRAFT    = CAtom.F_DRAFT;
-    public CAtom RECENT   = CAtom.F_RECENT;
+    private int MASK_STAR       = 0x40;
 
     public static Flags read(ImapInputStream is) throws IOException {
         is.skipChar('(');
         Flags flags = new Flags();
         do {
-            flags.set(is.readAtom().getName());
+            flags.set(is.readFlag());
         } while (is.match(' '));
         is.skipChar(')');
         return flags;
@@ -53,69 +47,70 @@ public final class Flags {
     
     public Flags() {}
 
-    public void set(String name) {
-        Atom flag = new Atom(name);
+    public void setAnswered() { set(MASK_ANSWERED); }
+    public void setFlagged()  { set(MASK_FLAGGED); }
+    public void setDeleted()  { set(MASK_DELETED); }
+    public void setSeen()     { set(MASK_SEEN); }
+    public void setDraft()    { set(MASK_DRAFT); }
+    public void setRecent()   { set(MASK_RECENT); }
+
+    public void set(String flag) {
+        set(new Atom(flag));
+    }
+    
+    private void set(Atom flag) {
         int mask = getMask(CAtom.get(flag));
         if (mask != 0) {
-            flagMask |= mask;
+            set(mask);
         } else if (!getExtensions().contains(flag)) {
             extensions.add(flag);
         }
     }
-
-    public void set(CAtom flag) {
-        flagMask |= getMask(flag);
+    
+    private void set(int mask) {
+        flagMask |= mask;
     }
 
-    public void setAnswered() { set(ANSWERED); }
-    public void setFlagged()  { set(FLAGGED); }
-    public void setDeleted()  { set(DELETED); }
-    public void setSeen()     { set(SEEN); }
-    public void setDraft()    { set(DRAFT); }
-    public void setRecent()   { set(RECENT); }
-    
+    public void unsetAnswered() { unset(MASK_ANSWERED); }
+    public void unsetFlagged()  { unset(MASK_FLAGGED); }
+    public void unsetDeleted()  { unset(MASK_DELETED); }
+    public void unsetSeen()     { unset(MASK_SEEN); }
+    public void unsetDraft()    { unset(MASK_DRAFT); }
+    public void unsetRecent()   { unset(MASK_RECENT); }
+
     public void unset(String name) {
         Atom flag = new Atom(name);
         int mask = getMask(CAtom.get(flag));
         if (mask != 0) {
-            flagMask &= ~mask;
+            unset(mask);
         } else {
             getExtensions().remove(flag);
         }
     }
-
-    public void unsetAnswered() { unset(ANSWERED); }
-    public void unsetFlagged()  { unset(FLAGGED); }
-    public void unsetDeleted()  { unset(DELETED); }
-    public void unsetSeen()     { unset(SEEN); }
-    public void unsetDraft()    { unset(DRAFT); }
-    public void unsetRecent()   { unset(RECENT); }
     
-    public void unset(CAtom flag) {
-        flagMask &= ~getMask(flag);
+    private void unset(int mask) {
+        flagMask &= ~mask;
     }
-    
+
+    public boolean isAnswered() { return isSet(MASK_ANSWERED); }
+    public boolean isFlagged()  { return isSet(MASK_FLAGGED); }
+    public boolean isDeleted()  { return isSet(MASK_DELETED); }
+    public boolean isSeen()     { return isSet(MASK_SEEN); }
+    public boolean isDraft()    { return isSet(MASK_DRAFT); }
+    public boolean isRecent()   { return isSet(MASK_RECENT); }
+    public boolean isStar()     { return isSet(MASK_STAR); }
+
     public boolean isSet(String name) {
         Atom flag = new Atom(name);
         int mask = getMask(CAtom.get(flag));
-        if (mask != 0) {
-            return (flagMask & mask) != 0;
-        } else {
-            return extensions != null && extensions.contains(flag);
-        }
+        return mask != 0 ?
+            isSet(mask) : extensions != null && extensions.contains(flag);
     }
 
-    public boolean isSet(CAtom flag) {
-        return (flagMask & getMask(flag)) != 0;
+    private boolean isSet(int mask) {
+        return (flagMask & mask) != 0;
     }
-
-    public boolean isAnswered() { return isSet(ANSWERED); }
-    public boolean isFlagged()  { return isSet(FLAGGED); }
-    public boolean isDeleted()  { return isSet(DELETED); }
-    public boolean isSeen()     { return isSet(SEEN); }
-    public boolean isDraft()    { return isSet(DRAFT); }
-    public boolean isRecent()   { return isSet(RECENT); }
-
+    
     private List<Atom> getExtensions() {
         if (extensions == null) {
             extensions = new ArrayList<Atom>();
@@ -137,6 +132,8 @@ public final class Flags {
             return MASK_DRAFT;
         case F_RECENT:
             return MASK_RECENT;
+        case F_STAR:
+            return MASK_STAR;
         default:
             return 0;
         }

@@ -37,7 +37,6 @@ public final class Ascii {
         case '\n': return "\\n";
         case '\t': return "\\t";
         case '\f': return "\\f";
-        case '\\': return "\\\\";
         }
         return b >= 0x20 && b <= 0x7e ?
             String.valueOf((char) b) :
