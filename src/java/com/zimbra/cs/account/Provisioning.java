@@ -1760,6 +1760,10 @@ public abstract class Provisioning {
     public static enum GAL_SEARCH_TYPE {
         ALL, USER_ACCOUNT, CALENDAR_RESOURCE
     }
+    
+    public static class AuthContext {
+	public static final String AC_ORIGINATING_CLIENT_IP = "ocip";
+    }
 
     /**
      * @param query LDAP search query

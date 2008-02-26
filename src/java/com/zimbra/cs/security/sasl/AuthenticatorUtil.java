@@ -16,6 +16,9 @@
  */
 package com.zimbra.cs.security.sasl;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
@@ -28,7 +31,7 @@ import com.zimbra.common.service.ServiceException;
  * Miscellaneous utility methods to support SASL authentication.
  */
 public final class AuthenticatorUtil {
-    public static Account authenticate(String username, String authenticateId, String password, String protocol)
+    public static Account authenticate(String username, String authenticateId, String password, String protocol, String origRemoteIp)
     throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(Provisioning.AccountBy.name, username);
@@ -37,7 +40,9 @@ public final class AuthenticatorUtil {
             return null;
 
         // authenticate the authentication principal
-        prov.authAccount(authacct, password, protocol);
+        Map<String, Object> authCtxt = new HashMap<String, Object>();
+        authCtxt.put(Provisioning.AuthContext.AC_ORIGINATING_CLIENT_IP, origRemoteIp);
+        prov.authAccount(authacct, password, protocol, authCtxt);
         // authorize as the target user
         if (!account.getId().equals(authacct.getId())) {
             // check domain/global admin if auth credentials != target account

@@ -997,7 +997,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             else if (ZimbraAuthenticator.MECHANISM.equals(mechanism))
                 acct = AuthenticatorUtil.authenticateZToken(username, password);
             else
-                acct = AuthenticatorUtil.authenticate(username, authenticateId, password, "imap");
+                acct = AuthenticatorUtil.authenticate(username, authenticateId, password, "imap", getOrigRemoteIpAddr());
             if (acct == null) {
                 sendNO(tag, command + " failed");
                 return CONTINUE_PROCESSING;
