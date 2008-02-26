@@ -164,6 +164,8 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
                     tzmap = new TimeZoneMap(tz);
                 tzmap.add(tz);
             } else {
+                System.out.println("Couldnt find: " + tzid + "; in tzidmap: " + mTimeZoneMap);
+                System.out.println("Bad comp = " + comp);
                 throw ServiceException.PARSE_ERROR(
                         "TZID reference encountered before/without its VTIMEZONE: " + tzid, null);
             }

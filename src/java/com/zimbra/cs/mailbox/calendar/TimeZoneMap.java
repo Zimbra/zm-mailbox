@@ -206,4 +206,17 @@ public class TimeZoneMap {
         }
         return zone;
     }
+
+    public String toString() {
+        String s = "{";
+
+        s += "LocalTz = " + mLocalTZ + "; others {";
+
+        for (ICalTimeZone i : mTzMap.values()) {
+            s += i +"; ";
+        }
+
+        s += "} }";
+        return s;
+    }
 }
