@@ -1973,12 +1973,6 @@ public abstract class ImapHandler extends ProtocolHandler {
                 ParsedMessage pm = append.mDate != null ? new ParsedMessage(append.mContent, append.mDate.getTime(), idxAttach) :
                                                           new ParsedMessage(append.mContent, idxAttach);
                 try {
-                    pm.analyze();
-                } catch (ServiceException e) {
-                    ZimbraLog.imap.warn("could not completely extract text from APPENDed message; continuing", e);
-                }
-
-                try {
                     if (!pm.getSender().equals("")) {
                         InternetAddress ia = new InternetAddress(pm.getSender());
                         if (AccountUtil.addressMatchesAccount(mbox.getAccount(), ia.getAddress()))

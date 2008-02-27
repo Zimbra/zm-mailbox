@@ -97,7 +97,6 @@ public class QuotaWarning implements LmtpCallback {
 
             String msgBody = StringUtil.fillTemplate(template, vars);
             ParsedMessage pm = new ParsedMessage(msgBody.getBytes(), now.getTime(), false);
-            pm.analyze();
             mbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX, false,
                 Flag.BITMASK_UNREAD | Flag.BITMASK_HIGH_PRIORITY, null);
             

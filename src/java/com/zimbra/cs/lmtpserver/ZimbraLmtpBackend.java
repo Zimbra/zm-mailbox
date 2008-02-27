@@ -289,13 +289,13 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                     if (attachmentsIndexingEnabled) {
                         if (pmAttachIndex == null) {
                             ZimbraLog.lmtp.debug("Creating ParsedMessage with attachment indexing enabled.");
-                            pmAttachIndex = incoming.createParsedMessage(true).analyze();
+                            pmAttachIndex = incoming.createParsedMessage(true);
                         }
                         pm = pmAttachIndex;
                     } else {
                         if (pmNoAttachIndex == null) {
                             ZimbraLog.lmtp.debug("Creating ParsedMessage with attachment indexing disabled.");
-                            pmNoAttachIndex = incoming.createParsedMessage(false).analyze();
+                            pmNoAttachIndex = incoming.createParsedMessage(false);
                         }
                         pm = pmNoAttachIndex;
                     }

@@ -56,8 +56,9 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.index.Fragment;
 import com.zimbra.cs.index.LuceneFields;
-import com.zimbra.cs.index.TopLevelMessageHandler;
+import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
@@ -83,7 +84,11 @@ public class ParsedMessage {
     private MimeMessage mExpandedMessage;
     private boolean mParsed = false;
     private boolean mAnalyzed = false;
-    private boolean mIndexAttachments = true;
+    private boolean mAnalyzedBodyParts = false;
+    private boolean mAnalyzedNonBodyParts = false;
+    private String mBodyContent = "";
+    private final boolean mIndexAttachments;
+    private int mNumParseErrors = 0;
     
     /** if TRUE then there was a _temporary_ failure analyzing the message.  We should attempt
      * to re-index this message at a later time */
@@ -95,14 +100,15 @@ public class ParsedMessage {
 
     private ParsedAddress mParsedSender;
     private boolean mHasAttachments = false;
+    private boolean mHasTextCalendarPart = false;
     private String mFragment = "";
     private long mDateHeader = -1;
     private long mReceivedDate = -1;
     private String mSubject;
     private String mNormalizedSubject;
     private boolean mSubjectPrefixed;
-    private List<Document> mLuceneDocuments;
-    private ZVCalendar miCalendar;
+    private List<Document> mLuceneDocuments = new ArrayList<Document>();
+    private ZVCalendar mCalendar;
 
     private File mRawFile;
     private byte[] mRawData;
@@ -240,8 +246,9 @@ public class ParsedMessage {
         try {
             mMessageParts = Mime.getParts(mExpandedMessage);
             mHasAttachments = Mime.hasAttachment(mMessageParts);
+            mHasTextCalendarPart = Mime.hasTextCalenndar(mMessageParts);
         } catch (Exception e) {
-            sLog.warn("exception while parsing message; message will not be indexed", e);
+            ZimbraLog.index.warn("exception while parsing message; message will not be indexed", e);
             mMessageParts = new ArrayList<MPartInfo>();
         }
         return this;
@@ -323,18 +330,209 @@ public class ParsedMessage {
         return mExpandedMessage != mMimeMessage;
     }
 
-    public ParsedMessage analyze() throws ServiceException {
+//    public ParsedMessage analyze() throws ServiceException {
+//        parse();
+//        
+//        if (mAnalyzed)
+//            return this;
+//        mAnalyzed = true;
+//        if (DebugConfig.disableMessageAnalysis)
+//            return this;
+//        
+//        analyzeBodyParts();
+//        analyzeNonBodyParts();
+//        
+//        if (mNumParseErrors > 0 && sLog.isWarnEnabled()) {
+//            String msgid = getMessageID();
+//            String sbj = getSubject();
+//            sLog.warn("Message had analysis errors in " + mNumParseErrors +
+//                " parts (Message-Id: " + msgid + ", Subject: " + sbj + ")");
+//        }
+//        
+////        
+////        try {
+////            Set<MPartInfo> mpiBodies = Mime.getBody(mMessageParts, false);
+////
+////            // extract text from the "body" parts
+////            StringBuilder bodyContent = new StringBuilder();
+////            {
+////                String reportRoot = null;
+////                for (MPartInfo mpi : mMessageParts) {
+////                    // text/calendar parts under a multipart/report aren't considered real calendar invites
+////                    String partName = mpi.mPartName;
+////                    if (reportRoot != null && !mpi.mPartName.startsWith(reportRoot))
+////                        reportRoot = null;
+////                    if (reportRoot == null && mpi.getContentType().equals(Mime.CT_MULTIPART_REPORT)) {
+////                        reportRoot = mpi.mPartName.endsWith("TEXT") ? mpi.mPartName.substring(0, partName.length() - 4) : mpi.mPartName + ".";
+////                    }
+////                    boolean isMainBody = mpiBodies.contains(mpi);
+////                    if (isMainBody) {
+////                        String toplevelText = analyzePart(isMainBody, mpi, reportRoot != null);
+////                        if (toplevelText.length() > 0)
+////                            appendToContent(bodyContent, toplevelText);
+////                    }
+////                }
+////                // Calculate the fragment -- requires body content
+////                mFragment = Fragment.getFragment(bodyContent.toString().trim(), mHasTextCalendarPart);
+////            }
+////
+////            // extract text from the "non-body" parts
+////            StringBuilder fullContent = new StringBuilder(bodyContent);
+////            {
+////                StringBuilder nonbodyContent = new StringBuilder();
+////                String reportRoot = null;
+////                for (MPartInfo mpi : mMessageParts) {
+////                    // text/calendar parts under a multipart/report aren't considered real calendar invites
+////                    String partName = mpi.mPartName;
+////                    if (reportRoot != null && !mpi.mPartName.startsWith(reportRoot))
+////                        reportRoot = null;
+////                    if (reportRoot == null && mpi.getContentType().equals(Mime.CT_MULTIPART_REPORT)) {
+////                        reportRoot = mpi.mPartName.endsWith("TEXT") ? mpi.mPartName.substring(0, partName.length() - 4) : mpi.mPartName + ".";
+////                    }
+////                    boolean isMainBody = mpiBodies.contains(mpi);
+////                    if (!isMainBody) {
+////                        String toplevelText = analyzePart(isMainBody, mpi, reportRoot != null);
+////                        if (toplevelText.length() > 0) {
+////                            appendToContent(nonbodyContent, toplevelText);
+////                        }
+////                    }
+////                }
+////                appendToContent(fullContent, nonbodyContent.toString());
+////            }
+////
+////            // requires FULL content (all parts)
+////            mLuceneDocuments.add(setLuceneHeadersFromContainer(getMainBodyLuceneDocument(bodyContent.toString(), fullContent)));
+////            
+////            if (mNumParseErrors > 0 && sLog.isWarnEnabled()) {
+////                String msgid = getMessageID();
+////                String sbj = getSubject();
+////                sLog.warn("Message had analysis errors in " + mNumParseErrors +
+////                    " parts (Message-Id: " + msgid + ", Subject: " + sbj + ")");
+////            }
+////        } catch (ServiceException e) {
+////            throw e;
+////        } catch (Exception e) {
+////            sLog.warn("exception while analyzing message; message will be partially indexed", e);
+////        }
+//        return this;
+//    }
+//    
+    /**
+     * Analyze and extract text from all the "body" (non-attachment) parts of the message.
+     * This step is required to properly generate the message fragment.
+     * 
+     * @throws ServiceException
+     */
+    private void analyzeBodyParts() throws ServiceException {
+        if (mAnalyzedBodyParts)
+            return;
+        mAnalyzedBodyParts = true;
+        if (DebugConfig.disableMessageAnalysis)
+            return;
+
         parse();
+        
         try {
-            analyzeMessage();   // figure out everything about this message
+            Set<MPartInfo> mpiBodies = Mime.getBody(mMessageParts, false);
+
+            // extract text from the "body" parts
+            StringBuilder bodyContent = new StringBuilder();
+            {
+                String reportRoot = null;
+                for (MPartInfo mpi : mMessageParts) {
+                    // text/calendar parts under a multipart/report aren't considered real calendar invites
+                    String partName = mpi.mPartName;
+                    if (reportRoot != null && !mpi.mPartName.startsWith(reportRoot))
+                        reportRoot = null;
+                    if (reportRoot == null && mpi.getContentType().equals(Mime.CT_MULTIPART_REPORT)) {
+                        reportRoot = mpi.mPartName.endsWith("TEXT") ? mpi.mPartName.substring(0, partName.length() - 4) : mpi.mPartName + ".";
+                    }
+                    boolean isMainBody = mpiBodies.contains(mpi);
+                    if (isMainBody) {
+                        String toplevelText = analyzePart(isMainBody, mpi, reportRoot != null);
+                        if (toplevelText.length() > 0)
+                            appendToContent(bodyContent, toplevelText);
+                    }
+                }
+                // Calculate the fragment -- requires body content
+                mBodyContent = bodyContent.toString().trim();
+                mFragment = Fragment.getFragment(mBodyContent, mHasTextCalendarPart);
+            }
         } catch (ServiceException e) {
             throw e;
         } catch (Exception e) {
             sLog.warn("exception while analyzing message; message will be partially indexed", e);
         }
-        return this;
     }
+    
+    /**
+     * Analyze and extract text from all attachments parts of the message 
+     *   
+     * @throws ServiceException
+     */
+    private void analyzeNonBodyParts() throws ServiceException {
+        if (mAnalyzedNonBodyParts)
+            return;
+        mAnalyzedNonBodyParts = true;
+        if (DebugConfig.disableMessageAnalysis)
+            return;
+        
+        analyzeBodyParts();
+        
+        try {
+            Set<MPartInfo> mpiBodies = Mime.getBody(mMessageParts, false);
 
+            // extract text from the "non-body" parts
+            StringBuilder fullContent = new StringBuilder(mBodyContent);
+            {
+                String reportRoot = null;
+                for (MPartInfo mpi : mMessageParts) {
+                    // text/calendar parts under a multipart/report aren't considered real calendar invites
+                    String partName = mpi.mPartName;
+                    if (reportRoot != null && !mpi.mPartName.startsWith(reportRoot))
+                        reportRoot = null;
+                    if (reportRoot == null && mpi.getContentType().equals(Mime.CT_MULTIPART_REPORT)) {
+                        reportRoot = mpi.mPartName.endsWith("TEXT") ? mpi.mPartName.substring(0, partName.length() - 4) : mpi.mPartName + ".";
+                    }
+                    boolean isMainBody = mpiBodies.contains(mpi);
+                    if (!isMainBody) {
+                        String toplevelText = analyzePart(isMainBody, mpi, reportRoot != null);
+                        if (toplevelText.length() > 0)
+                            appendToContent(fullContent, toplevelText);
+                    }
+                }
+            }
+            
+            // requires FULL content (all parts)
+            mLuceneDocuments.add(setLuceneHeadersFromContainer(getMainBodyLuceneDocument(mBodyContent, fullContent)));
+
+            // we're done with the body content (saved from analyzeBodyParts()) now
+            mBodyContent = "";
+            
+            if (mNumParseErrors > 0 && sLog.isWarnEnabled()) {
+                String msgid = getMessageID();
+                String sbj = getSubject();
+                sLog.warn("Message had analysis errors in " + mNumParseErrors +
+                    " parts (Message-Id: " + msgid + ", Subject: " + sbj + ")");
+            }
+        } catch (ServiceException e) {
+            throw e;
+        } catch (Exception e) {
+            sLog.warn("exception while analyzing message; message will be partially indexed", e);
+        }
+    }
+    
+    /**
+     * Extract all indexable text from this message.  This API should *only* be called if you are 
+     * sure you're going to add the message to the index.  The only callsites of this API should be
+     * Mailbox and test utilities.  Don't call it unless you absolutely are sure you need to do so.
+     * 
+     * @throws ServiceException
+     */
+    public void analyzeFully() throws ServiceException {
+        analyzeNonBodyParts();
+    }
+    
     /**
      * Returns the <tt>MimeMessage</tt>.  Affected by both conversion and mutation.  
      */
@@ -546,9 +744,9 @@ public class ParsedMessage {
 
     public String getFragment() {
         try {
-            analyze();
+            analyzeBodyParts();
         } catch (ServiceException e) {
-            sLog.warn("Message analysis failed when getting fragment; fragment is: " + mFragment);
+            sLog.warn("Message analysis failed when getting fragment; fragment is: " + mFragment, e);
         }
         return mFragment;
     }
@@ -704,6 +902,7 @@ public class ParsedMessage {
         if (date != -1)
             mReceivedDate = (Math.max(0, date) / 1000) * 1000;
     }
+    
     public long getReceivedDate() {
         if (mReceivedDate == -1)
             mReceivedDate = System.currentTimeMillis();
@@ -734,7 +933,7 @@ public class ParsedMessage {
 
     public List<Document> getLuceneDocuments() {
         try {
-            analyze();
+            analyzeFully();
         } catch (ServiceException e) {
             sLog.warn("message analysis failed when getting lucene documents");
         }
@@ -751,85 +950,15 @@ public class ParsedMessage {
      */
     public ZVCalendar getiCalendar() {
         try {
-            analyze();
+            parse();
+            if (mHasTextCalendarPart) {
+                analyzeFully();
+            }
         } catch (ServiceException e) {
             // the calendar info should still be parsed 
             sLog.warn("Message analysis failed when getting calendar info");
         }
-        return miCalendar;
-    }
-
-    private void analyzeMessage() throws MessagingException, ServiceException {
-        if (mAnalyzed)
-            return;
-        mAnalyzed = true;
-
-        mLuceneDocuments = new ArrayList<Document>();
-
-        if (DebugConfig.disableMessageAnalysis) {
-            // Note this also suppresses fragment support in conversation
-            // feature.  (see getFragment() call at end of this method)
-            return;
-        }
-
-        Set<MPartInfo> mpiBodies = Mime.getBody(mMessageParts, false);
-
-        TopLevelMessageHandler allTextHandler = new TopLevelMessageHandler(mMessageParts);
-
-        int numParseErrors = 0;
-        String reportRoot = null;
-
-        for (MPartInfo mpi : mMessageParts) {
-            // text/calendar parts under a multipart/report aren't considered real calendar invites
-            String partName = mpi.mPartName;
-            if (reportRoot != null && !partName.startsWith(reportRoot))
-                reportRoot = null;
-            if (reportRoot == null && mpi.getContentType().equals(Mime.CT_MULTIPART_REPORT))
-                reportRoot = partName.endsWith("TEXT") ? partName.substring(0, partName.length() - 4) : partName + ".";
-
-            try {
-                analyzePart(mpi, mpiBodies, allTextHandler, reportRoot != null);
-            } catch (MimeHandlerException e) {
-                numParseErrors++;
-                String pn = mpi.getPartName();
-                String ctype = mpi.getContentType();
-                String msgid = getMessageID();
-                sLog.warn("Unable to parse part %s (%s, %s) of message with Message-ID %s.",
-                    pn, mpi.getFilename(), ctype, msgid, e);
-                if (ConversionException.isTemporaryCauseOf(e)) {
-                    mTemporaryAnalysisFailure = true;
-                }
-                sLog.warn("Attachment will not be indexed.");
-            } catch (ObjectHandlerException e) {
-                numParseErrors++;
-                String pn = mpi.getPartName();
-                String ct = mpi.getContentType();
-                String msgid = getMessageID();
-                sLog.warn("Unable to parse part %s (%s, %s) of message with Message-ID %s." +
-                    "  Object will not be indexed.",
-                    pn, mpi.getFilename(), ct, msgid, e);
-            }
-        }
-        if (miCalendar != null) {
-            allTextHandler.hasCalendarPart(true);
-        }
-        if (numParseErrors > 0) {
-            String msgid = getMessageID();
-            String sbj = getSubject();
-            sLog.warn("Message had parse errors in " + numParseErrors +
-                        " parts (Message-Id: " + msgid + ", Subject: " + sbj + ")");
-        }
-        mLuceneDocuments.add(allTextHandler.getDocument(this));
-
-        for (Document doc : mLuceneDocuments) {
-            if (doc != null) {
-                // foreach doc we are adding, add domains of message
-                //msgHandler.setEmailDomainsField(doc);
-                allTextHandler.setLuceneHeadersFromContainer(doc, this);
-            }
-        }
-
-        mFragment = allTextHandler.getFragment();
+        return mCalendar;
     }
     
     /**
@@ -838,83 +967,246 @@ public class ParsedMessage {
      *         at some point in the future
      */
     public boolean hasTemporaryAnalysisFailure() throws ServiceException {
-        analyze();
+        analyzeFully();
         return this.mTemporaryAnalysisFailure;
     }
+    
+    private Document getMainBodyLuceneDocument(String bodyContent, StringBuilder fullContent)
+    throws MessagingException, ServiceException {
+        Document document = new Document();
+        
+        document.add(new Field(LuceneFields.L_MIMETYPE, "message/rfc822", Field.Store.YES, Field.Index.TOKENIZED));
+        document.add(new Field(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_TOP, Field.Store.YES, Field.Index.UN_TOKENIZED));
 
-    private void analyzePart(MPartInfo mpi, Set<MPartInfo> mpiBodies, TopLevelMessageHandler allTextHandler, boolean ignoreCalendar)
-    throws MimeHandlerException, ObjectHandlerException, MessagingException, ServiceException {
-        String ctype = mpi.getContentType();
-        // ignore multipart "container" parts
-        if (ctype.startsWith(Mime.CT_MULTIPART_PREFIX))
-            return;
+        String toValue = setHeaderAsLuceneField(document, "to", LuceneFields.L_H_TO, Field.Store.NO, Field.Index.TOKENIZED);
+        String ccValue = setHeaderAsLuceneField(document, "cc", LuceneFields.L_H_CC, Field.Store.NO, Field.Index.TOKENIZED);
 
-        MimeHandler handler = MimeHandlerManager.getMimeHandler(ctype, mpi.getFilename());
-        assert(handler != null);
+        setHeaderAsLuceneField(document, "x-envelope-from", LuceneFields.L_H_X_ENV_FROM, Field.Store.NO, Field.Index.TOKENIZED);
+        setHeaderAsLuceneField(document, "x-envelope-to", LuceneFields.L_H_X_ENV_TO, Field.Store.NO, Field.Index.TOKENIZED);
 
-        Mime.repairTransferEncoding(mpi.getMimePart());
+        String msgId = getHeader("message-id");
+        if (msgId.length() > 0) {
+            if (msgId.charAt(0) == '<')
+                msgId = msgId.substring(1);
 
-        if (handler.isIndexingEnabled()) {
-            handler.init(mpi.getMimePart().getDataHandler().getDataSource());
-            handler.setPartName(mpi.getPartName());
-            handler.setFilename(mpi.getFilename());
-            try {
-                handler.setMessageDigest(getRawDigest());
-            } catch (MessagingException e) {
-                throw new MimeHandlerException("unable to get message digest", e);
-            } catch (IOException e) {
-                throw new MimeHandlerException("unable to get message digest", e);
-            }
+            if (msgId.charAt(msgId.length()-1) == '>')
+                msgId = msgId.substring(0, msgId.length()-1);
 
-            // remember the first iCalendar attachment
-            if (!ignoreCalendar && miCalendar == null)
-                miCalendar = handler.getICalendar();
+            if (msgId.length() > 0)
+                document.add(new Field(LuceneFields.L_H_MESSAGE_ID, msgId, Field.Store.NO, Field.Index.UN_TOKENIZED));
+        }
 
-            boolean isMainBody = mpiBodies.contains(mpi);
-            boolean autoInclude = isMainBody && (!handler.runsExternally() || mIndexAttachments);
-            if (autoInclude || (mIndexAttachments && !DebugConfig.disableIndexingAttachmentsTogether)) {
-                // add ALL TEXT from EVERY PART to the toplevel body content.
-                // This is necessary for queries with multiple words -- where
+        String from = getSender();
+        String subject = getNormalizedSubject();
+        String sortFrom = getParsedSender().getSortString();
+        if (sortFrom == null)
+            sortFrom = "";
+        else if (sortFrom.length() > DbMailItem.MAX_SENDER_LENGTH)
+            sortFrom = sortFrom.substring(0, DbMailItem.MAX_SENDER_LENGTH);
+
+        document.add(new Field(LuceneFields.L_H_FROM, from, Field.Store.NO, Field.Index.TOKENIZED));
+        document.add(new Field(LuceneFields.L_H_SUBJECT, subject, Field.Store.NO, Field.Index.TOKENIZED));
+
+        // add subject and from to main content for better searching
+        appendToContent(fullContent, subject);
+
+        // Bug 583: add all of the TOKENIZED versions of the email addresses to our CONTENT field...
+        appendToContent(fullContent, ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_FROM, from));
+        appendToContent(fullContent, ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_TO, toValue));
+        appendToContent(fullContent, ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_CC, ccValue));
+
+        String text = fullContent.toString();
+
+        document.add(new Field(LuceneFields.L_CONTENT, text, Field.Store.NO, Field.Index.TOKENIZED));
+
+        String sizeStr = Integer.toString(getMimeMessage().getSize());
+        document.add(new Field(LuceneFields.L_SIZE, sizeStr, Field.Store.YES, Field.Index.NO));
+
+        try {
+            MimeHandler.getObjects(text, document);
+        } catch (ObjectHandlerException e) {
+            String msgid = getMessageID();
+            String sbj = getSubject();
+            sLog.warn("Unable to recognize searchable objects in message (Message-ID: " +
+                msgid + ", Subject: " + sbj + ")", e);
+        }
+
+        // Get the list of attachment content types from this message and any
+        // TNEF attachments
+        Set<String> contentTypes = Mime.getAttachmentList(mMessageParts);
+
+        // Assemble a comma-separated list of attachment content types
+        StringBuilder buf = new StringBuilder();
+        for (String contentType : contentTypes) {
+            if (buf.length() > 0)
+                buf.append(',');
+            buf.append(contentType);
+        }
+
+        String attachments = buf.toString();
+        if (attachments.equals(""))
+            attachments = LuceneFields.L_ATTACHMENT_NONE;
+        else
+            attachments = attachments + "," + LuceneFields.L_ATTACHMENT_ANY;
+        document.add(new Field(LuceneFields.L_ATTACHMENTS, attachments, Field.Store.NO, Field.Index.TOKENIZED));
+
+        return document;
+    }
+
+    private String setHeaderAsLuceneField(Document d, String headerName,
+        String fieldName, Field.Store stored, Field.Index indexed) throws MessagingException  {
+        String value = getMimeMessage().getHeader(headerName, null);
+
+        if (value == null || value.length() == 0)
+            return "";
+        try {
+            value = MimeUtility.decodeText(value);
+        } catch (UnsupportedEncodingException e) { }
+        d.add(new Field(fieldName, value, stored, indexed));
+        d.add(new Field(fieldName, value, stored, indexed));
+        return value;
+    }
+    
+    /**
+     * For every attachment, many of the lucene indexed fields from the top level
+     * message are also indexed as part of the attachment: this is done so that the
+     * attachment will show up if you do things like "type:pdf and from:foo"
+     * 
+     * "this" --> top level doc
+     * @param d subdocument of top level 
+     */
+    private Document setLuceneHeadersFromContainer(Document d) throws MessagingException {
+        setHeaderAsLuceneField(d, "to", LuceneFields.L_H_TO, Field.Store.NO, Field.Index.TOKENIZED);
+        setHeaderAsLuceneField(d, "cc", LuceneFields.L_H_CC, Field.Store.NO, Field.Index.TOKENIZED);
+
+        String subject = getNormalizedSubject();
+        String sortFrom = getParsedSender().getSortString();
+        if (sortFrom != null && sortFrom.length() > DbMailItem.MAX_SENDER_LENGTH)
+            sortFrom = sortFrom.substring(0, DbMailItem.MAX_SENDER_LENGTH);
+        String from = getSender();
+
+        if (from != null)
+            d.add(new Field(LuceneFields.L_H_FROM, from, Field.Store.NO, Field.Index.TOKENIZED));
+        
+        if (subject != null) 
+            d.add(new Field(LuceneFields.L_H_SUBJECT, subject, Field.Store.NO, Field.Index.TOKENIZED));
+        
+        return d;
+    }
+    
+    
+    
+    /**
+     * @return Extracted toplevel text (any text that should go into the toplevel indexed document)
+     */
+    private String analyzePart(boolean isMainBody, MPartInfo mpi, boolean ignoreCalendar)
+    throws MessagingException, ServiceException {
+        
+        String toRet = "";
+        try {
+            String ctype = mpi.getContentType();
+            // ignore multipart "container" parts
+            if (ctype.startsWith(Mime.CT_MULTIPART_PREFIX))
+                return toRet;
+            
+            MimeHandler handler = MimeHandlerManager.getMimeHandler(ctype, mpi.getFilename());
+            assert(handler != null);
+            
+            Mime.repairTransferEncoding(mpi.getMimePart());
+            
+            if (handler.isIndexingEnabled()) {
+                handler.init(mpi.getMimePart().getDataHandler().getDataSource());
+                handler.setPartName(mpi.getPartName());
+                handler.setFilename(mpi.getFilename());
+                try {
+                    handler.setMessageDigest(getRawDigest());
+                } catch (MessagingException e) {
+                    throw new MimeHandlerException("unable to get message digest", e);
+                } catch (IOException e) {
+                    throw new MimeHandlerException("unable to get message digest", e);
+                }
+
+                // remember the first iCalendar attachment
+                if (!ignoreCalendar && mCalendar == null)
+                    mCalendar = handler.getICalendar();
+
+                // In some cases we want to add ALL TEXT from EVERY PART to the toplevel 
+                // body content. This is necessary for queries with multiple words -- where
                 // one word is in the body and one is in a sub-attachment.
                 //
-                // If attachment indexing is disabled, then we only add the main body and
-                // text parts...
-                allTextHandler.addContent(handler.getContent(), isMainBody);
-            }
+                // We don't always want to do this, for example if attachment indexing is disabled
+                // and this is an attachment handler, we don't want to add this text to the toplevel
+                // document.  
+                //
+                // We index this content in the toplevel if it is:
+                //     - the 'main body' and a local mime handler
+                //     - the 'main body' and IndexAttachments was set in the constructor
+                //     - IndexAttachments was set and !disableIndexingAttachmentsTogether 
+                if ((isMainBody && (!handler.runsExternally() || mIndexAttachments)) ||
+                            (mIndexAttachments && !DebugConfig.disableIndexingAttachmentsTogether)) {
+                    toRet = handler.getContent();
+                }
 
-            if (mIndexAttachments && !DebugConfig.disableIndexingAttachmentsSeparately) {
-                // Each non-text MIME part is also indexed as a separate
-                // Lucene document.  This is necessary so that we can tell the
-                // client what parts match if a search matched a particular
-                // part.
-                Document doc = handler.getDocument();
-                if (doc != null) {
-                    int partSize = mpi.getMimePart().getSize();
-                    doc.add(new Field(LuceneFields.L_SIZE, Integer.toString(partSize), Field.Store.YES, Field.Index.NO));
-                    mLuceneDocuments.add(doc);
+                if (mIndexAttachments && !DebugConfig.disableIndexingAttachmentsSeparately) {
+                    // Each non-text MIME part is also indexed as a separate
+                    // Lucene document.  This is necessary so that we can tell the
+                    // client what parts match if a search matched a particular
+                    // part.
+                    Document doc = handler.getDocument();
+                    if (doc != null) {
+                        int partSize = mpi.getMimePart().getSize();
+                        doc.add(new Field(LuceneFields.L_SIZE, Integer.toString(partSize), Field.Store.YES, Field.Index.NO));
+                        mLuceneDocuments.add(setLuceneHeadersFromContainer(doc));
+                    }
                 }
             }
-        }
 
-        // make sure we've got the text/calendar handler installed
-        if (!ignoreCalendar && miCalendar == null && ctype.equals(Mime.CT_TEXT_CALENDAR)) {
-            if (handler.isIndexingEnabled())
-                ZimbraLog.index.warn("TextCalendarHandler not correctly installed");
+            // make sure we've got the text/calendar handler installed
+            if (!ignoreCalendar && mCalendar == null && ctype.equals(Mime.CT_TEXT_CALENDAR)) {
+                if (handler.isIndexingEnabled())
+                    ZimbraLog.index.warn("TextCalendarHandler not correctly installed");
 
-            InputStream is = null;
-            try {
-                String charset = mpi.getContentTypeParameter(Mime.P_CHARSET);
-                if (charset == null || charset.trim().equals(""))
-                    charset = Mime.P_CHARSET_DEFAULT;
+                InputStream is = null;
+                try {
+                    String charset = mpi.getContentTypeParameter(Mime.P_CHARSET);
+                    if (charset == null || charset.trim().equals(""))
+                        charset = Mime.P_CHARSET_DEFAULT;
 
-                Reader reader = new InputStreamReader(is = mpi.getMimePart().getInputStream(), charset);
-                miCalendar = ZCalendarBuilder.build(reader);
-            } catch (IOException ioe) {
-                ZimbraLog.index.warn("error reading text/calendar mime part", ioe);
-            } finally {
-                ByteUtil.closeStream(is);
+                    Reader reader = new InputStreamReader(is = mpi.getMimePart().getInputStream(), charset);
+                    mCalendar = ZCalendarBuilder.build(reader);
+                } catch (IOException ioe) {
+                    ZimbraLog.index.warn("error reading text/calendar mime part", ioe);
+                } finally {
+                    ByteUtil.closeStream(is);
+                }
             }
+        } catch (MimeHandlerException e) {
+            mNumParseErrors++;
+            String pn = mpi.getPartName();
+            String ctype = mpi.getContentType();
+            String msgid = getMessageID();
+            sLog.warn("Unable to parse part %s (%s, %s) of message with Message-ID %s.",
+                pn, mpi.getFilename(), ctype, msgid, e);
+            if (ConversionException.isTemporaryCauseOf(e)) {
+                mTemporaryAnalysisFailure = true;
+            }
+            sLog.warn("Attachment will not be indexed.");
+        } catch (ObjectHandlerException e) {
+            mNumParseErrors++;
+            String pn = mpi.getPartName();
+            String ct = mpi.getContentType();
+            String msgid = getMessageID();
+            sLog.warn("Unable to parse part %s (%s, %s) of message with Message-ID %s." +
+                "  Object will not be indexed.",
+                pn, mpi.getFilename(), ct, msgid, e);
         }
+        return toRet;
+    }
+    
+    private static final void appendToContent(StringBuilder sb, String s) {
+        if (sb.length() > 0)
+            sb.append(' ');
+        sb.append(s);
     }
 
     // these *should* be taken from a properties file

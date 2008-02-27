@@ -634,6 +634,16 @@ public class Mime {
         }
 	    return false;
 	}
+	
+    /** Returns true if any of the given message parts has a content-type
+     *  of text/calendar */
+    public static boolean hasTextCalenndar(List<MPartInfo> parts) {
+        for (MPartInfo mpi : parts) {
+            if (CT_TEXT_CALENDAR.equals(mpi.getContentType()))
+                return true;
+        }
+        return false;
+    }
 
     private static final InternetAddress[] NO_ADDRESSES = new InternetAddress[0];
 

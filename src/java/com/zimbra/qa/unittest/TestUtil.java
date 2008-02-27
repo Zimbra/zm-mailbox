@@ -190,7 +190,6 @@ extends Assert {
     throws Exception {
         String message = getTestMessage(subject, null, null, new Date(timestamp));
         ParsedMessage pm = new ParsedMessage(message.getBytes(), timestamp, false);
-        pm.analyze();
         return mbox.addMessage(null, pm, folderId, false, Flag.BITMASK_UNREAD, null);
     }
     

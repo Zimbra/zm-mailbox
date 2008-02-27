@@ -162,7 +162,7 @@ extends TestCase {
             // Test mutated status
             assertEquals(expected.wasMutated, pm.wasMutated());
             
-            pm.analyze();
+            pm.analyzeFully();
             pm.closeFile();
         }
     }
