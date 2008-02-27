@@ -29,7 +29,7 @@ For example:
    <password>test123</password>]
  </AuthRequest>
 
-The currect AuthRequest SOAP command is going to be used for custom auth.
+The current AuthRequest SOAP command is going to be used for custom auth.
 When an AuthRequest comes in, system will check the designated auth mechanhism 
 for the domain.  If it is set to custom auth, system will invoke the registered 
 custom auth handler to authenticate the user.
@@ -48,13 +48,15 @@ Preparing a domain for custom auth
 ==================================
 Domain is the scope for authentication mechanisms.  To enable a domain for custom 
 auth, set the domain attribute zimbraAuthMech to:
-	custom:{registered-custom-auth-hanlder-name}
+	custom:{registered-custom-auth-hanlder-name} [arg1 arg2 ...]
 
 For example:
-zmprov modifyDomain {domain|id} zimbraAuthMech custom:sample
+zmprov modifyDomain {domain|id} zimbraAuthMech custom:sample http://foo.com:123 "  bar abc"
 
-In the above example, "sample" is the name under which a custom authe mechanism is 
-registered.
+In the above example:
+- "sample" is the name under which a custom auth handler is registered.  
+- "http://foo.com:123" and "  bar abc" are arguments that will be passed to the authenticate 
+  method of the handler.
 
 
 ===========================================
@@ -152,8 +154,22 @@ public abstract class ZimbraCustomAuth {
     /*
      * Method invoked by the framework to handle authentication requests.
      * A custom auth implementation must implement this abstract method.
+     * 
+     * @param account: The account object of the principal to be authenticated
+     *                 all attributes of the account can be retrieved from this object.
+     *                   
+     * @param password: Clear-text password.
+     * 
+     * @param context: Map containing context information.  
+     *                 A list of context data is defined in com.zimbra.cs.account.AuthContext
+     * 
+     * @param args: Arguments specified in the zimbraAuthMech attribute
+     * 
+     * @return Returning from this function indicating the authentication has succeeded. 
+     *  
+     * @throws Exception.  If authentication failed, an Exception should be thrown.
      */
-    public abstract void authenticate(Account acct, String password) throws Exception;
+    public abstract void authenticate(Account acct, String password, Map<String, Object> context, List<String> args) throws Exception;
 }
 
 Implementor should extend the ZimbraCustomAuth and implement the authenticate method.
@@ -162,9 +178,12 @@ For example:
 
 public class SampleCustomAuth extends ZimbraCustomAuth {
 
-    public void authenticate(Account account, String password) throws Exception {
+    public void authenticate(Account acct, 
+                             String password, 
+                             Map<String, Object> context, 
+                             List<String> args) throws Exception {
         /*
-         * mock logic to demostrate 
+         * mock logic to demo:
          *     - usage of the parameters
          *     - returning for success auth 
          *     - throwing Zimbra ServiceException for unsuccessful auth.

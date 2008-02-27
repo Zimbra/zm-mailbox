@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.account.ldap;
 
+import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -59,18 +60,21 @@ public abstract class ZimbraCustomAuth {
      * Method invoked by the framework to handle authentication requests.
      * A custom auth implementation must implement this abstract method.
      * 
-     * Implementor must ensure thread safety during the life span in this method.
-     * 
      * @param account: The account object of the principal to be authenticated
      *                 all attributes of the account can be retrieved from this object.
      *                   
-     * @param password: Clear-text password, usually entered by user and colected by an UI. 
+     * @param password: Clear-text password.
+     * 
+     * @param context: Map containing context information.  
+     *                 A list of context data is defined in com.zimbra.cs.account.AuthContext
+     * 
+     * @param args: Arguments specified in the zimbraAuthMech attribute
      * 
      * @return Returning from this function indicating the authentication has succeeded. 
      *  
      * @throws Exception.  If authentication failed, an Exception should be thrown.
      */
-    public abstract void authenticate(Account acct, String password, Map<String, Object> context) throws Exception;
+    public abstract void authenticate(Account acct, String password, Map<String, Object> context, List<String> args) throws Exception;
     
     /*
      * This function is called by the framework after a successful authenticate.  If 

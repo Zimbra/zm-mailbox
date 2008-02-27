@@ -17,7 +17,10 @@
 
 package com.zimbra.cs.account.ldap;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.StringTokenizer;
 
 import javax.naming.AuthenticationException;
 import javax.naming.AuthenticationNotSupportedException;
@@ -183,15 +186,50 @@ abstract class AuthMechanism {
     static class CustomAuth extends AuthMechanism {
         private String mHandlerName = ""; 
         private ZimbraCustomAuth mHandler;
+        List<String> mArgs;
         
         CustomAuth(String authMech) {
             super(authMech);
          
-            // value is in the format of custom:{handler}
-            int idx = mAuthMech.indexOf(':');
-            if (idx != -1) {
-                mHandlerName = mAuthMech.substring(idx+1);
-                mHandler = ZimbraCustomAuth.getHandler(mHandlerName);
+            /*
+             * value is in the format of custom:{handler} [arg1 arg2 ...]
+             * args can be quoted.  whitespace and empty string in quoted args are preserved
+             * 
+             * e.g. http://blah.com:123    green " ocean blue   "  "" yelllow "" 
+             * will be parsed and passed to the custom handler as:
+             * [http://blah.com:123]
+             * [green]
+             * [ ocean blue   ]
+             * []
+             * [yelllow]
+             * []
+             * 
+             */
+            int handlerNameStart = mAuthMech.indexOf(':');
+            if (handlerNameStart != -1) {
+                int handlerNameEnd = mAuthMech.indexOf(' ');
+                if (handlerNameEnd != -1) {
+                    mHandlerName = mAuthMech.substring(handlerNameStart+1, handlerNameEnd);
+                    QuotedStringParser parser = new QuotedStringParser(mAuthMech.substring(handlerNameEnd+1));
+                    mArgs = parser.parse();
+                    if (mArgs.size() == 0)
+                        mArgs = null;
+                } else {    
+                    mHandlerName = mAuthMech.substring(handlerNameStart+1);
+                }
+                
+                if (!StringUtil.isNullOrEmpty(mHandlerName))
+                    mHandler = ZimbraCustomAuth.getHandler(mHandlerName);
+            }
+            
+            if (ZimbraLog.account.isDebugEnabled()) {
+                StringBuffer sb = null;
+                if (mArgs != null) {
+                    sb = new StringBuffer();
+                    for (String s : mArgs)
+                        sb.append("[" + s + "] ");
+                }
+                ZimbraLog.account.debug("CustomAuth: handlerName=" + mHandlerName + ", args=" + sb);
             }
         }
         
@@ -201,7 +239,7 @@ abstract class AuthMechanism {
                 throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "handler " + mHandlerName + " for custom auth for domain " + domain.getName() + " not found");
             
             try {
-                mHandler.authenticate(acct, password, context);
+                mHandler.authenticate(acct, password, context, mArgs);
                 return;
             } catch (Exception e) {
                 if (e instanceof ServiceException) {
@@ -227,6 +265,71 @@ abstract class AuthMechanism {
                 throw ServiceException.FAILURE("custom auth handler " + mHandlerName + " not found", null);
             return mHandler.checkPasswordAging();
         }
+    }
+    
+    static class QuotedStringParser {
+        private String mInput;
+          
+        //the parser flips between these two sets of delimiters
+        private static final String DELIM_WHITESPACE_AND_QUOTES = " \t\r\n\"";
+        private static final String DELIM_QUOTES_ONLY ="\"";
+
+        public QuotedStringParser(String input) {
+            if (input == null)
+                throw new IllegalArgumentException("Search Text cannot be null.");
+            mInput = input;
+        }
+
+        public List<String> parse() {
+            List<String> result = new ArrayList<String>();
+
+            boolean returnTokens = true;
+            String currentDelims = DELIM_WHITESPACE_AND_QUOTES;
+            StringTokenizer parser = new StringTokenizer(mInput, currentDelims, returnTokens);
+
+            boolean openDoubleQuote = false;
+            boolean gotContent = false;
+            String token = null;
+            while (parser.hasMoreTokens()) {
+                token = parser.nextToken(currentDelims);
+                if (!isDoubleQuote(token)) {
+                    if (!currentDelims.contains(token)) {
+                        result.add(token);
+                        gotContent = true;
+                    }
+                } else {
+                    currentDelims = flipDelimiters(currentDelims);
+                    // allow empty string in double quotes
+                    if (openDoubleQuote && !gotContent)
+                        result.add("");
+                    openDoubleQuote = !openDoubleQuote;
+                    gotContent = false;
+                }
+            }
+            return result;
+        }
+
+        private boolean isDoubleQuote(String token) {
+            return token.equals("\"");
+        }
+
+        private String flipDelimiters(String curDelims) {
+            if (curDelims.equals(DELIM_WHITESPACE_AND_QUOTES))
+                return DELIM_QUOTES_ONLY;
+            else
+                return DELIM_WHITESPACE_AND_QUOTES;
+        }
+    }
+    
+    public static void main(String[] args) {
+        QuotedStringParser parser = new QuotedStringParser( "http://blah.com:123    green \" ocean blue   \"  \"\" yelllow \"\"");
+        List<String> tokens = parser.parse();
+        int i = 0;
+        for (String s : tokens)
+            System.out.format("%d [%s]\n", ++i, s);
+        
+        CustomAuth ca = new CustomAuth("custom:sample http://blah.com:123    green \" ocean blue   \"  \"\" yelllow \"\"");
+         
     }
 }
 
