@@ -42,10 +42,14 @@ import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 
 public class LocalFreeBusyProvider {
 
-    public static FreeBusy getFreeBusy(Account acct, long start, long end) 
+    public static FreeBusy getFreeBusy(Account acct, String name, long start, long end) 
     	throws ServiceException {
-    	return getFreeBusyList(MailboxManager.getInstance().getMailboxByAccount(acct), start, end);
+    	return getFreeBusyList(MailboxManager.getInstance().getMailboxByAccount(acct), name, start, end);
     }
+	public static FreeBusy getFreeBusyList(Mailbox mbox, String name, long start, long end)
+		throws ServiceException {
+		return getFreeBusyList(mbox, name, start, end, null);
+	}
 	public static FreeBusy getFreeBusyList(Mailbox mbox, long start, long end)
 		throws ServiceException {
 		return getFreeBusyList(mbox, start, end, null);
@@ -62,6 +66,11 @@ public class LocalFreeBusyProvider {
 	 * @throws ServiceException
 	 */
 	public static FreeBusy getFreeBusyList(Mailbox mbox, long start, long end, Appointment exAppt)
+	throws ServiceException {
+		return getFreeBusyList(mbox, mbox.getAccount().getName(), start, end, exAppt);
+	}
+	
+	public static FreeBusy getFreeBusyList(Mailbox mbox, String name, long start, long end, Appointment exAppt)
 	throws ServiceException {
 //		Check if this account is an always-free calendar resource.
 		Account acct = mbox.getAccount();
@@ -134,7 +143,7 @@ public class LocalFreeBusyProvider {
 				}
 			}
 		}
-		return new FreeBusy(acct.getName(), intervals, start, end);
+		return new FreeBusy(name, intervals, start, end);
 	}
 
     public static void main(String[] args) {

@@ -149,7 +149,7 @@ public class GetFreeBusy extends MailDocumentHandler {
     	// acct in LDAP is either local or remote.
     	try {
     		if (Provisioning.onLocalServer(acct)) {
-    			FreeBusy fb = LocalFreeBusyProvider.getFreeBusy(acct, start, end);
+    			FreeBusy fb = LocalFreeBusyProvider.getFreeBusy(acct, user, start, end);
     			ToXML.encodeFreeBusy(response, fb);
     			return;
     		} else {
