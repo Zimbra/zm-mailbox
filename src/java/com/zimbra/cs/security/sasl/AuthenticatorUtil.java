@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthContext;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
@@ -41,7 +42,7 @@ public final class AuthenticatorUtil {
 
         // authenticate the authentication principal
         Map<String, Object> authCtxt = new HashMap<String, Object>();
-        authCtxt.put(Provisioning.AuthContext.AC_ORIGINATING_CLIENT_IP, origRemoteIp);
+        authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, origRemoteIp);
         prov.authAccount(authacct, password, protocol, authCtxt);
         // authorize as the target user
         if (!account.getId().equals(authacct.getId())) {

@@ -371,9 +371,23 @@ public class TestProvisioning extends TestCase {
             mTheOnlyPasswordIKnowAbout = password;
         }
         
-        public void authenticate(Account acct, String password, Map<String, Object> context) throws Exception {
+        private boolean verifyArgs(List<String> args) {
+            if (args.size() == 6 &&
+                args.get(0).equals("http://blah.com:123") &&
+                args.get(1).equals("green") &&
+                args.get(2).equals(" ocean blue   ") &&
+                args.get(3).equals("") &&
+                args.get(4).equals("yelllow") &&
+                args.get(5).equals(""))
+                return true;
+            else
+                return false;
+        }
+        
+        public void authenticate(Account acct, String password, Map<String, Object> context, List<String> args) throws Exception {
             if (acct.getName().equals(mTheOnlyAcctThatCanAuth.getName()) && 
-                password.equals(mTheOnlyPasswordIKnowAbout))
+                password.equals(mTheOnlyPasswordIKnowAbout) &&
+                verifyArgs(args))
                 return;
             else
                 throw new Exception("auth failed by TestCustomAuth for " + acct.getName() + " password " + password);
@@ -575,7 +589,8 @@ public class TestProvisioning extends TestCase {
         // custom auth
         attrsToMod.clear();
         String customAuthHandlerName = "test";
-        attrsToMod.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_CUSTOM + customAuthHandlerName);
+        String args = "http://blah.com:123    green \" ocean blue   \"  \"\" yelllow \"\"";
+        attrsToMod.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_CUSTOM + customAuthHandlerName + " " + args);
         mProv.modifyAttrs(domain, attrsToMod, true);
         ZimbraCustomAuth.register(customAuthHandlerName, new TestCustomAuth(account, PASSWORD));
         mProv.authAccount(account, PASSWORD, "unittest");
