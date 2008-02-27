@@ -3897,7 +3897,9 @@ public class Mailbox {
                 String rcptEmail, SharedDeliveryContext sharedDeliveryCtxt)
     throws IOException, ServiceException {
         // make sure the message has been analyzed before taking the Mailbox lock
-        pm.analyze();
+        if (sDebugBatchMessageIndexSize==0)
+            pm.analyzeFully();
+        
         // and then actually add the message
         long start = ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.start();
 
@@ -4312,7 +4314,8 @@ public class Mailbox {
     public Message saveDraft(OperationContext octxt, ParsedMessage pm, int id, String origId, String replyType, String identityId)
     throws IOException, ServiceException {
         // make sure the message has been analzyed before taking the Mailbox lock
-        pm.analyze();
+        if (sDebugBatchMessageIndexSize==0)
+            pm.analyzeFully();
         try {
             pm.getRawData();
         } catch (MessagingException me) {
@@ -5650,7 +5653,8 @@ public class Mailbox {
     
     public Message updateOrCreateChat(OperationContext octxt, ParsedMessage pm, int id) throws IOException, ServiceException {
         // make sure the message has been analzyed before taking the Mailbox lock
-        pm.analyze();
+        if (sDebugBatchMessageIndexSize==0)
+            pm.analyzeFully();
         try {
             pm.getRawData();
         } catch (MessagingException me) {
@@ -5665,47 +5669,52 @@ public class Mailbox {
         }
     }
     
-    public synchronized Chat createChat(OperationContext octxt, ParsedMessage pm, 
+    public Chat createChat(OperationContext octxt, ParsedMessage pm, 
                 int folderId, int flags, String tagsStr) throws IOException, ServiceException {
         if (pm == null)
             throw ServiceException.INVALID_REQUEST("null ParsedMessage when adding chat to mailbox " + mId, null);
         
-        byte[] data;
-        String digest;
-        int msgSize;
-        Chat chat = null;
-        try {
-            data = pm.getRawData();  
-            digest = pm.getRawDigest();  
-            msgSize = pm.getRawSize();
-        } catch (MessagingException me) {
-            throw MailServiceException.MESSAGE_PARSE_ERROR(me);
-        }
+        if (sDebugBatchMessageIndexSize==0)
+            pm.analyzeFully();
         
-        CreateChat redoRecorder = new CreateChat(mId, digest, msgSize, folderId, flags, tagsStr);
-        StoreManager sm = StoreManager.getInstance();
-        boolean success = false;
-        Blob blob = null;
-        
-        try {
-            beginTransaction("createChat", octxt, redoRecorder);
-
-            long   tags    = Tag.tagsToBitmask(tagsStr);
-            CreateChat redoPlayer = (octxt == null ? null : (CreateChat) octxt.getPlayer());
-            int itemId  = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
-            short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId() : redoPlayer.getVolumeId();
-            blob = sm.storeIncoming(data, digest, null, volumeId);
-            redoRecorder.setMessageBodyInfo(data, blob.getPath(), blob.getVolumeId());
-            markOtherItemDirty(blob);
-            chat = Chat.create(itemId, getFolderById(folderId), pm, msgSize, digest, volumeId, false, flags, tags);
-            redoRecorder.setMessageId(chat.getId());
-            sm.link(blob, this, itemId, chat.getSavedSequence(), chat.getVolumeId());
-            queueForIndexing(chat, false, pm);
-            success = true;
-        } finally {
-            endTransaction(success);
+        synchronized(this) {
+            byte[] data;
+            String digest;
+            int msgSize;
+            Chat chat = null;
+            try {
+                data = pm.getRawData();  
+                digest = pm.getRawDigest();  
+                msgSize = pm.getRawSize();
+            } catch (MessagingException me) {
+                throw MailServiceException.MESSAGE_PARSE_ERROR(me);
+            }
+            
+            CreateChat redoRecorder = new CreateChat(mId, digest, msgSize, folderId, flags, tagsStr);
+            StoreManager sm = StoreManager.getInstance();
+            boolean success = false;
+            Blob blob = null;
+            
+            try {
+                beginTransaction("createChat", octxt, redoRecorder);
+                
+                long   tags    = Tag.tagsToBitmask(tagsStr);
+                CreateChat redoPlayer = (octxt == null ? null : (CreateChat) octxt.getPlayer());
+                int itemId  = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
+                short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId() : redoPlayer.getVolumeId();
+                blob = sm.storeIncoming(data, digest, null, volumeId);
+                redoRecorder.setMessageBodyInfo(data, blob.getPath(), blob.getVolumeId());
+                markOtherItemDirty(blob);
+                chat = Chat.create(itemId, getFolderById(folderId), pm, msgSize, digest, volumeId, false, flags, tags);
+                redoRecorder.setMessageId(chat.getId());
+                sm.link(blob, this, itemId, chat.getSavedSequence(), chat.getVolumeId());
+                queueForIndexing(chat, false, pm);
+                success = true;
+            } finally {
+                endTransaction(success);
+            }
+            return chat;
         }
-        return chat;
     }
     
     public synchronized Chat updateChat(OperationContext octxt, ParsedMessage pm, int id) throws IOException, ServiceException {

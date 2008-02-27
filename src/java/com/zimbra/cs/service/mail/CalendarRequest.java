@@ -326,10 +326,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             }
 
             ParsedMessage pm = new ParsedMessage(csd.mMm, false);
-            // We must force JavaMail processing of pm/mMm right here so as to avoid doing so later
-            // after any attachments have been deleted already. (bug 19234)
-            pm.analyze();
-            
+
             if (csd.mInvite.getFragment() == null || csd.mInvite.getFragment().equals("")) {
                 csd.mInvite.setFragment(pm.getFragment());
             }
@@ -337,7 +334,8 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             ItemId msgId = null;
 
             int[] ids = null;
-            // First, update my own appointment.
+            // First, update my own appointment.  It is important that this happens BEFORE the call to sendMimeMessage,
+            // because sendMimMessage will delete uploaded attachments as a side-effect.
             if (updateOwnAppointment)
                 ids = mbox.addInvite(octxt, csd.mInvite, apptFolderId, pm);
 

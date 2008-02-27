@@ -153,7 +153,6 @@ public class SetCalendarItem extends CalendarRequest {
             ipr = parser.parse(zsc, octxt, mbox.getAccount(), msgElem.getElement(MailConstants.E_INVITE));
 
         ParsedMessage pm = new ParsedMessage(mm, mbox.attachmentsIndexingEnabled());
-        pm.analyze();
 
         Invite inv = (ipr == null ? null : ipr.mInvite);
         if (inv == null || inv.getDTStamp() == -1) { //zdsync if -1 for 4.5 back compat
