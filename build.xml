@@ -622,15 +622,8 @@
               overwrite="true"/>
     </target>
 
-    <target name="reset-all" description="Reset the world plus jetty">
-        <if>
-            <isset property="jetty.start.jar.exists"/>
-            <then>
-                <antcall target="stop-webserver"/>
-            </then>
-        </if>
-        <antcall target="clean"/>
-        <mkdir dir="${build.dir}"/>
+
+    <target name="reset-jetty" description="Resets jetty">
         <delete dir="${jetty.home.dir}"/>
         <gunzip src="${jetty.src.dir}/jetty-${jetty.version}.tar.gz" dest="${build.dir}/jetty-${jetty.version}.tar"/>
         <untar src="${build.dir}/jetty-${jetty.version}.tar" dest="${zimbra.home.dir}" overwrite="true"/>
@@ -644,7 +637,20 @@
         <mkdir dir="${jetty.home.dir}/work/service"/>
         <mkdir dir="${jetty.home.dir}/work/zimbra"/>
         <mkdir dir="${jetty.home.dir}/work/zimbraAdmin"/>
+    </target>
 
+
+    <target name="reset-all" description="Reset the world plus jetty">
+        <if>
+            <isset property="jetty.start.jar.exists"/>
+            <then>
+                <antcall target="stop-webserver"/>
+            </then>
+        </if>
+        <antcall target="clean"/>
+        <mkdir dir="${build.dir}"/>
+        
+        <antcall target="reset-jetty"/>
         <antcall target="reset-the-world"/>
         <ant dir="../Zimlet" target="clean" inheritAll="false"/>
         <ant dir="../ZimbraWebClient" target="clean" inheritAll="false"/>
