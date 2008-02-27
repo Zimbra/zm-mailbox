@@ -28,7 +28,6 @@ import java.util.Map;
 
 import org.apache.commons.httpclient.auth.AuthPolicy;
 import org.apache.commons.httpclient.Credentials;
-import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpState;
@@ -332,8 +331,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		Element response = null;
 		try {
 			int status = sendRequest(method, serverInfo);
-			Header cl = method.getResponseHeader("Content-Length");
-			if (status != 200 || cl == null)
+			if (status != 200)
 				return getEmptyList(req);
 			//String buf = new String(com.zimbra.common.util.ByteUtil.readInput(method.getResponseBodyAsStream(), 10240, 10240), "UTF-8");
 			//ZimbraLog.misc.debug(buf);
