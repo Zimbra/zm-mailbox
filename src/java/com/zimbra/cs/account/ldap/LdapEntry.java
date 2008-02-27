@@ -25,7 +25,7 @@ package com.zimbra.cs.account.ldap;
  * @author schemers
  * 
  */
-interface LdapEntry {
+public interface LdapEntry {
 
     public String getDN();
 
