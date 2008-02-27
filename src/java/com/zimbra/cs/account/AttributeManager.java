@@ -473,6 +473,10 @@ public class AttributeManager {
  	   return mFlagToAttrsMap.get(AttributeFlag.domainAdminModifiable).contains(attr);
     }
     
+    public void makeDomainAdminModifiable (String attr) {
+    	mFlagToAttrsMap.get(AttributeFlag.domainAdminModifiable).add(attr);
+    }
+    
     public boolean isEmailOrIDN(String attr) {
         AttributeInfo ai = mAttrs.get(attr.toLowerCase());
         if (ai != null) {

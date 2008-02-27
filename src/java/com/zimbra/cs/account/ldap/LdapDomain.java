@@ -33,7 +33,7 @@ import com.zimbra.cs.account.Provisioning;
 /**
  * @author schemers
  */
-class LdapDomain extends Domain implements LdapEntry {
+public class LdapDomain extends Domain implements LdapEntry {
 
     private String mDn;
 

@@ -444,7 +444,7 @@ public class LdapUtil {
      * @param attrs the attributes to enumerate over
      * @throws NamingException
      */
-    static Map<String, Object> getAttrs(Attributes attrs) throws NamingException  {
+    public static Map<String, Object> getAttrs(Attributes attrs) throws NamingException  {
         Map<String,Object> map = new HashMap<String,Object>();        
         for (NamingEnumeration ne = attrs.getAll(); ne.hasMore(); ) {
             Attribute attr = (Attribute) ne.next();
