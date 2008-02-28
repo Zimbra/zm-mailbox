@@ -6374,12 +6374,36 @@ public class Mailbox {
     }
 
     public synchronized CalendarData getCalendarSummaryForRange(
-            OperationContext octxt, int folderId,
-            byte itemType, long start, long end)
+            OperationContext octxt, int folderId, byte itemType, long start, long end)
     throws ServiceException {
         Folder folder = getFolderById(folderId);
         if (!folder.canAccess(ACL.RIGHT_READ))
-            throw MailServiceException.PERM_DENIED("you do not have sufficient permissions on folder " + folder.getName());
-        return CalendarCache.getInstance().getCalendarSummary(octxt, this, folderId, itemType, start, end, true);
+            throw MailServiceException.PERM_DENIED(
+                    "you do not have sufficient permissions on folder " + folder.getName());
+        return CalendarCache.getInstance().getCalendarSummary(
+                octxt, this, folderId, itemType, start, end, true);
+    }
+
+    public synchronized List<CalendarData> getAllCalendarsSummaryForRange(
+            OperationContext octxt, byte itemType, long start, long end)
+    throws ServiceException {
+        List<CalendarData> list = new ArrayList<CalendarData>();
+        for (Folder folder : listAllFolders()) {
+            int fid = folder.getId();
+            if (fid == ID_FOLDER_TRASH || fid == ID_FOLDER_SPAM)
+                continue;
+            // Only look at folders of right view type.  We might have to relax this to allow appointments/tasks
+            // in any folder, but that requires scanning too many folders each time, most of which don't contain
+            // any calendar items.
+            if (folder.getDefaultView() != itemType)
+                continue;
+            if (!folder.canAccess(ACL.RIGHT_READ))
+                continue;
+            CalendarData calData = CalendarCache.getInstance().getCalendarSummary(
+                    octxt, this, fid, itemType, start, end, true);
+            if (calData != null)
+                list.add(calData);
+        }
+        return list;
     }
 }
