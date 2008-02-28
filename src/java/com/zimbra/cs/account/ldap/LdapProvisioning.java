@@ -4201,6 +4201,7 @@ public class LdapProvisioning extends Provisioning {
 
     @Override
     public Signature createSignature(Account account, String signatureName, Map<String, Object> signatureAttrs) throws ServiceException {
+        signatureName = signatureName.trim();
         removeAttrIgnoreCase("objectclass", signatureAttrs);        
         validateSignatureAttrs(signatureAttrs);
 
@@ -4291,12 +4292,14 @@ public class LdapProvisioning extends Provisioning {
 
         String newName = (String) signatureAttrs.get(A_zimbraSignatureName);
         
-        // do not allow name to be wiped
-        if (newName!= null && newName.length()==0)
-            throw ServiceException.INVALID_REQUEST("empty signature name is not allowed", null);
-        
-        // check for duplicate names
         if (newName != null) {
+            newName = newName.trim();
+        
+            // do not allow name to be wiped
+            if (newName.length()==0)
+                throw ServiceException.INVALID_REQUEST("empty signature name is not allowed", null);
+            
+            // check for duplicate names
             List<Signature> sigs = getAllSignatures(account);
             for (Signature sig : sigs) {
                 if (sig.getName().equals(newName) && !sig.getId().equals(signatureId))
