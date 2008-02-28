@@ -2915,6 +2915,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>auth scheme to use</desc>
 </attr>
 
+<attr id="612" name="zimbraMtaAntiSpamLockMethod" type="astring" max="64" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>flock</globalConfigValue>
+  <desc>mta anti spam lock method.</desc>
+</attr>
+
 </attrs>
 
 
