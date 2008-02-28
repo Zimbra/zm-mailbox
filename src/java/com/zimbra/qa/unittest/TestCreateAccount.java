@@ -36,7 +36,7 @@ public class TestCreateAccount extends TestCase {
     private static String TEST_NAME = "test-accounts";
     private static String PASSWORD = "test123";
     private static int NUM_THREADS = 1; // 20;
-    private static int NUM_ACCTS_PER_THREAD = 100000; // 500;
+    private static int NUM_ACCTS_PER_THREAD = 100; // 500;
 
     private String DOMAIN_NAME = null;
    
@@ -185,6 +185,20 @@ public class TestCreateAccount extends TestCase {
         for (int i=0; i<NUM_THREADS; i++) {
             TestThread t = new TestGetAccountThread(i);
             t.start();
+        }
+    }
+    
+    public void xxxtestCreateDomain() throws Exception {
+        Provisioning prov = Provisioning.getInstance();
+        assertTrue(prov instanceof LdapProvisioning);
+         
+        String baseDomainName = TestProvisioningUtil.baseDomainName("domaintest", TEST_ID);
+        
+        int NUM_DOMAINS = 100;
+        for (int i=0; i<NUM_DOMAINS; i++) {
+            String domainName = "d-" + (i+1) + "." + baseDomainName;
+            Domain domain = prov.createDomain(domainName, new HashMap<String, Object>());
+            assertNotNull(domain);
         }
     }
  
