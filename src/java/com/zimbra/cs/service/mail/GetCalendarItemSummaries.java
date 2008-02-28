@@ -22,6 +22,7 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.util.Log;
@@ -34,7 +35,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.CalendarItem;
-import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
@@ -402,18 +402,35 @@ public class GetCalendarItemSummaries extends CalendarRequest {
         OperationContext octxt = getOperationContext(zsc, context);
 
         if (DebugConfig.calendarEnableCache) {
-            CalendarData calData = mbox.getCalendarSummaryForRange(
-                    octxt, iidFolder.getId(), getItemType(), rangeStart, rangeEnd);
-            if (calData != null) {
-	            for (Iterator<CalendarItemData> itemIter = calData.calendarItemIterator(); itemIter.hasNext(); ) {
-	            	CalendarItemData calItemData = itemIter.next();
-                    int numInstances = calItemData.getNumInstances();
-                    if (numInstances > 0) {
-                        Element calItemElem = CacheToXML.encodeCalendarItemData(
-                                zsc, acct, authAcct, calItemData, true);
-                        response.addElement(calItemElem);
+            int folderId = iidFolder.getId();
+            if (folderId != Mailbox.ID_AUTO_INCREMENT) {
+                CalendarData calData = mbox.getCalendarSummaryForRange(
+                        octxt, iidFolder.getId(), getItemType(), rangeStart, rangeEnd);
+                if (calData != null) {
+    	            for (Iterator<CalendarItemData> itemIter = calData.calendarItemIterator(); itemIter.hasNext(); ) {
+    	            	CalendarItemData calItemData = itemIter.next();
+                        int numInstances = calItemData.getNumInstances();
+                        if (numInstances > 0) {
+                            Element calItemElem = CacheToXML.encodeCalendarItemData(
+                                    zsc, acct, authAcct, calItemData, true);
+                            response.addElement(calItemElem);
+                        }
+    	            }
+                }
+            } else {
+                List<CalendarData> calDataList = mbox.getAllCalendarsSummaryForRange(
+                        octxt, getItemType(), rangeStart, rangeEnd);
+                for (CalendarData calData : calDataList) {
+                    for (Iterator<CalendarItemData> itemIter = calData.calendarItemIterator(); itemIter.hasNext(); ) {
+                        CalendarItemData calItemData = itemIter.next();
+                        int numInstances = calItemData.getNumInstances();
+                        if (numInstances > 0) {
+                            Element calItemElem = CacheToXML.encodeCalendarItemData(
+                                    zsc, acct, authAcct, calItemData, true);
+                            response.addElement(calItemElem);
+                        }
                     }
-	            }
+                }
             }
         } else {
 	        Collection<CalendarItem> calItems = mbox.getCalendarItemsForRange(

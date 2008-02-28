@@ -223,6 +223,9 @@ public class SetCalendarItem extends CalendarRequest {
         if (exceptions.size() > 0) {
             result.exceptions = new SetCalendarItemData[exceptions.size()];
             exceptions.toArray(result.exceptions);
+        } else {
+            if (result.defaultInv == null)
+                throw ServiceException.INVALID_REQUEST("No default/except/cancel specified", null);
         }
 
         // <replies>
@@ -230,7 +233,7 @@ public class SetCalendarItem extends CalendarRequest {
         if (repliesElem != null)
             result.replies = CalendarUtils.parseReplyList(repliesElem, defInv.getTimeZoneMap());
 
-        result.isTodo = defInv.isTodo();
+        result.isTodo = defInv != null && defInv.isTodo();
 
         result.nextAlarm = request.getAttributeLong(MailConstants.A_CAL_NEXT_ALARM, 0);
 
