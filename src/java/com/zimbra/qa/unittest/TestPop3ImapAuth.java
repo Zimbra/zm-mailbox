@@ -55,8 +55,7 @@ extends TestCase {
     
     private static final String IMAP_CONNECT_RESPONSE = "\\* OK .* Zimbra IMAP4rev1 service ready";
     private static final String IMAP_LOGIN = "1 LOGIN user1 test123" + CRLF;
-    private static final String IMAP_LOGIN_RESPONSE1 = "\\* CAPABILITY.*";
-    private static final String IMAP_LOGIN_RESPONSE2 = "1 OK LOGIN completed";
+    private static final String IMAP_LOGIN_RESPONSE = "1 OK.*LOGIN completed";
     private static final String IMAP_CLEARTEXT_FAILED_RESPONSE = "1 NO cleartext logins disabled";
     private static final String IMAP_STARTTLS = "2 STARTTLS" + CRLF;
     private static final String IMAP_STARTTLS_RESPONSE = "2 OK Begin TLS negotiation now";
@@ -159,16 +158,14 @@ extends TestCase {
         // Test cleartext
         Socket socket = new Socket(HOSTNAME, mImapCleartextPort);
         send(socket, null, IMAP_CONNECT_RESPONSE);
-        send(socket, IMAP_LOGIN, IMAP_LOGIN_RESPONSE1);
-        send(socket, null, IMAP_LOGIN_RESPONSE2);
+        send(socket, IMAP_LOGIN, IMAP_LOGIN_RESPONSE);
         send(socket, IMAP_LOGOUT, IMAP_LOGOUT_RESPONSE1);
         send(socket, null, IMAP_LOGOUT_RESPONSE2);
         
         // Test SSL
         socket = DummySSLSocketFactory.getDefault().createSocket(HOSTNAME, mImapSslPort);
         send(socket, null, IMAP_CONNECT_RESPONSE);
-        send(socket, IMAP_LOGIN, IMAP_LOGIN_RESPONSE1);
-        send(socket, null, IMAP_LOGIN_RESPONSE2);
+        send(socket, IMAP_LOGIN, IMAP_LOGIN_RESPONSE);
         send(socket, IMAP_LOGOUT, IMAP_LOGOUT_RESPONSE1);
         send(socket, null, IMAP_LOGOUT_RESPONSE2);
         
@@ -178,8 +175,7 @@ extends TestCase {
         send(socket, IMAP_STARTTLS, IMAP_STARTTLS_RESPONSE);
         SSLSocketFactory factory = (SSLSocketFactory) DummySSLSocketFactory.getDefault();
         socket = factory.createSocket(socket, HOSTNAME, mImapCleartextPort, true);
-        send(socket, IMAP_LOGIN, IMAP_LOGIN_RESPONSE1);
-        send(socket, null, IMAP_LOGIN_RESPONSE2);
+        send(socket, IMAP_LOGIN, IMAP_LOGIN_RESPONSE);
         send(socket, IMAP_LOGOUT, IMAP_LOGOUT_RESPONSE1);
         send(socket, null, IMAP_LOGOUT_RESPONSE2);
     }
@@ -198,8 +194,7 @@ extends TestCase {
         // Test SSL
         socket = DummySSLSocketFactory.getDefault().createSocket(HOSTNAME, mImapSslPort);
         send(socket, null, IMAP_CONNECT_RESPONSE);
-        send(socket, IMAP_LOGIN, IMAP_LOGIN_RESPONSE1);
-        send(socket, null, IMAP_LOGIN_RESPONSE2);
+        send(socket, IMAP_LOGIN, IMAP_LOGIN_RESPONSE);
         send(socket, IMAP_LOGOUT, IMAP_LOGOUT_RESPONSE1);
         send(socket, null, IMAP_LOGOUT_RESPONSE2);
         
@@ -209,8 +204,7 @@ extends TestCase {
         send(socket, IMAP_STARTTLS, IMAP_STARTTLS_RESPONSE);
         SSLSocketFactory factory = (SSLSocketFactory) DummySSLSocketFactory.getDefault();
         socket = factory.createSocket(socket, HOSTNAME, mImapCleartextPort, true);
-        send(socket, IMAP_LOGIN, IMAP_LOGIN_RESPONSE1);
-        send(socket, null, IMAP_LOGIN_RESPONSE2);
+        send(socket, IMAP_LOGIN, IMAP_LOGIN_RESPONSE);
         send(socket, IMAP_LOGOUT, IMAP_LOGOUT_RESPONSE1);
         send(socket, null, IMAP_LOGOUT_RESPONSE2);
     }
@@ -238,8 +232,7 @@ extends TestCase {
         send(socket, null, IMAP_CONNECT_RESPONSE);
         send(socket, IMAP_ID, IMAP_ID_RESPONSE1);
         send(socket, null, IMAP_ID_RESPONSE2);
-        send(socket, IMAP_LOGIN, IMAP_LOGIN_RESPONSE1);
-        send(socket, null, IMAP_LOGIN_RESPONSE2);
+        send(socket, IMAP_LOGIN, IMAP_LOGIN_RESPONSE);
         send(socket, IMAP_LOGOUT, IMAP_LOGOUT_RESPONSE1);
         send(socket, null, IMAP_LOGOUT_RESPONSE2);
     }
