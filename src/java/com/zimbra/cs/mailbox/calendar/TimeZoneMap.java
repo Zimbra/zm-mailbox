@@ -101,6 +101,8 @@ public class TimeZoneMap {
         for (Iterator it = mTzMap.entrySet().iterator(); it.hasNext(); ) {
             Map.Entry entry = (Entry) it.next();
             String key = (String) entry.getKey();
+            if (key == null || key.length() < 1)    // ignore null/empty TZIDs (bug 25183)
+                continue;
             ICalTimeZone zone = (ICalTimeZone) entry.getValue();
 
             int idx = tzList.indexOf(zone);
@@ -133,10 +135,12 @@ public class TimeZoneMap {
         for (Iterator it = map.entrySet().iterator(); it.hasNext(); ) {
             Map.Entry entry = (Entry) it.next();
             String key = (String)entry.getKey();
-            if (key.charAt(0) == '#') {
-                int idx = Integer.parseInt(key.substring(1));
-                ICalTimeZone tz = ICalTimeZone.decodeFromMetadata((Metadata) entry.getValue());
-                tzlist[idx] = tz;
+            if (key != null && key.length() > 0) {  // ignore null/empty TZIDs (bug 25183)
+                if (key.charAt(0) == '#') {
+                    int idx = Integer.parseInt(key.substring(1));
+                    ICalTimeZone tz = ICalTimeZone.decodeFromMetadata((Metadata) entry.getValue());
+                    tzlist[idx] = tz;
+                }
             }
         }
 
@@ -145,10 +149,12 @@ public class TimeZoneMap {
         for (Iterator it = map.entrySet().iterator(); it.hasNext(); ) {
             Map.Entry entry = (Entry) it.next();
             String key = (String) entry.getKey();
-            if (key.charAt(0) != '#') {
-                int idx = Integer.parseInt(entry.getValue().toString());
-                if (tzlist[idx] != null) {
-                    tzmap.put(key, tzlist[idx]);
+            if (key != null && key.length() > 0) {  // ignore null/empty TZIDs (bug 25183)
+                if (key.charAt(0) != '#') {
+                    int idx = Integer.parseInt(entry.getValue().toString());
+                    if (tzlist[idx] != null) {
+                        tzmap.put(key, tzlist[idx]);
+                    }
                 }
             }
         }
