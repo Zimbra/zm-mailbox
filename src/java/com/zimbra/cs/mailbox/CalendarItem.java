@@ -46,7 +46,6 @@ import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.LuceneFields;
-import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Alarm;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
@@ -66,7 +65,6 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
@@ -176,14 +174,12 @@ public abstract class CalendarItem extends MailItem {
     boolean isIndexed()        { return true; }
     boolean canHaveChildren()  { return false; }
     
-    @Override
-    public void reindex(IndexItem redo, boolean deleteFirst, Object indexData) throws ServiceException {
-        if (DebugConfig.disableIndexing)
-            return;
-        
-        List<org.apache.lucene.document.Document> docs = getLuceneDocuments();
-        mMailbox.getMailboxIndex().indexCalendarItem(mMailbox, redo, deleteFirst, this, 
-            docs, getDate());
+    @Override public List<org.apache.lucene.document.Document> generateIndexData() throws ServiceException {
+        List<org.apache.lucene.document.Document> docs = null;
+        synchronized(getMailbox()) {
+            docs = getLuceneDocuments();
+        }
+        return docs;
     }
     
     protected List<org.apache.lucene.document.Document> getLuceneDocuments() throws ServiceException {

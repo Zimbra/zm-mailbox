@@ -233,16 +233,16 @@ public class Mailbox {
         RedoableOp getRedoRecorder() { return recorder; }
         
         private static final class IndexItemEntry {
-            IndexItemEntry(boolean deleteFirst, Object data) { 
+            IndexItemEntry(boolean deleteFirst, List<org.apache.lucene.document.Document> docList) { 
                 mDeleteFirst = deleteFirst;
-                mData = data;
+                mData = docList;
             }
             boolean mDeleteFirst;
-            Object mData;
+            List<org.apache.lucene.document.Document> mData;
         }
         
-        void addIndexedItem(MailItem item, boolean deleteFirst, Object data)  { 
-            indexItems.put(item, new IndexItemEntry(deleteFirst, data)); 
+        void addIndexedItem(MailItem item, boolean deleteFirst, List<org.apache.lucene.document.Document> docList)  { 
+            indexItems.put(item, new IndexItemEntry(deleteFirst, docList)); 
         }
 
         void reset() {
@@ -251,7 +251,7 @@ public class Mailbox {
             active = false;
             conn = null;  octxt = null;  tcon = null;
             depth = 0;
-            size = changeId = itemId = contacts = accessed = recent = NO_CHANGE;
+            size = changeId = itemId = contacts = accessed = recent = idxDeferredCount = NO_CHANGE;
             sync = null;  config = null;
             itemCache = null;  indexItems.clear();
             mDirty.clear();  mOtherDirtyStuff.clear();
@@ -991,11 +991,11 @@ public class Mailbox {
      * 
      * @param item  The MailItem to be indexed.
      * @param deleteFirst True if we need to delete this item from the index before indexing it again
-     * @param data  The extra data to be used for the indexing step.
+     * @param data  The list of documents to be added.  SHOULD NOT BE NULL if possible, to avoid generating the documents w/ the lock held
      * @see #commitCache(Mailbox.MailboxChange) */
-    void queueForIndexing(MailItem item, boolean deleteFirst,  Object data) {
+    void queueForIndexing(MailItem item, boolean deleteFirst,  List<org.apache.lucene.document.Document> data) {
         if (item.getIndexId() > 0)
-        mCurrentChange.addIndexedItem(item, deleteFirst, data);
+            mCurrentChange.addIndexedItem(item, deleteFirst, data);
     }
 
     public synchronized Connection getOperationConnection() throws ServiceException {
@@ -1036,16 +1036,15 @@ public class Mailbox {
     synchronized void endMaintenance(boolean success) throws ServiceException {
         if (mMaintenance == null)
             throw ServiceException.FAILURE("mainbox not in maintenance mode", null);
-
+        
         if (success) {
             ZimbraLog.mailbox.info("Ending maintenance on mailbox %d.", getId());
             mMaintenance = null;
         } else {
             ZimbraLog.mailbox.info("Ending maintenance and marking mailbox %d as unavailable.", getId());
             mMaintenance.markUnavailable();
+        }
     }
-    }
-
 
     void beginTransaction(String caller, OperationContext octxt) throws ServiceException {
         beginTransaction(caller, System.currentTimeMillis(), octxt, null, null);
@@ -1059,6 +1058,7 @@ public class Mailbox {
         beginTransaction(caller, timestamp, octxt, recorder, conn);
     }
     private void beginTransaction(String caller, long time, OperationContext octxt, RedoableOp recorder, Connection conn) throws ServiceException {
+        assert(Thread.holdsLock(this));
         mCurrentChange.startChange(caller, octxt, recorder);
 
         // if a Connection object was provided, use it
@@ -1512,7 +1512,6 @@ public class Mailbox {
         }
     }
 
-
     public synchronized MailboxVersion getVersion() { return mVersion; }
     
     synchronized void updateVersion(MailboxVersion vers) throws ServiceException {
@@ -1526,12 +1525,10 @@ public class Mailbox {
         setConfig(null, Mailbox.MD_CONFIG_VERSION, md);
     }
     
-    
     /**
-     * Status of current reindexing operation for this mailbox, or NULL 
-     * if a re-index is not in progress
+     * Status of current batched indexing operation 
      */
-    public static class ReIndexStatus {
+    public static class BatchedIndexStatus {
         public int mNumProcessed = 0;
         public int mNumToProcess = 0;
         public int mNumFailed = 0;
@@ -1543,7 +1540,7 @@ public class Mailbox {
         }
 
         public Object clone() {
-            ReIndexStatus toRet = new ReIndexStatus();
+            BatchedIndexStatus toRet = new BatchedIndexStatus();
             toRet.mNumProcessed = mNumProcessed;
             toRet.mNumToProcess = mNumToProcess;
             toRet.mNumFailed = mNumFailed;
@@ -1553,13 +1550,13 @@ public class Mailbox {
     
     /** Status of current reindexing operation for this mailbox, or NULL 
      *  if a re-index is not in progress. */
-    private ReIndexStatus mReIndexStatus = null;
+    private BatchedIndexStatus mReIndexStatus = null;
 
     public synchronized boolean isReIndexInProgress() {
         return mReIndexStatus != null;
     }
 
-    public synchronized ReIndexStatus getReIndexStatus() {
+    public synchronized BatchedIndexStatus getReIndexStatus() {
         return mReIndexStatus;
     }
     
@@ -1608,6 +1605,10 @@ public class Mailbox {
      */
     public void reIndex(OperationContext octxt, Set<Byte> typesOrNull, Set<Integer> itemIdsOrNull, int completionId, boolean skipDelete) throws ServiceException {
         ReindexMailbox redoRecorder = new ReindexMailbox(mId, typesOrNull, itemIdsOrNull, completionId, skipDelete);
+
+        long start = 0;
+        if (ZimbraLog.mailbox.isInfoEnabled()) 
+            start = System.currentTimeMillis();
         
         if (typesOrNull != null && itemIdsOrNull != null)
             throw ServiceException.INVALID_REQUEST("Must only specify one of Types, ItemIds to Mailbox.reIndex", null);
@@ -1617,6 +1618,7 @@ public class Mailbox {
         Collection<SearchResult> msgs = null;
         boolean redoInitted = false;
         boolean indexDeleted = false;
+        boolean completedOperation = false;
 
         try {
             //
@@ -1643,7 +1645,7 @@ public class Mailbox {
                     
                     DbSearchConstraints c = new DbSearchConstraints();
                     c.mailbox = this;
-                    c.sort = DbSearch.SORT_BY_DATE;
+                    c.sort = DbSearch.SORT_NONE;
                     if (itemIdsOrNull != null)
                         c.itemIds = itemIdsOrNull; 
                     else if (typesOrNull != null)
@@ -1677,77 +1679,51 @@ public class Mailbox {
                 } finally {
                     endTransaction(success);
                 }
-                mReIndexStatus = new ReIndexStatus();
+                mReIndexStatus = new BatchedIndexStatus();
                 mReIndexStatus.mNumToProcess = msgs.size();
             }
 
-            long start = System.currentTimeMillis();
+            indexItemList(msgs, false, mReIndexStatus);
 
-            //
-            // Second step:
-            //      For each message in the list from above
-            //      lock mailbox, re-index msg, release lock
-            //
-            for (Iterator<SearchResult> iter = msgs.iterator(); iter.hasNext();) {
-                if (ZimbraLog.mailbox.isDebugEnabled() && ((mReIndexStatus.mNumProcessed % 2000) == 0)) {
-                    ZimbraLog.mailbox.debug("Re-Indexing: Mailbox "+getId()+" on item "+mReIndexStatus.mNumProcessed+" out of "+msgs.size());
+            if (ZimbraLog.mailbox.isInfoEnabled()) {
+                long end = System.currentTimeMillis();
+                long avg = 0;
+                long mps = 0;
+                if (mReIndexStatus.mNumProcessed>0) {
+                    avg = (end - start) / mReIndexStatus.mNumProcessed;
+                    mps = avg > 0 ? 1000 / avg : 0;                    
                 }
-                
-                synchronized(this) {
-                    if (mReIndexStatus.mCancel) {
-                        ZimbraLog.mailbox.warn("CANCELLING re-index of Mailbox "+getId()+" before it is complete.  ("+mReIndexStatus.mNumProcessed+" processed out of "+msgs.size()+")");                            
-                        throw ServiceException.INTERRUPTED("ReIndexing Canceled");
-                    }
-                    mReIndexStatus.mNumProcessed++;
-                    SearchResult sr = iter.next();
-                    try {
-                        MailItem item = getItemById(null, sr.id, sr.type);
-                        item.reindex(null, false /* already deleted above */, null);
-                    } catch(ServiceException  e) {
-                        mReIndexStatus.mNumFailed++;
-                        ZimbraLog.mailbox.info("Re-Indexing: Mailbox " +getId()+ " had error on item "+sr.id+".  Item will not be indexed.", e);
-                    } catch(java.lang.RuntimeException e) {
-                        mReIndexStatus.mNumFailed++;
-                        ZimbraLog.mailbox.info("Re-Indexing: Mailbox " +getId()+ " had error on item "+sr.id+".  Item will not be indexed.", e);
-                    }
-                }
+                ZimbraLog.mailbox.info("Re-Indexing: Mailbox " + getId() + " COMPLETED.  Re-indexed "+mReIndexStatus.mNumProcessed
+                    +" items in " + (end-start) + "ms.  (avg "+avg+"ms/item= "+mps+" items/sec)"
+                    +" ("+mReIndexStatus.mNumFailed+" failed) ");
             }
-
-            //
-            // Final step: print some statistics
-            //
-            long end = System.currentTimeMillis();
-            long avg = 0;
-            long mps = 0;
-            if (mReIndexStatus.mNumProcessed> 0) {
-                avg = (end - start) / mReIndexStatus.mNumProcessed;
-                mps = avg > 0 ? 1000 / avg : 0;
-            }
-            ZimbraLog.mailbox.info("Re-Indexing: Mailbox " + getId() + " COMPLETED.  Re-indexed "+mReIndexStatus.mNumProcessed
-                        +" items in " + (end-start) + "ms.  (avg "+avg+"ms/item= "+mps+" items/sec)"
-                        +" ("+mReIndexStatus.mNumFailed+" failed) ");
             
             if (completionId > 0)
                 completion(completionId);
             
+            completedOperation = true;
+            
         } finally {
             mReIndexStatus = null;
 
-            if (mMailboxIndex != null)
-                mMailboxIndex.flush();
-            if (redoInitted) {
-                if (indexDeleted) {
-                    // there's no meaningful way to roll this transaction back once data is deleted.
-                    // Sooo, always commit it I guess....right?
-                    //
-                    // The failure mode is if some or all the messages don't re-index.  Right now we expect
-                    // some failures, catch them, and ignore....maybe we need to return some error code to the 
-                    // caller if the number of failures is nonzero...or maybe even a list of failed messages?
-                    //
-                    // TODO think about this some more...
-                    redoRecorder.commit();
-                } else {
-                    redoRecorder.abort();
+            try {
+                if (mMailboxIndex != null)
+                    mMailboxIndex.flush();
+            } finally {
+                if (redoInitted) {
+                    if (completedOperation || indexDeleted) {
+                        // there's no meaningful way to roll this transaction back once data is deleted.
+                        // Sooo, always commit it I guess....right?
+                        //
+                        // The failure mode is if some or all the messages don't re-index.  Right now we expect
+                        // some failures, catch them, and ignore....maybe we need to return some error code to the 
+                        // caller if the number of failures is nonzero...or maybe even a list of failed messages?
+                        //
+                        // TODO think about this some more...
+                        redoRecorder.commit();
+                    } else {
+                        redoRecorder.abort();
+                    }
                 }
             }
         }
@@ -3160,100 +3136,292 @@ public class Mailbox {
         params.setMode(SearchResultMode.NORMAL);
         return search(SoapProtocol.Soap12, octxt, params);
     }
+
+    private static final long sBatchIndexMaxBytesPerTransaction = LC.zimbra_index_max_transaction_bytes.longValue();
+    private static final int sBatchIndexMaxItemsPerTransaction = LC.zimbra_index_max_transaction_items.intValue();
+    
+    private Object mIndexingDeferredItemsLock = new Object(); // the lock protects the mIndexingDeferredItems boolean below
+    private boolean mIndexingDeferredItems = false; // TRUE if we're in the middle of an index-deferred op.
+    
+    // how frequently is the mailbox allowed to retry indexing deferred items?  The mailbox will ALWAYS try to index deferred items
+    // if a text search is run, this only controls other periodic retries.
+    private static final long sIndexDeferredItemsRetryIntervalMs = LC.zimbra_index_deferred_items_retry_interval.intValue() * 1000L;
+    private long mLastIndexDeferredTime = 0; // the ENDING time of the last index-deferred-items attempt
+
+    /**
+     * This API will periodically attempt to re-try deferred index items.
+     */
+    private void maybeIndexDeferredItems() {
+        assert(!Thread.holdsLock(this));
+        if (Thread.holdsLock(this)) // don't attempt if we're somehow holding the mailbox lock!
+            return;
+        
+        boolean shouldIndexDeferred = false;
+        synchronized(this) {
+            if (!mIndexingDeferredItems) {
+                if (getIndexDeferredCount() > sDebugBatchMessageIndexSize) {
+                    if ((System.currentTimeMillis() - sIndexDeferredItemsRetryIntervalMs) > mLastIndexDeferredTime)
+                        shouldIndexDeferred = true;
+                }
+            }
+        }
+        if (shouldIndexDeferred)
+            indexDeferredItems(); 
+    }
     
     /**
-     * "Catch-up" the text index by indexing all the items that have the INDEXING_DEFERRED flag set
-     *
-     * @throws ServiceException
+     * "Catch-up" the text index by indexing all the items that have the INDEXING_DEFERRED flag set.  This
+     * function makes a "Best attempt" to index all items: it is not guaranteed that the index is
+     * completely caught-up when this function returns.
+     * 
+     * This outer function is responsible for synchronization -- it guarantees that only one
+     * thread can be in indexDeferredItemsInternal at a time.  Threads can block
+     * waiting for other indexDeferredItems threads to complete -- they will be run
+     * once the operation completes.
      */
-    public synchronized void indexDeferredItems(OperationContext octxt) throws ServiceException {
-        IndexDeferredItems redoPlayer = null;
-        boolean needRedo = octxt == null || octxt.needRedo();
+    private void indexDeferredItems() {
+        assert(!Thread.holdsLock(this));
+        assert(!Thread.holdsLock(mIndexingDeferredItemsLock));
         
-        if (octxt != null) 
-            redoPlayer = (IndexDeferredItems)octxt.getPlayer();
-        
-        if (redoPlayer != null || getIndexDeferredCount() > 0) { // double-check now that we're synchronized()...
-            long start = System.currentTimeMillis();
-            boolean success = false;
-            int itemsIndexed = 0;
-            
-            IndexDeferredItems redoRecorder = null;
-            if (needRedo)
-                redoRecorder = new IndexDeferredItems();
-            
-            beginTransaction("IndexDeferredIndexItems", octxt, needRedo ? redoRecorder : null);
-            
-            try {
-                int[] ids;
-                byte[] types;
-                
-                if (redoPlayer == null) {
-                    DbSearchConstraints c = new DbSearchConstraints();
-                    c.mailbox = this;
-                    c.tags = new HashSet<Tag>();
-                    c.tags.add(this.mIndexingDeferredFlag);
-                    Collection<SearchResult>items = new ArrayList<SearchResult>();
-                    
-                    DbSearch.search(items, getOperationConnection(), c, SearchResult.ExtraData.NONE);
-                    
-                    ids = new int[items.size()];
-                    types = new byte[items.size()];
-                    int i = 0;
-                    for (SearchResult sr : items) {
-                        ids[i] = sr.id;
-                        types[i] = sr.type;
-                        i++;
-                    }
-                } else {
-                    ids = redoPlayer.getItemIds();
-                    types = redoPlayer.getItemTypes();
-                }
-                
-                if (needRedo) 
-                    redoRecorder.setIds(ids, types);
-
-                List<Integer> successfulIds = new ArrayList<Integer>(ids.length);
-                for (int i = ids.length-1; i>=0; i--) {
-                    int id = ids[i];
-                    byte type = types[i];
-                    try {
-                        MailItem item = getItemById(null, id, type);
-                        item.reindex(null, false, null);
-                        successfulIds.add(id);
-                        if (item.getParentId() > 0)
-                            item.getParent().inheritedTagChanged(mIndexingDeferredFlag, false);
-                        item.tagChanged(mIndexingDeferredFlag, false);
-                        itemsIndexed++;
-                    } catch(ServiceException  e) {
-                        ZimbraLog.mailbox.info("Error indexing deferred item id = "+id+".  Item will not be indexed.", e);
-                    } catch(java.lang.RuntimeException e) {
-                        ZimbraLog.mailbox.info("Error indexing deferred item id = "+id+".  Item will not be indexed.", e);
-                    }
-                }
-                
-                if (successfulIds.size() > 0) {
-                    mCurrentChange.idxDeferredCount = ids.length - successfulIds.size();
-                    
-                    // set the flag in the DB
-                    DbMailItem.alterTag(mIndexingDeferredFlag, successfulIds, false);
-                }
-                
-                mMailboxIndex.flush();
-                
-                success = true;
-            } finally {
-                endTransaction(success);
+        synchronized(mIndexingDeferredItemsLock) {
+            synchronized(this) {
+                // must sync on 'this' to get correct value.  OK to release the 
+                // lock afterwards as we're just checking for 0 and we know the value
+                // can't go DOWN since we're holding mIndexingDeferredItemsLock
+                if (getIndexDeferredCount() <= 0)
+                    return;
             }
-            
-            if (ZimbraLog.mailbox.isDebugEnabled()) {
-                long elapsed = System.currentTimeMillis() - start;
-                double itemsPerMs = (1000.0*itemsIndexed) / elapsed;
-                ZimbraLog.mailbox.debug("Deferred Indexing: indexed "+itemsIndexed+" items in "+elapsed+"ms ("+itemsPerMs+"/sec)");
+            while (mIndexingDeferredItems) {
+                try {
+                    mIndexingDeferredItemsLock.wait();
+                } catch (InterruptedException e) {}
+            }
+            mIndexingDeferredItems = true;
+        }
+        try {
+            // at this point we know we're the only one in here
+            indexDeferredItemsInternal();
+        } finally {
+            synchronized(mIndexingDeferredItemsLock) {
+                synchronized(this) {
+                    mLastIndexDeferredTime = System.currentTimeMillis();
+                }                
+                mIndexingDeferredItems = false;
+                mIndexingDeferredItemsLock.notify();
             }
         }
     }
     
+    /**
+     * Do the actual work, index all the deferred items
+     */
+    private void indexDeferredItemsInternal() {
+        assert(!Thread.holdsLock(this));
+        assert(!Thread.holdsLock(mIndexingDeferredItemsLock));
+        assert (mIndexingDeferredItems);
+
+        long start = 0;
+        if (ZimbraLog.mailbox.isInfoEnabled()) 
+            start = System.currentTimeMillis();
+        
+        ///////////////////////////////
+        // Get the list of deferred items to index 
+        Collection<SearchResult>items = new ArrayList<SearchResult>();
+        synchronized(this) {
+            if (getIndexDeferredCount() <= 0) // check again, now that we have the mbox lock
+                return;
+            
+            try {
+                boolean success = false;
+                try {
+                    beginTransaction("IndexDeferredItems_Select", null);
+                    DbSearchConstraints c = new DbSearchConstraints();
+                    c.mailbox = this;
+                    c.tags = new HashSet<Tag>();
+                    c.tags.add(this.mIndexingDeferredFlag);
+                    c.sort = DbSearch.SORT_NONE;
+                    DbSearch.search(items, getOperationConnection(), c, SearchResult.ExtraData.NONE);
+                    
+                    int deferredCount = getIndexDeferredCount();
+                    if (items.size() != deferredCount) {
+                        if (ZimbraLog.mailbox.isInfoEnabled())
+                            ZimbraLog.mailbox.info("IndexDeferredItems: Deferred count out of sync - found "+items.size()+" deferred items (count="+getIndexDeferredCount()+")");
+                        mCurrentChange.idxDeferredCount = items.size();
+                    } else {
+                        if (ZimbraLog.mailbox.isDebugEnabled())
+                            ZimbraLog.mailbox.debug("IndexDeferredItems: found "+items.size()+" deferred items (count="+getIndexDeferredCount()+")");
+                    }
+                    success = true;
+                } finally {
+                    endTransaction(success);
+                }
+            } catch (ServiceException e) {
+                ZimbraLog.mailbox.info("Unable to index deferred items due to exception in step 1", e);
+                return;
+            }
+        }
+
+        BatchedIndexStatus status = new BatchedIndexStatus();
+        
+        try {
+            indexItemList(items, true, status);
+        } catch (ServiceException e) {
+            assert(false);
+            ZimbraLog.mailbox.error("Unexpected exception from Mailbox.indexItemList", e);
+        }
+
+        if (ZimbraLog.mailbox.isInfoEnabled()) {
+            long elapsed = System.currentTimeMillis() - start;
+            double itemsPerSec = (1000.0*(status.mNumProcessed-status.mNumFailed)) / elapsed;
+            int successful = status.mNumProcessed - status.mNumFailed;
+            if (ZimbraLog.mailbox.isInfoEnabled())
+                ZimbraLog.mailbox.info("Deferred Indexing: successfully indexed "+successful+" items in "+elapsed+"ms ("+itemsPerSec+"/sec). ("+
+                    (status.mNumFailed)+ " items failed to index).  IndexDeferredCount now at "+getIndexDeferredCount());
+        }
+    }
+    
+    /**
+     * Index a (protentially very large) list of MailItems.  Extract the indexable data outside of
+     * the mailbox lock and then index a chunk of items at a time into the mailbox.
+     *
+     * @param items
+     * @param forReindexAPI if TRUE, then this function will check the
+     * 
+     * @throws ServiceException.INTERRUPTED if status.mCancel is set to TRUE (by some other thread, synchronized on the Mailbox)
+     * 
+     */
+    private void indexItemList(Collection<SearchResult> items, boolean deferredItemsOnly, BatchedIndexStatus status) throws ServiceException {
+        assert(!Thread.holdsLock(this));
+        
+        ///////////////////////////////////
+        // Do the actual indexing: iterate through the list of items, fetch each one
+        // and call generateIndexData().  Buffer the items,IndexData into a chunk
+        // and when the chunk gets sufficiently large, run a Mailbox transaction
+        // to actually do the indexing
+        
+        // we reindex 'chunks' of items -- up to a certain size or count
+        List<Pair<MailItem, List<org.apache.lucene.document.Document>>> chunk = new ArrayList<Pair<MailItem, List<org.apache.lucene.document.Document>>>();
+        long itemSize = 0;
+        
+        // track the total number of deferred items which are indexed by looking at the
+        // deferred count before and after each chunk transaction
+        int idxDeferredChange = 0;
+        int itemsAttempted = 0;
+        
+        for (Iterator<SearchResult> iter = items.iterator(); iter.hasNext();) {
+            SearchResult sr = iter.next();
+            itemsAttempted++;
+
+            MailItem item = null;
+            try {
+                item = getItemById(null, sr.id, sr.type);
+            } catch(ServiceException  e) {
+                if (ZimbraLog.index.isDebugEnabled())
+                    ZimbraLog.index.debug("Error fetching deferred item id = "+sr.id+".  Item will not be indexed.", e);
+            } catch(java.lang.RuntimeException e) {
+                if (ZimbraLog.index.isDebugEnabled())
+                    ZimbraLog.index.debug("Error fetching deferred item id = "+sr.id+".  Item will not be indexed.", e);
+            }
+            if (item != null && (!deferredItemsOnly|| ((item.getFlagBitmask()&Flag.BITMASK_INDEXING_DEFERRED)!=0))) {
+                itemSize += item.getSize();
+                try {
+                    assert(!Thread.holdsLock(this));
+                    chunk.add(new Pair<MailItem, List<org.apache.lucene.document.Document>>(item, item.generateIndexData()));
+                } catch (ServiceException e) {
+                    if (ZimbraLog.index.isDebugEnabled())
+                        ZimbraLog.index.debug("Error generating index data for item ID: " +item.getId()+ " Skipping item", e);
+                }
+            } else {
+                if (ZimbraLog.index.isDebugEnabled())
+                    ZimbraLog.index.debug("SKIPPING indexing of item "+sr.id+" ptr="+item);
+            }
+
+            if (!iter.hasNext() || itemSize > sBatchIndexMaxBytesPerTransaction || chunk.size() > sBatchIndexMaxItemsPerTransaction) {
+                // we've got a chunk -- lets index it all
+                try { 
+                    synchronized(this) {
+                        if (status.mCancel) {
+                            ZimbraLog.mailbox.warn("CANCELLING batch index of Mailbox "+getId()+" before it is complete.  ("+status.mNumProcessed+" processed out of "+items.size()+")");                            
+                            throw ServiceException.INTERRUPTED("ReIndexing Canceled");
+                        }
+                        int idxDeferredStart = this.getIndexDeferredCount();
+                        try {
+                            boolean success = false;
+                            try {
+                                beginTransaction("IndexItemList_Chunk", null);
+                                for (Pair<MailItem, List<org.apache.lucene.document.Document>> p : chunk) {
+                                    if (!deferredItemsOnly || (p.getFirst().getFlagBitmask()&Flag.BITMASK_INDEXING_DEFERRED)!=0) {
+                                        queueForIndexing(p.getFirst(), false, p.getSecond());
+                                    }
+                                }
+                                success = true;
+                            } finally {
+                                endTransaction(success);
+                            }
+                        } catch (ServiceException e) {
+                            if (ZimbraLog.index.isDebugEnabled()) {
+                                StringBuilder sb = new StringBuilder();
+                                for (Pair<MailItem, List<org.apache.lucene.document.Document>> p : chunk) 
+                                    sb.append(p.getFirst().getId()).append(',');
+                                ZimbraLog.index.debug("Error deferred-indexing one chunk: "+sb.toString()+" skipping it");
+                            }
+                        }
+                        if (deferredItemsOnly) {
+                            // can infer success/failure by looking at IndexDeferredCount
+                            int idxDeferredCountNow = this.getIndexDeferredCount();
+                            idxDeferredChange +=  idxDeferredCountNow - idxDeferredStart;
+                            status.mNumProcessed = itemsAttempted;
+                            // success = idxDeferredChange
+                            // failure + success = attempt
+                            // failure = accempt - success
+                            status.mNumFailed = itemsAttempted + idxDeferredChange;
+                        } else {
+                            // can't track failures easily, skip it. 
+                            status.mNumProcessed = itemsAttempted;
+                        }
+                    }
+                } finally {
+                    chunk.clear();
+                    itemSize = 0;
+                }
+            }
+            if (ZimbraLog.mailbox.isDebugEnabled() && ((itemsAttempted % 2000) == 0)) {
+                ZimbraLog.mailbox.debug("Batch Indexing: Mailbox "+getId()+" on item "+mReIndexStatus.mNumProcessed+" out of "+items.size());
+            }
+        }
+    }
+    
+    
+    /**
+     * Entry point for Redo-logging system only.  Everybody else should use queueItemForIndexing inside a transactino
+     * 
+     * @throws ServiceException
+     */
+    public void redoIndexItem(MailItem item, boolean deleteFirst, int itemId, byte itemType, long timestamp, 
+        boolean noRedo, List<org.apache.lucene.document.Document> docList)
+    throws IOException, ServiceException {
+        IndexItem redo = null;
+        if (!noRedo) {
+            redo = new IndexItem(getId(), item.getId(), itemType, deleteFirst);
+            redo.start(System.currentTimeMillis());
+            redo.log();
+            redo.allowCommit();
+        }
+        
+        boolean success = false;
+        try {
+            if (getMailboxIndex() != null) {
+                getMailboxIndex().indexMailItem(this, redo, deleteFirst, docList, item);
+            }
+            success = true;
+        } catch (Throwable t) {
+            ZimbraLog.index.warn("Skipping indexing; Unable to parse message " + itemId + ": " + t.toString(), t);
+        } finally {
+            if (!success)
+                redo.abort();
+        }
+    }
+            
     /**
      * This is the preferred form of the API call.
      * 
@@ -3276,7 +3444,7 @@ public class Mailbox {
             return MailboxIndex.search(proto, octxt, this, params, getIndexDeferredCount()>0);
         } catch (MailServiceException e) {
             if (e.getCode() == MailServiceException.TEXT_INDEX_OUT_OF_SYNC) {
-                indexDeferredItems(null); // MUST be null here, even though the search context might not see the full mbox 
+                indexDeferredItems();
                 return MailboxIndex.search(proto, octxt, this, params, false);
             } else throw e;
         }
@@ -3631,18 +3799,21 @@ public class Mailbox {
         }
     }
 
-    public synchronized int[] addInvite(OperationContext octxt, Invite inv, int folderId)
+    public int[] addInvite(OperationContext octxt, Invite inv, int folderId)
     throws ServiceException {
+        maybeIndexDeferredItems();
         return addInvite(octxt, inv, folderId, null, false);
     }
 
-    public synchronized int[] addInvite(OperationContext octxt, Invite inv, int folderId, ParsedMessage pm)
+    public int[] addInvite(OperationContext octxt, Invite inv, int folderId, ParsedMessage pm)
     throws ServiceException {
+        maybeIndexDeferredItems();
         return addInvite(octxt, inv, folderId, pm, false);
     }
 
-    public synchronized int[] addInvite(OperationContext octxt, Invite inv, int folderId, boolean removeAlarms)
+    public int[] addInvite(OperationContext octxt, Invite inv, int folderId, boolean removeAlarms)
     throws ServiceException {
+        maybeIndexDeferredItems();
         return addInvite(octxt, inv, folderId, null, removeAlarms);
     }
 
@@ -3658,7 +3829,7 @@ public class Mailbox {
      * @return int[2] = { calendar-item-id, invite-mail-item-id }  Note that even though the invite has a mail-item-id, that mail-item does not really exist, it can ONLY be referenced through the calendar item "calItemId-invMailItemId"
      * @throws ServiceException
      */
-    public synchronized int[] addInvite(OperationContext octxt, Invite inv, int folderId,
+    public int[] addInvite(OperationContext octxt, Invite inv, int folderId,
                                         ParsedMessage pm, boolean removeAlarms)
     throws ServiceException {
         if (pm == null) {
@@ -3677,51 +3848,53 @@ public class Mailbox {
         }
 
         CreateInvite redoRecorder = new CreateInvite(mId, inv, folderId, data);
-
-        boolean success = false;
-        try {
-            beginTransaction("addInvite", octxt, redoRecorder);
-            CreateInvite redoPlayer = (octxt == null ? null : (CreateInvite) octxt.getPlayer());
-            short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId() : redoPlayer.getVolumeId();
-
-            if (redoPlayer == null || redoPlayer.getCalendarItemId() == 0) {
-                inv.setInviteId(getNextItemId(Mailbox.ID_AUTO_INCREMENT));
-            }
-
-            // Clear alarms if requested. (but not during a redo)
-            if (removeAlarms && redoPlayer == null)
-                inv.clearAlarms();
-
-            boolean calItemIsNew = false;
-            CalendarItem calItem = getCalendarItemByUid(inv.getUid());
-            if (calItem == null) { 
-                // ONLY create an calendar item if this is a REQUEST method...otherwise don't.
-                if (inv.getMethod().equals("REQUEST") || inv.getMethod().equals("PUBLISH")) {
-                    calItem = createCalendarItem(folderId, volumeId, 0, 0, inv.getUid(), pm, inv, 0);
-                    calItemIsNew = true;
+        
+        synchronized(this) {
+            boolean success = false;
+            try {
+                beginTransaction("addInvite", octxt, redoRecorder);
+                CreateInvite redoPlayer = (octxt == null ? null : (CreateInvite) octxt.getPlayer());
+                short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId() : redoPlayer.getVolumeId();
+                
+                if (redoPlayer == null || redoPlayer.getCalendarItemId() == 0) {
+                    inv.setInviteId(getNextItemId(Mailbox.ID_AUTO_INCREMENT));
+                }
+                
+                // Clear alarms if requested. (but not during a redo)
+                if (removeAlarms && redoPlayer == null)
+                    inv.clearAlarms();
+                
+                boolean calItemIsNew = false;
+                CalendarItem calItem = getCalendarItemByUid(inv.getUid());
+                if (calItem == null) { 
+                    // ONLY create an calendar item if this is a REQUEST method...otherwise don't.
+                    if (inv.getMethod().equals("REQUEST") || inv.getMethod().equals("PUBLISH")) {
+                        calItem = createCalendarItem(folderId, volumeId, 0, 0, inv.getUid(), pm, inv, 0);
+                        calItemIsNew = true;
+                    } else {
+//                      mLog.info("Mailbox " + getId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c not a REQUEST and no CalendarItem could be found");
+                        return null; // for now, just ignore this Invitation
+                    }
                 } else {
-//                  mLog.info("Mailbox " + getId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c not a REQUEST and no CalendarItem could be found");
-                    return null; // for now, just ignore this Invitation
+                    if (!checkItemChangeID(calItem))
+                        throw MailServiceException.MODIFY_CONFLICT();
+                    if (inv.getMethod().equals("REQUEST") || inv.getMethod().equals("PUBLISH")) {
+                        // Preserve invId.  (bug 19868)
+                        Invite currInv = calItem.getInvite(inv.getRecurId());
+                        if (currInv != null)
+                            inv.setInviteId(currInv.getMailItemId());
+                    }
+                    calItem.processNewInvite(pm, inv, folderId, volumeId, 0, !removeAlarms, false);
                 }
-            } else {
-                if (!checkItemChangeID(calItem))
-                    throw MailServiceException.MODIFY_CONFLICT();
-                if (inv.getMethod().equals("REQUEST") || inv.getMethod().equals("PUBLISH")) {
-                    // Preserve invId.  (bug 19868)
-                    Invite currInv = calItem.getInvite(inv.getRecurId());
-                    if (currInv != null)
-                        inv.setInviteId(currInv.getMailItemId());
-                }
-                calItem.processNewInvite(pm, inv, folderId, volumeId, 0, !removeAlarms, false);
+                if (calItem != null) 
+                    queueForIndexing(calItem, !calItemIsNew, null);
+                redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId(), volumeId);
+                
+                success = true;
+                return new int[] { calItem.getId(), inv.getMailItemId() };
+            } finally {
+                endTransaction(success);
             }
-            if (calItem != null)
-                queueForIndexing(calItem, !calItemIsNew, null);
-            redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId(), volumeId);
-
-            success = true;
-            return new int[] { calItem.getId(), inv.getMailItemId() };
-        } finally {
-            endTransaction(success);
         }
     }
 
@@ -3896,6 +4069,7 @@ public class Mailbox {
                 boolean noICal, int flags, String tagStr, int conversationId,
                 String rcptEmail, SharedDeliveryContext sharedDeliveryCtxt)
     throws IOException, ServiceException {
+        maybeIndexDeferredItems();
         // make sure the message has been analyzed before taking the Mailbox lock
         if (sDebugBatchMessageIndexSize==0)
             pm.analyzeFully();
@@ -4022,6 +4196,8 @@ public class Mailbox {
             // batched indexing
             if (deferIndexing) {
                 flags |= Flag.BITMASK_INDEXING_DEFERRED;
+                mCurrentChange.idxDeferredCount = Math.max(0, 
+                    (mCurrentChange.idxDeferredCount == MailboxChange.NO_CHANGE ? mData.idxDeferredCount : mCurrentChange.idxDeferredCount) + 1);
             }
 
             folder  = getFolderById(folderId);
@@ -4222,11 +4398,8 @@ public class Mailbox {
             markOtherItemDirty(mboxBlob);
 
             if (!deferIndexing) {
-                queueForIndexing(msg, false, pm);
-            } else {
-                mCurrentChange.idxDeferredCount = Math.max(0, 
-                    (mCurrentChange.idxDeferredCount == MailboxChange.NO_CHANGE ? mData.idxDeferredCount : mCurrentChange.idxDeferredCount) + 1);
-            }
+                queueForIndexing(msg, false, pm.getLuceneDocuments());
+            } 
             
             success = true;
         } finally {
@@ -4255,9 +4428,6 @@ public class Mailbox {
             ZimbraLog.mailbox.info("Added message: id=%d, digest=%s, folderId=%d, folderName=%s",
                 msg.getId(), digest, folderId, folderName);
         }
-        
-        if (sDebugBatchMessageIndexSize > 0 && getIndexDeferredCount() >= sDebugBatchMessageIndexSize)
-            indexDeferredItems(null); // MUST be null here, even though the overall context might not be the full mbx context
         
         return msg;
     }
@@ -4313,6 +4483,8 @@ public class Mailbox {
 
     public Message saveDraft(OperationContext octxt, ParsedMessage pm, int id, String origId, String replyType, String identityId)
     throws IOException, ServiceException {
+        maybeIndexDeferredItems();
+        
         // make sure the message has been analzyed before taking the Mailbox lock
         if (sDebugBatchMessageIndexSize==0)
             pm.analyzeFully();
@@ -4366,7 +4538,7 @@ public class Mailbox {
             redoRecorder.setMessageBodyInfo(data, blob.getPath(), blob.getVolumeId());
 
             // NOTE: msg is now uncached (will this cause problems during commit/reindex?)
-            queueForIndexing(msg, true, pm);
+            queueForIndexing(msg, true, pm.getLuceneDocuments());
             success = true;
             return msg;
         } finally {
@@ -5083,7 +5255,7 @@ public class Mailbox {
 
             redoRecorder.setContactId(con.getId());
             redoRecorder.setVolumeId(volumeId);
-            queueForIndexing(con, false, pc);
+            queueForIndexing(con, false, pc.getLuceneDocuments(this));
 
             success = true;
             return con;
@@ -5096,40 +5268,42 @@ public class Mailbox {
         modifyContactInternal(octxt, contactId, pc.analyze(this));
     }
 
-    public synchronized void modifyContactInternal(OperationContext octxt, int contactId, ParsedContact pc) throws ServiceException {
+    public void modifyContactInternal(OperationContext octxt, int contactId, ParsedContact pc) throws ServiceException {
         ModifyContact redoRecorder = new ModifyContact(mId, contactId, pc);
-
-        boolean success = false;
-        try {
-            beginTransaction("modifyContact", octxt, redoRecorder);
-            ModifyContact redoPlayer = (ModifyContact) mCurrentChange.getRedoPlayer();
-
-            Contact con = getContactById(contactId);
-            if (!checkItemChangeID(con))
-                throw MailServiceException.MODIFY_CONFLICT();
-
-            short volumeId = -1;
-            if (pc.hasAttachment()) {
-                if (redoPlayer != null)
-                    volumeId = redoPlayer.getVolumeId();
-                if (volumeId == -1)
-                    volumeId = Volume.getCurrentMessageVolume().getId();
-            }
-
+        pc.analyze(this);
+        synchronized(this) {
+            boolean success = false;
             try {
-                if (pc.getBlob() == null && con.getDigest() == null)
-                    con.setFields(pc);
-                else
-                    con.setContent(pc.getBlob(), pc.getDigest(), volumeId, pc);
-            } catch (IOException ioe) {
-                throw ServiceException.FAILURE("could not save contact blob", ioe);
+                beginTransaction("modifyContact", octxt, redoRecorder);
+                ModifyContact redoPlayer = (ModifyContact) mCurrentChange.getRedoPlayer();
+                
+                Contact con = getContactById(contactId);
+                if (!checkItemChangeID(con))
+                    throw MailServiceException.MODIFY_CONFLICT();
+                
+                short volumeId = -1;
+                if (pc.hasAttachment()) {
+                    if (redoPlayer != null)
+                        volumeId = redoPlayer.getVolumeId();
+                    if (volumeId == -1)
+                        volumeId = Volume.getCurrentMessageVolume().getId();
+                }
+                
+                try {
+                    if (pc.getBlob() == null && con.getDigest() == null)
+                        con.setFields(pc);
+                    else
+                        con.setContent(pc.getBlob(), pc.getDigest(), volumeId, pc);
+                } catch (IOException ioe) {
+                    throw ServiceException.FAILURE("could not save contact blob", ioe);
+                }
+                
+                redoRecorder.setVolumeId(volumeId);
+                queueForIndexing(con, true, pc.getLuceneDocuments(this));
+                success = true;
+            } finally {
+                endTransaction(success);
             }
-
-            redoRecorder.setVolumeId(volumeId);
-            queueForIndexing(con, true, pc);
-            success = true;
-        } finally {
-            endTransaction(success);
         }
     }
 
@@ -5564,6 +5738,7 @@ public class Mailbox {
     }
 
     public Document addDocumentRevision(OperationContext octxt, int docId, byte type, byte[] rawData, String author) throws ServiceException {
+        maybeIndexDeferredItems();
         Document doc = getDocumentById(octxt, docId);
         ParsedDocument pd = new ParsedDocument(rawData, doc.getName(), doc.getContentType(), System.currentTimeMillis(), author);
         return addDocumentRevision(octxt, docId, type, pd);
@@ -5585,7 +5760,7 @@ public class Mailbox {
             redoRecorder.setMessageBodyInfo(pd.getContent(), "", volumeId);
 
             doc.setContent(pd.getContent(), pd.getDigest(), volumeId, pd);
-            queueForIndexing(doc, false, pd);
+            queueForIndexing(doc, false, pd.getDocumentList());
 
             success = true;
             return doc;
@@ -5608,6 +5783,7 @@ public class Mailbox {
     	
     public Document createDocument(OperationContext octxt, int folderId, String filename, String mimeType, String author, byte[] rawData, byte type)
     throws ServiceException {
+        maybeIndexDeferredItems();
         ParsedDocument pd = new ParsedDocument(rawData, filename, mimeType, System.currentTimeMillis(), author);
         return createDocument(octxt, folderId, pd, type);
     }
@@ -5641,7 +5817,7 @@ public class Mailbox {
             redoRecorder.setMessageId(doc.getId());
             doc.setContent(pd.getContent(), pd.getDigest(), volumeId, pd);
 
-            queueForIndexing(doc, false, pd);
+            queueForIndexing(doc, false, pd.getDocumentList());
             success = true;
             return doc;
         } catch (IOException ioe) {
@@ -5674,6 +5850,7 @@ public class Mailbox {
         if (pm == null)
             throw ServiceException.INVALID_REQUEST("null ParsedMessage when adding chat to mailbox " + mId, null);
         
+        maybeIndexDeferredItems();
         if (sDebugBatchMessageIndexSize==0)
             pm.analyzeFully();
         
@@ -5708,7 +5885,8 @@ public class Mailbox {
                 chat = Chat.create(itemId, getFolderById(folderId), pm, msgSize, digest, volumeId, false, flags, tags);
                 redoRecorder.setMessageId(chat.getId());
                 sm.link(blob, this, itemId, chat.getSavedSequence(), chat.getVolumeId());
-                queueForIndexing(chat, false, pm);
+                if (sDebugBatchMessageIndexSize==0) 
+                    queueForIndexing(chat, false, pm.getLuceneDocuments());
                 success = true;
             } finally {
                 endTransaction(success);
@@ -5728,6 +5906,9 @@ public class Mailbox {
         } catch (MessagingException me) {
             throw MailServiceException.MESSAGE_PARSE_ERROR(me);
         }
+        
+        if (sDebugBatchMessageIndexSize == 0)
+            pm.analyzeFully();
         
         SaveChat redoRecorder = new SaveChat(mId, id, digest, size, -1, 0, null);
         boolean success = false;
@@ -5752,7 +5933,7 @@ public class Mailbox {
             redoRecorder.setMessageBodyInfo(data, blob.getPath(), blob.getVolumeId());
 
             // NOTE: msg is now uncached (will this cause problems during commit/reindex?)
-            queueForIndexing(chat, true, pm);
+            queueForIndexing(chat, true, pm.getLuceneDocuments());
             success = true;
             return chat;
         } finally {
@@ -5891,6 +6072,7 @@ public class Mailbox {
      * @throws ServiceException
      */
     synchronized void endTransaction(boolean success) throws ServiceException {
+        assert(Thread.holdsLock(this));
         if (!mCurrentChange.isActive()) {
             // would like to throw here, but it might cover another exception...
             ZimbraLog.mailbox.warn("cannot end a transaction when not inside a transaction", new Exception());
@@ -5928,7 +6110,7 @@ public class Mailbox {
         if (mCurrentChange.octxt != null)
             needRedo = mCurrentChange.octxt.needRedo();
         RedoableOp redoRecorder = mCurrentChange.recorder;
-        IndexItem indexRedo = null;
+        List<IndexItem> indexRedoList = null;
         Map<MailItem, MailboxChange.IndexItemEntry> itemsToIndex = mCurrentChange.indexItems;
         boolean indexingNeeded = !itemsToIndex.isEmpty() && !DebugConfig.disableIndexing;
 
@@ -5943,29 +6125,56 @@ public class Mailbox {
         boolean allGood = false;
         try {
             if (indexingNeeded) {
+                indexRedoList = new ArrayList<IndexItem>();
                 
                 // See bug 15072 - we need to clear mCurrentChange.indexItems (it is stored in a temporary)
                 // here, just in case item.reindex() recurses into a new transaction...
                 mCurrentChange.indexItems = new HashMap<MailItem, MailboxChange.IndexItemEntry>();
                 
-                int numIndexingFailed = 0;
+                // track to see if we make a net change to idxDeferredCount -- if so we'll need to re-write the Mailbox
+                // row to the DB an extra time
+                int idxDeferredChange = 0;
+                
+                List<Integer> deferredTagsToClear = new ArrayList<Integer>();
+                List<Integer> deferredTagsToSet = new ArrayList<Integer>();
                 
                 for (Map.Entry<MailItem, MailboxChange.IndexItemEntry> entry : itemsToIndex.entrySet()) {
                     MailItem item = entry.getKey();
+                    if (entry.getValue().mData == null)
+                        entry.getValue().mData = item.generateIndexData();
 
+                    IndexItem indexRedo = null;
+                    
                     if (needRedo) {
                         indexRedo = new IndexItem(mId, item.getId(), item.getType(), entry.getValue().mDeleteFirst);
                         indexRedo.start(getOperationTimestampMillis());
-                        indexRedo.setParentOp(redoRecorder);
+                        if (redoRecorder != null) {
+                            indexRedo.setParentOp(redoRecorder);
+                            indexRedoList.add(indexRedo);
+                        } else {
+                            // there's no outer redoOp here so don't bother with the list, we can let this indexRedo commit whenever it wants to
+                            indexRedo.allowCommit();
+                        }
                     }
 
                     try {
                         // 2. Index the item before committing the main
-                        // transaction.  This allows us to fail the entire
-                        // transaction when indexing fails.  Write the change
-                        // record for indexing only after indexing actually
-                        // works.
-                        item.reindex(indexRedo, entry.getValue().mDeleteFirst, entry.getValue().mData);
+                        // transaction.  This allows us to set the "Indexing Deferred
+                        // for this item" flag if indexing fails, without creating
+                        // an extra DB transaction.  Write the log record for indexing 
+                        // only after indexing actually works.
+                        if (getMailboxIndex() != null) {
+                            getMailboxIndex().indexMailItem(this, indexRedo, entry.getValue().mDeleteFirst, entry.getValue().mData, item);
+                        }
+                        
+                        if ((item.getFlagBitmask() & Flag.BITMASK_INDEXING_DEFERRED) != 0) {
+                            // IndexingDeferredFlag set, so we need to clear it
+                            deferredTagsToClear.add(item.getId());
+                            item.tagChanged(mIndexingDeferredFlag, false);
+                            mCurrentChange.idxDeferredCount = Math.max(0, 
+                                (mCurrentChange.idxDeferredCount == MailboxChange.NO_CHANGE ? mData.idxDeferredCount : mCurrentChange.idxDeferredCount) - 1);
+                            idxDeferredChange--;
+                        }
                         
                         // 3. Write the change redo record for indexing
                         //    sub-transaction to guarantee that it appears in the
@@ -5978,17 +6187,33 @@ public class Mailbox {
                         if (needRedo)
                             indexRedo.log();
                     } catch (Exception e) {
-                        ZimbraLog.index.info("Caught exception while indexing message id "+item.mId+" - indexing deferred", e);
-                        DbMailItem.alterTag(item, mIndexingDeferredFlag, true);
-                        item.tagChanged(mIndexingDeferredFlag, true);
-                        mCurrentChange.idxDeferredCount = Math.max(0, 
-                            (mCurrentChange.idxDeferredCount == MailboxChange.NO_CHANGE ? mData.idxDeferredCount : mCurrentChange.idxDeferredCount) + 1);
-                        numIndexingFailed++;
+                        if (ZimbraLog.index.isInfoEnabled())
+                            ZimbraLog.index.info("Caught exception while indexing message id "+item.mId+" - indexing deferred", e);
+                        
+                        if ((item.getFlagBitmask() & Flag.BITMASK_INDEXING_DEFERRED) == 0) {
+                            // IndexingDeferredFlag NOT set, so we need to set it
+                            deferredTagsToSet.add(item.getId());
+                            item.tagChanged(mIndexingDeferredFlag, true);
+                            mCurrentChange.idxDeferredCount = Math.max(0, 
+                                (mCurrentChange.idxDeferredCount == MailboxChange.NO_CHANGE ? mData.idxDeferredCount : mCurrentChange.idxDeferredCount) + 1);
+                            idxDeferredChange++;
+                        }
                     }
                 }
-                if (numIndexingFailed > 0) {
+                if (!deferredTagsToClear.isEmpty()) {
+                    if (conn == null)
+                        conn = getOperationConnection();
+                    DbMailItem.alterTag(mIndexingDeferredFlag, deferredTagsToClear, false);
+                }
+                if (!deferredTagsToSet.isEmpty()) {
+                    if (conn == null)
+                        conn = getOperationConnection();
+                    DbMailItem.alterTag(mIndexingDeferredFlag, deferredTagsToSet, true);
+                }
+                if (idxDeferredChange != 0) {
                     DbMailbox.updateMailboxStats(this);// must persist idxDeferedCount to DB
-                    ZimbraLog.index.warn("Indexing failure for index "+this.getMailboxIndex().toString()+". Currently "+this.getIndexDeferredCount()+" deferred index items.");
+                    if (ZimbraLog.index.isDebugEnabled()) 
+                        ZimbraLog.index.debug("Indexing deferred count changed ("+idxDeferredChange+").  Currently "+this.getIndexDeferredCount()+" deferred index items.");
                 }
             }
             
@@ -6024,8 +6249,10 @@ public class Mailbox {
                 // being redone during crash recovery when main transaction
                 // was never committed.
                 if (needRedo) {
-                    if (indexRedo != null)
-                        indexRedo.abort();
+                    if (indexRedoList != null)
+                        for (IndexItem indexRedo : indexRedoList) 
+                            indexRedo.abort();
+                    
                     if (redoRecorder != null)
                         redoRecorder.abort();
                 }
@@ -6070,8 +6297,9 @@ public class Mailbox {
                 //    is initialized to block the commit attempt by default.
                 //    At this point we've written the commit-main record, so
                 //    unblock the commit on indexing.
-                if (indexRedo != null)
-                    indexRedo.allowCommit();
+                if (indexRedoList != null)
+                    for (IndexItem indexRedo : indexRedoList)
+                        indexRedo.allowCommit();
             }
 
             // 7. We are finally done with database and redo commits.
@@ -6080,6 +6308,7 @@ public class Mailbox {
         }
     }
 
+    // if the incoming message has one of these flags, don't up our "new messages" counter
     public static final int NON_DELIVERY_FLAGS = Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME | Flag.BITMASK_COPIED | Flag.BITMASK_DELETED;
 
     void snapshotCounts() throws ServiceException {
@@ -6189,10 +6418,12 @@ public class Mailbox {
                     for (int i = 0; i < deleted.indexIds.size(); i++)
                         indexIds[i] = deleted.indexIds.get(i);
                     int[] deletedIds = mMailboxIndex.deleteDocuments(indexIds);
-                    if (deletedIds != indexIds)
-                        ZimbraLog.mailbox.warn("could not delete all index entries for items: " + deleted.itemIds.getAll());
+                    if (deletedIds != indexIds) {
+                        if (ZimbraLog.index.isInfoEnabled()) 
+                            ZimbraLog.index.info("could not delete all index entries for items: " + deleted.itemIds.getAll());
+                    }
                 } catch (IOException e) {
-                    ZimbraLog.mailbox.warn("ignoring error while deleting index entries for items: " + deleted.itemIds.getAll(), e);
+                    ZimbraLog.index.warn("ignoring error while deleting index entries for items: " + deleted.itemIds.getAll(), e);
                 }
             }
                 

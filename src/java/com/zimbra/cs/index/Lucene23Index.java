@@ -56,7 +56,6 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.localconfig.DebugConfig;
-import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.stats.ZimbraPerf;
 
@@ -194,18 +193,19 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
             }
         }
     }
-    
+
     public void addDocument(IndexItem redoOp, Document doc, int indexId, long receivedDate, 
-        MailItem mi, boolean deleteFirst) throws IOException {
-        addDocument(redoOp, new Document[] { doc }, indexId, receivedDate, mi, deleteFirst);
+        String sortSubject, String sortSender, boolean deleteFirst) throws IOException {
+        addDocument(redoOp, new Document[] { doc }, indexId, receivedDate, sortSubject, sortSender, deleteFirst);
     }
     
     public void addDocument(IndexItem redoOp, Document[] docs, int indexId, long receivedDate, 
-        MailItem mi, boolean deleteFirst) throws IOException {
+        String sortSubject, String sortSender, boolean deleteFirst) throws IOException {
+        if (docs.length == 0)
+            return;
+        
         long start = 0;
         synchronized(getLock()) {        
-            if (sLog.isDebugEnabled())
-                start = System.currentTimeMillis();
             
             openIndexWriter();
             try {
@@ -219,8 +219,8 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
                         doc.removeFields(LuceneFields.L_SORT_SUBJECT);
                         doc.removeFields(LuceneFields.L_SORT_NAME);
                         //                                                                                                  store, index, tokenize
-                        doc.add(new Field(LuceneFields.L_SORT_SUBJECT, mi.getSortSubject(), Field.Store.NO, Field.Index.UN_TOKENIZED));
-                        doc.add(new Field(LuceneFields.L_SORT_NAME,    mi.getSortSender(), Field.Store.NO, Field.Index.UN_TOKENIZED));
+                        doc.add(new Field(LuceneFields.L_SORT_SUBJECT, sortSubject, Field.Store.NO, Field.Index.UN_TOKENIZED));
+                        doc.add(new Field(LuceneFields.L_SORT_NAME,    sortSender, Field.Store.NO, Field.Index.UN_TOKENIZED));
                         
                         doc.removeFields(LuceneFields.L_MAILBOX_BLOB_ID);
                         doc.add(new Field(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(indexId), Field.Store.YES, Field.Index.UN_TOKENIZED));
@@ -243,17 +243,11 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
                             mIndexWriter.addDocument(doc);
                         }
                         
-                        if (redoOp != null)
-                            mUncommittedRedoOps.add(redoOp);
-                        
-//                        Field[] fs = doc.getFields(LuceneFields.L_MAILBOX_BLOB_ID);
-//                        for (Field f : fs) {
-////                            sLog.warn("IndexId of "+indexId+" for field: "+f.toString()+" in Document "+doc);
-//                            if (!f.stringValue().equals(Integer.toString(indexId))) {
-//                                sLog.warn("IndexId of "+indexId+" doesn't match field: "+f.toString());
-//                            }
-//                        }
-                    }
+                    } // synchronized(doc)
+                } // foreach Document
+
+                if (redoOp != null) {
+                    mUncommittedRedoOps.add(redoOp);
                 }
                 
                 // tim: this might seem bad, since an index in steady-state-of-writes will never get flushed, 
@@ -268,15 +262,8 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
                 if (sLog.isDebugEnabled()) {
                     sLog.debug("Flushing " + toString() + " because of too many uncommitted redo ops");
                 }
-//                this.checkBlobIds();
                 flush();
             }
-        }
-        
-        if (sLog.isDebugEnabled()) {
-            long end = System.currentTimeMillis();
-            long elapsed = end - start;
-            sLog.debug("Lucene23Index.addDocument took " + elapsed + " msec");
         }
     }
     

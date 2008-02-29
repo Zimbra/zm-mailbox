@@ -21,6 +21,8 @@
 package com.zimbra.cs.mime;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.mail.util.ByteArrayDataSource;
 
@@ -110,6 +112,11 @@ public class ParsedDocument {
     public String getContentType()  { return mContentType; }
 
     public Document getDocument()   { return mDocument; }  // it could return null if the conversion has failed
+    public List<Document> getDocumentList() { 
+        List<Document> toRet = new ArrayList<Document>(1); 
+        toRet.add(mDocument); 
+        return toRet; 
+    }
     public String getFragment()     { return mFragment; }
 
     public String getCreator()      { return mCreator; }

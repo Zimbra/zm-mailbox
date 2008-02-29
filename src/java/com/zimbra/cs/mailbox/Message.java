@@ -31,14 +31,12 @@ import javax.mail.internet.MimeMessage;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.calendar.*;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.TnefConverter;
-import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.common.service.ServiceException;
@@ -501,24 +499,22 @@ public class Message extends MailItem {
         return copy;
     }
 
-    @Override public void reindex(IndexItem redo, boolean deleteFirst, Object indexData) throws ServiceException {
-        MailboxIndex mi = mMailbox.getMailboxIndex();
-        if (mi == null)
-            return;
-        
-        ParsedMessage pm = (ParsedMessage) indexData;
-        if (pm == null) {
+    @Override public List<org.apache.lucene.document.Document> generateIndexData() throws ServiceException {
+        ParsedMessage pm = null;
+        synchronized(this.getMailbox()) {
             // force the pm's received-date to be the correct one
             pm = new ParsedMessage(getMimeMessage(), getDate(),getMailbox().attachmentsIndexingEnabled());
-            
-            // because of bug 8263, we sometimes have fragments that are incorrect:
-            // check them here and correct them if necessary
-            if (pm.getFragment().compareTo(getFragment()) != 0) {
-                getMailbox().reanalyze(getId(), getType(),  pm);
-            }
         }
-
-        mi.indexMessage(mMailbox, redo, deleteFirst, pm, this);
+        
+        pm.analyzeFully(); // don't hold the lock while extracting text!
+        
+        // because of bug 8263, we sometimes have fragments that are incorrect:
+        // check them here and correct them if necessary
+        if (pm.getFragment().compareTo(getFragment()) != 0) {
+            getMailbox().reanalyze(getId(), getType(),  pm);
+        }
+        
+        return pm.getLuceneDocuments();
     }
 
 

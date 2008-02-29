@@ -18,14 +18,11 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
 /**
- * 
+ * This class is deprecated and obsolete.
  */
 public class IndexDeferredItems extends RedoableOp {
     
@@ -85,8 +82,7 @@ public class IndexDeferredItems extends RedoableOp {
 
     @Override
     public void redo() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
-        mbox.indexDeferredItems(new OperationContext(this));
+        // do nothing.
     }
 
 }

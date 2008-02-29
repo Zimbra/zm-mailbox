@@ -99,7 +99,7 @@ public class ReIndex extends AdminDocumentHandler {
                 if (!mbox.isReIndexInProgress()) {
                     throw ServiceException.NOT_IN_PROGRESS(accountId, "ReIndex");
                 }
-                Mailbox.ReIndexStatus status = mbox.getReIndexStatus();
+                Mailbox.BatchedIndexStatus status = mbox.getReIndexStatus();
                 addStatus(response, status);
             }
             response.addAttribute(AdminConstants.A_STATUS, "running");
@@ -110,7 +110,7 @@ public class ReIndex extends AdminDocumentHandler {
                     throw ServiceException.NOT_IN_PROGRESS(accountId, "ReIndex");
                 }
 
-                Mailbox.ReIndexStatus status = mbox.getReIndexStatus();
+                Mailbox.BatchedIndexStatus status = mbox.getReIndexStatus();
                 status.mCancel = true;
 
                 response.addAttribute(AdminConstants.A_STATUS, "cancelled");
@@ -123,7 +123,7 @@ public class ReIndex extends AdminDocumentHandler {
         return response;
     }
 
-    public static void addStatus(Element response, Mailbox.ReIndexStatus status) {
+    public static void addStatus(Element response, Mailbox.BatchedIndexStatus status) {
         Element prog = response.addElement(AdminConstants.E_PROGRESS);
         prog.addAttribute(AdminConstants.A_NUM_SUCCEEDED, (status.mNumProcessed-status.mNumFailed));
         prog.addAttribute(AdminConstants.A_NUM_FAILED, status.mNumFailed);

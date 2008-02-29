@@ -33,7 +33,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.TreeSet;
 
 import org.apache.log4j.Layout;
 import org.apache.log4j.Level;
@@ -43,13 +42,6 @@ import org.apache.log4j.WriterAppender;
 import org.apache.lucene.document.DateField;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.search.Hits;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.spans.SpanNearQuery;
-import org.apache.lucene.search.spans.SpanQuery;
-import org.apache.lucene.search.spans.SpanTermQuery;
-import org.apache.lucene.search.spans.Spans;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -134,21 +126,21 @@ public class IndexEditor {
     }
 
 
-    public void reIndexMsg(int mailboxId, int msg) {
-        MailboxIndex midx = null;
-        try {
-            Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailboxId);
-            midx = mbox.getMailboxIndex();
-            MailItem item = mbox.getItemById(null, msg, MailItem.TYPE_MESSAGE);
-            item.reindex(null, true, null);
-        } catch(Exception e) {
-            outputStream.println("Re-index FAILED with " + ExceptionToString.ToString(e));
-        } finally {
-            if (midx != null) {
-                midx.flush();
-            }
-        }
-    }
+//    public void reIndexMsg(int mailboxId, int msg) {
+//        MailboxIndex midx = null;
+//        try {
+//            Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailboxId);
+//            midx = mbox.getMailboxIndex();
+//            MailItem item = mbox.getItemById(null, msg, MailItem.TYPE_MESSAGE);
+//            item.reindex(null, true, null);
+//        } catch(Exception e) {
+//            outputStream.println("Re-index FAILED with " + ExceptionToString.ToString(e));
+//        } finally {
+//            if (midx != null) {
+//                midx.flush();
+//            }
+//        }
+//    }
 
 
     public interface QueryRunner
@@ -1203,10 +1195,10 @@ public class IndexEditor {
                 } else if (command.equals("re-index-all")) {
                     reIndexAll();
                 } else if (command.equals("re-index-msg")) {
-                    outputStream.print("MSGID> ");
-                    String msg = inputReader.readLine();
-                    int msgId = Integer.parseInt(msg);
-                    reIndexMsg(mailboxId, msgId);
+                    outputStream.print("MSGID> THIS_FUNCTION_CURRENTLY_UNIMPLEMENTED");
+//                    String msg = inputReader.readLine();
+//                    int msgId = Integer.parseInt(msg);
+//                    reIndexMsg(mailboxId, msgId);
                 } else if (command.equals("sort da")) {
                     sortOrder = SortBy.DATE_ASCENDING;
                     outputStream.println("---->Search order = DATE_ASCENDING");
