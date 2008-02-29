@@ -19,7 +19,6 @@ package com.zimbra.cs.fb;
 
 import java.util.*;
 
-import com.zimbra.cs.mailbox.CalendarItem.Instance;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
@@ -255,16 +254,16 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
             } else {
                 mStatus = IcalXmlStrMap.FBTYPE_FREE;
             }
-            mInstances = new LinkedHashSet<Instance>();
+            mInstances = new LinkedHashSet<FBInstance>();
         }
 
-        public Interval(long start, long end, String status, Instance instance) {
+        public Interval(long start, long end, String status, FBInstance instance) {
             this(start, end, status);
             if (instance != null)
                 mInstances.add(instance);
         }
 
-        public Interval(long start, long end, String status, LinkedHashSet<Instance> instances) {
+        public Interval(long start, long end, String status, LinkedHashSet<FBInstance> instances) {
             this(start, end, status);
             addInstances(instances);
         }
@@ -276,7 +275,7 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
             toRet.append(", status=").append(mStatus);
             toRet.append(", invites=[");
             int i = 0;
-            for (Instance instance : mInstances) {
+            for (FBInstance instance : mInstances) {
                 if (i > 0)
                     toRet.append(", ");
                 i++;
@@ -291,9 +290,9 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
         Interval mNext = null;
         Interval mPrev = null;
         String mStatus;
-        LinkedHashSet<Instance> mInstances;  // invites relevant to this interval
-                                             // LinkedHashSet rather than generic
-                                             // set to preserve insertion order
+        LinkedHashSet<FBInstance> mInstances;  // instances relevant to this interval
+                                               // LinkedHashSet rather than generic
+                                               // set to preserve insertion order
 
         void insertAfter(Interval other) {
             other.mNext = mNext;
@@ -311,7 +310,7 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
             }
         }
 
-        void addInstances(LinkedHashSet<Instance> instances) {
+        void addInstances(LinkedHashSet<FBInstance> instances) {
             if (instances != null)
                 mInstances.addAll(instances);
         }
@@ -324,7 +323,7 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
         public long getStart() { return mStart; }
         public long getEnd() { return mEnd; }
         public String getStatus() { return mStatus; }
-        public LinkedHashSet<Instance> getInstances() { return mInstances; }
+        public LinkedHashSet<FBInstance> getInstances() { return mInstances; }
 
         public boolean overlapsOrAbuts(Interval other) {
 //            return (other.mEnd > mStart && other.mStart < mEnd);  
@@ -350,8 +349,8 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
      * times.
      * @return
      */
-    public LinkedHashSet<Instance> getAllInstances() {
-        LinkedHashSet<Instance> instances = new LinkedHashSet<Instance>();
+    public LinkedHashSet<FBInstance> getAllInstances() {
+        LinkedHashSet<FBInstance> instances = new LinkedHashSet<FBInstance>();
         for (Iterator<Interval> iter = iterator(); iter.hasNext(); ) {
             Interval interval = iter.next();
             instances.addAll(interval.getInstances());
@@ -484,4 +483,49 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
     
     public long getStartTime() { return mStart; }
     public long getEndTime() { return mEnd; }
+
+    public static class FBInstance implements Comparable<FBInstance> {
+        private long mStartTime;
+        private long mEndTime;
+        private int mApptId;
+        private long mRecurIdDt;
+
+        public FBInstance(long start, long end, int apptId, long recurIdDt) {
+            mStartTime = start;
+            mEndTime = end;
+            mApptId = apptId;
+            mRecurIdDt = recurIdDt;
+        }
+
+        public long getStartTime() { return mStartTime; }
+        public long getEndTime()   { return mEndTime; }
+        public int getApptId()     { return mApptId; }
+        public long getRecurIdDt() { return mRecurIdDt; }
+
+        public int compareTo(FBInstance other) {
+            long startDiff = mStartTime - other.mStartTime;
+            if (startDiff != 0)
+                return (startDiff > 0) ? 1 : -1;
+            long endDiff = mEndTime - other.mEndTime;
+            if (endDiff != 0)
+                return (endDiff > 0) ? 1 : -1;
+            int idDiff = mApptId - other.mApptId;
+            if (idDiff != 0)
+                return idDiff;
+            long ridDiff = mRecurIdDt - other.mRecurIdDt;
+            if (ridDiff != 0)
+                return (ridDiff > 0) ? 1 : -1;
+            return 0;
+        }
+
+        public boolean equals(Object o) {
+            if (!(o instanceof FBInstance)) {
+                return false;
+            }
+
+            FBInstance other = (FBInstance) o;
+            return (mStartTime == other.mStartTime) && (mEndTime == other.mEndTime) &&
+                   (mApptId == other.mApptId) && (mRecurIdDt == other.mRecurIdDt);
+        }
+    }
 }

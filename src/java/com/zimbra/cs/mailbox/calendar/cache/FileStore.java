@@ -45,6 +45,13 @@ public class FileStore {
         return new File(path);
     }
 
+    static void deleteCalendarData(int mboxId, int folderId)
+    throws ServiceException {
+        File file = getCalFolderFile(mboxId, folderId);
+        if (file.exists())
+            file.delete();
+    }
+
     static void saveCalendarData(int mboxId, CalendarData calData)
     throws ServiceException {
         File file = getCalFolderFile(mboxId, calData.getFolderId());

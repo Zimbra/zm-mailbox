@@ -824,6 +824,24 @@ public abstract class CalendarItem extends MailItem {
         return null;
     }
 
+    public Invite getInviteForRecurId(long recurIdDtstamp) {
+        Invite defInv = null;
+        for (Invite inv : mInvites) {
+            RecurId rid = inv.getRecurId();
+            if (rid == null) {
+                if (defInv == null)
+                    defInv = inv;
+            } else {
+                ParsedDateTime dt = rid.getDt();
+                if (dt != null) {
+                    if (dt.getUtcTime() == recurIdDtstamp)
+                        return inv;
+                }
+            }
+        }
+        return defInv;
+    }
+
     public Invite getDefaultInviteOrNull() {
         Invite first = null;
         for (Invite cur : mInvites) {

@@ -16,29 +16,26 @@
  */
 package com.zimbra.cs.fb;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
-import com.zimbra.cs.db.DbSearch;
+import com.zimbra.cs.fb.FreeBusy.FBInstance;
 import com.zimbra.cs.fb.FreeBusy.Interval;
 import com.zimbra.cs.fb.FreeBusy.IntervalList;
 import com.zimbra.cs.mailbox.Appointment;
-import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.CalendarItem.Instance;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
-import com.zimbra.cs.mailbox.calendar.Invite;
-import com.zimbra.cs.mailbox.calendar.InviteInfo;
-import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
+import com.zimbra.cs.mailbox.calendar.cache.CalendarData;
+import com.zimbra.cs.mailbox.calendar.cache.CalendarItemData;
+import com.zimbra.cs.mailbox.calendar.cache.FullInstanceData;
+import com.zimbra.cs.mailbox.calendar.cache.InstanceData;
 
 public class LocalFreeBusyProvider {
 
@@ -69,82 +66,81 @@ public class LocalFreeBusyProvider {
 	throws ServiceException {
 		return getFreeBusyList(mbox, mbox.getAccount().getName(), start, end, exAppt);
 	}
-	
+
 	public static FreeBusy getFreeBusyList(Mailbox mbox, String name, long start, long end, Appointment exAppt)
-	throws ServiceException {
-//		Check if this account is an always-free calendar resource.
-		Account acct = mbox.getAccount();
-		if (acct instanceof CalendarResource) {
-			CalendarResource resource = (CalendarResource) acct;
-			if (resource.autoAcceptDecline() && !resource.autoDeclineIfBusy()) {
-				IntervalList intervals = new IntervalList(start, end);
-				return new FreeBusy(acct.getName(), intervals, start, end);
-			}
-		}
+    throws ServiceException {
+	    // Check if this account is an always-free calendar resource.
+        Account acct = mbox.getAccount();
+        if (acct instanceof CalendarResource) {
+            CalendarResource resource = (CalendarResource) acct;
+            if (resource.autoAcceptDecline() && !resource.autoDeclineIfBusy()) {
+                IntervalList intervals = new IntervalList(start, end);
+                return new FreeBusy(acct.getName(), intervals, start, end);
+            }
+        }
 
-		int exApptId = exAppt == null ? -1 : exAppt.getId();
+        int exApptId = exAppt == null ? -1 : exAppt.getId();
 
-		List<Folder> folders = mbox.getFolderList(null, DbSearch.SORT_NONE);
-		List<Folder> excludeFolders = new ArrayList<Folder>();
-		for (Folder f : folders) {
-			if ((f.getFlagBitmask() & Flag.BITMASK_EXCLUDE_FREEBUSY)!= 0)
-				excludeFolders.add(f);
-		}
+        IntervalList intervals = new IntervalList(start, end);
 
-		int[] exFolders = null;
-		if (excludeFolders.size() > 0) {
-			exFolders = new int[excludeFolders.size()];
-			int i = 0;
-			for (Folder f : excludeFolders)
-				exFolders[i++] = f.getId();
-		}
+        List<CalendarData> calDataList =
+            mbox.getAllCalendarsSummaryForRange(null, MailItem.TYPE_APPOINTMENT, start, end);
+        for (CalendarData calData : calDataList) {
+            int folderId = calData.getFolderId();
+            Folder f = mbox.getFolderById(null, folderId);
+            if ((f.getFlagBitmask() & Flag.BITMASK_EXCLUDE_FREEBUSY) != 0)
+                continue;
+            for (Iterator<CalendarItemData> iter = calData.calendarItemIterator(); iter.hasNext(); ) {
+                CalendarItemData appt = iter.next();
+                int apptId = appt.getCalItemId();
+                if (apptId == exApptId)
+                    continue;
+                FullInstanceData defaultInstance = appt.getDefaultData();
+                if (defaultInstance == null)
+                    continue;
+                boolean isTransparent = false;
+                String transp = defaultInstance.getTransparency();
+                isTransparent = IcalXmlStrMap.TRANSP_TRANSPARENT.equals(transp);
+                long defaultDuration = 0;
+                if (defaultInstance.getDuration() != null)
+                    defaultDuration = defaultInstance.getDuration().longValue();
+                String defaultFreeBusy = defaultInstance.getFreeBusyActual();
+                for (Iterator<InstanceData> instIter = appt.instanceIterator(); instIter.hasNext(); ) {
+                    InstanceData instance = instIter.next();
+                    long instStart = instance.getDtStart() != null ? instance.getDtStart().longValue() : 0;
+                    // Skip instances that are outside the time range but were returned due to alarm being in range.
+                    if (instStart >= end)
+                        continue;
+                    long dur = defaultDuration;
+                    if (instance.getDuration() != null)
+                        dur = instance.getDuration().longValue();
+                    long instEnd = instStart + dur;
 
-		Collection<CalendarItem> appts = mbox.getCalendarItemsForRange(null, start, end, Mailbox.ID_AUTO_INCREMENT, exFolders);
+                    long recurIdDt = 0;
+                    // Skip if instance is TRANSPARENT to free/busy searches.
+                    if (instance instanceof FullInstanceData) {
+                        FullInstanceData fullInst = (FullInstanceData) instance;
+                        String transpInst = fullInst.getTransparency();
+                        recurIdDt = fullInst.getRecurrenceId();
+                        if (IcalXmlStrMap.TRANSP_TRANSPARENT.equals(transpInst))
+                            continue;
+                    } else if (isTransparent) {
+                        continue;
+                    }
 
-		IntervalList intervals = new IntervalList(start, end);
-
-		for (Iterator<CalendarItem> iter = appts.iterator(); iter.hasNext(); ) {
-			CalendarItem calItem = iter.next();
-			if (!(calItem instanceof Appointment))
-				continue;
-
-			Appointment cur = (Appointment) calItem;
-			if (cur.getId() == exApptId)
-				continue;
-
-//			Move start time of expansion up by default instance's duration
-//			to catch instances whose tail end overlap the F/B time window.
-			Invite defInv = cur.getDefaultInviteOrNull();
-			if (defInv == null || !defInv.isEvent())
-				continue;
-			ParsedDateTime dtStart = defInv.getStartTime();
-			long defInvStart = dtStart != null ? dtStart.getDate().getTime() : 0;
-			ParsedDateTime dtEnd = defInv.getEffectiveEndTime();
-			long defInvEnd = dtEnd != null ? dtEnd.getDate().getTime() : 0;
-			long startAdjusted = start - (defInvEnd - defInvStart) + 1;
-
-			Collection<Instance> instances = cur.expandInstances(startAdjusted, end, false);
-			for (Iterator<Instance> instIter = instances.iterator(); instIter.hasNext();) {
-				Appointment.Instance inst = instIter.next();
-				assert(inst.getStart() < end && inst.getEnd() > start);
-				InviteInfo invId = inst.getInviteInfo();
-				try {
-					Appointment appt = (Appointment) inst.getCalendarItem();
-					Invite inv = appt.getInvite(invId);
-					if (!inv.isTransparent()) {
-						String freeBusy = appt.getEffectiveFreeBusyActual(inv, inst);
-						if (!IcalXmlStrMap.FBTYPE_FREE.equals(freeBusy)) {
-							Interval ival = new Interval(inst.getStart(), inst.getEnd(), freeBusy, inst);
-							intervals.addInterval(ival);
-						}
-					}
-				} catch (MailServiceException.NoSuchItemException e) {
-					//sLog.debug("Could not load invite "+invId.toString() + " for appt "+mbox.getId());
-				}
-			}
-		}
-		return new FreeBusy(name, intervals, start, end);
-	}
+                    String freeBusy = instance.getFreeBusyActual();
+                    if (freeBusy == null)
+                        freeBusy = defaultFreeBusy;
+                    if (!IcalXmlStrMap.FBTYPE_FREE.equals(freeBusy)) {
+                        FBInstance fbInst = new FBInstance(instStart, instEnd, apptId, recurIdDt);
+                        Interval ival = new Interval(instStart, instEnd, freeBusy, fbInst);
+                        intervals.addInterval(ival);
+                    }
+                }
+            }
+        }
+        return new FreeBusy(name, intervals, start, end);
+    }
 
     public static void main(String[] args) {
         IntervalList l = new IntervalList(0, 100);
