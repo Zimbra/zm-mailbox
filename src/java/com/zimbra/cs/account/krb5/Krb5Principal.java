@@ -19,7 +19,6 @@ package com.zimbra.cs.account.krb5;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.EmailUtil;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
@@ -73,14 +72,17 @@ public class Krb5Principal {
      
      public static String getKrb5Principal(Domain domain, Account acct) {
          String principal = null;
-         String foreignPrincipal = acct.getAttr(Provisioning.A_zimbraForeignPrincipal);
-         if (foreignPrincipal != null && foreignPrincipal.startsWith(Provisioning.FP_PREFIX_KERBEROS5)) {
-             int idx = foreignPrincipal.indexOf(':');
-             if (idx != -1)
-                 principal = foreignPrincipal.substring(idx+1);
-             else
-                 ZimbraLog.account.warn("cannot extract principal from " + Provisioning.A_zimbraForeignPrincipal + " " +
-                                        foreignPrincipal + " , using local part and domain realm"); 
+         String fps[] = acct.getMultiAttr(Provisioning.A_zimbraForeignPrincipal);
+         if (fps != null && fps.length > 0) {
+             for (String fp : fps) {
+                 if (fp.startsWith(Provisioning.FP_PREFIX_KERBEROS5)) {
+                     int idx = fp.indexOf(':');
+                     if (idx != -1) {
+                         principal = fp.substring(idx+1);
+                         break;
+                     }
+                 }
+             }
          }
          if (principal == null) {
              String realm = domain.getAttr(Provisioning.A_zimbraAuthKerberos5Realm);

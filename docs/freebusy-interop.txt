@@ -46,28 +46,19 @@ or HTML form based authentication ala OWA.
 In order to enable the default Exchange free busy interop implementation, 
 the following conditions need to be met.
 
-1.  There is no more than one Active Directory in the Exchange environment.
+1.  There should be a single AD in the system or Global Catalog is available.
 2.  Zimbra server can access HTTP(S) port of IIS on at least one of the 
     Exchange server.
 3.  The web interface to Exchange public folders (http://server/public/) needs
     to be available via IIS.
 4.  Zimbra users need to be provisioned as a contact on Active Directory using
-    the same administrative group.
-5.  The value of 'cn' in attribute legacyExchangeDN must be the localpart
-    of the email address for all Zimbra contacts.
+    the same administrative group for each mail domain.
+5.  The Exchange username must be provisioned in the account attribute
+    zimbraForeignPrincipal for all the Zimbra users.
     
 The condition #4 and #5 are required only for Zimbra -> Exchange free/busy 
 replication.  With the first three condition met, Exchange -> Zimbra free/busy 
 lookup is still possible.
-
-For condition 4, select the same administrative group in the new contact
-wizard for all Zimbra contacts.  For condition 5, set the alias of the
-contact to be the localpart of the email address.  (if email address is
-james@mycompany.com, set the alias to be james).  That means if there is
-more than one domain on Zimbra server, the default Exchange implementation
-can't be used because localpart alone is ambiguous without the domain.  
-However, it's easy to extend the Exchange provider to handle more complex 
-cases as described in the next section.
 
 After creating the contacts, legacyExchangeDN attribute can be verified by 
 running ADSI Edit tool, open the contact object.  Search for the attribute 
@@ -76,7 +67,10 @@ legacyExchangeDN for the contact.  For example the attribute value would be
 legacyExchangeDN : /o=First Organization/ou=First Administrative Group/cn=Recipients/cn=james
 
 The substring left and right of /cn=Recipients are important, and need to
-be consistent across the Zimbra contacts.
+be consistent across the Zimbra contacts.  The left part 
+"/o=First Organization/ou=First Administrative Group" corresponds to the domain
+attribute zimbraFreebusyExchangeUserOrg.  The value of "cn" corresponds to the
+Exchange account name specified in zimbraForeignPrincipal.
 
 There are five global config variables on Zimbra to enable the interop with
 Exchange server.
@@ -109,13 +103,25 @@ with password 'changeme' :
 # zmprov mcf zimbraFreebusyExchangeURL http://exchange.mycompany.com
 # zmprov mcf zimbraFreebusyExchangeUserOrg "/o=First Organization/ou=First Administrative Group"
 
+Add the Zimbra account to Exchange account mapping to zimbraForeignPrincipal
+attribute.  Note that zimbraForeignPrincipal is a multi value attribute.  Be
+careful not to wipe out the existing values when adding a new one.  Use the
+prefix "ad:" in front of the Exchange account username to indicate the usage
+for Active Directory.
+
+# zmprov ma james@mycompany.com zimbraForeignPrincipal ad:james
+
+If there is more than one mail domain, zimbraFreebusyExchangeUserOrg can be set 
+for each domain.
+
+# zmprov md anotherdomain.com zimbraFreebusyExchangeUserOrg "/o=AnotherDomain/ou=First Administrative Group"
+
 
 --------------------------
 Complex Exchange environment
 
-If there is more than one AD, or if the Exchange users are partitioned into
-different Exchange servers, or if there is more than one Zimbra mail domain, 
-the default Exchange provider above needs to be extended to work in 
+If the Exchange environment does not meet the requirement for above, 
+the default Exchange provider needs to be extended to work in 
 such environment.  Zimbra provides a Java interface
 
     com.zimbra.cs.fb.ExchangeFreeBusyProvider.ExchangeResolver
