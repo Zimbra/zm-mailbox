@@ -21,6 +21,7 @@
 package com.zimbra.common.soap;
 
 import java.util.Map;
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.Element.XMLElement;
 import org.dom4j.DocumentException;
@@ -36,9 +37,7 @@ public abstract class SoapTransport {
     private SoapProtocol mRequestProto;
     private SoapProtocol mResponseProto;
     private boolean mPrettyPrint;
-    private String mAuthTokenType;
-    private String mAuthTokenValue;
-    private Map mAuthTokenAttrs;
+    private ZAuthToken mAuthToken;
     private String mTargetAcctId = null;
     private String mTargetAcctName = null;    
     private String mSessionId = null;
@@ -84,13 +83,11 @@ public abstract class SoapTransport {
 
     // AP-TODO-7: retire this?
     public void setAuthToken(String authToken) {
-    	mAuthTokenValue = authToken;
+    	mAuthToken = new ZAuthToken(null, authToken, null);
     }
     
-    public void setAuthToken(String type, String value, Map<String, String> attrs) {
-        mAuthTokenType = type;
-        mAuthTokenValue = value;
-        mAuthTokenAttrs = attrs;
+    public void setAuthToken(ZAuthToken authToken) {
+        mAuthToken = authToken;
     }
     
     public void setTargetAcctId(String acctId) {
@@ -189,7 +186,7 @@ public abstract class SoapTransport {
         }
         SoapProtocol responseProto = mResponseProto == null ? proto : mResponseProto;
 
-        Element context = SoapUtil.toCtxt(proto, mAuthTokenType, mAuthTokenValue, mAuthTokenAttrs, mTargetAcctId, mTargetAcctName, noSession);
+        Element context = SoapUtil.toCtxt(proto, mAuthToken, mTargetAcctId, mTargetAcctName, noSession);
         SoapUtil.addSessionToCtxt(context, mSessionId);
         SoapUtil.addChangeTokenToCtxt(context, changeToken, tokenType);
         if (mUserAgentName != null)

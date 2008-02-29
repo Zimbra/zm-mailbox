@@ -377,14 +377,14 @@ public class ZAuthToken {
         }
         
         Element req1 = new XMLElement(AccountConstants.GET_INFO_REQUEST);
-        trans.setAuthToken(null, value, attrs);
+        trans.setAuthToken(new ZAuthToken(null, value, attrs));
         resp = trans.invoke(req1);
         
         Element req2 = new XMLElement(AccountConstants.GET_INFO_REQUEST);
         attrs = new HashMap<String, String>();
         attrs.put("X", "x ...");
         attrs.put("Y", "y ...");
-        trans.setAuthToken("foobar", null, attrs);
+        trans.setAuthToken(new ZAuthToken("foobar", null, attrs));
         resp = trans.invoke(req2);
     }
     

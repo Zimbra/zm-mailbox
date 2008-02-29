@@ -17,6 +17,7 @@
 package com.zimbra.common.soap;
 
 import java.util.Map;
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.util.StringUtil;
 
 public class SoapUtil {
@@ -30,10 +31,9 @@ public class SoapUtil {
      * @param authToken  The serialized authorization token for the user.
      * @param noSession  Whether to suppress the default new session creation.
      * @return A new <code>context</code> Element in the appropriate markup. */
-    public static Element toCtxt(SoapProtocol protocol,
-            String atType, String atValue, Map<String, String> atAttrs,
+    public static Element toCtxt(SoapProtocol protocol, ZAuthToken authToken, 
             String targetAccountId, String targetAccountName, boolean noSession) {
-        Element ctxt = toCtxt(protocol, atType, atValue, atAttrs, noSession);
+        Element ctxt = toCtxt(protocol, authToken, noSession);
 
         if (targetAccountId != null || targetAccountName != null) {
             Element acctElt = ctxt.addUniqueElement(HeaderConstants.E_ACCOUNT);
@@ -54,14 +54,13 @@ public class SoapUtil {
      * @param authToken  The serialized authorization token for the user.
      * @param noSession  Whether to suppress the default new session creation.
      * @return A new <code>context</code> Element in the appropriate markup. */
-    public static Element toCtxt(SoapProtocol protocol,
-            String atType, String atValue, Map<String, String> atAttrs,
-            boolean noSession) {
+    public static Element toCtxt(SoapProtocol protocol, ZAuthToken authToken, boolean noSession) {
         Element ctxt = protocol.getFactory().createElement(HeaderConstants.CONTEXT);
-        /*
-        if (authToken != null)
-            ctxt.addAttribute(HeaderConstants.E_AUTH_TOKEN, authToken, Element.Disposition.CONTENT);
-        */
+        
+        String atType = authToken==null?null:authToken.getType();
+        String atValue = authToken==null?null:authToken.getValue();
+        Map<String, String> atAttrs = authToken==null?null:authToken.getAttrs();
+            
         Element eAt = null;
         if (atValue != null) {
             if (atType == null)
@@ -159,10 +158,8 @@ public class SoapUtil {
      * @param sessionId  The ID of the session to add to the <code>context</code>.
      * @return A new <code>context</code> Element in the appropriate markup.
      * @see #toCtxt(com.zimbra.common.soap.SoapProtocol, String, boolean) */
-    public static Element toCtxt(SoapProtocol protocol,
-            String atType, String atValue, Map<String, String> atAttrs,
-            String sessionId) {
-        Element ctxt = toCtxt(protocol, atType, atValue, atAttrs, false);
+    public static Element toCtxt(SoapProtocol protocol, ZAuthToken authToken, String sessionId) {
+        Element ctxt = toCtxt(protocol, authToken, false);
         return addSessionToCtxt(ctxt, sessionId);
     }
 }

@@ -20,6 +20,7 @@
  */
 package com.zimbra.common.soap;
 
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
 
@@ -440,7 +441,8 @@ public class SoapTestHarness {
 		if (mAuthToken == null) {
 			mCurrent.mSoapRequest = mSoapProto.soapEnvelope(mCurrent.mDocRequest);
         } else {
-            Element ctxt = SoapUtil.toCtxt(mSoapProto, null, mAuthToken, null, mSessionId);
+            ZAuthToken zat = new ZAuthToken(null, mAuthToken, null);
+            Element ctxt = SoapUtil.toCtxt(mSoapProto, zat, mSessionId);
             if (mTargetUser != null)
                 ctxt.addUniqueElement(HeaderConstants.E_ACCOUNT).addAttribute(HeaderConstants.A_BY, HeaderConstants.BY_NAME).setText(mTargetUser);
             if (mResponseProto == SoapProtocol.SoapJS)
