@@ -44,6 +44,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Server;
@@ -83,32 +84,32 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 			String url = server.getAttr(Provisioning.A_zimbraFreebusyExchangeURL, null);
 			String user = server.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthUsername, null);
 			String pass = server.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthPassword, null);
-			String org = server.getAttr(Provisioning.A_zimbraFreebusyExchangeUserOrg, null);
 			String scheme = server.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthScheme, null);
 			if (url == null || user == null || pass == null)
 				return null;
 			
 			ServerInfo info = new ServerInfo();
 			info.url = url;
-			info.org = org;
 			info.authUsername = user;
 			info.authPassword = pass;
 			info.scheme = AuthScheme.valueOf(scheme);
 			try {
 				Account acct = Provisioning.getInstance().get(AccountBy.name, emailAddr);
 				if (acct != null) {
-			         String fps[] = acct.getMultiAttr(Provisioning.A_zimbraForeignPrincipal);
-			         if (fps != null && fps.length > 0) {
-			             for (String fp : fps) {
-			                 if (fp.startsWith(Provisioning.FP_PREFIX_AD)) {
-			                     int idx = fp.indexOf(':');
-			                     if (idx != -1) {
-			                         info.cn = fp.substring(idx+1);
-			                         break;
-			                     }
-			                 }
-			             }
-			         }
+					Domain domain = Provisioning.getInstance().getDomain(acct);
+					info.org = domain.getAttr(Provisioning.A_zimbraFreebusyExchangeUserOrg, null);
+					String fps[] = acct.getMultiAttr(Provisioning.A_zimbraForeignPrincipal);
+					if (fps != null && fps.length > 0) {
+						for (String fp : fps) {
+							if (fp.startsWith(Provisioning.FP_PREFIX_AD)) {
+								int idx = fp.indexOf(':');
+								if (idx != -1) {
+									info.cn = fp.substring(idx+1);
+									break;
+								}
+							}
+						}
+					}
 				}
 			} catch (ServiceException se) {
 				info.cn = null;
@@ -192,9 +193,8 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		String url = server.getAttr(Provisioning.A_zimbraFreebusyExchangeURL, null);
 		String user = server.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthUsername, null);
 		String pass = server.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthPassword, null);
-		String org = server.getAttr(Provisioning.A_zimbraFreebusyExchangeUserOrg, null);
 		String scheme = server.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthScheme, null);
-		return (url != null && user != null && pass != null && org != null && scheme != null);
+		return (url != null && user != null && pass != null && scheme != null);
 	}
 	
 	public long cachedFreeBusyStartTime() {
