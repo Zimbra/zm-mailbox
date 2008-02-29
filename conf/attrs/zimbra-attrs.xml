@@ -2920,6 +2920,15 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>mta anti spam lock method.</desc>
 </attr>
 
+<attr id="613" name="zimbraMailReferMode" type="enum" value="always,wronghost,never" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>wronghost</globalConfigValue>
+  <desc>whether to send back a refer tag in an auth response to force a client redirect.
+        always    - always send refer
+        wronghost - send refer if only if the account being authenticated does not live on this mail host
+        never     - nerver send refer
+  </desc>
+</attr>
+
 </attrs>
 
 

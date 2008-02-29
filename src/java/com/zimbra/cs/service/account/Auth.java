@@ -33,6 +33,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.account.Server;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.session.Session;
@@ -133,7 +134,12 @@ public class Auth extends AccountDocumentHandler {
             if (session != null)
                 ZimbraSoapContext.encodeSession(response, session.getSessionId(), session.getSessionType(), true);
         }
-        if (!isCorrectHost || LC.zimbra_auth_always_send_refer.booleanValue()) {
+        
+        Server localhost = Provisioning.getInstance().getLocalServer();
+        String referMode = localhost.getAttr(Provisioning.A_zimbraMailReferMode, "wronghost");
+        // if (!isCorrectHost || LC.zimbra_auth_always_send_refer.booleanValue()) {
+        if (Provisioning.MAIL_REFER_MODE_ALWAYS.equals(referMode) ||
+            (Provisioning.MAIL_REFER_MODE_WRONGHOST.equals(referMode) && !isCorrectHost)) {
             response.addAttribute(AccountConstants.E_REFERRAL, acct.getAttr(Provisioning.A_zimbraMailHost), Element.Disposition.CONTENT);
         }
 

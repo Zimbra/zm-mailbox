@@ -207,6 +207,14 @@ public abstract class Provisioning {
      * but redirect traffic on the HTTP port to HTTPS.
      */
     public enum MAIL_MODE { http, https, mixed, both, redirect }
+    
+    /**
+     * Possible values for zimbraMailReferMode
+     */
+    public static final String MAIL_REFER_MODE_ALWAYS = "always";
+    public static final String MAIL_REFER_MODE_WRONGHOST = "wronghost";
+    public static final String MAIL_REFER_MODE_NEVER = "never";
+    
 
     // attributes
 
@@ -1040,6 +1048,7 @@ public abstract class Provisioning {
     public static final String A_zimbraMailSSLPort = "zimbraMailSSLPort";
     public static final String A_zimbraMailMode = "zimbraMailMode";
     public static final String A_zimbraMailURL = "zimbraMailURL";
+    public static final String A_zimbraMailReferMode = "zimbraMailReferMode";
 
     public static final String A_zimbraAdminPort = "zimbraAdminPort";
 
