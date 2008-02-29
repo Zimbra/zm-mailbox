@@ -33,6 +33,7 @@ import javax.mail.internet.MimeMessage;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.fb.FreeBusy;
+import com.zimbra.cs.fb.FreeBusy.FBInstance;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -40,6 +41,7 @@ import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
+import com.zimbra.cs.mailbox.calendar.cache.CalendarCache;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.redolog.op.CreateCalendarItemPlayer;
 import com.zimbra.cs.redolog.op.CreateCalendarItemRecorder;
@@ -131,7 +133,9 @@ public class Appointment extends CalendarItem {
 
         public static final int MAX_CONFLICT_LIST_SIZE = 5;
 
-        public static String getBusyTimesString(List<Availability> list, TimeZone tz, Locale lc) {
+        public static String getBusyTimesString(
+                OperationContext octxt, Mailbox mbox, List<Availability> list, TimeZone tz, Locale lc)
+        throws ServiceException {
             StringBuilder sb = new StringBuilder();
             boolean hasMoreConflicts = false;
             int conflictCount = 0;
@@ -144,15 +148,15 @@ public class Appointment extends CalendarItem {
 
                 // List conflicting appointments and their organizers.
                 FreeBusy fb = avail.getFreeBusy();
-                LinkedHashSet<Instance> instances = fb.getAllInstances();
-                for (Instance instance : instances) {
+                LinkedHashSet<FBInstance> instances = fb.getAllInstances();
+                for (FBInstance instance : instances) {
                     if (conflictCount >= MAX_CONFLICT_LIST_SIZE) {
                         hasMoreConflicts = true;
                         break;
                     }
 
-                    Date startDate = new Date(instance.getStart());
-                    Date endDate = new Date(instance.getEnd());
+                    Date startDate = new Date(instance.getStartTime());
+                    Date endDate = new Date(instance.getEndTime());
                     String start = CalendarMailSender.formatDateTime(startDate, tz, lc);
                     sb.append(" * ").append(start);
                     String end;
@@ -164,9 +168,12 @@ public class Appointment extends CalendarItem {
                         sb.append("\r\n   - ").append(end);
                     }
 
-                    Invite defInv = instance.getCalendarItem().getDefaultInviteOrNull();
-                    if (defInv != null && defInv.hasOrganizer()) {
-                        ZOrganizer organizer = defInv.getOrganizer();
+                    int apptId = instance.getApptId();
+                    long recurIdDt = instance.getRecurIdDt();
+                    CalendarItem appt = mbox.getCalendarItemById(octxt, apptId);
+                    Invite inv = appt.getInviteForRecurId(recurIdDt);
+                    if (inv != null && inv.hasOrganizer()) {
+                        ZOrganizer organizer = inv.getOrganizer();
                         String orgDispName;
                         if (organizer.hasCn())
                             orgDispName = organizer.getCn() + " <" + organizer.getAddress() + ">";
@@ -201,18 +208,34 @@ public class Appointment extends CalendarItem {
         Collection<Instance> instances = expandInstances(st, et, false);
         List<Availability> list = new ArrayList<Availability>(instances.size());
         int numConflicts = 0;
-        for (Instance inst : instances) {
-            if (numConflicts > Availability.MAX_CONFLICT_LIST_SIZE)
-                break;
-            long start = inst.getStart();
-            long end = inst.getEnd();
-            FreeBusy fb =
-                com.zimbra.cs.fb.LocalFreeBusyProvider.getFreeBusyList(getMailbox(), start, end, this);
-            String status = fb.getBusiest();
-            if (!IcalXmlStrMap.FBTYPE_FREE.equals(status)) {
-                list.add(new Availability(start, end, status, fb));
-                numConflicts++;
+        try {
+            for (Instance inst : instances) {
+                if (numConflicts > Availability.MAX_CONFLICT_LIST_SIZE)
+                    break;
+                long start = inst.getStart();
+                long end = inst.getEnd();
+                FreeBusy fb =
+                    com.zimbra.cs.fb.LocalFreeBusyProvider.getFreeBusyList(getMailbox(), start, end, this);
+                String status = fb.getBusiest();
+                if (!IcalXmlStrMap.FBTYPE_FREE.equals(status)) {
+                    list.add(new Availability(start, end, status, fb));
+                    numConflicts++;
+                }
             }
+        } finally {
+            // Ugly hack because availability check during appointment update
+            // ends up updating calendar cache with not-yet-committed modseq.
+            // If we don't clear the cache here, the next read from the cache
+            // won't show the current appointment being created/updated.
+            //
+            // We'll cheat and only invalidate the cache for the folder containing
+            // the current appointment.  The other calendar folders' modseq are
+            // being advanced unnecessarily, but that shouldn't cause harm because
+            // we're doing the present update with the entire mailbox locked.
+            //
+            // The proper fix for all of this is to do auto-accept check outside
+            // and prior to the appointment create/update transaction.
+            CalendarCache.getInstance().invalidateSummary(getMailbox(), getFolderId());
         }
         return list;
     }
@@ -302,7 +325,7 @@ public class Appointment extends CalendarItem {
                             String msg =
                                 L10nUtil.getMessage(MsgKey.calendarResourceDeclineReasonConflict, lc) +
                                 "\r\n\r\n" +
-                                Availability.getBusyTimesString(avail, tz, lc);
+                                Availability.getBusyTimesString(octxt, mbox, avail, tz, lc);
                             CalendarMailSender.sendReply(
                                     octxt, mbox, false,
                                     CalendarMailSender.VERB_DECLINE,
@@ -336,6 +359,7 @@ public class Appointment extends CalendarItem {
                 saveMetadata();
             }
         }
+
         return partStat;
     }
 }

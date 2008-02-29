@@ -25,6 +25,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.localconfig.DebugConfig;
+import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -124,6 +125,9 @@ public class CalendarCache {
                         calItem.getId() + "; SKIPPING");
                 return null;
             }
+            String defaultFba = null;
+            if (calItem instanceof Appointment)
+                defaultFba = ((Appointment) calItem).getEffectiveFreeBusyActual(defaultInvite, null);
 
             AlarmData alarm = null;
             CalendarItem.AlarmData calItemAlarmData = calItem.getAlarmData();
@@ -155,7 +159,7 @@ public class CalendarCache {
                     defDurationLong = new Long(defDtEnd.getUtcTime() - defDtStartLong.longValue());
             }
             FullInstanceData defaultData =
-                new FullInstanceData(defaultInvite, defDtStartLong, defDurationLong, null, null);
+                new FullInstanceData(defaultInvite, defDtStartLong, defDurationLong, defaultFba, null, null);
             calItemData = new CalendarItemData(
                     calItem.getModifiedSequence(),
                     calItem.getType(), calItem.getFolderId(), calItem.getId(),
@@ -195,15 +199,18 @@ public class CalendarCache {
                     Invite inv = calItem.getInvite(invId.getMsgId(), invId.getComponentId());
                     Long alarmAt = instStart == alarmInst ? new Long(alarmTime) : null;
 
+                    String fba = inv.getFreeBusyActual();
+                    if (calItem instanceof Appointment)
+                        fba = ((Appointment) calItem).getEffectiveFreeBusyActual(inv, inst);
                     InstanceData instData;
                     if (!inst.isException()) {
                         Long tzOffset = instStartLong != null ? Util.getTZOffsetForInvite(inv, instStart) : null;
                         instData = new InstanceData(
                                 instStartLong, durationLong, alarmAt, tzOffset,
-                                inv.getPartStat(), inv.getFreeBusyActual(), inv.getPercentComplete(),
+                                inv.getPartStat(), fba, inv.getPercentComplete(),
                                 defaultData);
                     } else {
-                        instData = new FullInstanceData(inv, instStartLong, durationLong, alarmAt, defaultData);
+                        instData = new FullInstanceData(inv, instStartLong, durationLong, fba, alarmAt, defaultData);
                     }
                     calItemData.addInstance(instData);
                 } catch (MailServiceException.NoSuchItemException e) {
@@ -280,7 +287,7 @@ public class CalendarCache {
     									   byte itemType, long rangeStart, long rangeEnd,
     									   boolean computeSubRange)
     throws ServiceException {
-        if (rangeStart >= rangeEnd)
+        if (rangeStart > rangeEnd)
             throw ServiceException.INVALID_REQUEST("End time must be after Start time", null);
 
         if (!DebugConfig.calendarEnableCache) {
@@ -393,5 +400,21 @@ public class CalendarCache {
         ZimbraPerf.COUNTER_CALENDAR_CACHE_LRU_SIZE.increment(lruSize);
 
         return retval;
+    }
+
+    public void invalidateSummary(Mailbox mbox, int folderId) {
+        if (!DebugConfig.calendarEnableCache)
+            return;
+
+        int mboxId = mbox.getId();
+        SummaryCacheKey key = new SummaryCacheKey(mboxId, folderId);
+        synchronized (mSummaryCache) {
+            mSummaryCache.remove(key);
+        }
+        try {
+            FileStore.deleteCalendarData(mboxId, folderId);
+        } catch (ServiceException e) {
+            ZimbraLog.calendar.warn("Error deleting calendar summary cache", e);
+        }
     }
 }
