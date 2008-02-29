@@ -78,6 +78,9 @@ import java.util.HashSet;
  * @author schemers
  */
 public class ProvUtil implements DebugListener {
+    
+    private static final String ERR_VIA_SOAP_ONLY = "can only be used via SOAP";
+    private static final String ERR_VIA_LDAP_ONLY = "can only be used via LDAP: zmprov -l";
  
     private boolean mInteractive = false;
     private boolean mVerbose = false;
@@ -115,8 +118,19 @@ public class ProvUtil implements DebugListener {
     }
 
     private void usage() {
+        usage(null);
+    }
+
+    private void usage(Command.Via violatedVia) {
         if (mCommand != null) {
-            System.out.printf("usage:  %s(%s) %s\n", mCommand.getName(), mCommand.getAlias(), mCommand.getHelp());
+            if (violatedVia == null)
+                System.out.printf("usage:  %s(%s) %s\n", mCommand.getName(), mCommand.getAlias(), mCommand.getHelp());
+            else {
+                if (violatedVia == Command.Via.ldap)
+                    System.out.printf("%s %s\n", mCommand.getName(), ERR_VIA_LDAP_ONLY);
+                else
+                    System.out.printf("%s %s\n", mCommand.getName(), ERR_VIA_SOAP_ONLY);
+            }
         }
 
         if (mInteractive)
@@ -245,7 +259,7 @@ public class ProvUtil implements DebugListener {
         RENAME_CALENDAR_RESOURCE("renameCalendarResource",  "rcr", "{name@domain|id} {newName@domain}", Category.CALENDAR, 2, 2),
         RENAME_COS("renameCos", "rc", "{name|id} {newName}", Category.COS, 2, 2),
         RENAME_DISTRIBUTION_LIST("renameDistributionList", "rdl", "{list@domain|id} {newName@domain}", Category.LIST, 2, 2),
-        RENAME_DOMAIN("renameDomain", "rd", "{domain|id} {newDomain}", Category.DOMAIN, 2, 2),
+        RENAME_DOMAIN("renameDomain", "rd", "{domain|id} {newDomain}", Category.DOMAIN, 2, 2, Via.ldap),
         REINDEX_MAILBOX("reIndexMailbox", "rim", "{name@domain|id} {action} [{reindex-by} {value1} [value2...]]", Category.MAILBOX, 2, Integer.MAX_VALUE),
         SEARCH_ACCOUNTS("searchAccounts", "sa", "[-v] {ldap-query} [limit {limit}] [offset {offset}] [sortBy {attr}] [attrs {a1,a2...}] [sortAscending 0|1*] [domain {domain}]", Category.SEARCH, 1, Integer.MAX_VALUE),
         SEARCH_CALENDAR_RESOURCES("searchCalendarResources", "scr", "[-v] domain attr op value [attr op value...]", Category.SEARCH),
@@ -265,6 +279,11 @@ public class ProvUtil implements DebugListener {
         private Category mCat;
         private int mMinArgLength = 0;
         private int mMaxArgLength = Integer.MAX_VALUE;
+        private Via mVia;
+        
+        public static enum Via {
+            soap, ldap;
+        }
 
         public String getName() { return mName; }
         public String getAlias() { return mAlias; }
@@ -275,6 +294,7 @@ public class ProvUtil implements DebugListener {
             int len = args == null ? 0 : args.length - 1;
             return len >= mMinArgLength && len <= mMaxArgLength;
         }
+        public Via getVia() { return mVia; }
 
         private Command(String name, String alias) {
             mName = name;
@@ -295,6 +315,16 @@ public class ProvUtil implements DebugListener {
             mCat = cat;
             mMinArgLength = minArgLength;
             mMaxArgLength = maxArgLength;            
+        }
+        
+        private Command(String name, String alias, String help, Category cat, int minArgLength, int maxArgLength, Via via)  {
+            mName = name;
+            mAlias = alias;
+            mHelp = help;
+            mCat = cat;
+            mMinArgLength = minArgLength;
+            mMaxArgLength = maxArgLength;     
+            mVia = via;
         }
         
     }
@@ -349,6 +379,20 @@ public class ProvUtil implements DebugListener {
         }
     }
     
+    private Command.Via violateVia(Command cmd) {
+        Command.Via via = cmd.getVia();
+        if (via == null)
+            return null;
+        
+        if (via == Command.Via.ldap && !(mProv instanceof LdapProvisioning))
+            return Command.Via.ldap;
+
+        if (via == Command.Via.soap && !(mProv instanceof SoapProvisioning))
+            return Command.Via.soap;
+        
+        return null;
+    }
+    
     private boolean execute(String args[]) throws ServiceException, ArgException, IOException {
         String [] members;
         Account account;
@@ -357,6 +401,12 @@ public class ProvUtil implements DebugListener {
         
         if (mCommand == null)
             return false;
+        
+        Command.Via violatedVia = violateVia(mCommand);
+        if (violatedVia != null) {
+            usage(violatedVia);
+            return true;
+        }
         
         if (!mCommand.checkArgsLength(args)) {
             usage();
@@ -633,7 +683,7 @@ public class ProvUtil implements DebugListener {
             break;
         case SELECT_MAILBOX:
             if (!(mProv instanceof SoapProvisioning))
-                throw ServiceException.INVALID_REQUEST("can only be used via SOAP", null);
+                throwSoapOnly();
              ZMailboxUtil util = new ZMailboxUtil();
              util.setVerbose(mVerbose);
              util.setDebug(mDebug);
@@ -678,7 +728,7 @@ public class ProvUtil implements DebugListener {
 
     private void doGetDomainInfo(String[] args) throws ServiceException {
         if (!(mProv instanceof SoapProvisioning))
-            throw ServiceException.INVALID_REQUEST("can only be used via SOAP", null);
+            throwSoapOnly();
         SoapProvisioning sp = (SoapProvisioning) mProv;
         DomainBy by = DomainBy.fromString(args[1]);
         dumpDomain(sp.getDomainInfo(by, args[2]), getArgNameSet(args, 3));
@@ -686,7 +736,7 @@ public class ProvUtil implements DebugListener {
     
     private void doRenameDomain(String[] args) throws ServiceException {
         if (!(mProv instanceof LdapProvisioning))
-            throw ServiceException.INVALID_REQUEST("can only be used via LDAP", null);
+            throwLdapOnly();
         
         LdapProvisioning lp = (LdapProvisioning) mProv;
         Domain domain = lookupDomain(args[1]);
@@ -696,7 +746,7 @@ public class ProvUtil implements DebugListener {
 
     private void doGetQuotaUsage(String[] args) throws ServiceException {
         if (!(mProv instanceof SoapProvisioning))
-            throw ServiceException.INVALID_REQUEST("can only be used via SOAP", null);
+            throwSoapOnly();
         SoapProvisioning sp = (SoapProvisioning) mProv;
         List<QuotaUsage> result = sp.getQuotaUsage(args[1]);
         for (QuotaUsage u : result) {
@@ -706,7 +756,7 @@ public class ProvUtil implements DebugListener {
 
     private void doGetMailboxInfo(String[] args) throws ServiceException {
         if (!(mProv instanceof SoapProvisioning))
-            throw ServiceException.INVALID_REQUEST("can only be used via SOAP", null);
+            throwSoapOnly();
         SoapProvisioning sp = (SoapProvisioning) mProv;
         Account acct = lookupAccount(args[1]);
         MailboxInfo info = sp.getMailbox(acct);
@@ -715,7 +765,7 @@ public class ProvUtil implements DebugListener {
     
     private void doReIndexMailbox(String[] args) throws ServiceException {
         if (!(mProv instanceof SoapProvisioning))
-            throw ServiceException.INVALID_REQUEST("can only be used via SOAP", null);
+            throwSoapOnly();
         SoapProvisioning sp = (SoapProvisioning) mProv;
         Account acct = lookupAccount(args[1]);
         ReIndexBy by = null;
@@ -743,7 +793,7 @@ public class ProvUtil implements DebugListener {
     
     private void doAddAccountLogger(String[] args) throws ServiceException {
         if (!(mProv instanceof SoapProvisioning))
-            throw ServiceException.INVALID_REQUEST("can only be used via SOAP", null);
+            throwSoapOnly();
         SoapProvisioning sp = (SoapProvisioning) mProv;
         Account acct = lookupAccount(args[1]);
         sp.addAccountLogger(acct, args[2], args[3]);
@@ -751,7 +801,7 @@ public class ProvUtil implements DebugListener {
     
     private void doGetAccountLoggers(String[] args) throws ServiceException {
         if (!(mProv instanceof SoapProvisioning))
-            throw ServiceException.INVALID_REQUEST("can only be used via SOAP", null);
+            throwSoapOnly();
         SoapProvisioning sp = (SoapProvisioning) mProv;
         Account acct = lookupAccount(args[1]);
         for (AccountLogger accountLogger : sp.getAccountLoggers(acct)) {
@@ -761,7 +811,7 @@ public class ProvUtil implements DebugListener {
     
     private void doGetAllAccountLoggers(String[] args) throws ServiceException {
         if (!(mProv instanceof SoapProvisioning))
-            throw ServiceException.INVALID_REQUEST("can only be used via SOAP", null);
+            throwSoapOnly();
         SoapProvisioning sp = (SoapProvisioning) mProv;
         
         Map<String, List<AccountLogger>> allLoggers = sp.getAllAccountLoggers(args[1]);
@@ -775,7 +825,7 @@ public class ProvUtil implements DebugListener {
     
     private void doRemoveAccountLogger(String[] args) throws ServiceException {
         if (!(mProv instanceof SoapProvisioning))
-            throw ServiceException.INVALID_REQUEST("can only be used via SOAP", null);
+            throwSoapOnly();
         SoapProvisioning sp = (SoapProvisioning) mProv;
         Account acct = lookupAccount(args[1]);
         sp.removeAccountLogger(acct, args[2]);
@@ -1671,10 +1721,6 @@ public class ProvUtil implements DebugListener {
             printError("error: " + pe.getMessage());
             err = true;
         }
-            
-        if (err || cl.hasOption('h')) {
-            pu.usage();
-        }
         
         if (cl.hasOption('l') && cl.hasOption('s')) {
             printError("error: cannot specify both -l and -s at the same time");
@@ -1683,6 +1729,10 @@ public class ProvUtil implements DebugListener {
         
         pu.setVerbose(cl.hasOption('v'));
         if (cl.hasOption('l')) pu.setUseLdap(true);
+        
+        if (err || cl.hasOption('h')) {
+            pu.usage();
+        }
         
         if (cl.hasOption('L')) {
             if (cl.hasOption('l'))
@@ -1890,8 +1940,13 @@ public class ProvUtil implements DebugListener {
             System.out.println("");            
             for (Command c : Command.values()) {
                 if (!c.hasHelp()) continue;
-                if (cat == Category.COMMANDS || cat == c.getCategory())
-                    System.out.printf("  %s(%s) %s%n%n", c.getName(), c.getAlias(), c.getHelp());
+                if (cat == Category.COMMANDS || cat == c.getCategory()) {
+                    Command.Via via = c.getVia();
+                    if (via == null || 
+                        (via == Command.Via.ldap && mUseLdap) ||
+                        (via == Command.Via.soap && !mUseLdap))
+                        System.out.printf("  %s(%s) %s%n%n", c.getName(), c.getAlias(), c.getHelp());
+                }
             }
         
             if (cat == Category.CALENDAR) {
@@ -1924,6 +1979,15 @@ public class ProvUtil implements DebugListener {
         System.out.println("========== SOAP SEND ==========");
         System.out.println(envelope.prettyPrint());
         System.out.println("===============================");
+    }
+
+    
+    void throwSoapOnly() throws ServiceException {
+        throw ServiceException.INVALID_REQUEST(ERR_VIA_SOAP_ONLY, null);
+    }
+    
+    void throwLdapOnly() throws ServiceException {
+        throw ServiceException.INVALID_REQUEST(ERR_VIA_LDAP_ONLY, null);
     }
 }
 
