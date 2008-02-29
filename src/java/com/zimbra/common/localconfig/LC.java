@@ -100,6 +100,9 @@ public class LC {
     public static final KnownKey zimbra_index_reader_lru_size;
     public static final KnownKey zimbra_index_reader_idle_flush_time;
     public static final KnownKey zimbra_index_reader_idle_sweep_frequency;
+    public static final KnownKey zimbra_index_deferred_items_retry_interval;
+    public static final KnownKey zimbra_index_max_transaction_bytes;
+    public static final KnownKey zimbra_index_max_transaction_items;
 
     public static final KnownKey zimbra_spam_report_queue_size;
 
@@ -471,7 +474,22 @@ public class LC {
         zimbra_index_reader_idle_sweep_frequency = new KnownKey("zimbra_index_reader_idle_sweep_frequency");
         zimbra_index_reader_idle_sweep_frequency.setDefault("30");
         zimbra_index_reader_idle_sweep_frequency.setDoc("Frequency (seconds) the index reader LRU is swept for idle readers");
-
+        
+        zimbra_index_deferred_items_retry_interval = new KnownKey(
+            "zimbra_index_deferred_items_retry_interval",
+            "300", "At most how frequently (in seconds) do we try to clear out the queue of unindexed (deferred) items");
+        
+        zimbra_index_max_transaction_bytes = new KnownKey(
+            "zimbra_index_max_transaction_bytes", 
+            "1000000",
+            "When batching index operations into a Mailbox transaction, the maximum aggregate size of items that" +
+            "we will allow in a single transaction");
+        
+        zimbra_index_max_transaction_items = new KnownKey(
+            "zimbra_index_max_transaction_items",
+            "50",
+            "When batching index operations, the maximum number of mail_items we allow in a single transaction");
+ 
         zimbra_spam_report_queue_size = new KnownKey("zimbra_spam_report_queue_size");
         zimbra_spam_report_queue_size.setDefault("100");
         zimbra_spam_report_queue_size.setDoc("For Junk/Not Junk Msg/ConvActionRequests this queue size limits the" +
