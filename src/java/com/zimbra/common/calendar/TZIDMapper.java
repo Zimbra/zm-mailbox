@@ -22,6 +22,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.localconfig.LC;
+
 /**
  * Mapping of time zone IDs among Olson database, Java and Windows.  Also
  * maps deprecated names to new names.
@@ -29,6 +31,7 @@ import java.util.Map;
 public class TZIDMapper {
 
     public static class TZ {
+    	private String mCanonicalID;
         private String mJavaID;
         private String mOlsonID;
         private String mWindowsID;
@@ -41,9 +44,18 @@ public class TZIDMapper {
             mWindowsID = windowsId;
             if (aliases.length > 0)
                 mAliases = aliases;
+            
+            if (LC.calendar_canonical_tzid.value().equals("windows"))
+            	mCanonicalID = mWindowsID;
+            else if (LC.calendar_canonical_tzid.value().equals("olson"))
+            	mCanonicalID = mOlsonID;
+            else if (LC.calendar_canonical_tzid.value().equals("java"))
+            	mCanonicalID = mJavaID;
+            else
+            	mCanonicalID = mWindowsID;
         }
 
-        public String getCanonicalID() { return getWindowsID(); }
+        public String getCanonicalID() { return mCanonicalID; }
         public String getJavaID()      { return mJavaID; }
         public String getOlsonID()     { return mOlsonID; }
         public String getWindowsID()   { return mWindowsID; }
