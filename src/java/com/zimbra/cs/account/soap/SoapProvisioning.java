@@ -91,7 +91,7 @@ public class SoapProvisioning extends Provisioning {
         if (mRetryCount > 0)
             mTransport.setRetryCount(mRetryCount);
         if (mAuthToken != null)
-            mTransport.setAuthToken(mAuthToken.getType(), mAuthToken.getValue(), mAuthToken.getAttrs());
+            mTransport.setAuthToken(mAuthToken);
         if (mDebugListener != null)
             mTransport.setDebugListener(mDebugListener);
     }
@@ -125,7 +125,7 @@ public class SoapProvisioning extends Provisioning {
     public void setAuthToken(ZAuthToken authToken) {
         mAuthToken = authToken;
         if (mTransport != null)
-            mTransport.setAuthToken(authToken.getType(), authToken.getValue(), authToken.getAttrs());
+            mTransport.setAuthToken(authToken);
     }
 
     /**
@@ -146,7 +146,7 @@ public class SoapProvisioning extends Provisioning {
        mAuthToken = new ZAuthToken(response.getElement(AdminConstants.E_AUTH_TOKEN), true);
        mAuthTokenLifetime = response.getAttributeLong(AdminConstants.E_LIFETIME);
        mAuthTokenExpiration = System.currentTimeMillis() + mAuthTokenLifetime;
-       mTransport.setAuthToken(mAuthToken.getType(), mAuthToken.getValue(), mAuthToken.getAttrs());
+       mTransport.setAuthToken(mAuthToken);
     }
 
     /**
