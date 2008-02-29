@@ -119,6 +119,12 @@ public abstract class Provisioning {
      * use the {principal-name} instead of {user-part}@{kerberos5-realm-of-the-domain}
      */
     public static final String FP_PREFIX_KERBEROS5 = "kerberos5:";  
+
+    /**
+     * Used to store Active Directory account name for the user for free/busy
+     * replication from Zimbra to Exchange.
+     */
+    public static final String FP_PREFIX_AD = "ad:";
     
     /**
      * the account is active, and allows logins, etc.

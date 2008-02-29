@@ -43,7 +43,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.util.NetUtil;
@@ -89,12 +91,28 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 			ServerInfo info = new ServerInfo();
 			info.url = url;
 			info.org = org;
-			info.cn = emailAddr;
-			if (emailAddr.indexOf('@') > 0)
-				info.cn = emailAddr.substring(0, emailAddr.indexOf('@'));
 			info.authUsername = user;
 			info.authPassword = pass;
 			info.scheme = AuthScheme.valueOf(scheme);
+			try {
+				Account acct = Provisioning.getInstance().get(AccountBy.name, emailAddr);
+				if (acct != null) {
+			         String fps[] = acct.getMultiAttr(Provisioning.A_zimbraForeignPrincipal);
+			         if (fps != null && fps.length > 0) {
+			             for (String fp : fps) {
+			                 if (fp.startsWith(Provisioning.FP_PREFIX_AD)) {
+			                     int idx = fp.indexOf(':');
+			                     if (idx != -1) {
+			                         info.cn = fp.substring(idx+1);
+			                         break;
+			                     }
+			                 }
+			             }
+			         }
+				}
+			} catch (ServiceException se) {
+				info.cn = null;
+			}
 			return info;
 		}
 	}
