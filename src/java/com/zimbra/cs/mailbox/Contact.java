@@ -24,10 +24,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedContact;
-import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.session.PendingModifications.Change;
 
 import java.io.ByteArrayInputStream;
@@ -623,11 +621,11 @@ public class Contact extends MailItem {
         return con;
     }
 
-    @Override public void reindex(IndexItem redo, boolean deleteFirst, Object indexData) throws ServiceException {
-        // FIXME: need to note this as dirty so we can reindex if things fail
-        MailboxIndex mi = mMailbox.getMailboxIndex();
-        if (mi != null)
-            mi.indexContact(mMailbox, redo, deleteFirst, this);
+    @Override public List<org.apache.lucene.document.Document> generateIndexData() throws ServiceException {
+        synchronized(mMailbox) {
+            ParsedContact pc = new ParsedContact(this);
+            return pc.getLuceneDocuments(mMailbox);
+        }
     }
 
     @Override void reanalyze(Object data) throws ServiceException {

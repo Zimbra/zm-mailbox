@@ -310,7 +310,12 @@ public class ParsedContact {
 
         mLuceneDocuments.add(getPrimaryDocument(attachContent));
     }
-
+    
+    public List<Document> getLuceneDocuments(Mailbox mbox) throws ServiceException {
+        analyze(mbox);
+        return mLuceneDocuments;
+    }
+    
     private void analyzeAttachment(Attachment attach, StringBuilder contentText, boolean indexAttachments)
     throws MimeHandlerException, ObjectHandlerException, ServiceException {
         String ctype = attach.getContentType();
@@ -351,31 +356,54 @@ public class ParsedContact {
             Contact.A_company, Contact.A_firstName, Contact.A_lastName, Contact.A_nickname
     }));
 
-    private Document getPrimaryDocument(StringBuilder contentText) throws ServiceException {
-        StringBuilder searchText = new StringBuilder(), emailText = new StringBuilder();
-        for (Map.Entry<String, String> field : mFields.entrySet()) {
-            String name = field.getKey(), value = field.getValue();
-            contentText.append(' ').append(value);
-            if (name.startsWith("email"))
-                emailText.append(' ').append(value);
-            if (sSearchFields.contains(name))
-                searchText.append(' ').append(value);
+    private static void appendContactField(StringBuilder sb, ParsedContact contact, String fieldName) {
+        String s = contact.getFields().get(fieldName);
+        if (s!= null) {
+            sb.append(s).append(' ');
         }
-        String emails = emailText.toString();
-        contentText.append(ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_TO, emails));
-        searchText.append(ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_TO, emails));
+    }
+    
+    private Document getPrimaryDocument(StringBuilder contentText) throws ServiceException {
+        org.apache.lucene.document.Document doc = new org.apache.lucene.document.Document();
+        
+        StringBuilder fieldText = new StringBuilder();
+        StringBuilder emailText = new StringBuilder();
+        
+        Map<String, String> m = getFields();
+        for (Map.Entry<String, String> entry : m.entrySet()) {
+            contentText.append(entry.getValue()).append(' ');
 
-        Document doc = new Document();
-        // put the email addresses in the "To" field so they can be more easily searched
-        doc.add(new Field(LuceneFields.L_H_TO, emails, Field.Store.NO, Field.Index.TOKENIZED));
-        // put the name in the "From" field since the MailItem table uses 'Sender'
-        doc.add(new Field(LuceneFields.L_H_FROM, Contact.getFileAsString(mFields), Field.Store.NO, Field.Index.TOKENIZED));
-        // bug 11831 - put contact searchable data in its own field so wildcard search works better
+            if (entry.getKey().startsWith("email"))
+                emailText.append(' ').append(entry.getValue());
+            
+            String fieldTextToAdd = entry.getKey() + ":" + entry.getValue() + "\n";
+            fieldText.append(fieldTextToAdd);
+        }
+
+        StringBuilder searchText = new StringBuilder();
+        appendContactField(searchText, this, Contact.A_company);
+        appendContactField(searchText, this, Contact.A_firstName);
+        appendContactField(searchText, this, Contact.A_lastName);
+        appendContactField(searchText, this, Contact.A_nickname);
+
+        String emailStr = emailText.toString();
+        
+        contentText.append(ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_TO, emailStr));
+        searchText.append(ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_TO, emailStr));
+        
+        /* put the email addresses in the "To" field so they can be more easily searched */
+        doc.add(new Field(LuceneFields.L_H_TO, emailStr,  Field.Store.NO, Field.Index.TOKENIZED));
+
+        /* put the name in the "From" field since the MailItem table uses 'Sender'*/
+        doc.add(new Field(LuceneFields.L_H_FROM, Contact.getFileAsString(mFields),  Field.Store.NO, Field.Index.TOKENIZED));
+        /* bug 11831 - put contact searchable data in its own field so wildcard search works better  */
         doc.add(new Field(LuceneFields.L_CONTACT_DATA, searchText.toString(), Field.Store.NO, Field.Index.TOKENIZED));
         doc.add(new Field(LuceneFields.L_CONTENT, contentText.toString(), Field.Store.NO, Field.Index.TOKENIZED));
-        doc.add(new Field(LuceneFields.L_H_SUBJECT, "", Field.Store.NO, Field.Index.TOKENIZED));
         doc.add(new Field(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_CONTACT, Field.Store.YES, Field.Index.UN_TOKENIZED));
 
+        /* add key:value pairs to the structured FIELD lucene field */
+        doc.add(new Field(LuceneFields.L_FIELD, fieldText.toString(), Field.Store.NO, Field.Index.TOKENIZED));
+        
         return doc;
     }
 }

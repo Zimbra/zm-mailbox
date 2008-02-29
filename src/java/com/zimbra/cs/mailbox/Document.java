@@ -20,12 +20,13 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mime.ParsedDocument;
-import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
 
@@ -69,18 +70,16 @@ public class Document extends MailItem {
         return getAccount().getIntAttr(Provisioning.A_zimbraNotebookMaxRevisions, 0);
     }
 
-    @Override
-    public void reindex(IndexItem redo, boolean deleteFirst, Object indexData) throws ServiceException {
-        MailboxIndex mi = mMailbox.getMailboxIndex();
-        if (mi == null)
-            return;
-
-        ParsedDocument pd = (ParsedDocument) indexData;
-        if (pd == null)
+    @Override public List<org.apache.lucene.document.Document> generateIndexData() throws ServiceException {
+        ParsedDocument pd = null;
+        synchronized(this.getMailbox()) {
             pd = new ParsedDocument(getContent(), getName(), getContentType(), getChangeDate(), getCreator());
-
-        if (indexData != null && indexData instanceof ParsedDocument)
-            mi.indexDocument(mMailbox, redo, deleteFirst,  pd, this);
+        }
+        
+        List<org.apache.lucene.document.Document> toRet = new ArrayList<org.apache.lucene.document.Document>(1);
+        toRet.add(pd.getDocument());
+        
+        return toRet;
     }
 
     @Override

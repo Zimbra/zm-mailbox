@@ -37,7 +37,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbSearch;
-import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.Blob;
@@ -1006,20 +1005,18 @@ public abstract class MailItem implements Comparable<MailItem> {
         return null;
     }
 
-
-    /** Adds the item to the index.
+    /**
+     * Returns the indexable data to be passed into reIndex.  This API is generally 
+     * to be called WITHOUT the Mailbox lock is held -- it is the implementation's 
+     * responsibility to lock the mailbox if that is necessary to get a consistent
+     * snapshot.
      * 
-     * @param redo       The redo recorder for the indexing operation.
-     * @param deleteFirst If TRUE, then the item might already be in the index, and so any existing 
-     *                   index entries must be deleted
-     * @param indexData  Extra data to index.  Each subclass of MailItem
-     *                   should interpret this argument differently;
-     *                   currently only Message class uses this argument for
-     *                   passing in a {@link com.zimbra.cs.mime.ParsedMessage}.
-     * @throws ServiceException */
-    @SuppressWarnings("unused")
-    public void reindex(IndexItem redo, boolean deleteFirst, Object indexData) throws ServiceException {
+     * @return a list of lucene Documents to be added to the index for this item
+     * @throws ServiceException
+     */
+    public List<org.apache.lucene.document.Document> generateIndexData() throws ServiceException {
         // override in subclasses that support indexing
+        return null;
     }
 
 

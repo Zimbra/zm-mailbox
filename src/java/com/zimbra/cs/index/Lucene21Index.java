@@ -20,13 +20,11 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.lucene.document.DateField;
@@ -53,7 +51,6 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.localconfig.DebugConfig;
-import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.redolog.op.IndexItem;
 import com.zimbra.cs.stats.ZimbraPerf;
 
@@ -190,12 +187,16 @@ class Lucene21Index implements ILuceneIndex, ITextIndex  {
     }
     
     public void addDocument(IndexItem redoOp, Document doc, int indexId, long receivedDate, 
-        MailItem mi, boolean deleteFirst) throws IOException {
-        addDocument(redoOp, new Document[] { doc }, indexId, receivedDate, mi, deleteFirst);
+        String sortSubject, String sortSender, boolean deleteFirst) throws IOException {
+        addDocument(redoOp, new Document[] { doc }, indexId, receivedDate, sortSubject, sortSender, deleteFirst);
     }
     
     public void addDocument(IndexItem redoOp, Document[] docs, int indexId, long receivedDate, 
-        MailItem mi, boolean deleteFirst) throws IOException {
+        String sortSubject, String sortSender, boolean deleteFirst) throws IOException {
+        
+        if (docs.length == 0)
+            return;
+        
         long start = 0;
         synchronized(getLock()) {        
             if (sLog.isDebugEnabled())
@@ -213,8 +214,8 @@ class Lucene21Index implements ILuceneIndex, ITextIndex  {
                         doc.removeFields(LuceneFields.L_SORT_SUBJECT);
                         doc.removeFields(LuceneFields.L_SORT_NAME);
                         //                                                                                                  store, index, tokenize
-                        doc.add(new Field(LuceneFields.L_SORT_SUBJECT, mi.getSortSubject(), Field.Store.NO, Field.Index.UN_TOKENIZED));
-                        doc.add(new Field(LuceneFields.L_SORT_NAME,    mi.getSortSender(), Field.Store.NO, Field.Index.UN_TOKENIZED));
+                        doc.add(new Field(LuceneFields.L_SORT_SUBJECT, sortSubject, Field.Store.NO, Field.Index.UN_TOKENIZED));
+                        doc.add(new Field(LuceneFields.L_SORT_NAME,    sortSender, Field.Store.NO, Field.Index.UN_TOKENIZED));
                         
                         doc.removeFields(LuceneFields.L_MAILBOX_BLOB_ID);
                         doc.add(new Field(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(indexId), Field.Store.YES, Field.Index.UN_TOKENIZED));
@@ -236,19 +237,11 @@ class Lucene21Index implements ILuceneIndex, ITextIndex  {
                         } else {
                             mIndexWriter.addDocument(doc);
                         }
-                        
-                        if (redoOp != null)
-                            mUncommittedRedoOps.add(redoOp);
-                        
-//                        Field[] fs = doc.getFields(LuceneFields.L_MAILBOX_BLOB_ID);
-//                        for (Field f : fs) {
-////                            sLog.warn("IndexId of "+indexId+" for field: "+f.toString()+" in Document "+doc);
-//                            if (!f.stringValue().equals(Integer.toString(indexId))) {
-//                                sLog.warn("IndexId of "+indexId+" doesn't match field: "+f.toString());
-//                            }
-//                        }
-                    }
-                }
+                    } // synchronized(doc)
+                } // foreach(Document)
+                
+                if (redoOp != null)
+                    mUncommittedRedoOps.add(redoOp);
                 
                 // tim: this might seem bad, since an index in steady-state-of-writes will never get flushed, 
                 // however we also track the number of uncomitted-operations on the index, and will force a 

@@ -695,8 +695,12 @@ public class MailboxManager {
                 DbMailbox.getMailboxVolumeInfo(conn, data);
 
                 mailbox = instantiateMailbox(data);
-                // the existing Connection is used for the rest of this transaction...
-                mailbox.beginTransaction("createMailbox", octxt, redoRecorder, conn);
+                
+                synchronized(mailbox) { // this is here only so that the assert(Thread.holdsLock(this)) doesn't trip in Mailbox.beginTransaction
+                    // the existing Connection is used for the rest of this transaction...
+                    mailbox.beginTransaction("createMailbox", octxt, redoRecorder, conn);
+                }
+                
                 // create the default folders
                 mailbox.initialize();
 
@@ -717,7 +721,9 @@ public class MailboxManager {
             } finally {
                 try {
                     if (mailbox != null) {
-                        mailbox.endTransaction(success);
+                        synchronized(mailbox) { // this is here only so that the assert(Thread.holdsLock(this)) doesn't trip in Mailbox.beginTransaction
+                            mailbox.endTransaction(success);
+                        }
                         conn = null;
                     } else {
                         if (conn != null)

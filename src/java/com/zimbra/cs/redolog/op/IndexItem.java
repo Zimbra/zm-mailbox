@@ -21,9 +21,11 @@
 package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
+import java.util.List;
 
-import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
@@ -89,10 +91,23 @@ public class IndexItem extends RedoableOp {
     public void redo() throws Exception {
         int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
+        MailItem item;
+        try {
+            item = mbox.getItemById(null, mId, mType);
+        } catch (MailServiceException.NoSuchItemException e) {
+            // Because index commits are batched, during mailbox restore
+            // it's possible to see the commit record of indexing operation
+            // after the delete operation on the item being indexed.
+            // (delete followed by edit, for example)
+            // We can't distinguish this legitimate case from a case of
+            // really missing the item being indexed due to unexpected
+            // problem.  So just ignore the NoSuchItemException.
+            return;
+        }
+        
+        List<org.apache.lucene.document.Document> docList = item.generateIndexData();
         synchronized (mbox) { // temp fix for bug 11890
-            MailboxIndex mi = mbox.getMailboxIndex();
-            if (mi != null)
-                mi.redoIndexItem(mbox, mDeleteFirst, mId, mType, getTimestamp(), getUnloggedReplay());
+            mbox.redoIndexItem(item, mDeleteFirst, mId, mType, getTimestamp(), getUnloggedReplay(), docList);
         }
     }
 
@@ -127,8 +142,9 @@ public class IndexItem extends RedoableOp {
 
     public synchronized void allowCommit() {
         mCommitAllowed = true;
-        if (mAttachedToParent)
+        if (mAttachedToParent) {
             commit();
+        }
     }
 
     /**
@@ -138,6 +154,9 @@ public class IndexItem extends RedoableOp {
      * calls.
      */
     public synchronized void commit() {
+        if (ZimbraLog.index.isDebugEnabled())
+            ZimbraLog.index.debug(this.toString()+" committed");
+        
         // Don't check mCommitAllowed here.  It's the responsibility of
         // the caller.
         if (!mCommitAbortDone) {
@@ -171,7 +190,13 @@ public class IndexItem extends RedoableOp {
             mAttachedToParent = true;
             if (mParentOp != null)
                 mParentOp.addChainedOp(this);
-        } else
+        } else {
+            if (ZimbraLog.index.isDebugEnabled()){ 
+                if (mAttachedToParent && !mCommitAllowed) {
+                    ZimbraLog.index.debug("Committing because attachToParent called twice!");
+                }
+            }
             commit();
+        }
     }
 }

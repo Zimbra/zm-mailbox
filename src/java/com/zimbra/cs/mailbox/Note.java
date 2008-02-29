@@ -20,10 +20,14 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.lucene.document.Field;
+
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.index.MailboxIndex;
-import com.zimbra.cs.redolog.op.IndexItem;
+import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
@@ -143,12 +147,19 @@ public class Note extends MailItem {
         return note;
     }
 
-    public void reindex(IndexItem redo, boolean deleteFirst, Object indexData) throws ServiceException {
-        // FIXME: need to note this as dirty so we can reindex if things fail
-        MailboxIndex mi = mMailbox.getMailboxIndex();
-        if (mi != null)
-            mi.indexNote(mMailbox, redo, deleteFirst, this);
+    @Override public List<org.apache.lucene.document.Document> generateIndexData() throws ServiceException {
+        String toIndex = getText();
+
+        org.apache.lucene.document.Document doc = new org.apache.lucene.document.Document();
+        doc.add(new Field(LuceneFields.L_CONTENT, toIndex, Field.Store.NO, Field.Index.TOKENIZED));
+        doc.add(new Field(LuceneFields.L_H_SUBJECT, toIndex, Field.Store.NO, Field.Index.TOKENIZED));
+        doc.add(new Field(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_NOTE, Field.Store.YES, Field.Index.UN_TOKENIZED));
+        
+        List<org.apache.lucene.document.Document> toRet = new ArrayList<org.apache.lucene.document.Document>(1);
+        toRet.add(doc);
+        return toRet;
     }
+    
 
     void setContent(String content) throws ServiceException {
         if (!isMutable())
