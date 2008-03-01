@@ -139,7 +139,7 @@ public class IcsFormatter extends Formatter {
         // TODO: Modify Formatter.save() API to pass in charset of body, then
         // use that charset in String() constructor.
         boolean continueOnError = context.ignoreAndContinueOnError();
-        boolean removeAlarms = false;
+        boolean preserveExistingAlarms = true;
         Reader reader = null;
         try {
             reader = new InputStreamReader(context.req.getInputStream(), Mime.P_CHARSET_UTF8);
@@ -148,7 +148,7 @@ public class IcsFormatter extends Formatter {
                 // and add them one by one.  Memory hungry if there are very many events/tasks, but it allows
                 // TZID reference before VTIMEZONE of that timezone appears in the ics file.
                 List<ZVCalendar> icals = ZCalendarBuilder.buildMulti(reader);
-                ImportInviteVisitor visitor = new ImportInviteVisitor(context.opContext, folder, removeAlarms);
+                ImportInviteVisitor visitor = new ImportInviteVisitor(context.opContext, folder, preserveExistingAlarms);
                 Invite.createFromCalendar(context.targetAccount, null, icals, true, continueOnError, visitor);
             } else {
                 // Events/tasks are added in callbacks during parse.  This is more memory efficient than the
@@ -156,7 +156,7 @@ public class IcsFormatter extends Formatter {
                 // clients that put VTIMEZONEs at the end will not parse.  Evolution client does this.
                 ZICalendarParseHandler handler =
                     new IcsImportParseHandler(context.opContext, context.targetAccount, folder,
-                                              continueOnError, removeAlarms);
+                                              continueOnError, preserveExistingAlarms);
                 ZCalendarBuilder.parse(reader, handler);
             }
         } finally {
