@@ -103,6 +103,9 @@ public class LC {
     public static final KnownKey zimbra_index_deferred_items_retry_interval;
     public static final KnownKey zimbra_index_max_transaction_bytes;
     public static final KnownKey zimbra_index_max_transaction_items;
+    public static final KnownKey zimbra_index_lucene_autocommit;
+    public static final KnownKey zimbra_index_use_nfs_deletion_policy;
+    public static final KnownKey zimbra_index_use_reader_reopen;
 
     public static final KnownKey zimbra_spam_report_queue_size;
 
@@ -489,6 +492,21 @@ public class LC {
             "zimbra_index_max_transaction_items",
             "50",
             "When batching index operations, the maximum number of mail_items we allow in a single transaction");
+        
+        zimbra_index_lucene_autocommit = new KnownKey(
+            "zimbra_index_lucene_autocommit",
+            "false",
+            "Lucene-2.3 autocommit setting");
+
+        zimbra_index_use_nfs_deletion_policy = new KnownKey(
+            "zimbra_index_use_nfs_deletion_policy",
+            "true",
+            "Use NFS-compatible IndexDeletionPolicy for Lucene");
+        
+        zimbra_index_use_reader_reopen = new KnownKey(
+            "zimbra_index_use_reader_reopen",
+            "false",
+            "If TRUE then attempt to reopen IndexReaders instead of recreating them when the index changes");
  
         zimbra_spam_report_queue_size = new KnownKey("zimbra_spam_report_queue_size");
         zimbra_spam_report_queue_size.setDefault("100");
