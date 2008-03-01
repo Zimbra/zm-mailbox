@@ -3152,8 +3152,7 @@ public class Mailbox {
      * This API will periodically attempt to re-try deferred index items.
      */
     private void maybeIndexDeferredItems() {
-        assert(!Thread.holdsLock(this));
-        if (Thread.holdsLock(this)) // don't attempt if we're somehow holding the mailbox lock!
+        if (Thread.holdsLock(this)) // don't attempt if we're holding the mailbox lock
             return;
         
         boolean shouldIndexDeferred = false;
