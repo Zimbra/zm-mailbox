@@ -42,6 +42,7 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
+import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.ParsedDuration;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.cache.CacheToXML;
@@ -114,8 +115,11 @@ public class GetCalendarItemSummaries extends CalendarRequest {
 
             ParsedDuration defDuration = defaultInvite.getEffectiveDuration();
             long defDurationMsecs = 0;
-            if (defDuration != null && defaultInvite.getStartTime() != null)
-                defDurationMsecs = defDuration.getDurationAsMsecs(defaultInvite.getStartTime().getDate());
+            if (defDuration != null && defaultInvite.getStartTime() != null) {
+                ParsedDateTime s = defaultInvite.getStartTime();
+                long et = s.add(defDuration).getUtcTime();
+                defDurationMsecs = et - s.getUtcTime();
+            }
             
             boolean defIsOrg = defaultInvite.isOrganizer();
             

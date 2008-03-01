@@ -235,20 +235,6 @@ public final class ParsedDuration
         return addToDate(new Date(utcTime), true).getTime();
     }
 
-    /**
-     * In order to _correctly_ calculate the number of ms in this duration, we actually
-     * need to know the STARTING time...this is because things like "1 Day" might change
-     * if we cross a Daylight/Standard timezone boundary.  
-     * 
-     * @param startDate
-     * @return
-     */
-    public long getDurationAsMsecs(Date startDate) {
-        Date endDate = addToDate(startDate);
-        
-        return endDate.getTime() - startDate.getTime();
-    }
-    
     public static ParsedDuration parse(String durationStr) throws ServiceException {
         if (durationStr == null)
             return null;
