@@ -35,6 +35,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.Element.XMLElement;
 
@@ -138,20 +139,32 @@ public class ZAuthToken {
         return (mValue == null && (mAttrs == null || mAttrs.isEmpty()));
     }
     
-    public Element encodeAuthReq(Element authReq, boolean isAdmin) {
-        Element eAuthToken = authReq.addElement(isAdmin?AdminConstants.E_AUTH_TOKEN:AccountConstants.E_AUTH_TOKEN);
+    private Element encodeAuthToken(Element parent,
+                                    String authTokenElem,
+                                    String attrElem,
+                                    String nameAttr) {
+        Element eAuthToken = parent.addElement(authTokenElem);
         if (mValue != null) {
             eAuthToken.setText(mValue);
         } else if (mAttrs != null) {
-            String eName = isAdmin?AdminConstants.E_A:AccountConstants.E_A;
-            String aName = isAdmin?AdminConstants.A_N:AccountConstants.A_N;
             for (Map.Entry<String, String> attr : mAttrs.entrySet())
-                eAuthToken.addKeyValuePair(attr.getKey(), attr.getValue(), eName, aName);
+                eAuthToken.addKeyValuePair(attr.getKey(), attr.getValue(), attrElem, nameAttr);
         }
         if (mType != null)
             eAuthToken.addAttribute(AccountConstants.A_TYPE, mType);
         
         return eAuthToken;
+    }
+    
+    public Element encodeSoapCtxt(Element ctxt) {
+        return encodeAuthToken(ctxt, HeaderConstants.E_AUTH_TOKEN, HeaderConstants.E_A, HeaderConstants.A_N);
+    }
+    
+    public Element encodeAuthReq(Element authReq, boolean isAdmin) {
+        String authTokenElem = isAdmin?AdminConstants.E_AUTH_TOKEN:AccountConstants.E_AUTH_TOKEN;
+        String attrElem = isAdmin?AdminConstants.E_A:AccountConstants.E_A;
+        String nameAttr = isAdmin?AdminConstants.A_N:AccountConstants.A_N;
+        return encodeAuthToken(authReq, authTokenElem, attrElem, nameAttr);
     }
 
     public void encode(HttpClient client, HttpMethod method, boolean isAdminReq, String cookieDomain) {

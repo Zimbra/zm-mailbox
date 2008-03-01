@@ -57,23 +57,8 @@ public class SoapUtil {
     public static Element toCtxt(SoapProtocol protocol, ZAuthToken authToken, boolean noSession) {
         Element ctxt = protocol.getFactory().createElement(HeaderConstants.CONTEXT);
         
-        String atType = authToken==null?null:authToken.getType();
-        String atValue = authToken==null?null:authToken.getValue();
-        Map<String, String> atAttrs = authToken==null?null:authToken.getAttrs();
-            
-        Element eAt = null;
-        if (atValue != null) {
-            if (atType == null)
-                ctxt.addAttribute(HeaderConstants.E_AUTH_TOKEN, atValue, Element.Disposition.CONTENT);
-            else
-                eAt = ctxt.addUniqueElement(HeaderConstants.E_AUTH_TOKEN).setText(atValue);
-        } else if (atAttrs != null) {
-            eAt = ctxt.addUniqueElement(HeaderConstants.E_AUTH_TOKEN);
-            for (Map.Entry<String, String> attr : atAttrs.entrySet())
-                eAt.addKeyValuePair(attr.getKey(), attr.getValue(), HeaderConstants.E_A, HeaderConstants.A_N);
-        }
-        if (eAt != null && atType != null)
-            eAt.addAttribute(HeaderConstants.A_TYPE, atType);
+        if (authToken != null)
+            authToken.encodeSoapCtxt(ctxt);
 
         if (noSession)
             ctxt.addUniqueElement(HeaderConstants.E_NO_SESSION);
