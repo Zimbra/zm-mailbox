@@ -1582,12 +1582,16 @@ class Lucene21Index implements ILuceneIndex, ITextIndex  {
         private boolean mShutdown = false;
     }
 
-    public Object getCurrentCommitPoint() { return null; }
+    public String getCurrentCommitPoint() { return null; }
     
     public void onClose(RefCountedIndexReader ref) {
         synchronized(mOpenReaders) {
             mOpenReaders.remove(ref);
         }
+    }
+    
+    public IndexReader reopenReader(IndexReader reader) throws IOException {
+        return null;
     }
     
     List<RefCountedIndexReader> mOpenReaders = new ArrayList<RefCountedIndexReader>();    

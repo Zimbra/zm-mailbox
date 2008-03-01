@@ -18,6 +18,7 @@ package com.zimbra.cs.index;
 
 import java.io.IOException;
 
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.Sort;
 
 import com.zimbra.cs.index.MailboxIndex.SortBy;
@@ -26,9 +27,10 @@ import com.zimbra.cs.index.MailboxIndex.SortBy;
  * 
  */
 interface ILuceneIndex extends ITextIndex {
-    Object getCurrentCommitPoint();
+    String getCurrentCommitPoint();
     void onClose(RefCountedIndexReader reader);
     RefCountedIndexSearcher getCountedIndexSearcher() throws IOException;
     Sort getSort(SortBy searchOrder);
     void checkBlobIds() throws IOException;
+    IndexReader reopenReader(IndexReader reader) throws IOException;
 }
