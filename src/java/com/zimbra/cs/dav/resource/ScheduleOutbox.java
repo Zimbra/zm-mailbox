@@ -132,7 +132,8 @@ public class ScheduleOutbox extends Collection {
 				end = ParsedDateTime.parseUtcOnly(dtendProp.getValue()).getUtcTime();
 			} else {
 				ParsedDuration dur = ParsedDuration.parse(durationProp.getValue());
-				end = startTime.add(dur).getUtcTime() - start;
+				ParsedDateTime endTime = startTime.add(dur);
+				end = endTime.getUtcTime();
 			}
 		} catch (ParseException pe) {
 			throw new DavException("can't parse date", HttpServletResponse.SC_BAD_REQUEST, pe);
