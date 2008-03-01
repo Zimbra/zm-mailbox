@@ -65,6 +65,8 @@ import com.zimbra.cs.stats.ZimbraPerf;
 class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
     
     private static final boolean sBatchIndexing = (LC.debug_batch_message_indexing.intValue() > 0);
+    private static final boolean sLuceneAutocommit = LC.zimbra_index_lucene_autocommit.booleanValue();
+    private static final boolean sUseDeletionPolicy = LC.zimbra_index_use_nfs_deletion_policy.booleanValue();
     
     static void flushAllWriters() {
         if (DebugConfig.disableIndexing)
@@ -321,7 +323,7 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
                 // can use default analyzer here since it is easier, and since we aren't actually
                 // going to do any indexing...
 //                sLog.info("MI"+this.toString()+" Opening IndexWriter(3) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-                writer = new IndexWriter(mIdxDirectory, true, ZimbraAnalyzer.getDefaultAnalyzer(), true);
+                writer = new IndexWriter(mIdxDirectory, sLuceneAutocommit, ZimbraAnalyzer.getDefaultAnalyzer(), true, (sUseDeletionPolicy ? this : null));
                 
                 if (ZimbraLog.index_lucene.isDebugEnabled())
                     writer.setInfoStream(new PrintStream(new LoggingOutputStream(ZimbraLog.index_lucene, Log.Level.debug)));
@@ -1121,14 +1123,17 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
         BooleanQuery.setMaxClauseCount(10000); 
 
         synchronized(getLock()) {
+            if (isIndexWriterOpen()) 
+                closeIndexWriter();
+            
             RefCountedIndexReader toRet = sIndexReadersCache.getIndexReader(this);
             if (toRet != null)
                 return toRet;
             
+            assert(!isIndexWriterOpen());
+            
             IndexReader reader = null;
             try {
-                if (isIndexWriterOpen())
-                    closeIndexWriter();
                 reader = IndexReader.open(mIdxDirectory);
             } catch(IOException e) {
                 // Handle the special case of trying to open a not-yet-created
@@ -1288,8 +1293,7 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
             if (mIndexWriter == null) {
                 try {
 //                  sLog.debug("MI"+this.toString()+" Opening IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-//                    mIndexWriter = new IndexWriter(mIdxDirectory, true, mMbidx.getAnalyzer(), false, this);
-                    mIndexWriter = new IndexWriter(mIdxDirectory, true, mMbidx.getAnalyzer(), false);
+                    mIndexWriter = new IndexWriter(mIdxDirectory, sLuceneAutocommit, mMbidx.getAnalyzer(), false, (sUseDeletionPolicy ? this : null));
                     if (ZimbraLog.index_lucene.isDebugEnabled())
                         mIndexWriter.setInfoStream(new PrintStream(new LoggingOutputStream(ZimbraLog.index_lucene, Log.Level.debug)));
                     if (DebugConfig.luceneUseSingleMergeScheduler) {
@@ -1306,8 +1310,7 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
                     File indexDir  = mIdxDirectory.getFile();
                     if (indexDirIsEmpty(indexDir)) {
 //                      sLog.debug("MI"+this.toString()+" Opening IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-//                        mIndexWriter = new IndexWriter(mIdxDirectory, true, mMbidx.getAnalyzer(), true, this);
-                        mIndexWriter = new IndexWriter(mIdxDirectory, true, mMbidx.getAnalyzer(), true);
+                        mIndexWriter = new IndexWriter(mIdxDirectory, sLuceneAutocommit, mMbidx.getAnalyzer(), true, (sUseDeletionPolicy ? this : null));
                         if (ZimbraLog.index_lucene.isDebugEnabled())
                             mIndexWriter.setInfoStream(new PrintStream(new LoggingOutputStream(ZimbraLog.index_lucene, Log.Level.debug)));
                         if (DebugConfig.luceneUseSingleMergeScheduler) {
@@ -1404,13 +1407,6 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
      * that the # open file descriptors is controlled.
      */
     private static int sLRUSize;
-    
-//    private static int sLuceneMergeFactor = 3;
-//    
-//    private static int sLuceneMaxBufferedDocs = 0;
-//    private static int sLuceneRAMBufferSizeMB = 0;
-//    private static boolean sLuceneUseCompoundFile = true;
-//    private static boolean sUseSingleMergeScheduler = true;
     
     /**
      * After we add a document to it, how long do we hold an index open for writing before closing it 
@@ -1611,25 +1607,37 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
      */
     public void onCommit(List c) throws IOException {
         List<IndexCommitPoint> commits = (List<IndexCommitPoint>)c;
+
+        if (commits.size() == 1)
+            return;
         
         synchronized(mOpenReaders) {
-            mCurrentCommitPoint = commits.get(commits.size()-1);
-            if (commits.size() == 1)
-                return;
+            // the 0th commit point is the oldest, the size()-1th entry is the most recent
+            // the size-1th entry must never be deleted!
+            mCurrentCommitPoint = commits.get(commits.size() -1).getSegmentsFileName();
             
-            IndexCommitPoint oldestCommitPoint = commits.get(0);
+//            String secondOldestCommitPoint = commits.get(commits.size()-2).getSegmentsFileName();
+//            
+//            IndexCommitPoint oldestCommitPoint = commits.get(0);
             
             Set<String> toSave = new HashSet<String>(); 
             
             for (RefCountedIndexReader or : mOpenReaders) {
-                IndexCommitPoint orPoint = (IndexCommitPoint)(or.getCommitPoint());
-                if (orPoint == null)
-                    orPoint = oldestCommitPoint;
+                String orPoint = or.getCommitPoint();
+                
+                if (orPoint == null) {
+                    // the assumption here is, if the reader has a
+                    // NULL then when it was opened we had NOT ever opened the writer.
+                    // therefore the reader is pointing to the most recent point.
+                    orPoint = mCurrentCommitPoint;
+                }
                 if (orPoint != null)
-                    toSave.add(orPoint.getSegmentsFileName());
+                    toSave.add(orPoint);
             }
             
             int commitsSize = commits.size();
+            
+            // <size()-1 so we never touch the last one, we NEVER want to delete it 
             for (int i = 0; i < commitsSize-1; i++) {
                 IndexCommitPoint cur = commits.get(i);
                 if (!toSave.contains(cur.getSegmentsFileName())) {
@@ -1648,7 +1656,7 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
         onCommit(c);
     }
     
-    public IndexCommitPoint getCurrentCommitPoint() { return mCurrentCommitPoint; }
+    public String getCurrentCommitPoint() { return mCurrentCommitPoint; }
     
     public void onClose(RefCountedIndexReader ref) {
         synchronized(mOpenReaders) {
@@ -1656,6 +1664,10 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
         }
     }
     
-    private IndexCommitPoint mCurrentCommitPoint = null;
-    List<RefCountedIndexReader> mOpenReaders = new ArrayList<RefCountedIndexReader>();    
+    private String mCurrentCommitPoint = null;
+    List<RefCountedIndexReader> mOpenReaders = new ArrayList<RefCountedIndexReader>();
+    
+    public IndexReader reopenReader(IndexReader reader) throws IOException {
+        return reader.reopen();
+    }
 }

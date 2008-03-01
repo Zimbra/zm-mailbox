@@ -16,12 +16,17 @@
  */
 package com.zimbra.cs.index;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
+import org.apache.lucene.index.IndexReader;
+
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * Self-sweeping (with it's own sweeper thread) LRU cache of open index readers 
@@ -34,6 +39,8 @@ class IndexReadersCache extends Thread {
     private boolean mShutdown;
     private long mSweepIntervalMS;
     private long mMaxReaderOpenTimeMS;
+    
+    private static boolean sUseReaderReopen = LC.zimbra_index_use_reader_reopen.booleanValue();
     
     IndexReadersCache(int maxOpenReaders, long maxReaderOpenTime, long sweepIntervalMS) {
         super("IndexReadersCache-Sweeper");
@@ -94,9 +101,16 @@ class IndexReadersCache extends Thread {
     synchronized void removeIndexReader(ILuceneIndex idx) {
         if (mMaxOpenReaders <= 0)
             return;
-        RefCountedIndexReader removed = mOpenIndexReaders.remove(idx);
-        if (removed != null) {
-            removed.release();
+        RefCountedIndexReader reader = mOpenIndexReaders.get(idx);
+        if (reader != null && !reader.requiresReopen()) {
+            if (sUseReaderReopen && reader.markForReopen()) {
+                if (sLog.isDebugEnabled())
+                    sLog.debug("IndexReader successfully marked for re-open: "+idx.toString());
+                return; // can be reopened: leave in cache and return
+            }
+            
+            // can't reopen in, someone's really using it...
+            mOpenIndexReaders.remove(idx);
             if (sLog.isDebugEnabled())
                 sLog.debug("Closing index reader for index: "+idx.toString()+" (removed)");
         }
@@ -108,8 +122,30 @@ class IndexReadersCache extends Thread {
      */
     synchronized RefCountedIndexReader getIndexReader(ILuceneIndex idx) {
         RefCountedIndexReader toRet = mOpenIndexReaders.get(idx);
-        if (toRet != null)
+        if (toRet != null) {
+            if (toRet.requiresReopen()) {
+                try {
+                    IndexReader oldReader = toRet.getReader();
+                    IndexReader newReader = oldReader.reopen();
+                    if (newReader != null && newReader != oldReader) {
+                        // reader changed, must close old one
+                        oldReader.close();
+                        if (sLog.isDebugEnabled()) 
+                            sLog.debug("Reopened new indexreader instance: "+newReader);
+                        toRet.reopened(newReader);
+                    } else {
+                        if (sLog.isDebugEnabled()) 
+                            sLog.debug("Attempted reopen but reader was current: "+oldReader);
+                        toRet.reopened(oldReader);
+                    }
+                } catch (IOException e) {
+                    ZimbraLog.im.debug("Caught exception while attempting to reopen IndexReader", e);
+                    toRet.release();
+                    return null;
+                }
+            }
             toRet.addRef();
+        }
         return toRet;
     }
     
@@ -120,7 +156,6 @@ class IndexReadersCache extends Thread {
     synchronized boolean containsKey(ILuceneIndex idx) {
         return mOpenIndexReaders.containsKey(idx);
     }
-    
     
     /**
      * Sweeper thread entry point

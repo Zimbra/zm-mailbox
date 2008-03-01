@@ -27,10 +27,11 @@ import com.zimbra.common.util.ZimbraLog;
  */
 final class RefCountedIndexReader {
     private ILuceneIndex mIdx;
-    private Object mCommitPoint;
+    private String mCommitPoint;
     private IndexReader mReader;
     private int mCount = 1;
     private long mAccessTime;
+    private boolean mRequiresReopen = false;
 
     RefCountedIndexReader(ILuceneIndex idx, IndexReader reader) {
         mIdx = idx;
@@ -39,27 +40,49 @@ final class RefCountedIndexReader {
         mAccessTime = System.currentTimeMillis();
     }
     
-    Object getCommitPoint() {
+    String getCommitPoint() {
         return mCommitPoint;
     }
     
-    public synchronized IndexReader getReader() { return mReader; }
+    synchronized IndexReader getReader() {
+        return mReader; 
+    }
 
-    public synchronized void addRef() {
+    synchronized void addRef() {
         mAccessTime = System.currentTimeMillis();
         mCount++;
     }
 
-    public synchronized void forceClose() {
+    synchronized void forceClose() {
         closeIt();
     }
 
-    public synchronized void release() {
+    synchronized void release() {
         mCount--;
         assert(mCount >= 0);
         if (0 == mCount) {
             closeIt();
         }
+    }
+    
+    synchronized boolean markForReopen() {
+        if (mCount != 1) 
+            return false;
+        mRequiresReopen = true;
+        return true;
+    }
+    
+    synchronized boolean requiresReopen() { assert(!mRequiresReopen || mCount==1); return mRequiresReopen; }
+    
+    synchronized void reopened(IndexReader newReader) {
+        assert(mRequiresReopen && mCount==1); 
+        mRequiresReopen = false;
+        mCommitPoint = mIdx.getCurrentCommitPoint();
+        mReader = newReader;
+    }
+    
+    synchronized int getRefCount() {
+        return mCount;
     }
     
     synchronized long getAccessTime() {
