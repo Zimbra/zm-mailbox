@@ -635,11 +635,16 @@ public class Recurrence
                 return new ArrayList<Instance>();
             }
 
+            ICalTimeZone tz = mDtStart.getTimeZone();
+            if (tz == null)
+                tz = ICalTimeZone.getUTC();
             List<Instance> toRet = null;
             try {
                 long duration = 0;
-                if (mDuration != null)
-                    duration = mDuration.getDurationAsMsecs(mDtStart.getDate());
+                if (mDuration != null) {
+                    ParsedDateTime et = mDtStart.add(mDuration);
+                    duration = et.getUtcTime() - mDtStart.getUtcTime();
+                }
                 List <java.util.Date> dateList = mRecur.expandRecurrenceOverRange(mDtStart, start - duration, end);
 
                 toRet = new ArrayList<Instance>(dateList.size());
@@ -649,10 +654,12 @@ public class Recurrence
                     Date cur = (Date)iter.next();
                     long instStart = cur.getTime();
                     long instEnd;
-                    if (mDuration != null)
-                        instEnd = mDuration.addToDate(cur).getTime();
-                    else
+                    if (mDuration != null) {
+                        ParsedDateTime startDt = ParsedDateTime.fromUTCTime(instStart, tz);
+                        instEnd = startDt.add(mDuration).getUtcTime();
+                    } else {
                         instEnd = instStart;
+                    }
                     if (instStart < end && instEnd > start) {
                         toRet.add(num++, new Instance(calItem, mInvId, false, instStart, instEnd, false));
                     }
@@ -1289,7 +1296,8 @@ public class Recurrence
                 Instance inst = iter.next();
                 if (inst != null) {
                     long st = inst.getStart();
-                    if (st < start || st >= end) {
+                    long et = inst.getEnd();
+                    if (et < start || st >= end) {
                         // Restrict to [start, end) range.
                         iter.remove();
                     } else {

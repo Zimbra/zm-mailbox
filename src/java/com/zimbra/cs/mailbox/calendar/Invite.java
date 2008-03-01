@@ -1910,13 +1910,16 @@ public class Invite {
         if (mStart == null)
             return;
         if (!isTodo()) {
-            ParsedDuration dur =
+            ParsedDuration durMinimum =
                 mStart.hasTime() ? ParsedDuration.parse(false, 0, 0, 0, 0, 1)
                                  : ParsedDuration.parse(false, 0, 1, 0, 0, 0);
             if (mEnd != null && mEnd.compareTo(mStart) <= 0) {
-                mEnd = mStart.add(dur);
-            } else if (mDuration != null && mDuration.getDurationAsMsecs(mStart.getDate()) <= 0) {
-                mDuration = dur;
+                mEnd = mStart.add(durMinimum);
+            } else if (mDuration != null) {
+                ParsedDateTime et = mStart.add(mDuration);
+                long durMillis = et.getUtcTime() - mStart.getUtcTime();
+                if (durMillis <= 0)
+                    mDuration = durMinimum;
             }
         }
     }

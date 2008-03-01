@@ -112,13 +112,6 @@ public class Alarm {
     public Action getAction() { return mAction; }
     public List<ZAttendee> getAttendees() { return mAttendees; }
     
-    public long getRepeatMillis() {
-        if (mRepeatDuration == null)
-            return mRepeatDuration.getDurationAsMsecs(new Date());
-        else
-            return 0;
-    }
-
     public Alarm(Action action,
                   TriggerType triggerType, TriggerRelated related,
                   ParsedDuration triggerRelative, ParsedDateTime triggerAbsolute,
