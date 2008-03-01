@@ -3810,10 +3810,10 @@ public class Mailbox {
         return addInvite(octxt, inv, folderId, pm, false);
     }
 
-    public int[] addInvite(OperationContext octxt, Invite inv, int folderId, boolean removeAlarms)
+    public int[] addInvite(OperationContext octxt, Invite inv, int folderId, boolean preserveExistingAlarms)
     throws ServiceException {
         maybeIndexDeferredItems();
-        return addInvite(octxt, inv, folderId, null, removeAlarms);
+        return addInvite(octxt, inv, folderId, null, preserveExistingAlarms);
     }
 
     /**
@@ -3829,7 +3829,7 @@ public class Mailbox {
      * @throws ServiceException
      */
     public int[] addInvite(OperationContext octxt, Invite inv, int folderId,
-                                        ParsedMessage pm, boolean removeAlarms)
+                                        ParsedMessage pm, boolean preserveExistingAlarms)
     throws ServiceException {
         if (pm == null) {
             inv.setDontIndexMimeMessage(true); // the MimeMessage is fake, so we don't need to index it
@@ -3859,10 +3859,6 @@ public class Mailbox {
                     inv.setInviteId(getNextItemId(Mailbox.ID_AUTO_INCREMENT));
                 }
                 
-                // Clear alarms if requested. (but not during a redo)
-                if (removeAlarms && redoPlayer == null)
-                    inv.clearAlarms();
-                
                 boolean calItemIsNew = false;
                 CalendarItem calItem = getCalendarItemByUid(inv.getUid());
                 if (calItem == null) { 
@@ -3883,7 +3879,7 @@ public class Mailbox {
                         if (currInv != null)
                             inv.setInviteId(currInv.getMailItemId());
                     }
-                    calItem.processNewInvite(pm, inv, folderId, volumeId, 0, !removeAlarms, false);
+                    calItem.processNewInvite(pm, inv, folderId, volumeId, 0, preserveExistingAlarms, false);
                 }
                 if (calItem != null) 
                     queueForIndexing(calItem, !calItemIsNew, null);
@@ -5506,12 +5502,12 @@ public class Mailbox {
         // disable modification conflict checks, as we've already wiped the folder and we may hit an appoinment >1 times
         OperationContext octxtNoConflicts = new OperationContext(octxt).unsetChangeConstraint();
 
-        boolean removeAlarms = false;
+        boolean preserveExistingAlarms = true;
         // add the newly-fetched items to the folder
         for (Object obj : sdata.items) {
             try {
                 if (obj instanceof Invite) {
-                    int calIds[] = addInvite(octxtNoConflicts, (Invite) obj, folderId, removeAlarms);
+                    int calIds[] = addInvite(octxtNoConflicts, (Invite) obj, folderId, preserveExistingAlarms);
                     if (calIds != null && calIds.length > 0)
                         existingCalItems.remove(calIds[0]);
                 } else if (obj instanceof ParsedMessage) {

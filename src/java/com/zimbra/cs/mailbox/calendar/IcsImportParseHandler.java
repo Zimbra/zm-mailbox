@@ -58,11 +58,11 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
     private InviteVisitor mInviteVisitor;
 
     public IcsImportParseHandler(OperationContext ctxt, Account account, Folder folder,
-                                 boolean continueOnError, boolean removeAlarms) {
+                                 boolean continueOnError, boolean preserveExistingAlarms) {
         mAccount = account;
         mContinueOnError = continueOnError;
         mTZIDsSeen = new HashSet<String>();
-        mInviteVisitor = new ImportInviteVisitor(ctxt, folder, removeAlarms);
+        mInviteVisitor = new ImportInviteVisitor(ctxt, folder, preserveExistingAlarms);
     }
 
     public IcsImportParseHandler(OperationContext ctxt, Account account, InviteVisitor visitor,
@@ -182,12 +182,12 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
     public static class ImportInviteVisitor implements InviteVisitor {
         private OperationContext mCtxt;
         private Folder mFolder;
-        private boolean mRemoveAlarms;
+        private boolean mPreserveExistingAlarms;
 
-        public ImportInviteVisitor(OperationContext ctxt, Folder folder, boolean removeAlarms) {
+        public ImportInviteVisitor(OperationContext ctxt, Folder folder, boolean preserveExistingAlarms) {
             mCtxt = ctxt;
             mFolder = folder;
-            mRemoveAlarms = removeAlarms;
+            mPreserveExistingAlarms = preserveExistingAlarms;
         }
 
         public void visit(Invite inv) throws ServiceException {
@@ -195,7 +195,7 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
             if (inv.getUid() == null)
                 inv.setUid(LdapUtil.generateUUID());
             // and add the invite to the calendar!
-            mFolder.getMailbox().addInvite(mCtxt, inv, mFolder.getId(), mRemoveAlarms);
+            mFolder.getMailbox().addInvite(mCtxt, inv, mFolder.getId(), mPreserveExistingAlarms);
             if (ZimbraLog.calendar.isDebugEnabled()) {
                 if (inv.isEvent())
                     ZimbraLog.calendar.debug("Appointment imported: UID=" + inv.getUid());
