@@ -125,7 +125,7 @@ public abstract class LmcSoapRequest {
             String curSessionID = null;
             if (mSession != null) {
                 ZAuthToken zat = mSession.getAuthToken();
-                trans.setAuthToken(zat.getType(), zat.getValue(), zat.getAttrs());
+                trans.setAuthToken(zat);
                 curSessionID = mSession.getSessionID();
                 trans.setSessionId(curSessionID);
             }

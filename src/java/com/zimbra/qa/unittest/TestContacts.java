@@ -73,7 +73,7 @@ extends TestCase {
 		String url = URLUtil.getSoapURL(remoteServer, true);
 		SoapHttpTransport transport = new SoapHttpTransport(url);
 		ZAuthToken zat = dar.getAuthToken();
-		transport.setAuthToken(zat.getType(), zat.getValue(), zat.getAttrs());
+		transport.setAuthToken(zat);
 		transport.setTargetAcctName(username);
 		try {
 			Element req = new Element.XMLElement(MailConstants.CONTACT_ACTION_REQUEST);

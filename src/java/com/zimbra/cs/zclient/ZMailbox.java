@@ -408,7 +408,7 @@ public class ZMailbox {
 
     private void initAuthToken(ZAuthToken authToken){
         mAuthToken = authToken;
-        mTransport.setAuthToken(mAuthToken.getType(), mAuthToken.getValue(), mAuthToken.getAttrs());
+        mTransport.setAuthToken(mAuthToken);
     }
 
     private void initPreAuth(Options options) {
@@ -521,7 +521,7 @@ public class ZMailbox {
         if (options.getRetryCount() != -1)
             mTransport.setRetryCount(options.getRetryCount());
         if (mAuthToken != null)
-            mTransport.setAuthToken(mAuthToken.getType(), mAuthToken.getValue(), mAuthToken.getAttrs());
+            mTransport.setAuthToken(mAuthToken);
         if (options.getResponseProtocol() != null)
             mTransport.setResponseProtocol(options.getResponseProtocol());
         if (options.getRequestProtocol() != null)
