@@ -135,7 +135,6 @@ public class Invite {
         mStart = start;
         mEnd = end;
         mDuration = duration;
-        mRecurrence = recurrence;
         mIsOrganizer = isOrganizer;
         mOrganizer = org;
         mAttendees = attendees;
@@ -145,7 +144,6 @@ public class Invite {
         mFlags = flags;
         mPartStat = partStat;
         mRsvp = rsvp;
-        mRecurrenceId = recurrenceId;
         mSeqNo = seqno;
         setDtStamp(dtstamp);
 
@@ -155,11 +153,34 @@ public class Invite {
         mSentByMe = sentByMe;
         mDescription = description;
         mFragment = fragment != null ? fragment : "";
+
+        setRecurrence(recurrence);
+        setRecurId(recurrenceId);
     }
 
     private Recurrence.IRecurrence mRecurrence;
     public Recurrence.IRecurrence getRecurrence() { return mRecurrence; }
-    public void setRecurrence(Recurrence.IRecurrence recur) { mRecurrence = recur; setIsRecurrence(mRecurrence != null); }
+    public void setRecurrence(Recurrence.IRecurrence recur) {
+        // Set RRULE only when RECURRENCE-ID is not set.
+        if (mRecurrenceId == null) {
+            mRecurrence = recur;
+            setIsRecurrence(mRecurrence != null);
+        }
+    }
+    private void clearRecurrence() {
+        mRecurrence = null;
+        setIsRecurrence(false);
+    }
+    protected RecurId mRecurrenceId = null; // RECURRENCE_ID
+    public RecurId getRecurId() { return mRecurrenceId; }
+    public void setRecurId(RecurId rid) {
+        mRecurrenceId = rid;
+        // Clear any RRULE if we're setting RECURRENCE-ID to a non-null value.
+        if (mRecurrenceId != null)
+            clearRecurrence();
+    }
+    public boolean hasRecurId() { return mRecurrenceId != null; }
+
     private boolean mSentByMe;
     private String mFragment;
     public String getFragment() { return mFragment; }
@@ -826,9 +847,6 @@ public class Invite {
     public void setClassProp(String classProp) { mClass = classProp; }
     public boolean classPropSetByMe() { return mClassSetByMe; }
     public void setClassPropSetByMe(boolean b) { mClassSetByMe = b; }
-    public RecurId getRecurId() { return mRecurrenceId; }
-    public void setRecurId(RecurId rid) { mRecurrenceId = rid; }
-    public boolean hasRecurId() { return mRecurrenceId != null; }
     public long getCompleted() { return mCompleted; }
     public void setCompleted(long completed) { mCompleted = completed; }
     public int getSeqNo() { return mSeqNo; }
@@ -1057,7 +1075,6 @@ public class Invite {
     protected String mComment;  /* RFC2445 'comment' */ 
     protected String mLocation;
     protected int mFlags = APPT_FLAG_EVENT;
-    protected RecurId mRecurrenceId = null; // RECURRENCE_ID
     protected long mDTStamp = 0;
     protected int mSeqNo = 0;
     
