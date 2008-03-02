@@ -60,6 +60,7 @@ import com.zimbra.cs.mailbox.calendar.Recurrence;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
+import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
@@ -414,8 +415,9 @@ public abstract class CalendarItem extends MailItem {
             return false;
         }
 
-        if (firstInv.getRecurrence() != null) {
-            mRecurrence = (Recurrence.RecurrenceRule) firstInv.getRecurrence().clone();
+        IRecurrence recur = firstInv.getRecurrence();
+        if (recur instanceof Recurrence.RecurrenceRule) {
+            mRecurrence = (IRecurrence) recur.clone();
             
             // now, go through the list of invites and find all the exceptions
             for (Invite cur : mInvites) {
@@ -433,18 +435,18 @@ public abstract class CalendarItem extends MailItem {
                         method.equals(ICalTok.PUBLISH.toString())) {
                         assert (cur.hasRecurId());
                         if (cur.hasRecurId() && cur.getStartTime() != null) {
-                            Recurrence.ExceptionRule exceptRule = (Recurrence.ExceptionRule) cur.getRecurrence();
-                            if (exceptRule == null) {
-                                // create a false ExceptionRule wrapper around the
-                                // single-instance
+                            Recurrence.ExceptionRule exceptRule = null;
+                            IRecurrence curRule = cur.getRecurrence();
+                            if (curRule != null && curRule instanceof Recurrence.ExceptionRule) {
+                                exceptRule = (Recurrence.ExceptionRule) curRule.clone();
+                            } else {
+                                // create a fake ExceptionRule wrapper around the single-instance
                                 exceptRule = new Recurrence.ExceptionRule(
                                         cur.getRecurId(),
                                         cur.getStartTime(), 
                                         cur.getEffectiveDuration(),
                                         new InviteInfo(cur)
                                         );
-                            } else {
-                                exceptRule = (Recurrence.ExceptionRule) exceptRule.clone();
                             }
                             ((Recurrence.RecurrenceRule) mRecurrence).addException(exceptRule);
                         } else {
