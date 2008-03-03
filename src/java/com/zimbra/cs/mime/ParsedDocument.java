@@ -31,6 +31,7 @@ import org.apache.lucene.document.Field;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.Fragment;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.mailbox.MailboxBlob;
@@ -81,7 +82,7 @@ public class ParsedDocument {
             try {
             	textContent = handler.getContent();
             } catch (Exception e) {
-            	// ignore conversion errors
+            	ZimbraLog.wiki.warn("Can't extract the text from the document.  (is convertd down?)", e);
             }
             mFragment = Fragment.getFragment(textContent, Fragment.Source.NOTEBOOK);
             try {
@@ -92,7 +93,7 @@ public class ParsedDocument {
             	mDocument.add(new Field(LuceneFields.L_H_FROM, creator, Field.Store.NO, Field.Index.TOKENIZED));
             	mDocument.add(new Field(LuceneFields.L_FILENAME, filename, Field.Store.YES, Field.Index.TOKENIZED));
             } catch (Exception e) {
-            	// ignore conversion errors
+            	ZimbraLog.wiki.warn("Can't index document.  (is convertd down?)", e);
             }
         } catch (MimeHandlerException mhe) {
             throw ServiceException.FAILURE("cannot create ParsedDocument", mhe);
@@ -101,7 +102,10 @@ public class ParsedDocument {
 
     public void setVersion(int v) {
         // should be indexed so we can add search constraints on the index version
-        mDocument.add(new Field(LuceneFields.L_VERSION, Integer.toString(v), Field.Store.YES, Field.Index.UN_TOKENIZED));
+    	if (mDocument == null)
+        	ZimbraLog.wiki.warn("Can't index document version.  (is convertd down?)");
+    	else
+    		mDocument.add(new Field(LuceneFields.L_VERSION, Integer.toString(v), Field.Store.YES, Field.Index.UN_TOKENIZED));
     }
 
     public int getSize()            { return mSize; }
@@ -113,6 +117,8 @@ public class ParsedDocument {
 
     public Document getDocument()   { return mDocument; }  // it could return null if the conversion has failed
     public List<Document> getDocumentList() { 
+    	if (mDocument == null)
+    		return java.util.Collections.emptyList();
         List<Document> toRet = new ArrayList<Document>(1); 
         toRet.add(mDocument); 
         return toRet; 
