@@ -20,6 +20,7 @@ package com.zimbra.cs.client.soap;
 import java.io.File;
 import java.io.IOException;
 import java.net.URLConnection;
+import java.util.Map;
 
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
@@ -93,11 +94,19 @@ public class LmcSendMsgRequest extends LmcSoapRequest {
         if (session == null)
             System.err.println(System.currentTimeMillis() + " " + Thread.currentThread() + " LmcSendMsgRequest.postAttachment session=null");
         
-        // Cookie cookie = new Cookie(domain, "ZM_AUTH_TOKEN", , "/", -1, false);
         HttpClient client = new HttpClient();
         PostMethod post = new PostMethod(uploadURL);
         ZAuthToken zat = session.getAuthToken();
-        zat.encode(client, post, false, domain);
+        Map<String, String> cookieMap = zat.cookieMap(false);
+        if (cookieMap != null) {
+            HttpState initialState = new HttpState();
+            for (Map.Entry<String, String> ck : cookieMap.entrySet()) {
+                Cookie cookie = new Cookie(domain, ck.getKey(), ck.getValue(), "/", -1, false);
+                initialState.addCookie(cookie);
+            }
+            client.setState(initialState);
+            client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
+        }
         client.getHttpConnectionManager().getParams().setConnectionTimeout(msTimeout);
         int statusCode = -1;
         try {

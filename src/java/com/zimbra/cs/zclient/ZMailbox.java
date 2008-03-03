@@ -74,7 +74,10 @@ import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemEvent;
 import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemFolderEvent;
 import com.zimbra.cs.zclient.event.ZRefreshEvent;
 import org.apache.commons.collections.map.LRUMap;
+import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpState;
+import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PostMethod;
@@ -1684,14 +1687,10 @@ public class ZMailbox {
         String aid = null;
 
         URI uri = getUploadURI();
-        boolean isAdmin = uri.getPort() == LC.zimbra_admin_service_port.intValue();
-        HttpClient client = new HttpClient();
+        HttpClient client = getHttpClient(uri);
 
         // make the post
         PostMethod post = new PostMethod(uri.toString());
-        ZAuthToken zat = getAuthToken();
-        zat.encode(client, post, isAdmin, uri.getHost(), true);
-
         client.getHttpConnectionManager().getParams().setConnectionTimeout(msTimeout);
         int statusCode;
         try {
@@ -1732,6 +1731,35 @@ public class ZMailbox {
             throw ZClientException.UPLOAD_SIZE_LIMIT_EXCEEDED("upload size limit exceeded", null);
         }
         throw ZClientException.UPLOAD_FAILED("upload failed, response: " + result, null);
+    }
+    
+    private void addAuthCookie(Map<String, String> cookieMap, URI uri, HttpState state) {
+        if (cookieMap == null) 
+            return;
+        
+        for (Map.Entry<String, String> ck : cookieMap.entrySet()) {
+            Cookie cookie = new Cookie(uri.getHost(), ck.getKey(), ck.getValue(), "/", -1, false);
+            state.addCookie(cookie);
+        }
+    }
+
+    HttpClient getHttpClient(URI uri) {
+        boolean isAdmin = uri.getPort() == LC.zimbra_admin_service_port.intValue();
+        HttpState initialState = new HttpState();
+        
+        Map<String, String> cookieMap;
+        if (isAdmin) {
+            cookieMap = getAuthToken().cookieMap(isAdmin);
+            addAuthCookie(cookieMap, uri, initialState);
+        }
+        
+        cookieMap = getAuthToken().cookieMap(false);
+        addAuthCookie(cookieMap, uri, initialState);
+        
+        HttpClient client = new HttpClient();
+        client.setState(initialState);
+        client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
+        return client;
     }
 
     /**
@@ -2011,15 +2039,12 @@ public class ZMailbox {
         int statusCode;
         try {
             URI uri = getRestURI(relativePath);
-            boolean isAdmin = uri.getPort() == LC.zimbra_admin_service_port.intValue();
+            HttpClient client = getHttpClient(uri);
 
-            HttpClient client = new HttpClient();
             if (msecTimeout > 0)
                 client.getHttpConnectionManager().getParams().setConnectionTimeout(msecTimeout);
 
             get = new GetMethod(uri.toString());
-            ZAuthToken zat = getAuthToken();
-            zat.encode(client, get, isAdmin, uri.getHost(), true);
 
             statusCode = client.executeMethod(get);
             // parse the response
@@ -2065,16 +2090,12 @@ public class ZMailbox {
                     relativePath = relativePath + "&ignore=1";
             }
             URI uri = getRestURI(relativePath);
-            boolean isAdmin = uri.getPort() == LC.zimbra_admin_service_port.intValue();
+            HttpClient client = getHttpClient(uri);
 
-            HttpClient client = new HttpClient();
             if (msecTimeout > 0)
                 client.getHttpConnectionManager().getParams().setConnectionTimeout(msecTimeout);
 
             post = new PostMethod(uri.toString());
-            ZAuthToken zat = getAuthToken();
-            zat.encode(client, post, isAdmin, uri.getHost(), true);
-
             RequestEntity entity = (length > 0) ?
                     new InputStreamRequestEntity(is, length, contentType != null ? contentType:  "application/octet-stream") :
                     new InputStreamRequestEntity(is, contentType);
