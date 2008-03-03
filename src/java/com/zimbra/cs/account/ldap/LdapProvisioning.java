@@ -763,6 +763,7 @@ public class LdapProvisioning extends Provisioning {
                 throw ServiceException.FAILURE("unable to get account after creating LDAP account entry: "+emailAddress+", check ldap log for possible BDB deadlock", null);
             AttributeManager.getInstance().postModify(acctAttrs, acct, attrManagerContext, true);
 
+        	validate("createAccountSucceeded", emailAddress);
             return acct;
         } catch (NameAlreadyBoundException nabe) {
             String info = "";
