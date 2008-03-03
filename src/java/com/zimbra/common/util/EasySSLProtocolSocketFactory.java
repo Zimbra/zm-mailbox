@@ -95,7 +95,7 @@ public class EasySSLProtocolSocketFactory implements SecureProtocolSocketFactory
             SSLContext context = SSLContext.getInstance("SSL");
             context.init(
               null, 
-              new TrustManager[] {new EasyX509TrustManager(null)},
+              new TrustManager[] {new GullibleTrustManager(null)},
               null);
             return context;
         } catch (Exception e) {
