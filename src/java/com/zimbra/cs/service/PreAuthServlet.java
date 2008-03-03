@@ -96,6 +96,7 @@ public class PreAuthServlet extends ZimbraServlet {
     {
         ZimbraLog.clearContext();
         try {
+            boolean revPxyMode = reverseProxyMode();
             Provisioning prov = Provisioning.getInstance();
             
             String isRedirect = getOptionalParam(req, PARAM_ISREDIRECT, "0");
@@ -109,7 +110,7 @@ public class PreAuthServlet extends ZimbraServlet {
             } else if (rawAuthToken != null) {
                 // see if we need a redirect to the correct server
                 Account acct = prov.get(AccountBy.id, authToken.getAccountId());
-                if (Provisioning.onLocalServer(acct)) {
+                if (Provisioning.onLocalServer(acct) || revPxyMode) {
                     setCookieAndRedirect(req, resp, authToken);
                 } else {
                     redirectToCorrectServer(req, resp, acct, rawAuthToken);
@@ -132,7 +133,7 @@ public class PreAuthServlet extends ZimbraServlet {
                 AuthToken at = (expires ==  0) ? AuthToken.getAuthToken(acct) : AuthToken.getAuthToken(acct, expires);
                 try {
                     rawAuthToken = at.getEncoded();
-                    if (Provisioning.onLocalServer(acct)) {
+                    if (Provisioning.onLocalServer(acct) || revPxyMode) {
                         setCookieAndRedirect(req, resp, at);
                     } else {
                         redirectToCorrectServer(req, resp, acct, rawAuthToken);
@@ -210,4 +211,11 @@ public class PreAuthServlet extends ZimbraServlet {
             }
         }
     }
+    
+    private boolean reverseProxyMode() throws ServiceException {
+        Server localhost = Provisioning.getInstance().getLocalServer();
+        String referMode = localhost.getAttr(Provisioning.A_zimbraMailReferMode, "wronghost");
+        return Provisioning.MAIL_REFER_MODE_NEVER.equals(referMode);
+    }
+    
 }
