@@ -19,6 +19,7 @@ package com.zimbra.cs.client;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Map;
 
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
@@ -122,13 +123,22 @@ public class LmcMessage {
         if (session == null)
             System.err.println(System.currentTimeMillis() + " " + Thread.currentThread() + " LmcMessage.downloadAttachment session=null");
         
-        // Cookie cookie = new Cookie(cookieDomain, "ZM_AUTH_TOKEN", session.getAuthToken(), "/", -1, false);
-        
         HttpClient client = new HttpClient();
         String url = baseURL + "?id=" + getID() + "&part=" + partNo;
         GetMethod get = new GetMethod(url);
+
         ZAuthToken zat = session.getAuthToken();
-        zat.encode(client, get, false, cookieDomain);
+        Map<String, String> cookieMap = zat.cookieMap(false);
+        if (cookieMap != null) {
+            HttpState initialState = new HttpState();
+            for (Map.Entry<String, String> ck : cookieMap.entrySet()) {
+                Cookie cookie = new Cookie(cookieDomain, ck.getKey(), ck.getValue(), "/", -1, false);
+                initialState.addCookie(cookie);
+            }
+            client.setState(initialState);
+            client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
+        }
+        
         client.setConnectionTimeout(msTimeout);
         int statusCode = -1;
         try {
