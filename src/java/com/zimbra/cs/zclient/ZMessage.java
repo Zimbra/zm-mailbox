@@ -107,7 +107,7 @@ public class ZMessage implements ZItem {
         mFolderId = e.getAttribute(MailConstants.A_FOLDER, null);
         mConversationId = e.getAttribute(MailConstants.A_CONV_ID, null);
         mPartName = e.getAttribute(MailConstants.A_PART, null);
-        mSize = e.getAttributeLong(MailConstants.A_SIZE);
+        mSize = e.getAttributeLong(MailConstants.A_SIZE, -1);
         
         Element content = e.getOptionalElement(MailConstants.E_CONTENT);
         if (content != null) {
