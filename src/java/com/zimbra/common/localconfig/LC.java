@@ -193,6 +193,7 @@ public class LC {
     public static final KnownKey postfix_smtpd_tls_cert_file;
     public static final KnownKey postfix_smtpd_tls_key_file;
     public static final KnownKey postfix_smtpd_tls_loglevel;
+    public static final KnownKey postfix_in_flow_delay;
     public static final KnownKey postfix_transport_maps;
     public static final KnownKey postfix_version;
     public static final KnownKey postfix_virtual_alias_domains;
@@ -826,6 +827,10 @@ public class LC {
         postfix_smtpd_tls_loglevel  = new KnownKey("postfix_smtpd_tls_loglevel");
         postfix_smtpd_tls_loglevel.setDefault("1");
         postfix_smtpd_tls_loglevel.setDoc("postfix_smtpd_tls_loglevel");
+
+        postfix_in_flow_delay  = new KnownKey("postfix_in_flow_delay");
+        postfix_in_flow_delay.setDefault("1s");
+        postfix_in_flow_delay.setDoc("postfix_in_flow_delay");
 
         postfix_transport_maps  = new KnownKey("postfix_transport_maps");
         postfix_transport_maps.setDefault("ldap:${zimbra_home}" + FS + "conf" + FS + "ldap-transport.cf");
