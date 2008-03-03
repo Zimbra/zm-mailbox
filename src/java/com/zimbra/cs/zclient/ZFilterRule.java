@@ -86,7 +86,7 @@ public class ZFilterRule {
         mActive = e.getAttributeBool(MailConstants.A_ACTIVE, false);
         Element groupEl = e.getElement(MailConstants.E_CONDITION_GROUP);
         mConditions = new ArrayList<ZFilterCondition>();
-        mAllConditions = groupEl.getAttribute(MailConstants.A_OPERATION, "allof").equals("allof");
+        mAllConditions = groupEl.getAttribute(MailConstants.A_OPERATION, "allof").equalsIgnoreCase("allof");
         for (Element condEl : groupEl.listElements(MailConstants.E_CONDITION)) {
             mConditions.add(ZFilterCondition.getCondition(condEl));
         }

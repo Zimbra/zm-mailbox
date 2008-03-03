@@ -98,7 +98,7 @@ public abstract class ZFilterAction {
     }
 
     public static ZFilterAction getAction(Element actionElement) throws ServiceException {
-        String n = actionElement.getAttribute(MailConstants.A_NAME);
+        String n = actionElement.getAttribute(MailConstants.A_NAME).toLowerCase();
         if (n.equals(A_KEEP))
             return new ZKeepAction();
         else if (n.equals(A_DISCARD))
