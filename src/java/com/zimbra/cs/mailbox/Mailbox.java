@@ -3604,6 +3604,20 @@ public class Mailbox {
                 }
             }
 
+            // bug 19868: Preserve invId of existing Invites.  We have to do this before making any
+            // calls to processNewInvite() because it'll delete all existing Invites and we'll lose
+            // old invId information.
+            if (!scidList.isEmpty()) {
+                CalendarItem existingCalItem = getCalendarItemByUid(scidList.get(0).mInv.getUid());
+                if (existingCalItem != null) {
+                    for (SetCalendarItemData scid : scidList) {
+                        Invite currInv = existingCalItem.getInvite(scid.mInv.getRecurId());
+                        if (currInv != null)
+                            scid.mInv.setInviteId(currInv.getMailItemId());
+                    }
+                }
+            }
+
             boolean first = true;
             CalendarItem calItem = null;
             boolean calItemIsNew = true;
@@ -3625,11 +3639,6 @@ public class Mailbox {
                             return 0; // for now, just ignore this Invitation
                         }
                     } else {
-                        // Preserve invId.  (bug 19868)
-                        Invite currInv = calItem.getInvite(scid.mInv.getRecurId());
-                        if (currInv != null)
-                            scid.mInv.setInviteId(currInv.getMailItemId());
-
                         // Preserve alarm time before any modification is made to the item.
                         AlarmData alarmData = calItem.getAlarmData();
                         if (alarmData != null)
@@ -3641,11 +3650,6 @@ public class Mailbox {
                     }
                     redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId(), volumeId);
                 } else {
-                    // Preserve invId.  (bug 19868)
-                    Invite currInv = calItem.getInvite(scid.mInv.getRecurId());
-                    if (currInv != null)
-                        scid.mInv.setInviteId(currInv.getMailItemId());
-
                     // exceptions
                     calItem.processNewInvite(scid.mPm, scid.mInv, folderId, volumeId, nextAlarm, false, false);
                 }
