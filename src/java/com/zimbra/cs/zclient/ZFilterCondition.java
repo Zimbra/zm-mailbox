@@ -188,7 +188,7 @@ public abstract class ZFilterCondition {
     }
 
     public static ZFilterCondition getCondition(Element condEl) throws ServiceException {
-        String n = condEl.getAttribute(MailConstants.A_NAME);
+        String n = condEl.getAttribute(MailConstants.A_NAME).toLowerCase();
         if (n.equals(C_HEADER)) {
             return new ZHeaderCondition(
                     getK0(condEl, true),
