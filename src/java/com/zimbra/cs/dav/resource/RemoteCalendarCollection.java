@@ -98,6 +98,8 @@ public class RemoteCalendarCollection extends CalendarCollection {
         
         try {
             Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteId);
+            if (target == null)
+            	return Collections.emptyList();
             ZMailbox.Options zoptions = new ZMailbox.Options(authToken, AccountUtil.getSoapUri(target));
             zoptions.setNoSession(true);
             zoptions.setTargetAccount(mRemoteId);
