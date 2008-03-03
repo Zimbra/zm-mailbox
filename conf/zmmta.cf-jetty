@@ -90,6 +90,7 @@ SECTION mta DEPENDS amavis
 	POSTCONF smtpd_tls_cert_file				LOCAL postfix_smtpd_tls_cert_file
 	POSTCONF smtpd_tls_key_file					LOCAL postfix_smtpd_tls_key_file
 	POSTCONF smtpd_tls_loglevel					LOCAL postfix_smtpd_tls_loglevel
+  POSTCONF in_flow_delay              LOCAL postfix_in_flow_delay
 	POSTCONF transport_maps						LOCAL postfix_transport_maps
 	POSTCONF version							LOCAL postfix_version
 	POSTCONF virtual_alias_domains				LOCAL postfix_virtual_alias_domains
