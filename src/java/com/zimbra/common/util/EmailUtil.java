@@ -37,6 +37,10 @@ public class EmailUtil
      *         found.
      */
     public static String[] getLocalPartAndDomain(String address) {
+        if (address == null) {
+            return null;
+        }
+        
         int at = address.indexOf('@');
         if (at == -1) {
             return null;
