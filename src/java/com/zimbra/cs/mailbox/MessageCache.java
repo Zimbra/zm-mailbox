@@ -128,7 +128,7 @@ public class MessageCache {
                 // wasn't cached; fetch, cache, and return it
                 long size = item.getSize();
                 if (size > Integer.MAX_VALUE)
-                    throw MailServiceException.MESSAGE_TOO_BIG(Integer.MAX_VALUE);
+                    throw MailServiceException.MESSAGE_TOO_BIG(Integer.MAX_VALUE, size);
                 InputStream is = fetchFromStore(item);
                 cnode = new CacheNode(size, ByteUtil.getContent(is, (int) size));
 
