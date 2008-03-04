@@ -2894,6 +2894,15 @@ public class ZMailbox {
         return new ZSendMessageResponse(id);
     }
 
+    /**
+     * Saves a message draft.
+     * 
+     * @param message the message
+     * @param existingDraftId id of existing draft or <tt>null</tt>
+     * @param folderId folder to save to or <tt>null</tt> to save to the <tt>Drafts</tt> folder
+     * 
+     * @return the message
+     */
     public synchronized ZMessage saveDraft(ZOutgoingMessage message, String existingDraftId, String folderId) throws ServiceException {
         Element req = newRequestElement(MailConstants.SAVE_DRAFT_REQUEST);
 
