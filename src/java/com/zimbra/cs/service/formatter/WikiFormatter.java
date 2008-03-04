@@ -199,10 +199,6 @@ public class WikiFormatter extends Formatter {
 		if (!context.targetAccount.getBooleanAttr("zimbraFeatureNotebookEnabled", false))
 			throw UserServletException.badRequest("Notebook is not enabled for user "+context.targetAccount.getName());
 		//long t0 = System.currentTimeMillis();
-        if (context.target instanceof Folder && context.itemId == null && !context.itemPath.endsWith("/")) {
-        	context.resp.sendRedirect(context.req.getRequestURI() + "/");
-        	return;
-        }
         String view = context.params.get(UserServlet.QP_VIEW);        
         if (view!=null && view.compareTo(UserServlet.QP_HISTORY) == 0 && context.target instanceof  WikiItem) {
         	handleWikiHistory(context, (WikiItem) context.target);
