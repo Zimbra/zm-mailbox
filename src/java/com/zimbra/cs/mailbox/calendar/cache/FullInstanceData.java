@@ -126,12 +126,12 @@ public class FullInstanceData extends InstanceData {
     }
 
     // create a full instance, clearing fields that don't override the default instance
-    public FullInstanceData(Invite inv, Long dtStart, Long duration, String freeBusyActual, Long alarmAt,
+    public FullInstanceData(Invite inv, Long dtStart, Long duration, String partStat, String freeBusyActual, Long alarmAt,
                             FullInstanceData defaultInstance)
     throws ServiceException {
         super(dtStart, duration, alarmAt,
               dtStart != null ? Util.getTZOffsetForInvite(inv, dtStart) : null,
-              inv.getPartStat(), freeBusyActual, inv.getPercentComplete());
+              partStat, freeBusyActual, inv.getPercentComplete());
         mInvId = inv.getMailItemId();
         mCompNum = inv.getComponentNum();
         if (inv.hasRecurId()) {
