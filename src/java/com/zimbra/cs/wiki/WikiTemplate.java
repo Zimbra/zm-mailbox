@@ -688,7 +688,14 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 				path.append("/");
 				for (MailItem item : list) {
 					String name = item.getName();
-					path.append(name);
+					if(item.getId() == Wiki.WIKI_FOLDER_ID) {
+                        MsgWiklet msgWiklet = (MsgWiklet) Wiklet.get("MSG");
+                        String msgText = msgWiklet.getMessage(name, ctxt);
+                        if(msgText !=null && !msgText.equals("")) {
+                            name = msgText;
+                        }
+                    }
+                    path.append(name);
 					buf.append("<span class='zmwiki-pageLink'>");
 					buf.append("[[").append(name).append("][").append(path).append("]]");
 					buf.append("</span>");
@@ -738,7 +745,14 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 			return null;
 		}
 		public String apply(Context ctxt) {
-            String mText = ctxt.item.getName(); 
+            String mText = ctxt.item.getName();
+            if(ctxt.item.getId() == Wiki.WIKI_FOLDER_ID) {
+                 MsgWiklet  msgWiklet =  (MsgWiklet) Wiklet.get("MSG");
+                 String msgText = msgWiklet.getMessage(mText, ctxt);
+                 if(msgText != null && !msgText.equals("")) {
+                    mText = msgText;
+                 }
+            }
             mText = mText.replaceAll("<", "&lt;");
             mText = mText.replaceAll(">", "&gt;");
             return mText;
@@ -1129,7 +1143,14 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 					url = wurl.getFullUrl(ctxt.wctxt, ctxt.item.getMailbox().getAccountId());
 				}
 				if(url != null){
-					buf.append("<a href='");
+                    if(ctxt.item.getId() == Wiki.WIKI_FOLDER_ID) {
+                        MsgWiklet msgWiklet = (MsgWiklet) Wiklet.get("MSG");
+                        String msgText = msgWiklet.getMessage(title, ctxt);
+                        if(msgText !=null && !msgText.equals("")) {
+                            title = msgText;
+                        }
+                    }
+                    buf.append("<a href='");
 					buf.append(url);
 					buf.append("'>").append(title).append("</a>");
 				}
@@ -1151,21 +1172,31 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		public WikiTemplate findInclusion(Context ctxt) {
 			return null;
 		}
-		public String apply(Context ctxt) {
+
+        public String getMessage (String key,  Context ctxt) {
+            String mText = "";
+            try {
+                Locale lc= ctxt.item.getMailbox().getAccount().getLocale();
+                MsgKey msgKey = MsgKey.valueOf(key);
+                if(msgKey != null) {
+                    String msgText = L10nUtil.getMessage(msgKey, lc);
+                    if(msgText != null) {
+                        mText = msgText;
+                    }
+                }
+            } catch (Exception e) {
+            }
+            return mText;
+        }
+
+        public String apply(Context ctxt) {
 			
 			try {
 				Map<String,String> params = ctxt.token.parseParam();
 				String key = params.get(sKEY);
-				
-				MsgKey msgKey = MsgKey.valueOf(key);	
-				
-				if(msgKey != null){
-					Locale lc= ctxt.item.getMailbox().getAccount().getLocale();
-					return L10nUtil.getMessage(msgKey, lc);					
-				}else {
-					return "";
-				}
-				
+
+                String mText =  this.getMessage(key, ctxt);
+                return mText;				
 			} catch (Exception e) {
 				return "";
 			}
