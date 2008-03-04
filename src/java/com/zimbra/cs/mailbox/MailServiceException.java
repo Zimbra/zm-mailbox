@@ -447,9 +447,9 @@ public class MailServiceException extends ServiceException {
         return new MailServiceException("CommitId " + commitId + " not found in redo logs", INVALID_COMMIT_ID, SENDERS_FAULT);
     }
     
-    public static MailServiceException MESSAGE_TOO_BIG(long maxSize) {
+    public static MailServiceException MESSAGE_TOO_BIG(long maxSize, long actualSize) {
         Argument arg = new Argument("maxSize", maxSize, Argument.Type.NUM);
-        return new MailServiceException("Message exceeded allowed size", MESSAGE_TOO_BIG, false, arg);
+        return new MailServiceException("Message of size " + actualSize + " exceeded allowed size", MESSAGE_TOO_BIG, false, arg);
     }
     
     public static MailServiceException TEXT_INDEX_OUT_OF_SYNC() {

@@ -218,10 +218,11 @@ public class ParseMimeMessage {
             }
         }
         
-        void incrementSize(long numBytes) throws MailServiceException {
+        void incrementSize(String name, long numBytes) throws MailServiceException {
             size += numBytes;
+            mLog.debug("Adding %s, incrementing size by %d to %d.", name, numBytes, size);
             if (size > maxSize) {
-                throw MailServiceException.MESSAGE_TOO_BIG(maxSize);
+                throw MailServiceException.MESSAGE_TOO_BIG(maxSize, size);
             }
         }
     }
@@ -478,7 +479,7 @@ public class ParseMimeMessage {
         // or a multipart/alternative created just above....either way we are safe to stick
         // the client's nice and simple body right here
         String data = elem.getAttribute(MailConstants.E_CONTENT, "");
-        ctxt.incrementSize(data.getBytes().length);
+        ctxt.incrementSize("message body", data.getBytes().length);
 
         // if the user has specified an alternative charset, make sure it exists and can encode the content
         String charset = StringUtil.checkCharset(data, ctxt.defaultCharset);
@@ -496,7 +497,7 @@ public class ParseMimeMessage {
 
         if (alternatives != null) {
             for (int i = 0; i < alternatives.length; i++) {
-                ctxt.incrementSize(alternatives[i].getSize());
+                ctxt.incrementSize("alternative body", alternatives[i].getSize());
                 mmp.addBodyPart(alternatives[i]);
             }
         }
@@ -527,7 +528,7 @@ public class ParseMimeMessage {
             // finally, add the alternatives if there are any...
             if (alternatives != null) {
                 for (int i = 0; i < alternatives.length; i++) {
-                    ctxt.incrementSize(alternatives[i].getSize());
+                    ctxt.incrementSize("alternative", alternatives[i].getSize());
                     mmpNew.addBodyPart(alternatives[i]);
                 }
             }
@@ -548,7 +549,7 @@ public class ParseMimeMessage {
             // add all the alternatives
             if (alternatives != null) {
                 for (int i = 0; i < alternatives.length; i++) {
-                    ctxt.incrementSize(alternatives[i].getSize());
+                    ctxt.incrementSize("alternative", alternatives[i].getSize());
                     mmpNew.addBodyPart(alternatives[i]);
                 }
             }
@@ -558,7 +559,7 @@ public class ParseMimeMessage {
     private static void attachUpload(MimeMultipart mmp, Upload up, String contentID, ParseMessageContext ctxt, ContentType ctypeOverride)
     throws ServiceException, MessagingException {
         // make sure we haven't exceeded the max size
-        ctxt.incrementSize((long) (up.getSize() * 1.33));
+        ctxt.incrementSize("upload " + up.getName(), (long) (up.getSize() * 1.33));
 
         // scan upload for viruses
         StringBuffer info = new StringBuffer();
@@ -615,7 +616,7 @@ public class ParseMimeMessage {
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(iid.getAccountId());
         Message msg = mbox.getMessageById(ctxt.octxt, iid.getId());
-        ctxt.incrementSize(msg.getSize());
+        ctxt.incrementSize("attached message", msg.getSize());
 
         MimeBodyPart mbp = new MimeBodyPart();
         mbp.setDataHandler(new DataHandler(new BlobDataSource(msg.getBlob())));
@@ -640,7 +641,7 @@ public class ParseMimeMessage {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(iid.getAccountId());
         VCard vcf = VCard.formatContact(mbox.getContactById(ctxt.octxt, iid.getId()));
 
-        ctxt.incrementSize(vcf.formatted.length());
+        ctxt.incrementSize("contact", vcf.formatted.length());
         String filename = vcf.fn + ".vcf";
         String charset = StringUtil.checkCharset(vcf.formatted, ctxt.defaultCharset);
 
@@ -704,8 +705,8 @@ public class ParseMimeMessage {
         if (mp == null)
             throw MailServiceException.NO_SUCH_PART(part);
 
-        ctxt.incrementSize((long) (mp.getSize() * 1.33));
         String filename = Mime.getFilename(mp);
+        ctxt.incrementSize("part " + filename, mp.getSize());
 
         MimeBodyPart mbp = new MimeBodyPart();
         mbp.setDataHandler(new DataHandler(new FixedMimePartDataSource(mp)));
