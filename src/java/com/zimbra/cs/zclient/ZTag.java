@@ -58,7 +58,8 @@ public class ZTag implements Comparable, ZItem {
             try {
                 return Color.valueOf(s);
             } catch (IllegalArgumentException e) {
-                throw ZClientException.CLIENT_ERROR("invalid color: "+s+", valid values: "+Arrays.asList(Color.values()), e);
+                return orange;
+	            //throw ZClientException.CLIENT_ERROR("invalid color: "+s+", valid values: "+Arrays.asList(Color.values()), e);
             }
         }
 
