@@ -55,6 +55,7 @@ import com.zimbra.cs.mailbox.ACL.GuestAccount;
 import com.zimbra.cs.service.ZimbraAuthProvider;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
@@ -411,6 +412,10 @@ public class ZimbraAuthToken extends AuthToken {
             parent.addAttribute(AdminConstants.E_AUTH_TOKEN, getOrigAuthData(), Element.Disposition.CONTENT);
         else
             parent.addAttribute(AccountConstants.E_AUTH_TOKEN, getOrigAuthData(), Element.Disposition.CONTENT);
+    }
+    
+    public ZAuthToken toZAuthToken() throws ServiceException {
+        return new ZAuthToken(getOrigAuthData());
     }
     
     /*

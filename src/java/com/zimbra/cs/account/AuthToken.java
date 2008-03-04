@@ -27,6 +27,7 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpState;
 
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.service.ServiceException;
@@ -109,7 +110,9 @@ public abstract class AuthToken {
      */
     public abstract void encode(HttpServletResponse resp, boolean isAdminReq) throws ServiceException;
 
-    public abstract void encodeAuthResp(Element parent, boolean isAdmin)  throws ServiceException;
+    public abstract void encodeAuthResp(Element parent, boolean isAdmin) throws ServiceException;
+    
+    public abstract ZAuthToken toZAuthToken() throws ServiceException; 
     
     // AP-TODO-5: REMOVE AFTER CLEANUP
     public abstract String getEncoded() throws AuthTokenException;
