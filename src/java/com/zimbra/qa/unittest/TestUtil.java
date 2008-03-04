@@ -280,6 +280,12 @@ extends Assert {
         String message = getTestMessage(subject);
         return mbox.addMessage(folderId, flags, null, 0, message, true);
     }
+    
+    public static void sendMessage(ZMailbox senderMbox, String recipientName, String subject)
+    throws Exception {
+        String body = getTestMessage(subject);
+        sendMessage(senderMbox, recipientName, subject, body);
+    }
 
     public static void sendMessage(ZMailbox senderMbox, String recipientName, String subject, String body)
     throws Exception {
@@ -318,7 +324,6 @@ extends Assert {
 
     }
     
-
     public static List<ZMessage> search(ZMailbox mbox, String query)
     throws Exception {
         List<ZMessage> msgs = new ArrayList<ZMessage>();
@@ -331,6 +336,18 @@ extends Assert {
             msgs.add(mbox.getMessage(msgParams));
         }
         return msgs;
+    }
+    
+    /**
+     * Gets the raw content of a message.
+     */
+    public static String getContent(ZMailbox mbox, String msgId)
+    throws Exception {
+        ZGetMessageParams msgParams = new ZGetMessageParams();
+        msgParams.setId(msgId);
+        msgParams.setRawContent(true);
+        ZMessage msg = mbox.getMessage(msgParams);
+        return msg.getContent();
     }
     
     public static ZMessage waitForMessage(ZMailbox mbox, String query)

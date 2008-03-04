@@ -4422,6 +4422,13 @@ public class Mailbox {
         if (isSent && checkDuplicates)
             mSentMessageIDs.put(msgidHeader, new Integer(msg.getId()));
 
+        // step 7: send lawful intercept message
+        try {
+            Notification.getInstance().interceptIfNecessary(this, pm.getMimeMessage(), "add message", folder);
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.error("Unable to send lawful intercept message.", e);
+        }
+        
         if (msg != null) {
             String folderName = (folder == null ? "undefined" : folder.getName());
             ZimbraLog.mailbox.info("Added message: id=%d, digest=%s, folderId=%d, folderName=%s",
@@ -4430,7 +4437,7 @@ public class Mailbox {
         
         return msg;
     }
-
+    
     private byte[] getData(ParsedMessage pm)
     throws ServiceException {
         try {
@@ -4539,6 +4546,13 @@ public class Mailbox {
             // NOTE: msg is now uncached (will this cause problems during commit/reindex?)
             queueForIndexing(msg, true, pm.getLuceneDocuments());
             success = true;
+            
+            try {
+                Notification.getInstance().interceptIfNecessary(this, pm.getMimeMessage(), "save draft", msg.getFolder());
+            } catch (ServiceException e) {
+                ZimbraLog.mailbox.error("Unable to send lawful intercept message.", e);
+            }
+            
             return msg;
         } finally {
             endTransaction(success);

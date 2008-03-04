@@ -1457,6 +1457,13 @@ public abstract class Provisioning {
     public static final String A_zimbraFreebusyExchangeAuthScheme   = "zimbraFreebusyExchangeAuthScheme";
     public static final String A_zimbraFreebusyExchangeUserOrg      = "zimbraFreebusyExchangeUserOrg";
     
+    // Lawful intercept
+    public static final String A_zimbraInterceptAddress             = "zimbraInterceptAddress";
+    public static final String A_zimbraInterceptSendHeadersOnly     = "zimbraInterceptSendHeadersOnly";
+    public static final String A_zimbraInterceptFrom                = "zimbraInterceptFrom";
+    public static final String A_zimbraInterceptSubject             = "zimbraInterceptSubject";
+    public static final String A_zimbraInterceptBody                = "zimbraInterceptBody";
+    
     public static final int MAX_ZIMBRA_ID_LEN = 127;
     
     private static Provisioning sProvisioning;
