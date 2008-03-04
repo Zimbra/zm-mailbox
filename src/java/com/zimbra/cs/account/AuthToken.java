@@ -89,7 +89,7 @@ public abstract class AuthToken {
     /**
      * AP-TODO-4:
      *     This API is called only from ZimbraServlet.proxyServletRequest when the first hop is http basic auth(REST basic auth and DAV).  
-     *     For the next hop we encode the String auth token in cookie.  For all other cases, the original cookies are "carbon-copied" "as is" 
+     *     For the next hop we encode the String auth token in cookie.  For all other cases, the original cookies are copied "as is" 
      *     to the next hop.  See ZimbraServlet.proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, HttpMethod method, HttpState state)
      *     We should clean this after AP-TODO-3 is resolved. 
      *     

@@ -208,9 +208,7 @@ public abstract class AuthProvider {
     }
 
     /**
-     * 
-     * AP-TODO-2:
-     * For SOAP, we currently do not pass in isAdminReq, because with the current flow in SoapEngine, 
+     * For SOAP, we do not pass in isAdminReq, because with the current flow in SoapEngine, 
      * at the point when the SOAP context(ZimbraSoapContext) is examined, we haven't looked at the SOAP 
      * body yet.  Whether admin auth is required is based on the SOAP command, which has to be extracted 
      * from the body.  ZimbraAuthProvider always retrieves the encoded auth token from the fixed tag, so 

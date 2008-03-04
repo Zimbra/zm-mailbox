@@ -261,8 +261,7 @@ public abstract class WikiPage {
 				auth = ctxt.auth;
 			else {
 				try {
-				    // AP-TODO-10: this will not work for Yahoo Y&T
-					auth = AuthToken.getZimbraAdminAuthToken();
+				    auth = AuthToken.getZimbraAdminAuthToken();
 				} catch (Exception ate) {
 					auth = null;
 				}

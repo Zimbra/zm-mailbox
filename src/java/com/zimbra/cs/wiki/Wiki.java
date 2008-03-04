@@ -377,7 +377,6 @@ public abstract class Wiki {
 			String url = URLUtil.getSoapURL(remoteServer, true);
 			SoapHttpTransport transport = new SoapHttpTransport(url);
 			try {
-			    // AP-TODO-9: pass ctxt.auth to setAuthToken after AP-TODO-7 is resolved
 			    transport.setAuthToken(ctxt.auth.getEncoded());
 			} catch (AuthTokenException e) {
 			    throw ServiceException.FAILURE("cannot get raw auth token", e);
