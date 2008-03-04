@@ -4931,5 +4931,13 @@ public class LdapProvisioning extends Provisioning {
         }
         
     }
+    
+    public void removeFromCache(Entry entry) {
+        if (entry instanceof Account)
+            sAccountCache.remove((Account)entry);
+        else
+            throw new UnsupportedOperationException(); 
+            
+    }
 
 }

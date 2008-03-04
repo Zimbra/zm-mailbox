@@ -1380,7 +1380,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Allowed domains for Proxy servlet</desc>
 </attr>
 
-<attr id="295" name="zimbraForeignPrincipal" type="string" max="256" cardinality="multi" optionalIn="account" flags="domainAdminModifiable">
+<attr id="295" name="zimbraForeignPrincipal" type="string" max="256" cardinality="multi" optionalIn="account" flags="domainAdminModifiable" callback="ForeignPrincipal">
   <desc>mapping to foreign principal identifier</desc>
 </attr>
 
