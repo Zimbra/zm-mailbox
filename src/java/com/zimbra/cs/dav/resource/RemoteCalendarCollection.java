@@ -133,7 +133,6 @@ public class RemoteCalendarCollection extends CalendarCollection {
             authToken = AuthToken.getAuthToken(ctxt.getAuthAccount());
             
             Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteId);
-            // AP-TODO-11: pass authToken after fixing ZMailbox.Options to take an AuthToken object
             ZMailbox.Options zoptions = new ZMailbox.Options(authToken.getEncoded(), AccountUtil.getSoapUri(target));
             zoptions.setNoSession(true);
             zoptions.setTargetAccount(mRemoteId);

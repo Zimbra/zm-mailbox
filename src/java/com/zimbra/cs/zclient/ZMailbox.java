@@ -200,7 +200,7 @@ public class ZMailbox {
             mUri = uri;
         }
 
-        // AP-TODO-18: find callsites and resolve/retire
+        // AP-TODO-7: retire
         public Options(String authToken, String uri) {
             mAuthToken = new ZAuthToken(null, authToken, null);
             mUri = uri;
@@ -254,7 +254,9 @@ public class ZMailbox {
 
         public ZAuthToken getAuthToken() { return mAuthToken; }
         public void setAuthToken(ZAuthToken authToken) { mAuthToken = authToken; }
-        public void setAuthToken(String authToken) { mAuthToken = new ZAuthToken(null, authToken, null); } // AP-TODO-20: retire
+        
+        // AP-TODO-8: retire
+        public void setAuthToken(String authToken) { mAuthToken = new ZAuthToken(null, authToken, null); } 
 
         public String getUri() { return mUri; }
         public void setUri(String uri) { mUri = uri; }

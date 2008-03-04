@@ -173,7 +173,6 @@ public class PreAuthServlet extends ZimbraServlet {
         }
     }
     
-    // AP-TODO-13: does not work for Yahoo Y&T cookie
     private void redirectToCorrectServer(HttpServletRequest req, HttpServletResponse resp, Account acct, String token) throws ServiceException, IOException {
         StringBuilder sb = new StringBuilder();
         Provisioning prov = Provisioning.getInstance();        

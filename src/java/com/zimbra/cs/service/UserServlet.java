@@ -294,8 +294,6 @@ public class UserServlet extends ZimbraServlet {
                 if (context.authAccount != null) {
                     context.basicAuthHappened = true;
                     
-                    // AP-TODO-16: should we set context.authToken only if !context.noSetCookie() ?  IT USED TO
-                    // i.e. move it inside the if
                     context.authToken = AuthToken.getAuthToken(context.authAccount, isAdminRequest);  
                     
                     // send cookie back if need be. 
