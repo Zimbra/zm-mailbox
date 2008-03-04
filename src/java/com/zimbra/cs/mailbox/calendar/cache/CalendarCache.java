@@ -158,8 +158,10 @@ public class CalendarCache {
                 if (defDtEnd != null)
                     defDurationLong = new Long(defDtEnd.getUtcTime() - defDtStartLong.longValue());
             }
+            String defaultEffectivePartStat = calItem.getEffectivePartStat(defaultInvite, null);
             FullInstanceData defaultData =
-                new FullInstanceData(defaultInvite, defDtStartLong, defDurationLong, defaultFba, null, null);
+                new FullInstanceData(defaultInvite, defDtStartLong, defDurationLong,
+                                     defaultEffectivePartStat, defaultFba, null, null);
             calItemData = new CalendarItemData(
                     calItem.getModifiedSequence(),
                     calItem.getType(), calItem.getFolderId(), calItem.getId(),
@@ -202,15 +204,16 @@ public class CalendarCache {
                     String fba = inv.getFreeBusyActual();
                     if (calItem instanceof Appointment)
                         fba = ((Appointment) calItem).getEffectiveFreeBusyActual(inv, inst);
+                    String effectivePartStat = calItem.getEffectivePartStat(inv, inst);
                     InstanceData instData;
                     if (!inst.isException()) {
                         Long tzOffset = instStartLong != null ? Util.getTZOffsetForInvite(inv, instStart) : null;
                         instData = new InstanceData(
                                 instStartLong, durationLong, alarmAt, tzOffset,
-                                inv.getPartStat(), fba, inv.getPercentComplete(),
+                                effectivePartStat, fba, inv.getPercentComplete(),
                                 defaultData);
                     } else {
-                        instData = new FullInstanceData(inv, instStartLong, durationLong, fba, alarmAt, defaultData);
+                        instData = new FullInstanceData(inv, instStartLong, durationLong, effectivePartStat, fba, alarmAt, defaultData);
                     }
                     calItemData.addInstance(instData);
                 } catch (MailServiceException.NoSuchItemException e) {
