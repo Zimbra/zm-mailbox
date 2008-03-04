@@ -79,8 +79,8 @@ import java.util.HashSet;
  */
 public class ProvUtil implements DebugListener {
     
-    private static final String ERR_VIA_SOAP_ONLY = "can only be used via SOAP";
-    private static final String ERR_VIA_LDAP_ONLY = "can only be used via LDAP: zmprov -l";
+    private static final String ERR_VIA_SOAP_ONLY = "can only be used with SOAP";
+    private static final String ERR_VIA_LDAP_ONLY = "can only be used with  \"zmprov -l/--ldap\"";
  
     private boolean mInteractive = false;
     private boolean mVerbose = false;
@@ -1942,10 +1942,16 @@ public class ProvUtil implements DebugListener {
                 if (!c.hasHelp()) continue;
                 if (cat == Category.COMMANDS || cat == c.getCategory()) {
                     Command.Via via = c.getVia();
+                    /*
                     if (via == null || 
                         (via == Command.Via.ldap && mUseLdap) ||
                         (via == Command.Via.soap && !mUseLdap))
-                        System.out.printf("  %s(%s) %s%n%n", c.getName(), c.getAlias(), c.getHelp());
+                        System.out.printf("  %s(%s) %s\n\n", c.getName(), c.getAlias(), c.getHelp());
+                    */
+                    System.out.printf("  %s(%s) %s\n", c.getName(), c.getAlias(), c.getHelp());
+                    if (via == Command.Via.ldap)
+                        System.out.printf("    -- NOTE: %s can only be used with \"zmprov -l/--ldap\"\n", c.getName());
+                    System.out.printf("\n");
                 }
             }
         
