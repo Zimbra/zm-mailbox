@@ -1225,11 +1225,16 @@ public class Invite {
                             at.setPartStat(otherAt.getPartStat());
                             modified = true;
                         }
-                        
-                        if (otherAt.hasRsvp() && !otherAt.getRsvp().equals(at.getRsvp())) {
-                            at.setRsvp(otherAt.getRsvp());
-                            modified = true;
-                        }
+
+                        // bug 21848: Similar to above comment on bug 4911, we don't want the reply to
+                        // update the RSVP.  It seems most CUAs will send ATTENDEE record without setting
+                        // RSVP.  Because RSVP=FALSE by default, transferring the RSVP value to the invite
+                        // would end up inadvertently clearing the original RSVP value.
+//                        if (otherAt.hasRsvp() && !otherAt.getRsvp().equals(at.getRsvp())) {
+//                            at.setRsvp(otherAt.getRsvp());
+//                            modified = true;
+//                        }
+
                         continue OUTER;
                     }
                 }
