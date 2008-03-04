@@ -444,7 +444,7 @@ public abstract class DocumentHandler {
         return "";
     }
     
-    void logAuditAccess(String delegatingAcctId, String authedAcctId, String targetAcctId) {
+    public void logAuditAccess(String delegatingAcctId, String authedAcctId, String targetAcctId) {
         if (!ZimbraLog.misc.isInfoEnabled())
             return;
         
