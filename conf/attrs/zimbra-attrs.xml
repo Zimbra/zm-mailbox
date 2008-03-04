@@ -2929,6 +2929,29 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
+<attr id="614" name="zimbraInterceptAddress" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <desc>The address to which lawful intercept messages will be sent.</desc>
+</attr>
+
+<attr id="615" name="zimbraInterceptSendHeadersOnly" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Specifies whether lawful intercept messages should contain the entire original
+        message or just the headers.</desc>
+</attr>
+
+<attr id="616" name="zimbraInterceptFrom" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>Postmaster &lt;postmaster@${ACCOUNT_DOMAIN}&gt;</defaultCOSValue>
+  <desc>Template used to construct the sender of a lawful intercept message.</desc>
+</attr>
+
+<attr id="617" name="zimbraInterceptSubject" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>Intercepted message for ${ACCOUNT_ADDRESS}: ${MESSAGE_SUBJECT}</defaultCOSValue>
+  <desc>Template used to construct the subject of a lawful intercept message.</desc>
+</attr>
+
+<attr id="618" name="zimbraInterceptBody" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>Intercepted message for ${ACCOUNT_ADDRESS}.${NEWLINE}Operation=${OPERATION}, folder=${FOLDER_NAME}, folder ID=${FOLDER_ID}.</defaultCOSValue>
+  <desc>Template used to construct the body of a lawful intercept message.</desc>
+</attr>
+
 </attrs>
-
-

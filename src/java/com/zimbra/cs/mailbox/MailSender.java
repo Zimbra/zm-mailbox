@@ -233,19 +233,29 @@ public class MailSender {
 
             // for delegated sends where the authenticated user is reflected in the Sender header (c.f. updateHeaders),
             //   automatically save a copy to the "From" user's mailbox
-            if (hasRecipients && isDelegatedRequest && mm.getSender() != null && acct.getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, true)) {
+            Message msg = null;
+            if (hasRecipients && isDelegatedRequest && mm.getSender() != null && acct.getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, true)) { 
                 int flags = Flag.BITMASK_UNREAD | Flag.BITMASK_FROM_ME;
                 // save the sent copy using the target's credentials, as the sender doesn't necessarily have write access
                 OperationContext octxtTarget = new OperationContext(acct);
                 if (pm == null || pm.isAttachmentIndexingEnabled() != mbox.attachmentsIndexingEnabled())
                     pm = new ParsedMessage(mm, mm.getSentDate().getTime(), mbox.attachmentsIndexingEnabled());
                 int sentFolderId = getSentFolderId(mbox, Provisioning.getInstance().getDefaultIdentity(acct));
-                Message msg = mbox.addMessage(octxtTarget, pm, sentFolderId, true, flags, null, convId);
+                msg = mbox.addMessage(octxtTarget, pm, sentFolderId, true, flags, null, convId);
                 rollback[1] = new RollbackData(msg);
             }
 
             // actually send the message via SMTP
             sendMessage(mm, ignoreFailedAddresses, rollback);
+
+            // Send intercept if save-to-sent didn't do it already.
+            if (!saveToSent) {
+                try {
+                    Notification.getInstance().interceptIfNecessary(mbox, mm, "send message", null);
+                } catch (ServiceException e) {
+                    ZimbraLog.mailbox.error("Unable to send lawful intercept message.", e);
+                }
+            }
 
             // check if this is a reply, and if so flag the msg appropriately
             if (origMsgId != null && !isDelegatedRequest && origMsgId.belongsTo(mbox)) {

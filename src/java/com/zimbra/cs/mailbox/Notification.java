@@ -18,6 +18,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,7 +26,9 @@ import javax.mail.MessagingException;
 import javax.mail.Transport;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 
 import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.service.ServiceException;
@@ -63,6 +66,26 @@ implements LmtpCallback {
     private static final Notification sInstance = new Notification();
 
     private Notification() {
+    }
+
+    /**
+     * Subclass of <tt>MimeMessage</tt> that allows the caller to set an explicit <tt>Message-ID</tt>
+     * header (see JavaMail FAQ for details).
+     */
+    private class MimeMessageWithId
+    extends MimeMessage {
+        
+        private String mMessageId;
+        
+        private MimeMessageWithId(String messageId) {
+            super(JMSession.getSession());
+            mMessageId = messageId;
+        }
+
+        @Override
+        protected void updateMessageID() throws MessagingException {
+            setHeader("Message-ID", mMessageId);
+        }
     }
     
     public void afterDelivery(Account account, Mailbox mbox, String envelopeSender,
@@ -382,7 +405,7 @@ implements LmtpCallback {
             nfailed("null from, subject or body", destination, rcpt, msg);
             return;
         }
-        String recipientDomain = EmailUtil.getLocalPartAndDomain(rcpt)[1];
+        String recipientDomain = getDomain(rcpt);
 
         Map<String, String> vars = new HashMap<String, String>();
         vars.put("SENDER_ADDRESS", msg.getSender());
@@ -426,6 +449,100 @@ implements LmtpCallback {
             nfailed("send failed", destination, rcpt, msg, me);
         }
 
+    }
+    
+    private static String getDomain(String address) {
+        String[] parts = EmailUtil.getLocalPartAndDomain(address);
+        if (parts == null) {
+            return null;
+        }
+        return parts[1];
+    }
+    
+    /**
+     * If <tt>zimbraInterceptAddress</tt> is specified, sends a message to that
+     * address with the given message attached.
+     * 
+     * @param operation name of the operation being performed (send, add message, save draft, etc.)
+     * @param folder the folder that the message was filed into, or <tt>null</tt>
+     */
+    void interceptIfNecessary(Mailbox mbox, MimeMessage msg, String operation, Folder folder)
+    throws ServiceException {
+        try {
+            // Don't do anything if intercept is turned off.
+            Account account = mbox.getAccount();
+            String interceptAddress = account.getAttr(Provisioning.A_zimbraInterceptAddress, null);
+            if (StringUtil.isNullOrEmpty(interceptAddress)) {
+                return;
+            }
+            ZimbraLog.mailbox.info("Sending intercept of message %s to %s.", msg.getMessageID(), interceptAddress);
+            
+            // Fill templates
+            String folderName = "none";
+            String folderId = "none";
+            if (folder != null) {
+                folderName = folder.getName();
+                folderId = Integer.toString(folder.getId());
+            }
+            Map<String, String> vars = new HashMap<String, String>();
+            vars.put("ACCOUNT_DOMAIN", getDomain(account.getName()));
+            vars.put("ACCOUNT_ADDRESS", account.getName());
+            vars.put("MESSAGE_SUBJECT", msg.getSubject());
+            vars.put("OPERATION", operation);
+            vars.put("FOLDER_NAME", folderName);
+            vars.put("FOLDER_ID", folderId);
+            vars.put("NEWLINE", "\r\n");
+            
+            String from = StringUtil.fillTemplate(account.getAttr(Provisioning.A_zimbraInterceptFrom), vars);
+            String subject = StringUtil.fillTemplate(account.getAttr(Provisioning.A_zimbraInterceptSubject), vars);
+            String bodyText = StringUtil.fillTemplate(account.getAttr(Provisioning.A_zimbraInterceptBody), vars);
+
+            // Assemble outgoing message
+            MimeMessage attached = msg;
+            boolean headersOnly = account.getBooleanAttr(Provisioning.A_zimbraInterceptSendHeadersOnly, false);
+            if (headersOnly) {
+                attached = new MimeMessageWithId(msg.getMessageID());
+                Enumeration e = msg.getAllHeaderLines();
+                while (e.hasMoreElements()) {
+                    attached.addHeaderLine((String) e.nextElement());
+                }
+                attached.setContent("", msg.getContentType());
+            }
+
+            SMTPMessage out = new SMTPMessage(JMSession.getSession());
+            out.setHeader("Auto-Submitted", "auto-replied (zimbra; intercept)");
+            InternetAddress address = new InternetAddress(from);
+            out.setFrom(address);
+            
+            address = new InternetAddress(interceptAddress);
+            out.setRecipient(javax.mail.Message.RecipientType.TO, address);
+            
+            String charset = getCharset(account, subject);
+            out.setSubject(subject, charset);
+            charset = getCharset(account, bodyText);
+            
+            MimeMultipart multi = new MimeMultipart();
+            
+            // Add message body
+            MimeBodyPart part = new MimeBodyPart(); 
+            part.setText(bodyText, charset);
+            multi.addBodyPart(part);
+            
+            // Add original message
+            part = new MimeBodyPart();
+            part.setContent(attached, Mime.CT_MESSAGE_RFC822);
+            multi.addBodyPart(part);
+
+            out.setContent(multi);
+            String envFrom = "<>";
+            out.setEnvelopeFrom(envFrom);
+            
+            out.saveChanges();
+            Transport.send(out);
+        } catch (MessagingException e) {
+            throw ServiceException.FAILURE("Unable to send intercept message.", e);
+        }
+        
     }
 
     /**
