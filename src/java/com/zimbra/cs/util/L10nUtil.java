@@ -113,7 +113,8 @@ public class L10nUtil {
         wikiVersion,
         wikiPageHistory,
         wikiBy,
-        
+
+        Notebook,
         // add other messages in the future...
     }
 
