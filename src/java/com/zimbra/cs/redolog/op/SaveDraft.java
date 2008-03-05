@@ -22,6 +22,7 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -74,6 +75,15 @@ public class SaveDraft extends CreateMessage {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         ParsedMessage pm = new ParsedMessage(getMessageBody(), getTimestamp(), mbox.attachmentsIndexingEnabled());
-        mbox.saveDraft(getOperationContext(), pm, getMessageId());
+        try {
+            mbox.saveDraft(getOperationContext(), pm, getMessageId());
+        } catch (MailServiceException e) {
+            if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
+                mLog.info("Draft " + getMessageId() + " is already in mailbox " + mboxId);
+                return;
+            } else {
+                throw e;
+            }
+        }
     }
 }

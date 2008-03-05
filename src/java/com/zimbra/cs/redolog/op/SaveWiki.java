@@ -19,6 +19,7 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
@@ -60,7 +61,15 @@ public class SaveWiki extends SaveDocument {
     public void redo() throws Exception {
         int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
-
-        mbox.createWiki(getOperationContext(), getFolderId(), mWikiword, getAuthor(), getMessageBody());
+        try {
+            mbox.createWiki(getOperationContext(), getFolderId(), mWikiword, getAuthor(), getMessageBody());
+        } catch (MailServiceException e) {
+            if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
+                mLog.info("Wiki " + getMessageId() + " is already in mailbox " + mboxId);
+                return;
+            } else {
+                throw e;
+            }
+        }
     }
 }
