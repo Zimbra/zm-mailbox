@@ -2954,4 +2954,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Template used to construct the body of a lawful intercept message.</desc>
 </attr>
 
+<attr id="619" name="zimbraBatchedIndexingSize" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>0</defaultCOSValue>
+  <desc>Batch size to use when indexing data</desc>
+</attr>
+
 </attrs>

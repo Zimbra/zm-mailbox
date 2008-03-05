@@ -36,6 +36,8 @@ import org.apache.lucene.index.IndexCommitPoint;
 import org.apache.lucene.index.IndexDeletionPolicy;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.LogByteSizeMergePolicy;
+import org.apache.lucene.index.LogDocMergePolicy;
 import org.apache.lucene.index.SerialMergeScheduler;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
@@ -64,8 +66,8 @@ import com.zimbra.cs.stats.ZimbraPerf;
  */
 class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
     
-    private static final boolean sBatchIndexing = (LC.debug_batch_message_indexing.intValue() > 0);
-    private static final boolean sLuceneAutocommit = LC.zimbra_index_lucene_autocommit.booleanValue();
+//    private static final boolean sBatchIndexing = (LC.debug_batch_message_indexing.intValue() > 0);
+//    private static final boolean sLuceneAutocommit = LC.zimbra_index_lucene_autocommit.booleanValue();
     private static final boolean sUseDeletionPolicy = LC.zimbra_index_use_nfs_deletion_policy.booleanValue();
     
     static void flushAllWriters() {
@@ -106,12 +108,6 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
             return;
         }
         
-        if (DebugConfig.luceneUseSingleMergeScheduler)
-            ZimbraLog.index.info("Using Lucene SingleMergeScheduler");
-        
-        if (!DebugConfig.luceneUseCompoundFile)
-            ZimbraLog.index.info("NOT Using Lucene CompoundFile");
-
         // In case startup is called twice in a row without shutdown in between
         if (sSweeper != null && sSweeper.isAlive()) {
             shutdown();
@@ -322,17 +318,10 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
 
                 // can use default analyzer here since it is easier, and since we aren't actually
                 // going to do any indexing...
-//                sLog.info("MI"+this.toString()+" Opening IndexWriter(3) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-                writer = new IndexWriter(mIdxDirectory, sLuceneAutocommit, ZimbraAnalyzer.getDefaultAnalyzer(), true, (sUseDeletionPolicy ? this : null));
+                writer = new IndexWriter(mIdxDirectory, true, ZimbraAnalyzer.getDefaultAnalyzer(), true, (sUseDeletionPolicy ? this : null));
                 
                 if (ZimbraLog.index_lucene.isDebugEnabled())
                     writer.setInfoStream(new PrintStream(new LoggingOutputStream(ZimbraLog.index_lucene, Log.Level.debug)));
-                
-                if (DebugConfig.luceneUseSingleMergeScheduler) {
-                    writer.setMergeScheduler(new SerialMergeScheduler());
-                }
-                
-//                sLog.info("MI"+this.toString()+" Opened IndexWriter(3) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
             } finally {
                 if (writer != null) {
                     writer.close();
@@ -1284,6 +1273,19 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
         
         assert(mIndexWriterMutex.isHeldByCurrentThread());
         
+        boolean useBatchIndexing;
+        try {
+            useBatchIndexing = mMbidx.useBatchedIndexing();
+        } catch (ServiceException e) {
+            throw new IOException("Caught IOException checking BatchedIndexing flag "+e);
+        }
+        final LuceneConfigSettings.Config config;
+        if (useBatchIndexing) {
+            config = LuceneConfigSettings.batched;
+        } else {
+            config = LuceneConfigSettings.nonBatched;
+        }
+        
         //
         // at this point, we've put ourselves into the writer cache
         // and we have the Write Mutex....so open the file if
@@ -1293,16 +1295,9 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
             if (mIndexWriter == null) {
                 try {
 //                  sLog.debug("MI"+this.toString()+" Opening IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-                    mIndexWriter = new IndexWriter(mIdxDirectory, sLuceneAutocommit, mMbidx.getAnalyzer(), false, (sUseDeletionPolicy ? this : null));
+                    mIndexWriter = new IndexWriter(mIdxDirectory, config.autocommit, mMbidx.getAnalyzer(), false, (sUseDeletionPolicy ? this : null));
                     if (ZimbraLog.index_lucene.isDebugEnabled())
                         mIndexWriter.setInfoStream(new PrintStream(new LoggingOutputStream(ZimbraLog.index_lucene, Log.Level.debug)));
-                    if (DebugConfig.luceneUseSingleMergeScheduler) {
-                        mIndexWriter.setMergeScheduler(new SerialMergeScheduler());
-                    }
-                    if (!DebugConfig.luceneUseCompoundFile) {
-                        mIndexWriter.setUseCompoundFile(false);
-                    }
-                    
 //                  sLog.debug("MI"+this.toString()+" Opened IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
 
                 } catch (IOException e1) {
@@ -1310,15 +1305,9 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
                     File indexDir  = mIdxDirectory.getFile();
                     if (indexDirIsEmpty(indexDir)) {
 //                      sLog.debug("MI"+this.toString()+" Opening IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-                        mIndexWriter = new IndexWriter(mIdxDirectory, sLuceneAutocommit, mMbidx.getAnalyzer(), true, (sUseDeletionPolicy ? this : null));
+                        mIndexWriter = new IndexWriter(mIdxDirectory, config.autocommit, mMbidx.getAnalyzer(), true, (sUseDeletionPolicy ? this : null));
                         if (ZimbraLog.index_lucene.isDebugEnabled())
                             mIndexWriter.setInfoStream(new PrintStream(new LoggingOutputStream(ZimbraLog.index_lucene, Log.Level.debug)));
-                        if (DebugConfig.luceneUseSingleMergeScheduler) {
-                            mIndexWriter.setMergeScheduler(new SerialMergeScheduler());
-                        }
-                        if (!DebugConfig.luceneUseCompoundFile) {
-                            mIndexWriter.setUseCompoundFile(false);
-                        }
                         
 //                      sLog.debug("MI"+this.toString()+" Opened IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
                         if (mIndexWriter == null) 
@@ -1331,58 +1320,28 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
                     }
                 }
 
-                ///////////////////////////////////////////////////
-                //
-                // mergeFactor and minMergeDocs are VERY poorly explained.  Here's the deal:
-                //
-                // The data is in a tree.  It starts out empty.
-                //
-                // 1) Whenever docs are added, they are merged into the the smallest node (or a new node) until its 
-                //    size reaches "mergeFactor"
-                //
-                // 2) When we have enough "mergeFactor" sized small nodes so that the total size is "minMergeDocs", then
-                //    we combine them into one "minMergeDocs" sized big node.
-                //
-                // 3) Rule (2) repeats recursively: every time we get "mergeFactor" small nodes, we combine them.
-                //
-                // 4) This means that every segment (beyond the first "level") is therefore always of size:
-                //       minMergeDocs * mergeFactor^N, where N is the # times it has been merged
-                //
-                // 5) Be careful, (2) implies that we will have (minMergeDocs / mergeFactor) small files!
-                //
-                // NOTE - usually with lucene, the 1st row of the tree is stored in memory, because you keep 
-                // the IndexWriter open for a long time: this dramatically changes the way it performs 
-                // because you can make mergeFactor a lot bigger without worrying about the overhead of 
-                // re-writing the smallest node over and over again. 
-                //
-                // In our case, mergeFactor is intentionally chosen to be very small: since we add one document
-                // then close the index, if mergeFactor were large it would mean we copied every document
-                // (mergeFactor/2) times (start w/ 1 doc, adding the second copies the first b/c it re-writes the
-                // file...adding the 3rd copies 1+2....etc)
-                //
-                // ...in an ideal world, we'd have a separate parameter to control the size of the 1st file and the
-                // mergeFactor: then we could have the 1st file be 1 entry and still have a high merge factor.  Doing
-                // this we could potentially lower the indexing IO by as much as 70% for our expected usage pattern...  
-                // 
-                /////////////////////////////////////////////////////
-
-                if (!sBatchIndexing) {
-                    // tim: these are set based on an expectation of ~25k msgs/mbox and assuming that
-                    // 11 fragment files are OK.  25k msgs with these settings (mf=3, mmd=33) means that
-                    // each message gets written 9 times to disk...as opposed to 12.5 times with the default
-                    // lucene settings of 10 and 100....
-                    mIndexWriter.setMergeFactor(DebugConfig.luceneMergeFactor);// should be > 1, otherwise segment sizes are effectively limited to
-                    // minMergeDocs documents: and this is probably bad (too many files!)
-                    
-                    if (DebugConfig.luceneMaxBufferedDocs > 0)
-                        mIndexWriter.setMaxBufferedDocs(DebugConfig.luceneMaxBufferedDocs); // we expect 11 index fragment files
-                    if (DebugConfig.luceneRAMBufferSizeMB > 0)
-                        mIndexWriter.setRAMBufferSizeMB(DebugConfig.luceneRAMBufferSizeMB);
-                    if (!DebugConfig.luceneUseCompoundFile) {
-                        mIndexWriter.setUseCompoundFile(false);
-                    }
-                    
+                if (config.useSerialMergeScheduler)
+                    mIndexWriter.setMergeScheduler(new SerialMergeScheduler());
+                
+                if (config.useDocScheduler) {
+                    LogDocMergePolicy policy = new LogDocMergePolicy();
+                    policy.setMergeFactor(config.mergeFactor);
+                    policy.setMinMergeDocs((int)config.minMerge);
+                    if (config.maxMerge != Integer.MAX_VALUE) 
+                        policy.setMaxMergeDocs((int)config.maxMerge);
+                } else {
+                    LogByteSizeMergePolicy policy = new LogByteSizeMergePolicy();
+                    policy.setMergeFactor(config.mergeFactor);
+                    policy.setMinMergeMB(((double)config.minMerge)/1024.0);
+                    if (config.maxMerge != Integer.MAX_VALUE)
+                        policy.setMaxMergeMB(((double)config.maxMerge)/1024.0);
                 }
+
+                mIndexWriter.setUseCompoundFile(config.useCompoundFile);
+                mIndexWriter.setMaxBufferedDocs(config.maxBufferedDocs);
+                mIndexWriter.setRAMBufferSizeMB(((double)config.ramBufferSizeKB)/1024.0);
+                mIndexWriter.setMergeFactor(config.mergeFactor);
+                
             } else {
                 ZimbraPerf.COUNTER_IDX_WRT_OPENED_CACHE_HIT.increment();
             }
@@ -1397,6 +1356,7 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
             }
         }
     }
+    
 
     private void updateLastWriteTime() { mLastWriteTime = System.currentTimeMillis(); }
 

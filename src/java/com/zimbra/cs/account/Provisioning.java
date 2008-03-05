@@ -1464,6 +1464,8 @@ public abstract class Provisioning {
     public static final String A_zimbraInterceptSubject             = "zimbraInterceptSubject";
     public static final String A_zimbraInterceptBody                = "zimbraInterceptBody";
     
+    public static final String A_zimbraBatchedIndexingSize          = "zimbraBatchedIndexingSize";
+    
     public static final int MAX_ZIMBRA_ID_LEN = 127;
     
     private static Provisioning sProvisioning;
