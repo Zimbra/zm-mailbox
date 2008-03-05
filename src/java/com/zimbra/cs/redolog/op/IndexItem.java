@@ -105,7 +105,7 @@ public class IndexItem extends RedoableOp {
             return;
         }
         
-        List<org.apache.lucene.document.Document> docList = item.generateIndexData();
+        List<org.apache.lucene.document.Document> docList = item.generateIndexData(true);
         synchronized (mbox) { // temp fix for bug 11890
             mbox.redoIndexItem(item, mDeleteFirst, mId, mType, getTimestamp(), getUnloggedReplay(), docList);
         }

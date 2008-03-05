@@ -70,7 +70,7 @@ public class Document extends MailItem {
         return getAccount().getIntAttr(Provisioning.A_zimbraNotebookMaxRevisions, 0);
     }
 
-    @Override public List<org.apache.lucene.document.Document> generateIndexData() throws ServiceException {
+    @Override public List<org.apache.lucene.document.Document> generateIndexData(boolean doConsistencyCheck) throws ServiceException {
         ParsedDocument pd = null;
         synchronized(this.getMailbox()) {
             pd = new ParsedDocument(getContent(), getName(), getContentType(), getChangeDate(), getCreator());

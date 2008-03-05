@@ -175,7 +175,7 @@ public abstract class CalendarItem extends MailItem {
     boolean isIndexed()        { return true; }
     boolean canHaveChildren()  { return false; }
     
-    @Override public List<org.apache.lucene.document.Document> generateIndexData() throws ServiceException {
+    @Override public List<org.apache.lucene.document.Document> generateIndexData(boolean doConsistencyCheck) throws ServiceException {
         List<org.apache.lucene.document.Document> docs = null;
         synchronized(getMailbox()) {
             docs = getLuceneDocuments();
