@@ -621,7 +621,7 @@ public class Contact extends MailItem {
         return con;
     }
 
-    @Override public List<org.apache.lucene.document.Document> generateIndexData() throws ServiceException {
+    @Override public List<org.apache.lucene.document.Document> generateIndexData(boolean doConsistencyCheck) throws ServiceException {
         synchronized(mMailbox) {
             ParsedContact pc = new ParsedContact(this);
             return pc.getLuceneDocuments(mMailbox);

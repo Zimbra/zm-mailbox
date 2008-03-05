@@ -1010,11 +1010,21 @@ public abstract class MailItem implements Comparable<MailItem> {
      * to be called WITHOUT the Mailbox lock is held -- it is the implementation's 
      * responsibility to lock the mailbox if that is necessary to get a consistent
      * snapshot.
+     * <p>
+     * Note that <code>doConsistencyCheck</code> <u>must</u> be <tt>false</tt> when
+     * this method is called from {@see Mailbox#endTransaction(boolean)}.
      * 
+     * @param doConsistencyCheck  If <tt>true</tt>, also perform a sanity check by
+     *                            comparing the overview data (subject, fragment,
+     *                            etc.) with that in the object itself; if the check
+     *                            fails, {@see Mailbox#reanalyze(int, byte, Object)}
+     *                            will be called to update the database before the
+     *                            index data is generated
      * @return a list of lucene Documents to be added to the index for this item
      * @throws ServiceException
      */
-    public List<org.apache.lucene.document.Document> generateIndexData() throws ServiceException {
+    @SuppressWarnings("unused")
+    public List<org.apache.lucene.document.Document> generateIndexData(boolean doConsistencyCheck) throws ServiceException {
         // override in subclasses that support indexing
         return null;
     }
@@ -1351,7 +1361,10 @@ public abstract class MailItem implements Comparable<MailItem> {
         return blob;
     }
 
-    @SuppressWarnings("unused") int getMaxRevisions() throws ServiceException  { return 1; }
+    @SuppressWarnings("unused")
+    int getMaxRevisions() throws ServiceException {
+        return 1;
+    }
 
     List<MailItem> loadRevisions() throws ServiceException {
         if (mRevisions == null) {

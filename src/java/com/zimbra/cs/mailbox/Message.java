@@ -499,21 +499,24 @@ public class Message extends MailItem {
         return copy;
     }
 
-    @Override public List<org.apache.lucene.document.Document> generateIndexData() throws ServiceException {
+    @Override public List<org.apache.lucene.document.Document> generateIndexData(boolean doConsistencyCheck) throws ServiceException {
         ParsedMessage pm = null;
-        synchronized(this.getMailbox()) {
+        synchronized (getMailbox()) {
             // force the pm's received-date to be the correct one
-            pm = new ParsedMessage(getMimeMessage(), getDate(),getMailbox().attachmentsIndexingEnabled());
+            pm = new ParsedMessage(getMimeMessage(), getDate(), getMailbox().attachmentsIndexingEnabled());
         }
-        
-        pm.analyzeFully(); // don't hold the lock while extracting text!
-        
-        // because of bug 8263, we sometimes have fragments that are incorrect:
-        // check them here and correct them if necessary
-        if (pm.getFragment().compareTo(getFragment()) != 0) {
-            getMailbox().reanalyze(getId(), getType(),  pm);
+
+        if (doConsistencyCheck) {
+            // because of bug 8263, we sometimes have fragments that are incorrect;
+            //   check them here and correct them if necessary
+            String fragment = pm.getFragment();
+            if (!getFragment().equals(fragment == null ? "" : fragment))
+                getMailbox().reanalyze(getId(), getType(), pm);
         }
-        
+
+        // don't hold the lock while extracting text!
+        pm.analyzeFully();
+
         return pm.getLuceneDocuments();
     }
 

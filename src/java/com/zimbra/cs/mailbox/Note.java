@@ -147,7 +147,7 @@ public class Note extends MailItem {
         return note;
     }
 
-    @Override public List<org.apache.lucene.document.Document> generateIndexData() throws ServiceException {
+    @Override public List<org.apache.lucene.document.Document> generateIndexData(boolean doConsistencyCheck) throws ServiceException {
         String toIndex = getText();
 
         org.apache.lucene.document.Document doc = new org.apache.lucene.document.Document();

@@ -1757,7 +1757,7 @@ public class Mailbox {
      * @param type  The item's type (e.g. {@link MailItem#TYPE_MESSAGE}).
      * @param data  The (optional) extra item data for indexing (e.g.
      *              a Message's {@link ParsedMessage}. */
-    public synchronized void reanalyze(int id, byte type, Object data) throws ServiceException {
+    synchronized void reanalyze(int id, byte type, Object data) throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("reanalyze", null);
@@ -3327,7 +3327,7 @@ public class Mailbox {
         int idxDeferredChange = 0;
         int itemsAttempted = 0;
         
-        for (Iterator<SearchResult> iter = items.iterator(); iter.hasNext();) {
+        for (Iterator<SearchResult> iter = items.iterator(); iter.hasNext(); ) {
             SearchResult sr = iter.next();
             itemsAttempted++;
 
@@ -3336,23 +3336,23 @@ public class Mailbox {
                 item = getItemById(null, sr.id, sr.type);
             } catch(ServiceException  e) {
                 if (ZimbraLog.index.isDebugEnabled())
-                    ZimbraLog.index.debug("Error fetching deferred item id = "+sr.id+".  Item will not be indexed.", e);
+                    ZimbraLog.index.debug("Error fetching deferred item id = " + sr.id + ".  Item will not be indexed.", e);
             } catch(java.lang.RuntimeException e) {
                 if (ZimbraLog.index.isDebugEnabled())
-                    ZimbraLog.index.debug("Error fetching deferred item id = "+sr.id+".  Item will not be indexed.", e);
+                    ZimbraLog.index.debug("Error fetching deferred item id = " + sr.id + ".  Item will not be indexed.", e);
             }
-            if (item != null && (!deferredItemsOnly|| ((item.getFlagBitmask()&Flag.BITMASK_INDEXING_DEFERRED)!=0))) {
+            if (item != null && (!deferredItemsOnly || (item.getFlagBitmask() & Flag.BITMASK_INDEXING_DEFERRED) != 0)) {
                 itemSize += item.getSize();
                 try {
                     assert(!Thread.holdsLock(this));
-                    chunk.add(new Pair<MailItem, List<org.apache.lucene.document.Document>>(item, item.generateIndexData()));
+                    chunk.add(new Pair<MailItem, List<org.apache.lucene.document.Document>>(item, item.generateIndexData(true)));
                 } catch (ServiceException e) {
                     if (ZimbraLog.index.isDebugEnabled())
-                        ZimbraLog.index.debug("Error generating index data for item ID: " +item.getId()+ " Skipping item", e);
+                        ZimbraLog.index.debug("Error generating index data for item ID: " + item.getId() + " Skipping item", e);
                 }
             } else {
                 if (ZimbraLog.index.isDebugEnabled())
-                    ZimbraLog.index.debug("SKIPPING indexing of item "+sr.id+" ptr="+item);
+                    ZimbraLog.index.debug("SKIPPING indexing of item " + sr.id + " ptr=" + item);
             }
 
             if (!iter.hasNext() || itemSize > sBatchIndexMaxBytesPerTransaction || chunk.size() > sBatchIndexMaxItemsPerTransaction) {
@@ -6174,7 +6174,7 @@ public class Mailbox {
                 for (Map.Entry<MailItem, MailboxChange.IndexItemEntry> entry : itemsToIndex.entrySet()) {
                     MailItem item = entry.getKey();
                     if (entry.getValue().mData == null)
-                        entry.getValue().mData = item.generateIndexData();
+                        entry.getValue().mData = item.generateIndexData(false);
 
                     IndexItem indexRedo = null;
                     
