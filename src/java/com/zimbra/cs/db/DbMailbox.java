@@ -281,6 +281,28 @@ public class DbMailbox {
         dropMailboxFromGroup(conn, mbox);
     }
 
+    public static void renameMailbox(Connection conn, Mailbox mbox, String newName) throws ServiceException {
+        int mailboxId = mbox.getId();
+        ZimbraLog.mailbox.info("Renaming email/comment of mailbox " + mailboxId + " to " + newName);
+
+        if (conn == null)
+            conn = mbox.getOperationConnection();
+
+        try {
+            PreparedStatement stmt = null;
+            try {
+                stmt = conn.prepareStatement("UPDATE mailbox SET comment = ?, last_backup_at = NULL WHERE id = ?");
+                stmt.setString(1, newName);
+                stmt.setInt(2, mailboxId);
+                stmt.executeUpdate();
+            } finally {
+                DbPool.closeStatement(stmt);
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("renameMailbox(" + mailboxId + ")", e);
+        }
+    }
+
     public static void clearMailboxContactCount(Mailbox mbox) throws ServiceException {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;

@@ -26,6 +26,8 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -44,7 +46,7 @@ public class RenameAccount extends AdminDocumentHandler {
     /**
      * must be careful and only allow renames from/to domains a domain admin can see
      */
-    public boolean domainAuthSufficient(Map context) {
+    public boolean domainAuthSufficient(Map<String, Object> context) {
         return true;
     }
 
@@ -68,7 +70,10 @@ public class RenameAccount extends AdminDocumentHandler {
         if (!canAccessEmail(lc, newName))
             throw ServiceException.PERM_DENIED("can not access account: "+newName);
 
+        Mailbox mbox = Provisioning.onLocalServer(account) ? MailboxManager.getInstance().getMailboxByAccount(account) : null;
         prov.renameAccount(id, newName);
+        if (mbox != null)
+            mbox.renameMailbox(newName);
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "RenameAccount","name", oldName, "newName", newName})); 
