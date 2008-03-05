@@ -1103,6 +1103,7 @@ public abstract class CalendarItem extends MailItem {
                         copy.setDtStamp(cur.getDTStamp());
                         copy.setRecurId(cur.getRecurId());
                         copy.setRecurrence(null);  // because we're only dealing with exceptions
+                        copy.setPartStat(cur.getPartStat());  // carry over PARTSTAT
                         ParsedDateTime start = cur.getRecurId().getDt();
                         if (start != null) {
                             copy.setDtStart(start);
