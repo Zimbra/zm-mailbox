@@ -162,7 +162,9 @@ public abstract class RedoableOp {
     
     public static final int OP_INDEX_DEFERRED_ITEMS = 68;
 
-    public static final int OP_LAST				        = 69;
+    public static final int OP_RENAME_MAILBOX = 69;
+
+    public static final int OP_LAST				        = 70;
 
 	// Element index is same as Redoable.OP_* constants.
 	// The strings must match the class names.
@@ -236,6 +238,7 @@ public abstract class RedoableOp {
         "DismissCalendarItemAlarm",
         "FixCalendarItemEndTime",
         "IndexDeferredItems",
+        "RenameMailbox",
 	};
 
 	public static String getOpClassName(int opcode) {
