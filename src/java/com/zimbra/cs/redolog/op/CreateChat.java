@@ -18,6 +18,7 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -55,7 +56,16 @@ public class CreateChat extends CreateMessage {
         int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
         ParsedMessage  pm = new ParsedMessage(getMessageBody(), getTimestamp(), mbox.attachmentsIndexingEnabled());
-        mbox.createChat(getOperationContext(), pm, getFolderId(), getFlags(), getTags());
+        try {
+            mbox.createChat(getOperationContext(), pm, getFolderId(), getFlags(), getTags());
+        } catch (MailServiceException e) {
+            if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
+                mLog.info("Chat " + getMessageId() + " is already in mailbox " + mboxId);
+                return;
+            } else {
+                throw e;
+            }
+        }
     }
     
 }

@@ -19,6 +19,7 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
@@ -93,6 +94,16 @@ public class SaveDocument extends CreateMessage {
     public void redo() throws Exception {
         int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
-        mbox.createDocument(getOperationContext(), getFolderId(), mFilename, mMimeType, mAuthor, getMessageBody(), mItemType);
+        try {
+            mbox.createDocument(getOperationContext(), getFolderId(), mFilename, mMimeType, mAuthor, getMessageBody(), mItemType);
+        } catch (MailServiceException e) {
+            if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
+                mLog.info("Document " + getMessageId() + " is already in mailbox " + mboxId);
+                return;
+            } else {
+                throw e;
+            }
+        }
+
     }
 }
