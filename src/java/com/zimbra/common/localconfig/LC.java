@@ -106,6 +106,27 @@ public class LC {
     public static final KnownKey zimbra_index_lucene_autocommit;
     public static final KnownKey zimbra_index_use_nfs_deletion_policy;
     public static final KnownKey zimbra_index_use_reader_reopen;
+    
+    public static final KnownKey zimbra_index_lucene_batch_use_doc_scheduler;
+    public static final KnownKey zimbra_index_lucene_batch_min_merge;
+    public static final KnownKey zimbra_index_lucene_batch_max_merge;
+    public static final KnownKey zimbra_index_lucene_batch_merge_factor;
+    public static final KnownKey zimbra_index_lucene_batch_use_compound_file;
+    public static final KnownKey zimbra_index_lucene_batch_use_serial_merge_scheduler;
+    public static final KnownKey zimbra_index_lucene_batch_max_buffered_docs;
+    public static final KnownKey zimbra_index_lucene_batch_ram_buffer_size_kb;
+    public static final KnownKey zimbra_index_lucene_batch_autocommit;
+    
+    public static final KnownKey zimbra_index_lucene_nobatch_use_doc_scheduler;
+    public static final KnownKey zimbra_index_lucene_nobatch_min_merge;
+    public static final KnownKey zimbra_index_lucene_nobatch_max_merge;
+    public static final KnownKey zimbra_index_lucene_nobatch_merge_factor;
+    public static final KnownKey zimbra_index_lucene_nobatch_use_compound_file;
+    public static final KnownKey zimbra_index_lucene_nobatch_use_serial_merge_scheduler;
+    public static final KnownKey zimbra_index_lucene_nobatch_max_buffered_docs;
+    public static final KnownKey zimbra_index_lucene_nobatch_ram_buffer_size_kb;
+    public static final KnownKey zimbra_index_lucene_nobatch_autocommit;
+    
 
     public static final KnownKey zimbra_spam_report_queue_size;
 
@@ -282,8 +303,6 @@ public class LC {
     public static final KnownKey zimbra_auth_provider;
     
     public static final KnownKey debug_update_config_use_old_scheme;
-    
-    public static final KnownKey debug_batch_message_indexing;
     
     public static final KnownKey debug_xmpp_disable_client_tls;
     
@@ -491,7 +510,7 @@ public class LC {
         
         zimbra_index_max_transaction_items = new KnownKey(
             "zimbra_index_max_transaction_items",
-            "50",
+            "100",
             "When batching index operations, the maximum number of mail_items we allow in a single transaction");
         
         zimbra_index_lucene_autocommit = new KnownKey(
@@ -501,14 +520,36 @@ public class LC {
 
         zimbra_index_use_nfs_deletion_policy = new KnownKey(
             "zimbra_index_use_nfs_deletion_policy",
-            "true",
+            "false",
             "Use NFS-compatible IndexDeletionPolicy for Lucene");
         
         zimbra_index_use_reader_reopen = new KnownKey(
             "zimbra_index_use_reader_reopen",
             "false",
             "If TRUE then attempt to reopen IndexReaders instead of recreating them when the index changes");
- 
+
+        
+        zimbra_index_lucene_batch_use_doc_scheduler = new KnownKey("zimbra_index_lucene_batch_use_doc_scheduler", "true", "Use the Doc-Count to schedule index merges, instead of segment-size-in-bytes");
+        zimbra_index_lucene_batch_min_merge = new KnownKey("zimbra_index_lucene_batch_min_merge", "1000", "Lucene Minimum Merge Size (in Documents or KB)");
+        zimbra_index_lucene_batch_max_merge = new KnownKey("zimbra_index_lucene_batch_max_merge", Integer.toString(Integer.MAX_VALUE), "Lucene Maximum Merge Size (in Documents or KB"); 
+        zimbra_index_lucene_batch_merge_factor = new KnownKey("zimbra_index_lucene_batch_merge_factor", "10", "Lucene MergeFactor");
+        zimbra_index_lucene_batch_use_compound_file = new KnownKey("zimbra_index_lucene_batch_use_compound_file", "true", "Use Compound File for Lucene");
+        zimbra_index_lucene_batch_use_serial_merge_scheduler = new KnownKey("zimbra_index_lucene_batch_use_serial_merge_scheduler", "true", "Use single thread for merge scheduling"); 
+        zimbra_index_lucene_batch_max_buffered_docs = new KnownKey("zimbra_index_lucene_batch_max_buffered_docs", "200", "Lucene Max Buffered Docs");  
+        zimbra_index_lucene_batch_ram_buffer_size_kb = new KnownKey("zimbra_index_lucene_batch_ram_buffer_size_kb", "10240", "Lucene Max Buffered RAM in KB");
+        zimbra_index_lucene_batch_autocommit = new KnownKey("zimbra_index_lucene_batch_autocommit", "false", "Lucene autcommit setting"); 
+            
+        zimbra_index_lucene_nobatch_use_doc_scheduler = new KnownKey("zimbra_index_lucene_nobatch_use_doc_scheduler",
+            "true", "Use the Doc-Count to schedule index merges, instead of segment-size-in-bytes");
+        zimbra_index_lucene_nobatch_min_merge = new KnownKey("zimbra_index_lucene_nobatch_min_merge", "10", "Lucene Minimum Merge Size (in Documents or KB)");
+        zimbra_index_lucene_nobatch_max_merge = new KnownKey("zimbra_index_lucene_nobatch_max_merge", Integer.toString(Integer.MAX_VALUE), "Lucene Maximum Merge Size (in Documents or KB"); 
+        zimbra_index_lucene_nobatch_merge_factor = new KnownKey("zimbra_index_lucene_nobatch_merge_factor", "3", "Lucene MergeFactor");
+        zimbra_index_lucene_nobatch_use_compound_file = new KnownKey("zimbra_index_lucene_nobatch_use_compound_file", "true", "Use Compound File for Lucene");
+        zimbra_index_lucene_nobatch_use_serial_merge_scheduler = new KnownKey("zimbra_index_lucene_nobatch_use_serial_merge_scheduler", "true", "Use single thread for merge scheduling"); 
+        zimbra_index_lucene_nobatch_max_buffered_docs = new KnownKey("zimbra_index_lucene_nobatch_max_buffered_docs", "200", "Lucene Max Buffered Docs");  
+        zimbra_index_lucene_nobatch_ram_buffer_size_kb = new KnownKey("zimbra_index_lucene_nobatch_ram_buffer_size_kb", "10240", "Lucene Max Buffered RAM in KB");
+        zimbra_index_lucene_nobatch_autocommit = new KnownKey("zimbra_index_lucene_nobatch_autocommit", "false", "Lucene autcommit setting");
+        
         zimbra_spam_report_queue_size = new KnownKey("zimbra_spam_report_queue_size");
         zimbra_spam_report_queue_size.setDefault("100");
         zimbra_spam_report_queue_size.setDoc("For Junk/Not Junk Msg/ConvActionRequests this queue size limits the" +
@@ -1089,8 +1130,6 @@ public class LC {
         debug_update_config_use_old_scheme = new KnownKey("debug_update_config_use_old_scheme");
         debug_update_config_use_old_scheme.setDefault("false");
         debug_update_config_use_old_scheme.setDoc("If true, DbMailbox.updateConfig() will do DELETE/INSERT instead of UPDATE.");
-        
-        debug_batch_message_indexing = new KnownKey("debug_batch_message_indexing", "0", "debug only test code to batch index updates (don't index immediately)");
         
         debug_xmpp_disable_client_tls = new KnownKey("debug_xmpp_disable_client_tls", "0", "disable TLS for XMPP C2S protocol");
         
