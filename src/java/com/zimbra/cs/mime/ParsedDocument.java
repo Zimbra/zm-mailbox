@@ -47,6 +47,7 @@ public class ParsedDocument {
     private Document mDocument = null;
     private String mFragment;
     private long mCreatedDate;
+    private boolean mIndexFailed;
 
     public ParsedDocument(MailboxBlob blob, String filename, String ctype, long createdDate, String creator)
     throws ServiceException, IOException {
@@ -67,6 +68,7 @@ public class ParsedDocument {
         mFilename = filename;
         mCreatedDate = createdDate;
         mCreator = creator;
+        mIndexFailed = false;
 
         try {
             MimeHandler handler = MimeHandlerManager.getMimeHandler(ctype, filename);
@@ -83,6 +85,7 @@ public class ParsedDocument {
             	textContent = handler.getContent();
             } catch (Exception e) {
             	ZimbraLog.wiki.warn("Can't extract the text from the document.  (is convertd down?)", e);
+            	mIndexFailed = true;
             }
             mFragment = Fragment.getFragment(textContent, Fragment.Source.NOTEBOOK);
             try {
@@ -94,6 +97,7 @@ public class ParsedDocument {
             	mDocument.add(new Field(LuceneFields.L_FILENAME, filename, Field.Store.YES, Field.Index.TOKENIZED));
             } catch (Exception e) {
             	ZimbraLog.wiki.warn("Can't index document.  (is convertd down?)", e);
+            	mIndexFailed = true;
             }
         } catch (MimeHandlerException mhe) {
             throw ServiceException.FAILURE("cannot create ParsedDocument", mhe);
@@ -127,4 +131,5 @@ public class ParsedDocument {
 
     public String getCreator()      { return mCreator; }
     public long getCreatedDate()    { return mCreatedDate; }
+    public boolean hasTemporaryAnalysisFailure() { return mIndexFailed; }
 }
