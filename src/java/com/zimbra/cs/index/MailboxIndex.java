@@ -167,6 +167,19 @@ public final class MailboxIndex
         }
     }
 
+    public int getBatchedIndexingCount() {
+        try {
+            return mMailbox.getAccount().getIntAttr(Provisioning.A_zimbraBatchedIndexingSize, 0);
+        } catch (ServiceException e) {
+            ZimbraLog.index.debug("Eating ServiceException trying to lookup BatchedIndexSize", e);
+        }
+        return 0;
+    }
+    
+    public boolean useBatchedIndexing() throws ServiceException {
+        return mMailbox.getAccount().getIntAttr(Provisioning.A_zimbraBatchedIndexingSize, 0) > 0;
+    }
+
     /**
      * @param fieldName - a lucene field (e.g. LuceneFields.L_H_CC)
      * @param collection - Strings which correspond to all of the domain terms stored in a given field.

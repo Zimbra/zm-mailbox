@@ -423,9 +423,6 @@ public class Mailbox {
     /** used by checkInitialization() to make sure the init steps happen only once */
     private boolean mInitializationComplete = false;
 
-    /** debug test code -- for batched indexing testing */
-    private static final int sDebugBatchMessageIndexSize = LC.debug_batch_message_indexing.intValue();
-    
     /**
      * Constructor
      * 
@@ -3171,14 +3168,14 @@ public class Mailbox {
     /**
      * This API will periodically attempt to re-try deferred index items.
      */
-    private void maybeIndexDeferredItems() {
+    private void maybeIndexDeferredItems(int batchIndexingCount) {
         if (Thread.holdsLock(this)) // don't attempt if we're holding the mailbox lock
             return;
         
         boolean shouldIndexDeferred = false;
         synchronized(this) {
             if (!mIndexingDeferredItems) {
-                if (getIndexDeferredCount() > sDebugBatchMessageIndexSize) {
+                if (getIndexDeferredCount() > batchIndexingCount) {
                     if ((System.currentTimeMillis() - sIndexDeferredItemsRetryIntervalMs) > mLastIndexDeferredTime)
                         shouldIndexDeferred = true;
                 }
@@ -3824,19 +3821,19 @@ public class Mailbox {
 
     public int[] addInvite(OperationContext octxt, Invite inv, int folderId)
     throws ServiceException {
-        maybeIndexDeferredItems();
+        maybeIndexDeferredItems(mMailboxIndex.getBatchedIndexingCount());
         return addInvite(octxt, inv, folderId, null, false);
     }
 
     public int[] addInvite(OperationContext octxt, Invite inv, int folderId, ParsedMessage pm)
     throws ServiceException {
-        maybeIndexDeferredItems();
+        maybeIndexDeferredItems(mMailboxIndex.getBatchedIndexingCount());
         return addInvite(octxt, inv, folderId, pm, false);
     }
 
     public int[] addInvite(OperationContext octxt, Invite inv, int folderId, boolean preserveExistingAlarms)
     throws ServiceException {
-        maybeIndexDeferredItems();
+        maybeIndexDeferredItems(mMailboxIndex.getBatchedIndexingCount());
         return addInvite(octxt, inv, folderId, null, preserveExistingAlarms);
     }
 
@@ -4088,9 +4085,10 @@ public class Mailbox {
                 boolean noICal, int flags, String tagStr, int conversationId,
                 String rcptEmail, SharedDeliveryContext sharedDeliveryCtxt)
     throws IOException, ServiceException {
-        maybeIndexDeferredItems();
+        int batchIndexCount = mMailboxIndex.getBatchedIndexingCount();
+        maybeIndexDeferredItems(batchIndexCount);
         // make sure the message has been analyzed before taking the Mailbox lock
-        if (sDebugBatchMessageIndexSize==0)
+        if (batchIndexCount==0)
             pm.analyzeFully();
         
         // and then actually add the message
@@ -4195,7 +4193,8 @@ public class Mailbox {
         MailboxBlob mboxBlob = null;
         boolean success = false;
         Folder folder = null;
-        boolean deferIndexing = (sDebugBatchMessageIndexSize>0 || pm.hasTemporaryAnalysisFailure());
+        int batchIndexCount = mMailboxIndex.getBatchedIndexingCount();
+        boolean deferIndexing = (batchIndexCount>0 || pm.hasTemporaryAnalysisFailure());
         
         try {
             beginTransaction("addMessage", octxt, redoRecorder);
@@ -4509,10 +4508,11 @@ public class Mailbox {
 
     public Message saveDraft(OperationContext octxt, ParsedMessage pm, int id, String origId, String replyType, String identityId)
     throws IOException, ServiceException {
-        maybeIndexDeferredItems();
+        int batchIndexCount = mMailboxIndex.getBatchedIndexingCount();
+        maybeIndexDeferredItems(batchIndexCount);
         
         // make sure the message has been analzyed before taking the Mailbox lock
-        if (sDebugBatchMessageIndexSize==0)
+        if (batchIndexCount==0)
             pm.analyzeFully();
         try {
             pm.getRawData();
@@ -4535,6 +4535,7 @@ public class Mailbox {
         byte[] data;
         String digest;
         int size;
+        
         try {
             data = pm.getRawData();  digest = pm.getRawDigest();  size = pm.getRawSize();
         } catch (MessagingException me) {
@@ -5153,7 +5154,7 @@ public class Mailbox {
             throw ServiceException.INVALID_REQUEST("note content may not be empty", null);
 
         CreateNote redoRecorder = new CreateNote(mId, folderId, content, color, location);
-
+        
         boolean success = false;
         try {
             beginTransaction("createNote", octxt, redoRecorder);
@@ -5258,6 +5259,7 @@ public class Mailbox {
         CreateContact redoRecorder = new CreateContact(mId, folderId, pc, tags);
 
         boolean success = false;
+        
         try {
             beginTransaction("createContact", octxt, redoRecorder);
             CreateContact redoPlayer = (CreateContact) mCurrentChange.getRedoPlayer();
@@ -5288,6 +5290,7 @@ public class Mailbox {
 
             redoRecorder.setContactId(con.getId());
             redoRecorder.setVolumeId(volumeId);
+            
             queueForIndexing(con, false, pc.getLuceneDocuments(this));
 
             success = true;
@@ -5771,7 +5774,7 @@ public class Mailbox {
     }
 
     public Document addDocumentRevision(OperationContext octxt, int docId, byte type, byte[] rawData, String author) throws ServiceException {
-        maybeIndexDeferredItems();
+        maybeIndexDeferredItems(mMailboxIndex.getBatchedIndexingCount());
         Document doc = getDocumentById(octxt, docId);
         ParsedDocument pd = new ParsedDocument(rawData, doc.getName(), doc.getContentType(), System.currentTimeMillis(), author);
         return addDocumentRevision(octxt, docId, type, pd);
@@ -5816,7 +5819,7 @@ public class Mailbox {
     	
     public Document createDocument(OperationContext octxt, int folderId, String filename, String mimeType, String author, byte[] rawData, byte type)
     throws ServiceException {
-        maybeIndexDeferredItems();
+        maybeIndexDeferredItems(mMailboxIndex.getBatchedIndexingCount());
         ParsedDocument pd = new ParsedDocument(rawData, filename, mimeType, System.currentTimeMillis(), author);
         return createDocument(octxt, folderId, pd, type);
     }
@@ -5862,7 +5865,7 @@ public class Mailbox {
     
     public Message updateOrCreateChat(OperationContext octxt, ParsedMessage pm, int id) throws IOException, ServiceException {
         // make sure the message has been analzyed before taking the Mailbox lock
-        if (sDebugBatchMessageIndexSize==0)
+        if (mMailboxIndex.getBatchedIndexingCount()==0)
             pm.analyzeFully();
         try {
             pm.getRawData();
@@ -5883,8 +5886,9 @@ public class Mailbox {
         if (pm == null)
             throw ServiceException.INVALID_REQUEST("null ParsedMessage when adding chat to mailbox " + mId, null);
         
-        maybeIndexDeferredItems();
-        if (sDebugBatchMessageIndexSize==0)
+        int batchIndexingCount = mMailboxIndex.getBatchedIndexingCount();
+        maybeIndexDeferredItems(batchIndexingCount);
+        if (batchIndexingCount==0)
             pm.analyzeFully();
         
         synchronized(this) {
@@ -5918,7 +5922,7 @@ public class Mailbox {
                 chat = Chat.create(itemId, getFolderById(folderId), pm, msgSize, digest, volumeId, false, flags, tags);
                 redoRecorder.setMessageId(chat.getId());
                 sm.link(blob, this, itemId, chat.getSavedSequence(), chat.getVolumeId());
-                if (sDebugBatchMessageIndexSize==0) 
+                if (batchIndexingCount==0) 
                     queueForIndexing(chat, false, pm.getLuceneDocuments());
                 success = true;
             } finally {
@@ -5940,7 +5944,8 @@ public class Mailbox {
             throw MailServiceException.MESSAGE_PARSE_ERROR(me);
         }
         
-        if (sDebugBatchMessageIndexSize == 0)
+        int batchIndexingCount = mMailboxIndex.getBatchedIndexingCount();
+        if (batchIndexingCount == 0)
             pm.analyzeFully();
         
         SaveChat redoRecorder = new SaveChat(mId, id, digest, size, -1, 0, null);
@@ -5966,7 +5971,8 @@ public class Mailbox {
             redoRecorder.setMessageBodyInfo(data, blob.getPath(), blob.getVolumeId());
 
             // NOTE: msg is now uncached (will this cause problems during commit/reindex?)
-            queueForIndexing(chat, true, pm.getLuceneDocuments());
+            if (batchIndexingCount == 0)
+                queueForIndexing(chat, true, pm.getLuceneDocuments());
             success = true;
             return chat;
         } finally {

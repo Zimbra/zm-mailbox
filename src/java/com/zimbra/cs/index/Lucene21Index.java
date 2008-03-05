@@ -59,8 +59,6 @@ import com.zimbra.cs.stats.ZimbraPerf;
  */
 class Lucene21Index implements ILuceneIndex, ITextIndex  {
     
-    private static final boolean sBatchIndexing = (LC.debug_batch_message_indexing.intValue() > 0);
-    
     static void flushAllWriters() {
         if (DebugConfig.disableIndexing)
             return;
@@ -82,9 +80,6 @@ class Lucene21Index implements ILuceneIndex, ITextIndex  {
             return;
         }
         
-        if (!DebugConfig.luceneUseCompoundFile)
-            ZimbraLog.index.info("NOT Using Lucene CompoundFile");
-
         sSweeper.signalShutdown();
         try {
             sSweeper.join();
@@ -325,9 +320,6 @@ class Lucene21Index implements ILuceneIndex, ITextIndex  {
                 
                 if (ZimbraLog.index_lucene.isDebugEnabled())
                     writer.setInfoStream(new PrintStream(new LoggingOutputStream(ZimbraLog.index_lucene, Log.Level.debug)));
-                
-                if (!DebugConfig.luceneUseCompoundFile)
-                    writer.setUseCompoundFile(false);
                 
 //                sLog.info("MI"+this.toString()+" Opened IndexWriter(3) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
             } finally {
@@ -1290,8 +1282,6 @@ class Lucene21Index implements ILuceneIndex, ITextIndex  {
                     mIndexWriter = new IndexWriter(mIdxDirectory, mMbidx.getAnalyzer(), false);
                     if (ZimbraLog.index_lucene.isDebugEnabled())
                         mIndexWriter.setInfoStream(new PrintStream(new LoggingOutputStream(ZimbraLog.index_lucene, Log.Level.debug)));
-                    if (!DebugConfig.luceneUseCompoundFile)
-                        mIndexWriter.setUseCompoundFile(false);
 //                  sLog.debug("MI"+this.toString()+" Opened IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
                 } catch (IOException e1) {
 //                    mLog.debug("****Creating new index in " + mIdxPath + " for mailbox " + mMailboxId);
@@ -1301,8 +1291,6 @@ class Lucene21Index implements ILuceneIndex, ITextIndex  {
                         mIndexWriter = new IndexWriter(mIdxDirectory, mMbidx.getAnalyzer(), true);
                         if (ZimbraLog.index_lucene.isDebugEnabled())
                             mIndexWriter.setInfoStream(new PrintStream(new LoggingOutputStream(ZimbraLog.index_lucene, Log.Level.debug)));
-                        if (!DebugConfig.luceneUseCompoundFile)
-                            mIndexWriter.setUseCompoundFile(false);
                         
 //                      sLog.debug("MI"+this.toString()+" Opened IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
                         if (mIndexWriter == null) 
@@ -1315,6 +1303,21 @@ class Lucene21Index implements ILuceneIndex, ITextIndex  {
                     }
                 }
 
+
+                boolean useBatchIndexing;
+                try {
+                    useBatchIndexing = mMbidx.useBatchedIndexing();
+                } catch (ServiceException e) {
+                    throw new IOException("Caught IOException checking BatchedIndexing flag "+e);
+                }
+                
+                final LuceneConfigSettings.Config config;
+                if (useBatchIndexing) {
+                    config = LuceneConfigSettings.batched;
+                } else {
+                    config = LuceneConfigSettings.nonBatched;
+                }
+                
                 ///////////////////////////////////////////////////
                 //
                 // mergeFactor and minMergeDocs are VERY poorly explained.  Here's the deal:
@@ -1349,20 +1352,10 @@ class Lucene21Index implements ILuceneIndex, ITextIndex  {
                 // this we could potentially lower the indexing IO by as much as 70% for our expected usage pattern...  
                 // 
                 /////////////////////////////////////////////////////
-
-                if (!sBatchIndexing) {
-                    // tim: these are set based on an expectation of ~25k msgs/mbox and assuming that
-                    // 11 fragment files are OK.  25k msgs with these settings (mf=3, mmd=33) means that
-                    // each message gets written 9 times to disk...as opposed to 12.5 times with the default
-                    // lucene settings of 10 and 100....
-                    mIndexWriter.setMergeFactor(DebugConfig.luceneMergeFactor);// must be >=2
-                    
-                    if (DebugConfig.luceneMaxBufferedDocs > 0)
-                        mIndexWriter.setMaxBufferedDocs(DebugConfig.luceneMaxBufferedDocs); 
-                    if (!DebugConfig.luceneUseCompoundFile)
-                        mIndexWriter.setUseCompoundFile(false);
-                    
-                }
+                
+                mIndexWriter.setMergeFactor(config.mergeFactor);
+                mIndexWriter.setMaxBufferedDocs(config.maxBufferedDocs);
+                mIndexWriter.setUseCompoundFile(config.useCompoundFile);
             } else {
                 ZimbraPerf.COUNTER_IDX_WRT_OPENED_CACHE_HIT.increment();
             }

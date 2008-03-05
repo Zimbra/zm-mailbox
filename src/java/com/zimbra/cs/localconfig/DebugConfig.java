@@ -93,12 +93,6 @@ public class DebugConfig {
 
     public static final int numMailboxGroups;
 
-    public static final int luceneMergeFactor;
-    public static final int luceneMaxBufferedDocs;
-    public static final int luceneRAMBufferSizeMB;
-    public static final boolean luceneUseCompoundFile;
-    public static final boolean luceneUseSingleMergeScheduler;
-
     public static boolean calendarEnableCache;
     public static int calendarCacheLRUSize;
     public static int calendarCacheRangeMonthFrom;
@@ -131,12 +125,6 @@ public class DebugConfig {
 
         numMailboxGroups = Math.max(LC.zimbra_mailbox_groups.intValue(), 1);
         
-        luceneMergeFactor = intValue("debug_lucene_merge_factor", 3);
-        luceneMaxBufferedDocs = intValue("debug_lucene_max_buffered_docs", 30);
-        luceneRAMBufferSizeMB = intValue("debug_lucene_ram_buffer_size_mb", 0);
-        luceneUseCompoundFile = booleanValue("debug_lucene_use_compound_file", true);
-        luceneUseSingleMergeScheduler = booleanValue("debug_lucene_use_single_merge_scheduler", true);
-
         calendarEnableCache = booleanValue("debug_enable_calendar_cache", false);
         if (calendarEnableCache)
             calendarCacheLRUSize = intValue("debug_calendar_cache_lru_size", 1000);
