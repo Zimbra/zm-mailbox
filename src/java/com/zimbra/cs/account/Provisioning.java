@@ -1555,12 +1555,8 @@ public abstract class Provisioning {
      */
     public Server getServer(Account acct) throws ServiceException {
         String serverId = acct.getAttr(Provisioning.A_zimbraMailHost);
-        Server server = serverId == null ? null : get(ServerBy.name, serverId);
-        if (server == null)
-            throw ServiceException.FAILURE("no zimbraMailHost for account "+acct.getId(), null);
-        else
-            return server;
-    }  
+        return (serverId == null ? null : get(ServerBy.name, serverId));
+    } 
     
     private static final String DATA_COS = "COS";
     
