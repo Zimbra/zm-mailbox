@@ -110,9 +110,12 @@ class IndexReadersCache extends Thread {
             }
             
             // can't reopen in, someone's really using it...
-            mOpenIndexReaders.remove(idx);
-            if (sLog.isDebugEnabled())
-                sLog.debug("Closing index reader for index: "+idx.toString()+" (removed)");
+            RefCountedIndexReader removed = mOpenIndexReaders.remove(idx);
+            if (removed != null) {
+                removed.release();
+                if (sLog.isDebugEnabled())
+                    sLog.debug("Closing index reader for index: "+idx.toString()+" (removed)");
+            }
         }
     }
     
