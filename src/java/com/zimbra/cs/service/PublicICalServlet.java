@@ -18,7 +18,9 @@ package com.zimbra.cs.service;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import javax.servlet.ServletException;
@@ -112,6 +114,15 @@ public class PublicICalServlet extends ZimbraServlet {
             	ArrayList<String> ids = new ArrayList<String>();
             	ids.add(acctName);
             	rangeStart = now - Constants.MILLIS_PER_WEEK;  // exchange doesn't like start date being now - 1 month.
+        		Calendar cal = GregorianCalendar.getInstance();
+        		cal.setTimeInMillis(rangeStart);
+        		cal.set(Calendar.MINUTE, 0);
+        		cal.set(Calendar.SECOND, 0);
+        		rangeStart = cal.getTimeInMillis();
+        		cal.setTimeInMillis(rangeEnd);
+        		cal.set(Calendar.MINUTE, 0);
+        		cal.set(Calendar.SECOND, 0);
+        		rangeEnd = cal.getTimeInMillis();
             	List<FreeBusy> fblist = FreeBusyProvider.getRemoteFreeBusy(ids, rangeStart, rangeEnd);
             	fb = fblist.get(0);
             	email = acctName;
