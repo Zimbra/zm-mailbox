@@ -166,7 +166,15 @@ public final class MailboxIndex
             throw ServiceException.FAILURE("Caught "+t.getMessage(), t);
         }
     }
+    
+    public long getBytesWritten() {
+        return mLucene.getBytesWritten();
+    }
 
+    public long getBytesRead() {
+        return mLucene.getBytesRead();
+    }
+    
     public int getBatchedIndexingCount() {
         try {
             return mMailbox.getAccount().getIntAttr(Provisioning.A_zimbraBatchedIndexingSize, 0);
