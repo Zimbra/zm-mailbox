@@ -96,7 +96,7 @@ public class CsvFormatter extends Formatter {
             String format = context.req.getParameter(UserServlet.QP_CSVFORMAT);
             List<Map<String, String>> contacts = ContactCSV.getContacts(reader, format);
             ItemId iidFolder = new ItemId(folder);
-            ImportContacts.ImportCsvContacts(context.opContext, context.targetMailbox, iidFolder, contacts, null);
+            ImportContacts.ImportCsvContacts(context.opContext, context.targetMailbox, iidFolder, contacts);
         } catch (ContactCSV.ParseException e) {
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "could not parse csv file");
         } catch (UnsupportedEncodingException uee) {

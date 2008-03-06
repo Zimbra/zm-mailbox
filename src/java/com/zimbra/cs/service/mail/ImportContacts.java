@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -31,8 +30,10 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.service.FileUploadServlet;
@@ -92,7 +93,7 @@ public class ImportContacts extends MailDocumentHandler  {
                 FileUploadServlet.deleteUploads(uploads);
         }
 
-        List<ItemId> idsList = ImportCsvContacts(octxt, mbox, iidFolder, contacts, null);
+        List<ItemId> idsList = ImportCsvContacts(octxt, mbox, iidFolder, contacts);
         
 
         StringBuilder ids = new StringBuilder();
@@ -123,25 +124,42 @@ public class ImportContacts extends MailDocumentHandler  {
         }
     }
     
-    private final static int CHUNK_SIZE = 100;
-    
     public static List<ItemId> ImportCsvContacts(OperationContext oc, Mailbox mbox, 
-        ItemId iidFolder, List<Map<String, String>> csvContacts, String tagsStr) throws ServiceException {
+        ItemId iidFolder, List<Map<String, String>> csvContacts) throws ServiceException {
         
         List<ItemId> createdIds = new LinkedList<ItemId>();
-        Iterator<Map<String, String>> iter = csvContacts.iterator();
-        List<ParsedContact> curChunk = new LinkedList<ParsedContact>();
-        while (iter.hasNext()) {
-            curChunk.clear();
-            for (int i = 0; i < CHUNK_SIZE && iter.hasNext(); i++)
-                curChunk.add(new ParsedContact(iter.next()));
-
-            List<Contact> contacts = CreateContact.createContacts(oc, mbox, iidFolder, curChunk, tagsStr);
-            for (Contact c : contacts) 
-                createdIds.add(new ItemId(c));
+        for (Map<String,String> contact : csvContacts) {
+        	String tags = getTags(oc, mbox, contact);
+        	Contact c = mbox.createContact(oc, new ParsedContact(contact), iidFolder.getId(), tags);
+        	createdIds.add(new ItemId(c));
         }
         
         return createdIds;
+    }
+    
+    public static String getTags(OperationContext octxt, Mailbox mbox, Map<String,String> contact) {
+		String tags = ContactCSV.getTags(contact);
+		if (tags == null)
+			return null;
+		StringBuilder tagIds = null;
+		for (String t : tags.split(",")) {
+			Tag tag = null;
+			try {
+				tag = mbox.getTagByName(t);
+			} catch (ServiceException se) {
+				try {
+					tag = mbox.createTag(octxt, t, MailItem.DEFAULT_COLOR);
+				} catch (ServiceException e) {
+				}
+			}
+			if (tag != null) {
+				if (tagIds == null)
+					tagIds = new StringBuilder(Integer.toString(tag.getId()));
+				else
+					tagIds.append(",").append(Integer.toString(tag.getId()));
+			}
+		}
+		return tagIds.toString();
     }
     
 }
