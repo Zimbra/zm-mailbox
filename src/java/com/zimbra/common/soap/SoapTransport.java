@@ -187,7 +187,7 @@ public abstract class SoapTransport {
         SoapProtocol responseProto = mResponseProto == null ? proto : mResponseProto;
 
         Element context = SoapUtil.toCtxt(proto, mAuthToken, mTargetAcctId, mTargetAcctName, noSession);
-        SoapUtil.addSessionToCtxt(context, mSessionId);
+        if (mAuthToken != null) SoapUtil.addSessionToCtxt(context, mSessionId);
         SoapUtil.addChangeTokenToCtxt(context, changeToken, tokenType);
         if (mUserAgentName != null)
             SoapUtil.addUserAgentToCtxt(context, mUserAgentName, mUserAgentVersion);
