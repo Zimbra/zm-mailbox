@@ -525,7 +525,7 @@ public class TestGal extends TestCase {
         mProv.modifyAttrs(domain, attrs);
     }
     
-    private void tokenizeTest(GalOp galOp, String key, String[] expectedUsers) throws Exception {
+    private void tokenizeTest(GalOp galOp, String tokenizeKey, String key, String[] expectedUsers) throws Exception {
         Domain domain = mProv.get(DomainBy.name, TOKENIZE_TEST_DOMAIN_NAME);
         SearchGalResult galResult = null;
         
@@ -543,6 +543,8 @@ public class TestGal extends TestCase {
             fail();
         
         System.out.println("tokenizeTest: key=" + key);
+        
+        assertEquals(galResult.tokenizeKey, tokenizeKey);
         
         Set<String> results = new HashSet<String>();
         for (GalContact gc : galResult.matches) {
@@ -572,41 +574,41 @@ public class TestGal extends TestCase {
     public void autoCompleteWithTokenizeAND(String galMode) throws Exception {
         setupTokenize(TOKENIZE_TEST_DOMAIN_NAME, galMode, GalConstants.TOKENIZE_KEY_AND);
         
-        tokenizeTest(GalOp.GOP_AUTOCOMPLETE, "phoebe", new String[]{"user1", "user2", "user3"});
-        tokenizeTest(GalOp.GOP_AUTOCOMPLETE, "shao", new String[]{"user1"});
-        tokenizeTest(GalOp.GOP_AUTOCOMPLETE, "phoebe shao", new String[]{"user1"});
-        tokenizeTest(GalOp.GOP_AUTOCOMPLETE, "phoebe blah", new String[0]);
-        tokenizeTest(GalOp.GOP_AUTOCOMPLETE, "blah shao", new String[0]);
+        tokenizeTest(GalOp.GOP_AUTOCOMPLETE, GalConstants.TOKENIZE_KEY_AND, "phoebe", new String[]{"user1", "user2", "user3"});
+        tokenizeTest(GalOp.GOP_AUTOCOMPLETE, GalConstants.TOKENIZE_KEY_AND, "shao", new String[]{"user1"});
+        tokenizeTest(GalOp.GOP_AUTOCOMPLETE, GalConstants.TOKENIZE_KEY_AND, "phoebe shao", new String[]{"user1"});
+        tokenizeTest(GalOp.GOP_AUTOCOMPLETE, GalConstants.TOKENIZE_KEY_AND, "phoebe blah", new String[0]);
+        tokenizeTest(GalOp.GOP_AUTOCOMPLETE, GalConstants.TOKENIZE_KEY_AND, "blah shao", new String[0]);
     }
     
     public void autoCompleteWithTokenizeOR(String galMode) throws Exception {
         setupTokenize(TOKENIZE_TEST_DOMAIN_NAME, galMode, GalConstants.TOKENIZE_KEY_OR);
         
-        tokenizeTest(GalOp.GOP_AUTOCOMPLETE, "phoebe", new String[]{"user1", "user2", "user3"});
-        tokenizeTest(GalOp.GOP_AUTOCOMPLETE, "shao", new String[]{"user1"});
-        tokenizeTest(GalOp.GOP_AUTOCOMPLETE, "phoebe shao", new String[]{"user1", "user2", "user3"});
-        tokenizeTest(GalOp.GOP_AUTOCOMPLETE, "phoebe blah", new String[]{"user1", "user2", "user3"});
-        tokenizeTest(GalOp.GOP_AUTOCOMPLETE, "blah shao", new String[]{"user1"});
+        tokenizeTest(GalOp.GOP_AUTOCOMPLETE, GalConstants.TOKENIZE_KEY_OR, "phoebe", new String[]{"user1", "user2", "user3"});
+        tokenizeTest(GalOp.GOP_AUTOCOMPLETE, GalConstants.TOKENIZE_KEY_OR, "shao", new String[]{"user1"});
+        tokenizeTest(GalOp.GOP_AUTOCOMPLETE, GalConstants.TOKENIZE_KEY_OR, "phoebe shao", new String[]{"user1", "user2", "user3"});
+        tokenizeTest(GalOp.GOP_AUTOCOMPLETE, GalConstants.TOKENIZE_KEY_OR, "phoebe blah", new String[]{"user1", "user2", "user3"});
+        tokenizeTest(GalOp.GOP_AUTOCOMPLETE, GalConstants.TOKENIZE_KEY_OR, "blah shao", new String[]{"user1"});
     }
     
     public void searchWithTokenizeAND(String galMode) throws Exception {
         setupTokenize(TOKENIZE_TEST_DOMAIN_NAME, galMode, GalConstants.TOKENIZE_KEY_AND);
         
-        tokenizeTest(GalOp.GOP_SEARCH, "phoebe", new String[]{"user1", "user2", "user3"});
-        tokenizeTest(GalOp.GOP_SEARCH, "shao", new String[]{"user1", "user2", "user3"}); // (gn=*%s*)
-        tokenizeTest(GalOp.GOP_SEARCH, "phoebe shao", new String[]{"user1", "user2", "user3"});  // (gn=*%s*)
-        tokenizeTest(GalOp.GOP_SEARCH, "phoebe blah", new String[0]);
-        tokenizeTest(GalOp.GOP_SEARCH, "blah shao", new String[0]);
+        tokenizeTest(GalOp.GOP_SEARCH, GalConstants.TOKENIZE_KEY_AND, "phoebe", new String[]{"user1", "user2", "user3"});
+        tokenizeTest(GalOp.GOP_SEARCH, GalConstants.TOKENIZE_KEY_AND, "shao", new String[]{"user1", "user2", "user3"}); // (gn=*%s*)
+        tokenizeTest(GalOp.GOP_SEARCH, GalConstants.TOKENIZE_KEY_AND, "phoebe shao", new String[]{"user1", "user2", "user3"});  // (gn=*%s*)
+        tokenizeTest(GalOp.GOP_SEARCH, GalConstants.TOKENIZE_KEY_AND, "phoebe blah", new String[0]);
+        tokenizeTest(GalOp.GOP_SEARCH, GalConstants.TOKENIZE_KEY_AND, "blah shao", new String[0]);
     }
     
     public void searchWithTokenizeOR(String galMode) throws Exception {
         setupTokenize(TOKENIZE_TEST_DOMAIN_NAME, galMode, GalConstants.TOKENIZE_KEY_OR);
         
-        tokenizeTest(GalOp.GOP_SEARCH, "phoebe", new String[]{"user1", "user2", "user3"});
-        tokenizeTest(GalOp.GOP_SEARCH, "shao", new String[]{"user1", "user2", "user3"}); // (gn=*%s*)
-        tokenizeTest(GalOp.GOP_SEARCH, "phoebe shao", new String[]{"user1", "user2", "user3"});
-        tokenizeTest(GalOp.GOP_SEARCH, "phoebe blah", new String[]{"user1", "user2", "user3"});
-        tokenizeTest(GalOp.GOP_SEARCH, "blah shao", new String[]{"user1", "user2", "user3"}); // (gn=*%s*)
+        tokenizeTest(GalOp.GOP_SEARCH, GalConstants.TOKENIZE_KEY_OR, "phoebe", new String[]{"user1", "user2", "user3"});
+        tokenizeTest(GalOp.GOP_SEARCH, GalConstants.TOKENIZE_KEY_OR, "shao", new String[]{"user1", "user2", "user3"}); // (gn=*%s*)
+        tokenizeTest(GalOp.GOP_SEARCH, GalConstants.TOKENIZE_KEY_OR, "phoebe shao", new String[]{"user1", "user2", "user3"});
+        tokenizeTest(GalOp.GOP_SEARCH, GalConstants.TOKENIZE_KEY_OR, "phoebe blah", new String[]{"user1", "user2", "user3"});
+        tokenizeTest(GalOp.GOP_SEARCH, GalConstants.TOKENIZE_KEY_OR, "blah shao", new String[]{"user1", "user2", "user3"}); // (gn=*%s*)
     }
     
     public void testTokenizeKey() throws Exception {

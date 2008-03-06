@@ -2235,6 +2235,16 @@ public abstract class Provisioning {
         public String token;
         public List<GalContact> matches;
         public boolean hadMore; // for auto-complete only
+        
+        /*
+         * for auto-complete and search only
+         * 
+         * The Ajax client backtracks on GAL results assuming the results of a more
+         * specific key is the subset of a more generic key, and it checks cached 
+         * results instead of issuing another SOAP request to the server.    
+         * If search key was tokenized with AND or OR, this cannot be assumed.
+         */
+        public String tokenizeKey; 
     }
 
     /**

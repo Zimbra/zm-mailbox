@@ -69,6 +69,7 @@ public class AutoCompleteGal extends AccountDocumentHandler {
         SearchGalResult result = prov.autoCompleteGal(prov.getDomain(account), n, type, max);
 
         response.addAttribute(AccountConstants.A_MORE, result.hadMore);
+        response.addAttribute(AccountConstants.A_TOKENIZE_KEY, result.tokenizeKey);
         
         for (GalContact contact : result.matches)
             addContact(response, contact);
@@ -80,7 +81,7 @@ public class AutoCompleteGal extends AccountDocumentHandler {
     public boolean needsAuth(Map<String, Object> context) {
         return true;
     }
-
+    
     public static void addContact(Element response, GalContact contact) {
         Element cn = response.addElement(MailConstants.E_CONTACT);
         cn.addAttribute(MailConstants.A_ID, contact.getId());

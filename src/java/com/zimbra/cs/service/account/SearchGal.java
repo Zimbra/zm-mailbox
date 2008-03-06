@@ -67,6 +67,8 @@ public class SearchGal extends AccountDocumentHandler {
         Domain d = prov.getDomain(account);
         SearchGalResult result = prov.searchGal(d, n, type, null);
         response.addAttribute(AccountConstants.A_MORE, result.hadMore);
+        response.addAttribute(AccountConstants.A_TOKENIZE_KEY, result.tokenizeKey);
+        
         for (GalContact contact : result.matches)
             addContact(response, contact);
         return response;
