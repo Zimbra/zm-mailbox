@@ -19,7 +19,9 @@ package com.zimbra.cs.service.formatter;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.Tag;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -219,6 +221,11 @@ public class ContactCSV {
             contact.put(lastNameField, value.substring(space).trim());
     }
     
+    private static final String TAG = "__tag";
+    
+    public static String getTags(Map<String,String> csv) {
+    	return csv.remove(TAG);
+    }
     private Map<String, String> toContact(List<String> csv, CsvFormat format) throws ParseException {
         Map<String, String> contact = new HashMap<String, String>();
         
@@ -241,6 +248,10 @@ public class ContactCSV {
                     addMultiValueField(col.names, csv, col.field, contact);
                 } else if (col.isName) {
                     addNameField(col.name, csv, col.field, contact);
+                } else if (col.mapToTag) {
+                	String tag = getField(col.name, csv);
+                	if (tag != null)
+                		contact.put(TAG, tag);
                 } else {
                     addField(col.name, csv, col.field, contact);
                 }
@@ -329,6 +340,7 @@ public class ContactCSV {
         List<String> names;  // in case of multivalue mapping
         boolean multivalue;
         boolean isName;
+        boolean mapToTag;
         CsvColumn(Element col) {
             names = new ArrayList<String>();
             name  = col.attributeValue(ATTR_NAME);
@@ -342,6 +354,8 @@ public class ContactCSV {
                 name = names.get(0);
             } else if (type.equals("name")) {
                 isName = true;
+            } else if (type.equals("tag")) {
+                mapToTag = true;
             }
         }
     }
@@ -488,7 +502,7 @@ public class ContactCSV {
         while (contacts.hasNext()) {
             Object c = contacts.next();
             if (c instanceof Contact)
-                toCSVContact(fmt, ((Contact)c).getFields(), sb);
+                toCSVContact(fmt, (Contact)c, sb);
         }
     }
 
@@ -511,12 +525,26 @@ public class ContactCSV {
         sb.append("\n");
     }
 
-    private static void toCSVContact(CsvFormat fmt, Map contact, StringBuffer sb) {
+    private static void toCSVContact(CsvFormat fmt, Contact c, StringBuffer sb) {
         boolean first = true;
         for (CsvColumn col : fmt.columns) {
             if (!first)
                 sb.append(',');
-            addFieldValue(contact, col.name, col.field, sb);
+            if (col.mapToTag) {
+            	try {
+            		boolean firstTag = true;
+                	sb.append('"');
+                	for (Tag t : c.getTagList()) {
+                		if (!firstTag)
+                			sb.append(',');
+                		sb.append(t.getName());
+                		firstTag = false;
+                	}
+                	sb.append('"');
+            	} catch (ServiceException se) {
+            	}
+            } else
+            	addFieldValue(c.getFields(), col.name, col.field, sb);
             first = false;
         }
         sb.append("\n");
