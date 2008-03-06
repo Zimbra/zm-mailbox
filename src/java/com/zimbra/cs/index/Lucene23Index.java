@@ -66,6 +66,10 @@ import com.zimbra.cs.stats.ZimbraPerf;
  */
 class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
     
+    static {
+        System.setProperty("org.apache.lucene.FSDirectory.class", "com.zimbra.cs.index.Z23FSDirectory");
+    }
+    
 //    private static final boolean sBatchIndexing = (LC.debug_batch_message_indexing.intValue() > 0);
 //    private static final boolean sLuceneAutocommit = LC.zimbra_index_lucene_autocommit.booleanValue();
     private static final boolean sUseDeletionPolicy = LC.zimbra_index_use_nfs_deletion_policy.booleanValue();
@@ -139,6 +143,14 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
         return (t < c) ? t : c;
     }
     
+    public long getBytesWritten() {
+        return mIdxDirectory.getBytesWritten();
+    }
+    public long getBytesRead() {
+        return mIdxDirectory.getBytesRead();
+    }        
+    
+    
     Lucene23Index(MailboxIndex mbidx, String idxParentDir, int mailboxId) throws ServiceException {
         mMbidx = mbidx;
         mIndexWriter = null;
@@ -183,7 +195,7 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
                 // that the directory we're returned is actually a cached FSDirectory (e.g. if the index
                 // was deleted and re-created) in which case we should be using the existing LockFactory
                 // and not creating a new one
-                mIdxDirectory = FSDirectory.getDirectory(idxPath);
+                mIdxDirectory = (Z23FSDirectory)FSDirectory.getDirectory(idxPath);
                 if (mIdxDirectory.getLockFactory() == null || !(mIdxDirectory.getLockFactory() instanceof SingleInstanceLockFactory))
                     mIdxDirectory.setLockFactory(new SingleInstanceLockFactory());
             } catch (IOException e) {
@@ -1323,25 +1335,27 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
                 if (config.useSerialMergeScheduler)
                     mIndexWriter.setMergeScheduler(new SerialMergeScheduler());
                 
+                mIndexWriter.setUseCompoundFile(config.useCompoundFile);
+                mIndexWriter.setMaxBufferedDocs(config.maxBufferedDocs);
+                mIndexWriter.setRAMBufferSizeMB(((double)config.ramBufferSizeKB)/1024.0);
+                mIndexWriter.setMergeFactor(config.mergeFactor);
+                
                 if (config.useDocScheduler) {
                     LogDocMergePolicy policy = new LogDocMergePolicy();
+                    mIndexWriter.setMergePolicy(policy);
                     policy.setMergeFactor(config.mergeFactor);
                     policy.setMinMergeDocs((int)config.minMerge);
                     if (config.maxMerge != Integer.MAX_VALUE) 
                         policy.setMaxMergeDocs((int)config.maxMerge);
                 } else {
                     LogByteSizeMergePolicy policy = new LogByteSizeMergePolicy();
+                    mIndexWriter.setMergePolicy(policy);
                     policy.setMergeFactor(config.mergeFactor);
                     policy.setMinMergeMB(((double)config.minMerge)/1024.0);
                     if (config.maxMerge != Integer.MAX_VALUE)
                         policy.setMaxMergeMB(((double)config.maxMerge)/1024.0);
                 }
 
-                mIndexWriter.setUseCompoundFile(config.useCompoundFile);
-                mIndexWriter.setMaxBufferedDocs(config.maxBufferedDocs);
-                mIndexWriter.setRAMBufferSizeMB(((double)config.ramBufferSizeKB)/1024.0);
-                mIndexWriter.setMergeFactor(config.mergeFactor);
-                
             } else {
                 ZimbraPerf.COUNTER_IDX_WRT_OPENED_CACHE_HIT.increment();
             }
@@ -1408,7 +1422,7 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
      * everytime editDistance is called.
      */
     private int e[][] = new int[1][1];
-    private FSDirectory mIdxDirectory = null;
+    private Z23FSDirectory mIdxDirectory = null;
     
     private IndexWriter mIndexWriter;
     private ReentrantLock mIndexWriterMutex = new ReentrantLock();

@@ -33,4 +33,6 @@ interface ILuceneIndex extends ITextIndex {
     Sort getSort(SortBy searchOrder);
     void checkBlobIds() throws IOException;
     IndexReader reopenReader(IndexReader reader) throws IOException;
+    long getBytesWritten();
+    long getBytesRead();
 }

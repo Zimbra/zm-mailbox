@@ -58,6 +58,10 @@ import com.zimbra.cs.stats.ZimbraPerf;
  * 
  */
 class Lucene21Index implements ILuceneIndex, ITextIndex  {
+
+    static {
+        System.setProperty("org.apache.lucene.FSDirectory.class", "com.zimbra.cs.index.Z21FSDirectory");
+    }
     
     static void flushAllWriters() {
         if (DebugConfig.disableIndexing)
@@ -73,6 +77,14 @@ class Lucene21Index implements ILuceneIndex, ITextIndex  {
             idx.closeIndexWriter(); 
         }
     }
+    
+    public long getBytesWritten() {
+        return mIdxDirectory.getBytesWritten();
+    }
+    public long getBytesRead() {
+        return mIdxDirectory.getBytesRead();
+    }        
+    
 
     static void shutdown() {
         if (DebugConfig.disableIndexing) {
@@ -172,7 +184,7 @@ class Lucene21Index implements ILuceneIndex, ITextIndex  {
                 // that the directory we're returned is actually a cached FSDirectory (e.g. if the index
                 // was deleted and re-created) in which case we should be using the existing LockFactory
                 // and not creating a new one
-                mIdxDirectory = FSDirectory.getDirectory(idxPath);
+                mIdxDirectory = (Z21FSDirectory)FSDirectory.getDirectory(idxPath);
                 if (mIdxDirectory.getLockFactory() == null || !(mIdxDirectory.getLockFactory() instanceof SingleInstanceLockFactory))
                     mIdxDirectory.setLockFactory(new SingleInstanceLockFactory());
             } catch (IOException e) {
@@ -1421,7 +1433,7 @@ class Lucene21Index implements ILuceneIndex, ITextIndex  {
      * everytime editDistance is called.
      */
     private int e[][] = new int[1][1];
-    private FSDirectory mIdxDirectory = null;
+    private Z21FSDirectory mIdxDirectory = null;
     
     private IndexWriter mIndexWriter;
     private ReentrantLock mIndexWriterMutex = new ReentrantLock();
