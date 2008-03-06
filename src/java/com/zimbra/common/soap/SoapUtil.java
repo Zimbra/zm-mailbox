@@ -78,9 +78,6 @@ public class SoapUtil {
     public static Element addSessionToCtxt(Element ctxt, String sessionId) {
         if (ctxt == null || sessionId == null || sessionId.trim().equals(""))
             return ctxt;
-        if (ctxt.getAttribute(HeaderConstants.E_AUTH_TOKEN, null) == null)
-            return ctxt;
-
         ctxt.addUniqueElement(HeaderConstants.E_SESSION_ID).addAttribute(HeaderConstants.A_ID, sessionId).setText(sessionId);
         return ctxt;
     }
@@ -145,6 +142,6 @@ public class SoapUtil {
      * @see #toCtxt(com.zimbra.common.soap.SoapProtocol, String, boolean) */
     public static Element toCtxt(SoapProtocol protocol, ZAuthToken authToken, String sessionId) {
         Element ctxt = toCtxt(protocol, authToken, false);
-        return addSessionToCtxt(ctxt, sessionId);
+        return authToken == null ? ctxt : addSessionToCtxt(ctxt, sessionId);
     }
 }
