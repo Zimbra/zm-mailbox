@@ -17,6 +17,10 @@ thunderbird-csv
 outlook-2000-csv
 outlook-2003-csv
 
+type attribute:
+
+name :
+
 if the CSV has single name field instead of parsed firstName and lastName,
 declare the column to 
 
@@ -24,6 +28,18 @@ declare the column to
 
 then the value of Name field will be split into firstName, middleName, and
 lastName.
+
+multivalue :
+
+merge columns into a single Zimbra field.
+
+        <column name="Home Address,Home Address 2" field="homeStreet" type="multivalue"/>
+
+tag :
+
+translate the value of into Zimbra tag.
+
+        <column name="Category" type="tag"/>
 
 -->
 
@@ -96,7 +112,7 @@ lastName.
         <column name="Last" field="lastName"/>
         <column name="Nickname" field="nickname"/>
         <column name="Email" field="email"/>
-        <column name="Category"/>
+        <column name="Category" type="tag"/>
         <column name="Distribution Lists"/>
         <column name="Messenger ID"/>
         <column name="Home" field="homePhone"/>
