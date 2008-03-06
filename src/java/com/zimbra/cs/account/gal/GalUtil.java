@@ -37,6 +37,15 @@ public class GalUtil {
         return query;
     }
     
+    public static String tokenizeKey(GalParams galParams, GalOp galOp) {
+        if (galOp == GalOp.autocomplete)
+            return galParams.tokenizeAutoCompleteKey();
+        else if (galOp == GalOp.search)
+            return galParams.tokenizeSearchKey();
+        
+        return null;
+    }
+    
     private static String expandKey(GalParams galParams, GalOp galOp, String filterTemplate, String key) throws ServiceException {
 
         if (!filterTemplate.startsWith("(")) {
@@ -49,11 +58,7 @@ public class GalUtil {
         String query = null;
         Map<String, String> vars = new HashMap<String, String>();
         
-        String tokenize = null;
-        if (galOp == GalOp.autocomplete)
-            tokenize = galParams.tokenizeAutoCompleteKey();
-        else if (galOp == GalOp.search)
-            tokenize = galParams.tokenizeSearchKey();
+        String tokenize = tokenizeKey(galParams, galOp);
         
         if (tokenize != null) {
             String tokens[] = key.split("\\s+");

@@ -971,6 +971,7 @@ public class LdapUtil {
     
         SearchGalResult result = new SearchGalResult();
         result.matches = new ArrayList<GalContact>();
+        result.tokenizeKey = GalUtil.tokenizeKey(galParams, galOp);
     
         if (url == null || url.length == 0 || base == null || filter == null) {
             if (url == null || url.length == 0)

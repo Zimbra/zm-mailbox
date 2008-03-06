@@ -1189,6 +1189,7 @@ public class SoapProvisioning extends Provisioning {
         SearchGalResult result = new SearchGalResult();
         result.matches = new ArrayList<GalContact>();
         result.hadMore = resp.getAttributeBool(AdminConstants.A_MORE);
+        result.tokenizeKey = resp.getAttribute(AccountConstants.A_TOKENIZE_KEY, null);
         for (Element e: resp.listElements(AdminConstants.E_CN)) {
             result.matches.add(new GalContact(AdminConstants.A_ID, getAttrs(e)));
         }
@@ -1293,6 +1294,7 @@ public class SoapProvisioning extends Provisioning {
         SearchGalResult result = new SearchGalResult();
         result.matches = new ArrayList<GalContact>();
         result.hadMore = resp.getAttributeBool(AdminConstants.A_MORE);
+        result.tokenizeKey = resp.getAttribute(AccountConstants.A_TOKENIZE_KEY, null);
         for (Element e: resp.listElements(AdminConstants.E_CN)) {
             result.matches.add(new GalContact(AdminConstants.A_ID, getAttrs(e)));
         }

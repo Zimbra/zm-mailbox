@@ -23,6 +23,7 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Account;
@@ -88,6 +89,7 @@ public class SearchGal extends AdminDocumentHandler {
         SearchGalResult result = prov.searchGal(d, n, type, token);
 
         response.addAttribute(AdminConstants.A_MORE, result.hadMore);
+        response.addAttribute(AccountConstants.A_TOKENIZE_KEY, result.tokenizeKey);
         
         for (GalContact contact : result.matches)
             addContact(response, contact);

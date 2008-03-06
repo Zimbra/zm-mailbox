@@ -3684,7 +3684,7 @@ public class LdapProvisioning extends Provisioning {
         } else {
             results = searchZimbraGal(d, n, maxResults, token, galOp);
         }
-        if (results == null) results = new SearchGalResult();
+        if (results == null) results = new SearchGalResult();  // should really not be null by now
         if (results.matches == null) results.matches = new ArrayList<GalContact>();
 
         if (type == Provisioning.GAL_SEARCH_TYPE.ALL) {
@@ -3757,7 +3757,7 @@ public class LdapProvisioning extends Provisioning {
         } else {
             results = searchZimbraGal(d, n, maxResults, null, galOp);
         }
-        if (results == null) results = new SearchGalResult();
+        if (results == null) results = new SearchGalResult();  // should really not be null by now
         if (results.matches == null) results.matches = new ArrayList<GalContact>();
 
         if (type == Provisioning.GAL_SEARCH_TYPE.ALL) {
@@ -3838,6 +3838,7 @@ public class LdapProvisioning extends Provisioning {
         LdapDomain ld = (LdapDomain) domain;
         SearchGalResult result = new SearchGalResult();
         result.matches = new ArrayList<GalContact>();
+        result.tokenizeKey = GalUtil.tokenizeKey(galParams, galOp);
         if (query == null)
             return result;
     

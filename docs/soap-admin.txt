@@ -280,7 +280,7 @@ Access: domain admin sufficient (a domain admin can't specify "domains" as a typ
    <name>...</name>
  </AutoCompleteGalRequest>
  
- <AutoCompleteGalResponse more="{more}">
+ <AutoCompleteGalResponse more="{more}" [tokenizeKey="{tokenize-key-op}"]>
    <cn>...</cn>*
  </AutoCompleteGalResponse>
 
@@ -293,6 +293,14 @@ Access: domain admin sufficient (a domain admin can't specify "domains" as a typ
            if omitted, defaults to "accounts"
            
   {more-flag} = 1 if the results were truncated.
+  
+  {tokenize-key-op} = and|or
+         - Not present if the search key was not tokenized.
+         - Some clients backtrack on GAL results assuming the results of a more
+           specific key is the subset of a more generic key, and it checks cached 
+           results instead of issuing another SOAP request to the server.    
+           If search key was tokenized and expanded with AND or OR, this cannot 
+           be assumed.
 
 Notes: admin verison of mail equiv. Used for testing via zmprov.
   
@@ -301,11 +309,19 @@ Notes: admin verison of mail equiv. Used for testing via zmprov.
    <name>...</name>
  </SearchGalRequest>
  
- <SearchGalResponse more="{more}">
+ <SearchGalResponse more="{more}" [tokenizeKey="{tokenize-key-op}"]>
    <cn>...</cn>*
  </SearchGalResponse>
 
   {more-flag} = 1 if the results were truncated.
+  
+  {tokenize-key-op} = and|or
+         - Not present if the search key was not tokenized.
+         - Some clients backtrack on GAL results assuming the results of a more
+           specific key is the subset of a more generic key, and it checks cached 
+           results instead of issuing another SOAP request to the server.    
+           If search key was tokenized and expanded with AND or OR, this cannot 
+           be assumed.
 
   {type} = type of addresses to search
            "account" for regular user accounts, aliases and distribution lists
