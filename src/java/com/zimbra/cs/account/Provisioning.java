@@ -1456,6 +1456,8 @@ public abstract class Provisioning {
     public static final String A_zimbraFreebusyExchangeAuthPassword = "zimbraFreebusyExchangeAuthPassword";
     public static final String A_zimbraFreebusyExchangeAuthScheme   = "zimbraFreebusyExchangeAuthScheme";
     public static final String A_zimbraFreebusyExchangeUserOrg      = "zimbraFreebusyExchangeUserOrg";
+    public static final String A_zimbraFreebusyExchangeCachedIntervalStart = "zimbraFreebusyExchangeCachedIntervalStart";
+    public static final String A_zimbraFreebusyExchangeCachedInterval      = "zimbraFreebusyExchangeCachedInterval";
     
     // Lawful intercept
     public static final String A_zimbraInterceptAddress             = "zimbraInterceptAddress";
