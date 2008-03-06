@@ -2959,4 +2959,14 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Batch size to use when indexing data</desc>
 </attr>
 
+<attr id="620" name="zimbraFreebusyExchangeCachedIntervalStart" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>7d</globalConfigValue>
+  <desc>The value of duration is used to indicate the start date (in the past relative to today) of the f/b interval pushed to Exchange server.</desc>
+</attr>
+
+<attr id="621" name="zimbraFreebusyExchangeCachedInterval" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>60d</globalConfigValue>
+  <desc>The duration of f/b block pushed to Exchange server.</desc>
+</attr>
+
 </attrs>

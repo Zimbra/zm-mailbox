@@ -41,6 +41,7 @@ import org.dom4j.DocumentException;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -198,10 +199,17 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 	}
 	
 	public long cachedFreeBusyStartTime() {
-		// beginning of this month
 		Calendar cal = GregorianCalendar.getInstance();
-		cal.setTimeInMillis(System.currentTimeMillis());
-		cal.set(Calendar.DAY_OF_MONTH, 1);
+		try {
+			Provisioning prov = Provisioning.getInstance();
+			Server s = prov.getLocalServer();
+			long dur = s.getTimeInterval(Provisioning.A_zimbraFreebusyExchangeCachedIntervalStart, 0);
+			cal.setTimeInMillis(System.currentTimeMillis() - dur);
+		} catch (ServiceException se) {
+			// set to 1 week ago
+			cal.setTimeInMillis(System.currentTimeMillis() - Constants.MILLIS_PER_WEEK);
+		}
+		// normalize the time to 00:00:00
 		cal.set(Calendar.HOUR_OF_DAY, 0);
 		cal.set(Calendar.MINUTE, 0);
 		cal.set(Calendar.SECOND, 0);
@@ -209,19 +217,19 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 	}
 	
 	public long cachedFreeBusyEndTime() {
-		// beginning of this month + 2
+		long duration = Constants.MILLIS_PER_MONTH * 2;
 		Calendar cal = GregorianCalendar.getInstance();
-		cal.setTimeInMillis(System.currentTimeMillis());
-		cal.set(Calendar.DAY_OF_MONTH, 1);
+		try {
+			Provisioning prov = Provisioning.getInstance();
+			Server s = prov.getLocalServer();
+			duration = s.getTimeInterval(Provisioning.A_zimbraFreebusyExchangeCachedInterval, duration);
+		} catch (ServiceException se) {
+		}
+		cal.setTimeInMillis(cachedFreeBusyStartTime() + duration);
+		// normalize the time to 00:00:00
 		cal.set(Calendar.HOUR_OF_DAY, 0);
 		cal.set(Calendar.MINUTE, 0);
 		cal.set(Calendar.SECOND, 0);
-		int month = cal.get(Calendar.MONTH) + 2;
-		if (month > 11) {
-			month -= 12;
-			cal.set(Calendar.YEAR, cal.get(Calendar.YEAR) + 1);
-		}
-		cal.set(Calendar.MONTH, month);
 		return cal.getTimeInMillis();
 	}
 	
