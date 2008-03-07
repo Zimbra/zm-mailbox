@@ -93,7 +93,7 @@ public class CsvFormatter extends Formatter {
         try {
             InputStreamReader isr = new InputStreamReader(context.req.getInputStream(), Mime.P_CHARSET_UTF8);
             reader = new BufferedReader(isr);
-            String format = context.req.getParameter(UserServlet.QP_CSVFORMAT);
+            String format = context.params.get(UserServlet.QP_CSVFORMAT);
             List<Map<String, String>> contacts = ContactCSV.getContacts(reader, format);
             ItemId iidFolder = new ItemId(folder);
             ImportContacts.ImportCsvContacts(context.opContext, context.targetMailbox, iidFolder, contacts);
