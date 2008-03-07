@@ -968,7 +968,7 @@ public class ParsedMessage {
      */
     public boolean hasTemporaryAnalysisFailure() throws ServiceException {
         analyzeFully();
-        return this.mTemporaryAnalysisFailure;
+        return this.mTemporaryAnalysisFailure; 
     }
     
     private Document getMainBodyLuceneDocument(String bodyContent, StringBuilder fullContent)

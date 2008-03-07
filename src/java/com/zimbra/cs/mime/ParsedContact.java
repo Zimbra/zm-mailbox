@@ -47,6 +47,7 @@ import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -278,6 +279,9 @@ public class ParsedContact {
         }
         return this;
     }
+    
+    boolean mHasTemporaryAnalysisFailure = false;
+    public boolean hasTemporaryAnalysisFailure() { return mHasTemporaryAnalysisFailure; } 
 
     private void analyzeContact(boolean indexAttachments) throws ServiceException {
         if (mLuceneDocuments != null)
@@ -297,8 +301,10 @@ public class ParsedContact {
                     String part = attach.getPartName();
                     String ctype = attach.getContentType();
                     ZimbraLog.index.warn("Parse error on attachment " + part + " (" + ctype + ")", e);
-                    if (conversionError == null && ConversionException.isTemporaryCauseOf(e))
+                    if (conversionError == null && ConversionException.isTemporaryCauseOf(e)) {
                         conversionError = ServiceException.FAILURE("failed to analyze part", e.getCause());
+                        mHasTemporaryAnalysisFailure = true;
+                    }
                 } catch (ObjectHandlerException e) {
                     numParseErrors++;
                     String part = attach.getPartName();

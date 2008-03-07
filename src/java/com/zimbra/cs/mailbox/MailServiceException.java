@@ -94,6 +94,8 @@ public class MailServiceException extends ServiceException {
     
     public static final String INVALID_COMMIT_ID = "mail.INVALID_COMMIT_ID";
     
+    public static final String TEMPORARY_ANALYSIS_ERROR = "mail.TEMPORARY_ANALYSIS_ERROR";
+    
     public static final String ID              = "id";
     public static final String TOKEN           = "token";
     public static final String ITEM_ID         = "itemId";
@@ -454,5 +456,9 @@ public class MailServiceException extends ServiceException {
     
     public static MailServiceException TEXT_INDEX_OUT_OF_SYNC() {
         return new MailServiceException("Text index is not up to date and query has a text part.", MailServiceException.TEXT_INDEX_OUT_OF_SYNC, RECEIVERS_FAULT); 
+    }
+    
+    public static MailServiceException TEMPORARY_ANALYSIS_ERROR() {
+        return new MailServiceException("Temporary Analysis Error", MailServiceException.TEMPORARY_ANALYSIS_ERROR, RECEIVERS_FAULT);
     }
 }

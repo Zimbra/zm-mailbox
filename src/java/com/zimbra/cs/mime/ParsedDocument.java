@@ -32,6 +32,7 @@ import org.apache.lucene.document.Field;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.index.Fragment;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.mailbox.MailboxBlob;
@@ -95,9 +96,15 @@ public class ParsedDocument {
             	mDocument.add(new Field(LuceneFields.L_CONTENT, filename,  Field.Store.NO, Field.Index.TOKENIZED));
             	mDocument.add(new Field(LuceneFields.L_H_FROM, creator, Field.Store.NO, Field.Index.TOKENIZED));
             	mDocument.add(new Field(LuceneFields.L_FILENAME, filename, Field.Store.YES, Field.Index.TOKENIZED));
+            } catch (MimeHandlerException e) {
+                if (ConversionException.isTemporaryCauseOf(e)) {
+                    ZimbraLog.index.info("Temporary failure indexing wiki document "+filename, e);
+                    mIndexFailed = true;
+                } else {
+                    ZimbraLog.index.warn("Failure indexing wiki document "+filename+".  Item will be partially indexed", e);
+                }
             } catch (Exception e) {
-            	ZimbraLog.wiki.warn("Can't index document.  (is convertd down?)", e);
-            	mIndexFailed = true;
+                ZimbraLog.index.warn("Failure indexing wiki document "+filename+".  Item will be partially indexed", e);
             }
         } catch (MimeHandlerException mhe) {
             throw ServiceException.FAILURE("cannot create ParsedDocument", mhe);

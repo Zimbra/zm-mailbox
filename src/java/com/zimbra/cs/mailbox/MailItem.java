@@ -650,6 +650,16 @@ public abstract class MailItem implements Comparable<MailItem> {
             flags = flags | Flag.BITMASK_UNREAD;
         return flags;
     }
+    
+    /**
+     * Convienence function.  Equvialent to ((getFlagBitmask() & FLAG)!=0)
+     * 
+     * @param bitmask
+     * @return
+     */
+    boolean isFlagSet(int mask) {
+        return ((getFlagBitmask() & mask)!=0); 
+    }
 
     /** Returns the "internal" flag bitmask, which does not include
      *  {@link Flag#BITMASK_UNREAD}.  This is the same bitmask as is stored
@@ -1004,6 +1014,12 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
         return null;
     }
+    
+    /**
+     * This class intentionally does not inherit from ServiceException, the exception is internal-only
+     * and should never be exposed outside of this package.
+     */
+    static class TemporaryIndexingException extends Exception { }
 
     /**
      * Returns the indexable data to be passed into reIndex.  This API is generally 
@@ -1024,7 +1040,7 @@ public abstract class MailItem implements Comparable<MailItem> {
      * @throws ServiceException
      */
     @SuppressWarnings("unused")
-    public List<org.apache.lucene.document.Document> generateIndexData(boolean doConsistencyCheck) throws ServiceException {
+    public List<org.apache.lucene.document.Document> generateIndexData(boolean doConsistencyCheck) throws TemporaryIndexingException {
         // override in subclasses that support indexing
         return null;
     }
@@ -1706,7 +1722,7 @@ public abstract class MailItem implements Comparable<MailItem> {
                 indexId = folder.inSpam() ? -1 : id;
         }
         boolean shared = indexId > 0 && indexId == mData.indexId;
-
+        
         // FIXME: can't use MailItem.alterTag() directly because it's a change to a system tag
         if (shared && !isTagged(mMailbox.mCopiedFlag)) {
             DbMailItem.alterTag(this, mMailbox.mCopiedFlag, true);
@@ -1714,31 +1730,36 @@ public abstract class MailItem implements Comparable<MailItem> {
             if (mData.parentId > 0)
                 getParent().inheritedTagChanged(mMailbox.mCopiedFlag, true);
         }
-
+        
         // if the copy or original is in Spam, put the copy in its own conversation
         boolean detach = parentId <= 0 || isTagged(mMailbox.mDraftFlag) || inSpam() != folder.inSpam();
-
+        
         UnderlyingData data = mData.duplicate(id, folder.getId(), destVolumeId);
         data.parentId = detach ? -1 : parentId;
         data.indexId  = indexId;
-        data.flags   &= shared ? ~0 : ~Flag.BITMASK_COPIED; 
+        data.flags   &= shared ? ~0 : ~Flag.BITMASK_COPIED;
+        
         data.metadata = encodeMetadata();
         data.contentChanged(mMailbox);
+        
+        if (indexId > 0 && indexId != mData.indexId) {
+            // we'll have to reindex the copy.  Just set the deferred flag, we'll
+            // index it later
+            mMailbox.incrementIndexDeferredCount(1);
+            data.flags |= Flag.BITMASK_INDEXING_DEFERRED;
+        }
+        
         DbMailItem.copy(this, id, folder, data.indexId, data.parentId, data.volumeId, data.metadata);
-
+        
         MailItem copy = constructItem(mMailbox, data);
         copy.finishCreation(detach ? null : getParent());
-
+        
         MailboxBlob srcBlob = getBlob();
         if (srcBlob != null) {
             StoreManager sm = StoreManager.getInstance();
             MailboxBlob blob = sm.link(srcBlob.getBlob(), mMailbox, data.id, data.modContent, data.volumeId);
             mMailbox.markOtherItemDirty(blob);
         }
-
-        // if we're not sharing the index entry, we need to index the new item
-        if (copy.getIndexId() == copy.getId())
-            mMailbox.queueForIndexing(copy, false, null);
 
         return copy;
     }
@@ -1807,7 +1828,11 @@ public abstract class MailItem implements Comparable<MailItem> {
             if (data.indexId <= 0 || isMutable())
                 data.indexId = target.inSpam() ? -1 : copyId;
         }
-        boolean shared = data.indexId > 0 && data.indexId == mData.indexId;  
+        boolean shared = data.indexId > 0 && data.indexId == mData.indexId;
+        if (data.indexId > 0 && data.indexId != mData.indexId) {
+            data.flags |= Flag.BITMASK_INDEXING_DEFERRED;
+            mMailbox.incrementIndexDeferredCount(1);
+        }
 
         data.contentChanged(mMailbox);
         DbMailItem.icopy(this, data, shared);
@@ -1839,10 +1864,6 @@ public abstract class MailItem implements Comparable<MailItem> {
             StoreManager sm = StoreManager.getInstance();
             MailboxBlob blob = sm.link(srcBlob.getBlob(), mMailbox, data.id, data.modContent, data.volumeId);
             mMailbox.markOtherItemDirty(blob);
-            
-            // if we're not sharing the index entry, we need to index the new item
-            if (copy.getIndexId() == copy.getId())
-                mMailbox.queueForIndexing(copy, false, null);
         }
         
         return copy;

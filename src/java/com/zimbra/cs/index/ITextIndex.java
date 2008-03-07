@@ -46,7 +46,7 @@ interface ITextIndex {
     /**
      * Delete all the documents from the index that have indexIds as specified 
      */
-    int[] deleteDocuments(int indexIds[]) throws IOException;
+    List<Integer> deleteDocuments(List<Integer> itemIds) throws IOException;
 
     /**
      * Delete this index completely.

@@ -175,7 +175,7 @@ public abstract class CalendarItem extends MailItem {
     boolean isIndexed()        { return true; }
     boolean canHaveChildren()  { return false; }
     
-    @Override public List<org.apache.lucene.document.Document> generateIndexData(boolean doConsistencyCheck) throws ServiceException {
+    @Override public List<org.apache.lucene.document.Document> generateIndexData(boolean doConsistencyCheck) throws MailItem.TemporaryIndexingException {
         List<org.apache.lucene.document.Document> docs = null;
         synchronized(getMailbox()) {
             docs = getLuceneDocuments();
@@ -183,7 +183,7 @@ public abstract class CalendarItem extends MailItem {
         return docs;
     }
     
-    protected List<org.apache.lucene.document.Document> getLuceneDocuments() throws ServiceException {
+    protected List<org.apache.lucene.document.Document> getLuceneDocuments() throws TemporaryIndexingException{
         List<org.apache.lucene.document.Document> toRet = 
             new ArrayList<org.apache.lucene.document.Document>();
 
@@ -209,8 +209,10 @@ public abstract class CalendarItem extends MailItem {
                 org.apache.lucene.document.Document doc = new org.apache.lucene.document.Document();
                 StringBuilder s = new StringBuilder();
                 for (ZAttendee at : inv.getAttendees()) {
-                    doc.add(new Field(LuceneFields.L_H_TO, at.getFriendlyAddress().toString(), Field.Store.NO, Field.Index.TOKENIZED));
-                    s.append(at.getIndexString()).append(' ');
+                    try {
+                        doc.add(new Field(LuceneFields.L_H_TO, at.getFriendlyAddress().toString(), Field.Store.NO, Field.Index.TOKENIZED));
+                        s.append(at.getIndexString()).append(' ');
+                    } catch (ServiceException e) {}
                 }
                 s.append(' ');
                 if (inv.getLocation() != null) {
@@ -223,21 +225,29 @@ public abstract class CalendarItem extends MailItem {
                 } else {
                     s.append(defaultName).append(' ');
                 }
-                s.append(inv.getDescription()).append(' ');
+                try {
+                    s.append(inv.getDescription()).append(' ');
+                } catch (ServiceException ex) {
+                    if (ZimbraLog.index.isDebugEnabled()) {
+                        ZimbraLog.index.debug("Caught exception fetching description while indexing CalendarItem "+this.getId()+" skipping", ex); 
+                    }
+                }
                 s.append(inv.getComment()).append(' ');
                 doc.add(new Field(LuceneFields.L_CONTENT, s.toString(), Field.Store.NO, Field.Index.TOKENIZED));
                 toRet.add(doc);
             } else {
-                MimeMessage mm = inv.getMimeMessage();
-                
-                if (mm == null)
-                    continue;
-                
                 try {
+                    MimeMessage mm = inv.getMimeMessage();
+                    
+                    if (mm == null)
+                        continue;
+                    
                     StringBuilder s = new StringBuilder();
                     for (ZAttendee at : inv.getAttendees()) {
-                        mm.addRecipient(RecipientType.TO, at.getFriendlyAddress());
-                        s.append(at.getIndexString()).append(' ');
+                        try {
+                            mm.addRecipient(RecipientType.TO, at.getFriendlyAddress());
+                            s.append(at.getIndexString()).append(' ');
+                        } catch (ServiceException ex) {}
                     }
                     
                     if (inv.getLocation() != null) {
@@ -249,13 +259,24 @@ public abstract class CalendarItem extends MailItem {
                     mm.saveChanges();
                     
                     ParsedMessage pm = new ParsedMessage(mm, mMailbox.attachmentsIndexingEnabled());
+                    pm.analyzeFully();
+                    if (pm.hasTemporaryAnalysisFailure()) {
+                        throw new MailItem.TemporaryIndexingException();
+                    }
                     List<org.apache.lucene.document.Document> docs = pm.getLuceneDocuments();
                     for (org.apache.lucene.document.Document doc : docs) {
                         doc.add(new Field(LuceneFields.L_CONTENT, s.toString(), Field.Store.NO, Field.Index.TOKENIZED));
                         toRet.add(doc);
                     }
                 } catch(MessagingException e) {
-                    throw ServiceException.FAILURE("Failure Indexing: " + toString(), e);
+                    if (ZimbraLog.index.isDebugEnabled()) {
+                        ZimbraLog.index.debug("Caught MessagingException for Invite "+inv.toString()+" while indexing CalendarItem "+this.getId()+" skipping Invite", e); 
+                    }
+                    
+                } catch(ServiceException e) {
+                    if (ZimbraLog.index.isDebugEnabled()) {
+                        ZimbraLog.index.debug("Caught MessagingException for Invite "+inv.toString()+" while indexing CalendarItem "+this.getId()+" skipping Invite", e); 
+                    }
                 }
             }
         }
