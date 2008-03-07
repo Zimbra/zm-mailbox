@@ -25,6 +25,10 @@ import com.zimbra.common.stats.Counter;
 import com.zimbra.common.stats.StatsDumperDataSource;
 
 
+/**
+ * ActivityTrackers get their own output file (e.g. soap.csv) and track a set of "commands" and their "total elapsed time" 
+ * for each counter stat period, one on a line.
+ */
 public class ActivityTracker
 implements StatsDumperDataSource {
 
