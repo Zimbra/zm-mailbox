@@ -576,6 +576,7 @@ public class Contact extends MailItem {
      * @param folder    The {@link Folder} to create the contact in.
      * @param volumeId  The volume to persist any attachments to.
      * @param pc        The contact's fields and values, plus attachments.
+     * @params flags    Initial flagset
      * @param tags      A serialized version of all {@link Tag}s to apply.
      * @perms {@link ACL#RIGHT_INSERT} on the folder
      * @throws ServiceException   The following error codes are possible:<ul>
@@ -587,7 +588,7 @@ public class Contact extends MailItem {
      *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
      *        permissions</ul>
      * @see #canContain(byte) */
-    static Contact create(int id, Folder folder, short volumeId, ParsedContact pc, String tags) throws ServiceException {
+    static Contact create(int id, Folder folder, short volumeId, ParsedContact pc, int flags, String tags) throws ServiceException {
         if (folder == null || !folder.canContain(TYPE_CONTACT))
             throw MailServiceException.CANNOT_CONTAIN();
         if (!folder.canAccess(ACL.RIGHT_INSERT))
@@ -607,7 +608,7 @@ public class Contact extends MailItem {
         data.volumeId    = volumeId;
         data.setBlobDigest(pc.getDigest());
         data.date        = mbox.getOperationTimestamp();
-        data.flags       = pc.hasAttachment() ? Flag.BITMASK_ATTACHED : 0;
+        data.flags       = flags | (pc.hasAttachment() ? Flag.BITMASK_ATTACHED : 0);
         data.tags        = Tag.tagsToBitmask(tags);
         data.sender      = getFileAsString(pc.getFields());
         data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, pc.getFields(), pc.getAttachments());
@@ -621,10 +622,17 @@ public class Contact extends MailItem {
         return con;
     }
 
-    @Override public List<org.apache.lucene.document.Document> generateIndexData(boolean doConsistencyCheck) throws ServiceException {
+    @Override public List<org.apache.lucene.document.Document> generateIndexData(boolean doConsistencyCheck) throws MailItem.TemporaryIndexingException {
         synchronized(mMailbox) {
-            ParsedContact pc = new ParsedContact(this);
-            return pc.getLuceneDocuments(mMailbox);
+            try {
+                ParsedContact pc = new ParsedContact(this);
+                pc.analyze(mMailbox);
+                if (pc.hasTemporaryAnalysisFailure())
+                    throw new MailItem.TemporaryIndexingException();
+                return pc.getLuceneDocuments(mMailbox);
+            } catch (Exception e) {
+                return new ArrayList<org.apache.lucene.document.Document>(); 
+            }
         }
     }
 

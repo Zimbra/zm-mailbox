@@ -29,6 +29,7 @@ import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * @author dkarp
@@ -70,16 +71,23 @@ public class Document extends MailItem {
         return getAccount().getIntAttr(Provisioning.A_zimbraNotebookMaxRevisions, 0);
     }
 
-    @Override public List<org.apache.lucene.document.Document> generateIndexData(boolean doConsistencyCheck) throws ServiceException {
+    @Override public List<org.apache.lucene.document.Document> generateIndexData(boolean doConsistencyCheck) throws MailItem.TemporaryIndexingException {
         ParsedDocument pd = null;
-        synchronized(this.getMailbox()) {
-            pd = new ParsedDocument(getContent(), getName(), getContentType(), getChangeDate(), getCreator());
+        try {
+            synchronized(this.getMailbox()) {
+                pd = new ParsedDocument(getContent(), getName(), getContentType(), getChangeDate(), getCreator());
+                if (pd.hasTemporaryAnalysisFailure())
+                    throw new MailItem.TemporaryIndexingException();
+            }
+            
+            List<org.apache.lucene.document.Document> toRet = new ArrayList<org.apache.lucene.document.Document>(1);
+            toRet.add(pd.getDocument());
+            
+            return toRet;
+        } catch (ServiceException e) {
+            ZimbraLog.index.warn("Error generating index data for Wiki Document "+getId()+". Item will not be indexed", e);
+            return new ArrayList<org.apache.lucene.document.Document>(0);
         }
-        
-        List<org.apache.lucene.document.Document> toRet = new ArrayList<org.apache.lucene.document.Document>(1);
-        toRet.add(pd.getDocument());
-        
-        return toRet;
     }
 
     @Override

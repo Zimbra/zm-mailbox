@@ -44,6 +44,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Mailbox.SearchResultMode;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.common.service.ServiceException;
@@ -67,6 +68,17 @@ public class TestSearch extends TestCase {
     {
         {
             Mailbox mbox = MailboxManager.getInstance().getMailboxById(mMailboxId);
+            
+            // force deferred index items to be caught-up
+            try {
+                byte[] types = new byte[1];
+                types[0] = MailItem.TYPE_MESSAGE;
+                mbox.search(new OperationContext(mbox), "abc", types, SortBy.DATE_ASCENDING, 1);
+            } catch (Exception e) {
+                e.printStackTrace();
+                fail("Caught exception running initial text search: "+e);
+            }
+                
             assertTrue(ZimbraQuery.unitTests(mbox));
         }
         long startTime = System.currentTimeMillis();

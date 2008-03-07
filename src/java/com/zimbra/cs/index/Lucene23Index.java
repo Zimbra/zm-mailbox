@@ -289,13 +289,13 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
 //        }
 //    }
 
-    public int[] deleteDocuments(int itemIds[]) throws IOException {
+    public List<Integer> deleteDocuments(List<Integer> itemIds) throws IOException {
         synchronized(getLock()) {
             openIndexWriter();
             try {
-                for (int i = 0; i < itemIds.length; i++) {
+                for (int i = 0; i < itemIds.size(); i++) {
                     try {
-                        String itemIdStr = Integer.toString(itemIds[i]);
+                        String itemIdStr = Integer.toString(itemIds.get(i));
                         Term toDelete = new Term(LuceneFields.L_MAILBOX_BLOB_ID, itemIdStr);
                         mIndexWriter.deleteDocuments(toDelete);
                         // NOTE!  The numDeleted may be < you expect here, the document may
@@ -306,9 +306,10 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
                             sLog.debug("Deleted index documents for itemId "+itemIdStr);
                         }
                     } catch (IOException ioe) {
-                        sLog.debug("deleteDocuments exception on index "+i+" out of "+itemIds.length+" (id="+itemIds[i]+")");
-                        int[] toRet = new int[i];
-                        System.arraycopy(itemIds,0,toRet,0,i);
+                        sLog.debug("deleteDocuments exception on index "+i+" out of "+itemIds.size()+" (id="+itemIds.get(i)+")");
+                        List<Integer> toRet = new ArrayList<Integer>(i);
+                        for (int j = 0; j < i; j++)
+                            toRet.add(itemIds.get(j));
                         return toRet;
                     }
                 }

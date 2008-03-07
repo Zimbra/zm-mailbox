@@ -229,7 +229,7 @@ public final class MailboxIndex
      * 
      * @throws IOException on index open failure, nothing processed.
      */
-    public int[] deleteDocuments(int itemIds[]) throws IOException {
+    public List<Integer> deleteDocuments(List<Integer> itemIds) throws IOException {
         return mTextIndex.deleteDocuments(itemIds);
     }
 

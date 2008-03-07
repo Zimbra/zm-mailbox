@@ -413,8 +413,10 @@ public class Message extends MailItem {
                     if (calItem == null) {
                         // ONLY create a calendar item if this is a REQUEST method...otherwise don't.
                         if (method.equals(ICalTok.REQUEST.toString())) {
+                            int flags = Flag.BITMASK_INDEXING_DEFERRED;
+                            mMailbox.incrementIndexDeferredCount(1);
                             int defaultFolder = cur.isTodo() ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;
-                            calItem = mMailbox.createCalendarItem(defaultFolder, volumeId, 0, 0, cur.getUid(), pm, cur, 0);
+                            calItem = mMailbox.createCalendarItem(defaultFolder, volumeId, flags, 0, cur.getUid(), pm, cur, 0);
                             calItemIsNew = true;
                         } else {
                             sLog.info("Mailbox " + getMailboxId()+" Message "+getId()+" SKIPPING Invite "+method+" b/c no CalendarItem could be found");
@@ -499,25 +501,33 @@ public class Message extends MailItem {
         return copy;
     }
 
-    @Override public List<org.apache.lucene.document.Document> generateIndexData(boolean doConsistencyCheck) throws ServiceException {
-        ParsedMessage pm = null;
-        synchronized (getMailbox()) {
-            // force the pm's received-date to be the correct one
-            pm = new ParsedMessage(getMimeMessage(), getDate(), getMailbox().attachmentsIndexingEnabled());
+    @Override public List<org.apache.lucene.document.Document> generateIndexData(boolean doConsistencyCheck) throws MailItem.TemporaryIndexingException {
+        try {
+            ParsedMessage pm = null;
+            synchronized (getMailbox()) {
+                // force the pm's received-date to be the correct one
+                pm = new ParsedMessage(getMimeMessage(), getDate(), getMailbox().attachmentsIndexingEnabled());
+            }
+            
+            if (doConsistencyCheck) {
+                // because of bug 8263, we sometimes have fragments that are incorrect;
+                //   check them here and correct them if necessary
+                String fragment = pm.getFragment();
+                if (!getFragment().equals(fragment == null ? "" : fragment))
+                    getMailbox().reanalyze(getId(), getType(), pm);
+            }
+            
+            // don't hold the lock while extracting text!
+            pm.analyzeFully();
+            
+            if (pm.hasTemporaryAnalysisFailure())
+                throw new MailItem.TemporaryIndexingException();
+            
+            return pm.getLuceneDocuments();
+        } catch (ServiceException e) {
+            ZimbraLog.index.warn("Unable to generate index data for Message "+getId()+". Item will not be indexed", e);
+            return new ArrayList<org.apache.lucene.document.Document>(0);
         }
-
-        if (doConsistencyCheck) {
-            // because of bug 8263, we sometimes have fragments that are incorrect;
-            //   check them here and correct them if necessary
-            String fragment = pm.getFragment();
-            if (!getFragment().equals(fragment == null ? "" : fragment))
-                getMailbox().reanalyze(getId(), getType(), pm);
-        }
-
-        // don't hold the lock while extracting text!
-        pm.analyzeFully();
-
-        return pm.getLuceneDocuments();
     }
 
 
