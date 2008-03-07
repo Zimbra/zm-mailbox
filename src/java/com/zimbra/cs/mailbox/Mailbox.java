@@ -1710,9 +1710,10 @@ public class Mailbox {
                     avg = (end - start) / mReIndexStatus.mNumProcessed;
                     mps = avg > 0 ? 1000 / avg : 0;                    
                 }
+                mMailboxIndex.flush();
                 ZimbraLog.mailbox.info("Re-Indexing: Mailbox " + getId() + " COMPLETED.  Re-indexed "+mReIndexStatus.mNumProcessed
                     +" items in " + (end-start) + "ms.  (avg "+avg+"ms/item= "+mps+" items/sec)"
-                    +" ("+mReIndexStatus.mNumFailed+" failed) ");
+                    +" ("+mReIndexStatus.mNumFailed+" failed)");
             }
             
             if (completionId > 0)
@@ -3344,6 +3345,10 @@ public class Mailbox {
                     assert(!Thread.holdsLock(this));
                     chunk.add(new Pair<MailItem, List<org.apache.lucene.document.Document>>(item, item.generateIndexData(true)));
                 } catch (ServiceException e) {
+                    //
+                    // this is an error with the item itself -- retry a few times
+                    //
+                    
                     if (ZimbraLog.index.isDebugEnabled())
                         ZimbraLog.index.debug("Error generating index data for item ID: " + item.getId() + " Skipping item", e);
                 }
@@ -3591,6 +3596,8 @@ public class Mailbox {
     throws ServiceException {
         flags = (flags & ~Flag.FLAG_SYSTEM);
         SetCalendarItem redoRecorder = new SetCalendarItem(getId(), attachmentsIndexingEnabled(), flags, tags);
+        
+        int batchIndexCount = mMailboxIndex.getBatchedIndexingCount();
 
         boolean success = false;
         try {
@@ -3646,6 +3653,12 @@ public class Mailbox {
                     calItem = getCalendarItemByUid(scid.mInv.getUid());
                     calItemIsNew = calItem == null;
                     if (calItemIsNew) {
+                        if (batchIndexCount != 0) {
+                            flags |= Flag.BITMASK_INDEXING_DEFERRED;
+                            mCurrentChange.idxDeferredCount = Math.max(0, 
+                                (mCurrentChange.idxDeferredCount == MailboxChange.NO_CHANGE ? mData.idxDeferredCount : mCurrentChange.idxDeferredCount) + 1);
+                        }
+                        
                         // ONLY create an calendar item if this is a REQUEST method...otherwise don't.
                         String method = scid.mInv.getMethod();
                         if ("REQUEST".equals(method) || "PUBLISH".equals(method)) {
@@ -3683,7 +3696,16 @@ public class Mailbox {
             if (replies != null)
                 calItem.setReplies(replies);
             
-            queueForIndexing(calItem, !calItemIsNew, null);
+//            if (batchIndexCount == 0)
+//                queueForIndexing(calItem, !calItemIsNew, null);
+//            else if ((calItem.getFlagBitmask() & Flag.BITMASK_INDEXING_DEFERRED) == 0) {
+//                // must set the bitmask
+//                DbMailItem.alterTag(calItem, this.mIndexingDeferredFlag, true);
+//                calItem.tagChanged(mIndexingDeferredFlag, true);
+//                mCurrentChange.idxDeferredCount = Math.max(0, 
+//                    (mCurrentChange.idxDeferredCount == MailboxChange.NO_CHANGE ? mData.idxDeferredCount : mCurrentChange.idxDeferredCount) + 1);
+//            }
+            maybeQueueForIndexing(batchIndexCount, calItem, !calItemIsNew, null);
 
             success = true;
             return calItem.getId();
@@ -3691,6 +3713,21 @@ public class Mailbox {
             endTransaction(success);
         }
     }
+    
+    private void maybeQueueForIndexing(int batchIndexCount, MailItem item, boolean deleteFirst, List<org.apache.lucene.document.Document> indexData) throws ServiceException {
+        assert(Thread.holdsLock(this));
+        
+        if (batchIndexCount == 0)
+            queueForIndexing(item, deleteFirst, indexData);
+        else if ((item.getFlagBitmask() & Flag.BITMASK_INDEXING_DEFERRED) == 0) {
+            // must set the bitmask
+            DbMailItem.alterTag(item, this.mIndexingDeferredFlag, true);
+            item.tagChanged(mIndexingDeferredFlag, true);
+            mCurrentChange.idxDeferredCount = Math.max(0, 
+                (mCurrentChange.idxDeferredCount == MailboxChange.NO_CHANGE ? mData.idxDeferredCount : mCurrentChange.idxDeferredCount) + 1);
+        }
+    }
+
 
     /**
      * Fix up timezone definitions in all appointments/tasks in the mailbox.
@@ -3902,8 +3939,10 @@ public class Mailbox {
                     }
                     calItem.processNewInvite(pm, inv, folderId, volumeId, 0, preserveExistingAlarms, false);
                 }
-                if (calItem != null) 
-                    queueForIndexing(calItem, !calItemIsNew, null);
+                if (calItem != null) {
+//                    queueForIndexing(calItem, !calItemIsNew, null);
+                    maybeQueueForIndexing(mMailboxIndex.getBatchedIndexingCount(), calItem, !calItemIsNew, null);
+                }
                 redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId(), volumeId);
                 
                 success = true;
@@ -3988,7 +4027,9 @@ public class Mailbox {
                 return;
             }
             if (calItem.processNewInviteReply(inv)) {
-                queueForIndexing(calItem, false, null);
+//                queueForIndexing(calItem, false, null);
+                maybeQueueForIndexing(mMailboxIndex.getBatchedIndexingCount(), calItem, true, null);
+                
             }
             success = true;
         } finally {
@@ -4417,7 +4458,11 @@ public class Mailbox {
 
             if (!deferIndexing) {
                 queueForIndexing(msg, false, pm.getLuceneDocuments());
-            } 
+            } else {
+                // don't call maybeQueueForIndexing here unless we're sure we want to index:
+                //   pm.generateLuceneDocuments() will trigger a full message analysis which is bad
+                assert((msg.getFlagBitmask() & Flag.BITMASK_INDEXING_DEFERRED) != 0);
+            }
             
             success = true;
         } finally {
@@ -4544,6 +4589,9 @@ public class Mailbox {
 
         SaveDraft redoRecorder = new SaveDraft(mId, id, digest, size);
         boolean success = false;
+        
+        int batchIndexCount = mMailboxIndex.getBatchedIndexingCount();
+        
         try {
             beginTransaction("saveDraft", octxt, redoRecorder);
             SaveDraft redoPlayer = (SaveDraft) mCurrentChange.getRedoPlayer();
@@ -4565,7 +4613,13 @@ public class Mailbox {
             redoRecorder.setMessageBodyInfo(data, blob.getPath(), blob.getVolumeId());
 
             // NOTE: msg is now uncached (will this cause problems during commit/reindex?)
-            queueForIndexing(msg, true, pm.getLuceneDocuments());
+            //queueForIndexing(msg, true, pm.getLuceneDocuments());
+            if (batchIndexCount == 0)
+                maybeQueueForIndexing(mMailboxIndex.getBatchedIndexingCount(), msg, true, pm.getLuceneDocuments());
+            else 
+                // DON'T call pm.getLuceneDocuments in this case b/c we don't want to trigger analysis
+                maybeQueueForIndexing(mMailboxIndex.getBatchedIndexingCount(), msg, true, null);
+                
             success = true;
             
             try {
@@ -5154,6 +5208,7 @@ public class Mailbox {
             throw ServiceException.INVALID_REQUEST("note content may not be empty", null);
 
         CreateNote redoRecorder = new CreateNote(mId, folderId, content, color, location);
+        int batchIndexCount = mMailboxIndex.getBatchedIndexingCount();
         
         boolean success = false;
         try {
@@ -5173,7 +5228,8 @@ public class Mailbox {
 
             redoRecorder.setNoteId(note.getId());
             redoRecorder.setVolumeId(note.getVolumeId());
-            queueForIndexing(note, false, null);
+//            queueForIndexing(note, false, null);
+            maybeQueueForIndexing(batchIndexCount, note, false, null);
             success = true;
             return note;
         } finally {
@@ -5187,6 +5243,7 @@ public class Mailbox {
             throw ServiceException.INVALID_REQUEST("note content may not be empty", null);
 
         EditNote redoRecorder = new EditNote(mId, noteId, content);
+        int batchIndexCount = mMailboxIndex.getBatchedIndexingCount();
 
         boolean success = false;
         try {
@@ -5196,7 +5253,9 @@ public class Mailbox {
             checkItemChangeID(note);
 
             note.setContent(content);
-            queueForIndexing(note, true, null);
+//            queueForIndexing(note, true, null);
+            maybeQueueForIndexing(batchIndexCount, note, true, null);
+            
             success = true;
         } finally {
             endTransaction(success);
@@ -5260,6 +5319,11 @@ public class Mailbox {
 
         boolean success = false;
         
+        int batchIndexCount = mMailboxIndex.getBatchedIndexingCount();
+        List<org.apache.lucene.document.Document> indexData = null;
+        if (batchIndexCount == 0)
+            indexData = pc.getLuceneDocuments(this);
+        
         try {
             beginTransaction("createContact", octxt, redoRecorder);
             CreateContact redoPlayer = (CreateContact) mCurrentChange.getRedoPlayer();
@@ -5291,7 +5355,8 @@ public class Mailbox {
             redoRecorder.setContactId(con.getId());
             redoRecorder.setVolumeId(volumeId);
             
-            queueForIndexing(con, false, pc.getLuceneDocuments(this));
+//            queueForIndexing(con, false, pc.getLuceneDocuments(this));
+            maybeQueueForIndexing(batchIndexCount, con, false, indexData);
 
             success = true;
             return con;
@@ -5307,6 +5372,12 @@ public class Mailbox {
     public void modifyContactInternal(OperationContext octxt, int contactId, ParsedContact pc) throws ServiceException {
         ModifyContact redoRecorder = new ModifyContact(mId, contactId, pc);
         pc.analyze(this);
+        
+        int batchIndexCount = mMailboxIndex.getBatchedIndexingCount();
+        List<org.apache.lucene.document.Document> indexData = null;
+        if (batchIndexCount == 0)
+            indexData = pc.getLuceneDocuments(this);
+        
         synchronized(this) {
             boolean success = false;
             try {
@@ -5335,7 +5406,8 @@ public class Mailbox {
                 }
                 
                 redoRecorder.setVolumeId(volumeId);
-                queueForIndexing(con, true, pc.getLuceneDocuments(this));
+//                queueForIndexing(con, true, pc.getLuceneDocuments(this));
+                maybeQueueForIndexing(batchIndexCount, con, true, indexData);
                 success = true;
             } finally {
                 endTransaction(success);
@@ -5782,6 +5854,8 @@ public class Mailbox {
 
     public synchronized Document addDocumentRevision(OperationContext octxt, int docId, byte type, ParsedDocument pd) throws ServiceException {
         AddDocumentRevision redoRecorder = new AddDocumentRevision(mId, pd.getDigest(), pd.getSize(), 0);
+        
+        int batchIndexCount = mMailboxIndex.getBatchedIndexingCount();
 
         boolean success = false;
         try {
@@ -5796,7 +5870,12 @@ public class Mailbox {
             redoRecorder.setMessageBodyInfo(pd.getContent(), "", volumeId);
 
             doc.setContent(pd.getContent(), pd.getDigest(), volumeId, pd);
-            queueForIndexing(doc, false, pd.getDocumentList());
+//            queueForIndexing(doc, false, pd.getDocumentList());
+            if (batchIndexCount == 0) {
+                maybeQueueForIndexing(batchIndexCount, doc, false, pd.getDocumentList());
+            } else {
+                maybeQueueForIndexing(batchIndexCount, doc, false, null);
+            }
 
             success = true;
             return doc;
@@ -5853,7 +5932,8 @@ public class Mailbox {
             redoRecorder.setMessageId(doc.getId());
             doc.setContent(pd.getContent(), pd.getDigest(), volumeId, pd);
 
-            queueForIndexing(doc, false, pd.getDocumentList());
+//            queueForIndexing(doc, false, pd.getDocumentList());
+            maybeQueueForIndexing(mMailboxIndex.getBatchedIndexingCount(), doc, false, pd.getDocumentList());
             success = true;
             return doc;
         } catch (IOException ioe) {
@@ -5886,9 +5966,9 @@ public class Mailbox {
         if (pm == null)
             throw ServiceException.INVALID_REQUEST("null ParsedMessage when adding chat to mailbox " + mId, null);
         
-        int batchIndexingCount = mMailboxIndex.getBatchedIndexingCount();
-        maybeIndexDeferredItems(batchIndexingCount);
-        if (batchIndexingCount==0)
+        int batchIndexCount = mMailboxIndex.getBatchedIndexingCount();
+        maybeIndexDeferredItems(batchIndexCount);
+        if (batchIndexCount==0)
             pm.analyzeFully();
         
         synchronized(this) {
@@ -5902,6 +5982,12 @@ public class Mailbox {
                 msgSize = pm.getRawSize();
             } catch (MessagingException me) {
                 throw MailServiceException.MESSAGE_PARSE_ERROR(me);
+            }
+            
+            if (batchIndexCount > 0) {
+                flags |= Flag.BITMASK_INDEXING_DEFERRED;
+                mCurrentChange.idxDeferredCount = Math.max(0, 
+                    (mCurrentChange.idxDeferredCount == MailboxChange.NO_CHANGE ? mData.idxDeferredCount : mCurrentChange.idxDeferredCount) + 1);
             }
             
             CreateChat redoRecorder = new CreateChat(mId, digest, msgSize, folderId, flags, tagsStr);
@@ -5922,8 +6008,10 @@ public class Mailbox {
                 chat = Chat.create(itemId, getFolderById(folderId), pm, msgSize, digest, volumeId, false, flags, tags);
                 redoRecorder.setMessageId(chat.getId());
                 sm.link(blob, this, itemId, chat.getSavedSequence(), chat.getVolumeId());
-                if (batchIndexingCount==0) 
+                if (batchIndexCount==0) 
                     queueForIndexing(chat, false, pm.getLuceneDocuments());
+                else
+                    assert((chat.getFlagBitmask()&Flag.BITMASK_INDEXING_DEFERRED)!=0);
                 success = true;
             } finally {
                 endTransaction(success);
@@ -5973,6 +6061,9 @@ public class Mailbox {
             // NOTE: msg is now uncached (will this cause problems during commit/reindex?)
             if (batchIndexingCount == 0)
                 queueForIndexing(chat, true, pm.getLuceneDocuments());
+            else
+                maybeQueueForIndexing(batchIndexingCount, chat, true, null);
+            
             success = true;
             return chat;
         } finally {
