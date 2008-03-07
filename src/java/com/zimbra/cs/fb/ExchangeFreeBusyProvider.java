@@ -45,7 +45,6 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Server;
@@ -79,7 +78,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 			try {
 				server = Provisioning.getInstance().getLocalServer();
 			} catch (ServiceException se) {
-				ZimbraLog.misc.warn("cannot fetch exchange server info", se);
+				ZimbraLog.fb.warn("cannot fetch exchange server info", se);
 				return null;
 			}
 			String url = server.getAttr(Provisioning.A_zimbraFreebusyExchangeURL, null);
@@ -97,8 +96,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 			try {
 				Account acct = Provisioning.getInstance().get(AccountBy.name, emailAddr);
 				if (acct != null) {
-					Domain domain = Provisioning.getInstance().getDomain(acct);
-					info.org = domain.getAttr(Provisioning.A_zimbraFreebusyExchangeUserOrg, null);
+					info.org = acct.getAttr(Provisioning.A_zimbraFreebusyExchangeUserOrg, null);
 					String fps[] = acct.getMultiAttr(Provisioning.A_zimbraForeignPrincipal);
 					if (fps != null && fps.length > 0) {
 						for (String fp : fps) {
@@ -166,7 +164,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 			try {
 				ret.addAll(this.getFreeBusyForHost(entry.getKey(), entry.getValue()));
 			} catch (IOException e) {
-				ZimbraLog.misc.error("error communicating to "+entry.getKey(), e);
+				ZimbraLog.fb.error("error communicating to "+entry.getKey(), e);
 				return getEmptyList(entry.getValue());
 			}
 		}
@@ -188,7 +186,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		try {
 			server = Provisioning.getInstance().getLocalServer();
 		} catch (ServiceException se) {
-			ZimbraLog.misc.warn("cannot fetch local server", se);
+			ZimbraLog.fb.warn("cannot fetch local server", se);
 			return false;
 		}
 		String url = server.getAttr(Provisioning.A_zimbraFreebusyExchangeURL, null);
@@ -240,17 +238,17 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 			email = getEmailAddress(accountId);
 			fb = getFreeBusy(accountId);
 		} catch (ServiceException se) {
-			ZimbraLog.misc.warn("can't get freebusy for account "+accountId, se);
+			ZimbraLog.fb.warn("can't get freebusy for account "+accountId, se);
 			// retry the request if it's receivers fault.
 			return !se.isReceiversFault();
 		}
 		if (email == null || fb == null) {
-			ZimbraLog.misc.warn("can't get freebusy for account "+accountId);
+			ZimbraLog.fb.warn("can't get freebusy for account "+accountId);
 			return true;  // no retry
 		}
 		ServerInfo serverInfo = getServerInfo(email);
 		if (serverInfo == null || serverInfo.org == null || serverInfo.cn == null) {
-			ZimbraLog.misc.warn("no exchange server info for user "+email);
+			ZimbraLog.fb.warn("no exchange server info for user "+email);
 			return true;  // no retry
 		}
 		ExchangeMessage msg = new ExchangeMessage(serverInfo.org, serverInfo.cn, email);
@@ -263,11 +261,11 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 			method.setRequestHeader(HEADER_TRANSLATE, "f");
 			int status = sendRequest(method, serverInfo);
 			if (status != MULTI_STATUS) {
-				ZimbraLog.misc.error("cannot modify resource at "+url);
+				ZimbraLog.fb.error("cannot modify resource at "+url);
 				return false;  // retry
 			}
 		} catch (IOException ioe) {
-			ZimbraLog.misc.error("error commucating to "+serverInfo.url, ioe);
+			ZimbraLog.fb.error("error commucating to "+serverInfo.url, ioe);
 			return false;  // retry
 		} finally {
 			method.releaseConnection();
@@ -322,7 +320,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		try {
 			int status = client.executeMethod(method);
 			if (status >= 400) {
-				ZimbraLog.misc.error("form auth to Exchange returned an error: "+status);
+				ZimbraLog.fb.error("form auth to Exchange returned an error: "+status);
 				return false;
 			}
 		} finally {
@@ -346,11 +344,11 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		Request r = req.get(0);
 		ServerInfo serverInfo = (ServerInfo) r.data;
 		if (serverInfo == null) {
-			ZimbraLog.misc.warn("no exchange server info for user "+r.email);
+			ZimbraLog.fb.warn("no exchange server info for user "+r.email);
 			return getEmptyList(req);
 		}
 		String url = constructGetUrl(serverInfo, req);
-		ZimbraLog.misc.debug("fetching fb from url="+url);
+		ZimbraLog.fb.debug("fetching fb from url="+url);
 		HttpMethod method = new GetMethod(url);
 		
 		
@@ -359,15 +357,17 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 			int status = sendRequest(method, serverInfo);
 			if (status != 200)
 				return getEmptyList(req);
-			//String buf = new String(com.zimbra.common.util.ByteUtil.readInput(method.getResponseBodyAsStream(), 10240, 10240), "UTF-8");
-			//ZimbraLog.misc.debug(buf);
-			//response = Element.parseXML(buf);
-			response = Element.parseXML(method.getResponseBodyAsStream());
+			if (ZimbraLog.fb.isDebugEnabled()) {
+				String buf = new String(com.zimbra.common.util.ByteUtil.readInput(method.getResponseBodyAsStream(), 10240, 10240), "UTF-8");
+				ZimbraLog.fb.debug(buf);
+				response = Element.parseXML(buf);
+			} else
+				response = Element.parseXML(method.getResponseBodyAsStream());
 		} catch (DocumentException e) {
-			ZimbraLog.misc.warn("error parsing fb response from exchange", e);
+			ZimbraLog.fb.warn("error parsing fb response from exchange", e);
 			return getEmptyList(req);
 		} catch (IOException e) {
-			ZimbraLog.misc.warn("error parsing fb response from exchange", e);
+			ZimbraLog.fb.warn("error parsing fb response from exchange", e);
 			return getEmptyList(req);
 		} finally {
 			method.releaseConnection();

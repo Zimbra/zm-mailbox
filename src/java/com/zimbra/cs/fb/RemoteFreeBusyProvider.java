@@ -111,13 +111,13 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
                     for (Element thisElt : remoteResponse.listElements())
                         response.addElement(thisElt.detach());
                 } else {
-                    ZimbraLog.calendar.debug("Account " + idStrs[0] + " not found while searching free/busy");
+                    ZimbraLog.fb.debug("Account " + idStrs[0] + " not found while searching free/busy");
                 }
             } catch (SoapFaultException e) {
-                ZimbraLog.calendar.error("cannot get free/busy for "+idStrs[0], e);
+                ZimbraLog.fb.error("cannot get free/busy for "+idStrs[0], e);
             	addFailedAccounts(response, idStrs);
             } catch (ServiceException e) {
-                ZimbraLog.calendar.error("cannot get free/busy for "+idStrs[0], e);
+                ZimbraLog.fb.error("cannot get free/busy for "+idStrs[0], e);
             	addFailedAccounts(response, idStrs);
             }
         }
