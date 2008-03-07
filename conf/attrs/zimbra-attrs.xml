@@ -2907,7 +2907,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Exchange user password for free/busy lookup and propagation</desc>
 </attr>
 
-<attr id="610" name="zimbraFreebusyExchangeUserOrg" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited">
+<attr id="610" name="zimbraFreebusyExchangeUserOrg" type="string" max="256" cardinality="single" optionalIn="cos,account" flags="accountInherited">
   <desc>O and OU used in legacyExchangeDN attribute</desc>
 </attr>
 

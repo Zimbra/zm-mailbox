@@ -75,7 +75,7 @@ public abstract class FreeBusyProvider {
 		String name = p.getName();
 		FreeBusySyncQueue queue = sPUSHQUEUES.get(name);
 		if (queue != null) {
-			ZimbraLog.misc.warn("free/busy provider "+name+" has been already registered.");
+			ZimbraLog.fb.warn("free/busy provider "+name+" has been already registered.");
 		}
 		queue = new FreeBusySyncQueue(p);
 		sPUSHQUEUES.put(name, queue);
@@ -99,7 +99,7 @@ public abstract class FreeBusyProvider {
 					try {
 						queue.writeToDisk();
 					} catch (IOException e) {
-						ZimbraLog.misc.error("can't write to the queue "+queue.getFilename());
+						ZimbraLog.fb.error("can't write to the queue "+queue.getFilename());
 					}
 					queue.notify();
 				}
@@ -126,7 +126,7 @@ public abstract class FreeBusyProvider {
 				}
 			}
 			if (!succeed) {
-				ZimbraLog.misc.error("can't find free/busy provider for user "+emailAddr);
+				ZimbraLog.fb.error("can't find free/busy provider for user "+emailAddr);
 				ret.add(FreeBusy.emptyFreeBusy(emailAddr, start, end));
 			}
 		}
@@ -198,7 +198,7 @@ public abstract class FreeBusyProvider {
 			try {
 				readFromDisk();
 			} catch (IOException e) {
-				ZimbraLog.misc.error("error reading from the queue", e);
+				ZimbraLog.fb.error("error reading from the queue", e);
 			}
 		}
 		public void run() {
@@ -212,7 +212,6 @@ public abstract class FreeBusyProvider {
 							// such that we don't spin loop and keep hammering a down server.
 							long now = System.currentTimeMillis();
 							if (now < mLastFailed + RETRY_INTERVAL) {
-								ZimbraLog.misc.debug("wait for a while..");
 								wait(RETRY_INTERVAL);
 								continue;
 							}
@@ -239,7 +238,7 @@ public abstract class FreeBusyProvider {
 
 				} catch (Exception e) {
 					mLastFailed = System.currentTimeMillis();
-					ZimbraLog.misc.error("error while syncing freebusy for "+mProvider.getName(), e);
+					ZimbraLog.fb.error("error while syncing freebusy for "+mProvider.getName(), e);
 				}
 			}
 		}
@@ -259,7 +258,7 @@ public abstract class FreeBusyProvider {
 			for (String id : this)
 				buf.append("\n").append(id);
 			if (buf.length() > MAX_FILE_SIZE) {
-				ZimbraLog.misc.error("The free/busy replication queue is too large. #elem="+size());
+				ZimbraLog.fb.error("The free/busy replication queue is too large. #elem="+size());
 				return;
 			}
 			FileOutputStream out = null;
@@ -279,7 +278,7 @@ public abstract class FreeBusyProvider {
 				f.createNewFile();
 			long len = f.length();
 			if (len > MAX_FILE_SIZE) {
-				ZimbraLog.misc.error("The free/busy replication queue is too large: "+mFilename+" ("+len+")");
+				ZimbraLog.fb.error("The free/busy replication queue is too large: "+mFilename+" ("+len+")");
 				return;
 			}
 			FileInputStream in = null;
@@ -296,7 +295,7 @@ public abstract class FreeBusyProvider {
 				return;
 			int numTokens = Integer.parseInt(tokens[0]);
 			if (numTokens != tokens.length) {
-				ZimbraLog.misc.error("The free/busy replication queue is inconsistent: "
+				ZimbraLog.fb.error("The free/busy replication queue is inconsistent: "
 						+"numTokens="+numTokens+", actual="+tokens.length);
 				return;
 			}

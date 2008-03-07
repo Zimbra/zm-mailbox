@@ -219,7 +219,7 @@ public class ExchangeMessage {
     		    	byte[] encoded = Base64.encodeBase64(raw);
     		    	buf = new String(encoded, "UTF-8");
     			} catch (IOException e) {
-					ZimbraLog.misc.warn("error converting millis to minutes for month "+m, e);
+					ZimbraLog.fb.warn("error converting millis to minutes for month "+m, e);
 					continue;
     			}
     		}
@@ -238,6 +238,8 @@ public class ExchangeMessage {
     	};
 		Document doc = createRequest(fb);
 		byte[] buf = DomUtil.getBytes(doc);
+		if (ZimbraLog.fb.isDebugEnabled())
+			ZimbraLog.fb.debug(new String(buf, "UTF-8"));
 		ByteArrayRequestEntity re = new ByteArrayRequestEntity(buf, "text/xml");
 		method.setRequestEntity(re);
 		return method;
