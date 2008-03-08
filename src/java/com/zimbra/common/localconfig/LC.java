@@ -100,7 +100,9 @@ public class LC {
     public static final KnownKey zimbra_index_reader_lru_size;
     public static final KnownKey zimbra_index_reader_idle_flush_time;
     public static final KnownKey zimbra_index_reader_idle_sweep_frequency;
-    public static final KnownKey zimbra_index_deferred_items_retry_interval;
+    public static final KnownKey zimbra_index_deferred_items_delay;
+    public static final KnownKey zimbra_index_deferred_items_failure_delay;
+
     public static final KnownKey zimbra_index_max_transaction_bytes;
     public static final KnownKey zimbra_index_max_transaction_items;
     public static final KnownKey zimbra_index_lucene_autocommit;
@@ -127,7 +129,6 @@ public class LC {
     public static final KnownKey zimbra_index_lucene_nobatch_ram_buffer_size_kb;
     public static final KnownKey zimbra_index_lucene_nobatch_autocommit;
     
-
     public static final KnownKey zimbra_spam_report_queue_size;
 
     public static final KnownKey zimbra_throttle_op_concurrency;
@@ -498,9 +499,12 @@ public class LC {
         zimbra_index_reader_idle_sweep_frequency.setDefault("30");
         zimbra_index_reader_idle_sweep_frequency.setDoc("Frequency (seconds) the index reader LRU is swept for idle readers");
         
-        zimbra_index_deferred_items_retry_interval = new KnownKey(
-            "zimbra_index_deferred_items_retry_interval",
-            "300", "At most how frequently (in seconds) do we try to clear out the queue of unindexed (deferred) items");
+        zimbra_index_deferred_items_delay = new KnownKey(
+            "zimbra_index_deferred_items_delay",
+            "10", "Minimum delay (seconds) between attempts to clear out the queue of unindexed (deferred) items");
+        
+        zimbra_index_deferred_items_failure_delay =
+            new KnownKey("zimbra_index_deferred_items_failure_delay", "300", "After a failure, the minimum delay (seconds) between attempts to clear out the queue of unindexed (deferred) items");
         
         zimbra_index_max_transaction_bytes = new KnownKey(
             "zimbra_index_max_transaction_bytes", 
