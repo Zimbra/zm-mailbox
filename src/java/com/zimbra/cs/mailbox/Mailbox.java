@@ -971,7 +971,7 @@ public class Mailbox {
     }
 
     /** Adds the object to the current change's list of non-{@link MailItem}
-     *  objects affected during the transaction.  Among these "dirty" itemsÿ
+     *  objects affected during the transaction.  Among these "dirty" items
      *  can be:<ul>
      *    <li>The {@link Blob} or {@link MailboxBlob} for a newly-created file.
      *    <li>The {@link MailItem.PendingDelete} holding blobs and index
