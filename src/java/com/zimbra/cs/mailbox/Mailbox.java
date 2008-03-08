@@ -377,7 +377,7 @@ public class Mailbox {
     private MailboxIndex mMailboxIndex = null;
     private IMPersona mPersona = null;
     private MailboxVersion mVersion = null;
-
+    
     /** flag: messages sent by me */
     public Flag mSentFlag;
     /** flag: messages/contacts with attachments */
@@ -3205,8 +3205,15 @@ public class Mailbox {
     
     // how frequently is the mailbox allowed to retry indexing deferred items?  The mailbox will ALWAYS try to index deferred items
     // if a text search is run, this only controls other periodic retries.
-    private static final long sIndexDeferredItemsRetryIntervalMs = LC.zimbra_index_deferred_items_retry_interval.intValue() * 1000L;
+    private static final long sIndexDeferredItemsRetryIntervalMs = LC.zimbra_index_deferred_items_delay.longValue() * 1000;
     private long mLastIndexDeferredTime = 0; // the ENDING time of the last index-deferred-items attempt
+    
+    // the timestamp of the last time we had a failure-to-index.  Not persisted anywhere.
+    // Used so the can throttle deferred-index-retries in a situation where an index
+    // is corrupt.  '0' means we think the index is good (we've successfully added to it), nonzero
+    // means that we've had failures without success.
+    private long mLastIndexingFailureTimestamp = 0;
+    private static final long sIndexItemDeferredRetryDelayAfterFailureMs = 1000 * LC.zimbra_index_deferred_items_failure_delay.longValue();
 
     /**
      * This API will periodically attempt to re-try deferred index items.
@@ -3221,7 +3228,10 @@ public class Mailbox {
         synchronized(this) {
             if (!mIndexingDeferredItems) {
                 if (getIndexDeferredCount() > batchIndexingCount) {
-                    if ((System.currentTimeMillis() - sIndexDeferredItemsRetryIntervalMs) > mLastIndexDeferredTime)
+                    long now = System.currentTimeMillis();
+                    
+                    if (((now - sIndexItemDeferredRetryDelayAfterFailureMs) > mLastIndexingFailureTimestamp) &&
+                                ((now - sIndexDeferredItemsRetryIntervalMs) > mLastIndexDeferredTime))
                         shouldIndexDeferred = true;
                 }
             }
@@ -3247,6 +3257,8 @@ public class Mailbox {
         
         synchronized(mIndexingDeferredItemsLock) {
             synchronized(this) {
+                mLastIndexDeferredTime = System.currentTimeMillis();
+                
                 // must sync on 'this' to get correct value.  OK to release the 
                 // lock afterwards as we're just checking for 0 and we know the value
                 // can't go DOWN since we're holding mIndexingDeferredItemsLock
@@ -3404,8 +3416,16 @@ public class Mailbox {
                 if (ZimbraLog.index.isDebugEnabled())
                     ZimbraLog.index.debug("SKIPPING indexing of item " + sr.id + " ptr=" + item);
             }
+            
+            int chunkSizeToUse = sBatchIndexMaxItemsPerTransaction;
+            if (mLastIndexingFailureTimestamp > 0) {
+                // Our most recent index attempts have all failed.  Lets NOT try a big full-size chunk
+                // since they are expensive.  Instead we'll try a small number of items and see if 
+                // we can make any of them index correctly...
+                chunkSizeToUse = 5;
+            }
 
-            if (!iter.hasNext() || itemSize > sBatchIndexMaxBytesPerTransaction || chunk.size() > sBatchIndexMaxItemsPerTransaction) {
+            if (!iter.hasNext() || itemSize > sBatchIndexMaxBytesPerTransaction || chunk.size() >= chunkSizeToUse) {
                 //
                 // Second step: we have a chunk of items and their corresponding index data -- add them to the index
                 //
@@ -3446,6 +3466,10 @@ public class Mailbox {
                             // failure + success = attempt
                             // failure = accempt - success
                             status.mNumFailed = itemsAttempted + idxDeferredChange;
+                            if (status.mNumFailed >= chunkSizeToUse) {
+                                ZimbraLog.index.warn("Possibly corrupt index: Too many failures ("+status.mNumFailed+") trying to indexItemList (total list size="+items.size()+") Aborting");
+                                return;
+                            }
                         } else {
                             // can't track failures easily, skip it. 
                             status.mNumProcessed = itemsAttempted;
@@ -3456,8 +3480,8 @@ public class Mailbox {
                     itemSize = 0;
                 }
             }
-            if (ZimbraLog.mailbox.isDebugEnabled() && ((itemsAttempted % 2000) == 0)) {
-                ZimbraLog.mailbox.debug("Batch Indexing: Mailbox "+getId()+" on item "+mReIndexStatus.mNumProcessed+" out of "+items.size());
+            if (ZimbraLog.mailbox.isInfoEnabled() && ((itemsAttempted % 2000) == 0)) {
+                ZimbraLog.mailbox.info("Batch Indexing: Mailbox "+getId()+" on item "+mReIndexStatus.mNumProcessed+" out of "+items.size());
             }
         }
     }
@@ -3486,7 +3510,7 @@ public class Mailbox {
             }
             success = true;
         } catch (Throwable t) {
-            ZimbraLog.index.warn("Skipping indexing; Unable to parse message " + itemId + ": " + t.toString(), t);
+            ZimbraLog.index.info("Skipping indexing; Unable to parse message " + itemId + ": " + t.toString(), t);
         } finally {
             if (!success)
                 redo.abort();
@@ -6289,8 +6313,11 @@ public class Mailbox {
                 try {
                     mMailboxIndex.deleteDocuments(mCurrentChange.indexItemsToDelete);
                 } catch (IOException e) {
-                    ZimbraLog.index.info("Caught IOException attempting to delete index entries in EndTransaction", e);
+                    if (ZimbraLog.index.isDebugEnabled())
+                        ZimbraLog.index.debug("Caught IOException attempting to delete index entries in EndTransaction", e);
                 }
+
+                int numIndexingExceptions = 0;
                 
                 for (Map.Entry<MailItem, MailboxChange.IndexItemEntry> entry : itemsToIndex.entrySet()) {
                     MailItem item = entry.getKey();
@@ -6329,8 +6356,7 @@ public class Mailbox {
                             // IndexingDeferredFlag set, so we need to clear it
                             deferredTagsToClear.add(item.getId());
                             item.tagChanged(mIndexingDeferredFlag, false);
-                            mCurrentChange.idxDeferredCount = Math.max(0, 
-                                (mCurrentChange.idxDeferredCount == MailboxChange.NO_CHANGE ? mData.idxDeferredCount : mCurrentChange.idxDeferredCount) - 1);
+                            this.incrementIndexDeferredCount(-1);
                             idxDeferredChange--;
                         }
                         
@@ -6344,20 +6370,32 @@ public class Mailbox {
                         //    end up with an unindexed item.
                         if (needRedo)
                             indexRedo.log();
-                    } catch (Exception e) {
-                        if (ZimbraLog.index.isInfoEnabled())
-                            ZimbraLog.index.info("Caught exception while indexing message id "+item.mId+" - indexing deferred", e);
+
+                        // successfully indexed something!  The index isn't totally corrupt: zero out the 
+                        // failure timestamp so that indexItemList can use the full transaction size
+                        mLastIndexingFailureTimestamp = 0;
                         
-                        if ((item.getFlagBitmask() & Flag.BITMASK_INDEXING_DEFERRED) == 0) {
+                    } catch (Exception e) {
+                        if (numIndexingExceptions == 0) {
+                            // log the first exception at INFO level, but log the rest of them at DEBUG
+                            if (ZimbraLog.index.isDebugEnabled())
+                                ZimbraLog.index.debug("Caught exception while indexing message id "+item.mId+" - indexing deferred", e);
+                        } else {
+                            if (ZimbraLog.index.isDebugEnabled())
+                                ZimbraLog.index.debug("Caught exception while indexing message id "+item.mId+" - indexing deferred", e);
+                        }
+                        
+                        if (!item.isFlagSet(Flag.BITMASK_INDEXING_DEFERRED)) {
                             // IndexingDeferredFlag NOT set, so we need to set it
                             deferredTagsToSet.add(item.getId());
                             item.tagChanged(mIndexingDeferredFlag, true);
-                            mCurrentChange.idxDeferredCount = Math.max(0, 
-                                (mCurrentChange.idxDeferredCount == MailboxChange.NO_CHANGE ? mData.idxDeferredCount : mCurrentChange.idxDeferredCount) + 1);
+                            this.incrementIndexDeferredCount(1);
                             idxDeferredChange++;
                         }
+                        numIndexingExceptions++;
                     }
                 }
+                
                 if (!deferredTagsToClear.isEmpty()) {
                     if (conn == null)
                         conn = getOperationConnection();
@@ -6372,6 +6410,11 @@ public class Mailbox {
                     DbMailbox.updateMailboxStats(this);// must persist idxDeferedCount to DB
                     if (ZimbraLog.index.isDebugEnabled()) 
                         ZimbraLog.index.debug("Indexing deferred count changed ("+idxDeferredChange+").  Currently "+this.getIndexDeferredCount()+" deferred index items.");
+                }
+                
+                if (numIndexingExceptions >= itemsToIndex.size()) {
+                    ZimbraLog.index.warn("Possibly corrupt index: "+numIndexingExceptions+" indexing operations failed in mailbox transaction.");
+                    mLastIndexingFailureTimestamp = System.currentTimeMillis();
                 }
             }
             
@@ -6578,7 +6621,7 @@ public class Mailbox {
                             ZimbraLog.index.info("could not delete all index entries for items: " + deleted.itemIds.getAll());
                     }
                 } catch (IOException e) {
-                    ZimbraLog.index.warn("ignoring error while deleting index entries for items: " + deleted.itemIds.getAll(), e);
+                    ZimbraLog.index.info("ignoring error while deleting index entries for items: " + deleted.itemIds.getAll(), e);
                 }
             }
                 
