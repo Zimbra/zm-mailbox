@@ -311,6 +311,11 @@ public class ZimbraLog {
     public static final Log store = LogFactory.getLog("zimbra.store");
     
     /**
+     * the "zimbra.fb" logger.  Logs free/busy operations.
+     */
+    public static final Log fb = LogFactory.getLog("zimbra.fb");
+    
+    /**
      * Keeps track of the account associated with the current thread, for
      * per-user logging settings. 
      */
