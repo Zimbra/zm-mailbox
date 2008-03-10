@@ -984,7 +984,7 @@ public class LdapProvisioning extends Provisioning {
                 new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, returnAttrs, false, false);
 
             //Set the page size and initialize the cookie that we pass back in subsequent pages
-            int pageSize = 1000; 
+            int pageSize = LdapUtil.adjustPageSize(maxResults, 1000); 
             byte[] cookie = null;
  
             LdapContext lctxt = (LdapContext)ctxt; 
