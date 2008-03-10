@@ -1273,6 +1273,7 @@ public class Mailbox {
             mFolderCache.remove(item.getId());
         } else {
             getItemCache().remove(item.getId());
+            MessageCache.purge(item);
         }
 
         if (ZimbraLog.cache.isDebugEnabled())
@@ -1292,8 +1293,10 @@ public class Mailbox {
         MailItem item = getItemCache().remove(itemId);
         if (ZimbraLog.cache.isDebugEnabled())
             ZimbraLog.cache.debug("uncached item " + itemId + " in mailbox " + getId());
-        if (item != null)
+        if (item != null) {
+            MessageCache.purge(item);
             item.uncacheChildren();
+        }
     }
 
     /** Removes all items of a specified type from the <tt>Mailbox</tt>'s

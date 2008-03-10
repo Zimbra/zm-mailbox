@@ -238,11 +238,20 @@ extends TestCase {
             TestUtil.getAddress(USER_NAME),
             TestUtil.getAddress(USER2_NAME)
         };
-        TestUtil.addMessageLmtp(NAME_PREFIX + " testDiskStreamingMultipleRecipients", recipients, TestUtil.getAddress(USER_NAME));
-        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        TestUtil.waitForMessage(mbox, NAME_PREFIX);
-        mbox = TestUtil.getZMailbox(USER2_NAME);
-        TestUtil.waitForMessage(mbox, NAME_PREFIX);
+        
+        String subject = NAME_PREFIX + " testDiskStreamingMultipleRecipients";
+        ZMailbox mbox1 = TestUtil.getZMailbox(USER_NAME);
+        ZMailbox mbox2 = TestUtil.getZMailbox(USER2_NAME);
+
+        TestUtil.addMessageLmtp(subject, recipients, TestUtil.getAddress(USER_NAME));
+        TestUtil.waitForMessage(mbox1, "in:inbox subject:\"" + subject + "\"");
+        ZMessage msg2 = TestUtil.waitForMessage(mbox2, "in:inbox subject:\"" + subject + "\"");
+        
+        // Test bug 25484.  Make sure that user1 can still read the message after user2
+        // deletes it.
+        mbox2.deleteMessage(msg2.getId());
+        mbox1 = TestUtil.getZMailbox(USER_NAME);
+        TestUtil.waitForMessage(mbox1, "in:inbox subject:\"" + subject + "\"");
     }
 
     /**
