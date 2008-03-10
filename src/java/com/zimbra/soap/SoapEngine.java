@@ -77,6 +77,9 @@ public class SoapEngine {
     
     /** context name of IP of the SOAP client */
     public static final String SOAP_REQUEST_IP = "soap.request.ip";
+
+    /** set to true if we log the soap request */
+    public static final String SOAP_REQUEST_LOGGED = "soap.request.logged";
     
     /** context name of IP of the origin client */
     public static final String ORIG_REQUEST_IP = "orig.request.ip";
@@ -129,7 +132,7 @@ public class SoapEngine {
         return soapProto.soapFault(e);
     }
     
-    public Element dispatch(String path, byte[] soapMessage, Map<String, Object> context, boolean loggedRequest) {
+    public Element dispatch(String path, byte[] soapMessage, Map<String, Object> context) {
         if (soapMessage == null || soapMessage.length == 0) {
             SoapProtocol soapProto = SoapProtocol.Soap12;
             return soapFaultEnv(soapProto, "SOAP exception", ServiceException.PARSE_ERROR("empty request payload", null));
@@ -150,7 +153,7 @@ public class SoapEngine {
             SoapProtocol soapProto = SoapProtocol.SoapJS;
             return soapFaultEnv(soapProto, "SOAP exception", ServiceException.PARSE_ERROR(e.getMessage(), e));
         }
-        return dispatch(path, document, context, loggedRequest);
+        return dispatch(path, document, context);
     }
 
     /**
@@ -165,7 +168,7 @@ public class SoapEngine {
      * @return an XmlObject which is a SoapEnvelope containing the response
      *         
      */
-    private Element dispatch(String path, Element envelope, Map<String, Object> context, boolean loggedRequest) {
+    private Element dispatch(String path, Element envelope, Map<String, Object> context) {
     	// if (mLog.isDebugEnabled()) mLog.debug("dispatch(path, envelope, context: " + envelope.getQualifiedName());
     	
         SoapProtocol soapProto = SoapProtocol.determineProtocol(envelope);
@@ -209,11 +212,10 @@ public class SoapEngine {
         if (zsc.getUserAgent() != null)
             ZimbraLog.addUserAgentToContext(zsc.getUserAgent());
 
-        // Global SOAP logging happens before the context is determined.  If we
-        // haven't already logged the message and need to log it for the current
-        // user, do it here.
-        if (!loggedRequest && ZimbraLog.soap.isDebugEnabled())
+        if (ZimbraLog.soap.isDebugEnabled()) {
             ZimbraLog.soap.debug("SOAP request:\n" + envelope.prettyPrint());
+            context.put(SOAP_REQUEST_LOGGED, true);
+        }
 
         context.put(ZIMBRA_CONTEXT, zsc);
         context.put(ZIMBRA_ENGINE, this);
