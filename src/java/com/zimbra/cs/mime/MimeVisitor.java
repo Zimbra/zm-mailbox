@@ -27,6 +27,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 
 /**
@@ -44,8 +45,19 @@ public abstract class MimeVisitor {
     private static List<Class<? extends MimeVisitor>> sMimeMutators   = new ArrayList<Class<? extends MimeVisitor>>();
 
         static {
-            registerConverter(UUEncodeConverter.class);
-            registerConverter(TnefConverter.class);
+            try {
+                if (LC.zimbra_converter_enabled_uuencode.booleanValue())
+                    registerConverter(UUEncodeConverter.class);
+            } catch (Exception e) {
+                ZimbraLog.misc.error("error loading UUENCODE converter", e);
+            }
+
+            try {
+                if (LC.zimbra_converter_enabled_tnef.booleanValue())
+                    registerConverter(TnefConverter.class);
+            } catch (Exception e) {
+                ZimbraLog.misc.error("error loading TNEF converter", e);
+            }
         }
 
     /** Adds a MimeVisitor class to the list of converters invoked on the fly
