@@ -189,7 +189,6 @@ public class LdapUtil {
         else
             sEnv.put("com.sun.jndi.ldap.connect.pool", "true");
         
-        
         // env.put("java.naming.ldap.derefAliases", "never");
         //
         // default: env.put("java.naming.ldap.version", "3");
@@ -854,6 +853,8 @@ public class LdapUtil {
                                    SearchGalResult result) throws ServiceException {
 
         result.token = token != null && !token.equals("")? token : EARLIEST_SYNC_TOKEN;
+        if (pageSize > 0)
+            pageSize = adjustPageSize(maxResults, pageSize);
         
         if (ZimbraLog.gal.isDebugEnabled()) {
             StringBuffer returnAttrs = new StringBuffer();
@@ -1338,5 +1339,23 @@ public class LdapUtil {
         }
         
         return new String(dups);
+    }
+    
+    /*
+     * Likely an OpenLDAP bug that intermittently if the max requested is 
+     * multiple of page size, after a paged search hits the SizeLimitExceededException, 
+     * the next search also always throws a SizeLimitExceededException, even 
+     * when it should not.
+     * 
+     * see bug 24168
+     */
+    public static int adjustPageSize(int maxResults, int pageSize) {
+        if (pageSize < 2)
+            return pageSize;
+        
+        if (maxResults >= pageSize && maxResults % pageSize == 0)
+            return pageSize - 1;
+        else
+            return pageSize;
     }
  }
