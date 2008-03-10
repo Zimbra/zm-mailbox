@@ -485,6 +485,8 @@ public class AdminConstants {
     public static final String A_PROPAGATE = "propagate";
     public static final String A_START = "start";
     public static final String A_END = "end";
+    public static final String A_PREFIX = "prefix";
+    public static final String A_QUEUE = "queue";
     
     //extension targets
     public static final String T_ADMIN_MAIN = "admin-main";
