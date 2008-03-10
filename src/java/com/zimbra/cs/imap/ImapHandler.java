@@ -700,7 +700,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         if (mSelectedFolder != null) {
             mSelectedFolder.unregister();
             if (sessionActivated(ActivatedExtension.QRESYNC))
-                sendUntagged("[CLOSED]");
+                sendUntagged("OK [CLOSED] mailbox closed");
         }
         mSelectedFolder = null;
     }
@@ -708,7 +708,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     void setSelectedFolder(ImapFolder i4folder) throws ServiceException, IOException {
         if (i4folder == mSelectedFolder) {
             if (sessionActivated(ActivatedExtension.QRESYNC))
-                sendUntagged("[CLOSED]");
+                sendUntagged("OK [CLOSED] mailbox closed");
             return;
         }
 
@@ -746,8 +746,8 @@ public abstract class ImapHandler extends ProtocolHandler {
 
     private static final Set<String> SUPPORTED_EXTENSIONS = new LinkedHashSet<String>(Arrays.asList(
         "ACL", "BINARY", "CATENATE", "CHILDREN", "CONDSTORE", "ENABLE", "ESEARCH", "ID", "IDLE",
-        "LIST-EXTENDED", "LITERAL+", "LOGIN-REFERRALS", "MULTIAPPEND", "NAMESPACE", "QUOTA", "RIGHTS=ektx",
-        "SASL-IR", "UIDPLUS", "UNSELECT", "WITHIN", "X-DRAFT-I05-SEARCHRES", "X-DRAFT-W05-QRESYNC"
+        "LIST-EXTENDED", "LITERAL+", "LOGIN-REFERRALS", "MULTIAPPEND", "NAMESPACE", "QRESYNC",
+        "QUOTA", "RIGHTS=ektx", "SASL-IR", "UIDPLUS", "UNSELECT", "WITHIN", "X-DRAFT-I05-SEARCHRES"
     ));
 
     protected String getCapabilityString() {
@@ -770,6 +770,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         // [LOGIN-REFERRALS]  RFC 2221: IMAP4 Login Referrals
         // [MULTIAPPEND]      RFC 3502: Internet Message Access Protocol (IMAP) - MULTIAPPEND Extension
         // [NAMESPACE]        RFC 2342: IMAP4 Namespace
+        // [QRESYNC]          RFC 5162: IMAP4 Extensions for Quick Mailbox Resynchronization
         // [QUOTA]            RFC 2087: IMAP4 QUOTA extension
         // [RIGHTS=ektx]      RFC 4314: IMAP4 Access Control List (ACL) Extension
         // [SASL-IR]          RFC 4959: IMAP Extension for Simple Authentication and Security Layer (SASL) Initial Client Response
@@ -777,7 +778,6 @@ public abstract class ImapHandler extends ProtocolHandler {
         // [UNSELECT]         RFC 3691: IMAP UNSELECT command
         // [WITHIN]           RFC 5032: WITHIN Search Extension to the IMAP Protocol
         // [X-DRAFT-I05-SEARCHRES]  draft-melnikov-imap-search-res-05: IMAP extension for referencing the last SEARCH result
-        // [X-DRAFT-W05-QRESYNC]    draft-ietf-lemonade-reconnect-client-06: IMAP4 Extensions for Quick Mailbox Resynchronization
 
         boolean authenticated = isAuthenticated();
         String nologin  = mStartedTLS || authenticated || mConfig.allowCleartextLogins()  ? "" : " LOGINDISABLED";
@@ -810,7 +810,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             return extensionEnabled("ESEARCH");
         if (extension.equalsIgnoreCase("RIGHTS=ektx"))
             return extensionEnabled("ACL");
-        if (extension.equalsIgnoreCase("X-DRAFT-W05-QRESYNC"))
+        if (extension.equalsIgnoreCase("QRESYNC"))
             return extensionEnabled("CONDSTORE");
         // see if the user's session has disabled the extension
         if (extension.equalsIgnoreCase("IDLE") && mCredentials != null && mCredentials.isHackEnabled(EnabledHack.NO_IDLE))
@@ -863,7 +863,7 @@ public abstract class ImapHandler extends ProtocolHandler {
 
             if (ext.equals("CONDSTORE")) {
                 targets.add(ActivatedExtension.CONDSTORE);
-            } else if (ext.equals("X-DRAFT-W05-QRESYNC")) {
+            } else if (ext.equals("QRESYNC")) {
                 targets.add(ActivatedExtension.CONDSTORE);
                 targets.add(ActivatedExtension.QRESYNC);
             } else {
@@ -1031,7 +1031,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             String correctHost = account.getAttr(Provisioning.A_zimbraMailHost);
             ZimbraLog.imap.info(command + " failed; should be on host " + correctHost);
             if (correctHost == null || correctHost.trim().equals("") || !extensionEnabled("LOGIN_REFERRALS"))
-                sendNO(tag, command + " failed [wrong host]");
+                sendNO(tag, command + " failed (wrong host)");
             else
                 sendNO(tag, "[REFERRAL imap://" + URLEncoder.encode(account.getName(), "utf-8") + '@' + correctHost + "/] " + command + " failed");
             return null;
