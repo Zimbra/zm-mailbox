@@ -138,6 +138,9 @@ public class LC {
 
     public static final KnownKey zimbra_session_max_pending_notifications;
 
+    public static final KnownKey zimbra_converter_enabled_uuencode;
+    public static final KnownKey zimbra_converter_enabled_tnef;
+
     public static final KnownKey stats_img_folder;
 
     public static final KnownKey ldap_host;
@@ -573,6 +576,14 @@ public class LC {
         zimbra_session_max_pending_notifications.setDefault("400");
         zimbra_session_max_pending_notifications.setDoc("Maximum number of pending notifications that can be queued " +
                 "in a SOAP session before the queue is purged and the client is told their state is invalid");
+
+        zimbra_converter_enabled_uuencode = new KnownKey("zimbra_converter_enabled_uuencode");
+        zimbra_converter_enabled_uuencode.setDefault("true");
+        zimbra_converter_enabled_uuencode.setDoc("Whether the UUENCODE decoder is run when parsing messages from the store");
+
+        zimbra_converter_enabled_tnef = new KnownKey("zimbra_converter_enabled_tnef");
+        zimbra_converter_enabled_tnef.setDefault("true");
+        zimbra_converter_enabled_tnef.setDoc("Whether the TNEF decoder is run when parsing messages from the store");
 
         stats_img_folder = new KnownKey("stats_img_folder");
         stats_img_folder.setDefault("${zimbra_home}" + FS + "logger" + FS + "db" + FS + "work");
