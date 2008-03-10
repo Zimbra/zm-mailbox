@@ -197,14 +197,15 @@ extends TestCase {
         pm = new ParsedMessage(mFile, null, true);
         verifyMutatedMessage(pm, substring, true);
         
-        // Test ParsedMessage created from MimeMessage.  We're currently
-        // not mutating the message when the ParsedMessage is created from
-        // a MimeMessage.
+        // Test ParsedMessage created from MimeMessage, attachment indexing off.
         MimeMessage mimeMsg = new MimeMessage(JMSession.getSession(), new ByteArrayInputStream(content.getBytes()));
         pm = new ParsedMessage(mimeMsg, false);
-        verifyMutatedMessage(pm, "oldsubject", false);
+        verifyMutatedMessage(pm, substring, true);
+        
+        // Test ParsedMessage created from MimeMessage, attachment indexing on.
+        mimeMsg = new MimeMessage(JMSession.getSession(), new ByteArrayInputStream(content.getBytes()));
         pm = new ParsedMessage(mimeMsg, true);
-        verifyMutatedMessage(pm, "oldsubject", false);
+        verifyMutatedMessage(pm, substring, true);
     }
     
     private void verifyMutatedMessage(ParsedMessage pm, String substring, boolean wasMutated)
