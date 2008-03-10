@@ -242,12 +242,6 @@ public class SoapServlet extends ZimbraServlet {
             req.setAttribute("com.zimbra.request.buffer", buffer);
         }
 
-        boolean loggedRequest = false;
-        if (ZimbraLog.soap.isDebugEnabled()) {
-            loggedRequest = true;
-            ZimbraLog.soap.debug("SOAP request:\n" + new String(buffer, "utf8"));
-        }
-
         HashMap<String, Object> context = new HashMap<String, Object>();
         context.put(SERVLET_REQUEST, req);
         
@@ -269,14 +263,22 @@ public class SoapServlet extends ZimbraServlet {
 
         Element envelope = null;
         try {
-            envelope = mEngine.dispatch(req.getRequestURI(), buffer, context, loggedRequest);
+            envelope = mEngine.dispatch(req.getRequestURI(), buffer, context);
         } catch (Throwable e) {
-            // don't interfere with Jetty Continuations -- pass the exception right up
-            if (e.getClass().getName().equals("org.mortbay.jetty.RetryRequest"))
-                throw ((RuntimeException)e);
             if (e instanceof OutOfMemoryError) {
                 Zimbra.halt("handler exception", e);
             }
+
+            if (ZimbraLog.soap.isDebugEnabled()) {
+                Boolean logged = (Boolean)context.get(SoapEngine.SOAP_REQUEST_LOGGED);
+                if (logged == null || !logged)
+                    ZimbraLog.soap.debug("SOAP request:\n" + new String(buffer, "utf8"));
+            }
+
+            // don't interfere with Jetty Continuations -- pass the exception right up
+            if (e.getClass().getName().equals("org.mortbay.jetty.RetryRequest"))
+                throw ((RuntimeException)e);
+
             ZimbraLog.soap.warn("handler exception", e);
             Element fault = SoapProtocol.Soap12.soapFault(ServiceException.FAILURE(e.toString(), e));
             envelope = SoapProtocol.Soap12.soapEnvelope(fault);
