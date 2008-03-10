@@ -83,13 +83,12 @@ public class ParsedMessage {
     private MimeMessage mMimeMessage;
     private MimeMessage mExpandedMessage;
     private boolean mParsed = false;
-    private boolean mAnalyzed = false;
     private boolean mAnalyzedBodyParts = false;
     private boolean mAnalyzedNonBodyParts = false;
     private String mBodyContent = "";
     private final boolean mIndexAttachments;
     private int mNumParseErrors = 0;
-    
+
     /** if TRUE then there was a _temporary_ failure analyzing the message.  We should attempt
      * to re-index this message at a later time */
     private boolean mTemporaryAnalysisFailure = false;
@@ -123,10 +122,20 @@ public class ParsedMessage {
     public ParsedMessage(MimeMessage msg, long receivedDate, boolean indexAttachments) {
         mIndexAttachments = indexAttachments;
         mMimeMessage = mExpandedMessage = msg;
-        // FIXME: not running mutators yet because of exception throwing!
-//      runMimeMutators();
-        // must set received-date before Lucene document is initialized
+
+        if (MimeVisitor.anyMutatorsRegistered()) {
+            MimeMessage backup = null;
+            try {
+                backup = new Mime.FixedMimeMessage(msg);
+                runMimeMutators();
+            } catch (MessagingException e) {
+                ZimbraLog.extensions.warn("Error applying message mutator.  Reverting to original MIME message.", e);
+                if (backup != null)
+                    mMimeMessage = mExpandedMessage = backup;
+            }
+        }
         runMimeConverters();
+        // must set received-date before Lucene document is initialized
         setReceivedDate(receivedDate);
     }
 
@@ -135,9 +144,9 @@ public class ParsedMessage {
     }
 
     public ParsedMessage(byte[] rawData, Long receivedDate, boolean indexAttachments) throws MessagingException {
-        if (rawData == null || rawData.length == 0) {
+        if (rawData == null || rawData.length == 0)
             throw new MessagingException("Message data cannot be null or empty.");
-        }
+
         mIndexAttachments = indexAttachments;
         InputStream is = new SharedByteArrayInputStream(rawData);
         mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), is);
@@ -150,16 +159,14 @@ public class ParsedMessage {
             }
         } catch (MessagingException e) {
             // mutator threw an exception, so go back to the raw and use it verbatim
-            ZimbraLog.extensions.warn(
-                "Error applying message mutator.  Reverting to original MIME message.", e);
-            mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), is);
+            ZimbraLog.extensions.warn("Error applying message mutator.  Reverting to original MIME message.", e);
+            mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(rawData));
             mRawData = rawData;
         }
         runMimeConverters();
         // must set received-date before Lucene document is initialized
-        if (receivedDate == null) {
-            receivedDate = getZimbraDateHeader(mMimeMessage); 
-        }
+        if (receivedDate == null)
+            receivedDate = getZimbraDateHeader(mMimeMessage);
         setReceivedDate(receivedDate);
     }
     
@@ -281,14 +288,13 @@ public class ParsedMessage {
      * Copies the <tt>MimeMessage</tt> if a converter would want 
      * to make a change, but doesn't alter the original MimeMessage.
      */
-    private class ForkMimeMessage
-    implements MimeVisitor.ModificationCallback {
+    private class ForkMimeMessage implements MimeVisitor.ModificationCallback {
         private boolean mForked = false;
 
         public boolean onModification() {
-            if (mForked) {
+            if (mForked)
                 return false;
-            }
+
             try {
                 mForked = true;
                 mExpandedMessage = new Mime.FixedMimeMessage(mMimeMessage);
@@ -513,7 +519,7 @@ public class ParsedMessage {
                 String msgid = getMessageID();
                 String sbj = getSubject();
                 sLog.warn("Message had analysis errors in " + mNumParseErrors +
-                    " parts (Message-Id: " + msgid + ", Subject: " + sbj + ")");
+                          " parts (Message-Id: " + msgid + ", Subject: " + sbj + ")");
             }
         } catch (ServiceException e) {
             throw e;
