@@ -116,11 +116,18 @@ public class FileBlobStore extends StoreManager {
         FileOutputStream fos = new FileOutputStream(file);
         ByteArrayOutputStream baos = null;
         OutputStream out = fos;
+
+        int diskStreamingThreshold =
+            Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, Integer.MAX_VALUE);
+        boolean compress = volume.getCompressBlobs() && sizeHint > volume.getCompressionThreshold();
         
-        if (0 < sizeHint && sizeHint <= volume.getCompressionThreshold()) {
-            // Keep data in memory for small blobs.
+        if (compress || (0 < sizeHint && sizeHint <= diskStreamingThreshold)) {
+            // Keep blob data into memory.  Data for compressed blobs
+            // must be in memory for random access.  See bug 25629 for details.
             baos = new ByteArrayOutputStream(sizeHint);
-        } else if (volume.getCompressBlobs() && sizeHint > volume.getCompressionThreshold()) {
+        }
+        
+        if (compress) {
             // Compress large blobs when writing to disk.  Keep data in memory, since
             // MimeMessage can't reference a compressed blob.
             out = new GZIPOutputStream(fos);
