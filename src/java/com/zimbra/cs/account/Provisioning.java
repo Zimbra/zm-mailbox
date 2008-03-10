@@ -1441,6 +1441,7 @@ public abstract class Provisioning {
     public static final String A_zimbraPrefCalendarReminderEmail      = "zimbraPrefCalendarReminderEmail";
     public static final String A_zimbraPrefCalendarReminderSendEmail  = "zimbraPrefCalendarReminderSendEmail";    
     public static final String A_zimbraPrefCalendarReminderMobile     = "zimbraPrefCalendarReminderMobile";
+    public static final String A_zimbraPrefCalendarReminderSendMobile     = "zimbraPrefCalendarReminderSendMobile";
     public static final String A_zimbraPrefCalendarReminderYMessenger = "zimbraPrefCalendarReminderYMessenger";
     
     /*
