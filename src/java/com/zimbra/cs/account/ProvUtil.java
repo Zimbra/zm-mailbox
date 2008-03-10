@@ -44,6 +44,7 @@ import com.zimbra.cs.account.soap.SoapProvisioning.ReIndexBy;
 import com.zimbra.cs.account.soap.SoapProvisioning.ReIndexInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning.QuotaUsage;
 import com.zimbra.cs.extension.ExtensionDispatcherServlet;
+import com.zimbra.cs.fb.FbCli;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.wiki.WikiUtil;
@@ -167,7 +168,8 @@ public class ProvUtil implements DebugListener {
         MAILBOX("help on mailbox-related commands"),
         NOTEBOOK("help on notebook-related commands"), 
         SEARCH("help on search-related commands"), 
-        SERVER("help on server-related commands");
+        SERVER("help on server-related commands"),
+        FREEBUSY("help on free/busy-related commands");
         
         String mDesc;
 
@@ -225,6 +227,7 @@ public class ProvUtil implements DebugListener {
         GET_ALL_COS("getAllCos", "gac", "[-v]", Category.COS, 0, 1),
         GET_ALL_DISTRIBUTION_LISTS("getAllDistributionLists", "gadl", "[{domain}]", Category.LIST, 0, 1),
         GET_ALL_DOMAINS("getAllDomains", "gad", "[-v] [attr1 [attr2...]]", Category.DOMAIN, 0, Integer.MAX_VALUE),
+        GET_ALL_FREEBUSY_PROVIDERS("getAllFbp", "gafbp", "[-v]", Category.FREEBUSY, 0, 1),
         GET_ALL_SERVERS("getAllServers", "gas", "[-v] [service]", Category.SERVER, 0, 1),
         GET_CALENDAR_RESOURCE("getCalendarResource",     "gcr", "{name@domain|id} [attr1 [attr2...]]", Category.CALENDAR, 1, Integer.MAX_VALUE), 
         GET_CONFIG("getConfig", "gcf", "{name}", Category.CONFIG, 1, 1),
@@ -233,6 +236,7 @@ public class ProvUtil implements DebugListener {
         GET_DISTRIBUTION_LIST_MEMBERSHIP("getDistributionListMembership", "gdlm", "{name@domain|id}", Category.LIST, 1, 1),
         GET_DOMAIN("getDomain", "gd", "{domain|id} [attr1 [attr2...]]", Category.DOMAIN, 1, Integer.MAX_VALUE),
         GET_DOMAIN_INFO("getDomainInfo", "gdi", "name|id|virtualHostname {value} [attr1 [attr2...]]", Category.DOMAIN, 2, Integer.MAX_VALUE), 
+        GET_FREEBUSY_QUEUE_INFO("getFreebusyQueyeInfo", "gfbqi", "[{provider-name}]", Category.FREEBUSY, 0, 1),
         GET_MAILBOX_INFO("getMailboxInfo", "gmi", "{account}", Category.MAILBOX, 1, 1),
         GET_QUOTA_USAGE("getQuotaUsage", "gqu", "{server}", Category.MAILBOX, 1, 1),        
         GET_SERVER("getServer", "gs", "{name|id} [attr1 [attr2...]]", Category.SERVER, 1, Integer.MAX_VALUE), 
@@ -251,6 +255,7 @@ public class ProvUtil implements DebugListener {
         MODIFY_IDENTITY("modifyIdentity", "mid", "{name@domain|id} {identity-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),
         MODIFY_SIGNATURE("modifySignature", "msig", "{name@domain|id} {signature-name|signature-id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),
         MODIFY_SERVER("modifyServer", "ms", "{name|id} [attr1 value1 [attr2 value2...]]", Category.SERVER, 3, Integer.MAX_VALUE),
+        PUSH_FREEBUSY("pushFreebusy", "pfb", "{domain|account-id} [account-id ...]", Category.FREEBUSY, 1, Integer.MAX_VALUE),
         REMOVE_ACCOUNT_ALIAS("removeAccountAlias", "raa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2),
         REMOVE_ACCOUNT_LOGGER("removeAccountLogger", "ral", "{name@domain|id} {logging-category}", Category.MISC, 2, 2),
         REMOVE_DISTRIBUTION_LIST_ALIAS("removeDistributionListAlias", "rdla", "{list@domain|id} {alias@domain}", Category.LIST, 2, 2),
@@ -495,6 +500,13 @@ public class ProvUtil implements DebugListener {
         case GET_ALL_DOMAINS:
             doGetAllDomains(args); 
             break;                        
+        case GET_ALL_FREEBUSY_PROVIDERS:
+        {
+        	FbCli fbcli = new FbCli();
+        	for (FbCli.FbProvider fbprov : fbcli.getAllFreeBusyProviders())
+        		System.out.println(fbprov.toString());
+        	break;
+        }
         case GET_ALL_SERVERS:
             doGetAllServers(args); 
             break;
@@ -513,6 +525,16 @@ public class ProvUtil implements DebugListener {
         case GET_DOMAIN_INFO:
             doGetDomainInfo(args);
             break;
+        case GET_FREEBUSY_QUEUE_INFO:
+        {
+        	FbCli fbcli = new FbCli();
+        	String name = null;
+        	if (args.length > 1)
+        		name = args[1];
+        	for (FbCli.FbQueue fbqueue : fbcli.getFreeBusyQueueInfo(name))
+        		System.out.println(fbqueue.toString());
+        	break;
+        }
         case GET_SERVER:
             dumpServer(lookupServer(args[1]), getArgNameSet(args, 2));
             break;
@@ -568,6 +590,23 @@ public class ProvUtil implements DebugListener {
         case DELETE_SERVER:
             mProv.deleteServer(lookupServer(args[1]).getId());
             break;
+        case PUSH_FREEBUSY:
+        {
+        	FbCli fbcli = new FbCli();
+        	if (args.length == 2) {
+        		try {
+        			lookupDomain(args[1]);
+        			fbcli.pushFreeBusyForDomain(args[1]);
+        			return true;
+        		} catch (ServiceException se) {
+        		}
+        	}
+			HashSet<String> accounts = new HashSet<String>();
+			java.util.Collections.addAll(accounts, args);
+			accounts.remove(args[0]);
+			fbcli.pushFreeBusyForAccounts(accounts);
+        	break;
+        }
         case REMOVE_ACCOUNT_ALIAS:
             mProv.removeAlias(lookupAccount(args[1], false), args[2]);
             break;
@@ -1574,6 +1613,10 @@ public class ProvUtil implements DebugListener {
         return lookupDistributionList(key, true);
     }
 
+    private String getAllFreebusyProviders(String[] args) throws ServiceException {
+    	return "";
+    }
+    
     public static AccountBy guessAccountBy(String value) {
         if (Provisioning.isUUID(value))
             return AccountBy.id;

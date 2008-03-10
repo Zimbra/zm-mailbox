@@ -51,6 +51,8 @@ public class GetFreeBusyQueueInfo extends AdminDocumentHandler {
         Element provider = response.addElement(AdminConstants.E_PROVIDER);
         provider.addAttribute(AdminConstants.A_NAME, prov.getName());
         FreeBusySyncQueue queue = prov.getSyncQueue();
+        if (queue == null)
+        	return;
         synchronized (queue) {
         	for (String id : queue)
         		provider.addElement(AdminConstants.E_ACCOUNT).addAttribute(AdminConstants.A_ID, id);

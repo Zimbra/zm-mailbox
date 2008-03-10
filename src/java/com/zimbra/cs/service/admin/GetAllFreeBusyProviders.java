@@ -36,6 +36,8 @@ public class GetAllFreeBusyProviders extends AdminDocumentHandler {
             provElem.addAttribute(AdminConstants.A_PROPAGATE, prov.registerForMailboxChanges());
             provElem.addAttribute(AdminConstants.A_START, prov.cachedFreeBusyStartTime());
             provElem.addAttribute(AdminConstants.A_END, prov.cachedFreeBusyEndTime());
+            provElem.addAttribute(AdminConstants.A_QUEUE, prov.getQueueFilename());
+            provElem.addAttribute(AdminConstants.A_PREFIX, prov.foreignPrincipalPrefix());
         }
 	    return response;
 	}
