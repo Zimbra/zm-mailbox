@@ -196,6 +196,7 @@ framework.
         public abstract boolean handleMailboxChange(String accountId);
         public abstract long cachedFreeBusyStartTime();
         public abstract long cachedFreeBusyEndTime();
+        public abstract String foreignPrincipalPrefix();
     }
 
 The API allows batching of lookup requests.  The framework invokes 

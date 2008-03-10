@@ -1965,7 +1965,7 @@ in soap-waitset.txt
 <GetAllFreeBusyProvidersRequest/>
 
 <GetAllFreeBusyProvidersResponse>
-  [<provider name="{provider-name}" propagate="{1|0}" start="{seconds-since-epoch of free/busy cache start time}" end="{seconds-since-epoch of free/busy cache end time}"/>]+
+  [<provider name="{provider-name}" propagate="{1|0}" queue="{location-of-the-queue}" prefix="{prefix-used-in-zimbraForeignPrincipal}" start="{seconds-since-epoch of free/busy cache start time}" end="{seconds-since-epoch of free/busy cache end time}"/>]+
 </GetAllFreeBusyProvidersResponse>
 
 ---------------------------------------------------------------------------

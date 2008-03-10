@@ -89,6 +89,10 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
 		return true;
 	}
 
+	public String foreignPrincipalPrefix() {
+		return "";
+	}
+	
 	public void addResults(Element response) {
         Provisioning prov = Provisioning.getInstance();
         for (Map.Entry<String, StringBuilder> entry : mRemoteAccountMap.entrySet()) {

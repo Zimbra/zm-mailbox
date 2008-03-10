@@ -175,6 +175,10 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 	private static final String HEADER_USER_AGENT = "User-Agent";
 	private static final String HEADER_TRANSLATE  = "Translate";
 	
+	public String foreignPrincipalPrefix() {
+		return Provisioning.FP_PREFIX_AD;
+	}
+	
 	public String getName() {
 		return EXCHANGE;
 	}

@@ -64,6 +64,7 @@ public abstract class FreeBusyProvider {
 	public abstract boolean handleMailboxChange(String accountId);
 	public abstract long cachedFreeBusyStartTime();
 	public abstract long cachedFreeBusyEndTime();
+	public abstract String foreignPrincipalPrefix();
 	
 	public static void register(FreeBusyProvider p) {
 		synchronized (sPROVIDERS) {
@@ -183,6 +184,13 @@ public abstract class FreeBusyProvider {
 		new ExchangeFreeBusyProvider();  // load the class
 	}
 	
+	public String getQueueFilename() {
+		if (!registerForMailboxChanges()) {
+			return "(none)";
+		}
+		return QUEUE_DIR + "/" + "queue-" + getName();
+	}
+	
 	@SuppressWarnings("serial")
 	public static class FreeBusySyncQueue extends LinkedList<String> implements Runnable {
 
@@ -190,7 +198,7 @@ public abstract class FreeBusyProvider {
 			mProvider = prov;
 			mLastFailed = 0;
 			mShutdown = false;
-			mFilename = QUEUE_DIR + "/" + "queue-" + prov.getName();
+			mFilename = prov.getQueueFilename();
 			File f = new File(mFilename);
 			if (!f.exists()) {
 				f.getParentFile().mkdirs();
