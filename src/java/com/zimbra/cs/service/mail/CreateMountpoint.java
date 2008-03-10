@@ -69,8 +69,10 @@ public class CreateMountpoint extends MailDocumentHandler {
         if (ownerId == null) {
             String ownerName = t.getAttribute(MailConstants.A_OWNER_NAME);
             target = Provisioning.getInstance().get(AccountBy.name, ownerName);
+            
+            // prevent directory harvest attack, mask no such account as permission denied
             if (target == null)
-                throw AccountServiceException.NO_SUCH_ACCOUNT(ownerName);
+                throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
 
             ownerId = target.getId();
             if (ownerId.equalsIgnoreCase(zsc.getRequestedAccountId()))
