@@ -20,6 +20,7 @@ IMAP protocol and extensions supported:
     [LOGIN-REFERRALS]  RFC 2221: IMAP4 Login Referrals
     [MULTIAPPEND]      RFC 3502: Internet Message Access Protocol (IMAP) - MULTIAPPEND Extension
     [NAMESPACE]        RFC 2342: IMAP4 Namespace
+    [QRESYNC]          RFC 5162: IMAP4 Extensions for Quick Mailbox Resynchronization
     [QUOTA]            RFC 2087: IMAP4 QUOTA extension
     [RIGHTS=ektx]      RFC 4314: IMAP4 Access Control List (ACL) Extension
     [SASL-IR]          RFC 4959: IMAP Extension for Simple Authentication and Security Layer (SASL) Initial Client Response
@@ -27,7 +28,6 @@ IMAP protocol and extensions supported:
     [UNSELECT]         RFC 3691: IMAP UNSELECT command
     [WITHIN]           RFC 5032: WITHIN Search Extension to the IMAP Protocol
     [X-DRAFT-I05-SEARCHRES]  draft-melnikov-imap-search-res-05: IMAP extension for referencing the last SEARCH result
-    [X-DRAFT-W05-QRESYNC]    draft-ietf-lemonade-reconnect-client-06: IMAP4 Extensions for Quick Mailbox Resynchronization
     [$MDNSent]         RFC 3503: Message Disposition Notification (MDN) profile for Internet Message Access Protocol (IMAP)
 
 POP protocol and extensions supported:
