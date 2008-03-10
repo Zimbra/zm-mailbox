@@ -761,7 +761,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         // [CATENATE]         RFC 4469: Internet Message Access Protocol (IMAP) CATENATE Extension
         // [CHILDREN]         RFC 3348: IMAP4 Child Mailbox Extension
         // [CONDSTORE]        RFC 4551: IMAP Extension for Conditional STORE Operation or Quick Flag Changes Resynchronization
-        // [ENABLE]           draft-gulbrandsen-imap-enable-03: The IMAP ENABLE Extension
+        // [ENABLE]           RFC 5161: The IMAP ENABLE Extension
         // [ESEARCH]          RFC 4731: IMAP4 Extension to SEARCH Command for Controlling What Kind of Information Is Returned
         // [ID]               RFC 2971: IMAP4 ID Extension
         // [IDLE]             RFC 2177: IMAP4 IDLE command
@@ -853,11 +853,16 @@ public abstract class ImapHandler extends ProtocolHandler {
         return CONTINUE_PROCESSING;
     }
 
-    boolean doENABLE(String tag, List<String> extensions) throws IOException, ImapParseException {
+    boolean doENABLE(String tag, List<String> extensions) throws IOException {
+        if (!checkState(tag, State.AUTHENTICATED))
+            return CONTINUE_PROCESSING;
+
+        StringBuilder enabled = new StringBuilder("ENABLED");
+
         List<ActivatedExtension> targets = new ArrayList<ActivatedExtension>(extensions.size());
         for (String ext : extensions) {
-            // draft-gulbrandsen-imap-enable-03 3: "If the argument is not an extension known to
-            //                                      the server, the server MUST ignore the argument."
+            // RFC 5161 3.1: "If the argument is not an extension known to the server,
+            //                the server MUST ignore the argument."
             if (!SUPPORTED_EXTENSIONS.contains(ext) || !extensionEnabled(ext))
                 continue;
 
@@ -867,19 +872,22 @@ public abstract class ImapHandler extends ProtocolHandler {
                 targets.add(ActivatedExtension.CONDSTORE);
                 targets.add(ActivatedExtension.QRESYNC);
             } else {
-                // draft-gulbrandsen-imap-enable-03 3: "If the argument is an extension known to the server,
-                //                                      and it is not specifically permitted to enable it
-                //                                      using ENABLE, the server MUST respond with BAD."
-                throw new ImapParseException(tag, "non-enableable extension: " + ext);
+                // RFC 5161 3.1: "If the argument is an extension known to the server, and
+                //                it is not specifically permitted to enable it using ENABLE,
+                //                the server MUST ignore the argument."
+                continue;
             }
+
+            enabled.append(' ').append(ext);
         }
 
-        // draft-gulbrandsen-imap-enable-03 3: "If the argument is an extension is supported by the
-        //                                      server and which needs to be enabled, the server MUST
-        //                                      enable the extension for the duration of the connection."
+        // RFC 5161 3.1: "If the argument is an extension is supported by the server and
+        //                which needs to be enabled, the server MUST enable the extension
+        //                for the duration of the connection."
         for (ActivatedExtension ax : targets)
             activateExtension(ax);
 
+        sendUntagged(enabled.toString());
         sendNotifications(true, false);
         sendOK(tag, "ENABLE completed");
         return CONTINUE_PROCESSING;
