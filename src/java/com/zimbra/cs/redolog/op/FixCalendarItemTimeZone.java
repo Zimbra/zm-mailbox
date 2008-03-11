@@ -43,7 +43,7 @@ public class FixCalendarItemTimeZone extends RedoableOp {
     }
 
     public int getOpCode() {
-        return OP_FIX_CALENDAR_ITEM_TZ;
+        return OP_FIX_CALENDAR_ITEM_TIME_ZONE;
     }
 
     protected String getPrintableData() {

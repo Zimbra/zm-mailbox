@@ -1805,6 +1805,25 @@ Deletes the given data source.
 <FixCalendarTimeZoneResponse/>
 
 Fix timezone definitions in appointments and tasks to reflect changes in
+daylight savings time rules for year 2007 in various timezones.
+
+---------------------------
+
+<FixCalendarTZRequest
+  [sync="0|1"]      // default 0
+                    // 0 = command returns right away
+                    // 1 = command blocks until processing finishes
+  [after="millis"]  // fix appts/tasks that have instances after this time
+                    // default = January 1, 2008 00:00:00 in GMT+13:00 timezone.
+>
+  <account name="<email>|all"/>+  // list of email addresses, or "all" for all
+                                  // accounts on this mailbox server
+  <tzfixup ... />   // fixup rules
+</FixCalendarTZRequest>
+
+<FixCalendarTZResponse/>
+
+Fix timezone definitions in appointments and tasks to reflect changes in
 daylight savings time rules in various timezones.
 
 ---------------------------
