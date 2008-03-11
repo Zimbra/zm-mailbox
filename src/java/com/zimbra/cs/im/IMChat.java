@@ -31,6 +31,7 @@ import javax.mail.MessagingException;
 import org.xmpp.muc.JoinRoom;
 import org.xmpp.muc.LeaveRoom;
 import org.xmpp.packet.JID;
+import org.xmpp.packet.PacketError;
 import org.xmpp.packet.Presence;
 
 import com.zimbra.common.localconfig.LC;
@@ -282,7 +283,7 @@ public class IMChat extends ClassLogger {
             }
         }
     }
-
+    
     /*
     MUC Example 32. Delivery of Discussion History:
     <message
@@ -402,7 +403,7 @@ public class IMChat extends ClassLogger {
                     }
                 }
             }
-
+            
             if (mucInvitationFrom == null && 
                         (subject == null || subject.length() == 0) &&
                         (bodyPart == null || bodyPart.getPlainText().length() == 0)) 
@@ -412,7 +413,8 @@ public class IMChat extends ClassLogger {
                 //
                 
                 IMBaseMessageNotification notification = 
-                    new IMBaseMessageNotification(msg.getFrom().toBareJID(), getThreadId(), typing, System.currentTimeMillis());  
+                    new IMBaseMessageNotification(msg.getFrom().toBareJID(), getThreadId(), typing, System.currentTimeMillis(),
+                        msg.getError() == null ? null : msg.getError().getCondition());
                 mPersona.postIMNotification(notification);
             } else {
                 if (mucInvitationFrom != null && mMessages.size() > 0) {
@@ -427,7 +429,7 @@ public class IMChat extends ClassLogger {
                                 getThreadId(), bodyPart.getPlainText());
                         mPersona.postIMNotification(inviteNot);
                     }
-                    addMessage(true, new IMAddr(messageFrom), subject, bodyPart, typing);
+                    addMessage(true, new IMAddr(messageFrom), subject, bodyPart, typing, msg.getError() == null ? null : msg.getError().getCondition());
                     assert(this.getHighestSeqNo() > seqNoStart);
                 }
             }
@@ -630,12 +632,22 @@ public class IMChat extends ClassLogger {
      */
     private void addMessage(boolean notify, IMAddr from, String subject, TextPart bodyPart, boolean isTyping)
     {
+        addMessage(notify, from, subject, bodyPart, isTyping, null);
+    }
+    
+    private void addMessage(boolean notify, IMAddr from, String subject, TextPart bodyPart, boolean isTyping, PacketError.Condition error)
+    {
         IMMessage immsg = new IMMessage(subject==null?null:new TextPart(subject), bodyPart, isTyping);
         immsg.setFrom(from);
-        addMessage(notify, immsg);
+        addMessage(notify, immsg, error);
     }
-
+        
+        
     private void addMessage(boolean notify, IMMessage immsg) {
+        addMessage(notify, immsg, null);
+    }
+    
+    private void addMessage(boolean notify, IMMessage immsg, PacketError.Condition error) {
         int seqNoStart = this.getHighestSeqNo();
         try {
             // will trigger the add of the participant if necessary
@@ -646,7 +658,7 @@ public class IMChat extends ClassLogger {
             int seqNo = mMessages.size()+mFirstSeqNo;
 
             if (notify) {
-                IMMessageNotification notification = new IMMessageNotification(immsg.getFrom(), getThreadId(), immsg, seqNo);
+                IMMessageNotification notification = new IMMessageNotification(immsg.getFrom(), getThreadId(), immsg, seqNo, error);
                 mPersona.postIMNotification(notification);
             }
         } finally {

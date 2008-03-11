@@ -224,7 +224,7 @@ IM NOTIFICATIONS
                 ]*
                 [
                 // NEW MESSAGE RECEIVED:
-                   <n type="message" from="address" thread="chat-id" ts="TIMESTAMP">
+                   <n type="message" from="address" thread="chat-id" ts="TIMESTAMP" [error="recipient_unavailable"]>
                       [<subject [lang="LANG"]>SUBJECT</subject>]
                       [<body [lang="LANG"]>BODY</body>]
                       [<typing/>]
