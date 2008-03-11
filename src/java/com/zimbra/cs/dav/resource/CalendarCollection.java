@@ -223,6 +223,7 @@ public class CalendarCollection extends Collection {
 				if (!itemEtag.equals(etag))
 					throw new DavException("event has different etag ("+itemEtag+") vs "+etag, HttpServletResponse.SC_CONFLICT, null);
 			}
+			boolean first = true;
 			for (Invite i : invites) {
 				// check for valid uid.
 				if (i.getUid() == null)
@@ -259,7 +260,8 @@ public class CalendarCollection extends Collection {
 					}
 					*/
 				}
-				mbox.addInvite(ctxt.getOperationContext(), i, mId);
+				mbox.addInvite(ctxt.getOperationContext(), i, mId, null, false, first);
+			    first = false;
 			}
 			calItem = mbox.getCalendarItemByUid(ctxt.getOperationContext(), uid);
 			return new CalendarObject.LocalCalendarObject(ctxt, calItem);

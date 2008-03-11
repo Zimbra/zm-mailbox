@@ -32,7 +32,7 @@ public class Version {
 
 	// These should be incremented with changes to serialization format.
 	private static final short CURRENT_MAJOR = 1;   // range: 0 - Short.MAX_VALUE
-	private static final short CURRENT_MINOR = 21;  // range: 0 - Short.MAX_VALUE
+	private static final short CURRENT_MINOR = 22;  // range: 0 - Short.MAX_VALUE
 
 	/**
 	 * Returns a version object with latest major and minor version

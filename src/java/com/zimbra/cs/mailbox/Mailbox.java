@@ -3995,19 +3995,19 @@ public class Mailbox {
     public int[] addInvite(OperationContext octxt, Invite inv, int folderId)
     throws ServiceException {
         maybeIndexDeferredItems();
-        return addInvite(octxt, inv, folderId, null, false);
+        return addInvite(octxt, inv, folderId, null, false, false);
     }
 
     public int[] addInvite(OperationContext octxt, Invite inv, int folderId, ParsedMessage pm)
     throws ServiceException {
         maybeIndexDeferredItems();
-        return addInvite(octxt, inv, folderId, pm, false);
+        return addInvite(octxt, inv, folderId, pm, false, false);
     }
 
     public int[] addInvite(OperationContext octxt, Invite inv, int folderId, boolean preserveExistingAlarms)
     throws ServiceException {
         maybeIndexDeferredItems();
-        return addInvite(octxt, inv, folderId, null, preserveExistingAlarms);
+        return addInvite(octxt, inv, folderId, null, preserveExistingAlarms, false);
     }
 
     /**
@@ -4017,13 +4017,14 @@ public class Mailbox {
      * @param octxt
      * @param inv
      * @param pm NULL is OK here
-     * @param removeAlarms if true, remove alarms from the invite
+     * @param preserveExistingAlarms
+     * @param discardExistingInvites
      * 
      * @return int[2] = { calendar-item-id, invite-mail-item-id }  Note that even though the invite has a mail-item-id, that mail-item does not really exist, it can ONLY be referenced through the calendar item "calItemId-invMailItemId"
      * @throws ServiceException
      */
-    public int[] addInvite(OperationContext octxt, Invite inv, int folderId,
-                                        ParsedMessage pm, boolean preserveExistingAlarms)
+    public int[] addInvite(OperationContext octxt, Invite inv, int folderId, ParsedMessage pm,
+                           boolean preserveExistingAlarms, boolean discardExistingInvites)
     throws ServiceException {
         if (pm == null) {
             inv.setDontIndexMimeMessage(true); // the MimeMessage is fake, so we don't need to index it
@@ -4040,8 +4041,9 @@ public class Mailbox {
             throw ServiceException.FAILURE("Caught IOException", ioe);
         }
 
-        CreateInvite redoRecorder = new CreateInvite(mId, inv, folderId, data);
-        
+        CreateInvite redoRecorder =
+            new CreateInvite(mId, inv, folderId, data, preserveExistingAlarms, discardExistingInvites);
+
         synchronized(this) {
             boolean success = false;
             try {
@@ -4075,7 +4077,8 @@ public class Mailbox {
                         if (currInv != null)
                             inv.setInviteId(currInv.getMailItemId());
                     }
-                    calItem.processNewInvite(pm, inv, folderId, volumeId, 0, preserveExistingAlarms, false);
+                    calItem.processNewInvite(pm, inv, folderId, volumeId, 0,
+                                             preserveExistingAlarms, discardExistingInvites);
                 }
                 
                 queueForIndexing(calItem, !calItemIsNew, null);
