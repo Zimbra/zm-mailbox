@@ -33,6 +33,7 @@ SECTION antivirus DEPENDS amavis
 SECTION antispam DEPENDS amavis
   REWRITE conf/salocal.cf.in conf/salocal.cf
   VAR zimbraMtaMyNetworks
+  VAR zimbraMtaAntiSpamLockMethod
   RESTART antispam mta
 
 SECTION archiving DEPENDS amavis
