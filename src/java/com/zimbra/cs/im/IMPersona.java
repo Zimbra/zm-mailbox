@@ -358,11 +358,11 @@ public class IMPersona extends ClassLogger {
         
         synchronized(getLock()) {
             try {
-                connectInteropUser(serviceName, mAddr.makeFullJID(getResource()), username, password);
+                registerInteropUser(serviceName, mAddr.makeFullJID(getResource()), username, password);
             } catch (ServiceException ace) {
                 try {
-                    disconnectInteropUser(serviceName, mAddr.makeFullJID(getResource()));
-                    connectInteropUser(serviceName, mAddr.makeFullJID(getResource()), username, password);
+                    unregisterInteropUser(serviceName, mAddr.makeFullJID(getResource()));
+                    registerInteropUser(serviceName, mAddr.makeFullJID(getResource()), username, password);
                 } catch (Exception e) {
                     throw ServiceException.FAILURE("Exception calling Interop.connectUser("
                         + username + "," + password, e);
@@ -400,7 +400,7 @@ public class IMPersona extends ClassLogger {
         
         synchronized(getLock()) {
             try {
-                disconnectInteropUser(serviceName, mAddr.makeFullJID(getResource()));
+                unregisterInteropUser(serviceName, mAddr.makeFullJID(getResource()));
             } catch (Exception e) {
                 throw ServiceException.FAILURE("Exception calling Interop.disconnectUser()", e);
             }
@@ -439,17 +439,17 @@ public class IMPersona extends ClassLogger {
         return Interop.getInstance().getAvailableServices();
     }
     
-    private void disconnectInteropUser(String serviceName, JID jid) throws ServiceException {
+    private void unregisterInteropUser(String serviceName, JID jid) throws ServiceException {
         try {
-            Interop.getInstance().disconnectUser(serviceName, jid);
+            Interop.getInstance().unregisterUser(serviceName, jid);
         } catch (Exception e) {
             throw ServiceException.FAILURE("Caught exception from component", e);
         }
     }
     
-    private void connectInteropUser(String serviceName, JID jid, String username, String password) throws ServiceException {
+    private void registerInteropUser(String serviceName, JID jid, String username, String password) throws ServiceException {
         try {
-            Interop.getInstance().connectUser(serviceName, jid, username, password);
+            Interop.getInstance().registerUser(serviceName, jid, username, password);
         } catch (Exception e) {
             throw ServiceException.FAILURE("Caught exception from component", e);
         }
