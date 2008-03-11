@@ -18,6 +18,8 @@ package com.zimbra.cs.service.im;
 
 import java.util.Map;
 
+import org.xmpp.packet.JID;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.IMConstants;
 import com.zimbra.common.soap.Element;
@@ -40,6 +42,13 @@ public class IMSubscribe extends IMDocumentHandler {
             add = false;
 
         IMAddr addr = new IMAddr(IMUtils.resolveAddress(request.getAttribute(IMConstants.A_ADDRESS)));
+        
+        try {
+            // make sure the requested address is valid
+            new JID(addr.getAddr());
+        } catch (Exception e) {
+            throw ServiceException.FAILURE("Invalid address: "+request.getAttribute(IMConstants.A_ADDRESS), e);
+        }
 
         Element response = zsc.createElement(IMConstants.IM_SUBSCRIBE_RESPONSE);
         response.addAttribute(IMConstants.A_ADDRESS, addr.toString());
