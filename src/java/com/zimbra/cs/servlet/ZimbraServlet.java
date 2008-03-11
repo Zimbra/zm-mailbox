@@ -50,6 +50,7 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.TrustedNetwork;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthContext;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Config;
@@ -354,7 +355,8 @@ public class ZimbraServlet extends HttpServlet {
             return null;
         }
         
-        String user = userPass.substring(0, loc);
+        String userPassedIn = userPass.substring(0, loc);
+        String user = userPassedIn;
         String pass = userPass.substring(loc + 1);
 
         Provisioning prov = Provisioning.getInstance();
@@ -376,7 +378,10 @@ public class ZimbraServlet extends HttpServlet {
             return new ACL.GuestAccount(user, pass);
         }
         try {
-            prov.authAccount(acct, pass, "http/basic");
+            Map<String, Object> authCtxt = new HashMap<String, Object>();
+            authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, getRemoteIp(req));
+            authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, userPassedIn);
+            prov.authAccount(acct, pass, "http/basic", authCtxt);
         } catch (ServiceException se) {
             if (sendChallenge) {
                 resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader());
@@ -441,6 +446,16 @@ public class ZimbraServlet extends HttpServlet {
     	resp.setHeader(ZIMBRA_FAULT_CODE_HEADER, e.getCode());
     	resp.setHeader(ZIMBRA_FAULT_MESSAGE_HEADER, e.getMessage());
     	resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+    }
+    
+    protected String getRemoteIp(HttpServletRequest req) {
+        String remoteAddr = req.getRemoteAddr();
+                
+        String origIp = null;
+        if (TrustedNetwork.isIpTrusted(remoteAddr)) {
+            origIp = req.getHeader(X_ORIGINATING_IP_HEADER);
+        }
+        return origIp;
     }
     
     protected void addRemoteIpToLoggingContext(HttpServletRequest req) {

@@ -29,6 +29,7 @@ import javax.security.auth.login.LoginException;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.account.AuthContext;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.krb5.Krb5Login;
@@ -111,9 +112,10 @@ abstract class AuthMechanism {
             if (LdapUtil.isSSHA(encodedPassword)) {
                 if (LdapUtil.verifySSHA(encodedPassword, password))
                     return; // good password, RETURN
-                else
-                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "invalid password");     
-
+                else {
+                    String namePassedIn = (String)context.get(AuthContext.AC_ACCOUNT_NAME_PASSEDIN);
+                    throw AuthFailedServiceException.AUTH_FAILED(namePassedIn==null?"":namePassedIn, "invalid password"); 
+                }
             } else if (acct instanceof LdapEntry) {
                 String[] urls = new String[] { LdapUtil.getLdapURL() };
                 try {
