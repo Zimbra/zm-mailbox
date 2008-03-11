@@ -18,8 +18,6 @@ package com.zimbra.cs.im;
 
 import java.util.Formatter;
 
-import org.xmpp.packet.PacketError;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.IMConstants;
 import com.zimbra.common.soap.Element;
@@ -31,10 +29,7 @@ public class IMMessageNotification extends IMBaseMessageNotification {
     private String mToAddr;
     
     public IMMessageNotification(IMAddr fromAddr, String threadId, IMMessage message, int seqNo) {
-        this(fromAddr, threadId, message, seqNo, null);
-    }
-    public IMMessageNotification(IMAddr fromAddr, String threadId, IMMessage message, int seqNo, PacketError.Condition errorCondition) {
-        super(fromAddr.toString(), threadId, message.isTyping(), message.getTimestamp(), errorCondition);
+        super(fromAddr.toString(), threadId, message.isTyping(), message.getTimestamp());
         mMessage = message;
         try { mToAddr = message.getTo().toString(); } catch (Exception e) {} // why in exception? figure out and comment me!  
     }

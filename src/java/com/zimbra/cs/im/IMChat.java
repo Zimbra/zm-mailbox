@@ -342,6 +342,10 @@ public class IMChat extends ClassLogger {
             if (msg.getType() == org.xmpp.packet.Message.Type.error) {
                 isError = true;
                 bodyPart = new TextPart("ERROR: "+msg.toXML());
+                IMErrorMessageNotification notification = 
+                    new IMErrorMessageNotification(messageFrom, getThreadId(), false, System.currentTimeMillis(), msg.toXML(), msg.getError().getCondition());
+                mPersona.postIMNotification(notification);
+                return;
             } else {
                 org.dom4j.Element htmlElt = msg.getChildElement("html", "http://jabber.org/protocol/xhtml-im");
                 if (htmlElt != null) {
@@ -370,67 +374,66 @@ public class IMChat extends ClassLogger {
                         }
                     }
                 }
-            }
             
-            if (mIsMUC && messageFrom.equals(mDestJid.toBareJID())) {
-                String resource = msg.getFrom().getResource();
-                if (resource != null && resource.length() > 0) {
-                    messageFrom = msg.getFrom().getResource();
-                    if (!isError && mPersona.getAddr().getNode().equals(messageFrom)) {
-                        info("Skipping MUC message from me: %s", msg);
-                        return;
-                    }
-                } else {
-                    debug("Message is from Conference itself"); 
-                }
-            }
-
-            boolean typing = false;
-            
-            // first, look for JEP-0085 events
-            org.dom4j.Element x = msg.getChildElement("composing", "http://jabber.org/protocol/chatstates");
-            if (x != null) {
-                typing = true;
-            } else if ((x = msg.getChildElement("active", "http://jabber.org/protocol/chatstates")) != null) {
-                typing = false;
-            } else {
-                // look for old-style JEP-0022 <composing>
-                if ((x = msg.getChildElement("x", "http://jabber.org/protocol/chatstates")) != null) {
-                    if (x.element("composing") != null) {
-                        typing = true;
+                if (mIsMUC && messageFrom.equals(mDestJid.toBareJID())) {
+                    String resource = msg.getFrom().getResource();
+                    if (resource != null && resource.length() > 0) {
+                        messageFrom = msg.getFrom().getResource();
+                        if (!isError && mPersona.getAddr().getNode().equals(messageFrom)) {
+                            info("Skipping MUC message from me: %s", msg);
+                            return;
+                        }
                     } else {
-                        typing = false;
+                        debug("Message is from Conference itself"); 
                     }
                 }
-            }
-            
-            if (mucInvitationFrom == null && 
-                        (subject == null || subject.length() == 0) &&
-                        (bodyPart == null || bodyPart.getPlainText().length() == 0)) 
-            {
-                //
-                // typing indication only...don't store
-                //
                 
-                IMBaseMessageNotification notification = 
-                    new IMBaseMessageNotification(msg.getFrom().toBareJID(), getThreadId(), typing, System.currentTimeMillis(),
-                        msg.getError() == null ? null : msg.getError().getCondition());
-                mPersona.postIMNotification(notification);
-            } else {
-                if (mucInvitationFrom != null && mMessages.size() > 0) {
-                    if (mucInvitationFrom != null) {
-                        systemNotification("Automatically joining converted multi-user-chat");
-                        joinMUCChat(msg.getFrom().toBareJID());
-                    }
+                boolean typing = false;
+                
+                // first, look for JEP-0085 events
+                org.dom4j.Element x = msg.getChildElement("composing", "http://jabber.org/protocol/chatstates");
+                if (x != null) {
+                    typing = true;
+                } else if ((x = msg.getChildElement("active", "http://jabber.org/protocol/chatstates")) != null) {
+                    typing = false;
                 } else {
-                    if (mucInvitationFrom != null) {
-                        IMChatInviteNotification inviteNot = 
-                            new IMChatInviteNotification(new IMAddr(msg.getFrom().toBareJID()),
-                                getThreadId(), bodyPart.getPlainText());
-                        mPersona.postIMNotification(inviteNot);
+                    // look for old-style JEP-0022 <composing>
+                    if ((x = msg.getChildElement("x", "http://jabber.org/protocol/chatstates")) != null) {
+                        if (x.element("composing") != null) {
+                            typing = true;
+                        } else {
+                            typing = false;
+                        }
                     }
-                    addMessage(true, new IMAddr(messageFrom), subject, bodyPart, typing, msg.getError() == null ? null : msg.getError().getCondition());
-                    assert(this.getHighestSeqNo() > seqNoStart);
+                }
+                
+                if (mucInvitationFrom == null && 
+                            (subject == null || subject.length() == 0) &&
+                            (bodyPart == null || bodyPart.getPlainText().length() == 0)) 
+                {
+                    //
+                    // typing indication only...don't store
+                    //
+                    
+                    IMBaseMessageNotification notification = 
+                        new IMBaseMessageNotification(msg.getFrom().toBareJID(), getThreadId(), typing, System.currentTimeMillis());
+                    mPersona.postIMNotification(notification);
+                } else {
+                    if (mucInvitationFrom != null && mMessages.size() > 0) {
+                        if (mucInvitationFrom != null) {
+                            systemNotification("Automatically joining converted multi-user-chat");
+                            joinMUCChat(msg.getFrom().toBareJID());
+                        }
+                    } else {
+                        if (mucInvitationFrom != null) {
+                            IMChatInviteNotification inviteNot = 
+                                new IMChatInviteNotification(new IMAddr(msg.getFrom().toBareJID()),
+                                    getThreadId(), bodyPart.getPlainText());
+                            mPersona.postIMNotification(inviteNot);
+                        }
+                        addMessage(true, new IMAddr(messageFrom), subject, bodyPart, typing);
+                        assert(this.getHighestSeqNo() > seqNoStart);
+                    }
                 }
             }
         } finally {
@@ -632,22 +635,13 @@ public class IMChat extends ClassLogger {
      */
     private void addMessage(boolean notify, IMAddr from, String subject, TextPart bodyPart, boolean isTyping)
     {
-        addMessage(notify, from, subject, bodyPart, isTyping, null);
-    }
-    
-    private void addMessage(boolean notify, IMAddr from, String subject, TextPart bodyPart, boolean isTyping, PacketError.Condition error)
-    {
         IMMessage immsg = new IMMessage(subject==null?null:new TextPart(subject), bodyPart, isTyping);
         immsg.setFrom(from);
-        addMessage(notify, immsg, error);
+        addMessage(notify, immsg);
     }
         
         
     private void addMessage(boolean notify, IMMessage immsg) {
-        addMessage(notify, immsg, null);
-    }
-    
-    private void addMessage(boolean notify, IMMessage immsg, PacketError.Condition error) {
         int seqNoStart = this.getHighestSeqNo();
         try {
             // will trigger the add of the participant if necessary
@@ -658,7 +652,7 @@ public class IMChat extends ClassLogger {
             int seqNo = mMessages.size()+mFirstSeqNo;
 
             if (notify) {
-                IMMessageNotification notification = new IMMessageNotification(immsg.getFrom(), getThreadId(), immsg, seqNo, error);
+                IMMessageNotification notification = new IMMessageNotification(immsg.getFrom(), getThreadId(), immsg, seqNo);
                 mPersona.postIMNotification(notification);
             }
         } finally {
