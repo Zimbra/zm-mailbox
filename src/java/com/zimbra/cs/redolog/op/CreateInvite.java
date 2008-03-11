@@ -40,15 +40,19 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
     private int mFolderId;
     private byte[] mData;
     private short mVolumeId = -1;
+    private boolean mPreserveExistingAlarms;
+    private boolean mDiscardExistingInvites;
     
     public CreateInvite() { }
 
-    public CreateInvite(int mailboxId, Invite inv, int folderId,
-    					byte[] data) {
+    public CreateInvite(int mailboxId, Invite inv, int folderId, byte[] data,
+                        boolean preserveExistingAlarms, boolean discardExistingInvites) {
         setMailboxId(mailboxId);
         mInvite = inv;
         mFolderId = folderId;
         mData = data;
+        mPreserveExistingAlarms = preserveExistingAlarms;
+        mDiscardExistingInvites = discardExistingInvites;
     }
 
     public int getOpCode() {
@@ -65,6 +69,8 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
         ICalTimeZone localTz = mInvite.getTimeZoneMap().getLocalTimeZone();
         sb.append(", localTZ=").append(localTz.encodeAsMetadata().toString());
         sb.append(", inv=").append(Invite.encodeMetadata(mInvite).toString());
+        sb.append(", preserveExistingAlarms=").append(mPreserveExistingAlarms);
+        sb.append(", discardExistingInvites=").append(mDiscardExistingInvites);
         return sb.toString();
     }
 
@@ -87,6 +93,11 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
         ICalTimeZone localTz = mInvite.getTimeZoneMap().getLocalTimeZone();
         out.writeUTF(localTz.encodeAsMetadata().toString());
         out.writeUTF(Invite.encodeMetadata(mInvite).toString());
+
+        if (getVersion().atLeast(1, 22)) {
+            out.writeBoolean(mPreserveExistingAlarms);
+            out.writeBoolean(mDiscardExistingInvites);
+        }
     }
 
     protected void deserializeData(RedoLogInput in) throws IOException {
@@ -113,6 +124,14 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
         } catch (ServiceException ex) {
             ex.printStackTrace();
             throw new IOException("Cannot read serialized entry for CreateInvite "+ex.toString());
+        }
+
+        if (getVersion().atLeast(1, 22)) {
+            mPreserveExistingAlarms = in.readBoolean();
+            mDiscardExistingInvites = in.readBoolean();
+        } else {
+            mPreserveExistingAlarms = false;
+            mDiscardExistingInvites = false;
         }
     }
     
@@ -150,6 +169,7 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
     public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
 		ParsedMessage pm = new ParsedMessage(mData, getTimestamp(), mbox.attachmentsIndexingEnabled());
-		mbox.addInvite(getOperationContext(), mInvite, mFolderId, pm);
+		mbox.addInvite(getOperationContext(), mInvite, mFolderId, pm,
+		               mPreserveExistingAlarms, mDiscardExistingInvites);
     }
 }
