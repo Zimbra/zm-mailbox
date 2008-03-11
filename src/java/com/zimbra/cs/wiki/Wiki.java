@@ -257,7 +257,7 @@ public abstract class Wiki {
 		private String urlEscape(String str) {
 			// rfc 2396 url escape.
 			// currently escaping ' and " only
-			if (str.indexOf(' ') == -1 && str.indexOf('\'') == -1 && str.indexOf('"') == -1)
+			if (str.indexOf(' ') == -1 && str.indexOf('\'') == -1 && str.indexOf('"') == -1 &&  str.indexOf('#') == -1 && str.indexOf('?') == -1)
 				return str;
 			StringBuilder buf = new StringBuilder();
 			for (char c : str.toCharArray()) {
@@ -267,6 +267,10 @@ public abstract class Wiki {
 					buf.append("%22");
 				else if (c == '\'')
 					buf.append("%27");
+				else if (c == '#')
+					buf.append("%23");			
+				else if (c == '?')
+					buf.append("%3F");
 				else buf.append(c);
 			}
 			return buf.toString();
