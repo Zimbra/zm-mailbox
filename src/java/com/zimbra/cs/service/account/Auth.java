@@ -27,6 +27,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AttributeFlag;
 import com.zimbra.cs.account.AttributeManager;
+import com.zimbra.cs.account.AuthContext;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Domain;
@@ -39,8 +40,10 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.SoapEngine;
 import com.zimbra.common.util.ZimbraLog;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -83,7 +86,8 @@ public class Auth extends AccountDocumentHandler {
             }
         } else {
             Element acctEl = request.getElement(AccountConstants.E_ACCOUNT);
-            String value = acctEl.getText();
+            String valuePassedIn = acctEl.getText();
+            String value = valuePassedIn;
             String byStr = acctEl.getAttribute(AccountConstants.A_BY, AccountBy.name.name());
             Element preAuthEl = request.getOptionalElement(AccountConstants.E_PREAUTH);
             String password = request.getAttribute(AccountConstants.E_PASSWORD, null);
@@ -103,12 +107,15 @@ public class Auth extends AccountDocumentHandler {
 
             Account acct = prov.get(by, value);
             if (acct == null)
-                throw AuthFailedServiceException.AUTH_FAILED(value, "account not found");
+                throw AuthFailedServiceException.AUTH_FAILED(valuePassedIn, "account not found");
 
             long expires = 0;
 
             if (password != null) {
-                prov.authAccount(acct, password, "soap");
+                Map<String, Object> authCtxt = new HashMap<String, Object>();
+                authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, (String)context.get(SoapEngine.ORIG_REQUEST_IP));
+                authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, valuePassedIn);
+                prov.authAccount(acct, password, "soap", authCtxt);
             } else if (preAuthEl != null) {
                 long timestamp = preAuthEl.getAttributeLong(AccountConstants.A_TIMESTAMP);
                 expires = preAuthEl.getAttributeLong(AccountConstants.A_EXPIRES, 0);

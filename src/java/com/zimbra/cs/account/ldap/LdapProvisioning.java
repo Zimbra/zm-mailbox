@@ -2797,6 +2797,10 @@ public class LdapProvisioning extends Provisioning {
                 acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false); 
         
         try {
+            // always pass in a non-null context, even if it is empty, so null doesn't have to be checked 
+            // by all auth mech implementations.
+            if (context == null)
+                context = new HashMap<String, Object>();
             authMech.doAuth(this, domain, acct, password, context);
             return;
         } catch (ServiceException e) {

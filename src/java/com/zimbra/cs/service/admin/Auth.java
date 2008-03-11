@@ -20,10 +20,12 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.account.AuthContext;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Domain;
@@ -36,6 +38,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -58,7 +61,8 @@ public class Auth extends AdminDocumentHandler {
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
-        String name = request.getAttribute(AdminConstants.E_NAME);
+        String namePassedIn = request.getAttribute(AdminConstants.E_NAME);
+        String name = namePassedIn;
 		String password = request.getAttribute(AdminConstants.E_PASSWORD);
 		Provisioning prov = Provisioning.getInstance();
 		Account acct = null;
@@ -86,12 +90,15 @@ public class Auth extends AdminDocumentHandler {
                 acct = prov.get(AccountBy.name, name);
 
             if (acct == null)
-                throw AuthFailedServiceException.AUTH_FAILED(name, "account not found");
+                throw AuthFailedServiceException.AUTH_FAILED(namePassedIn, "account not found");
         
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                     new String[] {"cmd", "AdminAuth","account", name})); 
         
-            prov.authAccount(acct, password, "soap");
+            Map<String, Object> authCtxt = new HashMap<String, Object>();
+            authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, (String)context.get(SoapEngine.ORIG_REQUEST_IP));
+            authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, namePassedIn);
+            prov.authAccount(acct, password, "soap", authCtxt);
             
             isDomainAdmin = acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
             boolean isAdmin= acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);            
