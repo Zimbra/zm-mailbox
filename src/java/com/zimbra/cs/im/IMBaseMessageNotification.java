@@ -31,23 +31,12 @@ public class IMBaseMessageNotification extends IMNotification {
     private String mThreadId;
     private long mTimestamp;
     private boolean mTyping;
-    private PacketError.Condition mErrorCondition = null; 
-
     public IMBaseMessageNotification(String fromAddr, String threadId, boolean typing, long timestamp) {
         mFromAddr = fromAddr;
         mThreadId = threadId;
         mTyping = typing;
         mTimestamp = timestamp;
     }
-    
-    public IMBaseMessageNotification(String fromAddr, String threadId, boolean typing, long timestamp, PacketError.Condition errorCondition) {
-        mFromAddr = fromAddr;
-        mThreadId = threadId;
-        mTyping = typing;
-        mTimestamp = timestamp;
-        mErrorCondition = errorCondition;
-    }
-    
     
     /* @see com.zimbra.cs.im.IMNotification#toXml(com.zimbra.common.soap.Element) */
     @Override
@@ -58,13 +47,6 @@ public class IMBaseMessageNotification extends IMNotification {
         if (mTyping)
             e.addElement(IMConstants.E_TYPING);
         e.addAttribute(IMConstants.A_TIMESTAMP, mTimestamp);
-        if (mErrorCondition != null) {
-            switch(mErrorCondition) {
-                case recipient_unavailable:
-                    e.addAttribute(IMConstants.A_ERROR, PacketError.Condition.recipient_unavailable.name());
-                    break;
-            }
-        }
         return e;
     }
 
