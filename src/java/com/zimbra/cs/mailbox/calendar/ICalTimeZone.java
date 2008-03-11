@@ -1022,11 +1022,11 @@ public class ICalTimeZone extends SimpleTimeZone {
     {
         ZComponent vtz = new ZComponent(ICalTok.VTIMEZONE);
         vtz.addProperty(new ZProperty(ICalTok.TZID, getID()));
-        
+
         if (mDayToStdDtStart != null) {
             ZComponent standard = new ZComponent(ICalTok.STANDARD);
             vtz.addComponent(standard);
-            
+
             standard.addProperty(new ZProperty(ICalTok.DTSTART, mDayToStdDtStart));
             standard.addProperty(new ZProperty(ICalTok.TZOFFSETTO, timeToTzOffsetString(mStandardOffset)));
             standard.addProperty(new ZProperty(ICalTok.TZOFFSETFROM, timeToTzOffsetString(mDaylightOffset)));
@@ -1034,7 +1034,7 @@ public class ICalTimeZone extends SimpleTimeZone {
 	            standard.addProperty(new ZProperty(ICalTok.RRULE, mDayToStdRule));
         }
 
-        if (mStdToDayDtStart != null) {
+        if (mStdToDayDtStart != null && (mHasDaylight || mDayToStdDtStart == null)) {
             ZComponent daylight = new ZComponent(ICalTok.DAYLIGHT);
             vtz.addComponent(daylight);
             
