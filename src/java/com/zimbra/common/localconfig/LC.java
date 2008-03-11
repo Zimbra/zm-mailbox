@@ -152,6 +152,7 @@ public class LC {
     public static final KnownKey ldap_root_password;
     public static final KnownKey ldap_connect_timeout;
     public static final KnownKey ldap_read_timeout;
+    public static final KnownKey ldap_deref_aliases;
     public static final KnownKey ldap_connect_pool_master;
     public static final KnownKey ldap_connect_pool_debug;
     public static final KnownKey ldap_connect_pool_initsize;
@@ -630,6 +631,11 @@ public class LC {
         ldap_read_timeout = new KnownKey("ldap_read_timeout");
         ldap_read_timeout.setDefault("30000");
         ldap_read_timeout.setDoc("Milliseconds after which a read attempt is aborted.");
+        
+        ldap_deref_aliases = new KnownKey("ldap_deref_aliases");
+        ldap_deref_aliases.setDefault("always");
+        ldap_deref_aliases.setDoc("Whether to dereference aliases while searching or binding to external directory." +
+                                  "Valid values are: always, never, finding, searching");
         
         ldap_connect_pool_master = new KnownKey("ldap_connect_pool_master");
         ldap_connect_pool_master.setDefault("false");
