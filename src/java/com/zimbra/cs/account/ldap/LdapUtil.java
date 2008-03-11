@@ -19,6 +19,7 @@ package com.zimbra.cs.account.ldap;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
@@ -280,6 +281,11 @@ public class LdapUtil {
         env.put(Context.REFERRAL, "follow");
         env.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
         env.put("com.sun.jndi.ldap.read.timeout", LC.ldap_read_timeout.value());
+        
+        String derefAliases = LC.ldap_deref_aliases.value();
+        if (!StringUtil.isNullOrEmpty(derefAliases))
+            env.put("java.naming.ldap.derefAliases", LC.ldap_deref_aliases.value());
+        
         // enable connection pooling
         env.put("com.sun.jndi.ldap.connect.pool", "true");
         return new InitialLdapContext(env, null);
@@ -292,6 +298,11 @@ public class LdapUtil {
         Hashtable<String, String> env = new Hashtable<String, String>();
         env.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
         env.put("com.sun.jndi.ldap.read.timeout", LC.ldap_read_timeout.value());
+        
+        String derefAliases = LC.ldap_deref_aliases.value();
+        if (!StringUtil.isNullOrEmpty(derefAliases))
+            env.put("java.naming.ldap.derefAliases", LC.ldap_deref_aliases.value());
+        
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
         env.put(Context.PROVIDER_URL, joinURLS(urls));
         env.put(Context.SECURITY_AUTHENTICATION, "simple");
