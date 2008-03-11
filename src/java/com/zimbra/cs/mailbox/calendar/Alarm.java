@@ -52,6 +52,10 @@ public class Alarm {
             }
             return null;
         }
+        
+        public String toString() {
+            return super.toString().replace('_', '-');
+        }
     };
     public static enum TriggerType {
         RELATIVE, ABSOLUTE;
