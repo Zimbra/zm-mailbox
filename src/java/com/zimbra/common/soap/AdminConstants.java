@@ -272,6 +272,8 @@ public class AdminConstants {
     // calendar time zone fixup
     public static final QName FIX_CALENDAR_TIME_ZONE_REQUEST = QName.get("FixCalendarTimeZoneRequest", NAMESPACE);
     public static final QName FIX_CALENDAR_TIME_ZONE_RESPONSE = QName.get("FixCalendarTimeZoneResponse", NAMESPACE);
+    public static final QName FIX_CALENDAR_TZ_REQUEST = QName.get("FixCalendarTZRequest", NAMESPACE);
+    public static final QName FIX_CALENDAR_TZ_RESPONSE = QName.get("FixCalendarTZResponse", NAMESPACE);
     // calendar item end time fixup
     public static final QName FIX_CALENDAR_END_TIME_REQUEST = QName.get("FixCalendarEndTimeRequest", NAMESPACE);
     public static final QName FIX_CALENDAR_END_TIME_RESPONSE = QName.get("FixCalendarEndTimeResponse", NAMESPACE);
