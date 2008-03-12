@@ -136,6 +136,7 @@ public class LC {
     public static final KnownKey zimbra_im_chat_flush_time;
     public static final KnownKey zimbra_im_chat_close_time;
 
+    public static final KnownKey zimbra_session_limit_imap;
     public static final KnownKey zimbra_session_max_pending_notifications;
 
     public static final KnownKey zimbra_converter_enabled_uuencode;
@@ -573,6 +574,10 @@ public class LC {
              "How frequently (seconds) are open IM chats written to the store");
         zimbra_im_chat_close_time = new KnownKey("zimbra_im_chat_close_time", "3600", 
              "How long (seconds) will the server wait to close idle IM chat sessions");
+
+        zimbra_session_limit_imap = new KnownKey("zimbra_session_limit_imap");
+        zimbra_session_limit_imap.setDefault("5");
+        zimbra_session_limit_imap.setDoc("Maximum number of IMAP folders a single user can have open at once");
 
         zimbra_session_max_pending_notifications = new KnownKey("zimbra_session_max_pending_notifications");
         zimbra_session_max_pending_notifications.setDefault("400");
