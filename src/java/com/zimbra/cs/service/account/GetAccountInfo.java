@@ -48,8 +48,9 @@ public class GetAccountInfo extends AccountDocumentHandler  {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(AccountBy.fromString(key), value);
 
+        // prevent directory harvest attack, mask no such account as permission denied
         if (account == null)
-            throw AccountServiceException.NO_SUCH_ACCOUNT(value);
+            throw ServiceException.PERM_DENIED("can not access account");
 
         Element response = zsc.createElement(AccountConstants.GET_ACCOUNT_INFO_RESPONSE);
         response.addAttribute(AccountConstants.E_NAME, account.getName(), Element.Disposition.CONTENT);

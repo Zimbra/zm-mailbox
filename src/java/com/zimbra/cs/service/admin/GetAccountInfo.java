@@ -60,9 +60,12 @@ public class GetAccountInfo extends AdminDocumentHandler  {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(AccountBy.fromString(key), value);
 
-        // prevent directory harvest attack, mask no such account as permission denied
-        if (account == null || !canAccessAccount(lc, account))
+        if (account == null)
+            throw AccountServiceException.NO_SUCH_ACCOUNT(value);
+       
+        if (!canAccessAccount(lc, account))
             throw ServiceException.PERM_DENIED("can not access account");
+
 
         Element response = lc.createElement(AdminConstants.GET_ACCOUNT_INFO_RESPONSE);
         response.addElement(AdminConstants.E_NAME).setText(account.getName());
