@@ -129,9 +129,9 @@ public class ZMessage implements ZItem {
 
         Element shrEl = e.getOptionalElement("shr");
         if (shrEl != null) {
-            Element contEl = shrEl.getElement(MailConstants.E_CONTENT);
-            if (contEl != null) {
-                mShare = ZShare.parseXml(contEl.getText());
+            String shareContent = shrEl.getAttribute(MailConstants.E_CONTENT);
+            if (shareContent != null) {
+                mShare = ZShare.parseXml(shareContent);
             }
         }
     }
