@@ -22,6 +22,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
@@ -143,16 +144,23 @@ public class CalendarCollection extends Collection {
 	
 	private String findEventUid(List<Invite> invites) throws DavException {
 		String uid = null;
+		LinkedList<Invite> inviteList = new LinkedList<Invite>();
 		for (Invite i : invites) {
 			byte type = i.getItemType();
             if (type == MailItem.TYPE_APPOINTMENT || type == MailItem.TYPE_TASK) {
 				if (uid != null && uid.compareTo(i.getUid()) != 0)
 					throw new DavException("too many events", HttpServletResponse.SC_BAD_REQUEST, null);
 				uid = i.getUid();
-			}
+            }
+            if (i.isRecurrence())
+				inviteList.addFirst(i);
+            else
+				inviteList.addLast(i);
 		}
 		if (uid == null)
 			throw new DavException("no event in the request", HttpServletResponse.SC_BAD_REQUEST, null);
+		invites.clear();
+		invites.addAll(inviteList);
 		return uid;
 	}
 
