@@ -5880,16 +5880,16 @@ public class Mailbox {
      * @throws ServiceException
      */
     public synchronized void purgeMessages(OperationContext octxt) throws ServiceException {
-        ZimbraLog.mailbox.info("Purging messages.");
+        ZimbraLog.purge.info("Purging messages.");
 
         Account acct = getAccount();
         
-        if (ZimbraLog.mailbox.isDebugEnabled()) {
-            ZimbraLog.mailbox.debug("System retention policy: Trash=%s, Junk=%s, All messages=%s",
+        if (ZimbraLog.purge.isDebugEnabled()) {
+            ZimbraLog.purge.debug("System retention policy: Trash=%s, Junk=%s, All messages=%s",
                 acct.getAttr(Provisioning.A_zimbraMailTrashLifetime),
                 acct.getAttr(Provisioning.A_zimbraMailSpamLifetime),
                 acct.getAttr(Provisioning.A_zimbraMailMessageLifetime));
-            ZimbraLog.mailbox.debug("User-specified retention policy: Inbox read=%s, Inbox unread=%s, Sent=%s, Junk=%s, Trash=%s",
+            ZimbraLog.purge.debug("User-specified retention policy: Inbox read=%s, Inbox unread=%s, Sent=%s, Junk=%s, Trash=%s",
                 acct.getAttr(Provisioning.A_zimbraPrefInboxReadLifetime),
                 acct.getAttr(Provisioning.A_zimbraPrefInboxUnreadLifetime),
                 acct.getAttr(Provisioning.A_zimbraPrefSentLifetime),
@@ -5919,7 +5919,7 @@ public class Mailbox {
         // sanity-check the really dangerous value...
         if (globalTimeout > 0 && globalTimeout < Constants.SECONDS_PER_MONTH) {
             // this min is also used by POP3 EXPIRE command. update Pop3Handler.MIN_EPXIRE_DAYS if it changes.
-            ZimbraLog.mailbox.warn("global message timeout < 1 month; defaulting to 31 days");
+            ZimbraLog.purge.warn("global message timeout < 1 month; defaulting to 31 days");
             globalTimeout = Constants.SECONDS_PER_MONTH;
         }
 

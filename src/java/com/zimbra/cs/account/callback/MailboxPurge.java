@@ -67,7 +67,8 @@ public class MailboxPurge extends AttributeCallback {
                 return;
         }
 
-        
+        ZimbraLog.purge.info("Mailbox purge interval set to %s.",
+            localServer.getAttr(Provisioning.A_zimbraMailPurgeSleepInterval, null));
         long interval = localServer.getTimeInterval(Provisioning.A_zimbraMailPurgeSleepInterval, 0);
         if (interval > 0 && !PurgeThread.isRunning()) {
             PurgeThread.startup();
