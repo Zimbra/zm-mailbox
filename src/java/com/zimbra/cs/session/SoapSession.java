@@ -135,7 +135,7 @@ public class SoapSession extends Session {
                 }
     
                 mVisibleFolderIds = ids;
-                mNextFolderCheck = now + 5 * Constants.MILLIS_PER_MINUTE;
+                mNextFolderCheck = now + SOAP_SESSION_TIMEOUT_MSEC / 2;
                 return ids != null;
             }
         }
@@ -286,7 +286,7 @@ public class SoapSession extends Session {
     private Map<String, DelegateSession> mDelegateSessions = new HashMap<String, DelegateSession>(3);
     private Map<String, RemoteSessionInfo> mRemoteSessions;
 
-    private static final long SOAP_SESSION_TIMEOUT_MSEC = 10 * Constants.MILLIS_PER_MINUTE;
+    static final long SOAP_SESSION_TIMEOUT_MSEC = Math.max(5, LC.zimbra_session_timeout_soap.intValue()) * 1000L;
 
     private static final int MAX_QUEUED_NOTIFICATIONS = LC.zimbra_session_max_pending_notifications.intValue();
 
