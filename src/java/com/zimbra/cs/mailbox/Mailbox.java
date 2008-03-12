@@ -6739,9 +6739,8 @@ public class Mailbox {
         // if the calendar items has changed in the mailbox,
         // recalculate the free/busy for the user and propogate to
         // other system.
-    	if (dirty != null && dirty.hasNotifications() 
-    			&& (dirty.changedTypes & MailItem.typeToBitmask(MailItem.TYPE_APPOINTMENT)) != 0) {
-    		FreeBusyProvider.mailboxChanged(this);
+    	if (dirty != null && dirty.hasNotifications()) {
+    		FreeBusyProvider.mailboxChanged(getAccountId(), dirty.changedTypes);
     	}
 
         // committed changes, so notify any listeners

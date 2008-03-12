@@ -48,6 +48,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.util.NetUtil;
 
@@ -183,6 +184,10 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		return EXCHANGE;
 	}
 
+	public int registerForItemTypes() {
+		return MailItem.typeToBitmask(MailItem.TYPE_APPOINTMENT);
+	}
+	
 	public boolean registerForMailboxChanges() {
 		if (sRESOLVERS.size() > 1)
 			return true;

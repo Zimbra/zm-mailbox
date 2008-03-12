@@ -75,6 +75,9 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
 		return Collections.emptyList();
 	}
 	
+	public int registerForItemTypes() {
+		return 0;
+	}
 	public boolean registerForMailboxChanges() {
 		return false;
 	}
