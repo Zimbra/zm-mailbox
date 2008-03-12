@@ -30,7 +30,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.httpclient.Header;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -40,6 +39,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
+import com.zimbra.cs.dav.caldav.TimeRange;
 import com.zimbra.cs.dav.service.DavServlet;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.service.UserServlet;
@@ -82,7 +82,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
     }
 
     @Override
-    public java.util.Collection<DavResource> getChildren(DavContext ctxt) throws DavException {
+    public java.util.Collection<DavResource> get(DavContext ctxt, TimeRange range) throws DavException {
         if (mChildren != null)
             return mChildren;
         
@@ -105,10 +105,8 @@ public class RemoteCalendarCollection extends CalendarCollection {
             zoptions.setTargetAccount(mRemoteId);
             zoptions.setTargetAccountBy(Provisioning.AccountBy.id);
             ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
-            long startTime = System.currentTimeMillis() - Constants.MILLIS_PER_MONTH;
-            long endTime = System.currentTimeMillis() + Constants.MILLIS_PER_MONTH * 12;
             String folderId = Integer.toString(mItemId);
-            results = zmbx.getApptSummaries(null, startTime, endTime, new String[] {folderId}, TimeZone.getDefault(), ZSearchParams.TYPE_APPOINTMENT);
+            results = zmbx.getApptSummaries(null, range.getStart(), range.getEnd(), new String[] {folderId}, TimeZone.getDefault(), ZSearchParams.TYPE_APPOINTMENT);
         } catch (ServiceException e) {
             return Collections.emptyList();
         }
@@ -141,6 +139,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
             ZFolder f = zmbx.getFolderById(new ItemId(mRemoteId, mItemId).toString());
             
             byte[] data = ctxt.getRequestData();
+            @SuppressWarnings("unchecked")
             Enumeration reqHeaders = ctxt.getRequest().getHeaderNames();
             ArrayList<Header> headerList = new ArrayList<Header>();
             while (reqHeaders.hasMoreElements()) {
