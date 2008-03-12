@@ -28,11 +28,11 @@ import java.util.Map;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -405,7 +405,7 @@ public class GetCalendarItemSummaries extends CalendarRequest {
 
         OperationContext octxt = getOperationContext(zsc, context);
 
-        if (DebugConfig.calendarEnableCache) {
+        if (LC.calendar_cache_enabled.booleanValue()) {
             int folderId = iidFolder.getId();
             if (folderId != Mailbox.ID_AUTO_INCREMENT) {
                 CalendarData calData = mbox.getCalendarSummaryForRange(
