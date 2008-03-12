@@ -552,10 +552,12 @@ public class FileUploadServlet extends ZimbraServlet {
             InputStream in = req.getInputStream();
             byte[] buf = new byte[1024];
             int numRead = 0;
-            mLog.info("Draining request input stream");
+            int totalRead = 0;
+            mLog.debug("Draining request input stream");
             while ((numRead = in.read(buf)) >= 0) {
-                mLog.info("Drained %d bytes", numRead);
+                totalRead += numRead;
             }
+            mLog.debug("Drained %d bytes", totalRead);            
         } catch (IOException e) {
             mLog.info("Ignoring error that occurred while reading the end of the client request: " + e);
         }
