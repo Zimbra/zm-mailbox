@@ -28,6 +28,7 @@ import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.zclient.ZClientException;
 import com.zimbra.cs.zclient.ZEmailAddress;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMessage;
@@ -41,15 +42,16 @@ extends TestCase {
     private static final String NAME_PREFIX = TestMaxMessageSize.class.getSimpleName();
     private static final int TEST_MAX_MESSAGE_SIZE = 2000;
     
-    private int mOrigMaxMessageSize;
+    private String mOrigMaxMessageSize;
+    private String mOrigFileUploadMaxSize;
     
     public void setUp()
     throws Exception {
         cleanUp();
         
-        Config config = Provisioning.getInstance().getConfig();
-        mOrigMaxMessageSize = config.getIntAttr(Provisioning.A_zimbraMtaMaxMessageSize, -1);
-        assertTrue("Unexpected max message size: " + mOrigMaxMessageSize, mOrigMaxMessageSize >= 0);
+        Provisioning prov = Provisioning.getInstance();
+        mOrigMaxMessageSize = prov.getConfig().getAttr(Provisioning.A_zimbraMtaMaxMessageSize, null);
+        mOrigFileUploadMaxSize = prov.getLocalServer().getAttr(Provisioning.A_zimbraFileUploadMaxSize, null); 
     }
     
     public void testMaxMessageSize()
@@ -118,6 +120,22 @@ extends TestCase {
         }
     }
     
+    public void testUploadMaxSize()
+    throws Exception {
+        TestUtil.setServerAttr(Provisioning.A_zimbraFileUploadMaxSize, "900");
+
+        // Upload an attachment that exceeds the max size
+        Map<String, byte[]> attachments = new HashMap<String, byte[]>();
+        attachments.put("file1.exe", new byte[1000]);
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        try {
+            mbox.uploadAttachments(attachments, 5000);
+            fail("Attachment upload should have failed");
+        } catch (ZClientException e) {
+            assertEquals(ZClientException.UPLOAD_SIZE_LIMIT_EXCEEDED, e.getCode());
+        }
+    }
+    
     private void validateMessageTooBigFault(SoapFaultException e)
     throws Exception {
         Provisioning prov = Provisioning.getInstance();
@@ -131,7 +149,8 @@ extends TestCase {
     public void tearDown()
     throws Exception {
         cleanUp();
-        setMaxMessageSize(mOrigMaxMessageSize);
+        TestUtil.setServerAttr(Provisioning.A_zimbraFileUploadMaxSize, mOrigFileUploadMaxSize);
+        TestUtil.setConfigAttr(Provisioning.A_zimbraMtaMaxMessageSize, mOrigMaxMessageSize);
     }
     
     private void setMaxMessageSize(int numBytes)

@@ -314,11 +314,13 @@ public class FileUploadServlet extends ZimbraServlet {
         try {
             adminPort = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, -1);
         } catch (ServiceException e) {
+            drainRequestStream(req);
             throw new ServletException(e);
         }
         boolean isAdminRequest = (req.getLocalPort() == adminPort);
         AuthToken at = isAdminRequest ? getAdminAuthTokenFromCookie(req, resp, true) : getAuthTokenFromCookie(req, resp, true);
         if (at == null) {
+            drainRequestStream(req);
             sendResponse(resp, HttpServletResponse.SC_UNAUTHORIZED, fmt, null, null, null);
             return;
         }
@@ -353,6 +355,7 @@ public class FileUploadServlet extends ZimbraServlet {
         		handlePlainUpload(req, resp, fmt, at.getAccountId());
         } catch (ServiceException e) {
             mLog.info("File upload failed", e);
+            drainRequestStream(req);
         	returnError(resp, e);
         }
     }
@@ -368,16 +371,19 @@ public class FileUploadServlet extends ZimbraServlet {
         } catch (FileUploadBase.SizeLimitExceededException e) {
             // at least one file was over max allowed size
             mLog.info("Exceeded maximum upload size of " + upload.getSizeMax() + " bytes: " + e);
+            drainRequestStream(req);
             sendResponse(resp, HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE, fmt, reqId, null, items);
             return;
         } catch (FileUploadBase.InvalidContentTypeException e) {
             // at least one file was of a type not allowed
             mLog.info("File upload failed", e);
+            drainRequestStream(req);
             sendResponse(resp, HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE, fmt, reqId, null, items);
             return;
         } catch (FileUploadException e) {
             // parse of request failed for some other reason
             mLog.info("File upload failed", e);
+            drainRequestStream(req);
             sendResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, fmt, reqId, null, items);
             return;
         }
@@ -444,6 +450,7 @@ public class FileUploadServlet extends ZimbraServlet {
             filename = new ContentDisposition(req.getHeader("Content-Disposition")).getParameter("filename");
 
         if (filename == null || filename.trim().equals("")) {
+            drainRequestStream(req);
             sendResponse(resp, HttpServletResponse.SC_NO_CONTENT, fmt, null, null, null);
             return;
         }
@@ -453,15 +460,17 @@ public class FileUploadServlet extends ZimbraServlet {
         FileItem fi = upload.getFileItemFactory().createItem("upload", contentType, false, filename);
         try {
             // write the upload to disk, but make sure not to exceed the permitted max upload size
-            int size = ByteUtil.copy(req.getInputStream(), true, fi.getOutputStream(), true, upload.getSizeMax() * 3);
+            int size = ByteUtil.copy(req.getInputStream(), false, fi.getOutputStream(), true, upload.getSizeMax() * 3);
             if (size > upload.getSizeMax()) {
                 fi.delete();
                 mLog.info("Exceeded maximum upload size of " + upload.getSizeMax() + " bytes: " + accountId);
+                drainRequestStream(req);
                 sendResponse(resp, HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE, fmt, null, null, null);
                 return;
             }
         } catch (IOException ioe) {
             fi.delete();
+            drainRequestStream(req);
             sendResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, fmt, null, null, null);
             return;
         }
@@ -531,6 +540,24 @@ public class FileUploadServlet extends ZimbraServlet {
         if (status != HttpServletResponse.SC_OK && items != null && items.size() > 0) {
             for (FileItem fi : items)
                 fi.delete();
+        }
+    }
+    
+    /**
+     * Reads the end of the client request when an error occurs, to avoid cases where
+     * the client blocks when writing the HTTP request.  
+     */
+    private static void drainRequestStream(HttpServletRequest req) {
+        try {
+            InputStream in = req.getInputStream();
+            byte[] buf = new byte[1024];
+            int numRead = 0;
+            mLog.info("Draining request input stream");
+            while ((numRead = in.read(buf)) >= 0) {
+                mLog.info("Drained %d bytes", numRead);
+            }
+        } catch (IOException e) {
+            mLog.info("Ignoring error that occurred while reading the end of the client request: " + e);
         }
     }
 
