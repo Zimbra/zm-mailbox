@@ -137,6 +137,7 @@ public class LC {
     public static final KnownKey zimbra_im_chat_close_time;
 
     public static final KnownKey zimbra_session_limit_imap;
+    public static final KnownKey zimbra_session_timeout_soap;
     public static final KnownKey zimbra_session_max_pending_notifications;
 
     public static final KnownKey zimbra_converter_enabled_uuencode;
@@ -584,6 +585,10 @@ public class LC {
         zimbra_session_limit_imap = new KnownKey("zimbra_session_limit_imap");
         zimbra_session_limit_imap.setDefault("5");
         zimbra_session_limit_imap.setDoc("Maximum number of IMAP folders a single user can have open at once");
+
+        zimbra_session_timeout_soap = new KnownKey("zimbra_session_timeout_soap");
+        zimbra_session_timeout_soap.setDefault("600");
+        zimbra_session_timeout_soap.setDoc("Idle timeout (in seconds) for SOAP sessions");
 
         zimbra_session_max_pending_notifications = new KnownKey("zimbra_session_max_pending_notifications");
         zimbra_session_max_pending_notifications.setDefault("400");
@@ -1144,33 +1149,33 @@ public class LC {
         zmstat_interval.setDefault("30");
         zmstat_interval.setDoc("how often samples are taken by zmstat (seconds)");
         
-        zimbra_noop_default_timeout = new KnownKey("zimbra_noop_default_timeout", "300", 
-        "Time (seconds) the server will allow a NoOpRequest to block if wait=1 is specified by the client");  
+        zimbra_noop_default_timeout = new KnownKey("zimbra_noop_default_timeout", "300",
+                "Time (seconds) the server will allow a NoOpRequest to block if wait=1 is specified by the client");  
         zimbra_noop_min_timeout = new KnownKey("zimbra_noop_min_timeout", "30", 
-        "Minimum allowable timeout (seconds) specified to NoOpRequest");  
+                "Minimum allowable timeout (seconds) specified to NoOpRequest");  
         zimbra_noop_max_timeout = new KnownKey("zimbra_noop_max_timeout", "1200", 
-        "Maximum allowable timeout (seconds) specified to NoOpRequest");
+                "Maximum allowable timeout (seconds) specified to NoOpRequest");
         
         zimbra_waitset_default_request_timeout = new KnownKey("zimbra_waitset_default_request_timeout", "300",
-        "Default Timeout (seconds) a non-admin WaitSetRequest will block");
+                "Default Timeout (seconds) a non-admin WaitSetRequest will block");
         zimbra_waitset_min_request_timeout = new KnownKey("zimbra_waitset_min_request_timeout", "30",
-        "Minimum Timeout (seconds) a non-admin WaitSetRequest will block");
+                "Minimum Timeout (seconds) a non-admin WaitSetRequest will block");
         zimbra_waitset_max_request_timeout = new KnownKey("zimbra_waitset_max_request_timeout", "1200",
-        "Maximum Timeout (seconds) a non-admin WaitSetRequest will block");
+                "Maximum Timeout (seconds) a non-admin WaitSetRequest will block");
         zimbra_waitset_max_per_account = new KnownKey("zimbra_waitset_max_per_account", "5",
-        "Maximum number of non-admin WaitSets a single account may have open");
+                "Maximum number of non-admin WaitSets a single account may have open");
         
         zimbra_admin_waitset_default_request_timeout = new KnownKey("zimbra_admin_waitset_default_request_timeout", "300",
-        "Default Timeout (seconds) an admin WaitSetRequest will block");
+                "Default Timeout (seconds) an admin WaitSetRequest will block");
         zimbra_admin_waitset_min_request_timeout = new KnownKey("zimbra_admin_waitset_min_request_timeout", "0", 
-        "Minimum Timeout (seconds) an admin WaitSetRequest will block");
+                "Minimum Timeout (seconds) an admin WaitSetRequest will block");
         zimbra_admin_waitset_max_request_timeout = new KnownKey("zimbra_admin_waitset_max_request_timeout", "3600",
-        "Maximum Timeout (seconds) an admin WaitSetRequest will block");
+                "Maximum Timeout (seconds) an admin WaitSetRequest will block");
         
         zimbra_waitset_initial_sleep_time  = new KnownKey("zimbra_waitset_initial_sleep_time", "1", 
-            "Initial timeout (seconds) to wait before processing any WaitSetRequest");
+                "Initial timeout (seconds) to wait before processing any WaitSetRequest");
         zimbra_waitset_nodata_sleep_time = new KnownKey("zimbra_waitset_nodata_sleep_time", "3",
-        "Time (seconds) to sleep handling a WaitSetRequest if there is no data after initial check");
+                "Time (seconds) to sleep handling a WaitSetRequest if there is no data after initial check");
 
         zimbra_csv_mapping_file = new KnownKey("zimbra_csv_mapping_file");
         zimbra_csv_mapping_file.setDefault("${zimbra_home}" + FS + "conf" + FS + "zimbra-contact-fields.xml");
