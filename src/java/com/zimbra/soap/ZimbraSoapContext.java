@@ -27,6 +27,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.dom4j.QName;
 import org.mortbay.util.ajax.Continuation;
 
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
@@ -83,7 +84,7 @@ public class ZimbraSoapContext {
 
     public static final int MAX_HOP_COUNT = 5;
 
-    private String    mRawAuthToken;
+    private ZAuthToken mRawAuthToken;
     private AuthToken mAuthToken;
     private String    mAuthTokenAccountId;
     private String    mRequestedAccountId;
@@ -119,11 +120,7 @@ public class ZimbraSoapContext {
      */
     public ZimbraSoapContext(AuthToken authToken, String accountId, SoapProtocol reqProtocol, SoapProtocol respProtocol, int hopCount) throws ServiceException {
         mAuthToken = authToken;
-        try {
-            mRawAuthToken = authToken.getEncoded();
-        } catch (AuthTokenException x) {
-            throw ServiceException.FAILURE("AuthTokenExcepiton", x);
-        }
+        mRawAuthToken = authToken.toZAuthToken();
         mAuthTokenAccountId = authToken.getAccountId();
         mRequestedAccountId = accountId;
         mRequestProtocol = reqProtocol;
@@ -234,7 +231,7 @@ public class ZimbraSoapContext {
                  * providers on the target serve?  Doesn't look like there is such cases.
                  *          
                  */
-                mRawAuthToken = mAuthToken.getEncoded();
+                mRawAuthToken = mAuthToken.toZAuthToken();
             
                 if (mAuthToken.isExpired())
                     throw ServiceException.AUTH_EXPIRED();
@@ -269,7 +266,7 @@ public class ZimbraSoapContext {
         if (targetServerId != null) {
             HttpServletRequest req = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
             if (req != null) {
-                mProxyTarget = new ProxyTarget(targetServerId, mRawAuthToken, req);
+                mProxyTarget = new ProxyTarget(targetServerId, mAuthToken, req);
                 mIsProxyRequest = !mProxyTarget.isTargetLocal();
             } else {
                 sLog.warn("Missing SERVLET_REQUEST key in request context");
@@ -451,7 +448,7 @@ public class ZimbraSoapContext {
     public Element toProxyCtxt(SoapProtocol proto) {
         Element ctxt = proto.getFactory().createElement(HeaderConstants.CONTEXT);
         if (mRawAuthToken != null)
-            ctxt.addAttribute(HeaderConstants.E_AUTH_TOKEN, mRawAuthToken, Element.Disposition.CONTENT);
+            mRawAuthToken.encodeSoapCtxt(ctxt);
         if (mResponseProtocol != mRequestProtocol)
             ctxt.addElement(HeaderConstants.E_FORMAT).addAttribute(HeaderConstants.A_TYPE, mResponseProtocol == SoapProtocol.SoapJS ? HeaderConstants.TYPE_JAVASCRIPT : HeaderConstants.TYPE_XML);
         Element eAcct = ctxt.addElement(HeaderConstants.E_ACCOUNT).addAttribute(HeaderConstants.A_HOPCOUNT, mHopCount).addAttribute(HeaderConstants.A_MOUNTPOINT, mMountpointTraversed);
@@ -501,8 +498,17 @@ public class ZimbraSoapContext {
     /** Returns the raw, encoded {@link AuthToken} for this SOAP request.
      *  This can come either from an HTTP cookie attached to the SOAP request
      *  or from an <tt>&lt;authToken></tt> element in the SOAP Header. */
-    // AP-TODO-2: retire
-    public String getRawAuthToken() {
+    // AP-TODO-2: retire and change all callsites to call getRawAuthToken
+    //            only used in com.zimbra.cs.service.admin.DeployZimlet and 
+    //            com.zimbra.cs.service.admin.UndeployZimlet.
+    public String getRawAuthTokenString() {
+        return mRawAuthToken.getValue();
+    }
+    
+    /** Returns the raw, encoded {@link AuthToken} for this SOAP request.
+     *  This can come either from an HTTP cookies attached to the SOAP request
+     *  or from an <tt>&lt;authToken></tt> element in the SOAP Header. */
+    public ZAuthToken getRawAuthToken() {
         return mRawAuthToken;
     }
 

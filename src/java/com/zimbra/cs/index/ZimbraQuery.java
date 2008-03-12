@@ -2622,7 +2622,7 @@ public final class ZimbraQuery {
                 if (toSetup instanceof RemoteQueryOperation) {
                     try {
                         RemoteQueryOperation remote = (RemoteQueryOperation) toSetup;
-                        remote.setup(proto, octxt.getAuthenticatedUser(), octxt.isUsingAdminPrivileges(), params);
+                        remote.setup(proto, octxt.getAuthToken(), params);
                     } catch(Exception e) {
                         ZimbraLog.index.info("Ignoring "+e+" during RemoteQuery generation for "+union.toString());
                     }

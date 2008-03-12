@@ -25,6 +25,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.Server;
@@ -39,10 +40,10 @@ import java.io.IOException;
 public class ProxyTarget {
 
     private Server mServer;
-    private String mAuthToken;
+    private AuthToken mAuthToken;
     private String mURL;
 
-    public ProxyTarget(String serverId, String authToken, HttpServletRequest req) throws ServiceException {
+    public ProxyTarget(String serverId, AuthToken authToken, HttpServletRequest req) throws ServiceException {
         mServer = Provisioning.getInstance().get(ServerBy.id, serverId);
         if (mServer == null)
             throw AccountServiceException.NO_SUCH_SERVER(serverId);
@@ -66,7 +67,7 @@ public class ProxyTarget {
         mURL = url;
     }
 
-    public ProxyTarget(Server server, String authToken, String url) {
+    public ProxyTarget(Server server, AuthToken authToken, String url) {
         mServer = server;  mAuthToken = authToken;  mURL = url;
     }
 
@@ -79,7 +80,7 @@ public class ProxyTarget {
         SoapProtocol proto = request instanceof Element.JSONElement ? SoapProtocol.SoapJS : SoapProtocol.Soap12;
         SoapHttpTransport transport = new SoapHttpTransport(mURL);
         try {
-            transport.setAuthToken(mAuthToken);
+            transport.setAuthToken(mAuthToken.toZAuthToken());
             transport.setRequestProtocol(proto);
             return transport.invokeWithoutSession(request);
         } catch (IOException e) {

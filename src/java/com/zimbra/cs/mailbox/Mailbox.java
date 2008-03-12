@@ -273,6 +273,7 @@ public class Mailbox {
         private Session    session;
         private RedoableOp player;
         private String     requestIP;
+        private AuthToken  authToken;
         
         boolean changetype = CHECK_CREATED;
         int     change = -1;
@@ -295,6 +296,7 @@ public class Mailbox {
                 throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
         }
         public OperationContext(AuthToken auth) throws ServiceException {
+            authToken = auth;
             String accountId = auth.getAccountId();
             isAdmin = auth.isAdmin() || auth.isDomainAdmin();
             authuser = Provisioning.getInstance().get(AccountBy.id, accountId);
@@ -311,6 +313,7 @@ public class Mailbox {
             player     = octxt.player;      session = octxt.session;
             authuser   = octxt.authuser;    isAdmin = octxt.isAdmin;
             changetype = octxt.changetype;  change  = octxt.change;
+            authToken  = octxt.authToken;
         }
 
         public OperationContext setChangeConstraint(boolean checkModified, int changeId) {
@@ -343,6 +346,14 @@ public class Mailbox {
         public Account getAuthenticatedUser() {
             return authuser;
         }
+        
+        public AuthToken getAuthToken() {
+            if (authToken != null)
+                return authToken;
+            else
+                return AuthToken.getAuthToken(getAuthenticatedUser(), isUsingAdminPrivileges());  // AP-TODO-9: CLEANUP/RETIRE THIS
+        }
+        
         public boolean isUsingAdminPrivileges() {
             return isAdmin;
         }

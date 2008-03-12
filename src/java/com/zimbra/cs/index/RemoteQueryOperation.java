@@ -72,7 +72,7 @@ class RemoteQueryOperation extends FilterQueryOperation {
         return "REMOTE["+mTarget.toString()+"]:"+mOp.toString();
     }
 
-    protected void setup(SoapProtocol proto, Account authenticatedAccount, boolean isAdmin, SearchParams params) 
+    protected void setup(SoapProtocol proto, AuthToken authToken, SearchParams params) 
     throws ServiceException {
         Provisioning prov  = Provisioning.getInstance();
         Account acct = prov.get(AccountBy.id, mTarget.toString());
@@ -85,12 +85,7 @@ class RemoteQueryOperation extends FilterQueryOperation {
             ZimbraLog.index.debug("RemoteQuery of \""+mOp.toQueryString()+"\" sent to "+mTarget.toString()+" on server "+remoteServer.getName());
 
         params.setQueryStr(mOp.toQueryString());
-        try {
-            mResults = new ProxiedQueryResults(proto, AuthToken.getAuthToken(authenticatedAccount, isAdmin).getEncoded(), 
-                mTarget.toString(), remoteServer.getName(), params, params.getMode());
-        } catch (AuthTokenException e) {
-            throw ServiceException.FAILURE("AuthTokenException getting auth token: " + e.toString(), e);
-        }
+        mResults = new ProxiedQueryResults(proto, authToken, mTarget.toString(), remoteServer.getName(), params, params.getMode());
     }
     
     public void resetIterator() throws ServiceException {

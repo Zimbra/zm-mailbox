@@ -129,7 +129,7 @@ public class DeployZimlet extends AdminDocumentHandler {
 		if (action.equals(AdminConstants.A_STATUS)) {
 			// just print the status
 		} else if (action.equals(AdminConstants.A_DEPLOYALL)) {
-			deploy(lc, aid, lc.getRawAuthToken());
+			deploy(lc, aid, lc.getRawAuthTokenString());
 		} else if (action.equals(AdminConstants.A_DEPLOYLOCAL)) {
 			deploy(lc, aid, null);
 		} else {

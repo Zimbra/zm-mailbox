@@ -69,7 +69,7 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
     protected boolean mAtEndOfList = false;
 
     protected String mServer;
-    protected String mAuthToken;
+    protected AuthToken mAuthToken;
     protected String mTargetAcctId = null;
 //    protected SoapTransport mTransport = null;
     protected SoapProtocol mResponseProto = null;
@@ -96,11 +96,11 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
      * @param server hostname of server
      * @param params
      */
-    public ProxiedQueryResults(SoapProtocol respProto, String encodedAuthToken, String targetAccountId, String server, SearchParams params, Mailbox.SearchResultMode mode) {
+    public ProxiedQueryResults(SoapProtocol respProto, AuthToken authToken, String targetAccountId, String server, SearchParams params, Mailbox.SearchResultMode mode) {
         super(params.getTypes(), params.getSortBy(), mode);
 
         setSearchParams(params);
-        this.mAuthToken = encodedAuthToken;
+        this.mAuthToken = authToken;
         this.mServer = server;
         this.mTargetAcctId = targetAccountId;
         this.mResponseProto = respProto;
@@ -113,12 +113,12 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
      * @param server hostname of server
      * @param params
      */
-    public ProxiedQueryResults(SoapProtocol respProto, String encodedAuthToken, String server, SearchParams params, Mailbox.SearchResultMode mode) {
+    public ProxiedQueryResults(SoapProtocol respProto, AuthToken authToken, String server, SearchParams params, Mailbox.SearchResultMode mode) {
         super(params.getTypes(), params.getSortBy(), mode);
 
         setSearchParams(params);
         mSearchParams.setOffset(0); 
-        this.mAuthToken = encodedAuthToken;
+        this.mAuthToken = authToken;
         this.mServer = server;
         this.mResponseProto = respProto;
     }
@@ -131,13 +131,13 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
      * @param params
      * @param searchAllMailboxes -- must be set to SEARCH_ALL_MAILBOXES
      */
-    public ProxiedQueryResults(SoapProtocol respProto, String encodedAuthToken, String server, SearchParams params, Mailbox.SearchResultMode mode, int searchAllMailboxes) {
+    public ProxiedQueryResults(SoapProtocol respProto, AuthToken authToken, String server, SearchParams params, Mailbox.SearchResultMode mode, int searchAllMailboxes) {
         super(params.getTypes(), params.getSortBy(), mode);
 
         assert(searchAllMailboxes == SEARCH_ALL_MAILBOXES);
 
         setSearchParams(params);
-        this.mAuthToken = encodedAuthToken;
+        this.mAuthToken = authToken;
         this.mServer = server;
         this.isMultipleMailboxes = true;
         this.isAllMailboxes = true; 
@@ -151,12 +151,12 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
      * @param server
      * @param params
      */
-    public ProxiedQueryResults(SoapProtocol respProto, String encodedAuthToken, String server, SearchParams params, Mailbox.SearchResultMode mode, List<ParseMailboxID> mailboxes)
+    public ProxiedQueryResults(SoapProtocol respProto, AuthToken authToken, String server, SearchParams params, Mailbox.SearchResultMode mode, List<ParseMailboxID> mailboxes)
     {
         super(params.getTypes(), params.getSortBy(), mode);
 
         setSearchParams(params);
-        this.mAuthToken = encodedAuthToken;
+        this.mAuthToken = authToken;
         this.mServer = server;
         this.isMultipleMailboxes = true;
         this.mResponseProto = respProto;
@@ -272,12 +272,8 @@ public class ProxiedQueryResults extends ZimbraQueryResultsImpl
 
         // call the remote server now!
         ZimbraSoapContext zsc = null;
-        try {
-            zsc = new ZimbraSoapContext(AuthToken.getAuthToken(mAuthToken), mTargetAcctId, mResponseProto, mResponseProto, mSearchParams.getHopCount()+1);
-        } catch (AuthTokenException ex) {
-            throw ServiceException.FAILURE("Caught AuthToken exception: ", ex);
-        }
-
+        zsc = new ZimbraSoapContext(mAuthToken, mTargetAcctId, mResponseProto, mResponseProto, mSearchParams.getHopCount()+1);
+      
         Server server = Provisioning.getInstance().get(ServerBy.name, mServer);
         String baseurl = null;
         if (!isMultipleMailboxes) {

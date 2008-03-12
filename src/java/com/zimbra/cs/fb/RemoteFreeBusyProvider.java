@@ -157,7 +157,7 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
         request.detach();
 
         // executing remotely; find out target and proxy there
-        ProxyTarget proxy = new ProxyTarget(server.getId(), zsc.getRawAuthToken(), mHttpReq);
+        ProxyTarget proxy = new ProxyTarget(server.getId(), zsc.getAuthToken(), mHttpReq);
         response = proxy.dispatch(request, zscTarget).detach();
 
         return response;
