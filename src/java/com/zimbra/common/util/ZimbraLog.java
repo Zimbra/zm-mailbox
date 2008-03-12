@@ -314,6 +314,11 @@ public class ZimbraLog {
      * the "zimbra.fb" logger.  Logs free/busy operations.
      */
     public static final Log fb = LogFactory.getLog("zimbra.fb");
+
+    /**
+     * the "zimbra.purge" logger.  Logs mailbox purge operations.
+     */
+    public static final Log purge = LogFactory.getLog("zimbra.purge");
     
     /**
      * Keeps track of the account associated with the current thread, for
