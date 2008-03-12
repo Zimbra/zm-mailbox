@@ -414,7 +414,7 @@ public abstract class DocumentHandler {
         } else {
             // executing remotely; find out target and proxy there
             HttpServletRequest httpreq = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
-            ProxyTarget proxy = new ProxyTarget(server.getId(), zsc.getRawAuthToken(), httpreq);
+            ProxyTarget proxy = new ProxyTarget(server.getId(), zsc.getAuthToken(), httpreq);
             response = proxy.dispatch(request, zsc).detach();
         }
         return response;

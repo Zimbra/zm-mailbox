@@ -51,7 +51,7 @@ public class UndeployZimlet extends AdminDocumentHandler {
 		String auth = null;
 		
 		if (action == null)
-			auth = lc.getRawAuthToken();
+			auth = lc.getRawAuthTokenString();
 	    Element response = lc.createElement(AdminConstants.UNDEPLOY_ZIMLET_RESPONSE);
 	    new Thread(new UndeployThread(name, auth)).start();
 		return response;
