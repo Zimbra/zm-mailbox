@@ -943,6 +943,7 @@
             zimbraServiceEnabled ldap \
             zimbraServiceEnabled mta \
             zimbraServiceEnabled mailbox
+        	ModifyServer ${zimbra.server.hostname} zimbraMailPurgeSleepInterval 0
             cd ${defaultdomain.name}
             mcf zimbraDefaultDomainName ${defaultdomain.name}
             mc default zimbraFeatureIMEnabled FALSE
