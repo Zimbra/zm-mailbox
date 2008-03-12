@@ -213,8 +213,24 @@ public abstract class MailItemResource extends DavResource {
     public void patchProperties(DavContext ctxt, java.util.Collection<Element> set, java.util.Collection<QName> remove) throws DavException, IOException {
 		for (QName n : remove)
 				mDeadProps.remove(n);
-		for (Element e : set)
+		for (Element e : set) {
+			if (e.getQName().getName().equals(DavElements.P_DISPLAYNAME) &&
+					mType == MailItem.TYPE_FOLDER || mType == MailItem.TYPE_MOUNTPOINT) {
+				// rename folder
+				try {
+					String val = e.getText();
+					String uri = getUri();
+					Mailbox mbox = getMailbox(ctxt);
+					mbox.rename(ctxt.getOperationContext(), mId, mType, val);
+					setProperty(DavElements.P_DISPLAYNAME, val);
+					UrlNamespace.addToRenamedResource(uri.substring(0, uri.length()-1), this);
+				} catch (ServiceException se) {
+					throw new DavException("unable to patch properties", DavProtocol.STATUS_FAILED_DEPENDENCY, se);
+				}
+				continue;
+			}
 			mDeadProps.put(e.getQName(), e);
+		}
 		if (mDeadProps.size() == 0)
 			return;
 		try {
