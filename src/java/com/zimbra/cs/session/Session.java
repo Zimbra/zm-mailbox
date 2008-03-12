@@ -29,6 +29,7 @@ import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.operation.Operation;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.StringUtil;
@@ -62,7 +63,7 @@ public abstract class Session {
     public enum Type {
         NULL(0, 0), // unused dummy session type
         SOAP(1, 5),
-        IMAP(2, 5),
+        IMAP(2, Math.max(0, LC.zimbra_session_limit_imap.intValue())),
         ADMIN(3, 5),
         WIKI(4, 0),
         SYNCLISTENER(5, 2),
