@@ -27,17 +27,17 @@ P4CLIENT = {client_name}
 P4 View:
 		
 	Only needed to get OpenLDAP for start of install:
-		//depot/main/ThirdPartyBuilds/MACOSXx86/sleepycat/... //{client_name}/ThirdPartyBuilds/MACOSXx86/sleepycat/...
-		//depot/main/ThirdPartyBuilds/MACOSXx86/openssl/... //{client_name}/ThirdPartyBuilds/MACOSXx86/openssl/...
-		//depot/main/ThirdPartyBuilds/MACOSXx86/heimdal/... //{client_name}/ThirdPartyBuilds/MACOSXx86/heimdal/...
 		//depot/main/ThirdPartyBuilds/MACOSXx86/curl/... //{client_name}/ThirdPartyBuilds/MACOSXx86/curl/...
 		//depot/main/ThirdPartyBuilds/MACOSXx86/cyrus-sasl/... //{client_name}/ThirdPartyBuilds/MACOSXx86/cyrus-sasl/...
+		//depot/main/ThirdPartyBuilds/MACOSXx86/heimdal/... //{client_name}/ThirdPartyBuilds/MACOSXx86/heimdal/...
 		//depot/main/ThirdPartyBuilds/MACOSXx86/openldap/... //{client_name}/ThirdPartyBuilds/MACOSXx86/openldap/...
+		//depot/main/ThirdPartyBuilds/MACOSXx86/openssl/... //{client_name}/ThirdPartyBuilds/MACOSXx86/openssl/...
+		//depot/main/ThirdPartyBuilds/MACOSXx86/sleepycat/... //{client_name}/ThirdPartyBuilds/MACOSXx86/sleepycat/...
 
 	For the basic server only include:
-		//depot/main/ZimbraServer/... //{client_name}/ZimbraServer/...
 		//depot/main/ZimbraCommon/... //{client_name}/ZimbraCommon/...
 		//depot/main/ZimbraIM/... //{client_name}/ZimbraIM/...
+		//depot/main/ZimbraServer/... //{client_name}/ZimbraServer/...
 		//depot/main/ThirdParty/jetty/... //{client_name}/ThirdParty/jetty/...
 
 	For the webclient also include
@@ -53,15 +53,14 @@ After you setup Perforce, login and sync the client. This will get
 you all of the files that you will need for the rest of the install.
 
 
-=== Setup /opt/zimbra ===
+=== Setup build environment ===
 
 Open a terminal shell and run the following commands:
 
 <pre>
-% sudo su -
-% mkdir -p /opt/zimbra
-% chown {user_name}:{user_name} /opt/zimbra
-% exit
+# set SRCDIR to P4 sync directory
+export SRCDIR=~/p4/main
+mkdir -p /opt/zimbra
 </pre>
 
 
@@ -69,17 +68,15 @@ Open a terminal shell and run the following commands:
 
 Download and install from http://dev.mysql.com/downloads/mysql/5.0.html#macosx-dmg
 
-Note: Install *both* packages so that MySQL will automatically start
-when you boot.
+Note: Install *both* packages so that MySQL starts automatically on reboot
 
 Run the following commands:
 
 <pre>
-% sudo ln -s /usr/local/mysql /opt/zimbra/mysql
+sudo ln -s /usr/local/mysql /opt/zimbra/mysql
 </pre>
 
-Then edit the file /opt/zimbra/mysql/data/my.cnf, type in the
-following, and save:
+Then create /opt/zimbra/mysql/data/my.cnf with:
 
 <pre>
 [mysqld]
@@ -87,18 +84,18 @@ bind-address = localhost
 port = 7306
 </pre>
 
-Now you should be able to start MySQL with the following command:
-[Note: you will probably have to reboot in order for this to work]
+Start MySQL with the following command:
+[Note: mysqld will start automatically on reboot]
 
 <pre>
-% sudo SystemStarter start MySQL
+sudo /opt/zimbra/mysql/mysqld_safe --user=mysql &
 </pre>
 
 Set the password to the ant expected "zimbra".  Start the mysql
 client with
 
 <pre>
-% mysql -u root
+/opt/zimbra/mysql/bin/mysql -u root
 </pre>
 
 then enter
@@ -109,26 +106,24 @@ mysql> FLUSH PRIVILEGES;
 mysql> quit
 </pre>
 
+
 === Install OpenLDAP ===
 
 <pre>
-% tar -xvzf  {p4_client_local_dir}/ThirdPartyBuilds/MACOSXx86/sleepycat/sleepycat-4.2.52.6.tgz -C /opt/zimbra
-% tar -xvzf  {p4_client_local_dir}/ThirdPartyBuilds/MACOSXx86/openssl/openssl-0.9.8g.tgz -C /opt/zimbra
-% tar -xvzf  {p4_client_local_dir}/ThirdPartyBuilds/MACOSXx86/heimdal/heimdal-1.0.2.tgz -C /opt/zimbra
-% tar -xvzf  {p4_client_local_dir}/ThirdPartyBuilds/MACOSXx86/curl/curl-7.17.0.tgz -C /opt/zimbra
-% tar -xvzf  {p4_client_local_dir}/ThirdPartyBuilds/MACOSXx86/cyrus-sasl/cyrus-sasl-2.1.22.3z.tgz -C /opt/zimbra
-% tar -xvzf  {p4_client_local_dir}/ThirdPartyBuilds/MACOSXx86/openldap/openldap-2.3.40.7z.tgz -C /opt/zimbra
-</pre>
+cd /opt/zimbra
+tar -xzf $SRCDIR/ThirdPartyBuilds/MACOSXx86/curl/curl-7.17.0.tgz
+tar -xzf $SRCDIR/ThirdPartyBuilds/MACOSXx86/cyrus-sasl/cyrus-sasl-2.1.22.3z.tgz
+tar -xzf $SRCDIR/ThirdPartyBuilds/MACOSXx86/heimdal/heimdal-1.0.2.tgz
+tar -xzf $SRCDIR}/ThirdPartyBuilds/MACOSXx86/openldap/openldap-2.3.40.7z.tgz
+tar -xzf $SRCDIR/ThirdPartyBuilds/MACOSXx86/openssl/openssl-0.9.8g.tgz
+tar -xzf $SRCDIR/ThirdPartyBuilds/MACOSXx86/sleepycat/sleepycat-4.2.52.6.tgz
 
-Run the following commands:
-
-<pre>
-% ln -s /opt/zimbra/{sleepycat_extract_dir} /opt/zimbra/sleepycat
-% ln -s /opt/zimbra/{openssl_extract_dir} /opt/zimbra/openssl
-% ln -s /opt/zimbra/{heimdal_extract_dir} /opt/zimbra/heimdal
-% ln -s /opt/zimbra/{curl_extract_dir} /opt/zimbra/curl
-% ln -s /opt/zimbra/{cyrus-sasl_extract_dir} /opt/zimbra/cyrus-sasl
-% ln -s /opt/zimbra/{openldap_extract_dir} /opt/zimbra/openldap
+ln -s /opt/zimbra/curl* /opt/zimbra/curl
+ln -s /opt/zimbra/cyrus-sasl* /opt/zimbra/cyrus-sasl
+ln -s /opt/zimbra/heimdal* /opt/zimbra/heimdal
+ln -s /opt/zimbra/openldap* /opt/zimbra/openldap
+ln -s /opt/zimbra/openssl* /opt/zimbra/openssl
+ln -s /opt/zimbra/sleepycat* /opt/zimbra/sleepycat
 </pre>
 
 Then run "sudo visudo" and add the following at the
@@ -139,27 +134,20 @@ end of the file and save:
 <pre>
 
 
-=== Install Ant ===
-
-Download from http://ant.apache.org/bindownload.cgi
-
-Extract the .tar.gz file to someplace useful and add to your
-PATH.
-
 === Deploy Zimbra ===
 
 Deploy Zimbra with the following commands:
 
 <pre>
-% cd {p4_client_local_dir}/ZimbraServer
-% ant reset-all
+cd $SRCDIR/ZimbraServer
+ant reset-all
 </pre>
 
 You should now be able to point your browser to the following
 URL and login with the username "user1" and password "test123":
 
 <pre>
-http://localhost:7070/zimbra/
+http://localhost:7070
 </pre>
 
 
@@ -180,38 +168,55 @@ will need to configure it -- use default settings where
 possible]
 
 <pre>
-% sudo cpan
+sudo
+cpan
 </pre>
 
 At the CPAN prompt, type the following commands:
 
 <pre>
-cpan> install Net::SMTP::Server
-cpan> install Net::LMTP
-cpan> install Net::DNS
-cpan> quit
+install Net::SMTP::Server
+install Net::LMTP
+install Net::DNS
+quit
 </pre>
 
-Now you can run the Perl MTA with the following commands:
+Now run the Perl MTA with the following commands:
 
 <pre>
-% export ZIMBRA_HOSTNAME=`/opt/zimbra/bin/zmhostname`
-% sudo perl {p4_client_local_dir}/ZimbraServer/src/perl/zMTAHack.pl
+export ZIMBRA_HOSTNAME=`/opt/zimbra/bin/zmhostname`
+sudo perl $SRCDIR/ZimbraServer/src/perl/zMTAHack.pl &
 </pre>
 
 NOTE: When sending mail, you need to fully qualify the
-address as {username}@{hostname}. The {username} is
-"user1" through "user5". The {hostname} is the same one
-that /opt/zimbra/bin/zmhostname displays.
+address as {username}@$ZIMBRA_HOSTNAME. The {username} is
+"user1" through "user5".
 
 
-=== Configuring Services to Start at Boot ===
+=== Starting / Stopping Servers ===
 
-At this point, only MySQL is configured to start at boot.
-If you want the other services (i.e. LDAP and
-MTA) to start at boot, you need to run the following
-commands:
+To start or stop all servers including LDAP:
 
 <pre>
+cd $SRCDIR/ZimbraServer
+ant [start-servers | stop-servers]
+TODO
+</pre>
+
+
+To start or stop LDAP:
+
+<pre>
+cd $SRCDIR/ZimbraServer
+ant [start-ldap | stop-ldap]
+TODO
+</pre>
+
+
+To start or ZCS web servers:
+
+<pre>
+cd $SRCDIR/ZimbraServer
+ant [start-webserver | stop-webserver]
 TODO
 </pre>
