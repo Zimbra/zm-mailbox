@@ -34,6 +34,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.mail.ToXML;
@@ -61,6 +62,7 @@ public abstract class FreeBusyProvider {
 
 	// propagation of Zimbra users free/busy to 3rd party system
 	public abstract boolean registerForMailboxChanges();
+	public abstract int registerForItemTypes();
 	public abstract boolean handleMailboxChange(String accountId);
 	public abstract long cachedFreeBusyStartTime();
 	public abstract long cachedFreeBusyEndTime();
@@ -84,12 +86,12 @@ public abstract class FreeBusyProvider {
 		return queue;
 	}
 	
-	public static void mailboxChanged(Mailbox mbox) {
-		mailboxChanged(mbox.getAccountId());
-	}
 	public static void mailboxChanged(String accountId) {
+		mailboxChanged(accountId, MailItem.typeToBitmask(MailItem.TYPE_APPOINTMENT));
+	}
+	public static void mailboxChanged(String accountId, int changedType) {
 		for (FreeBusyProvider prov : sPROVIDERS)
-			if (prov.registerForMailboxChanges()) {
+			if (prov.registerForMailboxChanges() && (changedType & prov.registerForItemTypes()) > 0) {
 				FreeBusySyncQueue queue = sPUSHQUEUES.get(prov.getName());
 				if (queue == null)
 					queue = startConsumerThread(prov);
