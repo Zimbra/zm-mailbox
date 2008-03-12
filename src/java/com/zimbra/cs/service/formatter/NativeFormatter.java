@@ -306,7 +306,8 @@ public class NativeFormatter extends Formatter {
                     }
                 }
             }
-            pis.unread(buf, 0, bytesRead);
+            if (bytesRead > 0)
+                pis.unread(buf, 0, bytesRead);
         }
         if (disposition != null) {
             String cd = disposition + "; filename=" + HttpUtil.encodeFilename(req, filename == null ? "unknown" : filename);
