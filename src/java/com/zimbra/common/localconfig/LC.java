@@ -88,7 +88,7 @@ public class LC {
 
     public static final KnownKey zimbra_store_sweeper_max_age;
 
-    public static final KnownKey zimbra_mailbox_purgeable;
+    public static final KnownKey zimbra_mailbox_manager_hardref_cache;
     public static final KnownKey zimbra_mailbox_active_cache;
     public static final KnownKey zimbra_mailbox_inactive_cache;
 
@@ -462,9 +462,10 @@ public class LC {
         zimbra_store_sweeper_max_age.setDefault("480");  // 480 mins = 8 hours
         zimbra_store_sweeper_max_age.setDoc("Files older than this many minutes are auto-deleted from store incoming directory.");
 
-        zimbra_mailbox_purgeable = new KnownKey("zimbra_mailbox_purgeable");
-        zimbra_mailbox_purgeable.setDefault("true");
-        zimbra_mailbox_purgeable.setDoc("Whether the mailbox manager should permit inactive mailboxes to be purged from its cache.");
+        zimbra_mailbox_manager_hardref_cache = new KnownKey("zimbra_mailbox_manager_hardref_cache");
+        zimbra_mailbox_manager_hardref_cache.setDefault("2500");
+        zimbra_mailbox_manager_hardref_cache.setDoc("The maximum number of mailboxes that will be pinned in memory before " +
+                "the mailbox manager starts allowing them to be purged via SoftReference garbage collection.");
 
         zimbra_mailbox_active_cache = new KnownKey("zimbra_mailbox_active_cache");
         zimbra_mailbox_active_cache.setDefault("500");
