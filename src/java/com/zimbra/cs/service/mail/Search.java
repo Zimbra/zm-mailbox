@@ -29,6 +29,7 @@ import java.util.Map;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
@@ -43,7 +44,6 @@ import com.zimbra.cs.index.*;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.SearchParams.ExpandResults;
 import com.zimbra.cs.index.queryparser.ParseException;
-import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Flag;
@@ -80,7 +80,7 @@ public class Search extends MailDocumentHandler  {
         String query = params.getQueryStr();
 
         params.setQueryStr(query);
-        if (DebugConfig.calendarEnableCache) {
+        if (LC.calendar_cache_enabled.booleanValue()) {
         	List<String> apptFolderIds = getFolderIdListIfSimpleAppointmentsQuery(params);
         	if (apptFolderIds != null) {
         		Account authAcct = getAuthenticatedAccount(zsc);

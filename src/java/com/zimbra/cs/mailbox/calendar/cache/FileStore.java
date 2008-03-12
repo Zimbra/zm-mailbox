@@ -23,15 +23,18 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Metadata;
-import com.zimbra.cs.store.Volume;
 
 public class FileStore {
-    private static final String SUBDIR_CALCACHE = "calcache";
     private static final String FILE_EXT = ".dat";
+    private static final int MBOX_GROUP_BITS = 8;
+    private static final int MBOX_BITS = 12;
+    private static final int FILE_GROUP_BITS = 8;
+    private static final int FILE_BITS = 12;
 
     private static final int CURRENT_VERSION = 1;
     private static final String FN_VERSION = "ver";
@@ -39,10 +42,15 @@ public class FileStore {
     private static final String FN_MODSEQ = "modSeq";
 
     private static File getCalFolderFile(int mboxId, int folderId) {
-        Volume vol = Volume.getCurrentMessageVolume();
-        String dir = vol.getItemDir(mboxId, folderId, SUBDIR_CALCACHE);
-        String path = dir + File.separator + folderId + FILE_EXT;
-        return new File(path);
+        long mdir = mboxId >> MBOX_BITS;
+        mdir &= MBOX_GROUP_BITS;
+        long fdir = folderId >> FILE_BITS;
+        fdir &= FILE_GROUP_BITS;
+
+        StringBuilder sb = new StringBuilder(LC.calendar_cache_directory.value());
+        sb.append(File.separator).append(mdir).append(File.separator).append(mboxId);
+        sb.append(File.separator).append(mdir).append(File.separator).append(folderId).append(FILE_EXT);
+        return new File(sb.toString());
     }
 
     static void deleteCalendarData(int mboxId, int folderId)

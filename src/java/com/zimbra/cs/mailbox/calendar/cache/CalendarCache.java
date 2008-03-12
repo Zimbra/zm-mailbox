@@ -21,10 +21,10 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
@@ -266,9 +266,12 @@ public class CalendarCache {
     private static final long MAX_PERIOD_SIZE_IN_DAYS = 366;
 
     static {
-        sRangeMonthFrom = DebugConfig.calendarCacheRangeMonthFrom;
-        sRangeNumMonths = DebugConfig.calendarCacheRangeMonths;
-        sLRUCapacity = DebugConfig.calendarCacheLRUSize;
+        sRangeMonthFrom = LC.calendar_cache_range_month_from.intValue();
+        sRangeNumMonths = LC.calendar_cache_range_months.intValue();
+        if (LC.calendar_cache_enabled.booleanValue())
+            sLRUCapacity = LC.calendar_cache_lru_size.intValue();
+        else
+            sLRUCapacity = 0;
         sInstance = new CalendarCache(sLRUCapacity);
     }
 
@@ -293,7 +296,7 @@ public class CalendarCache {
         if (rangeStart > rangeEnd)
             throw ServiceException.INVALID_REQUEST("End time must be after Start time", null);
 
-        if (!DebugConfig.calendarEnableCache) {
+        if (!LC.calendar_cache_enabled.booleanValue()) {
             ZimbraPerf.COUNTER_CALENDAR_CACHE_HIT.increment(0);
             ZimbraPerf.COUNTER_CALENDAR_CACHE_MEM_HIT.increment(0);
             return reloadCalendarOverRange(octxt, mbox, folderId, itemType, rangeStart, rangeEnd);
@@ -406,7 +409,7 @@ public class CalendarCache {
     }
 
     public void invalidateSummary(Mailbox mbox, int folderId) {
-        if (!DebugConfig.calendarEnableCache)
+        if (!LC.calendar_cache_enabled.booleanValue())
             return;
 
         int mboxId = mbox.getId();

@@ -93,11 +93,6 @@ public class DebugConfig {
 
     public static final int numMailboxGroups;
 
-    public static boolean calendarEnableCache;
-    public static int calendarCacheLRUSize;
-    public static int calendarCacheRangeMonthFrom;
-    public static int calendarCacheRangeMonths;
-    
     static {
         calendarAllowNonDisplayAlarms = booleanValue("debug_calendar_allow_non_display_alarms", false);
         calendarForceUTC = booleanValue("debug_calendar_force_utc", false);
@@ -124,14 +119,6 @@ public class DebugConfig {
         disableMessageStoreFsync = booleanValue("debug_disable_message_store_fsync", false);
 
         numMailboxGroups = Math.max(LC.zimbra_mailbox_groups.intValue(), 1);
-        
-        calendarEnableCache = booleanValue("debug_enable_calendar_cache", false);
-        if (calendarEnableCache)
-            calendarCacheLRUSize = intValue("debug_calendar_cache_lru_size", 1000);
-        else
-            calendarCacheLRUSize = 0;
-        calendarCacheRangeMonthFrom = intValue("debug_calendar_cache_range_month_from", 0);
-        calendarCacheRangeMonths = intValue("debug_calendar_cache_range_months", 3);
     }
 
     private static boolean booleanValue(String key, boolean defaultValue) {
