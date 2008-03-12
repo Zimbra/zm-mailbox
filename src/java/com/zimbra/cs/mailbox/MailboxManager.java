@@ -20,6 +20,8 @@ import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,12 +47,12 @@ import com.zimbra.common.util.ZimbraLog;
 public class MailboxManager {
 
     public static enum FetchMode {
-        AUTOCREATE, // create the mailbox if it doesn't exist
-        DO_NOT_AUTOCREATE, // fetch from DB if not in memory, but don't create it if it isn't in the DB
-        ONLY_IF_CACHED, // don't fetch from the DB, only return if cached
+        AUTOCREATE,         // create the mailbox if it doesn't exist
+        DO_NOT_AUTOCREATE,  // fetch from DB if not in memory, but don't create it if it isn't in the DB
+        ONLY_IF_CACHED,     // don't fetch from the DB, only return if cached
         ; 
     }
-    
+
     /**
      * Listener for mailbox loading
      */
@@ -63,7 +65,6 @@ public class MailboxManager {
         
         /** Called whenever a mailbox is created */
         public void mailboxCreated(Mailbox mbox) throws ServiceException;
-        
     }
 
     public static final class MailboxLock {
@@ -143,6 +144,7 @@ public class MailboxManager {
     private Map<String, Integer> mMailboxIds;
 
     /** Maps mailbox IDs (<code>Integer</code>s) to either <ul>
+     *     <li>a loaded <code>Mailbox</code>, or
      *     <li>a {@link SoftReference} to a loaded <code>Mailbox</code>, or
      *     <li>a {@link MailboxLock} for the mailbox.</ul><p>
      *  Mailboxes are faulted into memory as needed, but may drop from memory
@@ -150,14 +152,14 @@ public class MailboxManager {
      *  lack of outstanding references to the <code>Mailbox</code>.  Only one
      *  <code>Mailbox</code> per user is cached, and only that
      *  <code>Mailbox</code> can process user requests. */
-    private Map<Integer, Object> mMailboxCache;
+    private MailboxMap mMailboxCache;
 
     public MailboxManager() throws ServiceException {
         Connection conn = null;
         try {
             conn = DbPool.getConnection();
             mMailboxIds = DbMailbox.getMailboxes(conn);
-            mMailboxCache = new HashMap<Integer, Object>();
+            mMailboxCache = new MailboxMap(LC.zimbra_mailbox_manager_hardref_cache.intValue());
         } finally {
             DbPool.quietClose(conn);
         }
@@ -424,17 +426,12 @@ public class MailboxManager {
     public synchronized List<Mailbox> getAllLoadedMailboxes() {
         List<Mailbox> mboxes = new ArrayList<Mailbox>(mMailboxCache.size());
         for (Object o : mMailboxCache.values()) {
-            if (o instanceof SoftReference) {
-                Mailbox mbox = (Mailbox) ((SoftReference) o).get();
-                if (mbox != null)
-                    mboxes.add(mbox);
-            } else if (o instanceof Mailbox) {
-                mboxes.add((Mailbox)o);
+            if (o instanceof Mailbox) {
+                mboxes.add((Mailbox) o);
             } else if (o instanceof MailboxLock) {
-                MailboxLock lock = (MailboxLock)o;
-                if (lock.canAccess()) {
+                MailboxLock lock = (MailboxLock) o;
+                if (lock.canAccess())
                     mboxes.add(lock.getMailbox());
-                } 
             }
         }
         return mboxes;
@@ -449,29 +446,19 @@ public class MailboxManager {
      */
     public synchronized boolean isMailboxLoadedAndAvailable(int mailboxId) {
         Object cached = mMailboxCache.get(mailboxId);
-        if (cached == null) {
+        if (cached == null)
             return false;
-        }
-        if (cached instanceof SoftReference) {
-            Mailbox mbox = (Mailbox) ((SoftReference) cached).get();
-            return (mbox != null);
-        } else if (cached instanceof MailboxLock) {
-            MailboxLock lock = (MailboxLock) cached;
-            return (lock.canAccess());
-        } else {
+
+        if (cached instanceof MailboxLock)
+            return ((MailboxLock) cached).canAccess();
+        else
             return true;
-        }
     }
 
     private Object retrieveFromCache(int mailboxId, boolean trackGC) throws MailServiceException {
         synchronized (this) {
-            Object cached = mMailboxCache.get(mailboxId);
-            if (cached instanceof SoftReference) {
-                Mailbox mbox = (Mailbox) ((SoftReference) cached).get();
-                if (mbox == null && trackGC)
-                    ZimbraLog.mailbox.debug("mailbox " + mailboxId + " has been GCed; reloading");
-                return mbox;
-            } else if (cached instanceof MailboxLock) {
+            Object cached = mMailboxCache.get(mailboxId, trackGC);
+            if (cached instanceof MailboxLock) {
                 MailboxLock lock = (MailboxLock) cached;
                 if (!lock.canAccess())
                     throw MailServiceException.MAINTENANCE(mailboxId);
@@ -488,10 +475,7 @@ public class MailboxManager {
     }
 
     private Mailbox cacheMailbox(Mailbox mailbox) {
-        if (LC.zimbra_mailbox_purgeable.booleanValue())
-            mMailboxCache.put(mailbox.getId(), new SoftReference<Mailbox>(mailbox));
-        else
-            mMailboxCache.put(mailbox.getId(), mailbox);
+        mMailboxCache.put(mailbox.getId(), mailbox);
         return mailbox;
     }
 
@@ -593,8 +577,8 @@ public class MailboxManager {
         synchronized (this) {
             Collection<Integer> col = mMailboxIds.values();
             int[] mailboxIds = new int[col.size()];
-            for (int o : col)
-                mailboxIds[i++] = o;
+            for (int id : col)
+                mailboxIds[i++] = id;
             return mailboxIds;
         }
     }
@@ -696,7 +680,7 @@ public class MailboxManager {
 
                 mailbox = instantiateMailbox(data);
                 
-                synchronized(mailbox) { // this is here only so that the assert(Thread.holdsLock(this)) doesn't trip in Mailbox.beginTransaction
+                synchronized (mailbox) { // this is here only so that the assert(Thread.holdsLock(this)) doesn't trip in Mailbox.beginTransaction
                     // the existing Connection is used for the rest of this transaction...
                     mailbox.beginTransaction("createMailbox", octxt, redoRecorder, conn);
                 }
@@ -767,4 +751,129 @@ public class MailboxManager {
         ZimbraLog.mailbox.debug(sb.toString());
     }
 
+
+    private static class MailboxMap implements Map<Integer, Object> {
+        final int mHardSize;
+        final LinkedHashMap<Integer, Object> mHardMap;
+        final HashMap<Integer, Object> mSoftMap;
+
+        @SuppressWarnings("serial") MailboxMap(int hardSize) {
+            hardSize = Math.max(hardSize, 0);
+            mHardSize = hardSize;
+            mSoftMap = new HashMap<Integer, Object>();
+            mHardMap = new LinkedHashMap<Integer, Object>(mHardSize / 4, (float) .75, true) {
+                @Override protected boolean removeEldestEntry(Entry<Integer, Object> eldest) {
+                    if (size() <= mHardSize)
+                        return false;
+
+                    Object obj = eldest.getValue();
+                    if (obj instanceof Mailbox)
+                        obj = new SoftReference<Mailbox>((Mailbox) obj);
+                    mSoftMap.put(eldest.getKey(), obj);
+                    return true;
+                }
+            };
+        }
+
+        public void clear() {
+            mHardMap.clear();
+            mSoftMap.clear();
+        }
+
+        public boolean containsKey(Object key) {
+            return mHardMap.containsKey(key) || mSoftMap.containsKey(key);
+        }
+
+        public boolean containsValue(Object value) {
+            return mHardMap.containsValue(value) || mSoftMap.containsValue(value);
+        }
+
+        public Set<Entry<Integer, Object>> entrySet() {
+            Set<Entry<Integer, Object>> entries = new HashSet<Entry<Integer, Object>>(size());
+            if (mHardSize > 0)
+                entries.addAll(mHardMap.entrySet());
+            entries.addAll(mSoftMap.entrySet());
+            return entries;
+        }
+
+        public Object get(Object key) {
+            return get(key, false);
+        }
+
+        public Object get(Object key, boolean trackGC) {
+            Object obj = mHardSize > 0 ? mHardMap.get(key) : null;
+            if (obj == null) {
+                obj = mSoftMap.get(key);
+                if (obj instanceof SoftReference) {
+                    obj = ((SoftReference) obj).get();
+                    if (trackGC && obj == null)
+                        ZimbraLog.mailbox.debug("mailbox " + key + " has been GCed; reloading");
+                }
+            }
+            return obj;
+        }
+
+        public boolean isEmpty() {
+            return mHardMap.isEmpty() && mSoftMap.isEmpty();
+        }
+
+        public Set<Integer> keySet() {
+            Set<Integer> keys = new HashSet<Integer>(size());
+            if (mHardSize > 0)
+                keys.addAll(mHardMap.keySet());
+            keys.addAll(mSoftMap.keySet());
+            return keys;
+        }
+
+        public Object put(Integer key, Object value) {
+            Object removed;
+            if (mHardSize > 0) {
+                removed = mHardMap.put(key, value);
+                if (removed == null)
+                    removed = mSoftMap.remove(key);
+            } else {
+                if (value instanceof Mailbox)
+                    value = new SoftReference<Object>(value);
+                removed = mSoftMap.put(key, value);
+            }
+            if (removed instanceof SoftReference)
+                removed = ((SoftReference) removed).get();
+            return removed;
+        }
+
+        public void putAll(Map<? extends Integer, ? extends Object> t) {
+            for (Entry<? extends Integer, ? extends Object> entry : t.entrySet())
+                put(entry.getKey(), entry.getValue());
+        }
+
+        public Object remove(Object key) {
+            Object removed = mHardSize > 0 ? mHardMap.remove(key) : null;
+            if (removed == null) {
+                removed = mSoftMap.remove(key);
+                if (removed instanceof SoftReference)
+                    removed = ((SoftReference) removed).get();
+            }
+            return removed;
+        }
+
+        public int size() {
+            return mHardMap.size() + mSoftMap.size();
+        }
+
+        public Collection<Object> values() {
+            List<Object> values = new ArrayList<Object>(size());
+            if (mHardSize > 0)
+                values.addAll(mHardMap.values());
+            for (Object o : mSoftMap.values()) {
+                if (o instanceof SoftReference)
+                    o = ((SoftReference) o).get();
+                values.add(o);
+            }
+            return values;
+        }
+
+        @Override public String toString() {
+            return "<" + mHardMap.toString() + ", " + mSoftMap.toString() + ">";
+        }
+    }
 }
