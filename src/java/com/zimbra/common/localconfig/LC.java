@@ -253,6 +253,12 @@ public class LC {
     public static final KnownKey calendar_ics_import_full_parse_max_size;
     public static final KnownKey calendar_canonical_tzid;
 
+    public static final KnownKey calendar_cache_enabled;
+    public static final KnownKey calendar_cache_directory;
+    public static final KnownKey calendar_cache_lru_size;
+    public static final KnownKey calendar_cache_range_month_from;
+    public static final KnownKey calendar_cache_range_months;
+
     public static final KnownKey nio_enabled;
     public static final KnownKey nio_debug_enabled;
     public static final KnownKey nio_imap_enabled;
@@ -1011,6 +1017,26 @@ public class LC {
         calendar_canonical_tzid = new KnownKey("calendar_canonical_tzid");
         calendar_canonical_tzid.setDefault("windows");
         calendar_canonical_tzid.setDoc("The timezone id to be returnded as TimeZone.getCanonicalID(). Possible values: \"olson\",\"windows\",\"java\". \"windows\" by default.");
+
+        calendar_cache_enabled = new KnownKey("calendar_cache_enabled");
+        calendar_cache_enabled.setDefault("false");
+        calendar_cache_enabled.setDoc("Enable calendar cache.  False by default.");
+
+        calendar_cache_directory = new KnownKey("calendar_cache_directory");
+        calendar_cache_directory.setDefault("${zimbra_home}" + FS + "store" + FS + "calcache");
+        calendar_cache_directory.setDoc("Root directory of calendar cache files");
+
+        calendar_cache_lru_size = new KnownKey("calendar_cache_lru_size");
+        calendar_cache_lru_size.setDefault("1000");
+        calendar_cache_lru_size.setDoc("Size of memory-cache LRU.  Cache this many calendar folder in memory.");
+
+        calendar_cache_range_month_from = new KnownKey("calendar_cache_range_month_from");
+        calendar_cache_range_month_from.setDefault("0");
+        calendar_cache_range_month_from.setDoc("Starting month in cached range.  0 means current month, -1 means last month, etc.");
+
+        calendar_cache_range_months = new KnownKey("calendar_cache_range_months");
+        calendar_cache_range_months.setDefault("3");
+        calendar_cache_range_months.setDoc("Number of months in cached range");
 
         nio_imap_enabled = new KnownKey("nio_imap_enabled");
         nio_imap_enabled.setDefault("false");
