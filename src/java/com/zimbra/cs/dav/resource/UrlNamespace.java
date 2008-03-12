@@ -225,6 +225,7 @@ public class UrlNamespace {
 	}
 	
 	private static LRUMap sApptSummariesMap = new LRUMap(100);
+	private static LRUMap sRenamedResourceMap = new LRUMap(100);
 	
 	private static class RemoteFolder {
 	    static final long AGE = 60L * 1000L;
@@ -235,6 +236,18 @@ public class UrlNamespace {
 	    }
 	}
 	
+	public static void addToRenamedResource(String path, DavResource rsc) {
+		synchronized (sRenamedResourceMap) {
+			sRenamedResourceMap.put(path.toLowerCase(), rsc);
+		}
+	}
+	public static DavResource checkRenamedResource(String path) {
+        synchronized (sRenamedResourceMap) {
+        	if (sRenamedResourceMap.containsKey(path.toLowerCase()))
+        		return (DavResource)sRenamedResourceMap.get(path.toLowerCase());
+        }
+        return null;
+	}
     private static DavResource getMailItemResource(DavContext ctxt, String user, String path) throws ServiceException, DavException {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(AccountBy.name, user);
@@ -251,6 +264,10 @@ public class UrlNamespace {
         }
         Mailbox.OperationContext octxt = ctxt.getOperationContext();
         MailItem item = null;
+        
+        DavResource rs = checkRenamedResource(path);
+        if (rs != null)
+        	return rs;
         
         // simple case.  root folder or if id is specified.
         if (path.equals("/"))
