@@ -66,6 +66,7 @@ public class GetMiniCal extends CalendarRequest {
         Mailbox mbox = getRequestedMailbox(zsc);
         Account authAcct = getAuthenticatedAccount(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
+        AuthToken authToken = zsc.getAuthToken();
 
         long rangeStart = request.getAttributeLong(MailConstants.A_CAL_START_TIME);
         long rangeEnd = request.getAttributeLong(MailConstants.A_CAL_END_TIME);
@@ -91,7 +92,7 @@ public class GetMiniCal extends CalendarRequest {
         	String acctId = entry.getKey();
         	if (acctId != null) {
             	List<Integer> remoteFolders = entry.getValue();
-            	doRemoteAccount(authAcct, acctId, tz, remoteFolders, rangeStart, rangeEnd, busyDates);
+            	doRemoteAccount(authToken, acctId, tz, remoteFolders, rangeStart, rangeEnd, busyDates);
         	}
         }
 
@@ -131,18 +132,12 @@ public class GetMiniCal extends CalendarRequest {
         }
 	}
 
-    private static void doRemoteAccount(Account authAcct, String remoteAccountId, ICalTimeZone tz, List<Integer> remoteFolders,
+    private static void doRemoteAccount(AuthToken authToken, String remoteAccountId, ICalTimeZone tz, List<Integer> remoteFolders,
     								    long rangeStart, long rangeEnd, Set<String> busyDates)
     throws ServiceException {
-        String authtoken;
-        try {
-            authtoken = AuthToken.getAuthToken(authAcct).getEncoded();
-        } catch (AuthTokenException e) {
-            throw ServiceException.FAILURE("could not get auth token", e);
-        }
 
         Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, remoteAccountId);
-        ZMailbox.Options zoptions = new ZMailbox.Options(authtoken, AccountUtil.getSoapUri(target));
+        ZMailbox.Options zoptions = new ZMailbox.Options(authToken.toZAuthToken(), AccountUtil.getSoapUri(target));
         zoptions.setTargetAccount(remoteAccountId);
         zoptions.setTargetAccountBy(AccountBy.id);
         zoptions.setNoSession(true);
