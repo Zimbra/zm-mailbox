@@ -41,9 +41,10 @@ import com.zimbra.cs.service.mail.ToXML;
 
 public abstract class FreeBusyProvider {
 	protected static class Request {
-		public Request(String em, long s, long e) {
-			email = em; start = s; end = e;
+		public Request(Account req, String em, long s, long e) {
+			requestor = req; email = em; start = s; end = e;
 		}
+		Account requestor;
 		String email;
 		long start;
 		long end;
@@ -114,11 +115,11 @@ public abstract class FreeBusyProvider {
 			ToXML.encodeFreeBusy(response, fb);
 	}
 	
-	public static List<FreeBusy> getRemoteFreeBusy(List<String> remoteIds, long start, long end) {
+	public static List<FreeBusy> getRemoteFreeBusy(Account requestor, List<String> remoteIds, long start, long end) {
 		Set<FreeBusyProvider> providers = getProviders();
 		ArrayList<FreeBusy> ret = new ArrayList<FreeBusy>();
 		for (String emailAddr : remoteIds) {
-			Request req = new Request(emailAddr, start, end);
+			Request req = new Request(requestor, emailAddr, start, end);
 			boolean succeed = false;
 			for (FreeBusyProvider prov : providers) {
 				try {
@@ -140,8 +141,8 @@ public abstract class FreeBusyProvider {
 		return ret;
 	}
 	
-	public static void getRemoteFreeBusy(Element response, List<String> remoteIds, long start, long end) {
-		for (FreeBusy fb : getRemoteFreeBusy(remoteIds, start, end)) {
+	public static void getRemoteFreeBusy(Account requestor, Element response, List<String> remoteIds, long start, long end) {
+		for (FreeBusy fb : getRemoteFreeBusy(requestor, remoteIds, start, end)) {
 			ToXML.encodeFreeBusy(response, fb);
 		}
 	}

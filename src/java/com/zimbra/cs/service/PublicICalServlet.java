@@ -123,7 +123,7 @@ public class PublicICalServlet extends ZimbraServlet {
         		cal.set(Calendar.MINUTE, 0);
         		cal.set(Calendar.SECOND, 0);
         		rangeEnd = cal.getTimeInMillis();
-            	List<FreeBusy> fblist = FreeBusyProvider.getRemoteFreeBusy(ids, rangeStart, rangeEnd);
+            	List<FreeBusy> fblist = FreeBusyProvider.getRemoteFreeBusy(null, ids, rangeStart, rangeEnd);
             	fb = fblist.get(0);
             	email = acctName;
             } else if (!Provisioning.onLocalServer(acct)) {

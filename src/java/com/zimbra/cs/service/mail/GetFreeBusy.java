@@ -114,7 +114,8 @@ public class GetFreeBusy extends MailDocumentHandler {
     		}
     	}
     	remote.addResults(response);
-        FreeBusyProvider.getRemoteFreeBusy(response, nonZimbraIds, rangeStart, rangeEnd);
+    	Account requestor = Provisioning.getInstance().get(AccountBy.id, zc.getRequestedAccountId());
+        FreeBusyProvider.getRemoteFreeBusy(requestor, response, nonZimbraIds, rangeStart, rangeEnd);
         return response;
     }
     

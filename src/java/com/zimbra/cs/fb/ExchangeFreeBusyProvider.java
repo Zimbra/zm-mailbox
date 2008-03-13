@@ -45,9 +45,10 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.util.NetUtil;
@@ -75,18 +76,11 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 	
 	private static class BasicUserResolver implements ExchangeUserResolver {
 		public ServerInfo getServerInfo(String emailAddr) {
-			Server server = null;
-			try {
-				server = Provisioning.getInstance().getLocalServer();
-			} catch (ServiceException se) {
-				ZimbraLog.fb.warn("cannot fetch exchange server info", se);
-				return null;
-			}
-			String url = server.getAttr(Provisioning.A_zimbraFreebusyExchangeURL, null);
-			String user = server.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthUsername, null);
-			String pass = server.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthPassword, null);
-			String scheme = server.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthScheme, null);
-			if (url == null || user == null || pass == null)
+			String url = getAttr(Provisioning.A_zimbraFreebusyExchangeURL, emailAddr);
+			String user = getAttr(Provisioning.A_zimbraFreebusyExchangeAuthUsername, emailAddr);
+			String pass = getAttr(Provisioning.A_zimbraFreebusyExchangeAuthPassword, emailAddr);
+			String scheme = getAttr(Provisioning.A_zimbraFreebusyExchangeAuthScheme, emailAddr);
+			if (url == null || user == null || pass == null || scheme == null)
 				return null;
 			
 			ServerInfo info = new ServerInfo();
@@ -94,10 +88,10 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 			info.authUsername = user;
 			info.authPassword = pass;
 			info.scheme = AuthScheme.valueOf(scheme);
+			info.org = getAttr(Provisioning.A_zimbraFreebusyExchangeUserOrg, emailAddr);
 			try {
 				Account acct = Provisioning.getInstance().get(AccountBy.name, emailAddr);
 				if (acct != null) {
-					info.org = acct.getAttr(Provisioning.A_zimbraFreebusyExchangeUserOrg, null);
 					String fps[] = acct.getMultiAttr(Provisioning.A_zimbraForeignPrincipal);
 					if (fps != null && fps.length > 0) {
 						for (String fp : fps) {
@@ -115,6 +109,31 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 				info.cn = null;
 			}
 			return info;
+		}
+		// first lookup account/cos, then domain, then globalConfig.
+		static String getAttr(String attr, String emailAddr) {
+			String val = null;
+			if (attr == null)
+				return val;
+			try {
+				Provisioning prov = Provisioning.getInstance();
+				if (emailAddr != null) {
+					Account acct = prov.get(AccountBy.name, emailAddr);
+					if (acct != null) {
+						val = acct.getAttr(attr, null);
+						if (val != null)
+							return val;
+						Domain dom = prov.getDomain(acct);
+						val = dom.getAttr(attr, null);
+						if (val != null)
+							return val;
+					}
+				}
+				val = prov.getConfig().getAttr(attr, null);
+			} catch (ServiceException se) {
+				ZimbraLog.fb.error("can't get attr "+attr, se);
+			}
+			return val;
 		}
 	}
 	
@@ -139,7 +158,10 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 	public void addFreeBusyRequest(Request req) throws FreeBusyUserNotFoundException {
 		ServerInfo info = null;
 		for (ExchangeUserResolver resolver : sRESOLVERS) {
-			info = resolver.getServerInfo(req.email);
+			String email = req.email;
+			if (req.requestor != null)
+				email = req.requestor.getName();
+			info = resolver.getServerInfo(email);
 			if (info != null)
 				break;
 		}
@@ -191,26 +213,25 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 	public boolean registerForMailboxChanges() {
 		if (sRESOLVERS.size() > 1)
 			return true;
-		Server server = null;
+		Config config = null;
 		try {
-			server = Provisioning.getInstance().getLocalServer();
+			config = Provisioning.getInstance().getConfig();
 		} catch (ServiceException se) {
-			ZimbraLog.fb.warn("cannot fetch local server", se);
+			ZimbraLog.fb.warn("cannot fetch config", se);
 			return false;
 		}
-		String url = server.getAttr(Provisioning.A_zimbraFreebusyExchangeURL, null);
-		String user = server.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthUsername, null);
-		String pass = server.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthPassword, null);
-		String scheme = server.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthScheme, null);
+		String url = config.getAttr(Provisioning.A_zimbraFreebusyExchangeURL, null);
+		String user = config.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthUsername, null);
+		String pass = config.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthPassword, null);
+		String scheme = config.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthScheme, null);
 		return (url != null && user != null && pass != null && scheme != null);
 	}
 	
 	public long cachedFreeBusyStartTime() {
 		Calendar cal = GregorianCalendar.getInstance();
 		try {
-			Provisioning prov = Provisioning.getInstance();
-			Server s = prov.getLocalServer();
-			long dur = s.getTimeInterval(Provisioning.A_zimbraFreebusyExchangeCachedIntervalStart, 0);
+			Config config = Provisioning.getInstance().getConfig();
+			long dur = config.getTimeInterval(Provisioning.A_zimbraFreebusyExchangeCachedIntervalStart, 0);
 			cal.setTimeInMillis(System.currentTimeMillis() - dur);
 		} catch (ServiceException se) {
 			// set to 1 week ago
@@ -227,9 +248,8 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		long duration = Constants.MILLIS_PER_MONTH * 2;
 		Calendar cal = GregorianCalendar.getInstance();
 		try {
-			Provisioning prov = Provisioning.getInstance();
-			Server s = prov.getLocalServer();
-			duration = s.getTimeInterval(Provisioning.A_zimbraFreebusyExchangeCachedInterval, duration);
+			Config config = Provisioning.getInstance().getConfig();
+			duration = config.getTimeInterval(Provisioning.A_zimbraFreebusyExchangeCachedInterval, duration);
 		} catch (ServiceException se) {
 		}
 		cal.setTimeInMillis(cachedFreeBusyStartTime() + duration);
