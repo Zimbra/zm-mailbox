@@ -118,7 +118,90 @@ mail {
     # according to RFC 2971, is permissible in lieu of the field-value list
     # The imap_id directive may be overridden in a server block
     # 
-    #imap_id     "NAME" "nginx" "VERSION" "0" "RELEASE" "1";
+    imap_id     "NAME" "nginx" "VERSION" "0" "RELEASE" "1";
+
+    # master authenticating user for cases where nginx must authenticate 
+    # on behalf of the end user -- this is required in those sasl auth
+    # mechanisms where the user's plain-text password is not available,
+    # in these cases, after nginx has deemed that the user has authenticated
+    # himself/herself correctly, then nginx will use the master auth user 
+    # name and master auth password, along with the end user's user name, 
+    # in order to log in to the backend server
+    # such authentication will be done as per the PLAIN sasl mechanism as 
+    # defined in RFC 4616
+    # (presently, this will only be used for auth gssapi)
+    # 
+    master_auth_username    "nginx";
+    master_auth_password    "nginx123";
+
+    # sasl_app_name
+    # This is the application name which nginx will use when initializing
+    # the SASL library using the call to sasl_server_init()
+    # The SASL library is initialized once per process, the application name
+    # provided here is used for where to find the default configuration file
+    # If not specified, sasl_app_name defaults to "nginx"
+    # 
+    sasl_app_name           "nginx";
+
+    # Login rate limiting directives
+    # 
+
+    # mail_login_ip_max 
+    # 
+    # Sets the maximum number of times that any user is allowed to log in from
+    # a particular IP over POP or IMAP to this proxy server before the login is
+    # rejected with an appropriate protocol specific bye response
+    # This counter is cumulative for all users that appear to the proxy to be 
+    # logging in from the same IP address
+    # If multiple users appear to the proxy to be logging in from the same IP 
+    # address (usual with NATing), then each of the different users' login will
+    # contribute to increasing the hit counter for that IP address, and when the
+    # counter eventually exceeds mail_login_ip_max, then the connections from 
+    # that IP address will be throttled
+    # Therefore, all users from the same IP will contribute to
+    # (and be affected by) this counter
+    # Logins using all protocols (POP3/POP3S/IMAP/IMAPS) will affect this 
+    # counter, (the counter is aggregate for all protocols, *not* separate)
+    # See notes accompanying the mail_login_ip_ttl for reasonable values for
+    # this directive
+    # If this value is set to 0, then no throttling will take place for any IP
+    # 
+    mail_login_ip_max               0;
+
+    # mail_login_ip_ttl
+    # 
+    # Sets the time-to-live for the hit counter for IP login throttling
+    # Used in conjunction with mail_login_ip_max, this defines the semantics
+    # of the throttling for IP logins. Therfore, if this is set to 3600s, and
+    # if mail_login_ip_max is set to 1000, then it means that NGINX should not
+    # allow more than 1000 users to log in to the proxy from the same IP, 
+    # within the time interval of an hour (=3600s)
+    # The semantics for such a configuration would then be -
+    # "allow maximum 1000 users per hour from any given IP address"
+    #
+    mail_login_ip_ttl               3600s;
+
+    # Define a textual message that should be displayed to the user when
+    # his/her connection is rejected based on IP overusage
+    # This message will be encapsulated in the proper protocol specific 
+    # response to the client ("* BYE" for IMAP, and "-ERR" for POP3)
+    #
+    mail_login_ip_rejectmsg         "Login rejected from this IP";
+
+    # Similar semantics for Rate Limiting User Logins
+    # Setting mail_login_user_max to 100 and mail_login_user_ttl to 3600s
+    # implies "allow maximum 100 logins per hour for any user"
+    # As with the ip counterparts, the user hit counter and timeout are 
+    # cumulative for all protocols
+    # Also, for a given user's login, both counters are checked in succession,
+    # with the IP counter being checked first
+    # A login may be rejected (throttled) because the IP is over-usage, or
+    # because the login name itself is over-usage
+    # A value of 0 indicates that no throttling will take place for any user
+    # 
+    mail_login_user_max             0;
+    mail_login_user_ttl             3600s;
+    mail_login_user_rejectmsg       "Login rejected for this user";
 
     # TLS configuration
     # 
@@ -133,13 +216,19 @@ mail {
         listen %%zimbraPop3ProxyBindPort%%;
         protocol pop3;
         proxy on;
+        # Per server SASL Configuration
+        # 
+        sasl_service_name       "pop";
     }
 
     server {
         listen %%zimbraPop3SSLProxyBindPort%%;
         protocol pop3;
         proxy on;
-		ssl on;
+        ssl on;
+        # Per server SASL Configuration
+        # 
+        sasl_service_name       "pop";
     }
 
     # IMAP proxy configuration
@@ -148,6 +237,9 @@ mail {
         listen %%zimbraImapProxyBindPort%%;
         protocol imap;
         proxy on;
+        # Per server SASL Configuration
+        # 
+        sasl_service_name       "imap";
     }
 
     server {
@@ -155,5 +247,70 @@ mail {
         protocol imap;
         proxy on;
 		ssl on;
+        # Per server SASL Configuration
+        # 
+        sasl_service_name       "imap";
+    }
+}
+
+http {
+
+    # . Define an upstream section which represents a set of zimbra mailbox
+    #   servers to which we will proxy
+    # . Declare one server entry inside the upstream block for each known 
+    #   mailbox server - in a single node install, there should be just one
+    #   server entry, usually localhost:7070
+    #   In a multi-node install, there should be one server entry per mailbox
+    #   server
+    # . The name of the upstream block will be sent against the Host: header
+    #   to the real servers ("zimbra" is used in the example below, but it is 
+    #   probably better to use a fully qualified name here)
+    # . If the name of the proxy server needs to be sent instead, then 
+    # . Also include the zmauth directive (with no arguments) in the upstream 
+    #   block. Doing so will instruct nginx proxy to look at the ZM_AUTH_TOKEN
+    #   cookie, and to extract the name(s) of the mailbox servers from the 
+    #   "mailhost=" section of the decoded auth-token
+    # . A decoded ZM_AUTH_TOKEN may look like (no line sep) -
+    #          id=36:cc00ce85-8c0b-49eb-8e08-a8aab43ce836;
+    #          exp=13:1196504658160;
+    #          type=6:zimbra;
+    #          mailhost=14:127.0.0.1:7070;
+    #
+    upstream zimbra
+    {
+        server  localhost:7070;
+        zmauth;
+    }
+
+    server {
+        listen 8080;
+
+        location / {
+            # Proxy to the collection of servers identified by the upstream
+            # block 'zimbra'
+            # 
+            proxy_pass http://zimbra;
+
+            # Set the X-Forwarded-For request header to indicate the IP address
+            # of the end-client on whose behalf the proxying has been done 
+            # (usually required for security and audit purposes)
+            # 
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+            # Set the Host header to an appropriate value when communicating
+            # with the upstream server
+            # If not specified, the name of the upstream block (in this case,
+            # "zimbra") will be sent against the Host header to the backend
+            # server 
+            # Reasonable values here are -
+            #   $proxy_host (default)   The name of the upstream block
+            #   $server_name            The FQDN of the proxy server
+            #   $http_host              The server:port that was used by the
+            #                            client to reach the proxy server
+            # 
+            # proxy_set_header Host            $proxy_host;
+            # proxy_set_header Host            $server_name;
+            proxy_set_header Host            $http_host;
+        }
     }
 }
