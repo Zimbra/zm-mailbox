@@ -209,7 +209,7 @@ public class MailSender {
 
                 // figure out where to save the save-to-sent copy
                 if (authMailbox == null)
-                    authMailbox = getAuthenticatedMailbox(authuser, isAdminRequest);
+                    authMailbox = getAuthenticatedMailbox(octxt, authuser, isAdminRequest);
 
                 if (authMailbox instanceof Mailbox) {
                     Mailbox mboxSave = (Mailbox) authMailbox;
@@ -279,7 +279,7 @@ public class MailSender {
             // add any new contacts to the personal address book
             if (newContacts != null && !newContacts.isEmpty()) {
                 if (authMailbox == null)
-                    authMailbox = getAuthenticatedMailbox(authuser, isAdminRequest);
+                    authMailbox = getAuthenticatedMailbox(octxt, authuser, isAdminRequest);
                 for (InternetAddress inetaddr : newContacts) {
                     Map<String, String> fields = new ParsedAddress(inetaddr).getAttributes();
                     try {
@@ -326,7 +326,7 @@ public class MailSender {
         }
     }
 
-    private Object getAuthenticatedMailbox(Account authuser, boolean isAdminRequest) {
+    private Object getAuthenticatedMailbox(OperationContext octxt, Account authuser, boolean isAdminRequest) {
         try {
             if (Provisioning.onLocalServer(authuser)) {
                 return MailboxManager.getInstance().getMailboxByAccount(authuser);
@@ -334,7 +334,14 @@ public class MailSender {
                 String uri = AccountUtil.getSoapUri(authuser);
                 if (uri == null)
                     return null;
-                ZMailbox.Options options = new ZMailbox.Options(AuthToken.getAuthToken(authuser, isAdminRequest).getEncoded(), uri);
+                
+                AuthToken authToken = null;
+                if (octxt != null)
+                    authToken = octxt.getAuthToken(false);
+                if (authToken == null)
+                    authToken = AuthToken.getAuthToken(authuser, isAdminRequest);
+                    
+                ZMailbox.Options options = new ZMailbox.Options(authToken.toZAuthToken(), uri);
                 options.setNoSession(true);
                 return ZMailbox.getMailbox(options);
             }
