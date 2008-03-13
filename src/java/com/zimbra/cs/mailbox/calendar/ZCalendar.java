@@ -314,7 +314,8 @@ public class ZCalendar {
     // becomes \\\\ here because it is double-unescaped during the compile process!
     private static final Pattern MUST_ESCAPE = Pattern.compile("[,;\"\n\\\\]");
     private static final Pattern SIMPLE_ESCAPE = Pattern.compile("([,;\"\\\\])");
-    private static final Pattern NEWLINE_ESCAPE = Pattern.compile("[\r\n]");
+    private static final Pattern NEWLINE_CRLF_ESCAPE = Pattern.compile("\r\n");
+    private static final Pattern NEWLINE_BARE_CR_OR_LF_ESCAPE = Pattern.compile("[\r\n]");
     
     /**
      * ,;"\ and \n must all be escaped.  
@@ -325,8 +326,9 @@ public class ZCalendar {
             String toRet = SIMPLE_ESCAPE.matcher(str).replaceAll("\\\\$1");
             
             // escape
-            return NEWLINE_ESCAPE.matcher(toRet).replaceAll("\\\\n");
-            
+            toRet = NEWLINE_CRLF_ESCAPE.matcher(toRet).replaceAll("\\\\n");
+            toRet = NEWLINE_BARE_CR_OR_LF_ESCAPE.matcher(toRet).replaceAll("\\\\n");
+            return toRet;
         }
 
         return str;
@@ -339,7 +341,7 @@ public class ZCalendar {
     public static String unescape(String str) {
         if (str != null && str.indexOf('\\') >= 0) {
             String toRet = SIMPLE_ESCAPED.matcher(str).replaceAll("$1"); 
-            return NEWLINE_ESCAPED.matcher(toRet).replaceAll("\n"); 
+            return NEWLINE_ESCAPED.matcher(toRet).replaceAll("\r\n"); 
         }
         return str;
     }
