@@ -66,7 +66,7 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
 		mRemoteAccountMap.put(hostname, buf);
 	}
 	public void addFreeBusyRequest(Account acct, String id, long start, long end) {
-		Request req = new Request(id, start, end);
+		Request req = new Request(acct, id, start, end);
 		req.data = acct;
 		addFreeBusyRequest(req);
 	}
