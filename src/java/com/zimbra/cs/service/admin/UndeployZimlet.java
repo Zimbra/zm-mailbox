@@ -18,6 +18,7 @@ package com.zimbra.cs.service.admin;
 
 import java.util.Map;
 
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
@@ -29,8 +30,8 @@ public class UndeployZimlet extends AdminDocumentHandler {
 
 	private static class UndeployThread implements Runnable {
 		String name;
-		String auth;
-		public UndeployThread(String na, String au) {
+		ZAuthToken auth;
+		public UndeployThread(String na, ZAuthToken au) {
 			name = na;
 			auth = au;
 		}
@@ -48,10 +49,10 @@ public class UndeployZimlet extends AdminDocumentHandler {
 		ZimbraSoapContext lc = getZimbraSoapContext(context);
 	    String name = request.getAttribute(AdminConstants.A_NAME);
 		String action = request.getAttribute(AdminConstants.A_ACTION, null);
-		String auth = null;
+		ZAuthToken auth = null;
 		
 		if (action == null)
-			auth = lc.getRawAuthTokenString();
+			auth = lc.getRawAuthToken();
 	    Element response = lc.createElement(AdminConstants.UNDEPLOY_ZIMLET_RESPONSE);
 	    new Thread(new UndeployThread(name, auth)).start();
 		return response;

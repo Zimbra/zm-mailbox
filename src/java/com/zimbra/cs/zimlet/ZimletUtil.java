@@ -56,6 +56,7 @@ import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.common.service.ServiceException;
@@ -377,7 +378,7 @@ public class ZimletUtil {
 	 * @throws ZimletException
 	 * @throws ServiceException
 	 */
-	public static void deployZimlet(ZimletFile zf, DeployListener listener, String auth) throws IOException, ZimletException, ServiceException {
+	public static void deployZimlet(ZimletFile zf, DeployListener listener, ZAuthToken auth) throws IOException, ZimletException, ServiceException {
 		Server localServer = Provisioning.getInstance().getLocalServer();
 		try {
 			deployZimlet(zf);
@@ -587,7 +588,7 @@ public class ZimletUtil {
 	 * @param zimlet
 	 * @throws ZimletException
 	 */
-	public static void uninstallZimlet(String zimlet, String auth) throws ServiceException, ZimletException {
+	public static void uninstallZimlet(String zimlet, ZAuthToken auth) throws ServiceException, ZimletException {
 		ZimbraLog.zimlet.info("Uninstalling Zimlet " + zimlet + " from LDAP.");
 		Provisioning prov = Provisioning.getInstance();
 
@@ -1062,7 +1063,7 @@ public class ZimletUtil {
 		private String mUsername;
 		private String mPassword;
 		private String mAttachmentId;
-		private String mAuth;
+		private ZAuthToken mAuth;
 		private SoapHttpTransport mTransport;
 		private boolean mRunningInServer;
 		private Provisioning mProv;
@@ -1079,7 +1080,7 @@ public class ZimletUtil {
 			mProv = sp;
 		}
 		
-		public ZimletSoapUtil(String auth) {
+		public ZimletSoapUtil(ZAuthToken auth) {
 			mAuth = auth;
 			mRunningInServer = true;
 			mProv = Provisioning.getInstance();
@@ -1240,12 +1241,16 @@ public class ZimletUtil {
 	    private String postAttachment(String uploadURL, String name, byte[] data, String domain) throws ZimletException {
 	    	String aid = null;
 
-	    	Cookie cookie = new Cookie(domain, ZimbraServlet.COOKIE_ZM_ADMIN_AUTH_TOKEN, mAuth, "/", -1, false);
-	    	HttpState initialState = new HttpState();
-	    	initialState.addCookie(cookie);
 	    	HttpClient client = new HttpClient();
-	    	client.setState(initialState);
-	    	client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
+	        Map<String, String> cookieMap = mAuth.cookieMap(true);
+	        if (cookieMap != null) {
+	            HttpState state = new HttpState();
+	            for (Map.Entry<String, String> ck : cookieMap.entrySet()) {
+	                state.addCookie(new org.apache.commons.httpclient.Cookie(domain, ck.getKey(), ck.getValue(), "/", -1, false));
+	            }
+	            client.setState(state);
+	            client.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
+	        }
 
 	    	PostMethod post = new PostMethod(uploadURL);
 	    	client.getHttpConnectionManager().getParams().setConnectionTimeout(10000);
@@ -1287,7 +1292,8 @@ public class ZimletUtil {
 			req.addElement(AdminConstants.E_NAME).setText(mUsername);
 			req.addElement(AdminConstants.E_PASSWORD).setText(mPassword);
 			Element resp = mTransport.invoke(req);
-			mAuth = resp.getElement(AccountConstants.E_AUTH_TOKEN).getText();
+			// mAuth = resp.getElement(AccountConstants.E_AUTH_TOKEN).getText();
+			mAuth = new ZAuthToken(resp.getElement(AccountConstants.E_AUTH_TOKEN), true);
 		}
 		private static class ByteArrayPart extends PartBase {
 			private byte[] mData;
@@ -1513,6 +1519,7 @@ public class ZimletUtil {
 	}
 	
     public static void main(String[] args) throws IOException {
+        
     	getOpt(args);
     	if (sQuietMode) {
     		CliUtil.toolSetup("WARN");

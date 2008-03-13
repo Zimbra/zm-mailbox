@@ -28,6 +28,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.MailConstants;
@@ -82,8 +83,8 @@ public class DeployZimlet extends AdminDocumentHandler {
 	private static class DeployThread implements Runnable {
 		Upload upload;
 		Progress progress;
-		String auth;
-		public DeployThread(Upload up, Progress pr, String au) {
+		ZAuthToken auth;
+		public DeployThread(Upload up, Progress pr, ZAuthToken au) {
 			upload = up;
 			progress = pr;
 			auth = au;
@@ -108,7 +109,7 @@ public class DeployZimlet extends AdminDocumentHandler {
 		mProgressMap = new LRUMap(20);
 	}
 	
-	private void deploy(ZimbraSoapContext lc, String aid, String auth) throws ServiceException {
+	private void deploy(ZimbraSoapContext lc, String aid, ZAuthToken auth) throws ServiceException {
         Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), aid, lc.getAuthToken());
         if (up == null)
             throw MailServiceException.NO_SUCH_UPLOAD(aid);
@@ -129,7 +130,7 @@ public class DeployZimlet extends AdminDocumentHandler {
 		if (action.equals(AdminConstants.A_STATUS)) {
 			// just print the status
 		} else if (action.equals(AdminConstants.A_DEPLOYALL)) {
-			deploy(lc, aid, lc.getRawAuthTokenString());
+			deploy(lc, aid, lc.getRawAuthToken());
 		} else if (action.equals(AdminConstants.A_DEPLOYLOCAL)) {
 			deploy(lc, aid, null);
 		} else {

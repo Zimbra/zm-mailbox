@@ -494,16 +494,6 @@ public class ZimbraSoapContext {
     public AuthToken getAuthToken() {
         return mAuthToken;
     }
-
-    /** Returns the raw, encoded {@link AuthToken} for this SOAP request.
-     *  This can come either from an HTTP cookie attached to the SOAP request
-     *  or from an <tt>&lt;authToken></tt> element in the SOAP Header. */
-    // AP-TODO-2: retire and change all callsites to call getRawAuthToken
-    //            only used in com.zimbra.cs.service.admin.DeployZimlet and 
-    //            com.zimbra.cs.service.admin.UndeployZimlet.
-    public String getRawAuthTokenString() {
-        return mRawAuthToken.getValue();
-    }
     
     /** Returns the raw, encoded {@link AuthToken} for this SOAP request.
      *  This can come either from an HTTP cookies attached to the SOAP request
