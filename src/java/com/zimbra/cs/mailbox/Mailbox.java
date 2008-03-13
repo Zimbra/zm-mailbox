@@ -4189,10 +4189,20 @@ public class Mailbox {
         }
     }
 
+    private AuthToken getAuthToken(OperationContext octxt) throws ServiceException {
+        AuthToken authToken = octxt == null ? null : octxt.getAuthToken();
+        
+        if (authToken == null) {
+            Account authuser = octxt == null ? getAccount() : octxt.getAuthenticatedUser();
+            boolean isAdminRequest = octxt == null ? false : octxt.isUsingAdminPrivileges();
+            authToken = AuthToken.getAuthToken(authuser, isAdminRequest);
+        }
+        return authToken;
+    }
+    
     private void processICalReplies(OperationContext octxt, ZVCalendar cal)
     throws ServiceException {
-        Account authuser = octxt == null ? getAccount() : octxt.getAuthenticatedUser();
-        boolean isAdminRequest = octxt == null ? false : octxt.isUsingAdminPrivileges();
+        
 
         List<Invite> components = Invite.createFromCalendar(getAccount(), null, cal, false);
         for (Invite inv : components) {
@@ -4239,7 +4249,7 @@ public class Mailbox {
                                 sr.close();
                         }
                         Options options = new Options();
-                        options.setAuthToken(AuthToken.getAuthToken(authuser, isAdminRequest).getEncoded());
+                        options.setAuthToken(getAuthToken(octxt).toZAuthToken());
                         options.setTargetAccount(orgAccount.getName());
                         options.setTargetAccountBy(AccountBy.name);
                         options.setUri(uri);
@@ -4247,8 +4257,6 @@ public class Mailbox {
                         ZMailbox zmbox = ZMailbox.getMailbox(options);
                         zmbox.iCalReply(ical);
                     } catch (IOException e) {
-                        throw ServiceException.FAILURE("Error while posting REPLY to organizer mailbox host", e);
-                    } catch (AuthTokenException e) {
                         throw ServiceException.FAILURE("Error while posting REPLY to organizer mailbox host", e);
                     }
                 }

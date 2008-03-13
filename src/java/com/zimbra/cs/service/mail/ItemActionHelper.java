@@ -419,17 +419,22 @@ public class ItemActionHelper {
         }
     }
 
+    private AuthToken getAuthToken() {
+        AuthToken authToken = null;
+        
+        if (mOpCtxt != null)
+            authToken = mOpCtxt.getAuthToken();
+        
+        if (authToken == null)
+            authToken = AuthToken.getAuthToken(mAuthenticatedAccount);
 
+        return authToken;
+    }
+    
     private void executeRemote() throws ServiceException, IOException {
-        String authtoken;
-        try {
-            authtoken = AuthToken.getAuthToken(mAuthenticatedAccount).getEncoded();
-        } catch (AuthTokenException e) {
-            throw ServiceException.FAILURE("could not get auth token", e);
-        }
 
         Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mIidFolder.getAccountId());
-        ZMailbox.Options zoptions = new ZMailbox.Options(authtoken, AccountUtil.getSoapUri(target));
+        ZMailbox.Options zoptions = new ZMailbox.Options(getAuthToken().toZAuthToken(), AccountUtil.getSoapUri(target));
         zoptions.setNoSession(true);
         zoptions.setResponseProtocol(mResponseProtocol);
         ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
