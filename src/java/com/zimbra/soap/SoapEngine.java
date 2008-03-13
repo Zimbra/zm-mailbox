@@ -339,7 +339,7 @@ public class SoapEngine {
                 if (needsAuth || needsAdminAuth) {
                     // make sure that the authenticated account is still active and has not been deleted since the last request
                     //   note that delegated auth allows access unless the account's in maintenance mode
-                    Account account = Provisioning.getInstance().get(AccountBy.id, acctId);
+                    Account account = Provisioning.getInstance().get(AccountBy.id, acctId, at);
                     if (account == null)
                         return soapFaultWithNotes(soapProto, "acount " + acctId + " not found", ServiceException.AUTH_EXPIRED());
                     

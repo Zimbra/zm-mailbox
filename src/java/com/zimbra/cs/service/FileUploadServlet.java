@@ -329,7 +329,7 @@ public class FileUploadServlet extends ZimbraServlet {
         	if (!isAdminRequest) {
         		// make sure we're on the right host; proxy if we're not...
         		Provisioning prov = Provisioning.getInstance();
-        		Account acct = prov.get(AccountBy.id, at.getAccountId());
+        		Account acct = prov.get(AccountBy.id, at.getAccountId(), at);
         		if (acct == null)
         			throw AccountServiceException.NO_SUCH_ACCOUNT(at.getAccountId());
         		ZimbraLog.addAccountNameToContext(acct.getName());

@@ -159,7 +159,7 @@ public class GetInfo extends AccountDocumentHandler  {
         }
         if (sections.contains(Section.CHILDREN)) {
             Element ca = response.addUniqueElement(AccountConstants.E_CHILD_ACCOUNTS);
-            doChildAccounts(ca, account);
+            doChildAccounts(ca, account, zsc.getAuthToken());
         }
         
         GetAccountInfo.addUrls(response, account);
@@ -241,7 +241,7 @@ public class GetInfo extends AccountDocumentHandler  {
         }
     }
  
-    protected void doChildAccounts(Element response, Account acct) throws ServiceException {
+    protected void doChildAccounts(Element response, Account acct, AuthToken authToken) throws ServiceException {
         String[] childAccounts = acct.getMultiAttr(Provisioning.A_zimbraChildAccount);
         String[] visibleChildAccounts = acct.getMultiAttr(Provisioning.A_zimbraPrefChildVisibleAccount);
 
@@ -254,7 +254,7 @@ public class GetInfo extends AccountDocumentHandler  {
         for (String childId : visibleChildAccounts) {
             if (children.contains(childId))
                 continue;
-            Account child = prov.get(Provisioning.AccountBy.id, childId);
+            Account child = prov.get(Provisioning.AccountBy.id, childId, authToken);
             if (child != null)
                 encodeChildAccount(response, child, true);
             children.add(childId);
@@ -263,7 +263,7 @@ public class GetInfo extends AccountDocumentHandler  {
         for (String childId : childAccounts) {
             if (children.contains(childId))
                 continue;
-            Account child = prov.get(Provisioning.AccountBy.id, childId);
+            Account child = prov.get(Provisioning.AccountBy.id, childId, authToken);
             if (child != null)
                 encodeChildAccount(response, child, false);
             children.add(childId);

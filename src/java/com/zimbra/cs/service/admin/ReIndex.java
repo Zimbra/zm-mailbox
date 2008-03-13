@@ -58,7 +58,7 @@ public class ReIndex extends AdminDocumentHandler {
         Element mreq = request.getElement(AdminConstants.E_MAILBOX);
         String accountId = mreq.getAttribute(AdminConstants.A_ACCOUNTID);
         
-        Account account = Provisioning.getInstance().get(AccountBy.id, accountId);
+        Account account = Provisioning.getInstance().get(AccountBy.id, accountId, zsc.getAuthToken());
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
         if (!canAccessAccount(zsc, account))

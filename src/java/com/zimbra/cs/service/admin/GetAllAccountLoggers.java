@@ -41,7 +41,7 @@ public class GetAllAccountLoggers extends AdminDocumentHandler {
         Element response = zsc.createElement(AdminConstants.GET_ALL_ACCOUNT_LOGGERS_RESPONSE);
         for (AccountLogger al : LogFactory.getAllAccountLoggers()) {
             // Look up account
-            Account account = prov.get(AccountBy.name, al.getAccountName());
+            Account account = prov.get(AccountBy.name, al.getAccountName(), zsc.getAuthToken());
             if (account == null) {
                 ZimbraLog.misc.info("GetAllAccountLoggers: unable to find account '%s'.  Ignoring account logger.",
                     al.getAccountName());

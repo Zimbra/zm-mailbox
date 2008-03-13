@@ -151,7 +151,7 @@ public class SearchConv extends Search {
                     proxyRequest.addAttribute(MailConstants.E_QUERY, rewrittenQueryString, Element.Disposition.CONTENT);
                     
                     // now create a soap transport to talk to the remote account
-                    Account target = Provisioning.getInstance().get(AccountBy.id, cid.getAccountId());
+                    Account target = Provisioning.getInstance().get(AccountBy.id, cid.getAccountId(), zsc.getAuthToken());
                     SoapHttpTransport soapTransp = new SoapHttpTransport(AccountUtil.getSoapUri(target));
                     soapTransp.setAuthToken(AuthToken.getAuthToken(acct).getEncoded());
                     soapTransp.setTargetAcctId(target.getId());

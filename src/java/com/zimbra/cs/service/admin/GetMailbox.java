@@ -49,20 +49,20 @@ public class GetMailbox extends AdminDocumentHandler {
     }
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext zc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
         Element mreq = request.getElement(AdminConstants.E_MAILBOX);
         String accountId = mreq.getAttribute(AdminConstants.A_ACCOUNTID);
 
-        Account account = Provisioning.getInstance().get(AccountBy.id, accountId);
+        Account account = Provisioning.getInstance().get(AccountBy.id, accountId, zsc.getAuthToken());
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
 
-        if (!canAccessAccount(zc, account))
+        if (!canAccessAccount(zsc, account))
             throw ServiceException.PERM_DENIED("can not access account");
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(accountId);
-        Element response = zc.createElement(AdminConstants.GET_MAILBOX_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.GET_MAILBOX_RESPONSE);
         Element m = response.addElement(AdminConstants.E_MAILBOX);
         m.addAttribute(AdminConstants.A_MAILBOXID, mbox.getId());
         m.addAttribute(AdminConstants.A_SIZE, mbox.getSize());

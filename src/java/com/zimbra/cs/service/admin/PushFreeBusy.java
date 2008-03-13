@@ -33,7 +33,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class PushFreeBusy extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
     	Provisioning prov = Provisioning.getInstance();
         
     	Element domainElem = request.getOptionalElement(AdminConstants.E_DOMAIN);
@@ -43,7 +43,7 @@ public class PushFreeBusy extends AdminDocumentHandler {
         		String accountId = accounts.next().getAttribute(AdminConstants.A_ID, null);
         		if (accountId == null)
         			continue;
-        		Account acct = prov.get(Provisioning.AccountBy.id, accountId);
+        		Account acct = prov.get(Provisioning.AccountBy.id, accountId, zsc.getAuthToken());
         		if (acct == null) {
         			ZimbraLog.misc.warn("invalid accountId: "+accountId);
         			continue;
@@ -70,7 +70,7 @@ public class PushFreeBusy extends AdminDocumentHandler {
         	}
         }
 
-        Element response = lc.createElement(AdminConstants.PUSH_FREE_BUSY_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.PUSH_FREE_BUSY_RESPONSE);
         return response;
     }
 }

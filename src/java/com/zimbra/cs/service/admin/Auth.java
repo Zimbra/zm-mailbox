@@ -75,7 +75,7 @@ public class Auth extends AdminDocumentHandler {
             
             if (name.indexOf("@") == -1) {
 
-                acct = prov.get(AccountBy.adminName, name);
+                acct = prov.get(AccountBy.adminName, name, zsc.getAuthToken());
                 
                 if (acct == null) {
                     if (virtualHost != null) {

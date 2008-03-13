@@ -50,7 +50,7 @@ public class DelegateAuth extends AdminDocumentHandler {
     }
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
         Element a = request.getElement(AdminConstants.E_ACCOUNT);
         String key = a.getAttribute(AdminConstants.A_BY);
@@ -63,9 +63,9 @@ public class DelegateAuth extends AdminDocumentHandler {
         Account account = null;
 
         if (key.equals(BY_NAME)) {
-            account = prov.get(AccountBy.name, value);
+            account = prov.get(AccountBy.name, value, zsc.getAuthToken());
         } else if (key.equals(BY_ID)) {
-            account = prov.get(AccountBy.id, value);
+            account = prov.get(AccountBy.id, value, zsc.getAuthToken());
         } else {
             throw ServiceException.INVALID_REQUEST("unknown value for by: "+key, null);
         }
@@ -73,21 +73,21 @@ public class DelegateAuth extends AdminDocumentHandler {
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(value);
         
-        if (!canAccessAccount(lc, account))
+        if (!canAccessAccount(zsc, account))
             throw ServiceException.PERM_DENIED("can not access account");
         
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "DelegateAuth","accountId", account.getId(),"accountName", account.getName()})); 
 
-        Element response = lc.createElement(AdminConstants.DELEGATE_AUTH_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.DELEGATE_AUTH_RESPONSE);
         long maxLifetime = account.getTimeInterval(Provisioning.A_zimbraAuthTokenLifetime, DEFAULT_AUTH_LIFETIME*1000); 
 
         // take the min of requested lifetime vs maxLifetime
         long expires = System.currentTimeMillis()+ Math.min(lifetime, maxLifetime);
         String token;
-        Account adminAcct = prov.get(AccountBy.id, lc.getAuthtokenAccountId());
+        Account adminAcct = prov.get(AccountBy.id, zsc.getAuthtokenAccountId(), zsc.getAuthToken());
         if (adminAcct == null)
-            throw AccountServiceException.NO_SUCH_ACCOUNT(lc.getAuthtokenAccountId());
+            throw AccountServiceException.NO_SUCH_ACCOUNT(zsc.getAuthtokenAccountId());
 
         AuthToken at = AuthToken.getAuthToken(account, expires, false, adminAcct); 
         try {

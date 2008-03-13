@@ -68,7 +68,7 @@ public class CreateMountpoint extends MailDocumentHandler {
         String ownerId = t.getAttribute(MailConstants.A_ZIMBRA_ID, null);
         if (ownerId == null) {
             String ownerName = t.getAttribute(MailConstants.A_OWNER_NAME);
-            target = Provisioning.getInstance().get(AccountBy.name, ownerName);
+            target = Provisioning.getInstance().get(AccountBy.name, ownerName, zsc.getAuthToken());
             
             // prevent directory harvest attack, mask no such account as permission denied
             if (target == null)

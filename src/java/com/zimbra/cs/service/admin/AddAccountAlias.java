@@ -49,27 +49,27 @@ public class AddAccountAlias extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
 	    String id = request.getAttribute(AdminConstants.E_ID);
         String alias = request.getAttribute(AdminConstants.E_ALIAS);
 
-	    Account account = prov.get(AccountBy.id, id);
+	    Account account = prov.get(AccountBy.id, id, zsc.getAuthToken());
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
 
-        if (!canAccessAccount(lc, account))
+        if (!canAccessAccount(zsc, account))
             throw ServiceException.PERM_DENIED("can not access account");
 
-        if (!canAccessEmail(lc, alias))
+        if (!canAccessEmail(zsc, alias))
             throw ServiceException.PERM_DENIED("can not access account: "+alias);
 
         prov.addAlias(account, alias);
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "AddAccountAlias","name", account.getName(), "alias", alias})); 
         
-	    Element response = lc.createElement(AdminConstants.ADD_ACCOUNT_ALIAS_RESPONSE);
+	    Element response = zsc.createElement(AdminConstants.ADD_ACCOUNT_ALIAS_RESPONSE);
 	    return response;
 	}
 }

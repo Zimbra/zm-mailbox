@@ -48,7 +48,7 @@ public class GetAccount extends AdminDocumentHandler {
     }
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
         boolean applyCos = request.getAttributeBool(AdminConstants.A_APPLY_COS, true);
@@ -56,15 +56,15 @@ public class GetAccount extends AdminDocumentHandler {
 	    String key = a.getAttribute(AdminConstants.A_BY);
         String value = a.getText();
 
-	    Account account = prov.get(AccountBy.fromString(key), value);
+	    Account account = prov.get(AccountBy.fromString(key), value, zsc.getAuthToken());
 
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(value);
 
-        if (!canAccessAccount(lc, account))
+        if (!canAccessAccount(zsc, account))
             throw ServiceException.PERM_DENIED("can not access account");
 
-	    Element response = lc.createElement(AdminConstants.GET_ACCOUNT_RESPONSE);
+	    Element response = zsc.createElement(AdminConstants.GET_ACCOUNT_RESPONSE);
         ToXML.encodeAccountOld(response, account, applyCos);
 
 	    return response;

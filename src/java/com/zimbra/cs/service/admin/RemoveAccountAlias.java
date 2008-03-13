@@ -49,22 +49,22 @@ public class RemoveAccountAlias extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
 	    String id = request.getAttribute(AdminConstants.E_ID);
         String alias = request.getAttribute(AdminConstants.E_ALIAS);
 
-	    Account account = prov.get(AccountBy.id, id);
+	    Account account = prov.get(AccountBy.id, id, zsc.getAuthToken());
         
         String acctName = "";
         if (account != null) {
-            if (!canAccessAccount(lc, account))
+            if (!canAccessAccount(zsc, account))
                 throw ServiceException.PERM_DENIED("can not access account");
             acctName = account.getName();
         }
         
-        if (!canAccessEmail(lc, alias)) // sanity check
+        if (!canAccessEmail(zsc, alias)) // sanity check
             throw ServiceException.PERM_DENIED("can not access email: "+alias);
         
         prov.removeAlias(account, alias);
@@ -72,7 +72,7 @@ public class RemoveAccountAlias extends AdminDocumentHandler {
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "RemoveAccountAlias","name", acctName, "alias", alias})); 
         
-	    Element response = lc.createElement(AdminConstants.REMOVE_ACCOUNT_ALIAS_RESPONSE);
+	    Element response = zsc.createElement(AdminConstants.REMOVE_ACCOUNT_ALIAS_RESPONSE);
 	    return response;
 	}
 }
