@@ -186,9 +186,18 @@ public class TestBlobInputStream extends TestCase {
     	String firstChunk = getContent(in, 1000);
     	assertEquals(content.substring(0, 1000), firstChunk);
     	byte[] secondChunk = new byte[2000];
-    	in.read(secondChunk);
+    	int numRead = in.read(secondChunk);
+        assertEquals(2000, numRead);
     	assertEquals(content.substring(1000, 3000), new String(secondChunk));
-    	in.close();
+        
+        // Test bug 24715.  Make sure that we don't get IndexOutOfBoundsException
+        // when reading another byte[]
+        byte[] thirdChunk = new byte[2000];
+        numRead = in.read(thirdChunk);
+        assertEquals(2000, numRead);
+        assertEquals(content.substring(3000, 5000), new String(thirdChunk));
+        
+        in.close();
     }
     
     private String createFile(int numBytes)

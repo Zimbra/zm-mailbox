@@ -216,8 +216,8 @@ implements SharedInputStream {
         int numReadFromBuffer = Math.min(mBufSize - mBufPos, len);
         if (numReadFromBuffer > 0) {
         	System.arraycopy(mBuf, mBufPos, b, off, numReadFromBuffer);
-        	mBufPos += len;
-        	mPos += len;
+        	mBufPos += numReadFromBuffer;
+        	mPos += numReadFromBuffer;
         }
 
         int numReadFromFile = 0;
