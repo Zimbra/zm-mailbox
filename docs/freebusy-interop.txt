@@ -72,16 +72,13 @@ be consistent across the Zimbra contacts.  The left part
 attribute zimbraFreebusyExchangeUserOrg.  The value of "cn" corresponds to the
 Exchange account name specified in zimbraForeignPrincipal.
 
-There are four global config attributes and one cos attribute to enable 
-the interop with Exchange server.
+There are five global config attributes to enable the interop with Exchange server.
 
 globalConfig:
 zimbraFreebusyExchangeAuthUsername
 zimbraFreebusyExchangeAuthPassword
 zimbraFreebusyExchangeAuthScheme
 zimbraFreebusyExchangeURL
-
-cos:
 zimbraFreebusyExchangeUserOrg
 
 zimbraFreebusyExchangeAuthUsername and zimbraFreebusyExchangeAuthPassword are
@@ -104,7 +101,7 @@ with password 'changeme' :
 # zmprov mcf zimbraFreebusyExchangeAuthPassword changeme
 # zmprov mcf zimbraFreebusyExchangeAuthScheme basic
 # zmprov mcf zimbraFreebusyExchangeURL http://exchange.mycompany.com
-# zmprov mc default zimbraFreebusyExchangeUserOrg "/o=First Organization/ou=First Administrative Group"
+# zmprov mcf zimbraFreebusyExchangeUserOrg "/o=First Organization/ou=First Administrative Group"
 
 Add the Zimbra account to Exchange account mapping to zimbraForeignPrincipal
 attribute.  Note that zimbraForeignPrincipal is a multi value attribute.  Be
@@ -114,10 +111,9 @@ for Active Directory.
 
 # zmprov ma james@mycompany.com zimbraForeignPrincipal ad:james
 
-If there is more than one cos, zimbraFreebusyExchangeUserOrg can be set 
-for each.
+Each of the config variables above can be overridden in the domain level.
 
-# zmprov mc anothercos zimbraFreebusyExchangeUserOrg "/o=AnotherOrg/ou=First Administrative Group"
+# zmprov md anotherdomain.com zimbraFreebusyExchangeUserOrg "/o=AnotherOrg/ou=First Administrative Group"
 
 
 --------------------------
