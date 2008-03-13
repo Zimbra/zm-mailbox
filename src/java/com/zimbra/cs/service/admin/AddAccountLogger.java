@@ -49,7 +49,7 @@ public class AddAccountLogger extends AdminDocumentHandler {
         
         // Look up account
         String id = request.getElement(AdminConstants.E_ID).getText();
-        Account account = prov.get(AccountBy.id, id);
+        Account account = prov.get(AccountBy.id, id, zsc.getAuthToken());
         if (account == null) {
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
         }

@@ -800,7 +800,7 @@ public class UserServlet extends ZimbraServlet {
 
             // see if we can get target account or not
             if (itemId != null && itemId.getAccountId() != null) {
-                targetAccount = prov.get(AccountBy.id, itemId.getAccountId());                                
+                targetAccount = prov.get(AccountBy.id, itemId.getAccountId(), authToken);                                
                 return;
             } else if (accountPath.equals("~")) {
                 // can't resolve this yet
@@ -808,7 +808,7 @@ public class UserServlet extends ZimbraServlet {
             } else if (accountPath.startsWith("~")) {
                 accountPath = accountPath.substring(1);
             }
-            targetAccount = prov.get(AccountBy.name, accountPath);                
+            targetAccount = prov.get(AccountBy.name, accountPath, authToken);                
         }
 
         public Servlet getServlet() { return servlet; }

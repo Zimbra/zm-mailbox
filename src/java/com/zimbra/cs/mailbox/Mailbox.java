@@ -350,8 +350,11 @@ public class Mailbox {
         public AuthToken getAuthToken() {
             if (authToken != null)
                 return authToken;
-            else
-                return AuthToken.getAuthToken(getAuthenticatedUser(), isUsingAdminPrivileges());  // AP-TODO-9: CLEANUP/RETIRE THIS
+            else {
+                if (getAuthenticatedUser() != null)
+                    return AuthToken.getAuthToken(getAuthenticatedUser(), isUsingAdminPrivileges());  // AP-TODO-9: CLEANUP/RETIRE THIS
+            }
+            return null;
         }
         
         public boolean isUsingAdminPrivileges() {

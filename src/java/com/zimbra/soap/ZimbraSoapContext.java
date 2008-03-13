@@ -175,6 +175,22 @@ public class ZimbraSoapContext {
             else if (format.equals(HeaderConstants.TYPE_JAVASCRIPT))
                 mResponseProtocol = SoapProtocol.SoapJS;
         }
+        
+        try {
+            mAuthToken = AuthProvider.getAuthToken(ctxt, context);
+            if (mAuthToken != null) {
+                mRawAuthToken = mAuthToken.toZAuthToken();
+            
+                if (mAuthToken.isExpired())
+                    throw ServiceException.AUTH_EXPIRED();
+                mAuthTokenAccountId = mAuthToken.getAccountId();
+            }
+        } catch (AuthTokenException e) {
+            // ignore and leave null
+            mAuthToken = null;
+            if (sLog.isDebugEnabled())
+                sLog.debug("ZimbraContext AuthToken error: " + e.getMessage(), e);
+        }
 
         // find out if we're executing in another user's context
         Account account = null;
@@ -186,7 +202,7 @@ public class ZimbraSoapContext {
             if (key == null) {
                 mRequestedAccountId = null;
             } else if (key.equals(HeaderConstants.BY_NAME)) {
-                account = prov.get(AccountBy.name, value);
+                account = prov.get(AccountBy.name, value, mAuthToken);
                 if (account == null)
                     throw AccountServiceException.NO_SUCH_ACCOUNT(value);
                 mRequestedAccountId = account.getId();
@@ -203,45 +219,6 @@ public class ZimbraSoapContext {
             mMountpointTraversed = eAccount.getAttributeBool(HeaderConstants.A_MOUNTPOINT, false);
         } else {
             mRequestedAccountId = null;
-        }
-
-        try {
-            mAuthToken = AuthProvider.getAuthToken(ctxt, context);
-            if (mAuthToken != null) {
-                /*
-                 * AP-TODO-1:
-                 * Note, there is a behavior change on setting the mRawAuthToken.
-                 * 
-                 * before: mRawAuthToken is always set to either the <authToken> in soap context
-                 *         header, or the value set in the engine context, even if the raw 
-                 *         auth token *cannot* be resolved to an AuthToken object.
-                 *         
-                 * now:    mRawAuthToken is set only when the raw auth token can be resolved into 
-                 *         an AuthToken object, and the raw value is obtained by calling the 
-                 *         getEncoded method of the AuthToken object.
-                 *      
-                 * This should be fine because no call sites that access mRawAuthToken can be reached 
-                 * without a good AuthToken object.  If raw auth token cannot turn into an AuthToken,
-                 * handling of the request would have been stopped at SoapEngine:302, returning a 
-                 * AUTH_REQUIRED SOAP fault.    
-                 * 
-                 * Check: is there a case where AuthToken object is not required (and thus gets passed 
-                 * SoapEngine:302) but mRawAuthToken is needed for proxying?  e.g. commands that don't 
-                 * need auth on the first hop server but would need auth and can auth with whatever enabled 
-                 * providers on the target serve?  Doesn't look like there is such cases.
-                 *          
-                 */
-                mRawAuthToken = mAuthToken.toZAuthToken();
-            
-                if (mAuthToken.isExpired())
-                    throw ServiceException.AUTH_EXPIRED();
-                mAuthTokenAccountId = mAuthToken.getAccountId();
-            }
-        } catch (AuthTokenException e) {
-            // ignore and leave null
-            mAuthToken = null;
-            if (sLog.isDebugEnabled())
-                sLog.debug("ZimbraContext AuthToken error: " + e.getMessage(), e);
         }
                 
         

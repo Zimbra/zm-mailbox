@@ -48,25 +48,25 @@ public class GetAccountMembership extends AdminDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
         Element a = request.getElement(AdminConstants.E_ACCOUNT);
         String key = a.getAttribute(AdminConstants.A_BY);
         String value = a.getText();
 
-        Account account = prov.get(AccountBy.fromString(key), value);
+        Account account = prov.get(AccountBy.fromString(key), value, zsc.getAuthToken());
 
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(value);
 
-        if (!canAccessAccount(lc, account))
+        if (!canAccessAccount(zsc, account))
             throw ServiceException.PERM_DENIED("can not access account");
 
         HashMap<String,String> via = new HashMap<String, String>();
         List<DistributionList> lists = prov.getDistributionLists(account, false, via);
         
-        Element response = lc.createElement(AdminConstants.GET_ACCOUNT_MEMBERSHIP_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.GET_ACCOUNT_MEMBERSHIP_RESPONSE);
         for (DistributionList dl: lists) {
             Element distributionList = response.addElement(AdminConstants.E_DL);
             distributionList.addAttribute(AdminConstants.A_NAME, dl.getName());

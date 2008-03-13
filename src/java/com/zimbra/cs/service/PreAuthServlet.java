@@ -109,7 +109,7 @@ public class PreAuthServlet extends ZimbraServlet {
                 setCookieAndRedirect(req, resp, authToken);
             } else if (rawAuthToken != null) {
                 // see if we need a redirect to the correct server
-                Account acct = prov.get(AccountBy.id, authToken.getAccountId());
+                Account acct = prov.get(AccountBy.id, authToken.getAccountId(), authToken);
                 if (Provisioning.onLocalServer(acct) || revPxyMode) {
                     setCookieAndRedirect(req, resp, authToken);
                 } else {
@@ -123,7 +123,7 @@ public class PreAuthServlet extends ZimbraServlet {
                 long expires = Long.parseLong(getRequiredParam(req, resp, PARAM_EXPIRES));
             
                 Account acct = null;
-                acct = prov.get(AccountBy.fromString(accountBy), account);                            
+                acct = prov.get(AccountBy.fromString(accountBy), account, authToken);                            
             
                 if (acct == null)
                     throw AuthFailedServiceException.AUTH_FAILED(account, "account not found");

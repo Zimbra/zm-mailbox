@@ -52,8 +52,7 @@ public class ModifyDataSource extends AdminDocumentHandler {
 
         String id = request.getAttribute(AdminConstants.E_ID);
 
-
-        Account account = prov.get(AccountBy.id, id);
+        Account account = prov.get(AccountBy.id, id, zsc.getAuthToken());
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
 

@@ -330,7 +330,7 @@ public class ZimbraServlet extends HttpServlet {
         int adminPort = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, -1);
         boolean isAdminRequest = (req.getLocalPort() == adminPort);
         AuthToken at = isAdminRequest ? getAdminAuthTokenFromCookie(req, resp, true) : getAuthTokenFromCookie(req, resp, true);
-        return at == null ? null : Provisioning.getInstance().get(AccountBy.id, at.getAccountId()); 
+        return at == null ? null : Provisioning.getInstance().get(AccountBy.id, at.getAccountId(), at); 
     }
 
     public Account basicAuthRequest(HttpServletRequest req, HttpServletResponse resp, boolean sendChallenge)

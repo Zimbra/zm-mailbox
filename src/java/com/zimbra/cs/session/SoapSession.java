@@ -663,7 +663,7 @@ public class SoapSession extends Session {
         } else if (node.mFolder instanceof Mountpoint) {
             Mountpoint mpt = (Mountpoint) node.mFolder;
             try {
-                Account owner = Provisioning.getInstance().get(Provisioning.AccountBy.id, mpt.getOwnerId());
+                Account owner = Provisioning.getInstance().get(Provisioning.AccountBy.id, mpt.getOwnerId(), octxt.getAuthToken());
                 if (owner == null || owner.getId().equals(mAuthenticatedAccountId))
                     return;
                 // FIXME: not handling mountpoints pointing to a different server

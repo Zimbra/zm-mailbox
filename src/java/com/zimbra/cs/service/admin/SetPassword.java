@@ -49,17 +49,17 @@ public class SetPassword extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
 	    String id = request.getAttribute(AdminConstants.E_ID);
         String newPassword = request.getAttribute(AdminConstants.E_NEW_PASSWORD);
 
-	    Account account = prov.get(AccountBy.id, id);
+	    Account account = prov.get(AccountBy.id, id, zsc.getAuthToken());
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
         
-        if (!canAccessAccount(lc, account))
+        if (!canAccessAccount(zsc, account))
             throw ServiceException.PERM_DENIED("can not access account");
  
         prov.setPassword(account, newPassword);
@@ -67,7 +67,7 @@ public class SetPassword extends AdminDocumentHandler {
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "SetPassword","name", account.getName()}));
 
-	    Element response = lc.createElement(AdminConstants.SET_PASSWORD_RESPONSE);
+	    Element response = zsc.createElement(AdminConstants.SET_PASSWORD_RESPONSE);
 	    return response;
 	}
 

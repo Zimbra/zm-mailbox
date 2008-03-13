@@ -79,7 +79,7 @@ public final class AuthenticatorUtil {
             AuthToken at = ZimbraAuthToken.getAuthToken(authtoken);
             if (at == null || at.isExpired() || !at.isAdmin() || at.getAdminAccountId() != null)
                 return null;
-            Account admin = prov.get(Provisioning.AccountBy.id, at.getAccountId());
+            Account admin = prov.get(Provisioning.AccountBy.id, at.getAccountId(), at);
             if (admin == null || !admin.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
                 return null;
         } catch (AuthTokenException e) {

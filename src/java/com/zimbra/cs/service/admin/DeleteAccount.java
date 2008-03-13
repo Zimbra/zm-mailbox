@@ -56,18 +56,18 @@ public class DeleteAccount extends AdminDocumentHandler {
      * Deletes an account and its mailbox.
      */
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
         String id = request.getAttribute(AdminConstants.E_ID);
 
         // Confirm that the account exists and that the mailbox is located
         // on the current host
-        Account account = prov.get(AccountBy.id, id);
+        Account account = prov.get(AccountBy.id, id, zsc.getAuthToken());
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
 
-        if (!canAccessAccount(lc, account))
+        if (!canAccessAccount(zsc, account))
             throw ServiceException.PERM_DENIED("can not access account");
 
         Mailbox mbox = Provisioning.onLocalServer(account) ? MailboxManager.getInstance().getMailboxByAccount(account) : null;
@@ -88,7 +88,7 @@ public class DeleteAccount extends AdminDocumentHandler {
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
             new String[] {"cmd", "DeleteAccount","name", account.getName(), "id", account.getId()}));
 
-        Element response = lc.createElement(AdminConstants.DELETE_ACCOUNT_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.DELETE_ACCOUNT_RESPONSE);
         return response;
     }
     

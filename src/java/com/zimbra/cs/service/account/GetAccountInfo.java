@@ -46,7 +46,7 @@ public class GetAccountInfo extends AccountDocumentHandler  {
         String value = a.getText();
 
         Provisioning prov = Provisioning.getInstance();
-        Account account = prov.get(AccountBy.fromString(key), value);
+        Account account = prov.get(AccountBy.fromString(key), value, zsc.getAuthToken());
 
         // prevent directory harvest attack, mask no such account as permission denied
         if (account == null)

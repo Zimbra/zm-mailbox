@@ -49,18 +49,18 @@ public class DeleteMailbox extends AdminDocumentHandler {
     }
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext zc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
         Element mreq = request.getElement(AdminConstants.E_MAILBOX);
         String accountId = mreq.getAttribute(AdminConstants.A_ACCOUNTID);
         
-        Account account = Provisioning.getInstance().get(AccountBy.id, accountId);
+        Account account = Provisioning.getInstance().get(AccountBy.id, accountId, zsc.getAuthToken());
         if (account == null) {
-            if (isDomainAdminOnly(zc)) {
+            if (isDomainAdminOnly(zsc)) {
                 throw ServiceException.PERM_DENIED("account doesn't exist, unable to determine authorization");
             }
             ZimbraLog.account.warn("DeleteMailbox: account doesn't exist: "+accountId+" (still deleting mailbox)");
-        } else if (!canAccessAccount(zc, account)) {
+        } else if (!canAccessAccount(zsc, account)) {
             throw ServiceException.PERM_DENIED("can not access account");
         }
         
@@ -76,7 +76,7 @@ public class DeleteMailbox extends AdminDocumentHandler {
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
             new String[] {"cmd", "DeleteMailbox","id", idString}));
         
-        Element response = zc.createElement(AdminConstants.DELETE_MAILBOX_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.DELETE_MAILBOX_RESPONSE);
         if (mbox != null)
             response.addElement(AdminConstants.E_MAILBOX)
             .addAttribute(AdminConstants.A_MAILBOXID, mailboxId);

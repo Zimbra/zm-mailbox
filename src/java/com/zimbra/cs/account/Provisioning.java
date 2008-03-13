@@ -1711,6 +1711,23 @@ public abstract class Provisioning {
     }
     
     /**
+     * The Yahoo CalendarProvisioning.
+     * 
+     * The Yahoo paranoids normally want them to do what is called a "credentialed open" when they access UDB.
+     * That means they want the UDB client to pass in the Y&T cookies to UDB, so UDB will also double check 
+     * them. This helps to prevent servers from accidentally responding to a request without properly check 
+     * credentials and/or operating on the wrong account.
+     *
+     */ 
+    public Account get(AccountBy keyType, String key, AuthToken authToken) throws ServiceException {
+        return get(keyType, key);
+    }
+    
+    public Account get(AccountBy keyType, String key, boolean loadFromMaster, AuthToken authToken) throws ServiceException {
+        return get(keyType, key, loadFromMaster);
+    }
+    
+    /**
      * Get account by id first, if not found, get by name.
      * 
      * Note, this function might do an extra LDAP search, it should only be called from the edge of 

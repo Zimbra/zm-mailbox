@@ -77,7 +77,7 @@ public class Auth extends AccountDocumentHandler {
                 if (at.isExpired())
                     throw ServiceException.AUTH_EXPIRED();
                 // make sure that the authenticated account is active and has not been deleted/disabled since the last request
-                Account acct = Provisioning.getInstance().get(AccountBy.id, at.getAccountId());
+                Account acct = Provisioning.getInstance().get(AccountBy.id, at.getAccountId(), at);
                 if (acct == null || !acct.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
                     throw ServiceException.AUTH_EXPIRED();
                 return doResponse(request, at, zsc, acct);
