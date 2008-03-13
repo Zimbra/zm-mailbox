@@ -152,10 +152,10 @@ public class Account extends MailTarget {
      * @param nameKey name key to add to context if account lookup is ok
      * @param idOnlyKey id key to add to context if account lookup fails
      */
-    public static void addAccountToLogContext(String id, String nameKey, String idOnlyKey) {
+    public static void addAccountToLogContext(String id, String nameKey, String idOnlyKey, AuthToken authToken) {
         Account acct = null;
         try {
-            acct = Provisioning.getInstance().get(Provisioning.AccountBy.id, id);
+            acct = Provisioning.getInstance().get(Provisioning.AccountBy.id, id, authToken);
         } catch (ServiceException se) {
             ZimbraLog.misc.warn("unable to lookup account for log, id: " + id, se);
         }
