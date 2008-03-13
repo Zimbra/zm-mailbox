@@ -137,7 +137,7 @@ public abstract class DocumentHandler {
 
         if (ACL.GUID_PUBLIC.equals(id))
             return new ACL.GuestAccount(zsc.getAuthToken());
-        Account acct = Provisioning.getInstance().get(AccountBy.id, id);
+        Account acct = Provisioning.getInstance().get(AccountBy.id, id, zsc.getAuthToken());
         if (acct == null)
             throw ServiceException.AUTH_REQUIRED();
         return acct;
@@ -146,7 +146,7 @@ public abstract class DocumentHandler {
     public static Account getRequestedAccount(ZimbraSoapContext zsc) throws ServiceException {
         String id = zsc.getRequestedAccountId();
 
-        Account acct = Provisioning.getInstance().get(AccountBy.id, id);
+        Account acct = Provisioning.getInstance().get(AccountBy.id, id, zsc.getAuthToken());
         if (acct == null)
             throw ServiceException.AUTH_EXPIRED();
         return acct;

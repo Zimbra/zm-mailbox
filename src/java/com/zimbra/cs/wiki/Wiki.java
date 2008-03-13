@@ -376,7 +376,7 @@ public abstract class Wiki {
 		
 		private WikiPage load(WikiContext ctxt, String page) throws ServiceException {
 			Provisioning prov = Provisioning.getInstance();
-			Account acct = prov.get(AccountBy.id, mWikiAccount);
+			Account acct = prov.get(AccountBy.id, mWikiAccount, ctxt.auth);
 			Server remoteServer = prov.getServer(acct);
 			String url = URLUtil.getSoapURL(remoteServer, true);
 			SoapHttpTransport transport = new SoapHttpTransport(url);
@@ -468,7 +468,7 @@ public abstract class Wiki {
 		Wiki wiki;
 		WikiPage page;
 		Provisioning prov = Provisioning.getInstance();
-		Account acct = prov.get(Provisioning.AccountBy.id, accountId);
+		Account acct = prov.get(Provisioning.AccountBy.id, accountId, ctxt.auth);
         Domain domain = prov.getDomain(acct);
 		String domainWiki = domain == null ? null : domain.getAttr(Provisioning.A_zimbraNotebookAccount, null);
 		
@@ -514,7 +514,7 @@ public abstract class Wiki {
 	}
 
 	public static Wiki getInstance(WikiContext ctxt, String acctId, int folderId) throws ServiceException {
-		Account acct = Provisioning.getInstance().get(AccountBy.id, acctId);
+		Account acct = Provisioning.getInstance().get(AccountBy.id, acctId, ctxt.auth);
 		if (acct == null || folderId < 1)
 			throw new WikiServiceException.NoSuchWikiException("no such account");
 		
@@ -542,7 +542,7 @@ public abstract class Wiki {
 			fid = Integer.parseInt(key);
 			return getInstance(ctxt, acct, fid);
 		} catch (NumberFormatException e) {
-			Account account = Provisioning.getInstance().get(Provisioning.AccountBy.id, acct);
+			Account account = Provisioning.getInstance().get(Provisioning.AccountBy.id, acct, ctxt.auth);
 			if (Provisioning.onLocalServer(account)) {
 				Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 				if (key.equals("/"))
@@ -601,7 +601,7 @@ public abstract class Wiki {
     public abstract WikiPage lookupWikiRevision(WikiContext ctxt, String wikiWord, int rev) throws ServiceException;
 	
 	public static WikiPage findPage(WikiContext ctxt, String accountId, int id) throws ServiceException {
-		Account account = Provisioning.getInstance().get(Provisioning.AccountBy.id, accountId);
+		Account account = Provisioning.getInstance().get(Provisioning.AccountBy.id, accountId, ctxt.auth);
 		if (!Provisioning.onLocalServer(account)) {
 			throw new WikiServiceException.NoSuchWikiException("not on local host");
 		}

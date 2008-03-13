@@ -274,7 +274,7 @@ public class FolderAction extends ItemAction {
         Provisioning prov = Provisioning.getInstance();
         // for addresses, default to the authenticated user's domain
         if ((type == ACL.GRANTEE_USER || type == ACL.GRANTEE_GROUP) && name.indexOf('@') == -1) {
-            Account authacct = prov.get(AccountBy.id, zsc.getAuthtokenAccountId());
+            Account authacct = prov.get(AccountBy.id, zsc.getAuthtokenAccountId(), zsc.getAuthToken());
             String authname = (authacct == null ? null : authacct.getName());
             if (authacct != null)
                 name += authname.substring(authname.indexOf('@'));

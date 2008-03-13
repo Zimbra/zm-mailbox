@@ -56,7 +56,7 @@ public abstract class WikiDocumentHandler extends MailDocumentHandler {
 	
 	protected Wiki getRequestedWikiNotebook(Element request, ZimbraSoapContext zsc, OperationContext octxt) throws ServiceException {
 		ItemId fid = getRequestedFolder(request, zsc);
-		Account requestedAccount = Provisioning.getInstance().get(AccountBy.id, zsc.getRequestedAccountId());
+		Account requestedAccount = Provisioning.getInstance().get(AccountBy.id, zsc.getRequestedAccountId(), zsc.getAuthToken());
 		String accountId = requestedAccount.getId();
 		WikiContext ctxt = new WikiContext(octxt, zsc.getAuthToken());
 		if (fid == null) {

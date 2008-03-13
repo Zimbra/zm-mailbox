@@ -75,7 +75,7 @@ class RemoteQueryOperation extends FilterQueryOperation {
     protected void setup(SoapProtocol proto, AuthToken authToken, SearchParams params) 
     throws ServiceException {
         Provisioning prov  = Provisioning.getInstance();
-        Account acct = prov.get(AccountBy.id, mTarget.toString());
+        Account acct = prov.get(AccountBy.id, mTarget.toString(), authToken);
         if (acct == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(mTarget.toString());
 
