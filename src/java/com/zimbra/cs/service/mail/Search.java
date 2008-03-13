@@ -459,8 +459,6 @@ public class Search extends MailDocumentHandler  {
         parent.addAttribute(MailConstants.A_QUERY_OFFSET, params.getOffset());
         parent.addAttribute(MailConstants.A_QUERY_MORE, false);
 
-        String authToken = null;
-
         List<ItemId> folderIids = new ArrayList<ItemId>(folderIdStrs.size());
         for (String folderIdStr : folderIdStrs) {
             folderIids.add(new ItemId(folderIdStr, zsc));
@@ -502,15 +500,8 @@ public class Search extends MailDocumentHandler  {
                 req.addAttribute(MailConstants.A_CAL_EXPAND_INST_END, params.getCalItemExpandEnd());
                 req.addAttribute(MailConstants.E_QUERY, queryStr.toString(), Element.Disposition.CONTENT);
 
-                if (authToken == null) {
-                    try {
-                        authToken = AuthToken.getAuthToken(authAcct).getEncoded();
-                    } catch (AuthTokenException e) {
-                        throw ServiceException.FAILURE("could not get auth token", e);
-                    }
-                }
                 Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, acctId);
-                ZMailbox.Options zoptions = new ZMailbox.Options(authToken, AccountUtil.getSoapUri(target));
+                ZMailbox.Options zoptions = new ZMailbox.Options(zsc.getRawAuthToken(), AccountUtil.getSoapUri(target));
                 zoptions.setTargetAccount(acctId);
                 zoptions.setTargetAccountBy(AccountBy.id);
                 zoptions.setNoSession(true);

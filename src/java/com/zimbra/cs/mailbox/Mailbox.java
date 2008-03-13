@@ -348,9 +348,13 @@ public class Mailbox {
         }
         
         public AuthToken getAuthToken() {
+            return getAuthToken(true);
+        }
+        
+        public AuthToken getAuthToken(boolean constructIfNotPresent) {
             if (authToken != null)
                 return authToken;
-            else {
+            else if (constructIfNotPresent) {
                 if (getAuthenticatedUser() != null)
                     return AuthToken.getAuthToken(getAuthenticatedUser(), isUsingAdminPrivileges());  // AP-TODO-9: CLEANUP/RETIRE THIS
             }
