@@ -79,7 +79,7 @@ public class RenameAccount extends AdminDocumentHandler {
                 new String[] {"cmd", "RenameAccount","name", oldName, "newName", newName})); 
         
         // get again with new name...
-        account = prov.get(AccountBy.id, id, true);
+        account = prov.get(AccountBy.id, id, true, zsc.getAuthToken());
         if (account == null)
             throw ServiceException.FAILURE("unable to get account after rename: " + id, null);
 	    Element response = zsc.createElement(AdminConstants.RENAME_ACCOUNT_RESPONSE);

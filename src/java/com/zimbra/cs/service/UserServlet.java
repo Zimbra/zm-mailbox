@@ -275,7 +275,7 @@ public class UserServlet extends ZimbraServlet {
                         if (!at.isExpired()) {
                             context.qpAuthHappened = true;
                             context.authToken = at;
-                            context.authAccount = Provisioning.getInstance().get(AccountBy.id, at.getAccountId());
+                            context.authAccount = Provisioning.getInstance().get(AccountBy.id, at.getAccountId(), at);
                         }
                     } catch (AuthTokenException e) {
                     }
@@ -1020,7 +1020,7 @@ public class UserServlet extends ZimbraServlet {
     }
 
     public static Pair<Header[], byte[]> getRemoteResource(AuthToken authToken, ItemId iid, Map<String, String> params) throws ServiceException {
-        Account target = Provisioning.getInstance().get(AccountBy.id, iid.getAccountId());
+        Account target = Provisioning.getInstance().get(AccountBy.id, iid.getAccountId(), authToken);
         Map<String, String> pcopy = new HashMap<String, String>(params);
         pcopy.put(QP_ID, iid.toString());
         return getRemoteResource(authToken, target, null, pcopy);
@@ -1093,7 +1093,7 @@ public class UserServlet extends ZimbraServlet {
 
         // fetch from remote store
         Provisioning prov = Provisioning.getInstance();
-        Account target = prov.get(AccountBy.id, iid.getAccountId());
+        Account target = prov.get(AccountBy.id, iid.getAccountId(), at);
         String url = getRemoteUrl(target, null, pcopy);
         Server server = (target == null ? prov.getLocalServer() : prov.getServer(target));
         String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);

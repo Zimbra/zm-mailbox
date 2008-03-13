@@ -102,7 +102,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             String[] xpath = getProxiedAccountPath();
             String acctId = (xpath != null ? getXPath(request, xpath) : null);
             if (acctId != null) {
-                Account acct = prov.get(AccountBy.id, acctId, true);
+                Account acct = prov.get(AccountBy.id, acctId, true, zsc.getAuthToken());
                 if (acct != null && !Provisioning.onLocalServer(acct))
                     return proxyRequest(request, context, acctId);
             }

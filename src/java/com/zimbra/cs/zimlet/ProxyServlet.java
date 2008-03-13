@@ -70,7 +70,7 @@ public class ProxyServlet extends ZimbraServlet {
 
     private Set<String> getAllowedDomains(AuthToken auth) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
-        Account acct = prov.get(AccountBy.id, auth.getAccountId());
+        Account acct = prov.get(AccountBy.id, auth.getAccountId(), auth);
         return prov.getCOS(acct).getMultiAttrSet(Provisioning.A_zimbraProxyAllowedDomains);
     }
     
