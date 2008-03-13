@@ -771,23 +771,25 @@ public abstract class Element implements Cloneable {
             }
             private String readQuoted(char quote) throws SoapParseException {
                 StringBuffer sb = new StringBuffer();
-                for (char c = peekChar(); c != quote; c = js.charAt(++offset))
+                for (char c = js.charAt(offset); c != quote; c = js.charAt(++offset)) {
                     if (c == '\n' || c == '\t' || offset >= max - 1)
                         error("unterminated string");
                     else
                         sb.append(c == '\\' ? readEscaped() : c);
+                }
                 skipChar();
                 return sb.toString();
             }
             private String readLiteral() throws SoapParseException {
                 StringBuffer sb = new StringBuffer();
-                for (char c = peekChar(); offset < max - 1; c = js.charAt(++offset))
+                for (char c = peekChar(); offset < max - 1; c = js.charAt(++offset)) {
                     if (c <= ' ' || ",:]}/\"[{;=#".indexOf(c) >= 0)
                         break;
                     else if (c != '\\' || max - offset < 6 || js.charAt(offset + 1) != 'u')
                         sb.append(c);
                     else
                         sb.append(readEscaped());
+                }
                 if (sb.length() == 0)  error("zero-length identifier");
                 return sb.toString();
             }
@@ -1239,9 +1241,10 @@ public abstract class Element implements Cloneable {
             String qn = getQualifiedName();
             sb.append("<").append(qn);
             // element's attributes
-            if (mAttributes != null)
+            if (mAttributes != null) {
                 for (Map.Entry<String, Object> attr : mAttributes.entrySet())
                     sb.append(' ').append(attr.getKey()).append("=\"").append(xmlEncode((String) attr.getValue(), true)).append('"');
+            }
             // new namespaces defined on this element
             if (mNamespaces != null) {
                 for (Map.Entry<String, String> ns : mNamespaces.entrySet()) {
@@ -1255,22 +1258,29 @@ public abstract class Element implements Cloneable {
             if (mChildren != null || mText != null) {
                 sb.append('>');
                 if (mChildren != null) {
-                    for (Element child : mChildren)
+                    for (Element child : mChildren) {
                         if (child instanceof XMLElement)
                             ((XMLElement) child).toString(sb, indent < 0 ? -1 : indent + INDENT_SIZE);
                         else
                             sb.append(xmlEncode(child.toString(), false));
+                    }
                     indent(sb, indent, true);
-                } else
+                } else {
                     sb.append(xmlEncode(mText, false));
+                }
                 sb.append("</").append(qn).append('>');
-            } else
+            } else {
                 sb.append("/>");
+            }
         }
     }
 
 
     public static void main(String[] args) throws ContainerException, SoapParseException {
+        System.out.println(Element.parseJSON("{foo:' bar'}").getAttribute("foo", null));
+        System.out.println(Element.parseJSON("{foo:'bar'}").getAttribute("foo", null));
+        System.out.println(Element.parseJSON("{foo:''}").getAttribute("foo", null));
+
         org.dom4j.Namespace bogusNS = org.dom4j.Namespace.get("bogus", "");
         QName qm = new QName("m", bogusNS);
 
