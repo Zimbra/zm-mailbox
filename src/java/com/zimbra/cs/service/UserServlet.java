@@ -1185,14 +1185,7 @@ public class UserServlet extends ZimbraServlet {
         } catch (IOException e) {
         }
         
-        /*
-        HttpState state = new HttpState();
-        state.addCookie(new org.apache.commons.httpclient.Cookie(hostname, COOKIE_ZM_AUTH_TOKEN, authToken, "/", null, false));
         HttpClient client = new HttpClient();
-        client.setState(state);
-        */
-        HttpClient client = new HttpClient();
-        // authToken.encode(client, method, false, hostname);
         Map<String, String> cookieMap = authToken.cookieMap(false);
         if (cookieMap != null) {
             HttpState state = new HttpState();
