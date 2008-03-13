@@ -191,12 +191,12 @@ public class SoapEngine {
 
         String rid = zsc.getRequestedAccountId();
         if (rid != null) {
-            Account.addAccountToLogContext(rid, ZimbraLog.C_NAME, ZimbraLog.C_ID);
+            Account.addAccountToLogContext(rid, ZimbraLog.C_NAME, ZimbraLog.C_ID, zsc.getAuthToken());
             String aid = zsc.getAuthtokenAccountId();
             if (aid != null && !rid.equals(aid))
-                Account.addAccountToLogContext(aid, ZimbraLog.C_ANAME, ZimbraLog.C_AID);
+                Account.addAccountToLogContext(aid, ZimbraLog.C_ANAME, ZimbraLog.C_AID, zsc.getAuthToken());
             else if (zsc.getAuthToken() != null && zsc.getAuthToken().getAdminAccountId() != null)
-                Account.addAccountToLogContext(zsc.getAuthToken().getAdminAccountId(), ZimbraLog.C_ANAME, ZimbraLog.C_AID);                        
+                Account.addAccountToLogContext(zsc.getAuthToken().getAdminAccountId(), ZimbraLog.C_ANAME, ZimbraLog.C_AID, zsc.getAuthToken());                        
         }
         
         String ip = (String) context.get(SOAP_REQUEST_IP);
