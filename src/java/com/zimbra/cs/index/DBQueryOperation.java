@@ -628,11 +628,18 @@ class DBQueryOperation extends QueryOperation
                 }
 
                 if (mExecuteMode == null) {
+                    BooleanQuery origQuery = null;
+                    if (mLuceneOp != null)
+                        origQuery = mLuceneOp.getCurrentQuery();
+                    
                     if (hasNoResults() || !prepareSearchConstraints()) {
                         mExecuteMode = QueryExecuteMode.NO_RESULTS;
                     } else if (mLuceneOp == null) {
                         mExecuteMode = QueryExecuteMode.NO_LUCENE;
                     } else if (shouldExecuteDbFirst()) {
+                        // make sure the Lucene search is reset -- we might have executed it partially
+                        // in order to determine DB-First 
+                        mLuceneOp.resetQuery(origQuery);
                         mExecuteMode = QueryExecuteMode.DB_FIRST;
                     } else {
                         mExecuteMode = QueryExecuteMode.LUCENE_FIRST;
