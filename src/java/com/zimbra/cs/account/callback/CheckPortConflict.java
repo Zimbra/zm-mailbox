@@ -60,6 +60,9 @@ public class CheckPortConflict extends AttributeCallback {
         sPortAttrs.add(Provisioning.A_zimbraRemoteManagementPort);
         
         sPortAttrs.add(Provisioning.A_zimbraMemcachedBindPort);
+
+	sPortAttrs.add(Provisioning.A_zimbraMailProxyPort);
+	// sPortAttrs.add(Provisioning.A_zimbraMailSSLProxyPort);
     }
         
        
@@ -95,7 +98,7 @@ public class CheckPortConflict extends AttributeCallback {
         else 
             checkConfig((Config)entry, attrsToModify);
     }
-    
+
     private void checkServer(Server server, Map<String, Object> serverAttrsToModify) throws ServiceException {
            
         Map<String, String> ports = new HashMap<String, String>();
@@ -182,7 +185,7 @@ public class CheckPortConflict extends AttributeCallback {
             checkServerWithNewDefaults(server, newDefaults);
         }
     }
-        
+    
     private void checkServerWithNewDefaults(Server server, DualHashBidiMap newDefaults) throws ServiceException {
         Map<String, String> ports = new HashMap<String, String>();
         for (String attrName : sPortAttrs) {

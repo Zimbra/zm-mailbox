@@ -274,6 +274,7 @@ public class ProvUtil implements DebugListener {
         SET_PASSWORD("setPassword", "sp", "{name@domain|id} {password}", Category.ACCOUNT, 2, 2),
         GET_ALL_MTA_AUTH_URLS("getAllMtaAuthURLs", "gamau", "", Category.SERVER, 0, 0),
         GET_ALL_REVERSE_PROXY_URLS("getAllReverseProxyURLs", "garpu", "", Category.SERVER, 0, 0),
+        GET_ALL_REVERSE_PROXY_BACKENDS("getAllReverseProxyBackends", "garpb", "", Category.SERVER, 0, 0),
         GET_ALL_MEMCACHED_SERVERS("getAllMemcachedServers", "gamcs", "", Category.SERVER, 0, 0),
         SOAP(".soap", ".s"),
         SYNC_GAL("syncGal", "syg","{domain} [{token}]", Category.MISC, 1, 2);
@@ -744,6 +745,9 @@ public class ProvUtil implements DebugListener {
             break;
         case GET_ALL_REVERSE_PROXY_URLS:
             doGetAllReverseProxyURLs(args);
+            break;
+        case GET_ALL_REVERSE_PROXY_BACKENDS:
+            doGetAllReverseProxyBackends(args);
             break;
         case GET_ALL_MEMCACHED_SERVERS:
             doGetAllMemcachedServers(args);
@@ -1943,6 +1947,29 @@ public class ProvUtil implements DebugListener {
             }
         }
         System.out.println();
+    }
+
+    private void doGetAllReverseProxyBackends(String[] args) throws ServiceException {
+	List<Server> servers = mProv.getAllServers();
+        for (Server server : servers) {
+            boolean isTarget = server.getBooleanAttr(Provisioning.A_zimbraReverseProxyLookupTarget, false);
+	    if (!isTarget) {
+		return;
+	    }
+
+	    // (For now) assume HTTP can be load balanced to...
+	    String mode = server.getAttr(Provisioning.A_zimbraMailMode, null);
+	    boolean isPlain = mode.equalsIgnoreCase(Provisioning.MAIL_MODE.http.toString()) ||
+		mode.equalsIgnoreCase(Provisioning.MAIL_MODE.mixed.toString()) ||
+		mode.equalsIgnoreCase(Provisioning.MAIL_MODE.both.toString());
+	    if (!isPlain) {
+		return;
+	    }
+
+	    int backendPort = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
+	    String serviceName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
+	    System.out.println("    server " + serviceName + ":" + backendPort + ";");
+        }
     }
 
     private void doGetAllMemcachedServers(String[] args) throws ServiceException {

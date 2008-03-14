@@ -2969,4 +2969,66 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>The duration of f/b block pushed to Exchange server.</desc>
 </attr>
 
+<attr id="622" name="zimbraReverseProxyIPLoginLimit" type="integer" min="0" cardinality="single" optionalIn="globalConfig">
+  <globalConfigValue>0</globalConfigValue>
+  <desc>Sets the upper limit on logins from a remote IP via POP or
+    IMAP to this proxy server after which login is rejected with an
+    appropriate protocol specific bye response. This counter is
+    cumulative for all users that appear to the proxy to be logging in
+    from the same IP address.  If multiple users appear to the proxy
+    to be logging in from the same IP address (usual with NATing),
+    then each of the different users login will contribute to
+    increasing the hit counter for that IP address, and when the
+    counter eventually exceeds the limit, then the connections
+    from that IP address will be throttled.  Therefore, all users from
+    the same IP will contribute to (and be affected by) this counter.
+    Logins using all protocols (POP3/POP3S/IMAP/IMAPS) will affect
+    this counter (the counter is aggregate for all protocols, *not*
+    separate).  If this value is set to 0, then no limiting will take
+    place for any IP.</desc>
+</attr>
+
+<attr id="623" name="zimbraReverseProxyIPLoginLimitTime" type="integer" min="0" cardinality="single" optionalIn="globalConfig">
+  <globalConfigValue>3600</globalConfigValue>
+  <desc>Sets the time-to-live for the hit counter for IP based login
+    throttling.  If time is set to 3600 and limit is set to 1000, then
+    it means that NGINX should not allow more than 1000 users to log
+    in via the proxy from the same IP, within the time interval of an
+    hour.  The semantics for such a configuration would then be:
+    allow maximum 1000 users per hour from any given IP address.
+  </desc>
+</attr>
+
+<attr id="624" name="zimbraReverseProxyUserLoginLimit" type="integer" min="0" cardinality="single" optionalIn="globalConfig">
+  <globalConfigValue>0</globalConfigValue>
+  <desc>Limit how many times a user can login via the proxy.  Setting
+    limit to 100 and time to 3600 means: allow maximum 100 logins per
+    hour for any user.  As with the ip counterparts, the user hit
+    counter and timeout are cumulative for all protocols.  Also, for a
+    given users login, both counters are checked in succession, with
+    the IP counter being checked first.  A login may be rejected
+    (throttled) because the IP is over-usage, or because the login
+    name itself is over-usage. A value of 0 indicates that no
+    throttling will take place for any user.
+  </desc>
+</attr>
+
+<attr id="625" name="zimbraReverseProxyUserLoginLimitTime" type="integer" min="0" cardinality="single" optionalIn="globalConfig">
+  <globalConfigValue>3600</globalConfigValue>
+  <desc>
+    Sets the time-to-live for the hit counter for per user login
+    throttling.
+  </desc>
+</attr>
+
+<attr id="626" name="zimbraMailProxyPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict">
+  <globalConfigValue>0</globalConfigValue>
+  <desc>HTTP proxy port</desc>
+</attr>
+
+<attr id="627" name="zimbraMailSSLProxyPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict">
+  <globalConfigValue>0</globalConfigValue>
+  <desc>SSL port HTTP proxy</desc>
+</attr>
+
 </attrs>

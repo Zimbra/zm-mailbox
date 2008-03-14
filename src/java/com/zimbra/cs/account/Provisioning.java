@@ -1418,6 +1418,12 @@ public abstract class Provisioning {
     public static final String A_zimbraMemcachedBindPort = "zimbraMemcachedBindPort";
 
     /*
+     * HTTP proxying
+     */
+    public static final String A_zimbraMailProxyPort = "zimbraMailProxyPort";
+    public static final String A_zimbraMailSSLProxyPort = "zimbraMailSSLProxyPort";
+
+    /*
      * whether to use <> or account's real address for out of office 
      * and new mail notifications 
      */
