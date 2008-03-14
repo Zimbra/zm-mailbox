@@ -2625,7 +2625,7 @@ public class LdapProvisioning extends Provisioning {
     public void authAccount(Account acct, String password, String proto, Map<String, Object> context) throws ServiceException {
         try {
             if (password == null || password.equals(""))
-                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "empty password");
+                throw AuthFailedServiceException.AUTH_FAILED(AuthMechanism.namePassedIn(context), "empty password");
             authAccount(acct, password, true, context);
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                     new String[] {"cmd", "Auth","account", acct.getName(), "protocol", proto}));
@@ -2709,7 +2709,7 @@ public class LdapProvisioning extends Provisioning {
     
     }
 
-    void externalLdapAuth(Domain d, String authMech, Account acct, String password) throws ServiceException {
+    void externalLdapAuth(Domain d, String authMech, Account acct, String password, Map<String, Object> context) throws ServiceException {
         String url[] = d.getMultiAttr(Provisioning.A_zimbraAuthLdapURL);
         
         if (url == null || url.length == 0) {
@@ -2749,9 +2749,9 @@ public class LdapProvisioning extends Provisioning {
             }
 
         } catch (AuthenticationException e) {
-            throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "external LDAP auth failed, "+e.getMessage(), e);
+            throw AuthFailedServiceException.AUTH_FAILED(AuthMechanism.namePassedIn(context), "external LDAP auth failed, "+e.getMessage(), e);
         } catch (AuthenticationNotSupportedException e) {
-            throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "external LDAP auth failed, "+e.getMessage(), e);
+            throw AuthFailedServiceException.AUTH_FAILED(AuthMechanism.namePassedIn(context), "external LDAP auth failed, "+e.getMessage(), e);
         } catch (NamingException e) {
             throw ServiceException.FAILURE(e.getMessage(), e);
         }
