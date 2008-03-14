@@ -91,6 +91,13 @@ abstract class AuthMechanism {
         return mAuthMech;
     }
     
+    protected String namePassedIn(Map<String, Object> context) {
+        String npi = (String)context.get(AuthContext.AC_ACCOUNT_NAME_PASSEDIN);
+        if (npi==null)
+            npi = "";
+        return npi;    
+    }
+    
     /*
      * ZimbraAuth 
      */
@@ -104,17 +111,17 @@ abstract class AuthMechanism {
         }
         
         void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> context) throws ServiceException {
+            
             String encodedPassword = acct.getAttr(Provisioning.A_userPassword);
 
             if (encodedPassword == null)
-                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "missing "+Provisioning.A_userPassword);
+                throw AuthFailedServiceException.AUTH_FAILED(namePassedIn(context), "missing "+Provisioning.A_userPassword);
 
             if (LdapUtil.isSSHA(encodedPassword)) {
                 if (LdapUtil.verifySSHA(encodedPassword, password))
                     return; // good password, RETURN
                 else {
-                    String namePassedIn = (String)context.get(AuthContext.AC_ACCOUNT_NAME_PASSEDIN);
-                    throw AuthFailedServiceException.AUTH_FAILED(namePassedIn==null?"":namePassedIn, "invalid password"); 
+                    throw AuthFailedServiceException.AUTH_FAILED(namePassedIn(context), "invalid password"); 
                 }
             } else if (acct instanceof LdapEntry) {
                 String[] urls = new String[] { LdapUtil.getLdapURL() };
@@ -122,14 +129,14 @@ abstract class AuthMechanism {
                     LdapUtil.ldapAuthenticate(urls, ((LdapEntry)acct).getDN(), password);
                     return; // good password, RETURN                
                 } catch (AuthenticationException e) {
-                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), e.getMessage(), e);
+                    throw AuthFailedServiceException.AUTH_FAILED(namePassedIn(context), e.getMessage(), e);
                 } catch (AuthenticationNotSupportedException e) {
-                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), e.getMessage(), e);
+                    throw AuthFailedServiceException.AUTH_FAILED(namePassedIn(context), e.getMessage(), e);
                 } catch (NamingException e) {
                     throw ServiceException.FAILURE(e.getMessage(), e);
                 }
             }
-            throw AuthFailedServiceException.AUTH_FAILED(acct.getName());       
+            throw AuthFailedServiceException.AUTH_FAILED(namePassedIn(context));       
         }
         
         boolean checkPasswordAging() throws ServiceException {
@@ -166,13 +173,13 @@ abstract class AuthMechanism {
             String principal = Krb5Principal.getKrb5Principal(domain, acct);
             
             if (principal == null)
-                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "cannot obtain principal for " + mAuthMech + " auth");
+                throw AuthFailedServiceException.AUTH_FAILED(namePassedIn(context), "cannot obtain principal for " + mAuthMech + " auth");
             
             if (principal != null) {
                 try {
                     Krb5Login.verifyPassword(principal, password);
                 } catch (LoginException e) {
-                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName() + "(kerberos5 principal: " + principal + ")", e.getMessage(), e);
+                    throw AuthFailedServiceException.AUTH_FAILED(namePassedIn(context) + "(kerberos5 principal: " + principal + ")", e.getMessage(), e);
                 }
             }
         }
@@ -238,7 +245,7 @@ abstract class AuthMechanism {
         void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> context) throws ServiceException {
             
             if (mHandler == null)
-                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "handler " + mHandlerName + " for custom auth for domain " + domain.getName() + " not found");
+                throw AuthFailedServiceException.AUTH_FAILED(namePassedIn(context), "handler " + mHandlerName + " for custom auth for domain " + domain.getName() + " not found");
             
             try {
                 mHandler.authenticate(acct, password, context, mArgs);
@@ -256,7 +263,7 @@ abstract class AuthMechanism {
                      * include msg in the response, in addition to logs.  This is because custom 
                      * auth handlers might want to pass the reason back to the client.
                      */ 
-                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName()+msg, msg, e);
+                    throw AuthFailedServiceException.AUTH_FAILED(namePassedIn(context)+msg, msg, e);
                 }
             }
             
