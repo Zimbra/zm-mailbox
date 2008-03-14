@@ -64,7 +64,7 @@ public class ModifyPrefs extends AccountDocumentHandler {
         }
 
         // call modifyAttrs and pass true to checkImmutable
-        Provisioning.getInstance().modifyAttrs(account, prefs, true);
+        Provisioning.getInstance().modifyAttrs(account, prefs, true, zsc.getAuthToken());
 
         Element response = zsc.createElement(AccountConstants.MODIFY_PREFS_RESPONSE);
         return response;
