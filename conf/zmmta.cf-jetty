@@ -150,6 +150,15 @@ SECTION imapproxy
 	VAR zimbraImapSSLProxyBindPort
 	VAR zimbraPop3SSLProxyBindPort
   VAR getAllReverseProxyURLs
+  VAR getAllReverseProxyBackends
   VAR getAllMemcachedServers
+  VAR zimbraReverseProxyIPLoginLimit
+  VAR zimbraReverseProxyIPLoginLimitTime
+  VAR zimbraReverseProxyUserLoginLimit
+  VAR zimbraReverseProxyUserLoginLimitTime
+  VAR zimbraMailProxyPort
+  VAR zimbraMailSSLProxyPort
+  VAR zimbraReverseProxyHttpEnabled
+  VAR zimbraReverseProxyMailEnabled
 	REWRITE conf/nginx.conf.in conf/nginx.conf
   RESTART imapproxy
