@@ -6767,8 +6767,7 @@ public class Mailbox {
         // other system.
     	if (dirty != null && dirty.hasNotifications()) {
     		FreeBusyProvider.mailboxChanged(getAccountId(), dirty.changedTypes);
-        	MailboxListener.mailboxChanged(getAccountId(), dirty.changedTypes);
-        	
+        	MailboxListener.mailboxChanged(getAccountId(), dirty.changedTypes, change.octxt);
     	}
 
         // committed changes, so notify any listeners

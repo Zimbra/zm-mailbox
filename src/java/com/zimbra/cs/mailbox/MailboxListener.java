@@ -1,13 +1,13 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.HashSet;
-
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 
 
 public abstract class MailboxListener {
 
 	
-	public abstract void handleMailboxChange(String accountId, int changedTypes);
+	public abstract void handleMailboxChange(String accountId, int changedTypes, OperationContext octxt);
 	public abstract int registerForItemTypes();
 	
 	
@@ -27,11 +27,11 @@ public abstract class MailboxListener {
 		}
 	}
 	
-	public static void mailboxChanged(String accountId, int changedTypes) {
+	public static void mailboxChanged(String accountId, int changedTypes, OperationContext octxt) {
 	
 		for (MailboxListener l : sListeners) {
 			if ((changedTypes & l.registerForItemTypes()) > 0) {
-				l.handleMailboxChange(accountId, changedTypes);
+				l.handleMailboxChange(accountId, changedTypes, octxt);
 			}
 		}
 	}
