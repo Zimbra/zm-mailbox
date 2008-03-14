@@ -36,7 +36,6 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
@@ -613,7 +612,11 @@ public class ItemActionHelper {
             ZOrganizer org = invCopy.getOrganizer();
             org.setAddress(target.getName());
             org.setCn(target.getAttr(Provisioning.A_displayName));
-            // Preserve any SENT-BY on organizer by leaving it alone.
+            Account authAcct = mOpCtxt != null ? mOpCtxt.getAuthenticatedUser() : target;
+            if (authAcct.equals(target))
+                org.setSentBy(null);
+            else
+                org.setSentBy(authAcct.getName());
             inv = invCopy;
         }
 
