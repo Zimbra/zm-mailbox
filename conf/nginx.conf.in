@@ -212,45 +212,45 @@ mail {
 
     # POP3 proxy configuration
     # 
-    server {
-        listen %%zimbraPop3ProxyBindPort%%;
-        protocol pop3;
-        proxy on;
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%    server {
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%        listen %%zimbraPop3ProxyBindPort%%;
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%        protocol pop3;
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%        proxy on;
         # Per server SASL Configuration
         # 
-        sasl_service_name       "pop";
-    }
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%        sasl_service_name       "pop";
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%    }
 
-    server {
-        listen %%zimbraPop3SSLProxyBindPort%%;
-        protocol pop3;
-        proxy on;
-        ssl on;
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%    server {
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%        listen %%zimbraPop3SSLProxyBindPort%%;
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%        protocol pop3;
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%        proxy on;
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%        ssl on;
         # Per server SASL Configuration
         # 
-        sasl_service_name       "pop";
-    }
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%        sasl_service_name       "pop";
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%    }
 
     # IMAP proxy configuration
     # 
-    server {
-        listen %%zimbraImapProxyBindPort%%;
-        protocol imap;
-        proxy on;
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%    server {
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%        listen %%zimbraImapProxyBindPort%%;
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%        protocol imap;
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%        proxy on;
         # Per server SASL Configuration
         # 
-        sasl_service_name       "imap";
-    }
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%        sasl_service_name       "imap";
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%    }
 
-    server {
-        listen %%zimbraImapSSLProxyBindPort%%;
-        protocol imap;
-        proxy on;
-		ssl on;
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%    server {
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%        listen %%zimbraImapSSLProxyBindPort%%;
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%        protocol imap;
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%        proxy on;
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%		ssl on;
         # Per server SASL Configuration
         # 
-        sasl_service_name       "imap";
-    }
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%        sasl_service_name       "imap";
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%    }
 }
 
 http {
