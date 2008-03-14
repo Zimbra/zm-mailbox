@@ -405,7 +405,7 @@
     </target>
 
     <!-- jetty loads jetty-util*.jar, log4j*.jar and slf4j*.jar -->
-    <property name="war.include" value="slf4j*.jar, jsieve*.jar"/>
+    <property name="war.include" value="slf4j*.jar, jsieve*.jar, lucene*.jar"/>
 
     <target name="war" depends="jar">
         <echo>war.include=${war.include}</echo>
@@ -581,7 +581,7 @@
               file="${config.dir}/jetty-6.1/log4j.properties${production.suffix}" overwrite="true"/>
         <copy todir="${dist.dir}/jetty/common/lib" overwrite="true">
             <fileset dir="${common.jars.dir}"
-                     includes="${ical4j.jar},mail.jar,activation.jar,zimbra-native.jar,bouncycastle.jar,commons-beanutils*.jar,commons-cli*.jar,commons-codec*.jar,commons-collections*.jar,commons-dbcp*.jar,commons-digester*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-logging.jar,commons-pool*.jar,concurrent*.jar,yuicompressor-2.3.4.jar,dom4j*.jar,ganymed-ssh2*.jar,jakarta-oro*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,junit*.jar,jzlib.jar,lucene-core*.jar,mina*.jar,mysql-connector-java*.jar,nekohtml.jar,tnef*.jar,xercesImpl.jar,xpp3.jar,libidn*.jar"/>
+                     includes="${ical4j.jar},mail.jar,activation.jar,zimbra-native.jar,bouncycastle.jar,commons-beanutils*.jar,commons-cli*.jar,commons-codec*.jar,commons-collections*.jar,commons-dbcp*.jar,commons-digester*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-logging.jar,commons-pool*.jar,concurrent*.jar,yuicompressor-2.3.4.jar,dom4j*.jar,ganymed-ssh2*.jar,jakarta-oro*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,junit*.jar,jzlib.jar,mina*.jar,mysql-connector-java*.jar,nekohtml.jar,tnef*.jar,xercesImpl.jar,xpp3.jar,libidn*.jar"/>
         </copy>
         <copy todir="${dist.dir}/jetty/common/endorsed" overwrite="true">
 	    <fileset dir="${common.jars.dir}" includes="zimbra-charset.jar"/>

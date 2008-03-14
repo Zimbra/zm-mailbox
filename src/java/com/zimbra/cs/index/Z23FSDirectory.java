@@ -24,6 +24,8 @@ import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.IndexInput;
 import org.apache.lucene.store.IndexOutput;
 
+import com.zimbra.cs.stats.ZimbraPerf;
+
 /**
  * 
  */
@@ -49,15 +51,15 @@ public class Z23FSDirectory extends FSDirectory {
 
         return new FSIndexOutput(file);
     }
-    
+
     // Inherit javadoc
     public IndexInput openInput(String name) throws IOException {
-      return new FSIndexInput(new File(getFile(), name));
+        return new FSIndexInput(new File(getFile(), name));
     }
 
     // Inherit javadoc
     public IndexInput openInput(String name, int bufferSize) throws IOException {
-      return new FSIndexInput(new File(getFile(), name), bufferSize);
+        return new FSIndexInput(new File(getFile(), name), bufferSize);
     }
 
     protected class FSIndexOutput extends FSDirectory.FSIndexOutput {
@@ -67,22 +69,24 @@ public class Z23FSDirectory extends FSDirectory {
 
         /** output methods: */
         public void flushBuffer(byte[] b, int offset, int size) throws IOException {
+            ZimbraPerf.COUNTER_IDX_BYTES_WRITTEN.increment(size);
             mBytesWritten.addAndGet(size);
             super.flushBuffer(b, offset, size);
         }
     }
-    
+
     protected class FSIndexInput extends FSDirectory.FSIndexInput {
         public FSIndexInput(File path) throws IOException {
             super(path);
         }
-        
+
         public FSIndexInput(File path, int bufferSize) throws IOException {
             super(path, bufferSize);
         }
-        
+
         protected void readInternal(byte[] b, int offset, int len)
         throws IOException {
+            ZimbraPerf.COUNTER_IDX_BYTES_READ.increment(len);
             mBytesRead.addAndGet(len);
             super.readInternal(b, offset, len);
         }

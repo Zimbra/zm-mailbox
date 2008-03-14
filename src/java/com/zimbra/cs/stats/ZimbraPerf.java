@@ -77,6 +77,8 @@ public class ZimbraPerf {
     public static Counter COUNTER_CALENDAR_CACHE_HIT = new Counter("calcache_hit");
     public static Counter COUNTER_CALENDAR_CACHE_MEM_HIT = new Counter("calcache_mem_hit");
     public static Counter COUNTER_CALENDAR_CACHE_LRU_SIZE = new Counter("calcache_lru_size");
+    public static Counter COUNTER_IDX_BYTES_WRITTEN = new Counter("idx_bytes_written");
+    public static Counter COUNTER_IDX_BYTES_READ = new Counter("idx_bytes_read");
     
     public static ActivityTracker SOAP_TRACKER = new ActivityTracker("soap.csv");
     public static ActivityTracker IMAP_TRACKER = new ActivityTracker("imap.csv");
@@ -106,6 +108,8 @@ public class ZimbraPerf {
                         COUNTER_IDX_WRT_OPENED_CACHE_HIT,
                         COUNTER_CALENDAR_CACHE_HIT, COUNTER_CALENDAR_CACHE_MEM_HIT, 
                         COUNTER_CALENDAR_CACHE_LRU_SIZE,
+                        COUNTER_IDX_BYTES_WRITTEN,
+                        COUNTER_IDX_BYTES_READ,
                         sRealtimeStats
                     }
         );
@@ -212,7 +216,15 @@ public class ZimbraPerf {
         COUNTER_IDX_WRT.setShowAverage(true);
         COUNTER_IDX_WRT.setShowCount(false);
         COUNTER_IDX_WRT.setShowTotal(false);
+        
+        COUNTER_IDX_BYTES_WRITTEN.setShowAverage(true);
+        COUNTER_IDX_BYTES_WRITTEN.setShowCount(false);
+        COUNTER_IDX_BYTES_WRITTEN.setShowTotal(true);
 
+        COUNTER_IDX_BYTES_READ.setShowAverage(true);
+        COUNTER_IDX_BYTES_READ.setShowCount(false);
+        COUNTER_IDX_BYTES_READ.setShowTotal(true);
+        
         StatsDumper.schedule(new MailboxdStats(), CSV_DUMP_FREQUENCY);
         ThreadStats threadStats = new ThreadStats(THREAD_NAME_PREFIXES, "threads.csv");
         StatsDumper.schedule(threadStats, CSV_DUMP_FREQUENCY);
