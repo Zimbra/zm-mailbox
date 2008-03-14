@@ -166,7 +166,7 @@ mail {
     # this directive
     # If this value is set to 0, then no throttling will take place for any IP
     # 
-    mail_login_ip_max               0;
+    mail_login_ip_max               %%zimbraReverseProxyIPLoginLimit%%;
 
     # mail_login_ip_ttl
     # 
@@ -179,7 +179,7 @@ mail {
     # The semantics for such a configuration would then be -
     # "allow maximum 1000 users per hour from any given IP address"
     #
-    mail_login_ip_ttl               3600s;
+    mail_login_ip_ttl               %%zimbraReverseProxyIPLoginLimitTime%%s;
 
     # Define a textual message that should be displayed to the user when
     # his/her connection is rejected based on IP overusage
@@ -199,8 +199,8 @@ mail {
     # because the login name itself is over-usage
     # A value of 0 indicates that no throttling will take place for any user
     # 
-    mail_login_user_max             0;
-    mail_login_user_ttl             3600s;
+    mail_login_user_max             %%zimbraReverseProxyUserLoginLimit%%;
+    mail_login_user_ttl             %%zimbraReverseProxyUserLoginLimitTime%%s;
     mail_login_user_rejectmsg       "Login rejected for this user";
 
     # TLS configuration
@@ -278,39 +278,52 @@ http {
     #
     upstream zimbra
     {
-        server  localhost:7070;
+	%%getAllReverseProxyBackends%%
         zmauth;
     }
 
-    server {
-        listen 8080;
-
-        location / {
+%%uncomment VAR:zimbraReverseProxyHttpEnabled%% server {
+%%uncomment VAR:zimbraReverseProxyHttpEnabled%%     listen %%zimbraMailProxyPort%%;
+%%uncomment VAR:zimbraReverseProxyHttpEnabled%%     location / {
             # Proxy to the collection of servers identified by the upstream
             # block 'zimbra'
-            # 
-            proxy_pass http://zimbra;
+            #
+%%uncomment VAR:zimbraReverseProxyHttpEnabled%%         proxy_pass http://zimbra;
 
             # Set the X-Forwarded-For request header to indicate the IP address
-            # of the end-client on whose behalf the proxying has been done 
+            # of the end-client on whose behalf the proxying has been done
             # (usually required for security and audit purposes)
-            # 
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            #
+%%uncomment VAR:zimbraReverseProxyHttpEnabled%%         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 
             # Set the Host header to an appropriate value when communicating
             # with the upstream server
             # If not specified, the name of the upstream block (in this case,
             # "zimbra") will be sent against the Host header to the backend
-            # server 
+            # server
             # Reasonable values here are -
             #   $proxy_host (default)   The name of the upstream block
             #   $server_name            The FQDN of the proxy server
             #   $http_host              The server:port that was used by the
             #                            client to reach the proxy server
-            # 
+            #
             # proxy_set_header Host            $proxy_host;
             # proxy_set_header Host            $server_name;
-            proxy_set_header Host            $http_host;
-        }
-    }
+%%uncomment VAR:zimbraReverseProxyHttpEnabled%%         proxy_set_header Host            $http_host;
+
+%%uncomment VAR:zimbraReverseProxyHttpEnabled%%     }
+%%uncomment VAR:zimbraReverseProxyHttpEnabled%% }
+    # HTTPS Proxy
+%%uncomment VAR:zimbraReverseProxyHttpEnabled%% server {
+%%uncomment VAR:zimbraReverseProxyHttpEnabled%%     listen %%zimbraMailSSLProxyPort%%;
+%%uncomment VAR:zimbraReverseProxyHttpEnabled%%     ssl                  on;
+%%uncomment VAR:zimbraReverseProxyHttpEnabled%%     ssl_certificate      /opt/zimbra/conf/nginx.crt;
+%%uncomment VAR:zimbraReverseProxyHttpEnabled%%     ssl_certificate_key  /opt/zimbra/conf/nginx.key;
+%%uncomment VAR:zimbraReverseProxyHttpEnabled%%     location / {
+%%uncomment VAR:zimbraReverseProxyHttpEnabled%%         proxy_pass       http://zimbra;
+%%uncomment VAR:zimbraReverseProxyHttpEnabled%%         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+%%uncomment VAR:zimbraReverseProxyHttpEnabled%%         proxy_set_header Host            $http_host;
+%%uncomment VAR:zimbraReverseProxyHttpEnabled%%     }
+%%uncomment VAR:zimbraReverseProxyHttpEnabled%% }
+
 }
