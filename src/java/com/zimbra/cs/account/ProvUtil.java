@@ -1959,6 +1959,9 @@ public class ProvUtil implements DebugListener {
 
 	    // (For now) assume HTTP can be load balanced to...
 	    String mode = server.getAttr(Provisioning.A_zimbraMailMode, null);
+            if (mode == null) {
+                return;
+            }
 	    boolean isPlain = mode.equalsIgnoreCase(Provisioning.MAIL_MODE.http.toString()) ||
 		mode.equalsIgnoreCase(Provisioning.MAIL_MODE.mixed.toString()) ||
 		mode.equalsIgnoreCase(Provisioning.MAIL_MODE.both.toString());
