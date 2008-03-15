@@ -86,6 +86,6 @@ class AccountSearchParams {
     
     void doSearch() throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
-        mResult = prov.searchDirectory(mOptions);
+        mResult = prov.searchDirectory(mOptions, false);
     }
 }

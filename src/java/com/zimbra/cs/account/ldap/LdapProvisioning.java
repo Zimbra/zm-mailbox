@@ -903,10 +903,35 @@ public class LdapProvisioning extends Provisioning {
         return oc.toString();
     }
 
+    List<NamedEntry> searchObjects(String query, 
+            String returnAttrs[], 
+            final String sortAttr, 
+            final boolean sortAscending, 
+            String base, 
+            int flags, 
+            int maxResults)
+        throws ServiceException {
+        return searchObjects(query, 
+                returnAttrs, 
+                sortAttr, 
+                sortAscending, 
+                base, 
+                flags, 
+                maxResults,
+                true);
+    }
+    
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#searchAccounts(java.lang.String)
      */
-    List<NamedEntry> searchObjects(String query, String returnAttrs[], final String sortAttr, final boolean sortAscending, String base, int flags, int maxResults)
+    List<NamedEntry> searchObjects(String query, 
+                                   String returnAttrs[], 
+                                   final String sortAttr, 
+                                   final boolean sortAscending, 
+                                   String base, 
+                                   int flags, 
+                                   int maxResults,
+                                   boolean useConnPool)
     throws ServiceException {
         final List<NamedEntry> result = new ArrayList<NamedEntry>();
         
@@ -916,7 +941,7 @@ public class LdapProvisioning extends Provisioning {
             }
         };
         
-        searchObjects(query, returnAttrs, base, flags, visitor, maxResults);
+        searchObjects(query, returnAttrs, base, flags, visitor, maxResults, useConnPool);
 
         final boolean byName = sortAttr == null || sortAttr.equals("name"); 
         Comparator<NamedEntry> comparator = new Comparator<NamedEntry>() {
@@ -956,15 +981,20 @@ public class LdapProvisioning extends Provisioning {
         return result;
     }
     
+    void searchObjects(String query, String returnAttrs[], String base, int flags, NamedEntry.Visitor visitor, int maxResults)
+        throws ServiceException {
+        searchObjects(query, returnAttrs, base, flags, visitor, maxResults, true);
+    }
+    
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#searchAccounts(java.lang.String)
      */
-    void searchObjects(String query, String returnAttrs[], String base, int flags, NamedEntry.Visitor visitor, int maxResults)
+    void searchObjects(String query, String returnAttrs[], String base, int flags, NamedEntry.Visitor visitor, int maxResults, boolean useConnPool)
         throws ServiceException
     {
         DirContext ctxt = null;
         try {
-            ctxt = LdapUtil.getDirContext();
+            ctxt = LdapUtil.getDirContext(false, useConnPool);
             
             String objectClass = getObjectClassQuery(flags);
             
@@ -3624,8 +3654,12 @@ public class LdapProvisioning extends Provisioning {
         return searchObjects(query, returnAttrs, sortAttr, sortAscending, 
                              mDIT.domainDNToAccountSearchDN(ld.getDN()), flags, 0);
     }
-
+    
     public List<NamedEntry> searchDirectory(SearchOptions options) throws ServiceException {
+        return searchDirectory(options, true);
+    }
+
+    public List<NamedEntry> searchDirectory(SearchOptions options, boolean useConnPool) throws ServiceException {
         String base = mDIT.zimbraBaseDN();
         
         LdapDomain ld = (LdapDomain) options.getDomain();
@@ -3642,7 +3676,14 @@ public class LdapProvisioning extends Provisioning {
         if (options.getConvertIDNToAscii() && query != null && query.length()>0)
             query = LdapEntrySearchFilter.toLdapIDNFilter(query);
         
-        return searchObjects(query, options.getReturnAttrs(), options.getSortAttr(), options.isSortAscending(), base, options.getFlags(), options.getMaxResults());
+        return searchObjects(query, 
+                             options.getReturnAttrs(), 
+                             options.getSortAttr(), 
+                             options.isSortAscending(), 
+                             base, 
+                             options.getFlags(), 
+                             options.getMaxResults(),
+                             useConnPool);
     }
 
     @Override

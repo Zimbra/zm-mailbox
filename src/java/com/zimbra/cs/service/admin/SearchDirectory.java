@@ -126,7 +126,7 @@ public class SearchDirectory extends AdminDocumentHandler {
             options.setSortAscending(sortAscending);
             options.setSortAttr(sortBy);
             options.setConvertIDNToAscii(true);
-            accounts = prov.searchDirectory(options);
+            accounts = prov.searchDirectory(options, false);
         }
 
         Set<String> reqAttrs = attrs == null ? null : new HashSet(Arrays.asList(attrs));
