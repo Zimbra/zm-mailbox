@@ -20,6 +20,9 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 
@@ -224,6 +227,17 @@ public class Flag extends Tag {
         }
         return sb.toString();
     }
+    
+    public static List<Integer> bitmaskToFlagIds(int bitmask) {
+    	List<Integer> flagIds = new ArrayList<Integer>();
+        for (int i = 0; bitmask != 0 && i < MAX_FLAG_COUNT - 1; i++) {
+            if ((bitmask & (1 << i)) != 0) {
+                flagIds.add(-i - 1);
+                bitmask &= ~(1 << i);
+            }
+        }
+        return flagIds;
+    }
 
     @Override boolean canAccess(short rightsNeeded) {
         return true;
@@ -252,4 +266,14 @@ public class Flag extends Tag {
 
 	@Override void decodeMetadata(Metadata meta)     { }
 	@Override Metadata encodeMetadata(Metadata meta) { return meta; }
+	
+	
+	public static void main(String[] args) {
+		List<Integer> flagIds = bitmaskToFlagIds(FLAGS_MESSAGE);
+		int bitmask = 0;
+		for (int flagId : flagIds) {
+			bitmask |= 1 << getIndex(flagId);
+		}
+		assert bitmask == FLAGS_MESSAGE;
+	}
 }

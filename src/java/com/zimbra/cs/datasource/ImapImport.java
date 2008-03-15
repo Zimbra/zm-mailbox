@@ -58,10 +58,12 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.db.DbImapFolder;
 import com.zimbra.cs.db.DbImapMessage;
+import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.BuildInfo;
@@ -512,6 +514,7 @@ public class ImapImport implements MailItemImport {
         }
         final Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         final com.zimbra.cs.mailbox.Folder localFolder = mbox.getFolderById(null, trackedFolder.getItemId());
+        final DataSource dataSource = ds;
         
         // Get remote messages
         Message[] msgArray = remoteFolder.getMessages();
@@ -609,10 +612,9 @@ public class ImapImport implements MailItemImport {
                     pm = new ParsedMessage(remoteMsg, mbox.attachmentsIndexingEnabled());
                 }
                 int flags = getZimbraFlags(remoteMsg.getFlags());
-                com.zimbra.cs.mailbox.Message zimbraMsg =
-                    mbox.addMessage(null, pm, localFolder.getId(), false, flags, null);
+                int msgId = addMessage(mbox, ds, pm, localFolder.getId(), flags);
                 numAddedLocally++;
-                DbImapMessage.storeImapMessage(mbox, trackedFolder.getItemId(), uid, zimbraMsg.getId(), flags);
+                DbImapMessage.storeImapMessage(mbox, trackedFolder.getItemId(), uid, msgId, flags);
             }
         }
 
@@ -649,10 +651,9 @@ public class ImapImport implements MailItemImport {
                             ParsedMessage pm = getParsedMessage(
                                 md.getBodySections()[0].getData(), time, mbox.attachmentsIndexingEnabled());
                             int flags = getZimbraFlags(msg.getFlags());
-                            com.zimbra.cs.mailbox.Message zimbraMsg =
-                                mbox.addMessage(null, pm, localFolder.getId(), false, flags, null);
+                            int msgId = addMessage(mbox, dataSource, pm, localFolder.getId(), flags);
                             fetchCount.incrementAndGet();
-                            DbImapMessage.storeImapMessage(mbox, trackedFolder.getItemId(), uid, zimbraMsg.getId(), flags);
+                            DbImapMessage.storeImapMessage(mbox, trackedFolder.getItemId(), uid, msgId, flags);
                         }
                     });
                     numAddedLocally = fetchCount.intValue();
@@ -700,6 +701,21 @@ public class ImapImport implements MailItemImport {
             numDeletedLocally, numAddedRemotely, numDeletedRemotely, runAgain ? " Rerun import." : "");
         
         return !runAgain;
+    }
+    
+    private int addMessage(Mailbox mbox, DataSource ds, ParsedMessage pm, int folderId, int flags) throws ServiceException, IOException {
+    	com.zimbra.cs.mailbox.Message msg = null;
+    	SharedDeliveryContext sharedDeliveryCtxt = new SharedDeliveryContext();
+        if (folderId == Mailbox.ID_FOLDER_INBOX) {
+        	try {
+	            msg = RuleManager.getInstance().applyRules(mbox.getAccount(), mbox, pm, pm.getRawSize(), ds.getEmailAddress(), sharedDeliveryCtxt, flags);
+        	} catch (Throwable t) {
+        		ZimbraLog.datasource.warn("failed applying filter rules", t);
+        	}
+        }
+        if (msg == null)
+        	msg = mbox.addMessage(null, pm, folderId, false, flags, null);
+        return msg.getId();
     }
 
     private static ParsedMessage getParsedMessage(ImapData id,

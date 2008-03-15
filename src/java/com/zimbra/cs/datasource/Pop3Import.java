@@ -46,10 +46,12 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.db.DbPop3Message;
+import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mime.ParsedMessage;
 
 
@@ -229,11 +231,10 @@ implements MailItemImport {
             } else {
                 pm = new ParsedMessage(pop3Msg, mbox.attachmentsIndexingEnabled());
             }
-            com.zimbra.cs.mailbox.Message zimbraMsg =
-                mbox.addMessage(null, pm, ds.getFolderId(), false, Flag.BITMASK_UNREAD, null);
-
+            
+            int msgid = addMessage(mbox, ds, pm, ds.getFolderId());
             if (ds.leaveOnServer()) {
-                DbPop3Message.storeUid(mbox, ds.getId(), folder.getUID(pop3Msg), zimbraMsg.getId());
+                DbPop3Message.storeUid(mbox, ds.getId(), folder.getUID(pop3Msg), msgid);
             }
         }
 
@@ -247,6 +248,21 @@ implements MailItemImport {
         // Expunge if necessary and disconnect (QUIT)
         folder.close(!ds.leaveOnServer());
         store.close();
+    }
+    
+    private int addMessage(Mailbox mbox, DataSource ds, ParsedMessage pm, int folderId) throws ServiceException, IOException {
+    	com.zimbra.cs.mailbox.Message msg = null;
+    	SharedDeliveryContext sharedDeliveryCtxt = new SharedDeliveryContext();
+        if (folderId == Mailbox.ID_FOLDER_INBOX) {
+        	try {
+	            msg = RuleManager.getInstance().applyRules(mbox.getAccount(), mbox, pm, pm.getRawSize(), ds.getEmailAddress(), sharedDeliveryCtxt, Flag.BITMASK_UNREAD);
+        	} catch (Throwable t) {
+        		ZimbraLog.datasource.warn("failed applying filter rules", t);
+        	}
+        }
+        if (msg == null)
+        	msg = mbox.addMessage(null, pm, folderId, false, Flag.BITMASK_UNREAD, null);
+        return msg.getId();
     }
     
     private Set<String> getUidsToFetch(Mailbox mbox, DataSource ds, POP3Folder folder)
