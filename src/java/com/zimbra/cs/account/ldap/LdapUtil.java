@@ -189,12 +189,36 @@ public class LdapUtil {
             sEnv.put("com.sun.jndi.ldap.connect.pool", LC.ldap_connect_pool_master.value());
         else
             sEnv.put("com.sun.jndi.ldap.connect.pool", "true");
+            
         
         // env.put("java.naming.ldap.derefAliases", "never");
         //
         // default: env.put("java.naming.ldap.version", "3");
         return sEnv;
     }
+    
+    private static synchronized Hashtable getNonPooledEnv(boolean master) {
+        Hashtable<String, String> env = new Hashtable<String, String>(); 
+        
+        env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+        env.put(Context.PROVIDER_URL, master ? sLdapMasterURL : sLdapURL);
+        env.put(Context.SECURITY_AUTHENTICATION, "simple");
+        env.put(Context.SECURITY_PRINCIPAL, LC.zimbra_ldap_userdn.value());
+        env.put(Context.SECURITY_CREDENTIALS, LC.zimbra_ldap_password.value());
+        env.put(Context.REFERRAL, "follow");
+            
+        env.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
+        env.put("com.sun.jndi.ldap.read.timeout", LC.ldap_read_timeout.value());
+        
+        // enable connection pooling
+        if (master)
+            env.put("com.sun.jndi.ldap.connect.pool", LC.ldap_connect_pool_master.value());
+        else 
+            env.put("com.sun.jndi.ldap.connect.pool", "false");
+        
+        return env;
+    }
+    
     
     /**
      * 
@@ -211,9 +235,17 @@ public class LdapUtil {
      * @throws NamingException
      */
     public static DirContext getDirContext(boolean master) throws ServiceException {
+        return getDirContext(master, true);
+    }
+    
+    public static DirContext getDirContext(boolean master, boolean useConnPool) throws ServiceException {
         try {
             long start = ZimbraPerf.STOPWATCH_LDAP_DC.start();
-            DirContext dirContext = new InitialLdapContext(getDefaultEnv(master), null);
+            DirContext dirContext = null;
+            if (useConnPool)
+                dirContext = new InitialLdapContext(getDefaultEnv(master), null);
+            else
+                dirContext = new InitialLdapContext(getNonPooledEnv(master), null);
             ZimbraPerf.STOPWATCH_LDAP_DC.stop(start);
             //ZimbraLog.account.error("getDirContext", new RuntimeException("------------------- OPEN"));
             return dirContext;

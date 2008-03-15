@@ -2249,6 +2249,10 @@ public abstract class Provisioning {
     }
 
     public abstract List<NamedEntry> searchDirectory(SearchOptions options) throws ServiceException;
+    
+    public List<NamedEntry> searchDirectory(SearchOptions options, boolean useConnPool) throws ServiceException {
+        return searchDirectory(options);
+    }
 
     /**
      * 
