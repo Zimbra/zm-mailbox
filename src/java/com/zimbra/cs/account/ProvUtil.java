@@ -1951,28 +1951,34 @@ public class ProvUtil implements DebugListener {
 
     private void doGetAllReverseProxyBackends(String[] args) throws ServiceException {
 	List<Server> servers = mProv.getAllServers();
+	boolean atLeastOne = false;
         for (Server server : servers) {
             boolean isTarget = server.getBooleanAttr(Provisioning.A_zimbraReverseProxyLookupTarget, false);
 	    if (!isTarget) {
-		return;
+		continue;
 	    }
 
 	    // (For now) assume HTTP can be load balanced to...
 	    String mode = server.getAttr(Provisioning.A_zimbraMailMode, null);
             if (mode == null) {
-                return;
+		continue;
             }
 	    boolean isPlain = mode.equalsIgnoreCase(Provisioning.MAIL_MODE.http.toString()) ||
 		mode.equalsIgnoreCase(Provisioning.MAIL_MODE.mixed.toString()) ||
 		mode.equalsIgnoreCase(Provisioning.MAIL_MODE.both.toString());
 	    if (!isPlain) {
-		return;
+		continue;
 	    }
 
 	    int backendPort = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
 	    String serviceName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
 	    System.out.println("    server " + serviceName + ":" + backendPort + ";");
+	    atLeastOne = true;
         }
+	if (!atLeastOne) {
+	    // workaround zmmtaconfig not being able to deal with empty output
+	    System.out.println("    server localhost:8080;");
+	}
     }
 
     private void doGetAllMemcachedServers(String[] args) throws ServiceException {
