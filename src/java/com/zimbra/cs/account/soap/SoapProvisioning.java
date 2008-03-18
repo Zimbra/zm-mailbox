@@ -883,7 +883,8 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public void preAuthAccount(Account acct, String accountName,
-            String accountBy, long timestamp, long expires, String preAuth)
+            String accountBy, long timestamp, long expires, String preAuth,
+            Map<String, Object> authCtxt)
             throws ServiceException {
         XMLElement req = new XMLElement(AccountConstants.AUTH_REQUEST);
         Element a = req.addElement(AccountConstants.E_ACCOUNT);

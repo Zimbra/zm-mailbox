@@ -43,7 +43,8 @@ public class ChangePassword extends AccountDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         
-        String name = request.getAttribute(AccountConstants.E_ACCOUNT);
+        String namePassedIn = request.getAttribute(AccountConstants.E_ACCOUNT);
+        String name = namePassedIn;
         
         Element virtualHostEl = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST);
         String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
@@ -56,7 +57,7 @@ public class ChangePassword extends AccountDocumentHandler {
         
         Account acct = prov.get(AccountBy.name, name, zsc.getAuthToken());
         if (acct == null)
-            throw AuthFailedServiceException.AUTH_FAILED(name, "account not found");
+            throw AuthFailedServiceException.AUTH_FAILED(name, namePassedIn, "account not found");
 		String oldPassword = request.getAttribute(AccountConstants.E_OLD_PASSWORD);
 		String newPassword = request.getAttribute(AccountConstants.E_PASSWORD);
 		prov.changePassword(acct, oldPassword, newPassword);

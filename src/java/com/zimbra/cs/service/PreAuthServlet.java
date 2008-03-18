@@ -26,6 +26,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.account.AuthContext;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
@@ -33,6 +34,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.soap.SoapEngine;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
@@ -41,7 +43,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.net.URLEncoder;
 
 public class PreAuthServlet extends ZimbraServlet {
@@ -126,9 +130,12 @@ public class PreAuthServlet extends ZimbraServlet {
                 acct = prov.get(AccountBy.fromString(accountBy), account, authToken);                            
             
                 if (acct == null)
-                    throw AuthFailedServiceException.AUTH_FAILED(account, "account not found");
+                    throw AuthFailedServiceException.AUTH_FAILED(account, account, "account not found");
                 
-                prov.preAuthAccount(acct, account, accountBy, timestamp, expires, preAuth);
+                Map<String, Object> authCtxt = new HashMap<String, Object>();
+                authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, getRemoteIp(req));
+                authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, account);
+                prov.preAuthAccount(acct, account, accountBy, timestamp, expires, preAuth, authCtxt);
             
                 AuthToken at = (expires ==  0) ? AuthToken.getAuthToken(acct) : AuthToken.getAuthToken(acct, expires);
                 try {

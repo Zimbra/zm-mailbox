@@ -46,6 +46,7 @@ import com.zimbra.cs.account.ldap.custom.CustomLdapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.soap.SoapEngine;
 
 public class TestProvisioning extends TestCase {
     
@@ -617,12 +618,16 @@ public class TestProvisioning extends TestCase {
         params.put("timestamp", timestamp+"");
         params.put("expires", expires+"");
         String preAuth = PreAuthKey.computePreAuth(params, PRE_AUTH_KEY);
+        Map<String, Object> authCtxt = new HashMap<String, Object>();
+        authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, "127.0.0.1");
+        authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, ACCT_EMAIL);
         mProv.preAuthAccount(account, 
                             ACCT_EMAIL, // account name 
                             authBy,     // by
                             timestamp,  // timestamp
                             0,          // expires
-                            preAuth);   // preauth key
+                            preAuth,    // preauth key
+                            authCtxt);   
         
     }
     

@@ -37,7 +37,7 @@ public class TestSearchDirectory extends TestCase {
     
     private static String TEST_NAME = "test-sd";
     private static String DOMAIN_NAME = TestProvisioningUtil.baseDomainName(TEST_NAME, null);
-    private static int NUM_ACCTS = 1000;
+    private static int NUM_ACCTS = 10000;
     /*
      * these are what passed from admin console
      */
@@ -135,9 +135,9 @@ public class TestSearchDirectory extends TestCase {
         // TestUtil.cliSetup();
         // CliUtil.toolSetup("DEBUG");
         CliUtil.toolSetup();
-        // createAccounts();
+        createAccounts();
         
-        TestUtil.runTest(new TestSuite(TestSearchDirectory.class));
+        // TestUtil.runTest(new TestSuite(TestSearchDirectory.class));
     }
 }
 
