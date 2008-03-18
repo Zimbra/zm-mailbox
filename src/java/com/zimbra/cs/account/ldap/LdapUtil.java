@@ -1178,6 +1178,9 @@ public class LdapUtil {
         return timeA.compareTo(timeB) > 0 ? timeA : timeB;
     }
 
+    /*
+     * is this function used??
+     */
     public static void changeActiveDirectoryPassword(String urls[], String email, String oldPassword, String newPassword)
         throws NamingException, ServiceException
     {
@@ -1211,7 +1214,7 @@ public class LdapUtil {
             }
             
             if (dn == null) 
-                throw AuthFailedServiceException.AUTH_FAILED(email, "entry not found");
+                throw AuthFailedServiceException.AUTH_FAILED(email, email, "entry not found");
         
             System.out.println("DN = "+ dn);
             

@@ -2577,7 +2577,7 @@ public class LdapProvisioning extends Provisioning {
     
     public static final long TIMESTAMP_WINDOW = Constants.MILLIS_PER_MINUTE * 5; 
 
-    private void checkAccountStatus(Account acct) throws ServiceException {
+    private void checkAccountStatus(Account acct, Map<String, Object> authCtxt) throws ServiceException {
         /*
          * We no longer do this reload(see bug 18981):
          *     Staled data can be read back if there are replication delays and the account is 
@@ -2589,19 +2589,19 @@ public class LdapProvisioning extends Provisioning {
         
         String accountStatus = acct.getAccountStatus();
         if (accountStatus == null)
-            throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "missing account status");
+            throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), AuthMechanism.namePassedIn(authCtxt), "missing account status");
         if (accountStatus.equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE)) 
             throw AccountServiceException.MAINTENANCE_MODE();
 
         if (!(accountStatus.equals(Provisioning.ACCOUNT_STATUS_ACTIVE) ||
               accountStatus.equals(Provisioning.ACCOUNT_STATUS_LOCKOUT)))
-            throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "account(or domain) status is "+accountStatus);
+            throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), AuthMechanism.namePassedIn(authCtxt), "account(or domain) status is "+accountStatus);
     }
     
     @Override
-    public void preAuthAccount(Account acct, String acctValue, String acctBy, long timestamp, long expires, String preAuth) throws ServiceException {
+    public void preAuthAccount(Account acct, String acctValue, String acctBy, long timestamp, long expires, String preAuth, Map<String, Object> authCtxt) throws ServiceException {
         try {
-            preAuth(acct, acctValue, acctBy, timestamp, expires, preAuth);
+            preAuth(acct, acctValue, acctBy, timestamp, expires, preAuth, authCtxt);
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                     new String[] {"cmd", "PreAuth","account", acct.getName()}));
         } catch (AuthFailedServiceException e) {
@@ -2615,8 +2615,9 @@ public class LdapProvisioning extends Provisioning {
         }
     }
     
-    private void preAuth(Account acct, String acctValue, String acctBy, long timestamp, long expires, String preAuth) throws ServiceException {
-        checkAccountStatus(acct);
+    private void preAuth(Account acct, String acctValue, String acctBy, long timestamp, long expires, String preAuth, Map<String, Object> authCtxt) throws ServiceException {
+        
+        checkAccountStatus(acct, authCtxt);
         if (preAuth == null || preAuth.length() == 0)
             throw ServiceException.INVALID_REQUEST("preAuth must not be empty", null);
     
@@ -2630,7 +2631,7 @@ public class LdapProvisioning extends Provisioning {
         long now = System.currentTimeMillis();
         long diff = Math.abs(now-timestamp);
         if (diff > TIMESTAMP_WINDOW)
-            throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "preauth timestamp is too old");
+            throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), AuthMechanism.namePassedIn(authCtxt), "preauth timestamp is too old");
         
         // compute expected preAuth
         HashMap<String,String> params = new HashMap<String,String>();
@@ -2640,7 +2641,7 @@ public class LdapProvisioning extends Provisioning {
         params.put("expires", expires+"");
         String computedPreAuth = PreAuthKey.computePreAuth(params, domainPreAuthKey);
         if (!computedPreAuth.equalsIgnoreCase(preAuth))
-            throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "preauth mismatch");
+            throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), AuthMechanism.namePassedIn(authCtxt), "preauth mismatch");
         
         // update/check last logon
         updateLastLogon(acct);
@@ -2652,11 +2653,11 @@ public class LdapProvisioning extends Provisioning {
     }
     
     @Override    
-    public void authAccount(Account acct, String password, String proto, Map<String, Object> context) throws ServiceException {
+    public void authAccount(Account acct, String password, String proto, Map<String, Object> authCtxt) throws ServiceException {
         try {
             if (password == null || password.equals(""))
-                throw AuthFailedServiceException.AUTH_FAILED(AuthMechanism.namePassedIn(context), "empty password");
-            authAccount(acct, password, true, context);
+                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), AuthMechanism.namePassedIn(authCtxt), "empty password");
+            authAccount(acct, password, true, authCtxt);
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                     new String[] {"cmd", "Auth","account", acct.getName(), "protocol", proto}));
         } catch (AuthFailedServiceException e) {
@@ -2673,11 +2674,11 @@ public class LdapProvisioning extends Provisioning {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Account#authAccount(java.lang.String)
      */
-    private void authAccount(Account acct, String password, boolean checkPasswordPolicy, Map<String, Object> context) throws ServiceException {
-        checkAccountStatus(acct);
+    private void authAccount(Account acct, String password, boolean checkPasswordPolicy, Map<String, Object> authCtxt) throws ServiceException {
+        checkAccountStatus(acct, authCtxt);
         
         AuthMechanism authMech = AuthMechanism.makeInstance(acct);
-        verifyPassword(acct, password, authMech, context);
+        verifyPassword(acct, password, authMech, authCtxt);
 
         if (!checkPasswordPolicy)
             return;
@@ -2739,7 +2740,7 @@ public class LdapProvisioning extends Provisioning {
     
     }
 
-    void externalLdapAuth(Domain d, String authMech, Account acct, String password, Map<String, Object> context) throws ServiceException {
+    void externalLdapAuth(Domain d, String authMech, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException {
         String url[] = d.getMultiAttr(Provisioning.A_zimbraAuthLdapURL);
         
         if (url == null || url.length == 0) {
@@ -2779,9 +2780,9 @@ public class LdapProvisioning extends Provisioning {
             }
 
         } catch (AuthenticationException e) {
-            throw AuthFailedServiceException.AUTH_FAILED(AuthMechanism.namePassedIn(context), "external LDAP auth failed, "+e.getMessage(), e);
+            throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), AuthMechanism.namePassedIn(authCtxt), "external LDAP auth failed, "+e.getMessage(), e);
         } catch (AuthenticationNotSupportedException e) {
-            throw AuthFailedServiceException.AUTH_FAILED(AuthMechanism.namePassedIn(context), "external LDAP auth failed, "+e.getMessage(), e);
+            throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), AuthMechanism.namePassedIn(authCtxt), "external LDAP auth failed, "+e.getMessage(), e);
         } catch (NamingException e) {
             throw ServiceException.FAILURE(e.getMessage(), e);
         }
@@ -2792,15 +2793,15 @@ public class LdapProvisioning extends Provisioning {
         throw ServiceException.FAILURE(msg, null);
     }
 
-    private void verifyPassword(Account acct, String password, AuthMechanism authMech, Map<String, Object> context) throws ServiceException {
+    private void verifyPassword(Account acct, String password, AuthMechanism authMech, Map<String, Object> authCtxt) throws ServiceException {
         
         LdapLockoutPolicy lockoutPolicy = new LdapLockoutPolicy(this, acct);
         try {
             if (lockoutPolicy.isLockedOut())
-                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), "account lockout");
+                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), AuthMechanism.namePassedIn(authCtxt), "account lockout");
 
             // attempt to verify the password
-            verifyPasswordInternal(acct, password, authMech, context);
+            verifyPasswordInternal(acct, password, authMech, authCtxt);
 
             lockoutPolicy.successfulLogin();
         } catch (AccountServiceException e) {

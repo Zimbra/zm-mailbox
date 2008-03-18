@@ -107,20 +107,21 @@ public class Auth extends AccountDocumentHandler {
 
             Account acct = prov.get(by, value);
             if (acct == null)
-                throw AuthFailedServiceException.AUTH_FAILED(valuePassedIn, "account not found");
+                throw AuthFailedServiceException.AUTH_FAILED(value, valuePassedIn, "account not found");
 
             long expires = 0;
 
+            Map<String, Object> authCtxt = new HashMap<String, Object>();
+            authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, (String)context.get(SoapEngine.ORIG_REQUEST_IP));
+            authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, valuePassedIn);
+            
             if (password != null) {
-                Map<String, Object> authCtxt = new HashMap<String, Object>();
-                authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, (String)context.get(SoapEngine.ORIG_REQUEST_IP));
-                authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, valuePassedIn);
                 prov.authAccount(acct, password, "soap", authCtxt);
             } else if (preAuthEl != null) {
                 long timestamp = preAuthEl.getAttributeLong(AccountConstants.A_TIMESTAMP);
                 expires = preAuthEl.getAttributeLong(AccountConstants.A_EXPIRES, 0);
                 String preAuth = preAuthEl.getTextTrim();
-                prov.preAuthAccount(acct, value, byStr, timestamp, expires, preAuth);
+                prov.preAuthAccount(acct, value, byStr, timestamp, expires, preAuth, authCtxt);
             } else {
                 throw ServiceException.INVALID_REQUEST("must specify "+AccountConstants.E_PASSWORD, null);
             }

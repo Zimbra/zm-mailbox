@@ -74,9 +74,9 @@ public abstract class AuthMechanism {
         }
     }
     
-    public static void doDefaultAuth(AuthMechanism authMech, LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> context) throws ServiceException {
+    public static void doDefaultAuth(AuthMechanism authMech, LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException {
         ZimbraAuth zimbraAuth = new ZimbraAuth(authMech.getMechanism());
-        zimbraAuth.doAuth(prov, domain, acct, password, context);
+        zimbraAuth.doAuth(prov, domain, acct, password, authCtxt);
     }
 
     public boolean isZimbraAuth() {
@@ -85,14 +85,14 @@ public abstract class AuthMechanism {
     
     abstract boolean checkPasswordAging() throws ServiceException;
     
-    abstract void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> context) throws ServiceException;
+    abstract void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException;
 
     String getMechanism() {
         return mAuthMech;
     }
     
-    public static String namePassedIn(Map<String, Object> context) {
-        String npi = (String)context.get(AuthContext.AC_ACCOUNT_NAME_PASSEDIN);
+    public static String namePassedIn(Map<String, Object> authCtxt) {
+        String npi = (String)authCtxt.get(AuthContext.AC_ACCOUNT_NAME_PASSEDIN);
         if (npi==null)
             npi = "";
         return npi;    
@@ -110,18 +110,18 @@ public abstract class AuthMechanism {
             return true;
         }
         
-        void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> context) throws ServiceException {
+        void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException {
             
             String encodedPassword = acct.getAttr(Provisioning.A_userPassword);
 
             if (encodedPassword == null)
-                throw AuthFailedServiceException.AUTH_FAILED(namePassedIn(context), "missing "+Provisioning.A_userPassword);
+                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt), "missing "+Provisioning.A_userPassword);
 
             if (LdapUtil.isSSHA(encodedPassword)) {
                 if (LdapUtil.verifySSHA(encodedPassword, password))
                     return; // good password, RETURN
                 else {
-                    throw AuthFailedServiceException.AUTH_FAILED(namePassedIn(context), "invalid password"); 
+                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt), "invalid password"); 
                 }
             } else if (acct instanceof LdapEntry) {
                 String[] urls = new String[] { LdapUtil.getLdapURL() };
@@ -129,14 +129,14 @@ public abstract class AuthMechanism {
                     LdapUtil.ldapAuthenticate(urls, ((LdapEntry)acct).getDN(), password);
                     return; // good password, RETURN                
                 } catch (AuthenticationException e) {
-                    throw AuthFailedServiceException.AUTH_FAILED(namePassedIn(context), e.getMessage(), e);
+                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt), e.getMessage(), e);
                 } catch (AuthenticationNotSupportedException e) {
-                    throw AuthFailedServiceException.AUTH_FAILED(namePassedIn(context), e.getMessage(), e);
+                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt), e.getMessage(), e);
                 } catch (NamingException e) {
                     throw ServiceException.FAILURE(e.getMessage(), e);
                 }
             }
-            throw AuthFailedServiceException.AUTH_FAILED(namePassedIn(context));       
+            throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt));       
         }
         
         boolean checkPasswordAging() throws ServiceException {
@@ -152,8 +152,8 @@ public abstract class AuthMechanism {
             super(authMech);
         }
         
-        void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> context) throws ServiceException {
-            prov.externalLdapAuth(domain, mAuthMech, acct, password, context);
+        void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException {
+            prov.externalLdapAuth(domain, mAuthMech, acct, password, authCtxt);
         }
         
         boolean checkPasswordAging() throws ServiceException {
@@ -169,17 +169,17 @@ public abstract class AuthMechanism {
             super(authMech);
         }
         
-        void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> context) throws ServiceException {
+        void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException {
             String principal = Krb5Principal.getKrb5Principal(domain, acct);
             
             if (principal == null)
-                throw AuthFailedServiceException.AUTH_FAILED(namePassedIn(context), "cannot obtain principal for " + mAuthMech + " auth");
+                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt), "cannot obtain principal for " + mAuthMech + " auth");
             
             if (principal != null) {
                 try {
                     Krb5Login.verifyPassword(principal, password);
                 } catch (LoginException e) {
-                    throw AuthFailedServiceException.AUTH_FAILED(namePassedIn(context) + "(kerberos5 principal: " + principal + ")", e.getMessage(), e);
+                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt) + "(kerberos5 principal: " + principal + ")", e.getMessage(), e);
                 }
             }
         }
@@ -242,13 +242,13 @@ public abstract class AuthMechanism {
             }
         }
         
-        void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> context) throws ServiceException {
+        void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException {
             
             if (mHandler == null)
-                throw AuthFailedServiceException.AUTH_FAILED(namePassedIn(context), "handler " + mHandlerName + " for custom auth for domain " + domain.getName() + " not found");
+                throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt), "handler " + mHandlerName + " for custom auth for domain " + domain.getName() + " not found");
             
             try {
-                mHandler.authenticate(acct, password, context, mArgs);
+                mHandler.authenticate(acct, password, authCtxt, mArgs);
                 return;
             } catch (Exception e) {
                 if (e instanceof ServiceException) {
@@ -263,7 +263,7 @@ public abstract class AuthMechanism {
                      * include msg in the response, in addition to logs.  This is because custom 
                      * auth handlers might want to pass the reason back to the client.
                      */ 
-                    throw AuthFailedServiceException.AUTH_FAILED(namePassedIn(context)+msg, msg, e);
+                    throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt)+msg, msg, e);
                 }
             }
             
