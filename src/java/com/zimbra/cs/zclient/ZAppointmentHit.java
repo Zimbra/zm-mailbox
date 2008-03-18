@@ -254,7 +254,7 @@ public class ZAppointmentHit implements ZSearchHit {
             appt.mPriority = inst.getAttribute(MailConstants.A_CAL_PRIORITY, priority);
             appt.mPercentComplete = inst.getAttribute(MailConstants.A_TASK_PERCENT_COMPLETE, percentComplete);
             appt.mDueDate = inst.getAttributeLong(MailConstants.A_TASK_DUE_DATE, dueDate);
-            appt.mDuration = inst.getAttributeLong(MailConstants.A_CAL_DURATION, duration);
+            appt.mDuration = inst.getAttributeLong(MailConstants.A_CAL_NEW_DURATION, duration);
 
             appt.mEndTime = appt.mStartTime + appt.mDuration;
             appt.mFragment = inst.getAttribute(MailConstants.E_FRAG, fragment);
