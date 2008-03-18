@@ -268,6 +268,7 @@ public class LC {
     public static final KnownKey nio_lmtp_enabled;
 
     public static final KnownKey krb5_keytab;
+    public static final KnownKey krb5_debug_enabled;
     
     public static final KnownKey zimbra_mtareport_max_recipients;
     public static final KnownKey zimbra_mtareport_max_senders;
@@ -1072,6 +1073,10 @@ public class LC {
         krb5_keytab.setDefault("${zimbra_home}" + FS + "conf" + FS + "krb5.keytab");
         krb5_keytab.setDoc("Zimbra Kerberos 5 keytab file location");
 
+        krb5_debug_enabled = new KnownKey("krb5_debug_enabled");
+        krb5_debug_enabled.setDefault("false");
+        krb5_debug_enabled.setDoc("Enabled Kerberos debugging");
+        
         zimbra_mtareport_max_recipients = new KnownKey("zimbra_mtareport_max_recipients");
         zimbra_mtareport_max_recipients.setDefault("50");
         zimbra_mtareport_max_recipients.setDoc("Number of recipients to list in daily mta reports.");
