@@ -169,8 +169,12 @@ public final class ImapResponse {
         return false;
     }
 
-    public boolean isFailure() {
-        return isStatus() && !isOK();
+    public boolean isWarning() {
+        return isNO() && !isTagged();
+    }
+
+    public boolean isError() {
+        return isBAD() || (isNO() && isTagged());
     }
 
     public ResponseText getResponseText() {

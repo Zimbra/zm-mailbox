@@ -163,10 +163,10 @@ public class ImapImport implements MailItemImport {
     }
     
     public void importData(Account account, DataSource ds) throws ServiceException {
+        validateDataSource(ds);
+        Store store = null;
         try {
-            validateDataSource(ds);
-
-            Store store = getStore(ds.getConnectionType());
+            store = getStore(ds.getConnectionType());
             store.connect(ds.getHost(), ds.getPort(), ds.getUsername(), ds.getDecryptedPassword());
             Folder remoteRootFolder = store.getDefaultFolder();
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
@@ -374,6 +374,14 @@ public class ImapImport implements MailItemImport {
             throw ServiceException.FAILURE(e.getMessage(), e);
         } catch (IOException e) {
             throw ServiceException.FAILURE(e.getMessage(), e);
+        } finally {
+            if (store != null) {
+                try {
+                    store.close();
+                } catch (MessagingException e) {
+                    ZimbraLog.datasource.warn("Error closing IMAP store", e);
+                }
+            }
         }
     }
 
@@ -647,7 +655,7 @@ public class ImapImport implements MailItemImport {
                             IMAPMessage msg = remoteMsgs.get(uid);
                             if (msg == null) return;
                             Date receivedDate = md.getInternalDate();
-                            Long time = receivedDate != null ? (Long) receivedDate.getTime() : null;
+                            Long time = receivedDate != null ? receivedDate.getTime() : null;
                             ParsedMessage pm = getParsedMessage(
                                 md.getBodySections()[0].getData(), time, mbox.attachmentsIndexingEnabled());
                             int flags = getZimbraFlags(msg.getFlags());

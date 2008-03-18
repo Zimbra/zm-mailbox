@@ -4,6 +4,8 @@ import com.sun.mail.iap.ProtocolException;
 import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.IMAPMessage;
 import com.sun.mail.imap.protocol.IMAPProtocol;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailclient.CommandFailedException;
 
 import javax.mail.Folder;
 import javax.mail.Message;
@@ -27,8 +29,8 @@ public class UidFetch {
         config = new ImapConfig();
     }
 
-    public void fetch(IMAPFolder folder, final String seq,
-                      final Handler handler) throws IOException {
+    public void fetch(IMAPFolder folder, final String seq, final Handler handler)
+            throws IOException {
         try {
             folder.doCommand(new IMAPFolder.ProtocolCommand() {
                 public Object doCommand(final IMAPProtocol protocol) throws ProtocolException {
@@ -59,13 +61,18 @@ public class UidFetch {
             ImapResponse res = ImapResponse.read(is);
             if (res == null) throw new EOFException();
             try {
-                if (res.isFailure()) {
-                    throw new IOException(res.getResponseText().getText());
+                if (res.isError()) {
+                    throw new CommandFailedException(
+                        "FETCH", res.getResponseText().getText());
+                }
+                if (res.isWarning()) {
+                    ZimbraLog.datasource.warn(res.getResponseText().getText());
+                    continue;
                 }
                 if (res.isTagged()) {
                     assert res.isOK();
                     if (!tag.equals(res.getTag())) {
-                        throw new IOException("FETCH failed (incorrect tag)");
+                        throw new IOException("Protocol error: FETCH failed (incorrect tag)");
                     }
                     break;
                 }
@@ -80,12 +87,12 @@ public class UidFetch {
     }
 
     private static void handleResponse(MessageData md, Handler handler)
-            throws IOException {
+            throws CommandFailedException {
         try {
             handler.handleResponse(md);
         } catch (Exception e) {
-            throw (IOException)
-                new IOException("FETCH handler failed").initCause(e);
+            throw (CommandFailedException)
+                new CommandFailedException("FETCH", "handler failed").initCause(e);
         }
     }
 
@@ -101,7 +108,8 @@ public class UidFetch {
         Store store = session.getStore("imap");
         // store.connect("imap.mail.yahoo.com", 143, "jjztest", "test1234");
         // store.connect("mail.mac.com", 143, "dwconnelly", "Dthx1138");
-        store.connect("localhost", 7143, "user1", "test123");
+        store.connect("imap.aol.com", 143, "dacztest", "Dthx1138");
+        // store.connect("localhost", 7143, "user1", "test123");
         IMAPFolder folder = (IMAPFolder) store.getFolder("INBOX");
         folder.open(Folder.READ_WRITE);
         //FetchProfile fp = new FetchProfile();
