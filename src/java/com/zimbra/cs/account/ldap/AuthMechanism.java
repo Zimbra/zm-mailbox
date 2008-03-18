@@ -38,7 +38,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
-abstract class AuthMechanism {
+public abstract class AuthMechanism {
     
     protected String mAuthMech;  // value of the zimbraAuthMech attribute
     
@@ -91,7 +91,7 @@ abstract class AuthMechanism {
         return mAuthMech;
     }
     
-    protected String namePassedIn(Map<String, Object> context) {
+    public static String namePassedIn(Map<String, Object> context) {
         String npi = (String)context.get(AuthContext.AC_ACCOUNT_NAME_PASSEDIN);
         if (npi==null)
             npi = "";
@@ -153,7 +153,7 @@ abstract class AuthMechanism {
         }
         
         void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> context) throws ServiceException {
-            prov.externalLdapAuth(domain, mAuthMech, acct, password);
+            prov.externalLdapAuth(domain, mAuthMech, acct, password, context);
         }
         
         boolean checkPasswordAging() throws ServiceException {
