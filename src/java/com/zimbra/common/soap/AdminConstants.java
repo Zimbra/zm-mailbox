@@ -234,6 +234,11 @@ public class AdminConstants {
 
     public static final QName GET_QUOTA_USAGE_REQUEST = QName.get("GetQuotaUsageRequest", NAMESPACE);
     public static final QName GET_QUOTA_USAGE_RESPONSE = QName.get("GetQuotaUsageResponse", NAMESPACE);
+    public static final QName GET_ALL_MAILBOXES_REQUEST = QName.get("GetAllMailboxesRequest", NAMESPACE);
+    public static final QName GET_ALL_MAILBOXES_RESPONSE = QName.get("GetAllMailboxesResponse", NAMESPACE);
+    public static final QName GET_MAILBOX_STATS_REQUEST = QName.get("GetMailboxStatsRequest", NAMESPACE);
+    public static final QName GET_MAILBOX_STATS_RESPONSE = QName.get("GetMailboxStatsResponse", NAMESPACE);
+    
 
     public static final QName GET_MAIL_QUEUE_INFO_REQUEST = QName.get("GetMailQueueInfoRequest", NAMESPACE);
     public static final QName GET_MAIL_QUEUE_INFO_RESPONSE = QName.get("GetMailQueueInfoResponse", NAMESPACE);
@@ -368,6 +373,7 @@ public class AdminConstants {
     public static final String E_SEARCH = "search";
     public static final String E_DIRECTORY = "directory";
     public static final String E_PROVIDER = "provider";
+    public static final String E_STATS = "stats";
     
     public static final String A_ACTION = "action";
     public static final String A_APPLY_CONFIG = "applyConfig";
@@ -489,4 +495,8 @@ public class AdminConstants {
     public static final String A_END = "end";
     public static final String A_PREFIX = "prefix";
     public static final String A_QUEUE = "queue";
+    
+    // mailbox stats
+    public static final String A_NUM_MBOXES = "numMboxes";
+    public static final String A_TOTAL_SIZE = "totalSize";
 }
