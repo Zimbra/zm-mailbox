@@ -986,14 +986,14 @@ public abstract class ImapHandler extends ProtocolHandler {
     boolean authenticate(String username, String authenticateId, String password, String tag, String mechanism)
     throws IOException {
         // the Windows Mobile 5 hacks are enabled by appending "/wm" to the username, etc.
-        // TODO For GSSAPI, should enabled hack be applied to authenticateId
-        // instead?
         EnabledHack enabledHack = EnabledHack.NONE;
-        for (EnabledHack hack : EnabledHack.values()) {
-            if (hack.toString() != null && username != null && username.endsWith(hack.toString())) {
-                enabledHack = hack;
-                username = username.substring(0, username.length() - hack.toString().length());
-                break;
+        if (username != null) {
+            for (EnabledHack hack : EnabledHack.values()) {
+                if (hack.toString() != null && username != null && username.endsWith(hack.toString())) {
+                    enabledHack = hack;
+                    username = username.substring(0, username.length() - hack.toString().length());
+                    break;
+                }
             }
         }
 

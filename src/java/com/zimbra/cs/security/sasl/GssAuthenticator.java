@@ -53,7 +53,10 @@ public class GssAuthenticator extends Authenticator {
     private static final int MAX_RECEIVE_SIZE = 4096;
     private static final int MAX_SEND_SIZE = 4096;
 
-    private static final boolean DEBUG = true;
+    public static final String KRB5_DEBUG_ENABLED_PROP = "ZimbraKrb5DebugEnabled";
+    
+    private static final boolean DEBUG =
+        LC.krb5_debug_enabled.booleanValue() || Boolean.getBoolean(KRB5_DEBUG_ENABLED_PROP);
 
     public static final String MECHANISM = "GSSAPI";
     
