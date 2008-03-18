@@ -4528,7 +4528,6 @@ public class Mailbox {
             //       are unique partitions in the set of recipient mailboxes.
             StoreManager sm = StoreManager.getInstance();
             if (sharedDeliveryCtxt.isFirst()) {
-                sharedDeliveryCtxt.setFirst(false);
                 // This mailbox is the only recipient, or it is the first
                 // of multiple recipients.  Save message to incoming directory if
                 // it's not already there.
@@ -4637,6 +4636,7 @@ public class Mailbox {
                 // to this blob as opposed to saving its own copy.
                 sharedDeliveryCtxt.setBlob(blob);
                 sharedDeliveryCtxt.setMailboxBlob(mboxBlob);
+                sharedDeliveryCtxt.setFirst(false);
             }
         }
         
