@@ -27,8 +27,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -838,5 +840,81 @@ public class DbMailbox {
         }
 
         return accountIds;
+    }
+    
+    public static class MailboxRawData {
+        public int id;
+        public int group_id;
+        public String account_id;
+        public int index_volume_id;
+        public int item_id_checkpoint;
+        public int contact_count;
+        public long size_checkpoint;
+        public int change_checkpoint;
+        public int tracking_sync;
+        public boolean tracking_imap;
+        public int last_backup_at;
+        public String comment;
+        public int last_soap_access;
+        public int new_messages;
+        public int idx_deferred_count;
+    }
+    
+    public static List<MailboxRawData> getMailboxRawData(Connection conn) throws ServiceException {
+        List<MailboxRawData> results = new ArrayList<MailboxRawData>();
+
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement(
+                    "SELECT " +
+                    "id, " +
+                    "group_id, " +
+                    "account_id, " +
+                    "index_volume_id, " +
+                    "item_id_checkpoint, " +
+                    "contact_count, " +
+                    "size_checkpoint, " +
+                    "change_checkpoint, " +
+                    "tracking_sync, " +
+                    "tracking_imap, " +
+                    "last_backup_at, " +
+                    // "comment, " +
+                    "last_soap_access, " +
+                    "new_messages, " +
+                    "idx_deferred_count " +
+                    "FROM mailbox");
+            rs = stmt.executeQuery();
+            
+            while (rs.next()) {
+                MailboxRawData data = new MailboxRawData();
+                int pos = 1;
+                
+                data.id = rs.getInt(pos++);
+                data.group_id = rs.getInt(pos++);
+                data.account_id = rs.getString(pos++);
+                data.index_volume_id = rs.getShort(pos++);
+                data.item_id_checkpoint = rs.getInt(pos++);
+                data.contact_count = rs.getInt(pos++);
+                data.size_checkpoint = rs.getLong(pos++);
+                data.change_checkpoint = rs.getInt(pos++);
+                data.tracking_sync = rs.getInt(pos++);
+                data.tracking_imap = rs.getBoolean(pos++);
+                data.last_backup_at = rs.getInt(pos++);
+                // data.comment = rs.getString(pos++);
+                data.last_soap_access = rs.getInt(pos++);
+                data.new_messages = rs.getInt(pos++);
+                data.idx_deferred_count = rs.getInt(pos++);
+                
+                results.add(data);
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("getting distinct account id's", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+
+        return results;
     }
 }

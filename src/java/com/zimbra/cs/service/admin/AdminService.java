@@ -146,8 +146,10 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.GET_ALL_CALENDAR_RESOURCES_REQUEST, new GetAllCalendarResources());
         dispatcher.registerHandler(AdminConstants.SEARCH_CALENDAR_RESOURCES_REQUEST,  new SearchCalendarResources());
 
-        // QUOTA
+        // QUOTA and mailbox data
         dispatcher.registerHandler(AdminConstants.GET_QUOTA_USAGE_REQUEST, new GetQuotaUsage());
+        dispatcher.registerHandler(AdminConstants.GET_ALL_MAILBOXES_REQUEST, new GetAllMailboxes());
+        dispatcher.registerHandler(AdminConstants.GET_MAILBOX_STATS_REQUEST, new GetMailboxStats());
 
         // Mail queue management
         dispatcher.registerHandler(AdminConstants.GET_MAIL_QUEUE_INFO_REQUEST, new GetMailQueueInfo());

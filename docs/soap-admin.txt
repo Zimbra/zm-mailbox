@@ -403,6 +403,33 @@ When sorting by "quotaLimit", 0 is treated as the highest value possible.
 
 -----------------------------
 
+<GetAllMailboxesRequest [limit="..."] [offset="..."]>
+</GetAllMailboxesRequest>
+
+<GetAllMailboxesResponse>
+  <mbox id="..." groupid="..." accountid="..." indexvolumeid="..." itemidcheckpoint="..." contactcount="..." sizecheckpoint="..."
+        changecheckpoint="..." trackingsync="..." trackingimap="..." lastbackupat="..." lastsoapaccess="..." newmessages="..." idxdeferredcount="..."/>+
+</GetAllMailboxesResponse>
+
+Notes:
+Returns all data from the mailbox table (in db.sql), except for the "comment" column.
+  limit - the number of mailboxes to return (0 is default and means all)
+  offset - the starting offset (0, 25, etc)
+            
+-----------------------------
+
+<GetMailboxStatsRequest/>
+
+<GetMailboxStatsResponse>
+  <stats numMboxes="..." totalSize="..."/>
+</GetMailboxStatsResponse>
+
+Notes:
+  numMboxes: total number of mailboxes
+  totalSize: total size of all mailboxes
+
+-----------------------------
+
 <GetAllAccountsRequest>
   [<domain by="id|name">...</domain>]
 <GetAllAccountsRequest/>
