@@ -254,7 +254,7 @@ public class WaitSetRequest extends MailDocumentHandler {
                 Element a = iter.next();
                 String id = a.getAttribute(MailConstants.A_ID);
                 if (allowedAccountIds != null && !allowedAccountIds.contains(id)) {
-                    throw ServiceException.PERM_DENIED("Only adins may listen to other account IDs");
+                    throw ServiceException.PERM_DENIED("Only admins may listen to other account IDs");
                 }
                 String tokenStr = a.getAttribute(MailConstants.A_TOKEN, null);
                 SyncToken token = tokenStr != null ? new SyncToken(tokenStr) : null;
