@@ -23,6 +23,7 @@ package com.zimbra.cs.mailbox;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.lang.ref.SoftReference;
 import java.util.*;
 
@@ -45,7 +46,6 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -83,8 +83,10 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.TimeZoneFixup;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
+import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarCache;
@@ -3050,16 +3052,75 @@ public class Mailbox {
         return cal;
     }
 
-    public synchronized ZVCalendar getZCalendarForRange(
-            OperationContext octxt,
-            long start, long end, int folderId,
-            boolean useOutlookCompatMode, boolean allowPrivateAccess)
+    public synchronized void writeICalendarForCalendarItems(
+            Writer writer, Collection<CalendarItem> calItems,
+            boolean useOutlookCompatMode, boolean ignoreErrors, boolean allowPrivateAccess, boolean forceOlsonTZID,
+            boolean trimCalItemsList)
+    throws ServiceException {
+        try {
+            writer.write("BEGIN:VCALENDAR\r\n");
+
+            ZProperty prop;
+            prop = new ZProperty(ICalTok.PRODID, ZCalendar.sZimbraProdID);
+            prop.toICalendar(writer, forceOlsonTZID);
+            prop = new ZProperty(ICalTok.VERSION, ZCalendar.sIcalVersion);
+            prop.toICalendar(writer, forceOlsonTZID);
+            prop = new ZProperty(ICalTok.METHOD, ICalTok.PUBLISH.toString());
+            prop.toICalendar(writer, forceOlsonTZID);
+
+            // timezones
+            ICalTimeZone localTz = ICalTimeZone.getAccountTimeZone(getAccount()); 
+            TimeZoneMap tzmap = new TimeZoneMap(localTz);
+            for (CalendarItem calItem : calItems)
+                tzmap.add(calItem.getTimeZoneMap());
+            // iterate the tzmap and add all the VTimeZone's 
+            for (Iterator<ICalTimeZone> iter = tzmap.tzIterator(); iter.hasNext(); ) {
+                ICalTimeZone tz = iter.next();
+                tz.newToVTimeZone().toICalendar(writer, forceOlsonTZID);
+            }
+            tzmap = null;  // help keep memory consumption low
+
+            // build all the event components and add them to the Calendar
+            for (Iterator<CalendarItem> iter = calItems.iterator(); iter.hasNext(); ) {
+                CalendarItem calItem = iter.next();
+                if (trimCalItemsList)
+                    iter.remove();  // help keep memory consumption low
+                Invite[] invites = calItem.getInvites();
+                if (invites != null) {
+                    for (Invite inv : invites) {
+                        ZComponent comp = null;
+                        try {
+                            comp = inv.newToVComponent(useOutlookCompatMode, allowPrivateAccess);
+                        } catch (ServiceException e) {
+                            if (ignoreErrors) {
+                                ZimbraLog.calendar.warn(
+                                        "Error retrieving iCalendar data for item " +
+                                        inv.getMailItemId() + ": " + e.getMessage(), e);
+                            } else
+                                throw e;
+                        }
+                        if (comp != null)
+                            comp.toICalendar(writer, forceOlsonTZID);
+                    }
+                }
+            }
+
+            writer.write("END:VCALENDAR\r\n");
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Error writing iCalendar", e);
+        }
+    }
+
+    public synchronized void writeICalendarForRange(
+            Writer writer, OperationContext octxt, long start, long end, int folderId,
+            boolean useOutlookCompatMode, boolean ignoreErrors, boolean allowPrivateAccess, boolean forceOlsonTZID)
     throws ServiceException {
         boolean success = false;
         try {
-            beginTransaction("getCalendarForRange", octxt);
+            beginTransaction("writeICalendarForRange", octxt);
             Collection<CalendarItem> calItems = getCalendarItemsForRange(octxt, start, end, folderId, null);
-            return getZCalendarForCalendarItems(calItems, useOutlookCompatMode, false, allowPrivateAccess);
+            writeICalendarForCalendarItems(
+                    writer, calItems, useOutlookCompatMode, ignoreErrors, allowPrivateAccess, forceOlsonTZID, true);
         } finally {
             endTransaction(success);
         }

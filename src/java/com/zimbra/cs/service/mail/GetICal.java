@@ -65,6 +65,9 @@ public class GetICal extends MailDocumentHandler {
         boolean useOutlookCompatMode = Browser.IE.equals(browser);
         try {
             try {
+                ByteArrayOutputStream buf = new ByteArrayOutputStream();
+                OutputStreamWriter wout = new OutputStreamWriter(buf);
+
                 ZVCalendar cal = null;
                 ItemId iid = iidStr != null ? new ItemId(iidStr, zsc) : null;
                 if (iid != null) {
@@ -77,32 +80,23 @@ public class GetICal extends MailDocumentHandler {
                         throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
                     }
                     cal = inv.newToICalendar(useOutlookCompatMode, allowPrivateAccess);
-                } else {
-                    cal = mbx.getZCalendarForRange(octxt, rangeStart, rangeEnd, Mailbox.ID_FOLDER_CALENDAR,
-                                                   useOutlookCompatMode, allowPrivateAccess);
-                }
-                
-                ByteArrayOutputStream buf = new ByteArrayOutputStream();
-                try {
-                    OutputStreamWriter wout = new OutputStreamWriter(buf);
                     cal.toICalendar(wout);
-                    wout.flush();
-                    
-                    Element response = getResponseElement(zsc);
-                    
-                    Element icalElt = response.addElement(MailConstants.E_CAL_ICAL);
-
-                    if (iid != null)
-                        icalElt.addAttribute(MailConstants.A_ID, new ItemIdFormatter(zsc).formatItemId(iid));
-                    
-                    icalElt.addText(buf.toString());
-                    
-                    return response;
-                } catch (IOException e) {
-                    throw ServiceException.FAILURE("IO Exception while outputing Calendar for Invite: "+ iidStr + "-" + compNum, e);
+                } else {
+                    mbx.writeICalendarForRange(wout, octxt, rangeStart, rangeEnd, Mailbox.ID_FOLDER_CALENDAR,
+                                               useOutlookCompatMode, false, allowPrivateAccess, false);
                 }
+                wout.flush();
+
+                Element response = getResponseElement(zsc);
+                Element icalElt = response.addElement(MailConstants.E_CAL_ICAL);
+                if (iid != null)
+                    icalElt.addAttribute(MailConstants.A_ID, new ItemIdFormatter(zsc).formatItemId(iid));
+                icalElt.addText(buf.toString());
+                return response;
             } catch(MailServiceException.NoSuchItemException e) {
                 throw ServiceException.FAILURE("Error could get default invite for Invite: "+ iidStr + "-" + compNum, e);
+            } catch (IOException e) {
+                throw ServiceException.FAILURE("IO Exception while outputing Calendar for Invite: "+ iidStr + "-" + compNum, e);
             }
         } catch(MailServiceException.NoSuchItemException e) {
             throw ServiceException.FAILURE("No Such Invite Message: "+ iidStr, e);
