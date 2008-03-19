@@ -25,6 +25,7 @@ import java.util.Map;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.common.service.ServiceException;
@@ -63,6 +64,9 @@ public class DeleteMailbox extends AdminDocumentHandler {
         } else if (!canAccessAccount(zsc, account)) {
             throw ServiceException.PERM_DENIED("can not access account");
         }
+
+        if (account != null)
+            IMPersona.deleteIMPersona(account.getName());
         
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(accountId, false);
         int mailboxId = -1;

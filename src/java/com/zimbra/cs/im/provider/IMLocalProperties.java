@@ -32,6 +32,9 @@ public class IMLocalProperties implements PropertyProvider {
         sPropertyMap.put("provider.group.className", ZimbraGroupProvider.class.getName());
         sPropertyMap.put("connectionProvider.className", ZimbraConnectionProvider.class.getName());
         sPropertyMap.put("routingTableImpl.className", ZimbraRoutingTableImpl.class.getName());
+        
+        // do not allow users to update IM passwd via XMPP
+        sPropertyMap.put("register.password", "false");
     }        
 
     public String get(String key) {

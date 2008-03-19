@@ -1535,9 +1535,9 @@ public class Mailbox {
             try {
                 // remove all the relevant entries from the database
                 Connection conn = getOperationConnection();
-                    DbMailbox.clearMailboxContent(this);
-                    DbMailbox.deleteMailbox(conn, this);
-
+                DbMailbox.clearMailboxContent(this);
+                DbMailbox.deleteMailbox(conn, this);
+                    
                 success = true;
             } finally {
                 // commit the DB transaction before touching the store!  (also ends the operation)

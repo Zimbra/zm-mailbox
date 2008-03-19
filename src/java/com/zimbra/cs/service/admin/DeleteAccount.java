@@ -29,6 +29,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.SearchOptions;
+import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.common.service.ServiceException;
@@ -81,6 +82,7 @@ public class DeleteAccount extends AdminDocumentHandler {
         	throw  ServiceException.INVALID_REQUEST(String.format("Can not delete account %s because it is a domain-level wiki account for domain %s.",account.getName(),((NamedEntry)domains.get(0)).getName()) ,null);
         }
         
+        IMPersona.deleteIMPersona(account.getName());
         prov.deleteAccount(id);
         if (mbox != null)
             mbox.deleteMailbox();
