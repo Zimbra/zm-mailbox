@@ -1188,9 +1188,7 @@ public class Invite {
         }
         return null;
     }
-    
-    
-    
+
     /**
      * Updates the ATTENDEE entries in this invite which match entries in the other one -- presumably 
      * because the attendee has sent us a reply to change his status.  This function writes the MetaData 
@@ -1210,8 +1208,15 @@ public class Invite {
         
         OUTER: 
             for (ZAttendee otherAt : other.getAttendees()) {
+                // Look up internal account for the attendee.  For internal users we want to match
+                // on all email addresses of the account.
+                Account otherAcct = null;
+                String otherAddress = otherAt.getAddress();
+                if (otherAddress != null)
+                    otherAcct = Provisioning.getInstance().get(AccountBy.name, otherAddress);
                 for (ZAttendee at : attendees) {
-                    if (otherAt.addressesMatch(at)) {
+                    if (otherAt.addressesMatch(at) ||
+                        (otherAcct != null && CalendarItem.accountMatchesCalendarUser(otherAcct, at))) {
                     	
                     	// BUG:4911  When an invitee responds they include an ATTENDEE record, but
                     	// it doesn't have to have all fields.  In particular, we don't want to let them
