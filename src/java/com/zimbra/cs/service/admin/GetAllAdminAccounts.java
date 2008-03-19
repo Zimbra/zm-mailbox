@@ -40,13 +40,14 @@ public class GetAllAdminAccounts extends AdminDocumentHandler {
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
         ZimbraSoapContext lc = getZimbraSoapContext(context);
-	    Provisioning prov = Provisioning.getInstance();
+        Provisioning prov = Provisioning.getInstance();
 
+        boolean applyCos = request.getAttributeBool(AdminConstants.A_APPLY_COS, true);
         List accounts = prov.getAllAdminAccounts();
 
         Element response = lc.createElement(AdminConstants.GET_ALL_ADMIN_ACCOUNTS_RESPONSE);
         for (Iterator it=accounts.iterator(); it.hasNext(); ) {
-            ToXML.encodeAccountOld(response, (Account) it.next());
+            ToXML.encodeAccountOld(response, (Account)it.next(), applyCos);
         }
 	    return response;
 	}

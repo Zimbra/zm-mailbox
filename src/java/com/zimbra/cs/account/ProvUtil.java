@@ -213,15 +213,15 @@ public class ProvUtil implements DebugListener {
         FLUSH_CACHE("flushCache", "fc", "{skin|locale|account|config|cos|domain|server|zimlet} [name1|id1 [name2|id2...]]", Category.MISC, 1, Integer.MAX_VALUE),
         GENERATE_DOMAIN_PRE_AUTH("generateDomainPreAuth", "gdpa", "{domain|id} {name} {name|id|foreignPrincipal} {timestamp|0} {expires|0}", Category.MISC, 5, 5),
         GENERATE_DOMAIN_PRE_AUTH_KEY("generateDomainPreAuthKey", "gdpak", "[-f] {domain|id}", Category.MISC, 1, 2),
-        GET_ACCOUNT("getAccount", "ga", "{name@domain|id} [attr1 [attr2...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
+        GET_ACCOUNT("getAccount", "ga", "[-e] {name@domain|id} [attr1 [attr2...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
         GET_DATA_SOURCES("getDataSources", "gds", "{name@domain|id} [arg1 [arg2...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),                
         GET_IDENTITIES("getIdentities", "gid", "{name@domain|id} [arg1 [arg...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
         GET_SIGNATURES("getSignatures", "gsig", "{name@domain|id} [arg1 [arg...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
         GET_ACCOUNT_MEMBERSHIP("getAccountMembership", "gam", "{name@domain|id}", Category.ACCOUNT, 1, 2),
-        GET_ALL_ACCOUNTS("getAllAccounts","gaa", "[-v] [{domain}] [-s server]", Category.ACCOUNT, 0, 4),
+        GET_ALL_ACCOUNTS("getAllAccounts","gaa", "[-v] [-e] [-s server] [{domain}]", Category.ACCOUNT, 0, 5),
         GET_ACCOUNT_LOGGERS("getAccountLoggers", "gal", "{name@domain|id}", Category.MISC, 1, 1),
         GET_ALL_ACCOUNT_LOGGERS("getAllAccountLoggers", "gaal", "{server}", Category.MISC, 1, 1),
-        GET_ALL_ADMIN_ACCOUNTS("getAllAdminAccounts", "gaaa", "[-v]", Category.ACCOUNT, 0, 1),
+        GET_ALL_ADMIN_ACCOUNTS("getAllAdminAccounts", "gaaa", "[-v] [-e] [attr1 [attr2...]]", Category.ACCOUNT, 0, Integer.MAX_VALUE),
         GET_ALL_CALENDAR_RESOURCES("getAllCalendarResources", "gacr", "[-v] [{domain}]", Category.CALENDAR, 0, 2),
         GET_ALL_CONFIG("getAllConfig", "gacf", "[attr1 [attr2...]]", Category.CONFIG, 0, Integer.MAX_VALUE),
         GET_ALL_COS("getAllCos", "gac", "[-v]", Category.COS, 0, 1),
@@ -466,7 +466,7 @@ public class ProvUtil implements DebugListener {
             doGenerateDomainPreAuth(args);
             break;            
         case GET_ACCOUNT:
-            dumpAccount(lookupAccount(args[1]), getArgNameSet(args, 2));
+            doGetAccount(args);
             break;
         case GET_ACCOUNT_MEMBERSHIP:
             doGetAccountMembership(args);
@@ -892,6 +892,23 @@ public class ProvUtil implements DebugListener {
            }
         }
     }
+    
+    private void doGetAccount(String[] args) throws ServiceException {
+        boolean applyDefault = true;
+        int acctPos = 1;
+        
+        if (args[1].equals("-e")) {
+            if (args.length > 1) {
+                applyDefault = false;
+                acctPos = 2;
+            } else {
+                usage();
+                return;
+            }
+        } 
+        
+        dumpAccount(lookupAccount(args[acctPos], true, applyDefault), applyDefault, getArgNameSet(args, acctPos+1));
+    }
 
     private void doGetAccountMembership(String[] args) throws ServiceException {
         String key = null;
@@ -986,11 +1003,14 @@ public class ProvUtil implements DebugListener {
         }
     }
 
-    private void doGetAllAccounts(Provisioning prov, Domain domain, Server server, final boolean verbose, final Set<String> attrNames) throws ServiceException {
+    /*
+     * prov is always LdapProvisioning here
+     */
+    private void doGetAllAccounts(Provisioning prov, Domain domain, Server server, final boolean verbose, final boolean applyDefault, final Set<String> attrNames) throws ServiceException {
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
             public void visit(com.zimbra.cs.account.NamedEntry entry) throws ServiceException {
                 if (verbose)
-                    dumpAccount((Account) entry, attrNames);
+                    dumpAccount((Account) entry, applyDefault, attrNames);
                 else 
                     System.out.println(entry.getName());                        
             }
@@ -1000,56 +1020,49 @@ public class ProvUtil implements DebugListener {
     
     private void doGetAllAccounts(String[] args) throws ServiceException {
         boolean verbose = false;
+        boolean applyDefault = true;
         String d = null;
         String s = null;
-        if (args.length == 2) {
-            if (args[1].equals("-v")) 
+        
+        int i = 1;
+        while (i < args.length) {
+            String arg = args[i];
+            if (arg.equals("-v"))
                 verbose = true;
-            else 
-                d = args[1];
+            else if (arg.equals("-e"))
+                applyDefault = false;
+            else if (arg.equals("-s")) {
+                i++;
+                if (i < args.length) {
+                    if (s == null)
+                        s = args[i];
+                    else {
+                        System.out.println("invalid arg: " + args[i] + ", already specified -s with " + s);
+                        usage();
+                        return;
+                    }
+                } else {
+                    usage();
+                    return;
+                }
+            } else {
+                if (d == null)
+                    d = arg;
+                else {
+                    System.out.println("invalid arg: " + arg + ", already specified domain: " + d);
+                    usage();
+                    return;
+                }
+            }
+            i++;
+        }
 
-        } else if (args.length == 3) {
-            if (args[1].equals("-v")) {
-                verbose = true;
-                d = args[2];
-            } else if (args[1].equals("-s")) {
-                s = args[2];
-            } else {
-                usage();
-                return;
-            }
-        } else if (args.length == 4) {
-            if (args[1].equals("-v")) 
-                verbose = true;
-            else 
-                d = args[1];
-            
-            if (args[2].equals("-s"))
-                s = args[3];
-            else {
-                usage();
-                return;
-            }
-        } else if (args.length == 5) {
-            if (args[1].equals("-v")) {
-                verbose = true;
-                d = args[2];
-            } else {
-                usage();
-                return;
-            }
-            
-            if (args[3].equals("-s")) {
-                s = args[4];
-            } else {
-                usage();
-                return;
-            }
-        } else if (args.length != 1) {
+        if (!applyDefault && !verbose) {
+            System.out.println("invalid arg: -e can be specified only when -v is also specified");
             usage();
             return;
         }
-
+        
         // always use LDAP
         Provisioning prov = Provisioning.getInstance();
 
@@ -1061,11 +1074,11 @@ public class ProvUtil implements DebugListener {
             List domains = prov.getAllDomains();
             for (Iterator dit=domains.iterator(); dit.hasNext(); ) {
                 Domain domain = (Domain) dit.next();
-                doGetAllAccounts(prov, domain, server, verbose, null);
+                doGetAllAccounts(prov, domain, server, verbose, applyDefault, null);
             }
         } else {
             Domain domain = lookupDomain(d, prov);
-            doGetAllAccounts(prov, domain, server, verbose, null);
+            doGetAllAccounts(prov, domain, server, verbose, applyDefault, null);
         }
     }    
 
@@ -1131,7 +1144,7 @@ public class ProvUtil implements DebugListener {
             NamedEntry account = (NamedEntry) accounts.get(j);
             if (verbose) {
                 if (account instanceof Account)
-                    dumpAccount((Account)account, true, null);
+                    dumpAccount((Account)account, null);
                 else if (account instanceof Alias)
                     dumpAlias((Alias)account);
                 else if (account instanceof DistributionList)
@@ -1203,13 +1216,39 @@ public class ProvUtil implements DebugListener {
     }    
 
     private void doGetAllAdminAccounts(String[] args) throws ServiceException {
-        boolean verbose = args.length > 1 && args[1].equals("-v");
-        List accounts = mProv.getAllAdminAccounts();
-        Set<String> attrNames = getArgNameSet(args, verbose ? 2 : 1);
+        boolean verbose = false;
+        boolean applyDefault = true;
+        
+        int i = 1;
+        while (i < args.length) {
+            String arg = args[i];
+            if (arg.equals("-v"))
+                verbose = true;
+            else if (arg.equals("-e"))
+                applyDefault = false;
+            else
+                break;
+            i++;
+        }
+        
+        if (!applyDefault && !verbose) {
+            System.out.println("invalid arg: -e can be specified only when -v is also specified");
+            usage();
+            return;
+        }
+        
+        List accounts;
+        if (mProv instanceof SoapProvisioning) {
+            SoapProvisioning soapProv = (SoapProvisioning)mProv;
+            accounts = soapProv.getAllAdminAccounts(applyDefault);
+        } else
+            accounts = mProv.getAllAdminAccounts();
+        
+        Set<String> attrNames = getArgNameSet(args, i);
         for (Iterator it=accounts.iterator(); it.hasNext(); ) {
             Account account = (Account) it.next();
             if (verbose)
-                dumpAccount(account, attrNames);
+                dumpAccount(account, applyDefault, attrNames);
             else 
                 System.out.println(account.getName());
         }
@@ -1537,8 +1576,24 @@ public class ProvUtil implements DebugListener {
     	}
     }
     
-    private Account lookupAccount(String key, boolean mustFind) throws ServiceException {
-        Account a = mProv.getAccount(key);
+    private Account lookupAccount(String key, boolean mustFind, boolean applyDefault) throws ServiceException {
+        
+        Account a;
+        if (applyDefault==true || (mProv instanceof LdapProvisioning))
+            a = mProv.getAccount(key);
+        else {
+            /*
+             * oops, do not apply default, and we are SoapProvisioning
+             * 
+             * This a bit awkward because the applyDefault is controlled at the Entry.getAttrs, not at 
+             * the provisioning interface.   But for SOAP, this needs to be passed to the get(AccountBy) 
+             * method so it can set the flag in SOAP.   We do not want to add a provisioning method for 
+             * this.  Instead, we make it a SOAPProvisioning only method.
+             * 
+             */
+            SoapProvisioning soapProv = (SoapProvisioning)mProv;
+            a = soapProv.getAccount(key, applyDefault);
+        }
         
         if (mustFind && a == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(key);
@@ -1547,7 +1602,11 @@ public class ProvUtil implements DebugListener {
     }
     
     private Account lookupAccount(String key) throws ServiceException {
-        return lookupAccount(key, true);
+        return lookupAccount(key, true, true);
+    }
+    
+    private Account lookupAccount(String key, boolean mustFind) throws ServiceException {
+        return lookupAccount(key, mustFind, true);
     }
 
     private CalendarResource lookupCalendarResource(String key) throws ServiceException {

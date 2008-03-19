@@ -133,7 +133,7 @@ Access: domain admin sufficient
                 
 -----------------------------
 
-<GetAllAdminAccountsRequest/>
+<GetAllAdminAccountsRequest [applyCos="{apply-cos}"]/>
 
 <GetAllAdminAccountsResponse>
   <account name="{name}" id="{id}">
