@@ -1,8 +1,27 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ *
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2007, 2008 Zimbra, Inc.
+ *
+ * The contents of this file are subject to the Yahoo! Public License
+ * Version 1.0 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ *
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.cs.mailclient.imap;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
+ * IMAP response text:
+ *
  * resp-text       = ["[" resp-text-code "]" SP] text
  *
  * resp-text-code  = "ALERT" /
@@ -15,62 +34,62 @@ import java.io.IOException;
  *                   "UNSEEN" SP nz-number /
  *                   atom [SP 1*<any TEXT-CHAR except "]">]
  */
-public class ResponseText {
-    private ImapData mCode;
-    private ImapData mData;
-    private String mText;
+public final class ResponseText {
+    private Atom mCode;     // response text code
+    private Object mData;   // optional response text data
+    private String mText;   // response text
 
-    public static ResponseText read(ImapParser parser) throws IOException {
+    public static ResponseText read(ImapInputStream is) throws IOException {
         ResponseText rt = new ResponseText();
-        if (parser.peek() == '[') {
-            rt.parseCode(parser);
+        if (is.peek() == '[') {
+            rt.readCode(is);
         }
-        rt.mText = parser.readText().getStringValue();
+        rt.mText = is.readText();
         return rt;
     }
 
-    private void parseCode(ImapParser parser) throws IOException {
-        parser.skipChar('[');
-        mCode = parser.readAtom();
-        switch (mCode.getAtomValue()) {
+    private void readCode(ImapInputStream is) throws IOException {
+        is.skipChar('[');
+        mCode = is.readAtom();
+        switch (mCode.getCAtom()) {
         case ALERT: case PARSE: case READ_ONLY: case READ_WRITE: case TRYCREATE:
             break;
         case UIDNEXT: case UIDVALIDITY: case UNSEEN:
-            parser.skipSpace();
-            mData = parser.readAtom(); // Validate
+            is.skipChar(' ');
+            mData = is.readNZNumber();
             break;
         case BADCHARSET:
-            if (parser.isSpace()) {
-                parser.skipSpace();
-                mData = parser.readList();
+            if (is.match(' ')) {
+                mData = readCharset(is);
             }
             break;
         case PERMANENTFLAGS:
-            parser.skipSpace();
-            mData = parser.readList();
+            is.skipChar(' ');
+            mData = Flags.read(is);
             break;
         case CAPABILITY:
-            parser.skipSpace();
-            mData = parser.readAtoms();
+            is.skipChar(' ');
+            mData = Capabilities.read(is);
             break;
         default:
-            if (parser.isSpace()) {
-                parser.skipSpace();
-                mData = parser.readText(']');
+            if (is.match(' ')) {
+                mData = is.readText(']');
             }
         }
-        parser.skipChar(']');
+        is.skipChar(']');
     }
 
-    public ImapData getCode() {
-        return mCode;
+    private String[] readCharset(ImapInputStream is) throws IOException {
+        is.skipChar(' ');
+        ArrayList<String> cs = new ArrayList<String>();
+        do {
+            cs.add(is.readAString());
+        } while (is.match(' '));
+        is.skipChar(')');
+        return cs.toArray(new String[cs.size()]);
     }
-
-    public ImapData getData() {
-        return mData;
-    }
-
-    public String getText() {
-        return mText;
-    }
+           
+    public Atom getCode() { return mCode; }
+    public Object getData() { return mData; }
+    public String getText() { return mText; }
 }

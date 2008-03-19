@@ -17,6 +17,7 @@
 package com.zimbra.cs.datasource;
 
 import java.io.IOException;
+import java.io.File;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
@@ -67,6 +68,8 @@ import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.mailclient.imap.UidFetch;
 import com.zimbra.cs.mailclient.imap.Literal;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
+import com.zimbra.cs.mailclient.imap.MessageData;
+import com.zimbra.cs.mailclient.imap.ImapData;
 
 public class ImapImport implements MailItemImport {
     private final UidFetch mUidFetch;
@@ -632,7 +635,8 @@ public class ImapImport implements MailItemImport {
 
                     // Check for new messages using batch FETCH
                     mUidFetch.fetch(remoteFolder, startUid + ":" + stopUid, new UidFetch.Handler() {
-                        public void handleResponse(Literal lit, long uid, Date receivedDate) throws Exception {
+                        public void handleResponse(MessageData md) throws Exception {
+                            long uid = md.getUid();
                             ZimbraLog.datasource.debug("Found new remote message %d.  Creating local copy.", uid);
                             if (trackedMsgs.getByUid(uid) != null) {
                                 ZimbraLog.datasource.warn("Skipped message with uid = %d because it already exists locally", uid);
@@ -640,11 +644,10 @@ public class ImapImport implements MailItemImport {
                             }
                             IMAPMessage msg = remoteMsgs.get(uid);
                             if (msg == null) return;
+                            Date receivedDate = md.getInternalDate();
                             Long time = receivedDate != null ? (Long) receivedDate.getTime() : null;
-                            boolean indexingEnabled = mbox.attachmentsIndexingEnabled();
-                            ParsedMessage pm = lit.getFile() != null ?
-                                new ParsedMessage(lit.getFile(), time, indexingEnabled) :
-                                new ParsedMessage(lit.getBytes(), time, indexingEnabled);
+                            ParsedMessage pm = getParsedMessage(
+                                md.getBodySections()[0].getData(), time, mbox.attachmentsIndexingEnabled());
                             int flags = getZimbraFlags(msg.getFlags());
                             com.zimbra.cs.mailbox.Message zimbraMsg =
                                 mbox.addMessage(null, pm, localFolder.getId(), false, flags, null);
@@ -697,6 +700,20 @@ public class ImapImport implements MailItemImport {
             numDeletedLocally, numAddedRemotely, numDeletedRemotely, runAgain ? " Rerun import." : "");
         
         return !runAgain;
+    }
+
+    private static ParsedMessage getParsedMessage(ImapData id,
+                                                  Long receivedDate,
+                                                  boolean indexAttachments)
+            throws IOException, MessagingException {
+        if (id.isLiteral()) {
+            Literal lit = (Literal) id;
+            File f = lit.getFile();
+            if (f != null) {
+                return new ParsedMessage(f, receivedDate, indexAttachments);
+            }
+        }
+        return new ParsedMessage(id.getBytes(), receivedDate, indexAttachments);
     }
     
     /**

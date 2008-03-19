@@ -1,317 +1,191 @@
 package com.zimbra.cs.mailclient;
 
-import org.apache.commons.codec.binary.Base64;
+import static com.zimbra.cs.mailclient.ClientAuthenticator.*;
+import com.zimbra.cs.mailclient.util.SSLUtil;
 
-import javax.net.SocketFactory;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
-import javax.security.auth.login.LoginException;
 import javax.security.sasl.Sasl;
-import javax.security.sasl.SaslException;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.EOFException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
-import java.net.Socket;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Arrays;
+import java.util.ListIterator;
+import java.util.NoSuchElementException;
 
 public abstract class MailClient {
-    protected String mHost;
-    protected int mPort;
-    protected Socket mSocket;
-    protected String mAuthorizationId;
-    protected String mAuthenticationId;
-    protected String mPassword;
-    protected String mMechanism;
-    protected String mRealm;
-    protected boolean mSslEnabled;
-    protected SSLSocketFactory mSSLSocketFactory;
-    protected Map<String, String> mSaslProperties;
-    protected MailInputStream mInputStream;
-    protected MailOutputStream mOutputStream;
-    protected PrintStream mLogStream;
-    protected StringBuilder mLogBuffer;
-    protected ClientAuthenticator mAuthenticator;
-    protected boolean mDebug;
-    protected boolean mClosed;
-    protected State mState;
-    protected String mStatus;
-    protected String mResponse;
+    private MailConfig mConfig;
+    protected MailConnection mConnection;
+    private StringBuilder mLineBuffer;
+    private boolean mEnableTLS;
+    private boolean mGotEndOfFile;
 
-    public static enum State {
-        NON_AUTHENTICATED, AUTHENTICATED, SELECTED, LOGOUT
+    protected MailClient(MailConfig config) {
+        mConfig = config;
+        mLineBuffer = new StringBuilder(132);
     }
 
-    protected MailClient() {}
-
-    protected MailClient(String host, int port) {
-        mHost = host;
-        mPort = port;
-    }
-    
-    public void connect() throws IOException {
-        SocketFactory sf = mSslEnabled ?
-            getSSLSocketFactory() : SocketFactory.getDefault();
-        mSocket = sf.createSocket(mHost, mPort);
-        mInputStream = new MailInputStream(
-            new BufferedInputStream(mSocket.getInputStream()));
-        mOutputStream = new MailOutputStream(
-            new BufferedOutputStream(mSocket.getOutputStream()));
-        processGreeting();
-    }
-
-    private SSLSocketFactory getSSLSocketFactory() {
-        return mSSLSocketFactory != null ?
-            mSSLSocketFactory : (SSLSocketFactory) SSLSocketFactory.getDefault();
-    }
-    
-    protected abstract void processGreeting() throws IOException;
-    protected abstract void sendAuthenticate(boolean ir) throws LoginException, IOException;
-    protected abstract void sendStartTLS() throws IOException;
-
-    public abstract void login() throws IOException;
-    public abstract void logout() throws IOException;
-    public abstract void sendCommand(String cmd, String args) throws IOException;
-    public abstract String getProtocol();
-    public abstract void selectFolder(String folder) throws IOException;
-
-    public void sendCommand(String cmd) throws IOException {
-        sendCommand(cmd, null);
-    }
-    
-    public void authenticate(boolean ir) throws LoginException, IOException {
-        if (mMechanism == null || "LOGIN".equals(mMechanism)) {
-            login();
-            return;
-        }
-        checkCredentials();
-        mAuthenticator = new ClientAuthenticator(mMechanism, getProtocol(), mHost);
-        mAuthenticator.setAuthorizationId(mAuthorizationId);
-        mAuthenticator.setAuthenticationId(mAuthenticationId);
-        mAuthenticator.setPassword(mPassword);
-        mAuthenticator.setRealm(mRealm);
-        mAuthenticator.setDebug(mDebug);
-        if (mSaslProperties != null) {
-            mAuthenticator.getProperties().putAll(mSaslProperties);
-        }
-        mAuthenticator.initialize();
-        sendAuthenticate(ir);
-        if (mAuthenticator.isEncryptionEnabled()) {
-            mInputStream = new MailInputStream(
-                mAuthenticator.getUnwrappedInputStream(mSocket.getInputStream()));
-            mOutputStream = new MailOutputStream(
-                mAuthenticator.getWrappedOutputStream(mSocket.getOutputStream()));
-        }
-    }
-
-    public void authenticate() throws LoginException, IOException {
-        authenticate(false);
-    }
-
-    protected void processContinuation(String line) throws IOException {
-        byte[] response = mAuthenticator.evaluateChallenge(
-            decodeBase64(line.substring(2)));
-        if (response != null) writeLine(encodeBase64(response));
-    }
-
-    protected static byte[] decodeBase64(String s) throws SaslException {
+    public void run(String[] args) throws Exception {
         try {
-            return Base64.decodeBase64(s.getBytes("us-ascii"));
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException("US-ASCII encoding unsupported");
+            parseArguments(args);
+        } catch (IllegalArgumentException e) {
+            System.err.printf("ERROR: %s\n", e);
+            printUsage(System.err);
+            System.exit(1);
         }
+        if (mConfig.getAuthenticationId() == null) {
+            // Authentication id defaults to login username
+            mConfig.setAuthenticationId(System.getProperty("user.name"));
+        }
+        mConfig.setTraceStream(System.out);
+        mConfig.setSSLSocketFactory(SSLUtil.getDummySSLContext().getSocketFactory());
+        mConnection = MailConnection.getInstance(mConfig);
+        mConnection.connect();
+        if (mEnableTLS) mConnection.startTLS();
+        mConnection.authenticate();
+        mConnection.setTraceEnabled(false);
+        String qop = mConnection.getNegotiatedQop();
+        if (qop != null) System.out.printf("[Negotiated QOP is %s]\n", qop); 
+        startCommandLoop();
     }
 
-    protected static String encodeBase64(byte[] b) {
+    protected abstract void printUsage(PrintStream ps);
+    
+    private void startCommandLoop() throws IOException {
+        Thread t = new ReaderThread();
+        t.setDaemon(true);
+        t.start();
+        final MailInputStream is = mConnection.getInputStream();
+        String line;
         try {
-            return new String(Base64.encodeBase64(b), "us-ascii");
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException("US-ASCII encoding unsupported");
-        }
-    }
-
-    protected void checkCredentials() {
-        if (mAuthenticationId == null) {
-            mAuthenticationId = mAuthorizationId;
-        }
-        if (mAuthenticationId == null) {
-            throw new IllegalStateException("Missing authentication id");
-        }
-    }
-
-    public void startTLS() throws IOException {
-        sendStartTLS();
-        SSLSocket sock = (SSLSocket) getSSLSocketFactory().createSocket(
-            mSocket, mSocket.getInetAddress().getHostName(), mSocket.getPort(), false);
-        try {
-            sock.startHandshake();
-            mInputStream = new MailInputStream(sock.getInputStream());
-            mOutputStream = new MailOutputStream(sock.getOutputStream());
+            while ((line = is.readLine()) != null) {
+                System.out.println(line);
+            }
         } catch (IOException e) {
-            close();
-            throw e;
+            if (!mGotEndOfFile) e.printStackTrace();
         }
     }
 
-    public String getResponse() {
-        return mResponse;
-    }
-
-    public MailInputStream getInputStream() {
-        return mInputStream;
-    }
-
-    public MailOutputStream getOutputStream() {
-        return mOutputStream;
-    }
-
-    public void setHost(String host) {
-        mHost = host;
-    }
-
-    public void setPort(int port) {
-        mPort = port;
-    }
-
-    public void setSSLSocketFactory(SSLSocketFactory sf) {
-        mSSLSocketFactory = sf;
-    }
-    
-    public void setAuthorizationId(String id) {
-        mAuthorizationId = id;
-    }
-
-    public void setAuthenticationId(String id) {
-        mAuthenticationId = id;
-    }
-
-    public void setSaslProperty(String name, String value) {
-        if (mSaslProperties == null) {
-            mSaslProperties = new HashMap<String, String>();
-        }
-        mSaslProperties.put(name, value);
-    }
-    
-    public void setPassword(String password) {
-        mPassword = password;
-    }
-
-    public void setRealm(String realm) {
-        mRealm = realm;
-    }
-
-    public void setMechanism(String mechanism) {
-        mMechanism = mechanism;
-    }
-
-    public void setLogStream(PrintStream ps) {
-        mLogStream = ps;
-        if (mLogBuffer == null) {
-            mLogBuffer = new StringBuilder(132);
-        }
-    }
-
-    public void setDebug(boolean debug) {
-        mDebug = debug;
-    }
-
-    public void setSslEnabled(boolean enabled) {
-        mSslEnabled = enabled;
-    }
-
-    public boolean isSSLEnabled() {
-        return mSslEnabled;
-    }
-
-    public String getNegotiatedQop() {
-        return mAuthenticator != null ?
-            mAuthenticator.getNegotiatedProperty(Sasl.QOP) : null;
-    }
-
-    protected void write(String s) throws IOException {
-        ensureOpen();
-        try {
-            mOutputStream.write(s);
-        } catch (IOException e) {
-            close(); // automatically close upon I/O error
-            throw e;
-        }
-        if (mLogBuffer != null) {
-            mLogBuffer.append(s);
-        }
-    }
-
-    protected void write(byte[] b) throws IOException {
-        ensureOpen();
-        try {
-            mOutputStream.write(b);
-        } catch (IOException e) {
-            close();
-            throw e;
-        }
-        if (mLogBuffer != null) {
-            mLogBuffer.append("<<...>>");
-        }
-    }
-    
-    protected void newLine() throws IOException {
-        ensureOpen();
-        try {
-            mOutputStream.newLine();
-            mOutputStream.flush();
-        } catch (IOException e) {
-            close();
-            throw e;
-        }
-        if (mLogBuffer != null) {
-            mLogStream.println("C: " + mLogBuffer.toString());
-            mLogBuffer.setLength(0);
-        }
-    }
-    
-    protected void writeLine(String line) throws IOException {
-        write(line);
-        newLine();
-    }
-
-    protected String readLine() throws IOException {
-        ensureOpen();
-        try {
-            String line = mInputStream.readLine();
-            if (line == null) throw new EOFException();
-            if (mLogStream != null) mLogStream.println("S: " + line);
-            return line;
-        } catch (IOException e) {
-            close(); // automatically close upon I/O error
-            throw e;
-        }
-    }
-
-    public void close() {
-        if (mClosed) return;
-        try {
-            mSocket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        if (mAuthenticator != null) {
+    private class ReaderThread extends Thread {
+        public void run() {
             try {
-                mAuthenticator.dispose();
-            } catch (SaslException e) {
+                MailOutputStream os = mConnection.getOutputStream();
+                String line;
+                while ((line = readLine(System.in)) != null) {
+                    os.writeLine(line);
+                    os.flush();
+                }
+            } catch (IOException e) {
                 e.printStackTrace();
             }
+            mGotEndOfFile = true;
+            mConnection.close();
         }
-        mClosed = true;
     }
 
-    public boolean isClosed() {
-        return mClosed;
+    private String readLine(InputStream is) throws IOException {
+        mLineBuffer.setLength(0);
+        int c;
+        while ((c = is.read()) != -1 && c != '\n') {
+            if (c != '\r') mLineBuffer.append((char) c);
+        }
+        return c != -1 ? mLineBuffer.toString() : null;
     }
 
-    private void ensureOpen() throws IOException {
-        if (isClosed()) throw new IOException("Connection closed");
+    protected void parseArguments(String[] args) {
+        ListIterator<String> it = Arrays.asList(args).listIterator();
+        while (it.hasNext() && parseArgument(it)) {}
+        if (!it.hasNext()) {
+            throw new IllegalArgumentException("Missing required host name");
+        }
+        mConfig.setHost(it.next());
+        if (it.hasNext()) {
+            throw new IllegalArgumentException();
+        }
+    }
+
+    private boolean parseArgument(ListIterator<String> args) {
+        String arg = args.next();
+        if (!arg.startsWith("-")) {
+            args.previous();
+            return false;
+        }
+        if (arg.length() != 2) {
+            throw new IllegalArgumentException("Illegal option: " + arg);
+        }
+        int minQop = -1;
+        int maxQop = -1;
+        try {
+            switch (arg.charAt(1)) {
+            case 'p':
+                mConfig.setPort(Integer.parseInt(args.next()));
+                break;
+            case 'u':
+                mConfig.setAuthorizationId(args.next());
+                break;
+            case 'a':
+                mConfig.setAuthenticationId(args.next());
+                break;
+            case 'w':
+                mConfig.setPassword(args.next());
+                break;
+            case 'v':
+                mConfig.setDebug(true);
+                mConfig.setTrace(true);
+                break;
+            case 'm':
+                mConfig.setMechanism(args.next().toUpperCase());
+                break;
+            case 'r':
+                mConfig.setRealm(args.next());
+                break;
+            case 's':
+                mConfig.setSSLEnabled(true);
+                break;
+            case 'k':
+                minQop = parseQop(arg, args.next());
+                break;
+            case 'l':
+                maxQop = parseQop(arg, args.next());
+                break;
+            case 't':
+                mEnableTLS = true;
+                break;
+            case 'h':
+                printUsage(System.out);
+                System.exit(0);
+            default:
+                throw new IllegalArgumentException("Illegal option: " + arg);
+            }
+        } catch (NoSuchElementException e) {
+            throw new IllegalArgumentException("Option requires argument: " + arg);
+        }
+        // If SSL is enabled then only QOP_AUTH is supported
+        if (!mConfig.isSSLEnabled()) {
+            mConfig.setSaslProperty(Sasl.QOP, getQop(minQop, maxQop));
+        }
+        return true;
+    }
+
+    private static int parseQop(String arg, String value) {
+        if (value.equalsIgnoreCase(QOP_AUTH) || value.equals("0")) return 0;
+        if (value.equalsIgnoreCase(QOP_AUTH_INT) || value.equals("1")) return 1;
+        if (value.equalsIgnoreCase(QOP_AUTH_CONF) || value.equals("2")) return 2;
+        throw new IllegalArgumentException("Invalid value for option '" + arg + "'");
+    }
+
+    private static String getQop(int minQop, int maxQop) {
+        if (minQop == -1) minQop = 0;
+        if (maxQop == -1) maxQop = 2;
+        if (minQop > maxQop) maxQop = minQop;
+        StringBuilder sb = new StringBuilder();
+        for (int i = maxQop; i >= minQop; --i) {
+            switch (i) {
+                case 0: sb.append(QOP_AUTH); break;
+                case 1: sb.append(QOP_AUTH_INT); break;
+                case 2: sb.append(QOP_AUTH_CONF); break;
+                default: throw new AssertionError();
+            }
+            if (i > minQop) sb.append(',');
+        }
+        return sb.toString();
     }
 }

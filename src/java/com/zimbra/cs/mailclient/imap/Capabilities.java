@@ -1,3 +1,19 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ *
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2007, 2008 Zimbra, Inc.
+ *
+ * The contents of this file are subject to the Yahoo! Public License
+ * Version 1.0 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ *
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.cs.mailclient.imap;
 
 import com.zimbra.cs.mailclient.MailException;
@@ -10,48 +26,66 @@ import java.io.IOException;
  * IMAP server capabilities
  */
 public class Capabilities {
-    private final List<String> mCapabilities = new ArrayList<String>();
-    
+    private final List<Atom> mCapabilities = new ArrayList<Atom>();
+    private int mMask;
+
+    private static final int MASK_IMAP4 = 0x1;
+    private static final int MASK_LITERAL_PLUS = 0x2;
+
     public static final String IMAP4REV1 = "IMAP4rev1";
     public static final String STARTTLS = "STARTTLS";
     public static final String LOGINDISABLED = "LOGINDISABLED";
     public static final String IMAP4 = "IMAP4";
+    public static final String LITERAL_PLUS = "LITERAL+";
 
     private static final String[] REQUIRED_CAPABILITIES =
         { IMAP4REV1, STARTTLS, LOGINDISABLED };
 
-    public static Capabilities read(ImapParser parser) throws IOException {
+    public static Capabilities read(ImapInputStream is) throws IOException {
         Capabilities caps = new Capabilities();
-        for (ImapData atom : parser.readAtoms().getListValue()) {
-            caps.addCapability(atom.getStringValue());
-        }
-        caps.validate();
+        caps.readCapabilities(is);
         return caps;
     }
 
-    public Capabilities() {}
+    private Capabilities() {}
 
-    public void addCapability(String cap) {
-        mCapabilities.add(cap);
+    private void readCapabilities(ImapInputStream is) throws IOException {
+        do {
+            addCapability(is.readAtom().getName());
+        } while (is.match(' '));
+        if (hasCapability(IMAP4)) {
+            mMask |= MASK_IMAP4;
+        } else if (hasCapability(LITERAL_PLUS)) {
+            mMask |= MASK_LITERAL_PLUS;
+        }
+    }
+    
+    private void addCapability(String cap) {
+        mCapabilities.add(new Atom(cap));
     }
 
     public boolean hasCapability(String cap) {
-        return contains(mCapabilities, cap);
+        return mCapabilities.contains(new Atom(cap));
     }
 
     public boolean hasAuthMethod(String method) {
         return hasCapability("AUTH=" + method);
     }
 
-    private static boolean contains(List<String> list, String key) {
-        for (String s : list) {
-            if (s.equalsIgnoreCase(key)) return true;
-        }
-        return false;
+    public boolean hasImap4() {
+        return (mMask & MASK_IMAP4) != 0;
+    }
+    
+    public boolean hasLiteralPlus() {
+        return (mMask & MASK_LITERAL_PLUS) != 0;
     }
 
     public String[] getCapabilities() {
-        return mCapabilities.toArray(new String[mCapabilities.size()]);
+        String[] caps = new String[mCapabilities.size()];
+        for (int i = 0; i < caps.length; i++) {
+            caps[i] = mCapabilities.get(i).getName();
+        }
+        return caps;
     }
 
     public void validate() throws MailException {
@@ -64,7 +98,7 @@ public class Capabilities {
         
     public String toString() {
         StringBuilder sb = new StringBuilder("CAPABILITIES[");
-        for (String cap : mCapabilities) {
+        for (Atom cap : mCapabilities) {
             sb.append(' ').append(cap);
         }
         return sb.append(']').toString();

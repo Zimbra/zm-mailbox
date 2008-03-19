@@ -1,12 +1,27 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ *
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2007, 2008 Zimbra, Inc.
+ *
+ * The contents of this file are subject to the Yahoo! Public License
+ * Version 1.0 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ *
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.cs.mailclient.imap;
 
-import com.zimbra.cs.mailclient.ParseException;
-
-import java.util.Iterator;
 import java.util.List;
+import java.util.ArrayList;
+import java.io.IOException;
 
 /**
- * Parses IMAP envelope:
+ * IMAP response ENVELOPE data:
  * 
  * envelope        = "(" env-date SP env-subject SP env-from SP
  *                 env-sender SP env-reply-to SP env-to SP env-cc SP
@@ -41,6 +56,63 @@ public class Envelope {
     private Address[] mInReplyTo;
     private String mMessageId;
 
+    public static Envelope read(ImapInputStream is) throws IOException {
+        Envelope env = new Envelope();
+        env.readEnvelope(is);
+        return env;
+    }
+    
+    private void readEnvelope(ImapInputStream is) throws IOException {
+        is.skipChar('(');
+        mDate = is.readNString();
+        is.skipChar(' ');
+        mSubject = is.readNString();
+        is.skipChar(' ');
+        mFrom = readAList(is);
+        is.skipChar(' ');
+        mSender = readAList(is);
+        is.skipChar(' ');
+        mReplyTo = readAList(is);
+        is.skipChar(' ');
+        mTo = readAList(is);
+        is.skipChar(' ');
+        mCc = readAList(is);
+        is.skipChar(' ');
+        mBcc = readAList(is);
+        is.skipChar(' ');
+        mInReplyTo = readAList(is);
+        is.skipChar(' ');
+        mMessageId = is.readNString();
+        is.skipChar(')');
+    }
+
+    private static Address[] readAList(ImapInputStream is) throws IOException {
+        if (is.match('(')) {
+            List<Address> addrs = new ArrayList<Address>();
+            do {
+                addrs.add(readAddress(is));
+            } while (!is.match(')'));
+            return addrs.toArray(new Address[addrs.size()]);
+        } else {
+            is.skipNil();
+            return null;
+        }
+    }
+
+    private static Address readAddress(ImapInputStream is) throws IOException {
+        is.skipChar('(');
+        Address addr = new Address();
+        addr.mName = is.readNString();
+        is.skipChar(' ');
+        addr.mAdl = is.readNString();
+        is.skipChar(' ');
+        addr.mHost = is.readNString();
+        is.skipChar(' ');
+        addr.mMailbox = is.readNString();
+        is.skipChar(')');
+        return addr;
+    }
+
     public String getDate() {return mDate; }
     public String getSubject() { return mSubject; }
     public String getMessageId() { return mMessageId; }
@@ -52,69 +124,6 @@ public class Envelope {
     public Address[] getBcc() { return mBcc; }
     public Address[] getInReplyTo() { return mInReplyTo; }
 
-    public Envelope(ImapData data) throws ParseException {
-        parse(data);
-    }
-
-    private void parse(ImapData data) throws ParseException {
-        if (!data.isList() || data.getListValue().size() != 10) {
-            throw badEnvelope("not a list or incorrect list size");
-        }
-        Iterator<ImapData> it = data.getListValue().iterator();
-        mDate = parseNString(it.next(), "date");
-        mSubject = parseNString(it.next(), "subject");
-        mFrom = parseAList(it.next(), "from");
-        mSender = parseAList(it.next(), "sender");
-        mReplyTo = parseAList(it.next(), "reply-to");
-        mTo = parseAList(it.next(), "to");
-        mCc = parseAList(it.next(), "cc");
-        mBcc = parseAList(it.next(), "bcc");
-        mInReplyTo = parseAList(it.next(), "in-reply-to");
-        mMessageId = parseNString(it.next(), "message-id");
-    }
-
-    private String parseNString(ImapData data, String field)
-            throws ParseException {
-        if (!data.isNString()) throw invalidField(field);
-        return data.isNil() ? null : data.getStringValue();
-    }
-
-    private Address[] parseAList(ImapData data, String field)
-            throws ParseException {
-        if (data.isNil()) return null;
-        if (!data.isList() || data.getListValue().size() < 1) {
-            throw invalidField(field);
-        }
-        List<ImapData> l = data.getListValue();
-        Address[] addrs = new Address[l.size()];
-        Iterator<ImapData> it = l.iterator();
-        for (int i = 0; i < addrs.length; i++) {
-            addrs[i] = parseAddress(it.next(), field);
-        }
-        return addrs;
-    }
-
-    private Address parseAddress(ImapData data, String field) throws ParseException {
-        if (!data.isList() || data.getListValue().size() != 4) {
-            throw invalidField(field);
-        }
-        Address addr = new Address();
-        Iterator<ImapData> it = data.getListValue().iterator();
-        addr.mName = parseNString(it.next(), field);
-        addr.mAdl = parseNString(it.next(), field);
-        addr.mHost = parseNString(it.next(), field);
-        addr.mMailbox = parseNString(it.next(), field);
-        return addr;
-    }
-
-    private static ParseException badEnvelope(String s) {
-        return new ParseException("Bad envelope: " + s);
-    }
-
-    private static ParseException invalidField(String field) {
-        return badEnvelope("invalid value for field '" + field + "'");
-    }
-    
     public static class Address {
         private String mName;
         private String mAdl;

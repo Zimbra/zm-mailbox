@@ -17,7 +17,8 @@
 
 package com.zimbra.qa.unittest;
 
-import com.zimbra.cs.mailclient.imap.ImapClient;
+import com.zimbra.cs.mailclient.imap.ImapConnection;
+import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.MailException;
 import com.zimbra.cs.mailclient.util.SSLUtil;
 import junit.framework.TestCase;
@@ -26,7 +27,7 @@ import javax.security.auth.login.LoginException;
 import java.io.IOException;
 
 public class TestImap extends TestCase {
-    private ImapClient mClient;
+    private ImapConnection mConnection;
 
     private static final String HOST = "localhost";
     private static final int PORT = 7143;
@@ -37,44 +38,45 @@ public class TestImap extends TestCase {
     private static final boolean DEBUG = true;
 
     public void tearDown() throws Exception {
-        if (mClient != null) mClient.logout();
+        if (mConnection != null) mConnection.logout();
     }
 
     public void testLogin() throws Exception {
         connect(false);
-        mClient.login();
+        mConnection.login();
     }
 
     public void testSSLLogin() throws Exception {
         connect(true);
-        mClient.login();
+        mConnection.login();
     }
 
     public void testPlainAuth() throws Exception {
         connect(false);
-        mClient.authenticate();
+        mConnection.authenticate();
     }
 
     public void testPlainAuthInitialResponse() throws Exception {
         connect(false);
-        mClient.authenticate(true);
+        mConnection.authenticate(true);
     }
 
     public void testBadAuth() throws Exception {
         connect(false);
-        mClient.setPassword("bad_pass");
+        mConnection.getConfig().setPassword("bad_pass");
         try {
-            mClient.authenticate();
+            mConnection.authenticate();
         } catch (LoginException e) {
             return;
         }
         throw new Exception("Expected auth failure");
     }
 
+    /*
     public void testLiteral() throws Exception {
         connect(false);
         Object[] parts = new Object[] { USER, " ", PASS.getBytes() };
-        mClient.sendCommand("LOGIN", parts, false);
+        mConnection.sendCommand("LOGIN", parts, false);
     }
 
     public void testBigLiteral() throws Exception {
@@ -91,9 +93,9 @@ public class TestImap extends TestCase {
         byte[] lit2 = fill(new byte[100], 'y');
         Object[] parts = new Object[] { USER, " ", lit1, " ", lit2, "FOO"};
         try {
-            mClient.sendCommand("LOGIN", parts, sync);
+            mConnection.sendCommand("LOGIN", parts, sync);
         } catch (MailException e) {
-            String msg = mClient.getResponse();
+            String msg = mConnection.getResponse();
             assertTrue("Expected [TOOBIG] response", msg.contains("[TOOBIG]"));
             return;
         }
@@ -105,18 +107,20 @@ public class TestImap extends TestCase {
         return b;
     }
 
+    */
+
     private void connect(boolean ssl) throws IOException {
         System.out.println("---------");
-        mClient = new ImapClient(HOST, ssl ? SSL_PORT : PORT);
+        ImapConfig config = new ImapConfig(HOST, ssl);
+        config.setPort(ssl ? SSL_PORT : PORT);
         if (ssl) {
-            mClient.setSslEnabled(true);
-            mClient.setSSLSocketFactory(SSLUtil.getDummySSLContext().getSocketFactory());
+            config.setSSLSocketFactory(SSLUtil.getDummySSLContext().getSocketFactory());
         }
-        mClient.setDebug(DEBUG);
-        mClient.setLogStream(System.out);
-        mClient.connect();
-        mClient.setMechanism("PLAIN");
-        mClient.setAuthenticationId(USER);
-        mClient.setPassword(PASS);
+        config.setDebug(DEBUG);
+        config.setMechanism("PLAIN");
+        config.setAuthenticationId(USER);
+        config.setPassword(PASS);
+        mConnection = new ImapConnection(config);
+        mConnection.connect();
     }
 }
