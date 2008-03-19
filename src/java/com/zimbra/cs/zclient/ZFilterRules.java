@@ -47,7 +47,7 @@ public class ZFilterRules {
         }
     }
 
-    Element toElement(Element parent) {
+    public Element toElement(Element parent) {
         Element r = parent.addElement(MailConstants.E_RULES);
         for (ZFilterRule rule : mRules) {
             rule.toElement(r);
