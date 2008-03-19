@@ -42,13 +42,14 @@ public class GetAllDomains extends AdminDocumentHandler {
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 	    
         ZimbraSoapContext lc = getZimbraSoapContext(context);
-	    Provisioning prov = Provisioning.getInstance();
+        Provisioning prov = Provisioning.getInstance();
 
+        boolean applyConfig = request.getAttributeBool(AdminConstants.A_APPLY_CONFIG, true);
         List domains = prov.getAllDomains();
         
         Element response = lc.createElement(AdminConstants.GET_ALL_DOMAINS_RESPONSE);
         for (Iterator it = domains.iterator(); it.hasNext(); )
-            GetDomain.doDomain(response, (Domain) it.next());
+            GetDomain.doDomain(response, (Domain) it.next(), applyConfig);
 
 	    return response;
 	}

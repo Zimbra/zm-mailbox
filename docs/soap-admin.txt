@@ -509,7 +509,7 @@ If the domain doesn't exist, this call returns an empty body:
 
 -----------------------------
 
-<GetAllDomainsRequest/>
+<GetAllDomainsRequest [applyConfig="{apply-config}"]/>
 
 <GetAllDomainsResponse>
   <domain name="{name}" id="{id}">  
@@ -684,7 +684,7 @@ You can get all servers defined in the system or you can get all
 servers that have a particular service enabled (eg, mta, antispam,
 spell).
 
-<GetAllServersRequest [service="service-name"]/>
+<GetAllServersRequest [service="service-name"] [applyConfig="{apply-config}"]/>
 
 <GetAllServersResponse>
   <server name="{name}" id="{id}">
