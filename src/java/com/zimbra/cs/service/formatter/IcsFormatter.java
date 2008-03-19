@@ -41,10 +41,8 @@ import com.zimbra.cs.service.UserServlet.Context;
 import javax.mail.Part;
 import javax.servlet.ServletException;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -89,7 +87,7 @@ public class IcsFormatter extends Formatter {
             if (iterator instanceof QueryResultIterator)
                 ((QueryResultIterator) iterator).finished();
         }
-        
+
         // todo: get from folder name
         String filename = context.itemPath;
         if (filename == null || filename.length() == 0)
@@ -101,21 +99,13 @@ public class IcsFormatter extends Formatter {
 
         Browser browser = HttpUtil.guessBrowser(context.req);
         boolean useOutlookCompatMode = Browser.IE.equals(browser);
-//        try {
-            ZVCalendar cal = context.targetMailbox.getZCalendarForCalendarItems(
-                    calItems, useOutlookCompatMode, true,
-                    Account.allowPrivateAccess(context.authAccount, context.targetAccount));
-            ByteArrayOutputStream buf = new ByteArrayOutputStream();
-            OutputStreamWriter wout = new OutputStreamWriter(buf, Mime.P_CHARSET_UTF8);
-            boolean forceOlsonTZID = Browser.APPLE_ICAL.equals(browser);  // bug 15549
-            cal.toICalendar(wout, forceOlsonTZID);
-            wout.flush();
-            context.resp.getOutputStream().write(buf.toByteArray());
-//        } catch (ValidationException e) {
-//            throw ServiceException.FAILURE(" mbox:"+context.targetMailbox.getId()+" unable to get calendar "+e, e);
-//        }
+        boolean allowPrivateAccess = Account.allowPrivateAccess(context.authAccount, context.targetAccount);
+        boolean forceOlsonTZID = Browser.APPLE_ICAL.equals(browser);  // bug 15549
+        context.targetMailbox.writeICalendarForCalendarItems(
+                context.resp.getWriter(), calItems,
+                useOutlookCompatMode, true, allowPrivateAccess, forceOlsonTZID, true);
     }
-    
+
     // get the whole calendar
     public long getDefaultStartTime() {    
         return 0;
