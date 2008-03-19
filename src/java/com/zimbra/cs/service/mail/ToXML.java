@@ -234,17 +234,8 @@ public class ToXML {
             }
             if (needToOutput(fields, Change.MODIFIED_FOLDER))
                 elem.addAttribute(MailConstants.A_FOLDER, ifmt.formatItemId(folder.getFolderId()));
-
-            // rest URL if either the parent or name has changed
-            if (needToOutput(fields, Change.MODIFIED_FOLDER | Change.MODIFIED_NAME) && !folder.isHidden() && folder.getId() != Mailbox.ID_FOLDER_USER_ROOT) {
-                if (folder.getDefaultView() == MailItem.TYPE_WIKI ||
-                        folder.getDefaultView() == MailItem.TYPE_APPOINTMENT ||
-                        folder.getDefaultView() == MailItem.TYPE_TASK ||
-                        folder.getDefaultView() == MailItem.TYPE_CONTACT ||
-                        folder.getDefaultView() == MailItem.TYPE_DOCUMENT)
-                    encodeRestUrl(elem, folder);
-            }
         }
+
         if (needToOutput(fields, Change.MODIFIED_FLAGS)) {
             String flags = folder.getFlagString();
             if (fields != NOTIFY_FIELDS || !flags.equals(""))
@@ -1760,42 +1751,34 @@ public class ToXML {
 
     public static Element encodeDataSource(Element parent, DataSource ds) {
         Element m;
-        if (ds.getType() == DataSource.Type.imap) {
+        if (ds.getType() == DataSource.Type.imap)
             m = parent.addElement(MailConstants.E_DS_IMAP);
-        } else {
+        else
             m = parent.addElement(MailConstants.E_DS_POP3);
-        }
         m.addAttribute(MailConstants.A_ID, ds.getId());
         m.addAttribute(MailConstants.A_NAME, ds.getName());
         m.addAttribute(MailConstants.A_FOLDER, ds.getFolderId());
         m.addAttribute(MailConstants.A_DS_IS_ENABLED, ds.isEnabled());
-        
-        if (ds.getType() == DataSource.Type.pop3) {
+
+        if (ds.getType() == DataSource.Type.pop3)
             m.addAttribute(MailConstants.A_DS_LEAVE_ON_SERVER, ds.leaveOnServer());
-        }
-        
-        if (ds.getHost() != null) { 
+
+        if (ds.getHost() != null)
             m.addAttribute(MailConstants.A_DS_HOST, ds.getHost());
-        }
-        if (ds.getPort() != null) {
+        if (ds.getPort() != null)
             m.addAttribute(MailConstants.A_DS_PORT, ds.getPort());
-        }
-        if (ds.getConnectionType() != null) {
+        if (ds.getConnectionType() != null)
             m.addAttribute(MailConstants.A_DS_CONNECTION_TYPE, ds.getConnectionType().name());
-        }
-        if (ds.getUsername() != null) {
+        if (ds.getUsername() != null)
             m.addAttribute(MailConstants.A_DS_USERNAME, ds.getUsername());
-        }
-        
+
         try {
-            if (ds.getPollingInterval() > 0) {
-                m.addAttribute(MailConstants.A_DS_POLLING_INTERVAL,
-                    ds.getAttr(Provisioning.A_zimbraDataSourcePollingInterval));
-            }
+            if (ds.getPollingInterval() > 0)
+                m.addAttribute(MailConstants.A_DS_POLLING_INTERVAL, ds.getAttr(Provisioning.A_zimbraDataSourcePollingInterval));
         } catch (ServiceException e) {
             mLog.warn("Unable to get polling interval from %s", ds, e);
         }
-        
+
         m.addAttribute(MailConstants.A_DS_EMAIL_ADDRESS, ds.getEmailAddress());
         m.addAttribute(MailConstants.A_DS_USE_ADDRESS_FOR_FORWARD_REPLY, ds.useAddressForForwardReply());
         m.addAttribute(MailConstants.A_DS_DEFAULT_SIGNATURE, ds.getDefaultSignature());
