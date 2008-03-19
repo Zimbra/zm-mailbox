@@ -44,11 +44,13 @@ import org.apache.lucene.document.Field;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Alarm;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
+import com.zimbra.cs.mailbox.calendar.CalendarUser;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -1849,12 +1851,19 @@ public abstract class CalendarItem extends MailItem {
                 }
             }
         }
-        
-        boolean maybeStoreNewReply(Invite inv, ZAttendee at) {
+
+        boolean maybeStoreNewReply(Invite inv, ZAttendee at) throws ServiceException {
             for (Iterator<ReplyInfo> iter = mReplies.iterator(); iter.hasNext();) {
-                ReplyInfo cur = (ReplyInfo)iter.next();
-                
-                if (at.addressesMatch(cur.mAttendee)) {
+                ReplyInfo cur = iter.next();
+
+                // Look up internal account for the attendee.  For internal users we want to match
+                // on all email addresses of the account.
+                Account acct = null;
+                String address = at.getAddress();
+                if (address != null)
+                    acct = Provisioning.getInstance().get(AccountBy.name, address);
+                if (at.addressesMatch(cur.mAttendee) ||
+                    (acct != null && accountMatchesCalendarUser(acct, cur.mAttendee))) {
                     if (recurMatches(inv.getRecurId(), cur.mRecurId)) {
                         if (inv.getSeqNo() >= cur.mSeqNo) {
                             if (inv.getDTStamp() >= cur.mDtStamp) {
@@ -2528,5 +2537,11 @@ public abstract class CalendarItem extends MailItem {
             }
         }
         return result;
+    }
+
+    public static boolean accountMatchesCalendarUser(Account acct, CalendarUser calUser)
+    throws ServiceException {
+        String address = calUser.getAddress();
+        return AccountUtil.addressMatchesAccount(acct, address);
     }
 }
