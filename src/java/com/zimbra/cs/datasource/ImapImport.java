@@ -655,7 +655,7 @@ public class ImapImport implements MailItemImport {
                             IMAPMessage msg = remoteMsgs.get(uid);
                             if (msg == null) return;
                             Date receivedDate = md.getInternalDate();
-                            Long time = receivedDate != null ? receivedDate.getTime() : null;
+                            Long time = receivedDate != null ? (Long) receivedDate.getTime() : null;
                             ParsedMessage pm = getParsedMessage(
                                 md.getBodySections()[0].getData(), time, mbox.attachmentsIndexingEnabled());
                             int flags = getZimbraFlags(msg.getFlags());
