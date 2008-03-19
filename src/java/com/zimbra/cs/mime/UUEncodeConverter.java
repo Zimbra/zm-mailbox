@@ -16,12 +16,12 @@
  */
 package com.zimbra.cs.mime;
 
-import java.io.ByteArrayInputStream;
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
@@ -30,10 +30,13 @@ import javax.mail.Part;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import javax.mail.util.ByteArrayDataSource;
 
 import com.zimbra.common.mime.ContentDisposition;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.ByteUtil.PositionInputStream;
 
 public class UUEncodeConverter extends MimeVisitor {
     protected boolean visitMultipart(MimeMultipart mmp, VisitPhase visitKind)  { return false; }
@@ -50,41 +53,93 @@ public class UUEncodeConverter extends MimeVisitor {
             if (!msg.isMimeType(Mime.CT_TEXT_PLAIN))
                 return false;
 
-            // go through top-level text/plain part and extract uuencoded files
-            String text = Mime.getStringContent(msg, null);
-            boolean initial = text.startsWith("begin ");
-            for (int location = 0; initial || (location = text.indexOf("\nbegin ", location)) != -1; initial = false, location++) {
-                // find the end of the uuencoded block
-                int end = text.indexOf("\nend", location);
-                if (end != -1) {
-                    try {
-                        // parse the uuencoded content into a String
-                        int start = initial ? location : location + 1;
-                        UUDecodedFile uu = new UUDecodedFile(text.substring(start, end + 4));
-    
-                        MimeBodyPart mbp = new MimeBodyPart();
-                        mbp.setHeader("Content-Type", Mime.CT_APPLICATION_OCTET_STREAM);
-                        mbp.setHeader("Content-Disposition", new ContentDisposition(Part.ATTACHMENT).setParameter("filename", uu.getFilename()).toString());
-                        mbp.setDataHandler(new DataHandler(uu.getDataSource()));
-    
-                        if (mmp == null)
-                            mmp = new MimeMultipart("mixed");
-                        mmp.addBodyPart(mbp);
-    
-                        text = text.substring(0, start) + text.substring(end + 4);
-                        location--;
-                    } catch (ParseException pe) { }
-                }
+            // don't check transfer-encoded parts for uudecodeable attachments
+            String cte = msg.getHeader("Content-Transfer-Encoding", null);
+            if (cte != null) {
+                cte = cte.trim().toLowerCase();
+                if (!cte.equals(Mime.ET_7BIT) && !cte.equals(Mime.ET_8BIT) && !cte.equals(Mime.ET_BINARY))
+                    return false;
             }
-            
-            if (mmp == null)
+
+            List<UUDecodedFile> uufiles = null;
+
+            // go through top-level text/plain part and extract uuencoded files
+            PositionInputStream is = null;
+            long size;
+            try {
+                is = new PositionInputStream(new BufferedInputStream(msg.getInputStream()));
+                for (int c = is.read(); c != -1; ) {
+                    long start = is.getPosition() - 1;
+                    // check for uuencode header: "begin NNN filename"
+                    if (c == 'b' && (c = is.read()) == 'e' && (c = is.read()) == 'g' && (c = is.read()) == 'i' && (c = is.read()) == 'n' &&
+                            ((c = is.read()) == ' ' || c == '\t') &&
+                            Character.isDigit((c = is.read())) && Character.isDigit(c = is.read()) && Character.isDigit(c = is.read()) &&
+                            ((c = is.read()) == ' ' || c == '\t'))
+                    {
+                        StringBuilder sb = new StringBuilder();
+                        while ((c = is.read()) != '\r' && c != '\n' && c != -1)
+                            sb.append((char) c);
+                        String filename = FileUtil.trimFilename(sb.toString().trim());
+                        if (c != -1 && filename.length() > 0) {
+                            if (uufiles == null)
+                                uufiles = new ArrayList<UUDecodedFile>(3);
+                            try {
+                                uufiles.add(new UUDecodedFile(is, filename, start));
+                                // check to make sure that the caller's OK with altering the message
+                                if (uufiles.size() == 1 && mCallback != null && !mCallback.onModification())
+                                    return false;
+                            } catch (IOException ioe) { }
+                        }
+                    }
+                    // skip to the beginning of the next line
+                    while (c != '\r' && c != '\n' && c != -1)
+                        c = is.read();
+                    while (c == '\r' || c == '\n')
+                        c = is.read();
+                }
+                size = is.getPosition();
+            } finally {
+                ByteUtil.closeStream(is);
+            }
+
+            if (uufiles == null || uufiles.isEmpty())
                 return false;
-    
+
+            // create MimeParts for the extracted files
+            mmp = new MimeMultipart("mixed");
+            for (UUDecodedFile uu : uufiles) {
+                MimeBodyPart mbp = new MimeBodyPart();
+                mbp.setHeader("Content-Type", Mime.CT_APPLICATION_OCTET_STREAM);
+                mbp.setHeader("Content-Disposition", new ContentDisposition(Part.ATTACHMENT).setParameter("filename", uu.getFilename()).toString());
+                mbp.setDataHandler(new DataHandler(uu.getDataSource()));
+                mmp.addBodyPart(mbp);
+
+                size -= uu.getEndOffset() - uu.getStartOffset();
+            }
+
             // take the remaining text and put it in as the first "related" part
-            MimeBodyPart mbp = new MimeBodyPart();
-            mbp.setText(text, Mime.P_CHARSET_UTF8);
-            mbp.setHeader("Content-Type", "text/plain; charset=utf-8");
-            mmp.addBodyPart(mbp, 0);
+            InputStream isOrig = null;
+            try {
+                isOrig = msg.getInputStream();
+                long offset = 0;
+                ByteArrayOutputStream baos = new ByteArrayOutputStream((int) size);
+                byte[] buffer = new byte[8192];
+                for (UUDecodedFile uu : uufiles) {
+                    long count = uu.getStartOffset() - offset, numRead;
+                    while (count > 0 && (numRead = isOrig.read(buffer, 0, (int) Math.min(count, 8192))) >= 0) {
+                        baos.write(buffer, 0, (int) numRead);  count -= numRead;
+                    }
+                    isOrig.skip(uu.getEndOffset() - uu.getStartOffset());
+                    offset = uu.getEndOffset();
+                }
+                ByteUtil.copy(isOrig, true, baos, true);
+
+                MimeBodyPart mbp = new MimeBodyPart();
+                mbp.setDataHandler(new DataHandler(new ByteArrayDataSource(baos.toByteArray(), Mime.CT_TEXT_PLAIN)));
+                mmp.addBodyPart(mbp, 0);
+            } finally {
+                ByteUtil.closeStream(isOrig);
+            }
         } catch (MessagingException e) {
             ZimbraLog.extensions.warn("exception while uudecoding message part; skipping part", e);
             return false;
@@ -93,58 +148,40 @@ public class UUEncodeConverter extends MimeVisitor {
             return false;
         }
 
-        // check to make sure that the caller's OK with altering the message
-        if (mCallback != null && !mCallback.onModification())
-            return false;
-        // and replace the top-level part with a new multipart/related
+        // replace the top-level part with a new multipart/related
         msg.setContent(mmp);
         msg.setHeader("Content-Type", mmp.getContentType() + "; generated=true");
         return true;
     }
 
     private static class UUDecodedFile {
-        private short mMode;
         private String mFilename;
+        private long mStartOffset, mEndOffset;
         private byte[] mContent;
 
-        private UUDecodedFile(String text) throws ParseException {
-            // skip "begin *"
-            if (!text.startsWith("begin "))
-                throw new ParseException("missing 'begin'", 0);
-
-            // read mode value
-            int pos = 6, start;
-            char c;
-            while (text.charAt(pos) == ' ')
-                pos++;
-            try {
-                mMode = Short.parseShort(text.substring(pos, pos + 3));
-            } catch (NumberFormatException nfe) {
-                throw new ParseException("invalid mode string", pos);
-            }
-            pos += 3;
-
-            // read filename
-            if (text.charAt(pos++) != ' ')
-                throw new ParseException("missing space after mode", pos - 1);
-            while (text.charAt(pos) == ' ')
-                pos++;
-            start = pos;
-            while ((c = text.charAt(pos)) != '\r' && c != '\n')
-                pos++;
-            mFilename = FileUtil.trimFilename(text.substring(start, pos));
-            while ((c = text.charAt(pos)) == '\r' || c == '\n')
-                pos++;
+        private UUDecodedFile(PositionInputStream is, String filename, long start) throws IOException {
+            mFilename = filename;
+            mStartOffset = start;
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            int length = 0, end = text.length(), bits = 0, acc = 0;
-            do {
+            int length = -1, bits = 0, acc = 0, c = is.read();
+            while (c == 'r' || c == '\n')
+                c = is.read();
+            while (c != -1) {
+                // handle already-read length byte, or "end" if it's after a 0-length line
+                if (length == 0 && c == 'e') {
+                    is.mark(3);
+                    if (is.read() == 'n' && is.read() == 'd')
+                        break;
+                    is.reset();
+                }
+                length = (c - ' ') & 0x3F;
+
                 // read line of content
-                length = (text.charAt(pos++) - ' ') & 0x3F;
-                if (length * 4 / 3 > end - pos)
-                    throw new ParseException("invalid encoded line length", pos - 1);
                 for (int decoded = 0; decoded < length; ) {
-                    acc = (acc << 6) | (((c = text.charAt(pos++)) - ' ') & 0x3F);
+                    if ((c = is.read()) == -1)
+                        throw new IOException("unexpected eof during uuencoded attachment");
+                    acc = (acc << 6) | ((c - ' ') & 0x3F);
                     bits += 6;
                     if (bits < 8)
                         continue;
@@ -153,41 +190,31 @@ public class UUEncodeConverter extends MimeVisitor {
                     acc &= (0xFF >> (8 - bits));
                     decoded++;
                 }
-                while (pos < end && (c = text.charAt(pos)) != '\r' && c != '\n')
-                    pos++;
-                while (pos < end && (c = text.charAt(pos)) == '\r' || c == '\n')
-                    pos++;
-            } while (length > 0);
 
-            // skip "end"
-            if (!text.startsWith("end", pos))
-                throw new ParseException("missing 'end'", pos);
+                // skip to EOL
+                while ((c = is.read()) != '\r' && c != '\n' && c != -1)
+                    ;
+                while (c == '\r' || c == '\n')
+                    c = is.read();
+            }
+
             mContent = baos.toByteArray();
+            mEndOffset = is.getPosition();
         }
 
-        short getMode()             { return mMode; }
-        String getFilename()        { return mFilename; }
-        byte[] getContent()         { return mContent; }
-        DataSource getDataSource()  { return new ByteArrayDataSource(); }
+        long getStartOffset()  { return mStartOffset; }
+        long getEndOffset()    { return mEndOffset; }
+        byte[] getContent()    { return mContent; }
+        String getFilename()   { return mFilename; }
 
-        private class ByteArrayDataSource implements DataSource {
-            public String getContentType()         { return Mime.CT_APPLICATION_OCTET_STREAM; }
-            public String getName()                { return getFilename(); }
-            public InputStream getInputStream()    { return new ByteArrayInputStream(getContent()); }
-            public OutputStream getOutputStream()  { return null; }
+        DataSource getDataSource() {
+            ByteArrayDataSource bads = new ByteArrayDataSource(mContent, Mime.CT_APPLICATION_OCTET_STREAM);
+            bads.setName(mFilename);
+            return bads;
         }
     }
 
-    public static void main(String[] args) throws MessagingException, IOException, ParseException {
-        UUDecodedFile uu = new UUDecodedFile("begin 644 cat.txt\n#0V%T\n`\nend\n");
-        System.out.println(new String(uu.getContent()));
-
-        uu = new UUDecodedFile("begin 644 EXAMPLE\n>5&AI<R!F:6QE(&AA<R!B965N(%55+65N8V]D960N\n`\nend\n");
-        System.out.println(new String(uu.getContent()));
-
-        uu = new UUDecodedFile("begin 664 hoge.txt\nM/CXQ,PJDO:3LI,^EQZ6SH;RER:2YI.NDR*2MI,NDP:3(S,S%W:2KI,B[UZ3O\n#I.P*\n`\nend");
-        System.out.println(new String(uu.getContent(), "euc-jp"));
-
+    public static void main(String[] args) throws MessagingException, IOException {
         MimeMessage mm = new MimeMessage(com.zimbra.cs.util.JMSession.getSession(), new java.io.FileInputStream("c:\\tmp\\uuencode-1"));
         new UUEncodeConverter().accept(mm);
         mm.saveChanges();
