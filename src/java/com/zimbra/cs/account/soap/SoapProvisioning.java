@@ -44,6 +44,7 @@ import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.NamedEntry.Visitor;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Provisioning;
@@ -462,7 +463,35 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public Account get(AccountBy keyType, String key) throws ServiceException {
+        return get(keyType, key, true);
+    }
+    
+    /**
+     * @param key
+     * @param applyDefault
+     * @return
+     * @throws ServiceException
+     */
+    // SoapProvisioning only, for zmprov
+    public Account getAccount(String key, boolean applyDefault) throws ServiceException {
+        Account acct = null;
+        
+        if (Provisioning.isUUID(key))
+            acct = get(AccountBy.id, key, applyDefault);
+        else {
+            // could be id or name, try name first, if not found then try id
+            acct = get(AccountBy.name, key, applyDefault);
+            if (acct == null)
+                acct = get(AccountBy.id, key, applyDefault);
+        }
+        
+        return acct;
+    }
+    
+    // SoapProvisioning only, for zmprov
+    public Account get(AccountBy keyType, String key, boolean applyDefault) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GET_ACCOUNT_REQUEST);
+        req.addAttribute(AdminConstants.A_APPLY_COS, applyDefault);
         Element a = req.addElement(AdminConstants.E_ACCOUNT);
         a.setText(key);
         a.addAttribute(AdminConstants.A_BY, keyType.name());
@@ -478,8 +507,14 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public List<Account> getAllAdminAccounts() throws ServiceException {
+        return getAllAdminAccounts(true);
+    }
+    
+    // SoapProvisioning only, for zmprov
+    public List<Account> getAllAdminAccounts(boolean applyDefault) throws ServiceException {
         ArrayList<Account> result = new ArrayList<Account>();
         XMLElement req = new XMLElement(AdminConstants.GET_ALL_ADMIN_ACCOUNTS_REQUEST);
+        req.addAttribute(AdminConstants.A_APPLY_COS, applyDefault);
         Element resp = invoke(req);
         for (Element a: resp.listElements(AdminConstants.E_ACCOUNT)) {
             result.add(new SoapAccount(a));

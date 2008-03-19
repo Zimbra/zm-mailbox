@@ -1713,19 +1713,23 @@ public abstract class Provisioning {
     public abstract Account get(AccountBy keyType, String key) throws ServiceException;
     
     /**
-     * Like get(AccountBy keyType, String key), except that it takes an extra parameter:
-     * loadFromMaster that specifies if the account is not in cache whether it should be 
-     * loaded from the master store.
+     * Looks up an account by the specified key.
      * 
      * For implementations that do not support the loadFromMaster parameter, this method is 
      * equivalent to get(AccountBy keyType, String key).
+     * 
+     * @param keyType
+     * @param key
+     * @param loadFromMaster whether the account should be loaded from the master directory if the account is not in cache.
+     * @return
+     * @throws ServiceException
      */
     public Account get(AccountBy keyType, String key, boolean loadFromMaster) throws ServiceException {
         return get(keyType, key);
     }
     
     /**
-     * The Yahoo CalendarProvisioning.
+     * For Yahoo CalendarProvisioning.
      * 
      * The Yahoo paranoids normally want them to do what is called a "credentialed open" when they access UDB.
      * That means they want the UDB client to pass in the Y&T cookies to UDB, so UDB will also double check 
@@ -1745,7 +1749,7 @@ public abstract class Provisioning {
      * Get account by id first, if not found, get by name.
      * 
      * Note, this function might do an extra LDAP search, it should only be called from the edge of 
-     * CLI tools where is call rate is very low.  
+     * CLI tools where the call rate is very low.  
      * 
      * @param key account id or name
      * @return
