@@ -82,6 +82,7 @@ public class ProvUtil implements DebugListener {
     
     private static final String ERR_VIA_SOAP_ONLY = "can only be used with SOAP";
     private static final String ERR_VIA_LDAP_ONLY = "can only be used with  \"zmprov -l/--ldap\"";
+    private static final String ERR_INVALID_ARG_EV = "arg -e is invalid unless -v is also specified";
  
     private boolean mInteractive = false;
     private boolean mVerbose = false;
@@ -226,20 +227,20 @@ public class ProvUtil implements DebugListener {
         GET_ALL_CONFIG("getAllConfig", "gacf", "[attr1 [attr2...]]", Category.CONFIG, 0, Integer.MAX_VALUE),
         GET_ALL_COS("getAllCos", "gac", "[-v]", Category.COS, 0, 1),
         GET_ALL_DISTRIBUTION_LISTS("getAllDistributionLists", "gadl", "[{domain}]", Category.LIST, 0, 1),
-        GET_ALL_DOMAINS("getAllDomains", "gad", "[-v] [attr1 [attr2...]]", Category.DOMAIN, 0, Integer.MAX_VALUE),
+        GET_ALL_DOMAINS("getAllDomains", "gad", "[-v] [-e] [attr1 [attr2...]]", Category.DOMAIN, 0, Integer.MAX_VALUE),
         GET_ALL_FREEBUSY_PROVIDERS("getAllFbp", "gafbp", "[-v]", Category.FREEBUSY, 0, 1),
-        GET_ALL_SERVERS("getAllServers", "gas", "[-v] [service]", Category.SERVER, 0, 1),
+        GET_ALL_SERVERS("getAllServers", "gas", "[-v] [-e] [service]", Category.SERVER, 0, 3),
         GET_CALENDAR_RESOURCE("getCalendarResource",     "gcr", "{name@domain|id} [attr1 [attr2...]]", Category.CALENDAR, 1, Integer.MAX_VALUE), 
         GET_CONFIG("getConfig", "gcf", "{name}", Category.CONFIG, 1, 1),
         GET_COS("getCos", "gc", "{name|id} [attr1 [attr2...]]", Category.COS, 1, Integer.MAX_VALUE),
         GET_DISTRIBUTION_LIST("getDistributionList", "gdl", "{list@domain|id} [attr1 [attr2...]]", Category.LIST, 1, Integer.MAX_VALUE),
         GET_DISTRIBUTION_LIST_MEMBERSHIP("getDistributionListMembership", "gdlm", "{name@domain|id}", Category.LIST, 1, 1),
-        GET_DOMAIN("getDomain", "gd", "{domain|id} [attr1 [attr2...]]", Category.DOMAIN, 1, Integer.MAX_VALUE),
+        GET_DOMAIN("getDomain", "gd", "[-e] {domain|id} [attr1 [attr2...]]", Category.DOMAIN, 1, Integer.MAX_VALUE),
         GET_DOMAIN_INFO("getDomainInfo", "gdi", "name|id|virtualHostname {value} [attr1 [attr2...]]", Category.DOMAIN, 2, Integer.MAX_VALUE), 
         GET_FREEBUSY_QUEUE_INFO("getFreebusyQueyeInfo", "gfbqi", "[{provider-name}]", Category.FREEBUSY, 0, 1),
         GET_MAILBOX_INFO("getMailboxInfo", "gmi", "{account}", Category.MAILBOX, 1, 1),
         GET_QUOTA_USAGE("getQuotaUsage", "gqu", "{server}", Category.MAILBOX, 1, 1),        
-        GET_SERVER("getServer", "gs", "{name|id} [attr1 [attr2...]]", Category.SERVER, 1, Integer.MAX_VALUE), 
+        GET_SERVER("getServer", "gs", "[-e] {name|id} [attr1 [attr2...]]", Category.SERVER, 1, Integer.MAX_VALUE), 
         HELP("help", "?", "commands", Category.MISC, 0, 1),
         IMPORT_NOTEBOOK("importNotebook", "impn", "{name@domain} {directory} {folder}", Category.NOTEBOOK),
         INIT_NOTEBOOK("initNotebook", "in", "[{name@domain}]", Category.NOTEBOOK),
@@ -521,7 +522,7 @@ public class ProvUtil implements DebugListener {
             doGetDistributionListMembership(args);
             break;            
         case GET_DOMAIN:
-            dumpDomain(lookupDomain(args[1]), getArgNameSet(args, 2));
+            doGetDomain(args);
             break;
         case GET_DOMAIN_INFO:
             doGetDomainInfo(args);
@@ -537,7 +538,7 @@ public class ProvUtil implements DebugListener {
         	break;
         }
         case GET_SERVER:
-            dumpServer(lookupServer(args[1]), getArgNameSet(args, 2));
+            doGetServer(args);
             break;
         case HELP:
             doHelp(args); 
@@ -767,6 +768,25 @@ public class ProvUtil implements DebugListener {
             return false;
         }
         return true;
+    }
+    
+    private void doGetDomain(String[] args) throws ServiceException {
+        boolean applyDefault = true;
+                
+        int i = 1;
+        while (i < args.length) {
+            String arg = args[i];
+            if (arg.equals("-e"))
+                applyDefault = false;
+            else
+                break;
+            i++;
+        }
+        if (i >= args.length) {
+            usage();
+            return;
+        }
+        dumpDomain(lookupDomain(args[i], mProv, applyDefault), applyDefault, getArgNameSet(args, i+1));
     }
 
     private void doGetDomainInfo(String[] args) throws ServiceException {
@@ -1058,7 +1078,7 @@ public class ProvUtil implements DebugListener {
         }
 
         if (!applyDefault && !verbose) {
-            System.out.println("invalid arg: -e can be specified only when -v is also specified");
+            System.out.println(ERR_INVALID_ARG_EV);
             usage();
             return;
         }
@@ -1144,7 +1164,7 @@ public class ProvUtil implements DebugListener {
             NamedEntry account = (NamedEntry) accounts.get(j);
             if (verbose) {
                 if (account instanceof Account)
-                    dumpAccount((Account)account, null);
+                    dumpAccount((Account)account, true, null);
                 else if (account instanceof Alias)
                     dumpAlias((Alias)account);
                 else if (account instanceof DistributionList)
@@ -1232,7 +1252,7 @@ public class ProvUtil implements DebugListener {
         }
         
         if (!applyDefault && !verbose) {
-            System.out.println("invalid arg: -e can be specified only when -v is also specified");
+            System.out.println(ERR_INVALID_ARG_EV);
             usage();
             return;
         }
@@ -1275,9 +1295,36 @@ public class ProvUtil implements DebugListener {
     }
 
     private void doGetAllDomains(String[] args) throws ServiceException {
-        boolean verbose = args.length > 1 && args[1].equals("-v");
-        Set<String> attrNames = getArgNameSet(args, verbose ? 2 : 1);
-        List domains = mProv.getAllDomains();
+        boolean verbose = false;
+        boolean applyDefault = true;
+        
+        int i = 1;
+        while (i < args.length) {
+            String arg = args[i];
+            if (arg.equals("-v"))
+                verbose = true;
+            else if (arg.equals("-e"))
+                applyDefault = false;
+            else
+                break;
+            i++;
+        }
+        
+        if (!applyDefault && !verbose) {
+            System.out.println(ERR_INVALID_ARG_EV);
+            usage();
+            return;
+        }
+        
+        Set<String> attrNames = getArgNameSet(args, i);
+        
+        List domains;
+        if (mProv instanceof SoapProvisioning) {
+            SoapProvisioning soapProv = (SoapProvisioning)mProv;
+            domains = soapProv.getAllDomains(applyDefault);
+        } else
+            domains = mProv.getAllDomains();
+        
         for (Iterator it=domains.iterator(); it.hasNext(); ) {
             Domain domain = (Domain) it.next();
             if (verbose)
@@ -1288,8 +1335,12 @@ public class ProvUtil implements DebugListener {
     }        
 
     private void dumpDomain(Domain domain, Set<String> attrNames) throws ServiceException {
+        dumpDomain(domain, true, attrNames);
+    }
+    
+    private void dumpDomain(Domain domain, boolean expandConfig, Set<String> attrNames) throws ServiceException {
         System.out.println("# name "+domain.getName());
-        Map<String, Object> attrs = domain.getAttrs();
+        Map<String, Object> attrs = domain.getAttrs(expandConfig);
         dumpAttrs(attrs, attrNames);
         System.out.println();
     }
@@ -1310,39 +1361,59 @@ public class ProvUtil implements DebugListener {
 
     private void doGetAllServers(String[] args) throws ServiceException {
         boolean verbose = false;
+        boolean applyDefault = true;
         String service = null;
-        if (args.length > 1) {
-            for (int i = 1; i < args.length; i++) {
-                if (args[i].equals("-v")) {
-                    verbose = true;
-                } else {
-                    if (service != null) {
-                        throw ServiceException.INVALID_REQUEST("more than one service specified in get all servers", null); 
-                    }
-                    service = args[i];
+        
+        int i = 1;
+        while (i < args.length) {
+            String arg = args[i];
+            if (arg.equals("-v"))
+                verbose = true;
+            else if (arg.equals("-e"))
+                applyDefault = false;
+            else {
+                if (service == null)
+                    service = arg;
+                else {
+                    System.out.println("invalid arg: " + arg + ", already specified service: " + service);
+                    usage();
+                    return;
                 }
             }
+            i++;
         }
+
+        if (!applyDefault && !verbose) {
+            System.out.println(ERR_INVALID_ARG_EV);
+            usage();
+            return;
+        }    
         
-        List servers = mProv.getAllServers(service);
+        List servers;
+        if (mProv instanceof SoapProvisioning) {
+            SoapProvisioning soapProv = (SoapProvisioning)mProv;
+            servers = soapProv.getAllServers(service, applyDefault);
+        } else
+            servers = mProv.getAllServers(service);
+        
         for (Iterator it=servers.iterator(); it.hasNext(); ) {
             Server server = (Server) it.next();
             if (verbose)
-                dumpServer(server, null);
+                dumpServer(server, applyDefault, null);
             else 
                 System.out.println(server.getName());
         }
     }        
 
     private void dumpServer(Server server, Set<String> attrNames) throws ServiceException {
+        dumpServer(server, true, attrNames);
+    }
+    
+    private void dumpServer(Server server, boolean expandConfig, Set<String> attrNames) throws ServiceException {
         System.out.println("# name "+server.getName());
-        Map<String, Object> attrs = server.getAttrs(true);
+        Map<String, Object> attrs = server.getAttrs(expandConfig);
         dumpAttrs(attrs, attrNames);
         System.out.println();
-    }
-
-    void dumpAccount(Account account, Set<String> attrNames) throws ServiceException {
-        dumpAccount(account, true, attrNames);
     }
 
     private void dumpAccount(Account account, boolean expandCos, Set<String> attrNames) throws ServiceException {
@@ -1622,7 +1693,19 @@ public class ProvUtil implements DebugListener {
     }
     
     private Domain lookupDomain(String key, Provisioning prov) throws ServiceException {
-        Domain d = prov.get(guessDomainBy(key), key);
+        return lookupDomain(key, prov, true);
+    }
+    
+    private Domain lookupDomain(String key, Provisioning prov, boolean applyDefault) throws ServiceException {
+        
+        Domain d;
+        
+        if (prov instanceof SoapProvisioning) {
+            SoapProvisioning soapProv = (SoapProvisioning)prov;
+            d = soapProv.get(guessDomainBy(key), key, applyDefault);
+        } else
+            d = prov.get(guessDomainBy(key), key);
+        
         if (d == null)
             throw AccountServiceException.NO_SUCH_DOMAIN(key);
         else
@@ -1638,7 +1721,18 @@ public class ProvUtil implements DebugListener {
     }
 
     private Server lookupServer(String key) throws ServiceException {
-        Server s = mProv.get(guessServerBy(key), key);
+        return lookupServer(key, true);
+    }
+    
+    private Server lookupServer(String key, boolean applyDefault) throws ServiceException {
+        Server s;
+        
+        if (mProv instanceof SoapProvisioning) {
+            SoapProvisioning soapProv = (SoapProvisioning)mProv;
+            s = soapProv.get(guessServerBy(key), key, applyDefault);
+        } else
+            s = mProv.get(guessServerBy(key), key);
+        
         if (s == null)
             throw AccountServiceException.NO_SUCH_SERVER(key);
         else
@@ -2047,6 +2141,25 @@ public class ProvUtil implements DebugListener {
                              server.getAttr(Provisioning.A_zimbraMemcachedBindPort, "") + " ");
         }
         System.out.println();
+    }
+    
+    private void doGetServer(String[] args) throws ServiceException {
+        boolean applyDefault = true;
+                
+        int i = 1;
+        while (i < args.length) {
+            String arg = args[i];
+            if (arg.equals("-e"))
+                applyDefault = false;
+            else
+                break;
+            i++;
+        }
+        if (i >= args.length) {
+            usage();
+            return;
+        }
+        dumpServer(lookupServer(args[i], applyDefault), applyDefault, getArgNameSet(args, i+1));
     }
     
     private void doHelp(String[] args) {

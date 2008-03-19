@@ -535,8 +535,14 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public List<Domain> getAllDomains() throws ServiceException {
+        return getAllDomains(true);
+    }
+    
+    // SoapProvisioning only, for zmprov
+    public List<Domain> getAllDomains(boolean applyDefault) throws ServiceException {
         ArrayList<Domain> result = new ArrayList<Domain>();
         XMLElement req = new XMLElement(AdminConstants.GET_ALL_DOMAINS_REQUEST);
+        req.addAttribute(AdminConstants.A_APPLY_CONFIG, applyDefault);
         Element resp = invoke(req);
         for (Element a: resp.listElements(AdminConstants.E_DOMAIN)) {
             result.add(new SoapDomain(a));
@@ -546,13 +552,7 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public List<Server> getAllServers() throws ServiceException {
-        ArrayList<Server> result = new ArrayList<Server>();
-        XMLElement req = new XMLElement(AdminConstants.GET_ALL_SERVERS_REQUEST);
-        Element resp = invoke(req);
-        for (Element a: resp.listElements(AdminConstants.E_SERVER)) {
-            result.add(new SoapServer(a));
-        }
-        return result;        
+        return getAllServers(null, true);   
     }
 
     public static class QuotaUsage {
@@ -737,9 +737,16 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public List<Server> getAllServers(String service) throws ServiceException {
+        return getAllServers(service, true);      
+    }
+    
+    // SoapProvisioning only, for zmprov
+    public List<Server> getAllServers(String service, boolean applyDefault) throws ServiceException {
         ArrayList<Server> result = new ArrayList<Server>();
         XMLElement req = new XMLElement(AdminConstants.GET_ALL_SERVERS_REQUEST);
-        req.addAttribute(AdminConstants.A_SERVICE, service);
+        if (service != null)
+            req.addAttribute(AdminConstants.A_SERVICE, service);
+        req.addAttribute(AdminConstants.A_APPLY_CONFIG, applyDefault);
         Element resp = invoke(req);
         for (Element a: resp.listElements(AdminConstants.E_SERVER)) {
             result.add(new SoapServer(a));
@@ -819,7 +826,13 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public Domain get(DomainBy keyType, String key) throws ServiceException {
+        return get(keyType, key, true);
+    }
+    
+    // SoapProvisioning only, for zmprov
+    public Domain get(DomainBy keyType, String key, boolean applyDefault) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GET_DOMAIN_REQUEST);
+        req.addAttribute(AdminConstants.A_APPLY_CONFIG, applyDefault);
         Element a = req.addElement(AdminConstants.E_DOMAIN);
         a.setText(key);
         a.addAttribute(AdminConstants.A_BY, keyType.name());
@@ -871,7 +884,13 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public Server get(ServerBy keyType, String key) throws ServiceException {
+        return get(keyType, key, true);
+    }
+    
+    // SoapProvisioning only, for zmprov
+    public Server get(ServerBy keyType, String key, boolean applyDefault) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GET_SERVER_REQUEST);
+        req.addAttribute(AdminConstants.A_APPLY_CONFIG, applyDefault);
         Element a = req.addElement(AdminConstants.E_SERVER);
         a.setText(key);
         a.addAttribute(AdminConstants.A_BY, keyType.name());

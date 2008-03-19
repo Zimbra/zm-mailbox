@@ -42,14 +42,15 @@ public class GetAllServers extends AdminDocumentHandler {
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
         ZimbraSoapContext lc = getZimbraSoapContext(context);
-	    Provisioning prov = Provisioning.getInstance();
+        Provisioning prov = Provisioning.getInstance();
 
         String service = request.getAttribute(AdminConstants.A_SERVICE, null);
+        boolean applyConfig = request.getAttributeBool(AdminConstants.A_APPLY_CONFIG, true);
         List cos = prov.getAllServers(service);
         
         Element response = lc.createElement(AdminConstants.GET_ALL_SERVERS_RESPONSE);
         for (Iterator it = cos.iterator(); it.hasNext(); )
-            GetServer.doServer(response, (Server) it.next());
+            GetServer.doServer(response, (Server) it.next(), applyConfig);
 
 	    return response;
 	}
