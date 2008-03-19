@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -222,13 +223,13 @@ implements MailItemImport {
             // Add message to mailbox.  Validate the timestamp to avoid out-of-range
             // error in the database (see bug 17031).
             ParsedMessage pm = null;
-            if (pop3Msg.getSentDate() != null &&
-                pop3Msg.getSentDate().getTime() >= 0 &&
-                pop3Msg.getSentDate().getTime() <= 4294967295L) {
+            Date sentDate = pop3Msg.getSentDate();
+            if (sentDate != null && isValidDate(sentDate)) {
                 // Set received date to the original message's date
-                pm = new ParsedMessage(pop3Msg, pop3Msg.getSentDate().getTime(),
+                pm = new ParsedMessage(pop3Msg, sentDate.getTime(),
                     mbox.attachmentsIndexingEnabled());
             } else {
+                // Otherwise use current time if date invalid
                 pm = new ParsedMessage(pop3Msg, mbox.attachmentsIndexingEnabled());
             }
             
@@ -249,6 +250,12 @@ implements MailItemImport {
         folder.close(!ds.leaveOnServer());
         store.close();
     }
+
+    // Make sure specified date is valid when represented as UNIX time
+    // (seconds since the epoch).
+    private static boolean isValidDate(Date date) {
+        long time = date.getTime();
+        return time >= 0 && time <= 0xffffffffL * 1000;
     
     private int addMessage(Mailbox mbox, DataSource ds, ParsedMessage pm, int folderId) throws ServiceException, IOException {
     	com.zimbra.cs.mailbox.Message msg = null;
