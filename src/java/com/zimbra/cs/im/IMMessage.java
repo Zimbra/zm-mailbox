@@ -17,12 +17,15 @@
 
 package com.zimbra.cs.im;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.html.HtmlDefang;
 
 /**
  *
@@ -187,7 +190,11 @@ public class IMMessage {
         {
             if (mBody != null) {
                 Element e = parent.addElement("body");
-                e.setText(mBody.toString());
+                try {
+                    e.setText(HtmlDefang.defang(mBody.toString(), true));
+                } catch(IOException ex) {
+                    ZimbraLog.im.warn("Caught exception while HtmlDefang-ing IM message: \""+mBody.toString()+"\"", ex);
+                }
             }
         }
         return parent;
