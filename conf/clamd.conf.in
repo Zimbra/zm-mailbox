@@ -62,14 +62,14 @@ PidFile /opt/zimbra/log/clamd.pid
 
 # Path to the database directory.
 # Default: hardcoded (depends on installation options)
-DatabaseDirectory /opt/zimbra/data/clamav/db
+DatabaseDirectory /opt/zimbra/clamav/db
 
 # The daemon works in a local OR a network mode. Due to security reasons we
 # recommend the local mode.
 
 # Path to a local socket file the daemon will listen on.
 # Default: disabled
-# LocalSocket /opt/zimbra/data/clamav/clamav.sock
+# LocalSocket /opt/zimbra/clamav/clamav.sock
 
 # Remove stale socket after unclean shutdown.
 # Default: disabled
@@ -265,7 +265,7 @@ ArchiveMaxFileSize 100M
 
 # Mark encrypted archives as viruses (Encrypted.Zip, Encrypted.RAR).
 # Default: disabled
-%%uncomment VAR:zimbraVirusBlockEncryptedArchive%%ArchiveBlockEncrypted yes
+%%comment VAR:!zimbraVirusBlockEncryptedArchive%%ArchiveBlockEncrypted yes
 
 # Mark archives as viruses (e.g. RAR.ExceededFileSize, Zip.ExceededFilesLimit)
 # if ArchiveMaxFiles, ArchiveMaxFileSize, or ArchiveMaxRecursion limit is

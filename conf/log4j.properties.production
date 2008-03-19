@@ -8,8 +8,7 @@
 
 log4j.threshhold=OFF
 
-%%uncomment VAR:!zimbraLogToSyslog%%log4j.rootLogger=INFO,LOGFILE
-%%uncomment VAR:zimbraLogToSyslog%%log4j.rootLogger=INFO,LOGFILE,SYSLOG
+log4j.rootLogger=INFO,LOGFILE
 
 # Appender LOGFILE writes to the file "/opt/zimbra/log/mailbox.log".
 #log4j.appender.LOGFILE=org.apache.log4j.FileAppender
@@ -32,12 +31,24 @@ log4j.appender.AUDIT.layout.ConversionPattern=%d %-5p [%t] [%z] %c{1} - %m%n
 log4j.additivity.zimbra.security=false
 log4j.logger.zimbra.security=INFO,AUDIT
 
+# Appender STATS writes to the file "mailboxd.csv".
+log4j.appender.STATS=org.apache.log4j.ZimbraStatsAppender
+log4j.appender.STATS.File=/opt/zimbra/zmstat/mailboxd.csv
+log4j.appender.STATS.DatePattern=yyyy-MM-dd
+log4j.appender.STATS.Append=true
+log4j.appender.STATS.layout=org.apache.log4j.PatternLayout
+log4j.appender.STATS.layout.ConversionPattern=%m%n
+
+# Save zimbra.stats to STATS appender
+log4j.additivity.zimbra.stats=false
+log4j.logger.zimbra.stats=INFO,STATS
+
 # Syslog appender
 log4j.appender.SYSLOG=org.apache.log4j.net.SyslogAppender
 log4j.appender.SYSLOG.SyslogHost=localhost
 log4j.appender.SYSLOG.Facility=LOCAL0
 log4j.appender.SYSLOG.layout=com.zimbra.common.util.ZimbraPatternLayout
-log4j.appender.SYSLOG.layout.ConversionPattern=mailboxd: %-5p [%t] [%z] %c{1} - %m
+log4j.appender.SYSLOG.layout.ConversionPattern=%d %-5p [%t] [%z] %c{1} - %m%n
 
 # Appender SYNC writes to the file "sync.log".
 log4j.appender.SYNC=org.apache.log4j.DailyRollingFileAppender
@@ -71,15 +82,12 @@ log4j.appender.WBXML.Append=true
 log4j.appender.WBXML.layout=com.zimbra.common.util.ZimbraPatternLayout
 log4j.appender.WBXML.layout.ConversionPattern=%d %-5p [%t] [%z] %c{1} - %m%n
 
-# HttpMethodBase spews out too many WARN on the badly formatted cookies.
-log4j.logger.org.apache.commons.httpclient.HttpMethodBase=ERROR
-
 log4j.additivity.zimbra.sync=false
 log4j.logger.zimbra.sync=DEBUG,SYNC
 log4j.additivity.zimbra.synctrace=false
-log4j.logger.zimbra.synctrace=INFO,SYNCTRACE
+log4j.logger.zimbra.synctrace=TRACE,SYNCTRACE
 log4j.additivity.zimbra.syncstate=false
-log4j.logger.zimbra.syncstate=INFO,SYNCSTATE
+log4j.logger.zimbra.syncstate=DEBUG,SYNCSTATE
 log4j.additivity.zimbra.wbxml=false
 log4j.logger.zimbra.wbxml=DEBUG,WBXML
 
