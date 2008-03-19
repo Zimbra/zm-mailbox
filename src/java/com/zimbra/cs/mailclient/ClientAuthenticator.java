@@ -60,9 +60,6 @@ public class ClientAuthenticator {
     }
 
     public void initialize() throws LoginException, SaslException {
-        if (authorizationId == null) {
-            authorizationId = authenticationId;
-        }
         saslClient = MECHANISM_GSSAPI.equals(mechanism) ?
             createGssSaslClient() : createSaslClient();
         String qop = properties != null ? properties.get(Sasl.QOP) : null;
