@@ -256,6 +256,7 @@ implements MailItemImport {
     private static boolean isValidDate(Date date) {
         long time = date.getTime();
         return time >= 0 && time <= 0xffffffffL * 1000;
+    }
     
     private int addMessage(Mailbox mbox, DataSource ds, ParsedMessage pm, int folderId) throws ServiceException, IOException {
     	com.zimbra.cs.mailbox.Message msg = null;
