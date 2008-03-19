@@ -30,7 +30,7 @@ public class Pop3Config extends MailConfig {
     public String getProtocol() { return PROTOCOL; }
 
     public int getPort() {
-        if (mPort != -1) return mPort;
-        return isSSLEnabled ? DEFAULT_SSL_PORT : DEFAULT_PORT;
+        if (port != -1) return port;
+        return sslEnabled ? DEFAULT_SSL_PORT : DEFAULT_PORT;
     }
 }

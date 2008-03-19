@@ -24,8 +24,8 @@ import java.io.File;
  * IMAP client configuration settings.
  */
 public class ImapConfig extends MailConfig {
-    private int mMaxLiteralMemSize = DEFAULT_MAX_LITERAL_MEM_SIZE;
-    private File mLiteralDataDir = new File(System.getProperty("java.io.tmpdir"));
+    private int maxLiteralMemSize = DEFAULT_MAX_LITERAL_MEM_SIZE;
+    private File literalDataDir = new File(System.getProperty("java.io.tmpdir"));
     
     public static final String PROTOCOL = "imap";
 
@@ -36,30 +36,30 @@ public class ImapConfig extends MailConfig {
     public ImapConfig() {}
 
     public ImapConfig(String host, boolean sslEnabled) {
-        mHost = host;
-        isSSLEnabled = sslEnabled;
+        this.host = host;
+        this.sslEnabled = sslEnabled;
     }
 
     public String getProtocol() { return PROTOCOL; }
 
     public int getPort() {
-        if (mPort != -1) return mPort;
-        return isSSLEnabled ? DEFAULT_SSL_PORT : DEFAULT_PORT;
+        if (port != -1) return port;
+        return sslEnabled ? DEFAULT_SSL_PORT : DEFAULT_PORT;
     }
     
     public void setMaxLiteralMemSize(int size) {
-        mMaxLiteralMemSize = size;
+        maxLiteralMemSize = size;
     }
 
     public int getMaxLiteralMemSize() {
-        return mMaxLiteralMemSize;
+        return maxLiteralMemSize;
     }
 
     public void setLiteralDataDir(File dir) {
-        mLiteralDataDir = dir;
+        literalDataDir = dir;
     }
 
     public File getLiteralDataDir() {
-        return mLiteralDataDir;
+        return literalDataDir;
     }
 }

@@ -20,26 +20,27 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * IMAP message BODYSTRUCTURE response.
  */
 public class BodyStructure {
-    private String mType;           // Content type
-    private String mSubtype;        // Content subtype
-    private Map<String, String> mParams; // Content parameters
-    private String mId;             // Content-ID
-    private String mDescription;    // Content-Description
-    private String mEncoding;       // Content-Transfer-Encoding
-    private long mSize = -1;        // Content size in bytes
-    private long mLines = -1;       // Number of content lines
-    private Envelope mEnvelope;     // Optional envelope for MESSAGE/RFC822
-    private BodyStructure[] mParts; // Multipart message body parts
-    private String mMd5;            // Content MD5 checksum
-    private String mDisposition;    // Body disposition type
-    private Map<String, String> mDispositionParams; // Disposition parameters
-    private String[] mLanguage;     // Body language
-    private String mLocation;       // Body content URI
+    private String type;            // Content type
+    private String subtype;         // Content subtype
+    private Map<String, String> params; // Content parameters
+    private String id;              // Content-ID
+    private String description;     // Content-Description
+    private String encoding;        // Content-Transfer-Encoding
+    private long size = -1;         // Content size in bytes
+    private long lines = -1;        // Number of content lines
+    private Envelope envelope;      // Optional envelope for MESSAGE/RFC822
+    private BodyStructure[] parts;  // Multipart message body parts
+    private String md5;             // Content MD5 checksum
+    private String disposition;     // Body disposition type
+    private Map<String, String> dispositionParams; // Disposition parameters
+    private String[] language;      // Body language
+    private String location;        // Body content URI
 
     /**
      * Reads BODYSTRUCTURE IMAP response data.
@@ -79,24 +80,24 @@ public class BodyStructure {
     //                   [SP body-fld-loc *(SP body-extension)]]]
 
     private void read1Part(ImapInputStream is, boolean ext) throws IOException {
-        mType = is.readString().toLowerCase();
+        type = is.readString().toLowerCase();
         is.skipChar(' ');
-        mSubtype = is.readString().toLowerCase();
+        subtype = is.readString().toLowerCase();
         is.skipChar(' ');
         readFields(is);
-        if (mType.equals("text")) {
+        if (type.equals("text")) {
             is.skipChar(' ');
-            mLines = is.readNumber();
-        } else if (mType.equals("message") && mSubtype.equals("rfc822")) {
+            lines = is.readNumber();
+        } else if (type.equals("message") && subtype.equals("rfc822")) {
             is.skipChar(' ');
-            mEnvelope = Envelope.read(is);
+            envelope = Envelope.read(is);
             is.skipChar(' ');
-            mParts = new BodyStructure[] { BodyStructure.read(is, ext) };
+            parts = new BodyStructure[] { BodyStructure.read(is, ext) };
             is.skipChar(' ');
-            mLines = is.readNumber();
+            lines = is.readNumber();
         }
         if (ext && is.match(' ')) {
-            mMd5 = is.readNString();
+            md5 = is.readNString();
             if (is.match(' ')) readExt(is);
         }
     }
@@ -108,17 +109,17 @@ public class BodyStructure {
     
     private void readMPart(ImapInputStream is, boolean ext) throws IOException {
         is.skipChar('(');
-        mType = "multipart";
-        ArrayList<BodyStructure> parts = new ArrayList<BodyStructure>();
+        type = "multipart";
+        List<BodyStructure> parts = new ArrayList<BodyStructure>();
         do {
             parts.add(read(is, ext));
         } while (!is.match(' '));
-        mSubtype = is.readString().toLowerCase();
+        subtype = is.readString().toLowerCase();
         if (ext && is.match(' ')) {
-            mParams = readParams(is);
+            params = readParams(is);
             if (is.match(' ')) readExt(is);
         }
-        mParts = parts.toArray(new BodyStructure[parts.size()]);
+        this.parts = parts.toArray(new BodyStructure[parts.size()]);
         is.skipChar(')');
     }
 
@@ -127,14 +128,14 @@ public class BodyStructure {
     
     private void readExt(ImapInputStream is) throws IOException {
         is.skipChar('(');
-        mDisposition = is.readString();
+        disposition = is.readString();
         is.skipChar(' ');
-        mDispositionParams = readParams(is);
+        dispositionParams = readParams(is);
         is.skipChar(')');
         if (is.match(' ')) {
-            mLanguage = readLang(is);
+            language = readLang(is);
             if (is.match(' ')) {
-                mLocation = is.readNString();
+                location = is.readNString();
                 while (is.match(' ')) {
                     skipExtData(is);
                 }
@@ -151,15 +152,15 @@ public class BodyStructure {
     // body-fld-octets = number
 
     private void readFields(ImapInputStream is) throws IOException {
-        mParams = readParams(is);
+        params = readParams(is);
         is.skipChar(' ');
-        mId = is.readNString();
+        id = is.readNString();
         is.skipChar(' ');
-        mDescription = is.readNString();
+        description = is.readNString();
         is.skipChar(' ');
-        mEncoding = is.readString();
+        encoding = is.readString();
         is.skipChar(' ');
-        mSize = is.readNumber();
+        size = is.readNumber();
     }
 
     // body-fld-param  = "(" string SP string *(SP string SP string) ")" / nil
@@ -210,21 +211,21 @@ public class BodyStructure {
         return lang.toArray(new String[lang.size()]);
     }
     
-    public String getType() { return mType; }
-    public String getSubtype() { return mSubtype; }
-    public Map<String, String> getParameters() { return mParams; }
-    public String getId() { return mId; }
-    public String getDescription() { return mDescription; }
-    public String getEncoding() { return mEncoding; }
-    public long getSize() { return mSize; }
-    public long getLines() { return mLines; }
-    public Envelope getEnvelope() { return mEnvelope; }
-    public BodyStructure[] getParts() { return mParts; }
-    public String getMd5() { return mMd5; }
-    public String[] getLanguage() { return mLanguage; }
-    public String getLocation() { return mLocation; }
-    public String getDisposition() { return mDisposition; }
+    public String getType() { return type; }
+    public String getSubtype() { return subtype; }
+    public Map<String, String> getParameters() { return params; }
+    public String getId() { return id; }
+    public String getDescription() { return description; }
+    public String getEncoding() { return encoding; }
+    public long getSize() { return size; }
+    public long getLines() { return lines; }
+    public Envelope getEnvelope() { return envelope; }
+    public BodyStructure[] getParts() { return parts; }
+    public String getMd5() { return md5; }
+    public String[] getLanguage() { return language; }
+    public String getLocation() { return location; }
+    public String getDisposition() { return disposition; }
     public Map<String, String> getDispositionParameters() {
-        return mDispositionParams;
+        return dispositionParams;
     }
 }

@@ -28,18 +28,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ClientAuthenticator {
-    private final String mMechanism;
-    private final String mProtocol;
-    private final String mServerName;
-    private Map<String,String> mProperties;
-    private String mAuthorizationId;
-    private String mAuthenticationId;
-    private String mRealm;
-    private String mPassword;
-    private LoginContext mLoginContext;
-    private Subject mSubject;
-    private SaslClient mSaslClient;
-    private boolean mDebug;
+    private final String mechanism;
+    private final String protocol;
+    private final String serverName;
+    private Map<String,String> properties;
+    private String authorizationId;
+    private String authenticationId;
+    private String realm;
+    private String password;
+    private LoginContext loginContext;
+    private Subject subject;
+    private SaslClient saslClient;
+    private boolean debug;
 
     public static final String MECHANISM_GSSAPI = "GSSAPI";
     public static final String MECHANISM_PLAIN = "PLAIN";
@@ -53,27 +53,29 @@ public class ClientAuthenticator {
         if (mechanism  == null) throw new NullPointerException("mechanism");
         if (protocol   == null) throw new NullPointerException("protocol");
         if (serverName == null) throw new NullPointerException("serverName");
-        mMechanism = mechanism;
-        mProtocol = protocol;
-        mServerName = serverName;
-        mAuthenticationId = System.getProperty("user.name");
+        this.mechanism = mechanism;
+        this.protocol = protocol;
+        this.serverName = serverName;
+        authenticationId = System.getProperty("user.name");
     }
 
     public void initialize() throws LoginException, SaslException {
-        if (mAuthorizationId == null) mAuthorizationId = mAuthenticationId;
-        mSaslClient = MECHANISM_GSSAPI.equals(mMechanism) ?
+        if (authorizationId == null) {
+            authorizationId = authenticationId;
+        }
+        saslClient = MECHANISM_GSSAPI.equals(mechanism) ?
             createGssSaslClient() : createSaslClient();
-        String qop = mProperties != null ? mProperties.get(Sasl.QOP) : null;
+        String qop = properties != null ? properties.get(Sasl.QOP) : null;
         debug("Requested QOP is %s", qop != null ? qop : "auth");
     }
 
     private SaslClient createGssSaslClient() throws LoginException, SaslException {
-        mLoginContext = getLoginContext();
-        mLoginContext.login();
-        mSubject = mLoginContext.getSubject();
-        debug("GSS subject = %s", mSubject);
+        loginContext = getLoginContext();
+        loginContext.login();
+        subject = loginContext.getSubject();
+        debug("GSS subject = %s", subject);
         try {
-            return (SaslClient) Subject.doAs(mSubject,
+            return (SaslClient) Subject.doAs(subject,
                 new PrivilegedExceptionAction() {
                     public Object run() throws SaslException {
                         return createSaslClient();
@@ -98,7 +100,7 @@ public class ClientAuthenticator {
 
     private LoginContext getLoginContext() throws LoginException {
         Map<String, String> options = new HashMap<String, String>();
-        options.put("debug", Boolean.toString(mDebug));
+        options.put("debug", Boolean.toString(debug));
         options.put("principal", getPrincipal());
         // options.put("useTicketCache", "true");
         // options.put("storeKey", "true");
@@ -116,13 +118,13 @@ public class ClientAuthenticator {
     }
 
     private String getPrincipal() {
-        return mRealm != null && mAuthenticationId.indexOf('@') == -1 ?
-            mAuthenticationId + '@' + mRealm : mAuthenticationId;
+        return realm != null && authenticationId.indexOf('@') == -1 ?
+            authenticationId + '@' + realm : authenticationId;
     }
 
     private SaslClient createSaslClient() throws SaslException {
-        return Sasl.createSaslClient(new String[] { mMechanism },
-            mAuthorizationId, mProtocol, mServerName, mProperties,
+        return Sasl.createSaslClient(new String[] {mechanism},
+            authorizationId, protocol, serverName, properties,
             new SaslCallbackHandler());
     }
 
@@ -131,16 +133,16 @@ public class ClientAuthenticator {
         if (isComplete()) {
             throw new IllegalStateException("Authentication already completed");
         }
-        return mSubject != null ?
-            evaluateGssChallenge(challenge) : mSaslClient.evaluateChallenge(challenge);
+        return subject != null ?
+            evaluateGssChallenge(challenge) : saslClient.evaluateChallenge(challenge);
     }
 
     private byte[] evaluateGssChallenge(final byte[] challenge) throws SaslException {
         try {
-            return (byte[]) Subject.doAs(mSubject,
+            return (byte[]) Subject.doAs(subject,
                 new PrivilegedExceptionAction() {
                     public Object run() throws SaslException {
-                        return mSaslClient.evaluateChallenge(challenge);
+                        return saslClient.evaluateChallenge(challenge);
                     }
                 });
         } catch (PrivilegedActionException e) {
@@ -160,17 +162,17 @@ public class ClientAuthenticator {
             throw new IllegalStateException(
                 "Mechanism does not support initial response");
         }
-        return mSaslClient.evaluateChallenge(new byte[0]);
+        return saslClient.evaluateChallenge(new byte[0]);
     }
    
     public boolean hasInitialResponse() {
         checkInitialized();
-        return mSaslClient.hasInitialResponse();
+        return saslClient.hasInitialResponse();
     }
 
     public boolean isComplete() {
         checkInitialized();
-        return mSaslClient.isComplete();
+        return saslClient.isComplete();
     }
 
     private class SaslCallbackHandler implements CallbackHandler {
@@ -178,11 +180,11 @@ public class ClientAuthenticator {
             throws IOException, UnsupportedCallbackException {
             for (Callback cb : cbs) {
                 if (cb instanceof NameCallback) {
-                    ((NameCallback) cb).setName(mAuthenticationId);
+                    ((NameCallback) cb).setName(authenticationId);
                 } else if (cb instanceof PasswordCallback) {
                     ((PasswordCallback) cb).setPassword(getPassword());
                 } else if (cb instanceof RealmCallback) {
-                    ((RealmCallback) cb).setText(mRealm);
+                    ((RealmCallback) cb).setText(realm);
                 } else {
                     throw new UnsupportedCallbackException(cb);
                 }
@@ -191,32 +193,32 @@ public class ClientAuthenticator {
     }
 
     private char[] getPassword() throws IOException {
-        if (mPassword != null) return mPassword.toCharArray();
+        if (password != null) return password.toCharArray();
         return Password.getInstance().readPassword("Enter password: ");
     }
     
     public boolean isEncryptionEnabled() {
         checkInitialized();
-        return SaslSecurityLayer.getInstance(mSaslClient).isEnabled();
+        return SaslSecurityLayer.getInstance(saslClient).isEnabled();
     }
 
     public OutputStream getWrappedOutputStream(OutputStream os) {
         checkInitialized();
         return isEncryptionEnabled() ?
-            new SaslOutputStream(os, mSaslClient) : os;
+            new SaslOutputStream(os, saslClient) : os;
     }
 
     public InputStream getUnwrappedInputStream(InputStream is) {
         checkInitialized();
         return isEncryptionEnabled() ?
-            new SaslInputStream(is, mSaslClient) : is;
+            new SaslInputStream(is, saslClient) : is;
     }
     
     public Map<String,String> getProperties() {
-        if (mProperties == null) {
-            mProperties = new HashMap<String, String>();
+        if (properties == null) {
+            properties = new HashMap<String, String>();
         }
-        return mProperties;
+        return properties;
     }
 
     public void setProperty(String name, String value) {
@@ -224,50 +226,50 @@ public class ClientAuthenticator {
     }
 
     public String getNegotiatedProperty(String name) {
-        return (String) mSaslClient.getNegotiatedProperty(name);
+        return (String) saslClient.getNegotiatedProperty(name);
     }
     
     public void setAuthorizationId(String id) {
-        mAuthorizationId = id;
+        authorizationId = id;
     }
 
     public void setAuthenticationId(String id) {
-        mAuthenticationId = id;
+        authenticationId = id;
     }
 
     public void setRealm(String realm) {
-        mRealm = realm;
+        this.realm = realm;
     }                  
 
     public void setPassword(String password) {
-        mPassword = password;
+        this.password = password;
     }
 
     public void setDebug(boolean debug) {
-        mDebug = debug;
+        this.debug = debug;
     }
     
     public void dispose() throws SaslException {
         checkInitialized();
-        mSaslClient.dispose();
-        if (mLoginContext != null) {
+        saslClient.dispose();
+        if (loginContext != null) {
             try {
-                mLoginContext.logout();
+                loginContext.logout();
             } catch (LoginException e) {
                 e.printStackTrace();
             }
-            mLoginContext = null;
+            loginContext = null;
         }
     }
 
     private void checkInitialized() {
-        if (mSaslClient == null) {
+        if (saslClient == null) {
             throw new IllegalStateException("Authenticator is not initialized");
         }
     }
 
     private void debug(String format, Object... args) {
-        if (mDebug) {
+        if (debug) {
             System.out.printf("[ClientAuthenticator] " + format + "\n", args);
         }
     }

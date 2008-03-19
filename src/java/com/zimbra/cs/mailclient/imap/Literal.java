@@ -31,22 +31,22 @@ import java.io.FileInputStream;
  * IMAP literal data type.
  */
 public final class Literal extends ImapData {
-    private final byte[] mBytes;
-    private final File mFile;
-    private final int mSize;
-    private boolean mTemp; // if true then file is temporary
+    private final byte[] bytes;
+    private final File file;
+    private final int size;
+    private boolean tmp; // if true then file is temporary
 
     public Literal(byte[] bytes) {
-        mBytes = bytes;
-        mFile = null;
-        mSize = bytes.length;
+        this.bytes = bytes;
+        file = null;
+        size = bytes.length;
     }
 
-    public Literal(File file, boolean temp) {
-        mBytes = null;
-        mFile = file;
-        mSize = (int) file.length();
-        mTemp = temp;
+    public Literal(File file, boolean tmp) {
+        bytes = null;
+        this.file = file;
+        size = (int) file.length();
+        this.tmp = tmp;
     }
 
     public Literal(File file) {
@@ -58,23 +58,23 @@ public final class Literal extends ImapData {
     }
     
     public InputStream getInputStream() throws IOException {
-        return mBytes != null ?
-            new ByteArrayInputStream(mBytes) : new FileInputStream(mFile);
+        return bytes != null ?
+            new ByteArrayInputStream(bytes) : new FileInputStream(file);
     }
 
     public int getSize() {
-        return mSize;
+        return size;
     }
 
     public File getFile() {
-        return mFile;
+        return file;
     }
 
     public byte[] getBytes() throws IOException {
-        if (mBytes != null) return mBytes;
+        if (bytes != null) return bytes;
         DataInputStream is = new DataInputStream(getInputStream());
         try {
-            byte[] b = new byte[mSize];
+            byte[] b = new byte[size];
             is.readFully(b);
             return b;
         } finally {
@@ -85,14 +85,14 @@ public final class Literal extends ImapData {
     public void writePrefix(MailOutputStream os, boolean lp)
             throws IOException {
         os.write('{');
-        os.write(String.valueOf(mSize));
+        os.write(String.valueOf(size));
         if (lp) os.write('+');
         os.writeLine("}");
     }
 
     public void writeData(OutputStream os) throws IOException {
-        if (mBytes != null) {
-            os.write(mBytes);
+        if (bytes != null) {
+            os.write(bytes);
         } else {
             InputStream is = getInputStream();
             try {
@@ -117,8 +117,8 @@ public final class Literal extends ImapData {
     }
 
     public void dispose() {
-        if (mFile != null && mTemp) {
-            mFile.delete();
+        if (file != null && tmp) {
+            file.delete();
         }
     }
 

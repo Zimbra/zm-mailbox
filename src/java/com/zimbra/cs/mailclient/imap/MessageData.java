@@ -43,15 +43,15 @@ import java.io.IOException;
  *                   ; MUST NOT change for a message
  */
 public final class MessageData {
-    private Flags mFlags;
-    private Envelope mEnvelope;
-    private Date mInternalDate;
-    private ImapData mRfc822Header;
-    private ImapData mRfc822Text;
-    private long mRfc822Size = -1;
-    private BodyStructure mBodyStructure;
-    private List<Body> mBodySections;
-    private long mUid = -1;
+    private Flags flags;
+    private Envelope envelope;
+    private Date internalDate;
+    private ImapData rfc822Header;
+    private ImapData rfc822Text;
+    private long rfc822Size = -1;
+    private BodyStructure bodyStructure;
+    private List<Body> bodySections;
+    private long uid = -1;
 
     private static final SimpleDateFormat INTERNALDATE_FORMAT =
         new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss Z", Locale.US);
@@ -75,40 +75,40 @@ public final class MessageData {
         Atom attr = new Atom(is.readChars(Chars.FETCH_CHARS));
         CAtom cattr = attr.getCAtom();
         if (cattr == CAtom.BODY && is.peek() == '[') {
-            if (mBodySections == null) {
-                mBodySections = new ArrayList<Body>();
+            if (bodySections == null) {
+                bodySections = new ArrayList<Body>();
             }
-            mBodySections.add(Body.read(is));
+            bodySections.add(Body.read(is));
             return;
         }
         is.skipChar(' ');
         switch (attr.getCAtom()) {
         case FLAGS:
-            mFlags = Flags.read(is);
+            flags = Flags.read(is);
             break;
         case ENVELOPE:
-            mEnvelope = Envelope.read(is);
+            envelope = Envelope.read(is);
             break;
         case INTERNALDATE:
-            mInternalDate = readInternalDate(is);
+            internalDate = readInternalDate(is);
             break;
         case RFC822_HEADER:
-            mRfc822Header = is.readNStringData();
+            rfc822Header = is.readNStringData();
             break;
         case RFC822_TEXT:
-            mRfc822Text = is.readNStringData();
+            rfc822Text = is.readNStringData();
             break;
         case RFC822_SIZE:
-            mRfc822Size = is.readNumber();
+            rfc822Size = is.readNumber();
             break;
         case BODYSTRUCTURE:
-            mBodyStructure = BodyStructure.read(is, true);
+            bodyStructure = BodyStructure.read(is, true);
             break;
         case BODY:
-            mBodyStructure = BodyStructure.read(is, false);
+            bodyStructure = BodyStructure.read(is, false);
             break;
         case UID:
-            mUid = is.readNZNumber();
+            uid = is.readNZNumber();
             break;
         default:
             throw new ParseException("Invalid message data attribute: " + attr);
@@ -126,23 +126,24 @@ public final class MessageData {
         }
     }
 
-    public Flags getFlags() { return mFlags; }
-    public Envelope getEnvelope() { return mEnvelope; }
-    public Date getInternalDate() { return mInternalDate; }
-    public ImapData getRfc822Header() { return mRfc822Header; }
-    public ImapData getRfc822Text() { return mRfc822Text; }
-    public long getRfc822Size() { return mRfc822Size; }
-    public BodyStructure getBodyStructure() { return mBodyStructure; }
-    public long getUid() { return mUid; }
+    public Flags getFlags() { return flags; }
+    public Envelope getEnvelope() { return envelope; }
+    public Date getInternalDate() { return internalDate; }
+    public ImapData getRfc822Header() { return rfc822Header; }
+    public ImapData getRfc822Text() { return rfc822Text; }
+    public long getRfc822Size() { return rfc822Size; }
+    public BodyStructure getBodyStructure() { return bodyStructure; }
+    public long getUid() { return uid; }
+    
     public Body[] getBodySections() {
-        return mBodySections.toArray(new Body[mBodySections.size()]);
+        return bodySections.toArray(new Body[bodySections.size()]);
     }
 
     public void dispose() {
-        if (mRfc822Header != null) mRfc822Header.dispose();
-        if (mRfc822Text != null) mRfc822Text.dispose();
-        if (mBodySections != null) {
-            for (Body body : mBodySections) body.dispose();
+        if (rfc822Header != null) rfc822Header.dispose();
+        if (rfc822Text != null) rfc822Text.dispose();
+        if (bodySections != null) {
+            for (Body body : bodySections) body.dispose();
         }
     }
 }

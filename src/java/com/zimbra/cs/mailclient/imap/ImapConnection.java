@@ -22,16 +22,15 @@ import com.zimbra.cs.mailclient.MailInputStream;
 import com.zimbra.cs.mailclient.MailOutputStream;
 import com.zimbra.cs.mailclient.CommandFailedException;
 
-import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Formatter;
 
 public class ImapConnection extends MailConnection {
-    private Capabilities mCapabilities;
-    private ImapResponse mResponse;
-    private int mCount;
+    private Capabilities capabilities;
+    private ImapResponse response;
+    private int tagCount;
 
     private static final String TAG_FORMAT = "C%02d";
 
@@ -40,7 +39,7 @@ public class ImapConnection extends MailConnection {
     }
 
     protected MailInputStream getMailInputStream(InputStream is) {
-        return new ImapInputStream(is, (ImapConfig) mConfig);
+        return new ImapInputStream(is, (ImapConfig) config);
     }
 
     protected MailOutputStream getMailInputStream(OutputStream os) {
@@ -48,16 +47,16 @@ public class ImapConnection extends MailConnection {
     }
     
     protected void processGreeting() throws IOException {
-        mResponse = ImapResponse.read((ImapInputStream) mInputStream);
-        if (!mResponse.isOK()) {
-            String err = mResponse.getResponseText().getText();
+        response = ImapResponse.read((ImapInputStream) mailIn);
+        if (!response.isOK()) {
+            String err = response.getResponseText().getText();
             throw new MailException("Expected greeting, but got: " + err);
         }
     }
     
     protected void sendLogin() throws IOException {
-        sendCommandCheckStatus("LOGIN", mConfig.getAuthenticationId(),
-                               ' ', new Quoted(mConfig.getPassword()));
+        sendCommandCheckStatus("LOGIN", config.getAuthenticationId(),
+                               ' ', new Quoted(config.getPassword()));
     }
 
     public void logout() throws IOException {
@@ -65,9 +64,9 @@ public class ImapConnection extends MailConnection {
     }
 
     protected void sendAuthenticate(boolean ir) throws IOException {
-        StringBuilder sb = new StringBuilder(mConfig.getMechanism());
+        StringBuilder sb = new StringBuilder(config.getMechanism());
         if (ir) {
-            byte[] response = mAuthenticator.getInitialResponse();
+            byte[] response = authenticator.getInitialResponse();
             sb.append(' ').append(encodeBase64(response));
         }
         sendCommandCheckStatus("AUTHENTICATE", sb.toString());
@@ -89,44 +88,44 @@ public class ImapConnection extends MailConnection {
     public ImapResponse sendCommand(String cmd, Object... args)
             throws IOException {
         String tag = createTag();
-        mOutputStream.write(tag);
-        mOutputStream.write(' ');
-        mOutputStream.write(cmd);
+        mailOut.write(tag);
+        mailOut.write(' ');
+        mailOut.write(cmd);
         if (args != null && args.length > 0) {
-            mOutputStream.write(' ');
+            mailOut.write(' ');
             writeParts(args);
         }
-        mOutputStream.newLine();
-        mOutputStream.flush();
+        mailOut.newLine();
+        mailOut.flush();
         // TODO Handle case were we receive BYE just before connection is closed,
         // which may cause EOFException while reading the message.
         do {
-            mResponse = readResponse();
-            processResponse(mResponse);
-        } while (!mResponse.isTagged());
-        if (!tag.equals(mResponse.getTag())) {
+            response = readResponse();
+            processResponse(response);
+        } while (!response.isTagged());
+        if (!tag.equals(response.getTag())) {
             throw new MailException("Mismatched tag in response");
         }
-        return mResponse;
+        return response;
     }
 
     private void writeParts(Object[] parts) throws IOException {
         for (Object part : parts) {
             if (part instanceof Quoted) {
-                ((Quoted) part).write(mOutputStream);
+                ((Quoted) part).write(mailOut);
             } else if (part instanceof Literal) {
                 writeLiteral((Literal) part);
             } else if (part instanceof byte[]) {
                 writeLiteral(new Literal((byte []) part));
             } else {
-                mOutputStream.write(part.toString());
+                mailOut.write(part.toString());
             }
         }
     }
 
     private void writeLiteral(Literal lit) throws IOException {
-        boolean lp = mCapabilities != null && mCapabilities.hasLiteralPlus();
-        lit.writePrefix(mOutputStream, lp);
+        boolean lp = capabilities != null && capabilities.hasLiteralPlus();
+        lit.writePrefix(mailOut, lp);
         if (!lp) {
             // Wait for continuation response before proceeding
             ImapResponse res = readResponse();
@@ -134,11 +133,11 @@ public class ImapConnection extends MailConnection {
                 throw new MailException("Expected literal continuation response");
             }
         }
-        lit.writeData(mOutputStream);
+        lit.writeData(mailOut);
     }
 
     private ImapResponse readResponse() throws IOException {
-        return ImapResponse.read((ImapInputStream) mInputStream);
+        return ImapResponse.read((ImapInputStream) mailIn);
     }
 
     private void processResponse(ImapResponse res) throws IOException {
@@ -150,21 +149,21 @@ public class ImapConnection extends MailConnection {
             if (code != null) {
                 switch (code.getCAtom()) {
                 case CAPABILITY:
-                    mCapabilities = (Capabilities) rt.getData();
+                    capabilities = (Capabilities) rt.getData();
                 }
             }
         } else if (res.isUntagged()) {
             // TODO handle flags, etc
-            switch (mResponse.getCode()) {
+            switch (response.getCode()) {
             case CAPABILITY:
-                mCapabilities = (Capabilities) res.getData();
+                capabilities = (Capabilities) res.getData();
             }
         }
     }
 
     private String createTag() {
         Formatter fmt = new Formatter();
-        fmt.format(TAG_FORMAT, mCount++);
+        fmt.format(TAG_FORMAT, tagCount++);
         return fmt.toString();
     }
 }

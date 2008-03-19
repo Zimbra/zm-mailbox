@@ -25,12 +25,12 @@ import java.io.IOException;
  * IMAP atom data type.
  */
 public final class Atom extends ImapData {
-    private final String mName;
+    private final String name;
 
     public static final Atom NIL = new Atom("nil");
     
     public Atom(String name) {
-        mName = name;
+        this.name = name;
     }
 
     public Type getType() {
@@ -38,7 +38,7 @@ public final class Atom extends ImapData {
     }
     
     public String getName() {
-        return mName;
+        return name;
     }
 
     public CAtom getCAtom() {
@@ -46,35 +46,35 @@ public final class Atom extends ImapData {
     }
 
     public boolean isNumber() {
-        return Chars.isNumber(mName);
+        return Chars.isNumber(name);
     }
     
     public long getNumber() {
-        return Chars.getNumber(mName);
+        return Chars.getNumber(name);
     }
 
     public int getSize() {
-        return mName.length();
+        return name.length();
     }
 
     public byte[] getBytes() {
-        return Ascii.getBytes(mName);
+        return Ascii.getBytes(name);
     }
     
     public void write(OutputStream os) throws IOException {
-        Ascii.write(os, mName);
+        Ascii.write(os, name);
     }
     
     public int hashCode() {
-        return mName.toUpperCase().hashCode();
+        return name.toUpperCase().hashCode();
     }
     
     public boolean equals(Object obj) {
         return this == obj || obj != null && obj.getClass() == Atom.class &&
-                              mName.equalsIgnoreCase(((Atom) obj).mName);
+                              name.equalsIgnoreCase(((Atom) obj).name);
     }
 
     public String toString() {
-        return mName;
+        return name;
     }
 }

@@ -5,28 +5,26 @@ import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.IMAPMessage;
 import com.sun.mail.imap.protocol.IMAPProtocol;
 
-import javax.mail.FetchProfile;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Store;
-import javax.mail.UIDFolder;
 
 import java.io.EOFException;
 import java.io.IOException;
 
 public class UidFetch {
-    private ImapConfig mConfig;
+    private ImapConfig config;
 
     private static final boolean DEBUG = false;
     
     public UidFetch(ImapConfig config) {
-        mConfig = config;
+        this.config = config;
     }
 
     public UidFetch() {
-        mConfig = new ImapConfig();
+        config = new ImapConfig();
     }
 
     public void fetch(IMAPFolder folder, final String seq,
@@ -56,7 +54,7 @@ public class UidFetch {
         String tag = protocol.writeCommand(
             "UID FETCH " + seq + " (BODY.PEEK[] UID INTERNALDATE)", null);
         ImapInputStream is =
-            new ImapInputStream(protocol.getInputStream().getRealInputStream(), mConfig);
+            new ImapInputStream(protocol.getInputStream().getRealInputStream(), config);
         while (true) {
             ImapResponse res = ImapResponse.read(is);
             if (res == null) throw new EOFException();

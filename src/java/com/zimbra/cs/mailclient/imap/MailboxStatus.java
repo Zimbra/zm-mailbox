@@ -32,12 +32,12 @@ import java.io.IOException;
  *
  */
 public final class MailboxStatus {
-    private String mMailbox;
-    private long mMessages = -1;
-    private long mRecent = -1;
-    private long mUidNext = -1;
-    private long mUidValidity = -1;
-    private long mUnseen = -1;
+    private String mailbox;
+    private long messages = -1;
+    private long recent = -1;
+    private long uidNext = -1;
+    private long uidValidity = -1;
+    private long unseen = -1;
 
     public static MailboxStatus read(ImapInputStream is) throws IOException {
         MailboxStatus mbs = new MailboxStatus();
@@ -46,28 +46,28 @@ public final class MailboxStatus {
     }
 
     private void readStatus(ImapInputStream is) throws IOException {
-        mMailbox = is.readAString();
+        mailbox = is.readAString();
         is.skipChar(' ');
         is.skipChar('(');
         do {
             Atom attr = is.readAtom();
             is.skipChar(' ');
-            long num = is.readNumber();
+            long n = is.readNumber();
             switch (attr.getCAtom()) {
             case MESSAGES:
-                mMessages = num;
+                messages = n;
                 break;
             case RECENT:
-                mRecent = num;
+                recent = n;
                 break;
             case UIDNEXT:
-                mUidNext = num;
+                uidNext = n;
                 break;
             case UIDVALIDITY:
-                mUidValidity = num;
+                uidValidity = n;
                 break;
             case UNSEEN:
-                mUnseen = num;
+                unseen = n;
                 break;
             default:
                 throw new ParseException(
@@ -77,10 +77,10 @@ public final class MailboxStatus {
         is.skipChar(')');
     }
 
-    public String getMailbox() { return mMailbox; }
-    public long getMessages() { return mMessages; }
-    public long getRecent() { return mRecent; }
-    public long getUidNext() { return mUidNext; }
-    public long getUidValidity() { return mUidValidity; }
-    public long getUnseen() { return mUnseen; }
+    public String getMailbox() { return mailbox; }
+    public long getMessages() { return messages; }
+    public long getRecent() { return recent; }
+    public long getUidNext() { return uidNext; }
+    public long getUidValidity() { return uidValidity; }
+    public long getUnseen() { return unseen; }
 }

@@ -31,14 +31,14 @@ import java.io.EOFException;
 /**
  * An input stream for reading IMAP response data.
  */
-public final class  ImapInputStream extends MailInputStream {
-    private ImapConfig mConfig;
+public final class ImapInputStream extends MailInputStream {
+    private ImapConfig config;
 
     private static final boolean DEBUG = false;
 
     public ImapInputStream(InputStream is, ImapConfig config) {
         super(is);
-        mConfig = config;
+        this.config = config;
     }
 
     public Atom readAtom() throws IOException {
@@ -119,7 +119,7 @@ public final class  ImapInputStream extends MailInputStream {
 
     public Quoted readQuoted() throws IOException {
         skipChar('"');
-        mBuffer.setLength(0);
+        sbuf.setLength(0);
         int c;
         while ((c = read()) != '"') {
             switch (c) {
@@ -132,9 +132,9 @@ public final class  ImapInputStream extends MailInputStream {
             case '\\':
                 c = readChar();
             }
-            mBuffer.append((char) c);
+            sbuf.append((char) c);
         }
-        return new Quoted(mBuffer.toString());
+        return new Quoted(sbuf.toString());
     }
 
     private Literal readLiteral() throws IOException {
@@ -150,19 +150,19 @@ public final class  ImapInputStream extends MailInputStream {
     }
 
     private Literal readLiteral(int len) throws IOException {
-        if (len <= mConfig.getMaxLiteralMemSize()) {
+        if (len <= config.getMaxLiteralMemSize()) {
             // Cache literal data in memory
             byte[] b = new byte[len];
-            Io.readFully(mInputStream, b);
+            Io.readFully(in, b);
             return new Literal(b);
         }
         // Otherwise, use temporary file for literal data, which will be
         // automatically cleaned up when the ImapResponse is finished.
-        File f = File.createTempFile("lit", null, mConfig.getLiteralDataDir());
+        File f = File.createTempFile("lit", null, config.getLiteralDataDir());
         f.deleteOnExit();
         OutputStream os = new FileOutputStream(f);
         try {
-            Io.copyBytes(mInputStream, os, len);
+            Io.copyBytes(in, os, len);
         } finally {
             os.close();
         }
@@ -175,7 +175,7 @@ public final class  ImapInputStream extends MailInputStream {
     }
     
     public String readText(char delim) throws IOException {
-        mBuffer.setLength(0);
+        sbuf.setLength(0);
         char c;
         while ((c = peekChar()) != delim) {
             if (!Chars.isText(c)) {
@@ -183,17 +183,17 @@ public final class  ImapInputStream extends MailInputStream {
                     "Unexpected character '" + Ascii.pp((byte) c) +
                     "' while reading TEXT string");
             }
-            mBuffer.append((char) read());
+            sbuf.append((char) read());
         }
-        return mBuffer.toString();
+        return sbuf.toString();
     }
 
     public String readChars(boolean[] chars) throws IOException {
-        mBuffer.setLength(0);
+        sbuf.setLength(0);
         while (chars[peekChar()]) {
-            mBuffer.append((char) read());
+            sbuf.append((char) read());
         }
-        return mBuffer.toString();
+        return sbuf.toString();
     }
 
     public void skipChar(char expectedChar) throws IOException {

@@ -25,10 +25,10 @@ import java.io.EOFException;
  * POP3 server response message.
  */
 public class Pop3Response {
-    private final String mCommand;
-    private String mStatus;
-    private String mMessage;
-    private ContentInputStream mContentInputStream;
+    private final String command;
+    private String status;
+    private String message;
+    private ContentInputStream in;
     
     private static final String OK = "+OK";
     private static final String ERR = "-ERR";
@@ -46,7 +46,7 @@ public class Pop3Response {
     }
 
     private Pop3Response(String cmd) {
-        mCommand = cmd;
+        command = cmd;
     }
 
     private void readResponse(MailInputStream is) throws IOException {
@@ -56,14 +56,14 @@ public class Pop3Response {
         }
         int i = line.indexOf(' ');
         if (i == -1) {
-            mStatus = line;
-            mMessage = "";
+            status = line;
+            message = "";
         } else {
-            mStatus = line.substring(0, i);
-            mMessage = line.substring(i).trim();
+            status = line.substring(0, i);
+            message = line.substring(i).trim();
         }
-        if (isOK() && hasContent(mCommand)) {
-            mContentInputStream = new ContentInputStream(is);
+        if (isOK() && hasContent(command)) {
+            in = new ContentInputStream(is);
         }
     }
 
@@ -72,13 +72,13 @@ public class Pop3Response {
                UIDL.equalsIgnoreCase(cmd);
     }
     
-    public boolean isOK() { return mStatus.equals(OK); }
-    public boolean isERR() { return mStatus.equals(ERR); }
-    public boolean isContinuation() { return mStatus.equals(CONTINUATION); }
+    public boolean isOK() { return status.equals(OK); }
+    public boolean isERR() { return status.equals(ERR); }
+    public boolean isContinuation() { return status.equals(CONTINUATION); }
 
-    public String getMessage() { return mMessage; }
+    public String getMessage() { return message; }
         
     public ContentInputStream getContentInputStream() {
-        return mContentInputStream;
+        return in;
     }
 }

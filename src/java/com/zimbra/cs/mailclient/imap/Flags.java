@@ -24,8 +24,8 @@ import java.io.IOException;
  * IMAP message flags.
  */
 public final class Flags {
-    private int mFlagMask;
-    private List<Atom> mExtensions;
+    private int flagMask;
+    private List<Atom> extensions;
 
     private int MASK_ANSWERED   = 0x01;
     private int MASK_FLAGGED    = 0x02;
@@ -57,14 +57,14 @@ public final class Flags {
         Atom flag = new Atom(name);
         int mask = getMask(CAtom.get(flag));
         if (mask != 0) {
-            mFlagMask |= mask;
+            flagMask |= mask;
         } else if (!getExtensions().contains(flag)) {
-            mExtensions.add(flag);
+            extensions.add(flag);
         }
     }
 
     public void set(CAtom flag) {
-        mFlagMask |= getMask(flag);
+        flagMask |= getMask(flag);
     }
 
     public void setAnswered() { set(ANSWERED); }
@@ -78,7 +78,7 @@ public final class Flags {
         Atom flag = new Atom(name);
         int mask = getMask(CAtom.get(flag));
         if (mask != 0) {
-            mFlagMask &= ~mask;
+            flagMask &= ~mask;
         } else {
             getExtensions().remove(flag);
         }
@@ -92,21 +92,21 @@ public final class Flags {
     public void unsetRecent()   { unset(RECENT); }
     
     public void unset(CAtom flag) {
-        mFlagMask &= ~getMask(flag);
+        flagMask &= ~getMask(flag);
     }
     
     public boolean isSet(String name) {
         Atom flag = new Atom(name);
         int mask = getMask(CAtom.get(flag));
         if (mask != 0) {
-            return (mFlagMask & mask) != 0;
+            return (flagMask & mask) != 0;
         } else {
-            return mExtensions != null && mExtensions.contains(flag);
+            return extensions != null && extensions.contains(flag);
         }
     }
 
     public boolean isSet(CAtom flag) {
-        return (mFlagMask & getMask(flag)) != 0;
+        return (flagMask & getMask(flag)) != 0;
     }
 
     public boolean isAnswered() { return isSet(ANSWERED); }
@@ -117,10 +117,10 @@ public final class Flags {
     public boolean isRecent()   { return isSet(RECENT); }
 
     private List<Atom> getExtensions() {
-        if (mExtensions == null) {
-            mExtensions = new ArrayList<Atom>();
+        if (extensions == null) {
+            extensions = new ArrayList<Atom>();
         }
-        return mExtensions;
+        return extensions;
     }
 
     private int getMask(CAtom catom) {

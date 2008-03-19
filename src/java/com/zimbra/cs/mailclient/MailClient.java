@@ -12,15 +12,15 @@ import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
 public abstract class MailClient {
-    private MailConfig mConfig;
-    protected MailConnection mConnection;
-    private StringBuilder mLineBuffer;
-    private boolean mEnableTLS;
-    private boolean mGotEndOfFile;
+    private MailConfig config;
+    protected MailConnection connection;
+    private StringBuilder sbuf;
+    private boolean startTls;
+    private boolean eof;
 
     protected MailClient(MailConfig config) {
-        mConfig = config;
-        mLineBuffer = new StringBuilder(132);
+        this.config = config;
+        sbuf = new StringBuilder(132);
     }
 
     public void run(String[] args) throws Exception {
@@ -31,18 +31,18 @@ public abstract class MailClient {
             printUsage(System.err);
             System.exit(1);
         }
-        if (mConfig.getAuthenticationId() == null) {
+        if (config.getAuthenticationId() == null) {
             // Authentication id defaults to login username
-            mConfig.setAuthenticationId(System.getProperty("user.name"));
+            config.setAuthenticationId(System.getProperty("user.name"));
         }
-        mConfig.setTraceStream(System.out);
-        mConfig.setSSLSocketFactory(SSLUtil.getDummySSLContext().getSocketFactory());
-        mConnection = MailConnection.getInstance(mConfig);
-        mConnection.connect();
-        if (mEnableTLS) mConnection.startTLS();
-        mConnection.authenticate();
-        mConnection.setTraceEnabled(false);
-        String qop = mConnection.getNegotiatedQop();
+        config.setTraceStream(System.out);
+        config.setSSLSocketFactory(SSLUtil.getDummySSLContext().getSocketFactory());
+        connection = MailConnection.getInstance(config);
+        connection.connect();
+        if (startTls) connection.startTLS();
+        connection.authenticate();
+        connection.setTraceEnabled(false);
+        String qop = connection.getNegotiatedQop();
         if (qop != null) System.out.printf("[Negotiated QOP is %s]\n", qop); 
         startCommandLoop();
     }
@@ -53,21 +53,21 @@ public abstract class MailClient {
         Thread t = new ReaderThread();
         t.setDaemon(true);
         t.start();
-        final MailInputStream is = mConnection.getInputStream();
+        final MailInputStream is = connection.getInputStream();
         String line;
         try {
             while ((line = is.readLine()) != null) {
                 System.out.println(line);
             }
         } catch (IOException e) {
-            if (!mGotEndOfFile) e.printStackTrace();
+            if (!eof) e.printStackTrace();
         }
     }
 
     private class ReaderThread extends Thread {
         public void run() {
             try {
-                MailOutputStream os = mConnection.getOutputStream();
+                MailOutputStream os = connection.getOutputStream();
                 String line;
                 while ((line = readLine(System.in)) != null) {
                     os.writeLine(line);
@@ -76,18 +76,18 @@ public abstract class MailClient {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            mGotEndOfFile = true;
-            mConnection.close();
+            eof = true;
+            connection.close();
         }
     }
 
     private String readLine(InputStream is) throws IOException {
-        mLineBuffer.setLength(0);
+        sbuf.setLength(0);
         int c;
         while ((c = is.read()) != -1 && c != '\n') {
-            if (c != '\r') mLineBuffer.append((char) c);
+            if (c != '\r') sbuf.append((char) c);
         }
-        return c != -1 ? mLineBuffer.toString() : null;
+        return c != -1 ? sbuf.toString() : null;
     }
 
     protected void parseArguments(String[] args) {
@@ -96,7 +96,7 @@ public abstract class MailClient {
         if (!it.hasNext()) {
             throw new IllegalArgumentException("Missing required host name");
         }
-        mConfig.setHost(it.next());
+        config.setHost(it.next());
         if (it.hasNext()) {
             throw new IllegalArgumentException();
         }
@@ -116,29 +116,29 @@ public abstract class MailClient {
         try {
             switch (arg.charAt(1)) {
             case 'p':
-                mConfig.setPort(Integer.parseInt(args.next()));
+                config.setPort(Integer.parseInt(args.next()));
                 break;
             case 'u':
-                mConfig.setAuthorizationId(args.next());
+                config.setAuthorizationId(args.next());
                 break;
             case 'a':
-                mConfig.setAuthenticationId(args.next());
+                config.setAuthenticationId(args.next());
                 break;
             case 'w':
-                mConfig.setPassword(args.next());
+                config.setPassword(args.next());
                 break;
             case 'v':
-                mConfig.setDebug(true);
-                mConfig.setTrace(true);
+                config.setDebug(true);
+                config.setTrace(true);
                 break;
             case 'm':
-                mConfig.setMechanism(args.next().toUpperCase());
+                config.setMechanism(args.next().toUpperCase());
                 break;
             case 'r':
-                mConfig.setRealm(args.next());
+                config.setRealm(args.next());
                 break;
             case 's':
-                mConfig.setSSLEnabled(true);
+                config.setSSLEnabled(true);
                 break;
             case 'k':
                 minQop = parseQop(arg, args.next());
@@ -147,7 +147,7 @@ public abstract class MailClient {
                 maxQop = parseQop(arg, args.next());
                 break;
             case 't':
-                mEnableTLS = true;
+                startTls = true;
                 break;
             case 'h':
                 printUsage(System.out);
@@ -159,8 +159,8 @@ public abstract class MailClient {
             throw new IllegalArgumentException("Option requires argument: " + arg);
         }
         // If SSL is enabled then only QOP_AUTH is supported
-        if (!mConfig.isSSLEnabled()) {
-            mConfig.setSaslProperty(Sasl.QOP, getQop(minQop, maxQop));
+        if (!config.isSSLEnabled()) {
+            config.setSaslProperty(Sasl.QOP, getQop(minQop, maxQop));
         }
         return true;
     }

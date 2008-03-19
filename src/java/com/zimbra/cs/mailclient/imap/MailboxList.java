@@ -39,11 +39,11 @@ import java.util.HashSet;
  *                   ; Selectability flags; only one per LIST response
  */
 public final class MailboxList {
-    private CAtom mSFlag;
-    private boolean mNoInferiors;
-    private Set<Atom> mOtherFlags;
-    private Character mDelimiter;
-    private String mMailbox;
+    private CAtom sflag;
+    private boolean noInferiors;
+    private Set<Atom> otherFlags;
+    private Character delimiter;
+    private String mailbox;
 
     public static MailboxList read(ImapInputStream is) throws IOException {
         MailboxList mb = new MailboxList();
@@ -60,10 +60,10 @@ public final class MailboxList {
                 throw new ParseException(
                     "Invalid delimiter specification in LIST data: " + delim);
             }
-            mDelimiter = delim.charAt(0);
+            delimiter = delim.charAt(0);
         }
         is.skipChar(' ');
-        mMailbox = is.readAString();
+        mailbox = is.readAString();
     }
 
     private void readFlags(ImapInputStream is) throws IOException {
@@ -73,33 +73,33 @@ public final class MailboxList {
             CAtom catom = atom.getCAtom();
             switch (catom) {
             case F_NOINFERIORS:
-                mNoInferiors = true;
+                noInferiors = true;
                 break;
             case F_NOSELECT: case F_MARKED: case F_UNMARKED:
-                if (mSFlag != null) {
+                if (sflag != null) {
                     throw new ParseException(
                         "Invalid LIST flags - only one of \\Noselect, " +
                         " \\Nomarked, or \\Unmarked expected");
                 }
-                mSFlag = catom;
+                sflag = catom;
                 break;
             default:
-                if (mOtherFlags == null) {
-                    mOtherFlags = new HashSet<Atom>();
+                if (otherFlags == null) {
+                    otherFlags = new HashSet<Atom>();
                 }
-                mOtherFlags.add(atom);
+                otherFlags.add(atom);
             }
         } while (is.match(' '));
         is.skipChar(')');
     }
 
-    public boolean isNoinferiors() { return mNoInferiors; }
-    public boolean isNoselect() { return mSFlag == CAtom.F_NOSELECT; }
-    public boolean isMarked() { return mSFlag == CAtom.F_MARKED; }
-    public boolean isUnmarked() { return mSFlag == CAtom.F_UNMARKED; }
+    public boolean isNoinferiors() { return noInferiors; }
+    public boolean isNoselect() { return sflag == CAtom.F_NOSELECT; }
+    public boolean isMarked() { return sflag == CAtom.F_MARKED; }
+    public boolean isUnmarked() { return sflag == CAtom.F_UNMARKED; }
     public boolean isOther(String flag) {
-        return mOtherFlags != null && mOtherFlags.contains(new Atom(flag));
+        return otherFlags != null && otherFlags.contains(new Atom(flag));
     }
-    public String getMailbox() { return mMailbox; }
-    public Character getDelimiter() { return mDelimiter; }
+    public String getMailbox() { return mailbox; }
+    public Character getDelimiter() { return delimiter; }
 }

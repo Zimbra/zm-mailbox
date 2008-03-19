@@ -27,7 +27,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 public class Pop3Connection extends MailConnection {
-    private Pop3Response mResponse;
+    private Pop3Response response;
     
     public Pop3Connection(Pop3Config config) {
         super(config);
@@ -42,10 +42,10 @@ public class Pop3Connection extends MailConnection {
     }
     
     protected void processGreeting() throws IOException {
-        mResponse = Pop3Response.read(null, mInputStream);
-        if (!mResponse.isOK()) {
+        response = Pop3Response.read(null, mailIn);
+        if (!response.isOK()) {
             throw new MailException(
-                "Expected greeting, but got: " + mResponse.getMessage());
+                "Expected greeting, but got: " + response.getMessage());
         }
     }
 
@@ -55,14 +55,14 @@ public class Pop3Connection extends MailConnection {
 
 
     protected void sendLogin() throws IOException {
-        sendCommandCheckStatus("USER", mConfig.getAuthenticationId());
-        sendCommandCheckStatus("PASS", mConfig.getPassword());
+        sendCommandCheckStatus("USER", config.getAuthenticationId());
+        sendCommandCheckStatus("PASS", config.getPassword());
     }
     
     protected void sendAuthenticate(boolean ir) throws IOException {
-        StringBuffer sb = new StringBuffer(mConfig.getMechanism());
+        StringBuffer sb = new StringBuffer(config.getMechanism());
         if (ir) {
-            byte[] response = mAuthenticator.getInitialResponse();
+            byte[] response = authenticator.getInitialResponse();
             sb.append(' ').append(encodeBase64(response));
         }
         sendCommandCheckStatus("AUTH", sb.toString());
@@ -75,14 +75,14 @@ public class Pop3Connection extends MailConnection {
     public Pop3Response sendCommand(String cmd, String args) throws IOException {
         String line = cmd;
         if (args != null) line += " " + args;
-        mOutputStream.writeLine(line);
-        mOutputStream.flush();
+        mailOut.writeLine(line);
+        mailOut.flush();
         while (true) {
-            mResponse = Pop3Response.read(cmd, mInputStream);
-            if (!mResponse.isContinuation()) break;
-            processContinuation(mResponse.getMessage());
+            response = Pop3Response.read(cmd, mailIn);
+            if (!response.isContinuation()) break;
+            processContinuation(response.getMessage());
         }
-        return mResponse;
+        return response;
     }
 
     public Pop3Response sendCommandCheckStatus(String cmd, String args)

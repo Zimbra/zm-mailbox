@@ -20,18 +20,18 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 public class MailOutputStream extends OutputStream {
-    private final OutputStream os;
+    private final OutputStream out;
 
-    public MailOutputStream(OutputStream os) {
-        this.os = os;
+    public MailOutputStream(OutputStream out) {
+        this.out = out;
     }
 
     public void write(byte[] b, int off, int len) throws IOException {
-        os.write(b, off, len);
+        out.write(b, off, len);
     }
 
     public void write(int b) throws IOException {
-        os.write(b);
+        out.write(b);
     }
     
     public void write(String s) throws IOException {
@@ -52,10 +52,10 @@ public class MailOutputStream extends OutputStream {
     }
 
     public void flush() throws IOException {
-        os.flush();
+        out.flush();
     }
 
     public void close() throws IOException {
-        os.close();
+        out.close();
     }
 }

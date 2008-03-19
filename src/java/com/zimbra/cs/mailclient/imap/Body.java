@@ -36,11 +36,11 @@ import java.util.ArrayList;
  * header-fld-name  = astring
  */
 public final class Body {
-    private String mPart;
-    private CAtom mSection;
-    private String[] mFieldNames;
-    private long mOrigin = -1;
-    private ImapData mData;
+    private String part;
+    private CAtom section;
+    private String[] fieldNames;
+    private long origin = -1;
+    private ImapData data;
 
     public static Body read(ImapInputStream is) throws IOException {
         Body b = new Body();
@@ -55,35 +55,35 @@ public final class Body {
         }
         is.skipChar(']');
         if (is.match('<')) {
-            mOrigin = is.readNZNumber();
+            origin = is.readNZNumber();
             is.skipChar('>');
         }
         is.skipChar(' ');
-        mData = is.readNStringData();
+        data = is.readNStringData();
     }
 
     private void readSection(ImapInputStream is) throws IOException {
         if (is.isNumber()) {
-            mPart = readPart(is);
+            part = readPart(is);
         }
         if (is.peek() == ']') return; // No section text
-        Atom section = is.readAtom();
-        mSection = section.getCAtom();
-        switch (mSection) {
+        Atom sec = is.readAtom();
+        section = sec.getCAtom();
+        switch (section) {
         case HEADER: case TEXT:
             break;
         case HEADER_FIELDS: case HEADER_FIELDS_NOT:
             is.skipChar(' ');
-            mFieldNames = readFieldNames(is);
+            fieldNames = readFieldNames(is);
             break;
         case MIME:
-            if (mPart == null) {
+            if (part == null) {
                 throw new ParseException(
                     "BODY[MIME] response missing section part");
             }
             break;
         default:
-            throw new ParseException("Invalid BODY section type: " + section);
+            throw new ParseException("Invalid BODY section type: " + sec);
         }
     }
 
@@ -110,25 +110,25 @@ public final class Body {
         return names.toArray(new String[names.size()]);
     }
 
-    public String getPart() { return mPart; }
-    public CAtom getSection() { return mSection; }
-    public String[] getFieldNames() { return mFieldNames; }
-    public long getOrigin() { return mOrigin; }
-    public ImapData getData() { return mData; }
+    public String getPart() { return part; }
+    public CAtom getSection() { return section; }
+    public String[] getFieldNames() { return fieldNames; }
+    public long getOrigin() { return origin; }
+    public ImapData getData() { return data; }
     
     public InputStream getInputStream() throws IOException {
-        return mData.getInputStream();
+        return data.getInputStream();
     }
 
     public int getSize() {
-        return mData.getSize();
+        return data.getSize();
     }
 
     public byte[] getBytes() throws IOException {
-        return mData.getBytes();
+        return data.getBytes();
     }
 
     public void dispose() {
-        if (mData != null) mData.dispose();
+        if (data != null) data.dispose();
     }
 }

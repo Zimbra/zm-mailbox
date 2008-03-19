@@ -45,16 +45,16 @@ import java.io.IOException;
  * addr-name       = nstring
  */
 public class Envelope {
-    private String mDate;
-    private String mSubject;
-    private Address[] mFrom;
-    private Address[] mSender;
-    private Address[] mReplyTo;
-    private Address[] mTo;
-    private Address[] mCc;
-    private Address[] mBcc;
-    private Address[] mInReplyTo;
-    private String mMessageId;
+    private String date;
+    private String subject;
+    private Address[] from;
+    private Address[] sender;
+    private Address[] replyTo;
+    private Address[] to;
+    private Address[] cc;
+    private Address[] bcc;
+    private Address[] inReplyTo;
+    private String messageId;
 
     public static Envelope read(ImapInputStream is) throws IOException {
         Envelope env = new Envelope();
@@ -64,25 +64,25 @@ public class Envelope {
     
     private void readEnvelope(ImapInputStream is) throws IOException {
         is.skipChar('(');
-        mDate = is.readNString();
+        date = is.readNString();
         is.skipChar(' ');
-        mSubject = is.readNString();
+        subject = is.readNString();
         is.skipChar(' ');
-        mFrom = readAList(is);
+        from = readAList(is);
         is.skipChar(' ');
-        mSender = readAList(is);
+        sender = readAList(is);
         is.skipChar(' ');
-        mReplyTo = readAList(is);
+        replyTo = readAList(is);
         is.skipChar(' ');
-        mTo = readAList(is);
+        to = readAList(is);
         is.skipChar(' ');
-        mCc = readAList(is);
+        cc = readAList(is);
         is.skipChar(' ');
-        mBcc = readAList(is);
+        bcc = readAList(is);
         is.skipChar(' ');
-        mInReplyTo = readAList(is);
+        inReplyTo = readAList(is);
         is.skipChar(' ');
-        mMessageId = is.readNString();
+        messageId = is.readNString();
         is.skipChar(')');
     }
 
@@ -102,37 +102,37 @@ public class Envelope {
     private static Address readAddress(ImapInputStream is) throws IOException {
         is.skipChar('(');
         Address addr = new Address();
-        addr.mName = is.readNString();
+        addr.name = is.readNString();
         is.skipChar(' ');
-        addr.mAdl = is.readNString();
+        addr.adl = is.readNString();
         is.skipChar(' ');
-        addr.mHost = is.readNString();
+        addr.host = is.readNString();
         is.skipChar(' ');
-        addr.mMailbox = is.readNString();
+        addr.mailbox = is.readNString();
         is.skipChar(')');
         return addr;
     }
 
-    public String getDate() {return mDate; }
-    public String getSubject() { return mSubject; }
-    public String getMessageId() { return mMessageId; }
-    public Address[] getFrom() { return mFrom; }
-    public Address[] getSender() { return mSender; }
-    public Address[] getReplyTo() { return mReplyTo; }
-    public Address[] getTo() { return mTo; }
-    public Address[] getCc() { return mCc; }
-    public Address[] getBcc() { return mBcc; }
-    public Address[] getInReplyTo() { return mInReplyTo; }
+    public String getDate() {return date; }
+    public String getSubject() { return subject; }
+    public String getMessageId() { return messageId; }
+    public Address[] getFrom() { return from; }
+    public Address[] getSender() { return sender; }
+    public Address[] getReplyTo() { return replyTo; }
+    public Address[] getTo() { return to; }
+    public Address[] getCc() { return cc; }
+    public Address[] getBcc() { return bcc; }
+    public Address[] getInReplyTo() { return inReplyTo; }
 
     public static class Address {
-        private String mName;
-        private String mAdl;
-        private String mHost;
-        private String mMailbox;
+        private String name;
+        private String adl;
+        private String host;
+        private String mailbox;
 
-        public String getName() { return mName; }
-        public String getAdl() { return mAdl; }
-        public String getHost() { return mHost; }
-        public String getMailbox() { return mMailbox; }
+        public String getName() { return name; }
+        public String getAdl() { return adl; }
+        public String getHost() { return host; }
+        public String getMailbox() { return mailbox; }
     }
 }

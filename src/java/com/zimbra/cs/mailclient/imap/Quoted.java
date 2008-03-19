@@ -25,10 +25,10 @@ import java.io.IOException;
  * IMAP quoted string data type.
  */
 public final class Quoted extends ImapData {
-    private final String mString;
+    private final String string;
 
     public Quoted(String s) {
-        mString = s;
+        string = s;
     }
 
     public Type getType() {
@@ -36,21 +36,21 @@ public final class Quoted extends ImapData {
     }
 
     public String getString() {
-        return mString;
+        return string;
     }
 
     public int getSize() {
-        return mString.length();
+        return string.length();
     }
 
     public byte[] getBytes() {
-        return Ascii.getBytes(mString);
+        return Ascii.getBytes(string);
     }
     
     public void write(OutputStream os) throws IOException {
         os.write('"');
-        for (int i = 0; i < mString.length(); i++) {
-            char c = mString.charAt(i);
+        for (int i = 0; i < string.length(); i++) {
+            char c = string.charAt(i);
             switch (c) {
             case '\\': case '"':
                 os.write('\\');
@@ -62,16 +62,16 @@ public final class Quoted extends ImapData {
     }
 
     public int hashCode() {
-        return mString.hashCode();
+        return string.hashCode();
     }
 
     public boolean equals(Object obj) {
         return this == obj ||
             obj != null && obj.getClass() == Quoted.class &&
-            mString.equals(((Quoted) obj).mString);
+            string.equals(((Quoted) obj).string);
     }
     
     public String toString() {
-        return mString;
+        return string;
     }
 }

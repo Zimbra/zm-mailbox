@@ -18,101 +18,101 @@ import java.net.Socket;
  * Mail client configuration settings.
  */
 public abstract class MailConfig {
-    protected String mHost;
-    protected int mPort = -1;
-    protected boolean isSSLEnabled;
-    protected String mAuthorizationId;
-    protected String mAuthenticationId;
-    protected String mPassword;
-    protected String mMechanism;
-    protected String mRealm;
-    protected Map<String, String> mSaslProperties;
-    protected boolean mDebug;
-    protected boolean mTrace;
-    protected PrintStream mTraceStream;
-    protected SSLSocketFactory mSSLSocketFactory;
+    protected String host;
+    protected int port = -1;
+    protected boolean sslEnabled;
+    protected String authorizationId;
+    protected String authenticationId;
+    protected String password;
+    protected String mechanism;
+    protected String realm;
+    protected Map<String, String> saslProperties;
+    protected boolean debug;
+    protected boolean trace;
+    protected PrintStream traceOut;
+    protected SSLSocketFactory sslSocketFactory;
 
     public MailConfig() {
-        mTraceStream = System.out;
-        mAuthenticationId = System.getProperty("user.name");
+        traceOut = System.out;
+        authenticationId = System.getProperty("user.name");
     }
 
     public abstract String getProtocol();
                                                              
-    public void setHost(String host) { mHost = host; }
-    public void setPort(int port) { mPort = port; }
-    public void setDebug(boolean enabled) { mDebug = enabled; }
-    public void setTrace(boolean enabled) { mTrace = enabled; }
-    public void setRealm(String realm) { mRealm = realm; }
-    public boolean isTrace() { return mTrace; }
-    public String getMechanism() { return mMechanism; }
-    public boolean isSSLEnabled() { return isSSLEnabled; }
-    public void setPassword(String pass) { mPassword = pass; }
-    public String getPassword() { return mPassword; }
+    public void setHost(String host) { this.host = host; }
+    public void setPort(int port) { this.port = port; }
+    public void setDebug(boolean debug) { this.debug = debug; }
+    public void setTrace(boolean trace) { this.trace = trace; }
+    public void setRealm(String realm) { this.realm = realm; }
+    public boolean isTrace() { return trace; }
+    public String getMechanism() { return mechanism; }
+    public boolean isSSLEnabled() { return sslEnabled; }
+    public void setPassword(String pass) { password = pass; }
+    public String getPassword() { return password; }
 
-    public String getHost() { return mHost; }
-    public int getPort() { return mPort; }
+    public String getHost() { return host; }
+    public int getPort() { return port; }
     
     public void setMechanism(String mech) {
-        mMechanism = mech;
+        mechanism = mech;
     }
 
     public void setTraceStream(PrintStream ps) {
-        mTraceStream = ps;
+        traceOut = ps;
     }
 
     public TraceInputStream getTraceInputStream(InputStream is) {
-        return new TraceInputStream(is, mTraceStream);
+        return new TraceInputStream(is, traceOut);
     }
 
     public TraceOutputStream getTraceOutputStream(OutputStream os) {
-        return new TraceOutputStream(os, mTraceStream);
+        return new TraceOutputStream(os, traceOut);
     }
     
     public void setSSLEnabled(boolean enabled) {
-        isSSLEnabled = enabled;
+        sslEnabled = enabled;
     }
 
     public void setAuthorizationId(String id) {
-        mAuthorizationId = id;
+        authorizationId = id;
     }
 
     public void setAuthenticationId(String id) {
-        mAuthenticationId = id;
+        authenticationId = id;
     }
 
     public String getAuthenticationId() {
-        return mAuthenticationId;
+        return authenticationId;
     }
 
     public String getAuthorizationId() {
-        return mAuthorizationId;
+        return authorizationId;
     }
 
     public void setSaslProperty(String name, String value) {
-        if (mSaslProperties == null) {
-            mSaslProperties = new HashMap<String, String>();
+        if (saslProperties == null) {
+            saslProperties = new HashMap<String, String>();
         }
-        mSaslProperties.put(name, value);
+        saslProperties.put(name, value);
     }
 
     public void setSSLSocketFactory(SSLSocketFactory sf) {
-        mSSLSocketFactory = sf;
+        sslSocketFactory = sf;
     }
     
     public ClientAuthenticator createAuthenticator() {
-        if (mAuthenticationId == null) {
+        if (authenticationId == null) {
             throw new IllegalStateException("Missing required authentication id");
         }
         ClientAuthenticator ca =
-            new ClientAuthenticator(mMechanism, getProtocol(), mHost);
-        ca.setAuthorizationId(mAuthorizationId);
-        ca.setAuthenticationId(mAuthenticationId);
-        ca.setRealm(mRealm);
-        ca.setDebug(mDebug);
-        ca.setPassword(mPassword);
-        if (mSaslProperties != null) {
-            ca.getProperties().putAll(mSaslProperties);
+            new ClientAuthenticator(mechanism, getProtocol(), host);
+        ca.setAuthorizationId(authorizationId);
+        ca.setAuthenticationId(authenticationId);
+        ca.setRealm(realm);
+        ca.setDebug(debug);
+        ca.setPassword(password);
+        if (saslProperties != null) {
+            ca.getProperties().putAll(saslProperties);
         }
         return ca;
     }
@@ -129,7 +129,7 @@ public abstract class MailConfig {
     }
         
     public SSLSocketFactory getSSLSocketFactory() {
-        return mSSLSocketFactory != null ?
-            mSSLSocketFactory : (SSLSocketFactory) SSLSocketFactory.getDefault();
+        return sslSocketFactory != null ?
+            sslSocketFactory : (SSLSocketFactory) SSLSocketFactory.getDefault();
     }
 }
