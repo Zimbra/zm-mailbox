@@ -27,6 +27,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Formatter;
 
+import static com.zimbra.cs.mailclient.imap.ImapData.asAString;
+
 public class ImapConnection extends MailConnection {
     private Capabilities capabilities;
     private Mailbox mailbox;
@@ -78,15 +80,52 @@ public class ImapConnection extends MailConnection {
         sendCommand("STARTTLS");
     }
 
+    public Capabilities capability() throws IOException {
+        sendCommandCheckStatus("CAPABILITY");
+        return capabilities;
+    }
+
+    public void noop() throws IOException {
+        sendCommandCheckStatus("NOOP");
+    }
+    
     public Mailbox select(String name) throws IOException {
+        return doSelectOrExamine("SELECT", name);
+    }
+
+    public Mailbox examine(String name) throws IOException {
+        return doSelectOrExamine("EXAMINE", name);
+    }
+
+    private Mailbox doSelectOrExamine(String cmd, String name) throws IOException {
         mailbox = new Mailbox(name);
         try {
-            sendCommandCheckStatus("SELECT", ImapData.asAString(mailbox.getName()));
+            sendCommandCheckStatus(cmd, asAString(mailbox.getName()));
         } catch (CommandFailedException e) {
             mailbox = null;
             throw e;
         }
         return mailbox;
+    }
+
+    public void create(String name) throws IOException {
+        sendCommandCheckStatus("CREATE", asAString(name));
+    }
+
+    public void delete(String name) throws IOException {
+        sendCommandCheckStatus("DELETE", asAString(name));
+    }
+
+    public void rename(String from, String to) throws IOException {
+        sendCommandCheckStatus("RENAME", asAString(from), asAString(to));
+    }
+
+    public void subscribe(String name) throws IOException {
+        sendCommandCheckStatus("SUBSCRIBE", asAString(name));
+    }
+
+    public void unsubscribe(String name) throws IOException {
+        sendCommandCheckStatus("UNSUBSCRIBE", asAString(name));
     }
     
     public ImapResponse sendCommandCheckStatus(String cmd, Object... args)
