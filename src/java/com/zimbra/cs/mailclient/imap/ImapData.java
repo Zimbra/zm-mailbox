@@ -29,6 +29,10 @@ public abstract class ImapData {
     public static enum Type { ATOM, QUOTED, LITERAL }
 
     public static ImapData asAString(String s) {
+        if (s.length() > 1024) {
+            // Always treat data larger than 1K bytes as literal data
+            return new Literal(Ascii.getBytes(s));
+        }
         switch (getType(s)) {
         case ATOM:
             return new Atom(s);
