@@ -91,7 +91,7 @@ public final class ImapResponse {
             break;
         case STATUS:
             // "STATUS" SP mailbox SP "(" [status-att-list] ")"
-            data = MailboxStatus.read(is);
+            data = Mailbox.readStatus(is);
             break;
         case FETCH:
             // message-data    = nz-number SP ("EXPUNGE" / ("FETCH" SP msg-att))
