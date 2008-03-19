@@ -1127,7 +1127,7 @@ public class LC {
         data_source_fast_fetch =
             new KnownKey("data_source_fast_fetch", "true", "Enable faster downloads in imap folder import");
         data_source_fetch_size =
-            new KnownKey("data_source_fetch_size", "100", "maximum number of imap messages to FETCH in each request");
+            new KnownKey("data_source_fetch_size", "25", "maximum number of imap messages to FETCH in each request");
         data_source_max_literal_mem_size =
             new KnownKey("data_source_max_literal_mem_size",
                 "2097152", // 2 megabytes
