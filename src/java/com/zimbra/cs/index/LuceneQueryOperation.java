@@ -504,7 +504,7 @@ class LuceneQueryOperation extends TextQueryOperation
      * @param truth
      */
     void addClause(String queryStr, Query q, boolean truth) {
-        mQueryString = mQueryString+" "+queryStr;
+        mQueryString = mQueryString+" "+ (truth ? "" : "-") + queryStr;
         assert(!mHaveRunSearch);
 
         if (truth) {
