@@ -47,6 +47,7 @@ public class PrivilegedHandler {
     private static final String A_zimbraPop3SSLBindAddress = "zimbraPop3SSLBindAddress";
     private static final String A_zimbraPop3SSLServerEnabled = "zimbraPop3SSLServerEnabled";
     
+    private static final String mailboxd_keystore_enabled = "mailboxd_keystore_enabled";
     private static final String mailboxd_keystore = "mailboxd_keystore";
     private static final String mailboxd_keystore_password = "mailboxd_keystore_password";
     private static final String mailboxd_truststore_password = "mailboxd_truststore_password";
@@ -63,10 +64,13 @@ public class PrivilegedHandler {
         boolean nio_enabled = LC.nio_enabled.booleanValue(); // TODO move this to ldap
         
         try {
-            System.setProperty("javax.net.ssl.keyStore", getAttr(attributes, mailboxd_keystore));
-            System.setProperty("javax.net.ssl.keyStorePassword", getAttr(attributes, mailboxd_keystore_password));
-            System.setProperty("javax.net.ssl.trustStorePassword", getAttr(attributes, mailboxd_truststore_password));
-
+        	
+        	if (getBooleanAttr(attributes, mailboxd_keystore_enabled, false)) {
+        		System.setProperty("javax.net.ssl.keyStore", getAttr(attributes, mailboxd_keystore));
+        		System.setProperty("javax.net.ssl.keyStorePassword", getAttr(attributes, mailboxd_keystore_password));
+        		System.setProperty("javax.net.ssl.trustStorePassword", getAttr(attributes, mailboxd_truststore_password));
+        	}
+            
             if (getBooleanAttr(attributes, A_zimbraPop3ServerEnabled, false)) {
                 port = getIntAttr(attributes, A_zimbraPop3BindPort, D_POP3_BIND_PORT);
                 address = getAttr(attributes, A_zimbraPop3BindAddress, null);
