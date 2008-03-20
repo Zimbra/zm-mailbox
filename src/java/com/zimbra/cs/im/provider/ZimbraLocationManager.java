@@ -17,6 +17,7 @@
 package com.zimbra.cs.im.provider;
 
 import org.jivesoftware.wildfire.LocationManager;
+import org.jivesoftware.wildfire.user.UserNotFoundException;
 import org.xmpp.packet.JID;
 
 import com.zimbra.common.service.ServiceException;
@@ -32,11 +33,11 @@ public class ZimbraLocationManager implements LocationManager {
     
     private ZimbraLocationManager() {}
     
-    public boolean isLocal(String username) {
+    public boolean isLocal(String username) throws UserNotFoundException {
         return isLocal(new JID(username));
     }
     
-    public boolean isLocal(JID jid) {
+    public boolean isLocal(JID jid) throws UserNotFoundException {
         if (jid.getNode() == null || jid.getDomain() == null)
             return false;
         
@@ -44,6 +45,8 @@ public class ZimbraLocationManager implements LocationManager {
             String node = jid.getNode();
             node = JID.unescapeNode(node);
             Account acct = Provisioning.getInstance().get(AccountBy.name, node+"@"+jid.getDomain());
+            if (acct == null)
+                throw new UserNotFoundException("Unable to find user: "+jid.toString());
             return (Provisioning.onLocalServer(acct));
         } catch (ServiceException ex) {
             return false;
@@ -51,7 +54,7 @@ public class ZimbraLocationManager implements LocationManager {
 
     }
 
-    public boolean isRemote(JID jid) {
+    public boolean isRemote(JID jid) throws UserNotFoundException {
         return !isLocal(jid);
     }
 }
