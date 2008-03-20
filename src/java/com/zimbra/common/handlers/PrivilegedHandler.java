@@ -38,6 +38,7 @@ public class PrivilegedHandler {
     private static final String A_zimbraImapSSLBindPort = "zimbraImapSSLBindPort";
     private static final String A_zimbraImapSSLBindAddress = "zimbraImapSSLBindAddress";
     private static final String A_zimbraImapSSLServerEnabled = "zimbraImapSSLServerEnabled";
+    private static final String A_zimbraLmtpServerEnabled = "zimbraLmtpServerEnabled";
     
     private static final String A_zimbraPop3BindPort = "zimbraPop3BindPort";
     private static final String A_zimbraPop3BindAddress = "zimbraPop3BindAddress";
@@ -106,12 +107,14 @@ public class PrivilegedHandler {
                 }
             }
 
-            port = getIntAttr(attributes, A_zimbraLmtpBindPort, D_LMTP_BIND_PORT);
-            address = getAttr(attributes, A_zimbraLmtpBindAddress, null);
-            if (nio_enabled || LC.nio_lmtp_enabled.booleanValue()) {
-                NetUtil.bindNioServerSocket(address, port);
-            } else {
-                NetUtil.bindTcpServerSocket(address, port);
+            if (getBooleanAttr(attributes, A_zimbraLmtpServerEnabled, false)) {
+            	port = getIntAttr(attributes, A_zimbraLmtpBindPort, D_LMTP_BIND_PORT);
+            	address = getAttr(attributes, A_zimbraLmtpBindAddress, null);
+            	if (nio_enabled || LC.nio_lmtp_enabled.booleanValue()) {
+            		NetUtil.bindNioServerSocket(address, port);
+            	} else {
+            		NetUtil.bindTcpServerSocket(address, port);
+            	}
             }
         } catch (Throwable t) {        	
             try {
