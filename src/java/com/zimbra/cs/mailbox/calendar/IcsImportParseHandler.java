@@ -78,7 +78,7 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
         mInZCalendar = true;
         mCurCal = new ZVCalendar();
 
-        mMethod = null;
+        mMethod = ICalTok.PUBLISH.toString();
         mTimeZoneMap = new TimeZoneMap(ICalTimeZone.getAccountTimeZone(mAccount));
     }
 
