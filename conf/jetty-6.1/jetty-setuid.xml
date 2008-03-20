@@ -25,6 +25,10 @@
           <Item><New class="java.lang.Boolean"><Arg><Property name="zimbraImapServerEnabled" default="false"/></Arg></New></Item>
         </Entry>
         <Entry>
+          <Item>zimbraLmtpServerEnabled</Item>
+          <Item><New class="java.lang.Boolean"><Arg><Property name="zimbraLmtpServerEnabled" default="false"/></Arg></New></Item>
+        </Entry>
+        <Entry>
           <Item>zimbraImapBindAddress</Item>
           <Item><New class="java.lang.String"><Arg><Property name="zimbraImapBindAddress"/></Arg></New></Item>
         </Entry>
