@@ -35,6 +35,7 @@ import org.jivesoftware.wildfire.auth.AuthToken;
 import org.jivesoftware.wildfire.group.Group;
 import org.jivesoftware.wildfire.group.GroupManager;
 import org.jivesoftware.wildfire.group.GroupNotFoundException;
+import org.jivesoftware.wildfire.user.User;
 import org.jivesoftware.wildfire.user.UserNotFoundException;
 import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
@@ -69,6 +70,34 @@ public class IMPersona extends ClassLogger {
     private static final String FN_PRESENCE = "p";
     private static final String FN_INTEROP_SERVICE_PREFIX  = "isvc-";
 
+    //
+    // When to trigger this?  
+    //    
+    public static void deleteIMPersona(String acctName) {
+        try {
+            IMAddr addr = new IMAddr(acctName);
+            JID jid = addr.makeJID();
+            User user = XMPPServer.getInstance().getUserManager().getUser(jid.toBareJID());
+            try {
+                XMPPServer.getInstance().getUserManager().deleteUser(user);
+            } catch (Exception e) {
+                ZimbraLog.im.warn("Exception deleting IM User data for: "+acctName, e);
+            }
+            try {
+                XMPPServer.getInstance().getRosterManager().deleteRoster(jid);
+            } catch (Exception e) {
+                ZimbraLog.im.warn("Exception deleting IM Roster data for: "+acctName, e);
+            }
+            try {
+                GroupManager.getInstance().deleteUser(user);
+            } catch (Exception e) {
+                ZimbraLog.im.warn("Exception deleting IM Group data for: "+acctName, e);
+            }
+        } catch (Exception e) {
+            ZimbraLog.im.warn("Exception deleting IM data for: "+acctName, e);
+        }
+    }
+    
     /**
      * @param octxt
      * @param mbox
@@ -422,6 +451,7 @@ public class IMPersona extends ClassLogger {
             // return true;
         }
     }
+    
 
     public IMAddr getAddr() {
         return mAddr;
@@ -1035,7 +1065,7 @@ public class IMPersona extends ClassLogger {
                         + ex.toString(), ex);
         }
     }
-    
+  
     public void setPrivacyList(PrivacyList pl) {
         synchronized(getLock()) {
             // figure out what name to use

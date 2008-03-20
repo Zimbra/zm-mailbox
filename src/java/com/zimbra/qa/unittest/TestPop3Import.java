@@ -33,6 +33,7 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.db.DbPop3Message;
+import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.zclient.ZDataSource;
@@ -130,6 +131,7 @@ public class TestPop3Import extends TestCase {
         
         // Store bogus POP3 message row and delete mailbox
         DbPop3Message.storeUid(mbox, "TestPop3Import", "uid1", Mailbox.ID_FOLDER_INBOX);
+        IMPersona.deleteIMPersona(account.getName());
         mbox.deleteMailbox();
     }
     
