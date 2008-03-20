@@ -3047,4 +3047,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether LMTP server is enabled for a given server</desc>
 </attr>
 
+<attr id="631" name="mailboxd_keystore_enabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>whether keystore is enabled for a given server</desc>
+</attr>
+
 </attrs>
