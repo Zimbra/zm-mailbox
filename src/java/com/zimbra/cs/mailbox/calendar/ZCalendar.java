@@ -1003,7 +1003,10 @@ public class ZCalendar {
                     throw se;
                 } else {
                     // Found garbage after END:ZCALENDAR.  Log warning and move on.
-                    ZimbraLog.calendar.warn("Ignoring bad data at the end of text/calendar part: " + s.toString() , e);
+                    if (ZimbraLog.calendar.isDebugEnabled())
+                        ZimbraLog.calendar.warn("Ignoring bad data at the end of text/calendar part: " + s.toString() , e);
+                    else
+                        ZimbraLog.calendar.warn("Ignoring bad data at the end of text/calendar part: " + e.getMessage());
                 }
             }
         }
