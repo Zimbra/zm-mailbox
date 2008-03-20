@@ -3041,4 +3041,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Whether to enable IMAP/POP proxy</desc>
 </attr>
 
+
+<attr id="630" name="zimbraLmtpServerEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>whether LMTP server is enabled for a given server</desc>
+</attr>
+
 </attrs>
