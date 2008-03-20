@@ -133,25 +133,8 @@ public abstract class Session {
         if (isMailboxListener()) {
             mMailbox = MailboxManager.getInstance().getMailboxByAccountId(mTargetAccountId);
             
-            synchronized(mMailbox) {
-            
-                // once addListener is called, you may NOT lock the mailbox (b/c of deadlock possibilities)
-                mMailbox.addListener(this);
-
-                // Connect the session to their IM Persona, if and only if IMAutoLogin is enabled for this account 
-                if (isIMListener() && !isDelegatedSession()) {
-                    try {
-                        if (Provisioning.getInstance().get(AccountBy.id, this.getTargetAccountId()).getBooleanAttr(Provisioning.A_zimbraPrefIMAutoLogin, false)) {
-                            IMPersona persona = mMailbox.getPersona();
-                            if (persona != null) {
-                                registerWithIM(persona);
-                            }
-                        }
-                    } catch (ServiceException e) {
-                        ZimbraLog.session.info("Caught exception fetching account preference A_zimbraPrefIMAutoLogin", e);
-                    }
-                }
-            }
+            // once addListener is called, you may NOT lock the mailbox (b/c of deadlock possibilities)
+            mMailbox.addListener(this);
         }
 
         // registering the session automatically sets mSessionId
