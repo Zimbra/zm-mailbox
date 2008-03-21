@@ -16,7 +16,6 @@
  */
 package com.zimbra.cs.service.mail;
 
-import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
@@ -42,8 +41,7 @@ public class GetItem extends MailDocumentHandler {
     protected boolean checkMountpointProxy(Element request)  { return getXPath(request, TARGET_ITEM_PATH) == null; }
     protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
 
-    @Override
-    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+    @Override public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
@@ -55,17 +53,16 @@ public class GetItem extends MailDocumentHandler {
         String path = target.getAttribute(MailConstants.A_PATH, null);
 
         MailItem item;
-        
         if (id != null) {
             // get item by id
-            item = getItemById(octxt, mbox, new ItemId(id, zsc).getId(), MailItem.TYPE_UNKNOWN);
+            item = mbox.getItemById(octxt, new ItemId(id, zsc).getId(), MailItem.TYPE_UNKNOWN);
         } else if (folder != null) {
             // get item by name within containing folder id
             String name = target.getAttribute(MailConstants.A_NAME);
-            item = getItemByPath(octxt, mbox, name, new ItemId(folder, zsc).getId(), MailItem.TYPE_UNKNOWN);
+            item = mbox.getItemByPath(octxt, name, new ItemId(folder, zsc).getId());
         } else if (path != null) {
             // get item by user-root-relative absolute path
-            item = getItemByPath(octxt, mbox, path, Mailbox.ID_FOLDER_USER_ROOT, MailItem.TYPE_UNKNOWN); 
+            item = mbox.getItemByPath(octxt, path); 
         } else {
             throw ServiceException.INVALID_REQUEST("must specify 'id' or 'path' or 'l' / 'name'", null);
         }
@@ -74,25 +71,4 @@ public class GetItem extends MailDocumentHandler {
         ToXML.encodeItem(response, ifmt, octxt, item, ToXML.NOTIFY_FIELDS);
         return response;
     }
-    
-    public static MailItem[] getItemsById(OperationContext oc, Mailbox mbox, List<Integer> ids, byte type) throws ServiceException {
-        return mbox.getItemById(oc, ids, type);
-    }
-    
-    public static MailItem getItemById(OperationContext oc, Mailbox mbox, int id, byte type) throws ServiceException {
-        return mbox.getItemById(oc, id, type);
-    }
-    
-    public static MailItem getItemByImapId(OperationContext oc, Mailbox mbox, int imapId, int folderId) throws ServiceException {
-        return mbox.getItemByImapId(oc, imapId, folderId);
-    }
-    
-    public static MailItem getItemByPath(OperationContext oc, Mailbox mbox, String path, int folderId, byte type) throws ServiceException {
-        return mbox.getItemByPath(oc, path, folderId);
-    }
-    
-    public static MailItem getItemByPath(OperationContext oc, Mailbox mbox, String path, byte type) throws ServiceException {
-        return getItemByPath(oc, mbox, path, Mailbox.ID_FOLDER_USER_ROOT, type);
-    }
-    
 }
