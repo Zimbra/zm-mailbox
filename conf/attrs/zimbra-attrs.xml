@@ -3053,8 +3053,4 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <deprecateDesc>Never used</deprecateDesc>
 </attr>
 
-<attr id="632" name="zimbraCustomerCareBouncerUserID" type="string" cardinality="single" optionalIn="account">
-  <desc>Maps a ZCS account to external Yahoo! bouncer account.</desc>
-</attr>
-
 </attrs>

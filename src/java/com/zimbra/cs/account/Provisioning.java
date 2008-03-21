@@ -560,11 +560,6 @@ public abstract class Provisioning {
      * defines tier level for a customer care account
      */
     public static final String A_zimbraCustomerCareTier ="zimbraCustomerCareTier";
-
-    /**
-     * maps a customer care account to Yahoo! bouncer account
-     */
-    public static final String A_zimbraCustomerCareBouncerUserID ="zimbraCustomerCareBouncerUserID";
     /* Zimbra Customer Care*/
    
     /**
@@ -1709,7 +1704,7 @@ public abstract class Provisioning {
     public static enum AccountBy {
         
         // case must match protocol
-        adminName, id, foreignPrincipal, name, krb5Principal, bouncerID;
+        adminName, id, foreignPrincipal, name, krb5Principal;
         
         public static AccountBy fromString(String s) throws ServiceException {
             try {
