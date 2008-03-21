@@ -2887,7 +2887,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
         and will be removed in a future release.  See bug 23386 for details.</desc>
 </attr>
 
-<attr id="605" name="zimbraCustomerCareTier" type="integer" max="3" cardinality="single" optionalIn="account" flags="accountInfo">
+<attr id="605" name="zimbraCustomerCareTier" type="integer" max="3" cardinality="single" optionalIn="account" flags="accountInfo" order="integerOrderingMatch">
   <desc>set to 1 or 3 to specify customer care account tier level</desc>
 </attr>
 
@@ -3052,4 +3052,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether keystore is enabled for a given server</desc>
 </attr>
 
+<attr id="632" name="zimbraCustomerCareBouncerUserID" type="string" cardinality="single" optionalIn="account">
+  <desc>Maps a ZCS account to external Yahoo! bouncer account.</desc>
+</attr>
 </attrs>

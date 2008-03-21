@@ -550,6 +550,23 @@ public abstract class Provisioning {
      */
     public static final String A_zimbraIsDomainAdminAccount = "zimbraIsDomainAdminAccount";    
     
+    /* Zimbra Customer Care*/
+	/**
+     * set to true if an account is a customer care (AKA read-only admin) account
+     */
+    public static final String A_zimbraIsCustomerCareAccount= "zimbraIsCustomerCareAccount";
+
+    /**
+     * defines tier level for a customer care account
+     */
+    public static final String A_zimbraCustomerCareTier ="zimbraCustomerCareTier";
+
+    /**
+     * maps a customer care account to Yahoo! bouncer account
+     */
+    public static final String A_zimbraCustomerCareBouncerUserID ="zimbraCustomerCareBouncerUserID";
+    /* Zimbra Customer Care*/
+   
     /**
      * Set for entries (accounts/lists) in the directory that have an alias
      */
@@ -1692,7 +1709,7 @@ public abstract class Provisioning {
     public static enum AccountBy {
         
         // case must match protocol
-        adminName, id, foreignPrincipal, name, krb5Principal;
+        adminName, id, foreignPrincipal, name, krb5Principal, bouncerID;
         
         public static AccountBy fromString(String s) throws ServiceException {
             try {
