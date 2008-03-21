@@ -77,7 +77,7 @@
           <Item><New class="java.lang.Boolean"><Arg><Property name="nio_imap_enabled" default="false"/></Arg></New></Item>
         </Entry>
          <Entry>
-          <Item>mailbod_keystore_enabled</Item>
+          <Item>mailboxd_keystore_enabled</Item>
           <Item><New class="java.lang.Boolean"><Arg><Property name="mailboxd_keystore_enabled" default="false"/></Arg></New></Item>
         </Entry>
         <Entry>
