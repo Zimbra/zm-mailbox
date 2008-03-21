@@ -496,6 +496,7 @@ public class UserServlet extends ZimbraServlet {
                     filename = context.itemPath.substring(separator + 1);
                     context.itemPath = context.itemPath.substring(0, separator);
                     context.target = resolveItem(context, false);
+                    context.extraPath = filename;
                 }
 
                 folder = (context.target instanceof Folder ? (Folder) context.target : mbox.getFolderById(context.opContext, context.target.getFolderId()));
@@ -510,7 +511,6 @@ public class UserServlet extends ZimbraServlet {
 
                 if (folder instanceof Mountpoint) {
                     // if the target is a mountpoint, proxy the request on to the resolved target
-                    context.extraPath = filename;
                     proxyOnMountpoint(req, resp, context, (Mountpoint) folder);
                     return;
                 }
