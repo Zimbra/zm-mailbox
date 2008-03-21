@@ -474,12 +474,15 @@ public class LdapProvisioning extends Provisioning {
             return null;
         Account a = sAccountCache.getById(zimbraId);
         if (a == null) {
-            zimbraId= LdapUtil.escapeSearchFilterArg(zimbraId);
-            a = getAccountByQuery(
-                    mDIT.zimbraBaseDN(),
-                    "(&(zimbraId=" + zimbraId + ")" +
-                    FILTER_ACCOUNT_OBJECTCLASS + ")",
-                    ctxt, loadFromMaster);
+            zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
+            String query = "(&(zimbraId=" + zimbraId + ")" + FILTER_ACCOUNT_OBJECTCLASS + ")";
+            
+            a = getAccountByQuery(mDIT.mailBranchBaseDN(), query, ctxt, loadFromMaster);
+            
+            // search again under the admin base if not found and admin base is not under mail base
+            if (a == null && !mDIT.isUnder(mDIT.mailBranchBaseDN(), mDIT.adminBaseDN()))
+                a = getAccountByQuery(mDIT.adminBaseDN(), query, ctxt, loadFromMaster);
+            
             sAccountCache.put(a);
         }
         return a;
@@ -916,7 +919,7 @@ public class LdapProvisioning extends Provisioning {
                 returnAttrs, 
                 sortAttr, 
                 sortAscending, 
-                base, 
+                new String[] {base}, 
                 flags, 
                 maxResults,
                 true);
@@ -929,7 +932,7 @@ public class LdapProvisioning extends Provisioning {
                                    String returnAttrs[], 
                                    final String sortAttr, 
                                    final boolean sortAscending, 
-                                   String base, 
+                                   String[] bases, 
                                    int flags, 
                                    int maxResults,
                                    boolean useConnPool)
@@ -942,7 +945,12 @@ public class LdapProvisioning extends Provisioning {
             }
         };
         
-        searchObjects(query, returnAttrs, base, flags, visitor, maxResults, useConnPool);
+        if (bases == null || bases.length == 0)
+            searchObjects(query, returnAttrs, "", flags, visitor, maxResults, useConnPool);
+        else {    
+            for (String base : bases)
+                searchObjects(query, returnAttrs, base, flags, visitor, maxResults, useConnPool);
+        }
 
         final boolean byName = sortAttr == null || sortAttr.equals("name"); 
         Comparator<NamedEntry> comparator = new Comparator<NamedEntry>() {
@@ -3660,9 +3668,42 @@ public class LdapProvisioning extends Provisioning {
     public List<NamedEntry> searchDirectory(SearchOptions options) throws ServiceException {
         return searchDirectory(options, true);
     }
+    
+    private void addBase(Set<String> bases, String base) {
+        boolean add = true;
+        for (String b : bases) {
+            if (mDIT.isUnder(b, base)) {
+                add = false;
+                break;
+            }
+        }
+        if (add)
+            bases.add(base);
+    }
 
+    private String[] getSearchBases(int flags) {
+        Set<String> bases = new HashSet<String>();
+        
+        boolean accounts = (flags & Provisioning.SA_ACCOUNT_FLAG) != 0; 
+        boolean aliases = (flags & Provisioning.SA_ALIAS_FLAG) != 0;
+        boolean lists = (flags & Provisioning.SA_DISTRIBUTION_LIST_FLAG) != 0;
+        boolean domains = (flags & Provisioning.SA_DOMAIN_FLAG) != 0;
+        boolean calendarResources = (flags & Provisioning.SA_CALENDAR_RESOURCE_FLAG) != 0;
+        
+        if (accounts || aliases || lists || calendarResources)
+            addBase(bases, mDIT.mailBranchBaseDN());
+        
+        if (accounts)
+            addBase(bases, mDIT.adminBaseDN());
+        
+        if (domains)
+            addBase(bases, mDIT.domainBaseDN());
+        
+        return bases.toArray(new String[bases.size()]);
+    }
+    
     public List<NamedEntry> searchDirectory(SearchOptions options, boolean useConnPool) throws ServiceException {
-        String base = mDIT.zimbraBaseDN();
+        String base = null;
         
         LdapDomain ld = (LdapDomain) options.getDomain();
         if (ld != null) 
@@ -3673,6 +3714,12 @@ public class LdapProvisioning extends Provisioning {
                 base = bs;
         }
         
+        String bases[];
+        if (base == null)
+            bases = getSearchBases(options.getFlags());
+        else    
+            bases = new String[] {base};
+        
         String query = options.getQuery();
         
         if (options.getConvertIDNToAscii() && query != null && query.length()>0)
@@ -3682,7 +3729,7 @@ public class LdapProvisioning extends Provisioning {
                              options.getReturnAttrs(), 
                              options.getSortAttr(), 
                              options.isSortAscending(), 
-                             base, 
+                             bases, 
                              options.getFlags(), 
                              options.getMaxResults(),
                              useConnPool);

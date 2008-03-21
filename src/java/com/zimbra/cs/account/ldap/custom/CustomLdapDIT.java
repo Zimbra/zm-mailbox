@@ -177,12 +177,7 @@ public class CustomLdapDIT extends LdapDIT {
      * verify that dn is under parentDn
      */
     private boolean validateUnderDN(String parentDn, String dn) {
-                
-        if (!parentDn.equals(ROOT_DN)) {
-            if (!dn.toLowerCase().endsWith(parentDn.toLowerCase()))
-                return false;
-        }
-        return true;
+        return isUnder(parentDn, dn);
     }
     
     private void validateMailBranchEntryDN(String dn) throws ServiceException {

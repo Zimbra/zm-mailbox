@@ -494,5 +494,22 @@ public class LdapDIT {
         else
             throw ServiceException.FAILURE("entry type " + entry.getClass().getCanonicalName() + " is not supported by getNamingRdnAttr", null);
     }
+    
+
+    /**
+     * returns if dn is under parentDn
+     * 
+     * @param parentDn
+     * @param dn
+     * @return
+     */
+    public boolean isUnder(String parentDn, String dn) {
+        
+        if (!parentDn.equals(ROOT_DN)) {
+            if (!dn.toLowerCase().endsWith(parentDn.toLowerCase()))
+                return false;
+        }
+        return true;
+    }
 
 }
