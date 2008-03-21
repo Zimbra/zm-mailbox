@@ -29,7 +29,6 @@ import java.util.Locale;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.Servlet;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -73,7 +72,6 @@ import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.formatter.*;
-import com.zimbra.cs.service.mail.GetItem;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.NetUtil;
@@ -238,8 +236,7 @@ public class UserServlet extends ZimbraServlet {
         return mFormatters.get(type);
     }
 
-    private Mailbox getTargetMailbox(Context context) throws ServiceException {
-
+    private Mailbox getTargetMailbox(Context context) {
         // treat the non-existing target account the same as insufficient permission
         // to access existing item in order to prevent account harvesting.
         Mailbox mbox = null;
@@ -327,7 +324,7 @@ public class UserServlet extends ZimbraServlet {
         }
     }
 
-    public void doGet(HttpServletRequest req, HttpServletResponse resp)
+    @Override public void doGet(HttpServletRequest req, HttpServletResponse resp)
     throws ServletException, IOException {
         Context context = null;
         ZimbraLog.clearContext();
@@ -452,14 +449,14 @@ public class UserServlet extends ZimbraServlet {
     /** Adds an item to a folder specified in the URI.  The item content is
      *  provided in the PUT request's body.
      * @see #doPost(HttpServletRequest, HttpServletResponse) */
-    public void doPut(HttpServletRequest req, HttpServletResponse resp)
+    @Override public void doPut(HttpServletRequest req, HttpServletResponse resp)
     throws ServletException, IOException {
         doPost(req, resp);
     }
 
     /** Adds an item to a folder specified in the URI.  The item content is
      *  provided in the POST request's body. */
-    public void doPost(HttpServletRequest req, HttpServletResponse resp)
+    @Override public void doPost(HttpServletRequest req, HttpServletResponse resp)
     throws ServletException, IOException {
         Context context = null;
         ZimbraLog.clearContext();
@@ -486,7 +483,7 @@ public class UserServlet extends ZimbraServlet {
                 ZimbraLog.mailbox.info("UserServlet (POST): " + context.req.getRequestURL().toString());
     
                 context.opContext = new OperationContext(context.authAccount, isAdminRequest(context));
-    
+
                 try {
                     context.target = resolveItem(context, false);
                 } catch (NoSuchItemException nsie) {
@@ -500,9 +497,9 @@ public class UserServlet extends ZimbraServlet {
                     context.itemPath = context.itemPath.substring(0, separator);
                     context.target = resolveItem(context, false);
                 }
-    
+
                 folder = (context.target instanceof Folder ? (Folder) context.target : mbox.getFolderById(context.opContext, context.target.getFolderId()));
-    
+
                 if (context.target != folder) {
                     if (filename == null)
                         filename = context.target.getName();
@@ -510,7 +507,7 @@ public class UserServlet extends ZimbraServlet {
                         // need to fail on POST to "Notebook/existing-file/random-cruft"
                         throw MailServiceException.NO_SUCH_FOLDER(context.itemPath);
                 }
-    
+
                 if (folder instanceof Mountpoint) {
                     // if the target is a mountpoint, proxy the request on to the resolved target
                     context.extraPath = filename;
@@ -580,22 +577,21 @@ public class UserServlet extends ZimbraServlet {
     	
     	for (int id : context.reqListIds) {
     		try {
-    			context.respListItems.add(GetItem.getItemById(context.opContext, context.targetMailbox, id, MailItem.TYPE_UNKNOWN));
+    			context.respListItems.add(context.targetMailbox.getItemById(context.opContext, id, MailItem.TYPE_UNKNOWN));
     		} catch (NoSuchItemException x) {
     			ZimbraLog.misc.info(x.getMessage());
     		} catch (ServiceException x) {
-                if (x.getCode() == ServiceException.PERM_DENIED) {
+                if (x.getCode().equals(ServiceException.PERM_DENIED)) {
                 	ZimbraLog.misc.info(x.getMessage());
                 } else {
                 	throw x;
                 }
     		}
     	}
-    	
-    	//We consider partial success OK.  Let the client figure out which item is missing
-    	if (context.respListItems.size() == 0) {
+
+    	// we consider partial success OK -- let the client figure out which item is missing
+    	if (context.respListItems.isEmpty())
     		throw MailServiceException.NO_SUCH_ITEM(context.reqListIds.toString());
-    	}
     }
 
     /*
@@ -611,27 +607,30 @@ public class UserServlet extends ZimbraServlet {
      * the clients has gone through the access checks.
      * 
      */
-    private MailItem resolveItem(Context context, boolean checkExtension) throws ServiceException, UserServletException {
+    private MailItem resolveItem(Context context, boolean checkExtension) throws ServiceException {
         if (context.formatter != null && !context.formatter.requiresAuth())
             return null;
+
+        Mailbox mbox = context.targetMailbox;
 
         // special-case the fetch-by-IMAP-id option
         if (context.imapId > 0) {
             // fetch the folder from the path
-            Folder folder = context.targetMailbox.getFolderByPath(context.opContext, context.itemPath);
-            
+            Folder folder = mbox.getFolderByPath(context.opContext, context.itemPath);
+
             // and then fetch the item from the "imap_id" query parameter
-            return GetItem.getItemByImapId(context.opContext, context.targetMailbox, context.imapId, folder.getId());
+            return mbox.getItemByImapId(context.opContext, context.imapId, folder.getId());
         }
 
         if (context.itemId != null) {
-            context.target = GetItem.getItemById(context.opContext, context.targetMailbox, context.itemId.getId(), MailItem.TYPE_UNKNOWN);
+            context.target = mbox.getItemById(context.opContext, context.itemId.getId(), MailItem.TYPE_UNKNOWN);
 
             context.itemPath = context.target.getPath();
             if (context.target instanceof Mountpoint || context.extraPath == null || context.extraPath.equals(""))
                 return context.target;
             if (context.itemPath == null)
                 throw MailServiceException.NO_SUCH_ITEM("?id=" + context.itemId + "&name=" + context.extraPath);
+            context.target = null;
             context.itemId = null;
         }
 
@@ -640,36 +639,48 @@ public class UserServlet extends ZimbraServlet {
             context.extraPath = null;
         }
 
+        // first, try the full requested path
+        ServiceException failure = null;
         try {
-            // first, try the full path
-            context.target = GetItem.getItemByPath(context.opContext, context.targetMailbox, context.itemPath, MailItem.TYPE_UNKNOWN);
+            context.target = mbox.getItemByPath(context.opContext, context.itemPath);
         } catch (ServiceException e) {
-            if (!(e instanceof NoSuchItemException) && e.getCode() != ServiceException.PERM_DENIED)
+            if (!(e instanceof NoSuchItemException) && !e.getCode().equals(ServiceException.PERM_DENIED))
                 throw e;
-
-            // no joy.  if they asked for something like "calendar.csv" (where "calendar" was the folder name), try again minus the extension
-            if (!checkExtension || context.format != null)
-                throw e;
-
-            /* if path == /foo/bar/baz.html, then
-             *      format -> html
-             *      path   -> /foo/bar/baz  */
-            int dot = context.itemPath.lastIndexOf('.');
-            if (dot == -1)
-                throw e;
-
-            String unsuffixedPath = context.itemPath.substring(0, dot);
-
-            // try again, w/ the extension removed...
-            context.target = GetItem.getItemByPath(context.opContext, context.targetMailbox, unsuffixedPath, MailItem.TYPE_UNKNOWN);
-
-            context.format = context.itemPath.substring(dot + 1);
-            context.itemPath = unsuffixedPath;
+            failure = e;
         }
 
-        // don't think this code can ever get called because <tt>item</tt> can't be null at this point
+        if (context.target == null) {
+            // no joy.  if they asked for something like "calendar.csv" (where "calendar" was the folder name), try again minus the extension
+            int dot = context.itemPath.lastIndexOf('.'), slash = context.itemPath.lastIndexOf('/');
+            if (checkExtension && context.format == null && dot != -1 && dot > slash) {
+                /* if path == /foo/bar/baz.html, then
+                 *      format -> html
+                 *      path   -> /foo/bar/baz  */
+                String unsuffixedPath = context.itemPath.substring(0, dot);
+                try {
+                    context.target = mbox.getItemByPath(context.opContext, unsuffixedPath);
+                    context.format = context.itemPath.substring(dot + 1);
+                    context.itemPath = unsuffixedPath;
+                } catch (ServiceException e) { }
+            }
+        }
+
+        if (context.target == null) {
+            // still no joy.  the only viable possibility at this point is that there's a mountpoint somewhere higher up in the requested path
+            try {
+                Pair<Folder, String> match = mbox.getFolderByPathLongestMatch(context.opContext, Mailbox.ID_FOLDER_USER_ROOT, context.itemPath);
+                Folder reachable = match.getFirst();
+                if (reachable instanceof Mountpoint) {
+                    context.target = reachable;
+                    context.itemPath = reachable.getPath();
+                    context.extraPath = match.getSecond();
+                }
+            } catch (ServiceException e) { }
+        }
+
+        // don't think this code can ever get called because <tt>context.target</tt> can't be null at this point
         if (context.target == null && context.getQueryString() == null)
-            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "item not found");
+            throw failure;
 
         return context.target;
     }
@@ -723,13 +734,13 @@ public class UserServlet extends ZimbraServlet {
         private long mStartTime = -2;
         private long mEndTime = -2;
 
-        Context(HttpServletRequest request, HttpServletResponse response, UserServlet servlet)
+        Context(HttpServletRequest request, HttpServletResponse response, UserServlet srvlt)
         throws UserServletException, ServiceException {
             Provisioning prov = Provisioning.getInstance();
 
             this.req = request;
             this.resp = response;
-            this.servlet = servlet;
+            this.servlet = srvlt;
             this.params = HttpUtil.getURIParams(request);
             
             //rest url override for locale
@@ -793,7 +804,7 @@ public class UserServlet extends ZimbraServlet {
 
             if (this.format != null) {
                 this.format = this.format.toLowerCase();
-                this.formatter = servlet.getFormatter(this.format);
+                this.formatter = srvlt.getFormatter(this.format);
                 if (this.formatter == null)
                     throw new UserServletException(HttpServletResponse.SC_NOT_IMPLEMENTED, "not implemented yet");
             }                
@@ -938,7 +949,7 @@ public class UserServlet extends ZimbraServlet {
             return ByteUtil.getContent(req.getInputStream(), req.getContentLength(), sizeLimit);
         }
 
-        public String toString() {
+        @Override public String toString() {
             StringBuffer sb = new StringBuffer();
             sb.append("account(" + accountPath + ")\n");
             sb.append("itemPath(" + itemPath + ")\n");
@@ -947,7 +958,7 @@ public class UserServlet extends ZimbraServlet {
         }
     }
 
-    protected String getRealmHeader() {
+    @Override protected String getRealmHeader() {
         return "BASIC realm=\"Zimbra\"";
     }
 
@@ -968,8 +979,8 @@ public class UserServlet extends ZimbraServlet {
             case MailItem.TYPE_CONTACT:
                 return context.target instanceof Folder? "csv" : "vcf";
             case MailItem.TYPE_WIKI:
-            //case MailItem.TYPE_DOCUMENT:   // use native formatter for Document
                 return "wiki";
+            //case MailItem.TYPE_DOCUMENT:   // use native formatter for Document
             default:
                 return "native";
         }
@@ -990,14 +1001,14 @@ public class UserServlet extends ZimbraServlet {
         resp.sendError(HttpServletResponse.SC_FORBIDDEN, "The attachment download has been disabled per security policy.");
     }
 
-    public void init() throws ServletException {
+    @Override public void init() throws ServletException {
         String name = getServletName();
         ZimbraLog.mailbox.info("Servlet " + name + " starting up");
         super.init();
         mBlockPage = getInitParameter(MSGPAGE_BLOCK);
     }
 
-    public void destroy() {
+    @Override public void destroy() {
         String name = getServletName();
         ZimbraLog.mailbox.info("Servlet " + name + " shutting down");
         super.destroy();
@@ -1087,7 +1098,7 @@ public class UserServlet extends ZimbraServlet {
 
 
     public static FileUploadServlet.Upload getRemoteResourceAsUpload(AuthToken at, ItemId iid, Map<String,String> params)
-    throws ServiceException, IOException, AuthTokenException {
+    throws ServiceException, IOException {
         Map<String, String> pcopy = new HashMap<String, String>(params);
         pcopy.put(QP_ID, iid.toString());
 

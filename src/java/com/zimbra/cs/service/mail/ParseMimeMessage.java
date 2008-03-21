@@ -26,7 +26,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ExceptionToString;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Provisioning;
@@ -601,8 +600,6 @@ public class ParseMimeMessage {
             return;
         } catch (IOException ioe) {
             throw ServiceException.FAILURE("can't serialize remote contact", ioe);
-        } catch (AuthTokenException ate) {
-            throw ServiceException.FAILURE("can't serialize remote contact", ate);
         }
     }
 
