@@ -143,6 +143,8 @@ public class LC {
     public static final KnownKey zimbra_converter_enabled_uuencode;
     public static final KnownKey zimbra_converter_enabled_tnef;
 
+    public static final KnownKey zimbra_ssl_enabled;
+    
     public static final KnownKey stats_img_folder;
 
     public static final KnownKey ldap_host;
@@ -604,6 +606,8 @@ public class LC {
         zimbra_converter_enabled_tnef.setDefault("true");
         zimbra_converter_enabled_tnef.setDoc("Whether the TNEF decoder is run when parsing messages from the store");
 
+        
+        zimbra_ssl_enabled = new KnownKey("zimbra_ssl_enabled", "true", "Whether or not to load the ssl keystore");
         stats_img_folder = new KnownKey("stats_img_folder");
         stats_img_folder.setDefault("${zimbra_home}" + FS + "logger" + FS + "db" + FS + "work");
         stats_img_folder.setDoc("Directory for storing generated statistics images.");

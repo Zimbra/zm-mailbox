@@ -47,7 +47,6 @@ public class PrivilegedHandler {
     private static final String A_zimbraPop3SSLBindAddress = "zimbraPop3SSLBindAddress";
     private static final String A_zimbraPop3SSLServerEnabled = "zimbraPop3SSLServerEnabled";
     
-    private static final String mailboxd_keystore_enabled = "mailboxd_keystore_enabled";
     private static final String mailboxd_keystore = "mailboxd_keystore";
     private static final String mailboxd_keystore_password = "mailboxd_keystore_password";
     private static final String mailboxd_truststore_password = "mailboxd_truststore_password";
@@ -65,7 +64,7 @@ public class PrivilegedHandler {
         
         try {
         	
-        	if (getBooleanAttr(attributes, mailboxd_keystore_enabled, false)) {
+        	if (LC.zimbra_ssl_enabled.booleanValue()) { //default is true
         		System.setProperty("javax.net.ssl.keyStore", getAttr(attributes, mailboxd_keystore));
         		System.setProperty("javax.net.ssl.keyStorePassword", getAttr(attributes, mailboxd_keystore_password));
         		System.setProperty("javax.net.ssl.trustStorePassword", getAttr(attributes, mailboxd_truststore_password));
