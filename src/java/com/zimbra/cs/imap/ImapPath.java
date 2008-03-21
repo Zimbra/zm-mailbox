@@ -16,10 +16,12 @@
  */
 package com.zimbra.cs.imap;
 
-import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
@@ -44,6 +46,16 @@ import com.zimbra.cs.zclient.ZSearchFolder;
 
 public class ImapPath {
     enum Scope { UNPARSED, NAME, CONTENT, REFERENCE };
+
+    static Charset FOLDER_ENCODING_CHARSET;
+        static {
+            try {
+                FOLDER_ENCODING_CHARSET = Charset.forName("imap-utf-7");
+            } catch (Exception e) {
+                ZimbraLog.imap.error("could not load imap-utf-7 charset (perhaps zimbra-charset.jar is not in the jetty endorsed directory)", e);
+                FOLDER_ENCODING_CHARSET = Charset.forName("utf-8");
+            }
+        }
 
     static final String NAMESPACE_PREFIX = "/home/";
 
@@ -581,17 +593,13 @@ public class ImapPath {
     }
 
     /** Formats a folder path as an IMAP-UTF-7 quoted-string.  Applies all
-     *  special hack-specific path transforms.
-     * @param mPath         The Zimbra-local folder pathname.
-     * @param mCredentials  The authenticated user's credentials.
-     * @see #importPath(String, ImapCredentials) */
+     *  special hack-specific path transforms. */
     String asUtf7String() {
-        String path = asImapPath();
-        try {
-            path = '"' + new String(path.getBytes("imap-utf-7"), "US-ASCII") + '"';
-        } catch (UnsupportedEncodingException e) {
-            path = '"' + path + '"';
-        }
-        return path.replaceAll("\\\\", "\\\\\\\\");
+        ByteBuffer bb = FOLDER_ENCODING_CHARSET.encode(asImapPath());
+        byte[] content = new byte[bb.limit() + 2];
+        content[0] = '"';
+        System.arraycopy(bb.array(), 0, content, 1, content.length - 2);
+        content[content.length - 1] = '"';
+        return new String(content).replaceAll("\\\\", "\\\\\\\\");
     }
 }

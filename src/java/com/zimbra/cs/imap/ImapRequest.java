@@ -22,6 +22,7 @@ package com.zimbra.cs.imap;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.text.DateFormat;
@@ -397,7 +398,7 @@ abstract class ImapRequest {
         if (raw == null || raw.indexOf("&") == -1)
             return raw;
         try {
-            return new String(raw.getBytes("US-ASCII"), "imap-utf-7");
+            return ImapPath.FOLDER_ENCODING_CHARSET.decode(ByteBuffer.wrap(raw.getBytes("US-ASCII"))).toString();
         } catch (Throwable t) {
             ZimbraLog.imap.debug("ignoring error while decoding folder name: " + raw, t);
             return raw;
