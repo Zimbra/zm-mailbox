@@ -33,6 +33,7 @@ import javax.mail.internet.MimePart;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -136,6 +137,14 @@ public class ZipFormatter extends Formatter {
                     if (calItem.isPublic() || calItem.allowPrivateAccess(context.authAccount)) {
                         // do nothing for now
                     }
+                } else if (item instanceof Document) {
+                	String ext = "";
+                	if (item.getType() == MailItem.TYPE_WIKI)
+                		ext = ".wiki";
+                	ZipEntry entry = new ZipEntry(getZipEntryName(item, item.getName(), ext, context, usedNames));
+                    entry.setExtra(SyncFormatter.getXZimbraHeadersBytes(item));
+                    out.putNextEntry(entry);
+                    ByteUtil.copy(item.getContentStream(), true, out, false);
                 }
             }
         } finally {
