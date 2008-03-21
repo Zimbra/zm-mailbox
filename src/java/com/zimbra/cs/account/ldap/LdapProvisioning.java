@@ -503,8 +503,6 @@ public class LdapProvisioning extends Provisioning {
             return getAccountByName(key, loadFromMaster);
         case krb5Principal:
             return Krb5Principal.getAccountFromKrb5Principal(key, loadFromMaster);
-        case bouncerID:
-        	return getAccountByBouncerID(key,loadFromMaster);
         default:
             return null;
         }
@@ -522,8 +520,6 @@ public class LdapProvisioning extends Provisioning {
             return sAccountCache.getByName(key);
         case krb5Principal:
             throw ServiceException.FAILURE("key type krb5Principal is not supported by getFromCache", null);
-        case bouncerID:
-            throw ServiceException.FAILURE("key type bouncerID is not supported by getFromCache", null);            
         default:
             return null;
         }
@@ -597,21 +593,7 @@ public class LdapProvisioning extends Provisioning {
         }
         return account;
     }
-  
-    /*
-	 * (non-Javadoc)
-	 * 
-	 * looks up an account by Y! Bouncer ID
-	*/
-	private Account getAccountByBouncerID(String bouncerID,
-			boolean loadFromMaster) throws ServiceException {
 
-		Account account = getAccountByQuery(mDIT.mailBranchBaseDN(), "(&("
-				+ A_zimbraCustomerCareBouncerUserID + "=" + bouncerID + ")"
-				+ FILTER_ACCOUNT_OBJECTCLASS + ")", null, loadFromMaster);
-		sAccountCache.put(account);
-		return account;
-	}
     
     private Cos lookupCos(String key, DirContext ctxt) throws ServiceException {
         Cos c = null;
