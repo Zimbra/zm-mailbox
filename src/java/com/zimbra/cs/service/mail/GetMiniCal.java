@@ -31,8 +31,8 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.MailItem;
@@ -137,6 +137,8 @@ public class GetMiniCal extends CalendarRequest {
     throws ServiceException {
 
         Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, remoteAccountId);
+        if (target == null)
+            throw AccountServiceException.NO_SUCH_ACCOUNT(remoteAccountId);
         ZMailbox.Options zoptions = new ZMailbox.Options(authToken.toZAuthToken(), AccountUtil.getSoapUri(target));
         zoptions.setTargetAccount(remoteAccountId);
         zoptions.setTargetAccountBy(AccountBy.id);
