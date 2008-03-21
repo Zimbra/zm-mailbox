@@ -2727,7 +2727,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="573" name="zimbraPrefCalendarReminderDuration1" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
-  <defaultCOSValue>-PT15</defaultCOSValue>
+  <defaultCOSValue>-PT15M</defaultCOSValue>
   <desc>When to send the first reminder for an event.</desc>
 </attr>
 
