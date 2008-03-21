@@ -3041,19 +3041,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Whether to enable IMAP/POP proxy</desc>
 </attr>
 
-
 <attr id="630" name="zimbraLmtpServerEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>whether LMTP server is enabled for a given server</desc>
 </attr>
 
-<attr id="631" name="mailboxd_keystore_enabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" deprecatedSince="5.0.3">
-  <globalConfigValue>TRUE</globalConfigValue>
-  <desc>whether keystore is enabled for a given server</desc>
-  <deprecateDesc>Never used</deprecateDesc>
-</attr>
-
-<attr id="632" name="zimbraCustomerCareBouncerUserID" type="string" cardinality="single" optionalIn="account">
+<attr id="631" name="zimbraCustomerCareBouncerUserID" type="string" cardinality="single" optionalIn="account">
   <desc>Maps a ZCS account to external Yahoo! bouncer account.</desc>
 </attr>
 
