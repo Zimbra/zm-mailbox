@@ -83,7 +83,9 @@ public class IMGlobalProperties implements PropertyProvider {
         // "xmpp.socket.ssl.port"  // defaul 5223
         // "xmpp.component.socket.port" // 10015
         // "xmpp.server.socket.port" // 5269
-        mLocalConfigMap.put("xmpp.cloudrouting.port", "7335"); 
+        mLocalConfigMap.put("xmpp.cloudrouting.port", "7335");
+        mLocalConfigMap.put("xmpp.cloudrouting.ssl", "false");
+        
         // "xmpp.multiplex.socket.port" // 5262
         
     }

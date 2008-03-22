@@ -38,10 +38,13 @@ import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
 import org.xmpp.packet.Presence;
+import org.xmpp.packet.StreamError;
 
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.ZimbraAuthToken;
 
 /**
  * This class represents a route in the *LOCAL* cloud, ie between trusted servers
@@ -50,13 +53,32 @@ import com.zimbra.cs.account.Server;
 public class CloudRouteSession extends Session {
 
     static public CloudRouteSession create(String hostname, CloudRoutingSocketReader reader, SocketConnection connection, Element streamElt) {
-        CloudRouteSession toRet = new CloudRouteSession(connection, XMPPServer.getInstance().getSessionManager().nextStreamID());
-        return toRet;
+        String encodedAuthToken = streamElt.attributeValue("authtoken");
+        try {
+            AuthToken token = AuthToken.getAuthToken(encodedAuthToken);
+            
+            if (token.isAdmin()) {
+                CloudRouteSession toRet = new CloudRouteSession(connection, XMPPServer.getInstance().getSessionManager().nextStreamID());
+                ZimbraLog.im.info("Accepted CloudRouting connection from host "+connection.toString());
+                return toRet;
+            } else {
+                ZimbraLog.im.warn("Rejecting CloudRouting connection -- Got non-admin auth token on cloud routing connection from "+connection.toString()+" token = "+token);
+           }
+        } catch (Exception e) {
+            ZimbraLog.im.warn("Rejecting CloudRouting connection -- caught exception attempting to create CloudRoutingSession from "+connection.toString(), e);
+        }
+        
+        StreamError error = new StreamError(StreamError.Condition.not_authorized);
+        connection.deliverRawText(error.toXML());
+        connection.close();
+        return null;
     }
 
     static CloudRouteSession connect(Server targetServer) throws Exception {
         String hostname = targetServer.getAttr(Provisioning.A_zimbraServiceHostname);
         int port = 7335;
+        
+        AuthToken adminAuthToken = ZimbraAuthToken.getZimbraAdminAuthToken();
         
         Socket socket = new Socket();
         try {
@@ -75,6 +97,7 @@ public class CloudRouteSession extends Session {
             openingStream.append(" xmlns:stream=\"http://etherx.jabber.org/streams\"");
             openingStream.append(" xmlns=\"jabber:cloudrouting\"");
             openingStream.append(" to=\"").append(hostname).append("\"");
+            openingStream.append(" authtoken=\"").append(adminAuthToken.getEncoded()).append("\"");
             openingStream.append(" version=\"1.0\">\n");
             ZimbraLog.im.debug("LocalCloudRoute - Sending stream header: "+openingStream.toString()); 
             connection.deliverRawText(openingStream.toString());
