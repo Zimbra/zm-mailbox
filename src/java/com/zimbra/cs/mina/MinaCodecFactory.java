@@ -62,6 +62,10 @@ class MinaCodecFactory implements ProtocolCodecFactory {
         public void decode(IoSession session,
                            org.apache.mina.common.ByteBuffer in,
                            ProtocolDecoderOutput out) throws IOException {
+            if (MinaServer.isDebugEnabled()) {
+                ZimbraLog.nio.debug("Decode request: session = %d, bytes = %d",
+                                    session.hashCode(), in.remaining());
+            }
             java.nio.ByteBuffer bb = in.buf();
             while (bb.hasRemaining()) {
                 if (req == null) {
@@ -78,6 +82,9 @@ class MinaCodecFactory implements ProtocolCodecFactory {
                 if (!req.isComplete()) break;
                 out.write(req);
                 req = null;
+            }
+            if (MinaServer.isDebugEnabled()) {
+                ZimbraLog.nio.debug("Decode finished: session = %d", session.hashCode());
             }
         }
     }
