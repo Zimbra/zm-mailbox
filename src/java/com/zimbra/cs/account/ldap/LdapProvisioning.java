@@ -154,12 +154,6 @@ public class LdapProvisioning extends Provisioning {
             Provisioning.A_uid
     };
 
-    private static final String FILTER_ACCOUNT_OBJECTCLASS =
-        "(objectclass=zimbraAccount)";
-    private static final String FILTER_CALENDAR_RESOURCE_OBJECTCLASS =
-        "(objectclass=zimbraCalendarResource)";
-    private static final String FILTER_DISTRIBUTION_LIST_OBJECTCLASS =
-        "(objectclass=zimbraDistributionList)";
 
     private static AccountCache sAccountCache =
         new AccountCache(
@@ -475,7 +469,7 @@ public class LdapProvisioning extends Provisioning {
         Account a = sAccountCache.getById(zimbraId);
         if (a == null) {
             zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
-            String query = "(&(zimbraId=" + zimbraId + ")" + FILTER_ACCOUNT_OBJECTCLASS + ")";
+            String query = LdapFilter.accountById(zimbraId);
             
             a = getAccountByQuery(mDIT.mailBranchBaseDN(), query, ctxt, loadFromMaster);
             
@@ -538,8 +532,7 @@ public class LdapProvisioning extends Provisioning {
             foreignPrincipal = LdapUtil.escapeSearchFilterArg(foreignPrincipal);
             a = getAccountByQuery(
                     mDIT.mailBranchBaseDN(),
-                    "(&(zimbraForeignPrincipal=" + foreignPrincipal + ")" +
-                    FILTER_ACCOUNT_OBJECTCLASS + ")",
+                    LdapFilter.accountByForeignPrincipal(foreignPrincipal),
                     null, loadFromMaster);
             sAccountCache.put(a);
         }
@@ -552,8 +545,7 @@ public class LdapProvisioning extends Provisioning {
             name = LdapUtil.escapeSearchFilterArg(name);
             a = getAccountByQuery(
                     mDIT.adminBaseDN(),
-                    "(&(" + mDIT.accountNamingRdnAttr() + "=" + name + ")" +
-                    FILTER_ACCOUNT_OBJECTCLASS + ")",
+                    LdapFilter.adminAccountByName(mDIT.accountNamingRdnAttr(), name),
                     null, loadFromMaster);
             sAccountCache.put(a);
         }
@@ -588,9 +580,7 @@ public class LdapProvisioning extends Provisioning {
             emailAddress = LdapUtil.escapeSearchFilterArg(emailAddress);
             account = getAccountByQuery(
                     mDIT.mailBranchBaseDN(),
-                    "(&(|(zimbraMailDeliveryAddress=" + emailAddress +
-                    ")(zimbraMailAlias=" + emailAddress + "))" +
-                    FILTER_ACCOUNT_OBJECTCLASS + ")",
+                    LdapFilter.accountByName(emailAddress),
                     null, loadFromMaster);
             sAccountCache.put(account);
         }
@@ -2531,8 +2521,8 @@ public class LdapProvisioning extends Provisioning {
     private DistributionList getDistributionListById(String zimbraId, DirContext ctxt) throws ServiceException {
         //zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
         return getDistributionListByQuery(mDIT.mailBranchBaseDN(),
-                                          "(&(zimbraId="+zimbraId+")" + 
-                                          FILTER_DISTRIBUTION_LIST_OBJECTCLASS+ ")", ctxt);
+                                          LdapFilter.distributionListById(zimbraId),
+                                          ctxt);
     }
 
     private DistributionList getDistributionListById(String zimbraId) throws ServiceException {
@@ -2566,9 +2556,8 @@ public class LdapProvisioning extends Provisioning {
         listAddress = IDNUtil.toAsciiEmail(listAddress);
         
         listAddress = LdapUtil.escapeSearchFilterArg(listAddress);
-        return getDistributionListByQuery(mDIT.mailBranchBaseDN(), 
-                                          "(&(zimbraMailAlias="+listAddress+")" +
-                                          FILTER_DISTRIBUTION_LIST_OBJECTCLASS+ ")",
+        return getDistributionListByQuery(mDIT.mailBranchBaseDN(),
+                                          LdapFilter.distributionListByName(listAddress),
                                           null);
     }
     
@@ -3309,8 +3298,7 @@ public class LdapProvisioning extends Provisioning {
             zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
             resource = (LdapCalendarResource) getAccountByQuery(
                 mDIT.mailBranchBaseDN(),
-                "(&(zimbraId=" + zimbraId + ")" +
-                FILTER_CALENDAR_RESOURCE_OBJECTCLASS + ")",
+                LdapFilter.calendarResourceById(zimbraId),
                 null, loadFromMaster);
             sAccountCache.put(resource);
         }
@@ -3328,9 +3316,7 @@ public class LdapProvisioning extends Provisioning {
             emailAddress = LdapUtil.escapeSearchFilterArg(emailAddress);
             resource = (LdapCalendarResource) getAccountByQuery(
                 mDIT.mailBranchBaseDN(),
-                "(&(|(zimbraMailDeliveryAddress=" + emailAddress +
-                ")(zimbraMailAlias=" + emailAddress + "))" +
-                FILTER_CALENDAR_RESOURCE_OBJECTCLASS + ")",
+                LdapFilter.calendarResourceByName(emailAddress),
                 null, loadFromMaster);
             sAccountCache.put(resource);
         }
@@ -3344,8 +3330,7 @@ public class LdapProvisioning extends Provisioning {
         LdapCalendarResource resource =
             (LdapCalendarResource) getAccountByQuery(
                 mDIT.mailBranchBaseDN(),
-                "(&(zimbraForeignPrincipal=" + foreignPrincipal + ")" +
-                FILTER_CALENDAR_RESOURCE_OBJECTCLASS + ")",
+                LdapFilter.calendarResourceByForeignPrincipal(foreignPrincipal),
                 null, loadFromMaster);
         sAccountCache.put(resource);
         return resource;
