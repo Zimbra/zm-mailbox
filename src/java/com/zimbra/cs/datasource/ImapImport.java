@@ -93,8 +93,11 @@ public class ImapImport implements MailItemImport {
         props.setProperty("mail.imap.timeout", Long.toString(timeout));
         props.setProperty("mail.imaps.connectiontimeout", Long.toString(timeout));
         props.setProperty("mail.imaps.timeout", Long.toString(timeout));    	
-		props.setProperty("mail.imaps.socketFactory.class", CustomSSLSocketFactory.class.getName());
+        props.setProperty("mail.imaps.socketFactory.class", CustomSSLSocketFactory.class.getName());
         props.setProperty("mail.imaps.socketFactory.fallback", "false");
+        if (LC.javamail_imap_debug.booleanValue()) {
+            props.setProperty("mail.debug", "true");
+        }
         if (idExt != null) {
         	props.setProperty("mail.imap.idextension", idExt);
         	props.setProperty("mail.imaps.idextension", idExt);
@@ -104,8 +107,6 @@ public class ImapImport implements MailItemImport {
         	props.setProperty("mail.imaps.starttls.enable", "true");
         }
         sSession = Session.getInstance(props);
-        if (LC.javamail_imap_debug.booleanValue())
-        	sSession.setDebug(true);
 
         Properties sscProps = new Properties();
         sscProps.setProperty("mail.imaps.connectiontimeout", Long.toString(timeout));
@@ -118,8 +119,11 @@ public class ImapImport implements MailItemImport {
         	sscProps.setProperty("mail.imaps.starttls.enable", "true");
         }
         sSelfSignedCertSession = Session.getInstance(sscProps);
-        if (LC.javamail_imap_debug.booleanValue())
-        	sSelfSignedCertSession.setDebug(true);
+        
+        if (LC.javamail_imap_debug.booleanValue()) {
+            sSession.setDebug(true);
+            sSelfSignedCertSession.setDebug(true);
+        }
 
         FETCH_PROFILE = new FetchProfile();
         FETCH_PROFILE.add(UIDFolder.FetchProfileItem.UID);
@@ -158,7 +162,7 @@ public class ImapImport implements MailItemImport {
     	return false;
     }
     
-    public void importData(Account account, DataSource ds) throws ServiceException {
+    public void importData(Account account, DataSource ds, boolean fullSync) throws ServiceException {
         validateDataSource(ds);
         Store store = null;
         try {
@@ -176,17 +180,17 @@ public class ImapImport implements MailItemImport {
             //when deleting folders, especially remoted folders, we delete children before parents
             //to avoid complications.  so we want to sort in fullname length descending order.
             Arrays.sort(remoteFolders, new Comparator<Folder>() {
-				public int compare(Folder o1, Folder o2) {
-					return o2.getFullName().length() - o1.getFullName().length();
-				}
+                public int compare(Folder o1, Folder o2) {
+                    return o2.getFullName().length() - o1.getFullName().length();
+                }
             });
             for (int i = 0; i < remoteFolders.length; i++) {
                 IMAPFolder remoteFolder = (IMAPFolder) remoteFolders[i];
-                
+
                 long remoteUvv = 0;
                 if (!hasAttribute(remoteFolder, "\\Noselect"))
                 	remoteUvv = remoteFolder.getUIDValidity();
-                
+
                 ZimbraLog.datasource.debug("Processing IMAP folder " + remoteFolder.getFullName());
 
                 // Update associations between remote and local folders
@@ -213,7 +217,7 @@ public class ImapImport implements MailItemImport {
                         imapFolders.remove(folderTracker);
                         ds.deleteImapFolder(folderTracker);
                     }
-                    
+
                     if (folderTracker.getUidValidity() == null) {
                         // Migrate old data created before we added the uid_validity column
                         ZimbraLog.datasource.info("Initializing UIDVALIDITY of %s to %d", remoteFolder.getFullName(), remoteUvv);
@@ -223,7 +227,7 @@ public class ImapImport implements MailItemImport {
 
                     if (localFolder != null) {
                         if (!localFolder.getPath().equals(folderTracker.getLocalPath())) {
-                            // Folder path does not match
+                                // Folder path does not match
                         	String jmPath = localPathToRemotePath(ds, localRootFolder, localFolder, remoteFolder.getSeparator());
                             if (jmPath != null && isParent(localRootFolder, localFolder)) {
                                 // Folder has a new name/path but is still under the
@@ -261,7 +265,7 @@ public class ImapImport implements MailItemImport {
                                 if (newUids != null && newUids.length == 1 && newUids[0] != null && newUids[0].uid > 0)
                                 	DbImapMessage.storeImapMessage(mbox, localFolder.getId(), newUids[0].uid, id, flags);
                             }
-                            
+
                             // Empty local folder so that it will be resynced later and store the new UIDVALIDITY value.
                             mbox.emptyFolder(null, localFolder.getId(), false);
                             folderTracker.setUidValidity(remoteUvv);
@@ -282,7 +286,7 @@ public class ImapImport implements MailItemImport {
 	                        localFolder = mbox.getFolderByPath(null, zimbraPath);
 	                    } catch (NoSuchItemException e) {
 	                    }
-	                    
+
 	                    if (localFolder == null) {
 	                        localFolder = mbox.createFolder(null, zimbraPath, (byte) 0,
 	                            MailItem.TYPE_UNKNOWN);
@@ -355,7 +359,7 @@ public class ImapImport implements MailItemImport {
                 if (imapFolder.getUidValidity() != 0) {
 	                try {
 	                	for (int i = 0; i < 3; ++i) //at most run 3 times on a single folder import to prevent a dead loop
-	                		if (importFolder(account, ds, store, imapFolder))
+	                		if (importFolder(account, ds, store, imapFolder, fullSync))
 	                			break;
 	                } catch (MessagingException e) {
 	                    ZimbraLog.datasource.warn("An error occurred while importing folder %s", imapFolder.getRemotePath(), e);
@@ -504,8 +508,9 @@ public class ImapImport implements MailItemImport {
         }
     }
 
-    private boolean importFolder(Account account, DataSource ds, Store store, final ImapFolder trackedFolder)
-    throws MessagingException, IOException, ServiceException {
+    private boolean importFolder(Account account, DataSource ds, Store store,
+                                 final ImapFolder trackedFolder, boolean fullSync)
+        throws MessagingException, IOException, ServiceException {
         // Instantiate folders
         com.sun.mail.imap.IMAPFolder remoteFolder =
             (com.sun.mail.imap.IMAPFolder) store.getFolder(trackedFolder.getRemotePath());
@@ -516,6 +521,19 @@ public class ImapImport implements MailItemImport {
                 remoteFolder.getFullName());
             return true;
         }
+
+        // Don't load message flags unless full sync requested or there are
+        // new messages in the folder (uidnext has advanced).
+        if (!fullSync) {
+            long trackedUid = trackedFolder.getUidNext();
+            long remoteUid = remoteFolder.getUIDNext();
+            if (trackedUid != -1 && remoteUid != -1 && trackedUid == remoteUid) {
+                return true; // No new messages have been detected
+            }
+        }
+        // Update next uid for tracked folder data
+        trackedFolder.setUidNext(remoteFolder.getUIDNext());
+        
         final Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         final com.zimbra.cs.mailbox.Folder localFolder = mbox.getFolderById(null, trackedFolder.getItemId());
         final DataSource dataSource = ds;

@@ -118,12 +118,16 @@ public class DataSourceManager {
         
         return importStatus;
     }
+
+    public static void importData(Account account, DataSource ds) throws ServiceException {
+        importData(account, ds, true);
+    }
     
     /**
      * Executes the data source's <code>MailItemImport</code> implementation
      * to import data in the current thread.
      */
-    public static void importData(Account account, DataSource ds) throws ServiceException {
+    public static void importData(Account account, DataSource ds, boolean fullSync) throws ServiceException {
         ImportStatus importStatus = getImportStatus(account, ds);
         
         synchronized (importStatus) {
@@ -145,7 +149,7 @@ public class DataSourceManager {
 
         try {
             ZimbraLog.datasource.info("Importing data.");
-            mii.importData(account, ds);
+            mii.importData(account, ds, fullSync);
             ZimbraLog.datasource.info("Import completed.");
             success = true;
         } catch (ServiceException x) {
