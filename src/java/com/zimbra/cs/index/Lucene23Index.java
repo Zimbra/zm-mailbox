@@ -1334,7 +1334,6 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
                 if (config.useSerialMergeScheduler)
                     mIndexWriter.setMergeScheduler(new SerialMergeScheduler());
                 
-                mIndexWriter.setUseCompoundFile(config.useCompoundFile);
                 mIndexWriter.setMaxBufferedDocs(config.maxBufferedDocs);
                 mIndexWriter.setRAMBufferSizeMB(((double)config.ramBufferSizeKB)/1024.0);
                 mIndexWriter.setMergeFactor(config.mergeFactor);
@@ -1342,6 +1341,8 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
                 if (config.useDocScheduler) {
                     LogDocMergePolicy policy = new LogDocMergePolicy();
                     mIndexWriter.setMergePolicy(policy);
+                    policy.setUseCompoundDocStore(config.useCompoundFile);
+                    policy.setUseCompoundFile(config.useCompoundFile);
                     policy.setMergeFactor(config.mergeFactor);
                     policy.setMinMergeDocs((int)config.minMerge);
                     if (config.maxMerge != Integer.MAX_VALUE) 
@@ -1349,6 +1350,8 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
                 } else {
                     LogByteSizeMergePolicy policy = new LogByteSizeMergePolicy();
                     mIndexWriter.setMergePolicy(policy);
+                    policy.setUseCompoundDocStore(config.useCompoundFile);
+                    policy.setUseCompoundFile(config.useCompoundFile);
                     policy.setMergeFactor(config.mergeFactor);
                     policy.setMinMergeMB(((double)config.minMerge)/1024.0);
                     if (config.maxMerge != Integer.MAX_VALUE)
