@@ -37,6 +37,11 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.datasource.ImapFolder;
+import com.zimbra.cs.datasource.ImapFolderCollection;
+import com.zimbra.cs.db.DbImapFolder;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.Mailbox;
 
 /**
  * @author schemers
@@ -157,7 +162,7 @@ public class DataSource extends NamedEntry implements Comparable {
     
     /**
      * Returns <tt>true</tt> if this data source has a scheduled poll interval.
-     * @see #getPollInterval
+     * @see #getPollingInterval
      */
     public boolean isScheduled()
     throws ServiceException {
@@ -240,6 +245,27 @@ public class DataSource extends NamedEntry implements Comparable {
      */
     public boolean isSyncEnabled(String localPath) {
     	return true;
+    }
+
+    public ImapFolderCollection getImapFolders() throws ServiceException {
+        return DbImapFolder.getImapFolders(getMailbox(), this);
+    }
+
+    public void deleteImapFolder(ImapFolder folder) throws ServiceException {
+        DbImapFolder.deleteImapFolder(getMailbox(), this, folder);
+    }
+
+    public void updateImapFolder(ImapFolder folder) throws ServiceException {
+        DbImapFolder.updateImapFolder(folder);
+    }
+
+    public ImapFolder createImapFolder(int itemId, String localPath,
+                                       String remotePath, long uidValidity) throws ServiceException {
+        return DbImapFolder.createImapFolder(getMailbox(), this, itemId, localPath, remotePath, uidValidity);
+    }
+
+    public Mailbox getMailbox() throws ServiceException {
+        return MailboxManager.getInstance().getMailboxByAccount(getAccount());
     }
     
     private static byte[] randomSalt() {
