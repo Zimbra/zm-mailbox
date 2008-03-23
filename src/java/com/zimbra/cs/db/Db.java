@@ -129,6 +129,12 @@ public abstract class Db {
 
     abstract String forceIndexClause(String index);
 
+    /**
+     * WARN: only call to completely shutdown db.  Currently only applicable to derby
+     */
+    void shutdown() {
+    	//default is to do nothing
+    }
 
     /** Generates a SELECT expression representing a BOOLEAN.  For databases
      *  that don't support a BOOLEAN datatype, returns an appropriate CASE

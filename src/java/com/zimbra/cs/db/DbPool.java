@@ -389,4 +389,15 @@ public class DbPool {
     public static int getSize() {
         return sConnectionPool.getNumActive();
     }
+    
+    /**
+     * This is only to be used by DbOfflineMigration to completely close connection to Derby.
+     * @throws Exception
+     */
+    static synchronized void close() throws Exception {
+    	sConnectionPool.close();
+    	sConnectionPool = null;
+    	sPoolingDataSource = null;
+    	Db.getInstance().shutdown();
+    }
 }
