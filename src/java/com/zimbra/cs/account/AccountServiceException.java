@@ -121,6 +121,11 @@ public class AccountServiceException extends ServiceException {
         public static AuthFailedServiceException AUTH_FAILED(String acctName, String namePassedIn, String reason, Throwable t) {
             return new AuthFailedServiceException(acctName, namePassedIn, reason, AUTH_FAILED, SENDERS_FAULT, t);
         }  
+        
+        public static AuthFailedServiceException AUTH_FAILED( String reason, Throwable t) {
+            return new AuthFailedServiceException("N/A", "N/A", reason, AUTH_FAILED, SENDERS_FAULT, t);
+        }   
+        
  
     }
     
