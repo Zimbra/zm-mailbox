@@ -3046,4 +3046,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether LMTP server is enabled for a given server</desc>
 </attr>
 
+<attr id="631" name="zimbraFeatureNewAddrBookEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>Whether user can create address books</desc>
+</attr>
+
 </attrs>
