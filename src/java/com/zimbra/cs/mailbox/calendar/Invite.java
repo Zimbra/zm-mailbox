@@ -710,12 +710,17 @@ public class Invite {
             String charset = null;
             for (int i  = 0; i < numParts; i++) {
                 BodyPart part = mm.getBodyPart(i);
-                ContentType ct = new ContentType(part.getContentType());
-                if (ct.match(Mime.CT_TEXT_PLAIN)) {
-                    textPlain = part;
-                    charset = ct.getParameter(Mime.P_CHARSET);
-                    if (charset == null) charset = Mime.P_CHARSET_DEFAULT;
-                    break;
+                String ctStr = part.getContentType();
+                try {
+                    ContentType ct = new ContentType(ctStr);
+                    if (ct.match(Mime.CT_TEXT_PLAIN)) {
+                        textPlain = part;
+                        charset = ct.getParameter(Mime.P_CHARSET);
+                        if (charset == null) charset = Mime.P_CHARSET_DEFAULT;
+                        break;
+                    }
+                } catch (javax.mail.internet.ParseException e) {
+                    ZimbraLog.calendar.warn("Invalid Content-Type found: \"" + ctStr + "\"; skipping part", e);
                 }
             }
             if (textPlain == null) return null;
