@@ -27,6 +27,7 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -62,13 +63,17 @@ public class GetAccountInfo extends AccountDocumentHandler  {
     }
 
     static void addUrls(Element response, Account account) throws ServiceException {
-        Server server = Provisioning.getInstance().getServer(account);
+        Provisioning prov = Provisioning.getInstance();
+        
+        Server server = prov.getServer(account);
         if (server == null) return;
         String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);        
         if (hostname == null) return;
+        
+        Domain domain = prov.getDomain(account);
 
-        String http = URLUtil.getSoapURL(server, false);
-        String https = URLUtil.getSoapURL(server, true);
+        String http = URLUtil.getSoapURL(server, domain, false);
+        String https = URLUtil.getSoapURL(server, domain, true);
 
         if (http != null)
             response.addAttribute(AccountConstants.E_SOAP_URL, http, Element.Disposition.CONTENT);
