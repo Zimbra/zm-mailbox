@@ -29,6 +29,7 @@ import java.util.List;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.common.localconfig.LC;
@@ -61,6 +62,10 @@ public class URLUtil {
         return getMailURL(server, ZimbraServlet.USER_SERVICE_URI, preferSSL);  
     }
     
+    public static String getSoapURL(Server server, Domain domain, boolean preferSSL) throws ServiceException {
+        return getMailURL(server, domain, ZimbraServlet.USER_SERVICE_URI, preferSSL);  
+    }
+    
     /**
      * Returns absolute URL with scheme, host, and port for mail app on server.
      * 
@@ -70,10 +75,24 @@ public class URLUtil {
      * @return desired URL
      */
     public static String getMailURL(Server server, String path, boolean preferSSL) throws ServiceException {
-        String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
-        if (hostname == null) {
+        return getMailURL(server, null, path, preferSSL);
+    }
+    
+    /**
+     * Returns absolute URL with scheme, host, and port for mail app on server.
+     * 
+     * @param server
+     * @param path what follows port number; begins with slash
+     * @param preferSSL if both SSL and and non-SSL are available, whether to prefer SSL 
+     * @return desired URL
+     */
+    public static String getMailURL(Server server, Domain domain, String path, boolean preferSSL) throws ServiceException {
+        String hostname = domain == null ? null : domain.getAttr(Provisioning.A_zimbraPublicServiceHostname, null);
+        
+        if (hostname == null)
+            hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
+        if (hostname == null)
             throw ServiceException.INVALID_REQUEST("server " + server.getName() + " does not have " + Provisioning.A_zimbraServiceHostname, null);
-        }
         
         String modeString = server.getAttr(Provisioning.A_zimbraMailMode, null);
         if (modeString == null) {
