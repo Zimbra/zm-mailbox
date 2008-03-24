@@ -23,14 +23,12 @@
  */
 package com.zimbra.cs.mime;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
 import javax.activation.DataSource;
 
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.store.StoreManager;
 
@@ -67,8 +65,7 @@ public class BlobDataSource implements DataSource {
      * @throws IOException
      */
     public InputStream getInputStream() throws IOException {
-    	// read the blob, close the original InputStream to blob file, return a new stream that does not leak fd when unclosed.
-    	return new ByteArrayInputStream(ByteUtil.getContent(StoreManager.getInstance().getContent(mBlob), 0));
+    	return StoreManager.getInstance().getContent(mBlob);
     }
 
     /* (non-Javadoc)
