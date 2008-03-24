@@ -24,6 +24,7 @@ public class ImapFolder {
     private String mLocalPath;
     private String mRemotePath;
     private Long mUidValidity;
+    private long mUidNext = -1; // Used to optimize offline data source
     
     public ImapFolder(int mailboxId, int id, String dataSourceId, String localPath, String remotePath, Long uidValidity) {
         mMailboxId = mailboxId;
@@ -40,10 +41,12 @@ public class ImapFolder {
     public String getLocalPath() { return mLocalPath; }
     public String getRemotePath() { return mRemotePath; }
     public Long getUidValidity() { return mUidValidity; }
+    public long getUidNext() { return mUidNext; }
     
     void setLocalPath(String localPath) { mLocalPath = localPath; }
     void setUidValidity(Long uidValidity) { mUidValidity = uidValidity; }
-    
+    void setUidNext(long uidNext) { mUidNext = uidNext; }
+
     public String toString() {
         return String.format("ImapFolder: { mailboxId=%d, itemId=%d, dataSourceId=%s, localPath=%s, remotePath=%s, uidValidity=%d }",
             mMailboxId, mItemId, mDataSourceId, mLocalPath, mRemotePath, mUidValidity);

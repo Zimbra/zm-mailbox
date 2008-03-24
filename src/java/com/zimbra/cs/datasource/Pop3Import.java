@@ -56,8 +56,7 @@ import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mime.ParsedMessage;
 
 
-public class Pop3Import
-implements MailItemImport {
+public class Pop3Import implements MailItemImport {
     // (item id).(blob digest)
     private static final Pattern PAT_ZIMBRA_UIDL = Pattern.compile("(\\d+)\\.([^\\.]+)");
     
@@ -99,8 +98,7 @@ implements MailItemImport {
         UID_PROFILE.add(UIDFolder.FetchProfileItem.UID);
     }
 
-    public String test(DataSource ds)
-    throws ServiceException {
+    public String test(DataSource ds) throws ServiceException {
         String error = null;
         
         validateDataSource(ds);
@@ -116,8 +114,8 @@ implements MailItemImport {
         return error;
     }
     
-    public void importData(Account account, DataSource dataSource)
-    throws ServiceException {
+    public void importData(Account account, DataSource dataSource, boolean fullSync)
+            throws ServiceException {
         try {
             fetchMessages(account, dataSource);
         } catch (MessagingException e) {

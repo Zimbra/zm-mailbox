@@ -33,5 +33,5 @@ public interface MailItemImport {
     /**
      * Imports data from the specified data source.
      */
-    public void importData(Account account, DataSource dataSource) throws ServiceException;
+    public void importData(Account account, DataSource dataSource, boolean fullSync) throws ServiceException;
 }
