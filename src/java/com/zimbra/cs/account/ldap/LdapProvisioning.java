@@ -386,7 +386,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             ctxt = LdapUtil.getDirContext();
             mimeType = LdapUtil.escapeSearchFilterArg(mimeType);
-            NamingEnumeration ne = LdapUtil.searchDir(ctxt, mDIT.mimeBaseDN(), "(" + Provisioning.A_zimbraMimeType + "=" + mimeType + ")", sSubtreeSC);
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, mDIT.mimeBaseDN(), LdapFilter.mimeEntryByMimeType(mimeType), sSubtreeSC);
             List<MimeTypeInfo> mimeTypes = new ArrayList<MimeTypeInfo>();
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
@@ -411,8 +411,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             ctxt = LdapUtil.getDirContext();
             List<MimeTypeInfo> mimeTypes = new ArrayList<MimeTypeInfo>();
-            NamingEnumeration ne = LdapUtil.searchDir(ctxt, mDIT.mimeBaseDN(),
-                "(" + Provisioning.A_objectClass + "=" + C_zimbraMimeEntry + ")", sSubtreeSC);
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, mDIT.mimeBaseDN(), LdapFilter.allMimeEntries(), sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 mimeTypes.add(new LdapMimeType(sr.getNameInNamespace(), sr.getAttributes()));
@@ -1504,7 +1503,7 @@ public class LdapProvisioning extends Provisioning {
         LdapDomain domain = (LdapDomain) sDomainCache.getById(zimbraId);
         if (domain == null) {
             zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
-            domain = getDomainByQuery("(&(zimbraId="+zimbraId+")(objectclass=zimbraDomain))", ctxt);
+            domain = getDomainByQuery(LdapFilter.domainById(zimbraId), ctxt);
             sDomainCache.put(domain);
         }
         return domain;
@@ -1529,7 +1528,7 @@ public class LdapProvisioning extends Provisioning {
         LdapDomain domain = (LdapDomain) sDomainCache.getByName(name);
         if (domain == null) {
             name = LdapUtil.escapeSearchFilterArg(name);
-            domain = getDomainByQuery("(&(zimbraDomainName="+name+")(objectclass=zimbraDomain))", ctxt);
+            domain = getDomainByQuery(LdapFilter.domainByName(name), ctxt);
             sDomainCache.put(domain);
         }
         return domain;        
@@ -1539,7 +1538,7 @@ public class LdapProvisioning extends Provisioning {
         LdapDomain domain = (LdapDomain) sDomainCache.getByVirtualHostname(virtualHostname);
         if (domain == null) {
             virtualHostname = LdapUtil.escapeSearchFilterArg(virtualHostname);
-            domain = getDomainByQuery("(&(zimbraVirtualHostname="+virtualHostname+")(objectclass=zimbraDomain))", null);
+            domain = getDomainByQuery(LdapFilter.domainByVirtualHostame(virtualHostname), null);
             sDomainCache.put(domain);
         }
         return domain;        
@@ -1549,7 +1548,7 @@ public class LdapProvisioning extends Provisioning {
         LdapDomain domain = (LdapDomain) sDomainCache.getByKrb5Realm(krb5Realm);
         if (domain == null) {
             krb5Realm = LdapUtil.escapeSearchFilterArg(krb5Realm);
-            domain = getDomainByQuery("(&(zimbraAuthKerberos5Realm="+krb5Realm+")(objectclass=zimbraDomain))", null);
+            domain = getDomainByQuery(LdapFilter.domainByKrb5Realm(krb5Realm), null);
             sDomainCache.put(domain);
         }
         return domain;        
@@ -1565,7 +1564,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             ctxt = LdapUtil.getDirContext();
 
-            NamingEnumeration ne = LdapUtil.searchDir(ctxt, mDIT.domainBaseDN(), "(objectclass=zimbraDomain)", sSubtreeSC);
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, mDIT.domainBaseDN(), LdapFilter.allDomains(), sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 result.add(new LdapDomain(sr.getNameInNamespace(), sr.getAttributes(), getConfig().getDomainDefaults()));
@@ -1582,7 +1581,7 @@ public class LdapProvisioning extends Provisioning {
 
     private static boolean domainDnExists(DirContext ctxt, String dn) throws NamingException {
         try {
-            NamingEnumeration ne = LdapUtil.searchDir(ctxt, dn,"objectclass=dcObject", sObjectSC);
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, dn, LdapFilter.domainLabel(), sObjectSC);
             boolean result = ne.hasMore();
             ne.close();
             return result;
@@ -1736,7 +1735,7 @@ public class LdapProvisioning extends Provisioning {
         LdapCos cos = sCosCache.getById(zimbraId);
         if (cos == null) {
             zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
-            cos = getCOSByQuery("(&(zimbraId="+zimbraId+")(objectclass=zimbraCOS))", ctxt);
+            cos = getCOSByQuery(LdapFilter.cosById(zimbraId), ctxt);
             sCosCache.put(cos);
         }
         return cos;
@@ -1802,7 +1801,7 @@ public class LdapProvisioning extends Provisioning {
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
-            NamingEnumeration ne = LdapUtil.searchDir(ctxt, mDIT.cosBaseDN(), "(objectclass=zimbraCOS)", sSubtreeSC);
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, mDIT.cosBaseDN(), LdapFilter.allCoses(), sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 result.add(new LdapCos(sr.getNameInNamespace(), sr.getAttributes()));
@@ -2138,7 +2137,7 @@ public class LdapProvisioning extends Provisioning {
             s = sServerCache.getById(zimbraId);
         if (s == null) {
             zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
-            s = (Server)getServerByQuery("(&(zimbraId="+zimbraId+")(objectclass=zimbraServer))", ctxt); 
+            s = (Server)getServerByQuery(LdapFilter.serverById(zimbraId), ctxt); 
             sServerCache.put(s);
         }
         return s;
@@ -2219,11 +2218,11 @@ public class LdapProvisioning extends Provisioning {
         DirContext ctxt = null;
         try {
             ctxt = LdapUtil.getDirContext();
-            String filter = "(objectclass=zimbraServer)";
+            String filter;
             if (service != null) {
-                filter = "(&(objectclass=zimbraServer)(zimbraServiceEnabled=" + LdapUtil.escapeSearchFilterArg(service) + "))";
+                filter = LdapFilter.serverByService(LdapUtil.escapeSearchFilterArg(service));
             } else {
-                filter = "(objectclass=zimbraServer)";
+                filter = LdapFilter.allServers();
             }
             NamingEnumeration ne = LdapUtil.searchDir(ctxt, mDIT.serverBaseDN(), filter, sSubtreeSC);
             while (ne.hasMore()) {
@@ -2249,7 +2248,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             if (ctxt == null)
                 ctxt = LdapUtil.getDirContext();
-            NamingEnumeration ne = LdapUtil.searchDir(ctxt, mDIT.cosBaseDN(), "(&(objectclass=zimbraCOS)" + query + ")", sSubtreeSC);
+            NamingEnumeration ne = LdapUtil.searchDir(ctxt, mDIT.cosBaseDN(), query, sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 result.add(new LdapCos(sr.getNameInNamespace(), sr.getAttributes()));
@@ -2271,7 +2270,7 @@ public class LdapProvisioning extends Provisioning {
     private void removeServerFromAllCOSes(String server, DirContext initCtxt) {
         List<Cos> coses = null;
         try {
-            coses = searchCOS("(" + Provisioning.A_zimbraMailHostPool + "=" + server +")", initCtxt);
+            coses = searchCOS(LdapFilter.cosesByMailHostPool(server), initCtxt);
             for (Cos cos: coses) {
                 Map<String, String> attrs = new HashMap<String, String>();
                 attrs.put("-"+Provisioning.A_zimbraMailHostPool, server);
@@ -3171,7 +3170,7 @@ public class LdapProvisioning extends Provisioning {
     	DirContext ctxt = null;
     	try {
     		ctxt = LdapUtil.getDirContext();
-    		NamingEnumeration ne = LdapUtil.searchDir(ctxt, mDIT.configBranchBaseDN(), "(objectclass=zimbraZimletEntry)", sSubtreeSC);
+    		NamingEnumeration ne = LdapUtil.searchDir(ctxt, mDIT.configBranchBaseDN(), LdapFilter.allZimlets(), sSubtreeSC);
     		while (ne.hasMore()) {
     			SearchResult sr = (SearchResult) ne.next();
              result.add(new LdapZimlet(sr.getNameInNamespace(), sr.getAttributes()));
@@ -3531,18 +3530,6 @@ public class LdapProvisioning extends Provisioning {
         }
         Collections.sort(result);
         return result;
-    }
-    
-    public static void main(String args[]) {
-        System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", null));
-        System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", ""));
-        System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "WTF"));
-        System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "%n"));
-        System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "%u"));        
-        System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "%d"));
-        System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "%D"));                
-        System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "uid=%u,ou=people,%D"));
-        System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "n(%n)u(%u)d(%d)D(%D)(%%)"));
     }
 
     static final String DATA_DL_SET = "DL_SET";
@@ -4016,7 +4003,7 @@ public class LdapProvisioning extends Provisioning {
 
     private Identity getIdentityByName(LdapEntry entry, String name,  DirContext ctxt) throws ServiceException {
         name = LdapUtil.escapeSearchFilterArg(name);
-        List<Identity> result = getIdentitiesByQuery(entry, "(&(objectclass=zimbraIdentity)(zimbraPrefIdentityName="+name+"))", ctxt); 
+        List<Identity> result = getIdentitiesByQuery(entry, LdapFilter.identityByName(name), ctxt); 
         return result.isEmpty() ? null : result.get(0);
     }
 
@@ -4182,7 +4169,7 @@ public class LdapProvisioning extends Provisioning {
             return result;
         }
         
-        result = getIdentitiesByQuery(ldapEntry, "(objectclass=zimbraIdentity)", null);
+        result = getIdentitiesByQuery(ldapEntry, LdapFilter.allIdentities(), null);
         for (Identity identity: result) {
             // gross hack for 4.5beta. should be able to remove post 4.5
             if (identity.getId() == null) {
@@ -4254,7 +4241,7 @@ public class LdapProvisioning extends Provisioning {
 
     private Signature getSignatureById(Account acct, LdapEntry entry, String id,  DirContext ctxt) throws ServiceException {
         id = LdapUtil.escapeSearchFilterArg(id);
-        List<Signature> result = getSignaturesByQuery(acct, entry, "(&(objectclass=zimbraSignature)(" + Provisioning.A_zimbraSignatureId + "=" + id +"))", ctxt, null); 
+        List<Signature> result = getSignaturesByQuery(acct, entry, LdapFilter.signatureById(id), ctxt, null); 
         return result.isEmpty() ? null : result.get(0);
     }
 
@@ -4475,7 +4462,7 @@ public class LdapProvisioning extends Provisioning {
         if (acctSig != null)
             result.add(acctSig);
         
-        result = getSignaturesByQuery(account, ldapEntry, "(objectclass=zimbraSignature)", null, result);
+        result = getSignaturesByQuery(account, ldapEntry, LdapFilter.allSignatures(), null, result);
         
         result = Collections.unmodifiableList(result);
         account.setCachedData(SIGNATURE_LIST_CACHE_KEY, result);
@@ -4534,13 +4521,13 @@ public class LdapProvisioning extends Provisioning {
 
     private DataSource getDataSourceById(LdapEntry entry, String id,  DirContext ctxt) throws ServiceException {
         id= LdapUtil.escapeSearchFilterArg(id);
-        List<DataSource> result = getDataSourcesByQuery(entry, "(&(objectclass=zimbraDataSource)(zimbraDataSourceId="+id+"))", ctxt); 
+        List<DataSource> result = getDataSourcesByQuery(entry, LdapFilter.dataSourceById(id), ctxt); 
         return result.isEmpty() ? null : result.get(0);
     }
 
     private DataSource getDataSourceByName(LdapEntry entry, String name,  DirContext ctxt) throws ServiceException {
         name = LdapUtil.escapeSearchFilterArg(name);
-        List<DataSource> result = getDataSourcesByQuery(entry, "(&(objectclass=zimbraDataSource)(zimbraDataSourceName="+name+"))", ctxt); 
+        List<DataSource> result = getDataSourcesByQuery(entry, LdapFilter.dataSourceByName(name), ctxt); 
         return result.isEmpty() ? null : result.get(0);
     }    
 
@@ -4749,7 +4736,7 @@ public class LdapProvisioning extends Provisioning {
         LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));
         if (ldapEntry == null) 
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
-        result = getDataSourcesByQuery(ldapEntry, "(objectclass=zimbraDataSource)", null);
+        result = getDataSourcesByQuery(ldapEntry, LdapFilter.allDataSources(), null);
         result = Collections.unmodifiableList(result);
         account.setCachedData(DATA_SOURCE_LIST_CACHE_KEY, result);        
         return result;
@@ -4833,13 +4820,7 @@ public class LdapProvisioning extends Provisioning {
     }
     
     public long countAccounts(String domain) throws ServiceException {
-        StringBuilder buf = new StringBuilder();
-        buf.append("(&");
-        buf.append("(!(zimbraIsSystemResource=TRUE))");
-        buf.append("(objectclass=zimbraAccount)(!(objectclass=zimbraCalendarResource))");
-        buf.append(")");
-
-        String query = buf.toString();
+        String query = LdapFilter.allNonSystemAccounts();
         int numAccounts = 0;
         
         DirContext ctxt = null;
@@ -5017,7 +4998,210 @@ public class LdapProvisioning extends Provisioning {
             sAccountCache.remove((Account)entry);
         else
             throw new UnsupportedOperationException(); 
-            
+    }
+    
+    
+    public static void testAuthDN(String args[]) {
+        System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", null));
+        System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", ""));
+        System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "WTF"));
+        System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "%n"));
+        System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "%u"));        
+        System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "%d"));
+        System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "%D"));                
+        System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "uid=%u,ou=people,%D"));
+        System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "n(%n)u(%u)d(%d)D(%D)(%%)"));
+    }
+    
+    private static void printFilter(String doc, String usage, String base, String filter) {
+        System.out.println();
+        System.out.println(doc);
+        System.out.println("usage:  " + usage);
+        System.out.println("base:   " + base);
+        System.out.println("filter: " + filter);
+    }
+    
+    private void printFilters() throws ServiceException {
+        // account
+        printFilter("all non system accounts", 
+                    "create account(count account for license)",
+                    mDIT.domainToAccountSearchDN("example.com"),
+                    LdapFilter.allNonSystemAccounts());
+        
+        printFilter("account by foreign principal", 
+                    "general",
+                    mDIT.mailBranchBaseDN(),
+                    LdapFilter.accountByForeignPrincipal("{foreign principal}"));
+        
+        printFilter("account by id",
+                    "general",
+                    mDIT.mailBranchBaseDN(),
+                    LdapFilter.accountById("{account id}"));
+        
+        printFilter("account by email",
+                    "general",
+                    mDIT.mailBranchBaseDN(),
+                    LdapFilter.accountByName("{account email}"));
+        
+        printFilter("admin account by RDN",
+                    "admin account access",
+                    mDIT.mailBranchBaseDN(),
+                    LdapFilter.adminAccountByName(mDIT.accountNamingRdnAttr(), "{admin name}"));
+        
+        // calendar resource
+        printFilter("calendar resource by foreign principal",
+                    "general",
+                    mDIT.mailBranchBaseDN(),
+                    LdapFilter.calendarResourceByForeignPrincipal("{foreign principal}"));
+        
+        printFilter("calendar resource by id",
+                    "general",
+                    mDIT.mailBranchBaseDN(),
+                    LdapFilter.calendarResourceById("{calendar resource id}"));
+        
+        printFilter("calendar resource by name",
+                    "general",
+                    mDIT.mailBranchBaseDN(),
+                    LdapFilter.calendarResourceByName("{calendar resource name}"));
+        
+        // cos
+        printFilter("all coses",
+                    "admin console, zmprov",
+                    mDIT.cosBaseDN(),
+                    LdapFilter.allCoses());
+        
+        printFilter("cos by id",
+                    "general",
+                    mDIT.cosBaseDN(),
+                    LdapFilter.cosById("{cos id}"));
+        
+        printFilter("coses have certain server in its server pool",
+                    "delete server (to remove the server from all coses)",
+                    mDIT.cosBaseDN(),
+                    LdapFilter.cosesByMailHostPool("{server name}"));
+        
+        // data source
+        printFilter("all data sources",
+                    "general",
+                    "account DN",
+                    LdapFilter.allDataSources());
+        
+        printFilter("data source by id",
+                    "general",
+                    "account DN",
+                    LdapFilter.dataSourceById("{data source id}"));
+        
+        printFilter("data source by name",
+                    "general",
+                    "account DN",
+                    LdapFilter.dataSourceByName("{data source name}"));
+        
+        // distributuion list
+        printFilter("distributuion list by id",
+                    "general",
+                    mDIT.mailBranchBaseDN(),
+                    LdapFilter.distributionListById("{dist list id}"));
+        
+        printFilter("distributuion list by name",
+                    "general",
+                    mDIT.mailBranchBaseDN(),
+                    LdapFilter.distributionListByName("{dist list name}"));
+        
+        // domain
+        printFilter("all domains",
+                    "admin console, zmprov",
+                    mDIT.domainBaseDN(),
+                    LdapFilter.allDomains());
+        
+        printFilter("domain by id",
+                    "general",
+                    mDIT.domainBaseDN(),
+                    LdapFilter.domainById("{domain id}"));
+        
+        printFilter("domain by krb5 realm",
+                    "general",
+                    mDIT.domainBaseDN(),
+                    LdapFilter.domainByKrb5Realm("{krb5 realm}"));
+        
+        printFilter("domain by name",
+                    "general",
+                    mDIT.domainBaseDN(),
+                    LdapFilter.domainByName("{domain name}"));
+        
+        printFilter("domain by virtual hostname",
+                    "general",
+                    mDIT.domainBaseDN(),
+                    LdapFilter.domainByVirtualHostame("{virtual hostname}"));
+        
+        printFilter("test if a domain label(dot separated segments) exists",
+                    "create domain",
+                    "{parent domain DN}",
+                    LdapFilter.domainLabel());
+        
+        // identity
+        printFilter("all identities",
+                    "general",
+                    "account DN",
+                    LdapFilter.allIdentities());
+        
+        printFilter("identity by name",
+                    "general",
+                    "account DN",
+                    LdapFilter.identityByName("{identity name}"));
+        
+        
+        // mime 
+        printFilter("all mime entries",
+                    "general",
+                    mDIT.mimeBaseDN(),
+                    LdapFilter.allMimeEntries());
+        
+        printFilter("mime entry by mime type",
+                    "general",
+                    mDIT.mimeBaseDN(),
+                    LdapFilter.mimeEntryByMimeType("{mime type}"));
+        
+        // signature
+        printFilter("all signatures",
+                    "general",
+                    "account DN",
+                    LdapFilter.allSignatures());
+        
+        printFilter("signature by id",
+                    "general",
+                    "account DN",
+                    LdapFilter.signatureById("{signature id}"));
+        
+        // server
+        printFilter("all servers", 
+                    "admin console, zmprov",
+                    mDIT.serverBaseDN(), 
+                    LdapFilter.allServers());
+        
+        printFilter("server by id",
+                    "general",
+                    mDIT.serverBaseDN(),
+                    LdapFilter.serverById("{server id}"));
+        
+        printFilter("server by service",
+                    "general",
+                    mDIT.serverBaseDN(),
+                    LdapFilter.serverByService("{service}"));
+        
+        // zimlet
+        printFilter("all zimlets",
+                    "general",
+                    mDIT.configBranchBaseDN(),
+                    LdapFilter.allZimlets());
+        
+    }
+    
+    /**
+     * @param args
+     */
+    public static void main(String[] args) throws Exception {
+        LdapProvisioning prov = (LdapProvisioning)Provisioning.getInstance();
+        prov.printFilters();
     }
 
 }
