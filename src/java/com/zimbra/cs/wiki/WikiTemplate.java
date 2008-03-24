@@ -551,8 +551,9 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 	    	list.addAll(folder.getSubfolders(ctxt.wctxt.octxt));
 	    	
 	    	Mailbox mbox = ctxt.item.getMailbox();
-	    	if (ctxt.wctxt.view == null)
-	    		list.addAll(mbox.getItemList(ctxt.wctxt.octxt, MailItem.TYPE_WIKI, folder.getId(), (byte)(DbSearch.SORT_BY_NAME_NATURAL_ORDER | DbSearch.SORT_ASCENDING)));
+            byte type = folder.getDefaultView();
+            if (ctxt.wctxt.view == null)
+	    		list.addAll(mbox.getItemList(ctxt.wctxt.octxt, type, folder.getId(), (byte)(DbSearch.SORT_BY_NAME_NATURAL_ORDER | DbSearch.SORT_ASCENDING)));
 	    	else
 	    		list.addAll(mbox.getItemList(ctxt.wctxt.octxt, MailItem.getTypeForName(ctxt.wctxt.view), folder.getId(), (byte)(DbSearch.SORT_BY_NAME_NATURAL_ORDER | DbSearch.SORT_ASCENDING)));
 
@@ -727,9 +728,14 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 			return null;
 		}
 		public String apply(Context ctxt) {
-			if (ctxt.item instanceof Document)
-				return "<div class='ImgPage'></div>";
-			if (ctxt.item.getFolderId() == Mailbox.ID_FOLDER_USER_ROOT)
+			if (ctxt.item instanceof Document) {
+                if (ctxt.item instanceof WikiItem) {
+                    return "<div class='ImgPage'></div>";
+                }else {
+		            return "<div class='ImgAttachment'></div>";
+                }
+            }
+            if (ctxt.item.getFolderId() == Mailbox.ID_FOLDER_USER_ROOT)
 				return "<div class='ImgNotebook'></div>";
 			return "<div class='ImgSection'></div>";
 		}

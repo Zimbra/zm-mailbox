@@ -980,7 +980,8 @@ public class UserServlet extends ZimbraServlet {
                 return context.target instanceof Folder? "csv" : "vcf";
             case MailItem.TYPE_WIKI:
                 return "wiki";
-            //case MailItem.TYPE_DOCUMENT:   // use native formatter for Document
+            case MailItem.TYPE_DOCUMENT:   // use native formatter for Document
+                return context.target instanceof Folder? "wiki" : "native";
             default:
                 return "native";
         }
