@@ -358,10 +358,6 @@ public class ParsedContact {
         }
     }
 
-    private static final Set<String> sSearchFields = new HashSet<String>(Arrays.asList(new String[] {
-            Contact.A_company, Contact.A_firstName, Contact.A_lastName, Contact.A_nickname
-    }));
-
     private static void appendContactField(StringBuilder sb, ParsedContact contact, String fieldName) {
         String s = contact.getFields().get(fieldName);
         if (s!= null) {
@@ -379,13 +375,13 @@ public class ParsedContact {
         for (Map.Entry<String, String> entry : m.entrySet()) {
             contentText.append(entry.getValue()).append(' ');
 
-            if (entry.getKey().startsWith("email"))
+            if (Contact.getEmailFields().contains(entry.getKey()))
                 emailText.append(' ').append(entry.getValue());
             
             String fieldTextToAdd = entry.getKey() + ":" + entry.getValue() + "\n";
             fieldText.append(fieldTextToAdd);
         }
-
+        
         StringBuilder searchText = new StringBuilder();
         appendContactField(searchText, this, Contact.A_company);
         appendContactField(searchText, this, Contact.A_firstName);
@@ -394,8 +390,9 @@ public class ParsedContact {
 
         String emailStr = emailText.toString();
         
-        contentText.append(ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_TO, emailStr));
-        searchText.append(ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_TO, emailStr));
+        String emailStrConcat = ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_TO, emailStr); 
+        contentText.append(emailStrConcat);
+        searchText.append(emailStrConcat);
         
         /* put the email addresses in the "To" field so they can be more easily searched */
         doc.add(new Field(LuceneFields.L_H_TO, emailStr,  Field.Store.NO, Field.Index.TOKENIZED));

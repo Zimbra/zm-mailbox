@@ -36,9 +36,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.activation.DataSource;
 import javax.mail.MessagingException;
@@ -539,7 +541,19 @@ public class Contact extends MailItem {
     }
 
     /** The list of all "email" fields in the contact's map. */
-    private static final String[] EMAIL_FIELDS = new String[] { A_email, A_email2, A_email3 };
+    private static final String[] EMAIL_FIELDS = new String[] { A_email, A_email2, A_email3, A_workEmail1, A_workEmail2, A_workEmail3 };
+    
+    private static final Set<String> sEmailFields;
+    
+    static {
+        Set<String> set = new HashSet<String>();    
+        for (String s : EMAIL_FIELDS) {
+            set.add(s);
+        }
+        sEmailFields = Collections.unmodifiableSet(set);
+    }
+    
+    public static final Set<String> getEmailFields() { return sEmailFields; } 
 
     /** Returns a list of all email address fields for this contact.  This is used
      *  by {@link com.zimbra.cs.index.Indexer#indexContact} to populate the
