@@ -56,7 +56,6 @@ import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
-import com.zimbra.cs.db.DbImapFolder;
 import com.zimbra.cs.db.DbImapMessage;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.mailbox.Flag;
@@ -169,8 +168,8 @@ public class ImapImport implements MailItemImport {
             store = getStore(ds.getConnectionType());
             store.connect(ds.getHost(), ds.getPort(), ds.getUsername(), ds.getDecryptedPassword());
             Folder remoteRootFolder = store.getDefaultFolder();
-            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-            ImapFolderCollection imapFolders = DbImapFolder.getImapFolders(mbox, ds);
+            Mailbox mbox = ds.getMailbox();
+            ImapFolderCollection imapFolders = ds.getImapFolders();
 
             com.zimbra.cs.mailbox.Folder localRootFolder =
                 mbox.getFolderById(null, ds.getFolderId());
@@ -215,14 +214,14 @@ public class ImapImport implements MailItemImport {
                             remoteFolder.delete(true);
                         }
                         imapFolders.remove(folderTracker);
-                        DbImapFolder.deleteImapFolder(mbox, ds, folderTracker);
+                        ds.deleteImapFolder(folderTracker);
                     }
                     
                     if (folderTracker.getUidValidity() == null) {
                         // Migrate old data created before we added the uid_validity column
                         ZimbraLog.datasource.info("Initializing UIDVALIDITY of %s to %d", remoteFolder.getFullName(), remoteUvv);
                         folderTracker.setUidValidity(remoteUvv);
-                        DbImapFolder.updateImapFolder(folderTracker);
+                        ds.updateImapFolder(folderTracker);
                     }
 
                     if (localFolder != null) {
@@ -236,13 +235,13 @@ public class ImapImport implements MailItemImport {
                                     folderTracker.getLocalPath(), localFolder.getPath());
                                 renameJavaMailFolder(remoteFolder, jmPath);
                                 folderTracker.setLocalPath(localFolder.getPath());
-                                DbImapFolder.updateImapFolder(folderTracker);
+                                ds.updateImapFolder(folderTracker);
                             } else {
                                 // Folder was moved outside the data source root, or folder setting is changed to "not to sync"
                                 // Treat as a delete.
                                 ZimbraLog.datasource.info("Local folder %s was renamed to %s and moved outside the data source root.",
                                     folderTracker.getLocalPath(), localFolder.getPath());
-                                DbImapFolder.deleteImapFolder(mbox, ds, folderTracker);
+                                ds.deleteImapFolder(folderTracker);
                                 imapFolders.remove(folderTracker);
                                 folderTracker = null;
                                 localFolder = null;
@@ -269,7 +268,7 @@ public class ImapImport implements MailItemImport {
                             // Empty local folder so that it will be resynced later and store the new UIDVALIDITY value.
                             mbox.emptyFolder(null, localFolder.getId(), false);
                             folderTracker.setUidValidity(remoteUvv);
-                            DbImapFolder.updateImapFolder(folderTracker);
+                            ds.updateImapFolder(folderTracker);
                             DbImapMessage.deleteImapMessages(mbox, folderTracker.getItemId());
                         }
                     }
@@ -292,7 +291,7 @@ public class ImapImport implements MailItemImport {
 	                            MailItem.TYPE_UNKNOWN);
 	                    }
 	                    ds.initializedLocalFolder(zimbraPath); //offline can disable sync this way
-	                    folderTracker = DbImapFolder.createImapFolder(mbox, ds, localFolder.getId(),
+	                    folderTracker = ds.createImapFolder(localFolder.getId(),
 	                        localFolder.getPath(), remoteFolder.getFullName(), remoteUvv);
 	                    imapFolders.add(folderTracker);
                     }
@@ -316,7 +315,7 @@ public class ImapImport implements MailItemImport {
                     ImapFolder imapFolder = imapFolders.getByItemId(zimbraFolder.getId());
                     if (imapFolder != null) {
 	                    imapFolders.remove(imapFolder);
-	                    DbImapFolder.deleteImapFolder(mbox, ds, imapFolder);
+	                    ds.deleteImapFolder(imapFolder);
                     }
                     continue;
                 }
@@ -333,7 +332,7 @@ public class ImapImport implements MailItemImport {
 	                        ZimbraLog.datasource.info("Remote folder %s was deleted.  Deleting local folder %s.",
 	                            imapFolder.getRemotePath(), zimbraFolder.getPath());
 	                        mbox.delete(null, zimbraFolder.getId(), zimbraFolder.getType());
-	                        DbImapFolder.deleteImapFolder(mbox, ds, imapFolder);
+	                        ds.deleteImapFolder(imapFolder);
 	                        imapFolders.remove(imapFolder);
 	                    }
                 	}
@@ -342,7 +341,7 @@ public class ImapImport implements MailItemImport {
                     if (jmPath != null) { //null means don't sync up
                     	ZimbraLog.datasource.info("Found new local folder %s.  Creating remote folder %s.", zimbraFolder.getPath(), jmPath);
 	                    IMAPFolder jmFolder = createJavaMailFolder(store, jmPath);
-	                    imapFolder = DbImapFolder.createImapFolder(mbox, ds, zimbraFolder.getId(),
+	                    imapFolder = ds.createImapFolder(zimbraFolder.getId(),
 	                        zimbraFolder.getPath(), jmFolder.getFullName(), jmFolder.getUIDValidity());
 	                    imapFolders.add(imapFolder);
                     }
