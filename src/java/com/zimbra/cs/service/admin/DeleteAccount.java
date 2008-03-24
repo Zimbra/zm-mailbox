@@ -79,7 +79,7 @@ public class DeleteAccount extends AdminDocumentHandler {
         options.setQuery(String.format("(%s=%s)",Provisioning.A_zimbraNotebookAccount,account.getName()));
         List domains = prov.searchDirectory(options);
         if(!domains.isEmpty() && domains.get(0) != null) {
-        	throw  ServiceException.INVALID_REQUEST(String.format("Can not delete account %s because it is a domain-level wiki account for domain %s.",account.getName(),((NamedEntry)domains.get(0)).getName()) ,null);
+        	throw  ServiceException.INVALID_REQUEST(String.format("Can not delete account %s because it is a domain-level wiki account for domain %s. If you intend to delete the domain, you need to remove the value in zimbraNotebookAccount attribute of the domain before deleting accounts in this account.",account.getName(),((NamedEntry)domains.get(0)).getName()) ,null);
         }
         
         IMPersona.deleteIMPersona(account.getName());
