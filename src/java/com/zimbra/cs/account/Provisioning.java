@@ -827,6 +827,8 @@ public abstract class Provisioning {
 
     public static final String A_zimbraFeatureWebSearchEnabled = "zimbraFeatureWebSearchEnabled";
 
+	public static final String A_zimbraFeatureNewAddrBookEnabled = "zimbraFeatureNewAddrBookEnabled";
+
     
 
     /**

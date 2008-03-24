@@ -118,5 +118,7 @@ public class ZFeatures {
     // defaults to TRUE
     public boolean getWebSearchEnabled() { return get(Provisioning.A_zimbraFeatureWebSearchEnabled) == null ||
     											  getBool(Provisioning.A_zimbraFeatureWebSearchEnabled); }
+
+	public boolean getNewAddrBookEnabled() { return getBool(Provisioning.A_zimbraFeatureNewAddrBookEnabled); }
 }
 
