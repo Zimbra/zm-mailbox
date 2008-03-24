@@ -23,6 +23,7 @@ import java.nio.charset.UnsupportedCharsetException;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Cos;
@@ -44,6 +45,14 @@ public class MailCharset extends AttributeCallback {
             return;
         
         String charset = (String)value;
+        
+        if (StringUtil.isNullOrEmpty(charset)) {
+            if (entry instanceof Account)
+                return;
+            else
+                throw ServiceException.INVALID_REQUEST("cannot set " + Provisioning.A_zimbraPrefMailDefaultCharset + " on cos to empty", null);
+        }
+        
         try {
             Charset.forName(charset);
         } catch (IllegalCharsetNameException e) {
