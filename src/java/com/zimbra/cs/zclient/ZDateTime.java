@@ -89,6 +89,8 @@ public class ZDateTime {
         if (mTimeZoneId != null && mTimeZoneId.length() > 0) {
             tz = TimeZone.getTimeZone(TZIDMapper.toJava(mTimeZoneId));
             df.setTimeZone(tz);
+        } else if (mDateTime.indexOf('Z') != -1) {
+            df.setTimeZone(TimeZone.getTimeZone("GMT"));
         }
 
         Date date = null;
@@ -110,6 +112,8 @@ public class ZDateTime {
         if (mTimeZoneId != null && mTimeZoneId.length() > 0) {
             tz = TimeZone.getTimeZone(TZIDMapper.toJava(mTimeZoneId));
             df.setTimeZone(tz);
+        } else if (mDateTime.indexOf('Z') != -1) {
+            df.setTimeZone(TimeZone.getTimeZone("GMT"));
         }
 
         Date date = null;
