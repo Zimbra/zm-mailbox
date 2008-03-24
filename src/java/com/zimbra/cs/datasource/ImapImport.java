@@ -79,7 +79,6 @@ public class ImapImport implements MailItemImport {
     private static Session sSelfSignedCertSession;
     private static FetchProfile FETCH_PROFILE;
 
-    private static final boolean FAST_FETCH = LC.data_source_fast_fetch.booleanValue();
     private static final int FETCH_SIZE = LC.data_source_fetch_size.intValue();
     private static final int MAX_LITERAL_MEM_SIZE = LC.data_source_max_literal_mem_size.intValue();
     
@@ -125,8 +124,6 @@ public class ImapImport implements MailItemImport {
         FETCH_PROFILE = new FetchProfile();
         FETCH_PROFILE.add(UIDFolder.FetchProfileItem.UID);
         FETCH_PROFILE.add(UIDFolder.FetchProfileItem.FLAGS);
-        if (!FAST_FETCH)
-        	FETCH_PROFILE.add(UIDFolder.FetchProfileItem.ENVELOPE);
     }
 
     public ImapImport() {
@@ -608,67 +605,49 @@ public class ImapImport implements MailItemImport {
                     numDeletedRemotely++;
                     DbImapMessage.deleteImapMessage(mbox, trackedFolder.getItemId(), trackedMsg.getUid());
                 }
-            } else if (!FAST_FETCH) {
-                ZimbraLog.datasource.debug("Found new remote message %d.  Creating local copy.", uid);
-                ParsedMessage pm = null;
-                if (remoteMsg.getSentDate() != null) {
-                    // Set received date to the original message's date
-                    pm = new ParsedMessage(remoteMsg, remoteMsg.getSentDate().getTime(),
-                        mbox.attachmentsIndexingEnabled());
-                } else {
-                    pm = new ParsedMessage(remoteMsg, mbox.attachmentsIndexingEnabled());
-                }
-                int flags = getZimbraFlags(remoteMsg.getFlags());
-                int msgId = addMessage(mbox, ds, pm, localFolder.getId(), flags);
-                numAddedLocally++;
-                DbImapMessage.storeImapMessage(mbox, trackedFolder.getItemId(), uid, msgId, flags);
             }
         }
 
-        if (FAST_FETCH) {
-            long lastUid = trackedMsgs.getMaxUid();
-                int startIndex = 0;
-                int endIndex = msgArray.length - 1;
-                while (startIndex <= endIndex) {
-                long startUid = remoteFolder.getUID(msgArray[startIndex]);
-                if (startUid <= lastUid) {
-                        ++startIndex;
-                        continue;
+        // Fetch new IMAP messages from remote folder
+        long lastUid = trackedMsgs.getMaxUid();
+        int startIndex = 0;
+        int endIndex = msgArray.length - 1;
+        while (startIndex <= endIndex) {
+            long startUid = remoteFolder.getUID(msgArray[startIndex]);
+            if (startUid <= lastUid) {
+                ++startIndex;
+                continue;
+            }
+
+            int stopIndex = startIndex + FETCH_SIZE - 1;
+            stopIndex = stopIndex < endIndex ? stopIndex : endIndex;
+            long stopUid = remoteFolder.getUID(msgArray[stopIndex]);
+
+            final AtomicInteger fetchCount = new AtomicInteger();
+
+            // Check for new messages using batch FETCH
+            mUidFetch.fetch(remoteFolder, startUid + ":" + stopUid, new UidFetch.Handler() {
+                public void handleResponse(MessageData md) throws Exception {
+                    long uid = md.getUid();
+                    ZimbraLog.datasource.debug("Found new remote message %d.  Creating local copy.", uid);
+                    if (trackedMsgs.getByUid(uid) != null) {
+                        ZimbraLog.datasource.warn("Skipped message with uid = %d because it already exists locally", uid);
+                        return;
+                    }
+                    IMAPMessage msg = remoteMsgs.get(uid);
+                    if (msg == null) return;
+                    Date receivedDate = md.getInternalDate();
+                    Long time = receivedDate != null ? (Long) receivedDate.getTime() : null;
+                    ParsedMessage pm = getParsedMessage(
+                        md.getBodySections()[0].getData(), time, mbox.attachmentsIndexingEnabled());
+                    int flags = getZimbraFlags(msg.getFlags());
+                    int msgId = addMessage(mbox, dataSource, pm, localFolder.getId(), flags);
+                    fetchCount.incrementAndGet();
+                    DbImapMessage.storeImapMessage(mbox, trackedFolder.getItemId(), uid, msgId, flags);
                 }
-
-                int stopIndex = startIndex + FETCH_SIZE - 1;
-                stopIndex = stopIndex < endIndex ? stopIndex : endIndex;
-                long stopUid = remoteFolder.getUID(msgArray[stopIndex]);
-
-                    final AtomicInteger fetchCount = new AtomicInteger();
-
-                    // Check for new messages using batch FETCH
-                    mUidFetch.fetch(remoteFolder, startUid + ":" + stopUid, new UidFetch.Handler() {
-                        public void handleResponse(MessageData md) throws Exception {
-                            long uid = md.getUid();
-                            ZimbraLog.datasource.debug("Found new remote message %d.  Creating local copy.", uid);
-                            if (trackedMsgs.getByUid(uid) != null) {
-                                ZimbraLog.datasource.warn("Skipped message with uid = %d because it already exists locally", uid);
-                                return;
-                            }
-                            IMAPMessage msg = remoteMsgs.get(uid);
-                            if (msg == null) return;
-                            Date receivedDate = md.getInternalDate();
-                            Long time = receivedDate != null ? (Long) receivedDate.getTime() : null;
-                            ParsedMessage pm = getParsedMessage(
-                                md.getBodySections()[0].getData(), time, mbox.attachmentsIndexingEnabled());
-                            int flags = getZimbraFlags(msg.getFlags());
-                            int msgId = addMessage(mbox, dataSource, pm, localFolder.getId(), flags);
-                            fetchCount.incrementAndGet();
-                            DbImapMessage.storeImapMessage(mbox, trackedFolder.getItemId(), uid, msgId, flags);
-                        }
-                    });
-                    numAddedLocally = fetchCount.intValue();
-
-                    startIndex = stopIndex + 1;
-                }
-
- 
+            });
+            numAddedLocally = fetchCount.intValue();
+            startIndex = stopIndex + 1;
         }
 
         // Remaining local ID's are messages that were not found on the remote server
