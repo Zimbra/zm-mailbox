@@ -46,6 +46,7 @@ import javax.mail.internet.MimeMessage;
 import com.sun.mail.imap.AppendUID;
 import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.IMAPMessage;
+import com.sun.mail.imap.IMAPStore;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
@@ -81,6 +82,8 @@ public class ImapImport implements MailItemImport {
 
     private static final int FETCH_SIZE = LC.data_source_fetch_size.intValue();
     private static final int MAX_LITERAL_MEM_SIZE = LC.data_source_max_literal_mem_size.intValue();
+
+    private static final boolean JAVAMAIL_DEBUG = Boolean.getBoolean("ZimbraJavamailDebug");
     
     static {
     	String idExt = "(\"vendor\" \"Zimbra\" \"os\" \"" + System.getProperty("os.name") +
@@ -95,7 +98,7 @@ public class ImapImport implements MailItemImport {
         props.setProperty("mail.imaps.timeout", Long.toString(timeout));    	
         props.setProperty("mail.imaps.socketFactory.class", CustomSSLSocketFactory.class.getName());
         props.setProperty("mail.imaps.socketFactory.fallback", "false");
-        if (LC.javamail_imap_debug.booleanValue()) {
+        if (JAVAMAIL_DEBUG || LC.javamail_imap_debug.booleanValue()) {
             props.setProperty("mail.debug", "true");
         }
         if (idExt != null) {
@@ -120,7 +123,7 @@ public class ImapImport implements MailItemImport {
         }
         sSelfSignedCertSession = Session.getInstance(sscProps);
         
-        if (LC.javamail_imap_debug.booleanValue()) {
+        if (JAVAMAIL_DEBUG || LC.javamail_imap_debug.booleanValue()) {
             sSession.setDebug(true);
             sSelfSignedCertSession.setDebug(true);
         }
@@ -164,9 +167,9 @@ public class ImapImport implements MailItemImport {
     
     public void importData(Account account, DataSource ds, boolean fullSync) throws ServiceException {
         validateDataSource(ds);
-        Store store = null;
+        IMAPStore store = null;
         try {
-            store = getStore(ds.getConnectionType());
+            store = (IMAPStore) getStore(ds.getConnectionType());
             store.connect(ds.getHost(), ds.getPort(), ds.getUsername(), ds.getDecryptedPassword());
             Folder remoteRootFolder = store.getDefaultFolder();
             Mailbox mbox = ds.getMailbox();
@@ -188,8 +191,21 @@ public class ImapImport implements MailItemImport {
                 IMAPFolder remoteFolder = (IMAPFolder) remoteFolders[i];
 
                 long remoteUvv = 0;
-                if (!hasAttribute(remoteFolder, "\\Noselect"))
-                	remoteUvv = remoteFolder.getUIDValidity();
+                if (!hasAttribute(remoteFolder, "\\Noselect")) {
+                    remoteUvv = remoteFolder.getUIDValidity();
+                    if (remoteUvv <= 0) {
+                        // Workaround for bug 25623: if this is AOL mail and
+                        // STATUS returns an invalid UIDVALIDITY value, then
+                        // assume the correct value is 1 (always seems to be
+                        // the case).
+                        if (store.hasCapability("XAOL-NETMAIL")) {
+                            remoteUvv = 1;
+                        } else {
+                            throw ServiceException.FAILURE("Received incorrect UIDVALIDITY value: " + remoteUvv, null);
+                        }
+                    }
+                }
+
 
                 ZimbraLog.datasource.debug("Processing IMAP folder " + remoteFolder.getFullName());
 
