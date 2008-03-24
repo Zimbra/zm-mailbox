@@ -544,7 +544,7 @@ public class LdapProvisioning extends Provisioning {
             name = LdapUtil.escapeSearchFilterArg(name);
             a = getAccountByQuery(
                     mDIT.adminBaseDN(),
-                    LdapFilter.adminAccountByName(mDIT.accountNamingRdnAttr(), name),
+                    LdapFilter.adminAccountByRDN(mDIT.accountNamingRdnAttr(), name),
                     null, loadFromMaster);
             sAccountCache.put(a);
         }
@@ -5045,8 +5045,8 @@ public class LdapProvisioning extends Provisioning {
         
         printFilter("admin account by RDN",
                     "admin account access",
-                    mDIT.mailBranchBaseDN(),
-                    LdapFilter.adminAccountByName(mDIT.accountNamingRdnAttr(), "{admin name}"));
+                    mDIT.adminBaseDN(),
+                    LdapFilter.adminAccountByRDN(mDIT.accountNamingRdnAttr(), "{admin name}"));
         
         // calendar resource
         printFilter("calendar resource by foreign principal",
