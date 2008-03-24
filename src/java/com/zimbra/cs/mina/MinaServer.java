@@ -20,6 +20,7 @@ package com.zimbra.cs.mina;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.security.sasl.SaslFilter;
 import com.zimbra.cs.server.Server;
 import com.zimbra.cs.server.ServerConfig;
@@ -123,6 +124,9 @@ public abstract class MinaServer implements Server {
         mAcceptorConfig.setReuseAddress(true);
         mAcceptorConfig.setThreadModel(ThreadModel.MANUAL);
         mSocketAcceptor = new SocketAcceptor(NUM_IO_PROCESSORS, IO_THREAD_POOL);
+        if (isDebugEnabled()) {
+            ZimbraLog.nio.setLevel(Log.Level.debug);
+        }
     }
 
     protected MinaServer(ServerConfig config) throws IOException, ServiceException {
