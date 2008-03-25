@@ -27,6 +27,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.common.soap.Element;
@@ -82,6 +83,8 @@ public class ModifyAccount extends AdminDocumentHandler {
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "ModifyAccount","name", account.getName()}, attrs));
+        
+        checkNewServer(zsc, context, account);
 
         Element response = zsc.createElement(AdminConstants.MODIFY_ACCOUNT_RESPONSE);
         ToXML.encodeAccountOld(response, account);
@@ -115,4 +118,37 @@ public class ModifyAccount extends AdminDocumentHandler {
         if (!canModifyMailQuota(zsc,  account, quota))
             throw ServiceException.PERM_DENIED("can not modify mail quota");
     }
+    
+    /*
+     * if the account's home server is changed as a result of this command and the new server is no longer
+     * this server, need to send a flush cache command to the new server so we don't get into the following:
+     * 
+     * account is on server A (this server)
+     * 
+     * on server B: 
+     *     zmprov ma {account} zimbraMailHost B
+     *     (the ma is proxied to server A;
+     *      and on server B, the account still appears to be on A)
+     *               
+     *     zmprov ma {account} {any attr} {value}
+     *     ERROR: service.TOO_MANY_HOPS
+     *     Until the account is expired from cache on server B.          
+     */
+    private void checkNewServer(ZimbraSoapContext zsc, Map<String, Object> context, Account acct) {
+        Server newServer = null;
+        try {
+            if (!Provisioning.getInstance().onLocalServer(acct)) {
+                newServer = Provisioning.getInstance().getServer(acct);
+                Element request = zsc.createRequestElement(AdminConstants.FLUSH_CACHE_REQUEST);
+                Element eCache = request.addElement(AdminConstants.E_CACHE).addAttribute(AdminConstants.A_TYPE, Provisioning.CacheEntryType.account.name());
+                eCache.addElement(AdminConstants.E_ENTRY).addAttribute(AdminConstants.A_BY, Provisioning.CacheEntryBy.id.name()).addText(acct.getId());
+
+                Element response = proxyRequest(request, context, newServer, zsc);
+            }
+        } catch (ServiceException e) {
+            // ignore any error and continue
+            ZimbraLog.mailbox.warn("cannot flush account cache on server " + (newServer==null?"":newServer.getName()) + " for " + acct.getName(), e);
+        }
+    }
+
 }
