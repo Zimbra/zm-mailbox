@@ -6071,11 +6071,15 @@ public class Mailbox {
         }
     }
 
-    public Document addDocumentRevision(OperationContext octxt, int docId, byte type, byte[] rawData, String author) throws ServiceException {
+    public Document addDocumentRevision(OperationContext octxt, int docId, byte type, InputStream data, String author) throws ServiceException {
         maybeIndexDeferredItems();
         Document doc = getDocumentById(octxt, docId);
-        ParsedDocument pd = new ParsedDocument(rawData, doc.getName(), doc.getContentType(), System.currentTimeMillis(), author);
-        return addDocumentRevision(octxt, docId, type, pd);
+        try {
+            ParsedDocument pd = new ParsedDocument(data, doc.getName(), doc.getContentType(), System.currentTimeMillis(), author);
+            return addDocumentRevision(octxt, docId, type, pd);
+        } catch (IOException e) {
+            throw MailServiceException.MESSAGE_PARSE_ERROR(e);
+        }
     }
 
     public synchronized Document addDocumentRevision(OperationContext octxt, int docId, byte type, ParsedDocument pd) throws ServiceException {
@@ -6089,13 +6093,12 @@ public class Mailbox {
 
             Document doc = getDocumentById(docId);
 
-            redoRecorder.setAuthor(pd.getCreator());
-            redoRecorder.setDocument(doc);
-            short volumeId = Volume.getCurrentMessageVolume().getId();
+            redoRecorder.setDocument(pd);
+            redoRecorder.setDocId(docId);
+            redoRecorder.setItemType(type);
             // TODO: simplify the redoRecorder by not subclassing from CreateMessage
-            redoRecorder.setMessageBodyInfo(pd.getContent(), "", volumeId);
-
-            doc.setContent(pd.getContent(), pd.getDigest(), volumeId, pd);
+            Blob blob = doc.setContent(pd);
+            redoRecorder.setMessageBodyInfo(blob.getFile(), blob.getVolumeId());
             
             queueForIndexing(doc, false, deferIndexing ? null : pd.getDocumentList());
 
@@ -6108,21 +6111,25 @@ public class Mailbox {
         }
     }
 
-    public WikiItem createWiki(OperationContext octxt, int folderId, String wikiword, String author, byte[] rawData)
+    public WikiItem createWiki(OperationContext octxt, int folderId, String wikiword, String author, InputStream data)
     throws ServiceException {
-        return (WikiItem) createDocument(octxt, folderId, wikiword, WikiItem.WIKI_CONTENT_TYPE, author, rawData, MailItem.TYPE_WIKI);
+        return (WikiItem) createDocument(octxt, folderId, wikiword, WikiItem.WIKI_CONTENT_TYPE, author, data, MailItem.TYPE_WIKI);
     }
 
-    public Document createDocument(OperationContext octxt, int folderId, String filename, String mimeType, String author, byte[] rawData)
+    public Document createDocument(OperationContext octxt, int folderId, String filename, String mimeType, String author, InputStream data)
     throws ServiceException {
-        return createDocument(octxt, folderId, filename, mimeType, author, rawData, MailItem.TYPE_DOCUMENT);
+        return createDocument(octxt, folderId, filename, mimeType, author, data, MailItem.TYPE_DOCUMENT);
     }
     	
-    public Document createDocument(OperationContext octxt, int folderId, String filename, String mimeType, String author, byte[] rawData, byte type)
+    public Document createDocument(OperationContext octxt, int folderId, String filename, String mimeType, String author, InputStream data, byte type)
     throws ServiceException {
         maybeIndexDeferredItems();
-        ParsedDocument pd = new ParsedDocument(rawData, filename, mimeType, System.currentTimeMillis(), author);
-        return createDocument(octxt, folderId, pd, type);
+        try {
+            ParsedDocument pd = new ParsedDocument(data, filename, mimeType, System.currentTimeMillis(), author);
+            return createDocument(octxt, folderId, pd, type);
+        } catch (IOException e) {
+            throw MailServiceException.MESSAGE_PARSE_ERROR(e);
+        }
     }
 
     public synchronized Document createDocument(OperationContext octxt, int folderId, ParsedDocument pd, byte type)
@@ -6132,16 +6139,12 @@ public class Mailbox {
             SaveDocument redoRecorder = new SaveDocument(mId, pd.getDigest(), pd.getSize(), folderId);
 
             beginTransaction("createDoc", octxt, redoRecorder);
-            redoRecorder.setFilename(pd.getFilename());
-            redoRecorder.setMimeType(pd.getContentType());
-            redoRecorder.setAuthor(pd.getCreator());
+            redoRecorder.setDocument(pd);
             redoRecorder.setItemType(type);
             
             SaveDocument redoPlayer = (octxt == null ? null : (SaveDocument) octxt.getPlayer());
             int itemId  = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
-            short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId() : redoPlayer.getVolumeId();
-
-            redoRecorder.setMessageBodyInfo(pd.getContent(), "", volumeId);
+            short volumeId = redoPlayer == null ? pd.getBlob().getVolumeId() : redoPlayer.getVolumeId();
 
             Document doc;
             if (type == MailItem.TYPE_DOCUMENT)
@@ -6152,7 +6155,8 @@ public class Mailbox {
                 throw MailServiceException.INVALID_TYPE(type);
 
             redoRecorder.setMessageId(doc.getId());
-            doc.setContent(pd.getContent(), pd.getDigest(), volumeId, pd);
+            Blob blob = doc.setContent(pd);
+            redoRecorder.setMessageBodyInfo(blob.getFile(), blob.getVolumeId());
 
             queueForIndexing(doc, false, this.getBatchedIndexingCount() > 0 ? null : pd.getDocumentList());
             success = true;

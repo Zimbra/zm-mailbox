@@ -27,6 +27,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.ParsedDocument;
+import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
@@ -221,11 +222,11 @@ public class WikiFormatter extends Formatter {
     @Override
 	public void saveCallback(Context context, String contentType, Folder folder, String filename)
     throws UserServletException, ServiceException, IOException {
-        byte[] body = context.getPostBody();
         Mailbox mbox = folder.getMailbox();
 
+    	FileUploadServlet.Upload upload = context.getUpload();
         String creator = (context.authAccount == null ? null : context.authAccount.getName());
-        ParsedDocument pd = new ParsedDocument(body, filename, WikiItem.WIKI_CONTENT_TYPE, System.currentTimeMillis(), creator);
+        ParsedDocument pd = new ParsedDocument(upload.getInputStream(), filename, WikiItem.WIKI_CONTENT_TYPE, System.currentTimeMillis(), creator);
         try {
             MailItem item = mbox.getItemByPath(context.opContext, filename, folder.getId());
             // XXX: should we just overwrite here instead?
@@ -235,6 +236,8 @@ public class WikiFormatter extends Formatter {
             mbox.addDocumentRevision(context.opContext, item.getId(), item.getType(), pd);
         } catch (NoSuchItemException nsie) {
             mbox.createDocument(context.opContext, folder.getId(), pd, MailItem.TYPE_WIKI);
+        } finally {
+        	FileUploadServlet.deleteUpload(upload);
         }
 
         // clear the wiki cache because we just went straight to the Mailbox

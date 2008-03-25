@@ -17,7 +17,6 @@
 package com.zimbra.cs.dav.resource;
 
 import java.io.IOException;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,7 +27,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
-import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.property.Acl;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
@@ -37,6 +35,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
+import com.zimbra.cs.service.FileUploadServlet;
 
 /**
  * RFC 2518bis section 5.
@@ -149,19 +148,15 @@ public class Collection extends MailItemResource {
 			throw new DavException("cannot get mailbox", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, null);
 		}
 
+		FileUploadServlet.Upload upload = ctxt.getUpload();
 		String author = ctxt.getAuthAccount().getName();
-		String ctype = ctxt.getRequest().getContentType();
-		byte[] data = ctxt.getRequestData();
-		if (ctype == null)
-			ctype = URLConnection.getFileNameMap().getContentTypeFor(name);
-		if (ctype == null)
-			ctype = DavProtocol.DEFAULT_CONTENT_TYPE;
+		String ctype = upload.getContentType();
 		try {
 			// add a revision if the resource already exists
 			MailItem item = mbox.getItemByPath(ctxt.getOperationContext(), ctxt.getPath());
 			if (item.getType() != MailItem.TYPE_DOCUMENT && item.getType() != MailItem.TYPE_WIKI)
 				throw new DavException("no DAV resource for " + MailItem.getNameForType(item.getType()), HttpServletResponse.SC_NOT_ACCEPTABLE, null);
-			Document doc = mbox.addDocumentRevision(ctxt.getOperationContext(), item.getId(), item.getType(), data, author);
+			Document doc = mbox.addDocumentRevision(ctxt.getOperationContext(), item.getId(), item.getType(), upload.getInputStream(), author);
 			return new Notebook(ctxt, doc);
 		} catch (ServiceException e) {
 			if (!(e instanceof NoSuchItemException))
@@ -170,7 +165,7 @@ public class Collection extends MailItemResource {
 		
 		// create
 		try {
-			Document doc = mbox.createDocument(ctxt.getOperationContext(), mId, name, ctype, author, data);
+			Document doc = mbox.createDocument(ctxt.getOperationContext(), mId, name, ctype, author, upload.getInputStream());
 			return new Notebook(ctxt, doc);
 		} catch (ServiceException se) {
 			throw new DavException("cannot create ", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, se);

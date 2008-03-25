@@ -20,14 +20,18 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.store.Blob;
+import com.zimbra.cs.store.StoreManager;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -74,8 +78,13 @@ public class Document extends MailItem {
     @Override public List<org.apache.lucene.document.Document> generateIndexData(boolean doConsistencyCheck) throws MailItem.TemporaryIndexingException {
         ParsedDocument pd = null;
         try {
+        	StoreManager sm = StoreManager.getInstance();
+        	MailboxBlob blob = sm.getMailboxBlob(mMailbox, mId, mVersion, getVolumeId());
+        	if (blob == null)
+                throw new MailItem.TemporaryIndexingException();
+        		
             synchronized(this.getMailbox()) {
-                pd = new ParsedDocument(getContent(), getName(), getContentType(), getChangeDate(), getCreator());
+                pd = new ParsedDocument(blob.getBlob(), getName(), getContentType(), getChangeDate(), getCreator());
                 if (pd.hasTemporaryAnalysisFailure())
                     throw new MailItem.TemporaryIndexingException();
             }
@@ -84,6 +93,9 @@ public class Document extends MailItem {
             toRet.add(pd.getDocument());
             
             return toRet;
+        } catch (IOException e) {
+            ZimbraLog.index.warn("Error generating index data for Wiki Document "+getId()+". Item will not be indexed", e);
+            return new ArrayList<org.apache.lucene.document.Document>(0);
         } catch (ServiceException e) {
             ZimbraLog.index.warn("Error generating index data for Wiki Document "+getId()+". Item will not be indexed", e);
             return new ArrayList<org.apache.lucene.document.Document>(0);
@@ -157,6 +169,41 @@ public class Document extends MailItem {
         return doc;
     }
 
+    Blob setContent(ParsedDocument pd) throws ServiceException,IOException {
+    	short volumeId = pd.getBlob().getVolumeId();
+        addRevision(false);
+
+        // update the item's relevant attributes
+        markItemModified(Change.MODIFIED_CONTENT  | Change.MODIFIED_DATE |
+                         Change.MODIFIED_IMAP_UID | Change.MODIFIED_SIZE);
+
+        int size = pd.getSize();
+        if (mData.size != size) {
+            mMailbox.updateSize(size - mData.size, false);
+            getFolder().updateSize(0, size - mData.size);
+            mData.size = size;
+        }
+        mContentType = pd.getContentType();
+        mCreator = pd.getCreator();
+        mFragment = pd.getFragment();
+        mData.setBlobDigest(pd.getDigest());
+        mData.date     = mMailbox.getOperationTimestamp();
+        mData.volumeId = volumeId;
+        mData.imapId   = mMailbox.isTrackingImap() ? 0 : mData.id;
+        mData.contentChanged(mMailbox);
+        mBlob = null;
+
+        // rewrite the DB row to reflect our new view (MUST call saveData)
+        reanalyze(pd);
+
+        // move the blob into the mailbox.
+        StoreManager sm = StoreManager.getInstance();
+        MailboxBlob mblob = sm.renameTo(pd.getBlob(), mMailbox, mId, getSavedSequence(), volumeId);
+        mMailbox.markOtherItemDirty(mblob);
+
+        return mblob.getBlob();
+    }
+    
     @Override 
     void decodeMetadata(Metadata meta) throws ServiceException {
         // roll forward from the old versioning mechanism (old revisions are lost)

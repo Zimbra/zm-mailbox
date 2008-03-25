@@ -18,6 +18,7 @@
 package com.zimbra.cs.service;
 
 import java.io.FilterInputStream;
+import java.io.InputStream;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -43,8 +44,8 @@ import org.apache.commons.httpclient.HttpsURL;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.cookie.CookiePolicy;
-import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PutMethod;
 
 import com.zimbra.common.auth.ZAuthToken;
@@ -943,10 +944,15 @@ public class UserServlet extends ZimbraServlet {
         /** Default maximum upload size for PUT/POST write ops: 10MB. */
         private static final long DEFAULT_MAX_POST_SIZE = 10 * 1024 * 1024;
 
+        // don't use this for a large upload.  use getUpload() instead.
         public byte[] getPostBody() throws ServiceException, IOException {
             long sizeLimit = Provisioning.getInstance().getLocalServer().getLongAttr(
                     Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_POST_SIZE);
             return ByteUtil.getContent(req.getInputStream(), req.getContentLength(), sizeLimit);
+        }
+        
+        public FileUploadServlet.Upload getUpload() throws ServiceException, IOException {
+            return FileUploadServlet.saveUpload(req.getInputStream(), itemPath, req.getContentType(), authAccount.getId());
         }
 
         @Override public String toString() {
@@ -1155,12 +1161,12 @@ public class UserServlet extends ZimbraServlet {
 
 
     public static Pair<Header[], HttpInputStream> putRemoteResource(AuthToken authToken, String url, Account target,
-            byte[] req, Header[] headers) throws ServiceException, IOException {
+            InputStream req, Header[] headers) throws ServiceException, IOException {
         return putRemoteResource(authToken.toZAuthToken(), url, target, req, headers);
     }
     
     public static Pair<Header[], HttpInputStream> putRemoteResource(ZAuthToken authToken, String url, Account target,
-            byte[] req, Header[] headers) throws ServiceException, IOException {
+            InputStream req, Header[] headers) throws ServiceException, IOException {
         Provisioning prov = Provisioning.getInstance();
         Server server = (target == null ? prov.getLocalServer() : prov.getServer(target));
         String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
@@ -1177,7 +1183,7 @@ public class UserServlet extends ZimbraServlet {
                     contentType = hdr.getValue();
             }
         }
-        method.setRequestEntity(new ByteArrayRequestEntity(req, contentType));
+        method.setRequestEntity(new InputStreamRequestEntity(req, contentType));
         Pair<Header[], HttpMethod> pair = doHttpOp(authToken, hostname, null, 0, null, null, method);
         return new Pair<Header[], HttpInputStream>(pair.getFirst(), new HttpInputStream(pair.getSecond()));
     }

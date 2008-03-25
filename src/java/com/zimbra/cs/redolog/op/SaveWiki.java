@@ -62,7 +62,7 @@ public class SaveWiki extends SaveDocument {
         int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
         try {
-            mbox.createWiki(getOperationContext(), getFolderId(), mWikiword, getAuthor(), getMessageBody());
+            mbox.createWiki(getOperationContext(), getFolderId(), mWikiword, getAuthor(), getInputStream());
         } catch (MailServiceException e) {
             if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                 mLog.info("Wiki " + getMessageId() + " is already in mailbox " + mboxId);

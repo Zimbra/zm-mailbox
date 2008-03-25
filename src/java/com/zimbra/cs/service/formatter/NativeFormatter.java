@@ -47,6 +47,7 @@ import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.UserServlet.Context;
@@ -244,11 +245,10 @@ public class NativeFormatter extends Formatter {
     }
 
     public void saveCallback(Context context, String contentType, Folder folder, String filename) throws IOException, ServiceException, UserServletException {
-        byte[] body = context.getPostBody();
         Mailbox mbox = folder.getMailbox();
         if (filename == null) {
             try {
-                ParsedMessage pm = new ParsedMessage(body, mbox.attachmentsIndexingEnabled());
+                ParsedMessage pm = new ParsedMessage(context.getPostBody(), mbox.attachmentsIndexingEnabled());
                 mbox.addMessage(context.opContext, pm, folder.getId(), true, 0, null);
                 return;
             } catch (MessagingException e) {
@@ -257,7 +257,8 @@ public class NativeFormatter extends Formatter {
         }
 
         String creator = (context.authAccount == null ? null : context.authAccount.getName());
-        ParsedDocument pd = new ParsedDocument(body, filename, contentType, System.currentTimeMillis(), creator);
+    	FileUploadServlet.Upload upload = context.getUpload();
+        ParsedDocument pd = new ParsedDocument(upload.getInputStream(), filename, contentType, System.currentTimeMillis(), creator);
         try {
             MailItem item = mbox.getItemByPath(context.opContext, filename, folder.getId());
             // XXX: should we just overwrite here instead?
@@ -267,6 +268,8 @@ public class NativeFormatter extends Formatter {
             mbox.addDocumentRevision(context.opContext, item.getId(), item.getType(), pd);
         } catch (NoSuchItemException nsie) {
             mbox.createDocument(context.opContext, folder.getId(), pd, MailItem.TYPE_DOCUMENT);
+        } finally {
+        	FileUploadServlet.deleteUpload(upload);
         }
     }
     
