@@ -28,6 +28,7 @@ import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.MessageHit;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -60,8 +61,9 @@ public class ScheduleInbox extends Collection {
                 ZimbraHit hit = zqr.getNext();
                 if (hit instanceof MessageHit) {
                 	Message msg = ((MessageHit)hit).getMessage();
-                	if (msg.isInvite() && msg.hasCalendarItemInfos())
-                		result.add(new CalendarScheduleMessage(ctxt, msg));
+                	CalendarItem calItem = UrlNamespace.getCalendarItemForMessage(ctxt, msg);
+                	if (calItem != null)
+                		result.add(new CalendarObject.LocalCalendarObject(ctxt, calItem));
                 }
 			}
 		} catch (Exception e) {
