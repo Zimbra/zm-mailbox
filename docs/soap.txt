@@ -1444,13 +1444,13 @@ if nest="1" on the request, response looks like this:
 ----------
 
 <GetItemRequest>
-  [<item [id="{item-id}"] [path="{fully-qualified-path}"] [l="{folder-id}" name="{item-name}]/>]
+  [<item [id="{item-id}"] [path="{path}"] [l="{folder-id}"]/>]
 </GetItemRequest>
 
   the caller must specify one of:
     - an {item-id},
-    - a {fully-qualified-path}, or
-    - both a {folder-id} and an {item-name}
+    - a fully-qualified {path}, or
+    - both a {folder-id} and a relative {path}
 
 <GetItemResponse>
   <folder|m|c|cn|wiki|etc. ...>
