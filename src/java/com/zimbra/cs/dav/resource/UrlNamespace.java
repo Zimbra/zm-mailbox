@@ -335,6 +335,20 @@ public class UrlNamespace {
         }
     }
     
+    public static CalendarItem getCalendarItemForMessage(DavContext ctxt, Message msg) throws ServiceException {
+    	Mailbox mbox = msg.getMailbox();
+    	if (msg.isInvite() && msg.hasCalendarItemInfos()) {
+    		Message.CalendarItemInfo calItemInfo = msg.getCalendarItemInfo(0);
+    		try {
+    			return mbox.getCalendarItemById(ctxt.getOperationContext(), calItemInfo.getCalendarItemId());
+            } catch (MailServiceException.NoSuchItemException e) {
+            	// the appt must have been cancelled or deleted.
+            	// bug 26315
+            }
+    	}
+    	return null;
+    }
+    
 	/* Returns DavResource for the MailItem. */
 	public static MailItemResource getResourceFromMailItem(DavContext ctxt, MailItem item) throws DavException {
 		MailItemResource resource = null;
@@ -374,9 +388,9 @@ public class UrlNamespace {
 				resource = new CalendarObject.LocalCalendarObject(ctxt, (CalendarItem)item);
 				break;
 			case MailItem.TYPE_MESSAGE :
-				Message msg = (Message)item;
-				if (msg.isInvite() && msg.hasCalendarItemInfos())
-					resource = new CalendarScheduleMessage(ctxt, msg);
+				CalendarItem calItem = getCalendarItemForMessage(ctxt, (Message)item);
+				if (calItem != null)
+					resource = new CalendarObject.LocalCalendarObject(ctxt, calItem);
 				break;
 			}
 		} catch (ServiceException e) {
