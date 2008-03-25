@@ -16,9 +16,11 @@
  */
 package com.zimbra.cs.service.wiki;
 
+import java.io.InputStream;
 import java.io.IOException;
 import java.util.Map;
 
+import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 
@@ -34,7 +36,6 @@ import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.wiki.Wiki;
@@ -53,10 +54,22 @@ public class SaveDocument extends WikiDocumentHandler {
     }
 
 	private static class Doc {
-		public byte[] contents;
 		public String name;
 		public String contentType;
 		public Upload up = null;
+		public MimePart mp = null;
+		public InputStream getInputStream() throws IOException {
+			try {
+			if (up != null)
+				return up.getInputStream();
+			else if (mp != null)
+				return mp.getInputStream();
+			else
+				throw new IOException("no contents");
+			} catch (MessagingException e) {
+				throw new IOException(e.getMessage());
+			}
+		}
 		public void cleanup() {
 			if (up != null) {
                 FileUploadServlet.deleteUpload(up);
@@ -64,16 +77,15 @@ public class SaveDocument extends WikiDocumentHandler {
 		}
 	}
 	
-	protected Doc getDocumentDataFromMimePart(OperationContext octxt, Mailbox mbox, String msgid, String part) throws ServiceException {
+	protected Doc getDocumentDataFromMimePart(OperationContext octxt, Mailbox mbox, String msgid, String part) throws ServiceException, IOException {
 		Message item = mbox.getMessageById(octxt, Integer.parseInt(msgid));
         MimeMessage mm = item.getMimeMessage();
 		Doc doc = new Doc();
 		try {
-	        MimePart mp = Mime.getMimePart(mm, part);
-			doc.contents = ByteUtil.getContent(mp.getInputStream(), 0);
-			doc.name = Mime.getFilename(mp);
-			doc.contentType = Mime.getContentType(mp);
-		} catch (Exception e) {
+	        doc.mp = Mime.getMimePart(mm, part);
+			doc.name = Mime.getFilename(doc.mp);
+			doc.contentType = Mime.getContentType(doc.mp);
+		} catch (MessagingException e) {
 			throw ServiceException.FAILURE("cannot get part "+part+" from message "+msgid, e);
 		}
 		
@@ -84,15 +96,9 @@ public class SaveDocument extends WikiDocumentHandler {
         Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), aid, lc.getAuthToken());
 
         Doc doc = new Doc();
-        try {
-        	doc.up = up;
-        	doc.contents = ByteUtil.getContent(up.getInputStream(), 0);
-        	doc.name = up.getName();
-        	doc.contentType = up.getContentType();
-        } catch (IOException ioe) {
-       		doc.cleanup();
-        	throw ServiceException.FAILURE("cannot get uploaded file", ioe);
-        }
+        doc.up = up;
+        doc.name = up.getName();
+        doc.contentType = up.getContentType();
         return doc;
 	}
 	
@@ -108,43 +114,50 @@ public class SaveDocument extends WikiDocumentHandler {
         Element docElem = request.getElement(MailConstants.E_DOC);
         OperationContext octxt = getOperationContext(zsc, context);
 
-        Doc doc;
-        Element attElem = docElem.getOptionalElement(MailConstants.E_UPLOAD);
-        if (attElem != null) {
-            String aid = attElem.getAttribute(MailConstants.A_ID, null);
-            doc = getDocumentDataFromUpload(zsc, aid);
-        } else {
-        	attElem = docElem.getElement(MailConstants.E_MSG);
-            String msgid = attElem.getAttribute(MailConstants.A_ID, null);
-            String part = attElem.getAttribute(MailConstants.A_PART, null);
-            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(zsc.getRequestedAccountId());
-        	doc = getDocumentDataFromMimePart(octxt, mbox, msgid, part);
+        Doc doc = null;
+        Element response = null;
+        try {
+            Element attElem = docElem.getOptionalElement(MailConstants.E_UPLOAD);
+            if (attElem != null) {
+                String aid = attElem.getAttribute(MailConstants.A_ID, null);
+                doc = getDocumentDataFromUpload(zsc, aid);
+            } else {
+            	attElem = docElem.getElement(MailConstants.E_MSG);
+                String msgid = attElem.getAttribute(MailConstants.A_ID, null);
+                String part = attElem.getAttribute(MailConstants.A_PART, null);
+                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(zsc.getRequestedAccountId());
+            	doc = getDocumentDataFromMimePart(octxt, mbox, msgid, part);
+            }
+
+            
+            String name = docElem.getAttribute(MailConstants.A_NAME, doc.name);
+            String ctype = docElem.getAttribute(MailConstants.A_CONTENT_TYPE, doc.contentType);
+            String id = docElem.getAttribute(MailConstants.A_ID, null);
+            int ver = (int)docElem.getAttributeLong(MailConstants.A_VERSION, 0);
+            int itemId;
+            if (id == null) {
+            	itemId = 0;
+            } else {
+            	ItemId iid = new ItemId(id, zsc);
+            	itemId = iid.getId();
+            }
+
+            WikiContext ctxt = new WikiContext(octxt, zsc.getAuthToken());
+            WikiPage page = WikiPage.create(name, getAuthor(zsc), ctype, doc.getInputStream());
+            Wiki.addPage(ctxt, page, itemId, ver, getRequestedFolder(request, zsc));
+            Document docItem = page.getWikiItem(ctxt);
+
+            response = zsc.createElement(MailConstants.SAVE_DOCUMENT_RESPONSE);
+            Element m = response.addElement(MailConstants.E_DOC);
+            m.addAttribute(MailConstants.A_ID, new ItemIdFormatter(zsc).formatItemId(docItem));
+            m.addAttribute(MailConstants.A_VERSION, docItem.getVersion());
+            ToXML.encodeRestUrl(m, docItem);
+        } catch (IOException e) {
+			throw ServiceException.FAILURE("can't save document", e);
+        } finally {
+        	if (doc != null)
+        		doc.cleanup();
         }
-
-        
-        String name = docElem.getAttribute(MailConstants.A_NAME, doc.name);
-        String ctype = docElem.getAttribute(MailConstants.A_CONTENT_TYPE, doc.contentType);
-        String id = docElem.getAttribute(MailConstants.A_ID, null);
-        int ver = (int)docElem.getAttributeLong(MailConstants.A_VERSION, 0);
-        int itemId;
-        if (id == null) {
-        	itemId = 0;
-        } else {
-        	ItemId iid = new ItemId(id, zsc);
-        	itemId = iid.getId();
-        }
-
-        WikiContext ctxt = new WikiContext(octxt, zsc.getAuthToken());
-        WikiPage page = WikiPage.create(name, getAuthor(zsc), ctype, doc.contents);
-        Wiki.addPage(ctxt, page, itemId, ver, getRequestedFolder(request, zsc));
-        Document docItem = page.getWikiItem(ctxt);
-
-        Element response = zsc.createElement(MailConstants.SAVE_DOCUMENT_RESPONSE);
-        Element m = response.addElement(MailConstants.E_DOC);
-        m.addAttribute(MailConstants.A_ID, new ItemIdFormatter(zsc).formatItemId(docItem));
-        m.addAttribute(MailConstants.A_VERSION, docItem.getVersion());
-        ToXML.encodeRestUrl(m, docItem);
-        doc.cleanup();
         return response;
 	}
 }

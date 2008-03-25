@@ -17,6 +17,7 @@
 package com.zimbra.cs.wiki;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -93,7 +94,7 @@ public abstract class WikiUtil {
                     populateFolders(octxt, mbox, sub, f);
                 } else {
                     byte type = 0;
-                    byte[] contents = ByteUtil.getContent(f);
+                    FileInputStream in = new FileInputStream(f);
                     String name = f.getName();
                     String contentType;
 
@@ -124,7 +125,7 @@ public abstract class WikiUtil {
                     }
                     */
 
-                    mbox.createDocument(octxt, where.getId(), name, contentType, mbox.getAccount().getName(), contents, type);
+                    mbox.createDocument(octxt, where.getId(), name, contentType, mbox.getAccount().getName(), in, type);
                 }
             }
         }

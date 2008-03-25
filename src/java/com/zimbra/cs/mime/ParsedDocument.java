@@ -20,26 +20,27 @@
  */
 package com.zimbra.cs.mime;
 
+import javax.activation.FileDataSource;
+
+import java.io.InputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.index.Fragment;
 import com.zimbra.cs.index.LuceneFields;
-import com.zimbra.cs.mailbox.MailboxBlob;
+import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.store.Volume;
 
 public class ParsedDocument {
-    private byte[] mContent;
+	private Blob mBlob;
     private int mSize;
     private String mDigest;
     private String mContentType;
@@ -50,21 +51,18 @@ public class ParsedDocument {
     private long mCreatedDate;
     private boolean mIndexFailed;
 
-    public ParsedDocument(MailboxBlob blob, String filename, String ctype, long createdDate, String creator)
+    private static Blob saveInputAsBlob(InputStream in) throws ServiceException, IOException {
+    	return StoreManager.getInstance().storeIncoming(in, 0, null, Volume.getCurrentMessageVolume().getId());
+    }
+    public ParsedDocument(InputStream in, String filename, String ctype, long createdDate, String creator)
+    	throws ServiceException, IOException {
+    	this(saveInputAsBlob(in), filename, ctype, createdDate, creator);
+    }
+    public ParsedDocument(Blob blob, String filename, String ctype, long createdDate, String creator)
     throws ServiceException, IOException {
-        init(ByteUtil.getContent(StoreManager.getInstance().getContent(blob), 0), filename, ctype, createdDate, creator);
-    }
-
-    public ParsedDocument(byte[] rawData, String filename, String ctype, long createdDate, String creator)
-    throws ServiceException {
-        init(rawData, filename, ctype, createdDate, creator);
-    }
-
-    private void init(byte[] content, String filename, String ctype, long createdDate, String creator)
-    throws ServiceException {
-        mContent = content;
-        mSize = content.length;
-        mDigest = ByteUtil.getDigest(content);
+        mBlob = blob;
+        mSize = blob.getRawSize();
+        mDigest = blob.getDigest();
         mContentType = ctype;
         mFilename = filename;
         mCreatedDate = createdDate;
@@ -76,7 +74,7 @@ public class ParsedDocument {
             assert(handler != null);
 
             if (handler.isIndexingEnabled())
-                handler.init(new ByteArrayDataSource(content, ctype));
+                handler.init(new FileDataSource(blob.getFile()));
             handler.setFilename(filename);
             handler.setPartName(LuceneFields.L_PARTNAME_TOP);
             handler.setMessageDigest(mDigest);
@@ -121,7 +119,7 @@ public class ParsedDocument {
 
     public int getSize()            { return mSize; }
     public String getDigest()       { return mDigest; }
-    public byte[] getContent()      { return mContent; }
+    public Blob getBlob()           { return mBlob; }
 
     public String getFilename()     { return mFilename; }
     public String getContentType()  { return mContentType; }

@@ -16,7 +16,6 @@
  */
 package com.zimbra.cs.dav.resource;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -195,13 +194,12 @@ public class CalendarCollection extends Collection {
 		
 		Provisioning prov = Provisioning.getInstance();
 		try {
-			byte[] item = ctxt.getRequestData();
             String user = ctxt.getUser();
             Account account = prov.get(AccountBy.name, user);
             if (account == null)
                 throw new DavException("no such account "+user, HttpServletResponse.SC_NOT_FOUND, null);
 
-			ZCalendar.ZVCalendar vcalendar = ZCalendar.ZCalendarBuilder.build(new InputStreamReader(new ByteArrayInputStream(item)));
+			ZCalendar.ZVCalendar vcalendar = ZCalendar.ZCalendarBuilder.build(new InputStreamReader(ctxt.getUpload().getInputStream()));
 			List<Invite> invites = Invite.createFromCalendar(account,
 					findSummary(vcalendar), 
 					vcalendar, 

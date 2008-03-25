@@ -19,7 +19,6 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
-import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -42,14 +41,12 @@ public class AddDocumentRevision extends SaveDocument {
         return OP_ADD_DOCUMENT_REVISION;
     }
 
-    public int getDocId() {
-    	return mDocId;
+    public void setDocId(int docId) {
+    	mDocId = docId;
     }
     
-    public void setDocument(Document doc) {
-    	mDocId = doc.getId();
-    	setFilename(doc.getName());
-    	setMimeType(doc.getContentType());
+    public int getDocId() {
+    	return mDocId;
     }
     
     protected void serializeData(RedoLogOutput out) throws IOException {
@@ -67,7 +64,7 @@ public class AddDocumentRevision extends SaveDocument {
         int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
         try {
-            mbox.addDocumentRevision(octxt, mDocId, MailItem.TYPE_DOCUMENT, getMessageBody(), getAuthor());
+            mbox.addDocumentRevision(octxt, mDocId, MailItem.TYPE_DOCUMENT, getInputStream(), getAuthor());
         } catch (MailServiceException e) {
             if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                 mLog.info("Document revision " + getMessageId() + " is already in mailbox " + mboxId);

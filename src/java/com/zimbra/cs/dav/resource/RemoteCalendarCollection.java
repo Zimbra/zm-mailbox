@@ -138,7 +138,6 @@ public class RemoteCalendarCollection extends CalendarCollection {
             ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
             ZFolder f = zmbx.getFolderById(new ItemId(mRemoteId, mItemId).toString());
             
-            byte[] data = ctxt.getRequestData();
             @SuppressWarnings("unchecked")
             Enumeration reqHeaders = ctxt.getRequest().getHeaderNames();
             ArrayList<Header> headerList = new ArrayList<Header>();
@@ -149,7 +148,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
             }
             String url = UrlNamespace.urlEscape(f.getPath() + "/" + ctxt.getItem());
             url = DavServlet.getDavUrl(target.getName()) + url;
-            Pair<Header[], HttpInputStream> response = UserServlet.putRemoteResource(authToken, url, target, data, headerList.toArray(new Header[0]));
+            Pair<Header[], HttpInputStream> response = UserServlet.putRemoteResource(authToken, url, target, ctxt.getUpload().getInputStream(), headerList.toArray(new Header[0]));
             for (Header h : response.getFirst())
                 if (h.getName().equals(DavProtocol.HEADER_ETAG)) {
                     UrlNamespace.invalidateApptSummariesCache(mRemoteId, mItemId);

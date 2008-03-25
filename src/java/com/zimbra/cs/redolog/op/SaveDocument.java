@@ -22,6 +22,7 @@ import java.io.IOException;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -75,6 +76,11 @@ public class SaveDocument extends CreateMessage {
     	mItemType = type;
     }
     
+    public void setDocument(ParsedDocument doc) {
+    	setFilename(doc.getFilename());
+    	setMimeType(doc.getContentType());
+        setAuthor(doc.getCreator());
+    }
     protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeUTF(mFilename);
         out.writeUTF(mMimeType);
@@ -95,7 +101,7 @@ public class SaveDocument extends CreateMessage {
         int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
         try {
-            mbox.createDocument(getOperationContext(), getFolderId(), mFilename, mMimeType, mAuthor, getMessageBody(), mItemType);
+            mbox.createDocument(getOperationContext(), getFolderId(), mFilename, mMimeType, mAuthor, getInputStream(), mItemType);
         } catch (MailServiceException e) {
             if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                 mLog.info("Document " + getMessageId() + " is already in mailbox " + mboxId);

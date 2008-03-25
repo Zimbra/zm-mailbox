@@ -176,6 +176,8 @@ public class DavServlet extends ZimbraServlet {
 			try {
 				resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			} catch (Exception ex) {}
+		} finally {
+			ctxt.cleanup();
 		}
 	}
 	

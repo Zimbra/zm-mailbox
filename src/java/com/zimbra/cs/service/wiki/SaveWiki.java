@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.service.wiki;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Map;
 
@@ -55,14 +56,15 @@ public class SaveWiki extends WikiDocumentHandler {
         	itemId = iid.getId();
         }
 
-        byte[] rawData;
+        ByteArrayInputStream is = null;
         try {
-        	rawData = msgElem.getText().getBytes("UTF-8");
+        	byte[] rawData = msgElem.getText().getBytes("UTF-8");
+        	is = new ByteArrayInputStream(rawData);
         } catch (IOException ioe) {
-        	throw ServiceException.FAILURE("cannot convert", ioe);
+        	throw ServiceException.FAILURE("can't get the content", ioe);
         }
         WikiContext ctxt = new WikiContext(octxt, zsc.getAuthToken());
-        WikiPage page = WikiPage.create(subject, getAuthor(zsc), rawData);
+        WikiPage page = WikiPage.create(subject, getAuthor(zsc), is);
         Wiki.addPage(ctxt, page, itemId, ver, getRequestedFolder(request, zsc));
         Document wikiItem = page.getWikiItem(ctxt);
         

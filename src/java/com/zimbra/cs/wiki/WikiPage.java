@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.wiki;
 
+import java.io.InputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Iterator;
@@ -49,11 +50,11 @@ public abstract class WikiPage {
         return new LocalWikiPage(page, rev, ctxt);
     }
     
-	public static WikiPage create(String wikiWord, String author, byte[] data) {
+	public static WikiPage create(String wikiWord, String author, InputStream data) {
 		return new LocalWikiPage(wikiWord, WikiItem.WIKI_CONTENT_TYPE, author, data, MailItem.TYPE_WIKI);
 	}
 
-	public static WikiPage create(String wikiWord, String author, String ctype, byte[] data) {
+	public static WikiPage create(String wikiWord, String author, String ctype, InputStream data) {
 		return new LocalWikiPage(wikiWord, ctype, author, data, MailItem.TYPE_DOCUMENT);
 	}
 
@@ -127,8 +128,8 @@ public abstract class WikiPage {
 	
 	public static class LocalWikiPage extends WikiPage {
 		private String  mMimeType;
-		private byte[]  mData;
 		private byte    mType;
+		private InputStream  mData;
 
 		LocalWikiPage(Document doc) {
 			addWikiItem(doc);
@@ -138,7 +139,7 @@ public abstract class WikiPage {
             addWikiItem(doc, rev, ctxt);
         }
         
-		LocalWikiPage(String wikiWord, String mime, String author, byte[] data, byte type) {
+		LocalWikiPage(String wikiWord, String mime, String author, InputStream data, byte type) {
 			mWikiWord = wikiWord;
 			mCreator = author;
 			mMimeType = mime;
