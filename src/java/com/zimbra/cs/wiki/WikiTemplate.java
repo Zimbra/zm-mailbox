@@ -176,7 +176,8 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 	}
 	
 	private String apply(Context ctxt) throws ServiceException, IOException {
-		if (ctxt.token.getType() == Token.TokenType.TEXT)
+		if (ctxt.token.getType() == Token.TokenType.TEXT ||
+		    ctxt.token.getType() == Token.TokenType.COMMENT)
 			return ctxt.token.getValue();
 		Wiklet w = Wiklet.get(ctxt.token);
 		if (w != null) {
@@ -202,7 +203,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		public static final String sWIKLETTAG = "wiklet";
 		public static final String sCLASSATTR = "class";
 		
-		public enum TokenType { TEXT, WIKLET, WIKILINK }
+		public enum TokenType { TEXT, WIKLET, WIKILINK, COMMENT };
 		public static void parse(String str, List<Token> tokens) throws IllegalArgumentException {
 			Token.parse(str, 0, tokens);
 		}
@@ -212,8 +213,15 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 			int end = pos;
 			int lastPos = str.length() - 1;
 			if (pos >= lastPos)
-                return;
-			if (str.startsWith("{{", pos)) {
+				return;
+			if (str.startsWith("<!--", pos)) {
+				// HTML comments are left intact for ALE (spreadsheet) to work
+				end = str.indexOf("-->", pos);
+				if (end > 0) {
+					end += 3;
+					tok = new Token(str.substring(pos, end), TokenType.COMMENT);
+				}
+			} else if (str.startsWith("{{", pos)) {
 				end = str.indexOf("}}", pos);
 				if (end > 0) {
 					tok = new Token(str.substring(pos+2, end), TokenType.WIKLET);
@@ -242,9 +250,10 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 			if (tok == null) {
 				end = pos+1;
 				while (end < lastPos) {
-					if (str.startsWith("{{", end) ||
-							str.startsWith("[[", end) ||
-							str.startsWith("<wiklet", end)) {
+					if (str.startsWith("<!--", end) ||
+					    str.startsWith("{{", end) ||
+					    str.startsWith("[[", end) ||
+					    str.startsWith("<wiklet", end)) {
 						break;
 					}
 					end++;
