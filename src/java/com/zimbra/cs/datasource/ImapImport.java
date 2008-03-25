@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -47,6 +48,9 @@ import com.sun.mail.imap.AppendUID;
 import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.IMAPMessage;
 import com.sun.mail.imap.IMAPStore;
+import com.sun.mail.imap.protocol.Status;
+import com.sun.mail.imap.protocol.IMAPProtocol;
+import com.sun.mail.iap.ProtocolException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
@@ -179,7 +183,8 @@ public class ImapImport implements MailItemImport {
                 mbox.getFolderById(null, ds.getFolderId());
 
             // Handle new remote folders and moved/renamed/deleted local folders
-            Folder[]  remoteFolders = remoteRootFolder.list("*");
+            Folder[] remoteFolders = remoteRootFolder.list("*");
+            Map<String, Status> folderStatus = new HashMap<String, Status>();
             //when deleting folders, especially remoted folders, we delete children before parents
             //to avoid complications.  so we want to sort in fullname length descending order.
             Arrays.sort(remoteFolders, new Comparator<Folder>() {
@@ -192,21 +197,22 @@ public class ImapImport implements MailItemImport {
 
                 long remoteUvv = 0;
                 if (!hasAttribute(remoteFolder, "\\Noselect")) {
-                    remoteUvv = remoteFolder.getUIDValidity();
-                    if (remoteUvv <= 0) {
+                    Status status = getStatus(remoteFolder, "UIDVALIDITY", "UIDNEXT");
+                    if (status.uidvalidity <= 0) {
                         // Workaround for bug 25623: if this is AOL mail and
                         // STATUS returns an invalid UIDVALIDITY value, then
                         // assume the correct value is 1 (always seems to be
                         // the case).
                         if (store.hasCapability("XAOL-NETMAIL")) {
-                            remoteUvv = 1;
+                            status.uidvalidity = 1;
                         } else {
-                            throw ServiceException.FAILURE("Received incorrect UIDVALIDITY value: " + remoteUvv, null);
+                            throw ServiceException.FAILURE("Received incorrect UIDVALIDITY value: " + status.uidvalidity, null);
                         }
                     }
+                    folderStatus.put(remoteFolder.getFullName(), status);
+                    remoteUvv = status.uidvalidity;
                 }
-
-
+                
                 ZimbraLog.datasource.debug("Processing IMAP folder " + remoteFolder.getFullName());
 
                 // Update associations between remote and local folders
@@ -369,19 +375,30 @@ public class ImapImport implements MailItemImport {
             for (ImapFolder imapFolder : imapFolders) {
             	if (!ds.isSyncEnabled(imapFolder.getLocalPath()))
             		continue;
-            	
+                
+                // Don't import folder unless full sync requested or there are
+                // new messages in the folder (uidnext has advanced).
+                Status status = folderStatus.get(imapFolder.getRemotePath());
+                if (!fullSync && status != null) {
+                    long trackedUid = imapFolder.getUidNext();
+                    if (trackedUid != -1 && status.uidnext != -1 &&
+                        trackedUid == status.uidnext) {
+                        continue; // No new messages have been detected
+                    }
+                }
+                
                 ZimbraLog.datasource.info("Importing from IMAP folder %s to local folder %s",
                     imapFolder.getRemotePath(), imapFolder.getLocalPath());
                 if (imapFolder.getUidValidity() != 0) {
-	                try {
-	                	for (int i = 0; i < 3; ++i) //at most run 3 times on a single folder import to prevent a dead loop
-	                		if (importFolder(account, ds, store, imapFolder, fullSync))
-	                			break;
-	                } catch (MessagingException e) {
-	                    ZimbraLog.datasource.warn("An error occurred while importing folder %s", imapFolder.getRemotePath(), e);
-	                } catch (ServiceException e) {
-	                    ZimbraLog.datasource.warn("An error occurred while importing folder %s", imapFolder.getRemotePath(), e);
-	                }
+                    try {
+                        for (int i = 0; i < 3; ++i) //at most run 3 times on a single folder import to prevent a dead loop
+                            if (importFolder(account, ds, store, imapFolder))
+                                break;
+                    } catch (MessagingException e) {
+                        ZimbraLog.datasource.warn("An error occurred while importing folder %s", imapFolder.getRemotePath(), e);
+                    } catch (ServiceException e) {
+                        ZimbraLog.datasource.warn("An error occurred while importing folder %s", imapFolder.getRemotePath(), e);
+                    }
                 }
             }
 
@@ -401,6 +418,15 @@ public class ImapImport implements MailItemImport {
         }
     }
 
+    private Status getStatus(final IMAPFolder folder, final String... items)
+            throws MessagingException {
+        return (Status) folder.doCommand(new IMAPFolder.ProtocolCommand() {
+            public Object doCommand(final IMAPProtocol protocol) throws ProtocolException {
+                return protocol.status(folder.getFullName(), items);
+            }
+        });
+    }
+    
     private void renameJavaMailFolder(Folder remoteFolder, String jmPath)
     throws MessagingException {
         ZimbraLog.datasource.info("Renaming IMAP folder from %s to %s", remoteFolder.getFullName(), jmPath);
@@ -525,7 +551,7 @@ public class ImapImport implements MailItemImport {
     }
 
     private boolean importFolder(Account account, DataSource ds, Store store,
-                                 final ImapFolder trackedFolder, boolean fullSync)
+                                 final ImapFolder trackedFolder)
         throws MessagingException, IOException, ServiceException {
         // Instantiate folders
         com.sun.mail.imap.IMAPFolder remoteFolder =
@@ -538,15 +564,6 @@ public class ImapImport implements MailItemImport {
             return true;
         }
 
-        // Don't load message flags unless full sync requested or there are
-        // new messages in the folder (uidnext has advanced).
-        if (!fullSync) {
-            long trackedUid = trackedFolder.getUidNext();
-            long remoteUid = remoteFolder.getUIDNext();
-            if (trackedUid != -1 && remoteUid != -1 && trackedUid == remoteUid) {
-                return true; // No new messages have been detected
-            }
-        }
         // Update next uid for tracked folder data
         trackedFolder.setUidNext(remoteFolder.getUIDNext());
         
