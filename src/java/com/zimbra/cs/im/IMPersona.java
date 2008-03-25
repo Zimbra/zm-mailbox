@@ -74,6 +74,10 @@ public class IMPersona extends ClassLogger {
     // When to trigger this?  
     //    
     public static void deleteIMPersona(String acctName) {
+        
+        if (true) // disabled temporarily
+            return;
+        
         try {
             IMAddr addr = new IMAddr(acctName);
             JID jid = addr.makeJID();
