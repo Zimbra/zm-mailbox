@@ -22,6 +22,7 @@ package com.zimbra.cs.service.mail;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
@@ -129,11 +130,14 @@ public class ToXML {
         return ((fields & fieldMask) > 0);
     }
 
-    public static Element encodeMailbox(Element parent, Mailbox mbox) {
-        return encodeMailbox(parent, mbox, NOTIFY_FIELDS);
+    public static Element encodeMailbox(Element parent, OperationContext octxt, Mailbox mbox) {
+        return encodeMailbox(parent, octxt, mbox, NOTIFY_FIELDS);
     }
-    public static Element encodeMailbox(Element parent, Mailbox mbox, int fields) {
+
+    public static Element encodeMailbox(Element parent, OperationContext octxt, Mailbox mbox, int fields) {
         Element elem = parent.addUniqueElement(MailConstants.E_MAILBOX);
+        if (octxt.isDelegatedRequest(mbox))
+            elem.addAttribute(HeaderConstants.A_ACCOUNT_ID, mbox.getAccountId());
         if (needToOutput(fields, Change.MODIFIED_SIZE))
             elem.addAttribute(MailConstants.A_SIZE, mbox.getSize());
         return elem;

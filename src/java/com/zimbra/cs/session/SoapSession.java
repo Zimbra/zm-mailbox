@@ -643,7 +643,7 @@ public class SoapSession extends Session {
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
         // dump current mailbox status (currently just size)
-        ToXML.encodeMailbox(eRefresh, mbox);
+        ToXML.encodeMailbox(eRefresh, octxt, mbox);
 
         // dump all tags under a single <tags> parent
         List<Tag> tags = mbox.getTagList(octxt);
@@ -892,7 +892,7 @@ public class SoapSession extends Session {
                         return;
                     }
                 } else if (chg.why != 0 && chg.what instanceof Mailbox) {
-                    ToXML.encodeMailbox(eModified, (Mailbox) chg.what, chg.why);
+                    ToXML.encodeMailbox(eModified, octxt, (Mailbox) chg.what, chg.why);
                 }
             }
         }
