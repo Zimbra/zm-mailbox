@@ -54,6 +54,8 @@ import com.zimbra.znative.IO;
  */
 public class FileBlobStore extends StoreManager {
 
+    private static final int BUFLEN = Math.max(LC.zimbra_store_copy_buffer_size_kb.intValue(), 1) * 1024;
+
     private UniqueFileNameGenerator mUniqueFilenameGenerator;
 
 	FileBlobStore() throws Exception {
@@ -136,7 +138,7 @@ public class FileBlobStore extends StoreManager {
         }
         
         // Write to the file and byte array.
-        byte[] buffer = new byte[1024];
+        byte[] buffer = new byte[BUFLEN];
         int numRead = -1;
         int totalRead = 0;
         while ((numRead = digestStream.read(buffer)) >= 0) {
