@@ -86,21 +86,12 @@ public class CancelCalendarItem extends CalendarRequest {
                 cancelInstance(zsc, octxt, request, acct, mbox, calItem, inv, recurId);
             } else {
                 // if recur is not set, then we're canceling the entire calendar item...
-                
-                // first, pull a list of all the invites and THEN start canceling them: since canceling them
-                // will remove them from the calendar item's list, we can get really confused if we just directly
-                // iterate through the list...
-                
-                Invite invites[] = new Invite[calItem.numInvites()];
-                for (int i = calItem.numInvites() - 1; i >= 0; i--) {
-                    invites[i] = calItem.getInvite(i);
-                }
-                
-                for (int i = invites.length - 1; i >= 0; i--) {
-                    if (invites[i] == null)
-                        continue;
-                    if (invites[i].getMethod().equals(ICalTok.REQUEST.toString()) || invites[i].getMethod().equals(ICalTok.PUBLISH.toString()))
-                        cancelInvite(zsc, octxt, request, acct, mbox, calItem, invites[i]);
+
+                Invite seriesInv = calItem.getDefaultInviteOrNull();
+                if (seriesInv != null) {
+                    if (seriesInv.getMethod().equals(ICalTok.REQUEST.toString()) ||
+                        seriesInv.getMethod().equals(ICalTok.PUBLISH.toString()))
+                        cancelInvite(zsc, octxt, request, acct, mbox, calItem, seriesInv);
                     // disable change constraint checking since we've just successfully done a modify
                     octxt = new OperationContext(octxt).unsetChangeConstraint();
                 }

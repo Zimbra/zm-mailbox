@@ -1048,6 +1048,15 @@ public abstract class CalendarItem extends MailItem {
         for (int i = 0; i < numInvitesCurrent; i++) {
             Invite cur = mInvites.get(i);
 
+            // If request is a cancellation of entire appointment, simply add each invite to removal list.
+            if (isCancel && !newInvite.hasRecurId()) {
+                addNewOne = false;
+                modifiedCalItem = true;
+                toRemove.add(cur);
+                idxsToRemove.add(0, i);
+                continue;
+            }
+
             boolean matchingRecurId = recurrenceIdsMatch(cur, newInvite);
             if (discardExistingInvites || matchingRecurId) {
                 if (discardExistingInvites || isNewerVersion(cur, newInvite)) {
