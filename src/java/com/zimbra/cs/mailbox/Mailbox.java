@@ -3401,8 +3401,8 @@ public class Mailbox {
                     
                     int deferredCount = getIndexDeferredCount();
                     if (items.size() != deferredCount) {
-                        if (ZimbraLog.mailbox.isInfoEnabled())
-                            ZimbraLog.mailbox.info("IndexDeferredItems: Deferred count out of sync - found "+items.size()+" deferred items (count="+getIndexDeferredCount()+")");
+                        if (ZimbraLog.mailbox.isDebugEnabled())
+                            ZimbraLog.mailbox.debug("IndexDeferredItems: Deferred count out of sync - found "+items.size()+" deferred items (count="+getIndexDeferredCount()+")");
                         mCurrentChange.idxDeferredCount = items.size();
                     } else {
                         if (ZimbraLog.mailbox.isDebugEnabled())
