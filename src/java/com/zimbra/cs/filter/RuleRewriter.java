@@ -69,6 +69,8 @@ public class RuleRewriter {
     
     private Mailbox mMailbox;
     
+    RuleRewriter() {}
+    
     /**
      * Initializes rewriter to convert from Sieve parse tree to an XML DOM tree.
      * 
@@ -76,7 +78,7 @@ public class RuleRewriter {
      * @param node the Sieve parse tree root node
      * @see #getElement()
      */
-    RuleRewriter(ElementFactory factory, Node node) {
+    void initialize(ElementFactory factory, Node node) {
         mRoot = factory.createElement("rules");
         traverse(node);
     }
@@ -87,7 +89,7 @@ public class RuleRewriter {
      * @param xmlRules
      * @see RuleRewriter#getScript()
      */
-    public RuleRewriter(Element eltRules, Mailbox mbox) {
+    void initialize(Element eltRules, Mailbox mbox) {
         mRoot = eltRules;
         mMailbox = mbox;
     }
@@ -354,7 +356,7 @@ public class RuleRewriter {
         }
     }
 
-    private void action(StringBuffer sb, String actionName, Element element, String ruleName) throws ServiceException {
+    void action(StringBuffer sb, String actionName, Element element, String ruleName) throws ServiceException {
         for (Iterator it = element.elementIterator("arg"); it.hasNext(); ) {
             Element subnode = (Element) it.next();
             String argVal = subnode.getText();

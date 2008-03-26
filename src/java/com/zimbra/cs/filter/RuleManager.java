@@ -160,7 +160,7 @@ public class RuleManager {
         } catch (TokenMgrError e) {
             throw ServiceException.PARSE_ERROR("parsing Sieve script", e);
         }
-        RuleRewriter t = new RuleRewriter(factory, node);
+        RuleRewriter t = RuleRewriterFactory.getInstance().createRuleRewriter(factory, node);
         return t.getElement();
     }
 
@@ -168,7 +168,7 @@ public class RuleManager {
      * Sets filter rules, specified as an XML element tree.
      */
     public void setXMLRules(Account account, Element eltRules) throws ServiceException {
-        RuleRewriter t = new RuleRewriter(eltRules, MailboxManager.getInstance().getMailboxByAccount(account));
+        RuleRewriter t = RuleRewriterFactory.getInstance().createRuleRewriter(eltRules, MailboxManager.getInstance().getMailboxByAccount(account));
         String script = t.getScript();
         setRules(account, script);
     }
