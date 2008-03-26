@@ -205,6 +205,8 @@ public class ZPrefs {
     public boolean getForwardReplyTextFormat() { return "text".equals(getForwardReplyFormat()); }
     public boolean getForwardReplyHtmlFormat() { return "html".equals(getForwardReplyFormat()); }
     public boolean getForwardReplySameFormat() { return "same".equals(getForwardReplyFormat()); }
+    public boolean getForwardReplyInOriginalFormat() { return getBool(Provisioning.A_zimbraPrefForwardReplyInOriginalFormat); }
+
 
     public String getForwardReplyPrefixChar() { return get(Provisioning.A_zimbraPrefForwardReplyPrefixChar); }
 
