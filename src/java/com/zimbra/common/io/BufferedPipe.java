@@ -144,7 +144,7 @@ class BufferedPipe {
             mIsFull = false;
     }
 
-    private long write(ByteBuffer[] srcs, int offset, int length) throws IOException {
+    private long write(ByteBuffer[] srcs, int offset, int length) {
         synchronized (mWriteLock) {
             long written = 0;
             for (int i = offset; i < offset + length; i++) {
@@ -152,13 +152,13 @@ class BufferedPipe {
                     break;
 
                 ByteBuffer src = srcs[i];
-                written += (long) write(src);
+                written += write(src);
             }
             return written;
         }
     }
 
-    private int write(ByteBuffer src) throws IOException {
+    private int write(ByteBuffer src) {
         synchronized (mWriteLock) {
             synchronized (this) {
                 int expected = src.remaining();
@@ -221,7 +221,7 @@ class BufferedPipe {
      * @return actual number of bytes written
      * @throws IOException
      */
-    private int write(byte[] src, int offset, int len) throws IOException {
+    private int write(byte[] src, int offset, int len) {
         synchronized (mWriteLock) {
             synchronized (this) {
                 int remaining = len;
@@ -276,7 +276,7 @@ class BufferedPipe {
         }
     }
 
-    private long read(ByteBuffer[] dsts, int offset, int length) throws IOException {
+    private long read(ByteBuffer[] dsts, int offset, int length) {
         synchronized (mReadLock) {
             long bytesRead = 0;
             for (int i = offset; i < offset + length; i++) {
@@ -284,13 +284,13 @@ class BufferedPipe {
                     break;
 
                 ByteBuffer dest = dsts[i];
-                bytesRead += (long) read(dest);
+                bytesRead += read(dest);
             }
             return bytesRead;
         }
     }
 
-    private int read(ByteBuffer dst) throws IOException {
+    private int read(ByteBuffer dst) {
         synchronized (mReadLock) {
             synchronized (this) {
                 int expected = dst.remaining();
@@ -354,7 +354,7 @@ class BufferedPipe {
      * @return actual number of bytes read
      * @throws IOException
      */
-    private int read(byte[] dst, int offset, int len) throws IOException {
+    private int read(byte[] dst, int offset, int len) {
         synchronized (mReadLock) {
             synchronized (this) {
                 int remaining = len;
@@ -416,7 +416,7 @@ class BufferedPipe {
 
         public BaseChannel() { mOpen = true; }
 
-        public void close() throws IOException {
+        public void close() {
             synchronized (this) {
                 mOpen = false;
             }
@@ -450,19 +450,19 @@ class BufferedPipe {
          * @return actual number of bytes written
          * @throws IOException
          */
-        public int write(byte[] src, int offset, int len) throws IOException {
+        public int write(byte[] src, int offset, int len) {
             return BufferedPipe.this.write(src, offset, len);
         }
 
-        public int write(ByteBuffer src) throws IOException {
+        public int write(ByteBuffer src) {
             return BufferedPipe.this.write(src);
         }
 
-        public long write(ByteBuffer[] srcs, int offset, int length) throws IOException {
+        public long write(ByteBuffer[] srcs, int offset, int length) {
             return BufferedPipe.this.write(srcs, offset, length);
         }
 
-        public long write(ByteBuffer[] srcs) throws IOException {
+        public long write(ByteBuffer[] srcs) {
             return write(srcs, 0, srcs.length);
         }
 
@@ -485,7 +485,7 @@ class BufferedPipe {
          * @return actual number of bytes read
          * @throws IOException
          */
-        public int read(byte[] dst) throws IOException {
+        public int read(byte[] dst) {
             return read(dst, 0, dst.length);
         }
 
@@ -498,19 +498,19 @@ class BufferedPipe {
          * @return actual number of bytes read
          * @throws IOException
          */
-        public int read(byte[] dst, int offset, int len) throws IOException {
+        public int read(byte[] dst, int offset, int len) {
             return BufferedPipe.this.read(dst, offset, len);
         }
 
-        public int read(ByteBuffer dst) throws IOException {
+        public int read(ByteBuffer dst) {
             return BufferedPipe.this.read(dst);
         }
 
-        public long read(ByteBuffer[] dsts, int offset, int length) throws IOException {
+        public long read(ByteBuffer[] dsts, int offset, int length) {
             return BufferedPipe.this.read(dsts, offset, length);
         }
 
-        public long read(ByteBuffer[] dsts) throws IOException {
+        public long read(ByteBuffer[] dsts) {
             return read(dsts, 0, dsts.length);
         }
 
