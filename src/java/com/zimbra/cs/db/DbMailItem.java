@@ -2001,8 +2001,7 @@ public class DbMailItem {
         }
     }
 
-    private static final String LEAF_NODE_FIELDS = "id, size, type, unread, folder_id, parent_id, " +
-                                                   Db.selectBOOLEAN("blob_digest IS NOT NULL") + ',' +
+    private static final String LEAF_NODE_FIELDS = "id, size, type, unread, folder_id, parent_id, blob_digest," +
                                                    " mod_content, mod_metadata, flags, index_id, volume_id";
 
     private static final int LEAF_CI_ID           = 1;
@@ -2011,7 +2010,7 @@ public class DbMailItem {
     private static final int LEAF_CI_IS_UNREAD    = 4;
     private static final int LEAF_CI_FOLDER_ID    = 5;
     private static final int LEAF_CI_PARENT_ID    = 6;
-    private static final int LEAF_CI_HAS_BLOB     = 7;
+    private static final int LEAF_CI_BLOB_DIGEST  = 7;
     private static final int LEAF_CI_MOD_CONTENT  = 8;
     private static final int LEAF_CI_MOD_METADATA = 9;
     private static final int LEAF_CI_FLAGS        = 10;
@@ -2192,13 +2191,14 @@ public class DbMailItem {
             else
                 count.increment(1, size);
 
-            boolean hasBlob = rs.getBoolean(LEAF_CI_HAS_BLOB);
-            if (hasBlob) {
+            String blobDigest = rs.getString(LEAF_CI_BLOB_DIGEST);
+            if (blobDigest != null) {
+                info.blobDigests.add(blobDigest);
                 short volumeId = rs.getShort(LEAF_CI_VOLUME_ID);
                 try {
                     MailboxBlob mblob = sm.getMailboxBlob(mbox, id, revision, volumeId);
                     if (mblob == null)
-                        sLog.error("missing blob for id: " + id + ", change: " + revision);
+                        sLog.warn("missing blob for id: " + id + ", change: " + revision);
                     else
                         info.blobs.add(mblob);
                 } catch (Exception e1) { }
@@ -2232,7 +2232,7 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("SELECT mi.id, mi.folder_id, rev.size, rev.mod_content, rev.volume_id, " + Db.selectBOOLEAN("rev.blob_digest IS NOT NULL") +
+            stmt = conn.prepareStatement("SELECT mi.id, mi.folder_id, rev.size, rev.mod_content, rev.volume_id, rev.blob_digest " +
                     " FROM " + getMailItemTableName(mbox, "mi") + ", " + getRevisionTableName(mbox, "rev") +
                     " WHERE mi.mailbox_id = ? AND mi.id IN " + DbUtil.suitableNumberOfVariables(versioned) +
                     " AND mi.mailbox_id = rev.mailbox_id AND mi.id = rev.item_id");
@@ -2250,8 +2250,9 @@ public class DbMailItem {
                 else
                     count.increment(0, rs.getLong(3));
 
-                boolean hasBlob = rs.getBoolean(6);
-                if (hasBlob) {
+                String blobDigest = rs.getString(6);
+                if (blobDigest != null) {
+                    info.blobDigests.add(blobDigest);
                     try {
                         MailboxBlob mblob = sm.getMailboxBlob(mbox, rs.getInt(1), rs.getInt(4), rs.getShort(5));
                         if (mblob == null)
@@ -2269,6 +2270,37 @@ public class DbMailItem {
         }
     }
 
+    /**
+     * Returns the blob digest for the item with the given id, or <tt>null</tt>
+     * if either the id doesn't exist in the table or there is no associated blob.
+     */
+    public static String getBlobDigest(Mailbox mbox, int itemId) throws ServiceException {
+        Connection conn = mbox.getOperationConnection();
+        String blobDigest = null;
+
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT blob_digest " +
+                    " FROM " + getMailItemTableName(mbox) +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
+            stmt.setInt(1, mbox.getId());
+            stmt.setInt(2, itemId);
+            rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                blobDigest = rs.getString(1);
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("unable to get blob digest for id " + itemId, e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+        
+        return blobDigest;
+    }
+    
     public static void resolveSharedIndex(Mailbox mbox, PendingDelete info) throws ServiceException {
         if (info.sharedIndex == null || info.sharedIndex.isEmpty())
             return;
