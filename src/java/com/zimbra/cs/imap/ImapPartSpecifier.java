@@ -16,6 +16,8 @@
  */
 package com.zimbra.cs.imap;
 
+import java.io.ByteArrayOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -28,9 +30,11 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 
 class ImapPartSpecifier {
@@ -74,7 +78,7 @@ class ImapPartSpecifier {
     @Override public String toString() {
         StringBuilder response = new StringBuilder(mCommand);
         if (mCommand.equals("BODY") || mCommand.equals("BINARY") || mCommand.equals("BINARY.SIZE")) {
-            response.append('[');  getSectionPart(response);  response.append(']');
+            response.append('[').append(getSectionSpec()).append(']');
             // 6.4.5: "BODY[]<0.2048> of a 1500-octet message will return
             //         BODY[]<0> with a literal of size 1500, not BODY[]."
             if (mOctetStart != -1)
@@ -84,12 +88,7 @@ class ImapPartSpecifier {
     }
 
     String getSectionSpec() {
-        return getSectionPart(null);
-    }
-
-    private String getSectionPart(StringBuilder sb) {
-        if (sb == null)
-            sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder();
         sb.append(mPart).append(mPart.equals("") || mModifier.equals("") ? "" : ".").append(mModifier);
         if (mHeaders != null) {
             boolean first = true;  sb.append(" (");
@@ -101,40 +100,76 @@ class ImapPartSpecifier {
         return sb.toString();
     }
 
-    void writeMessage(PrintStream ps, OutputStream os, InputStream is, long length) throws IOException, ServiceException {
+    void writeMessage(PrintStream ps, OutputStream os, MailItem item) throws IOException, ServiceException {
         if (!isEntireMessage())
             throw ServiceException.FAILURE("called writeMessage on non-toplevel part", null);
 
-        if (mOctetStart < 0) {
-            write(ps, os, is, length);
-        } else {
-            length = Math.max(0, Math.min(length, mOctetEnd) - mOctetStart);
-            write(ps, os, ByteUtil.SegmentInputStream.create(is, mOctetStart, mOctetStart + length), length);
-        }
-    }
+        Pair<Long, InputStream> contents = ImapMessage.getContent(item);
+        InputStream is = contents.getSecond();
+        long length = contents.getFirst();
 
-    private void write(PrintStream ps, OutputStream os, InputStream is, long length) throws IOException {
-        ps.print(this);  ps.write(' ');
-
-        if (is == null) {
-            ps.print("NIL");
-        } else if (mCommand.equals("BINARY.SIZE")) {
-            ps.print(length);
-        } else {
-            // FIXME: need to check for NUL bytes in message content
-            // boolean binary = mCommand.startsWith("BINARY") && hasNULs(content);
-            ps.print("{");  ps.print(length);  ps.write('}');
-            if (os != null) {
-                os.write(ImapHandler.LINE_SEPARATOR_BYTES);  ByteUtil.copy(is, false, os, false);
+        try {
+            if (mOctetStart >= 0) {
+                length = Math.max(0, Math.min(length, mOctetEnd) - mOctetStart);
+                is = ByteUtil.SegmentInputStream.create(is, mOctetStart, mOctetStart + length);
             }
+
+            ps.print(this);  ps.write(' ');
+
+            if (is == null) {
+                ps.print("NIL");
+            } else if (mCommand.equals("BINARY.SIZE")) {
+                ps.print(length);
+            } else {
+                boolean binary = false;
+                if (mCommand.startsWith("BINARY")) {
+                    // we want to (a) avoid rereading the message from disk, but (b) avoid reading a 30GB blob to memory
+                    //   so we're going to read messages up to a certain length into memory and do the rest by going back to disk
+                    ByteArrayOutputStream baos = length > 100000 ? null : new ByteArrayOutputStream((int) length);
+                    byte[] buffer = new byte[8192];
+                    int bytesRead;
+                    while ((bytesRead = is.read(buffer)) >= 0) {
+                        // check for NUL bytes
+                        if (!binary) {
+                            for (int i = 0; i < bytesRead; i++) {
+                                if (buffer[i] == '\0') {
+                                    binary = true;  break;
+                                }
+                            }
+                        }
+                        // and copy to memory buffer if we're doing that...
+                        if (baos != null)
+                            baos.write(buffer, 0, bytesRead);
+                        else if (binary)
+                            break;
+                    }
+
+                    if (baos == null) {
+                        // reload the original InputStream
+                        ByteUtil.closeStream(is);
+                        is = ImapMessage.getContent(item).getSecond();
+                        if (mOctetStart >= 0)
+                            is = ByteUtil.SegmentInputStream.create(is, mOctetStart, mOctetStart + length);
+                    } else {
+                        // use the cached copy (would like to avoid the arraycopy, but it's a relatively small buffer)
+                        assert(baos.size() == length);
+                        is = new ByteArrayInputStream(baos.toByteArray());
+                    }
+                }
+
+                ps.print(binary ? "~{" : "{");  ps.print(length);  ps.write('}');
+                if (os != null) {
+                    os.write(ImapHandler.LINE_SEPARATOR_BYTES);  ByteUtil.copy(is, false, os, false);
+                }
+            }
+        } finally {
+            ByteUtil.closeStream(is);
         }
     }
 
     void write(PrintStream ps, OutputStream os, MimeMessage mm) throws IOException, BinaryDecodingException {
-        write(ps, os, getContent(mm));
-    }
+        byte[] content = getContent(mm);
 
-    private void write(PrintStream ps, OutputStream os, byte[] content) throws IOException {
         ps.print(this);  ps.write(' ');
 
         if (content == null) {
@@ -153,6 +188,7 @@ class ImapPartSpecifier {
     private boolean hasNULs(byte[] buffer) {
         if (buffer == null)
             return false;
+
         for (int i = 0, end = buffer.length; i < end; i++) {
             if (buffer[i] == '\0')
                 return true;
