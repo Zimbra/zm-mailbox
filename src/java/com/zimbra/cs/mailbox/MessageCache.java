@@ -33,6 +33,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.stats.ZimbraPerf;
@@ -89,7 +90,25 @@ public class MessageCache {
         purge(item.getDigest());
     }
     
-    private static void purge(String digest) {
+    /** Uncaches any data associated with the given item.  This must be done
+     *  before you change the item's content; otherwise, the cache will return
+     *  stale data. */
+    static void purge(Mailbox mbox, int itemId) {
+        String digest = null;
+        try {
+            digest = DbMailItem.getBlobDigest(mbox, itemId);
+        } catch (ServiceException e) {
+            ZimbraLog.cache.warn("Unable to uncache message for item", e);
+        }
+        if (digest != null) {
+            purge(digest);
+        }
+    }
+    
+    /** Uncaches any data associated with the given item.  This must be done
+     *  before you change the item's content; otherwise, the cache will return
+     *  stale data. */
+    static void purge(String digest) {
         CacheNode cnode = null;
         synchronized (mCache) {
             cnode = mCache.remove(digest);

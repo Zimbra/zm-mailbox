@@ -1317,6 +1317,8 @@ public class Mailbox {
         if (item != null) {
             MessageCache.purge(item);
             item.uncacheChildren();
+        } else {
+            MessageCache.purge(this, itemId);
         }
     }
 

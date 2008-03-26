@@ -2183,6 +2183,8 @@ public abstract class MailItem implements Comparable<MailItem> {
          *  tracking various per-folder counts for items being deleted. */
         public Map<Integer, DbMailItem.LocationCount> messages = new HashMap<Integer, DbMailItem.LocationCount>();
 
+        /** Digests of all blobs being deleted. */
+        public Set<String> blobDigests = new HashSet<String>();
 
         /** Combines the data from another <tt>PendingDelete</tt> into
          *  this object.  The other <tt>PendingDelete</tt> is unmodified.
@@ -2201,6 +2203,7 @@ public abstract class MailItem implements Comparable<MailItem> {
                 modifiedIds.addAll(other.modifiedIds);
                 indexIds.addAll(other.indexIds);
                 blobs.addAll(other.blobs);
+                blobDigests.addAll(other.blobDigests);
 
                 if (other.cascadeIds != null)
                     (cascadeIds == null ? cascadeIds = new ArrayList<Integer>(other.cascadeIds.size()) : cascadeIds).addAll(other.cascadeIds);
@@ -2312,6 +2315,11 @@ public abstract class MailItem implements Comparable<MailItem> {
         // write a deletion record for later sync
         if (writeTombstones && mbox.isTrackingSync() && !info.itemIds.isEmpty())
             DbMailItem.writeTombstones(mbox, info.itemIds);
+        
+        // remove cached messages
+        for (String digest : info.blobDigests) {
+            MessageCache.purge(digest);
+        }
 
         // don't actually delete the blobs or index entries here; wait until after the commit
     }

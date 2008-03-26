@@ -37,6 +37,7 @@ import com.zimbra.cs.lmtpserver.ZimbraLmtpBackend;
 import com.zimbra.cs.lmtpserver.utils.LmtpClient;
 import com.zimbra.cs.mime.handler.MessageRFC822Handler;
 import com.zimbra.cs.zclient.ZEmailAddress;
+import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZGetMessageParams;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMessage;
@@ -253,6 +254,41 @@ extends TestCase {
         mbox1 = TestUtil.getZMailbox(USER_NAME);
         TestUtil.waitForMessage(mbox1, "in:inbox subject:\"" + subject + "\"");
     }
+    
+    /**
+     * Another test for bug 25484.  Delivers a message to user1 and user2, then confirms that
+     * user1 can still read the message after user2 empties the folder that contains the message. 
+     */
+    public void testDiskStreamingEmptyFolder()
+    throws Exception {
+        TestUtil.setServerAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, "0");
+        String[] recipients = {
+            TestUtil.getAddress(USER_NAME),
+            TestUtil.getAddress(USER2_NAME)
+        };
+        
+        String subject = NAME_PREFIX + " testDiskStreamingMultipleRecipients";
+        ZMailbox mbox1 = TestUtil.getZMailbox(USER_NAME);
+        ZMailbox mbox2 = TestUtil.getZMailbox(USER2_NAME);
+
+        TestUtil.addMessageLmtp(subject, recipients, TestUtil.getAddress(USER_NAME));
+        TestUtil.waitForMessage(mbox1, "in:inbox subject:\"" + subject + "\"");
+        ZMessage msg2 = TestUtil.waitForMessage(mbox2, "in:inbox subject:\"" + subject + "\"");
+        
+        // Test bug 25484.  Have user2 move the message to a folder, empty the folder,
+        // and then have user1 read the message.
+        ZFolder folder2 = TestUtil.createFolder(mbox2, "/" + NAME_PREFIX + " testDiskStreamingEmptyFolder");
+        mbox2.moveMessage(msg2.getId(), folder2.getId());
+
+        // Mark message as read, since unread messages result in uncache
+        // getting called explicitly in Folder.propagateDeletion().
+        mbox2.markItemRead(msg2.getId(), true, null);
+        mbox2.emptyFolder(folder2.getId());
+        mbox1 = TestUtil.getZMailbox(USER_NAME);
+        System.out.println("Getting message content?");
+        
+        TestUtil.waitForMessage(mbox1, "in:inbox subject:\"" + subject + "\"");
+    }
 
     /**
      * Confirms that a message gets delivered regardless of what the size hint is set to.
@@ -368,7 +404,7 @@ extends TestCase {
         
         // Test search for inner message body
         msgs = TestUtil.search(mbox, NAME_PREFIX + " waves");
-        assertEquals(1, msgs.size()); 
+        assertEquals(1, msgs.size());
     }
     
     /**
