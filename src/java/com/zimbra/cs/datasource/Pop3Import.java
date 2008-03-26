@@ -253,7 +253,7 @@ public class Pop3Import implements MailItemImport {
     // (seconds since the epoch).
     private static boolean isValidDate(Date date) {
         long time = date.getTime();
-        return time >= 0 && time <= 0xffffffffL * 1000;
+        return time >= 0 && time <= 4294967295L;
     }
     
     private int addMessage(Mailbox mbox, DataSource ds, ParsedMessage pm, int folderId) throws ServiceException, IOException {
