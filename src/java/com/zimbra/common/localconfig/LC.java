@@ -87,6 +87,7 @@ public class LC {
     public static final KnownKey skins_directory;
 
     public static final KnownKey zimbra_store_sweeper_max_age;
+    public static final KnownKey zimbra_store_copy_buffer_size_kb;
 
     public static final KnownKey zimbra_mailbox_manager_hardref_cache;
     public static final KnownKey zimbra_mailbox_active_cache;
@@ -472,6 +473,10 @@ public class LC {
         zimbra_store_sweeper_max_age = new KnownKey("zimbra_store_sweeper_max_age");
         zimbra_store_sweeper_max_age.setDefault("480");  // 480 mins = 8 hours
         zimbra_store_sweeper_max_age.setDoc("Files older than this many minutes are auto-deleted from store incoming directory.");
+
+        zimbra_store_copy_buffer_size_kb = new KnownKey("zimbra_store_copy_buffer_size_kb");
+        zimbra_store_copy_buffer_size_kb.setDefault("32");  // 32KB
+        zimbra_store_copy_buffer_size_kb.setDoc("File copy operations use buffers of this size");
 
         zimbra_mailbox_manager_hardref_cache = new KnownKey("zimbra_mailbox_manager_hardref_cache");
         zimbra_mailbox_manager_hardref_cache.setDefault("2500");

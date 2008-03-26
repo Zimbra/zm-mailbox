@@ -29,7 +29,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -39,12 +38,14 @@ import java.util.Date;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import com.zimbra.common.localconfig.LC;
+
 /**
  * @author jhahm
  */
 public class FileUtil {
 
-	private static final int COPYBUFLEN = 16 * 1024;
+	private static final int COPYBUFLEN = Math.max(LC.zimbra_store_copy_buffer_size_kb.intValue(), 1) * 1024;
 
 	public static void copy(String src, String dest) throws IOException {
 		copy(new File(src), new File(dest));
