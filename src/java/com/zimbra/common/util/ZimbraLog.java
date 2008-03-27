@@ -77,7 +77,7 @@ public class ZimbraLog {
      * "mid" key for context. Id of requested mailbox. Only present if request is
      * dealing with a mailbox.
      */
-    private static final String C_MID = "mid";    
+    public static final String C_MID = "mid";    
 
     /**
      * "ua" key for context.  The name of the client application. 
