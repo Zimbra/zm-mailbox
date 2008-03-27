@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -32,6 +33,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ClassLoaderUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Cos;
 
@@ -83,7 +85,7 @@ public class SkinUtil {
     
     public static String[] getSkins(Account acct) throws ServiceException {
         String[] installedSkins = getAllInstalledSkinsSorted();
-        Set<String> allowedSkins = acct.getMultiAttrSet(Provisioning.A_zimbraAvailableSkin);
+        Set<String> allowedSkins = getAvailableSkins(acct);
     
         String[] availSkins = null;
         if (allowedSkins.size() == 0)
@@ -99,34 +101,39 @@ public class SkinUtil {
         }
         return availSkins;
     }
+    
+    private static Set<String> getAvailableSkins(Account acct) throws ServiceException {
+        
+        // 1) if set on account/cos, use it
+        Set<String> skins = acct.getMultiAttrSet(Provisioning.A_zimbraAvailableSkin);
+        if (skins.size() > 0)
+            return skins;
+        
+        // 2) if set on Domain, use it
+        Domain domain = Provisioning.getInstance().getDomain(acct);
+        return domain.getMultiAttrSet(Provisioning.A_zimbraAvailableSkin);
+    }
 
 	public static String chooseSkin(Account acct, String requestedSkin) throws ServiceException {
 		String[] installedSkins = getAllInstalledSkinsSorted();
 
-		// If the requested skin is intalled and allowed, return it.
-		Set<String> allowedSkins = acct.getMultiAttrSet(Provisioning.A_zimbraAvailableSkin);
+		// If the requested skin is installed and allowed, return it.
+		Set<String> allowedSkins = getAvailableSkins(acct);
 		if (checkSkin(requestedSkin, installedSkins, allowedSkins)) {
 			ZimbraLog.webclient.debug("Loading requested skin "+requestedSkin );
 			return requestedSkin;
 		}
 
-		// If the account's skin is intalled and allowed, return it.
-		String accountSkin = acct.getAttr(Provisioning.A_zimbraPrefSkin);
-		if (checkSkin(accountSkin, installedSkins, allowedSkins)) {
-			ZimbraLog.webclient.debug("Loading account skin "+accountSkin );
-			return accountSkin;
-		}
-
-		// If the cos default skin is intalled and allowed, return it.
-		String cosSkin = Provisioning.getInstance().getCOS(acct).getAttr(Provisioning.A_zimbraPrefSkin);
-		if (checkSkin(cosSkin, installedSkins, allowedSkins)) {
-			ZimbraLog.webclient.debug("Loading COS skin "+cosSkin );
-			return cosSkin;
+		// If the account/cos's pref skin is installed and allowed, return it.
+		String prefSkin = acct.getAttr(Provisioning.A_zimbraPrefSkin);
+		if (checkSkin(prefSkin, installedSkins, allowedSkins)) {
+			ZimbraLog.webclient.debug("Loading account skin "+prefSkin );
+			return prefSkin;
 		}
 
 		// Nothing in ldap has a valid skin. Since beach seens to be our most stable skin, try it.
 		String usuallyAvailableSkin = "beach";
-		if (accountSkin != usuallyAvailableSkin && cosSkin != usuallyAvailableSkin) {
+		if (prefSkin != usuallyAvailableSkin) {
 			if (checkSkin(usuallyAvailableSkin, installedSkins, allowedSkins)) {
 				ZimbraLog.webclient.debug("Loading default skin "+usuallyAvailableSkin );
 				return usuallyAvailableSkin;

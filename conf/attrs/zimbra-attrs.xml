@@ -1684,8 +1684,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Account for storing templates and providing space for public wiki</desc>
 </attr>
 
-<attr id="364" name="zimbraAvailableSkin" type="string" max="80" cardinality="multi" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
-  <desc>Skins available for this account</desc>
+<attr id="364" name="zimbraAvailableSkin" type="string" max="80" cardinality="multi" optionalIn="account,cos,domain" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <desc>Skins available for this account.  
+        Fallback order is: 
+        1. the normal account/cos inheritance   
+        2. if not set on account/cos, use the value on the domain of the account
+  </desc>
 </attr>
 
 <attr id="365" name="zimbraDebugInfo" type="string" max="1024" cardinality="multi" optionalIn="account">
