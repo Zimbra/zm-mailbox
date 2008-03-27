@@ -3051,4 +3051,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Whether user can create address books</desc>
 </attr>
 
+<attr id="632" name="zimbraReverseProxyHttpPortAttribute" type="string" cardinality="single" optionalIn="globalConfig">
+  <globalConfigValue>zimbraMailPort</globalConfigValue>
+  <desc>attribute that contains http bind port</desc>
+</attr>
+
 </attrs>
