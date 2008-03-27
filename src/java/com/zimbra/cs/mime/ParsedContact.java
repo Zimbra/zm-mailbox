@@ -314,7 +314,7 @@ public class ParsedContact {
             }
         }
 
-        mLuceneDocuments.add(getPrimaryDocument(attachContent));
+        mLuceneDocuments.add(getPrimaryDocument(attachContent.toString()));
     }
     
     public List<Document> getLuceneDocuments(Mailbox mbox) throws ServiceException {
@@ -365,34 +365,42 @@ public class ParsedContact {
         }
     }
     
-    private Document getPrimaryDocument(StringBuilder contentText) throws ServiceException {
+    private Document getPrimaryDocument(String contentStrIn) throws ServiceException {
         org.apache.lucene.document.Document doc = new org.apache.lucene.document.Document();
         
         StringBuilder fieldText = new StringBuilder();
-        StringBuilder emailText = new StringBuilder();
+        StringBuilder contentText = new StringBuilder();
         
         Map<String, String> m = getFields();
         for (Map.Entry<String, String> entry : m.entrySet()) {
-            contentText.append(entry.getValue()).append(' ');
+            if (!Contact.isEmailField(entry.getKey()))
+                contentText.append(entry.getValue()).append(' ');
 
-            if (Contact.getEmailFields().contains(entry.getKey()))
-                emailText.append(' ').append(entry.getValue());
-            
             String fieldTextToAdd = entry.getKey() + ":" + entry.getValue() + "\n";
             fieldText.append(fieldTextToAdd);
         }
         
-        StringBuilder searchText = new StringBuilder();
+        // fetch all the 'email' addresses for this contact into a single concatenated string
+        String emailStr; 
+        {
+            StringBuilder emailSb  = new StringBuilder();
+            for (String email : Contact.getEmailAddresses(getFields())) {
+                emailSb.append(email).append(' ');
+            }
+            emailStr = emailSb.toString();
+        }
+        String emailStrTokens = ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_TO, emailStr);
+        
+        StringBuilder searchText = new StringBuilder(emailStrTokens).append(' ');
         appendContactField(searchText, this, Contact.A_company);
         appendContactField(searchText, this, Contact.A_firstName);
         appendContactField(searchText, this, Contact.A_lastName);
         appendContactField(searchText, this, Contact.A_nickname);
-
-        String emailStr = emailText.toString();
         
-        String emailStrConcat = ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_TO, emailStr); 
-        contentText.append(emailStrConcat);
-        searchText.append(emailStrConcat);
+        // rebuild contentText here with the emailStr FIRST, then the other text.  
+        // The email addresses should be first so that they have a higher search score than the other
+        // text
+        contentText = new StringBuilder(emailStrTokens).append(' ').append(contentText).append(' ').append(contentStrIn);
         
         /* put the email addresses in the "To" field so they can be more easily searched */
         doc.add(new Field(LuceneFields.L_H_TO, emailStr,  Field.Store.NO, Field.Index.TOKENIZED));

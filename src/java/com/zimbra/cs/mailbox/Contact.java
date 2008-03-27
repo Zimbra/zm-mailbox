@@ -540,37 +540,51 @@ public class Contact extends MailItem {
         attrs.put(A_fileAs, new Integer(FA_EXPLICIT).toString() + ':' + fileAs);
     }
 
-    /** The list of all "email" fields in the contact's map. */
+    /** The list of all *simple* "email" fields in the contact's map.
+     *  
+     * IMPORTANT NOTE - does not include the Contact Group 'dlist' entry, which is 
+     * a multi-value entry (comma-separated) 
+     * 
+     * You most certainly want to use getEmailAddresses() or getEmailAddresses(Map) instead of this
+     */
     private static final String[] EMAIL_FIELDS = new String[] { A_email, A_email2, A_email3, A_workEmail1, A_workEmail2, A_workEmail3 };
     
-    private static final Set<String> sEmailFields;
-    
-    static {
-        Set<String> set = new HashSet<String>();    
-        for (String s : EMAIL_FIELDS) {
-            set.add(s);
-        }
-        sEmailFields = Collections.unmodifiableSet(set);
-    }
-    
-    public static final Set<String> getEmailFields() { return sEmailFields; } 
-
     /** Returns a list of all email address fields for this contact.  This is used
      *  by {@link com.zimbra.cs.index.Indexer#indexContact} to populate the
      *  "To" field with the contact's email addresses. */
     public List<String> getEmailAddresses() {
+        return getEmailAddresses(mFields);
+    }
+    
+    public static final boolean isEmailField(String fieldName) {
+        if (fieldName == null)
+            return false;
+        String lcField = fieldName.toLowerCase();
+        for (String e : EMAIL_FIELDS) {
+            if (lcField.equals(e))
+                return true;
+        }
+        if (lcField.equals(A_dlist))
+            return true;
+        return false;
+    }
+    
+    public static final List<String> getEmailAddresses(Map<String, String> fields) {
         ArrayList<String> result = new ArrayList<String>();
         for (String field : EMAIL_FIELDS) {
-            String value = mFields.get(field);
+            String value = fields.get(field);
             if (value != null && !value.trim().equals(""))
                 result.add(value);
         }
 
         // if the dlist is set, return it as a single value
-        String dlist = get(A_dlist);
-        if (dlist != null)
-            result.add(dlist);
-        
+        String dlist = fields.get(A_dlist);
+        if (dlist != null) {
+            String addrs[] = dlist.split(",");
+            for (String s : addrs) {
+                result.add(s.trim());
+            }
+        }
         return result;
     }
 
