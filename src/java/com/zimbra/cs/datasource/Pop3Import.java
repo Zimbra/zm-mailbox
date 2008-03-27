@@ -220,9 +220,9 @@ public class Pop3Import implements MailItemImport {
 
             // Add message to mailbox.  Validate the timestamp to avoid out-of-range
             // error in the database (see bug 17031).
-            ParsedMessage pm = null;
+            ParsedMessage pm;
             Date sentDate = pop3Msg.getSentDate();
-            if (sentDate != null && isValidDate(sentDate)) {
+            if (sentDate != null && isValidTime(sentDate.getTime())) {
                 // Set received date to the original message's date
                 pm = new ParsedMessage(pop3Msg, sentDate.getTime(),
                     mbox.attachmentsIndexingEnabled());
@@ -249,11 +249,13 @@ public class Pop3Import implements MailItemImport {
         store.close();
     }
 
-    // Make sure specified date is valid when represented as UNIX time
-    // (seconds since the epoch).
-    private static boolean isValidDate(Date date) {
-        long time = date.getTime();
-        return time >= 0 && time <= 4294967295L;
+    /*
+     * Make sure the specified time, expressed in number of milliseconds
+     * since the epoch, is a valid integer when converted to seconds. This is
+     * necessary to avoid out-of-range error in the database (see bug 17031).
+     */
+    private static boolean isValidTime(long time) {
+        return time >= 0 && time <= 0xffffffffL * 1000; // 4294967295L * 1000
     }
     
     private int addMessage(Mailbox mbox, DataSource ds, ParsedMessage pm, int folderId) throws ServiceException, IOException {
