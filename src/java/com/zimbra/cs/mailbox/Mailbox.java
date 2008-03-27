@@ -1086,11 +1086,12 @@ public class Mailbox {
         if (mMaintenance != null)
             throw MailServiceException.MAINTENANCE(mId);
         ZimbraLog.mailbox.info("Locking mailbox %d for maintenance.", getId());
-        mMaintenance = new MailboxLock(mData.accountId, mId, this);
 
         purgeListeners();
         if (mMailboxIndex != null)
             mMailboxIndex.flush();
+
+        mMaintenance = new MailboxLock(mData.accountId, mId, this);
         return mMaintenance;
     }
 
