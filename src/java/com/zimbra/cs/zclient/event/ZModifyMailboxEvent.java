@@ -18,6 +18,7 @@
 package com.zimbra.cs.zclient.event;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.ZSoapSB;
 import com.zimbra.common.soap.Element;
@@ -26,7 +27,7 @@ public class ZModifyMailboxEvent implements ZModifyEvent {
 
     protected Element mMailboxEl;
 
-    public ZModifyMailboxEvent(Element e) throws ServiceException {
+    public ZModifyMailboxEvent(Element e) {
         mMailboxEl = e;
     }
 
@@ -38,12 +39,17 @@ public class ZModifyMailboxEvent implements ZModifyEvent {
     public long getSize(long defaultValue) throws ServiceException {
         return mMailboxEl.getAttributeLong(MailConstants.A_SIZE, defaultValue);
     }
-    
+
+    public String getOwner(String defaultId) {
+        return mMailboxEl.getAttribute(HeaderConstants.A_ACCOUNT_ID, defaultId);
+    }
+
     public String toString() {
         try {
             ZSoapSB sb = new ZSoapSB();
             sb.beginStruct();
             if (getSize(-1) != -1) sb.add("size", getSize(-1));
+            if (getOwner(null) != null) sb.add("owner", getOwner(null));
             sb.endStruct();
             return sb.toString();
         } catch (ServiceException se) {

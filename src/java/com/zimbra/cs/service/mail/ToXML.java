@@ -135,7 +135,7 @@ public class ToXML {
     }
 
     public static Element encodeMailbox(Element parent, OperationContext octxt, Mailbox mbox, int fields) {
-        Element elem = parent.addUniqueElement(MailConstants.E_MAILBOX);
+        Element elem = parent.addElement(MailConstants.E_MAILBOX);
         if (octxt.isDelegatedRequest(mbox))
             elem.addAttribute(HeaderConstants.A_ACCOUNT_ID, mbox.getAccountId());
         if (needToOutput(fields, Change.MODIFIED_SIZE))

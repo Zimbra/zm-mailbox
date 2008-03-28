@@ -73,6 +73,7 @@ import com.zimbra.cs.zclient.event.ZModifyTaskEvent;
 import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemEvent;
 import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemFolderEvent;
 import com.zimbra.cs.zclient.event.ZRefreshEvent;
+
 import org.apache.commons.collections.map.LRUMap;
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
@@ -105,7 +106,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
-import java.util.TreeSet;
 import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -572,8 +572,11 @@ public class ZMailbox {
     }
 
     private void handleRefresh(Element refresh) throws ServiceException {
-        Element mbx = refresh.getOptionalElement(MailConstants.E_MAILBOX);
-        if (mbx != null) mSize = mbx.getAttributeLong(MailConstants.A_SIZE);
+        for (Element mbx : refresh.listElements(MailConstants.E_MAILBOX)) {
+            // FIXME: logic should be different if ZMailbox points at another user's mailbox
+            if (mbx.getAttribute(HeaderConstants.A_ACCOUNT_ID, null) == null)
+                mSize = mbx.getAttributeLong(MailConstants.A_SIZE);
+        }
 
         Element tags = refresh.getOptionalElement(ZimbraNamespace.E_TAGS);
         List<ZTag> tagList = new ArrayList<ZTag>();
@@ -764,7 +767,10 @@ public class ZMailbox {
                     f.modifyNotification(event);
                 }
             } else if (event instanceof ZModifyMailboxEvent) {
-            	mSize = ((ZModifyMailboxEvent)event).getSize(mSize);
+                ZModifyMailboxEvent mme = (ZModifyMailboxEvent) event;
+                // FIXME: logic should be different if ZMailbox points at another user's mailbox
+                if (mme.getOwner(null) == null)
+                    mSize = mme.getSize(mSize);
             } else if (event instanceof ZModifyMessageEvent) {
                 ZModifyMessageEvent mme = (ZModifyMessageEvent) event;
                 CachedMessage cm = (CachedMessage) mMessageCache.get(mme.getId());
