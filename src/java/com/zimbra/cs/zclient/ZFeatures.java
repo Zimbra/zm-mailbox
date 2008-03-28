@@ -119,6 +119,8 @@ public class ZFeatures {
     public boolean getWebSearchEnabled() { return get(Provisioning.A_zimbraFeatureWebSearchEnabled) == null ||
     											  getBool(Provisioning.A_zimbraFeatureWebSearchEnabled); }
 
-	public boolean getNewAddrBookEnabled() { return getBool(Provisioning.A_zimbraFeatureNewAddrBookEnabled); }
+	// defaults to TRUE
+	public boolean getNewAddrBookEnabled() { return get(Provisioning.A_zimbraFeatureNewAddrBookEnabled) == null ||
+													getBool(Provisioning.A_zimbraFeatureNewAddrBookEnabled); }
 }
 
