@@ -33,6 +33,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -336,93 +337,6 @@ public class ParsedMessage {
         return mExpandedMessage != mMimeMessage;
     }
 
-//    public ParsedMessage analyze() throws ServiceException {
-//        parse();
-//        
-//        if (mAnalyzed)
-//            return this;
-//        mAnalyzed = true;
-//        if (DebugConfig.disableMessageAnalysis)
-//            return this;
-//        
-//        analyzeBodyParts();
-//        analyzeNonBodyParts();
-//        
-//        if (mNumParseErrors > 0 && sLog.isWarnEnabled()) {
-//            String msgid = getMessageID();
-//            String sbj = getSubject();
-//            sLog.warn("Message had analysis errors in " + mNumParseErrors +
-//                " parts (Message-Id: " + msgid + ", Subject: " + sbj + ")");
-//        }
-//        
-////        
-////        try {
-////            Set<MPartInfo> mpiBodies = Mime.getBody(mMessageParts, false);
-////
-////            // extract text from the "body" parts
-////            StringBuilder bodyContent = new StringBuilder();
-////            {
-////                String reportRoot = null;
-////                for (MPartInfo mpi : mMessageParts) {
-////                    // text/calendar parts under a multipart/report aren't considered real calendar invites
-////                    String partName = mpi.mPartName;
-////                    if (reportRoot != null && !mpi.mPartName.startsWith(reportRoot))
-////                        reportRoot = null;
-////                    if (reportRoot == null && mpi.getContentType().equals(Mime.CT_MULTIPART_REPORT)) {
-////                        reportRoot = mpi.mPartName.endsWith("TEXT") ? mpi.mPartName.substring(0, partName.length() - 4) : mpi.mPartName + ".";
-////                    }
-////                    boolean isMainBody = mpiBodies.contains(mpi);
-////                    if (isMainBody) {
-////                        String toplevelText = analyzePart(isMainBody, mpi, reportRoot != null);
-////                        if (toplevelText.length() > 0)
-////                            appendToContent(bodyContent, toplevelText);
-////                    }
-////                }
-////                // Calculate the fragment -- requires body content
-////                mFragment = Fragment.getFragment(bodyContent.toString().trim(), mHasTextCalendarPart);
-////            }
-////
-////            // extract text from the "non-body" parts
-////            StringBuilder fullContent = new StringBuilder(bodyContent);
-////            {
-////                StringBuilder nonbodyContent = new StringBuilder();
-////                String reportRoot = null;
-////                for (MPartInfo mpi : mMessageParts) {
-////                    // text/calendar parts under a multipart/report aren't considered real calendar invites
-////                    String partName = mpi.mPartName;
-////                    if (reportRoot != null && !mpi.mPartName.startsWith(reportRoot))
-////                        reportRoot = null;
-////                    if (reportRoot == null && mpi.getContentType().equals(Mime.CT_MULTIPART_REPORT)) {
-////                        reportRoot = mpi.mPartName.endsWith("TEXT") ? mpi.mPartName.substring(0, partName.length() - 4) : mpi.mPartName + ".";
-////                    }
-////                    boolean isMainBody = mpiBodies.contains(mpi);
-////                    if (!isMainBody) {
-////                        String toplevelText = analyzePart(isMainBody, mpi, reportRoot != null);
-////                        if (toplevelText.length() > 0) {
-////                            appendToContent(nonbodyContent, toplevelText);
-////                        }
-////                    }
-////                }
-////                appendToContent(fullContent, nonbodyContent.toString());
-////            }
-////
-////            // requires FULL content (all parts)
-////            mLuceneDocuments.add(setLuceneHeadersFromContainer(getMainBodyLuceneDocument(bodyContent.toString(), fullContent)));
-////            
-////            if (mNumParseErrors > 0 && sLog.isWarnEnabled()) {
-////                String msgid = getMessageID();
-////                String sbj = getSubject();
-////                sLog.warn("Message had analysis errors in " + mNumParseErrors +
-////                    " parts (Message-Id: " + msgid + ", Subject: " + sbj + ")");
-////            }
-////        } catch (ServiceException e) {
-////            throw e;
-////        } catch (Exception e) {
-////            sLog.warn("exception while analyzing message; message will be partially indexed", e);
-////        }
-//        return this;
-//    }
-//    
     /**
      * Analyze and extract text from all the "body" (non-attachment) parts of the message.
      * This step is required to properly generate the message fragment.
@@ -1000,6 +914,22 @@ public class ParsedMessage {
 
             if (msgId.length() > 0)
                 document.add(new Field(LuceneFields.L_H_MESSAGE_ID, msgId, Field.Store.NO, Field.Index.UN_TOKENIZED));
+        }
+        
+        {
+            // iterate all the message headers, add them to the structured-field data in the index
+            StringBuilder fieldText = new StringBuilder();
+            Enumeration<String> en = (Enumeration<String>)(getMimeMessage().getAllHeaderLines());
+            while (en.hasMoreElements()) {
+                String s = en.nextElement();
+                if (s.length() > 0) {
+                    fieldText.append(s).append('\n');
+                }
+            }
+            if (fieldText.length() > 0) {
+                /* add key:value pairs to the structured FIELD lucene field */
+                document.add(new Field(LuceneFields.L_FIELD, fieldText.toString(), Field.Store.NO, Field.Index.TOKENIZED));
+            }                
         }
 
         String from = getSender();
