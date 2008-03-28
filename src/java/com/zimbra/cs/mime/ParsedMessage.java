@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.mail.Address;
+import javax.mail.Header;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MailDateFormat;
@@ -919,15 +920,35 @@ public class ParsedMessage {
         {
             // iterate all the message headers, add them to the structured-field data in the index
             StringBuilder fieldText = new StringBuilder();
-            Enumeration<String> en = (Enumeration<String>)(getMimeMessage().getAllHeaderLines());
+//            Enumeration<String> en = (Enumeration<String>)(getMimeMessage().getAllHeaderLines());
+            Enumeration<Header> en = (Enumeration<Header>)(getMimeMessage().getAllHeaders());
             while (en.hasMoreElements()) {
-                String s = en.nextElement();
-                if (s.length() > 0) {
-                    fieldText.append(s).append('\n');
+                Header h = en.nextElement();
+                String key = h.getName().trim();
+                String value = h.getValue();
+                if (value != null) {
+                    value = MimeUtility.unfold(value).trim();
+                } else {
+                    value = "";
+                }
+//                ZimbraLog.mailbox.info("HEADER: "+key+": "+value);
+                if (key.length() > 0) {
+//                    if (s.length() > 0) {
+//                  fieldText.append(s).append('\n');
+                    if (value.length() == 0) {
+                        // low-level tokenizer can't deal with blank header value, so we'll index
+                        // some dummy value just so the header appears in the index.
+                        // Users can query for the existence of the header with a query
+                        // like #headername:*
+                        fieldText.append(key).append(':').append("_blank_").append('\n');
+                    } else {
+                        fieldText.append(key).append(':').append(value).append('\n');
+                    }
                 }
             }
             if (fieldText.length() > 0) {
                 /* add key:value pairs to the structured FIELD lucene field */
+//                ZimbraLog.index.info("FIELD text is:\n"+fieldText.toString());
                 document.add(new Field(LuceneFields.L_FIELD, fieldText.toString(), Field.Store.NO, Field.Index.TOKENIZED));
             }                
         }
