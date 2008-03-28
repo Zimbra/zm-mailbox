@@ -1054,7 +1054,10 @@ public class Mailbox {
      * @return 
      */
     int getBatchedIndexingCount() {
-        return mMailboxIndex.getBatchedIndexingCount();        
+        if (mMailboxIndex != null)
+            return mMailboxIndex.getBatchedIndexingCount();
+        else
+            return 0;
     }
     
 
@@ -1779,7 +1782,8 @@ public class Mailbox {
                     avg = (end - start) / mReIndexStatus.mNumProcessed;
                     mps = avg > 0 ? 1000 / avg : 0;                    
                 }
-                mMailboxIndex.flush();
+                if (mMailboxIndex != null)
+                    mMailboxIndex.flush();
                 ZimbraLog.mailbox.info("Re-Indexing: Mailbox " + getId() + " COMPLETED.  Re-indexed "+mReIndexStatus.mNumProcessed
                     +" items in " + (end-start) + "ms.  (avg "+avg+"ms/item= "+mps+" items/sec)"
                     +" ("+mReIndexStatus.mNumFailed+" failed)");
@@ -4354,7 +4358,7 @@ public class Mailbox {
                 boolean noICal, int flags, String tagStr, int conversationId,
                 String rcptEmail, SharedDeliveryContext sharedDeliveryCtxt)
     throws IOException, ServiceException {
-        int batchIndexCount = mMailboxIndex.getBatchedIndexingCount();
+        int batchIndexCount = getBatchedIndexingCount();
         maybeIndexDeferredItems();
         // make sure the message has been analyzed before taking the Mailbox lock
         if (batchIndexCount==0)
@@ -6173,7 +6177,7 @@ public class Mailbox {
     
     public Message updateOrCreateChat(OperationContext octxt, ParsedMessage pm, int id) throws IOException, ServiceException {
         // make sure the message has been analzyed before taking the Mailbox lock
-        if (mMailboxIndex.getBatchedIndexingCount()==0)
+        if (getBatchedIndexingCount()==0)
             pm.analyzeFully();
         try {
             pm.getRawData();
@@ -6495,7 +6499,8 @@ public class Mailbox {
                 List<Integer> deferredTagsToSet = new ArrayList<Integer>();
                 
                 try {
-                    mMailboxIndex.deleteDocuments(mCurrentChange.indexItemsToDelete);
+                    if (mMailboxIndex != null)
+                        mMailboxIndex.deleteDocuments(mCurrentChange.indexItemsToDelete);
                 } catch (IOException e) {
                     if (ZimbraLog.index.isDebugEnabled())
                         ZimbraLog.index.debug("Caught IOException attempting to delete index entries in EndTransaction", e);
