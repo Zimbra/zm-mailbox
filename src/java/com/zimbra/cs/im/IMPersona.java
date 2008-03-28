@@ -74,28 +74,26 @@ public class IMPersona extends ClassLogger {
     // When to trigger this?  
     //    
     public static void deleteIMPersona(String acctName) {
-        
-        if (true) // disabled temporarily
-            return;
-        
         try {
-            IMAddr addr = new IMAddr(acctName);
-            JID jid = addr.makeJID();
-            User user = XMPPServer.getInstance().getUserManager().getUser(jid.toBareJID());
-            try {
-                XMPPServer.getInstance().getUserManager().deleteUser(user);
-            } catch (Exception e) {
-                ZimbraLog.im.warn("Exception deleting IM User data for: "+acctName, e);
-            }
-            try {
-                XMPPServer.getInstance().getRosterManager().deleteRoster(jid);
-            } catch (Exception e) {
-                ZimbraLog.im.warn("Exception deleting IM Roster data for: "+acctName, e);
-            }
-            try {
-                GroupManager.getInstance().deleteUser(user);
-            } catch (Exception e) {
-                ZimbraLog.im.warn("Exception deleting IM Group data for: "+acctName, e);
+            if (Provisioning.getInstance().getLocalServer().getBooleanAttr(Provisioning.A_zimbraXMPPEnabled, false)) {
+                IMAddr addr = new IMAddr(acctName);
+                JID jid = addr.makeJID();
+                User user = XMPPServer.getInstance().getUserManager().getUser(jid.toBareJID());
+//                try {
+//                    XMPPServer.getInstance().getUserManager().deleteUser(user);
+//                } catch (Exception e) {
+//                    ZimbraLog.im.warn("Exception deleting IM User data for: "+acctName, e);
+//                }
+                try {
+                    XMPPServer.getInstance().getRosterManager().deleteRoster(jid);
+                } catch (Exception e) {
+                    ZimbraLog.im.warn("Exception deleting IM Roster data for: "+acctName, e);
+                }
+                try {
+                    GroupManager.getInstance().deleteUser(user);
+                } catch (Exception e) {
+                    ZimbraLog.im.warn("Exception deleting IM Group data for: "+acctName, e);
+                }
             }
         } catch (Exception e) {
             ZimbraLog.im.warn("Exception deleting IM data for: "+acctName, e);
