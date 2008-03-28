@@ -38,8 +38,10 @@ import org.apache.lucene.analysis.Token;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.TokenFilter;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.analysis.standard.StandardTokenizer;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 
 /***
  * 
@@ -193,7 +195,9 @@ public class ZimbraAnalyzer extends StandardAnalyzer
     /**
      * Special Analyzer for structured-data field (see LuceneFields.L_FIELD )
      *
-     *  "fieldname=Val1 val2 val3" becomes  "fieldname:Val1 fieldname:val2 fieldname:val3"
+     *  "fieldname=Val1 val2 val3\nfieldname2=val2_1 val2_2 val2_3\n"
+     *   becomes 
+     *  "fieldname:Val1 fieldname:val2 fieldname:val3\nfieldname2:val2_1 fieldname2:val2_2 fieldname2:val2_3"
      *  
      */
     protected static class FieldTokenStream extends Tokenizer {
@@ -203,28 +207,16 @@ public class ZimbraAnalyzer extends StandardAnalyzer
         List<org.apache.lucene.analysis.Token> mValues = new ArrayList<org.apache.lucene.analysis.Token>();
         protected static final char FIELD_SEPARATOR = ':';
         protected static final char EOL = '\n';
+        StandardTokenizer mSt = null;
         
         public FieldTokenStream(Reader r) { 
             super(r);
-        }
-        
-        protected boolean isWhitespace(char ch) {
-            switch (ch) {
-                case ' ':
-                case '\t':
-                    return true;
-            }
-            return false;
         }
         
         protected String stripFieldName(String fieldName) {
             return fieldName;
         }
         
-        protected String stripValue(String fieldName, String value) {
-            return value;
-        }
-
         /* @see org.apache.lucene.analysis.TokenStream#next() */
         @Override
         public Token next() throws IOException {
@@ -238,14 +230,49 @@ public class ZimbraAnalyzer extends StandardAnalyzer
             
             return mValues.remove(0);
         }
+
+        protected boolean isWhitespace(char ch) {
+            switch (ch) {
+                case ' ':
+                case '\t':
+                case '"': // conflict with query language 
+                case '\'': 
+                case ';': 
+                case ',': 
+                // case '-': don't remove - b/c of negative numbers!
+                case '<':
+                case '>':
+                case '[':
+                case ']':
+                case '(':
+                case ')':
+                case '*': // wildcard conflict w/ query language
+                    return true;
+            }
+            return false;
+        }
         
+        /**
+         * Strip out punctuation
+         * 
+         * @param val
+         * @param ch
+         */
         protected void addCharToValue(StringBuilder val, char ch) {
-            if (ch == ':')
-                return;
+//            switch (ch) {
+//                    return;
+//            }
             if (!Character.isISOControl(ch))
                 val.append(Character.toLowerCase(ch));
         }
         
+        /**
+         * Strip out chars we absolutely don't want in the index -- useful just to stop collisions with
+         * the query grammar, and stop control chars, etc.
+         * 
+         * @param val
+         * @param ch
+         */
         protected void addCharToFieldName(StringBuilder val, char ch) {
             if (ch == ':')
                 return;
@@ -253,11 +280,17 @@ public class ZimbraAnalyzer extends StandardAnalyzer
                 val.append(Character.toLowerCase(ch));
         }
         
+        /**
+         * @param curWord word to be added
+         * @param wordStart offset into the string (for term position)
+         * @param wordEnd offset into the string (for term position)
+         */
         protected void addToken(String curWord, int wordStart, int wordEnd) {
             if (mFieldName.length() > 0) {
-                String toAdd = stripValue(mFieldName, curWord.toString());
-                if (toAdd.length() > 0) {
-                    mValues.add(new org.apache.lucene.analysis.Token(mFieldName+":"+toAdd, wordStart, wordEnd));
+                if (curWord.length() > 0) {
+                    String token = mFieldName+":"+curWord;
+//                    ZimbraLog.index.info("TOKEN("+wordStart+","+wordEnd+"): "+token);
+                    mValues.add(new org.apache.lucene.analysis.Token(token, wordStart, wordEnd));
                 }
             }
         }
@@ -315,32 +348,61 @@ public class ZimbraAnalyzer extends StandardAnalyzer
                 
                 StringBuilder curWord = new StringBuilder();
                 int wordStart = mOffset;
-                
-                // 7 - 11
-                while(true) {
-                    c = input.read();
-                    mOffset++;
-                    
-                    // at EOF?  Finish current word if one exists...
-                    if (c < 0) {
-                        addToken(curWord.toString(), wordStart, mOffset);
-                        return false;
-                    }
 
-                    char ch = (char)c;
-                    if (isWhitespace(ch)) {
-                        addToken(curWord.toString(), wordStart, mOffset);
-                        curWord = new StringBuilder();                        
-                    } else if (ch == EOL) {
-                        addToken(curWord.toString(), wordStart, mOffset);
-                        return true;
-                    } else {
-                        addCharToValue(curWord, ch);
+                if (true) { // if TRUE then use simple tokenizing rules (isWhitespace() above), if FALSE use Lucene's StandardTokenizer
+                    // 7 - 11
+                    while(true) {
+                        c = input.read();
+                        mOffset++;
+
+                        // at EOF?  Finish current word if one exists...
+                        if (c < 0) {
+                            if (curWord.length()>0)
+                                addToken(curWord.toString(), wordStart, mOffset);
+                            return false;
+                        }
+
+                        char ch = (char)c;
+                        
+                        // HACKHACKHACK -- treat '-' as whitespace UNLESS it is at the beginning of a word!
+                        if (isWhitespace(ch) || (curWord.length() > 0 && ch == '-')) {
+                            if (curWord.length() > 0) {
+                                addToken(curWord.toString(), wordStart, mOffset);
+                                curWord = new StringBuilder();
+                            }
+                        } else if (ch == EOL) {
+                            if (curWord.length()>0)
+                                addToken(curWord.toString(), wordStart, mOffset);
+                            return true;
+                        } else {
+                            addCharToValue(curWord, ch);
+                        }
+                    }
+                } else {
+                    int startOffset = mOffset;
+                    StringBuilder restOfLine = new StringBuilder();
+                    while(true) {
+                        c = input.read();
+                        mOffset++;
+                        if (c < 0 || (((char)c) == EOL)) {
+//                            StandardTokenizer st = new StandardTokenizer(new StringReader(restOfLine.toString()));
+                            Reader r = new StringReader(restOfLine.toString());
+                            if (mSt == null)
+                                mSt = new StandardTokenizer(r);
+                            else
+                                mSt.reset(r);
+                            Token cur = new Token();
+                            while ((cur = mSt.next(cur)) != null) {
+                                addToken(cur.termText(), startOffset+cur.startOffset(), startOffset+cur.endOffset()); 
+                            }
+                            return (!(c<0));
+                        } else {
+                            restOfLine.append(Character.toLowerCase((char)c));
+                        }
                     }
                 }
                 
                 // notreached
-                
             } catch (IOException e) {
                 mFieldName = null;
                 mValues.clear();
