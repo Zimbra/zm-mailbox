@@ -277,10 +277,22 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         return
             folders.size() == 1 && excludeFolders.isEmpty() &&
             typeListIncludesMessage &&
-            (tagConstraints == null ||
-             (tagConstraints.searchFlagsets == null &&
-              tagConstraints.searchTagsets == null &&
-              tagConstraints.unread == null)) &&
+            
+// bug: 23985
+// tagConstraints is not initialized when this check is made, don't count on it
+// instead use the tags/flags from the query itself            
+//            (tagConstraints == null ||
+//             (tagConstraints.searchFlagsets == null &&
+//              tagConstraints.searchTagsets == null &&
+//              tagConstraints.unread == null)) &&
+            hasTags == null &&
+            (excludeTags == null || excludeTags.isEmpty()) &&
+            (tags == null || tags.isEmpty()) &&
+            
+            calEndDates.isEmpty() &&
+            calStartDates.isEmpty() &&
+            convCounts.isEmpty() &&
+            
             convId == 0 && prohibitedConvIds.isEmpty() &&
             itemIds.isEmpty() && prohibitedItemIds.isEmpty() &&
             indexIds.isEmpty() &&
