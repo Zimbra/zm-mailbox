@@ -273,37 +273,8 @@ public final class MailboxIndex
     private static ILuceneFactory sLuceneFactory = null;
 
     static {
-        try {
-            Class serialMergeScheduler = Class.forName("org.apache.lucene.index.SerialMergeScheduler");
-            if (serialMergeScheduler != null) {
-                Class fact = Class.forName("com.zimbra.cs.index.Lucene23Factory");
-                if (fact != null) {
-                    sLuceneFactory = (ILuceneFactory)fact.newInstance();
-                    ZimbraLog.index.info("Using Lucene Jar version 2.3 or higher");
-                }
-            }
-        } catch (ClassNotFoundException e) {
-        } catch (Exception e) {
-            ZimbraLog.index.info("Caught exception initializing Lucene Factory: ", e);
-        }
-
-        if (sLuceneFactory == null) {
-            // couldn't find the SerialMergeFactory class, must be older Lucene jar
-            try {
-                Class fact = Class.forName("com.zimbra.cs.index.Lucene21Factory");
-                if (fact != null) {
-                    sLuceneFactory = (ILuceneFactory)fact.newInstance();
-                    ZimbraLog.index.info("Using Lucene version before 2.3");
-                }
-            } catch (ClassNotFoundException e) {
-            } catch (Exception e) {
-                ZimbraLog.index.info("Caught exception initializing Lucene Factory: ", e);
-            }
-        }
-
-        if (sLuceneFactory == null) {
-            ZimbraLog.index.fatal("Fatal error - could not find Lucene Index factory");
-        }
+        ZimbraLog.index.info("Using Lucene Jar version 2.3 or higher");
+        sLuceneFactory = new Lucene23Factory();
     }
 
 
