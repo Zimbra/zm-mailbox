@@ -51,6 +51,7 @@ import com.sun.mail.imap.IMAPStore;
 import com.sun.mail.imap.protocol.Status;
 import com.sun.mail.imap.protocol.IMAPProtocol;
 import com.sun.mail.iap.ProtocolException;
+import com.sun.mail.iap.CommandFailedException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
@@ -184,7 +185,6 @@ public class ImapImport implements MailItemImport {
 
             // Handle new remote folders and moved/renamed/deleted local folders
             Folder[] remoteFolders = remoteRootFolder.list("*");
-            Map<String, Status> folderStatus = new HashMap<String, Status>();
             //when deleting folders, especially remoted folders, we delete children before parents
             //to avoid complications.  so we want to sort in fullname length descending order.
             Arrays.sort(remoteFolders, new Comparator<Folder>() {
@@ -192,22 +192,27 @@ public class ImapImport implements MailItemImport {
                     return o2.getFullName().length() - o1.getFullName().length();
                 }
             });
+            Map<String, Status> folderStatus = new HashMap<String, Status>();
+
             for (int i = 0; i < remoteFolders.length; i++) {
                 IMAPFolder remoteFolder = (IMAPFolder) remoteFolders[i];
 
                 long remoteUvv = 0;
                 if (!hasAttribute(remoteFolder, "\\Noselect")) {
                     Status status = getStatus(remoteFolder, "UIDVALIDITY", "UIDNEXT");
-                    if (status.uidvalidity <= 0) {
+                    if (status != null && status.uidvalidity == 0 &&
+                        store.hasCapability("XAOL-NETMAIL")) {
                         // Workaround for bug 25623: if this is AOL mail and
-                        // STATUS returns an invalid UIDVALIDITY value, then
-                        // assume the correct value is 1 (always seems to be
-                        // the case).
-                        if (store.hasCapability("XAOL-NETMAIL")) {
-                            status.uidvalidity = 1;
-                        } else {
-                            throw ServiceException.FAILURE("Received incorrect UIDVALIDITY value: " + status.uidvalidity, null);
-                        }
+                        // STATUS returns a UIDVALIDITY of 0, then assume
+                        // a correct value of 1 (always seems to be the case).
+                        status.uidvalidity = 1;
+                    } else if (status == null || status.uidvalidity <= 0 ||
+                               status.uidnext <= 0) {
+                        // Skip folder with bad STATUS results (see bug 26425)
+                        ZimbraLog.datasource.warn(
+                            "Not importing remote folder '%s' because STATUS command failed",
+                            remoteFolder.getFullName());
+                        continue;
                     }
                     folderStatus.put(remoteFolder.getFullName(), status);
                     remoteUvv = status.uidvalidity;
@@ -422,7 +427,11 @@ public class ImapImport implements MailItemImport {
             throws MessagingException {
         return (Status) folder.doCommand(new IMAPFolder.ProtocolCommand() {
             public Object doCommand(final IMAPProtocol protocol) throws ProtocolException {
-                return protocol.status(folder.getFullName(), items);
+                try {
+                    return protocol.status(folder.getFullName(), items);
+                } catch (CommandFailedException e) {
+                    return null;
+                }
             }
         });
     }
