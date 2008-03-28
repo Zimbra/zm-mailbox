@@ -135,6 +135,9 @@ public class TestPop3Import extends TestCase {
         mbox.deleteMailbox();
     }
     
+    /**
+     * Tests import of a message with a date in the future (bug 17031).
+     */
     public void testBogusDate()
     throws Exception {
         // Create source account

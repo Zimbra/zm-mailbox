@@ -222,7 +222,7 @@ public class Pop3Import implements MailItemImport {
             // error in the database (see bug 17031).
             ParsedMessage pm;
             Date sentDate = pop3Msg.getSentDate();
-            if (sentDate != null && isValidTime(sentDate.getTime())) {
+            if (sentDate != null) {
                 // Set received date to the original message's date
                 pm = new ParsedMessage(pop3Msg, sentDate.getTime(),
                     mbox.attachmentsIndexingEnabled());
@@ -249,15 +249,6 @@ public class Pop3Import implements MailItemImport {
         store.close();
     }
 
-    /*
-     * Make sure the specified time, expressed in number of milliseconds
-     * since the epoch, is a valid integer when converted to seconds. This is
-     * necessary to avoid out-of-range error in the database (see bug 17031).
-     */
-    private static boolean isValidTime(long time) {
-        return time >= 0 && time <= 0xffffffffL * 1000; // 4294967295L * 1000
-    }
-    
     private int addMessage(Mailbox mbox, DataSource ds, ParsedMessage pm, int folderId) throws ServiceException, IOException {
     	com.zimbra.cs.mailbox.Message msg = null;
     	SharedDeliveryContext sharedDeliveryCtxt = new SharedDeliveryContext();

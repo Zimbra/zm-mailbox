@@ -361,7 +361,15 @@ public class Message extends MailItem {
             data.indexId     = id;
         data.volumeId    = volumeId;
         data.imapId      = id;
-        data.date        = (int) (pm.getReceivedDate() / 1000);
+
+        // Make sure the date is not negative or in the future (bug 17031)
+        long date = pm.getReceivedDate();
+        long now = System.currentTimeMillis();
+        if (date < 0 || date > now) {
+            date = now;
+        }
+        data.date        = (int) (date / 1000);
+        
         data.size        = msgSize;
         data.setBlobDigest(digest);
         data.flags       = flags & (Flag.FLAGS_MESSAGE | Flag.FLAGS_GENERIC);
