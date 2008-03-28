@@ -289,10 +289,6 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
             (excludeTags == null || excludeTags.isEmpty()) &&
             (tags == null || tags.isEmpty()) &&
             
-            calEndDates.isEmpty() &&
-            calStartDates.isEmpty() &&
-            convCounts.isEmpty() &&
-            
             convId == 0 && prohibitedConvIds.isEmpty() &&
             itemIds.isEmpty() && prohibitedItemIds.isEmpty() &&
             indexIds.isEmpty() &&
