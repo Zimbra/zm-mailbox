@@ -111,6 +111,8 @@ public class SkinUtil {
         
         // 2) if set on Domain, use it
         Domain domain = Provisioning.getInstance().getDomain(acct);
+        if (domain == null)
+        	return skins;
         return domain.getMultiAttrSet(Provisioning.A_zimbraAvailableSkin);
     }
 
