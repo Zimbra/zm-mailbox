@@ -106,7 +106,7 @@ element involving the session.)  If there is a session, there will be a
        <change token="{change-id}"/>
        [<refresh>
           <version>{server-version-string}</version>
-          <mbx s="{bytes-used}"/>       
+          <mbx s="{bytes-used}" [acct="{remote-mailbox-owner-id}"]/>
           <tags>
             <-- all tags listed -->
           </tags>
@@ -173,7 +173,7 @@ response:
      <context xmlns="urn:zimbra">
        <sessionId id="{session-id}" [type="admin"]>
        [<refresh>
-          <mbx s="{bytes-used}"/>
+          <mbx s="{bytes-used}" [acct="{remote-mailbox-owner-id}"]/>
           <tags>
             <-- all tags listed -->
           </tags>

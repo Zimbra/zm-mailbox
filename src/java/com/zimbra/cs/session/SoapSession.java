@@ -21,6 +21,7 @@
 package com.zimbra.cs.session;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -121,11 +122,16 @@ public class SoapSession extends Session {
             long now = System.currentTimeMillis();
 
             Mailbox mbox = mMailbox;
+            if (mbox == null) {
+                mVisibleFolderIds = Collections.emptySet();
+                return true;
+            }
+
             synchronized (mbox) {
                 if (!force && mNextFolderCheck > now)
                     return mVisibleFolderIds != null;
 
-                Set<Folder> visible = mbox == null ? null : mbox.getVisibleFolders(new OperationContext(getAuthenticatedAccountId()));
+                Set<Folder> visible = mbox.getVisibleFolders(new OperationContext(getAuthenticatedAccountId()));
                 Set<Integer> ids = null;
                 if (visible != null) {
                     ids = new HashSet<Integer>(visible.size());
@@ -163,7 +169,9 @@ public class SoapSession extends Session {
             // first, recalc visible folders if any folders got created or moved or had their ACL changed
             if (folderRecalcRequired(pms) && !calculateVisibleFolders(true))
                 return pms;
-            assert(mVisibleFolderIds != null);
+            Set<Integer> visible = mVisibleFolderIds;
+            if (visible == null)
+                return pms;
 
             PendingModifications filtered = new PendingModifications();
             filtered.changedTypes = pms.changedTypes;
@@ -172,7 +180,7 @@ public class SoapSession extends Session {
             }
             if (pms.created != null && !pms.created.isEmpty()) {
                 for (MailItem item : pms.created.values()) {
-                    if (item instanceof Conversation || mVisibleFolderIds.contains(item instanceof Folder ? item.getId() : item.getFolderId()))
+                    if (item instanceof Conversation || visible.contains(item instanceof Folder ? item.getId() : item.getFolderId()))
                         filtered.recordCreated(item);
                 }
             }
@@ -180,12 +188,13 @@ public class SoapSession extends Session {
                 for (Change chg : pms.modified.values()) {
                     if (!(chg.what instanceof MailItem))
                         continue;
+
                     MailItem item = (MailItem) chg.what;
-                    boolean visible = mVisibleFolderIds.contains(item instanceof Folder ? item.getId() : item.getFolderId());
+                    boolean isVisible = visible.contains(item instanceof Folder ? item.getId() : item.getFolderId());
                     boolean moved = (chg.why & Change.MODIFIED_FOLDER) != 0;
                     if (item instanceof Conversation) {
                         filtered.recordModified(item, chg.why | MODIFIED_CONVERSATION_FLAGS);
-                    } else if (visible) {
+                    } else if (isVisible) {
                         filtered.recordModified(item, chg.why);
                         // if it's an unmoved visible message and it had a tag/flag/unread change, make sure the conv shows up in the modified or created list
                         if (item instanceof Message && (moved || (chg.why & BASIC_CONVERSATION_FLAGS) != 0))
@@ -204,17 +213,16 @@ public class SoapSession extends Session {
 
         private void forceConversationModification(Message msg, PendingModifications pms, PendingModifications filtered, int changeMask) {
             int convId = msg.getConversationId();
-            ModificationKey mkey = new ModificationKey(msg.getMailbox().getAccountId(), convId);
+            Mailbox mbox = msg.getMailbox();
+            ModificationKey mkey = new ModificationKey(mbox.getAccountId(), convId);
             Change existing = null;
             if (pms.created != null && pms.created.containsKey(mkey)) {
                 ;
             } else if (pms.modified != null && (existing = pms.modified.get(mkey)) != null) {
                 filtered.recordModified((MailItem) existing.what, existing.why | changeMask);
             } else {
-                Mailbox mbox = mMailbox;
                 try {
-                    if (mbox != null)
-                        filtered.recordModified(mbox.getConversationById(null, convId), changeMask);
+                    filtered.recordModified(mbox.getConversationById(null, convId), changeMask);
                 } catch (Throwable t) { }
             }
         }
