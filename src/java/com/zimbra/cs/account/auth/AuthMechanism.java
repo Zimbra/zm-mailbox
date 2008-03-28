@@ -15,7 +15,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.account.ldap;
+package com.zimbra.cs.account.auth;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +34,9 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.krb5.Krb5Login;
 import com.zimbra.cs.account.krb5.Krb5Principal;
+import com.zimbra.cs.account.ldap.LdapEntry;
+import com.zimbra.cs.account.ldap.LdapProvisioning;
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -83,11 +86,11 @@ public abstract class AuthMechanism {
         return false;
     }
     
-    abstract boolean checkPasswordAging() throws ServiceException;
+    public abstract boolean checkPasswordAging() throws ServiceException;
     
-    abstract void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException;
+    public abstract void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException;
 
-    String getMechanism() {
+    public String getMechanism() {
         return mAuthMech;
     }
     
@@ -110,7 +113,7 @@ public abstract class AuthMechanism {
             return true;
         }
         
-        void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException {
+        public void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException {
             
             String encodedPassword = acct.getAttr(Provisioning.A_userPassword);
 
@@ -139,7 +142,7 @@ public abstract class AuthMechanism {
             throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt));       
         }
         
-        boolean checkPasswordAging() throws ServiceException {
+        public boolean checkPasswordAging() throws ServiceException {
             return true;
         }
     }
@@ -152,11 +155,11 @@ public abstract class AuthMechanism {
             super(authMech);
         }
         
-        void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException {
+        public void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException {
             prov.externalLdapAuth(domain, mAuthMech, acct, password, authCtxt);
         }
         
-        boolean checkPasswordAging() throws ServiceException {
+        public boolean checkPasswordAging() throws ServiceException {
             return false;
         }
     }
@@ -169,7 +172,7 @@ public abstract class AuthMechanism {
             super(authMech);
         }
         
-        void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException {
+        public void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException {
             String principal = Krb5Principal.getKrb5Principal(domain, acct);
             
             if (principal == null)
@@ -184,7 +187,7 @@ public abstract class AuthMechanism {
             }
         }
         
-        boolean checkPasswordAging() throws ServiceException {
+        public boolean checkPasswordAging() throws ServiceException {
             return false;
         }
     }
@@ -242,7 +245,7 @@ public abstract class AuthMechanism {
             }
         }
         
-        void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException {
+        public void doAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException {
             
             if (mHandler == null)
                 throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt), "handler " + mHandlerName + " for custom auth for domain " + domain.getName() + " not found");
@@ -269,7 +272,7 @@ public abstract class AuthMechanism {
             
         }
         
-        boolean checkPasswordAging() throws ServiceException {
+        public boolean checkPasswordAging() throws ServiceException {
             if (mHandler == null)
                 throw ServiceException.FAILURE("custom auth handler " + mHandlerName + " not found", null);
             return mHandler.checkPasswordAging();

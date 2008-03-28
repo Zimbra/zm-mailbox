@@ -62,6 +62,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.account.auth.AuthMechanism;
 import com.zimbra.cs.account.callback.MailSignature;
 import com.zimbra.cs.account.gal.GalNamedFilter;
 import com.zimbra.cs.account.gal.GalOp;
@@ -2737,7 +2738,7 @@ public class LdapProvisioning extends Provisioning {
     
     }
 
-    void externalLdapAuth(Domain d, String authMech, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException {
+    public void externalLdapAuth(Domain d, String authMech, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException {
         String url[] = d.getMultiAttr(Provisioning.A_zimbraAuthLdapURL);
         
         if (url == null || url.length == 0) {
