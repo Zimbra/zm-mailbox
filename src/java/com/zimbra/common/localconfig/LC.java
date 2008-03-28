@@ -1135,7 +1135,7 @@ public class LC {
             new KnownKey("data_source_trust_self_signed_certs", "false",
             "Allow self-signed certificates when connecting to a data source over SSL.");
         data_source_fetch_size =
-            new KnownKey("data_source_fetch_size", "25", "maximum number of imap messages to FETCH in each request");
+            new KnownKey("data_source_fetch_size", "5", "maximum number of imap messages to FETCH in each request");
         data_source_max_literal_mem_size =
             new KnownKey("data_source_max_literal_mem_size",
                 "2097152", // 2 megabytes
