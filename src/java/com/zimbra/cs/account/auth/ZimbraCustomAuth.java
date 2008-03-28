@@ -28,6 +28,13 @@ import com.zimbra.cs.account.Provisioning;
 public abstract class ZimbraCustomAuth {
     
     private static Map<String, ZimbraCustomAuth> mHandlers;
+    
+    static {
+        /*
+         * register known custom auth 
+         */
+        ZimbraCustomAuth.register("hosted", new HostedAuth());
+    }
 
     /*
      * Register a custom auth handler.
