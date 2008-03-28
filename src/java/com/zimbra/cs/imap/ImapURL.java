@@ -253,10 +253,10 @@ class ImapURL {
 
             // and return the appropriate subpart of the selected message
             MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), new ByteArrayInputStream(content));
-            byte[] part = mPart.getContent(mm);
+            Pair<Long, InputStream> part = mPart.getContent(mm);
             if (part == null)
                 throw new ImapUrlException(tag, mURL, "no such part");
-            return part;
+            return ByteUtil.getContent(part.getSecond(), (int) Math.min(part.getFirst(), Integer.MAX_VALUE));
 
         } catch (NoSuchItemException e) {
             ZimbraLog.imap.info("no such message", e);

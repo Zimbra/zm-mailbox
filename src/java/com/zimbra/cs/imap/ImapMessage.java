@@ -141,7 +141,7 @@ public class ImapMessage implements Comparable<ImapMessage> {
     private static final DateFormat GMT_DATE_FORMAT = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z (z)", Locale.US);
         static { GMT_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT")); }
 
-    private static final byte[] EMPTY_CONTENT = new byte[0];
+    static final Pair<Long, InputStream> EMPTY_CONTENT = new Pair<Long, InputStream>(0L, new ByteArrayInputStream(new byte[0]));
 
     static Pair<Long, InputStream> getContent(MailItem item) throws ServiceException {
         if (item instanceof Message) {
@@ -167,7 +167,7 @@ public class ImapMessage implements Comparable<ImapMessage> {
                 throw ServiceException.FAILURE("problems serializing contact " + item.getId(), e);
             }
         } else {
-            return new Pair<Long, InputStream>(0L, new ByteArrayInputStream(EMPTY_CONTENT));
+            return EMPTY_CONTENT;
         }
     }
 

@@ -40,6 +40,10 @@ import com.zimbra.common.util.ZimbraLog;
 class ImapPartSpecifier {
     static class BinaryDecodingException extends Exception { private static final long serialVersionUID = 8158363540973909369L; }
 
+    /** Maximum size of byte[] buffer held in memory while processing a
+     *  <tt>FETCH BINARY</tt> or <tt>FETCH BINARY.SIZE</tt>. */
+    static final int MAX_PINNED_BINARY_CONTENT = 100000;
+
     private String mCommand;
     private String mPart;
     private String mModifier;
@@ -100,66 +104,39 @@ class ImapPartSpecifier {
         return sb.toString();
     }
 
-    void writeMessage(PrintStream ps, OutputStream os, MailItem item) throws IOException, ServiceException {
-        if (!isEntireMessage())
-            throw ServiceException.FAILURE("called writeMessage on non-toplevel part", null);
+    void write(PrintStream ps, OutputStream os, Object obj) throws IOException, BinaryDecodingException, ServiceException {
+        Pair<Long, InputStream> contents = getContent(obj);
+        InputStream is = contents == null ? null : contents.getSecond();
+        long length = contents == null ? -1 : contents.getFirst();
 
-        Pair<Long, InputStream> contents = ImapMessage.getContent(item);
-        InputStream is = contents.getSecond();
-        long length = contents.getFirst();
+        ps.print(this);  ps.write(' ');
 
         try {
-            if (mOctetStart >= 0) {
-                length = Math.max(0, Math.min(length, mOctetEnd) - mOctetStart);
-                is = ByteUtil.SegmentInputStream.create(is, mOctetStart, mOctetStart + length);
-            }
-
-            ps.print(this);  ps.write(' ');
-
             if (is == null) {
                 ps.print("NIL");
             } else if (mCommand.equals("BINARY.SIZE")) {
-                ps.print(length);
+                ps.print(length >= 0 ? length : NULCheck.getLength(is));
             } else {
                 boolean binary = false;
                 if (mCommand.startsWith("BINARY")) {
-                    // we want to (a) avoid rereading the message from disk, but (b) avoid reading a 30GB blob to memory
-                    //   so we're going to read messages up to a certain length into memory and do the rest by going back to disk
-                    ByteArrayOutputStream baos = length > 100000 ? null : new ByteArrayOutputStream((int) length);
-                    byte[] buffer = new byte[8192];
-                    int bytesRead;
-                    while ((bytesRead = is.read(buffer)) >= 0) {
-                        // check for NUL bytes
-                        if (!binary) {
-                            for (int i = 0; i < bytesRead; i++) {
-                                if (buffer[i] == '\0') {
-                                    binary = true;  break;
-                                }
-                            }
-                        }
-                        // and copy to memory buffer if we're doing that...
-                        if (baos != null)
-                            baos.write(buffer, 0, bytesRead);
-                        else if (binary)
-                            break;
-                    }
-
-                    if (baos == null) {
+                    NULCheck nul = NULCheck.hasNULs(is, length);
+                    if (length < 0)
+                        length = nul.length;
+                    if (nul.content == null) {
                         // reload the original InputStream
-                        ByteUtil.closeStream(is);
-                        is = ImapMessage.getContent(item).getSecond();
-                        if (mOctetStart >= 0)
-                            is = ByteUtil.SegmentInputStream.create(is, mOctetStart, mOctetStart + length);
+                        is = getContent(obj).getSecond();
                     } else {
-                        // use the cached copy (would like to avoid the arraycopy, but it's a relatively small buffer)
-                        assert(baos.size() == length);
-                        is = new ByteArrayInputStream(baos.toByteArray());
+                        // use the cached copy
+                        is = new ByteArrayInputStream(nul.content);
                     }
+                    binary = nul.hasNULs;
                 }
 
                 ps.print(binary ? "~{" : "{");  ps.print(length);  ps.write('}');
                 if (os != null) {
-                    os.write(ImapHandler.LINE_SEPARATOR_BYTES);  ByteUtil.copy(is, false, os, false);
+                    os.write(ImapHandler.LINE_SEPARATOR_BYTES);
+                    int written = ByteUtil.copy(is, false, os, false);
+                    assert(written == length);
                 }
             }
         } finally {
@@ -167,44 +144,104 @@ class ImapPartSpecifier {
         }
     }
 
-    void write(PrintStream ps, OutputStream os, MimeMessage mm) throws IOException, BinaryDecodingException {
-        byte[] content = getContent(mm);
-
-        ps.print(this);  ps.write(' ');
-
-        if (content == null) {
-            ps.print("NIL");
-        } else if (mCommand.equals("BINARY.SIZE")) {
-            ps.print(content.length);
+    Pair<Long, InputStream> getContent(Object obj) throws IOException, BinaryDecodingException, ServiceException {
+        Pair<Long, InputStream> contents;
+        if (obj instanceof MimeMessage) {
+            contents = getContent((MimeMessage) obj);
+        } else if (obj instanceof MailItem) {
+            if (!isEntireMessage())
+                throw ServiceException.FAILURE("called writeMessage on non-toplevel part", null);
+            contents = ImapMessage.getContent((MailItem) obj);
         } else {
-            boolean binary = mCommand.startsWith("BINARY") && hasNULs(content);
-            ps.print(binary ? "~{" : "{");  ps.print(content.length);  ps.write('}');
-            if (os != null) {
-                os.write(ImapHandler.LINE_SEPARATOR_BYTES);  os.write(content);
+            throw ServiceException.FAILURE("called write() with unexpected argument: " + (obj == null ? "null" : obj.getClass().getSimpleName()), null);
+        }
+
+        if (mOctetStart >= 0 && contents != null) {
+            // if there is a "partial" octet start/length constraint on this part specifier, apply it here
+            InputStream is = contents.getSecond();
+            long statedLength = contents.getFirst();
+            long realLength = Math.max(0, Math.min(statedLength < 0 ? Integer.MAX_VALUE : statedLength, mOctetEnd) - mOctetStart);
+            try {
+                is = ByteUtil.SegmentInputStream.create(is, mOctetStart, mOctetStart + realLength);
+            } catch (IOException ioe) {
+                ByteUtil.closeStream(is);
+                throw ioe;
             }
+            contents = new Pair<Long, InputStream>(statedLength < 0 ? -1 : realLength, is);
+        }
+        return contents;
+    }
+
+    private static class NULCheck {
+        long length;
+        byte[] content;
+        boolean hasNULs;
+
+        static long getLength(InputStream is) throws BinaryDecodingException {
+            return scan(is, -1, false).length;
+        }
+
+        static NULCheck hasNULs(InputStream is, long length) throws BinaryDecodingException {
+            return scan(is, length, true);
+        }
+
+        private static NULCheck scan(InputStream is, long length, boolean checkNULs) throws BinaryDecodingException {
+            // we want to (a) avoid rereading the message from disk, but (b) avoid reading a 30GB blob to memory
+            //   so we're going to read messages up to a certain length into memory and do the rest by going back to disk
+            NULCheck nul = new NULCheck();
+            long totalSize = 0;
+            ByteArrayOutputStream baos = null;
+            if (checkNULs && length <= MAX_PINNED_BINARY_CONTENT)
+                baos = new ByteArrayOutputStream(length < 0 ? MAX_PINNED_BINARY_CONTENT / 2 : (int) length);
+
+            byte[] buffer = new byte[8192];
+            int bytesRead;
+            try {
+                while ((bytesRead = is.read(buffer)) >= 0) {
+                    // check for NUL bytes
+                    if (checkNULs && !nul.hasNULs) {
+                        for (int i = 0; i < bytesRead; i++) {
+                            if (buffer[i] == '\0') {
+                                nul.hasNULs = true;  break;
+                            }
+                        }
+                    }
+                    // and copy to memory buffer if we're doing that...
+                    if (length < 0) {
+                        totalSize += bytesRead;
+                        if (totalSize > MAX_PINNED_BINARY_CONTENT && baos != null)
+                            baos = null;
+                    }
+                    if (baos != null)
+                        baos.write(buffer, 0, bytesRead);
+                    else if (nul.hasNULs && length > 0)
+                        break;
+                }
+            } catch (IOException ioe) {
+                throw new BinaryDecodingException();
+            } finally {
+                ByteUtil.closeStream(is);
+            }
+
+            if (baos != null)
+                nul.content = baos.toByteArray();
+            if (length < 0)
+                nul.length = totalSize;
+            return nul;
         }
     }
 
-    private boolean hasNULs(byte[] buffer) {
-        if (buffer == null)
-            return false;
+    private Pair<Long, InputStream> getContent(MimeMessage msg) throws BinaryDecodingException {
+        long length = -1;
+        InputStream is = null;
 
-        for (int i = 0, end = buffer.length; i < end; i++) {
-            if (buffer[i] == '\0')
-                return true;
-        }
-        return false;
-    }
-
-    private static final byte[] NO_CONTENT = new byte[0];
-
-    byte[] getContent(MimeMessage msg) throws BinaryDecodingException {
         try {
             MimePart mp = Mime.getMimePart(msg, mPart);
             if (mp == null)
                 return null;
             // TEXT and HEADER* modifiers operate on rfc822 messages
             if ((mModifier.equals("TEXT") || mModifier.startsWith("HEADER")) && !(mp instanceof MimeMessage)) {
+                // FIXME: hackaround for JavaMail's failure to handle multipart/digest properly
                 Object content = Mime.getMessageContent(mp);
                 if (!(content instanceof MimeMessage))
                     return null;
@@ -215,26 +252,27 @@ class ImapPartSpecifier {
                 if (mp instanceof MimeBodyPart) {
                     if (mCommand.startsWith("BINARY")) {
                         try {
-                            return getContent(((MimeBodyPart) mp).getInputStream(), -1);
+                            is = ((MimeBodyPart) mp).getInputStream();
                         } catch (IOException ioe) {
                             throw new BinaryDecodingException();
                         }
                     } else {
-                        return getContent(((MimeBodyPart) mp).getRawInputStream(), mp.getSize());
+                        is = ((MimeBodyPart) mp).getRawInputStream();  length = mp.getSize();
                     }
                 } else if (mp instanceof MimeMessage) {
                     if (mCommand.startsWith("BINARY")) {
                         try {
-                            return getContent(((MimeMessage) mp).getInputStream(), mp.getSize());
+                            is = ((MimeMessage) mp).getInputStream();
                         } catch (IOException ioe) {
                             throw new BinaryDecodingException();
                         }
                     } else {
-                        return getContent(((MimeMessage) mp).getRawInputStream(), mp.getSize());
+                        is = ((MimeMessage) mp).getRawInputStream();  length = mp.getSize();
                     }
+                } else {
+                    ZimbraLog.imap.debug("getting content of part; not MimeBodyPart: " + this);
+                    return ImapMessage.EMPTY_CONTENT;
                 }
-                ZimbraLog.imap.debug("getting content of part; not MimeBodyPart: " + this);
-                return NO_CONTENT;
             } else if (mModifier.startsWith("HEADER")) {
                 MimeMessage mm = (MimeMessage) mp;
                 Enumeration headers;
@@ -244,37 +282,30 @@ class ImapPartSpecifier {
                 StringBuilder result = new StringBuilder();
                 while (headers.hasMoreElements())
                     result.append(headers.nextElement()).append(ImapHandler.LINE_SEPARATOR);
-                return result.append(ImapHandler.LINE_SEPARATOR).toString().getBytes();
+
+                byte[] content = result.append(ImapHandler.LINE_SEPARATOR).toString().getBytes();
+                is = new ByteArrayInputStream(content);  length = content.length;
             } else if (mModifier.equals("MIME")) {
                 Enumeration mime = mp.getAllHeaderLines();
                 StringBuilder result = new StringBuilder();
                 while (mime.hasMoreElements())
                     result.append(mime.nextElement()).append(ImapHandler.LINE_SEPARATOR);
-                return result.append(ImapHandler.LINE_SEPARATOR).toString().getBytes();
+
+                byte[] content = result.append(ImapHandler.LINE_SEPARATOR).toString().getBytes();
+                is = new ByteArrayInputStream(content);  length = content.length;
             } else if (mModifier.equals("TEXT")) {
-                MimeMessage mm = (MimeMessage) mp;
-                return getContent(mm.getRawInputStream(), mp.getSize());
+                is = ((MimeMessage) mp).getRawInputStream();  length = mp.getSize();
+            } else {
+                return null;
             }
-            return null;
+
+            return new Pair<Long, InputStream>(length, is);
         } catch (IOException e) {
+            ByteUtil.closeStream(is);
             return null;
         } catch (MessagingException e) {
+            ByteUtil.closeStream(is);
             return null;
         }
-    }
-
-    /** Takes an <code>InputStream</code> and reads it into a <tt>byte[]</tt>
-     *  array.  If there is a "partial" octet start/length constraint on this
-     *  part specifier, it's applied while generating the array. */
-    private byte[] getContent(InputStream is, int sizeHint) throws IOException {
-        try {
-            if (mOctetStart > 0)
-                is.skip(mOctetStart);
-        } catch (IOException ioe) {
-            ByteUtil.closeStream(is);
-            throw ioe;
-        }
-        int limit = mOctetStart < 0 ? -1 : Math.max(0, mOctetEnd - mOctetStart);
-        return ByteUtil.getPartialContent(is, limit, sizeHint);
     }
 }

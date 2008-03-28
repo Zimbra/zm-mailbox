@@ -2913,7 +2913,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                 if (!fullMessage.isEmpty()) {
                     // FIXME: fetching the entire body into memory even for a partial fetch
                     for (ImapPartSpecifier pspec : fullMessage) {
-                        result.print(empty ? "" : " ");  pspec.writeMessage(result, os, item);  empty = false;
+                        result.print(empty ? "" : " ");  pspec.write(result, os, item);  empty = false;
                     }
                 }
 
