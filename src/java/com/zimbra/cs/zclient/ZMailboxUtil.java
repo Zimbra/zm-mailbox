@@ -77,8 +77,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -2299,6 +2301,17 @@ public class ZMailboxUtil implements DebugListener {
         System.out.println("===============================");
     }
     
+    private String urlEncode(String value) {
+        String encoded = value;
+        try {
+            encoded = URLEncoder.encode(value, "utf-8").replace("+", "%20");
+        } catch (UnsupportedEncodingException e) {
+            // this should never happen...
+            encoded = URLEncoder.encode(value).replace("+", "%20");
+        }
+        return encoded;
+    }
+    
     private void doGetRestURL(String args[]) throws ServiceException {
         OutputStream os = null;
         String outputFile = outputFileOpt();
@@ -2306,7 +2319,7 @@ public class ZMailboxUtil implements DebugListener {
         
         try {
             os = hasOutputFile ? new FileOutputStream(outputFile) : System.out;
-            mMbox.getRESTResource(args[0], os, hasOutputFile, 0);
+            mMbox.getRESTResource(urlEncode(args[0]), os, hasOutputFile, 0);
         } catch (IOException e) {
             throw ZClientException.IO_ERROR(e.getMessage(), e);
         } finally {
@@ -2317,7 +2330,7 @@ public class ZMailboxUtil implements DebugListener {
     private void doPostRestURL(String args[]) throws ServiceException {
         try {
             File file = new File(args[1]);
-            mMbox.postRESTResource(args[0], new FileInputStream(file), true, file.length(), contentTypeOpt(), ignoreAndContinueOnErrorOpt(), 0);
+            mMbox.postRESTResource(urlEncode(args[0]), new FileInputStream(file), true, file.length(), contentTypeOpt(), ignoreAndContinueOnErrorOpt(), 0);
         } catch (FileNotFoundException e) {
             throw ZClientException.CLIENT_ERROR("file not found: "+args[1], e);
         }
