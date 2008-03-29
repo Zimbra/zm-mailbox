@@ -639,11 +639,11 @@ abstract class ImapRequest {
             // XXX: BCC always returns no results because we don't separately index that field
             else if (key.equals("BCC"))         { skipSpace(); child = new NoneSearch(); readAstring(charset); }
             else if (key.equals("BEFORE"))      { skipSpace(); child = new DateSearch(DateSearch.Relation.before, readDate()); }
-            else if (key.equals("BODY"))        { skipSpace(); child = new ContentSearch(ContentSearch.Relation.body, readAstring(charset)); }
-            else if (key.equals("CC"))          { skipSpace(); child = new ContentSearch(ContentSearch.Relation.cc, readAstring(charset)); }
-            else if (key.equals("FROM"))        { skipSpace(); child = new ContentSearch(ContentSearch.Relation.from, readAstring(charset)); }
-            else if (key.equals("HEADER"))      { skipSpace(); ContentSearch.Relation relation = ContentSearch.Relation.parse(mTag, readAstring());
-                                                  skipSpace(); child = new ContentSearch(relation, readAstring(charset)); }
+            else if (key.equals("BODY"))        { skipSpace(); child = new ContentSearch(readAstring(charset)); }
+            else if (key.equals("CC"))          { skipSpace(); child = new HeaderSearch(HeaderSearch.Header.CC, readAstring(charset)); }
+            else if (key.equals("FROM"))        { skipSpace(); child = new HeaderSearch(HeaderSearch.Header.FROM, readAstring(charset)); }
+            else if (key.equals("HEADER"))      { skipSpace(); HeaderSearch.Header relation = HeaderSearch.Header.parse(readAstring());
+                                                  skipSpace(); child = new HeaderSearch(relation, readAstring(charset)); }
             else if (key.equals("KEYWORD"))     { skipSpace(); child = new FlagSearch(readAtom()); }
             else if (key.equals("LARGER"))      { skipSpace(); child = new SizeSearch(SizeSearch.Relation.larger, parseLong(readNumber())); }
             else if (key.equals("MODSEQ") && extensionEnabled("CONDSTORE"))  { skipSpace();
@@ -657,9 +657,9 @@ abstract class ImapRequest {
             else if (key.equals("SENTSINCE"))   { skipSpace(); child = new DateSearch(DateSearch.Relation.after, readDate()); }
             else if (key.equals("SINCE"))       { skipSpace(); child = new DateSearch(DateSearch.Relation.after, readDate()); }
             else if (key.equals("SMALLER"))     { skipSpace(); child = new SizeSearch(SizeSearch.Relation.smaller, parseLong(readNumber())); }
-            else if (key.equals("SUBJECT"))     { skipSpace(); child = new ContentSearch(ContentSearch.Relation.subject, readAstring(charset)); }
-            else if (key.equals("TEXT"))        { skipSpace(); child = new ContentSearch(ContentSearch.Relation.body, readAstring(charset)); }
-            else if (key.equals("TO"))          { skipSpace(); child = new ContentSearch(ContentSearch.Relation.to, readAstring(charset)); }
+            else if (key.equals("SUBJECT"))     { skipSpace(); child = new HeaderSearch(HeaderSearch.Header.SUBJECT, readAstring(charset)); }
+            else if (key.equals("TEXT"))        { skipSpace(); child = new ContentSearch(readAstring(charset)); }
+            else if (key.equals("TO"))          { skipSpace(); child = new HeaderSearch(HeaderSearch.Header.TO, readAstring(charset)); }
             else if (key.equals("UID"))         { skipSpace(); child = new SequenceSearch(mTag, readSequence(), true); }
             else if (key.equals("UNKEYWORD"))   { skipSpace(); child = new NotOperation(new FlagSearch(readAtom())); }
             else if (key.equals("YOUNGER") && extensionEnabled("WITHIN"))  { skipSpace(); child = new RelativeDateSearch(DateSearch.Relation.after, parseInteger(readNumber())); }
