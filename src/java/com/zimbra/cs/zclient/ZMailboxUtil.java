@@ -1373,7 +1373,7 @@ public class ZMailboxUtil implements DebugListener {
             }
             if (zid == null) {
                 if (type != GranteeType.all && type != GranteeType.pub)
-                    throw ZClientException.CLIENT_ERROR("unablle to resolve zimbra id for: "+grantee, null);
+                    throw ZClientException.CLIENT_ERROR("unable to resolve zimbra id for: "+grantee, null);
             } else {
                 grantee = zid;
             }
