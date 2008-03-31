@@ -16,11 +16,9 @@
  */
 package com.zimbra.cs.imap;
 
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.tcpserver.TcpServerInputStream;
@@ -48,8 +46,7 @@ public class TcpImapHandler extends ImapHandler {
         super(server);
     }
                                                       
-    @Override
-    protected boolean setupConnection(Socket connection) throws IOException {
+    @Override protected boolean setupConnection(Socket connection) throws IOException {
         connection.setSoTimeout(mConfig.getUnauthMaxIdleSeconds() * 1000);        
         mRemoteAddress = connection.getInetAddress().getHostAddress();
         INFO("connected");
@@ -69,21 +66,19 @@ public class TcpImapHandler extends ImapHandler {
         return true;
     }
 
-    @Override
-    protected boolean authenticate() {
+    @Override protected boolean authenticate() {
         // we auth with the LOGIN command (and more to come)
         return true;
     }
 
-    @Override
-    protected void setIdle(boolean idle) {
+    @Override protected void setIdle(boolean idle) {
         super.setIdle(idle);
-        if (mSelectedFolder != null)
-            mSelectedFolder.updateAccessTime();
+        ImapFolder i4selected = mSelectedFolder;
+        if (i4selected != null)
+            i4selected.updateAccessTime();
     }
 
-    @Override
-    protected boolean processCommand() throws IOException {
+    @Override protected boolean processCommand() throws IOException {
         TcpImapRequest req = null;
         boolean keepGoing = CONTINUE_PROCESSING;
         ZimbraLog.clearContext();
@@ -93,15 +88,17 @@ public class TcpImapHandler extends ImapHandler {
             if (mInputStream == null)
                 return STOP_PROCESSING;
 
+            ImapFolder i4selected = mSelectedFolder;
+            Mailbox mbox = i4selected == null ? null : i4selected.getMailbox();
+            String origRemoteIp = getOrigRemoteIpAddr();
+
             if (mCredentials != null)
                 ZimbraLog.addAccountNameToContext(mCredentials.getUsername());
-            if (mSelectedFolder != null)
-                ZimbraLog.addMboxToContext(mSelectedFolder.getMailbox().getId());
-            ZimbraLog.addIpToContext(mRemoteAddress);
-            
-            String origRemoteIp = getOrigRemoteIpAddr();
+            if (mbox != null)
+                ZimbraLog.addMboxToContext(mbox.getId());
             if (origRemoteIp != null)
                 ZimbraLog.addOrigIpToContext(origRemoteIp);
+            ZimbraLog.addIpToContext(mRemoteAddress);
             
             req = mIncompleteRequest;
             if (req == null)
@@ -118,32 +115,8 @@ public class TcpImapHandler extends ImapHandler {
             long start = ZimbraPerf.STOPWATCH_IMAP.start();
 
             // check account status before executing command
-            if (mCredentials != null) {
-                try {
-                    Account account = mCredentials.getAccount();
-                    if (account == null || !account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE)) {
-                        ZimbraLog.imap.warn("account missing or not active; dropping connection");
-                        return STOP_PROCESSING;
-                    }
-                } catch (ServiceException e) {
-                    ZimbraLog.imap.warn("error checking account status; dropping connection", e);
-                    return STOP_PROCESSING;
-                }
-            }
-
-            // check target folder's aowner's account status before executing command
-            if (mSelectedFolder != null && !mCredentials.getAccountId().equalsIgnoreCase(mSelectedFolder.getTargetAccountId())) {
-                try {
-                    Account account = Provisioning.getInstance().get(Provisioning.AccountBy.id, mSelectedFolder.getTargetAccountId());
-                    if (account == null || !account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE)) {
-                        ZimbraLog.imap.warn("target account missing or not active; dropping connection");
-                        return STOP_PROCESSING;
-                    }
-                } catch (ServiceException e) {
-                    ZimbraLog.imap.warn("error checking target account status; dropping connection", e);
-                    return STOP_PROCESSING;
-                }
-            }
+            if (!checkAccountStatus())
+                return STOP_PROCESSING;
 
             if (mAuthenticator != null && !mAuthenticator.isComplete())
                 keepGoing = continueAuthentication(req);
@@ -153,9 +126,8 @@ public class TcpImapHandler extends ImapHandler {
             mIncompleteRequest = null;
 
             ZimbraPerf.STOPWATCH_IMAP.stop(start);
-            if (mLastCommand != null) {
+            if (mLastCommand != null)
                 ZimbraPerf.IMAP_TRACKER.addStat(mLastCommand.toUpperCase(), start);
-            }
         } catch (TcpImapRequest.ImapContinuationException ice) {
             mIncompleteRequest = req.rewind();
             if (ice.sendContinuation)
@@ -173,11 +145,10 @@ public class TcpImapHandler extends ImapHandler {
         return keepGoing;
     }
 
-    @Override
-    boolean doSTARTTLS(String tag) throws IOException {
-        if (!checkState(tag, State.NOT_AUTHENTICATED))
+    @Override boolean doSTARTTLS(String tag) throws IOException {
+        if (!checkState(tag, State.NOT_AUTHENTICATED)) {
             return CONTINUE_PROCESSING;
-        else if (mStartedTLS) {
+        } else if (mStartedTLS) {
             sendNO(tag, "TLS already started");
             return CONTINUE_PROCESSING;
         }
@@ -195,16 +166,15 @@ public class TcpImapHandler extends ImapHandler {
         return CONTINUE_PROCESSING;
     }
 
-    @Override
-    public void dropConnection() {
+    @Override public void dropConnection() {
         dropConnection(true);
     }
 
-    @Override
-    protected void dropConnection(boolean sendBanner) {
-        if (mSelectedFolder != null) {
-            mSelectedFolder.setHandler(null);
-            SessionCache.clearSession(mSelectedFolder);
+    @Override protected void dropConnection(boolean sendBanner) {
+        ImapFolder i4selected = mSelectedFolder;
+        if (i4selected != null) {
+            i4selected.setHandler(null);
+            SessionCache.clearSession(i4selected);
             mSelectedFolder = null;
         }
 
@@ -228,7 +198,8 @@ public class TcpImapHandler extends ImapHandler {
         }.start();
 
         try {
-            if (mOutputStream != null) {
+            OutputStream os = mOutputStream;
+            if (os != null) {
                 if (sendBanner) {
                     if (!mGoodbyeSent) {
                         try {
@@ -237,7 +208,7 @@ public class TcpImapHandler extends ImapHandler {
                     }
                     mGoodbyeSent = true;
                 }
-                mOutputStream.close();
+                os.close();
                 mOutputStream = null;
             }
             if (mInputStream != null) {
@@ -253,8 +224,7 @@ public class TcpImapHandler extends ImapHandler {
         }
     }
 
-    @Override
-    protected void notifyIdleConnection() {
+    @Override protected void notifyIdleConnection() {
         // we can, and do, drop idle connections after the timeout
 
         // TODO in the TcpServer case, is this duplicated effort with
@@ -263,8 +233,7 @@ public class TcpImapHandler extends ImapHandler {
         dropConnection();
     }
 
-    @Override
-    protected void completeAuthentication() throws IOException {
+    @Override protected void completeAuthentication() throws IOException {
         mAuthenticator.sendSuccess();
         if (mAuthenticator.isEncryptionEnabled()) {
             // Switch to encrypted streams
@@ -274,24 +243,23 @@ public class TcpImapHandler extends ImapHandler {
         }
     }
     
-    @Override
-    protected void enableInactivityTimer() throws SocketException {
+    @Override protected void enableInactivityTimer() throws SocketException {
         mConnection.setSoTimeout(mConfig.getMaxIdleSeconds() * 1000);
     }
 
-    @Override
-    protected void flushOutput() throws IOException {
+    @Override protected void flushOutput() throws IOException {
         mOutputStream.flush();
     }
 
     void sendLine(String line, boolean flush) throws IOException {
         // FIXME: throw an exception instead?
-        if (mOutputStream == null)
+        OutputStream os = mOutputStream;
+        if (os == null)
             return;
-        mOutputStream.write(line.getBytes());
-        mOutputStream.write(LINE_SEPARATOR_BYTES);
+        os.write(line.getBytes());
+        os.write(LINE_SEPARATOR_BYTES);
         if (flush)
-            mOutputStream.flush();
+            os.flush();
     }
 
     void INFO(String message, Throwable e) {
