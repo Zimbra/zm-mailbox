@@ -17,10 +17,8 @@
 
 package com.zimbra.cs.imap;
 
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mina.MinaHandler;
 import com.zimbra.cs.mina.MinaIoSessionOutputStream;
 import com.zimbra.cs.mina.MinaOutputStream;
@@ -87,19 +85,21 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
             return;
         }
 
-        if (mCredentials != null) {
-            ZimbraLog.addAccountNameToContext(mCredentials.getUsername());
-        }
-        if (mSelectedFolder != null) {
-            ZimbraLog.addMboxToContext(mSelectedFolder.getMailbox().getId());
-            mSelectedFolder.updateAccessTime();
-        }
-        ZimbraLog.addIpToContext(mSession.getRemoteAddress().toString());
-        
+        ImapFolder i4selected = mSelectedFolder;
+        Mailbox mbox = i4selected == null ? null : i4selected.getMailbox();
         String origRemoteIp = getOrigRemoteIpAddr();
+
+        if (mCredentials != null)
+            ZimbraLog.addAccountNameToContext(mCredentials.getUsername());
+        if (mbox != null)
+            ZimbraLog.addMboxToContext(mbox.getId());
         if (origRemoteIp != null)
             ZimbraLog.addOrigIpToContext(origRemoteIp);
-        
+        ZimbraLog.addIpToContext(mSession.getRemoteAddress().toString());
+
+        if (i4selected != null)
+            i4selected.updateAccessTime();
+
         long start = ZimbraPerf.STOPWATCH_IMAP.start();
         try {
             if (!processRequest(imapReq))
@@ -114,7 +114,7 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
 
     private boolean processRequest(MinaImapRequest req) throws IOException {
         if (!checkAccountStatus())
-            return false;
+            return STOP_PROCESSING;
 
         if (mAuthenticator != null && !mAuthenticator.isComplete())
             return continueAuthentication(req);
@@ -123,7 +123,7 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
             return executeRequest(req);
         } catch (ImapParseException e) {
             handleParseException(e);
-            return true;
+            return CONTINUE_PROCESSING;
         }
     }
 
@@ -138,44 +138,6 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
             sendBAD(e.mTag, e.getMessage());
     }
 
-    // TODO Consider moving to ImapHandler base class
-    private boolean checkAccountStatus() {
-        if (mCredentials == null) return true;
-        // Check authenticated user's account status before executing command
-        try {
-            Account account = mCredentials.getAccount();
-            if (account == null || !isAccountStatusActive(account)) {
-                ZimbraLog.imap.warn("account missing or not active; dropping connection");
-                return false;
-            }
-        } catch (ServiceException e) {
-            ZimbraLog.imap.warn("error checking account status; dropping connection", e);
-            return false;
-        }
-        // Check target folder owner's account status before executing command
-        if (mSelectedFolder == null)
-            return true;
-        String id = mSelectedFolder.getTargetAccountId();
-        if (mCredentials.getAccountId().equalsIgnoreCase(id))
-            return true;
-        try {
-            Account account = Provisioning.getInstance().get(Provisioning.AccountBy.id, id);
-            if (account == null || !isAccountStatusActive(account)) {
-                ZimbraLog.imap.warn("target account missing or not active; dropping connection");
-                return false;
-            }
-        } catch (ServiceException e) {
-            ZimbraLog.imap.warn("error checking target account status; dropping connection", e);
-            return false;
-        }
-        return true;
-    }
-
-    // TODO Consider adding method to Account base class
-    private boolean isAccountStatusActive(Account account) {
-        return account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE);
-    }
-    
     /**
      * Called when connection is closed. No need to worry about concurrent
      * execution since requests are processed in sequence for any given
@@ -195,9 +157,10 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
                 sendUntagged(mConfig.getGoodbye(), true);
                 mGoodbyeSent = true;
             }
-            if (timeout >= 0) {
+            MinaOutputStream out = (MinaOutputStream) mOutputStream;
+            if (timeout >= 0 && out != null) {
                 // Wait for all remaining bytes to be written
-                if (!((MinaOutputStream) mOutputStream).join(timeout))
+                if (!out.join(timeout))
                     ZimbraLog.imap.warn("Force closing session because write timed out: " + mSession);
             }
             mSession.close();
@@ -216,9 +179,10 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
     }
 
     private void cleanup() {
-        if (mSelectedFolder != null) {
-            mSelectedFolder.setHandler(null);
-            SessionCache.clearSession(mSelectedFolder);
+        ImapFolder i4selected = mSelectedFolder;
+        if (i4selected != null) {
+            i4selected.setHandler(null);
+            SessionCache.clearSession(i4selected);
             mSelectedFolder = null;
         }
     }
@@ -256,10 +220,12 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
     
     @Override void sendLine(String line, boolean flush) throws IOException {
         MinaOutputStream out = (MinaOutputStream) mOutputStream;
-        out.write(line);
-        out.write("\r\n");
-        if (flush)
-            out.flush();
+        if (out != null) {
+            out.write(line);
+            out.write("\r\n");
+            if (flush)
+                out.flush();
+        }
     }
 
     private void info(String msg, Throwable e) {

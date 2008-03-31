@@ -19,7 +19,6 @@ package com.zimbra.cs.imap;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.URLEncoder;
@@ -206,6 +205,47 @@ public abstract class ImapHandler extends ProtocolHandler {
 
     private static boolean canContinue(Authenticator auth) {
         return ((ImapAuthenticatorUser) auth.getAuthenticatorUser()).canContinue();
+    }
+
+    boolean checkAccountStatus() {
+        // check authenticated user's account status before executing command
+        if (mCredentials == null)
+            return CONTINUE_PROCESSING;
+        try {
+            Account account = mCredentials.getAccount();
+            if (account == null || !isAccountStatusActive(account)) {
+                ZimbraLog.imap.warn("account missing or not active; dropping connection");
+                return STOP_PROCESSING;
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.imap.warn("error checking account status; dropping connection", e);
+            return STOP_PROCESSING;
+        }
+
+        // check target folder owner's account status before executing command
+        ImapFolder i4selected = mSelectedFolder;
+        if (i4selected == null)
+            return CONTINUE_PROCESSING;
+        String id = i4selected.getTargetAccountId();
+        if (mCredentials.getAccountId().equalsIgnoreCase(id))
+            return CONTINUE_PROCESSING;
+        try {
+            Account account = Provisioning.getInstance().get(Provisioning.AccountBy.id, id);
+            if (account == null || !isAccountStatusActive(account)) {
+                ZimbraLog.imap.warn("target account missing or not active; dropping connection");
+                return STOP_PROCESSING;
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.imap.warn("error checking target account status; dropping connection", e);
+            return STOP_PROCESSING;
+        }
+
+        return CONTINUE_PROCESSING;
+    }
+
+    // TODO Consider adding method to Account base class
+    private boolean isAccountStatusActive(Account account) {
+        return account.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE);
     }
 
     boolean executeRequest(ImapRequest req) throws IOException, ImapParseException {
@@ -697,8 +737,9 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     void unsetSelectedFolder() throws IOException {
-        if (mSelectedFolder != null) {
-            mSelectedFolder.unregister();
+        ImapFolder i4selected = mSelectedFolder;
+        if (i4selected != null) {
+            i4selected.unregister();
             if (sessionActivated(ActivatedExtension.QRESYNC))
                 sendUntagged("OK [CLOSED] mailbox closed");
         }
