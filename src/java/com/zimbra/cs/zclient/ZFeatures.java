@@ -67,6 +67,8 @@ public class ZFeatures {
 
     public boolean getTagging() { return getBool(Provisioning.A_zimbraFeatureTaggingEnabled); }
 
+    public boolean getOptions() { return getBool(Provisioning.A_zimbraFeatureOptionsEnabled); }
+    
     public boolean getAdvancedSearch() { return getBool(Provisioning.A_zimbraFeatureAdvancedSearchEnabled); }
 
     public boolean getSavedSearches() { return getBool(Provisioning.A_zimbraFeatureSavedSearchesEnabled); }
