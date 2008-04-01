@@ -789,10 +789,11 @@ public class ImapImport implements MailItemImport {
     	SharedDeliveryContext sharedDeliveryCtxt = new SharedDeliveryContext();
         if (folderId == Mailbox.ID_FOLDER_INBOX) {
         	try {
-	            msg = RuleManager.getInstance().applyRules(mbox.getAccount(), mbox, pm, pm.getRawSize(), ds.getEmailAddress(), sharedDeliveryCtxt, flags);
+	            msg = RuleManager.getInstance().applyRules(mbox.getAccount(), mbox, pm, pm.getRawSize(), ds.getEmailAddress(), sharedDeliveryCtxt);
         	} catch (Throwable t) {
         		ZimbraLog.datasource.warn("failed applying filter rules", t);
         	}
+        	mbox.setTags(null, msg.getId(), MailItem.TYPE_MESSAGE, flags, MailItem.TAG_UNCHANGED);
         }
         if (msg == null)
         	msg = mbox.addMessage(null, pm, folderId, false, flags, null);
