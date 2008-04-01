@@ -24,7 +24,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.mail.MessagingException;
@@ -42,7 +41,6 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -175,14 +173,6 @@ public class RuleManager {
     
     public Message applyRules(Account account, Mailbox mailbox, ParsedMessage pm, int size, 
             String recipient, SharedDeliveryContext sharedDeliveryCtxt)
-		throws IOException, MessagingException, ServiceException {
-    	return applyRules(account, mailbox, pm, size, recipient, sharedDeliveryCtxt, Flag.BITMASK_UNREAD);
-    }
-    
-    //we call this api in offline for IMAP accounts' local filter rules
-    //because IMAP messages could already have flags different from UNREAD synced from server
-    public Message applyRules(Account account, Mailbox mailbox, ParsedMessage pm, int size, 
-            String recipient, SharedDeliveryContext sharedDeliveryCtxt, int flags) 
     	throws IOException, MessagingException, ServiceException
     {
         Message msg = null;
@@ -190,7 +180,6 @@ public class RuleManager {
             Node node = getRulesNode(account);
             ZimbraMailAdapter mailAdapter = new ZimbraMailAdapter(
                     mailbox, pm, recipient, sharedDeliveryCtxt);
-            addFlagActions(mailAdapter, flags);
             
             // Determine whether to apply rules
             boolean applyRules = true;
@@ -228,33 +217,22 @@ public class RuleManager {
                 // filtering system generates errors; 
                 // ignore filtering and file the message into INBOX
                 msg = mailbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX,
-                        false, flags, null, recipient, sharedDeliveryCtxt);
+                        false, Flag.BITMASK_UNREAD, null, recipient, sharedDeliveryCtxt);
             }
         } catch (ParseException e) {
             ZimbraLog.filter.warn("Unable to parse Sieve script.  Filing message in Inbox.", e);
             // filtering system generates errors; 
             // ignore filtering and file the message into INBOX
             msg = mailbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX,
-                    false, flags, null, recipient, sharedDeliveryCtxt);
+                    false, Flag.BITMASK_UNREAD, null, recipient, sharedDeliveryCtxt);
         } catch (TokenMgrError e) {
             ZimbraLog.filter.warn("Unable to parse Sieve script.  Filing message in Inbox.", e);
             // filtering system generates errors; 
             // ignore filtering and file the message into INBOX
             msg = mailbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX,
-                    false, flags, null, recipient, sharedDeliveryCtxt);
+                    false, Flag.BITMASK_UNREAD, null, recipient, sharedDeliveryCtxt);
         }
         return msg;
-    }
-    
-    private void addFlagActions(ZimbraMailAdapter mailAdapter, int flags) {
-    	List<Integer> flagIds = Flag.bitmaskToFlagIds(flags);
-    	for (int flagId : flagIds) {
-    		mailAdapter.addAction(new ActionFlag(flagId, true, ""));
-    	}
-    	//by default the ZimbraMailAdapter will assume UNREAD so if the flags don't contain UNREAD
-    	//we need to unset the UNREAD flag
-    	if ((flags & Flag.BITMASK_UNREAD) == 0)
-    		mailAdapter.addAction(new ActionFlag(Flag.ID_FLAG_UNREAD, false, ""));
     }
     
     /**
