@@ -78,7 +78,7 @@ Run the following commands:
 % sudo ln -s /usr/local/mysql /opt/zimbra/mysql
 </pre>
 
-Then edit the file /opt/zimbra/mysql/data/my.cnf, type in the
+Then create the file /opt/zimbra/mysql/data/my.cnf, type in the
 following, and save:
 
 <pre>
@@ -94,19 +94,10 @@ Now you should be able to start MySQL with the following command:
 % sudo SystemStarter start MySQL
 </pre>
 
-Set the password to the ant expected "zimbra".  Start the mysql
-client with
+Set the password to the ant expected "zimbra".
 
 <pre>
-% mysql -u root
-</pre>
-
-then enter
-
-<pre>
-mysql> UPDATE mysql.user SET Password = PASSWORD('zimbra') WHERE User='root';
-mysql> FLUSH PRIVILEGES;
-mysql> quit
+% mysqladmin -u root password zimbra
 </pre>
 
 === Install OpenLDAP ===
@@ -141,7 +132,11 @@ end of the file and save:
 
 === Install Ant ===
 
-Download from http://ant.apache.org/bindownload.cgi
+See if ant is already installed by running
+
+% which ant
+
+If it's not there, download from http://ant.apache.org/bindownload.cgi
 
 Extract the .tar.gz file to someplace useful and add to your
 PATH.
@@ -192,7 +187,16 @@ cpan> install Net::DNS
 cpan> quit
 </pre>
 
-Now you can run the Perl MTA with the following commands:
+If you're use Mac OS 10.5 or later, run "sudo visudo"
+and add the following line to the Defaults section:
+
+<pre>
+Defaults        env_keep += "ZIMBRA_HOSTNAME"
+</pre>
+
+to allow ZIMBRA_HOSTNAME to be exported into a sudo
+environment.  Now you can run the Perl MTA with the following
+commands:
 
 <pre>
 % export ZIMBRA_HOSTNAME=`/opt/zimbra/bin/zmhostname`
