@@ -18,7 +18,6 @@ package com.zimbra.cs.datasource;
 
 import java.io.IOException;
 import java.io.File;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
@@ -28,6 +27,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.HashMap;
+import java.util.Collections;
+import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -176,7 +177,7 @@ public class ImapImport implements MailItemImport {
         try {
             store = (IMAPStore) getStore(ds.getConnectionType());
             store.connect(ds.getHost(), ds.getPort(), ds.getUsername(), ds.getDecryptedPassword());
-            Folder remoteRootFolder = store.getDefaultFolder();
+            IMAPFolder remoteRootFolder = (IMAPFolder) store.getDefaultFolder();
             Mailbox mbox = ds.getMailbox();
             ImapFolderCollection imapFolders = ds.getImapFolders();
 
@@ -184,19 +185,18 @@ public class ImapImport implements MailItemImport {
                 mbox.getFolderById(null, ds.getFolderId());
 
             // Handle new remote folders and moved/renamed/deleted local folders
-            Folder[] remoteFolders = remoteRootFolder.list("*");
+            List<IMAPFolder> remoteFolders = listFolders(remoteRootFolder, "*");
+
             //when deleting folders, especially remoted folders, we delete children before parents
             //to avoid complications.  so we want to sort in fullname length descending order.
-            Arrays.sort(remoteFolders, new Comparator<Folder>() {
+            Collections.sort(remoteFolders, new Comparator<Folder>() {
                 public int compare(Folder o1, Folder o2) {
                     return o2.getFullName().length() - o1.getFullName().length();
                 }
             });
             Map<String, Status> folderStatus = new HashMap<String, Status>();
 
-            for (int i = 0; i < remoteFolders.length; i++) {
-                IMAPFolder remoteFolder = (IMAPFolder) remoteFolders[i];
-
+            for (IMAPFolder remoteFolder : remoteFolders) {
                 long remoteUvv = 0;
                 if (!hasAttribute(remoteFolder, "\\Noselect")) {
                     Status status = getStatus(remoteFolder, "UIDVALIDITY", "UIDNEXT");
@@ -421,6 +421,41 @@ public class ImapImport implements MailItemImport {
                 }
             }
         }
+    }
+
+    /*
+     * Returns list of subfolders, removing duplicates (see bug 26483).
+     */
+    private static List<IMAPFolder> listFolders(IMAPFolder root, String pattern)
+            throws MessagingException {
+        Folder[] folders = root.list(pattern);
+        List<IMAPFolder> folderList = new ArrayList<IMAPFolder>(folders.length);
+        Set<String> names = new HashSet<String>(folders.length);
+        for (Folder folder : folders) {
+            String name = getNormalizedName(folder.getFullName(), folder.getSeparator());
+            if (names.contains(name)) {
+                ZimbraLog.datasource.warn("Not importing duplicate folder name: " + folder.getFullName());
+            } else {
+                names.add(name);
+                folderList.add((IMAPFolder) folder);
+            }
+        }
+        return folderList;
+    }
+
+    /*
+     * Normalize IMAP path name. If specified path is INBOX or a subfolder
+     * of INBOX, then return path with INBOX converted to upper case. This
+     * is needed to workaround issues where GMail sometimes returns the same
+     * folder differing only in the case of the INBOX part (see bug 26483).
+     */
+    private static String getNormalizedName(String path, char separator) {
+        int len = path.length();
+        if (len < 5 || !path.substring(0, 5).equalsIgnoreCase("INBOX")) {
+            return path;
+        }
+        if (len == 5) return "INBOX";
+        return path.charAt(5) == separator ? "INBOX" + path.substring(5) : path;
     }
 
     private Status getStatus(final IMAPFolder folder, final String... items)
