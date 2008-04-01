@@ -26,37 +26,61 @@ package com.zimbra.cs.lmtpserver;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PushbackInputStream;
 import java.util.LinkedList;
 
 /**
  * Wraps an <tt>InputStream</tt> and reads an LMTP message
- * from the current position in the stream.  Stops reading
- * after encountering <tt>CRLF.CRLF</tt>.
+ * from the current position in the stream according to the
+ * rules specified in RFC 2821:
  * 
+ * <ul>
+ *   <li>If <tt>CRLF.CRLF</tt> is encountered, returns everything
+ *     up to the first <tt>CRLF</tt>, strips the trailing <tt>.CRLF</tt>
+ *     and stops reading.</li>
+ *   <li>If <tt>CRLF.</tt> is encountered without a trailing <tt>CRLF</tt>,
+ *     removes the <tt>.</tt> from the stream (transparency, section 4.5.2)</li>
+ * </ul>
+ * 
+ * The transparency implementation allows a user-entered line
+ * that begins with a dot.<p>
+ *
+ * @throws IOException if <tt>EOF</tt> is encountered before <tt>CRLF.CRLF</tt>
+ * or there's an error reading from the stream.
  * @author bburtin
  */
 public class LmtpMessageInputStream extends InputStream {
 
     private static final int CR = 13;
     private static final int LF = 10;
-    private static final int[] EOM = new int[] { CR, LF, '.', CR, LF };
-    private static final int EOMLEN = EOM.length;
 
-    private InputStream mIn;
-    // We start our state as though \r\n was already matched - so if
-    // the first line is ".\r\n" we recognize that as end of message.
-    private int mMatched = 1;
-    private boolean mInitialPhantomMatch = true;
+    private PushbackInputStream mIn;
     private int mMessageSize = 0;
     private boolean mDone = false;
-    private LinkedList<Integer> mBuffer = new LinkedList<Integer>();
+    private LinkedList<Integer> mPrefix;
+    
+    // Default mGotCR and mGotLF to true.  The <CRLF> after the DATA command applies, according
+    // to section 4.1.1.4 of RFC 2821.
+    
+    /**
+     * <tt>true</tt> if the last character was <tt>CR</tt> or
+     * the last two characters were <tt>CRLF</tt>.
+     */
+    private boolean mGotCR = true;
+    
+    /**
+     * <tt>true</tt> if the last two characters were <tt>CRLF</tt>.
+     */
+    private boolean mGotLF = true;
     
     public LmtpMessageInputStream(InputStream in, String prefix) {
-        mIn = in;
+        mIn = new PushbackInputStream(in);
+        
         if (prefix != null) {
+            mPrefix = new LinkedList<Integer>();
             byte[] bytes = prefix.getBytes();
-            for (int i = 0; i < bytes.length; i++) {
-                mBuffer.add((int) bytes[i]);
+            for (byte b : bytes) {
+                mPrefix.add((int) b);
             }
             mMessageSize = bytes.length;
         }
@@ -76,66 +100,85 @@ public class LmtpMessageInputStream extends InputStream {
     
     @Override
     public int read() throws IOException {
-        if (!mBuffer.isEmpty()) {
-            return mBuffer.remove();
-        }
         if (mDone) {
             return -1;
         }
         
-        while (true) {
-            int ch = mIn.read();
-
-            if (ch == -1) {
-                throw new IOException("EOF when looking for <CR><LF>.<CR><LF>");
+        // Return data from the prefix if it's available.
+        if (mPrefix != null) {
+            if (mPrefix.size() > 0) {
+                return mPrefix.remove();
+            } else {
+                mPrefix = null;
             }
-            
-            if (ch == EOM[mMatched + 1]) {
-                mMatched++;
-                if (mMatched == (EOMLEN-1)) {
-                    // see bug 6326 and RFC 2821 section 4.1.1.4 for why we need
-                    // to preserve the CRLF that was part of the <CRLF>.<CRLF>
-                    mBuffer.add(LF);
-                    mMessageSize += 2;
-                    mDone = true;
-                    return CR;
-                } else {
-                    continue; // match more characters
-                }
-            }
-            
-            // Flush sequence that started looking like EOM, but wasn't.
-            if (mMatched > -1) {
-                
-                int flushFrom = 0;
-                if (mInitialPhantomMatch) {
-                    mInitialPhantomMatch = false;
-                    flushFrom = 2;
-                }
-
-                for (int i = flushFrom; i <= mMatched; i++) {
-                    if (i == 2) {
-                        // We encountered "\r\n." but it did not lead to EOM.
-                        // Swallow "." so we end up removing SMTP transparency.
-                        continue;
-                    }
-                    mBuffer.add(EOM[i]);
-                    mMessageSize++;
-                }
-                
-                // Reset match counter.
-                mMatched = -1;
-                
-                // We might be at the beginning of EOM.
-                if (ch == EOM[0]) {
-                    mMatched++;
-                    continue;
-                }
-            }
-
-            mBuffer.add(ch);
-            mMessageSize++;
-            return mBuffer.remove();
         }
+        
+        // Read the next character.
+        int c = mIn.read();
+        if (c == -1) {
+            mDone = true;
+            throw new IOException("End of stream encountered when looking for <CR><LF>.<CR><LF>");
+        }
+        
+        if (c == CR) {
+            mGotCR = true;
+            mGotLF = false;
+            mMessageSize++;
+            return c;
+        }
+        if (c == LF) {
+            if (mGotCR) {
+                mGotLF = true;
+            }
+            mMessageSize++;
+            return c;
+        }
+        if (!(mGotCR && mGotLF)) {
+            mGotCR = false;
+            mGotLF = false;
+            mMessageSize++;
+            return c;
+        }
+        
+        // Got '<CRLF>'.
+        if (c != '.') {
+            mGotCR = false;
+            mGotLF = false;
+            mMessageSize++;
+            return c;
+        }
+        
+        // Got '<CRLF>.'.
+        c = mIn.read();
+        if (c == -1) {
+            mDone = true;
+            throw new IOException("End of stream encountered after '.' when looking for '<CR><LF>'");
+        }
+        if (c != CR) {
+            // Strip the dot and return the next character (transparency).
+            mGotCR = false;
+            mGotLF = false;
+            mMessageSize++;
+            return c;
+        }
+        
+        // Got '<CRLF>.<CR>'.
+        c = mIn.read();
+        if (c == -1) {
+            mDone = true;
+            throw new IOException("End of stream encountered after '<CR><LF>.<CR>' when looking for '<LF>'");
+        }
+        if (c != LF) {
+            // Edge case: '<CRLF>.<CR>' followed by something other than LF.
+            mIn.unread(c);
+            mGotCR = true;
+            mGotLF = false;
+            mMessageSize++;
+            return CR;
+        }
+        
+        // Got '<CRLF>.<CRLF>'
+        mDone = true;
+        return -1;
     }
 }
