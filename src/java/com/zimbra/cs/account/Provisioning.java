@@ -219,7 +219,7 @@ public abstract class Provisioning {
      */
     public static final String MAIL_REFER_MODE_ALWAYS = "always";
     public static final String MAIL_REFER_MODE_WRONGHOST = "wronghost";
-    public static final String MAIL_REFER_MODE_NEVER = "never";
+    public static final String MAIL_REFER_MODE_REVERSE_PROXIED = "reverse-proxied";
     
 
     // attributes

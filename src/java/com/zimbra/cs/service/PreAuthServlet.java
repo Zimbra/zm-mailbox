@@ -221,7 +221,7 @@ public class PreAuthServlet extends ZimbraServlet {
     private boolean reverseProxyMode() throws ServiceException {
         Server localhost = Provisioning.getInstance().getLocalServer();
         String referMode = localhost.getAttr(Provisioning.A_zimbraMailReferMode, "wronghost");
-        return Provisioning.MAIL_REFER_MODE_NEVER.equals(referMode);
+        return Provisioning.MAIL_REFER_MODE_REVERSE_PROXIED.equals(referMode);
     }
     
 }
