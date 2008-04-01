@@ -91,19 +91,10 @@ Start MySQL with the following command:
 sudo /opt/zimbra/mysql/mysqld_safe --user=mysql &
 </pre>
 
-Set the password to the ant expected "zimbra".  Start the mysql
-client with
+Set the password to the ant expected "zimbra".
 
 <pre>
-/opt/zimbra/mysql/bin/mysql -u root
-</pre>
-
-then enter
-
-<pre>
-mysql> UPDATE mysql.user SET Password = PASSWORD('zimbra') WHERE User='root';
-mysql> FLUSH PRIVILEGES;
-mysql> quit
+% mysqladmin -u root password zimbra
 </pre>
 
 
@@ -181,7 +172,16 @@ install Net::DNS
 quit
 </pre>
 
-Now run the Perl MTA with the following commands:
+If you're use Mac OS 10.5 or later, run "sudo visudo"
+and add the following line to the Defaults section:
+
+<pre>
+Defaults        env_keep += "ZIMBRA_HOSTNAME"
+</pre>
+
+to allow ZIMBRA_HOSTNAME to be exported into a sudo
+environment.  Now you can run the Perl MTA with the following
+commands:
 
 <pre>
 export ZIMBRA_HOSTNAME=`/opt/zimbra/bin/zmhostname`
