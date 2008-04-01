@@ -176,7 +176,7 @@ public class ZMailbox {
         private String mProxyPass;
         private String mUserAgentName;
         private String mUserAgentVersion;
-        private int mTimeout = -1;
+        private int mTimeout = 60000;
         private int mRetryCount = -1;
         private SoapProtocol mResponseProtocol = SoapProtocol.SoapJS; //12; //JS;
         private SoapProtocol mRequestProtocol = SoapProtocol.SoapJS; //12; //JS;
