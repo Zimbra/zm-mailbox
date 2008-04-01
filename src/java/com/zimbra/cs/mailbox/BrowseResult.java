@@ -24,6 +24,9 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.ArrayList;
+import java.util.List;
+
+import com.zimbra.cs.index.MailboxIndex.BrowseTerm;
 
 /**
  * @author schemers
@@ -32,43 +35,38 @@ import java.util.ArrayList;
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
 public class BrowseResult {
-    private ArrayList mResult;
+    private List<BrowseTerm> mResult;
 
-	public BrowseResult() {
-	    mResult = new ArrayList();
-	}
-	
-    void add(Object item) {
-        mResult.add(item);
+    public BrowseResult() {
+        mResult = new ArrayList<BrowseTerm>();
     }
     
-    public ArrayList getResult() {
+    public List<BrowseTerm> getResult() {
         return mResult;
     }
     
-    public static class DomainItem {
+    public static class DomainItem extends BrowseTerm {
         static final int F_FROM = 0x1;
         static final int F_TO = 0x2;
         static final int F_CC = 0x4;
         private static final String[] sHeaderFlags = {"", "f", "t", "ft", "c", "fc", "tc", "ftc"}; 
 
-        String mDomain;
         int mFlags;
         
-        DomainItem(String domain) {
-            mDomain = domain;
+        DomainItem(BrowseTerm domain) {
+            super(domain.term, domain.freq);
         }
         
-        void setFlag(int flag) {
+        public String getDomain() {
+            return term;
+        }
+        
+        void addFlag(int flag) {
             mFlags |= flag;
         }
         
         public String getHeaderFlags() {
             return sHeaderFlags[mFlags];
-        }
-        
-        public String getDomain() {
-            return mDomain;
         }
         
         public boolean isFrom() {
