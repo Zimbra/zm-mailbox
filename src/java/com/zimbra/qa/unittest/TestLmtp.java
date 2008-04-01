@@ -182,23 +182,46 @@ extends TestCase {
     
     public void testLmtpMessageInputStream()
     throws Exception {
-        runLmtpMessageTest("abcd\r\n", null);
-        runLmtpMessageTest("abcd\r\n.\r", null);
-        runLmtpMessageTest("ab\r\ncd\r\n.\r\n", "ab\r\ncd\r\n");
+        String prefix = "12345678\r\n";
+        
+        // Negative tests
+        runLmtpMessageTest("abcd\r\n", null, null);
+        runLmtpMessageTest("abcd\r\n.\r", null, null);
+        runLmtpMessageTest("\n\r.\r\n", null, null);
+        runLmtpMessageTest("\n\r\r\r\r\n\r.\r\n", null, null);
+        runLmtpMessageTest("\r\n.\n\r\n", null, null);
+        runLmtpMessageTest("..\r\n", null, null);
+        runLmtpMessageTest(".", null, null);
+        runLmtpMessageTest(".\r", null, null);
+        
+        // Positive tests
+        runLmtpMessageTest("ab\r\ncd\r\n.\r\n", "ab\r\ncd\r\n", null);
+        runLmtpMessageTest("ab\r\ncd\r\n.\r\n", "ab\r\ncd\r\n", prefix);
+        runLmtpMessageTest("ab\r\ncd\r\n\r\n.\r\n", "ab\r\ncd\r\n\r\n", null);
+        runLmtpMessageTest("ab\r\ncd\r\n\r\n.\r\n", "ab\r\ncd\r\n\r\n", prefix);
+        runLmtpMessageTest("ab\r\n..\n\r\n\r\n.\r\n", "ab\r\n.\n\r\n\r\n", null);
+        runLmtpMessageTest("ab\r\n..\n\r\n\r\n.\r\n", "ab\r\n.\n\r\n\r\n", prefix);
+        runLmtpMessageTest("ab\r\n.\rcd\r\n.\r\n", "ab\r\n\rcd\r\n", null);
+        runLmtpMessageTest("ab\r\n.\rcd\r\n.\r\n", "ab\r\n\rcd\r\n", prefix);
         
         // Transparency
-        runLmtpMessageTest(".\r\n", "\r\n");
-        runLmtpMessageTest(".\rabcd\r\n.\r\n", "\rabcd\r\n");
-        runLmtpMessageTest(".a\r\n.\r\n", "a\r\n");
-        runLmtpMessageTest(".a\r\n.\r\n", "a\r\n");
-        runLmtpMessageTest("a\r\n.a\r\n.\r\n", "a\r\na\r\n");
-        runLmtpMessageTest(".\r\n", "\r\n");
+        runLmtpMessageTest(".\r\n", "", null);
+        runLmtpMessageTest(".\r\n", "", prefix);
+        runLmtpMessageTest("..\r\n.\r\n", ".\r\n", null);
+        runLmtpMessageTest("..\r\n.\r\n", ".\r\n", prefix);
+        runLmtpMessageTest("..\rabcd\r\n.\r\n", ".\rabcd\r\n", null);
+        runLmtpMessageTest("..\rabcd\r\n.\r\n", ".\rabcd\r\n", prefix);
+        runLmtpMessageTest("..a\r\n.\r\n", ".a\r\n", null);
+        runLmtpMessageTest("..a\r\n.\r\n", ".a\r\n", prefix);
+        runLmtpMessageTest("a\r\n..a\r\n.\r\n", "a\r\n.a\r\n", null);
+        runLmtpMessageTest("a\r\n..a\r\n.\r\n", "a\r\n.a\r\n", prefix);
     }
 
-    private void runLmtpMessageTest(String input, String expectedOutput)
+    private void runLmtpMessageTest(String input, String expectedOutput, String prefix)
     throws Exception {
+        // Test without prefix
         ByteArrayInputStream in = new ByteArrayInputStream(input.getBytes());
-        LmtpMessageInputStream lin = new LmtpMessageInputStream(in, null);
+        LmtpMessageInputStream lin = new LmtpMessageInputStream(in, prefix);
         
         StringBuilder readContent = new StringBuilder();
         try {
@@ -214,7 +237,11 @@ extends TestCase {
             }
         }
         
-        assertEquals(expectedOutput, readContent.toString());
+        if (prefix == null) {
+            prefix = "";
+        }
+        assertEquals(prefix + expectedOutput, readContent.toString());
+        assertEquals(expectedOutput.length() + prefix.length(), lin.getMessageSize());
     }
     
     /**
