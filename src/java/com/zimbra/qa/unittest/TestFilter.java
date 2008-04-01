@@ -35,6 +35,7 @@ import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMessage;
 import com.zimbra.cs.zclient.ZTag;
 import com.zimbra.cs.zclient.ZFilterAction.MarkOp;
+import com.zimbra.cs.zclient.ZFilterAction.ZDiscardAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZFileIntoAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZKeepAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZMarkAction;
@@ -210,6 +211,19 @@ extends TestCase {
         TestUtil.verifyTag(mMbox, msg, TAG1_NAME);
     }
 
+    /**
+     * Tests the discard filter rule (bug 26604).
+     */
+    public void testDiscard()
+    throws Exception {
+        String recipient = TestUtil.getAddress(USER_NAME);
+        String subject = NAME_PREFIX + " doDiscard";
+        TestUtil.addMessageLmtp(subject, recipient, recipient);
+        subject = NAME_PREFIX + " dontDiscard";
+        TestUtil.addMessageLmtp(subject, recipient, recipient);
+        TestUtil.waitForMessage(mMbox, "in:inbox dontDiscard");
+        assertEquals(0, TestUtil.search(mMbox, "in:inbox doDiscard").size());
+    }
     protected void tearDown() throws Exception {
         mMbox.saveFilterRules(mOriginalRules);
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraSpamApplyUserFilters, mOriginalSpamApplyUserFilters);
@@ -263,6 +277,13 @@ extends TestCase {
         actions.add(new ZTagAction(TAG1_NAME));
         actions.add(new ZFileIntoAction(FOLDER2_PATH));
         rules.add(new ZFilterRule("testBug5455", true, false, conditions, actions));
+        
+        // if subject contains "discard", discard the message
+        conditions = new ArrayList<ZFilterCondition>();
+        actions = new ArrayList<ZFilterAction>();
+        conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "doDiscard"));
+        actions.add(new ZDiscardAction());
+        rules.add(new ZFilterRule("testDiscard", true, false, conditions, actions));
         
         return new ZFilterRules(rules);
     }
