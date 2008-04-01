@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.lucene.document.Document;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.index.MailboxIndex.BrowseTerm;
 import com.zimbra.cs.redolog.op.IndexItem;
 
 /**
@@ -68,19 +69,19 @@ interface ITextIndex {
      * @param collection - Strings which correspond to all of the domain terms stored in a given field.
      * @throws IOException
      */
-    void getDomainsForField(String fieldName, Collection<String> collection) throws IOException;
+    void getDomainsForField(String fieldName, String regex, Collection<BrowseTerm> collection) throws IOException;
 
     
     /**
      * @param collection - Strings which correspond to all of the attachment types in the index
      * @throws IOException
      */
-    void getAttachments(Collection<String> collection) throws IOException;
+    void getAttachments(String regex, Collection<BrowseTerm> collection) throws IOException;
     
     /**
      * Return the list of objects (e.g. PO, etc) from the index, for SearchBuilder browsing
      */
-    void getObjects(Collection<String> collection) throws IOException;
+    void getObjects(String regex, Collection<BrowseTerm> collection) throws IOException;
 
     /**
      * Suggest alternate spellings for the given token 

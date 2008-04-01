@@ -66,6 +66,7 @@ import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.index.MailboxIndex.BrowseTerm;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.localconfig.DebugConfig;
@@ -3659,52 +3660,136 @@ public class Mailbox {
         return com.zimbra.cs.fb.LocalFreeBusyProvider.getFreeBusyList(this, start, end);
     }
 
-    private void addDomains(HashMap<String, DomainItem> domainItems, HashSet<String> newDomains, int flag) {
-        for (String domain : newDomains) {
-            DomainItem di = domainItems.get(domain);
+    private void addDomains(HashMap<String, DomainItem> domainItems, HashSet<BrowseTerm> newDomains, int flag) {
+        for (BrowseTerm domain : newDomains) {
+            DomainItem di = domainItems.get(domain.term);
             if (di == null)
-                domainItems.put(domain, di = new DomainItem(domain));
-            di.setFlag(flag);
+                domainItems.put(domain.term, di = new DomainItem(domain));
+            di.addFlag(flag);
         }
     }
+    
+    public static enum BrowseBy {
+        attachments, domains, objects;
+    }
 
-    public synchronized BrowseResult browse(OperationContext octxt, String browseBy) throws IOException, ServiceException {
+    /**
+     * Return a list of all the {attachments} or {doamins} or {objects} in this Mailbox, optionally with a prefix string 
+     * or limited by maximum number.  
+     *  
+     * @param octxt
+     * @param browseBy
+     * @param regex
+     * @param max Maximum number of results to return.  0 means "return all results"  If more than max entries exist, only the first max are returned, sorted by frequency.  
+     * @return
+     * @throws IOException
+     * @throws ServiceException
+     */
+    public synchronized BrowseResult browse(OperationContext octxt, BrowseBy browseBy, String regex, int max) throws IOException, ServiceException {
         boolean success = false;
         try {
             beginTransaction("browse", octxt);
             if (!hasFullAccess())
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions on this mailbox");
-            if (browseBy != null)
-                browseBy = browseBy.intern();
-
+            
             BrowseResult browseResult = new BrowseResult();
 
             MailboxIndex idx = getMailboxIndex();
             if (idx != null) {
-                if (browseBy == BROWSE_BY_ATTACHMENTS) {
-                    idx.getAttachments(browseResult.getResult());
-                } else if (browseBy == BROWSE_BY_DOMAINS) {
-                    HashMap<String, DomainItem> domainItems = new HashMap<String, DomainItem>();
-                    HashSet<String> set = new HashSet<String>();
-    
-                    idx.getDomainsForField(LuceneFields.L_H_CC, set);
-                    addDomains(domainItems, set, DomainItem.F_CC);
-    
-                    set.clear();
-                    idx.getDomainsForField(LuceneFields.L_H_FROM, set);
-                    addDomains(domainItems, set, DomainItem.F_FROM);
-    
-                    set.clear();             
-                    idx.getDomainsForField(LuceneFields.L_H_TO, set);
-                    addDomains(domainItems, set, DomainItem.F_TO);
-    
-                    browseResult.getResult().addAll(domainItems.values());
-                } else if (browseBy == BROWSE_BY_OBJECTS) {
-                    idx.getObjects(browseResult.getResult());
-                } else { 
-                    // throw exception?
+                switch(browseBy) {
+                    case attachments:
+                        idx.getAttachments(regex, browseResult.getResult());
+                        break;
+                    case domains:
+                        HashMap<String, DomainItem> domainItems = new HashMap<String, DomainItem>();
+                        HashSet<BrowseTerm> set = new HashSet<BrowseTerm>();
+        
+                        idx.getDomainsForField(LuceneFields.L_H_CC, regex, set);
+                        addDomains(domainItems, set, DomainItem.F_CC);
+        
+                        set.clear();
+                        idx.getDomainsForField(LuceneFields.L_H_FROM, regex, set);
+                        addDomains(domainItems, set, DomainItem.F_FROM);
+        
+                        set.clear();             
+                        idx.getDomainsForField(LuceneFields.L_H_TO, regex, set);
+                        addDomains(domainItems, set, DomainItem.F_TO);
+                        
+                        browseResult.getResult().addAll(domainItems.values());
+                        break;
+                    case objects:
+                        idx.getObjects(regex, browseResult.getResult());
+                        break;
+                    default:
+                        throw new IllegalArgumentException("Unknown browseBy: "+browseBy);
                 }
             }
+            
+            if (max > 0) {
+                if (browseResult.getResult().size() > max) {
+                    Comparator<BrowseTerm> reverseComp= new Comparator<BrowseTerm>() {
+                        public int compare(BrowseTerm o1, BrowseTerm o2) {
+                            int retVal = o2.freq - o1.freq;
+                            if (retVal == 0) {
+                                retVal = o1.term.compareTo(o2.term);
+                            }
+                            return retVal;
+                        }
+                    };
+//                    {
+//                        StringBuilder sb = new StringBuilder("UNSORTED: ");
+//                        for (BrowseTerm term : browseResult.getResult()) {
+//                            sb.append(term.term).append('(').append(term.freq).append("),");
+//                        }
+//                        ZimbraLog.mailbox.info(sb.toString());
+//                    }
+                    
+                    Collections.sort(browseResult.getResult(), reverseComp);
+//                    {
+//                        StringBuilder sb = new StringBuilder("SORTED: ");
+//                        for (BrowseTerm term : browseResult.getResult()) {
+//                            sb.append(term.term).append('(').append(term.freq).append("),");
+//                        }
+//                        ZimbraLog.mailbox.info(sb.toString());
+//                    }
+                    
+                    int num = 0;
+                    for (Iterator<BrowseTerm> iter = browseResult.getResult().iterator(); iter.hasNext(); ) {
+                        BrowseTerm curTerm = (BrowseTerm)iter.next();
+//                        ZimbraLog.mailbox.info("Checking: "+curTerm.term+"("+curTerm.freq+")");
+                        num++;
+                        if (num > max) {
+                            iter.remove();
+                        }
+                    }
+                }
+            }
+                    
+//                }
+//                if (browseBy == BROWSE_BY_ATTACHMENTS) {
+//                    idx.getAttachments(browseResult.getResult());
+//                } else if (browseBy == BROWSE_BY_DOMAINS) {
+//                    HashMap<String, DomainItem> domainItems = new HashMap<String, DomainItem>();
+//                    HashSet<String> set = new HashSet<String>();
+//    
+//                    idx.getDomainsForField(LuceneFields.L_H_CC, set);
+//                    addDomains(domainItems, set, DomainItem.F_CC);
+//    
+//                    set.clear();
+//                    idx.getDomainsForField(LuceneFields.L_H_FROM, set);
+//                    addDomains(domainItems, set, DomainItem.F_FROM);
+//    
+//                    set.clear();             
+//                    idx.getDomainsForField(LuceneFields.L_H_TO, set);
+//                    addDomains(domainItems, set, DomainItem.F_TO);
+//    
+//                    browseResult.getResult().addAll(domainItems.values());
+//                } else if (browseBy == BROWSE_BY_OBJECTS) {
+//                    idx.getObjects(browseResult.getResult());
+//                } else { 
+//                    // throw exception?
+//                }
+//            }
             success = true;
             return browseResult;
         } finally {

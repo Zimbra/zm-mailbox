@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.regex.Pattern;
 
 import org.apache.lucene.document.DateField;
 import org.apache.lucene.document.Document;
@@ -56,6 +57,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.index.MailboxIndex.BrowseTerm;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.redolog.op.IndexItem;
@@ -362,10 +364,11 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
     
     public void checkBlobIds() throws IOException {
         sLog.warn("Starting blob ID check for index "+this.toString());
-        List<String> l = new LinkedList<String>();
-        enumerateTermsForField(new Term(LuceneFields.L_MAILBOX_BLOB_ID, ""),new TermEnumCallback(l));
+        List<BrowseTerm> l = new LinkedList<BrowseTerm>();
+        enumerateTermsForField("", new Term(LuceneFields.L_MAILBOX_BLOB_ID, ""),new TermEnumCallback(l));
         
-        for (String s : l) {
+        for (BrowseTerm result : l) {
+            String s = result.term;
             RefCountedIndexSearcher searcher = this.getCountedIndexSearcher();
             try {
                 Query q = new TermQuery(new Term(LuceneFields.L_MAILBOX_BLOB_ID, s));
@@ -385,7 +388,7 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
         sLog.warn("Completed blob ID check for index "+this.toString());
     }
     
-    private void enumerateTermsForField(Term firstTerm, TermEnumInterface callback) throws IOException
+    private void enumerateTermsForField(String regex, Term firstTerm, TermEnumInterface callback) throws IOException
     {
         synchronized(getLock()) {
             RefCountedIndexSearcher searcher = this.getCountedIndexSearcher();
@@ -394,6 +397,16 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
 
                 TermEnum terms = iReader.terms(firstTerm);
                 boolean hasDeletions = iReader.hasDeletions();
+                
+                // HACK!
+                boolean stripAtBeforeRegex = false;
+                if (callback instanceof DomainEnumCallback) 
+                    stripAtBeforeRegex = true;
+                
+                Pattern p = null;
+                if (regex != null && regex.length() > 0) {
+                    p = Pattern.compile(regex);
+                }
 
                 do {
                     Term cur = terms.term();
@@ -402,11 +415,25 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
                             break;
                         }
 
-                        // NOTE: the term could exist in docs, but they might all be deleted. Unfortunately this means  
-                        // that we need to actually walk the TermDocs enumeration for this document to see if it is
-                        // non-empty
-                        if ((!hasDeletions) || (iReader.termDocs(cur).next())) {
-                            callback.onTerm(cur, terms.docFreq());
+                        boolean skipIt = false;
+                        if (p != null) {
+                            String compareTo = cur.text();
+                            if (stripAtBeforeRegex)
+                                if (compareTo.length() > 1 && compareTo.charAt(0)=='@')
+                                    compareTo = compareTo.substring(1);
+                            ZimbraLog.index.info("Browse Regex Check comparing \""+compareTo+"\" to regexp \""+regex+"\"");
+                            if (!(p.matcher(compareTo).matches()))
+                                skipIt = true;
+                        }
+
+                        if (!skipIt) {
+                            // NOTE: the term could exist in docs, but they might all be deleted. Unfortunately this means  
+                            // that we need to actually walk the TermDocs enumeration for this document to see if it is
+                            // non-empty
+                            if ((!hasDeletions) || (iReader.termDocs(cur).next())) {
+                                ZimbraLog.index.info("Adding term: "+cur.toString()+" freq="+terms.docFreq());
+                                callback.onTerm(cur, terms.docFreq());
+                            }
                         }
                     }
                 } while (terms.next());
@@ -827,23 +854,29 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
      * @param collection - Strings which correspond to all of the domain terms stored in a given field.
      * @throws IOException
      */
-    public void getDomainsForField(String fieldName, Collection<String> collection) throws IOException
+    public void getDomainsForField(String fieldName, String regex, Collection<BrowseTerm> collection) throws IOException
     {
-        enumerateTermsForField(new Term(fieldName,""),new DomainEnumCallback(collection));
+        if (regex == null)
+            regex = "";
+        enumerateTermsForField(regex, new Term(fieldName,""),new DomainEnumCallback(collection));
     }
     
     /**
      * @param collection - Strings which correspond to all of the attachment types in the index
      * @throws IOException
      */
-    public void getAttachments(Collection<String> collection) throws IOException
+    public void getAttachments(String regex, Collection<BrowseTerm> collection) throws IOException
     {
-        enumerateTermsForField(new Term(LuceneFields.L_ATTACHMENTS,""), new TermEnumCallback(collection));
+        if (regex == null)
+            regex = "";
+        enumerateTermsForField(regex, new Term(LuceneFields.L_ATTACHMENTS, ""), new TermEnumCallback(collection));
     }
 
-    public void getObjects(Collection<String> collection) throws IOException
+    public void getObjects(String regex, Collection<BrowseTerm> collection) throws IOException
     {
-        enumerateTermsForField(new Term(LuceneFields.L_OBJECTS,""), new TermEnumCallback(collection));
+        if (regex == null)
+            regex = "";
+        enumerateTermsForField(regex, new Term(LuceneFields.L_OBJECTS, ""), new TermEnumCallback(collection));
     }
 
   
@@ -1440,30 +1473,30 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
         abstract boolean onDocument(Document doc, boolean isDeleted);
     }
     static class DomainEnumCallback implements TermEnumInterface {
-        DomainEnumCallback(Collection<String> collection) {
+        DomainEnumCallback(Collection<BrowseTerm> collection) {
             mCollection = collection;
         }
 
         public void onTerm(Term term, int docFreq) {
             String text = term.text();
             if (text.length() > 1 && text.charAt(0) == '@') {
-                mCollection.add(text.substring(1));
+                mCollection.add(new BrowseTerm(text.substring(1), docFreq));
             }           
         }
-        private Collection<String> mCollection;
+        private Collection<BrowseTerm> mCollection;
     }
     static class TermEnumCallback implements TermEnumInterface {
-        TermEnumCallback(Collection<String> collection) {
+        TermEnumCallback(Collection<BrowseTerm> collection) {
             mCollection = collection;
         }
 
         public void onTerm(Term term, int docFreq) {
             String text = term.text();
             if (text.length() > 1) {
-                mCollection.add(text);
+                mCollection.add(new BrowseTerm(text, docFreq));
             }           
         }
-        private Collection<String> mCollection;
+        private Collection<BrowseTerm> mCollection;
     }
     interface TermEnumInterface {
         abstract void onTerm(Term term, int docFreq); 

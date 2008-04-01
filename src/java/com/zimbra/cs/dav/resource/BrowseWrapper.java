@@ -28,6 +28,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.dav.DavContext;
+import com.zimbra.cs.index.MailboxIndex.BrowseTerm;
 import com.zimbra.cs.mailbox.BrowseResult;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -132,13 +133,13 @@ public class BrowseWrapper extends PhantomResource {
 		Provisioning prov = Provisioning.getInstance();
 		Account account = prov.get(AccountBy.name, user);
 		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-		BrowseResult br = mbox.browse(ctxt.getOperationContext(), Mailbox.BROWSE_BY_DOMAINS);
-		for (Object obj : br.getResult()) {
-			if (obj instanceof DomainItem) {
-				DomainItem di = (DomainItem) obj;
-				if (di.isFrom())
-					res.add(new BrowseWrapper(generateUri(di.getDomain()), getOwner()));
-			}
+		BrowseResult br = mbox.browse(ctxt.getOperationContext(), Mailbox.BrowseBy.domains, "", 0);
+		for (BrowseTerm bt : br.getResult()) {
+		    if (bt instanceof DomainItem) {
+		        DomainItem di = (DomainItem) bt;
+		        if (di.isFrom())
+		            res.add(new BrowseWrapper(generateUri(di.getDomain()), getOwner()));
+		    }
 		}
 		return res;
 	}
@@ -149,19 +150,17 @@ public class BrowseWrapper extends PhantomResource {
 		Provisioning prov = Provisioning.getInstance();
 		Account account = prov.get(AccountBy.name, user);
 		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-		BrowseResult br = mbox.browse(ctxt.getOperationContext(), Mailbox.BROWSE_BY_ATTACHMENTS);
-		for (Object obj : br.getResult()) {
-			if (obj instanceof String) {
-				String ctype = (String) obj;
-				int index = ctype.indexOf('/');
-				if (index != -1 || ctype.equals("message") || ctype.equals("none")) {
-					continue;
-					// the client still gets confused about having a slash in the
-					// path even after encoding
-					//ctype = ctype.substring(0,index) + "%2F" + ctype.substring(index+1);
-				}
-				res.add(new BrowseWrapper(generateUri(ctype), getOwner()));
-			}
+		BrowseResult br = mbox.browse(ctxt.getOperationContext(), Mailbox.BrowseBy.attachments, "", 0);
+		for (BrowseTerm bt: br.getResult()) {
+		    String ctype = bt.term;
+		    int index = ctype.indexOf('/');
+		    if (index != -1 || ctype.equals("message") || ctype.equals("none")) {
+		        continue;
+		        // the client still gets confused about having a slash in the
+		        // path even after encoding
+		        //ctype = ctype.substring(0,index) + "%2F" + ctype.substring(index+1);
+		    }
+		    res.add(new BrowseWrapper(generateUri(ctype), getOwner()));
 		}
 		res.add(new BrowseWrapper(generateUri("word"), getOwner()));
 		res.add(new BrowseWrapper(generateUri("excel"), getOwner()));

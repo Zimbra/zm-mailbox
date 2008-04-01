@@ -1419,14 +1419,17 @@ if nest="1" on the request, response looks like this:
 
 ------------
 
-<BrowseRequest browseBy="{browse-by}"/>
+<BrowseRequest browseBy="{browse-by}" [regex="{regex-string}"] [maxToReturn="{max}"]/>
 
 
 <BrowseResponse>
- <bd>{browse-data}</bd>*
+ <bd freq="count">{browse-data}</bd>*
 </BrowseResponse>
 
   {browse-by} = domains|attachments|objects
+  {regex-string} = return only those results which match the specified regular expression
+  {max} = return only a maximum number of entries as requested.  If more than {max}
+          results exist, the server will return the first {max}, sorted by frequency
   {browse-data} =  
       for attachments: content type (application/msword)
       

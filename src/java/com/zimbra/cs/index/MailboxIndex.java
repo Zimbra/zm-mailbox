@@ -187,29 +187,63 @@ public final class MailboxIndex
     public boolean useBatchedIndexing() throws ServiceException {
         return mMailbox.getAccount().getIntAttr(Provisioning.A_zimbraBatchedIndexingSize, 0) > 0;
     }
+    
+    public static class BrowseTerm {
+        public final String term;
+        public final int freq;
+        
+        public BrowseTerm(String term, int freq) {
+            this.term = term;
+            this.freq = freq;
+        }
+
+        @Override
+        public int hashCode() {
+            return term.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            final BrowseTerm other = (BrowseTerm) obj;
+            if (term == null) {
+                if (other.term != null)
+                    return false;
+            } else if (!term.equals(other.term))
+                return false;
+            return true;
+        }
+        
+        
+    }
 
     /**
      * @param fieldName - a lucene field (e.g. LuceneFields.L_H_CC)
      * @param collection - Strings which correspond to all of the domain terms stored in a given field.
      * @throws IOException
      */
-    public void getDomainsForField(String fieldName, Collection<String> collection) throws IOException
+    public void getDomainsForField(String fieldName, String regex, Collection<BrowseTerm> collection) throws IOException
     {
-        mTextIndex.getDomainsForField(fieldName, collection);
+        mTextIndex.getDomainsForField(fieldName, regex, collection);
     }
 
     /**
      * @param collection - Strings which correspond to all of the attachment types in the index
      * @throws IOException
      */
-    public void getAttachments(Collection<String> collection) throws IOException
+    public void getAttachments(String regex, Collection<BrowseTerm> collection) throws IOException
     {
-        mTextIndex.getAttachments(collection);
+        mTextIndex.getAttachments(regex, collection);
     }
 
-    public void getObjects(Collection<String> collection) throws IOException
+    public void getObjects(String regex, Collection<BrowseTerm> collection) throws IOException
     {
-        mTextIndex.getObjects(collection);
+        mTextIndex.getObjects(regex, collection);
     }
 
 
