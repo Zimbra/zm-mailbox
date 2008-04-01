@@ -1420,6 +1420,7 @@ public abstract class Provisioning {
     public static final String A_zimbraReverseProxyPop3PortAttribute    = "zimbraReverseProxyPop3PortAttribute";
     public static final String A_zimbraReverseProxyPop3SSLPortAttribute = "zimbraReverseProxyPop3SSLPortAttribute";
     public static final String A_zimbraReverseProxyImapPortAttribute    = "zimbraReverseProxyImapPortAttribute";
+    public static final String A_zimbraReverseProxyHttpPortAttribute    = "zimbraReverseProxyHttpPortAttribute";
     public static final String A_zimbraReverseProxyImapSSLPortAttribute = "zimbraReverseProxyImapSSLPortAttribute";
     public static final String A_zimbraReverseProxyDomainNameQuery      = "zimbraReverseProxyDomainNameQuery";
     public static final String A_zimbraReverseProxyDomainNameSearchBase = "zimbraReverseProxyDomainNameSearchBase";
