@@ -238,7 +238,7 @@ public abstract class MailItemResource extends DavResource {
 		for (Element e : set) {
 			QName name = e.getQName();
 			if (name.equals(DavElements.E_DISPLAYNAME) &&
-					mType == MailItem.TYPE_FOLDER || mType == MailItem.TYPE_MOUNTPOINT) {
+					(mType == MailItem.TYPE_FOLDER || mType == MailItem.TYPE_MOUNTPOINT)) {
 				// rename folder
 				try {
 					String val = e.getText();
@@ -254,7 +254,7 @@ public abstract class MailItemResource extends DavResource {
 				mDeadProps.remove(name);
 				continue;
 			} else if (name.equals(DavElements.E_CALENDAR_COLOR) &&
-					mType == MailItem.TYPE_FOLDER || mType == MailItem.TYPE_MOUNTPOINT) {
+					(mType == MailItem.TYPE_FOLDER || mType == MailItem.TYPE_MOUNTPOINT)) {
 				// change color
 				String colorStr = e.getText();
 				byte col = (byte) COLOR_LIST.indexOf(colorStr);
