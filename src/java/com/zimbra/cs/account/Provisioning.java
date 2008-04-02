@@ -1859,19 +1859,8 @@ public abstract class Provisioning {
     public abstract void authAccount(Account acct, String password, String proto) throws ServiceException;
     
     public abstract void authAccount(Account acct, String password, String proto, Map<String, Object> authCtxt) throws ServiceException;
-
-    /*
-     * TODO, retire after next release of YCC goes out
-     * next release of YCC goes out with Zimbra 5_0_3, we need to keep the 5_0_3 signature for now
-     * or else CalendarProvisioning won't compile 
-     */
-    public void preAuthAccount(Account acct, String accountName, String accountBy, long timestamp, long expires, String preAuth) throws ServiceException
-    {
-    }
     
-    public void preAuthAccount(Account acct, String accountName, String accountBy, long timestamp, long expires, String preAuth, Map<String, Object> authCtxt) throws ServiceException {
-        preAuthAccount(acct, accountName, accountBy, timestamp, expires, preAuth);
-    }
+    public abstract void preAuthAccount(Account acct, String accountName, String accountBy, long timestamp, long expires, String preAuth, Map<String, Object> authCtxt) throws ServiceException;
     
     public abstract void changePassword(Account acct, String currentPassword, String newPassword) throws ServiceException;
     
