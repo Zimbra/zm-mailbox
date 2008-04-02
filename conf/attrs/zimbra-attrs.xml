@@ -2857,7 +2857,6 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="598" name="zimbraGalSyncInternalSearchBase"  type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited">
-  <globalConfigValue>DOMAIN</globalConfigValue>
   <desc>LDAP search base for internal GAL sync (special values: "ROOT" for top, "DOMAIN" for domain only, "SUBDOMAINS" for domain and subdomains)
         If not set fallback to zimbraGalInternalSearchBase
   </desc>
