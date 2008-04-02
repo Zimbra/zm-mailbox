@@ -255,6 +255,8 @@ public class Pop3Import implements MailItemImport {
         if (folderId == Mailbox.ID_FOLDER_INBOX) {
         	try {
 	            msg = RuleManager.getInstance().applyRules(mbox.getAccount(), mbox, pm, pm.getRawSize(), ds.getEmailAddress(), sharedDeliveryCtxt);
+	            if (msg == null)
+	            	 return 0; //null if DISCARD
         	} catch (Throwable t) {
         		ZimbraLog.datasource.warn("failed applying filter rules", t);
         	}
