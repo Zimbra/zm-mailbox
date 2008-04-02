@@ -61,8 +61,8 @@ public class CheckPortConflict extends AttributeCallback {
         
         sPortAttrs.add(Provisioning.A_zimbraMemcachedBindPort);
 
-	// sPortAttrs.add(Provisioning.A_zimbraMailProxyPort);
-	// sPortAttrs.add(Provisioning.A_zimbraMailSSLProxyPort);
+        sPortAttrs.add(Provisioning.A_zimbraMailProxyPort);
+        sPortAttrs.add(Provisioning.A_zimbraMailSSLProxyPort);
     }
         
        
@@ -134,7 +134,7 @@ public class CheckPortConflict extends AttributeCallback {
             }
             
             if (!StringUtil.isNullOrEmpty(newValue)) {
-                if (ports.containsKey(newValue))
+                if (conflict(ports, newValue))
                     throw ServiceException.INVALID_REQUEST("port " + newValue + " conflict between " + 
                                                            attrName + " and " + ports.get(newValue) + " on server " + 
                                                            (server == null?"":server.getName()), null);
@@ -167,7 +167,7 @@ public class CheckPortConflict extends AttributeCallback {
             }
                 
             if (!StringUtil.isNullOrEmpty(newValue)) {
-                if (newDefaults.containsKey(newValue))
+                if (conflict(newDefaults, newValue))
                     throw ServiceException.INVALID_REQUEST("port " + newValue + " conflict between " + 
                                                            attrName + " and " + newDefaults.get(newValue) + " on global config", null);
                 else
@@ -200,7 +200,7 @@ public class CheckPortConflict extends AttributeCallback {
                 newValue = curValue;
             
             if (!StringUtil.isNullOrEmpty(newValue)) {
-                if (ports.containsKey(newValue))
+                if (conflict(ports, newValue))
                     throw ServiceException.INVALID_REQUEST("port " + newValue + " conflict between " + 
                             attrName + " and " + ports.get(newValue) + " on server " + server.getName(), null);
                 else
@@ -209,6 +209,12 @@ public class CheckPortConflict extends AttributeCallback {
         }
     }
         
+    private boolean conflict(Map ports, String port) {
+        if (port.equals("0"))
+            return false;
+        else
+            return ports.containsKey(port);
+    }
         
     /**
      * need to keep track in context on whether or not we have been called yet, only 
