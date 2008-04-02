@@ -100,7 +100,7 @@ public class PreAuthServlet extends ZimbraServlet {
     {
         ZimbraLog.clearContext();
         try {
-            boolean revPxyMode = reverseProxyMode();
+            boolean revPxyMode = URLUtil.reverseProxyMode(Provisioning.getInstance().getLocalServer());
             Provisioning prov = Provisioning.getInstance();
             
             String isRedirect = getOptionalParam(req, PARAM_ISREDIRECT, "0");
@@ -217,11 +217,6 @@ public class PreAuthServlet extends ZimbraServlet {
             }
         }
     }
-    
-    private boolean reverseProxyMode() throws ServiceException {
-        Server localhost = Provisioning.getInstance().getLocalServer();
-        String referMode = localhost.getAttr(Provisioning.A_zimbraMailReferMode, "wronghost");
-        return Provisioning.MAIL_REFER_MODE_REVERSE_PROXIED.equals(referMode);
-    }
+
     
 }
