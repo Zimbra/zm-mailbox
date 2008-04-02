@@ -237,4 +237,8 @@ public abstract class DavResource {
 	public boolean isLocal() {
 		return true;
 	}
+	
+	public String toString() {
+		return mUri;
+	}
 }

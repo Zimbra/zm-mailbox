@@ -28,6 +28,7 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.QName;
 
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -181,6 +182,8 @@ public class DavResponse {
 
 	/* Writes response XML Document to OutputStream. */
 	public void writeTo(OutputStream out) throws IOException {
+		if (ZimbraLog.dav.isDebugEnabled())
+			ZimbraLog.dav.debug("RESPONSE:\n"+new String(DomUtil.getBytes(mResponse), "UTF-8"));
 		DomUtil.writeDocumentToStream(mResponse, out);
 	}
 }

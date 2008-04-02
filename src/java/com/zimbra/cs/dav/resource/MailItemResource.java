@@ -20,6 +20,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -75,6 +77,24 @@ public abstract class MailItemResource extends DavResource {
 	private static final int PROP_LENGTH_LIMIT = 1024;
     private static final String TEXT_PLAIN = "text/plain";
 	
+    private static final String BLUE   = "#0252D4FF";
+    private static final String GREEN  = "#2CA10BFF";
+    private static final String PURPLE = "#492BA1FF";
+    private static final String RED    = "#E51717FF";
+    private static final String PINK   = "#B027AEFF";
+    private static final String ORANGE = "#F57802FF";
+    private static final String DEFAULT_COLOR = ORANGE;
+    
+    protected static final String[] COLOR_MAP = {
+    	DEFAULT_COLOR, BLUE, DEFAULT_COLOR, GREEN, PURPLE, RED, DEFAULT_COLOR, PINK, DEFAULT_COLOR, ORANGE
+    };
+    
+    protected static final ArrayList<String> COLOR_LIST = new ArrayList<String>();
+    
+    static {
+    	Collections.addAll(COLOR_LIST, COLOR_MAP);
+    }
+    
 	public MailItemResource(DavContext ctxt, MailItem item) throws ServiceException {
 		this(ctxt, getItemPath(item), item);
 	}
@@ -191,6 +211,8 @@ public abstract class MailItemResource extends DavResource {
 		String configVal = data.get(Integer.toString(item.getId()), null);
 		if (configVal == null)
 			return props;
+		if (configVal.length() == 0)
+			return props;
 		ByteArrayInputStream in = new ByteArrayInputStream(configVal.getBytes("UTF-8"));
 		org.dom4j.Document doc = new SAXReader().read(in);
 		Element e = doc.getRootElement();
@@ -214,7 +236,8 @@ public abstract class MailItemResource extends DavResource {
 		for (QName n : remove)
 				mDeadProps.remove(n);
 		for (Element e : set) {
-			if (e.getQName().getName().equals(DavElements.P_DISPLAYNAME) &&
+			QName name = e.getQName();
+			if (name.equals(DavElements.E_DISPLAYNAME) &&
 					mType == MailItem.TYPE_FOLDER || mType == MailItem.TYPE_MOUNTPOINT) {
 				// rename folder
 				try {
@@ -223,17 +246,32 @@ public abstract class MailItemResource extends DavResource {
 					Mailbox mbox = getMailbox(ctxt);
 					mbox.rename(ctxt.getOperationContext(), mId, mType, val);
 					setProperty(DavElements.P_DISPLAYNAME, val);
+					UrlNamespace.addToRenamedResource(uri, this);
 					UrlNamespace.addToRenamedResource(uri.substring(0, uri.length()-1), this);
 				} catch (ServiceException se) {
 					throw new DavException("unable to patch properties", DavProtocol.STATUS_FAILED_DEPENDENCY, se);
 				}
+				mDeadProps.remove(name);
+				continue;
+			} else if (name.equals(DavElements.E_CALENDAR_COLOR) &&
+					mType == MailItem.TYPE_FOLDER || mType == MailItem.TYPE_MOUNTPOINT) {
+				// change color
+				String colorStr = e.getText();
+				byte col = (byte) COLOR_LIST.indexOf(colorStr);
+				if (col < 0) col = 0;
+				try {
+					Mailbox mbox = getMailbox(ctxt);
+					mbox.setColor(ctxt.getOperationContext(), mId, mType, col);
+				} catch (ServiceException se) {
+					throw new DavException("unable to patch properties", DavProtocol.STATUS_FAILED_DEPENDENCY, se);
+				}
+				mDeadProps.remove(name);
 				continue;
 			}
-			mDeadProps.put(e.getQName(), e);
+			mDeadProps.put(name, e);
 		}
-		if (mDeadProps.size() == 0)
-			return;
-		try {
+		String configVal = "";
+		if (mDeadProps.size() > 0) {
 			org.dom4j.Document doc = org.dom4j.DocumentHelper.createDocument();
 			Element top = doc.addElement(CONFIG_KEY);
 			for (Map.Entry<QName,Element> entry : mDeadProps.entrySet())
@@ -243,11 +281,12 @@ public abstract class MailItemResource extends DavResource {
 			OutputFormat format = OutputFormat.createCompactFormat();
 			XMLWriter writer = new XMLWriter(out, format);
 			writer.write(doc);
-			String configVal = new String(out.toByteArray(), "UTF-8");
+			configVal = new String(out.toByteArray(), "UTF-8");
 			
 			if (configVal.length() > PROP_LENGTH_LIMIT)
 				throw new DavException("unable to patch properties", DavProtocol.STATUS_INSUFFICIENT_STORAGE, null);
-
+		}
+		try {
 			Mailbox mbox = getMailbox(ctxt);
 			synchronized (mbox) {
 				Metadata data = mbox.getConfig(ctxt.getOperationContext(), CONFIG_KEY);
@@ -264,9 +303,9 @@ public abstract class MailItemResource extends DavResource {
 	public ResourceProperty getProperty(QName prop) {
 		ResourceProperty rp = null;
 		if (mDeadProps != null) {
-		Element e = mDeadProps.get(prop);
-		if (e != null)
-			rp = new ResourceProperty(e);
+			Element e = mDeadProps.get(prop);
+			if (e != null)
+				rp = new ResourceProperty(e);
 		}
 		if (rp == null)
 			rp = super.getProperty(prop);

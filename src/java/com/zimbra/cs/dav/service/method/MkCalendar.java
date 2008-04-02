@@ -20,7 +20,11 @@ import java.io.IOException;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.dom4j.Document;
+import org.dom4j.Element;
+
 import com.zimbra.cs.dav.DavContext;
+import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.resource.CalendarCollection;
@@ -45,12 +49,27 @@ public class MkCalendar extends DavMethod {
 		
 		if (user == null || name == null)
 			throw new DavException("invalid uri", HttpServletResponse.SC_FORBIDDEN, null);
+		Element top = null;
+		if (ctxt.hasRequestMessage()) {
+			Document doc = ctxt.getRequestMessage();
+			top = doc.getRootElement();
+			if (!top.getName().equals(DavElements.P_MKCALENDAR))
+				throw new DavException("msg "+top.getName()+" not allowed in MKCALENDAR", HttpServletResponse.SC_BAD_REQUEST, null);
+		}
 		
 		Collection col = UrlNamespace.getCollectionAtUrl(ctxt, ctxt.getPath());
 		if (col instanceof CalendarCollection)
 			throw new DavException("can't create calendar under another calendar", HttpServletResponse.SC_FORBIDDEN, null);
 		
-		col.mkCol(ctxt, name, MailItem.TYPE_APPOINTMENT);
+		Collection newone = col.mkCol(ctxt, name, MailItem.TYPE_APPOINTMENT);
+		boolean success = false;
+		try {
+			PropPatch.handlePropertyUpdate(ctxt, top, newone);
+			success = true;
+		} finally {
+			if (!success)
+				newone.delete(ctxt);
+		}
 		ctxt.setStatus(HttpServletResponse.SC_CREATED);
 		ctxt.getResponse().addHeader(DavProtocol.HEADER_CACHE_CONTROL, DavProtocol.NO_CACHE);
 	}

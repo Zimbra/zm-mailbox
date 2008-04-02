@@ -24,11 +24,13 @@ public class DavElements {
 	public static final String CALDAV_NS_STRING = "urn:ietf:params:xml:ns:caldav";
 	public static final String ZIMBRA_NS_STRING = "urn:ietf:params:xml:ns:zimbra";
 	public static final String XML_NS_STRING = "xml:";
+	public static final String APPLE_NS_STRING = "http://apple.com/ns/ical/";
 	
 	public static final Namespace WEBDAV_NS = Namespace.get(WEBDAV_NS_STRING);
 	public static final Namespace CALDAV_NS = Namespace.get(CALDAV_NS_STRING);
 	public static final Namespace ZIMBRA_NS = Namespace.get(ZIMBRA_NS_STRING);
 	public static final Namespace XML_NS = Namespace.get(XML_NS_STRING);
+	public static final Namespace APPLE_NS = Namespace.get(APPLE_NS_STRING);
 
 	// general
 	public static final String LANG_EN_US = "en-us";
@@ -52,6 +54,7 @@ public class DavElements {
 	public static final String P_BIND = "bind";
 
 	public static final String P_CALENDAR = "calendar";
+	public static final String P_CALENDAR_COLOR = "calendar-color";
 	public static final String P_CALENDAR_DATA = "calendar-data";
 	public static final String P_CALENDAR_DESCRIPTION = "calendar-description";
 	public static final String P_CALENDAR_HOME_SET = "calendar-home-set";
@@ -112,6 +115,7 @@ public class DavElements {
 	public static final String P_MAX_INSTANCES = "max-instances";
 	public static final String P_MAX_RESOURCE_SIZE = "max-resource-size";
 	public static final String P_MIN_DATE_TIME = "min-date-time";
+	public static final String P_MKCALENDAR = "mkcalendar";
 	public static final String P_MULTISTATUS = "multistatus";
 	
 	public static final String P_NAME = "name";
@@ -208,6 +212,7 @@ public class DavElements {
 	public static final QName E_BIND    = QName.get(P_BIND, WEBDAV_NS);
 
 	public static final QName E_CALENDAR = QName.get(P_CALENDAR, CALDAV_NS);
+	public static final QName E_CALENDAR_COLOR = QName.get(P_CALENDAR_COLOR, APPLE_NS);
 	public static final QName E_CALENDAR_DATA = QName.get(P_CALENDAR_DATA, CALDAV_NS);
 	public static final QName E_CALENDAR_DESCRIPTION = QName.get(P_CALENDAR_DESCRIPTION, CALDAV_NS);
 	public static final QName E_CALENDAR_HOME_SET = QName.get(P_CALENDAR_HOME_SET, CALDAV_NS);
