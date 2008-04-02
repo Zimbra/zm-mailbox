@@ -28,6 +28,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.httpclient.HttpState;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -36,7 +37,6 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
-import com.zimbra.cs.dav.DomUtil;
 import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.dav.resource.MailItemResource;
 import com.zimbra.cs.dav.service.method.*;
@@ -138,7 +138,9 @@ public class DavServlet extends ZimbraServlet {
 		try {
 			long t0 = System.currentTimeMillis();
 			if (ctxt.hasRequestMessage() && ZimbraLog.dav.isDebugEnabled())
-				ZimbraLog.dav.debug("REQUEST:\n"+new String(DomUtil.getBytes(ctxt.getRequestMessage()), "UTF-8"));
+				try {
+					ZimbraLog.dav.debug("REQUEST:\n"+new String(ByteUtil.readInput(ctxt.getUpload().getInputStream(), -1, 1024), "UTF-8"));
+				} catch (Exception e) {}
 			method.checkPrecondition(ctxt);
 			method.handle(ctxt);
 			method.checkPostcondition(ctxt);

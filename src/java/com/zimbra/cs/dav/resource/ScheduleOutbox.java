@@ -16,8 +16,8 @@
  */
 package com.zimbra.cs.dav.resource;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -75,11 +75,9 @@ public class ScheduleOutbox extends Collection {
 		String      originator = ctxt.getRequest().getHeader(DavProtocol.HEADER_ORIGINATOR);
 		Enumeration recipients = ctxt.getRequest().getHeaders(DavProtocol.HEADER_RECIPIENT);
 
-		byte[] msg = ByteUtil.getContent(ctxt.getRequest().getInputStream(), 0);
-		if (ZimbraLog.dav.isDebugEnabled())
-			ZimbraLog.dav.debug(new String(msg, "UTF-8"));
+		InputStream in = ctxt.getUpload().getInputStream();
 
-		ZCalendar.ZVCalendar vcalendar = ZCalendar.ZCalendarBuilder.build(new InputStreamReader(new ByteArrayInputStream(msg)));
+		ZCalendar.ZVCalendar vcalendar = ZCalendar.ZCalendarBuilder.build(new InputStreamReader(in, "UTF-8"));
 		Iterator<ZComponent> iter = vcalendar.getComponentIterator();
 		ZComponent req = null;
 		while (iter.hasNext()) {
