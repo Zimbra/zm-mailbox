@@ -76,7 +76,7 @@ public abstract class GalParams {
             super(domain, galOp); 
             
             if (galOp == GalOp.sync) {
-                mSearchBase = domain.getAttr(Provisioning.A_zimbraGalSyncInternalSearchBase, "DOMAIN");
+                mSearchBase = domain.getAttr(Provisioning.A_zimbraGalSyncInternalSearchBase);
                 if (mSearchBase == null)
                     mSearchBase = domain.getAttr(Provisioning.A_zimbraGalInternalSearchBase, "DOMAIN");
             } else {
