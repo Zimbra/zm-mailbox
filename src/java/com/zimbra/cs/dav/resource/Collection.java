@@ -121,14 +121,15 @@ public class Collection extends MailItemResource {
 		return ret;
 	}
 	
-	public void mkCol(DavContext ctxt, String name) throws DavException {
-		mkCol(ctxt, name, mView);
+	public Collection mkCol(DavContext ctxt, String name) throws DavException {
+		return mkCol(ctxt, name, mView);
 	}
 	
-	public void mkCol(DavContext ctxt, String name, byte view) throws DavException {
+	public Collection mkCol(DavContext ctxt, String name, byte view) throws DavException {
 		try {
 			Mailbox mbox = getMailbox(ctxt);
-			mbox.createFolder(ctxt.getOperationContext(), name, mId, view, 0, (byte)0, null);
+			Folder f = mbox.createFolder(ctxt.getOperationContext(), name, mId, view, 0, (byte)0, null);
+			return new Collection(ctxt, f);
 		} catch (ServiceException e) {
 			if (e.getCode().equals(MailServiceException.ALREADY_EXISTS))
 				throw new DavException("item already exists", HttpServletResponse.SC_CONFLICT, e);

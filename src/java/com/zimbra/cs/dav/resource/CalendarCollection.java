@@ -93,7 +93,11 @@ public class CalendarCollection extends Collection {
 		addProperty(CalDavProperty.getSupportedCalendarData());
 		addProperty(CalDavProperty.getSupportedCollationSet());
 		
+		byte color = f.getColor();
+		if (color >= COLOR_MAP.length)
+			color = 0;
 		setProperty(DavElements.E_DISPLAYNAME, f.getName());
+		setProperty(DavElements.E_CALENDAR_COLOR, COLOR_MAP[color]);
 		setProperty(DavElements.E_PRINCIPAL_URL, UrlNamespace.getResourceUrl(this), true);
 		setProperty(DavElements.E_ALTERNATE_URI_SET, null, true);
 		setProperty(DavElements.E_GROUP_MEMBER_SET, null, true);

@@ -36,6 +36,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
+import com.zimbra.cs.dav.DomUtil;
 import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.dav.resource.MailItemResource;
 import com.zimbra.cs.dav.service.method.*;
@@ -136,14 +137,15 @@ public class DavServlet extends ZimbraServlet {
 		
 		try {
 			long t0 = System.currentTimeMillis();
-			//ZimbraLog.dav.info("DavServlet dispatch: "+method);
+			if (ctxt.hasRequestMessage() && ZimbraLog.dav.isDebugEnabled())
+				ZimbraLog.dav.debug("REQUEST:\n"+new String(DomUtil.getBytes(ctxt.getRequestMessage()), "UTF-8"));
 			method.checkPrecondition(ctxt);
 			method.handle(ctxt);
 			method.checkPostcondition(ctxt);
 			if (!ctxt.isResponseSent())
 				resp.setStatus(ctxt.getStatus());
 			long t1 = System.currentTimeMillis();
-			ZimbraLog.dav.info("DavServlet operation "+method.getName()+" finished in "+(t1-t0)+"ms");
+			ZimbraLog.dav.info("DavServlet operation "+method.getName()+" to "+req.getPathInfo()+" finished in "+(t1-t0)+"ms");
 		} catch (DavException e) {
 			if (e.getCause() instanceof MailServiceException.NoSuchItemException ||
 					e.getStatus() == HttpServletResponse.SC_NOT_FOUND)
