@@ -1425,6 +1425,7 @@ public abstract class Provisioning {
     public static final String A_zimbraReverseProxyDomainNameQuery      = "zimbraReverseProxyDomainNameQuery";
     public static final String A_zimbraReverseProxyDomainNameSearchBase = "zimbraReverseProxyDomainNameSearchBase";
     public static final String A_zimbraReverseProxyDomainNameAttribute  = "zimbraReverseProxyDomainNameAttribute";
+    public static final String A_zimbraReverseProxyHttpEnabled          = "zimbraReverseProxyHttpEnabled";
     public static final String A_zimbraVirtualIPAddress                 = "zimbraVirtualIPAddress";
     
     /*
