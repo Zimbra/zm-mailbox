@@ -200,6 +200,7 @@ public class Contact extends MailItem {
         otherStreet,
         otherURL,
         pager,
+        tollFree,
         workCity,
         workCountry,
         workFax,
