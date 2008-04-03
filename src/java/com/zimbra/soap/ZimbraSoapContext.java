@@ -96,7 +96,7 @@ public class ZimbraSoapContext {
     private int     mMaximumChangeId = -1;
 
     private SessionInfo mSessionInfo;
-    private boolean mSessionSuppressed; // don't create a new session for this request
+    private boolean mSessionEnabled; // whether to create a new session for this request
     private boolean mUnqualifiedItemIds;
     private boolean mWaitForNotifications;
     private boolean mCanceledWaitForNotifications = false;
@@ -126,7 +126,7 @@ public class ZimbraSoapContext {
         mRequestProtocol = reqProtocol;
         mResponseProtocol = respProtocol;
 
-        mSessionSuppressed = true;
+        mSessionEnabled = false;
         mHopCount = hopCount;
     }
     
@@ -143,7 +143,7 @@ public class ZimbraSoapContext {
         mResponseProtocol = zsc.mResponseProtocol;
 
         mSessionInfo = zsc.mSessionInfo;
-        mSessionSuppressed = zsc.mSessionSuppressed;
+        mSessionEnabled = zsc.mSessionEnabled;
         mUnqualifiedItemIds = zsc.mUnqualifiedItemIds;
 
         mHopCount = zsc.mHopCount + 1;
@@ -260,11 +260,13 @@ public class ZimbraSoapContext {
         // record session-related info and validate any specified sessions
         //   (don't create new sessions yet)
         if (ctxt != null) {
-            mSessionSuppressed  = ctxt.getOptionalElement(HeaderConstants.E_NO_NOTIFY) != null;
-            mSessionSuppressed |= ctxt.getOptionalElement(HeaderConstants.E_NO_SESSION) != null;
+            boolean suppress = ctxt.getOptionalElement(HeaderConstants.E_NO_NOTIFY) != null;
+            suppress |= ctxt.getOptionalElement(HeaderConstants.E_NO_SESSION) != null;
             // if sessions are enabled, create a SessionInfo to encapsulate (will fetch the Session object during the request)
-            if (!mSessionSuppressed) {
-                for (Element session : ctxt.listElements(HeaderConstants.E_SESSION_ID)) {
+            if (!suppress) {
+                Element session = ctxt.getOptionalElement(HeaderConstants.E_SESSION);
+                if (session != null) {
+                    mSessionEnabled = true;
                     String sessionId = null;
                     if ("".equals(sessionId = session.getTextTrim()))
                         sessionId = session.getAttribute(HeaderConstants.A_ID, null);
@@ -310,10 +312,8 @@ public class ZimbraSoapContext {
         mMountpointTraversed = true;
     }
 
-    public String toString() {
-        String sessionPart = "";
-        if (!mSessionSuppressed)
-            sessionPart = ", sessions=" + mSessionInfo;
+    @Override public String toString() {
+        String sessionPart = mSessionEnabled ? ", session=" + mSessionInfo : "";
         return "LC(mbox=" + mAuthTokenAccountId + sessionPart + ")";
     }
 
@@ -346,7 +346,7 @@ public class ZimbraSoapContext {
 
 
     public boolean isNotificationEnabled() {
-        return !mSessionSuppressed;
+        return mSessionEnabled;
     }
 
     /** Returns the {@link SessionInfo} item associated with this
@@ -420,8 +420,7 @@ public class ZimbraSoapContext {
 
     /** Serializes this object for use in a proxied SOAP request.  The
      *  attributes encapsulated by the <code>ZimbraContext</code> -- the
-     *  response protocol, the auth token, etc. -- are carried forward.
-     *  Notification is expressly declined. */
+     *  response protocol, the auth token, etc. -- are carried forward. */
     public Element toProxyCtxt(SoapProtocol proto) {
         Element ctxt = proto.getFactory().createElement(HeaderConstants.CONTEXT);
         if (mRawAuthToken != null)
@@ -431,8 +430,8 @@ public class ZimbraSoapContext {
         Element eAcct = ctxt.addElement(HeaderConstants.E_ACCOUNT).addAttribute(HeaderConstants.A_HOPCOUNT, mHopCount).addAttribute(HeaderConstants.A_MOUNTPOINT, mMountpointTraversed);
         if (mRequestedAccountId != null && !mRequestedAccountId.equalsIgnoreCase(mAuthTokenAccountId))
             eAcct.addAttribute(HeaderConstants.A_BY, HeaderConstants.BY_ID).setText(mRequestedAccountId);
-        if (mSessionSuppressed)
-            ctxt.addUniqueElement(HeaderConstants.E_NO_SESSION);
+        if (mSessionEnabled)
+            ctxt.addUniqueElement(HeaderConstants.E_SESSION);
         if (mUnqualifiedItemIds)
             ctxt.addUniqueElement(HeaderConstants.E_NO_QUALIFY);
         return ctxt;
@@ -445,13 +444,10 @@ public class ZimbraSoapContext {
      * @param parent   The {@link Element} to add the serialized Session to.
      * @param sessionId TODO
      * @param sessionType TODO
-     * @param unique   Whether there can be more than one Session serialized to the
-     *                 <tt>parent</tt> Element.
      * @return The created <tt>&lt;sessionId></tt> Element. */
-    public static Element encodeSession(Element parent, String sessionId, Session.Type sessionType, boolean unique) {
+    public static Element encodeSession(Element parent, String sessionId, Session.Type sessionType) {
         String typeStr = (sessionType == Session.Type.ADMIN ? HeaderConstants.SESSION_ADMIN : null);
-
-        Element elt = unique ? parent.addUniqueElement(HeaderConstants.E_SESSION_ID) : parent.addElement(HeaderConstants.E_SESSION_ID);
+        Element elt = parent.addUniqueElement(HeaderConstants.E_SESSION);
         elt.addAttribute(HeaderConstants.A_TYPE, typeStr).addAttribute(HeaderConstants.A_ID, sessionId).setText(sessionId);
         return elt;
     }

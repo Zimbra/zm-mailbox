@@ -24,11 +24,9 @@ urn:zimbra  -- top-level namespace for global attributes/elements
   <soap:Header>
     <context xmlns="urn:zimbra">
        <authToken>...</authToken>
-       [<nosession/>]
-       [<sessionId id="{returned-from-server-in-last-response}" seq="{highest_notification_received}"/>]
+       [<session [id="{returned-from-server-in-last-response}" [seq="{highest_notification_received}"]]/>]
        [<account by="name|id">{account-name-or-id}</account>]
        [<change token="{change-id}" [type="mod|new"]/>]
-       [<nonotify/>]
        [<targetServer>{proxy-target-server-id}</targetServer>]
        [<userAgent name="{client-name}" [version="{client-version}"]/>]
     </context>
@@ -76,15 +74,19 @@ by id, not by name.
 
 Sessions
 
-Specifying <nosession> in the context prevents creating a session on the
-server.  When <nosession> is specified, any <sessionId> found is ignored.
+The server's default is disabling sessions for every SOAP request.
+Clients that desire notification must explicitly request that the server
+maintain a session for them.  This is done by specifying a <session/>
+element in the request.
 
-The session info is only returned if the id has changed, of if
-it is not sent by the client.  If a session ID is returned, the client
-should immediately start using that session ID (and possibly assume the old
-session has expired and act accordingly).
+When sessions are explicitly requested by the client, the server
+will return the client's active session ID in the response's <session/> 
+header element.  If this session ID is different from the one sent by the
+client (or if the client requested a new session by including just a bare
+"<session/>" inn the header), the client should assume the old session
+(if any) has expired and immediately start using the returned session ID.
 
-If a new session is created (due to no session being supplied in the request
+If a new session is created (due to no session ID being supplied in the request
 or the old session timing out), the response context header will contain a 
 <refresh> block containing the current set of tags and folders.  If there 
 have been any changes to the mailbox since the last soap operation (including 
@@ -102,7 +104,7 @@ element involving the session.)  If there is a session, there will be a
 <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
   [<soap:Header>
      <context xmlns="urn:zimbra">
-       <sessionId id="{session-id}" [type="admin"]/>
+       <session id="{session-id}" [type="admin"]/>
        <change token="{change-id}"/>
        [<refresh>
           <version>{server-version-string}</version>
@@ -151,7 +153,7 @@ batch requests:
   <soap:Header>
     <context xmlns="urn:zimbra">
        <authToken>...</authToken>
-       [<sessionId id="{returned-from-server-in-last-response}"/>]
+       [<session [id="{returned-from-server-in-last-response}"]/>]
        [<account by="name|id">{account-name-or-id}</account>]
        [<change token="{change-id}" [type="mod|new"]/>]
     </context>
@@ -171,7 +173,7 @@ response:
 <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
   [<soap:Header>
      <context xmlns="urn:zimbra">
-       <sessionId id="{session-id}" [type="admin"]>
+       <session id="{session-id}" [type="admin"]>
        [<refresh>
           <mbx s="{bytes-used}" [acct="{remote-mailbox-owner-id}"]/>
           <tags>
@@ -333,7 +335,7 @@ global soap/system errors used with zimbra:Error/Code:
  <AuthResponse">
    <authToken>...</authToken>
    <lifetime>...</lifetime>
-   <sessionId .../>
+   <session .../>
    <refer>{mail-host}</refer>  
    [<prefs><pref name="{name}" modified="{modified-time}">{value}</pref>...</prefs>]
    [<attrs><attr name="{name}">{value}</a>...</attrs>]

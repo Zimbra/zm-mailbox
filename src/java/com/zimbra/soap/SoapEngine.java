@@ -455,7 +455,7 @@ public class SoapEngine {
             Session session = sinfo == null ? null : SessionCache.lookup(sinfo.sessionId, authAccountId);
             if (session != null) {
                 // session ID is valid, so ping it back to the client:
-                ZimbraSoapContext.encodeSession(ctxt, session.getSessionId(), session.getSessionType(), false);
+                ZimbraSoapContext.encodeSession(ctxt, session.getSessionId(), session.getSessionType());
 
                 if (session instanceof SoapSession) {
                     SoapSession soap = (SoapSession) session;

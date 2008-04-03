@@ -65,7 +65,7 @@ public class LmcAuthRequest extends LmcSoapRequest {
 		String authToken = DomUtil.getString(responseXML, AccountConstants.E_AUTH_TOKEN);
 		ZAuthToken zat = new ZAuthToken(null, authToken, null);
 		// get the session id, if not present, default to null
-		String sessionId = DomUtil.getString(responseXML, HeaderConstants.E_SESSION_ID, null);
+		String sessionId = DomUtil.getString(responseXML, HeaderConstants.E_SESSION, null);
 
 		LmcAuthResponse responseObj = new LmcAuthResponse();
 		LmcSession sess = new LmcSession(zat, sessionId);

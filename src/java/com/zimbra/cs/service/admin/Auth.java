@@ -120,7 +120,7 @@ public class Auth extends AdminDocumentHandler {
         response.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, Provisioning.A_zimbraIsDomainAdminAccount).setText(isDomainAdmin+"");
         Session session = updateAuthenticatedAccount(zsc, at, true);
         if (session != null)
-            ZimbraSoapContext.encodeSession(response, session.getSessionId(), session.getSessionType(), true);
+            ZimbraSoapContext.encodeSession(response, session.getSessionId(), session.getSessionType());
 		return response;
 	}
 

@@ -93,7 +93,7 @@ public class RulesUtil {
         Element authReq = createAuthRequest(acctEmail, pwd);
         Element authResp = trans.invokeWithoutSession(authReq);
         String authToken = authResp.getAttribute(AdminConstants.E_AUTH_TOKEN);
-        String sessionId = authResp.getAttribute(HeaderConstants.E_SESSION_ID, null);
+        String sessionId = authResp.getAttribute(HeaderConstants.E_SESSION, null);
         trans.setAuthToken(authToken);
         if (sessionId != null)
             trans.setSessionId(sessionId);

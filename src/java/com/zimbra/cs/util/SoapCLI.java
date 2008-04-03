@@ -35,7 +35,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.client.LmcSession;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
@@ -181,7 +180,7 @@ public abstract class SoapCLI {
             Element authResp = mTrans.invokeWithoutSession(authReq);
             String authToken = authResp.getAttribute(AdminConstants.E_AUTH_TOKEN);
             ZAuthToken zat = new ZAuthToken(null, authToken, null);
-            String sessionId = authResp.getAttribute(HeaderConstants.E_SESSION_ID, null);
+            String sessionId = authResp.getAttribute(HeaderConstants.E_SESSION, null);
             mTrans.setAuthToken(authToken);
             if (sessionId != null) {
                 mTrans.setSessionId(sessionId);
