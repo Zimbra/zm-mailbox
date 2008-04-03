@@ -64,7 +64,7 @@ public class ZimbraIM {
             
             // set the special msgs ClassLoader -- so that WF looks in our conf/msgs directory
             // for its localization .properties bundles.
-            org.jivesoftware.util.LocaleUtils.sMsgsClassLoader = com.zimbra.cs.util.L10nUtil.getMsgClassLoader();
+            org.jivesoftware.util.LocaleUtils.sMsgsClassLoader = com.zimbra.common.util.L10nUtil.getMsgClassLoader();
             
             CloudRoutingSocketReader.setSessionFactory(new CloudRoutingSessionFactory() { 
                 public Session createSession(String hostname, CloudRoutingSocketReader reader, SocketConnection connection, Element streamElt) {

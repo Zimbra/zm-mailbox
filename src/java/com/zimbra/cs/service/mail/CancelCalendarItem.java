@@ -45,8 +45,8 @@ import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.util.L10nUtil;
-import com.zimbra.cs.util.L10nUtil.MsgKey;
+import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class CancelCalendarItem extends CalendarRequest {

@@ -25,7 +25,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.util.L10nUtil;
+import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.AccountConstants;

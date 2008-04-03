@@ -1,9 +1,10 @@
+<%@ page import="com.zimbra.common.util.L10nUtil,com.zimbra.common.util.L10nUtil.MsgKey" %>
 <HTML>
 <BODY>
 <%--
 	This page can be customized.
 --%> 
-<h3>The attachment download has been disabled per security policy.</h3>
+<h3><%=L10nUtil.getMessage(MsgKey.errAttachmentDownloadDisabled, request)%></h3>
 </BODY>
 </HTML>
 

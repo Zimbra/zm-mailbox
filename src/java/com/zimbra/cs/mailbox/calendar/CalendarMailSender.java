@@ -58,8 +58,8 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.util.L10nUtil;
-import com.zimbra.cs.util.L10nUtil.MsgKey;
+import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.L10nUtil.MsgKey;
 
 public class CalendarMailSender {
 
