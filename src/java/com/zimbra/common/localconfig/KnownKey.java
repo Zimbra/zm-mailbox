@@ -17,8 +17,9 @@
 
 package com.zimbra.common.localconfig;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.zimbra.common.util.L10nUtil;
+
+import java.util.*;
 
 public class KnownKey {
 
@@ -44,7 +45,7 @@ public class KnownKey {
         if (kk == null) {
             return null;
         }
-        return kk.mDoc;
+        return kk.doc();
     }
     
     static String getDefaultValue(String key) {
@@ -96,7 +97,7 @@ public class KnownKey {
      * The only public method here.  If you have a KnownKey object, this
      * is a shortcut to get it's value.
      * 
-     * @see LC.get()
+     * @see LC#get
      */
     public String value() {
         return LC.get(mKey);
@@ -162,7 +163,25 @@ public class KnownKey {
     	return mKey;   
     }
 
-    public KnownKey(String key, String defaultValue, String doc) {
+	public String doc() {
+		return doc(null);
+	}
+
+	public String doc(Locale locale) {
+		String doc = mDoc;
+		if (doc == null) doc = L10nUtil.getMessage(mKey, locale);
+		return doc;
+	}
+
+	public KnownKey(String key) {
+		this(key, null, null);
+	}
+
+	public KnownKey(String key, String defaultValue) {
+		this(key, defaultValue, null);
+	}
+
+	public KnownKey(String key, String defaultValue, String doc) {
         mKey = key;
         if (mKnownKeys.containsKey(key)) {
             Logging.warn("programming error - known key added more than once: " + key);
@@ -172,15 +191,6 @@ public class KnownKey {
         mKnownKeys.put(key, this);
     }
 
-    public KnownKey(String key) 
-    {
-        mKey = key;
-        if (mKnownKeys.containsKey(key)) {
-            Logging.warn("programming error - known key added more than once: " + key);
-        }
-        mKnownKeys.put(key, this);
-    }
-    
     public void setDoc(String doc) {
         mDoc = doc;
     }
