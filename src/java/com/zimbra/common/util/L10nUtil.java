@@ -15,7 +15,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.util;
+package com.zimbra.common.util;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -31,9 +31,9 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.Set;
 
+import javax.servlet.http.*;
+
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.util.SetUtil;
-import com.zimbra.common.util.ZimbraLog;
 
 public class L10nUtil {
 
@@ -115,12 +115,33 @@ public class L10nUtil {
         wikiBy,
 
         Notebook,
-        // add other messages in the future...
+
+		errAttachmentDownloadDisabled,
+		errInvalidId,
+		errInvalidImapId,
+		errInvalidPath,
+		errInvalidRequest,
+		errMailboxNotFound,
+		errMessageNotFound,
+		errMissingUploadId,
+		errMustAuthenticate,
+		errNoSuchAccount,
+		errNoSuchItem,
+		errNoSuchUpload,
+		errNotImplemented,
+		errPartNotFound,
+		errPermissionDenied,
+		errUnsupportedFormat
+
+		// add other messages in the future...
     }
 
 
     public static final String MSG_FILE_BASENAME = "ZsMsg";
 	public static final String L10N_MSG_FILE_BASENAME = "L10nMsg";
+
+	public static final String P_LOCALE_ID = "loc";
+//	public static final String P_FALLBACK_LOCALE_ID = "javax.servlet.jsp.jstl.fmt.fallbackLocale";
 
     // class loader that loads ZsMsg.properties files from
     // /opt/zimbra/conf/msgs directory
@@ -141,16 +162,22 @@ public class L10nUtil {
             urls[0] = new URL("file://" + msgsDir);
             classLoader = new URLClassLoader(urls);
         } catch (MalformedURLException e) {
-            Zimbra.halt("Unable to initialize localization", e);
-        }
+			try {
+				ZimbraLog.system.fatal("Unable to initialize localization", e);
+			}
+			finally {
+				Runtime.getRuntime().halt(1);
+			}
+
+		}
         
         return classLoader;
     }
     
     static {
-        String msgsDir = LC.localized_msgs_directory.value();
+		String msgsDir = LC.localized_msgs_directory.value();
         sMsgClassLoader = getClassLoader(msgsDir);
-        
+
         Locale[] locales = Locale.getAvailableLocales();
         sLocaleMap = new HashMap<String, Locale>(locales.length);
         for (Locale lc : locales) {
@@ -158,7 +185,37 @@ public class L10nUtil {
         }
     }
 
-    /**
+	public static String getMessage(MsgKey key,
+									Object... args) {
+		return getMessage(key.toString(), (Locale)null, args);
+	}
+
+	public static String getMessage(String key,
+									Object... args) {
+		return getMessage(key, (Locale)null, args);
+	}
+
+	public static String getMessage(MsgKey key,
+									HttpServletRequest request,
+									Object... args) {
+		return getMessage(key.toString(), request, args);
+	}
+
+	public static String getMessage(String key,
+									HttpServletRequest request,
+									Object... args) {
+		Locale locale = null;
+		if (request != null) {
+			locale = lookupLocale(request.getParameter(P_LOCALE_ID));
+		}
+		// TODO: If not specified in params, get locale from config
+		if (locale == null && request != null) {
+			locale = request.getLocale();
+		}
+		return getMessage(key, locale, args);
+	}
+
+	/**
      * Get the message for specified key in given locale, applying variable
      * substitutions with any args.  ({0}, {1}, etc.)
      * @param key message key
@@ -169,7 +226,13 @@ public class L10nUtil {
     public static String getMessage(MsgKey key,
                                     Locale lc,
                                     Object... args) {
-		return getMessage(MSG_FILE_BASENAME, key.toString(), lc, args);
+		return getMessage(key.toString(), lc, args);
+	}
+
+	public static String getMessage(String key,
+									Locale lc,
+									Object... args) {
+		return getMessage(MSG_FILE_BASENAME, key, lc, args);
 	}
 
 	public static String getMessage(String basename, String key,
@@ -177,6 +240,7 @@ public class L10nUtil {
 									Object... args) {
 		ResourceBundle rb;
 		try {
+			if (lc == null) lc = Locale.getDefault();
 			rb = ResourceBundle.getBundle(basename, lc, sMsgClassLoader);
 			String fmt = rb.getString(key);
 			if (fmt != null && args != null && args.length > 0)
@@ -194,7 +258,7 @@ public class L10nUtil {
     /**
      * Lookup a Locale object from locale string specified in
      * language[_country[_variant]] format, e.g. en_US.
-     * @param locale
+     * @param name
      * @return
      */
     public static Locale lookupLocale(String name) {
@@ -203,7 +267,7 @@ public class L10nUtil {
             synchronized (sLocaleMap) {
                 lc = sLocaleMap.get(name);
                 if (lc == null) {
-                    String parts[] = name.split("_");
+					String parts[] = name.indexOf('_') != -1 ? name.split("_") : name.split("-");
                     if (parts.length == 1)
                         lc = new Locale(parts[0]);
                     else if (parts.length == 2)
