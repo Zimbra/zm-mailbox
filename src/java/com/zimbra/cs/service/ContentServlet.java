@@ -55,6 +55,8 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.util.*;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.L10nUtil.MsgKey;
 
 /**
  * The content servlet returns an attachment document in its original format.
@@ -76,8 +78,9 @@ public class ContentServlet extends ZimbraServlet {
     protected static final String PARAM_FORMAT = "fmt";
     protected static final String PARAM_SYNC = "sync";
     protected static final String PARAM_EXPUNGE = "expunge";
+	protected static final String PARAM_LOCALE_ID = L10nUtil.P_LOCALE_ID;
 
-    protected static final String FORMAT_RAW = "raw";
+	protected static final String FORMAT_RAW = "raw";
     protected static final String FORMAT_DEFANGED_HTML = "htmldf";
     protected static final String FORMAT_DEFANGED_HTML_NOT_IMAGES = "htmldfi";
 
@@ -97,7 +100,7 @@ public class ContentServlet extends ZimbraServlet {
         try {
             iid = new ItemId(req.getParameter(PARAM_MSGID), (String) null);
         } catch (ServiceException e) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "invalid id requested");
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, L10nUtil.getMessage(MsgKey.errInvalidId, req));
             return;
         }
 
@@ -121,14 +124,14 @@ public class ContentServlet extends ZimbraServlet {
 
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(accountId);
             if (mbox == null) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "mailbox not found");
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, L10nUtil.getMessage(MsgKey.errMailboxNotFound, req));
                 return;				
             }
             ZimbraLog.addMboxToContext(mbox.getId());
 
             MailItem item = mbox.getItemById(new Mailbox.OperationContext(token), iid.getId(), MailItem.TYPE_UNKNOWN);
             if (item == null) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "message not found");
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, L10nUtil.getMessage(MsgKey.errMessageNotFound, req));
                 return;				
             }
 
@@ -218,13 +221,13 @@ public class ContentServlet extends ZimbraServlet {
                         }
                         return;
                     }
-                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "part not found");
+                    resp.sendError(HttpServletResponse.SC_BAD_REQUEST, L10nUtil.getMessage(MsgKey.errPartNotFound, req));
                 }
             } catch (MessagingException e) {
                 resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
             } 
         } catch (NoSuchItemException e) {
-            resp.sendError(HttpServletResponse.SC_NOT_FOUND, "no such item");
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND, L10nUtil.getMessage(MsgKey.errNoSuchItem, req));
         } catch (ServiceException e) {
         	returnError(resp, e);
 		} finally {
@@ -241,7 +244,7 @@ public class ContentServlet extends ZimbraServlet {
         // if it's another server fetching an already-uploaded file, just do that
         String uploadId = req.getParameter(PARAM_UPLOAD_ID);
         if (uploadId == null) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "missing upload id");
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, L10nUtil.getMessage(MsgKey.errMissingUploadId, req));
             return;
         }
 
@@ -256,7 +259,7 @@ public class ContentServlet extends ZimbraServlet {
 
             Upload up = FileUploadServlet.fetchUpload(authToken.getAccountId(), uploadId, authToken);
             if (up == null) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "no such upload");
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, L10nUtil.getMessage(MsgKey.errNoSuchUpload, req));
                 return;
             }
 
@@ -341,7 +344,7 @@ public class ContentServlet extends ZimbraServlet {
             dispatcher.forward(req, resp);
             return;
         }
-        resp.sendError(HttpServletResponse.SC_FORBIDDEN, "The attachment download has been disabled per security policy.");
+        resp.sendError(HttpServletResponse.SC_FORBIDDEN, L10nUtil.getMessage(MsgKey.errAttachmentDownloadDisabled, req));
     }
     
     public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
@@ -362,7 +365,7 @@ public class ContentServlet extends ZimbraServlet {
         } else if (pathInfo != null && pathInfo.equals(PREFIX_PROXY)) {
             retrieveUpload(req, resp, authToken);
         } else {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "invalid request");
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, L10nUtil.getMessage(MsgKey.errInvalidRequest, req));
         }
     }
     

@@ -26,7 +26,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CacheEntryBy;
-import com.zimbra.cs.util.L10nUtil;
+import com.zimbra.common.util.L10nUtil;
 import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 

@@ -27,7 +27,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.util.L10nUtil;
+import com.zimbra.common.util.L10nUtil;
 import com.zimbra.cs.extension.ExtensionUtil;
 
 import javax.mail.internet.InternetAddress;

@@ -46,8 +46,8 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZRecur;
-import com.zimbra.cs.util.L10nUtil;
-import com.zimbra.cs.util.L10nUtil.MsgKey;
+import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.L10nUtil.MsgKey;
 
 import java.io.StringReader;
 import java.text.ParseException;

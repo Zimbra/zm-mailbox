@@ -35,7 +35,7 @@ import com.zimbra.cs.account.Signature.SignatureContent;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Signature;
-import com.zimbra.cs.util.L10nUtil;
+import com.zimbra.common.util.L10nUtil;
 
 import java.util.Iterator;
 import java.util.Locale;

@@ -35,8 +35,8 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.WikiItem;
-import com.zimbra.cs.util.L10nUtil;
-import com.zimbra.cs.util.L10nUtil.MsgKey;
+import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.cs.wiki.Wiki.WikiContext;
 import com.zimbra.cs.wiki.Wiki.WikiUrl;
 

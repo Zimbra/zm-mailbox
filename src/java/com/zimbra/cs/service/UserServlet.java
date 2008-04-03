@@ -55,6 +55,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.HttpUtil;
+import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -332,7 +334,7 @@ public class UserServlet extends ZimbraServlet {
         try {
             context = new Context(req, resp, this);
             if (!checkAuthentication(req, resp, context)) {
-                sendError(context, req, resp, "must authenticate");
+                sendError(context, req, resp, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
                 return;
             }
 
@@ -353,7 +355,7 @@ public class UserServlet extends ZimbraServlet {
             doAuthGet(req, resp, context);
 
         } catch (NoSuchItemException e) {
-            resp.sendError(HttpServletResponse.SC_NOT_FOUND, "no such item");
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND, L10nUtil.getMessage(MsgKey.errNoSuchItem, req));
         } catch (ServiceException se) {
             if (se.getCode() == ServiceException.PERM_DENIED)
                 sendError(context, req, resp, se.getMessage());
@@ -435,7 +437,7 @@ public class UserServlet extends ZimbraServlet {
         // return auth error instead of "no such mailbox".  If request/formatter doesn't require
         // authentication, call the formatter and let it deal with preventing harvest attacks.
         if (mbox == null && context.formatter.requiresAuth())
-            throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
+            throw ServiceException.PERM_DENIED(L10nUtil.getMessage(MsgKey.errPermissionDenied, req));
 
         if (context.formatter.canBeBlocked()) {
             if (Formatter.checkGlobalOverride(Provisioning.A_zimbraAttachmentsBlocked, context.authAccount)) {
@@ -464,7 +466,7 @@ public class UserServlet extends ZimbraServlet {
         try {
             context = new Context(req, resp, this);
             if (!checkAuthentication(req, resp, context)) {
-                sendError(context, req, resp, "must authenticate");
+                sendError(context, req, resp, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
                 return;
             }
 
@@ -534,13 +536,13 @@ public class UserServlet extends ZimbraServlet {
             context.target = folder;
             resolveFormatter(context);
             if (!context.formatter.supportsSave())
-                sendError(context, req, resp, "format not supported for save");
+                sendError(context, req, resp, L10nUtil.getMessage(MsgKey.errUnsupportedFormat, req));
 
             // Prevent harvest attacks.  If mailbox doesn't exist for a request requiring authentication,
             // return auth error instead of "no such mailbox".  If request/formatter doesn't require
             // authentication, call the formatter and let it deal with preventing harvest attacks.
             if (mbox == null && context.formatter.requiresAuth())
-                throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
+                throw ServiceException.PERM_DENIED(L10nUtil.getMessage(MsgKey.errPermissionDenied, req));
 
             context.formatter.save(context, ctype, folder, filename);
         } catch (NoSuchItemException e) {
@@ -564,13 +566,13 @@ public class UserServlet extends ZimbraServlet {
         if (context.format == null) {
             context.format = defaultFormat(context);
             if (context.format == null)
-                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "unsupported format");
+                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, L10nUtil.getMessage(MsgKey.errUnsupportedFormat, context.req));
         }
 
         if (context.formatter == null)
             context.formatter = mFormatters.get(context.format);
         if (context.formatter == null)
-            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "unsupported format");
+            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, L10nUtil.getMessage(MsgKey.errUnsupportedFormat, context.req));
     }
     
     private void resolveItems(Context context) throws ServiceException {
@@ -702,7 +704,7 @@ public class UserServlet extends ZimbraServlet {
         Provisioning prov = Provisioning.getInstance();
         Account targetAccount = prov.get(AccountBy.id, mpt.getOwnerId());
         if (targetAccount == null)
-            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "referenced account not found");
+            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, L10nUtil.getMessage(MsgKey.errNoSuchAccount, req));
 
         proxyServletRequest(req, resp, prov.getServer(targetAccount), uri, context.basicAuthHappened ? context.authToken : null);
     }
@@ -762,12 +764,12 @@ public class UserServlet extends ZimbraServlet {
             
             String pathInfo = request.getPathInfo().toLowerCase();
             if (pathInfo == null || pathInfo.equals("/") || pathInfo.equals("") || !pathInfo.startsWith("/"))
-                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "invalid path");
+                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, L10nUtil.getMessage(MsgKey.errInvalidPath, request));
             int pos = pathInfo.indexOf('/', 1);
             if (pos == -1)
                 pos = pathInfo.length();
             if (pos < 1)
-                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "invalid path");
+                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, L10nUtil.getMessage(MsgKey.errInvalidPath, request));
 
             this.accountPath = pathInfo.substring(1, pos);
 
@@ -784,7 +786,7 @@ public class UserServlet extends ZimbraServlet {
             try {
                 this.itemId = id == null ? null : new ItemId(id, (String) null);
             } catch (ServiceException e) {
-                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "invalid id requested");
+                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, L10nUtil.getMessage(MsgKey.errInvalidId, request));
             }
             
             String listParam = this.params.get(QP_LIST);
@@ -800,14 +802,14 @@ public class UserServlet extends ZimbraServlet {
             try {
                 this.imapId = imap == null ? -1 : Integer.parseInt(imap);
             } catch (NumberFormatException nfe) {
-                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "invalid imap id requested");
+                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, L10nUtil.getMessage(MsgKey.errInvalidImapId, request));
             }
 
             if (this.format != null) {
                 this.format = this.format.toLowerCase();
                 this.formatter = srvlt.getFormatter(this.format);
                 if (this.formatter == null)
-                    throw new UserServletException(HttpServletResponse.SC_NOT_IMPLEMENTED, "not implemented yet");
+                    throw new UserServletException(HttpServletResponse.SC_NOT_IMPLEMENTED, L10nUtil.getMessage(MsgKey.errNotImplemented, request));
             }                
 
             // see if we can get target account or not
@@ -1005,7 +1007,7 @@ public class UserServlet extends ZimbraServlet {
             dispatcher.forward(req, resp);
             return;
         }
-        resp.sendError(HttpServletResponse.SC_FORBIDDEN, "The attachment download has been disabled per security policy.");
+        resp.sendError(HttpServletResponse.SC_FORBIDDEN, L10nUtil.getMessage(MsgKey.errAttachmentDownloadDisabled, req));
     }
 
     @Override public void init() throws ServletException {

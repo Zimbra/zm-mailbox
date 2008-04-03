@@ -47,8 +47,8 @@ import com.zimbra.cs.redolog.op.CreateCalendarItemPlayer;
 import com.zimbra.cs.redolog.op.CreateCalendarItemRecorder;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateTimeUtil;
-import com.zimbra.cs.util.L10nUtil;
-import com.zimbra.cs.util.L10nUtil.MsgKey;
+import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.L10nUtil.MsgKey;
 
 
 /**
