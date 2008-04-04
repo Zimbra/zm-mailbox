@@ -40,12 +40,12 @@ public class MailHost extends AttributeCallback {
         if (!(value instanceof String))
             throw ServiceException.INVALID_REQUEST(Provisioning.A_zimbraMailHost+" is a single-valued attribute", null);
         
-        String mailHost = (String)value;
-        String mailTransport = null;
-        if (attrsToModify.get("-" + Provisioning.A_zimbraMailHost) != null)
-            mailHost = null; // unsetting
+        if (StringUtil.isNullOrEmpty((String)value) || 
+            attrsToModify.get("-" + Provisioning.A_zimbraMailHost) != null)
+            return; // unsetting
         
-        mailTransport = (String)attrsToModify.get(Provisioning.A_zimbraMailTransport);
+        String mailHost = (String)value;
+        String mailTransport = (String)attrsToModify.get(Provisioning.A_zimbraMailTransport);
         
         /*
          * never allow setting both zimbraMailHost and zimbraMailTransport in the same request
@@ -54,6 +54,7 @@ public class MailHost extends AttributeCallback {
             throw ServiceException.INVALID_REQUEST("setting both " + Provisioning.A_zimbraMailHost + " and " +  Provisioning.A_zimbraMailTransport + " in the same request is not allowed", null);
         
         Provisioning prov = Provisioning.getInstance();
+        
         Server server = prov.get(ServerBy.serviceHostname, mailHost);
         if (server == null)
             throw ServiceException.INVALID_REQUEST("specified "+Provisioning.A_zimbraMailHost+" does not correspond to a valid server service hostname: "+mailHost, null);
@@ -67,30 +68,27 @@ public class MailHost extends AttributeCallback {
              * If zimbraMailHost is modified, see if applying lmtp rule to old zimbraMailHost value would result in old zimbraMailTransport - 
              * if it would, then replace both zimbraMailHost and set new zimbraMailTransport.  Otherwise error.
              */
-            boolean match = false;
             if (entry != null && !isCreate) {
+        	// as long as the new mail host matches the current mail transport, 
+                // allow it since we are not stomping mail transport 
+                if (mailTransport(server).equals(entry.getAttr(Provisioning.A_zimbraMailTransport)))
+                    return;
+        	
                 String oldMailHost = entry.getAttr(Provisioning.A_zimbraMailHost);
                 if (oldMailHost != null) {
                     Server oldServer = prov.get(ServerBy.serviceHostname, oldMailHost);
                     if (oldServer != null) {
-                        if (mailTransport(oldServer).equals(entry.getAttr(Provisioning.A_zimbraMailTransport)))
-                            match = true;
+                        if (!mailTransport(oldServer).equals(entry.getAttr(Provisioning.A_zimbraMailTransport)))
+                            throw ServiceException.INVALID_REQUEST("current value of " + Provisioning.A_zimbraMailHost + " does not match " + Provisioning.A_zimbraMailTransport, null);
                     }
-                } else {
-                    // if zimbraMailHost is currently not set, we allowing setting it if it matches the current zimbraMailTransport
-                    if (mailTransport(server).equals(entry.getAttr(Provisioning.A_zimbraMailTransport)))
-                        match = true;
                 }
             } else {
                 // we are creating the account
-                match = true;
             }
             
-            if (match) {
-                String newMailTransport = mailTransport(server);
-                attrsToModify.put(Provisioning.A_zimbraMailTransport, newMailTransport);
-            } else
-                throw ServiceException.INVALID_REQUEST("current value of " + Provisioning.A_zimbraMailHost + " does not match " + Provisioning.A_zimbraMailTransport, null);
+            // also update mail transport to match the new mail host
+            String newMailTransport = mailTransport(server);
+            attrsToModify.put(Provisioning.A_zimbraMailTransport, newMailTransport);
         }
     }
     
