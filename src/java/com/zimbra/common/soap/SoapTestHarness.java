@@ -442,11 +442,11 @@ public class SoapTestHarness {
 			mCurrent.mSoapRequest = mSoapProto.soapEnvelope(mCurrent.mDocRequest);
         } else {
             ZAuthToken zat = new ZAuthToken(null, mAuthToken, null);
-            Element ctxt = SoapUtil.toCtxt(mSoapProto, zat, mSessionId, -1);
+            Element ctxt = SoapUtil.toCtxt(mSoapProto, zat, mSessionId);
             if (mTargetUser != null)
-                SoapUtil.addTargetAccountToCtxt(ctxt, null, mTargetUser);
+                ctxt.addUniqueElement(HeaderConstants.E_ACCOUNT).addAttribute(HeaderConstants.A_BY, HeaderConstants.BY_NAME).setText(mTargetUser);
             if (mResponseProto == SoapProtocol.SoapJS)
-                SoapUtil.addResponseProtocolToCtxt(ctxt, mResponseProto);
+                ctxt.addElement(HeaderConstants.E_FORMAT).addAttribute(HeaderConstants.A_TYPE, HeaderConstants.TYPE_JAVASCRIPT);
             mCurrent.mSoapRequest = mSoapProto.soapEnvelope(mCurrent.mDocRequest, ctxt);
         }
 
