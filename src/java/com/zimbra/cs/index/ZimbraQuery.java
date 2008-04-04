@@ -472,15 +472,23 @@ public final class ZimbraQuery {
                         switch (field) {
                             case Calendar.YEAR:
                                 cal.set(Calendar.MONTH, 0);
+                                // fall-through
                             case Calendar.MONTH:
-                                cal.set(Calendar.WEEK_OF_MONTH, 0);
+                                cal.set(Calendar.DAY_OF_MONTH, 1);
+                                cal.set(Calendar.HOUR_OF_DAY, 0);
+                                cal.set(Calendar.MINUTE, 0);
+                                cal.set(Calendar.SECOND, 0);
+                                break;
                             case Calendar.WEEK_OF_YEAR:
-                                cal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
+                                cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
+                                // fall-through
                             case Calendar.DATE:
                                 cal.set(Calendar.HOUR_OF_DAY, 0);
+                                // fall-through
                             case Calendar.HOUR:
                             case Calendar.HOUR_OF_DAY:
                                 cal.set(Calendar.MINUTE, 0);
+                                // fall-through
                             case Calendar.MINUTE:
                                 cal.set(Calendar.SECOND, 0);
                         }
