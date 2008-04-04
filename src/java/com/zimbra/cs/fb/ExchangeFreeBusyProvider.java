@@ -454,6 +454,26 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		return serverInfo;
 	}
 	
+	public static int checkAuth(Account requestor) throws IOException {
+		ExchangeFreeBusyProvider prov = new ExchangeFreeBusyProvider();
+		ServerInfo info = new ServerInfo();
+		info.url = BasicUserResolver.getAttr(Provisioning.A_zimbraFreebusyExchangeURL, null);
+		info.authUsername = BasicUserResolver.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthUsername, null);
+		info.authPassword = BasicUserResolver.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthPassword, null);
+		String scheme = BasicUserResolver.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthScheme, null);
+		info.scheme = AuthScheme.valueOf(scheme);
+		info.org = BasicUserResolver.getAttr(Provisioning.A_zimbraFreebusyExchangeUserOrg, null);
+		ArrayList<Request> req = new ArrayList<Request>();
+		req.add(new Request(
+				requestor, 
+				requestor.getName(), 
+				prov.cachedFreeBusyStartTime(), 
+				prov.cachedFreeBusyEndTime()));
+		String url = prov.constructGetUrl(info, req);
+		HttpMethod method = new GetMethod(url);
+		return prov.sendRequest(method, info);
+	}
+	
 	public static class ExchangeUserFreeBusy extends FreeBusy {
 		/*
 			<a:response xmlns:a="WM">
