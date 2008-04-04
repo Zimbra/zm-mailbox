@@ -2047,3 +2047,13 @@ in soap-waitset.txt
 </PushFreeBusyRequest>
 
 <PushFreeBusyResponse/>
+
+----------------------------------------
+
+<CheckExchangeAuthRequest/>
+
+<CheckExchangeAuthResponse>
+  <code>...</code>
+  <message>...</message>*
+</CheckExchangeAuthResponse>
+
