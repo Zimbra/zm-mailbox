@@ -137,6 +137,8 @@ public class AdminConstants {
     public static final QName CHECK_AUTH_CONFIG_RESPONSE = QName.get("CheckAuthConfigResponse", NAMESPACE);
     public static final QName CHECK_GAL_CONFIG_REQUEST = QName.get("CheckGalConfigRequest", NAMESPACE);
     public static final QName CHECK_GAL_CONFIG_RESPONSE = QName.get("CheckGalConfigResponse", NAMESPACE);
+    public static final QName CHECK_EXCHANGE_AUTH_REQUEST = QName.get("CheckExchangeAuthRequest", NAMESPACE);
+    public static final QName CHECK_EXCHANGE_AUTH_RESPONSE = QName.get("CheckExchangeAuthResponse", NAMESPACE);
 
     public static final QName AUTO_COMPLETE_GAL_REQUEST = QName.get("AutoCompleteGalRequest", NAMESPACE);
     public static final QName AUTO_COMPLETE_GAL_RESPONSE = QName.get("AutoCompleteGalResponse", NAMESPACE);
