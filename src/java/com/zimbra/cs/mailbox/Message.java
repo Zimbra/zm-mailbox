@@ -324,7 +324,8 @@ public class Message extends MailItem {
 
         List<Invite> components = null;
         String methodStr = null;
-        if (cal != null) {
+        // Skip calendar processing if message is being filed as spam or trash.
+        if (cal != null && folder.getId() != Mailbox.ID_FOLDER_SPAM && folder.getId() != Mailbox.ID_FOLDER_TRASH) {
             Account acct = mbox.getAccount();
 
             // XXX: shouldn't we just be checking flags for Flag.FLAG_FROM_ME?
