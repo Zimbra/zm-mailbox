@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.account.ldap;
 
+import java.io.IOException;
 import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -32,11 +33,13 @@ import javax.naming.NamingException;
 import javax.naming.directory.InvalidSearchFilterException;
 import javax.net.ssl.SSLHandshakeException;
 
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.gal.GalParams;
+import com.zimbra.cs.fb.ExchangeFreeBusyProvider;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ExceptionToString;
 import com.zimbra.common.util.ZimbraLog;
@@ -72,6 +75,10 @@ public class Check {
     /** some other error occurred  */
     public static final String STATUS_FAILURE = "check.FAILURE";
 
+    /** HTTP error codes */
+    public static final String STATUS_BAD_URL = "check.BAD_URL";
+    public static final String STATUS_FORBIDDEN = "check.FORBIDDEN";
+    
     public static class Result {
         String code;
         String message;
@@ -190,6 +197,31 @@ public class Check {
         }
     }
 
+    public static Result checkExchangeAuth(Account acct) throws ServiceException {
+    	try {
+        	int code = ExchangeFreeBusyProvider.checkAuth(acct);
+        	switch (code) {
+        	case 400:
+        	case 404:
+                return new Result(STATUS_BAD_URL, "", null);
+        	case 401:
+        	case 403:
+                return new Result(STATUS_AUTH_FAILED, "", null);
+        	}
+    	} catch (IOException e) {
+            if (e instanceof UnknownHostException) {
+                return new Result(STATUS_UNKNOWN_HOST, e, null);
+            } else if (e instanceof ConnectException) {
+                return new Result(STATUS_CONNECTION_REFUSED, e, null);
+            } else if (e instanceof SSLHandshakeException) {
+                return new Result(STATUS_SSL_HANDSHAKE_FAILURE, e, null);
+            } else {
+                return new Result(STATUS_COMMUNICATION_FAILURE, e, null);
+            }
+    	}
+    	return new Result(STATUS_OK, "", null);
+    }
+    
     private static Result toResult(NamingException e, String dn) {
         if (e instanceof CommunicationException) {
             if (e.getRootCause() instanceof UnknownHostException) {
