@@ -380,6 +380,9 @@ public class Message extends MailItem {
         data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, pm, flags, dinfo, null);
         data.unreadCount = unread ? 1 : 0; 
         data.contentChanged(mbox);
+
+        ZimbraLog.mailop.info("Adding Message: id=%d, Message-ID=%s, parentId=%d, folderId=%d, folderName=%s.",
+            data.id, pm.getMessageID(), data.parentId, folder.getId(), folder.getName());
         DbMailItem.create(mbox, data);
         Message msg = fact.create(mbox, data);
 

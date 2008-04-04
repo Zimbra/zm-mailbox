@@ -33,6 +33,7 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 /**
@@ -334,6 +335,18 @@ public class Conversation extends MailItem {
         data.children    = children;
         data.inheritedTags = tags.toString();
         data.contentChanged(mbox);
+        
+        if (ZimbraLog.mailop.isDebugEnabled()) {
+            StringBuilder msgIds = new StringBuilder();
+            for (int i = 0; i < msgs.length; i++) {
+                if (i > 0) {
+                    msgIds.append(',');
+                }
+                msgIds.append(msgs[i].getId());
+            }
+            ZimbraLog.mailop.debug("Adding Conversation: id=%d, message(s): %s.",
+                data.id, msgIds);
+        }
         DbMailItem.create(mbox, data);
 
         Conversation conv = new Conversation(mbox, data);
@@ -470,6 +483,11 @@ public class Conversation extends MailItem {
             if (excludeAccess)
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
         } else {
+            if (ZimbraLog.mailop.isDebugEnabled()) {
+                String operation = add ? "Setting" : "Unsetting";
+                ZimbraLog.mailop.debug("%s %s for %s.  Affected ids: %s",
+                    operation, getMailopContext(tag), getMailopContext(this), StringUtil.join(",", targets));
+            }
             DbMailItem.alterTag(tag, targets, add);
         }
     }
@@ -578,6 +596,17 @@ public class Conversation extends MailItem {
             // moving a conversation to spam closes it
             if (target.inSpam())
                 detach();
+            if (ZimbraLog.mailop.isInfoEnabled()) {
+                StringBuilder ids = new StringBuilder();
+                for (int i = 0; i < moved.size(); i++) {
+                    if (i > 0) {
+                        ids.append(',');
+                    }
+                    ids.append(moved.get(i).getId());
+                }
+                ZimbraLog.mailop.info("Moving %s to %s.  Affected message ids: %s",
+                    getMailopContext(this), getMailopContext(target), ids);
+            }
             DbMailItem.setFolder(moved, target);
             
             if (!indexUpdated.isEmpty()) { 

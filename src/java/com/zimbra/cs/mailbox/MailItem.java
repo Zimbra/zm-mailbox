@@ -43,6 +43,7 @@ import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.Volume;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -1327,6 +1328,9 @@ public abstract class MailItem implements Comparable<MailItem> {
         markItemModified(Change.MODIFIED_IMAP_UID);
         mData.imapId = imapId;
         mData.metadataChanged(mMailbox);
+        if (ZimbraLog.mailop.isDebugEnabled()) {
+            ZimbraLog.mailop.debug("Setting imapId of %s to %d.", getMailopContext(this), imapId);
+        }
         DbMailItem.saveImapUid(this);
 
         getFolder().updateUIDNEXT();
@@ -1415,6 +1419,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             folder.updateSize(0, mData.size);
             mMailbox.updateSize(mData.size);
 
+            ZimbraLog.mailop.debug("Saving revision %d for %s", mVersion, getMailopContext(this));
             DbMailItem.snapshotRevision(this, mVersion);
             if (!isTagged(mMailbox.mVersionedFlag))
                 tagChanged(mMailbox.mVersionedFlag, true);
@@ -1561,6 +1566,9 @@ public abstract class MailItem implements Comparable<MailItem> {
             tag.updateUnread((newValue ? 1 : -1) * mData.unreadCount);
 
         // alter our tags in the DB
+        if (ZimbraLog.mailop.isDebugEnabled()) {
+            ZimbraLog.mailop.debug("Setting %s for %s.", getMailopContext(tag), getMailopContext(this));
+        }
         DbMailItem.alterTag(this, tag, newValue);
     }
 
@@ -1725,6 +1733,9 @@ public abstract class MailItem implements Comparable<MailItem> {
         
         // FIXME: can't use MailItem.alterTag() directly because it's a change to a system tag
         if (shared && !isTagged(mMailbox.mCopiedFlag)) {
+            if (ZimbraLog.mailop.isDebugEnabled()) {
+                ZimbraLog.mailop.debug("Setting copied flag for %s.", getMailopContext(this));
+            }
             DbMailItem.alterTag(this, mMailbox.mCopiedFlag, true);
             tagChanged(mMailbox.mCopiedFlag, true);
             if (mData.parentId > 0)
@@ -1749,6 +1760,8 @@ public abstract class MailItem implements Comparable<MailItem> {
             data.flags |= Flag.BITMASK_INDEXING_DEFERRED;
         }
         
+        ZimbraLog.mailop.info("Copying %s: copyId=%d, folderId=%d, folderName=%s, parentId=%d.",
+            getMailopContext(this), id, folder.getId(), folder.getName(), data.parentId);
         DbMailItem.copy(this, id, folder, data.indexId, data.parentId, data.volumeId, data.metadata);
         
         MailItem copy = constructItem(mMailbox, data);
@@ -1835,6 +1848,9 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
 
         data.contentChanged(mMailbox);
+        
+        ZimbraLog.mailop.info("Performing IMAP copy of %s: copyId=%d, folderId=%d, folderName=%s, parentId=%d.",
+            getMailopContext(this), copyId, target.getId(), target.getName(), data.parentId);
         DbMailItem.icopy(this, data, shared);
 
         MailItem copy = constructItem(mMailbox, data);
@@ -1939,6 +1955,9 @@ public abstract class MailItem implements Comparable<MailItem> {
             addRevision(false);
 
             markItemModified(Change.MODIFIED_NAME);
+            if (ZimbraLog.mailop.isDebugEnabled()) {
+                ZimbraLog.mailop.debug("Renaming %s to %s.", getMailopContext(this), name);
+            }
             mData.name = name;
             mData.date = mMailbox.getOperationTimestamp();
             mData.contentChanged(mMailbox);
@@ -2068,6 +2087,7 @@ public abstract class MailItem implements Comparable<MailItem> {
                 getMailbox().queueForIndexing(this, false, null);
             }
 
+        ZimbraLog.mailop.info("Moving %s to %s.", getMailopContext(this), target);
         DbMailItem.setFolder(this, target);
         folderChanged(target, 0);
         return true;
@@ -2278,12 +2298,26 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
 
         // actually delete the items from the DB
-        if (info.incomplete || item == null)
+        if (info.incomplete || item == null) {
+            if (ZimbraLog.mailop.isInfoEnabled()) {
+                if (item != null) {
+                    ZimbraLog.mailop.info("Deleting items from %s.", getMailopContext(item));
+                }
+                List<Integer> all = info.itemIds.getAll();
+                if (all != null && all.size() > 0) {
+                    for (List<Integer> idList : ListUtil.split(all, 200)) {
+                        ZimbraLog.mailop.info("Deleting items: " + StringUtil.join(",", idList));
+                    }
+                }
+            }
             DbMailItem.delete(mbox, info.itemIds.getAll());
-        else if (scope == DeleteScope.CONTENTS_ONLY)
+        } else if (scope == DeleteScope.CONTENTS_ONLY) {
+            ZimbraLog.mailop.info("Deleting contents of %s.", getMailopContext(item));
             DbMailItem.deleteContents(item);
-        else
+        } else {
+            ZimbraLog.mailop.info("Deleting %s.", getMailopContext(item));
             DbMailItem.delete(item);
+        }
 
         // remove the deleted item(s) from the mailbox's cache
         if (item != null) {
@@ -2322,6 +2356,23 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
 
         // don't actually delete the blobs or index entries here; wait until after the commit
+    }
+    
+    static String getMailopContext(MailItem item) {
+        if (item == null || !ZimbraLog.mailop.isInfoEnabled()) {
+            return "<undefined>";
+        }
+        if (item instanceof Folder || item instanceof Tag || item instanceof WikiItem) {
+            return String.format("%s %s (id=%d)", item.getClass().getSimpleName(), item.getName(), item.getId());
+        } else if (item instanceof Contact) {
+            String email = ((Contact) item).get(Contact.A_email);
+            if (StringUtil.isNullOrEmpty(email)) {
+                email = "<undefined>";
+            }
+            return String.format("%s %s (id=%d)", item.getClass().getSimpleName(), email, item.getId());
+        } else {
+            return String.format("%s (id=%d)", item.getClass().getSimpleName(), item.getId());
+        }
     }
 
     /** Determines the set of items to be deleted.  Assembles a new
@@ -2428,6 +2479,9 @@ public abstract class MailItem implements Comparable<MailItem> {
 
     protected void saveMetadata(String metadata) throws ServiceException {
         mData.metadataChanged(mMailbox);
+        if (ZimbraLog.mailop.isDebugEnabled()) {
+            ZimbraLog.mailop.debug("Saving metadata for %s.", getMailopContext(this));
+        }
         DbMailItem.saveMetadata(this, metadata);
     }
 
@@ -2446,6 +2500,7 @@ public abstract class MailItem implements Comparable<MailItem> {
 
     protected void saveData(String sender, String metadata) throws ServiceException {
         mData.metadataChanged(mMailbox);
+        ZimbraLog.mailop.debug("Saving data for %s.", getMailopContext(this));
         DbMailItem.saveData(this, sender, metadata);
     }
 

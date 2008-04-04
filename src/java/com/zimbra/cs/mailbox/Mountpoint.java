@@ -20,6 +20,7 @@
 package com.zimbra.cs.mailbox;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbMailItem;
 
 /**
@@ -132,6 +133,8 @@ public class Mountpoint extends Folder {
         data.subject  = name;
         data.metadata = encodeMetadata(color, 1, view, ownerId, remoteId);
         data.contentChanged(mbox);
+        ZimbraLog.mailop.info("Adding Mountpoint %s: id=%d, parentId=%d, parentName=%s.",
+            name, data.id, parent.getId(), parent.getName());
         DbMailItem.create(mbox, data);
 
         Mountpoint mpt = new Mountpoint(mbox, data);

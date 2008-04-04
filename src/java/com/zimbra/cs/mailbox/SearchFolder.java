@@ -25,6 +25,7 @@ import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 
 /**
  * @author dkarp
@@ -133,6 +134,8 @@ public class SearchFolder extends Folder {
         data.subject     = name;
         data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, query, types, sort);
         data.contentChanged(mbox);
+        ZimbraLog.mailop.info("Adding SearchFolder %s: id=%d, parentId=%d, parentName=%s.",
+            name, data.id, parent.getId(), parent.getName());
         DbMailItem.create(mbox, data);
         
         SearchFolder search = new SearchFolder(mbox, data);

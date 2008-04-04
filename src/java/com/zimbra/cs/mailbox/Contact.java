@@ -22,6 +22,7 @@ package com.zimbra.cs.mailbox;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mime.Mime;
@@ -642,6 +643,16 @@ public class Contact extends MailItem {
         data.sender      = getFileAsString(pc.getFields());
         data.metadata    = encodeMetadata(DEFAULT_COLOR, 1, pc.getFields(), pc.getAttachments());
         data.contentChanged(mbox);
+        
+        if (ZimbraLog.mailop.isInfoEnabled()) {
+            String email="null";
+            if (pc.getFields() != null) {
+                email = pc.getFields().get(Contact.A_email);
+            }
+            ZimbraLog.mailop.info("Adding Contact %s: id=%d, folderId=%d, folderName=%s.",
+                email, data.id, folder.getId(), folder.getName());
+        }
+        
         DbMailItem.create(mbox, data);
 
         Contact con = new Contact(mbox, data);

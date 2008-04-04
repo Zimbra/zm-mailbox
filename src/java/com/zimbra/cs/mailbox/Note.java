@@ -31,6 +31,7 @@ import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 
 
 /**
@@ -140,6 +141,8 @@ public class Note extends MailItem {
         data.subject     = content;
         data.metadata    = encodeMetadata(color, 1, location);
         data.contentChanged(mbox);
+        ZimbraLog.mailop.info("Adding Note: id=%d, folderId=%d, folderName=%s.",
+            data.id, folder.getId(), folder.getName());
         DbMailItem.create(mbox, data);
         
         Note note = new Note(mbox, data);

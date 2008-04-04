@@ -35,6 +35,7 @@ import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ArrayUtil;
+import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -635,11 +636,11 @@ public class Folder extends MailItem {
         data.subject  = name;
         data.metadata = encodeMetadata(color, 1, attributes, view, null, new SyncData(url), id + 1, 0, mbox.getOperationChangeID(), 0);
         data.contentChanged(mbox);
+        ZimbraLog.mailop.info("Adding Folder %s: id=%d, parentId=%d.", name, data.id, data.parentId);
         DbMailItem.create(mbox, data);
 
         Folder folder = new Folder(mbox, data);
         folder.finishCreation(parent);
-        ZimbraLog.mailbox.info("Created folder %s, id=%d", folder.getPath(), folder.getId());
         return folder;
     }
 
@@ -743,10 +744,22 @@ public class Folder extends MailItem {
         }
 
         // mark all messages in this folder as read in the database
-        if (!missed)
+        if (!missed) {
+            if (ZimbraLog.mailop.isDebugEnabled()) {
+                String state = unread ? "unread" : "read";
+                ZimbraLog.mailop.debug("Marking all messages in %s as %s.", getMailopContext(this), state);
+            }
             DbMailItem.alterUnread(this, unread);
-        else
+        } else {
+            if (ZimbraLog.mailop.isDebugEnabled() && targets.size() > 0) {
+                String state = unread ? "unread" : "read";
+                String context = getMailopContext(this);
+                for (List<Integer> ids : ListUtil.split(targets, 200)) {
+                    ZimbraLog.mailop.debug("Marking messages in %s as %s.  ids: %s", context, state, StringUtil.join(",", ids));  
+                }
+            }
             DbMailItem.alterUnread(mMailbox, targets, unread);
+        }
     }
 
     /** Tags or untags a folder.  Persists the change to the database and
@@ -784,6 +797,9 @@ public class Folder extends MailItem {
 
         List<Integer> ids = new ArrayList<Integer>();
         ids.add(mId);
+        if (ZimbraLog.mailop.isDebugEnabled()) {
+            ZimbraLog.mailop.debug("Setting %s for %s.", getMailopContext(tag), getMailopContext(this));
+        }
         DbMailItem.alterTag(tag, ids, newValue);
 
         // clearing the "no inherit" flag sets inherit ON and thus must clear the folder's ACL
@@ -843,6 +859,7 @@ public class Folder extends MailItem {
         target.addChild(this);
 
         // and update the folder's data (in memory and DB)
+        ZimbraLog.mailop.info("Moving %s to new parent %s.", this, target);
         DbMailItem.setFolder(this, target);
         mData.folderId = target.getId();
         mData.parentId = target.getId();

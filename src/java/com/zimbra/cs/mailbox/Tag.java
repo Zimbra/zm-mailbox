@@ -154,6 +154,7 @@ public class Tag extends MailItem {
         data.subject     = name;
         data.metadata    = encodeMetadata(color, 1);
         data.contentChanged(mbox);
+        ZimbraLog.mailop.info("Adding Tag %s: id=%d.", name, data.id);
         DbMailItem.create(mbox, data);
 
         Tag tag = new Tag(mbox, data);
@@ -227,6 +228,9 @@ public class Tag extends MailItem {
     @Override
     void purgeCache(PendingDelete info, boolean purgeItem) throws ServiceException {
         // remove the tag from all items in the database
+        if (ZimbraLog.mailop.isDebugEnabled()) {
+            ZimbraLog.mailop.debug("Removing %s from all items.", getMailopContext(this));
+        }
         DbMailItem.clearTag(this);
         // dump entire item cache (necessary now because we reuse tag ids)
         mMailbox.purge(TYPE_MESSAGE);
