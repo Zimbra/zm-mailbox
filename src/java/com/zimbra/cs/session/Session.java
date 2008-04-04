@@ -22,8 +22,6 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -33,7 +31,6 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
 
 /**
  *  A {@link Session} is identified by an (accountId, sessionID) pair.  A single
@@ -131,10 +128,11 @@ public abstract class Session {
             return this;
 
         if (isMailboxListener()) {
-            mMailbox = MailboxManager.getInstance().getMailboxByAccountId(mTargetAccountId);
+            Mailbox mbox = mMailbox = MailboxManager.getInstance().getMailboxByAccountId(mTargetAccountId);
             
             // once addListener is called, you may NOT lock the mailbox (b/c of deadlock possibilities)
-            mMailbox.addListener(this);
+            if (mbox != null)
+                mbox.addListener(this);
         }
 
         // registering the session automatically sets mSessionId
@@ -152,21 +150,21 @@ public abstract class Session {
      * @see #isRegisteredInCache() */
     public Session unregister() {
         // locking order is always Mailbox then Session
-        assert(mMailbox == null || Thread.holdsLock(mMailbox) || !Thread.holdsLock(this));
+        Mailbox mbox = mMailbox;
+        assert(mbox == null || Thread.holdsLock(mbox) || !Thread.holdsLock(this));
         
         // Must do this in two steps (first, w/ the Session lock, and then
         // w/ the Persona lock if we have one) b/c of possible deadlock.
         IMPersona persona = null;
-        synchronized(this) {
+        synchronized (this) {
             persona = mPersona;
             mPersona = null;
         }
-        if (persona != null) {
+        if (persona != null)
             persona.removeListener(this);
-        }
-        
-        if (mMailbox != null && isMailboxListener()) {
-            mMailbox.removeListener(this);
+
+        if (mbox != null && isMailboxListener()) {
+            mbox.removeListener(this);
             mMailbox = null;
         }
 
