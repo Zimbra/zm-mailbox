@@ -18,6 +18,8 @@ package com.zimbra.cs.datasource;
 
 import java.io.IOException;
 import java.io.File;
+import java.io.OutputStream;
+import java.io.InputStream;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
@@ -29,6 +31,7 @@ import java.util.Set;
 import java.util.HashMap;
 import java.util.Collections;
 import java.util.ArrayList;
+import java.util.zip.CRC32;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -81,6 +84,7 @@ import com.zimbra.cs.mailclient.imap.ImapData;
 
 public class ImapImport implements MailItemImport {
     private final UidFetch mUidFetch;
+    private final byte[] buf = new byte[4096]; // Temp buffer for checksum calculation
     
     private static Session sSession;
     private static Session sSelfSignedCertSession;
@@ -289,8 +293,12 @@ public class ImapImport implements MailItemImport {
                                 int flags = localMsg.getFlagBitmask();
                                 setFlags(mimeMsg, flags);
                                 AppendUID[] newUids = remoteFolder.appendUIDMessages(new MimeMessage[] { mimeMsg });
-                                if (newUids != null && newUids.length == 1 && newUids[0] != null && newUids[0].uid > 0)
-                                	DbImapMessage.storeImapMessage(mbox, localFolder.getId(), newUids[0].uid, id, flags);
+                                assert newUids != null && newUids.length == 1;
+                                long uid = newUids[0] != null ? newUids[0].uid : -id;
+                                // If no UID returned by APPEND, then store the message locally with a negative UID.
+                                // When we sync again we will calculate the checksum of remote message and use that
+                                // to find the corresponding local entry and update the UID with the correct value.
+                                DbImapMessage.storeImapMessage(mbox, localFolder.getId(), uid, id, flags);
                             }
 
                             // Empty local folder so that it will be resynced later and store the new UIDVALIDITY value.
@@ -645,10 +653,22 @@ public class ImapImport implements MailItemImport {
 
         // Get stored message ID'S
         final ImapMessageCollection trackedMsgs = DbImapMessage.getImapMessages(mbox, ds, trackedFolder);
-        Set<Integer> localIds = new HashSet<Integer>();
+        final Set<Integer> localIds = new HashSet<Integer>();
         addMailItemIds(localIds, mbox, localFolder.getId(), MailItem.TYPE_MESSAGE);
         addMailItemIds(localIds, mbox, localFolder.getId(), MailItem.TYPE_CHAT);
-        
+
+        // For servers not supporting UIDVALIDITY, get tracked messages that
+        // were appended to mailbox but have no UID. We will match to downloaded
+        // messages by checksum.
+        final Map<Long, ImapMessage> noUidMsgs = new HashMap<Long, ImapMessage>();
+        for (ImapMessage trackedMsg : trackedMsgs.getNoUid()) {
+            int id = trackedMsg.getItemId();
+            MimeMessage msg = mbox.getMessageById(null, id).getMimeMessage(false);
+            long cksum = computeChecksum(msg);
+            ZimbraLog.datasource.debug("Local message with no UID (checksum = %x)", cksum);
+            noUidMsgs.put(cksum, trackedMsg);
+        }
+
         int numMatched = 0;
         int numUpdated = 0;
         int numDeletedLocally = 0;
@@ -698,7 +718,7 @@ public class ImapImport implements MailItemImport {
                     ZimbraLog.datasource.debug("Message %d was deleted locally.  Deleting remote copy.", uid);
                     remoteMsg.setFlag(Flags.Flag.DELETED, true);
                     numDeletedRemotely++;
-                    DbImapMessage.deleteImapMessage(mbox, trackedFolder.getItemId(), trackedMsg.getUid());
+                    DbImapMessage.deleteImapMessage(mbox, trackedFolder.getItemId(), trackedMsg.getItemId());
                 }
             }
         }
@@ -731,14 +751,28 @@ public class ImapImport implements MailItemImport {
                     }
                     IMAPMessage msg = remoteMsgs.get(uid);
                     if (msg == null) return;
-                    Date receivedDate = md.getInternalDate();
-                    Long time = receivedDate != null ? (Long) receivedDate.getTime() : null;
-                    ParsedMessage pm = getParsedMessage(
-                        md.getBodySections()[0].getData(), time, mbox.attachmentsIndexingEnabled());
-                    int flags = getZimbraFlags(msg.getFlags());
-                    int msgId = addMessage(mbox, dataSource, pm, localFolder.getId(), flags);
+                    ImapData data = md.getBodySections()[0].getData();
+                    // If server does not support UIDVALIDITY and there are
+                    // local messages without UID, match downloaded messages
+                    // based on checksum and assign UID.
+                    if (!noUidMsgs.isEmpty()) {
+                        long cksum = computeChecksum(data.getInputStream());
+                        ImapMessage trackedMsg = noUidMsgs.remove(cksum);
+                        if (trackedMsg != null) {
+                            ZimbraLog.datasource.debug(
+                                "Matched fetched message to local with checksum %x (UID = %x", cksum, uid);
+                            DbImapMessage.setUid(mbox, trackedMsg.getItemId(), uid);
+                            localIds.remove(trackedMsg.getItemId());
+                        }
+                    } else {
+                        Date receivedDate = md.getInternalDate();
+                        Long time = receivedDate != null ? (Long) receivedDate.getTime() : null;
+                        ParsedMessage pm = getParsedMessage(data, time, mbox.attachmentsIndexingEnabled());
+                        int flags = getZimbraFlags(msg.getFlags());
+                        int msgId = addMessage(mbox, dataSource, pm, localFolder.getId(), flags);
+                        DbImapMessage.storeImapMessage(mbox, trackedFolder.getItemId(), uid, msgId, flags);
+                    }
                     fetchCount.incrementAndGet();
-                    DbImapMessage.storeImapMessage(mbox, trackedFolder.getItemId(), uid, msgId, flags);
                 }
             });
             numAddedLocally = fetchCount.intValue();
@@ -753,7 +787,7 @@ public class ImapImport implements MailItemImport {
                 ImapMessage tracker = trackedMsgs.getByItemId(localId);
                 mbox.delete(null, localId, MailItem.TYPE_UNKNOWN);
                 numDeletedLocally++;
-                DbImapMessage.deleteImapMessage(mbox, trackedFolder.getItemId(), tracker.getUid());
+                DbImapMessage.deleteImapMessage(mbox, trackedFolder.getItemId(), tracker.getItemId());
             } else {
                 ZimbraLog.datasource.debug("Found new local message %d.  Creating remote copy.", localId);
                 com.zimbra.cs.mailbox.Message localMsg = mbox.getMessageById(null, localId);
@@ -761,18 +795,24 @@ public class ImapImport implements MailItemImport {
                 int flags = localMsg.getFlagBitmask();
                 setFlags(mimeMsg, flags);
                 AppendUID[] newUids = remoteFolder.appendUIDMessages(new MimeMessage[] { mimeMsg });
+                assert newUids != null && newUids.length == 1;
+                long uid = newUids[0] != null ? newUids[0].uid : -localId;
                 numAddedRemotely++;
-                if (newUids != null && newUids.length == 1 && newUids[0] != null && newUids[0].uid > 0)
-                	DbImapMessage.storeImapMessage(mbox, localFolder.getId(), newUids[0].uid, localId, flags);
-                else {
-                    //remote doesn't give us a UID in response, so we delete first and wait for the bounce back
-                	//TODO: this is pretty inefficient, so find another way!
-                    mbox.delete(null, localId, MailItem.TYPE_UNKNOWN);
-                    runAgain = true; //sync this folder again
+                // If no UID returned by APPEND, then store the message locally with a negative UID.
+                // When we sync again we will calculate the checksum of remote message and use that
+                // to find the corresponding local entry and update the UID with the correct value.
+                DbImapMessage.storeImapMessage(mbox, localFolder.getId(), uid, localId, flags);
+                if (uid < 0) {
+                    runAgain = true; // Sync this folder again since APPEND did not give back a UID
                 }
             }
         }
-        
+
+        // Discard local messages with unassigned UIDs that were not matched to
+        // any fetched email based on checksum (must have been deleted on remote server).
+        for (ImapMessage trackedMsg : noUidMsgs.values()) {
+            DbImapMessage.deleteImapMessage(mbox, localFolder.getId(), trackedMsg.getItemId());
+        }
         remoteFolder.close(true);
 
         ZimbraLog.datasource.debug(
@@ -783,7 +823,7 @@ public class ImapImport implements MailItemImport {
         
         return !runAgain;
     }
-    
+
     private int addMessage(Mailbox mbox, DataSource ds, ParsedMessage pm, int folderId, int flags) throws ServiceException, IOException {
     	com.zimbra.cs.mailbox.Message msg = null;
     	SharedDeliveryContext sharedDeliveryCtxt = new SharedDeliveryContext();
@@ -892,5 +932,23 @@ public class ImapImport implements MailItemImport {
             }
         }
         return zflags;
+    }
+    
+    private static long computeChecksum(MimeMessage msg) throws IOException, MessagingException {
+        final CRC32 crc = new CRC32();
+        msg.writeTo(new OutputStream() {
+            public void write(int b) { crc.update(b); }
+            public void write(byte[] b, int off, int len) { crc.update(b, off, len); }
+        });
+        return crc.getValue();
+    }
+
+    private long computeChecksum(InputStream is) throws IOException {
+        CRC32 crc = new CRC32();
+        int len;
+        while ((len = is.read(buf)) != -1) {
+            crc.update(buf, 0, len);
+        }
+        return crc.getValue();
     }
 }

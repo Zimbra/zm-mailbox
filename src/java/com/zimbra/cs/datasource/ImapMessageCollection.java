@@ -20,22 +20,35 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.Collection;
 
 
-public class ImapMessageCollection
-implements Iterable<ImapMessage>
-{
+public class ImapMessageCollection implements Iterable<ImapMessage> {
     private Map<Integer, ImapMessage> mByItemId = new HashMap<Integer, ImapMessage>();
     private Map<Long, ImapMessage> mByUid = new HashMap<Long, ImapMessage>();
-    
+    // Tracked message with a UID of 0 did not return a UID when appended to a
+    // remote folder. In this case, we will look up the message by checksum
+    // later when it is downloaded (see bug 26347).
+    private Map<Integer, ImapMessage> mNoUid = new HashMap<Integer, ImapMessage>();
+
     public void add(ImapMessage msg) {
         mByItemId.put(msg.getItemId(), msg);
-        mByUid.put(msg.getUid(), msg);
+        long uid = msg.getUid();
+        if (uid > 0) {
+            mByUid.put(msg.getUid(), msg);
+        } else {
+            mNoUid.put(msg.getItemId(), msg);
+        }
     }
-    
+
     public void remove(ImapMessage msg) {
         mByItemId.remove(msg.getItemId());
-        mByUid.remove(msg.getUid());
+        long uid = msg.getUid();
+        if (uid > 0) {
+            mByUid.remove(msg.getUid());
+        } else {
+            mNoUid.remove(msg.getItemId());
+        }
     }
     
     public ImapMessage getByItemId(int itemId) {
@@ -44,6 +57,10 @@ implements Iterable<ImapMessage>
     
     public ImapMessage getByUid(long uid) {
         return mByUid.get(uid);
+    }
+
+    public Collection<ImapMessage> getNoUid() {
+        return mNoUid.values();
     }
     
     public boolean containsItemId(int itemId) {
