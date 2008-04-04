@@ -37,8 +37,8 @@ public class UidFetch {
                     try {
                         return doFETCH(protocol, seq, handler);
                     } catch (IOException e) {
-                        e.printStackTrace();
-                        throw new ProtocolException("FETCH failed: " + e);
+                        throw (ProtocolException)
+                            new ProtocolException("FETCH failed: " + e).initCause(e);
                     }
                 }
             });

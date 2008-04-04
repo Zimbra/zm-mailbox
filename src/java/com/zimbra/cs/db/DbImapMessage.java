@@ -72,6 +72,31 @@ public class DbImapMessage {
         }
     }
 
+    public static void setUid(Mailbox mbox, int itemId, long uid)
+        throws ServiceException {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ZimbraLog.datasource.debug(
+            "Updating IMAP message tracker uid: mboxId=%d, localItemId=%d remoteUid=%x",
+            mbox.getId(), itemId, uid);
+        try {
+            conn = DbPool.getConnection();
+            stmt = conn.prepareStatement(
+                "UPDATE " + getTableName(mbox) + " SET uid = ?" +
+                " WHERE mailbox_id = ? AND item_id = ?");
+            stmt.setLong(1, uid);
+            stmt.setInt(2, mbox.getId());
+            stmt.setInt(3, itemId);
+            stmt.executeUpdate();
+            conn.commit();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Unable to update IMAP message data", e);
+        } finally {
+            if (stmt != null) DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+    }
+    
     public static void setFlags(Mailbox mbox, int itemId, int flags)
         throws ServiceException
     {
@@ -100,24 +125,24 @@ public class DbImapMessage {
     /**
      * Deletes IMAP message tracker data.
      */
-    public static void deleteImapMessage(Mailbox mbox, int localFolderId, long remoteUid)
+    public static void deleteImapMessage(Mailbox mbox, int localFolderId, int localItemId)
     throws ServiceException
     {
         Connection conn = null;
         PreparedStatement stmt = null;
         
         ZimbraLog.datasource.debug(
-            "Deleting IMAP message tracker: mboxId=%d, localFolderId=%d, remoteUid=%d",
-            mbox.getId(), localFolderId, remoteUid);
+            "Deleting IMAP message tracker: mboxId=%d, localFolderId=%d, msgId=%d",
+            mbox.getId(), localFolderId, localItemId);
 
         try {
             conn = DbPool.getConnection();
             stmt = conn.prepareStatement(
                 "DELETE FROM " + getTableName(mbox) +
-                " WHERE mailbox_id = ? AND imap_folder_id = ? AND uid = ?");
+                " WHERE mailbox_id = ? AND imap_folder_id = ? AND item_id = ?");
             stmt.setInt(1, mbox.getId());
             stmt.setInt(2, localFolderId);
-            stmt.setLong(3, remoteUid);
+            stmt.setInt(3, localItemId);
             stmt.executeUpdate();
             conn.commit();
         } catch (SQLException e) {
@@ -126,7 +151,7 @@ public class DbImapMessage {
             DbPool.closeStatement(stmt);
             DbPool.quietClose(conn);
         }
-    }
+    } 
 
     /**
      * Deletes IMAP message tracker data.
