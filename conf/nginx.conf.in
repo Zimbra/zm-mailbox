@@ -98,7 +98,7 @@ mail {
     auth_http %%getAllReverseProxyURLs%%;
 
 	pop3_capabilities        "TOP" "USER" "UIDL" "STLS" "EXPIRE 31 USER";
-	imap_capabilities        "IMAP4rev1" "STARTTLS" "BINARY" "CHILDREN" "ID" "LITERAL+" "LOGIN-REFERRALS" "NAMESPACE" "QUOTA" "SASL-IR" "UIDPLUS" "UNSELECT";
+	imap_capabilities        "IMAP4rev1" "ID" "LITERAL+" "SASL-IR";
 
     # IMAP4 ID Extension support (RFC 2971)
     # Use the imap_id directive to specify the string that should be sent
@@ -203,9 +203,35 @@ mail {
     mail_login_user_ttl             %%zimbraReverseProxyUserLoginLimitTime%%s;
     mail_login_user_rejectmsg       "Login rejected for this user";
 
+    # Supported SASL Authentication mechanisms
+    # 
+    # Use the pop3_auth and imap_auth to specify which SASL mechanisms are 
+    # enabled for POP and IMAP respectively
+    # These directives may be specified at mail{} level, or overridden at
+    # server{} level
+    # Even though an authentication mechanism may be listed against 
+    # pop3_auth and/or imap_auth, it may or may not be available depending
+    # on whether cleartext login is available (see description for starttls)
+    # For example, if starttls is set to only, then SASL PLAIN is not 
+    # available outside of TLS/SSL
+    # SASL mechanisms may be specified all on one line (space separated)
+    # against pop3_auth, or they may be specified on a separate line
+    # Specifying the SASL mechanisms on a separate line has the advantage
+    # that they can be enabled/disabled separately by zmmtaconfig using
+    # different LDAP attributes
+    # Currently, only PLAIN and GSSAPI mechanisms are supported
+    # 
+
+    pop3_auth               plain;
+    pop3_auth               gssapi;
+
+    imap_auth               plain;
+    imap_auth               gssapi;
+
     # TLS configuration
     # 
-    starttls on;
+    # (starttls moved to per-server config)
+    # starttls on;
     ssl_prefer_server_ciphers on;
     ssl_certificate             /opt/zimbra/conf/nginx.crt;
     ssl_certificate_key         /opt/zimbra/conf/nginx.key;
@@ -216,9 +242,11 @@ mail {
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        listen %%zimbraPop3ProxyBindPort%%;
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        protocol pop3;
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        proxy on;
-        # Per server SASL Configuration
-        # 
+        # sasl_service_name defaults to "pop" when protocol=pop3, "imap" when protocol=imap
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        sasl_service_name       "pop";
+        # starttls=on implies cleartext login enabled
+        # starttls=only implies cleartext login requires SSL/TLS
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%        starttls                on;
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%    }
 
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%    server {
@@ -226,8 +254,7 @@ mail {
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        protocol pop3;
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        proxy on;
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        ssl on;
-        # Per server SASL Configuration
-        # 
+        # sasl_service_name defaults to "pop" when protocol=pop3, "imap" when protocol=imap
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        sasl_service_name       "pop";
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%    }
 
@@ -237,18 +264,19 @@ mail {
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        listen %%zimbraImapProxyBindPort%%;
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        protocol imap;
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        proxy on;
-        # Per server SASL Configuration
-        # 
+        # sasl_service_name defaults to "pop" when protocol=pop3, "imap" when protocol=imap
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        sasl_service_name       "imap";
+        # starttls=on implies cleartext login enabled
+        # starttls=only implies cleartext login requires SSL/TLS
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%        starttls                on;
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%    }
 
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%    server {
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        listen %%zimbraImapSSLProxyBindPort%%;
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        protocol imap;
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        proxy on;
-%%uncomment VAR:zimbraReverseProxyMailEnabled%%		ssl on;
-        # Per server SASL Configuration
-        # 
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%        ssl on;
+        # sasl_service_name defaults to "pop" when protocol=pop3, "imap" when protocol=imap
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        sasl_service_name       "imap";
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%    }
 }
