@@ -316,6 +316,11 @@ public class ZimbraLog {
     public static final Log purge = LogFactory.getLog("zimbra.purge");
     
     /**
+     * the "zimbra.mailop" logger.  Logs changes to items in the mailbox.
+     */
+    public static final Log mailop = LogFactory.getLog("zimbra.mailop");
+    
+    /**
      * Keeps track of the account associated with the current thread, for
      * per-user logging settings. 
      */
