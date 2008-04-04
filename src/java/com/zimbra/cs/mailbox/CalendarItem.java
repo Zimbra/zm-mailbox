@@ -366,6 +366,8 @@ public abstract class CalendarItem extends MailItem {
                                        recur, invites, firstInvite.getTimeZoneMap(),
                                        new ReplyList(), null);
         data.contentChanged(mbox);
+        ZimbraLog.mailop.info("Adding CalendarItem: id=%d, Message-ID=%s, folderId=%d, folderName=%s, invite=%s.",
+            data.id, pm.getMessageID(), folder.getId(), folder.getName(), firstInvite.getName());
         DbMailItem.create(mbox, data);
 
         CalendarItem item =
@@ -510,6 +512,10 @@ public abstract class CalendarItem extends MailItem {
         if (mStartTime != startTime || mEndTime != endTime) {
             mStartTime = startTime;
             mEndTime = endTime;
+            if (ZimbraLog.mailop.isDebugEnabled()) {
+                ZimbraLog.mailop.debug("Updating recurrence for %s.  nextAlarm=%d.",
+                    getMailopContext(this), nextAlarm);
+            }
             DbMailItem.updateInCalendarItemTable(this);
         }
         return true;
@@ -2359,6 +2365,10 @@ public abstract class CalendarItem extends MailItem {
             long newNextAlarm = mAlarmData.getNextAt();
             if (newNextAlarm > 0 && newNextAlarm < mStartTime)
                 mStartTime = newNextAlarm;
+            if (ZimbraLog.mailop.isDebugEnabled()) {
+                ZimbraLog.mailop.debug("Setting next alarm for %s to %d.",
+                    getMailopContext(this), nextAlarm);
+            }
             DbMailItem.updateInCalendarItemTable(this);
         }
         if (mAlarmData != null || hadAlarm)

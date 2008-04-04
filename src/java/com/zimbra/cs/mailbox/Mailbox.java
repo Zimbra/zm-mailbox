@@ -4804,12 +4804,6 @@ public class Mailbox {
             ZimbraLog.mailbox.error("Unable to send lawful intercept message.", e);
         }
         
-        if (msg != null) {
-            String folderName = (folder == null ? "undefined" : folder.getName());
-            ZimbraLog.mailbox.info("Added message: id=%d, digest=%s, folderId=%d, folderName=%s",
-                msg.getId(), digest, folderId, folderName);
-        }
-        
         return msg;
     }
     

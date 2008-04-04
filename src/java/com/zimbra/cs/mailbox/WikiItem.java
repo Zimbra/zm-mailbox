@@ -17,6 +17,7 @@
 package com.zimbra.cs.mailbox;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mime.ParsedDocument;
@@ -40,6 +41,8 @@ public class WikiItem extends Document {
 
 		Mailbox mbox = folder.getMailbox();
 		data.contentChanged(mbox);
+        ZimbraLog.mailop.info("Adding WikiItem %s: id=%d, folderId=%d, folderName=%s.",
+            wikiword, data.id, folder.getId(), folder.getName());
         DbMailItem.create(mbox, data);
 
         WikiItem wiki = new WikiItem(mbox, data);

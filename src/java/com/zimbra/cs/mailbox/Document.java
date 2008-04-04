@@ -161,6 +161,8 @@ public class Document extends MailItem {
 
         Mailbox mbox = folder.getMailbox();
         data.contentChanged(mbox);
+        ZimbraLog.mailop.info("Adding Document %s: id=%d, folderId=%d, folderName=%s.",
+            filename, data.id, folder.getId(), folder.getName());
         DbMailItem.create(mbox, data);
 
         Document doc = new Document(mbox, data);
