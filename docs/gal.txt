@@ -7,9 +7,12 @@ Attribute                                 scope                  For            
                                                                                   - all
 ======================================================================================================================================================================
 zimbraHideInGal                           account,DL,CR          zimbra           all
+
 zimbraFeatureGalEnabled                   account,cos            both             search,sync
 zimbraFeatureGalAutoCompleteEnabled       account,cos            both             autocomplete
+zimbraPrefGalSearchEnabled                account,cos            both             search
 zimbraPrefGalAutoCompleteEnabled          account,cos            both             autocomplete
+
 zimbraGalMode                             domain                 both             all
 zimbraGalLdapFilterDef                    globalConfig           both             all
 zimbraGalLdapAttrMap                      domain,globalConfig    both             all

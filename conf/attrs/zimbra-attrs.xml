@@ -3069,4 +3069,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether or not to open searches at login</desc>
 </attr>
 
+<attr id="635" name="zimbraPrefGalSearchEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>whether end-user wants search from GAL. Feature must also be enabled.</desc>
+</attr>
+
+
 </attrs>
