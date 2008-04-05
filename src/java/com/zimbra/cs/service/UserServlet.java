@@ -197,7 +197,7 @@ public class UserServlet extends ZimbraServlet {
         String url = getRestUrl(acct) + item.getPath();
 
         if (url.startsWith("https"))
-        	url = new HttpsURL(url).toString();
+            url = new HttpsURL(url).toString();
         else
             url = new HttpURL(url).toString();    		
 

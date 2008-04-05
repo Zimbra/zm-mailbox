@@ -72,8 +72,8 @@ public class GetAccountInfo extends AccountDocumentHandler  {
         
         Domain domain = prov.getDomain(account);
 
-        String http = URLUtil.getSoapURL(server, domain, false, true);
-        String https = URLUtil.getSoapURL(server, domain, true, true);
+        String http = URLUtil.getSoapURL(server, domain, false);
+        String https = URLUtil.getSoapURL(server, domain, true);
 
         if (http != null)
             response.addAttribute(AccountConstants.E_SOAP_URL, http, Element.Disposition.CONTENT);
