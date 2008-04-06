@@ -115,11 +115,10 @@ public class ZimletResources
 
                 List<ZimletFile> files = getZimletFiles(req, type);
                 for (ZimletFile file : files) {
-                    String filename = file.getAbsolutePath();
-                    if (!filename.startsWith("/res/")) {
+                    if (!file.isResourceFile) {
                         continue;
                     }
-                    HttpServletRequest wrappedReq = new RequestWrapper(req, filename);
+                    HttpServletRequest wrappedReq = new RequestWrapper(req, "/res/" + file.zimletName);
                     HttpServletResponse wrappedResp = new ResponseWrapper(resp, printer);
                     dispatcher.include(wrappedReq, wrappedResp);
                 }
@@ -251,7 +250,7 @@ public class ZimletResources
         List<ZimletFile> files = getZimletFiles(req, type);
         for (ZimletFile file : files) {
             String filename = file.getAbsolutePath();
-            if (filename.startsWith("/res/")) {
+            if (file.isResourceFile) {
                 continue;
             }
 
@@ -390,7 +389,7 @@ public class ZimletResources
             // add properties files
             boolean isJavaScript = type.equals(T_JAVASCRIPT);
             if (isJavaScript) {
-                files.add(new ZimletFile(zimletName, "/res/"+zimletName));
+                files.add(new ZimletFile(zimletName, "/res/"+zimletName, true));
             }
 
             // add included files
@@ -440,10 +439,18 @@ public class ZimletResources
 
     static class ZimletFile extends File {
         public String zimletName;
+        public boolean isResourceFile;
 
         public ZimletFile(String zimletName, String filename) {
             super(filename);
             this.zimletName = zimletName;
+            this.isResourceFile = false;
+        }
+
+        public ZimletFile(String zimletName, String filename, boolean isResourceFile) {
+            super(filename);
+            this.zimletName = zimletName;
+            this.isResourceFile = isResourceFile;
         }
     }
 
