@@ -191,6 +191,8 @@ public class Zimbra {
 
         sInited = false;
 
+        PurgeThread.shutdown();
+        
         ZimbraApplication app = ZimbraApplication.getInstance();
         
         if (app.supports(MemoryStats.class.getName()))

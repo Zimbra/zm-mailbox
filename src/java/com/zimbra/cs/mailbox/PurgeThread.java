@@ -143,7 +143,7 @@ extends Thread {
                         try {
                             Thread.sleep(interval);
                         } catch (InterruptedException e) {
-                            ZimbraLog.purge.info("Purge thread was interrupted.");
+                            ZimbraLog.purge.debug("Purge thread was interrupted.");
                             mShutdownRequested = true;
                         }
                         
@@ -176,7 +176,6 @@ extends Thread {
     }
     
     private void requestShutdown() {
-        ZimbraLog.purge.info("Shutdown requested for purge thread.");
         mShutdownRequested = true;
     }
     
