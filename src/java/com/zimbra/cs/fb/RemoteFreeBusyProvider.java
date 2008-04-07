@@ -57,12 +57,11 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
 	public void addFreeBusyRequest(Request req) {
 		Account account = (Account) req.data;
 		String hostname = account.getAttr(Provisioning.A_zimbraMailHost);
-		String id = account.getId();
 		StringBuilder buf = mRemoteAccountMap.get(hostname);
 		if (buf == null)
-			buf = new StringBuilder(id);
+			buf = new StringBuilder(req.email);
 		else
-			buf.append(",").append(id);
+			buf.append(",").append(req.email);
 		mRemoteAccountMap.put(hostname, buf);
 	}
 	public void addFreeBusyRequest(Account acct, String id, long start, long end) {
