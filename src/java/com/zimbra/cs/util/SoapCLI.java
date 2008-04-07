@@ -180,13 +180,9 @@ public abstract class SoapCLI {
             Element authResp = mTrans.invokeWithoutSession(authReq);
             String authToken = authResp.getAttribute(AdminConstants.E_AUTH_TOKEN);
             ZAuthToken zat = new ZAuthToken(null, authToken, null);
-            String sessionId = authResp.getAttribute(HeaderConstants.E_SESSION, null);
             mTrans.setAuthToken(authToken);
-            if (sessionId != null) {
-                mTrans.setSessionId(sessionId);
-            }
             mAuth = true;
-            return new LmcSession(zat, sessionId);
+            return new LmcSession(zat, null);
         } catch (UnknownHostException e) {
             // UnknownHostException's error message is not clear; rethrow with a more descriptive message
             throw new IOException("Unknown host: " + mHost);

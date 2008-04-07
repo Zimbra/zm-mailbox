@@ -20,6 +20,7 @@
  */
 package com.zimbra.soap;
 
+import java.util.Arrays;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -430,10 +431,10 @@ public class ZimbraSoapContext {
         Element eAcct = ctxt.addElement(HeaderConstants.E_ACCOUNT).addAttribute(HeaderConstants.A_HOPCOUNT, mHopCount).addAttribute(HeaderConstants.A_MOUNTPOINT, mMountpointTraversed);
         if (mRequestedAccountId != null && !mRequestedAccountId.equalsIgnoreCase(mAuthTokenAccountId))
             eAcct.addAttribute(HeaderConstants.A_BY, HeaderConstants.BY_ID).setText(mRequestedAccountId);
-        if (mSessionEnabled)
-            ctxt.addUniqueElement(HeaderConstants.E_SESSION);
         if (mUnqualifiedItemIds)
             ctxt.addUniqueElement(HeaderConstants.E_NO_QUALIFY);
+        // be backwards-compatible for sanity-preservation purposes
+        ctxt.addUniqueElement(mSessionEnabled ? HeaderConstants.E_SESSION : HeaderConstants.E_NO_SESSION);
         return ctxt;
     }
 
@@ -446,10 +447,14 @@ public class ZimbraSoapContext {
      * @param sessionType TODO
      * @return The created <tt>&lt;sessionId></tt> Element. */
     public static Element encodeSession(Element parent, String sessionId, Session.Type sessionType) {
+        Element oldSession = parent.getOptionalElement(HeaderConstants.E_SESSION);
+        if (oldSession != null)
+            oldSession.detach();
+
         String typeStr = (sessionType == Session.Type.ADMIN ? HeaderConstants.SESSION_ADMIN : null);
-        Element elt = parent.addUniqueElement(HeaderConstants.E_SESSION);
-        elt.addAttribute(HeaderConstants.A_TYPE, typeStr).addAttribute(HeaderConstants.A_ID, sessionId).setText(sessionId);
-        return elt;
+        Element eSession = parent.addUniqueElement(HeaderConstants.E_SESSION);
+        eSession.addAttribute(HeaderConstants.A_TYPE, typeStr).addAttribute(HeaderConstants.A_ID, sessionId).setText(sessionId);
+        return eSession;
     }
 
     public SoapProtocol getRequestProtocol()   { return mRequestProtocol; }
