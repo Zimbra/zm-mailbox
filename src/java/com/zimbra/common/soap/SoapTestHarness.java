@@ -438,17 +438,14 @@ public class SoapTestHarness {
 	private void doRequest(Element request) throws SoapFaultException, IOException {
         mCurrent.mDocRequest = request.elementIterator().next();
         mCurrent.mDocRequest.detach();
-		if (mAuthToken == null) {
-			mCurrent.mSoapRequest = mSoapProto.soapEnvelope(mCurrent.mDocRequest);
-        } else {
-            ZAuthToken zat = new ZAuthToken(null, mAuthToken, null);
-            Element ctxt = SoapUtil.toCtxt(mSoapProto, zat, mSessionId, -1);
-            if (mTargetUser != null)
-                SoapUtil.addTargetAccountToCtxt(ctxt, null, mTargetUser);
-            if (mResponseProto == SoapProtocol.SoapJS)
-                SoapUtil.addResponseProtocolToCtxt(ctxt, mResponseProto);
-            mCurrent.mSoapRequest = mSoapProto.soapEnvelope(mCurrent.mDocRequest, ctxt);
-        }
+
+        ZAuthToken zat = mAuthToken == null ? null : new ZAuthToken(null, mAuthToken, null);
+        Element ctxt = SoapUtil.toCtxt(mSoapProto, zat, mSessionId, -1);
+        if (mTargetUser != null)
+            SoapUtil.addTargetAccountToCtxt(ctxt, null, mTargetUser);
+        if (mResponseProto == SoapProtocol.SoapJS)
+            SoapUtil.addResponseProtocolToCtxt(ctxt, mResponseProto);
+        mCurrent.mSoapRequest = mSoapProto.soapEnvelope(mCurrent.mDocRequest, ctxt);
 
 		long start = System.currentTimeMillis();
 		mCurrent.mSoapResponse = mTransport.invokeRaw(mCurrent.mSoapRequest);

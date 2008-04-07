@@ -190,8 +190,11 @@ public abstract class SoapTransport {
         String targetName = targetId == null ? mTargetAcctName : null;
 
         Element context = SoapUtil.toCtxt(proto, mAuthToken);
-        if (mAuthToken != null && !noSession)
-            SoapUtil.addSessionToCtxt(context, mSessionId, mMaxNotifySeq);
+        if (noSession) {
+            SoapUtil.disableNotificationOnCtxt(context);
+        } else {
+            SoapUtil.addSessionToCtxt(context, mAuthToken == null ? null : mSessionId, mMaxNotifySeq);
+        }
         SoapUtil.addTargetAccountToCtxt(context, targetId, targetName);
         SoapUtil.addChangeTokenToCtxt(context, changeToken, tokenType);
         if (mUserAgentName != null)
@@ -234,6 +237,9 @@ public abstract class SoapTransport {
         mContext = proto.getHeader(env, HeaderConstants.CONTEXT);
         if (mContext != null) {
             String sid = mContext.getAttribute(HeaderConstants.E_SESSION, null);
+            // be backwards-compatible for sanity-preservation purposes
+            if (sid == null)
+                mContext.getAttribute("sessionId", null);
             if (sid != null)
                 mSessionId = sid;
         }

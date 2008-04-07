@@ -16,6 +16,8 @@
  */
 package com.zimbra.common.soap;
 
+import java.util.Arrays;
+
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.util.StringUtil;
 
@@ -47,8 +49,16 @@ public class SoapUtil {
      * @see #toCtxt(com.zimbra.common.soap.SoapProtocol, String, boolean) */
     public static Element toCtxt(SoapProtocol protocol, ZAuthToken authToken, String sessionId, int sequence) {
         Element ctxt = toCtxt(protocol, authToken);
-        if (authToken != null)
-            addSessionToCtxt(ctxt, sessionId, sequence);
+        return addSessionToCtxt(ctxt, authToken == null ? null : sessionId, sequence);
+    }
+
+    public static Element disableNotificationOnCtxt(Element ctxt) {
+        if (ctxt == null)
+            return ctxt;
+        if (!ctxt.getName().equals(HeaderConstants.E_CONTEXT))
+            throw new IllegalArgumentException("Invalid element: " + ctxt.getName());
+
+        ctxt.addUniqueElement(HeaderConstants.E_NO_SESSION);
         return ctxt;
     }
 
@@ -70,9 +80,12 @@ public class SoapUtil {
 
         Element eSession = ctxt.addUniqueElement(HeaderConstants.E_SESSION);
         if (sessionId != null && !sessionId.trim().equals("")) {
-            eSession.addAttribute(HeaderConstants.A_ID, sessionId);
-            if (sequence > 0)
-                eSession.addAttribute(HeaderConstants.A_SEQNO, sequence);
+            // be backwards-compatible for sanity-preservation purposes
+            for (Element elt : Arrays.asList(eSession, ctxt.addUniqueElement("sessionId"))) {
+                elt.addAttribute(HeaderConstants.A_ID, sessionId);
+                if (sequence > 0)
+                    elt.addAttribute(HeaderConstants.A_SEQNO, sequence);
+            }
         }
         return ctxt;
     }
