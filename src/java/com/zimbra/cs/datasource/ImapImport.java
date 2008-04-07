@@ -376,6 +376,7 @@ public class ImapImport implements MailItemImport {
                     String jmPath = localPathToRemotePath(ds, localRootFolder, zimbraFolder, remoteRootFolder.getSeparator());
                     if (jmPath != null) { //null means don't sync up
                     	ZimbraLog.datasource.info("Found new local folder %s.  Creating remote folder %s.", zimbraFolder.getPath(), jmPath);
+                    	ds.initializedLocalFolder(zimbraFolder.getPath()); //offline can disable sync this way
 	                    IMAPFolder jmFolder = createJavaMailFolder(store, jmPath);
 	                    imapFolder = ds.createImapFolder(zimbraFolder.getId(),
 	                        zimbraFolder.getPath(), jmFolder.getFullName(), jmFolder.getUIDValidity());
