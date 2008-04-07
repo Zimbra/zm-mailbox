@@ -47,6 +47,17 @@ public final class ImapInputStream extends MailInputStream {
         return atom;
     }
 
+    public Atom readFlag() throws IOException {
+        sbuf.setLength(0);
+        if (peek() == '\\') {
+            sbuf.append((char) read());
+            if (peek() == '*') {
+                return new Atom(sbuf.append((char) read()).toString());
+            }
+        }
+        return new Atom(readChars(sbuf, Chars.ATOM_CHARS).toString());
+    }
+    
     public String readString() throws IOException {
         return readStringData().toString();
     }
@@ -190,10 +201,15 @@ public final class ImapInputStream extends MailInputStream {
 
     public String readChars(boolean[] chars) throws IOException {
         sbuf.setLength(0);
+        return readChars(sbuf, chars).toString();
+    }
+
+    public StringBuilder readChars(StringBuilder sb, boolean[] chars)
+            throws IOException {
         while (chars[peekChar()]) {
-            sbuf.append((char) read());
+            sb.append((char) read());
         }
-        return sbuf.toString();
+        return sb;
     }
 
     public void skipChar(char expectedChar) throws IOException {
@@ -201,7 +217,7 @@ public final class ImapInputStream extends MailInputStream {
         if (c != expectedChar) {
             throw new ParseException(
                 "Unexpected character '" + Ascii.pp((byte) c) +
-                "' (expecting '" + Ascii.pp((byte) c) + "')");
+                "' (expecting '" + Ascii.pp((byte) expectedChar) + "')");
         }
     }
 

@@ -32,6 +32,7 @@ public final class Mailbox {
     private long uidNext = -1;
     private long uidValidity = -1;
     private long unseen = -1;
+    private CAtom access;
 
     public static final String INBOX = "INBOX";
 
@@ -106,21 +107,29 @@ public final class Mailbox {
             flags = (Flags) res.getData();
             break;
         case OK:
-            ResponseText rt = res.getResponseText();
-            switch (rt.getCode().getCAtom()) {
-            case UNSEEN:
-                unseen = (Long) rt.getData();
-                break;
-            case UIDNEXT:
-                uidNext = (Long) rt.getData();
-                break;
-            case UIDVALIDITY:
-                uidValidity = (Long) rt.getData();
-                break;
-            case PERMANENTFLAGS:
-                permanentFlags = (Flags) rt.getData();
-                break;
-            }
+            processResponseText(res.getResponseText());
+        }
+    }
+
+    private void processResponseText(ResponseText rt) {
+        switch (rt.getCode().getCAtom()) {
+        case UNSEEN:
+            unseen = (Long) rt.getData();
+            break;
+        case UIDNEXT:
+            uidNext = (Long) rt.getData();
+            break;
+        case UIDVALIDITY:
+            uidValidity = (Long) rt.getData();
+            break;
+        case PERMANENTFLAGS:
+            permanentFlags = (Flags) rt.getData();
+            break;
+        case READ_WRITE:
+            access = CAtom.READ_WRITE;
+            break;
+        case READ_ONLY:
+            access = CAtom.READ_ONLY;
         }
     }
 
@@ -132,4 +141,6 @@ public final class Mailbox {
     public long getUidNext() { return uidNext; }
     public long getUidValidity() { return uidValidity; }
     public long getUnseen() { return unseen; }
+    public boolean isReadOnly() { return access == CAtom.READ_ONLY; }
+    public boolean isReadWrite() { return access == CAtom.READ_WRITE; }
 }
