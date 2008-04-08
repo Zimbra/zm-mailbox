@@ -19,7 +19,7 @@
     <t:response>
       <t:select path="//acct:AuthResponse/acct:lifetime"  match="^\d+$"/>
       <t:select path="//acct:AuthResponse/acct:authToken" set="authToken"/>
-      <!-- <t:select path="//acct:AuthResponse/acct:sessionId" set="sessionId"/> -->
+      <t:select path="//acct:AuthResponse/acct:session" set="sessionId"/>
     </t:response>
   </t:test>
 
