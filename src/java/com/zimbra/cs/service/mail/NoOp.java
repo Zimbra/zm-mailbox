@@ -67,10 +67,11 @@ public class NoOp extends MailDocumentHandler  {
     
     ConcurrentHashMap<String /*AccountId*/, ZimbraSoapContext> sBlockedNops = 
         new ConcurrentHashMap<String /*AccountId*/, ZimbraSoapContext>(5000, 0.75f, 50);
-    
+
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 	    ZimbraSoapContext zsc = getZimbraSoapContext(context);
         boolean wait = request.getAttributeBool(MailConstants.A_WAIT, false);
+        boolean includeDelegates = request.getAttributeBool(MailConstants.A_DELEGATE, true);
         HttpServletRequest servletRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
         
         boolean enforceLimit = request.getAttributeBool(MailConstants.A_LIMIT_TO_ONE_BLOCKED, false);
@@ -88,17 +89,17 @@ public class NoOp extends MailDocumentHandler  {
                 servletRequest.setAttribute("nop_origcontext", zsc);
                 
                 // NOT a resumed request -- block if necessary
-                if (zsc.beginWaitForNotifications(continuation)) {
+                if (zsc.beginWaitForNotifications(continuation, includeDelegates)) {
                     if (enforceLimit) {
                         ZimbraSoapContext otherContext = sBlockedNops.put(zsc.getAuthtokenAccountId(), zsc);
-                        if (otherContext!= null) {
+                        if (otherContext != null) {
                             otherContext.signalNotification(true);
                         }
                     }
                     
-                    synchronized(zsc) {
+                    synchronized (zsc) {
                         if (zsc.waitingForNotifications()) {
-                            assert (!(continuation instanceof WaitingContinuation) || ((WaitingContinuation)continuation).getMutex()==zsc); 
+                            assert (!(continuation instanceof WaitingContinuation) || ((WaitingContinuation) continuation).getMutex() == zsc); 
                             continuation.suspend(parseTimeout(request));
                         }
                         assert(continuation instanceof WaitingContinuation); // this part of code only reached if we're using WaitingContinuations

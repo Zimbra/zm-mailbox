@@ -237,10 +237,11 @@ public class SoapSession extends Session {
         }
     }
 
-    private static class QueuedNotifications {
+    private class QueuedNotifications {
         /** IMNotifications are strictly sequential right now */
         public List<IMNotification> mIMNotifications;
         public PendingModifications mMailboxChanges;
+        public boolean mHasLocalChanges;
 
         /** used by the Session object to ensure that notifications are reliably
          * received by the listener */
@@ -250,7 +251,15 @@ public class SoapSession extends Session {
         QueuedNotifications(int seqno)  { mSequence = seqno; }
 
         boolean hasNotifications() {
-            return getNotificationCount() > 0 || (mIMNotifications != null && mIMNotifications.size() > 0);
+            return hasNotifications(false);
+        }
+
+        boolean hasNotifications(boolean localMailboxOnly) {
+            if (localMailboxOnly ? mHasLocalChanges : mMailboxChanges != null && mMailboxChanges.hasNotifications())
+                return true;
+            if (mIMNotifications != null && mIMNotifications.size() > 0)
+                return true;
+            return false;
         }
 
         int getNotificationCount() {
@@ -264,13 +273,18 @@ public class SoapSession extends Session {
         }
 
         void addNotification(PendingModifications pms) {
+            if (pms == null || !pms.hasNotifications())
+                return;
             if (mMailboxChanges == null) 
                 mMailboxChanges = new PendingModifications();
             mMailboxChanges.add(pms);
+            if (!mHasLocalChanges)
+                mHasLocalChanges |= pms.overlapsWithAccount(mAuthenticatedAccountId);
         }
 
         void clearMailboxChanges() {
             mMailboxChanges = null;
+            // note that mHasLocalChanges does *not* get reset when we trigger a <refresh> condition... 
         }
     }
 
@@ -431,8 +445,9 @@ public class SoapSession extends Session {
      *  for new notifications */
     public static interface PushChannel {
         public void closePushChannel();
-        public int getLastKnownSeqNo();
+        public int getLastKnownSequence();
         public ZimbraSoapContext getSoapContext();
+        public boolean localChangesOnly();
         public void notificationsReady() throws ServiceException; 
     }
 
@@ -446,8 +461,11 @@ public class SoapSession extends Session {
      *
      * @return TRUE if the PushChannel is waiting (no data and notifications
      *         turned on), or FALSE if the channel is not waiting.
-     * @param sc  The push channel. */
-    public RegisterNotificationResult registerNotificationConnection(PushChannel sc) throws ServiceException {
+     * @param sc                The push channel. 
+     * @param includeDelegates  Whether notifications from delegate sessions
+     *                          trigger {@link RegisterNotificationResult#DATA_READY}. */
+    public RegisterNotificationResult registerNotificationConnection(final PushChannel sc)
+    throws ServiceException {
         // don't have to lock the Mailbox before locking the Session to avoid deadlock because we're not calling any ToXML functions
         synchronized (this) {
             if (mPushChannel != null) {
@@ -463,10 +481,15 @@ public class SoapSession extends Session {
             boolean dataReady;
             synchronized (mSentChanges) {
                 // are there any notifications already pending given the passed-in seqno?
-                boolean notifying = mChanges.hasNotifications();
-                int lastSeqNo = sc.getLastKnownSeqNo();
-                boolean isEmpty = mSentChanges.isEmpty();
-                dataReady = notifying || (mChanges.getSequence() > lastSeqNo + 1 && !isEmpty);
+                int lastSeqNo = sc.getLastKnownSequence();
+                dataReady = mChanges.hasNotifications(sc.localChangesOnly());
+                if (!dataReady && mChanges.getSequence() > lastSeqNo + 1 && !mSentChanges.isEmpty()) {
+                    for (QueuedNotifications ntfn : mSentChanges) {
+                        if (ntfn.getSequence() > lastSeqNo && ntfn.hasNotifications(sc.localChangesOnly())) {
+                            dataReady = true;  break;
+                        }
+                    }
+                }
             }
             if (dataReady) {
                 sc.notificationsReady();  
@@ -488,7 +511,7 @@ public class SoapSession extends Session {
         }
         try {
             // if we're in a hanging no-op, alert the client that there are changes
-            notifyPushChannel(true);
+            notifyPushChannel(null, true);
         } catch (ServiceException e) {
             ZimbraLog.session.warn("ServiceException in notifyIM", e);
         }
@@ -547,7 +570,7 @@ public class SoapSession extends Session {
             // update the set of notifications not yet sent to the client
             cacheNotifications(pms, fromThisSession);
             // if we're in a hanging no-op, alert the client that there are changes
-        	notifyPushChannel(true);
+        	notifyPushChannel(pms, true);
             // FIXME: this query result cache purge seems a little aggressive
         	clearCachedQueryResults();
         } catch (ServiceException e) {
@@ -594,25 +617,29 @@ public class SoapSession extends Session {
 
     public void forcePush() {
         try {
-            notifyPushChannel(false);
+            notifyPushChannel(null, false);
         } catch (ServiceException e) {
             ZimbraLog.session.warn("ServiceException in forcePush", e);
         }
     }
 
-    private void notifyPushChannel(boolean clearChannel) throws ServiceException {
+    private void notifyPushChannel(final PendingModifications pms, final boolean clearChannel) throws ServiceException {
         // don't have to lock the Mailbox before locking the Session to avoid deadlock because we're not calling any ToXML functions
         synchronized (this) {
-            if (mPushChannel != null) {
-                mPushChannel.notificationsReady();
-                if (clearChannel)
-                	mPushChannel = null;
-            }
+            if (mPushChannel == null)
+                return;
+            // ignore the notification if we're only interested in local changes and these aren't local
+            if (mPushChannel.localChangesOnly() && pms != null && !pms.overlapsWithAccount(mAuthenticatedAccountId))
+                return;
+
+            mPushChannel.notificationsReady();
+            if (clearChannel)
+            	mPushChannel = null;
         }
     }
 
 
-    public boolean requiresRefresh(int lastSequence) {
+    public boolean requiresRefresh(final int lastSequence) {
         synchronized (mSentChanges) {
             if (lastSequence <= 0)
                 return mForceRefresh == getCurrentNotificationSequence();
@@ -620,8 +647,6 @@ public class SoapSession extends Session {
                 return mForceRefresh > Math.min(lastSequence, getCurrentNotificationSequence());
         }
     }
-
-    private static final String A_ID = "id";
 
     /** Serializes basic folder/tag structure to a SOAP response header.
      *  <p>
@@ -836,6 +861,8 @@ public class SoapSession extends Session {
      *  If it looks like it'd be too expensive to fetch that list, we just
      *  skip the notification. */
     private static final int DELEGATED_CONVERSATION_SIZE_LIMIT = 30;
+
+    private static final String A_ID = "id";
 
     /**
      * Write a single instance of the PendingModifications structure into the 

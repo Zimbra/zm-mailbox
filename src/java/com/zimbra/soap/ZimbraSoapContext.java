@@ -20,7 +20,6 @@
  */
 package com.zimbra.soap;
 
-import java.util.Arrays;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -64,20 +63,26 @@ public class ZimbraSoapContext {
             sessionId = id;  sequence = seqNo;  created = newSession;
         }
 
-        public String toString()  { return sessionId; }
+        @Override public String toString()  { return sessionId; }
 
 
         private class SoapPushChannel implements SoapSession.PushChannel {
-            public void closePushChannel() {  
-                signalNotification(true); // don't allow there to be more than one NoOp hanging on a particular account
+            private boolean mLocalChangesOnly;
+
+            SoapPushChannel(boolean localOnly)  { mLocalChangesOnly = localOnly; }
+
+            public void closePushChannel() {
+                // don't allow there to be more than one NoOp hanging on a particular account
+                signalNotification(true);
             }
-            public int getLastKnownSeqNo()            { return sequence; }
+            public int getLastKnownSequence()         { return sequence; }
             public ZimbraSoapContext getSoapContext() { return ZimbraSoapContext.this; }
+            public boolean localChangesOnly()         { return mLocalChangesOnly; }
             public void notificationsReady()          { signalNotification(false); }
         }
 
-        public PushChannel getPushChannel() {
-            return new SoapPushChannel();
+        public PushChannel getPushChannel(boolean localChangesOnly) {
+            return new SoapPushChannel(localChangesOnly);
         }
     }
 
@@ -375,24 +380,22 @@ public class ZimbraSoapContext {
     }
 
 
-    public boolean beginWaitForNotifications(Continuation continuation) throws ServiceException {
-        boolean someBlocked = false;
-        boolean someReady = false;
+    public boolean beginWaitForNotifications(Continuation continuation, boolean includeDelegates) throws ServiceException {
         mWaitForNotifications = true;
         mContinuation = continuation;
 
         Session session = SessionCache.lookup(mSessionInfo.sessionId, mAuthTokenAccountId);
-        if (session instanceof SoapSession) {
-            SoapSession ss = (SoapSession) session;
-            SoapSession.RegisterNotificationResult result = ss.registerNotificationConnection(mSessionInfo.getPushChannel());
-            switch (result) {
-                case NO_NOTIFY: break;
-                case DATA_READY: someReady = true; break;
-                case BLOCKING: someBlocked = true; break;
-            }
-        }
+        if (!(session instanceof SoapSession))
+            return false;
 
-        return (someBlocked && !someReady);
+        SoapSession ss = (SoapSession) session;
+        SoapSession.RegisterNotificationResult result = ss.registerNotificationConnection(mSessionInfo.getPushChannel(!includeDelegates));
+        switch (result) {
+            case NO_NOTIFY:   return false;
+            case DATA_READY:  return false;
+            case BLOCKING:    return true;
+            default:          return false;
+        }
     }
 
     /** Called by the Session object if a new notification comes in. */

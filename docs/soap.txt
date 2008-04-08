@@ -2265,7 +2265,7 @@ EXAMPLE:
 
 -----------------------
 
- <NoOpRequest [wait='1'] [limitToOneBlocked='1'] [timeout="msecs to wait"/>
+ <NoOpRequest [wait='1' [delegate='0']] [limitToOneBlocked='1'] [timeout="msecs to wait"]/>
 
  <NoOpResponse [waitDisallowed="1"]/>
 
@@ -2277,6 +2277,10 @@ will block until there are new notifications for the client.  Note
 that the soap envelope must reference an existing session that has
 notifications enabled, and the notification sequencing number should
 be specified.
+
+If "wait" is set, the caller can specify whether notifications on
+delegate sessions will cause the operation to return.  If "delegate"
+is 0, delegate mailbox notifications will be ignored.  The default is 1.
 
 Some clients (notably browsers) have a global-limit on the number of
 outstanding sockets...in situations with two App Instances connected
