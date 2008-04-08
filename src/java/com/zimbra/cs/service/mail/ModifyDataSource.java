@@ -74,7 +74,6 @@ public class ModifyDataSource extends MailDocumentHandler {
         value = eDataSource.getAttribute(MailConstants.A_DS_HOST, null);
         if (value != null && !value.equals(ds.getHost())) {
             dsAttrs.put(Provisioning.A_zimbraDataSourceHost, value);
-            wipeOutOldData = true;
         }
         
         value = eDataSource.getAttribute(MailConstants.A_DS_PORT, null);
@@ -87,7 +86,6 @@ public class ModifyDataSource extends MailDocumentHandler {
         value = eDataSource.getAttribute(MailConstants.A_DS_USERNAME, null);
         if (value != null && !value.equals(ds.getUsername())) {
         	dsAttrs.put(Provisioning.A_zimbraDataSourceUsername, value);
-        	wipeOutOldData = true;
         }
     
         value = eDataSource.getAttribute(MailConstants.A_DS_PASSWORD, null);
@@ -105,7 +103,8 @@ public class ModifyDataSource extends MailDocumentHandler {
             if (newValue != ds.leaveOnServer()) {
                 dsAttrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer,
                     LdapUtil.getBooleanString(newValue));
-                wipeOutOldData = true;
+                Mailbox mbox = getRequestedMailbox(zsc);
+                DbPop3Message.deleteUids(mbox, ds.getId());
             }
         }
         
@@ -117,13 +116,6 @@ public class ModifyDataSource extends MailDocumentHandler {
         processCommonOptionalAttrs(dsAttrs, eDataSource);
         
         prov.modifyDataSource(account, id, dsAttrs);
-        
-        if (wipeOutOldData) {
-            // Host, username or leaveOnServer changed.  Wipe out
-            // UID's for the data source.
-            Mailbox mbox = getRequestedMailbox(zsc);
-            DbPop3Message.deleteUids(mbox, ds.getId());
-        }
         
         Element response = zsc.createElement(MailConstants.MODIFY_DATA_SOURCE_RESPONSE);
 

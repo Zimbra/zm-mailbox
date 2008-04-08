@@ -105,17 +105,17 @@ public class TestPop3Import extends TestCase {
         // Test modifying host
         ZPop3DataSource zds = getZDataSource();
         zds.setHost(zds.getHost() + "2");
-        modifyAndCheck(zds);
+        modifyAndCheck(zds, false);
         
         // Test modifying username
         zds = getZDataSource();
         zds.setUsername(zds.getUsername() + "2");
-        modifyAndCheck(zds);
+        modifyAndCheck(zds, false);
         
         // Test modifying leave on server
         zds = getZDataSource();
         zds.setLeaveOnServer(!zds.leaveOnServer());
-        modifyAndCheck(zds);
+        modifyAndCheck(zds, true);
     }
     
     /**
@@ -166,7 +166,10 @@ public class TestPop3Import extends TestCase {
         assertEquals("Imported message not found", 1, messages.size());
     }
     
-    private void modifyAndCheck(ZPop3DataSource zds)
+    /**
+     * Modifies the data source and confirms whether UID data was deleted.
+     */
+    private void modifyAndCheck(ZPop3DataSource zds, boolean shouldDeleteData)
     throws Exception {
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         DataSource ds = getDataSource();
@@ -183,7 +186,8 @@ public class TestPop3Import extends TestCase {
         Set<String> uids = new HashSet<String>();
         uids.add("1");
         Set<String> matchingUids = DbPop3Message.getMatchingUids(mbox, ds, uids);
-        assertEquals("matching UID's: " + StringUtil.join(",", matchingUids), 0, matchingUids.size());
+        int expected = shouldDeleteData ? 0 : 1;
+        assertEquals("matching UID's: " + StringUtil.join(",", matchingUids), expected, matchingUids.size());
     }
 
     private ZPop3DataSource getZDataSource()
