@@ -944,7 +944,7 @@ public class LC {
 
         javamail_pop3_timeout = new KnownKey("javamail_pop3_timeout");
         javamail_pop3_timeout.setDefault("60");
-
+                                                 
         javamail_imap_timeout = new KnownKey("javamail_imap_timeout");
         javamail_imap_timeout.setDefault("60");
         
@@ -952,13 +952,13 @@ public class LC {
         javamail_smtp_timeout.setDefault("60");
 
         javamail_pop3_enable_starttls = new KnownKey("javamail_pop3_enable_starttls");
-        javamail_pop3_enable_starttls.setDefault("false");
+        javamail_pop3_enable_starttls.setDefault("true");
 
         javamail_imap_enable_starttls = new KnownKey("javamail_imap_enable_starttls");
-        javamail_imap_enable_starttls.setDefault("false");
+        javamail_imap_enable_starttls.setDefault("true");
 
         javamail_smtp_enable_starttls = new KnownKey("javamail_smtp_enable_starttls");
-        javamail_smtp_enable_starttls.setDefault("false");
+        javamail_smtp_enable_starttls.setDefault("true");
 
 		// NOTE: When adding a new KnownKey, you do not need to call
 		//       setDoc. The documentation string will come from the
