@@ -630,47 +630,47 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>what part of the original message to include during forwards (deprecatedSince 5.0 in identity)</desc>
 </attr>
 
-<attr id="135" name="zimbraFeatureContactsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="135" name="zimbraFeatureContactsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>contact features</desc>
 </attr>
 
-<attr id="136" name="zimbraFeatureCalendarEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="136" name="zimbraFeatureCalendarEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>calendar features</desc>
 </attr>
 
-<attr id="137" name="zimbraFeatureTaggingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="137" name="zimbraFeatureTaggingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>tagging feature</desc>
 </attr>
 
-<attr id="138" name="zimbraFeatureAdvancedSearchEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="138" name="zimbraFeatureAdvancedSearchEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>advanced search button enabled</desc>
 </attr>
 
-<attr id="139" name="zimbraFeatureSavedSearchesEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="139" name="zimbraFeatureSavedSearchesEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>saved search feature</desc>
 </attr>
 
-<attr id="140" name="zimbraFeatureConversationsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="140" name="zimbraFeatureConversationsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>conversations</desc>
 </attr>
 
-<attr id="141" name="zimbraFeatureChangePasswordEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="141" name="zimbraFeatureChangePasswordEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>password changing</desc>
 </attr>
 
-<attr id="142" name="zimbraFeatureInitialSearchPreferenceEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="142" name="zimbraFeatureInitialSearchPreferenceEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>preference to set initial search</desc>
 </attr>
 
-<attr id="143" name="zimbraFeatureFiltersEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="143" name="zimbraFeatureFiltersEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>filter prefs enabled</desc>
 </attr>
@@ -699,7 +699,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>number of contacts per page</desc>
 </attr>
 
-<attr id="149" name="zimbraFeatureGalEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="149" name="zimbraFeatureGalEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>GAL features</desc>
 </attr>
@@ -1076,7 +1076,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether or not to use same format (text or html) of message we are replying to</desc>
 </attr>
 
-<attr id="219" name="zimbraFeatureHtmlComposeEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="219" name="zimbraFeatureHtmlComposeEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>enabled html composing</desc>
 </attr>
@@ -1423,7 +1423,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Whether this zimlet is an extension</desc>
 </attr>
 
-<attr id="305" name="zimbraFeatureIMEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="305" name="zimbraFeatureIMEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>IM features</desc>
 </attr>
@@ -1452,7 +1452,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>value of postfix mynetworks</desc>
 </attr>
 
-<attr id="312" name="zimbraFeatureViewInHtmlEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="312" name="zimbraFeatureViewInHtmlEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>option to view attachments in html</desc>
 </attr>
@@ -1557,7 +1557,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Size of cache for delivery time dedupe based on Message-Id header.  Set to 0 to disable this type of deduping.</desc>
 </attr>
 
-<attr id="335" name="zimbraFeatureSharingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="335" name="zimbraFeatureSharingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>enabled sharing</desc>
 </attr>
@@ -1646,7 +1646,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>hide entry in Global Address List</desc>
 </attr>
 
-<attr id="354" name="zimbraFeatureSkinChangeEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="354" name="zimbraFeatureSkinChangeEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Whether changing skin is allowed for this account or in this cos</desc>
 </attr>
@@ -1656,7 +1656,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Skin to use for this account</desc>
 </attr>
 
-<attr id="356" name="zimbraFeatureNotebookEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="356" name="zimbraFeatureNotebookEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Whether notebook feature should be allowed for this account or in this cos</desc>
 </attr>
@@ -1670,7 +1670,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>LDAP search base for interal GAL queries (special values: "ROOT" for top, "DOMAIN" for domain only, "SUBDOMAINS" for domain and subdomains)</desc>
 </attr>
 
-<attr id="359" name="zimbraFeatureGalAutoCompleteEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="359" name="zimbraFeatureGalAutoCompleteEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>enable auto-completion from the GAL, zimbraFeatureGalEnabled also has to be enabled for the auto-completion feature</desc>
 </attr>
@@ -1696,12 +1696,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>For selective enabling of debug logging</desc>
 </attr>
 
-<attr id="366" name="zimbraFeatureOutOfOfficeReplyEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="366" name="zimbraFeatureOutOfOfficeReplyEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Whether out of office reply feature should be allowed for this account or in this cos</desc>
 </attr>
 
-<attr id="367" name="zimbraFeatureNewMailNotificationEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="367" name="zimbraFeatureNewMailNotificationEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Whether new mail notification feature should be allowed for this account or in this cos</desc>
 </attr>
@@ -1906,12 +1906,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>maximum number of identities allowed on an account</desc>
 </attr>
 
-<attr id="415" name="zimbraFeatureIdentitiesEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="415" name="zimbraFeatureIdentitiesEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether to allow use of identities feature</desc>
 </attr>
 
-<attr id="416" name="zimbraFeaturePop3DataSourceEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="416" name="zimbraFeaturePop3DataSourceEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether user is allowed to retrieve mail from an external POP3 data source</desc>
 </attr>
@@ -2016,7 +2016,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Whether X-Originating-IP will be added to messages sent via SendMsgRequest.</desc>
 </attr>
 
-<attr id="436" name="zimbraFeatureTasksEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="436" name="zimbraFeatureTasksEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether to allow use of tasks feature</desc>
 </attr>
@@ -2044,7 +2044,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>hour of day that the day view should end at, non-inclusive (16=4pm, 24 = midnight, etc)</desc>
 </attr>
 
-<attr id="441" name="zimbraFeatureMailPollingIntervalPreferenceEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" deprecatedSince="5.0">
+<attr id="441" name="zimbraFeatureMailPollingIntervalPreferenceEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" deprecatedSince="5.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <deprecateDesc>done via skin template overrides</deprecateDesc>
   <desc>whether user is allowed to set mail polling interval</desc>
@@ -2068,7 +2068,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>disabled IMAP SSL capabilities.  Capabilities are listed on the CAPABILITY line, also known in RFCs as extensions</desc>
 </attr>
 
-<attr id="445" name="zimbraFeatureVoiceEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="445" name="zimbraFeatureVoiceEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Voicemail features enabled</desc>
 </attr>
@@ -2077,7 +2077,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>admin saved searches</desc>
 </attr>
 
-<attr id="447" name="zimbraFeaturePortalEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="447" name="zimbraFeaturePortalEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>portal features</desc>
 </attr>
@@ -2096,12 +2096,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>zimbraId of visible child accounts</desc>
 </attr>
 
-<attr id="451" name="zimbraFeatureOptionsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="451" name="zimbraFeatureOptionsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether an account can modify its zimbraPref* attributes</desc>
 </attr>
 
-<attr id="452" name="zimbraFeatureShortcutAliasesEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="452" name="zimbraFeatureShortcutAliasesEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>keyboard shortcuts aliases features</desc>
 </attr>
@@ -2240,7 +2240,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>attribute that contains imap bind port for SSL</desc>
 </attr>
 
-<attr id="481" name="zimbraFeatureGroupCalendarEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="481" name="zimbraFeatureGroupCalendarEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>group calendar features.  if set to FALSE, calendar works as a personal calendar and attendees and scheduling etc are turned off in web UI</desc>
 </attr>
@@ -2278,7 +2278,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether to login to the IM client automatically</desc>
 </attr>
 
-<attr id="489" name="zimbraFeatureMailEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="489" name="zimbraFeatureMailEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>email features enabled</desc>
 </attr>
@@ -2300,7 +2300,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>maximum number of signatures allowed on an account</desc>
 </attr>
 
-<attr id="494" name="zimbraFeatureSignaturesEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="494" name="zimbraFeatureSignaturesEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether to allow use of signature feature</desc>
 </attr>
@@ -2320,12 +2320,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>URL prefix for where the zimbraAdmin app resides on this server</desc>
 </attr>
 
-<attr id="498" name="zimbraFeatureBriefcasesEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="498" name="zimbraFeatureBriefcasesEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether to allow use of briefcase feature</desc>
 </attr>
 
-<attr id="499" name="zimbraFeatureFlaggingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="499" name="zimbraFeatureFlaggingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether to allow use of flagging feature</desc>
 </attr>
@@ -2435,7 +2435,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether mailbox server should log to syslog</desc>
 </attr>
 
-<attr id="521" name="zimbraFeatureInstantNotify" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="521" name="zimbraFeatureInstantNotify" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Enable instant notifications</desc>
 </attr>
@@ -2465,7 +2465,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>number of voice messages/call logs per page</desc>
 </attr>
 
-<attr id="527" name="zimbraFeatureMailUpsellEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="527" name="zimbraFeatureMailUpsellEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>email upsell enabled</desc>
 </attr>
@@ -2474,7 +2474,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>email upsell URL</desc>
 </attr>
 
-<attr id="529" name="zimbraFeatureContactsUpsellEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="529" name="zimbraFeatureContactsUpsellEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>address book upsell enabled</desc>
 </attr>
@@ -2483,7 +2483,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>address book upsell URL</desc>
 </attr>
 
-<attr id="531" name="zimbraFeatureCalendarUpsellEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="531" name="zimbraFeatureCalendarUpsellEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>calendar upsell enabled</desc>
 </attr>
@@ -2492,7 +2492,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>calendar upsell URL</desc>
 </attr>
 
-<attr id="533" name="zimbraFeatureVoiceUpsellEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="533" name="zimbraFeatureVoiceUpsellEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>voice upsell enabled</desc>
 </attr>
@@ -2593,7 +2593,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>The id of the last purged mailbox.</desc>
 </attr>
 
-<attr id="544" name="zimbraFeatureZimbraAssistantEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="544" name="zimbraFeatureZimbraAssistantEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Zimbra Assistant enabled</desc>
 </attr>
@@ -2698,7 +2698,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Incoming messages larger than this number of bytes are streamed to disk during LMTP delivery, instead of being read into memory.  This limits memory consumption at the expense of higher disk utilization.</desc>
 </attr>
 
-<attr id="566" name="zimbraFeatureMailPriorityEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="566" name="zimbraFeatureMailPriorityEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>mail priority feature</desc>
 </attr>
@@ -2707,7 +2707,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>interface address(es) on which IM server should listen; if empty, binds to all interfaces</desc>
 </attr>
 
-<attr id="568" name="zimbraFeatureImapDataSourceEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="568" name="zimbraFeatureImapDataSourceEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether user is allowed to retrieve mail from an external IMAP data source</desc>
 </attr>
@@ -2785,12 +2785,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="584" name="zimbraFeatureComposeInNewWindowEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="584" name="zimbraFeatureComposeInNewWindowEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether or not compose messages in a new windows is allowed</desc>
 </attr>
 
-<attr id="585" name="zimbraFeatureOpenMailInNewWindowEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="585" name="zimbraFeatureOpenMailInNewWindowEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether or not open a new msg/conv in a new windows is allowed</desc>
 </attr>
@@ -2874,7 +2874,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>set to true for customer care accounts</desc>
 </attr>
 
-<attr id="602" name="zimbraFeatureWebSearchEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="602" name="zimbraFeatureWebSearchEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether web search feature is enabled</desc>
 </attr>
@@ -3049,7 +3049,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether LMTP server is enabled for a given server</desc>
 </attr>
 
-<attr id="631" name="zimbraFeatureNewAddrBookEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="631" name="zimbraFeatureNewAddrBookEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>Whether user can create address books</desc>
 </attr>
