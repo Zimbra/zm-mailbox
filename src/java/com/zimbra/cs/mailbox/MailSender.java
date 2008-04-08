@@ -52,6 +52,7 @@ import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.zclient.ZMailbox;
 
@@ -371,14 +372,23 @@ public class MailSender {
     }
 
     private static final String X_ORIGINATING_IP = "X-Originating-IP";
+    private static final String X_MAILER = "X-Mailer";
 
     void updateHeaders(MimeMessage mm, Account acct, Account authuser, OperationContext octxt, String originIP, boolean replyToSender)
     throws MessagingException, ServiceException {
+	
+	Provisioning prov = Provisioning.getInstance();
         if (originIP != null) {
-            Provisioning prov = Provisioning.getInstance();
             boolean addOriginatingIP = prov.getConfig().getBooleanAttr(Provisioning.A_zimbraSmtpSendAddOriginatingIP, true);
             if (addOriginatingIP)
                 mm.addHeader(X_ORIGINATING_IP, "[" + originIP + "]");
+        }
+        
+        boolean addMailer = prov.getConfig().getBooleanAttr(Provisioning.A_zimbraSmtpSendAddMailer, true);
+        if (addMailer) {
+            String ua = octxt.getUserAgent();
+            String mailer = "Zimbra " + BuildInfo.VERSION + ((ua==null)?"":" (" + ua + ")");
+            mm.addHeader(X_MAILER, mailer);
         }
 
         boolean overrideFromHeader = true;

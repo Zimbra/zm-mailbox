@@ -125,6 +125,7 @@ public abstract class DocumentHandler {
         OperationContext octxt = new OperationContext(at);
         octxt.setChangeConstraint(zsc.getChangeConstraintType(), zsc.getChangeConstraintLimit());
         octxt.setRequestIP(zsc.getRequestIP()).setSession(session);
+        octxt.setUserAgent(zsc.getUserAgent());
         return octxt;
     }
 

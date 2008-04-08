@@ -64,7 +64,9 @@ public class BuildInfo {
         System.out.println("Release: " + RELEASE);
         System.out.println("Build Date: " + DATE);
         System.out.println("Build Host: " + HOST);
+        System.out.println("Full Version: " + FULL_VERSION);
         System.out.println("DB Version: " + Versions.DB_VERSION);
         System.out.println("Index Version: " + Versions.INDEX_VERSION);
+        
     }
 }
