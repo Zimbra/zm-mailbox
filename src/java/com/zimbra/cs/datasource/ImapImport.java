@@ -87,13 +87,13 @@ public class ImapImport implements MailItemImport {
     private final byte[] buf = new byte[4096]; // Temp buffer for checksum calculation
     
     private static Session sSession;
-    private static Session sSelfSignedCertSession;
     private static FetchProfile FETCH_PROFILE;
 
     private static final int FETCH_SIZE = LC.data_source_fetch_size.intValue();
     private static final int MAX_LITERAL_MEM_SIZE = LC.data_source_max_literal_mem_size.intValue();
 
-    private static final boolean JAVAMAIL_DEBUG = Boolean.getBoolean("ZimbraJavamailDebug");
+    private static final boolean DEBUG = 
+        Boolean.getBoolean("ZimbraJavamailDebug") || LC.javamail_imap_debug.booleanValue();
     
     static {
     	String idExt = "(\"vendor\" \"Zimbra\" \"os\" \"" + System.getProperty("os.name") +
@@ -105,37 +105,26 @@ public class ImapImport implements MailItemImport {
         props.setProperty("mail.imap.connectiontimeout", Long.toString(timeout));
         props.setProperty("mail.imap.timeout", Long.toString(timeout));
         props.setProperty("mail.imaps.connectiontimeout", Long.toString(timeout));
-        props.setProperty("mail.imaps.timeout", Long.toString(timeout));    	
-        props.setProperty("mail.imaps.socketFactory.class", CustomSSLSocketFactory.class.getName());
+        props.setProperty("mail.imaps.timeout", Long.toString(timeout));
+        props.setProperty("mail.imaps.socketFactory.class",
+            LC.data_source_trust_self_signed_certs.booleanValue() ?
+                DummySSLSocketFactory.class.getName() : CustomSSLSocketFactory.class.getName());
         props.setProperty("mail.imaps.socketFactory.fallback", "false");
-        if (JAVAMAIL_DEBUG || LC.javamail_imap_debug.booleanValue()) {
+        if (DEBUG) {
             props.setProperty("mail.debug", "true");
-        }
+        }      
         if (idExt != null) {
-        	props.setProperty("mail.imap.idextension", idExt);
-        	props.setProperty("mail.imaps.idextension", idExt);
+            props.setProperty("mail.imap.idextension", idExt);
+            props.setProperty("mail.imaps.idextension", idExt);
         }
         if (LC.javamail_imap_enable_starttls.booleanValue()) {
-        	props.setProperty("mail.imap.starttls.enable", "true");
-        	props.setProperty("mail.imaps.starttls.enable", "true");
+            props.setProperty("mail.imap.starttls.enable", "true");
+            props.setProperty("mail.imap.socketFactory.class", TlsSocketFactory.class.getName());
         }
         sSession = Session.getInstance(props);
 
-        Properties sscProps = new Properties();
-        sscProps.setProperty("mail.imaps.connectiontimeout", Long.toString(timeout));
-        sscProps.setProperty("mail.imaps.timeout", Long.toString(timeout));    	
-        sscProps.setProperty("mail.imaps.socketFactory.class", DummySSLSocketFactory.class.getName());
-        sscProps.setProperty("mail.imaps.socketFactory.fallback", "false");
-        if (idExt != null)
-        	sscProps.setProperty("mail.imaps.idextension", idExt);
-        if (LC.javamail_imap_enable_starttls.booleanValue()) {
-        	sscProps.setProperty("mail.imaps.starttls.enable", "true");
-        }
-        sSelfSignedCertSession = Session.getInstance(sscProps);
-        
-        if (JAVAMAIL_DEBUG || LC.javamail_imap_debug.booleanValue()) {
+        if (DEBUG) {
             sSession.setDebug(true);
-            sSelfSignedCertSession.setDebug(true);
         }
 
         FETCH_PROFILE = new FetchProfile();
@@ -589,16 +578,13 @@ public class ImapImport implements MailItemImport {
     }
 
     private Store getStore(DataSource.ConnectionType connectionType)
-    throws NoSuchProviderException, ServiceException {
-        if (connectionType == DataSource.ConnectionType.cleartext) {
+            throws NoSuchProviderException, ServiceException {
+        switch (connectionType) {
+        case cleartext:
             return sSession.getStore("imap");
-        } else if (connectionType == DataSource.ConnectionType.ssl) {
-            if (LC.data_source_trust_self_signed_certs.booleanValue()) {
-                return sSelfSignedCertSession.getStore("imaps");
-            } else {
-                return sSession.getStore("imaps");
-            }
-        } else {
+        case ssl:
+            return sSession.getStore("imaps");
+        default:
             throw ServiceException.FAILURE("Invalid connectionType: " + connectionType, null);
         }
     }
