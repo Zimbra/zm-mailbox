@@ -276,6 +276,7 @@ public class Mailbox {
         private Session    session;
         private RedoableOp player;
         private String     requestIP;
+        private String     userAgent;
         private AuthToken  authToken;
         
         boolean changetype = CHECK_CREATED;
@@ -374,8 +375,17 @@ public class Mailbox {
         public OperationContext setRequestIP(String addr) {
             requestIP = addr;  return this;
         }
+        
         public String getRequestIP() {
             return requestIP;
+        }
+        
+        public OperationContext setUserAgent(String ua) {
+            userAgent = ua;  return this;
+        }
+        
+        public String getUserAgent() {
+            return userAgent;
         }
     }
 
