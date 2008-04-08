@@ -21,8 +21,10 @@
 package com.zimbra.cs.servlet;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.ServletException;
@@ -106,18 +108,25 @@ public class ZimbraServlet extends HttpServlet {
                 if (vals == null || vals.length == 0)
                     throw new ServletException("Must specify comma-separated list of port numbers for " +
                                                PARAM_ALLOWED_PORTS + " parameter");
-                mAllowedPorts = new int[vals.length];
+                List<Integer> allowedPorts = new ArrayList<Integer>();
+                int port;
                 for (int i = 0; i < vals.length; i++) {
                     try {
-                        mAllowedPorts[i] = Integer.parseInt(vals[i]);
+                	port = Integer.parseInt(vals[i]);
                     } catch (NumberFormatException e) {
                         throw new ServletException("Invalid port number \"" + vals[i] + "\" in " +
                                                    PARAM_ALLOWED_PORTS + " parameter");
                     }
-                    if (mAllowedPorts[i] < 1)
-                        throw new ServletException("Invalid port number " + mAllowedPorts[i] + " in " +
+                    if (port < 0)
+                	throw new ServletException("Invalid port number " + vals[i] + " in " +
                                                    PARAM_ALLOWED_PORTS + " parameter; port number must be greater than zero");
+                    else if (port != 0)  // 0 is a legit value for those ports that are disabled
+                	allowedPorts.add(port);
                 }
+                
+                mAllowedPorts = new int[allowedPorts.size()];
+                for (int i=0; i<allowedPorts.size(); i++)
+                    mAllowedPorts[i] = allowedPorts.get(i);
             }
             
             // Store reference to this servlet for accessor 
