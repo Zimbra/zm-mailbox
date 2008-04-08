@@ -39,6 +39,7 @@ public class MailServiceException extends ServiceException {
 	public static final String NO_SUCH_PART    = "mail.NO_SUCH_PART";
 	public static final String NO_SUCH_CONTACT = "mail.NO_SUCH_CONTACT";
 	public static final String NO_SUCH_FOLDER  = "mail.NO_SUCH_FOLDER";
+	public static final String NO_SUCH_MOUNTPOINT = "mail.NO_SUCH_MOUNTPOINT";
 	public static final String NO_SUCH_NOTE    = "mail.NO_SUCH_NOTE";
     public static final String NO_SUCH_CALITEM = "mail.NO_SUCH_CALITEM";
 	public static final String NO_SUCH_APPT    = "mail.NO_SUCH_APPT";
@@ -99,6 +100,8 @@ public class MailServiceException extends ServiceException {
     public static final String ID              = "id";
     public static final String TOKEN           = "token";
     public static final String ITEM_ID         = "itemId";
+    public static final String REMOTE_ACCOUNT_ID = "remoteAcctId";
+    public static final String REMOTE_ITEM_ID  = "remoteItemId";
     public static final String REVISION        = "ver";
     public static final String NAME            = "name"; 
     public static final String PATH            = "path"; 
@@ -181,6 +184,14 @@ public class MailServiceException extends ServiceException {
         return new NoSuchItemException("no such folder path: " + path, NO_SUCH_FOLDER, SENDERS_FAULT, new Argument(PATH, path, Argument.Type.STR));
     }
     
+    public static MailServiceException NO_SUCH_MOUNTPOINT(int id, String remoteAccountId, int remoteId, Throwable t) {
+        return new NoSuchItemException("no such mountpoint id: " + id + "; owner = " + remoteAccountId + ", remoteId=" + remoteId,
+                                       NO_SUCH_MOUNTPOINT, SENDERS_FAULT, t,
+                                       new Argument(ITEM_ID, id, Argument.Type.IID),
+                                       new Argument(REMOTE_ACCOUNT_ID, remoteAccountId, Argument.Type.ACCTID),
+                                       new Argument(REMOTE_ITEM_ID, remoteId, Argument.Type.IID));
+    }
+
     public static MailServiceException NO_SUCH_NOTE(int id) {
         return new NoSuchItemException("no such note: " + id, NO_SUCH_NOTE, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
     }
