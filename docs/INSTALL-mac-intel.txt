@@ -88,7 +88,7 @@ Start MySQL with the following command:
 [Note: mysqld will start automatically on reboot]
 
 <pre>
-sudo /opt/zimbra/mysql/mysqld_safe --user=mysql &
+sudo -b /opt/zimbra/mysql/bin/mysqld_safe --user=mysql
 </pre>
 
 Set the password to the ant expected "zimbra".
