@@ -542,7 +542,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>lifetime (nnnnn[hmsd]) of a mail message regardless of location</desc>
 </attr>
 
-<attr id="107" name="zimbraContactMaxNumEntries" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="107" name="zimbraContactMaxNumEntries" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>0</defaultCOSValue>
   <desc>maximum number of contacts allowed in mailbox</desc>
 </attr>
@@ -1901,7 +1901,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>what format we reply/forward messages in (deprecatedSince 5.0 in identity)</desc>
 </attr>
 
-<attr id="414" name="zimbraIdentityMaxNumEntries" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="414" name="zimbraIdentityMaxNumEntries" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>20</defaultCOSValue>
   <desc>maximum number of identities allowed on an account</desc>
 </attr>
@@ -1952,7 +1952,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Which security layer to use for connection (cleartext, ssl, starttls)</desc>
 </attr>
 
-<attr id="426" name="zimbraDataSourceMaxNumEntries" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="426" name="zimbraDataSourceMaxNumEntries" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>20</defaultCOSValue>
   <desc>Maximum number of data sources allowed on an account</desc>
 </attr>
@@ -2111,7 +2111,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>user preference of client type</desc>
 </attr>
 
-<attr id="454" name="zimbraMailSignatureMaxLength" type="long" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="454" name="zimbraMailSignatureMaxLength" type="long" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>1024</defaultCOSValue>
   <desc>maximum length of mail signature, 0 means unlimited. If not set, default is 1024</desc>
 </attr>
@@ -2245,7 +2245,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>group calendar features.  if set to FALSE, calendar works as a personal calendar and attendees and scheduling etc are turned off in web UI</desc>
 </attr>
 
-<attr id="482" name="zimbraNotebookMaxRevisions" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="482" name="zimbraNotebookMaxRevisions" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited">
   <defaultCOSValue>0</defaultCOSValue>
   <desc>maximum number of revisions to keep for wiki pages and documents. 0 means unlimited.</desc>
 </attr>
@@ -2295,7 +2295,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>default mail signature for account/identity/dataSource</desc>
 </attr>
 
-<attr id="493" name="zimbraSignatureMaxNumEntries" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+<attr id="493" name="zimbraSignatureMaxNumEntries" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>20</defaultCOSValue>
   <desc>maximum number of signatures allowed on an account</desc>
 </attr>
