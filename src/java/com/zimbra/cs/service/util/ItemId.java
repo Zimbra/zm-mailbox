@@ -31,6 +31,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -204,6 +205,12 @@ public class ItemId {
                         if (!mp.isLocal()) {
                             // done resolving if pointing to a different account
                             targetAccountId = mp.getOwnerId();
+                            Account targetAcct = Provisioning.getInstance().get(Provisioning.AccountBy.id, targetAccountId);
+                            if (targetAcct == null) {
+                                throw MailServiceException.NO_SUCH_MOUNTPOINT(
+                                        mp.getId(), mp.getOwnerId(), mp.getRemoteId(),
+                                        AccountServiceException.NO_SUCH_ACCOUNT(targetAccountId));
+                            }
                             break;
                         }
                         hopCount++;
