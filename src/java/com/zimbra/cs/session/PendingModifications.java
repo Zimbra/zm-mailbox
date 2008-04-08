@@ -101,6 +101,26 @@ public final class PendingModifications {
         return count;
     }
 
+    public boolean overlapsWithAccount(String accountId) {
+        accountId = accountId == null ? null : accountId.toLowerCase();
+        if (deleted != null) {
+            for (ModificationKey mkey : deleted.keySet())
+                if (mkey.getAccountId().equals(accountId))
+                    return true;
+        }
+        if (created != null) {
+            for (ModificationKey mkey : created.keySet())
+                if (mkey.getAccountId().equals(accountId))
+                    return true;
+        }
+        if (modified != null) {
+            for (ModificationKey mkey : modified.keySet())
+                if (mkey.getAccountId().equals(accountId))
+                    return true;
+        }
+        return false;
+    }
+
     public void recordCreated(MailItem item) {
 //        ZimbraLog.mailbox.debug("--> NOTIFY: created " + item.getId());
         if (created == null)
