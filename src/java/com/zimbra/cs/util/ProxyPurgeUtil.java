@@ -119,18 +119,20 @@ public class ProxyPurgeUtil
         for (String a: accounts) {
             for (int i = 0; i < numServers; ++i) {
                 if (purge) {
-                    mc.delete ("IMAP:" + a, i, new Date(0));
-                    mc.delete ("POP3:" + a, i, new Date(0));
+                    mc.delete ("route:proto=imap;user=" + a, i, new Date(0));
+                    mc.delete ("route:proto=pop3;user=" + a, i, new Date(0));
                 } else {
                     Formatter pop3f, imapf;
 
                     imapf = new Formatter ();
                     imapf.format (outputformat, servers.get(i), 
-                        "IMAP:" + a, mc.get ("IMAP:" + a, i));
+                        "route:proto=imap;user=" + a,
+                        mc.get ("route:proto=imap;user=" + a, i));
                     System.out.println (imapf.toString ());
                     pop3f = new Formatter ();
                     pop3f.format (outputformat, servers.get(i), 
-                        "POP3:" + a, mc.get ("POP3:" + a, i));
+                        "route:proto=pop3;user=" + a,
+                        mc.get ("route:proto=pop3;user=" + a, i));
                     System.out.println (pop3f.toString ());
                 }
             }
