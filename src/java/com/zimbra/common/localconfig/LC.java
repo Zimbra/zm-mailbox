@@ -82,6 +82,7 @@ public class LC {
     public static final KnownKey zimbra_admin_service_scheme;
     public static final KnownKey zimbra_zmprov_default_to_ldap;
     public static final KnownKey zimbra_zmprov_default_soap_server;
+    public static final KnownKey zimbra_require_interprocess_security;
     public static final KnownKey localized_msgs_directory;
     public static final KnownKey localized_client_msgs_directory;
     public static final KnownKey skins_directory;
@@ -871,6 +872,9 @@ public class LC {
         zimbra_zmprov_default_to_ldap = new KnownKey("zimbra_zmprov_default_to_ldap", "false");
 
         zimbra_zmprov_default_soap_server = new KnownKey("zimbra_zmprov_default_soap_server", "localhost");
+
+        zimbra_require_interprocess_security = new KnownKey("zimbra_require_interprocess_security");
+        zimbra_require_interprocess_security.setDefault("1");
 
         zimbra_mailbox_groups = new KnownKey("zimbra_mailbox_groups");
         zimbra_mailbox_groups.setDefault("100");
