@@ -31,39 +31,39 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 
 public class HostedAuth extends ZimbraCustomAuth {
-	public static String HEADER_AUTH_METHOD = "Auth-Method";
+	//public static String HEADER_AUTH_METHOD = "Auth-Method";
 	public static String HEADER_AUTH_USER = "Auth-User";
 	public static String HEADER_AUTH_PASSWORD = "Auth-Pass";
-	public static String HEADER_AUTH_PROTOCOL = "Auth-Protocol";
-	public static String HEADER_AUTH_LOGIN_ATTEMPT = "Auth-Login-Attempt";
-	public static String HEADER_CLIENT_IP = "Client-IP";
+	//public static String HEADER_AUTH_PROTOCOL = "Auth-Protocol";
+	//public static String HEADER_AUTH_LOGIN_ATTEMPT = "Auth-Login-Attempt";
+	//public static String HEADER_CLIENT_IP = "Client-IP";
 	public static String HEADER_AUTH_STATUS = "Auth-Status";
-	public static String HEADER_AUTH_SERVER = "Auth-Server";
-	public static String HEADER_AUTH_PORT = "Auth-Port";
+	//public static String HEADER_AUTH_SERVER = "Auth-Server";
+	//public static String HEADER_AUTH_PORT = "Auth-Port";
 	
 	public static String AUTH_STATUS_OK = "OK";
 	
 	/**
 	 *  This custom auth module takes arguments in the following form:
 	 * {URL} [GET|POST - default is GET] [encryption method - defautl is plain] [auth protocol - default is imap] 
-	 * e.g.: http://auth.customer.com:80 GET plain imap
+	 * e.g.: http://auth.customer.com:80 GET
 	 **/
 	public void authenticate(Account acct, String password,
 			Map<String, Object> context, List<String> args) throws Exception {
 		HttpClient client = new HttpClient();
 		HttpMethod method = null;
 		
-		String authMethod = "plain";
-		String authProtocol = "imap";
+		/*String authMethod = "plain";
+		String authProtocol = "imap";*/
 		String targetURL = args.get(0);
-		
+		/*
 		if (args.size()>2) {
 			authMethod = args.get(2);
 		}
 		
 		if (args.size()>3) {
 			authMethod = args.get(3);
-		}
+		}*/
 		
 		if(args.size()>1) {
 			if(args.get(1).equalsIgnoreCase("GET"))
@@ -73,10 +73,10 @@ public class HostedAuth extends ZimbraCustomAuth {
 		} else
 			method = new GetMethod(targetURL);
 		
-		method.addRequestHeader(HEADER_AUTH_METHOD,authMethod);
+		//method.addRequestHeader(HEADER_AUTH_METHOD,authMethod);
 		method.addRequestHeader(HEADER_AUTH_USER,acct.getName());
 		method.addRequestHeader(HEADER_AUTH_PASSWORD,password);
-		method.addRequestHeader(HEADER_AUTH_PROTOCOL,authProtocol);
+		//method.addRequestHeader(HEADER_AUTH_PROTOCOL,authProtocol);
         try {
             client.executeMethod(method);
         } catch (HttpException ex) {
