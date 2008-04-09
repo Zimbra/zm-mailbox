@@ -501,4 +501,8 @@ public class AdminConstants {
     // mailbox stats
     public static final String A_NUM_MBOXES = "numMboxes";
     public static final String A_TOTAL_SIZE = "totalSize";
+    
+    //extension targets
+    public static final String T_ADMIN_MAIN = "admin-main";
+    public static final String T_ADMIN_DOMAIN = "admin-domain";     
 }
