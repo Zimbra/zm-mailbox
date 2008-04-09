@@ -34,6 +34,7 @@ public class XMLChartConfig {
     public static final String E_CHARTS = "charts";
     public static final String E_CHART = "chart";
     public static final String E_PLOT = "plot";
+    public final static String E_GROUP_PLOT = "groupplot";
 
     // <chart> attributes
     public static final String A_CHART_TITLE = "title";
@@ -45,6 +46,7 @@ public class XMLChartConfig {
     public static final String A_CHART_PLOT_ZERO = "plotZero";
     public static final String A_CHART_WIDTH = "width";
     public static final String A_CHART_HEIGHT = "height";
+    public final static String A_CHART_DOCUMENT = "outDocument";
 
     // <plot> attributes
     public static final String A_PLOT_LEGEND = "legend";
@@ -60,6 +62,8 @@ public class XMLChartConfig {
     public static final String A_PLOT_DATA_FUNCTION = "dataFunction";
     public static final String A_PLOT_AGGREGATE_FUNCTION = "aggregateFunction";
     public static final String A_PLOT_OPTIONAL = "optional";
+    
+    public static final String A_PLOT_GROUP_BY = "groupBy";
 
     private static String getAttr(Element elem, String name)
             throws DocumentException {
@@ -187,9 +191,10 @@ public class XMLChartConfig {
                     ChartSettings.DEFAULT_CHART_WIDTH);
             int height = getInheritedAttrInt(chartElem, A_CHART_HEIGHT,
                     ChartSettings.DEFAULT_CHART_HEIGHT);
+            String outDoc = getAttr(chartElem, A_CHART_DOCUMENT, null);
 
             ChartSettings chart = new ChartSettings(chartTitle, category, outfile, xAxis,
-                    yAxis, allowLogScale, plotZero, width, height);
+                    yAxis, allowLogScale, plotZero, width, height, outDoc);
 
             for (Iterator plotIter = chartElem.elementIterator(E_PLOT); plotIter
                     .hasNext();) {
@@ -230,6 +235,50 @@ public class XMLChartConfig {
 
                 PlotSettings plot = new PlotSettings(
                         legend, infile, dataCol, showRaw, showMovingAvg,
+                        movingAvgPoints, multiplier, divisor,
+                        nonNegative, percentTime,
+                        dataFunction, aggFunction, optional);
+                chart.addPlot(plot);
+            }
+            for (Iterator plotIter = chartElem.elementIterator(E_GROUP_PLOT);
+                    plotIter.hasNext();) {
+                Element plotElem = (Element) plotIter.next();
+                String dataCol = getAttr(plotElem, A_PLOT_DATA_COLUMN);
+
+                // inheritable attributes
+                String infile = getInheritedAttr(plotElem, A_PLOT_INFILE, null);
+
+                boolean showRaw = getInheritedAttrBoolean(plotElem,
+                        A_PLOT_SHOW_RAW, PlotSettings.DEFAULT_PLOT_SHOW_RAW);
+                boolean showMovingAvg = getInheritedAttrBoolean(plotElem,
+                        A_PLOT_SHOW_MOVING_AVG,
+                        PlotSettings.DEFAULT_PLOT_SHOW_MOVING_AVG);
+                int movingAvgPoints = getInheritedAttrInt(plotElem,
+                        A_PLOT_MOVING_AVG_POINTS,
+                        PlotSettings.DEFAULT_PLOT_MOVING_AVG_POINTS);
+                double multiplier = getInheritedAttrDouble(plotElem,
+                        A_PLOT_MULTIPLIER, PlotSettings.DEFAULT_PLOT_MULTIPLIER);
+                double divisor = getInheritedAttrDouble(plotElem,
+                        A_PLOT_DIVISOR, PlotSettings.DEFAULT_PLOT_DIVISOR);
+
+                boolean nonNegative = getInheritedAttrBoolean(plotElem,
+                        A_PLOT_NON_NEGATIVE,
+                        PlotSettings.DEFAULT_PLOT_NON_NEGATIVE);
+                boolean percentTime = getInheritedAttrBoolean(plotElem,
+                        A_PLOT_PERCENT_TIME,
+                        PlotSettings.DEFAULT_PLOT_PERCENT_TIME);
+                String dataFunction = getAttr(plotElem, A_PLOT_DATA_FUNCTION,
+                        PlotSettings.DEFAULT_PLOT_DATA_FUNCTION);
+                String aggFunction = getAttr(plotElem, A_PLOT_AGGREGATE_FUNCTION,
+                        PlotSettings.DEFAULT_PLOT_AGGREGATE_FUNCTION);
+                String groupBy = getAttr(plotElem, A_PLOT_GROUP_BY);
+
+                boolean optional = getInheritedAttrBoolean(plotElem,
+                        A_PLOT_OPTIONAL,
+                        PlotSettings.DEFAULT_PLOT_OPTIONAL);
+
+                GroupPlotSettings plot = new GroupPlotSettings(
+                        groupBy, infile, dataCol, showRaw, showMovingAvg,
                         movingAvgPoints, multiplier, divisor,
                         nonNegative, percentTime,
                         dataFunction, aggFunction, optional);

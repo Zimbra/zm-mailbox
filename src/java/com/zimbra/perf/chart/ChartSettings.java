@@ -31,6 +31,7 @@ class ChartSettings {
 
     public static enum ImageType { JPG, PNG };
 
+    private String mDocument;
     private String mTitle;
     private String mCategory;
     private String mOutfile;
@@ -41,6 +42,7 @@ class ChartSettings {
     private int mHeight = 200;
     private ImageType mImageType;
     private List<PlotSettings> mPlots;
+    private List<GroupPlotSettings> mGroupPlots;
 
     /**
      * <code>LogarithmicAxis</code> can't handle zero values. Setting this
@@ -51,7 +53,7 @@ class ChartSettings {
 
     public ChartSettings(String title, String category, String outfile, String xAxis,
                          String yAxis, boolean allowLogScale, boolean plotZero, int width,
-                         int height) {
+                         int height, String outDoc) {
         mTitle = title;
         mCategory = category;
         mOutfile = outfile;
@@ -71,10 +73,15 @@ class ChartSettings {
         mWidth = width;
         mHeight = height;
         mPlots = new ArrayList<PlotSettings>();
+        mGroupPlots = new ArrayList<GroupPlotSettings>();
+        mDocument = outDoc;
     }
 
     public void addPlot(PlotSettings p) {
         mPlots.add(p);
+    }
+    public void addPlot(GroupPlotSettings p) {
+    	mGroupPlots.add(p);
     }
 
     public String getTitle() { return mTitle; }
@@ -87,6 +94,7 @@ class ChartSettings {
     public int getWidth() { return mWidth; }
     public ImageType getImageType() { return mImageType; }
     public List<PlotSettings> getPlots() { return mPlots; }
+    public List<GroupPlotSettings> getGroupPlots() { return mGroupPlots; }
 
     public int getHeight() {
         int h = Math.max(mHeight, MINIMUM_CHART_HEIGHT);
@@ -106,10 +114,18 @@ class ChartSettings {
         sb.append("  ").append("plotZero=\"").append(mPlotZero).append("\"\n");
         sb.append("  ").append("width=\"").append(mWidth).append("\"\n");
         sb.append("  ").append("height=\"").append(mHeight).append("\"\n");
+        sb.append("  ").append("outDocument=\"").append(mDocument).append("\"\n");
         sb.append(">\n");
         for (PlotSettings plot : mPlots)
             sb.append(plot.toString());
         sb.append("</chart>\n");
         return sb.toString();
+    }
+
+    public String getOutDocument() {
+        return mDocument;
+    }
+    public void setOutDocument(String doc) {
+        mDocument = doc;
     }
 }

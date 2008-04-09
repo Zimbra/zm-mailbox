@@ -25,11 +25,13 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.io.RandomAccessFile;
 import java.io.Reader;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -58,6 +60,7 @@ import org.jfree.data.time.MovingAverage;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.xy.XYDataset;
+
 import com.zimbra.common.util.CsvReader;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
@@ -75,6 +78,8 @@ public class ChartUtil {
     private static final String OPT_AGGREGATE_START_AT = "aggregate-start-at";
     private static final String OPT_AGGREGATE_END_AT = "aggregate-end-at";
     private static final String OPT_NO_SUMMARY = "no-summary";
+    
+    private final static String GROUP_PLOT_SYNTHETIC = "group-plot-synthetic$";
 
     private static final SimpleDateFormat[] sDateFormats = {
             new SimpleDateFormat("MM/dd/yyyy HH:mm:ss"),
@@ -92,10 +97,16 @@ public class ChartUtil {
     private Date mAggregateEndAt = null;
     private boolean mSkipSummary;
 
+    private List<ChartSettings> mSyntheticChartSettings =
+        new ArrayList<ChartSettings>();
     private List<JFreeChart> mCharts = new ArrayList<JFreeChart>();
     private Set<DataColumn> mUniqueDataColumns;
+    private Set<DataColumn> mUniqueStringColumns;
     private Map<String /* infile */, Set<Pair<String /* column */, DataSeries>>> mColumnsByInfile;
+    private Map<ChartSettings,JFreeChart> mChartMap =
+        new HashMap<ChartSettings,JFreeChart>();
     private Map<DataColumn, DataSeries> mDataSeries;
+    private Map<DataColumn, StringSeries> mStringSeries;
     private Map<DataColumn, Double> mAggregates;
     private Map<String, Double> mStats;
     private Aggregator mAggregator;
@@ -134,6 +145,10 @@ public class ChartUtil {
             DataColumn other = (DataColumn) obj;
             return mInfile.equals(other.mInfile)
                     && mColumn.equals(other.mColumn);
+        }
+        @Override
+        public String toString() {
+            return mInfile + ":" + mColumn;
         }
     }
 
@@ -310,7 +325,9 @@ public class ChartUtil {
                 Long.MAX_VALUE);
         mSkipSummary = skipSummary;
         mUniqueDataColumns = new HashSet<DataColumn>();
+        mUniqueStringColumns = new HashSet<DataColumn>();
         mColumnsByInfile = new HashMap<String, Set<Pair<String, DataSeries>>>();
+        mStringSeries = new HashMap<DataColumn, StringSeries>();
         mDataSeries = new HashMap<DataColumn, DataSeries>();
         mAggregates = new HashMap<DataColumn, Double>();
         mAggregator = new Aggregator();
@@ -320,12 +337,30 @@ public class ChartUtil {
     private void doit() throws Exception {
         List<ChartSettings> allSettings = getAllChartSettings(mConfs);
         readCsvFiles();
-        for (ChartSettings cs : allSettings) {
-            computeAggregates(cs, mAggregateStartAt, mAggregateEndAt);
-            mCharts.add(createJFReeChart(cs));
+        List<ChartSettings> outDocSettings = new ArrayList<ChartSettings>();
+        HashSet<String> outDocNames = new HashSet<String>();
+        for (Iterator<ChartSettings> i = allSettings.iterator();
+                i.hasNext();) {
+            ChartSettings cs = i.next();
+            mCharts.addAll(createJFReeChart(cs));
+            if (cs.getOutDocument() == null || cs.getGroupPlots().size() == 0)
+                computeAggregates(cs, mAggregateStartAt, mAggregateEndAt);
+            else if (cs.getOutDocument() != null) {
+                outDocSettings.add(cs);
+                outDocNames.add(cs.getOutDocument());
+                i.remove();
+            }
         }
+        for (ChartSettings cs : mSyntheticChartSettings) {
+            computeAggregates(cs, mAggregateStartAt, mAggregateEndAt);
+            outDocNames.add(cs.getOutDocument());
+        }
+        outDocSettings.addAll(mSyntheticChartSettings);
+        outDocNames.remove(null); // lazy, instead of checking for null above
+
         lineUpAxes();
-        writeAllCharts(allSettings);
+        writeAllCharts(allSettings, outDocNames);
+        writeOutDocCharts(mSyntheticChartSettings, outDocNames);
         if (!mSkipSummary)
             writeSummary(allSettings);
     }
@@ -343,12 +378,21 @@ public class ChartUtil {
 
             // Figure out which columns in which input files are being charted.
             for (ChartSettings cs : settings) {
-                List<PlotSettings> plots = cs.getPlots();
+            	ArrayList<PlotSettings> plots = new ArrayList<PlotSettings>();
+            	plots.addAll(cs.getPlots());
+            	plots.addAll(cs.getGroupPlots());
                 for (PlotSettings ps : plots) {
                     String infile = ps.getInfile();
                     String column = ps.getDataColumn();
                     DataColumn dc = new DataColumn(infile, column);
                     mUniqueDataColumns.add(dc);
+                }
+                for (GroupPlotSettings gps : cs.getGroupPlots()) {
+                    String infile = gps.getInfile();
+                    String column = gps.getGroupBy();
+                    DataColumn dc = new DataColumn(infile, column);
+                    mUniqueStringColumns.add(dc);
+                    mStringSeries.put(dc, new StringSeries());
                 }
             }
             allSettings.addAll(settings);
@@ -356,9 +400,7 @@ public class ChartUtil {
         validateChartSettings(allSettings);
 
         // Figure out which column are being used in each infile.
-        for (Iterator<DataColumn> iter = mUniqueDataColumns.iterator(); iter
-                .hasNext();) {
-            DataColumn dc = iter.next();
+        for (DataColumn dc : mUniqueDataColumns) {
             String infile = dc.getInfile();
             String column = dc.getColumn();
             Set<Pair<String, DataSeries>> cols = mColumnsByInfile.get(infile);
@@ -433,15 +475,84 @@ public class ChartUtil {
         analyzer.writeReport(resultCsv);
     }
 
-    private void writeAllCharts(List<ChartSettings> allSettings) throws IOException {
+    private void writeOutDocCharts(List<ChartSettings> outChartSettings,
+            Set<String> linkedDocuments) throws IOException {
         // write all charts
-        for (int i = 0; i < mCharts.size(); i++)
-            writeChart(mCharts.get(i), allSettings.get(i));
+        for (String filename : linkedDocuments) {
+            File file = new File(mDestDir, filename);
+            FileWriter writer = new FileWriter(file, false);
+            try {
+                writer.write("<html><head><title>");
+                writer.write(StringUtil.escapeHtml(mTitle) + ": " + filename);
+                writer.write("</title><body bgcolor=\"#eeeeee\"><h1>");
+                writer.write(StringUtil.escapeHtml(mTitle) + ": " + filename);
+                writer.write("</h1>\n");
+            }
+            finally {
+                writer.close();
+            }
+        }
+        for (ChartSettings cs : outChartSettings) {
+            JFreeChart chart = mChartMap.get(cs);
+            if (chart != null && hasData(chart)) {
+                writeChart(chart, cs);
+                FileWriter writer = new FileWriter(
+                        new File(mDestDir, cs.getOutDocument()), true);
+                try {
+                    List<PlotSettings> plots = cs.getPlots();
+                    String statString = "";
+                    boolean first = true;
+                    for (PlotSettings ps : plots) {
+                        DataColumn dc = new DataColumn(ps.getInfile(),
+                                ps.getDataColumn());
+                        DataSeries ds = mDataSeries.get(dc);
+                        if (ds == null || ds.size() == 0)
+                            continue;
+                        if (first)
+                            first = false;
+                        else
+                            statString += " &nbsp;&nbsp; ";
+                        statString += ps.getAggregateFunction() +
+                                "(" + ps.getLegend() + ") = " +
+                        formatDouble(mAggregates.get(dc).doubleValue());
+                    }
 
-        writeIndexHtml(allSettings);
+                    writer.write("<a name=\"" + cs.getOutfile() + "\">");
+                    writer.write("<h3>" + cs.getTitle() + "</h3></a>\n");
+                    writer.write("<h5>" + statString + "</h5>\n");
+                    writer.write(String.format(
+                            "<img src=\"%s\" width=\"%d\" height=\"%d\">\n",
+                            cs.getOutfile(), cs.getWidth(), cs .getHeight()));
+                }
+                finally {
+                    writer.close();
+                }
+            }
+        }
+        for (String filename : linkedDocuments) {
+            File file = new File(mDestDir, filename);
+            FileWriter writer = new FileWriter(file, true);
+            try {
+                writer.write("</body></html>\n");
+            } finally {
+                writer.close();
+            }
+        }
+    }
+    private void writeAllCharts(List<ChartSettings> allSettings,
+            Set<String> linkedDocuments) throws IOException {
+        // write all charts
+        for (ChartSettings cs : allSettings) {
+            JFreeChart chart = mChartMap.get(cs);
+            if (chart != null)
+                writeChart(chart, cs);
+        }
+
+        writeIndexHtml(allSettings, linkedDocuments);
     }
 
-    private void writeIndexHtml(List<ChartSettings> allSettings) throws IOException {
+    private void writeIndexHtml(List<ChartSettings> allSettings,
+            Set<String> linkedDocuments) throws IOException {
         // Generate HTML
         System.out.println("Writing index.html");
         FileWriter writer = null;
@@ -452,12 +563,23 @@ public class ChartUtil {
                     + "</title>\n</head>\n<body bgcolor=\"#eeeeee\">\n");
             writer.write("<h1>" + StringUtil.escapeHtml(mTitle) + "</h1>\n");
 
+            if (linkedDocuments.size() > 0) {
+                writer.write("<h2>Additional charts</h2>");
+                writer.write("<ul>");
+                for (String document : linkedDocuments) {
+                    writer.write("<li><a href=\"" + document + "\">");
+                    writer.write(document);
+                    writer.write("</a></li>\n");
+                }
+                writer.write("</ul>\n");
+            }
             List<String> noData = new ArrayList<String>();
 
             int count = 0;
-            for (int i = 0; i < mCharts.size(); i++) {
-                JFreeChart chart = mCharts.get(i);
-                ChartSettings cs = allSettings.get(i);
+            for (ChartSettings cs : allSettings) {
+                JFreeChart chart = mChartMap.get(cs);
+                if (chart == null)
+                    continue;
 
                 List<PlotSettings> plots = cs.getPlots();
                 String statString = "";
@@ -614,10 +736,85 @@ public class ChartUtil {
         }
     }
 
+    private Date readTS(CsvReader r, String ctx) throws ParseException {
+	Date ts = null;
+	String tstamp = r.getValue(PlotSettings.TSTAMP_COLUMN);
+	if (tstamp == null) {
+	    throw new ParseException(ctx + ": no timestamp found.", 0);
+	}
+
+	// Try all date parsers until one succeeds
+	ParseException lastException = null;
+	for (int i = 0; i < sDateFormats.length && ts == null; i++) {
+	    try {
+		synchronized (sDateFormats[i]) {
+		    ts = sDateFormats[i].parse(tstamp);
+		}
+	    } catch (ParseException e) {
+		lastException = e;
+	    }
+	    if (lastException != null)
+		throw lastException;
+	}
+	return ts;
+    }
     private void readCsvFiles() throws Exception {
         Date minDate = null;
         Date maxDate = null;
 
+        // GROUP PLOT SUPPORT
+        // the downside of this loop is that it will re-open the file once
+        // for each column name, if more than one column name is specified
+        // per-file--shouldn't happen much since this is only for groupplot
+        for (DataColumn c : mUniqueStringColumns) {
+            String inFilename = c.getInfile();
+            Reader reader = null;
+            StringSeries data = mStringSeries.get(c);
+            try {
+        	reader = new MultipleDirsFileReader(inFilename, mSrcDirs);
+            }
+            catch (FileNotFoundException e) {
+                System.out.printf("CSV file %s not found; Skipping...\n",
+                        inFilename);
+        	continue;
+            }
+            CsvReader csv = null;
+            
+            try {
+        	csv = new CsvReader(reader);
+        	int line = 1;
+        	while (csv.hasNext()) {
+        	    line++;
+        	    String ctx = inFilename + ", line " + line;
+        	    Date ts = null;
+        	    try {
+        		ts = readTS(csv, ctx);
+        	    }
+        	    catch (ParseException e) {
+                        System.out.println(ctx + ": " + e);
+                        continue;
+        	    }
+                    if (ts.before(mStartAt) || ts.after(mEndAt))
+                        continue;
+                    if (minDate == null) {
+                	minDate = ts;
+                	maxDate = ts;
+                    } else {
+                        if (ts.compareTo(minDate) < 0)
+                            minDate = ts;
+                        if (ts.compareTo(maxDate) > 0)
+                            maxDate = ts;
+                    }
+        	    
+                    String value = csv.getValue(c.getColumn());
+                    data.AddEntry(ts, value);
+        	}
+            }
+            finally {
+        	if (csv != null)
+        	    csv.close();
+            }
+        }
         // Read CSVs and populate data series.
         for (Iterator<Map.Entry<String, Set<Pair<String, DataSeries>>>> mapIter = mColumnsByInfile
                 .entrySet().iterator(); mapIter.hasNext();) {
@@ -644,27 +841,12 @@ public class ChartUtil {
                     line++;
                     String context = inFilename + ", line " + line;
 
-                    // Find timestamp column
-                    String tstamp = csv.getValue(PlotSettings.TSTAMP_COLUMN);
-                    if (tstamp == null) {
-                        System.out.println(context + ": no timestamp found.");
-                        continue;
-                    }
-
-                    // Try all date parsers until one succeeds
                     Date ts = null;
-                    ParseException lastException = null;
-                    for (int i = 0; i < sDateFormats.length && ts == null; i++) {
-                        try {
-                            synchronized (sDateFormats[i]) {
-                                ts = sDateFormats[i].parse(tstamp);
-                            }
-                        } catch (ParseException e) {
-                            lastException = e;
-                        }
+                    try {
+                	ts = readTS(csv, context);
                     }
-                    if (ts == null) {
-                        System.out.println(context + ": " + lastException);
+                    catch (ParseException e) {
+                        System.out.println(context + ": " + e);
                         continue;
                     }
 
@@ -697,18 +879,15 @@ public class ChartUtil {
                                 try {
                                     series.AddEntry(ts, d);
                                 } catch (SeriesException e) {
-                                    System.out
-                                            .printf(
-                                                    "Can't add sample to series: timestamp=%s, value=%s\n",
-                                                    tstamp, val);
+                                    System.out.printf(
+                                            "Can't add sample to series: timestamp=%s, value=%s\n",
+                                            ts, val);
                                     e.printStackTrace(System.out);
                                 }
                             } catch (NumberFormatException e) {
-                                System.out
-                                        .println(String
-                                                .format(
-                                                        "%s: unable to parse value '%s' for %s: %s",
-                                                        context, val, column, e));
+                                System.out.println(String.format(
+                                        "%s: unable to parse value '%s' for %s: %s",
+                                        context, val, column, e));
                             }
                         }
                     }
@@ -837,7 +1016,7 @@ public class ChartUtil {
         }
     }
 
-    private JFreeChart createJFReeChart(ChartSettings cs) {
+    private List<JFreeChart> createJFReeChart(ChartSettings cs) {
 
         double minValue = Double.MAX_VALUE;
         double maxValue = Double.MIN_VALUE;
@@ -845,6 +1024,70 @@ public class ChartUtil {
         double count = 0;
         double total = 0;
         TimeSeriesCollection data = new TimeSeriesCollection();
+
+        ArrayList<ChartSettings> syntheticSettings =
+            new ArrayList<ChartSettings>();
+        for (GroupPlotSettings gps : cs.getGroupPlots()) {
+            String groupBy = gps.getGroupBy();
+            DataColumn dc = new DataColumn(gps.getInfile(), groupBy);
+            StringSeries groupBySeries = mStringSeries.get(dc);
+            dc = new DataColumn(gps.getInfile(), gps.getDataColumn());
+            DataSeries ds = mDataSeries.get(dc);
+            int idx = 0;
+            Map<String,List<Integer>> groups =
+                new HashMap<String,List<Integer>>();
+            for (StringEntry e : groupBySeries.dataCollection) {
+                String g = e.getVal();
+                List<Integer> indices = groups.get(g);
+                if (indices == null) {
+                    indices = new ArrayList<Integer>();
+                    groups.put(g, indices);
+                }
+                indices.add(idx);
+                idx++;
+            }
+            for (Map.Entry<String,List<Integer>> g : groups.entrySet()) {
+                String groupByValue = g.getKey();
+                List<Integer> indices = g.getValue();
+                DataSeries syntheticDS = new DataSeries();
+                DataColumn c = new DataColumn(gps.getInfile(),
+                        GROUP_PLOT_SYNTHETIC + groupByValue + ":" +
+                        gps.getDataColumn());
+                for (int i : indices) {
+                    Entry e = ds.get(i);
+                    syntheticDS.AddEntry(e.getTimestamp(), e.getVal());
+                }
+                mDataSeries.put(c, syntheticDS);
+                PlotSettings syntheticPlot = new PlotSettings(
+                        groupByValue, c.getInfile(), c.getColumn(),
+                        gps.getShowRaw(),           gps.getShowMovingAvg(),
+                        gps.getMovingAvgPoints(),   gps.getMultiplier(),
+                        gps.getDivisor(),           gps.getNonNegative(),
+                        gps.getPercentTime(),       gps.getDataFunction(),
+                        gps.getAggregateFunction(), gps.getOptional());
+                cs.addPlot(syntheticPlot);
+                if (cs.getOutDocument() != null) {
+                    ChartSettings s = new ChartSettings(
+                            String.format(cs.getTitle(), groupByValue),
+                            cs.getCategory(),
+                            String.format(cs.getOutfile(), groupByValue),
+                            cs.getXAxis(),         cs.getYAxis(),
+                            cs.getAllowLogScale(), cs.getPlotZero(),
+                            cs.getWidth(),         cs.getHeight(), null);
+                    s.addPlot(syntheticPlot);
+                    syntheticSettings.add(s);
+                }
+            }
+        }
+        if (cs.getOutDocument() != null && cs.getGroupPlots().size() != 0) {
+            ArrayList<JFreeChart> charts = new ArrayList<JFreeChart>();
+            for (ChartSettings c : syntheticSettings) {
+                charts.addAll(createJFReeChart(c));
+                c.setOutDocument(cs.getOutDocument());
+            }
+            mSyntheticChartSettings.addAll(syntheticSettings);
+            return charts;
+        }
 
         List<PlotSettings> plots = cs.getPlots();
         for (PlotSettings ps : plots) {
@@ -922,7 +1165,8 @@ public class ChartUtil {
             }
         }
 
-        return chart;
+        mChartMap.put(cs, chart);
+        return Arrays.asList(chart);
 
     }
 
@@ -997,8 +1241,6 @@ public class ChartUtil {
     }
 
     class DataSeries {
-        String data;
-
         List<Entry> dataCollection = new ArrayList<Entry>();
 
         public void AddEntry(Date t, double d) {
@@ -1011,6 +1253,40 @@ public class ChartUtil {
         }
 
         public Entry get(int index) {
+            return dataCollection.get(index);
+        }
+    }
+    class StringEntry {
+        Date timestamp;
+
+        String value;
+
+        public StringEntry(Date t, String v) {
+            this.timestamp = t;
+            this.value = v;
+        }
+
+        public Date getTimestamp() {
+            return timestamp;
+        }
+
+        public String getVal() {
+            return value;
+        }
+    }
+    class StringSeries {
+        List<StringEntry> dataCollection = new ArrayList<StringEntry>();
+
+        public void AddEntry(Date t, String s) {
+            StringEntry entry = new StringEntry(t, s);
+            dataCollection.add(entry);
+        }
+
+        public int size() {
+            return dataCollection.size();
+        }
+
+        public StringEntry get(int index) {
             return dataCollection.get(index);
         }
     }
