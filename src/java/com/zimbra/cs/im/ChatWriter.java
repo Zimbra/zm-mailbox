@@ -84,7 +84,7 @@ class ChatWriter {
             return "ImXmlPartDataSource";
         }
 
-        public OutputStream getOutputStream() throws IOException {
+        public OutputStream getOutputStream() {
             throw new UnsupportedOperationException();
         }
 
@@ -97,7 +97,7 @@ class ChatWriter {
         }
 
         public String getContentType() {
-            return "text/html";
+            return "text/html; charset=utf-8";
         }
 
         private String mText;
@@ -123,7 +123,7 @@ class ChatWriter {
             return "HtmlPartDataSource";
         }
 
-        public OutputStream getOutputStream() throws IOException {
+        public OutputStream getOutputStream() {
             throw new UnsupportedOperationException();
         }
 
@@ -194,7 +194,7 @@ class ChatWriter {
 
         // subject
         int subjLen = Math.min(40, subject.length());
-        mm.setSubject(subject.substring(0, subjLen));
+        mm.setSubject(subject.substring(0, subjLen), Mime.P_CHARSET_UTF8);
 
         // sender list
         Address[] addrArray  = new Address[addrs.size()];
