@@ -671,7 +671,6 @@ public class MailboxManager {
                     newMboxId.id, newMboxId.groupId, account.getName());
                 data.id = newMboxId.id;
                 data.schemaGroupId = newMboxId.groupId;
-                DbMailbox.createMailboxDatabase(conn, data.id, data.schemaGroupId);
 
                 // The above initialization of data is incomplete because it
                 // is missing the message/index volume information.  Query

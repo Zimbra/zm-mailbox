@@ -111,6 +111,29 @@ public class DbMailbox {
     public synchronized static NewMboxId createMailbox(
             Connection conn, int mailboxId, String accountId, String comment, int lastBackupAt)
     throws ServiceException {
+        String limitClause = Db.supports(Db.Capability.LIMIT_CLAUSE) ? " ORDER BY index_volume_id LIMIT 1" : "";
+        boolean explicitId = (mailboxId != Mailbox.ID_AUTO_INCREMENT);
+        if (!explicitId) {
+            PreparedStatement stmt = null;
+            ResultSet rs = null;
+            try {
+                stmt = conn.prepareStatement("SELECT next_mailbox_id FROM current_volumes" + limitClause);
+                rs = stmt.executeQuery();
+                if (rs.next())
+                    mailboxId = rs.getInt(1);
+                else
+                    throw ServiceException.FAILURE("Unable to assign next new mailbox id", null);
+            } catch (SQLException e) {
+                throw ServiceException.FAILURE("determining next new mailbox id", e);
+            } finally {
+                DbPool.closeResults(rs);
+                DbPool.closeStatement(stmt);
+            }
+        }
+        int groupId = getMailboxGroupId(mailboxId);
+        // Make sure the group database exists before we start doing DMLs.
+        createMailboxDatabase(conn, mailboxId, groupId);
+
         if (comment != null && comment.length() > MAX_COMMENT_LENGTH)
             comment = comment.substring(0, MAX_COMMENT_LENGTH);
         if (comment != null)
@@ -120,17 +143,13 @@ public class DbMailbox {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            boolean explicitId = (mailboxId != Mailbox.ID_AUTO_INCREMENT);
-            String idSource = (explicitId ? "?" : "next_mailbox_id");
-            String limitClause = Db.supports(Db.Capability.LIMIT_CLAUSE) ? " ORDER BY index_volume_id LIMIT 1" : "";
             stmt = conn.prepareStatement("INSERT INTO mailbox" +
                     "(account_id, id, group_id, index_volume_id, item_id_checkpoint, last_backup_at, comment)" +
-                    " SELECT ?, " + idSource + ", 0, index_volume_id, " + (Mailbox.FIRST_USER_ID - 1) + ", ?, ?" +
+                    " SELECT ?, ?, 0, index_volume_id, " + (Mailbox.FIRST_USER_ID - 1) + ", ?, ?" +
                     " FROM current_volumes" + limitClause);
             int attr = 1;
             stmt.setString(attr++, accountId);
-            if (explicitId)
-                stmt.setInt(attr++, mailboxId);
+            stmt.setInt(attr++, mailboxId);
             if (lastBackupAt >= 0)
                 stmt.setInt(attr++, lastBackupAt);
             else
@@ -153,25 +172,11 @@ public class DbMailbox {
             stmt.close();
             stmt = null;
 
-            if (explicitId) {
-                ret.id = mailboxId;
-                ret.groupId = getMailboxGroupId(ret.id);
+            ret.id = mailboxId;
+            ret.groupId = groupId;
+            if (explicitId)
                 return ret;
-            }
 
-            stmt = conn.prepareStatement("SELECT id FROM mailbox WHERE " + Db.equalsSTRING("account_id"));
-            stmt.setString(1, accountId.toUpperCase());
-            rs = stmt.executeQuery();
-            if (rs.next())
-                ret.id = rs.getInt(1);
-            else
-                throw ServiceException.FAILURE("determining new account id for mailbox: " + accountId, null);
-            rs.close();
-            rs = null;
-            stmt.close();
-            stmt = null;
-
-            ret.groupId = getMailboxGroupId(ret.id);
             stmt = conn.prepareStatement("UPDATE mailbox SET group_id = ? WHERE id = ?");
             stmt.setInt(1, ret.groupId);
             stmt.setInt(2, ret.id);
@@ -200,8 +205,13 @@ public class DbMailbox {
         PreparedStatement stmt = null;
         try {
             String dbName = getDatabaseName(groupId);
-            if (Db.getInstance().databaseExists(conn, dbName))
+            if (Db.getInstance().databaseExists(conn, dbName)) {
+                // If database didn't exist we would end up doing CREATE DATABASE which does implicit commit.
+                // Let's do an explicit here so pending transactions always committed on exit from this method
+                // whether we create a database or not.
+                conn.commit();
                 return;
+            }
 
             // Create the new database
             ZimbraLog.mailbox.info("Creating database " + dbName);
