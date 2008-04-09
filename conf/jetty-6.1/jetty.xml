@@ -116,10 +116,11 @@
     <!-- Set handler Collection Structure                            --> 
     <!-- =========================================================== -->
     <Set name="handler">
-      <New id="Handlers" class="org.mortbay.jetty.handler.RewriteHandler">
+      <New id="Handlers" class="org.mortbay.jetty.handler.rewrite.RewriteHandler">
         <Set name="rewriteRequestURI">true</Set>
         <Set name="rewritePathInfo">false</Set>
         <Set name="originalPathAttribute">requestedPath</Set>
+	<Call name="addRule"><Arg><New class="org.mortbay.jetty.handler.rewrite.MsieSslRule"/></Arg></Call>
         <Call name="addRewriteRule"><Arg>/Microsoft-Server-ActiveSync/*</Arg><Arg>/service/extension/zimbrasync</Arg></Call>
         <Call name="addRewriteRule"><Arg>/principals/*</Arg><Arg>/service/dav/principals</Arg></Call>
         <Call name="addRewriteRule"><Arg>/dav/*</Arg><Arg>/service/dav/home</Arg></Call>
