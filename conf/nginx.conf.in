@@ -228,6 +228,16 @@ mail {
     imap_auth               plain;
     imap_auth               gssapi;
 
+    # Specify whether to use literal strings while issuing the LOGIN command
+    # to the upstream server. If set to on, then it means that NGINX will use
+    # literal strings to log in to the upstream server, and so the upstream 
+    # MUST support literal strings
+    # If set to off, then NGINX uses quoted strings to log in to the upstream
+    # server when using the LOGIN command
+    # If not specified, imap_literalauth defaults to on
+    # 
+    imap_literalauth        on;
+
     # TLS configuration
     # 
     # (starttls moved to per-server config)
