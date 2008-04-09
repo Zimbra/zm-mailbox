@@ -222,11 +222,11 @@ mail {
     # Currently, only PLAIN and GSSAPI mechanisms are supported
     # 
 
-    pop3_auth               plain;
-    pop3_auth               gssapi;
+    #pop3_auth               plain;
+    #pop3_auth               gssapi;
 
-    imap_auth               plain;
-    imap_auth               gssapi;
+    #imap_auth               plain;
+    #imap_auth               gssapi;
 
     # Specify whether to use literal strings while issuing the LOGIN command
     # to the upstream server. If set to on, then it means that NGINX will use
@@ -236,14 +236,14 @@ mail {
     # server when using the LOGIN command
     # If not specified, imap_literalauth defaults to on
     # 
-    imap_literalauth        on;
+    #imap_literalauth        on;
 
     # Auth Wait Interval
     # Specifies the time interval that NGINX will wait before rejecting an
     # authentication attempt with invalid credentials
     # If not specified, this value defaults to 10 seconds
     # 
-    auth_wait               10s;
+    #auth_wait               10s;
 
     # TLS configuration
     # 
@@ -260,7 +260,7 @@ mail {
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        protocol pop3;
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        proxy on;
         # sasl_service_name defaults to "pop" when protocol=pop3, "imap" when protocol=imap
-%%uncomment VAR:zimbraReverseProxyMailEnabled%%        sasl_service_name       "pop";
+#%%uncomment VAR:zimbraReverseProxyMailEnabled%%        sasl_service_name       "pop";
         # starttls=on implies cleartext login enabled
         # starttls=only implies cleartext login requires SSL/TLS
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        starttls                on;
@@ -272,7 +272,7 @@ mail {
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        proxy on;
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        ssl on;
         # sasl_service_name defaults to "pop" when protocol=pop3, "imap" when protocol=imap
-%%uncomment VAR:zimbraReverseProxyMailEnabled%%        sasl_service_name       "pop";
+#%%uncomment VAR:zimbraReverseProxyMailEnabled%%        sasl_service_name       "pop";
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%    }
 
     # IMAP proxy configuration
@@ -282,7 +282,7 @@ mail {
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        protocol imap;
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        proxy on;
         # sasl_service_name defaults to "pop" when protocol=pop3, "imap" when protocol=imap
-%%uncomment VAR:zimbraReverseProxyMailEnabled%%        sasl_service_name       "imap";
+#%%uncomment VAR:zimbraReverseProxyMailEnabled%%        sasl_service_name       "imap";
         # starttls=on implies cleartext login enabled
         # starttls=only implies cleartext login requires SSL/TLS
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        starttls                on;
@@ -294,7 +294,7 @@ mail {
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        proxy on;
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        ssl on;
         # sasl_service_name defaults to "pop" when protocol=pop3, "imap" when protocol=imap
-%%uncomment VAR:zimbraReverseProxyMailEnabled%%        sasl_service_name       "imap";
+#%%uncomment VAR:zimbraReverseProxyMailEnabled%%        sasl_service_name       "imap";
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%    }
 }
 
