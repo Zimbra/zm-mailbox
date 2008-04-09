@@ -3059,14 +3059,14 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>attribute that contains http bind port</desc>
 </attr>
 
-<attr id="633" name="zimbraPrefOpenTagsAtLogin" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
-  <defaultCOSValue>FALSE</defaultCOSValue>
-  <desc>whether or not to open tags at login</desc>
+<attr id="633" name="zimbraPrefTagTreeOpen" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether or not tag tree is expanded</desc>
 </attr>
 
-<attr id="634" name="zimbraPrefOpenSeachesAtLogin" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
-  <defaultCOSValue>FALSE</defaultCOSValue>
-  <desc>whether or not to open searches at login</desc>
+<attr id="634" name="zimbraPrefSearchTreeOpen" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether or not search tree is expanded</desc>
 </attr>
 
 <attr id="635" name="zimbraPrefGalSearchEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
@@ -3077,6 +3077,16 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="636" name="zimbraSmtpSendAddMailer" type="boolean" cardinality="single" optionalIn="globalConfig">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>Whether X-Mailer will be added to messages sent by Zimbra</desc>
+</attr>
+
+<attr id="637" name="zimbraPrefFolderTreeOpen" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether or not folder tree is expanded</desc>
+</attr>
+
+<attr id="638" name="zimbraPrefZimletTreeOpen" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>whether or not zimlet tree is expanded</desc>
 </attr>
 
 </attrs>
