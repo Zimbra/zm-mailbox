@@ -214,9 +214,13 @@ public class ProxyServlet extends ZimbraServlet {
             Enumeration headers = req.getHeaderNames();
             while (headers.hasMoreElements()) {
                 String hdr = (String) headers.nextElement();
+            	ZimbraLog.zimlet.debug("incoming: " + hdr + ": " + req.getHeader(hdr));
                 if (canProxyHeader(hdr)) {
-                    //ZimbraLog.zimlet.info(hdr + ": " + req.getHeader(hdr));
-                    method.addRequestHeader(hdr, req.getHeader(hdr));
+                	ZimbraLog.zimlet.debug("outgoing: " + hdr + ": " + req.getHeader(hdr));
+                	if (hdr.equalsIgnoreCase("x-host"))
+                		method.getParams().setVirtualHost(req.getHeader(hdr));
+                	else
+                		method.addRequestHeader(hdr, req.getHeader(hdr));
                 }
             }
             
