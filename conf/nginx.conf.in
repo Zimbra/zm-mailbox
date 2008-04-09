@@ -238,6 +238,13 @@ mail {
     # 
     imap_literalauth        on;
 
+    # Auth Wait Interval
+    # Specifies the time interval that NGINX will wait before rejecting an
+    # authentication attempt with invalid credentials
+    # If not specified, this value defaults to 10 seconds
+    # 
+    auth_wait               10s;
+
     # TLS configuration
     # 
     # (starttls moved to per-server config)
