@@ -73,6 +73,10 @@
           <Item><New class="java.lang.Integer"><Arg><Property name="zimbraPop3SSLBindPort" default="995"/></Arg></New></Item>
         </Entry>
         <Entry>
+          <Item>zimbraSSLExcludeCipherSuites</Item>
+          <Item><New class="java.lang.String"><Arg><Property name="zimbraSSLExcludeCipherSuites"/></Arg></New></Item>
+        </Entry>
+        <Entry>
           <Item>nio_imap_enabled</Item>
           <Item><New class="java.lang.Boolean"><Arg><Property name="nio_imap_enabled" default="false"/></Arg></New></Item>
         </Entry>
@@ -92,9 +96,11 @@
     </Arg>
   </Call>
 
+  <!-- 
   <Set name="startServerAsPrivileged">false</Set>
-  <Set name="umask">23</Set><!--decimal, equivalent to octal 027-->
+  <Set name="umask">23</Set>decimal, equivalent to octal 027
   <Set name="uid"><Property name="zimbra_uid"/></Set>
   <Set name="gid"><Property name="zimbra_gid"/></Set>
+  -->
 </Configure>
 
