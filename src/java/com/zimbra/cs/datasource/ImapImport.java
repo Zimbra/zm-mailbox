@@ -90,7 +90,8 @@ public class ImapImport implements MailItemImport {
     private static FetchProfile FETCH_PROFILE;
 
     private static final int FETCH_SIZE = LC.data_source_fetch_size.intValue();
-    private static final int MAX_LITERAL_MEM_SIZE = LC.data_source_max_literal_mem_size.intValue();
+    private static final int MAX_MESSAGE_MEMORY_SIZE =
+        LC.data_source_max_message_memory_size.intValue();
 
     private static final boolean DEBUG = 
         Boolean.getBoolean("ZimbraJavamailDebug") || LC.javamail_imap_debug.booleanValue();
@@ -134,7 +135,7 @@ public class ImapImport implements MailItemImport {
 
     public ImapImport() {
         ImapConfig config = new ImapConfig();
-        config.setMaxLiteralMemSize(MAX_LITERAL_MEM_SIZE);
+        config.setMaxLiteralMemSize(MAX_MESSAGE_MEMORY_SIZE);
         mUidFetch = new UidFetch(config);
     }
     
