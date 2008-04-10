@@ -290,7 +290,7 @@ public class LC {
     
     public static final KnownKey data_source_trust_self_signed_certs;
     public static final KnownKey data_source_fetch_size;
-    public static final KnownKey data_source_max_literal_mem_size;
+    public static final KnownKey data_source_max_message_memory_size;
 
     public static final KnownKey timezone_file;
 
@@ -891,7 +891,7 @@ public class LC {
         
         data_source_trust_self_signed_certs = new KnownKey("data_source_trust_self_signed_certs", "false");
         data_source_fetch_size = new KnownKey("data_source_fetch_size", "5");
-        data_source_max_literal_mem_size = new KnownKey("data_source_max_literal_mem_size", "2097152"); // 2 megabytes
+        data_source_max_message_memory_size = new KnownKey("data_source_max_message_memory_size", "2097152"); // 2 megabytes
 
         timezone_file = new KnownKey("timezone_file");
         timezone_file.setDefault("${zimbra_home}" + FS + "conf" + FS + "timezones.ics");
