@@ -47,6 +47,8 @@ public class PrivilegedHandler {
     private static final String A_zimbraPop3SSLBindAddress = "zimbraPop3SSLBindAddress";
     private static final String A_zimbraPop3SSLServerEnabled = "zimbraPop3SSLServerEnabled";
     
+    private static final String A_zimbraSSLExcludeCipherSuites = "zimbraSSLExcludeCipherSuites";
+    
     private static final String mailboxd_keystore = "mailboxd_keystore";
     private static final String mailboxd_keystore_password = "mailboxd_keystore_password";
     private static final String mailboxd_truststore_password = "mailboxd_truststore_password";
@@ -60,6 +62,7 @@ public class PrivilegedHandler {
     public static void openPorts(Map<String, Object> attributes) {
         int port;
         String address;
+        String[] excludeCiphers;
         boolean nio_enabled = LC.nio_enabled.booleanValue(); // TODO move this to ldap
         
         try {
@@ -86,7 +89,8 @@ public class PrivilegedHandler {
                 if (nio_enabled || LC.nio_pop3_enabled.booleanValue()) {
                     NetUtil.bindNioServerSocket(address, port);
                 } else {
-                    NetUtil.bindSslTcpServerSocket(address, port);
+                    excludeCiphers = getExcludeCiphers(attributes);
+                    NetUtil.bindSslTcpServerSocket(address, port, excludeCiphers);
                 }
             }
 
@@ -103,10 +107,11 @@ public class PrivilegedHandler {
             if (getBooleanAttr(attributes, A_zimbraImapSSLServerEnabled, false)) {
             	port = getIntAttr(attributes, A_zimbraImapSSLBindPort, D_IMAP_SSL_BIND_PORT);
             	address = getAttr(attributes, A_zimbraImapSSLBindAddress, null);
-                if (nio_enabled || LC.nio_imap_enabled.booleanValue()) {
+            	if (nio_enabled || LC.nio_imap_enabled.booleanValue()) {
                     NetUtil.bindNioServerSocket(address, port);
                 } else {
-                    NetUtil.bindSslTcpServerSocket(address, port);
+                    excludeCiphers = getExcludeCiphers(attributes);
+                    NetUtil.bindSslTcpServerSocket(address, port, excludeCiphers);
                 }
             }
 
@@ -152,5 +157,13 @@ public class PrivilegedHandler {
 	private static int getIntAttr(Map<String, Object> attributes, String name, int defaultValue) {
         Object v = attributes.get(name);
         return v == null ? defaultValue : ((Integer)v).intValue();
+	}
+	
+	private static String[] getExcludeCiphers(Map<String, Object> attributes) {
+	String ec = getAttr(attributes, A_zimbraSSLExcludeCipherSuites, null);
+	if (ec != null)
+	    return ec.split(" ");
+	else
+	    return null;
 	}
 }
