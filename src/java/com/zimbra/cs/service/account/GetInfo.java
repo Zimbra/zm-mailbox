@@ -35,6 +35,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeFlag;
 import com.zimbra.cs.account.AttributeManager;
+import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
@@ -125,6 +126,8 @@ public class GetInfo extends AccountDocumentHandler  {
                 }
             } catch (ServiceException e) { }
         }
+        
+        doCos(account, response);
 
         Map<String, Object> attrMap = account.getUnicodeAttrs();
         Locale locale = Provisioning.getInstance().getLocale(account);
@@ -164,6 +167,15 @@ public class GetInfo extends AccountDocumentHandler  {
         
         GetAccountInfo.addUrls(response, account);
         return response;
+    }
+    
+    static void doCos(Account acct, Element response) throws ServiceException {
+	Cos cos = Provisioning.getInstance().getCOS(acct);
+	if (cos != null) {
+	    Element eCos = response.addUniqueElement(AccountConstants.E_COS);
+	    eCos.addAttribute(AccountConstants.A_ID, cos.getId());
+	    eCos.addAttribute(AccountConstants.A_NAME, cos.getName());
+	}
     }
 
     static void doAttrs(Account acct, String locale, Element response, Map attrsMap) throws ServiceException {
