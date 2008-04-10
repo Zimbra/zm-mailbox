@@ -411,6 +411,7 @@ an authToken can be passed instead of account/password/preauth to validate an ex
     <accessed>{last-SOAP-access}</accessed>
     <recent>{recent-messages}</recent>
    ]
+   <cos name="cos-name" id="cos-id"/>
    <attrs>
     <attr name="{name}">{value}</a>
      ...
