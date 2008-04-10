@@ -689,22 +689,22 @@ public class LC {
         postfix_broken_sasl_auth_clients.setDefault("yes");
 
         postfix_command_directory  = new KnownKey("postfix_command_directory");
-        postfix_command_directory.setDefault("${zimbra_home}" + FS + "postfix-${postfix_version}" + FS + "sbin");
+        postfix_command_directory.setDefault("${zimbra_home}" + FS + "postfix" + FS + "sbin");
 
         postfix_daemon_directory  = new KnownKey("postfix_daemon_directory");
-        postfix_daemon_directory.setDefault("${zimbra_home}" + FS + "postfix-${postfix_version}" + FS + "libexec");
+        postfix_daemon_directory.setDefault("${zimbra_home}" + FS + "postfix" + FS + "libexec");
 
         postfix_header_checks  = new KnownKey("postfix_header_checks");
         postfix_header_checks.setDefault("pcre:${zimbra_home}" + FS + "conf" + FS + "postfix_header_checks");
 
         postfix_mailq_path  = new KnownKey("postfix_mailq_path");
-        postfix_mailq_path.setDefault("${zimbra_home}" + FS + "postfix-${postfix_version}" + FS + "sbin" + FS + "mailq");
+        postfix_mailq_path.setDefault("${zimbra_home}" + FS + "postfix" + FS + "sbin" + FS + "mailq");
 
         postfix_manpage_directory  = new KnownKey("postfix_manpage_directory");
-        postfix_manpage_directory.setDefault("${zimbra_home}" + FS + "postfix-${postfix_version}" + FS + "man");
+        postfix_manpage_directory.setDefault("${zimbra_home}" + FS + "postfix" + FS + "man");
 
         postfix_newaliases_path  = new KnownKey("postfix_newaliases_path");
-        postfix_newaliases_path.setDefault("${zimbra_home}" + FS + "postfix-${postfix_version}" + FS + "sbin" + FS + "newaliases");
+        postfix_newaliases_path.setDefault("${zimbra_home}" + FS + "postfix" + FS + "sbin" + FS + "newaliases");
 
         postfix_queue_directory  = new KnownKey("postfix_queue_directory");
         postfix_queue_directory.setDefault("${zimbra_home}" + FS + "data" + FS + "postfix" + FS + "spool");
@@ -713,7 +713,7 @@ public class LC {
         postfix_sender_canonical_maps.setDefault("ldap:${zimbra_home}" + FS + "conf" + FS + "ldap-scm.cf");
 
         postfix_sendmail_path  = new KnownKey("postfix_sendmail_path");
-        postfix_sendmail_path.setDefault("${zimbra_home}" + FS + "postfix-${postfix_version}" + FS + "sbin" + FS + "sendmail");
+        postfix_sendmail_path.setDefault("${zimbra_home}" + FS + "postfix" + FS + "sbin" + FS + "sendmail");
 
         postfix_smtpd_client_restrictions  = new KnownKey("postfix_smtpd_client_restrictions");
         postfix_smtpd_client_restrictions.setDefault("reject_unauth_pipelining");
@@ -740,7 +740,7 @@ public class LC {
         postfix_transport_maps.setDefault("ldap:${zimbra_home}" + FS + "conf" + FS + "ldap-transport.cf");
 
         postfix_version  = new KnownKey("postfix_version");
-        postfix_version.setDefault("2.4.3.4z");
+        postfix_version.setDefault("2.4.7.5z");
 
         postfix_virtual_alias_domains  = new KnownKey("postfix_virtual_alias_domains");
         postfix_virtual_alias_domains.setDefault("ldap:${zimbra_home}" + FS + "conf" + FS + "ldap-vad.cf");
