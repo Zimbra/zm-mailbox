@@ -17,6 +17,7 @@
 package com.zimbra.cs.datasource;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -63,6 +64,9 @@ public class Pop3Import implements MailItemImport {
     private static Session sSession;
     private static Session sSelfSignedCertSession;
     private static FetchProfile UID_PROFILE;
+
+    private static final int MAX_MESSAGE_MEMORY_SIZE =
+        LC.data_source_max_message_memory_size.intValue();
     
     static {
     	
@@ -79,6 +83,8 @@ public class Pop3Import implements MailItemImport {
         	props.setProperty("mail.pop3.starttls.enable", "true");
         	props.setProperty("mail.pop3s.starttls.enable", "true");
         }
+        props.setProperty("mail.pop3.max.message.memory.size",
+                          String.valueOf(MAX_MESSAGE_MEMORY_SIZE));
         sSession = Session.getInstance(props);
         if (LC.javamail_pop3_debug.booleanValue())
         	sSession.setDebug(true);
@@ -218,22 +224,27 @@ public class Pop3Import implements MailItemImport {
                 }
             }
 
-            // Add message to mailbox.  Validate the timestamp to avoid out-of-range
-            // error in the database (see bug 17031).
-            ParsedMessage pm;
-            Date sentDate = pop3Msg.getSentDate();
-            if (sentDate != null) {
-                // Set received date to the original message's date
-                pm = new ParsedMessage(pop3Msg, sentDate.getTime(),
-                    mbox.attachmentsIndexingEnabled());
-            } else {
-                // Otherwise use current time if date invalid
-                pm = new ParsedMessage(pop3Msg, mbox.attachmentsIndexingEnabled());
-            }
-            
-            int msgid = addMessage(mbox, ds, pm, ds.getFolderId());
-            if (ds.leaveOnServer()) {
-                DbPop3Message.storeUid(mbox, ds.getId(), folder.getUID(pop3Msg), msgid);
+            try {
+                // Add message to mailbox.  Validate the timestamp to avoid out-of-range
+                // error in the database (see bug 17031).
+                ParsedMessage pm;
+                Date sentDate = pop3Msg.getSentDate();
+                if (sentDate != null) {
+                    // Set received date to the original message's date
+                    pm = new ParsedMessage(pop3Msg, sentDate.getTime(),
+                        mbox.attachmentsIndexingEnabled());
+                } else {
+                    // Otherwise use current time if date invalid
+                    pm = new ParsedMessage(pop3Msg, mbox.attachmentsIndexingEnabled());
+                }
+
+                int msgid = addMessage(mbox, ds, pm, ds.getFolderId());
+
+                if (ds.leaveOnServer()) {
+                    DbPop3Message.storeUid(mbox, ds.getId(), folder.getUID(pop3Msg), msgid);
+                }
+            } finally {
+                pop3Msg.dispose();
             }
         }
 
