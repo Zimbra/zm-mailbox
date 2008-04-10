@@ -386,7 +386,7 @@ public class MailSender {
         
         boolean addMailer = prov.getConfig().getBooleanAttr(Provisioning.A_zimbraSmtpSendAddMailer, true);
         if (addMailer) {
-            String ua = octxt.getUserAgent();
+            String ua = octxt != null ? octxt.getUserAgent() : null;
             String mailer = "Zimbra " + BuildInfo.VERSION + ((ua==null)?"":" (" + ua + ")");
             mm.addHeader(X_MAILER, mailer);
         }
