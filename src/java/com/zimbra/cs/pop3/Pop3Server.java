@@ -49,9 +49,10 @@ public class Pop3Server extends TcpServer implements RealtimeStatsCallback {
         return new TcpPop3Handler(this);
     }
 
+    // not used?
     public static void bindServerSocket(String addr, int port, boolean ssl)
             throws IOException {
-        NetUtil.bindServerSocket(addr, port, ssl, MinaPop3Server.isEnabled());
+        NetUtil.bindServerSocket(addr, port, ssl, MinaPop3Server.isEnabled(), null);
     }
 
     public synchronized static void startupPop3Server() throws ServiceException {

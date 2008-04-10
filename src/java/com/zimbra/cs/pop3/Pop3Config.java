@@ -51,6 +51,8 @@ public class Pop3Config extends ServerConfig {
                                         DEFAULT_NUM_THREADS));
         if (ssl) {
             setSSLEnabled(ssl);
+            com.zimbra.cs.account.Config config = prov.getConfig();
+            setSSLExcludeCiphers(config.getMultiAttr(A_zimbraSSLExcludeCipherSuites));
             setBindAddress(server.getAttr(A_zimbraPop3SSLBindAddress));
             setBindPort(server.getIntAttr(A_zimbraPop3SSLBindPort,
                                           DEFAULT_SSL_BIND_PORT));

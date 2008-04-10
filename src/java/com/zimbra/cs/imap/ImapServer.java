@@ -56,9 +56,10 @@ public class ImapServer extends TcpServer implements RealtimeStatsCallback {
         return new TcpImapHandler(this);
     }
 
+    // not used?
     public static void bindServerSocket(String addr, int port, boolean ssl)
             throws IOException {
-        NetUtil.bindServerSocket(addr, port, ssl, MinaImapServer.isEnabled());
+        NetUtil.bindServerSocket(addr, port, ssl, MinaImapServer.isEnabled(), null);
     }
     
     public synchronized static void startupImapServer() throws ServiceException {

@@ -32,6 +32,7 @@ public class ServerConfig {
     private int mBindPort = -1;
     private int mNumThreads = -1;
     private boolean mSSLEnabled;
+    private String[] mSSLExcludeCiphers;
 
     public ServerConfig() {
         String name = LC.zimbra_server_hostname.value();
@@ -96,10 +97,18 @@ public class ServerConfig {
     public boolean isSSLEnabled() {
         return mSSLEnabled;
     }
+    
+    public void setSSLExcludeCiphers(String[] excludeCiphers) {
+	mSSLExcludeCiphers = excludeCiphers;
+    }
+    
+    public String[] getSSLExcludeCiphers() {
+	return mSSLExcludeCiphers;
+    }
 
     public ServerSocket getServerSocket() throws ServiceException {
         return isSSLEnabled() ?
-            NetUtil.getSslTcpServerSocket(getBindAddress(), getBindPort()) :
+            NetUtil.getSslTcpServerSocket(getBindAddress(), getBindPort(), getSSLExcludeCiphers()) :
             NetUtil.getTcpServerSocket(getBindAddress(), getBindPort());
     }
 

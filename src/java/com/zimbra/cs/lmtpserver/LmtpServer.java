@@ -42,9 +42,10 @@ public class LmtpServer extends TcpServer {
         return new TcpLmtpHandler(this);
     }
 
+    // not used?
     public static void bindServerSocket(String addr, int port)
             throws IOException {
-        NetUtil.bindServerSocket(addr, port, false, MinaLmtpServer.isEnabled());
+        NetUtil.bindServerSocket(addr, port, false, MinaLmtpServer.isEnabled(), null);
     }
     
     public static void startupLmtpServer() throws ServiceException {

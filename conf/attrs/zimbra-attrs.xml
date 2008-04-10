@@ -3089,4 +3089,22 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether or not zimlet tree is expanded</desc>
 </attr>
 
+<attr id="639" name="zimbraSSLExcludeCipherSuites" type="string" cardinality="multi" optionalIn="globalConfig">
+  <globalConfigValue>SSL_RSA_WITH_DES_CBC_SHA</globalConfigValue>
+  <globalConfigValue>SSL_DHE_RSA_WITH_DES_CBC_SHA</globalConfigValue>
+  <globalConfigValue>SSL_DHE_DSS_WITH_DES_CBC_SHA</globalConfigValue> 
+  <globalConfigValue>SSL_RSA_EXPORT_WITH_RC4_40_MD5</globalConfigValue> 
+  <globalConfigValue>SSL_RSA_EXPORT_WITH_DES40_CBC_SHA</globalConfigValue> 
+  <globalConfigValue>SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA</globalConfigValue> 
+  <globalConfigValue>SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA</globalConfigValue>
+  <desc>space separated list of excluded cipher suites</desc>
+</attr>
+
+<attr id="640" name="zimbraReverseProxySSLCiphers" type="string" cardinality="single" optionalIn="globalConfig">
+  <globalConfigValue>SSL_RSA_WITH_DES_CBC_SHA SSL_DHE_RSA_WITH_DES_CBC_SHA SSL_DHE_DSS_WITH_DES_CBC_SHA SSL_RSA_EXPORT_WITH_RC4_40_MD5 SSL_RSA_EXPORT_WITH_DES40_CBC_SHA SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA</globalConfigValue>
+  <desc>permitted ciphers for reverse proxy. Ciphers are in the formats supported by OpenSSL 
+        e.g. ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP;
+  </desc>
+</attr>
+
 </attrs>
