@@ -74,7 +74,9 @@ public class HostedAuth extends ZimbraCustomAuth {
 		} else
 			method = new GetMethod(targetURL);
 		
-		method.addRequestHeader(HEADER_CLIENT_IP,context.get(AuthContext.AC_ORIGINATING_CLIENT_IP).toString());
+		if(context.get(AuthContext.AC_ORIGINATING_CLIENT_IP)!=null)
+			method.addRequestHeader(HEADER_CLIENT_IP,context.get(AuthContext.AC_ORIGINATING_CLIENT_IP).toString());
+		
 		method.addRequestHeader(HEADER_AUTH_USER,acct.getName());
 		method.addRequestHeader(HEADER_AUTH_PASSWORD,password);
 		//method.addRequestHeader(HEADER_AUTH_PROTOCOL,authProtocol);
