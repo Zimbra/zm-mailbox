@@ -238,28 +238,6 @@ extends TestCase {
         send(socket, null, IMAP_LOGOUT_RESPONSE2);
     }
     
-    
-    public void testCiphers() throws Exception {
-        Socket socket = DummySSLSocketFactory.getDefault().createSocket(HOSTNAME, mPop3SslPort);
-        SSLSocket sslSocket = (SSLSocket)socket;
-
-        // use an excluded cipher suite 
-        sslSocket.setEnabledCipherSuites(new String[] {"SSL_RSA_WITH_DES_CBC_SHA"});
-
-        boolean good = false;
-        try {
-            send(socket, "", POP3_CONNECT_RESPONSE);
-            send(socket, POP3_USER, POP3_USER_RESPONSE);
-            send(socket, POP3_PASS, POP3_PASS_RESPONSE);
-            send(socket, POP3_QUIT, POP3_QUIT_RESPONSE);
-        } catch (javax.net.ssl.SSLHandshakeException e) {
-            good = true;
-        } finally {
-            socket.close();
-        }
-        assertTrue(good);
-    }
-    
     public void tearDown()
     throws Exception {
         setPop3Cleartext(mOrigPop3CleartextLoginEnabled);
