@@ -41,6 +41,7 @@ public class ZGetInfoResult {
     private long mLifetime;
     private long mExpiration;
     private long mMailboxQuotaUsed;
+    private String mRecent;
     private Map<String, List<String>> mAttrs;
     private Map<String, List<String>> mPrefAttrs;
     private ZPrefs mPrefs;
@@ -82,7 +83,7 @@ public class ZGetInfoResult {
         mPrefAttrs = getMap(e, AccountConstants.E_PREFS, AccountConstants.E_PREF);
         mPrefs = new ZPrefs(mPrefAttrs);
         mFeatures = new ZFeatures(mAttrs);
-
+        mRecent = e.getAttribute(AccountConstants.E_RECENT_MSGS, "0");
         mRestURLBase = e.getAttribute(AccountConstants.E_REST, null);
 
         mMailURLs = new ArrayList<String>();
@@ -172,6 +173,10 @@ public class ZGetInfoResult {
         return mLifetime;
     }
 
+    public String getRecent() {
+        return mRecent;
+    }
+
     public List<String> getMailURL() {
         return mMailURLs;
     }
@@ -209,6 +214,7 @@ public class ZGetInfoResult {
         sb.addDate("expiration", mExpiration);
         sb.add("lifetime", mLifetime);
         sb.add("mailboxQuotaUsed", mMailboxQuotaUsed);
+        sb.add("recent", mRecent);
         sb.add("attrs", mAttrs);
         sb.add("prefs", mPrefAttrs);
         sb.add("mailURLs", mMailURLs, true, true);
