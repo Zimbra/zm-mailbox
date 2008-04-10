@@ -54,6 +54,8 @@ public class PlotSettings {
     private String mDataFunction;
     private String mAggregateFunction;
     private boolean mOptional;
+    private String mRatioTop;
+    private String mRatioBottom;
 
     public PlotSettings(String legend, String infile,
                         String dataCol, boolean showRaw,
@@ -61,7 +63,7 @@ public class PlotSettings {
                         double multiplier, double divisor,
                         boolean nonNegative, boolean percentTime,
                         String dataFunction, String aggFunction,
-                        boolean optional) {
+                        boolean optional, String ratioTop, String ratioBottom) {
         mLegend = legend;
         mInfile = infile;
         mDataColumn = dataCol;
@@ -77,9 +79,13 @@ public class PlotSettings {
         mDataFunction = dataFunction;
         mAggregateFunction = aggFunction;
         mOptional = optional;
+        mRatioTop = ratioTop;
+        mRatioBottom = ratioBottom;
 
         if (mLegend == null || mLegend.length() < 1)
             mLegend = mDataColumn;
+        if (mLegend == null) // must be a ratio
+            mLegend = "(" + mRatioTop + ")" + " / " + "(" + mRatioBottom + ")";
 
         if (mInfile == null || mInfile.length() < 1)
             throw new IllegalArgumentException(
@@ -98,6 +104,7 @@ public class PlotSettings {
     public String getLegend() { return mLegend; }
     public String getInfile() { return mInfile; }
     public String getDataColumn() { return mDataColumn; }
+    public void setDataColumn(String c) { mDataColumn = c; }
     public boolean getShowRaw() { return mShowRaw; }
     public boolean getShowMovingAvg() { return mShowMovingAvg; }
     public int getMovingAvgPoints() { return mMovingAvgPoints; }
@@ -108,6 +115,8 @@ public class PlotSettings {
     public String getDataFunction() { return mDataFunction; }
     public String getAggregateFunction() { return mAggregateFunction; }
     public boolean getOptional() { return mOptional; }
+    public String getRatioTop() { return mRatioTop; }
+    public String getRatioBottom() { return mRatioBottom; }
 
     public String toString() {
         StringBuilder sb = new StringBuilder();
