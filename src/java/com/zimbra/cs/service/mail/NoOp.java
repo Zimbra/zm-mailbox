@@ -83,6 +83,10 @@ public class NoOp extends MailDocumentHandler  {
             wait = false;
         
         if (wait) {
+            if (!zsc.hasSession()) {
+                throw ServiceException.INVALID_REQUEST("Cannot execute a NoOpRequest with wait=\"1\" without a session."+
+                                                       "  Set the <session> flag in the <context> of your request", null);
+            }
             if (!context.containsKey(SoapServlet.IS_RESUMED_REQUEST)) {
                 Continuation continuation = ContinuationSupport.getContinuation(servletRequest, zsc);
                 

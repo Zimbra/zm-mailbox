@@ -378,7 +378,10 @@ public class ZimbraSoapContext {
     public boolean hasCreatedSession() {
         return mSessionInfo != null && mSessionInfo.created;
     }
-
+    
+    public boolean hasSession() {
+        return mSessionInfo != null;
+    }
 
     public boolean beginWaitForNotifications(Continuation continuation, boolean includeDelegates) throws ServiceException {
         mWaitForNotifications = true;
