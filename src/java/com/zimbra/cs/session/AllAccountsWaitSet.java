@@ -19,11 +19,11 @@ package com.zimbra.cs.session;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
@@ -39,24 +39,20 @@ import com.zimbra.cs.redolog.RedoLogProvider;
  */
 public final class AllAccountsWaitSet extends WaitSetBase {
     
-    private static HashSet<AllAccountsWaitSet> sAllAccountsWaitSets = new LinkedHashSet<AllAccountsWaitSet>();
-    private static int sInterestMask = 0;
+    private static Map<AllAccountsWaitSet, String> sAllAccountsWaitSets = new ConcurrentHashMap<AllAccountsWaitSet, String>();
+    private static volatile int sInterestMask = 0;
     
     /** Callback from the Mailbox object when a transaction has completed in some Mailbox */
     public static final void mailboxChangeCommitted(String commitIdStr, String accountId, int changedTypesMask) {
-        synchronized(sAllAccountsWaitSets) {
-            if (sAllAccountsWaitSets.size() > 0 && ((changedTypesMask & sInterestMask) != 0)) {
-                for (AllAccountsWaitSet ws : sAllAccountsWaitSets) {
-                    ws.onMailboxChangeCommitted(commitIdStr, accountId, changedTypesMask);
-                }
+        if ((changedTypesMask & sInterestMask) != 0) {
+            for (AllAccountsWaitSet ws : sAllAccountsWaitSets.keySet()) {
+                ws.onMailboxChangeCommitted(commitIdStr, accountId, changedTypesMask);
             }
         }
     }
     
     public static final boolean isCallbackNecessary(int changeMask) {
-        synchronized(sAllAccountsWaitSets) {
-            return (changeMask & sInterestMask) != 0;
-        }
+        return (changeMask & sInterestMask) != 0;
     }
     
     /**
@@ -96,15 +92,6 @@ public final class AllAccountsWaitSet extends WaitSetBase {
     /** private constructor */
     private AllAccountsWaitSet(String ownerAccountId, String id, int defaultInterest, boolean bufferCommitsAtCreate) {
         super(ownerAccountId, id, defaultInterest);
-        synchronized(sAllAccountsWaitSets) {
-            sAllAccountsWaitSets.add(this);
-            
-            // update the static interest mask
-            sInterestMask = 0;
-            for (AllAccountsWaitSet ws : sAllAccountsWaitSets) {
-                sInterestMask |= ws.getDefaultInterest();
-            }
-        }
         mCurrentSeqNo = "0";
         mCbSeqNo = "0";
         if (bufferCommitsAtCreate) {
@@ -112,7 +99,18 @@ public final class AllAccountsWaitSet extends WaitSetBase {
         } else {
             mBufferedCommits = null;
         }
-           
+        
+        // add us to the global set of AllAccounts waitsets, update the global interest mask
+        synchronized(sAllAccountsWaitSets) {
+            sAllAccountsWaitSets.put(this, "");
+            
+            // update the static interest mask
+            int newMask = 0;
+            for (AllAccountsWaitSet ws : sAllAccountsWaitSets.keySet()) {
+                newMask |= ws.getDefaultInterest();
+            }
+            sInterestMask = newMask;
+        }
     }
     
     /* @see com.zimbra.cs.session.IWaitSet#doWait(com.zimbra.cs.session.WaitSetCallback, java.lang.String, boolean, java.util.List, java.util.List, java.util.List) */
@@ -225,10 +223,11 @@ public final class AllAccountsWaitSet extends WaitSetBase {
             sAllAccountsWaitSets.remove(this);
             
             // update the static interest mask
-            sInterestMask = 0;
-            for (AllAccountsWaitSet ws : sAllAccountsWaitSets) {
-                sInterestMask |= ws.getDefaultInterest();
+            int newMask = 0;
+            for (AllAccountsWaitSet ws : sAllAccountsWaitSets.keySet()) {
+                newMask |= ws.getDefaultInterest();
             }
+            sInterestMask = newMask;
         }
         return null;
     }
