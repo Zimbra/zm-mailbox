@@ -28,6 +28,7 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthContext;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 
 public class HostedAuth extends ZimbraCustomAuth {
@@ -36,7 +37,7 @@ public class HostedAuth extends ZimbraCustomAuth {
 	public static String HEADER_AUTH_PASSWORD = "Auth-Pass";
 	//public static String HEADER_AUTH_PROTOCOL = "Auth-Protocol";
 	//public static String HEADER_AUTH_LOGIN_ATTEMPT = "Auth-Login-Attempt";
-	//public static String HEADER_CLIENT_IP = "Client-IP";
+	public static String HEADER_CLIENT_IP = "Client-IP";
 	public static String HEADER_AUTH_STATUS = "Auth-Status";
 	//public static String HEADER_AUTH_SERVER = "Auth-Server";
 	//public static String HEADER_AUTH_PORT = "Auth-Port";
@@ -73,7 +74,7 @@ public class HostedAuth extends ZimbraCustomAuth {
 		} else
 			method = new GetMethod(targetURL);
 		
-		//method.addRequestHeader(HEADER_AUTH_METHOD,authMethod);
+		method.addRequestHeader(HEADER_CLIENT_IP,context.get(AuthContext.AC_ORIGINATING_CLIENT_IP).toString());
 		method.addRequestHeader(HEADER_AUTH_USER,acct.getName());
 		method.addRequestHeader(HEADER_AUTH_PASSWORD,password);
 		//method.addRequestHeader(HEADER_AUTH_PROTOCOL,authProtocol);
