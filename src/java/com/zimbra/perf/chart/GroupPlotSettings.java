@@ -29,7 +29,7 @@ public class GroupPlotSettings extends PlotSettings {
             boolean optional) {
         super(groupBy, infile, dataCol, showRaw, showMovingAvg,
                 movingAvgPoints, multiplier, divisor, nonNegative,
-                percentTime, dataFunction, aggFunction, optional);
+                percentTime, dataFunction, aggFunction, optional, null, null);
         mGroupBy = groupBy;
     }
 

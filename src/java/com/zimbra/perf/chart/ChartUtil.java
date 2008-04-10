@@ -25,7 +25,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.io.RandomAccessFile;
 import java.io.Reader;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -80,6 +79,7 @@ public class ChartUtil {
     private static final String OPT_NO_SUMMARY = "no-summary";
     
     private final static String GROUP_PLOT_SYNTHETIC = "group-plot-synthetic$";
+    private final static String RATIO_PLOT_SYNTHETIC = "ratio-plot-synthetic$";
 
     private static final SimpleDateFormat[] sDateFormats = {
             new SimpleDateFormat("MM/dd/yyyy HH:mm:ss"),
@@ -384,8 +384,20 @@ public class ChartUtil {
                 for (PlotSettings ps : plots) {
                     String infile = ps.getInfile();
                     String column = ps.getDataColumn();
-                    DataColumn dc = new DataColumn(infile, column);
-                    mUniqueDataColumns.add(dc);
+                    if (column == null) {
+                        String[] top = ps.getRatioTop().split("\\+");
+                        String[] bottom = ps.getRatioBottom().split("\\+");
+                        ArrayList<String> cols = new ArrayList<String>();
+                        cols.addAll(Arrays.asList(top));
+                        cols.addAll(Arrays.asList(bottom));
+                        for (String c : cols) {
+                            DataColumn dc = new DataColumn(infile, c);
+                            mUniqueDataColumns.add(dc);
+                        }
+                    } else {
+                        DataColumn dc = new DataColumn(infile, column);
+                        mUniqueDataColumns.add(dc);
+                    }
                 }
                 for (GroupPlotSettings gps : cs.getGroupPlots()) {
                     String infile = gps.getInfile();
@@ -1064,7 +1076,8 @@ public class ChartUtil {
                         gps.getMovingAvgPoints(),   gps.getMultiplier(),
                         gps.getDivisor(),           gps.getNonNegative(),
                         gps.getPercentTime(),       gps.getDataFunction(),
-                        gps.getAggregateFunction(), gps.getOptional());
+                        gps.getAggregateFunction(), gps.getOptional(),
+                        null, null);
                 cs.addPlot(syntheticPlot);
                 if (cs.getOutDocument() != null) {
                     ChartSettings s = new ChartSettings(
@@ -1091,6 +1104,50 @@ public class ChartUtil {
 
         List<PlotSettings> plots = cs.getPlots();
         for (PlotSettings ps : plots) {
+            String columnName = ps.getDataColumn();
+            if (columnName == null) {
+                columnName = RATIO_PLOT_SYNTHETIC + ps.getRatioTop() +
+                        "/" + ps.getRatioBottom();
+                String infile = ps.getInfile();
+                String[] top = ps.getRatioTop().split("\\+");
+                String[] bottom = ps.getRatioBottom().split("\\+");
+                DataColumn[] ratioTop = new DataColumn[top.length];
+                DataColumn[] ratioBottom = new DataColumn[bottom.length];
+                for (int i = 0, j = top.length; i < j; i++)
+                    ratioTop[i] = new DataColumn(infile, top[i]);
+                for (int i = 0, j = bottom.length; i < j; i++)
+                    ratioBottom[i] = new DataColumn(infile, bottom[i]);
+                DataSeries[] topData = new DataSeries[ratioTop.length];
+                DataSeries[] bottomData = new DataSeries[ratioBottom.length];
+                for (int i = 0, j = ratioTop.length; i < j; i++)
+                    topData[i] = mDataSeries.get(ratioTop[i]);
+                for (int i = 0, j = ratioBottom.length; i < j; i++)
+                    bottomData[i] = mDataSeries.get(ratioBottom[i]);
+                DataSeries ds = new DataSeries();
+                for (int i = 0, j = topData[0].size(); i < j; i++) {
+                    double topValue = 0.0;
+                    double bottomValue = 0.0;
+                    double ratio = 0.0;
+                    Entry lastEntry = null;
+                    for (int m = 0, n = topData.length; m < n; m++) {
+                        Entry e = topData[m].get(i);
+                        topValue += e.getVal();;
+                    }
+                    for (int m = 0, n = bottomData.length; m < n; m++) {
+                        Entry e = bottomData[m].get(i);
+                        bottomValue += e.getVal();;
+                        lastEntry = e;
+                    }
+                    if (bottomValue != 0.0) {
+                        ratio = topValue / bottomValue;
+                    }
+                    // should never be null
+                    assert lastEntry != null;
+                    ds.AddEntry(lastEntry.getTimestamp(), ratio);
+                }
+                mDataSeries.put(new DataColumn(infile, columnName), ds);
+                ps.setDataColumn(columnName);
+            }
             DataColumn dc = new DataColumn(ps.getInfile(), ps.getDataColumn());
             DataSeries ds = mDataSeries.get(dc);
             TimeSeries ts = new TimeSeries(ps.getLegend(),

@@ -62,7 +62,8 @@ public class XMLChartConfig {
     public static final String A_PLOT_DATA_FUNCTION = "dataFunction";
     public static final String A_PLOT_AGGREGATE_FUNCTION = "aggregateFunction";
     public static final String A_PLOT_OPTIONAL = "optional";
-    
+    public static final String A_PLOT_RATIO_TOP = "ratioTop";
+    public static final String A_PLOT_RATIO_BOTTOM = "ratioBottom";
     public static final String A_PLOT_GROUP_BY = "groupBy";
 
     private static String getAttr(Element elem, String name)
@@ -169,8 +170,8 @@ public class XMLChartConfig {
         if (!chartsElem.getName().equals(E_CHARTS))
             throw new DocumentException("Missing <" + E_CHARTS
                     + "> root element");
-        for (Iterator iter = chartsElem.elementIterator(E_CHART); iter
-                .hasNext();) {
+        for (Iterator iter = chartsElem.elementIterator(E_CHART);
+                iter.hasNext();) {
             Element chartElem = (Element) iter.next();
             String chartTitle = getAttr(chartElem, A_CHART_TITLE);
             String category = getAttr(chartElem, A_CHART_CATEGORY, "unknown");
@@ -196,10 +197,10 @@ public class XMLChartConfig {
             ChartSettings chart = new ChartSettings(chartTitle, category, outfile, xAxis,
                     yAxis, allowLogScale, plotZero, width, height, outDoc);
 
-            for (Iterator plotIter = chartElem.elementIterator(E_PLOT); plotIter
-                    .hasNext();) {
+            for (Iterator plotIter = chartElem.elementIterator(E_PLOT);
+                    plotIter.hasNext();) {
                 Element plotElem = (Element) plotIter.next();
-                String dataCol = getAttr(plotElem, A_PLOT_DATA_COLUMN);
+                String dataCol = getAttr(plotElem, A_PLOT_DATA_COLUMN, null);
 
                 // inheritable attributes
                 String legend = getInheritedAttr(plotElem, A_PLOT_LEGEND, null);
@@ -228,7 +229,19 @@ public class XMLChartConfig {
                         PlotSettings.DEFAULT_PLOT_DATA_FUNCTION);
                 String aggFunction = getAttr(plotElem, A_PLOT_AGGREGATE_FUNCTION,
                         PlotSettings.DEFAULT_PLOT_AGGREGATE_FUNCTION);
+                String ratioTop = getAttr(plotElem, A_PLOT_RATIO_TOP, null);
+                String ratioBottom = getAttr(plotElem,
+                        A_PLOT_RATIO_BOTTOM, null);
 
+                if ((ratioTop == null && ratioBottom != null)
+                        || (ratioTop != null && ratioBottom == null)) {
+                    throw new DocumentException(
+                            "Both ratioTop/ratioBottom need to be specified");
+                }
+                if ((ratioTop == null && dataCol == null)
+                        || (ratioTop != null && dataCol != null)) {
+                    throw new DocumentException("Specify either ratio or data");
+                }
                 boolean optional = getInheritedAttrBoolean(plotElem,
                         A_PLOT_OPTIONAL,
                         PlotSettings.DEFAULT_PLOT_OPTIONAL);
@@ -237,7 +250,8 @@ public class XMLChartConfig {
                         legend, infile, dataCol, showRaw, showMovingAvg,
                         movingAvgPoints, multiplier, divisor,
                         nonNegative, percentTime,
-                        dataFunction, aggFunction, optional);
+                        dataFunction, aggFunction, optional,
+                        ratioTop, ratioBottom);
                 chart.addPlot(plot);
             }
             for (Iterator plotIter = chartElem.elementIterator(E_GROUP_PLOT);
