@@ -421,17 +421,15 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
                             if (stripAtBeforeRegex)
                                 if (compareTo.length() > 1 && compareTo.charAt(0)=='@')
                                     compareTo = compareTo.substring(1);
-                            ZimbraLog.index.info("Browse Regex Check comparing \""+compareTo+"\" to regexp \""+regex+"\"");
                             if (!(p.matcher(compareTo).matches()))
                                 skipIt = true;
                         }
-
+                        
                         if (!skipIt) {
                             // NOTE: the term could exist in docs, but they might all be deleted. Unfortunately this means  
                             // that we need to actually walk the TermDocs enumeration for this document to see if it is
                             // non-empty
                             if ((!hasDeletions) || (iReader.termDocs(cur).next())) {
-                                ZimbraLog.index.info("Adding term: "+cur.toString()+" freq="+terms.docFreq());
                                 callback.onTerm(cur, terms.docFreq());
                             }
                         }
