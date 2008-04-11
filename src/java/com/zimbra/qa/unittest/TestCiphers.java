@@ -38,6 +38,8 @@ import com.zimbra.cs.account.Server;
 public class TestCiphers
 extends TestCase {
 
+    private static final String[] EXCLUDED_CIPHERS = new String[] {"SSL_RSA_WITH_DES_CBC_SHA"};
+    
     private static final String CRLF = "\r\n";
     private static final String HOSTNAME = "localhost";
     
@@ -80,13 +82,13 @@ extends TestCase {
 	    "</soap:Envelope>";
     
     private static final String HTTP_SOAP_PING = 
-    "POST /service/admin/soap/ HTTP/1.1" + CRLF +
-    "Content-Type: text/xml; charset=utf-8" + CRLF +
-    "User-Agent: Jakarta Commons-HttpClient/3.0" + CRLF +
-    "Host: localhost:7070" + CRLF +
-    "Content-Length: " + SOAP_ENV.length() + CRLF +
-    CRLF +
-    SOAP_ENV;
+            "POST /service/admin/soap/ HTTP/1.1" + CRLF +
+            "Content-Type: text/xml; charset=utf-8" + CRLF +
+            "User-Agent: Jakarta Commons-HttpClient/3.0" + CRLF +
+            "Host: localhost:7070" + CRLF +
+            "Content-Length: " + SOAP_ENV.length() + CRLF +
+            CRLF +
+            SOAP_ENV;
     
     private static final String HTTP_SOAP_PING_RESPONSE = "HTTP/1.1 200 OK";
     
@@ -114,54 +116,108 @@ extends TestCase {
         mHttpCleartextPort = server.getIntAttr(Provisioning.A_zimbraMailPort, 7070);
         mHttpSslPort = server.getIntAttr(Provisioning.A_zimbraAdminPort, 7071); // use zimbraAdminPort for testing because zimbraMailSSL Port may not be enabled 
     }
+    
+    private void setEnabledCipherSuites(Socket socket) {
+	SSLSocket sslSocket = (SSLSocket)socket;
+	sslSocket.setEnabledCipherSuites(EXCLUDED_CIPHERS);
+    }
         
-    public void pop3Test(boolean usedExcludeCipher) throws Exception {
-        Socket socket = DummySSLSocketFactory.getDefault().createSocket(HOSTNAME, mPop3SslPort);
-        SSLSocket sslSocket = (SSLSocket)socket;
+    public void pop3(boolean useExcludedCipher) throws Exception {
+        // Test cleartext
+        Socket socket = new Socket(HOSTNAME, mPop3CleartextPort);
+        send(socket, "", POP3_CONNECT_RESPONSE);
+        send(socket, POP3_USER, POP3_USER_RESPONSE);
+        send(socket, POP3_PASS, POP3_PASS_RESPONSE);
+        send(socket, POP3_QUIT, POP3_QUIT_RESPONSE);
+        socket.close();
 
-        // use an excluded cipher suite 
-        if (usedExcludeCipher)
-            sslSocket.setEnabledCipherSuites(new String[] {"SSL_RSA_WITH_DES_CBC_SHA"});
-
+        // Test SSL
         boolean good = false;
+        socket = DummySSLSocketFactory.getDefault().createSocket(HOSTNAME, mPop3SslPort);
+        if (useExcludedCipher)
+            setEnabledCipherSuites(socket);
         try {
             send(socket, "", POP3_CONNECT_RESPONSE);
             send(socket, POP3_USER, POP3_USER_RESPONSE);
             send(socket, POP3_PASS, POP3_PASS_RESPONSE);
             send(socket, POP3_QUIT, POP3_QUIT_RESPONSE);
-            good = !usedExcludeCipher;
+            good = !useExcludedCipher;
         } catch (javax.net.ssl.SSLHandshakeException e) {
-            good = usedExcludeCipher;
+            good = useExcludedCipher;
         } finally {
             socket.close();
         }
-        assertTrue(good);
+        
+        // Test TLS
+        good = false;
+        socket = new Socket(HOSTNAME, mPop3CleartextPort);
+        send(socket, "", POP3_CONNECT_RESPONSE);
+        send(socket, POP3_STLS, POP3_STLS_RESPONSE);
+        SSLSocketFactory factory = (SSLSocketFactory) DummySSLSocketFactory.getDefault();
+        socket = factory.createSocket(socket, HOSTNAME, mPop3CleartextPort, true);
+        if (useExcludedCipher)
+            setEnabledCipherSuites(socket);
+        try {
+            send(socket, POP3_USER, POP3_USER_RESPONSE);
+            send(socket, POP3_PASS, POP3_PASS_RESPONSE);
+            send(socket, POP3_QUIT, POP3_QUIT_RESPONSE);
+            good = !useExcludedCipher;
+        } catch (javax.net.ssl.SSLHandshakeException e) {
+            good = useExcludedCipher;
+        } finally {
+            socket.close();
+        }
     }
     
-    public void imapTest(boolean usedExcludeCipher) throws Exception {
-        Socket socket = DummySSLSocketFactory.getDefault().createSocket(HOSTNAME, mImapSslPort);
-        SSLSocket sslSocket = (SSLSocket)socket;
-
-        // use an excluded cipher suite 
-        if (usedExcludeCipher)
-            sslSocket.setEnabledCipherSuites(new String[] {"SSL_RSA_WITH_DES_CBC_SHA"});
-
+    public void imap(boolean useExcludedCipher) throws Exception {
+        // Test cleartext
+        Socket socket = new Socket(HOSTNAME, mImapCleartextPort);
+        send(socket, null, IMAP_CONNECT_RESPONSE);
+        send(socket, IMAP_LOGIN, IMAP_LOGIN_RESPONSE);
+        send(socket, IMAP_LOGOUT, IMAP_LOGOUT_RESPONSE1);
+        send(socket, null, IMAP_LOGOUT_RESPONSE2);
+        
+        // Test SSL
         boolean good = false;
+        socket = DummySSLSocketFactory.getDefault().createSocket(HOSTNAME, mImapSslPort);
+        if (useExcludedCipher)
+            setEnabledCipherSuites(socket);
         try {
             send(socket, null, IMAP_CONNECT_RESPONSE);
             send(socket, IMAP_LOGIN, IMAP_LOGIN_RESPONSE);
             send(socket, IMAP_LOGOUT, IMAP_LOGOUT_RESPONSE1);
             send(socket, null, IMAP_LOGOUT_RESPONSE2);
-            good = !usedExcludeCipher;
+            good = !useExcludedCipher;
         } catch (javax.net.ssl.SSLHandshakeException e) {
-            good = usedExcludeCipher;
+            good = useExcludedCipher;
+        } finally {
+            socket.close();
+        }
+        assertTrue(good);
+        
+        // Test TLS
+        good = false;
+        socket = new Socket(HOSTNAME, mImapCleartextPort);
+        send(socket, null, IMAP_CONNECT_RESPONSE);
+        send(socket, IMAP_STARTTLS, IMAP_STARTTLS_RESPONSE);
+        SSLSocketFactory factory = (SSLSocketFactory) DummySSLSocketFactory.getDefault();
+        socket = factory.createSocket(socket, HOSTNAME, mImapCleartextPort, true);
+        if (useExcludedCipher)
+            setEnabledCipherSuites(socket);
+        try {
+            send(socket, IMAP_LOGIN, IMAP_LOGIN_RESPONSE);
+            send(socket, IMAP_LOGOUT, IMAP_LOGOUT_RESPONSE1);
+            send(socket, null, IMAP_LOGOUT_RESPONSE2);
+            good = !useExcludedCipher;
+        } catch (javax.net.ssl.SSLHandshakeException e) {
+            good = useExcludedCipher;
         } finally {
             socket.close();
         }
         assertTrue(good);
     }
     
-    public void httpTest(boolean usedExcludeCipher) throws Exception {
+    public void http(boolean usedExcludeCipher) throws Exception {
         Socket socket = DummySSLSocketFactory.getDefault().createSocket(HOSTNAME, mHttpSslPort);
         SSLSocket sslSocket = (SSLSocket)socket;
 
@@ -182,18 +238,18 @@ extends TestCase {
     }
     
     public void testPop3() throws Exception {
-	pop3Test(true);
-	pop3Test(false);
+	pop3(true);
+	pop3(false);
     }
     
     public void testImap() throws Exception {
-	imapTest(true);
-	imapTest(false);
+	imap(true);
+	imap(false);
     }
     
     public void testHttp() throws Exception {
-	httpTest(true);
-	httpTest(false);
+	http(true);
+	http(false);
     }
     
     /**

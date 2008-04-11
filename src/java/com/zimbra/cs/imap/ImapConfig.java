@@ -60,10 +60,10 @@ public class ImapConfig extends ServerConfig {
     public ImapConfig(Provisioning prov, boolean ssl) throws ServiceException {
         Server server = prov.getLocalServer();
         setSSLEnabled(ssl);
-        if (ssl) {
-            com.zimbra.cs.account.Config config = prov.getConfig();
-            setSSLExcludeCiphers(config.getMultiAttr(A_zimbraSSLExcludeCipherSuites));
-        }
+        
+        // set excluded ciphers for SSL and TLS
+        com.zimbra.cs.account.Config config = prov.getConfig();
+        setSSLExcludeCiphers(config.getMultiAttr(A_zimbraSSLExcludeCipherSuites));
         
         String name = server.getAttr(A_zimbraImapAdvertisedName);
         if (name != null && name.length() > 0) setName(name);

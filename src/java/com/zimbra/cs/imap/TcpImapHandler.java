@@ -17,6 +17,7 @@
 package com.zimbra.cs.imap;
 
 import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.NetUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.session.SessionCache;
@@ -156,6 +157,7 @@ public class TcpImapHandler extends ImapHandler {
 
         SSLSocketFactory fac = (SSLSocketFactory) SSLSocketFactory.getDefault();
         SSLSocket tlsconn = (SSLSocket) fac.createSocket(mConnection, mConnection.getInetAddress().getHostName(), mConnection.getPort(), true);
+        NetUtil.setSSLEnabledCipherSuites(tlsconn, mConfig.getSSLExcludeCiphers());
         tlsconn.setUseClientMode(false);
         tlsconn.startHandshake();
         ZimbraLog.imap.debug("suite: " + tlsconn.getSession().getCipherSuite());

@@ -49,10 +49,13 @@ public class Pop3Config extends ServerConfig {
         setMaxIdleSeconds(DEFAULT_MAX_IDLE_SECONDS);
         setNumThreads(server.getIntAttr(A_zimbraPop3NumThreads,
                                         DEFAULT_NUM_THREADS));
+        
+        // set excluded ciphers for SSL and TLS
+        com.zimbra.cs.account.Config config = prov.getConfig();
+        setSSLExcludeCiphers(config.getMultiAttr(A_zimbraSSLExcludeCipherSuites));
+        
         if (ssl) {
             setSSLEnabled(ssl);
-            com.zimbra.cs.account.Config config = prov.getConfig();
-            setSSLExcludeCiphers(config.getMultiAttr(A_zimbraSSLExcludeCipherSuites));
             setBindAddress(server.getAttr(A_zimbraPop3SSLBindAddress));
             setBindPort(server.getIntAttr(A_zimbraPop3SSLBindPort,
                                           DEFAULT_SSL_BIND_PORT));
