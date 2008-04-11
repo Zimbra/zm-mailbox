@@ -78,8 +78,11 @@ class IMSubscribedNotification extends IMNotification {
             e = create(parent, IMConstants.E_UNSUBSCRIBED);
         }
         e.addAttribute(IMConstants.A_NAME, mName);
-        
-        if (mAsk != null) {
+
+        // don't send ask="unsubscribe"...looks like the client gets confused by this,
+        // and frankly it shouldn't care if the other user has responded to our
+        // unsub request or not...
+        if (mAsk != null && mAsk!=Roster.Ask.unsubscribe) {
             e.addAttribute(IMConstants.A_ASK, mAsk.name());
         }
         

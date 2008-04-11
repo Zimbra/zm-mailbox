@@ -1278,11 +1278,15 @@ public class IMPersona extends ClassLogger {
     public void removeOutgoingSubscription(OperationContext octxt, IMAddr address,
                 String name, String[] groups) throws ServiceException {
         synchronized(getLock()) {
-            // tell the server to change our roster
-            Roster rosterPacket = new Roster(Type.set);
-            rosterPacket.addItem(address.makeJID(), name, Roster.Ask.unsubscribe,
-                Roster.Subscription.none, Arrays.asList(groups));
-            xmppRoute(rosterPacket);
+
+            //
+            // RFC3921, section 8.4 -- looks the roster.set is NOT sent during unsubscribe
+            //
+//            Roster rosterPacket = new Roster(Type.set);
+//            rosterPacket.addItem(address.makeJID(), name, Roster.Ask.unsubscribe,
+//                Roster.Subscription.none, Arrays.asList(groups));
+//            xmppRoute(rosterPacket);
+            
             // tell the other user we want to unsubscribe
             Presence unsubscribePacket = new Presence(Presence.Type.unsubscribe);
             unsubscribePacket.setTo(address.makeJID());
