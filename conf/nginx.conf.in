@@ -268,7 +268,7 @@ mail {
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        protocol pop3;
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        proxy on;
         # sasl_service_name defaults to "pop" when protocol=pop3, "imap" when protocol=imap
-#%%uncomment VAR:zimbraReverseProxyMailEnabled%%        sasl_service_name       "pop";
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%        sasl_service_name       "pop";
         # starttls=on implies cleartext login enabled
         # starttls=only implies cleartext login requires SSL/TLS
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        starttls                on;
@@ -280,7 +280,7 @@ mail {
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        proxy on;
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        ssl on;
         # sasl_service_name defaults to "pop" when protocol=pop3, "imap" when protocol=imap
-#%%uncomment VAR:zimbraReverseProxyMailEnabled%%        sasl_service_name       "pop";
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%        sasl_service_name       "pop";
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%    }
 
     # IMAP proxy configuration
@@ -290,7 +290,7 @@ mail {
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        protocol imap;
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        proxy on;
         # sasl_service_name defaults to "pop" when protocol=pop3, "imap" when protocol=imap
-#%%uncomment VAR:zimbraReverseProxyMailEnabled%%        sasl_service_name       "imap";
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%        sasl_service_name       "imap";
         # starttls=on implies cleartext login enabled
         # starttls=only implies cleartext login requires SSL/TLS
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        starttls                on;
@@ -302,7 +302,7 @@ mail {
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        proxy on;
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        ssl on;
         # sasl_service_name defaults to "pop" when protocol=pop3, "imap" when protocol=imap
-#%%uncomment VAR:zimbraReverseProxyMailEnabled%%        sasl_service_name       "imap";
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%        sasl_service_name       "imap";
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%    }
 }
 
