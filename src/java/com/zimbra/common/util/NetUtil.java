@@ -21,6 +21,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLSocket;
 import java.nio.channels.ServerSocketChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -105,20 +106,31 @@ public class NetUtil {
         serverSocket.bind(isa, 1024);
         return serverSocket;
     }
+    
+    private static String[] computeEnabledCipherSuites(String[] enabledCiphers, String[] excludeCiphers) {
+	List<String> excludedCSList = new ArrayList<String>(Arrays.asList(excludeCiphers));
+        List<String> enabledCSList = new ArrayList<String>(Arrays.asList(enabledCiphers));
+        
+        for (String cipher : excludedCSList) {
+            if (enabledCSList.contains(cipher))
+                enabledCSList.remove(cipher);
+        }
+
+        return enabledCSList.toArray(new String[enabledCSList.size()]);
+    }
 
     private static void setSSLEnabledCipherSuites(SSLServerSocket socket, String[] excludeCiphers) {
-	
 	if (excludeCiphers != null && excludeCiphers.length > 0) {
-	    List<String> excludedCSList = Arrays.asList(excludeCiphers);
-            String[] enabledCipherSuites = socket.getEnabledCipherSuites();
-            List<String> enabledCSList = new ArrayList<String>(Arrays.asList(enabledCipherSuites));
-            
-            for (String cipher : excludedCSList) {
-                if (enabledCSList.contains(cipher))
-                    enabledCSList.remove(cipher);
-            }
-
-            String[] enabledCiphers = enabledCSList.toArray(new String[enabledCSList.size()]);
+	    String[] enabledCiphers = socket.getEnabledCipherSuites();
+            enabledCiphers = computeEnabledCipherSuites(enabledCiphers, excludeCiphers);
+            socket.setEnabledCipherSuites(enabledCiphers);
+        }
+    }
+    
+    public static void setSSLEnabledCipherSuites(SSLSocket socket, String[] excludeCiphers) {
+	if (excludeCiphers != null && excludeCiphers.length > 0) {
+	    String[] enabledCiphers = socket.getEnabledCipherSuites();
+            enabledCiphers = computeEnabledCipherSuites(enabledCiphers, excludeCiphers);
             socket.setEnabledCipherSuites(enabledCiphers);
         }
     }
