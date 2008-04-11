@@ -337,6 +337,7 @@ http {
 
 %%uncomment VAR:zimbraReverseProxyHttpEnabled%% server {
 %%uncomment VAR:zimbraReverseProxyHttpEnabled%%     listen %%zimbraMailProxyPort%%;
+%%uncomment VAR:zimbraReverseProxyHttpEnabled%%     client_max_body_size %%zimbraFileUploadMaxSize%%;
 %%uncomment VAR:zimbraReverseProxyHttpEnabled%%     location / {
             # Proxy to the collection of servers identified by the upstream
             # block 'zimbra'
@@ -369,6 +370,7 @@ http {
     # HTTPS Proxy
 %%uncomment VAR:zimbraReverseProxyHttpEnabled%% server {
 %%uncomment VAR:zimbraReverseProxyHttpEnabled%%     listen %%zimbraMailSSLProxyPort%%;
+%%uncomment VAR:zimbraReverseProxyHttpEnabled%%     client_max_body_size %%zimbraFileUploadMaxSize%%;
 %%uncomment VAR:zimbraReverseProxyHttpEnabled%%     ssl                  on;
 %%uncomment VAR:zimbraReverseProxyHttpEnabled%%     ssl_certificate      /opt/zimbra/conf/nginx.crt;
 %%uncomment VAR:zimbraReverseProxyHttpEnabled%%     ssl_certificate_key  /opt/zimbra/conf/nginx.key;
