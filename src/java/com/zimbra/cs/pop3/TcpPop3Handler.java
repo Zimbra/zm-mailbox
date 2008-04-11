@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.pop3;
 
+import com.zimbra.common.util.NetUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.tcpserver.TcpServerInputStream;
 
@@ -72,6 +73,7 @@ public class TcpPop3Handler extends Pop3Handler {
         SSLSocketFactory fac = (SSLSocketFactory) SSLSocketFactory.getDefault();
         SSLSocket sock = (SSLSocket)
             fac.createSocket(mConnection, mConnection.getInetAddress().getHostName(), mConnection.getPort(), true);
+        NetUtil.setSSLEnabledCipherSuites(sock, mConfig.getSSLExcludeCiphers());
         sock.setUseClientMode(false);
         sock.startHandshake();
         ZimbraLog.pop.debug("suite: "+ sock.getSession().getCipherSuite());
