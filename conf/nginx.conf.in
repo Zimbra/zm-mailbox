@@ -272,7 +272,7 @@ mail {
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        sasl_service_name       "pop";
         # starttls=on implies cleartext login enabled
         # starttls=only implies cleartext login requires SSL/TLS
-%%uncomment VAR:zimbraReverseProxyMailEnabled%%        starttls                on;
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%        starttls                %%zimbraReverseProxyPop3StartTlsMode%%;
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%    }
 
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%    server {
@@ -294,7 +294,7 @@ mail {
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%        sasl_service_name       "imap";
         # starttls=on implies cleartext login enabled
         # starttls=only implies cleartext login requires SSL/TLS
-%%uncomment VAR:zimbraReverseProxyMailEnabled%%        starttls                on;
+%%uncomment VAR:zimbraReverseProxyMailEnabled%%        starttls                %%zimbraReverseProxyImapStartTlsMode%%;
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%    }
 
 %%uncomment VAR:zimbraReverseProxyMailEnabled%%    server {
