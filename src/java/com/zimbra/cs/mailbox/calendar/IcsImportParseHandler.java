@@ -125,7 +125,7 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
         }
     }
 
-    public void startProperty(String name) { 
+    public void startProperty(String name) {
         mCurProperty = new ZProperty(name);
         
         if (mComponents.size() > 0) {
@@ -135,10 +135,18 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
         }
     }
 
-    public void propertyValue(String value) { 
+    public void propertyValue(String value) throws ParserException { 
         mCurProperty.mValue = value;
-        if (mComponents.size() == 0 && ICalTok.METHOD.equals(mCurProperty.getToken()))
-            mMethod = value;
+        if (mComponents.size() == 0) {
+            if (ICalTok.METHOD.equals(mCurProperty.getToken()))
+                mMethod = value;
+            if (ICalTok.VERSION.equals(mCurProperty.getToken())) {
+                if (ZCalendar.sObsoleteVcalVersion.equals(value))
+                    throw new ParserException("vCalendar 1.0 format not supported; use iCalendar instead");
+                if (!ZCalendar.sIcalVersion.equals(value))
+                    throw new ParserException("Unknow iCalendar version " + value);
+            }
+        }
     }
 
     public void endProperty(String name) { mCurProperty = null; }
