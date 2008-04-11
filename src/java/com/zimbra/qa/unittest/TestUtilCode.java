@@ -235,6 +235,17 @@ public class TestUtilCode extends TestCase
         }
     }
     
+    /**
+     * Makes sure that {@link ZimbraLog#addAccountNameToContext} can be called
+     * with a <tt>null</tt> value.  See bug 26997 for details.
+     */
+    public void testAccountLogger()
+    throws Exception {
+        ZimbraLog.addAccountNameToContext(null);
+        Log.addAccountLogger("zimbra.test", TestUtil.getAddress("user1"), Log.Level.info);
+        ZimbraLog.test.debug("Testing addAccountNameToContext(null).");
+    }
+    
     private static <E> boolean compareLists(List<E> list, List<List<E>> listOfLists) {
         int i = 0;
         for (List<E> curList : listOfLists) {
