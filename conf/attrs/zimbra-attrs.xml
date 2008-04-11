@@ -3106,4 +3106,30 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
+<attr id="641" name="zimbraReverseProxyImapStartTlsMode" type="enum" value="on,off,only" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>only</globalConfigValue>
+  <desc>on   - on the plain POP/IMAP port, starttls is allowed
+        off  - no starttls is offered on plain port
+        only - you have to use starttls before clear text login 
+  </desc>
+</attr>
+
+<attr id="642" name="zimbraReverseProxyPop3StartTlsMode" type="enum" value="on,off,only" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>only</globalConfigValue>
+  <desc>on   - on the plain POP/IMAP port, starttls is allowed
+        off  - no starttls is offered on plain port
+        only - you have to use starttls before clear text login 
+  </desc>
+</attr>
+
+<attr id="643" name="zimbraReverseProxyImapSaslGssapiEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>whether IMAP SASL GSSAPI is enabled for reverse proxy</desc>
+</attr>
+
+<attr id="644" name="zimbraReverseProxyPop3SaslGssapiEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>whether POP3 SASL GSSAPI is enabled for reverse proxy</desc>
+</attr>
+
 </attrs>
