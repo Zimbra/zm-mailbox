@@ -205,6 +205,7 @@ mail {
 
     # XOIP
     proxy_issue_pop3_xoip %%zimbraReverseProxySendPop3Xoip%%;
+
     # Supported SASL Authentication mechanisms
     # 
     # Use the pop3_auth and imap_auth to specify which SASL mechanisms are 
@@ -225,10 +226,10 @@ mail {
     # 
 
     pop3_auth               plain;
-    pop3_auth               gssapi;
+%%uncomment VAR:zimbraReverseProxyPop3SaslGssapiEnabled%%    pop3_auth               gssapi;
 
     imap_auth               plain;
-    imap_auth               gssapi;
+%%uncomment VAR:zimbraReverseProxyImapSaslGssapiEnabled%%    imap_auth               gssapi;
 
     # Specify whether to use literal strings while issuing the LOGIN command
     # to the upstream server. If set to on, then it means that NGINX will use
