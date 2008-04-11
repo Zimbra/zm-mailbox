@@ -43,6 +43,7 @@ public class ZCalendar {
     
     public static final String sZimbraProdID = "Zimbra-Calendar-Provider";
     public static final String sIcalVersion = "2.0";
+    public static final String sObsoleteVcalVersion = "1.0";
     
     public static enum ICalTok {
         ACTION, ALTREP, ATTACH, ATTENDEE, BINARY, BOOLEAN,
@@ -918,8 +919,16 @@ public class ZCalendar {
             }
         }
 
-        public void propertyValue(String value) { 
+        public void propertyValue(String value) throws ParserException { 
             mCurProperty.mValue = value;
+            if (mComponents.size() == 0) {
+                if (ICalTok.VERSION.equals(mCurProperty.getToken())) {
+                    if (sObsoleteVcalVersion.equals(value))
+                        throw new ParserException("vCalendar 1.0 format not supported; use iCalendar instead");
+                    if (!sIcalVersion.equals(value))
+                        throw new ParserException("Unknow iCalendar version " + value);
+                }
+            }
         }
 
         public void endProperty(String name) { mCurProperty = null; }
