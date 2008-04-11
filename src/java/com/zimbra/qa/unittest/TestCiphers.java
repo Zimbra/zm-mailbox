@@ -91,6 +91,7 @@ extends TestCase {
             SOAP_ENV;
     
     private static final String HTTP_SOAP_PING_RESPONSE = "HTTP/1.1 200 OK";
+    private static final String HTTP_SOAP_PING_RESPONSE_CLEARTEXT = "HTTP/1.1 500 Internal Server Error";  // because PingRequest is an admin command and thus is only allowed on admin port
     
     private static Provisioning mProv;
     private static int mPop3CleartextPort;
@@ -217,20 +218,21 @@ extends TestCase {
         assertTrue(good);
     }
     
-    public void http(boolean usedExcludeCipher) throws Exception {
-        Socket socket = DummySSLSocketFactory.getDefault().createSocket(HOSTNAME, mHttpSslPort);
-        SSLSocket sslSocket = (SSLSocket)socket;
-
-        // use an excluded cipher suite 
-        if (usedExcludeCipher)
-            sslSocket.setEnabledCipherSuites(new String[] {"SSL_RSA_WITH_DES_CBC_SHA"});
-
+    public void http(boolean useExcludedCipher) throws Exception {
+	// Test cleartext
+        Socket socket = new Socket(HOSTNAME, mHttpCleartextPort);
+        send(socket, HTTP_SOAP_PING, HTTP_SOAP_PING_RESPONSE_CLEARTEXT);
+	
+        // Test SSL
         boolean good = false;
+	socket = DummySSLSocketFactory.getDefault().createSocket(HOSTNAME, mHttpSslPort);
+	if (useExcludedCipher)
+            setEnabledCipherSuites(socket);
         try {
             send(socket, HTTP_SOAP_PING, HTTP_SOAP_PING_RESPONSE);
-            good = !usedExcludeCipher;
+            good = !useExcludedCipher;
         } catch (javax.net.ssl.SSLHandshakeException e) {
-            good = usedExcludeCipher;
+            good = useExcludedCipher;
         } finally {
             socket.close();
         }
