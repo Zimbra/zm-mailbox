@@ -74,10 +74,10 @@ class IMSubscribedNotification extends IMNotification {
         Element e;
         if (mSubscribed) { 
             e = create(parent, IMConstants.E_SUBSCRIBED);
-            e.addAttribute(IMConstants.A_NAME, mName);
         } else {
             e = create(parent, IMConstants.E_UNSUBSCRIBED);
         }
+        e.addAttribute(IMConstants.A_NAME, mName);
         
         if (mAsk != null) {
             e.addAttribute(IMConstants.A_ASK, mAsk.name());

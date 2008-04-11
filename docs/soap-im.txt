@@ -217,10 +217,10 @@ IM NOTIFICATIONS
                  ---> EG:  (subscription="none" ask="subscribe") means we're waiting
                  for a response to subscribe, but we haven't received one yet
                 [
-                   <n type="subscribed" to="TOADDR" name="NAME" groups="GROUPS" [ask="subscribe|unsubscribe"]/> // you added them to your buddy list
+                   <n type="subscribed" to="TOADDR" name="NAME" groups="GROUPS" [ask="subscribe|unsubscribe"]/> // subscription is ACTIVE (you are receiving their presence)
                 ]*
                 [
-                   <n type="unsubscribed" to="TOADDR" groups="GROUPS" [ask="subscribe|unsubscribe"]/> // you removed them from your buddy list
+                   <n type="unsubscribed" to="TOADDR" name="NAME" groups="GROUPS" [ask="subscribe|unsubscribe"]/> // subscription is NOT ACTIVE (you are NOT currently receiving their presence information)
                 ]*
                 [
                 // NEW MESSAGE RECEIVED:
