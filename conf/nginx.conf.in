@@ -252,6 +252,12 @@ mail {
     ssl_prefer_server_ciphers on;
     ssl_certificate             /opt/zimbra/conf/nginx.crt;
     ssl_certificate_key         /opt/zimbra/conf/nginx.key;
+    
+    # Ciphers configuration
+    #
+    # Permitted ciphers. Ciphers are assigned in the formats supported by OpenSSL
+    #
+%%uncomment VAR:zimbraReverseProxySSLCiphers%%        ssl_ciphers %%zimbraReverseProxySSLCiphers%%;
 
     # POP3 proxy configuration
     # 
