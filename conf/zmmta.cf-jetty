@@ -135,6 +135,8 @@ SECTION mailbox
   VAR zimbraImapSSLBindPort
   VAR zimbraHttpNumThreads
   VAR nio_imap_enabled
+  VAR zimbraSSLExcludeCipherSuites
+  VAR zimbraSSLExcludeCipherSuitesXML
   LOCAL mailboxd_keystore_password
   LOCAL mailboxd_truststore_password
   LOCAL zimbra_uid
