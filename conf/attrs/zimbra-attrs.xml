@@ -3103,6 +3103,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="640" name="zimbraReverseProxySSLCiphers" type="string" cardinality="single" optionalIn="globalConfig">
   <desc>permitted ciphers for reverse proxy. Ciphers are in the formats supported by OpenSSL 
         e.g. ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP;
+        if not set, all ciphers supported by OpenSSL are permitted.
   </desc>
 </attr>
 
