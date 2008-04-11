@@ -336,6 +336,13 @@ http {
         zmauth;
     }
 
+    # HTTP lookup handlers that will return the route information for a
+    # http/https login
+    # see http://wiki.codemongers.com/NginxMailCoreModule
+    # 
+%%uncomment VAR:zimbraReverseProxyHttpEnabled%%    zmroutehandlers %%getAllReverseProxyURLs%%;
+%%uncomment VAR:zimbraReverseProxyHttpEnabled%%    zmroute_timeout 15s;
+
 %%uncomment VAR:zimbraReverseProxyHttpEnabled%% server {
 %%uncomment VAR:zimbraReverseProxyHttpEnabled%%     listen %%zimbraMailProxyPort%%;
 %%uncomment VAR:zimbraReverseProxyHttpEnabled%%     client_max_body_size %%zimbraFileUploadMaxSize%%;
