@@ -203,6 +203,8 @@ mail {
     mail_login_user_ttl             %%zimbraReverseProxyUserLoginLimitTime%%s;
     mail_login_user_rejectmsg       "Login rejected for this user";
 
+    # XOIP
+    proxy_issue_pop3_xoip %%zimbraReverseProxySendPop3Xoip%%;
     # Supported SASL Authentication mechanisms
     # 
     # Use the pop3_auth and imap_auth to specify which SASL mechanisms are 
@@ -222,11 +224,11 @@ mail {
     # Currently, only PLAIN and GSSAPI mechanisms are supported
     # 
 
-    #pop3_auth               plain;
-    #pop3_auth               gssapi;
+    pop3_auth               plain;
+    pop3_auth               gssapi;
 
-    #imap_auth               plain;
-    #imap_auth               gssapi;
+    imap_auth               plain;
+    imap_auth               gssapi;
 
     # Specify whether to use literal strings while issuing the LOGIN command
     # to the upstream server. If set to on, then it means that NGINX will use
@@ -236,14 +238,14 @@ mail {
     # server when using the LOGIN command
     # If not specified, imap_literalauth defaults to on
     # 
-    #imap_literalauth        on;
+    imap_literalauth        on;
 
     # Auth Wait Interval
     # Specifies the time interval that NGINX will wait before rejecting an
     # authentication attempt with invalid credentials
     # If not specified, this value defaults to 10 seconds
     # 
-    #auth_wait               10s;
+    auth_wait               10s;
 
     # TLS configuration
     # 
