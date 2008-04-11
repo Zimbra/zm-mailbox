@@ -336,7 +336,9 @@ public class ZimbraLog {
     }
     
     private static void addAccountForThread(String accountName) {
-        getAccountNamesForThread().add(accountName);
+        if (accountName != null) {
+            getAccountNamesForThread().add(accountName);
+        }
     }
 
     private static final ThreadLocal<Map<String, String>> sContextMap = new ThreadLocal<Map<String, String>>();
