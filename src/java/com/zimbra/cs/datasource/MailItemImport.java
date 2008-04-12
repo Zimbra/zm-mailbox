@@ -24,14 +24,14 @@ import com.zimbra.cs.account.DataSource;
 public interface MailItemImport {
 
     /**
-     * Tests connecting to the specified data source.
+     * Tests connection to the data source.
      * 
      * @return <code>null</code> or an error message if the test failed. 
      */
-    public String test(DataSource ds) throws ServiceException;
+    public String test() throws ServiceException;
     
     /**
      * Imports data from the specified data source.
      */
-    public void importData(Account account, DataSource dataSource, boolean fullSync) throws ServiceException;
+    public void importData(boolean fullSync) throws ServiceException;
 }

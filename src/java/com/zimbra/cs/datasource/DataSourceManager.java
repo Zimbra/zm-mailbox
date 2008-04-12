@@ -17,7 +17,6 @@
 package com.zimbra.cs.datasource;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,19 +43,10 @@ import com.zimbra.cs.mailbox.ScheduledTaskManager;
  * @author bburtin
  */
 public class DataSourceManager {
-
-    private static Map<DataSource.Type, MailItemImport> sImports =
-        Collections.synchronizedMap(new HashMap<DataSource.Type, MailItemImport>());
-    
     // accountId -> dataSourceId -> ImportStatus
-    private static Map<String, Map<String, ImportStatus>> sImportStatus =
+    private static final Map<String, Map<String, ImportStatus>> sImportStatus =
         new HashMap<String, Map<String, ImportStatus>>();
 
-    static {
-        registerImport(DataSource.Type.pop3, new Pop3Import());
-        registerImport(DataSource.Type.imap, new ImapImport());
-    }
-    
     /**
      * Tests connecting to a data source.  Do not actually create the
      * data source.
@@ -67,8 +57,8 @@ public class DataSourceManager {
     public static String test(DataSource ds)
     throws ServiceException {
         ZimbraLog.datasource.info("Testing %s", ds);
-        MailItemImport mii = sImports.get(ds.getType());
-        String error = mii.test(ds);
+        MailItemImport mii = newMailItemImport(ds);
+        String error = mii.test();
         if (error == null) {
             ZimbraLog.datasource.info("Test succeeded");
         } else {
@@ -78,17 +68,18 @@ public class DataSourceManager {
         return error;
     }
 
-    /**
-     * Associate the specified type with the <code>MailItemImport</code>
-     * implementation that will perform import of data of that type.
-     * 
-     * @param type the data source type
-     * @param mii import implementation
-     */
-    public static void registerImport(DataSource.Type type, MailItemImport mii) {
-        sImports.put(type, mii);
+    private static MailItemImport newMailItemImport(DataSource ds)
+            throws ServiceException {
+        switch (ds.getType()) {
+        case imap:
+            return new ImapImport(ds);
+        case pop3:
+            return new Pop3Import(ds);
+        default:
+            throw new IllegalArgumentException(
+                "Unknown data import type: " + ds.getType());
+        }
     }
-
     public static List<ImportStatus> getImportStatus(Account account)
     throws ServiceException {
         List<DataSource> dsList = Provisioning.getInstance().getAllDataSources(account);
@@ -119,16 +110,16 @@ public class DataSourceManager {
         return importStatus;
     }
 
-    public static void importData(Account account, DataSource ds) throws ServiceException {
-        importData(account, ds, true);
+    public static void importData(DataSource ds) throws ServiceException {
+        importData(ds, true);
     }
     
     /**
      * Executes the data source's <code>MailItemImport</code> implementation
      * to import data in the current thread.
      */
-    public static void importData(Account account, DataSource ds, boolean fullSync) throws ServiceException {
-        ImportStatus importStatus = getImportStatus(account, ds);
+    public static void importData(DataSource ds, boolean fullSync) throws ServiceException {
+        ImportStatus importStatus = getImportStatus(ds.getAccount(), ds);
         
         synchronized (importStatus) {
             if (importStatus.isRunning()) {
@@ -143,13 +134,13 @@ public class DataSourceManager {
         }
         
         
-        MailItemImport mii = sImports.get(ds.getType());
+        MailItemImport mii = newMailItemImport(ds);
         boolean success = false;
         String error = null;
 
         try {
             ZimbraLog.datasource.info("Importing data.");
-            mii.importData(account, ds, fullSync);
+            mii.importData(fullSync);
             ZimbraLog.datasource.info("Import completed.");
             success = true;
         } catch (ServiceException x) {

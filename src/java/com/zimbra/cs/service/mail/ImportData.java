@@ -35,13 +35,13 @@ public class ImportData extends MailDocumentHandler {
 
     @Override
     public Element handle(Element request, Map<String, Object> context)
-    throws ServiceException, SoapFaultException {
+            throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         Account account = getRequestedAccount(zsc);
 
         for (Element elem : request.listElements()) {
-            DataSource ds = null;
+            DataSource ds;
             
             String name, id = elem.getAttribute(MailConstants.A_ID, null);
             if (id != null) {
@@ -59,7 +59,7 @@ public class ImportData extends MailDocumentHandler {
             }
             
             ZimbraLog.addDataSourceNameToContext(ds.getName());
-            DataSourceManager.importData(account, ds);
+            DataSourceManager.importData(ds);
         }
         
         Element response = zsc.createElement(MailConstants.IMPORT_DATA_RESPONSE);
