@@ -57,23 +57,27 @@ public class ChildAccount extends AttributeCallback {
         Set<String> visibleChildren = newValuesToBe(visibleChildrenMod, entry, Provisioning.A_zimbraPrefChildVisibleAccount);
         Set<String> allChildren = newValuesToBe(allChildrenMod, entry, Provisioning.A_zimbraChildAccount);
         
-        Set<String> vidsToRemove = new HashSet<String>();
-        for (String vid : visibleChildren) {
-            if (!allChildren.contains(vid)) {
-                /*
-                 * if the request is removing children and not updating the visible children, we remove the visible children 
-                 * that are no longer a child.
-                 * otherwise, we throw exception if the mod result into a situation where a visible child is not one of the children.
-                 */ 
-                if (allChildrenMod!=null && allChildrenMod.removing() && visibleChildrenMod==null)
-                    vidsToRemove.add(vid);
-                else
-                    throw ServiceException.INVALID_REQUEST("visible child id " + vid + " is not one of " + Provisioning.A_zimbraChildAccount, null);
+        if (allChildrenMod != null && allChildrenMod.deletingall()) {
+            attrsToModify.put(Provisioning.A_zimbraPrefChildVisibleAccount, "");
+        } else {
+            Set<String> vidsToRemove = new HashSet<String>();
+            for (String vid : visibleChildren) {
+                if (!allChildren.contains(vid)) {
+                    /*
+                     * if the request is removing children but not updating the visible children, we remove the visible children 
+                     * that are no longer a child.
+                     * otherwise, we throw exception if the mod result into a situation where a visible child is not one of the children.
+                     */ 
+                    if (allChildrenMod!=null && allChildrenMod.removing() && visibleChildrenMod==null)
+                        vidsToRemove.add(vid);
+                    else
+                        throw ServiceException.INVALID_REQUEST("visible child id " + vid + " is not one of " + Provisioning.A_zimbraChildAccount, null);
+                }
             }
+    
+            if (vidsToRemove.size() > 0)
+                attrsToModify.put("-" + Provisioning.A_zimbraPrefChildVisibleAccount, vidsToRemove.toArray(new String[vidsToRemove.size()]));
         }
-
-        if (vidsToRemove.size() > 0)
-            attrsToModify.put("-" + Provisioning.A_zimbraPrefChildVisibleAccount, vidsToRemove.toArray(new String[vidsToRemove.size()]));
     }
     
     private Set<String> newValuesToBe(MultiValueMod mod, Entry entry, String attrName) {
@@ -90,6 +94,8 @@ public class ChildAccount extends AttributeCallback {
                     SetUtil.union(newValues, curValues, mod.valuesSet());
                 } else if (mod.removing()) {
                     newValues = SetUtil.subtract(curValues, mod.valuesSet());
+                } else if (mod.deletingall()) {
+                    newValues = new HashSet<String>();
                 } else {
                     newValues = mod.valuesSet();
                 }
