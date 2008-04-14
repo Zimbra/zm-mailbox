@@ -100,7 +100,7 @@ public class PreAuthServlet extends ZimbraServlet {
     {
         ZimbraLog.clearContext();
         try {
-            boolean revPxyMode = ZimbraServlet.reverseProxiedMode(Provisioning.getInstance().getLocalServer());
+            boolean revPxyMode = URLUtil.reverseProxiedMode(Provisioning.getInstance().getLocalServer());
             Provisioning prov = Provisioning.getInstance();
             
             String isRedirect = getOptionalParam(req, PARAM_ISREDIRECT, "0");
