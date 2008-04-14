@@ -204,7 +204,7 @@ mail {
     mail_login_user_rejectmsg       "Login rejected for this user";
 
     # XOIP
-    proxy_issue_pop3_xoip %%zimbraReverseProxySendPop3Xoip%%;
+%%uncomment !VAR:zimbraReverseProxySendPop3Xoip%%    proxy_issue_pop3_xoip off;
 
     # Supported SASL Authentication mechanisms
     # 
