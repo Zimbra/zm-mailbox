@@ -1601,7 +1601,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>RFC822 forwarding address for an account</desc>
 </attr>
 
-<attr id="344" name="zimbraPrefMailLocalDeliveryDisabled" type="boolean" cardinality="single" optionalIn="account">
+<attr id="344" name="zimbraPrefMailLocalDeliveryDisabled" type="boolean" cardinality="single" optionalIn="account" flags="domainAdminModifiable">
   <desc>whether or not to deliver mail locally</desc>
 </attr>
 
