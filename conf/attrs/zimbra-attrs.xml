@@ -3134,4 +3134,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether POP3 SASL GSSAPI is enabled for reverse proxy</desc>
 </attr>
 
+<attr id="645" name="zimbraPrefIMCustomStatusMessage" type="string" cardinality="multi" optionalIn="account" flags="domainAdminModifiable">
+  <desc>Custom IM status messages</desc>
+</attr>
+
 </attrs>
