@@ -2628,8 +2628,12 @@ public class LdapProvisioning extends Provisioning {
         // see if request is recent
         long now = System.currentTimeMillis();
         long diff = Math.abs(now-timestamp);
-        if (diff > TIMESTAMP_WINDOW)
-            throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), AuthMechanism.namePassedIn(authCtxt), "preauth timestamp is too old");
+        if (diff > TIMESTAMP_WINDOW) {
+            Date nowDate = new Date(now);
+            Date preauthDate = new Date(timestamp);
+            throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), AuthMechanism.namePassedIn(authCtxt), 
+        	    "preauth timestamp is too old, server time: " + nowDate.toString() + ", preauth timestamp: " + preauthDate.toString());
+        }
         
         // compute expected preAuth
         HashMap<String,String> params = new HashMap<String,String>();
