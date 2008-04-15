@@ -2703,12 +2703,15 @@ public abstract class ImapHandler extends ProtocolHandler {
 
         try {
             Mailbox mbox = mSelectedFolder.getMailbox();
-            synchronized (mbox) {
-                if (i4search.canBeRunLocally()) {
+            if (i4search.canBeRunLocally()) {
+                synchronized (mbox) {
                     hits = i4search.evaluate(mSelectedFolder);
                     hits.remove(null);
-                } else {
-                    String search = i4search.toZimbraSearch(mSelectedFolder);
+                }
+            } else {
+                String search;
+                synchronized (mbox) {
+                    search = i4search.toZimbraSearch(mSelectedFolder);
                     if (!mSelectedFolder.isVirtual())
                         search = "in:" + mSelectedFolder.getQuotedPath() + ' ' + search;
                     else if (mSelectedFolder.getSize() <= LARGEST_FOLDER_BATCH)
@@ -2716,32 +2719,32 @@ public abstract class ImapHandler extends ProtocolHandler {
                     else
                         search = '(' + mSelectedFolder.getQuery() + ") " + search;
                     ZimbraLog.imap.info("[ search is: " + search + " ]");
-
-                    SearchParams params = new SearchParams();
-                    params.setIncludeTagDeleted(true);
-                    params.setQueryStr(search);
-                    params.setTypes(ITEM_TYPES);
-                    params.setSortBy(MailboxIndex.SortBy.DATE_ASCENDING);
-                    params.setChunkSize(2000);
-                    params.setPrefetch(false);
-                    params.setMode(requiresMODSEQ ? Mailbox.SearchResultMode.MODSEQ : Mailbox.SearchResultMode.IDS);
-                    ZimbraQueryResults zqr = mbox.search(SoapProtocol.Soap12, getContext(), params);
-
-                    hits = new ImapMessageSet();
-                    try {
-                        for (ZimbraHit hit = zqr.getFirstHit(); hit != null; hit = zqr.getNext()) {
-                            ImapMessage i4msg = mSelectedFolder.getById(hit.getItemId());
-                            if (i4msg == null || i4msg.isExpunged())
-                                continue;
-                            hits.add(i4msg);
-                            if (requiresMODSEQ)
-                                modseq = Math.max(modseq, Math.max(hit.getModifiedSequence(), i4msg.getFlagModseq(mSelectedFolder.getTagset())));
-                        }
-                    } finally {
-                        zqr.doneWithSearchResults();
-                    }
                 }
-        	}
+
+                SearchParams params = new SearchParams();
+                params.setIncludeTagDeleted(true);
+                params.setQueryStr(search);
+                params.setTypes(ITEM_TYPES);
+                params.setSortBy(MailboxIndex.SortBy.NONE);
+                params.setChunkSize(2000);
+                params.setPrefetch(false);
+                params.setMode(requiresMODSEQ ? Mailbox.SearchResultMode.MODSEQ : Mailbox.SearchResultMode.IDS);
+                ZimbraQueryResults zqr = mbox.search(SoapProtocol.Soap12, getContext(), params);
+
+                hits = new ImapMessageSet();
+                try {
+                    for (ZimbraHit hit = zqr.getNext(); hit != null; hit = zqr.getNext()) {
+                        ImapMessage i4msg = mSelectedFolder.getById(hit.getItemId());
+                        if (i4msg == null || i4msg.isExpunged())
+                            continue;
+                        hits.add(i4msg);
+                        if (requiresMODSEQ)
+                            modseq = Math.max(modseq, Math.max(hit.getModifiedSequence(), i4msg.getFlagModseq(mSelectedFolder.getTagset())));
+                    }
+                } finally {
+                    zqr.doneWithSearchResults();
+                }
+            }
         } catch (ParseException pe) {
             ZimbraLog.imap.warn("SEARCH failed (bad query)", pe);
             sendNO(tag, "SEARCH failed");
