@@ -3271,7 +3271,10 @@ public class Mailbox {
     }
     
     /**
-     * You **MUST** call {@link ZimbraQueryResults#doneWithSearchResults()} when you are done with the search results, otherwise
+     * 
+     * In order to avoid deadlock, callers MUST NOT be holding the Mailbox lock when calling this API.
+     *
+     * You MUST call {@link ZimbraQueryResults#doneWithSearchResults()} when you are done with the search results, otherwise
      * resources will be leaked.
      * 
      * @param octxt
@@ -3621,7 +3624,9 @@ public class Mailbox {
     /**
      * This is the preferred form of the API call.
      * 
-     * You **MUST** call {@link ZimbraQueryResults#doneWithSearchResults()} when you are done with the search results, otherwise
+     * In order to avoid deadlock, callers MUST NOT be holding the Mailbox lock when calling this API.  
+     * 
+     * You MUST call {@link ZimbraQueryResults#doneWithSearchResults()} when you are done with the search results, otherwise
      * resources will be leaked.
      * 
      * @param proto  The soap protocol the request is coming from.  Determines the type of Element we create for proxied results.
@@ -3633,6 +3638,8 @@ public class Mailbox {
      * @throws ServiceException
      */
     public ZimbraQueryResults search(SoapProtocol proto, OperationContext octxt, SearchParams params) throws IOException, ParseException, ServiceException {
+        if (Thread.holdsLock(this))
+            throw ServiceException.INVALID_REQUEST("Must not call Mailbox.search() while holding Mailbox lock", null);
         if (octxt == null)
             throw ServiceException.INVALID_REQUEST("The OperationContext must not be null", null);
         
