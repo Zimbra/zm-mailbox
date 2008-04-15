@@ -119,6 +119,10 @@ public class DataSource extends NamedEntry implements Comparable {
         }
         return connectionType;
     }
+
+    public boolean isSslEnabled() {
+        return getConnectionType() == ConnectionType.ssl;
+    }
     
     public int getFolderId() { return getIntAttr(Provisioning.A_zimbraDataSourceFolderId, -1); }
     

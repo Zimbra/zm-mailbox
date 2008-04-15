@@ -31,7 +31,6 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.NoSuchProviderException;
 import javax.mail.Session;
-import javax.mail.Store;
 import javax.mail.UIDFolder;
 
 import com.sun.mail.pop3.POP3Folder;
@@ -46,12 +45,10 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.db.DbPop3Message;
-import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mime.ParsedMessage;
 
 
@@ -280,7 +277,26 @@ public class Pop3Import extends AbstractMailItemImport {
         return true;
     }
 
-    public Store getStore() {
-        return store;
+    protected void connect() throws ServiceException  {
+        if (!store.isConnected()) {
+            DataSource ds = getDataSource();
+            try {
+                store.connect(ds.getHost(), ds.getPort(), ds.getUsername(),
+                              ds.getDecryptedPassword());
+            } catch (MessagingException e) {
+                throw ServiceException.FAILURE("Unable to connect to mail store: " + ds, e);
+            }
+        }
+    }
+
+    protected void disconnect() throws ServiceException {
+        if (store.isConnected()) {
+            DataSource ds = getDataSource();
+            try {
+                store.close();
+            } catch (MessagingException e) {
+                ZimbraLog.datasource.warn("Unable to disconnect from mail store: " + ds);
+            }
+        }
     }
 }

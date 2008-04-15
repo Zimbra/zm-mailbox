@@ -803,7 +803,7 @@ public class ImapImport extends AbstractMailItemImport {
         return new ParsedMessage(id.getBytes(), receivedDate, indexAttachments);
     }
     
-    /**
+    /*
      * Adds item id's to the given set.
      */
     private void addMailItemIds(Set<Integer> idSet, Mailbox mbox, int folderId, byte type)
@@ -898,7 +898,26 @@ public class ImapImport extends AbstractMailItemImport {
         return crc.getValue();
     }
 
-    public Store getStore() {
-        return store;
+    protected void connect() throws ServiceException  {
+        if (!store.isConnected()) {
+            DataSource ds = getDataSource();
+            try {
+                store.connect(ds.getHost(), ds.getPort(), ds.getUsername(),
+                    ds.getDecryptedPassword());
+            } catch (MessagingException e) {
+                throw ServiceException.FAILURE("Unable to connect to mail store: " + ds, e);
+            }
+        }
+    }
+
+    protected void disconnect() throws ServiceException {
+        if (store.isConnected()) {
+            DataSource ds = getDataSource();
+            try {
+                store.close();
+            } catch (MessagingException e) {
+                ZimbraLog.datasource.warn("Unable to disconnect from mail store: " + ds);
+            }
+        }
     }
 }
