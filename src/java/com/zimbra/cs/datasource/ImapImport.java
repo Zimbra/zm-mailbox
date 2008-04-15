@@ -65,12 +65,10 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.db.DbImapMessage;
-import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.BuildInfo;
@@ -736,7 +734,7 @@ public class ImapImport extends AbstractMailItemImport {
                         Long time = receivedDate != null ? (Long) receivedDate.getTime() : null;
                         ParsedMessage pm = getParsedMessage(data, time, mbox.attachmentsIndexingEnabled());
                         int flags = getZimbraFlags(msg.getFlags());
-                        int msgId = addMessage(mbox, ds, pm, localFolder.getId(), flags);
+                        int msgId = addMessage(pm, localFolder.getId(), flags);
                         DbImapMessage.storeImapMessage(mbox, trackedFolder.getItemId(), uid, msgId, flags);
                     }
                     fetchCount.incrementAndGet();
@@ -789,25 +787,6 @@ public class ImapImport extends AbstractMailItemImport {
             numDeletedLocally, numAddedRemotely, numDeletedRemotely, runAgain ? " Rerun import." : "");
         
         return !runAgain;
-    }
-
-    private int addMessage(Mailbox mbox, DataSource ds, ParsedMessage pm, int folderId, int flags) throws ServiceException, IOException {
-    	com.zimbra.cs.mailbox.Message msg = null;
-    	SharedDeliveryContext sharedDeliveryCtxt = new SharedDeliveryContext();
-        if (folderId == Mailbox.ID_FOLDER_INBOX) {
-        	try {
-	            msg = RuleManager.getInstance().applyRules(mbox.getAccount(), mbox, pm, pm.getRawSize(), ds.getEmailAddress(), sharedDeliveryCtxt);
-	            if (msg != null)
-	            	mbox.setTags(null, msg.getId(), MailItem.TYPE_MESSAGE, flags, MailItem.TAG_UNCHANGED);
-	            else
-	            	return 0;  //null if DISCARD
-        	} catch (Throwable t) {
-        		ZimbraLog.datasource.warn("failed applying filter rules", t);
-        	}
-        }
-        if (msg == null)
-        	msg = mbox.addMessage(null, pm, folderId, false, flags, null);
-        return msg.getId();
     }
 
     private static ParsedMessage getParsedMessage(ImapData id,
