@@ -16,7 +16,7 @@ public abstract class MailClient {
     private MailConfig config;
     protected MailConnection connection;
     private StringBuilder sbuf;
-    private boolean startTls;
+    private String password;
     private boolean eof;
 
     protected MailClient(MailConfig config) {
@@ -42,8 +42,7 @@ public abstract class MailClient {
         config.setSSLSocketFactory(SSLUtil.getDummySSLContext().getSocketFactory());
         connection = MailConnection.getInstance(config);
         connection.connect();
-        if (startTls) connection.startTLS();
-        connection.authenticate();
+        connection.authenticate(password);
         String qop = connection.getNegotiatedQop();
         if (qop != null) System.out.printf("[Negotiated QOP is %s]\n", qop); 
     }
@@ -136,7 +135,7 @@ public abstract class MailClient {
                 config.setAuthorizationId(args.next());
                 break;
             case 'w':
-                config.setPassword(args.next());
+                password = args.next();
                 break;
             case 'r':
                 config.setRealm(args.next());
@@ -151,10 +150,10 @@ public abstract class MailClient {
                 maxQop = parseQop(arg, args.next());
                 break;
             case 's':
-                config.setSSLEnabled(true);
+                config.setSslEnabled(true);
                 break;
             case 't':
-                startTls = true;
+                config.setTlsEnabled(true);
                 break;
             case 'd':
                 config.setDebug(true);
@@ -172,7 +171,7 @@ public abstract class MailClient {
             throw new IllegalArgumentException("Option requires argument: " + arg);
         }
         // If SSL is enabled then only QOP_AUTH is supported
-        if (!config.isSSLEnabled()) {
+        if (!config.isSslEnabled()) {
             config.setSaslProperty(Sasl.QOP, getQop(minQop, maxQop));
         }
         return true;

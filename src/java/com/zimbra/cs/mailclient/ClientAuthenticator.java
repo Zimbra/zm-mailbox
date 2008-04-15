@@ -3,7 +3,6 @@ package com.zimbra.cs.mailclient;
 import com.zimbra.cs.security.sasl.SaslInputStream;
 import com.zimbra.cs.security.sasl.SaslOutputStream;
 import com.zimbra.cs.security.sasl.SaslSecurityLayer;
-import com.zimbra.cs.mailclient.util.Password;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
@@ -120,7 +119,7 @@ public class ClientAuthenticator {
     }
 
     private SaslClient createSaslClient() throws SaslException {
-        return Sasl.createSaslClient(new String[] {mechanism},
+        return Sasl.createSaslClient(new String[] { mechanism },
             authorizationId, protocol, serverName, properties,
             new SaslCallbackHandler());
     }
@@ -179,7 +178,8 @@ public class ClientAuthenticator {
                 if (cb instanceof NameCallback) {
                     ((NameCallback) cb).setName(authenticationId);
                 } else if (cb instanceof PasswordCallback) {
-                    ((PasswordCallback) cb).setPassword(getPassword());
+                    ((PasswordCallback) cb).setPassword(password.toCharArray());
+                    password = null; // Clear password once finished
                 } else if (cb instanceof RealmCallback) {
                     ((RealmCallback) cb).setText(realm);
                 } else {
@@ -189,11 +189,6 @@ public class ClientAuthenticator {
         }
     }
 
-    private char[] getPassword() throws IOException {
-        if (password != null) return password.toCharArray();
-        return Password.getInstance().readPassword("Enter password: ");
-    }
-    
     public boolean isEncryptionEnabled() {
         checkInitialized();
         return SaslSecurityLayer.getInstance(saslClient).isEnabled();

@@ -31,7 +31,6 @@ public abstract class MailConnection {
     protected TraceOutputStream traceOut;
     protected MailInputStream mailIn;
     protected MailOutputStream mailOut;
-    protected boolean closed;
     protected State state;
 
     public static enum State {
@@ -58,10 +57,14 @@ public abstract class MailConnection {
     }
 
     public void connect() throws IOException {
+        if (isConnected()) return;
         socket = config.createSocket();
         initStreams(new BufferedInputStream(socket.getInputStream()),
-                     new BufferedOutputStream(socket.getOutputStream()));
+                    new BufferedOutputStream(socket.getOutputStream()));
         processGreeting();
+        if (config.isTlsEnabled() && !config.isSslEnabled()) {
+            startTls();
+        }
     }
 
     protected void initStreams(InputStream is, OutputStream os)
@@ -75,41 +78,37 @@ public abstract class MailConnection {
     }
 
     protected abstract void processGreeting() throws IOException;
-    protected abstract void sendLogin() throws IOException;
+    protected abstract void sendLogin(String user, String pass) throws IOException;
     protected abstract void sendAuthenticate(boolean ir) throws IOException;
-    protected abstract void sendStartTLS() throws IOException;
+    protected abstract void sendStartTls() throws IOException;
     protected abstract MailInputStream getMailInputStream(InputStream is);
     protected abstract MailOutputStream getMailInputStream(OutputStream os);
 
     public abstract void logout() throws IOException;
 
-    public void login() throws IOException {
+    public void login(String pass) throws IOException {
+        if (pass == null) throw new NullPointerException("password");
         String user = config.getAuthenticationId();
-        String pass = config.getPassword();
-        if (user == null || pass == null) {
-            throw new IllegalStateException(
-                "Missing required login username or password");
+        if (user == null) {
+            throw new IllegalStateException("Authentication id missing");
         }
-        sendLogin();
+        sendLogin(user, pass);
     }
     
-    public void authenticate(boolean ir) throws LoginException, IOException {
+    public void authenticate(String pass) throws LoginException, IOException {
         String mech = config.getMechanism();
         if (mech == null || mech.equalsIgnoreCase(LOGIN)) {
-            login();
+            login(pass);
             return;
-        }
+        }                  
         authenticator = config.createAuthenticator();
+        authenticator.setPassword(pass);
         authenticator.initialize();
-        sendAuthenticate(ir);
+        sendAuthenticate(false);
         if (authenticator.isEncryptionEnabled()) {
             initStreams(authenticator.getUnwrappedInputStream(socket.getInputStream()),
                         authenticator.getWrappedOutputStream(socket.getOutputStream()));
         }
-    }
-
-    public void authenticate() throws LoginException, IOException {
-        authenticate(false);
     }
 
     protected void processContinuation(String s) throws IOException {
@@ -136,13 +135,12 @@ public abstract class MailConnection {
         }
     }
 
-    public void startTLS() throws IOException {
-        sendStartTLS();
+    public void startTls() throws IOException {
+        sendStartTls();
         SSLSocket sock = config.createSSLSocket(socket);
         try {
             sock.startHandshake();
-            mailIn = new MailInputStream(sock.getInputStream());
-            mailOut = new MailOutputStream(sock.getOutputStream());
+            initStreams(sock.getInputStream(), sock.getOutputStream());
         } catch (IOException e) {
             close();
             throw e;
@@ -174,9 +172,13 @@ public abstract class MailConnection {
     public MailConfig getConfig() {
         return config;
     }
+
+    public boolean isConnected() {
+        return socket != null && socket.isConnected();
+    }
     
     public void close() {
-        if (closed) return;
+        if (!isConnected()) return;
         try {
             socket.close();
         } catch (IOException e) {
@@ -189,10 +191,7 @@ public abstract class MailConnection {
                 e.printStackTrace();
             }
         }
-        closed = true;
-    }
-
-    public boolean isClosed() {
-        return closed;
+        socket = null;
+        authenticator = null;
     }
 }

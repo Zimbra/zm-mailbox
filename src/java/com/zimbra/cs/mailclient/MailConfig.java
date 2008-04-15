@@ -21,9 +21,9 @@ public abstract class MailConfig {
     protected String host;
     protected int port = -1;
     protected boolean sslEnabled;
+    protected boolean tlsEnabled;
     protected String authorizationId;
     protected String authenticationId;
-    protected String password;
     protected String mechanism;
     protected String realm;
     protected Map<String, String> saslProperties;
@@ -44,12 +44,11 @@ public abstract class MailConfig {
     public void setDebug(boolean debug) { this.debug = debug; }
     public void setTrace(boolean trace) { this.trace = trace; }
     public void setRealm(String realm) { this.realm = realm; }
+    
     public boolean isTrace() { return trace; }
+    public boolean isSslEnabled() { return sslEnabled; }
+    public boolean isTlsEnabled() { return tlsEnabled; }
     public String getMechanism() { return mechanism; }
-    public boolean isSSLEnabled() { return sslEnabled; }
-    public void setPassword(String pass) { password = pass; }
-    public String getPassword() { return password; }
-
     public String getHost() { return host; }
     public int getPort() { return port; }
     
@@ -61,18 +60,14 @@ public abstract class MailConfig {
         traceOut = ps;
     }
 
-    public TraceInputStream getTraceInputStream(InputStream is) {
-        return new TraceInputStream(is, traceOut);
-    }
-
-    public TraceOutputStream getTraceOutputStream(OutputStream os) {
-        return new TraceOutputStream(os, traceOut);
-    }
-    
-    public void setSSLEnabled(boolean enabled) {
+    public void setSslEnabled(boolean enabled) {
         sslEnabled = enabled;
     }
 
+    public void setTlsEnabled(boolean enabled) {
+        tlsEnabled = enabled;
+    }
+    
     public void setAuthorizationId(String id) {
         authorizationId = id;
     }
@@ -99,6 +94,8 @@ public abstract class MailConfig {
     public void setSSLSocketFactory(SSLSocketFactory sf) {
         sslSocketFactory = sf;
     }
+
+    // TODO Stuff below here should probably be moved to another class
     
     public ClientAuthenticator createAuthenticator() {
         if (authenticationId == null) {
@@ -110,7 +107,6 @@ public abstract class MailConfig {
         ca.setAuthenticationId(authenticationId);
         ca.setRealm(realm);
         ca.setDebug(debug);
-        ca.setPassword(password);
         if (saslProperties != null) {
             ca.getProperties().putAll(saslProperties);
         }
@@ -118,7 +114,7 @@ public abstract class MailConfig {
     }
 
     public Socket createSocket() throws IOException {
-        SocketFactory sf = isSSLEnabled() ?
+        SocketFactory sf = isSslEnabled() ?
             getSSLSocketFactory() : SocketFactory.getDefault();
         return sf.createSocket(getHost(), getPort());
     }
@@ -131,5 +127,13 @@ public abstract class MailConfig {
     public SSLSocketFactory getSSLSocketFactory() {
         return sslSocketFactory != null ?
             sslSocketFactory : (SSLSocketFactory) SSLSocketFactory.getDefault();
+    }
+
+    public TraceInputStream getTraceInputStream(InputStream is) {
+        return new TraceInputStream(is, traceOut);
+    }
+
+    public TraceOutputStream getTraceOutputStream(OutputStream os) {
+        return new TraceOutputStream(os, traceOut);
     }
 }

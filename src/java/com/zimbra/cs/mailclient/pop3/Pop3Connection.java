@@ -53,10 +53,9 @@ public class Pop3Connection extends MailConnection {
         sendCommandCheckStatus("QUIT", null);
     }
 
-
-    protected void sendLogin() throws IOException {
-        sendCommandCheckStatus("USER", config.getAuthenticationId());
-        sendCommandCheckStatus("PASS", config.getPassword());
+    protected void sendLogin(String user, String pass) throws IOException {
+        sendCommandCheckStatus("USER", user);
+        sendCommandCheckStatus("PASS", pass);
     }
     
     protected void sendAuthenticate(boolean ir) throws IOException {
@@ -68,7 +67,7 @@ public class Pop3Connection extends MailConnection {
         sendCommandCheckStatus("AUTH", sb.toString());
     }
 
-    protected void sendStartTLS() throws IOException {
+    protected void sendStartTls() throws IOException {
         sendCommandCheckStatus("STLR", null);
     }
 

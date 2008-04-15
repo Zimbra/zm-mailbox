@@ -69,7 +69,7 @@ public final class ImapResponse {
             break;
         case CAPABILITY:
             is.skipChar(' ');
-            data = Capabilities.read(is);
+            data = ImapCapabilities.read(is);
             break;           
         case FLAGS:
             // "FLAGS" SP flag-list

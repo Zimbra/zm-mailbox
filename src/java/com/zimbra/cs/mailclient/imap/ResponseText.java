@@ -69,7 +69,7 @@ public final class ResponseText {
             break;
         case CAPABILITY:
             is.skipChar(' ');
-            data = Capabilities.read(is);
+            data = ImapCapabilities.read(is);
             break;
         default:
             if (is.match(' ')) {
