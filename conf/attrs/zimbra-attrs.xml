@@ -3101,7 +3101,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="640" name="zimbraReverseProxySSLCiphers" type="string" cardinality="single" optionalIn="globalConfig">
-  <globalConfigValue>HIGH</globalConfigValue>
+  <globalConfigValue>!SSLv2:!MD5:HIGH</globalConfigValue>
   <desc>permitted ciphers for reverse proxy. Ciphers are in the formats supported by OpenSSL 
         e.g. ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP;
         if not set, default ciphers permitted by nginx will apply
