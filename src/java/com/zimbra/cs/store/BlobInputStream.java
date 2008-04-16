@@ -40,7 +40,7 @@ import com.zimbra.common.util.ZimbraLog;
 public class BlobInputStream extends InputStream
 implements SharedInputStream {
     
-    private static final int BUFFER_SIZE = Math.max(LC.zimbra_store_copy_buffer_size_kb.intValue(), 1) * 1024;
+    private static final int BUFFER_SIZE = Math.max(LC.zimbra_blob_input_stream_buffer_size_kb.intValue(), 1) * 1024;
 
     private File mFile;
     private RandomAccessFile mRAF;
