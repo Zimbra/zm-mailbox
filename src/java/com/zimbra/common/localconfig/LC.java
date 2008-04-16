@@ -94,6 +94,7 @@ public class LC {
     public static final KnownKey zimbra_mailbox_manager_hardref_cache;
     public static final KnownKey zimbra_mailbox_active_cache;
     public static final KnownKey zimbra_mailbox_inactive_cache;
+    public static final KnownKey zimbra_mailbox_change_checkpoint_frequency;
 
     public static final KnownKey zimbra_index_max_uncommitted_operations;
     public static final KnownKey zimbra_index_lru_size;
@@ -449,6 +450,8 @@ public class LC {
 
         zimbra_mailbox_inactive_cache = new KnownKey("zimbra_mailbox_inactive_cache");
         zimbra_mailbox_inactive_cache.setDefault("30");
+
+        zimbra_mailbox_change_checkpoint_frequency = new KnownKey("zimbra_mailbox_change_checkpoint_frequency", "100");
 
         zimbra_index_max_uncommitted_operations = new KnownKey("zimbra_index_max_uncommitted_operations");
         zimbra_index_max_uncommitted_operations.setDefault("200");
