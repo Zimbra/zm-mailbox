@@ -99,10 +99,4 @@ final class RefCountedIndexReader {
             mIdx.onClose(this);
         }
     }
-
-    protected void finalize() {
-        if (mReader != null) {
-            throw new java.lang.RuntimeException("Reader isn't closed in RefCountedIndexReader's finalizer!");
-        }
-    }
 }

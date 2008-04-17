@@ -51,11 +51,4 @@ public class RefCountedIndexSearcher {
         mCount++;
         return this;
     }
-    
-    protected void finalize() {
-        if (mReader != null) {
-            throw new java.lang.RuntimeException("Reader isn't closed in RefCountedIndexSearcher's finalizer!");
-        }
-    }
-    
 }
