@@ -25,7 +25,7 @@ zdsync extension
 This extension is used by zdesktop to carry sync status information in soap responses so that web client can properly inform user of mailbox sync status.  It is only present when server is running as zdesktop backend.  zdsync usually is added to every single soap response.  It has the following structure:
 
 <zdsync xmlns="urn:zimbraOffline">
-  [(<account name="{NAME}" id="{ID}" status="{STATUS}" lastsync="{LASTSYNC}">
+  [(<account name="{NAME}" id="{ID}" status="{STATUS}" lastsync="{LASTSYNC}" unread="{INBOX_UNREAD_COUNT}">
     [<error [message="{MESSAGE}"]>
       [<exception>{EXCEPTION}</exception>]
     </error>]
@@ -46,6 +46,8 @@ where
            error: last sync encountered an error other than network or authentication problems
 
 {LASTSYNC} -- timestamp in epoch milliseconds at the end of the last successful sync which could be initial sync or delta sync. 0 means initial sync is not complete (could be running or have encountered error).
+
+{INBOX_UNREAD_COUNT} -- the number of unread messages in Inbox of the account.
 
 {MESSAGE} -- human readable error message in English.  Note, this is more a debugging aid and client is discouraged to display this directly to user.
 
