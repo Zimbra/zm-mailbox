@@ -52,6 +52,9 @@ mail {
     # 
     memcache_timeout              3000ms;
 
+    # POP/IMAP timeout
+    timeout                       3600s;
+
     # The amount of time that NGINX will wait before attempting to reconnect
     # to a memcache server that unexpectedly terminated (or shut down) its 
     # connection with NGINX
