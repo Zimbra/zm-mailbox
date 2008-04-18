@@ -3776,7 +3776,7 @@ public class LdapProvisioning extends Provisioning {
          *  token has changed in this sync.        
          */
         boolean gotNewToken = true;
-        if ((token != null && token.equals(results.token)) || results.token.equals(LdapUtil.EARLIEST_SYNC_TOKEN))
+        if (results.token == null || (token != null && token.equals(results.token)) || results.token.equals(LdapUtil.EARLIEST_SYNC_TOKEN))
             gotNewToken = false;
         
         if (gotNewToken) {
@@ -3855,6 +3855,10 @@ public class LdapProvisioning extends Provisioning {
                 queryExpr = queryExprs[i].substring(fname.length());
             }
         }
+        
+        if (queryExpr == null)
+            ZimbraLog.gal.warn("missing filter def " + name + " in " + Provisioning.A_zimbraGalLdapFilterDef);
+        
         return queryExpr;
     }
 
@@ -3906,8 +3910,10 @@ public class LdapProvisioning extends Provisioning {
         SearchGalResult result = new SearchGalResult();
         result.matches = new ArrayList<GalContact>();
         result.tokenizeKey = GalUtil.tokenizeKey(galParams, galOp);
-        if (query == null)
+        if (query == null) {
+            ZimbraLog.gal.warn("searchZimbraWithQuery query is null");
             return result;
+        }
     
         // filter out hidden entries
         query = "(&("+query+")(!(zimbraHideInGal=TRUE)))";
