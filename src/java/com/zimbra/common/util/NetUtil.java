@@ -86,19 +86,19 @@ public class NetUtil {
         }
 
         if (useChannels) {
-        	//for SSL channels, it's up to the selector to configure SSL stuff
+            //for SSL channels, it's up to the selector to configure SSL stuff
             ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
             serverSocketChannel.configureBlocking(false); //I believe the only time we use channels is in NIO
             serverSocket = serverSocketChannel.socket();
         } else {
-        	if (ssl) {
+            if (ssl) {
                 SSLServerSocketFactory fact = (SSLServerSocketFactory)
                 SSLServerSocketFactory.getDefault();
                 serverSocket = fact.createServerSocket();
                 setSSLEnabledCipherSuites((SSLServerSocket)serverSocket, excludeCiphers);
-        	} else {
-        		serverSocket = new ServerSocket();
-        	}
+            } else {
+                serverSocket = new ServerSocket();
+            }
         }
         
         serverSocket.setReuseAddress(true);
@@ -107,8 +107,20 @@ public class NetUtil {
         return serverSocket;
     }
     
-    private static String[] computeEnabledCipherSuites(String[] enabledCiphers, String[] excludeCiphers) {
-	List<String> excludedCSList = new ArrayList<String>(Arrays.asList(excludeCiphers));
+    /**
+     * 
+     * @param enabledCiphers
+     * @param excludeCiphers
+     * @return Array of enabled cipher after excluding the unwanted ones
+     *         null if either enabledCiphers or excludeCiphers are null or empty.  Callers should not 
+     *         alter the default ciphers on the SSL socket/engine if computeEnabledCipherSuites returns null.
+     */
+    public static String[] computeEnabledCipherSuites(String[] enabledCiphers, String[] excludeCiphers) {
+        if (enabledCiphers == null || enabledCiphers.length == 0 ||
+            excludeCiphers == null || excludeCiphers.length == 0)
+            return null;
+        
+        List<String> excludedCSList = new ArrayList<String>(Arrays.asList(excludeCiphers));
         List<String> enabledCSList = new ArrayList<String>(Arrays.asList(enabledCiphers));
         
         for (String cipher : excludedCSList) {
@@ -120,19 +132,15 @@ public class NetUtil {
     }
 
     private static void setSSLEnabledCipherSuites(SSLServerSocket socket, String[] excludeCiphers) {
-	if (excludeCiphers != null && excludeCiphers.length > 0) {
-	    String[] enabledCiphers = socket.getEnabledCipherSuites();
-            enabledCiphers = computeEnabledCipherSuites(enabledCiphers, excludeCiphers);
+        String[] enabledCiphers = computeEnabledCipherSuites(socket.getEnabledCipherSuites(), excludeCiphers);
+        if (enabledCiphers != null)
             socket.setEnabledCipherSuites(enabledCiphers);
-        }
     }
     
     public static void setSSLEnabledCipherSuites(SSLSocket socket, String[] excludeCiphers) {
-	if (excludeCiphers != null && excludeCiphers.length > 0) {
-	    String[] enabledCiphers = socket.getEnabledCipherSuites();
-            enabledCiphers = computeEnabledCipherSuites(enabledCiphers, excludeCiphers);
+        String[] enabledCiphers = computeEnabledCipherSuites(socket.getEnabledCipherSuites(), excludeCiphers);
+        if (enabledCiphers != null)
             socket.setEnabledCipherSuites(enabledCiphers);
-        }
     }
     
     private static Map mBoundSockets = new HashMap();
