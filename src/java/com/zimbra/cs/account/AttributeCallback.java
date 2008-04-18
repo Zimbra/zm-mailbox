@@ -76,7 +76,8 @@ public abstract class AttributeCallback {
         static enum Mod {
             ADDING,
             REMOVING,
-            REPLACING
+            REPLACING,
+            DELETINGALL
         }
         
         Mod mMod;
@@ -85,6 +86,7 @@ public abstract class AttributeCallback {
         public boolean adding() { return mMod==Mod.ADDING; }
         public boolean removing() { return mMod==Mod.REMOVING; }
         public boolean replacing() { return mMod==Mod.REPLACING; }
+        public boolean deletingall() { return mMod==Mod.DELETINGALL; }
         public List<String> values() { return mValues; }
         public Set<String> valuesSet() { return new HashSet<String>(mValues); }
     }
@@ -93,7 +95,10 @@ public abstract class AttributeCallback {
         MultiValueMod mvm = new MultiValueMod();
         Object v = attrsToModify.get(attrName);
         if (v != null) {
-            mvm.mMod = MultiValueMod.Mod.REPLACING;
+            if ((v instanceof String) && ((String)v).length() == 0)
+        	mvm.mMod = MultiValueMod.Mod.DELETINGALL;
+            else
+                mvm.mMod = MultiValueMod.Mod.REPLACING;
         }
         if (v == null) {
             v = attrsToModify.get("+" + attrName);
