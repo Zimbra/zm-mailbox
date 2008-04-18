@@ -218,8 +218,9 @@ public class ZSimpleRecurrence {
                 }
                 break;
             case MON:
-                if (empty(byRules) && rr.getInterval() < 2 && mEnd == ZSimpleRecurrenceEnd.NEVER) {
+                if (empty(byRules)) {
                     mType = ZSimpleRecurrenceType.MONTHLY; /////
+                    mMonthlyInterval = rr.getInterval();
                     return;
                 } else if (byRules != null && byRules.size() == 1 && byRules.get(0).getType() == ZByType.BY_MONTHDAY) {
                     ZByRule br = byRules.get(0);
@@ -248,7 +249,7 @@ public class ZSimpleRecurrence {
                 }
                 break;
             case YEA:
-                if (empty(byRules) && rr.getInterval() < 2 && mEnd == ZSimpleRecurrenceEnd.NEVER) {
+                if (empty(byRules) && rr.getInterval() < 2) {
                     mType = ZSimpleRecurrenceType.YEARLY; /////
                     return;
                 } else if (rr.getInterval() < 2 && byRules != null && byRules.size() == 2) {
