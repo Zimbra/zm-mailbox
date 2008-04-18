@@ -53,7 +53,7 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
             return true;
         }
 
-        MinaServer.startTLS(mSession);
+        MinaServer.startTLS(mSession, mConfig);
         sendOK(tag, "Begin TLS negotiation now");
         mStartedTLS = true;
         return true;

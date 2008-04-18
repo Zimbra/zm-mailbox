@@ -20,6 +20,7 @@ package com.zimbra.cs.mina;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
+import com.zimbra.common.util.NetUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.security.sasl.SaslFilter;
 import com.zimbra.cs.server.Server;
@@ -34,6 +35,7 @@ import org.apache.mina.transport.socket.nio.SocketAcceptorConfig;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
 import javax.net.ssl.TrustManagerFactory;
 import javax.security.sasl.SaslServer;
 import java.io.FileInputStream;
@@ -57,8 +59,9 @@ public abstract class MinaServer implements Server {
     protected final ExecutorService mHandlerThreadPool;
     protected final SocketAcceptor mSocketAcceptor;
     protected final ServerConfig mServerConfig;
-
+    
     private static SSLContext sslContext;
+    private static String[] mSslEnabledCipherSuites;
 
     private static final String HANDLER_THREAD_NAME = "MinaProtocolHandler";
     
@@ -108,6 +111,76 @@ public abstract class MinaServer implements Server {
     }
 
     /**
+     * Our cipher config attribute zimbraSSLExcludeCipherSuites specifies a list of ciphers that should be 
+     * disabled instead of enabled.  This is because we want the same attribute to control all SSL protocols 
+     * running on mailbox servers.  For https, Jetty configuration only supports an excluded list.  
+     * Therefore we adapted the same scheme for zimbraSSLExcludeCipherSuites, which is written to jetty.xml 
+     * by config rewrite, and will be used for protocols (imaps/pop3s) handled by Zimbra code.
+     * 
+     * For nio based servers/handlers, MinaServer uses SSLFilter for SSL communication.  SSLFilter wraps 
+     * an SSLEngine that actually does all the work.  SSLFilter.setEnabledCipherSuites() sets the list of 
+     * cipher suites to be enabled when the underlying SSLEngine is initialized.  Since we only have an 
+     * excluded list, we need to exclude those from the ciphers suites which are currently enabled for use 
+     * on a engine. 
+     *
+     * Since we do not directly interact with a SSLEngine while sessions are handled,  and there is 
+     * no SSLFilter API to alter the SSLEngine it wraps, we workaround this by doing the following:
+     *   - create a dummy SSLEngine from the same SSLContext instance that will be used for all SSL communication.
+     *   - get the enabled ciphers from SSLEngine.getEnabledCipherSuites()
+     *   - exclude the ciphers we need to exclude from the enabled ciphers, so we now have a net enabled ciphers
+     *     list.
+     * The above is only done once and we keep a singleton of this cipher list.  We then can pass it to 
+     * SSLFilter.setEnabledCipherSuites() for SSL and StartTLS session.
+     * 
+     * @param sslCtxt
+     * @param serverConfig
+     * @return array of enabled ciphers, or empty array (note, not null) if all default ciphers should be enabled.
+     *         (i.e. we do not need to alter the default ciphers)
+     */
+    private static synchronized String[] getSSLEnabledCiphers(SSLContext sslCtxt, ServerConfig serverConfig) {
+        if (mSslEnabledCipherSuites == null) {
+            try {
+                String[] excludeCiphers = serverConfig.getSSLExcludeCiphers();
+
+                if (excludeCiphers != null && excludeCiphers.length > 0) {
+                    // create a SSLEngine to get the ciphers enabled for the engine
+                    SSLEngine sslEng = sslCtxt.createSSLEngine();
+                    String[] enabledCiphers = sslEng.getEnabledCipherSuites();
+                    mSslEnabledCipherSuites = NetUtil.computeEnabledCipherSuites(enabledCiphers, excludeCiphers);
+                } 
+
+                /*
+                 * if null, it means we do not need to alter the ciphers - either excluded cipher is not configures,
+                 * or the original SSLEngine default is null/empty (can this happen?).
+                 * 
+                 * set it to empty array to indicate that mSslEnabledCipherSuites has been initialized.
+                 */
+                if (mSslEnabledCipherSuites == null)
+                    mSslEnabledCipherSuites = new String[0];
+                
+            } catch (Exception e) {
+                Zimbra.halt("exception initializing SSL enabled ciphers", e);
+            }
+        }
+        return mSslEnabledCipherSuites;
+    }
+    
+    /**
+     * Create a SSLFilter and set enabled ciphers on the filter
+     * 
+     * @param serverConfig
+     * @return
+     */
+    private static SSLFilter getSSLFilter(ServerConfig serverConfig) {
+        SSLContext sslCtxt = getSSLContext();
+        SSLFilter sslFilter = new SSLFilter(sslCtxt);
+        String [] enabledCiphers = getSSLEnabledCiphers(sslCtxt, serverConfig);
+        if (enabledCiphers.length > 0)
+            sslFilter.setEnabledCipherSuites(enabledCiphers);
+        return sslFilter;
+    }
+    
+    /**
      * Creates a new server for the specified configuration.
      * 
      * @param config the ServerConfig for the server
@@ -153,7 +226,7 @@ public abstract class MinaServer implements Server {
         ServerConfig sc = getConfig();
         DefaultIoFilterChainBuilder fc = mAcceptorConfig.getFilterChain();
         if (sc.isSSLEnabled()) {
-            fc.addFirst("ssl", new SSLFilter(getSSLContext()));
+            fc.addFirst("ssl", getSSLFilter(getConfig()));
         }
         fc.addLast("codec", new ProtocolCodecFilter(new MinaCodecFactory(this)));
         fc.addLast("executer", new ExecutorFilter(mHandlerThreadPool));
@@ -228,8 +301,8 @@ public abstract class MinaServer implements Server {
      *
      * @param session the IoSession on which to start the TLS handshake
      */
-    public static void startTLS(IoSession session) {
-        SSLFilter filter = new SSLFilter(getSSLContext());
+    public static void startTLS(IoSession session, ServerConfig serverConfig) {
+        SSLFilter filter = getSSLFilter(serverConfig);
         session.getFilterChain().addFirst("ssl", filter);
         session.setAttribute(SSLFilter.DISABLE_ENCRYPTION_ONCE, true);
     }

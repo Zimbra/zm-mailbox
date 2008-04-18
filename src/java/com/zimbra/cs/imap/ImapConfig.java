@@ -61,7 +61,7 @@ public class ImapConfig extends ServerConfig {
         Server server = prov.getLocalServer();
         setSSLEnabled(ssl);
         
-        // set excluded ciphers for SSL and TLS
+        // set excluded ciphers for SSL and StartTLS
         com.zimbra.cs.account.Config config = prov.getConfig();
         setSSLExcludeCiphers(config.getMultiAttr(A_zimbraSSLExcludeCipherSuites));
         

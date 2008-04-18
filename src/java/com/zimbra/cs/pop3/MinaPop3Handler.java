@@ -66,7 +66,7 @@ public class MinaPop3Handler extends Pop3Handler implements MinaHandler {
 
     @Override
     protected void startTLS() throws IOException {
-        MinaServer.startTLS(mSession);
+        MinaServer.startTLS(mSession, mConfig);
         sendOK("Begin TLS negotiation");
     }
     
