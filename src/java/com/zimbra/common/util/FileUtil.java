@@ -46,6 +46,7 @@ import com.zimbra.common.localconfig.LC;
 public class FileUtil {
 
 	private static final int COPYBUFLEN = Math.max(LC.zimbra_store_copy_buffer_size_kb.intValue(), 1) * 1024;
+	private static final long NIO_COPY_CHUNK_SIZE = Math.max(LC.zimbra_nio_file_copy_chunk_size_kb.longValue(), 1) * 1024;
 
 	public static void copy(String src, String dest) throws IOException {
 		copy(new File(src), new File(dest));
@@ -132,11 +133,19 @@ public class FileUtil {
     		fout = new FileOutputStream(to);
     		FileChannel cin = fin.getChannel();
     		FileChannel cout = fout.getChannel();
-    		long target = cin.size();
-    		long transferred = cin.transferTo(0, target, cout);
-    		if (target != transferred) {
-    			throw new IOException("FileUtil.copy(" + from + "," + to + "): incomplete transfer target=" + target + " transferred=" + transferred); 
-    		}
+            long length = cin.size();
+            long offset = 0;
+            long bytesLeft = length;
+            while (bytesLeft > 0) {
+                long chunkSize = Math.min(NIO_COPY_CHUNK_SIZE, bytesLeft);
+                long bytesCopied = cin.transferTo(offset, chunkSize, cout);
+                if (bytesCopied != chunkSize) {
+                    throw new IOException("FileUtil.copy(" + from + "," + to + "): incomplete transfer; expected=" +
+                                          chunkSize + " bytes, actual=" + bytesCopied + " bytes");
+                }
+                offset += bytesCopied;
+                bytesLeft -= bytesCopied;
+            }
             if (sync)
                 cout.force(true);
     	} finally {
