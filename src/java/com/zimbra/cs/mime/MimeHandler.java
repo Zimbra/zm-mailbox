@@ -189,6 +189,7 @@ public abstract class MimeHandler {
 
     /**
      * Converts the document into HTML/images for viewing.
+     * TODO: remove when old conversion API that requires files is removed
      * 
      * @param doc
      * @param baseURL
@@ -197,6 +198,18 @@ public abstract class MimeHandler {
      * @throws ConversionException
      */
     public abstract String convert(AttachmentInfo doc, String baseURL) throws IOException, ConversionException;
+
+    /**
+     * Converts the document into HTML/images for viewing.
+     * 
+     * @param InputStream
+     * @param relative path for linked files
+     * @return HTML data
+     * @throws IOException
+     */
+    public byte[] convert(InputStream is, String path) throws IOException {
+        return null;
+    }
 
     /**
      * Determines if this handler can process archive files (zip, tar, etc.).
