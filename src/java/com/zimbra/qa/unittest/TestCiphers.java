@@ -40,6 +40,39 @@ extends TestCase {
 
     private static final String[] EXCLUDED_CIPHERS = new String[] {"SSL_RSA_WITH_DES_CBC_SHA"};
     
+    // set to true when nio is enabled on the server, to toggle between IMAP_STARTTLS_RESPONSE and IMAP_STARTTLS_RESPONSE_NIO
+    private static final boolean TESTING_NIO = false;
+    
+    /*
+To enable nio, add the following in localconfig.xml
+
+  <key name="nio_enabled">
+    <value>true</value>
+  </key>
+  <key name="nio_imap_enabled">
+    <value>true</value>
+  </key>
+  <key name="nio_pop3_enabled">
+    <value>true</value>
+  </key>
+  <key name="nio_lmtp_enabled">
+    <value>true</value>
+  </key>
+  
+    */
+    
+    private static final boolean zimbraSSLExcludeCipherSuites_configured = true;
+    
+    /*
+
+configure excluded ciphers, need to restart server
+zmprov mcf +zimbraSSLExcludeCipherSuites SSL_RSA_WITH_DES_CBC_SHA +zimbraSSLExcludeCipherSuites SSL_DHE_RSA_WITH_DES_CBC_SHA +zimbraSSLExcludeCipherSuites SSL_DHE_DSS_WITH_DES_CBC_SHA +zimbraSSLExcludeCipherSuites SSL_RSA_EXPORT_WITH_RC4_40_MD5 +zimbraSSLExcludeCipherSuites SSL_RSA_EXPORT_WITH_DES40_CBC_SHA +zimbraSSLExcludeCipherSuites SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA +zimbraSSLExcludeCipherSuites SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA    
+       
+clear all excluded ciphers, need to restart server
+zmprov mcf zimbraSSLExcludeCipherSuites ""
+
+    */
+    
     private static final String CRLF = "\r\n";
     private static final String HOSTNAME = "localhost";
     
@@ -61,7 +94,8 @@ extends TestCase {
     private static final String IMAP_LOGIN_RESPONSE = "1 OK.*LOGIN completed";
     private static final String IMAP_CLEARTEXT_FAILED_RESPONSE = "1 NO cleartext logins disabled";
     private static final String IMAP_STARTTLS = "2 STARTTLS" + CRLF;
-    private static final String IMAP_STARTTLS_RESPONSE = "2 OK Begin TLS negotiation now";
+    private static final String IMAP_STARTTLS_RESPONSE = "2 OK Begin TLS negotiation now";      // our non-nio imap server returns Begin
+    private static final String IMAP_STARTTLS_RESPONSE_NIO = "2 OK begin TLS negotiation now";  // our nio imap server returns begin 
     private static final String IMAP_LOGOUT = "3 LOGOUT" + CRLF;
     private static final String IMAP_LOGOUT_RESPONSE1 = "\\* BYE.*IMAP4rev1 server terminating connection";
     private static final String IMAP_LOGOUT_RESPONSE2 = "3 OK LOGOUT completed";
@@ -93,7 +127,6 @@ extends TestCase {
     private static final String HTTP_SOAP_PING_RESPONSE = "HTTP/1.1 200 OK";
     private static final String HTTP_SOAP_PING_RESPONSE_CLEARTEXT = "HTTP/1.1 500 Internal Server Error";  // because PingRequest is an admin command and thus is only allowed on admin port
     
-    private static Provisioning mProv;
     private static int mPop3CleartextPort;
     private static int mPop3SslPort;
     private static int mImapCleartextPort;
@@ -103,13 +136,20 @@ extends TestCase {
     
     private Map<Socket, BufferedReader> mReaders = new HashMap<Socket, BufferedReader>();
     
-    public static void init()
-    throws Exception {
+    static {
+        try {
+            init();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    static void init() throws Exception {
         // Initialize SSL for SOAP provisioning
         EasySSLProtocolSocketFactory.init();
         
-        mProv = Provisioning.getInstance();
-        Server server = mProv.getLocalServer();
+        Provisioning prov = Provisioning.getInstance();
+        Server server = prov.getLocalServer();
         mPop3CleartextPort = server.getIntAttr(Provisioning.A_zimbraPop3BindPort, 7110);
         mPop3SslPort = server.getIntAttr(Provisioning.A_zimbraPop3SSLBindPort, 7995);
         mImapCleartextPort = server.getIntAttr(Provisioning.A_zimbraImapBindPort, 7143);
@@ -119,8 +159,8 @@ extends TestCase {
     }
     
     private void setEnabledCipherSuites(Socket socket) {
-	SSLSocket sslSocket = (SSLSocket)socket;
-	sslSocket.setEnabledCipherSuites(EXCLUDED_CIPHERS);
+        SSLSocket sslSocket = (SSLSocket)socket;
+        sslSocket.setEnabledCipherSuites(EXCLUDED_CIPHERS);
     }
         
     public void pop3(boolean useExcludedCipher) throws Exception {
@@ -142,12 +182,13 @@ extends TestCase {
             send(socket, POP3_USER, POP3_USER_RESPONSE);
             send(socket, POP3_PASS, POP3_PASS_RESPONSE);
             send(socket, POP3_QUIT, POP3_QUIT_RESPONSE);
-            good = !useExcludedCipher;
+            good = !zimbraSSLExcludeCipherSuites_configured || !useExcludedCipher;
         } catch (javax.net.ssl.SSLHandshakeException e) {
-            good = useExcludedCipher;
+            good = zimbraSSLExcludeCipherSuites_configured && useExcludedCipher;
         } finally {
             socket.close();
         }
+        assertTrue(good);
         
         // Test TLS
         good = false;
@@ -162,12 +203,13 @@ extends TestCase {
             send(socket, POP3_USER, POP3_USER_RESPONSE);
             send(socket, POP3_PASS, POP3_PASS_RESPONSE);
             send(socket, POP3_QUIT, POP3_QUIT_RESPONSE);
-            good = !useExcludedCipher;
+            good = !zimbraSSLExcludeCipherSuites_configured || !useExcludedCipher;
         } catch (javax.net.ssl.SSLHandshakeException e) {
-            good = useExcludedCipher;
+            good = zimbraSSLExcludeCipherSuites_configured && useExcludedCipher;
         } finally {
             socket.close();
         }
+        assertTrue(good);
     }
     
     public void imap(boolean useExcludedCipher) throws Exception {
@@ -188,9 +230,9 @@ extends TestCase {
             send(socket, IMAP_LOGIN, IMAP_LOGIN_RESPONSE);
             send(socket, IMAP_LOGOUT, IMAP_LOGOUT_RESPONSE1);
             send(socket, null, IMAP_LOGOUT_RESPONSE2);
-            good = !useExcludedCipher;
+            good = !zimbraSSLExcludeCipherSuites_configured || !useExcludedCipher;
         } catch (javax.net.ssl.SSLHandshakeException e) {
-            good = useExcludedCipher;
+            good = zimbraSSLExcludeCipherSuites_configured && useExcludedCipher;
         } finally {
             socket.close();
         }
@@ -200,7 +242,8 @@ extends TestCase {
         good = false;
         socket = new Socket(HOSTNAME, mImapCleartextPort);
         send(socket, null, IMAP_CONNECT_RESPONSE);
-        send(socket, IMAP_STARTTLS, IMAP_STARTTLS_RESPONSE);
+        String expectedStartTLSResp = TESTING_NIO?IMAP_STARTTLS_RESPONSE_NIO:IMAP_STARTTLS_RESPONSE;
+        send(socket, IMAP_STARTTLS, expectedStartTLSResp);
         SSLSocketFactory factory = (SSLSocketFactory) DummySSLSocketFactory.getDefault();
         socket = factory.createSocket(socket, HOSTNAME, mImapCleartextPort, true);
         if (useExcludedCipher)
@@ -209,9 +252,9 @@ extends TestCase {
             send(socket, IMAP_LOGIN, IMAP_LOGIN_RESPONSE);
             send(socket, IMAP_LOGOUT, IMAP_LOGOUT_RESPONSE1);
             send(socket, null, IMAP_LOGOUT_RESPONSE2);
-            good = !useExcludedCipher;
+            good = !zimbraSSLExcludeCipherSuites_configured || !useExcludedCipher;
         } catch (javax.net.ssl.SSLHandshakeException e) {
-            good = useExcludedCipher;
+            good = zimbraSSLExcludeCipherSuites_configured && useExcludedCipher;
         } finally {
             socket.close();
         }
@@ -219,14 +262,17 @@ extends TestCase {
     }
     
     public void http(boolean useExcludedCipher) throws Exception {
-	// Test cleartext
+        // Test cleartext
         Socket socket = new Socket(HOSTNAME, mHttpCleartextPort);
         send(socket, HTTP_SOAP_PING, HTTP_SOAP_PING_RESPONSE_CLEARTEXT);
 	
         // Test SSL
+        // for http, don't take into account if zimbraSSLExcludeCipherSuites_configured 
+        // unless using config rewrite for jetty.xml, which usually is not done in dev env.
+        // 
         boolean good = false;
-	socket = DummySSLSocketFactory.getDefault().createSocket(HOSTNAME, mHttpSslPort);
-	if (useExcludedCipher)
+        socket = DummySSLSocketFactory.getDefault().createSocket(HOSTNAME, mHttpSslPort);
+        if (useExcludedCipher)
             setEnabledCipherSuites(socket);
         try {
             send(socket, HTTP_SOAP_PING, HTTP_SOAP_PING_RESPONSE);
@@ -240,18 +286,18 @@ extends TestCase {
     }
     
     public void testPop3() throws Exception {
-	pop3(true);
-	pop3(false);
+        pop3(true);
+        pop3(false);
     }
     
     public void testImap() throws Exception {
-	imap(true);
-	imap(false);
+        imap(true);
+        imap(false);
     }
     
     public void testHttp() throws Exception {
-	http(true);
-	http(false);
+        http(true);
+        http(false);
     }
     
     /**
@@ -286,7 +332,6 @@ extends TestCase {
     
     public static void main(String[] args) throws Exception {
         TestUtil.cliSetup();
-        init();
         TestUtil.runTest(new TestSuite(TestCiphers.class));        
     }
 }

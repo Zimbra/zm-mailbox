@@ -50,7 +50,7 @@ public class Pop3Config extends ServerConfig {
         setNumThreads(server.getIntAttr(A_zimbraPop3NumThreads,
                                         DEFAULT_NUM_THREADS));
         
-        // set excluded ciphers for SSL and TLS
+        // set excluded ciphers for SSL and StartTLS
         com.zimbra.cs.account.Config config = prov.getConfig();
         setSSLExcludeCiphers(config.getMultiAttr(A_zimbraSSLExcludeCipherSuites));
         
