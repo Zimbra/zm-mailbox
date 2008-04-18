@@ -28,10 +28,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
-import java.util.HashSet;
 import java.util.Set;
 
 import javax.mail.internet.SharedInputStream;
+
+import org.jivesoftware.util.ConcurrentHashSet;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
@@ -49,6 +50,11 @@ implements SharedInputStream {
     private int mMarkReadLimit;
     private long mStart;
     private long mEnd;
+    
+    /**
+     * Contains this stream and all related streams created with {@link #newStream}.
+     * This set is shared between the original stream and all substreams.
+     */
     private Set<BlobInputStream> mSubStreams;
     
     private byte[] mBuf = new byte[BUFFER_SIZE];
@@ -60,16 +66,29 @@ implements SharedInputStream {
      */
     public BlobInputStream(File file)
     throws IOException {
-        this(file, null, null);
+        this(file, null, null, null);
     }
 
     /**
      * Constructs a <tt>BlobInputStream</tt> that reads a section of a file.
      * @param file the file
-     * @param start starting index
-     * @param end ending index (exclusive)
+     * @param start starting index, or <tt>null</tt> for beginning of file
+     * @param end ending index (exclusive), or <tt>null</tt> for end of file
      */
     public BlobInputStream(File file, Long start, Long end)
+    throws IOException {
+        this(file, start, end, null);
+    }
+    
+    /**
+     * Constructs a <tt>BlobInputStream</tt> that reads a section of a file.
+     * @param file the file
+     * @param start starting index, or <tt>null</tt> for beginning of file
+     * @param end ending index (exclusive), or <tt>null</tt> for end of file
+     * @param subStreams the <tt>Set</tt> of substreams, or <tt>null</tt>
+     * if this is the original stream
+     */
+    private BlobInputStream(File file, Long start, Long end, Set<BlobInputStream> subStreams)
     throws IOException {
         if (start != null && end != null && start > end) {
             String msg = String.format("Start index %d is larger than end index %d", start, end);
@@ -92,6 +111,11 @@ implements SharedInputStream {
             }
             mEnd = end;
         }
+        mSubStreams = subStreams;
+        if (mSubStreams == null) {
+            mSubStreams = new ConcurrentHashSet<BlobInputStream>();
+        }
+        mSubStreams.add(this);
     }
     
     /**
@@ -132,11 +156,8 @@ implements SharedInputStream {
      */
     public void closeFile()
     throws IOException {
-        closeMyFile();
-        if (mSubStreams != null) {
-            for (BlobInputStream subStream : mSubStreams) {
-                subStream.closeFile();
-            }
+        for (BlobInputStream subStream : mSubStreams) {
+            subStream.closeMyFile();
         }
     }
     
@@ -145,12 +166,9 @@ implements SharedInputStream {
      */
     public void fileMoved(File newFile)
     throws IOException {
-        closeMyFile();
-        mFile = newFile;
-        if (mSubStreams != null) {
-            for (BlobInputStream subStream : mSubStreams) {
-                subStream.fileMoved(newFile);
-            }
+        for (BlobInputStream subStream : mSubStreams) {
+            subStream.closeMyFile();
+            subStream.mFile = newFile;
         }
     }
     
@@ -164,6 +182,7 @@ implements SharedInputStream {
     @Override
     public void close() throws IOException {
         closeMyFile();
+        mSubStreams.remove(this);
         mPos = mEnd;
     }
 
@@ -284,11 +303,6 @@ implements SharedInputStream {
         return numSkipped;
     }
     
-    @Override
-    protected void finalize() throws Throwable {
-        closeMyFile();
-    }
-
     ////////////// SharedInputStream methods //////////////
 
     public long getPosition() {
@@ -313,15 +327,11 @@ implements SharedInputStream {
         
         BlobInputStream newStream = null;
         try {
-            newStream = new BlobInputStream(mFile, start, end);
+            newStream = new BlobInputStream(mFile, start, end, mSubStreams);
         } catch (IOException e) {
             ZimbraLog.misc.warn("Unable to create substream for %s", mFile.getPath(), e);
         }
-
-        if (mSubStreams == null) {
-            mSubStreams = new HashSet<BlobInputStream>();
-        }
-        mSubStreams.add(newStream);
+        
         return newStream;
     }
 }
