@@ -177,7 +177,7 @@ public class NativeFormatter extends Formatter {
     		handleConversion(context, is, doc.getName(), doc.getContentType(), doc.getDigest());
     	} else {
         	context.resp.setContentType(doc.getContentType());
-            sendbackBinaryData(context.req, context.resp, is, Part.INLINE, doc.getName());
+            sendbackBinaryData(context.req, context.resp, is, null, doc.getName());
         }
     }
     
@@ -280,6 +280,10 @@ public class NativeFormatter extends Formatter {
     };
 
     public static void sendbackBinaryData(HttpServletRequest req, HttpServletResponse resp, InputStream in, String disposition, String filename) throws IOException {
+    	if (disposition == null) {
+            String disp = req.getParameter(UserServlet.QP_DISP);
+            disposition = (disp == null || disp.toLowerCase().startsWith("i") ) ? Part.INLINE : Part.ATTACHMENT;
+    	}
         PushbackInputStream pis = new PushbackInputStream(in, READ_AHEAD_BUFFER_SIZE);
         boolean isSafe = false;
         String ua = req.getHeader("User-Agent");
