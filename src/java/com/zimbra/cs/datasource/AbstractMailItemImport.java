@@ -12,8 +12,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.SystemUtil;
 
-import javax.mail.Store;
-import javax.mail.MessagingException;
 import java.io.IOException;
 
 /**
@@ -40,31 +38,8 @@ public abstract class AbstractMailItemImport implements MailItemImport {
         return null;
     }
 
-    protected void connect() throws ServiceException  {
-        Store store = getStore();
-        if (!store.isConnected()) {
-            DataSource ds = getDataSource();
-            try {
-                store.connect(ds.getHost(), ds.getPort(), ds.getUsername(),
-                              ds.getDecryptedPassword());
-            } catch (MessagingException e) {
-                throw ServiceException.FAILURE("Unable to connect to mail store: " + ds, e);
-            }
-        }
-    }
+    protected abstract void connect() throws ServiceException;
 
-    protected void disconnect() throws ServiceException {
-        Store store = getStore();
-        if (store.isConnected()) {
-            DataSource ds = getDataSource();
-            try {
-                store.close();
-            } catch (MessagingException e) {
-                ZimbraLog.datasource.warn("Unable to disconnect from mail store: " + ds);
-            }
-        }
-    }
-    
     protected void validateDataSource() throws ServiceException {
         DataSource ds = getDataSource();
         if (ds.getHost() == null) {
@@ -109,10 +84,12 @@ public abstract class AbstractMailItemImport implements MailItemImport {
         }
         return msg.getId();
     }
+
+    public boolean isSslEnabled() {
+        return dataSource.getConnectionType() == DataSource.ConnectionType.ssl;
+    }
     
     public DataSource getDataSource() {
         return dataSource;
     }
-
-    public abstract Store getStore();
 }

@@ -1073,6 +1073,22 @@ public class Folder extends MailItem {
         return MailItem.encodeMetadata(meta, color, version);
     }
 
+    /**
+     * Returns true if specified folder is a descendant of this folder.
+     * @param folder the folder whose ancestry is to be checked
+     * @return true if the folder is a descendant, false otherwise
+     * @throws ServiceException if an error ocurred
+     */
+    public boolean isDescendant(Folder folder) throws ServiceException {
+        while (true) {
+            int parentId = folder.getParentId();
+            if (parentId == getId())
+                return true;
+            if (parentId == Mailbox.ID_FOLDER_ROOT)
+                return false;
+            folder = folder.getMailbox().getFolderById(null, parentId);
+        }
+    }
 
     private static final String CN_ATTRIBUTES = "attributes";
 
