@@ -75,7 +75,7 @@ extends ScheduledTask {
             if (ds != null) {
                 // Do the work
                 ZimbraLog.addDataSourceNameToContext(ds.getName());
-                DataSourceManager.importData(account, ds);
+                DataSourceManager.importData(ds);
             } else {
                 ZimbraLog.datasource.info("DataSource %s was deleted.  Cancelling future tasks.",
                     getDataSourceId());

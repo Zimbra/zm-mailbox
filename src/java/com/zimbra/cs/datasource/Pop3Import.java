@@ -17,7 +17,6 @@
 package com.zimbra.cs.datasource;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -37,15 +36,14 @@ import javax.mail.UIDFolder;
 
 import com.sun.mail.pop3.POP3Folder;
 import com.sun.mail.pop3.POP3Message;
+import com.sun.mail.pop3.POP3Store;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.CustomSSLSocketFactory;
 import com.zimbra.common.util.DummySSLSocketFactory;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.db.DbPop3Message;
 import com.zimbra.cs.filter.RuleManager;
@@ -57,73 +55,64 @@ import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mime.ParsedMessage;
 
 
-public class Pop3Import implements MailItemImport {
+public class Pop3Import extends AbstractMailItemImport {
+    private POP3Store store;
+    
     // (item id).(blob digest)
     private static final Pattern PAT_ZIMBRA_UIDL = Pattern.compile("(\\d+)\\.([^\\.]+)");
     
-    private static Session sSession;
-    private static Session sSelfSignedCertSession;
-    private static FetchProfile UID_PROFILE;
-
     private static final int MAX_MESSAGE_MEMORY_SIZE =
         LC.data_source_max_message_memory_size.intValue();
+
+    private static final long TIMEOUT = LC.javamail_pop3_timeout.longValue() * Constants.MILLIS_PER_SECOND;
+
+    private static final boolean DEBUG =
+        Boolean.getBoolean("ZimbraJavamailDebug") || LC.javamail_pop3_debug.booleanValue();
+
+    private static final Session SESSION;
+    private static final FetchProfile UID_PROFILE;
     
     static {
-    	
-    	long timeout = LC.javamail_pop3_timeout.longValue() * Constants.MILLIS_PER_SECOND;
-    	
         Properties props = new Properties();
-        props.setProperty("mail.pop3.connectiontimeout", Long.toString(timeout));
-        props.setProperty("mail.pop3.timeout", Long.toString(timeout));
-        props.setProperty("mail.pop3s.connectiontimeout", Long.toString(timeout));
-        props.setProperty("mail.pop3s.timeout", Long.toString(timeout));    	
-		props.setProperty("mail.pop3s.socketFactory.class", CustomSSLSocketFactory.class.getName());
+        props.setProperty("mail.pop3.connectiontimeout", Long.toString(TIMEOUT));
+        props.setProperty("mail.pop3.timeout", Long.toString(TIMEOUT));
+        props.setProperty("mail.pop3s.connectiontimeout", Long.toString(TIMEOUT));
+        props.setProperty("mail.pop3s.timeout", Long.toString(TIMEOUT));
+        props.setProperty("mail.pop3s.socketFactory.class",
+            LC.data_source_trust_self_signed_certs.booleanValue() ?
+                DummySSLSocketFactory.class.getName() : CustomSSLSocketFactory.class.getName());
         props.setProperty("mail.pop3s.socketFactory.fallback", "false");
         if (LC.javamail_pop3_enable_starttls.booleanValue()) {
         	props.setProperty("mail.pop3.starttls.enable", "true");
-        	props.setProperty("mail.pop3s.starttls.enable", "true");
         }
         props.setProperty("mail.pop3.max.message.memory.size",
                           String.valueOf(MAX_MESSAGE_MEMORY_SIZE));
-        sSession = Session.getInstance(props);
-        if (LC.javamail_pop3_debug.booleanValue())
-        	sSession.setDebug(true);
+        props.setProperty("mail.pop3s.max.message.memory.size",
+                          String.valueOf(MAX_MESSAGE_MEMORY_SIZE));
+        if (DEBUG) {
+            props.setProperty("mail.debug", "true");
+        }
         
-        Properties sscProps = new Properties();
-        sscProps.setProperty("mail.pop3s.connectiontimeout", Long.toString(timeout));
-        sscProps.setProperty("mail.pop3s.timeout", Long.toString(timeout));    	
-        sscProps.setProperty("mail.pop3s.socketFactory.class", DummySSLSocketFactory.class.getName());
-        sscProps.setProperty("mail.pop3s.socketFactory.fallback", "false");
-        sSelfSignedCertSession = Session.getInstance(sscProps);
-        if (LC.javamail_pop3_enable_starttls.booleanValue())
-        	sscProps.setProperty("mail.pop3s.starttls.enable", "true");
-        if (LC.javamail_pop3_debug.booleanValue())
-        	sSelfSignedCertSession.setDebug(true);
+        SESSION = Session.getInstance(props);
         
+        if (DEBUG) {
+            SESSION.setDebug(true);
+        }
+
         UID_PROFILE = new FetchProfile();
         UID_PROFILE.add(UIDFolder.FetchProfileItem.UID);
     }
 
-    public String test(DataSource ds) throws ServiceException {
-        String error = null;
-        
-        validateDataSource(ds);
-
-        try {
-            Store store = getStore(ds.getConnectionType());
-            store.connect(ds.getHost(), ds.getPort(), ds.getUsername(), ds.getDecryptedPassword());
-            store.close();
-        } catch (MessagingException e) {
-            ZimbraLog.datasource.info("Testing connection to data source", e);
-            error = SystemUtil.getInnermostException(e).getMessage();
-        }
-        return error;
+    public Pop3Import(DataSource ds) throws ServiceException {
+        super(ds);
+        store = getStore(ds);
     }
     
-    public void importData(Account account, DataSource dataSource, boolean fullSync)
-            throws ServiceException {
+    public void importData(boolean fullSync) throws ServiceException {
+        validateDataSource();
+        connect();
         try {
-            fetchMessages(account, dataSource);
+            fetchMessages();
         } catch (MessagingException e) {
             // Only send the Java class name back to the client if there's no message
             String message = e.getMessage();
@@ -138,47 +127,37 @@ public class Pop3Import implements MailItemImport {
                 message = e.toString();
             }
             throw ServiceException.FAILURE(message, e);
+        } finally {
+            disconnect();
         }
     }
 
-    private void validateDataSource(DataSource ds)
-    throws ServiceException {
-        if (ds.getHost() == null) {
-            throw ServiceException.FAILURE(ds + ": host not set", null);
+    private static POP3Store getStore(DataSource ds) throws ServiceException {
+        DataSource.ConnectionType type = ds.getConnectionType();
+        String provider = getProvider(type);
+        if (provider == null) {
+            throw ServiceException.FAILURE("Invalid connection type: " + type, null);
         }
-        if (ds.getPort() == null) {
-            throw ServiceException.FAILURE(ds + ": port not set", null);
+        try {
+            return (POP3Store) SESSION.getStore(provider);
+        } catch (NoSuchProviderException e) {
+            throw ServiceException.FAILURE("Unknown provider: " + provider, e);
         }
-        if (ds.getConnectionType() == null) {
-            throw ServiceException.FAILURE(ds + ": connectionType not set", null);
-        }
-        if (ds.getUsername() == null) {
-            throw ServiceException.FAILURE(ds + ": username not set", null);
+    }
+
+    private static String getProvider(DataSource.ConnectionType type) {
+        switch (type) {
+        case cleartext:
+            return "pop3";
+        case ssl:
+            return "pop3s";
+        default:
+            return null;
         }
     }
     
-    private Store getStore(DataSource.ConnectionType connectionType)
-    throws NoSuchProviderException, ServiceException {
-        if (connectionType == DataSource.ConnectionType.cleartext) {
-            return sSession.getStore("pop3");
-        } else if (connectionType == DataSource.ConnectionType.ssl) {
-            if (LC.data_source_trust_self_signed_certs.booleanValue()) {
-                return sSelfSignedCertSession.getStore("pop3s");
-            } else {
-                return sSession.getStore("pop3s");
-            }
-        } else {
-            throw ServiceException.FAILURE("Invalid connectionType: " + connectionType, null);
-        }
-    }
-    
-    private void fetchMessages(Account account, DataSource ds)
-    throws MessagingException, IOException, ServiceException {
-        validateDataSource(ds);
-        
-        // Connect (USER, PASS, STAT)
-        Store store = getStore(ds.getConnectionType());
-        store.connect(ds.getHost(), ds.getPort(), ds.getUsername(), ds.getDecryptedPassword());
+    private void fetchMessages() throws MessagingException, IOException, ServiceException {
+        DataSource ds = getDataSource();
         POP3Folder folder = (POP3Folder) store.getFolder("INBOX");
         folder.open(Folder.READ_WRITE);
 
@@ -187,11 +166,10 @@ public class Pop3Import implements MailItemImport {
         // Bail out if there are no messages
         if (msgs.length == 0) {
             folder.close(false);
-            store.close();
             return;
         }
         
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(ds.getAccount());
         
         // Fetch message UID's for reconciliation (UIDL)
         folder.fetch(msgs, UID_PROFILE);
@@ -201,7 +179,6 @@ public class Pop3Import implements MailItemImport {
         String uid = folder.getUID(msgs[0]);
         if (poppingSelf(mbox, uid)) {
             folder.close(false);
-            store.close();
             throw ServiceException.INVALID_REQUEST(
                 "User attempted to import messages from his own mailbox", null);
         }
@@ -257,7 +234,6 @@ public class Pop3Import implements MailItemImport {
         
         // Expunge if necessary and disconnect (QUIT)
         folder.close(!ds.leaveOnServer());
-        store.close();
     }
 
     private int addMessage(Mailbox mbox, DataSource ds, ParsedMessage pm, int folderId) throws ServiceException, IOException {
@@ -319,5 +295,9 @@ public class Pop3Import implements MailItemImport {
         }
         
         return true;
+    }
+
+    public Store getStore() {
+        return store;
     }
 }

@@ -62,9 +62,7 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.CustomSSLSocketFactory;
 import com.zimbra.common.util.DummySSLSocketFactory;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.db.DbImapMessage;
 import com.zimbra.cs.filter.RuleManager;
@@ -82,12 +80,10 @@ import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.MessageData;
 import com.zimbra.cs.mailclient.imap.ImapData;
 
-public class ImapImport implements MailItemImport {
-    private final UidFetch mUidFetch;
+public class ImapImport extends AbstractMailItemImport {
+    private final UidFetch uidFetch;
     private final byte[] buf = new byte[4096]; // Temp buffer for checksum calculation
-    
-    private static Session sSession;
-    private static FetchProfile FETCH_PROFILE;
+    private IMAPStore store;
 
     private static final int FETCH_SIZE = LC.data_source_fetch_size.intValue();
     private static final int MAX_MESSAGE_MEMORY_SIZE =
@@ -95,82 +91,58 @@ public class ImapImport implements MailItemImport {
 
     private static final boolean DEBUG = 
         Boolean.getBoolean("ZimbraJavamailDebug") || LC.javamail_imap_debug.booleanValue();
-    
+
+    private static final String ID_EXT = "(\"vendor\" \"Zimbra\" \"os\" \"" +
+        System.getProperty("os.name") + "\" \"os-version\" \"" +
+        System.getProperty("os.version") + "\" \"guid\" \"" + BuildInfo.TYPE + "\")";
+
+    private static final long TIMEOUT =
+        LC.javamail_imap_timeout.longValue() * Constants.MILLIS_PER_SECOND;
+
+    private static final Session SESSION;
+    private static final FetchProfile FETCH_PROFILE;
+
     static {
-    	String idExt = "(\"vendor\" \"Zimbra\" \"os\" \"" + System.getProperty("os.name") +
-    	               "\" \"os-version\" \"" + System.getProperty("os.version") + "\" \"guid\" \"" + BuildInfo.TYPE + "\")";
-    	
-    	long timeout = LC.javamail_imap_timeout.longValue() * Constants.MILLIS_PER_SECOND;
-    	
         Properties props = new Properties();
-        props.setProperty("mail.imap.connectiontimeout", Long.toString(timeout));
-        props.setProperty("mail.imap.timeout", Long.toString(timeout));
-        props.setProperty("mail.imaps.connectiontimeout", Long.toString(timeout));
-        props.setProperty("mail.imaps.timeout", Long.toString(timeout));
+        props.setProperty("mail.imap.connectiontimeout", Long.toString(TIMEOUT));
+        props.setProperty("mail.imap.timeout", Long.toString(TIMEOUT));
+        props.setProperty("mail.imaps.connectiontimeout", Long.toString(TIMEOUT));
+        props.setProperty("mail.imaps.timeout", Long.toString(TIMEOUT));
         props.setProperty("mail.imaps.socketFactory.class",
             LC.data_source_trust_self_signed_certs.booleanValue() ?
                 DummySSLSocketFactory.class.getName() : CustomSSLSocketFactory.class.getName());
         props.setProperty("mail.imaps.socketFactory.fallback", "false");
         if (DEBUG) {
             props.setProperty("mail.debug", "true");
-        }      
-        if (idExt != null) {
-            props.setProperty("mail.imap.idextension", idExt);
-            props.setProperty("mail.imaps.idextension", idExt);
         }
+        props.setProperty("mail.imap.idextension", ID_EXT);
+        props.setProperty("mail.imaps.idextension", ID_EXT);
         if (LC.javamail_imap_enable_starttls.booleanValue()) {
             props.setProperty("mail.imap.starttls.enable", "true");
             props.setProperty("mail.imap.socketFactory.class", TlsSocketFactory.class.getName());
         }
-        sSession = Session.getInstance(props);
-
+        SESSION = Session.getInstance(props);
         if (DEBUG) {
-            sSession.setDebug(true);
+            SESSION.setDebug(true);
         }
-
         FETCH_PROFILE = new FetchProfile();
         FETCH_PROFILE.add(UIDFolder.FetchProfileItem.UID);
         FETCH_PROFILE.add(UIDFolder.FetchProfileItem.FLAGS);
     }
 
-    public ImapImport() {
+    public ImapImport(DataSource ds) throws ServiceException {
+        super(ds);
         ImapConfig config = new ImapConfig();
         config.setMaxLiteralMemSize(MAX_MESSAGE_MEMORY_SIZE);
-        mUidFetch = new UidFetch(config);
+        uidFetch = new UidFetch(config);
+        store = getStore(ds);
     }
-    
-    public String test(DataSource ds) throws ServiceException {
-        String error = null;
 
-        validateDataSource(ds);
-
+    public void importData(boolean fullSync) throws ServiceException {
+        validateDataSource();
+        connect();
+        DataSource ds = getDataSource();
         try {
-            Store store = getStore(ds.getConnectionType());
-            store.connect(ds.getHost(), ds.getPort(), ds.getUsername(), ds.getDecryptedPassword());
-            store.close();
-        } catch (MessagingException e) {
-            ZimbraLog.datasource.info("Testing connection to data source", e);
-            error = SystemUtil.getInnermostException(e).getMessage();
-            error = error != null ? error : e.toString();
-        }
-        return error;
-    }
-    
-    private boolean hasAttribute(IMAPFolder folder, String attribute) throws MessagingException {
-    	String[] attrs = folder.getAttributes();
-    	if (attrs != null)
-    		for (String attr : attrs)
-    			if (attribute.equalsIgnoreCase(attr))
-    				return true;
-    	return false;
-    }
-    
-    public void importData(Account account, DataSource ds, boolean fullSync) throws ServiceException {
-        validateDataSource(ds);
-        IMAPStore store = null;
-        try {
-            store = (IMAPStore) getStore(ds.getConnectionType());
-            store.connect(ds.getHost(), ds.getPort(), ds.getUsername(), ds.getDecryptedPassword());
             IMAPFolder remoteRootFolder = (IMAPFolder) store.getDefaultFolder();
             Mailbox mbox = ds.getMailbox();
             ImapFolderCollection imapFolders = ds.getImapFolders();
@@ -396,8 +368,7 @@ public class ImapImport implements MailItemImport {
                 if (imapFolder.getUidValidity() != 0) {
                     try {
                         for (int i = 0; i < 3; ++i) //at most run 3 times on a single folder import to prevent a dead loop
-                            if (importFolder(account, ds, store, imapFolder))
-                                break;
+                            if (importFolder(imapFolder)) break;
                     } catch (MessagingException e) {
                         ZimbraLog.datasource.warn("An error occurred while importing folder %s", imapFolder.getRemotePath(), e);
                     } catch (ServiceException e) {
@@ -529,7 +500,7 @@ public class ImapImport implements MailItemImport {
 
     private static final Pattern PAT_LEADING_SLASHES = Pattern.compile("^/+");
 
-    /**
+    /*
      * Returns the path to the Zimbra folder that stores messages for the given
      * JavaMail folder. The Zimbra folder has the same path as the JavaMail
      * folder, but is relative to the root folder specified by the
@@ -563,35 +534,43 @@ public class ImapImport implements MailItemImport {
         return zimbraPath;
     }
 
-    private void validateDataSource(DataSource ds) throws ServiceException {
-        if (ds.getHost() == null) {
-            throw ServiceException.FAILURE(ds + ": host not set", null);
+    private static IMAPStore getStore(DataSource ds) throws ServiceException {
+        DataSource.ConnectionType type = ds.getConnectionType();
+        String provider = getProvider(type);
+        if (provider == null) {
+            throw ServiceException.FAILURE("Invalid connection type: " + type, null);
         }
-        if (ds.getPort() == null) {
-            throw ServiceException.FAILURE(ds + ": port not set", null);
-        }
-        if (ds.getConnectionType() == null) {
-            throw ServiceException.FAILURE(ds + ": connectionType not set", null);
-        }
-        if (ds.getUsername() == null) {
-            throw ServiceException.FAILURE(ds + ": username not set", null);
+        try {
+            return (IMAPStore) SESSION.getStore(provider);
+        } catch (NoSuchProviderException e) {
+            throw ServiceException.FAILURE("Unknown provider: " + provider, e);
         }
     }
 
-    private Store getStore(DataSource.ConnectionType connectionType)
-            throws NoSuchProviderException, ServiceException {
-        switch (connectionType) {
+    private static String getProvider(DataSource.ConnectionType type) {
+        switch (type) {
         case cleartext:
-            return sSession.getStore("imap");
+            return "imap";
         case ssl:
-            return sSession.getStore("imaps");
+            return "imaps";
         default:
-            throw ServiceException.FAILURE("Invalid connectionType: " + connectionType, null);
+            return null;
         }
     }
 
-    private boolean importFolder(Account account, DataSource ds, Store store,
-                                 final ImapFolder trackedFolder)
+    private boolean hasAttribute(IMAPFolder folder, String attribute) throws MessagingException {
+        String[] attrs = folder.getAttributes();
+        if (attrs != null) {
+            for (String attr : attrs) {
+                if (attribute.equalsIgnoreCase(attr)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean importFolder(final ImapFolder trackedFolder)
         throws MessagingException, IOException, ServiceException {
         // Instantiate folders
         com.sun.mail.imap.IMAPFolder remoteFolder =
@@ -607,10 +586,10 @@ public class ImapImport implements MailItemImport {
         // Update next uid for tracked folder data
         trackedFolder.setUidNext(remoteFolder.getUIDNext());
         
-        final Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        final DataSource ds = getDataSource();
+        final Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(ds.getAccount());
         final com.zimbra.cs.mailbox.Folder localFolder = mbox.getFolderById(null, trackedFolder.getItemId());
-        final DataSource dataSource = ds;
-        
+
         // Get remote messages
         Message[] msgArray = remoteFolder.getMessages();
         ZimbraLog.datasource.debug("Found %d messages in %s", msgArray.length, remoteFolder.getFullName());
@@ -729,7 +708,7 @@ public class ImapImport implements MailItemImport {
             final AtomicInteger fetchCount = new AtomicInteger();
 
             // Check for new messages using batch FETCH
-            mUidFetch.fetch(remoteFolder, startUid + ":" + stopUid, new UidFetch.Handler() {
+            uidFetch.fetch(remoteFolder, startUid + ":" + stopUid, new UidFetch.Handler() {
                 public void handleResponse(MessageData md) throws Exception {
                     long uid = md.getUid();
                     ZimbraLog.datasource.debug("Found new remote message %d.  Creating local copy.", uid);
@@ -757,7 +736,7 @@ public class ImapImport implements MailItemImport {
                         Long time = receivedDate != null ? (Long) receivedDate.getTime() : null;
                         ParsedMessage pm = getParsedMessage(data, time, mbox.attachmentsIndexingEnabled());
                         int flags = getZimbraFlags(msg.getFlags());
-                        int msgId = addMessage(mbox, dataSource, pm, localFolder.getId(), flags);
+                        int msgId = addMessage(mbox, ds, pm, localFolder.getId(), flags);
                         DbImapMessage.storeImapMessage(mbox, trackedFolder.getItemId(), uid, msgId, flags);
                     }
                     fetchCount.incrementAndGet();
@@ -938,5 +917,9 @@ public class ImapImport implements MailItemImport {
             crc.update(buf, 0, len);
         }
         return crc.getValue();
+    }
+
+    public Store getStore() {
+        return store;
     }
 }
