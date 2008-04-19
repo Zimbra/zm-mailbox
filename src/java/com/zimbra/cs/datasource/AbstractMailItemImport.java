@@ -1,12 +1,20 @@
 package com.zimbra.cs.datasource;
 
 import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.mailbox.SharedDeliveryContext;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.SystemUtil;
 
 import javax.mail.Store;
 import javax.mail.MessagingException;
+import java.io.IOException;
 
 /**
  * Common base class for both ImapImport and Pop3Import.
@@ -56,6 +64,7 @@ public abstract class AbstractMailItemImport implements MailItemImport {
             }
         }
     }
+    
     protected void validateDataSource() throws ServiceException {
         DataSource ds = getDataSource();
         if (ds.getHost() == null) {
@@ -72,6 +81,35 @@ public abstract class AbstractMailItemImport implements MailItemImport {
         }
     }
 
+    private static final RuleManager RULE_MANAGER = RuleManager.getInstance();
+    
+    protected int addMessage(ParsedMessage pm, int folderId, int flags)
+        throws ServiceException, IOException {
+        Mailbox mbox = dataSource.getMailbox();
+        SharedDeliveryContext context = new SharedDeliveryContext();
+        Message msg = null;
+        if (folderId == Mailbox.ID_FOLDER_INBOX) {
+            try {
+                msg = RULE_MANAGER.applyRules(mbox.getAccount(), mbox, pm,
+                    pm.getRawSize(), dataSource.getEmailAddress(), context);
+                if (msg == null) {
+                    return 0; // Message was discarded
+                }
+                // Set flags (setting of BITMASK_UNREAD is implicit)
+                if (flags != Flag.BITMASK_UNREAD) {
+                    mbox.setTags(null, msg.getId(), MailItem.TYPE_MESSAGE,
+                                 flags, MailItem.TAG_UNCHANGED);
+                }
+            } catch (Exception e) {
+                ZimbraLog.datasource.warn("Error applying filter rules", e);
+            }
+        }
+        if (msg == null) {
+            msg = mbox.addMessage(null, pm, folderId, false, flags, null);
+        }
+        return msg.getId();
+    }
+    
     public DataSource getDataSource() {
         return dataSource;
     }

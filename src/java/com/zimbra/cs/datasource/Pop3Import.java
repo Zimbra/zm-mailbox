@@ -215,7 +215,7 @@ public class Pop3Import extends AbstractMailItemImport {
                     pm = new ParsedMessage(pop3Msg, mbox.attachmentsIndexingEnabled());
                 }
 
-                int msgid = addMessage(mbox, ds, pm, ds.getFolderId());
+                int msgid = addMessage(pm, ds.getFolderId(), Flag.BITMASK_UNREAD);
 
                 if (ds.leaveOnServer()) {
                     DbPop3Message.storeUid(mbox, ds.getId(), folder.getUID(pop3Msg), msgid);
@@ -236,23 +236,6 @@ public class Pop3Import extends AbstractMailItemImport {
         folder.close(!ds.leaveOnServer());
     }
 
-    private int addMessage(Mailbox mbox, DataSource ds, ParsedMessage pm, int folderId) throws ServiceException, IOException {
-    	com.zimbra.cs.mailbox.Message msg = null;
-    	SharedDeliveryContext sharedDeliveryCtxt = new SharedDeliveryContext();
-        if (folderId == Mailbox.ID_FOLDER_INBOX) {
-        	try {
-	            msg = RuleManager.getInstance().applyRules(mbox.getAccount(), mbox, pm, pm.getRawSize(), ds.getEmailAddress(), sharedDeliveryCtxt);
-	            if (msg == null)
-	            	 return 0; //null if DISCARD
-        	} catch (Throwable t) {
-        		ZimbraLog.datasource.warn("failed applying filter rules", t);
-        	}
-        }
-        if (msg == null)
-        	msg = mbox.addMessage(null, pm, folderId, false, Flag.BITMASK_UNREAD, null);
-        return msg.getId();
-    }
-    
     private Set<String> getUidsToFetch(Mailbox mbox, DataSource ds, POP3Folder folder)
     throws MessagingException, ServiceException {
         Set<String> uidsToFetch = new HashSet<String>();
