@@ -34,6 +34,7 @@ public class Pop3Response {
     private static final String ERR = "-ERR";
     private static final String CONTINUATION = "+";
     
+    private static final String CAPA = "CAPA";
     private static final String LIST = "LIST";
     private static final String RETR = "RETR";
     private static final String UIDL = "UIDL";
@@ -69,7 +70,7 @@ public class Pop3Response {
 
     private static boolean hasContent(String cmd) {
         return LIST.equalsIgnoreCase(cmd) || RETR.equalsIgnoreCase(cmd) ||
-               UIDL.equalsIgnoreCase(cmd);
+               UIDL.equalsIgnoreCase(cmd) || CAPA.equalsIgnoreCase(cmd);
     }
     
     public boolean isOK() { return status.equals(OK); }

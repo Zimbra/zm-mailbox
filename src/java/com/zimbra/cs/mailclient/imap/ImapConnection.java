@@ -30,7 +30,7 @@ import java.util.Formatter;
 import static com.zimbra.cs.mailclient.imap.ImapData.asAString;
 
 public class ImapConnection extends MailConnection {
-    private Capabilities capabilities;
+    private ImapCapabilities capabilities;
     private Mailbox mailbox;
     private ImapResponse response;
     private int tagCount;
@@ -55,12 +55,11 @@ public class ImapConnection extends MailConnection {
             String err = response.getResponseText().getText();
             throw new MailException("Expected greeting, but got: " + err);
         }
+        capability();
     }
 
-    protected void sendLogin() throws IOException {
-        sendCommandCheckStatus("LOGIN",
-            ImapData.asAString(config.getAuthenticationId()), ' ',
-            ImapData.asAString(config.getPassword()));
+    protected void sendLogin(String user, String pass) throws IOException {
+        sendCommandCheckStatus("LOGIN", asAString(user), ' ', asAString(pass));
     }
 
     public void logout() throws IOException {
@@ -76,11 +75,11 @@ public class ImapConnection extends MailConnection {
         sendCommandCheckStatus("AUTHENTICATE", sb.toString());
     }
 
-    protected void sendStartTLS() throws IOException {
+    protected void sendStartTls() throws IOException {
         sendCommand("STARTTLS");
     }
 
-    public Capabilities capability() throws IOException {
+    public ImapCapabilities capability() throws IOException {
         sendCommandCheckStatus("CAPABILITY");
         return capabilities;
     }
@@ -126,6 +125,14 @@ public class ImapConnection extends MailConnection {
 
     public void unsubscribe(String name) throws IOException {
         sendCommandCheckStatus("UNSUBSCRIBE", asAString(name));
+    }
+
+    public ImapCapabilities getCapabilities() {
+        return capabilities;
+    }
+
+    public boolean hasCapability(String cap) {
+        return capabilities != null && capabilities.hasCapability(cap);
     }
     
     public ImapResponse sendCommandCheckStatus(String cmd, Object... args)
@@ -176,7 +183,7 @@ public class ImapConnection extends MailConnection {
     }
 
     private void writeLiteral(Literal lit) throws IOException {
-        boolean lp = capabilities != null && capabilities.hasLiteralPlus();
+        boolean lp = hasCapability(ImapCapabilities.LITERAL_PLUS);
         lit.writePrefix(mailOut, lp);
         if (!lp) {
             // Wait for continuation response before proceeding
@@ -201,14 +208,14 @@ public class ImapConnection extends MailConnection {
             if (code != null) {
                 switch (code.getCAtom()) {
                 case CAPABILITY:
-                    capabilities = (Capabilities) rt.getData();
+                    capabilities = (ImapCapabilities) rt.getData();
                 }
             }
         } else if (res.isUntagged()) {
             // TODO handle flags, etc
             switch (response.getCode()) {
             case CAPABILITY:
-                capabilities = (Capabilities) res.getData();
+                capabilities = (ImapCapabilities) res.getData();
             }
         }
         if (mailbox != null) {

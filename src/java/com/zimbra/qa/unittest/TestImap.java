@@ -19,11 +19,10 @@ package com.zimbra.qa.unittest;
 
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
-import com.zimbra.cs.mailclient.MailException;
 import com.zimbra.cs.mailclient.util.SSLUtil;
+import com.zimbra.cs.mailclient.CommandFailedException;
 import junit.framework.TestCase;
 
-import javax.security.auth.login.LoginException;
 import java.io.IOException;
 
 public class TestImap extends TestCase {
@@ -43,30 +42,24 @@ public class TestImap extends TestCase {
 
     public void testLogin() throws Exception {
         connect(false);
-        mConnection.login();
+        mConnection.login(PASS);
     }
 
     public void testSSLLogin() throws Exception {
         connect(true);
-        mConnection.login();
+        mConnection.login(PASS);
     }
 
     public void testPlainAuth() throws Exception {
         connect(false);
-        mConnection.authenticate();
-    }
-
-    public void testPlainAuthInitialResponse() throws Exception {
-        connect(false);
-        mConnection.authenticate(true);
+        mConnection.authenticate(PASS);
     }
 
     public void testBadAuth() throws Exception {
         connect(false);
-        mConnection.getConfig().setPassword("bad_pass");
         try {
-            mConnection.authenticate();
-        } catch (LoginException e) {
+            mConnection.authenticate("foobaz");
+        } catch (CommandFailedException e) {
             return;
         }
         throw new Exception("Expected auth failure");
@@ -117,9 +110,9 @@ public class TestImap extends TestCase {
             config.setSSLSocketFactory(SSLUtil.getDummySSLContext().getSocketFactory());
         }
         config.setDebug(DEBUG);
+        config.setTrace(true);
         config.setMechanism("PLAIN");
         config.setAuthenticationId(USER);
-        config.setPassword(PASS);
         mConnection = new ImapConnection(config);
         mConnection.connect();
     }
