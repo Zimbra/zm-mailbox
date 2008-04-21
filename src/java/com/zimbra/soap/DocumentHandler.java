@@ -325,6 +325,15 @@ public abstract class DocumentHandler {
         return s;
     }
 
+    /**
+     * End the session immediately, removing it from the session cache and cleaning it up
+     * 
+     * @param s
+     */
+    protected void endSession(Session s) {
+        SessionCache.clearSession(s);
+    }
+
 
     /** Returns the {@link Server} object where an Account (specified by ID)
      *  is homed.  This is similar to {@link Provisioning#getServer(Account),
