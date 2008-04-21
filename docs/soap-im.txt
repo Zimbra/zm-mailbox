@@ -180,11 +180,32 @@ NOT_IMPLEMENTED_YET:   booted_by_other_login  -- will not retry connect: someone
 
 IMGatewayRegister 
 -----------------
-<IMGatewayRegister op="reg" service="SERVICE_NAME" name="remoteName" password="remotePassword"/>
-<IMGatewayRegister op="unreg" service="SERVICE_NAME"/>
-<IMGatewayRegister op="reconnect" service="SERVICE_NAME"/> // tell the service to try a reconnect right now, also re-enable if the service was in the disabled state
+<IMGatewayRegisterRequest op="reg" service="SERVICE_NAME" name="remoteName" password="remotePassword"/>
+<IMGatewayRegisterRequest op="unreg" service="SERVICE_NAME"/>
+<IMGatewayRegisterRequest op="reconnect" service="SERVICE_NAME"/> // tell the service to try a reconnect right now, also re-enable if the service was in the disabled state
 
 <IMGatewayRegisterResponse result="0|1"/>
+
+
+IMSetIdle
+-----------------
+<IMSetIdleRequest isIdle="1|0" idleTime="seconds_idle"/>
+<IMSetIdleResponse/>
+
+-- idleTime is number of seconds since last user action.  Client should
+make a best-effort to calculate this, but is free to return "0" if
+unsupported.
+
+-- Throws ServiceException.SESSION_REQUIRED if there is no session
+   referenced (a session MUST be active for this API to be used)
+
+When calculating presence, the sever will look at the "idle" values of
+all active web client sessions.  If all sessions are "idle" then the
+server will update the user's status to "away".
+
+The web client must be careful to unset the "idle" status when the
+user comes back, otherwise the user's presence will be stuck in the
+"Away" state and the user won't understand why.
 
 
 

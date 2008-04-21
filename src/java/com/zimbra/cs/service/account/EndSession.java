@@ -41,5 +41,4 @@ public class EndSession extends AccountDocumentHandler {
         Element response = zsc.createElement(AccountConstants.END_SESSION_REQUEST); 
         return response;
     }
-
 }

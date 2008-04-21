@@ -21,12 +21,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Formatter;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.dom4j.Element;
 import org.jivesoftware.wildfire.ClientSession;
@@ -50,9 +48,6 @@ import com.zimbra.cs.im.IMMessage.Lang;
 import com.zimbra.cs.im.IMPresence.Show;
 import com.zimbra.cs.im.interop.Interop;
 import com.zimbra.cs.im.interop.UserStatus;
-//import com.zimbra.cs.im.interop.Interop;
-//import com.zimbra.cs.im.interop.Interop.ServiceName;
-//import com.zimbra.cs.im.interop.Interop.UserStatus;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -121,8 +116,8 @@ public class IMPersona extends ClassLogger {
             String mdAddr = meta.get(FN_ADDRESS, null);
             if (mdAddr != null && mdAddr.equals(addr.getAddr())) {
                 toRet = new IMPersona(mbox, addr);
-                IMPresence presence = IMPresence.decodeMetadata(meta.getMap(FN_PRESENCE));
-                toRet.mMyPresence = presence;
+//                IMPresence presence = IMPresence.decodeMetadata(meta.getMap(FN_PRESENCE));
+//                toRet.mMyPresence = presence;
             }
 
             // iterate through the metadata, looking for entries with "isvc-" keys,
@@ -163,16 +158,30 @@ public class IMPersona extends ClassLogger {
     private int mCurChatId = 0;
     private int mCurRequestId = 0;
     private Map<String, IMGroup> mGroups = new HashMap<String, IMGroup>();
-    private Set<Session> mListeners = new HashSet<Session>();
+    
+    private static final class IdleInfo {
+        public boolean isIdle = false;
+        public long idleStartTime = 0;
+        IdleInfo() {};
+        IdleInfo(boolean isIdle, long idleStartTime) {
+            this.isIdle = isIdle;
+            this.idleStartTime = idleStartTime;
+        }
+    }
+    private Map<Session, IdleInfo> mListeners = new HashMap<Session, IdleInfo>();
     
     // these TWO parameters make up my presence - the first one is the presence
     // I have saved in the DB, and the second is a flag if I am online or
     // offline
     private IMPresence mMyPresence = new IMPresence(Show.ONLINE, (byte) 1, null);
+    
     private boolean mIsOnline = false;
+    private boolean mIsIdle = false;
+    private long mIdleStartTime = 0;
+    
 //    private HashSet<String> mSharedGroups = new HashSet<String>();
     private ClientSession mXMPPSession;
-    private HashMap<String /*ServiceName*/, Map<String, String>> mInteropRegistrationData;
+    private Map<String /*ServiceName*/, Map<String, String>> mInteropRegistrationData;
 
     private IMPersona(Mailbox mbox, IMAddr addr) {
         super(ZimbraLog.im);
@@ -199,7 +208,10 @@ public class IMPersona extends ClassLogger {
                     e.printStackTrace();
                 }
             }
-            mListeners.add(session);
+            if (!mListeners.containsKey(session)) {
+                mListeners.put(session, new IdleInfo());
+                updateSynthesizedIdle();
+            }
         }
     }
     
@@ -221,16 +233,52 @@ public class IMPersona extends ClassLogger {
                 }
                 disconnectFromIMServer();
             }
+            updateSynthesizedIdle();
         }
     }
-
+    
+    public void setIdleState(Session session, boolean isIdle, long idleStartTime) throws ServiceException {
+        synchronized(getLock()) {
+            IdleInfo info = mListeners.get(session);
+            if (info == null) 
+                throw ServiceException.INVALID_REQUEST("Could not find referenced session "+session, null);
+            
+            info.isIdle = isIdle;
+            info.idleStartTime = idleStartTime;
+            updateSynthesizedIdle();
+        }
+    }
+    
+    private void updateSynthesizedIdle() {
+        synchronized(getLock()) {
+            boolean isIdle = true;
+            long idleStartTime = 0;
+            
+            for (IdleInfo info : mListeners.values()) {
+                if (!info.isIdle)
+                    isIdle = false;
+                idleStartTime = Math.max(idleStartTime, info.idleStartTime);
+            }
+            
+            if (mIsIdle != isIdle) {
+                mIsIdle = isIdle;
+                mIdleStartTime = idleStartTime;
+                try {
+                    pushMyPresence();
+                } catch (ServiceException e) {
+                    mLog.debug("Ignoring exception in updateSynthesizedIdle", e);
+                }
+            }
+        }
+    }
+    
     /**
      * Mailbox is going into Maintenance mode, shut down the persona
      */
     public void purgeListeners() {
         synchronized(getLock()) {
             List<Session> toRemove = new ArrayList<Session>();
-            toRemove.addAll(mListeners);
+            toRemove.addAll(mListeners.keySet());
             for (Session s : toRemove) {
                 removeListener(s);
             }
@@ -347,7 +395,7 @@ public class IMPersona extends ClassLogger {
         assert (getAddr().getAddr().equals(mbox.getAccount().getName()));
         Metadata meta = new Metadata();
         meta.put(FN_ADDRESS, mAddr);
-        meta.put(FN_PRESENCE, mMyPresence.encodeAsMetadata());
+//        meta.put(FN_PRESENCE, mMyPresence.encodeAsMetadata());
         
         for (Map.Entry<String, Map<String, String>> svc : mInteropRegistrationData.entrySet()) {
             Metadata interopData = new Metadata();
@@ -567,11 +615,18 @@ public class IMPersona extends ClassLogger {
         }
     }
 
+    /**
+     * @return The "effective" presence - taking into account online/offline and idle state of all sessions
+     */
     public IMPresence getEffectivePresence() {
         synchronized(getLock()) {
-            if (mIsOnline)
-                return mMyPresence;
-            else
+            if (mIsOnline) {
+                if (mIsIdle) {
+                    return new IMPresence(Show.AWAY, (byte)1, null);
+                } else {
+                    return mMyPresence;
+                }
+            } else
                 return new IMPresence(Show.OFFLINE, mMyPresence.getPriority(), mMyPresence.getStatus());
         }
     }
@@ -580,23 +635,6 @@ public class IMPersona extends ClassLogger {
         return mAddr + "/" + getResource();
     }
 
-//    /**
-//     * Finds an existing group
-//     * 
-//     * @param create
-//     *        if TRUE will create the group if one doesn't exist
-//     * @param name
-//     * @return
-//     */
-//    private IMGroup getGroup(boolean create, String name) {
-//        IMGroup toRet = mGroups.get(name);
-//        if (toRet == null && create) {
-//            toRet = new IMGroup(name);
-//            mGroups.put(name, toRet);
-//        }
-//        return toRet;
-//    }
-    
     public Map<String, String> getIMGatewayRegistration(String serviceName) throws ServiceException {
         synchronized(getLock()) {
             return mInteropRegistrationData.get(serviceName);
@@ -638,13 +676,6 @@ public class IMPersona extends ClassLogger {
         return "zcs";
     }
 
-//    public void getRoster(OperationContext octxt) throws ServiceException {
-//        if (mHaveInitialRoster) {
-//            Roster rosterPacket = new Roster(Type.get);
-//            xmppRoute(rosterPacket);
-//        }
-//    }
-    
     public void refreshRoster(Session s)  {
         synchronized(getLock()) {
             if (mHaveInitialRoster) {
@@ -1200,7 +1231,7 @@ public class IMPersona extends ClassLogger {
      */
     private void postIMNotification(IMNotification not, Session s) {
         if (s == null) { 
-            for (Session session : mListeners) {
+            for (Session session : mListeners.keySet()) {
                 session.notifyIM(not);
             }
         } else {
@@ -1402,7 +1433,7 @@ public class IMPersona extends ClassLogger {
             // TODO optimize out change-to-same eventually (leave for now, very
             // convienent as is)
             mMyPresence = presence;
-            flush(octxt);
+//            flush(octxt);
             pushMyPresence();
         }
     }

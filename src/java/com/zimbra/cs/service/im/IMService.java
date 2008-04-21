@@ -35,5 +35,7 @@ public class IMService implements DocumentService {
         dispatcher.registerHandler(IMConstants.IM_GATEWAY_LIST_REQUEST, new IMGatewayList());
         dispatcher.registerHandler(IMConstants.IM_GET_PRIVACY_LIST_REQUEST, new IMGetPrivacyList());
         dispatcher.registerHandler(IMConstants.IM_SET_PRIVACY_LIST_REQUEST, new IMSetPrivacyList());
+        dispatcher.registerHandler(IMConstants.IM_SET_IDLE_REQUEST, new IMSetIdle());
+        
     }
 }
