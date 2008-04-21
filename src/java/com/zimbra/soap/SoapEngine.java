@@ -21,6 +21,8 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.dom4j.DocumentException;
 
 import com.zimbra.common.service.ServiceException;
@@ -43,6 +45,7 @@ import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.service.admin.AdminDocumentHandler;
 import com.zimbra.cs.session.Session;
@@ -197,6 +200,14 @@ public class SoapEngine {
                 Account.addAccountToLogContext(aid, ZimbraLog.C_ANAME, ZimbraLog.C_AID, zsc.getAuthToken());
             else if (zsc.getAuthToken() != null && zsc.getAuthToken().getAdminAccountId() != null)
                 Account.addAccountToLogContext(zsc.getAuthToken().getAdminAccountId(), ZimbraLog.C_ANAME, ZimbraLog.C_AID, zsc.getAuthToken());                        
+        
+            try {
+                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(rid, false);
+                if (mbox != null)
+                    ZimbraLog.addMboxToContext(mbox.getId());
+            } catch (ServiceException e) {
+                // mLog.warn("cannot get mailbox for account " + rid, null);
+            }
         }
         
         String ip = (String) context.get(SOAP_REQUEST_IP);
@@ -224,20 +235,25 @@ public class SoapEngine {
 
         if (mLog.isDebugEnabled())
             mLog.debug("dispatch: doc " + doc.getQualifiedName());
-
+        
         Element responseBody = null;
-        if (!zsc.isProxyRequest()) {
+        if (!zsc.isProxyRequest()) {    
             // if the client's told us that they've seen through notification block 50, we can drop old notifications up to that point
             acknowledgeNotifications(zsc);
 
             if (doc.getQName().equals(ZimbraNamespace.E_BATCH_REQUEST)) {
                 boolean contOnError = doc.getAttribute(ZimbraNamespace.A_ONERROR, ZimbraNamespace.DEF_ONERROR).equals("continue");
                 responseBody = zsc.createElement(ZimbraNamespace.E_BATCH_RESPONSE);
+                ZimbraLog.soap.info(doc.getQualifiedName());
                 for (Element req : doc.listElements()) {
+                    
+                    /*
                     if (mLog.isDebugEnabled())
                         mLog.debug("dispatch: multi " + req.getQualifiedName());
-
+                    */
+                    
                     String id = req.getAttribute(A_REQUEST_CORRELATOR, null);
+                    ZimbraLog.soap.info("(batch) " + req.getQualifiedName());
                     Element br = dispatchRequest(req, context, zsc);
                     if (id != null)
                         br.addAttribute(A_REQUEST_CORRELATOR, id);
@@ -247,6 +263,7 @@ public class SoapEngine {
                 }
             } else {
                 String id = doc.getAttribute(A_REQUEST_CORRELATOR, null);
+                ZimbraLog.soap.info(doc.getQualifiedName());
                 responseBody = dispatchRequest(doc, context, zsc);
                 if (id != null)
                     responseBody.addAttribute(A_REQUEST_CORRELATOR, id);
@@ -263,6 +280,7 @@ public class SoapEngine {
                 // if we don't detach it first.
                 doc.detach();
                 ZimbraSoapContext zscTarget = new ZimbraSoapContext(zsc, null);
+                ZimbraLog.soap.info(doc.getQualifiedName() + " (Proxying to " + zsc.getProxyTarget().toString() +")");
                 responseBody = zsc.getProxyTarget().dispatch(doc, zscTarget);
                 responseBody.detach();
             } catch (SoapFaultException e) {
@@ -286,6 +304,7 @@ public class SoapEngine {
 
         return response;
     }
+
 
     /**
      * Handles individual requests, either direct or from a batch
