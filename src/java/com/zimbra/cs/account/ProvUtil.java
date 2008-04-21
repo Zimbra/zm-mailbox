@@ -2076,7 +2076,7 @@ public class ProvUtil implements DebugListener {
     private void doGetAllMtaAuthURLs(String[] args) throws ServiceException {
         List<Server> servers = mProv.getAllServers();
         for (Server server : servers ) {
-            boolean isTarget = server.getBooleanAttr(Provisioning.A_zimbraMtaAuthTarget, true);
+            boolean isTarget = server.getBooleanAttr(Provisioning.A_zimbraMtaAuthTarget, false);
             if (isTarget) {
                 System.out.print(URLUtil.getAdminURL(server) + " ");
             }
