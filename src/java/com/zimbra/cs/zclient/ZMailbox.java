@@ -3857,8 +3857,12 @@ public class ZMailbox {
     }
 
     public ZActionResult trashVoiceMail(String phone, String id) throws ServiceException {
-		ZActionResult result = doAction(voiceAction("move", phone, id, VoiceConstants.FID_TRASH));
-		ZModifyEvent event = new ZModifyVoiceMailItemFolderEvent(Integer.toString(VoiceConstants.FID_TRASH));
+		return moveVoiceMail(phone, id, VoiceConstants.FID_TRASH);
+	}
+
+    public ZActionResult moveVoiceMail(String phone, String id, int folderId) throws ServiceException {
+		ZActionResult result = doAction(voiceAction("move", phone, id, folderId));
+		ZModifyEvent event = new ZModifyVoiceMailItemFolderEvent(Integer.toString(folderId));
 		handleEvent(event);
 		return result;
 	}
