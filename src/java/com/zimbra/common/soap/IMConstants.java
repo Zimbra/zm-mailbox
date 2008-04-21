@@ -51,6 +51,9 @@ public class IMConstants {
     public static final QName IM_GATEWAY_LIST_RESPONSE = QName.get("IMGatewayListResponse", NAMESPACE);
     public static final QName IM_GATEWAY_REGISTER_REQUEST = QName.get("IMGatewayRegisterRequest", NAMESPACE);
     public static final QName IM_GATEWAY_REGISTER_RESPONSE = QName.get("IMGatewayRegisterResponse", NAMESPACE);
+    
+    public static final QName IM_SET_IDLE_REQUEST = QName.get("IMSetIdleRequest", NAMESPACE);
+    public static final QName IM_SET_IDLE_RESPONSE = QName.get("IMSetIdleResponse", NAMESPACE);
 
     public static final String A_ACTION         = "action";
     public static final String A_AUTHORIZED     = "authorized";
@@ -74,6 +77,8 @@ public class IMConstants {
     public static final String A_TIME_UNTIL_NEXT_CONNECT = "timeUntilNextConnect";
     public static final String A_USERNAME       = "username";
     public static final String A_ERROR          = "error";
+    public static final String A_IS_IDLE        = "isIdle";
+    public static final String A_IDLE_TIME      = "idleTime";
 
     public static final String E_LIST           = "list";
     public static final String E_MESSAGES       = "messages";
