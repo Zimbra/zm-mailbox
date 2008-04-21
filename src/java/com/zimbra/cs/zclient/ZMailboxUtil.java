@@ -321,10 +321,10 @@ public class ZMailboxUtil implements DebugListener {
     static Option O_SORT = new Option("s", "sort", true, "sort order TODO");
     static Option O_REPLACE = new Option("r", "replace", false, "replace contact (default is to merge)");
     static Option O_TAGS = new Option("T", "tags", true, "list of tag ids/names");
-    static Option O_TYPES = new Option("t", "types", true, "list of types to search for (message,conversation,contact,appointment,wiki)");
+    static Option O_TYPES = new Option("t", "types", true, "list of types to search for (message,conversation,contact,appointment,document,task,wiki)");
     static Option O_URL = new Option("u", "url", true, "url to connect to");
     static Option O_VERBOSE = new Option("v", "verbose", false, "verbose output");
-    static Option O_VIEW = new Option("V", "view", true, "default type for folder (conversation,message,contact,appointment,wiki)");
+    static Option O_VIEW = new Option("V", "view", true, "default type for folder (appointment,contact,conversation,document,message,task,wiki)");
 
     enum Command {
         AUTHENTICATE("authenticate", "a", "{name} {password}", "authenticate as account and open mailbox", Category.MISC, 2, 2, O_URL),
