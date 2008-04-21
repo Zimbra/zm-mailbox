@@ -19,8 +19,12 @@ package com.zimbra.cs.service.formatter;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+import javax.mail.Part;
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -32,6 +36,7 @@ import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.wiki.PageCache;
 import com.zimbra.cs.wiki.Wiki;
@@ -84,7 +89,7 @@ public class WikiFormatter extends Formatter {
             template = wt.getComposedPage(ctxt, wiki, VERSION_CHROME);
         }
     	String url = UserServlet.getRestUrl(wiki);
-		printWikiPage(context, template, wiki.getName(),url);
+		printWikiPage(context, template, wiki.getName(), url, neuterHtmlTags(wiki.getAccount()));
 	}
     
     private void handleWikiHistory(Context context, WikiItem wiki) throws IOException, ServiceException {
@@ -93,7 +98,7 @@ public class WikiFormatter extends Formatter {
        	WikiTemplate wt = getTemplate(context, wiki.getMailbox().getAccountId(), wiki.getFolderId(), VERSION);
        	template = wt.getComposedPage(ctxt, wiki, VERSION_CHROME);
     	String url = UserServlet.getRestUrl(wiki);
-		printWikiPage(context, template, wiki.getName(),url);
+		printWikiPage(context, template, wiki.getName(), url, neuterHtmlTags(wiki.getAccount()));
 	}
     
     private static final String TOC = "_Index";
@@ -144,17 +149,30 @@ public class WikiFormatter extends Formatter {
     		//sCache.addPage(key, template);
     	}
     	String url = UserServlet.getRestUrl(folder);
-		printWikiPage(context, template, folder.getName(),url);
+		printWikiPage(context, template, folder.getName(), url, neuterHtmlTags(folder.getAccount()));
     }
 
+    private boolean neuterHtmlTags(Account acct) throws ServiceException {
+    	if (acct != null) {
+    		return acct.getBooleanAttr(Provisioning.A_zimbraNotebookSanitizeHtml, true);
+    	}
+    	return true;
+    }
+    
 	/**
 	 * <b>Note:</b>
 	 * This will be revisited when the client relies on the REST
 	 * output for display/browsing functionality.
 	 */
-	private static void printWikiPage(Context context, String s, String title, String baseURL)
+	private static void printWikiPage(Context context, String s, String title, String baseURL, boolean neuter)
 	throws IOException {
+        String disp = context.req.getParameter(UserServlet.QP_DISP);
+        disp = (disp == null || disp.toLowerCase().startsWith("i") ) ? Part.INLINE : Part.ATTACHMENT;
 		context.resp.setContentType(WikiItem.WIKI_CONTENT_TYPE);
+		if (disp.equals(Part.ATTACHMENT)) {
+			String cd = disp + "; filename=" + HttpUtil.encodeFilename(context.req, title);
+			context.resp.addHeader("Content-Disposition", cd);
+		}
 		PrintWriter out = context.resp.getWriter();
 		out.println("<HTML>");
 		out.println("<HEAD>");
@@ -190,7 +208,10 @@ public class WikiFormatter extends Formatter {
 		/***/
 		out.println("</HEAD>");
 		out.println("<BODY style='margin:0px'>");
-		out.println(s);
+		if (neuter && !disp.equals(Part.ATTACHMENT))
+			out.println(HtmlDefang.defang(s, false));
+		else
+			out.println(s);
 		out.println("</BODY>");
 		out.println("</HTML>");
 	}

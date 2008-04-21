@@ -170,14 +170,19 @@ public class NativeFormatter extends Formatter {
     private void handleDocument(Context context, Document doc) throws IOException, ServiceException, ServletException {
         String v = context.params.get(UserServlet.QP_VERSION);
         int version = v != null ? Integer.parseInt(v) : -1;
+        String contentType = doc.getContentType();
 
         doc = (version > 0 ? (Document)doc.getMailbox().getItemRevision(context.opContext, doc.getId(), doc.getType(), version) : doc);
         InputStream is = doc.getContentStream();
     	if (HTML_VIEW.equals(context.getView())) {
     		handleConversion(context, is, doc.getName(), doc.getContentType(), doc.getDigest());
     	} else {
-        	context.resp.setContentType(doc.getContentType());
-            sendbackBinaryData(context.req, context.resp, is, null, doc.getName());
+            String defaultCharset = context.targetAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null);
+            boolean neuter = doc.getAccount().getBooleanAttr(Provisioning.A_zimbraNotebookSanitizeHtml, true);
+            if (neuter)
+            	sendbackOriginalDoc(is, contentType, defaultCharset, doc.getName(), null, context.req, context.resp);
+            else
+            	sendbackBinaryData(context.req, context.resp, is, null, doc.getName());
         }
     }
     
