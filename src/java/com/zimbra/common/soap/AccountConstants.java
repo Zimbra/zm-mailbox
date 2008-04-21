@@ -30,6 +30,8 @@ public class AccountConstants {
     public static final QName AUTH_RESPONSE = QName.get("AuthResponse", NAMESPACE);
     public static final QName CHANGE_PASSWORD_REQUEST = QName.get("ChangePasswordRequest", NAMESPACE);
     public static final QName CHANGE_PASSWORD_RESPONSE = QName.get("ChangePasswordResponse", NAMESPACE);
+    public static final QName END_SESSION_REQUEST = QName.get("EndSessionRequest", NAMESPACE);
+    public static final QName END_SESSION_RESPONSE = QName.get("EndSessionResponse", NAMESPACE);
 
     // prefs
     public static final QName GET_PREFS_REQUEST = QName.get("GetPrefsRequest", NAMESPACE);
