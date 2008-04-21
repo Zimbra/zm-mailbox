@@ -376,7 +376,15 @@ an authToken can be passed instead of account/password/preauth to validate an ex
                    does not include a domain component. For example, if the domain foo.com has a zimbraVirtualHostname of "mail.foo.com", 
                    and an auth request comes in for "joe" with a virtualHost of "mail.foo.com", then the request will be equivalent to
                    logging in with "joe@foo.com".
-                   
+
+---------------------------
+
+<EndSessionRequest xmlns="urn:zimbraAccount"/>
+
+Ends the current session, removing it from all caches.  Called when
+the browser app (or other session-using app) shuts down.  Has no
+effect if called in a <nosession> context.
+
 ---------
  <GetPrefsRequest>
    <!-- get only the specified prefs -->
@@ -2556,7 +2564,6 @@ are not specified.
 isRunning: Whether data is currently being imported from this data source.
 success:   Whether the last import completed successfully.
 error:     If the last import failed, the error message that was returned.
-
 
 ---------------------------
 

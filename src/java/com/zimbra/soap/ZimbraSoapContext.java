@@ -368,7 +368,7 @@ public class ZimbraSoapContext {
         return (mSessionInfo = new SessionInfo(sessionId, 0, true));
     }
 
-    void clearSessionInfo() {
+    protected void clearSessionInfo() {
         mSessionInfo = null;
     }
 
