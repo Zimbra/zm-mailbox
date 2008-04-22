@@ -47,18 +47,30 @@ import org.apache.jsieve.mail.MailUtils;
 import org.apache.jsieve.mail.SieveMailException;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.IDNUtil;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.filter.jsieve.ActionTag;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.zclient.ZFolder;
+import com.zimbra.cs.zclient.ZMailbox;
 
 /**
  * Sieve evaluation engine adds a list of {@link org.apache.jsieve.mail.Action}s 
@@ -263,20 +275,44 @@ public class ZimbraMailAdapter implements MailAdapter
                 } else if (action instanceof ActionFileInto) {
                     ActionFileInto fileinto = (ActionFileInto) action;
                     String folderName = fileinto.getDestination();
-                    int folderId = Mailbox.ID_FOLDER_INBOX;
+                    Folder folder = null;
                     try {
-                        folderId = mMailbox.getFolderByPath(null, folderName).getId();
+                        folder = mMailbox.getFolderByPath(null, folderName);
                     } catch (MailServiceException.NoSuchItemException nsie) {
                         ZimbraLog.filter.warn("Folder " + folderName + " not found; message saved to INBOX for " + mRecipient);
+                        folder = mMailbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX);
                     }
                     // save the message to the specified folder;
                     // The message will not be filed into the same folder multiple times because of
                     // jsieve FileInto validation ensures it; it is allowed to be filed into
                     // multiple different folders, however
-                    Message msg = addMessage(folderId);
-                    if (msg == null) {
-                        dup = true;
-                        break;
+
+                    boolean filedRemotely = false;
+                    if (folder instanceof Mountpoint) {
+                        Mountpoint mountpoint = (Mountpoint) folder;
+                        try {
+                            // Do a REST POST to the mountpoint.  UserServlet will then
+                            // redirect to the target mailbox.
+                            ZMailbox zMailbox = getZMailbox();
+                            String path = HttpUtil.encodePath(mountpoint.getPath());
+                            zMailbox.postRESTResource(
+                                path, mParsedMessage.getRawInputStream(), true,
+                                mParsedMessage.getRawSize(), Mime.CT_MESSAGE_RFC822, false,
+                                (int) (60 * Constants.MILLIS_PER_MINUTE));
+                            filedRemotely = true;
+                        } catch (Exception e) {
+                            ZimbraLog.filter.warn("Unable to file to %s.  Filing to INBOX instead.",
+                                mountpoint.getPath(), e);
+                            folder = mMailbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX);
+                        }
+                    }
+                    
+                    if (!filedRemotely) {
+                        Message msg = addMessage(folder.getId());
+                        if (msg == null) {
+                            dup = true;
+                            break;
+                        }
                     }
                 } else if (action instanceof ActionRedirect) {
                     // redirect mail to another address
@@ -529,6 +565,25 @@ public class ZimbraMailAdapter implements MailAdapter
     
     public Mailbox getMailbox() {
         return mMailbox;
+    }
+    
+    private ZMailbox getZMailbox()
+    throws ServiceException {
+        // Get auth token
+        AuthToken authToken = null;
+        OperationContext opCtxt = mMailbox.getOperationContext();
+        if (opCtxt != null) {
+            authToken = opCtxt.getAuthToken();
+        }
+        if (authToken == null) {
+            authToken = AuthToken.getAuthToken(mMailbox.getAccount());
+        }
+        
+        // Get ZMailbox
+        Account account = mMailbox.getAccount();
+        ZMailbox.Options zoptions = new ZMailbox.Options(authToken.toZAuthToken(), AccountUtil.getSoapUri(account));
+        zoptions.setNoSession(true);
+        return ZMailbox.getMailbox(zoptions);
     }
     
     protected String getRecipient() {

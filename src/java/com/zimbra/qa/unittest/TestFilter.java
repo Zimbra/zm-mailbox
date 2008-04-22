@@ -31,6 +31,7 @@ import com.zimbra.cs.zclient.ZFilterAction;
 import com.zimbra.cs.zclient.ZFilterCondition;
 import com.zimbra.cs.zclient.ZFilterRule;
 import com.zimbra.cs.zclient.ZFilterRules;
+import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMessage;
 import com.zimbra.cs.zclient.ZTag;
@@ -49,6 +50,7 @@ public class TestFilter
 extends TestCase {
 
     private static String USER_NAME = "user1";
+    private static String REMOTE_USER_NAME = "user2";
     private static String NAME_PREFIX = "TestFilter";
     private static String TAG_TEST_BASE64_SUBJECT = NAME_PREFIX + "-testBase64Subject";
     private static String FOLDER1_NAME = NAME_PREFIX + "-folder1";
@@ -57,6 +59,7 @@ extends TestCase {
     private static String FOLDER2_PATH = "/" + FOLDER2_NAME;
     private static String TAG1_NAME = NAME_PREFIX + "-tag1";
     private static String TAG2_NAME = NAME_PREFIX + "-tag2";
+    private static String MOUNTPOINT_FOLDER_NAME = NAME_PREFIX + " mountpoint";
     
     private ZMailbox mMbox;
     private ZFilterRules mOriginalRules;
@@ -66,6 +69,11 @@ extends TestCase {
     throws Exception {
         mMbox = TestUtil.getZMailbox(USER_NAME);
         cleanUp();
+
+        // Create mountpoint for testMountpoint()
+        ZMailbox remoteMbox = TestUtil.getZMailbox(REMOTE_USER_NAME);
+        TestUtil.createMountpoint(remoteMbox, "/" + MOUNTPOINT_FOLDER_NAME, mMbox, MOUNTPOINT_FOLDER_NAME);
+        
         mOriginalRules = mMbox.getFilterRules();
         mMbox.saveFilterRules(getRules());
         
@@ -224,6 +232,36 @@ extends TestCase {
         TestUtil.waitForMessage(mMbox, "in:inbox dontDiscard");
         assertEquals(0, TestUtil.search(mMbox, "in:inbox doDiscard").size());
     }
+    
+    /**
+     * Tests filing into a mountpoint folder.
+     * @throws Exception
+     */
+    public void testMountpoint()
+    throws Exception {
+        // Send message.
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        String address = TestUtil.getAddress(USER_NAME);
+        String subject = NAME_PREFIX + " mountpoint1";
+        TestUtil.addMessageLmtp(subject, address, address);
+        
+        // Confirm that it gets filed into the mountpoint folder and not in inbox.
+        TestUtil.waitForMessage(mbox, "in:\"/" + MOUNTPOINT_FOLDER_NAME + "\" subject:\"" + subject + "\"");
+        assertEquals(0, TestUtil.search(mbox, "in:inbox subject:\"" + subject + "\"").size());
+        
+        // Delete the remote folder.
+        ZMailbox remote = TestUtil.getZMailbox(REMOTE_USER_NAME);
+        ZFolder remoteFolder = remote.getFolderByPath("/" + MOUNTPOINT_FOLDER_NAME);
+        remote.deleteFolder(remoteFolder.getId());
+        
+        // Send another message, confirm that it gets filed into inbox and not in the mountpoint folder.
+        subject = NAME_PREFIX + " mountpoint2";
+        TestUtil.addMessageLmtp(subject, address, address);
+        TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
+        assertEquals(0, TestUtil.search(mbox,
+            "in:\"/" + MOUNTPOINT_FOLDER_NAME + "\" subject:\"" + subject + "\"").size());
+    }
+    
     protected void tearDown() throws Exception {
         mMbox.saveFilterRules(mOriginalRules);
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraSpamApplyUserFilters, mOriginalSpamApplyUserFilters);
@@ -233,6 +271,7 @@ extends TestCase {
     private void cleanUp()
     throws Exception {
         TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
+        TestUtil.deleteTestData(REMOTE_USER_NAME, NAME_PREFIX);
         
         // Clean up messages created by testBase64Subject()
         for (ZMessage msg : TestUtil.search(mMbox, "villanueva")) {
@@ -284,6 +323,13 @@ extends TestCase {
         conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "doDiscard"));
         actions.add(new ZDiscardAction());
         rules.add(new ZFilterRule("testDiscard", true, false, conditions, actions));
+        
+        // if subject contains "mountpoint", file into the mountpoint folder
+        conditions = new ArrayList<ZFilterCondition>();
+        actions = new ArrayList<ZFilterAction>();
+        conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "mountpoint"));
+        actions.add(new ZFileIntoAction("/" + MOUNTPOINT_FOLDER_NAME));
+        rules.add(new ZFilterRule("testMountpoint", true, false, conditions, actions));
         
         return new ZFilterRules(rules);
     }

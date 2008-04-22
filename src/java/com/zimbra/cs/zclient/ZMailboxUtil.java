@@ -27,6 +27,7 @@ import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -2301,18 +2302,6 @@ public class ZMailboxUtil implements DebugListener {
         System.out.println("===============================");
     }
     
-    private String encodePath(String path) {
-        String encoded = path;
-        try {
-            URI uri = new URI(null, null, path, null);
-            encoded = uri.toString();
-        } catch (URISyntaxException e) {
-            // ignore and just return the orig path
-        }
-        
-        return encoded;
-    }
-    
     private void doGetRestURL(String args[]) throws ServiceException {
         OutputStream os = null;
         String outputFile = outputFileOpt();
@@ -2320,7 +2309,7 @@ public class ZMailboxUtil implements DebugListener {
         
         try {
             os = hasOutputFile ? new FileOutputStream(outputFile) : System.out;
-            mMbox.getRESTResource(encodePath(args[0]), os, hasOutputFile, 0);
+            mMbox.getRESTResource(HttpUtil.encodePath(args[0]), os, hasOutputFile, 0);
         } catch (IOException e) {
             throw ZClientException.IO_ERROR(e.getMessage(), e);
         } finally {
@@ -2331,7 +2320,7 @@ public class ZMailboxUtil implements DebugListener {
     private void doPostRestURL(String args[]) throws ServiceException {
         try {
             File file = new File(args[1]);
-            mMbox.postRESTResource(encodePath(args[0]), new FileInputStream(file), true, file.length(), contentTypeOpt(), ignoreAndContinueOnErrorOpt(), 0);
+            mMbox.postRESTResource(HttpUtil.encodePath(args[0]), new FileInputStream(file), true, file.length(), contentTypeOpt(), ignoreAndContinueOnErrorOpt(), 0);
         } catch (FileNotFoundException e) {
             throw ZClientException.CLIENT_ERROR("file not found: "+args[1], e);
         }

@@ -64,12 +64,18 @@ import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.zclient.ZDataSource;
 import com.zimbra.cs.zclient.ZEmailAddress;
 import com.zimbra.cs.zclient.ZFolder;
+import com.zimbra.cs.zclient.ZGetInfoResult;
 import com.zimbra.cs.zclient.ZGetMessageParams;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMessage;
+import com.zimbra.cs.zclient.ZMountpoint;
 import com.zimbra.cs.zclient.ZSearchHit;
 import com.zimbra.cs.zclient.ZSearchParams;
 import com.zimbra.cs.zclient.ZTag;
+import com.zimbra.cs.zclient.ZGrant.GranteeType;
+import com.zimbra.cs.zclient.ZMailbox.OwnerBy;
+import com.zimbra.cs.zclient.ZMailbox.SharedItemBy;
+import com.zimbra.cs.zclient.ZMailbox.ZActionResult;
 import com.zimbra.cs.zclient.ZMailbox.ZImportStatus;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.MessagePart;
@@ -637,6 +643,31 @@ extends Assert {
         }
         
         return mbox.createFolder(parentId, name, null, null, null, null);
+    }
+    
+    /**
+     * Creates a mountpoint between two mailboxes.  The mountpoint gives the
+     * "to" user full rights on the folder.
+     * 
+     * @param remoteMbox remote mailbox
+     * @param remotePath remote folder path.  Folder is created if it doesn't exist.
+     * @param localMbox local mailbox
+     * @param mountpointName the name of the mountpoint folder.  The folder is created
+     * directly under the user root.
+     */
+    public static ZMountpoint createMountpoint(ZMailbox remoteMbox, String remotePath,
+                                               ZMailbox localMbox, String mountpointName)
+    throws ServiceException {
+        ZFolder remoteFolder = remoteMbox.getFolderByPath(remotePath);
+        if (remoteFolder == null) {
+            remoteFolder = createFolder(remoteMbox, remotePath);
+        }
+        ZGetInfoResult remoteInfo = remoteMbox.getAccountInfo(true);
+        ZGetInfoResult localInfo = localMbox.getAccountInfo(true);
+        remoteMbox.modifyFolderGrant(
+            remoteFolder.getId(), GranteeType.all, null, "rwidx", null);
+        return localMbox.createMountpoint(Integer.toString(Mailbox.ID_FOLDER_USER_ROOT),
+            mountpointName, null, null, null, OwnerBy.BY_ID, remoteInfo.getId(), SharedItemBy.BY_ID, remoteFolder.getId());
     }
     
     /**
