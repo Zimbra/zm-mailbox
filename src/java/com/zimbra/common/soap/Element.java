@@ -1286,8 +1286,8 @@ public abstract class Element implements Cloneable {
 
         SoapProtocol proto = SoapProtocol.SoapJS;
         Element ctxt = new JSONElement(proto.getHeaderQName()).addUniqueElement(HeaderConstants.E_CONTEXT);
-        ctxt.addElement(HeaderConstants.E_SESSION_ID).setText("3").addAttribute(HeaderConstants.A_ID, 3);
-        System.out.println(ctxt.getAttribute(HeaderConstants.E_SESSION_ID, null));
+        ctxt.addElement(HeaderConstants.E_SESSION).setText("3").addAttribute(HeaderConstants.A_ID, 3);
+        System.out.println(ctxt.getAttribute(HeaderConstants.E_SESSION, null));
 
         Element env = testMessage(new JSONElement(proto.getEnvelopeQName()), proto, qm);
         System.out.println(env);
