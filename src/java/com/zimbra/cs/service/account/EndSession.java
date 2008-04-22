@@ -38,7 +38,7 @@ public class EndSession extends AccountDocumentHandler {
             Session s = getSession(zsc);
             endSession(s);
         }
-        Element response = zsc.createElement(AccountConstants.END_SESSION_REQUEST); 
+        Element response = zsc.createElement(AccountConstants.END_SESSION_RESPONSE); 
         return response;
     }
 }
