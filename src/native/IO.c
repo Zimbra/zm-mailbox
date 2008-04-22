@@ -71,7 +71,7 @@ Java_com_zimbra_znative_IO_link0(JNIEnv *env,
     if (link(oldpath, newpath) == 0) {
 	return;
     } else {
-        char msg[256];
+        char msg[2048];
         snprintf(msg, sizeof(msg), "link(%s, %s): %s", oldpath, newpath, 
                  strerror(errno));
         ZimbraThrowIOE(env, msg);
@@ -103,7 +103,7 @@ JNIEXPORT jint JNICALL Java_com_zimbra_znative_IO_linkCount0
     if (stat(path, &sb) == 0) {
         return (jint)sb.st_nlink;
     } else {
-        char msg[256];
+        char msg[2048];
         snprintf(msg, sizeof(msg), "stat(%s): %s", path, strerror(errno));
         ZimbraThrowIOE(env, msg);
         return -1;
@@ -138,7 +138,7 @@ JNIEXPORT void JNICALL Java_com_zimbra_znative_IO_setStdoutStderrTo0
 	dup2(fileno(fp), fileno(stderr));
 	fclose(fp);
     } else {
-	char msg[256];
+	char msg[2048];
 	snprintf(msg, sizeof(msg), "IO.setStdoutStderr0 fopen %s: %s", path, strerror(errno));
         ZimbraThrowIOE(env, msg);
         return;
@@ -167,7 +167,7 @@ JNIEXPORT void JNICALL Java_com_zimbra_znative_IO_chmod0
     (*env)->GetByteArrayRegion(env, jpath, 0, len, (jbyte *)path);
 
     if (chmod(path, (mode_t)mode) != 0) {
-        char msg[256];
+        char msg[2048];
         snprintf(msg, sizeof(msg), "chmod(%s): %s", path, strerror(errno));
         ZimbraThrowIOE(env, msg);
     }
