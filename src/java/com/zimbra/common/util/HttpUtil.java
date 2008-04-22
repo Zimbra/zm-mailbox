@@ -17,6 +17,8 @@
 package com.zimbra.common.util;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.HashMap;
@@ -96,6 +98,23 @@ public class HttpUtil {
         return params;
     }
 
+    /**
+     * URL-encodes the given URL path.
+     * 
+     * @return the encoded path, or the original path if it
+     * is malformed
+     */
+    public static String encodePath(String path) {
+        String encoded = path;
+        try {
+            URI uri = new URI(null, null, path, null);
+            encoded = uri.toString();
+        } catch (URISyntaxException e) {
+            // ignore and just return the orig path
+        }
+        return encoded;
+    }
+    
     public static void main(String[] args) {
         System.out.println(getURIParams((String) null));
         System.out.println(getURIParams("foo=bar"));
