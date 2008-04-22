@@ -171,4 +171,14 @@ public class Mountpoint extends Folder {
         meta.put(Metadata.FN_REMOTE_ID, remoteId);
         return Folder.encodeMetadata(meta, color, version, attrs, view, null, null, 0, 0, 0, 0);
     }
+
+    @Override public String toString() {
+        StringBuffer sb = new StringBuffer();
+        sb.append("mountpoint: {");
+        sb.append("n:\"").append(getName()).append("\", ");
+        appendCommonMembers(sb).append(", ");
+        sb.append(CN_ATTRIBUTES).append(": ").append(mAttributes);
+        sb.append("}");
+        return sb.toString();
+    }
 }

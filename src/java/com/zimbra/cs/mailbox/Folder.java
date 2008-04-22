@@ -1090,7 +1090,7 @@ public class Folder extends MailItem {
         }
     }
 
-    private static final String CN_ATTRIBUTES = "attributes";
+    protected static final String CN_ATTRIBUTES = "attributes";
 
     @Override public String toString() {
         StringBuffer sb = new StringBuffer();
