@@ -1304,6 +1304,7 @@ public class Recurrence
                         for (IException except : mExceptions) {
                             if (except != null && except.matches(inst.getStart())) {
                                 iter.remove();
+                                break;
                             }
                         }
                     }
