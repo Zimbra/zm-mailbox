@@ -704,7 +704,13 @@ public abstract class Element implements Cloneable {
                 Element attrs = getOptionalElement(E_ATTRS);
                 obj = (attrs == null ? null : attrs.mAttributes.get(key));
             }
-            return (obj == null ? defaultValue : obj.toString());
+            if (obj == null) {
+                return defaultValue;
+            } else if (obj instanceof JSONKeyValuePair) {
+                return ((JSONKeyValuePair)obj).getValue();
+            } else {
+                return obj.toString();
+            }
         }
 
         @SuppressWarnings("unchecked")
@@ -1277,6 +1283,8 @@ public abstract class Element implements Cloneable {
 
 
     public static void main(String[] args) throws ContainerException, SoapParseException {
+        System.out.println(Element.parseJSON("{ 'a':'b'}").getAttribute("a", null));
+        System.out.println(Element.parseJSON("{ '_attrs' : {'a':'b'}}").getAttribute("a", null));
         System.out.println(Element.parseJSON("{foo:' bar'}").getAttribute("foo", null));
         System.out.println(Element.parseJSON("{foo:'bar'}").getAttribute("foo", null));
         System.out.println(Element.parseJSON("{foo:''}").getAttribute("foo", null));
