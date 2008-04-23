@@ -5,6 +5,8 @@ import java.io.OutputStream;
 import java.io.IOException;
 import java.io.EOFException;
 import java.io.DataInputStream;
+import java.util.List;
+import java.util.Iterator;
 
 /**
  * I/O utility methods.
@@ -30,5 +32,17 @@ public final class Io {
             os.write(b, 0, n);
             len -= n;
         }
+    }
+
+    public static String toString(List<Object> items, String separator) {
+        StringBuilder sb = new StringBuilder();
+        Iterator<Object> it = items.iterator();
+        if (it.hasNext()) {
+            sb.append(it.next());
+            while (it.hasNext()) {
+                sb.append(separator).append(it.next());
+            }
+        }
+        return sb.toString();
     }
 }

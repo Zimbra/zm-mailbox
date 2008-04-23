@@ -178,6 +178,9 @@ public class ClientAuthenticator {
                 if (cb instanceof NameCallback) {
                     ((NameCallback) cb).setName(authenticationId);
                 } else if (cb instanceof PasswordCallback) {
+                    if (password == null) {
+                        throw new MailException("Authentication password not specified");
+                    }
                     ((PasswordCallback) cb).setPassword(password.toCharArray());
                     password = null; // Clear password once finished
                 } else if (cb instanceof RealmCallback) {

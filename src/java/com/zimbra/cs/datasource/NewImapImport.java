@@ -2,6 +2,7 @@ package com.zimbra.cs.datasource;
 
 import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
+import com.zimbra.cs.mailclient.imap.Mailbox;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.localconfig.LC;
@@ -37,7 +38,7 @@ public class NewImapImport extends AbstractMailItemImport {
     }
     
     protected void connect() throws ServiceException {
-        if (connection.isConnected()) return;
+        if (connection.isClosed()) return;
         try {
             connection.connect();
             connection.login(dataSource.getDecryptedPassword());
@@ -50,5 +51,9 @@ public class NewImapImport extends AbstractMailItemImport {
     public void importData(boolean fullSync) throws ServiceException {
         validateDataSource();
         connect();
+        try {
+            Mailbox mbox = connection.examine("INBOX");
+        } catch (IOException e) {
+        }
     }
 }

@@ -82,7 +82,7 @@ public final class Literal extends ImapData {
         }
     }
 
-    public void writePrefix(MailOutputStream os, boolean lp)
+    public void writePrefix(ImapOutputStream os, boolean lp)
             throws IOException {
         os.write('{');
         os.write(String.valueOf(size));

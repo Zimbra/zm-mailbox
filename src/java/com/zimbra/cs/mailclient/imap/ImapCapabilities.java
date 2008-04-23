@@ -18,6 +18,7 @@ package com.zimbra.cs.mailclient.imap;
 
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.io.IOException;
 
 /**
@@ -61,10 +62,14 @@ public class ImapCapabilities {
     }
 
     public String toString() {
-        StringBuilder sb = new StringBuilder("CAPABILITIES[");
-        for (Atom cap : capabilities) {
-            sb.append(' ').append(cap);
+        StringBuilder sb = new StringBuilder("{");
+        Iterator<Atom> it = capabilities.iterator();
+        if (it.hasNext()) {
+            sb.append(it.next());
+            while (it.hasNext()) {
+                sb.append(' ').append(it.next());
+            }
         }
-        return sb.append(']').toString();
+        return sb.append('}').toString();
     }
 }

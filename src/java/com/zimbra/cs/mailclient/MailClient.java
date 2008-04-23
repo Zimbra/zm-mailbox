@@ -2,6 +2,7 @@ package com.zimbra.cs.mailclient;
 
 import static com.zimbra.cs.mailclient.ClientAuthenticator.*;
 import com.zimbra.cs.mailclient.util.SSLUtil;
+import com.zimbra.cs.mailclient.util.Password;
 
 import javax.security.sasl.Sasl;
 import javax.security.auth.login.LoginException;
@@ -26,6 +27,7 @@ public abstract class MailClient {
 
     public void run(String[] args) throws LoginException, IOException {
         config.setTrace(true);
+        config.setRawMode(true);
         parseArguments(args);
         connect();
         startCommandLoop();
@@ -34,13 +36,16 @@ public abstract class MailClient {
     protected abstract void printUsage(PrintStream ps);
     
     protected void connect() throws LoginException, IOException {
+        if (password == null && config.isPasswordRequired()) {
+            password = Password.read("Password: ");
+        }
         if (config.getAuthenticationId() == null) {
             // Authentication id defaults to login username
             config.setAuthenticationId(System.getProperty("user.name"));
         }
         config.setTraceStream(System.out);
         config.setSSLSocketFactory(SSLUtil.getDummySSLContext().getSocketFactory());
-        connection = MailConnection.getInstance(config);
+        connection = MailConnection.newInstance(config);
         connection.connect();
         connection.authenticate(password);
         String qop = connection.getNegotiatedQop();
@@ -69,8 +74,10 @@ public abstract class MailClient {
                 MailOutputStream os = connection.getOutputStream();
                 String line;
                 while ((line = readLine(System.in)) != null) {
-                    os.writeLine(line);
-                    os.flush();
+                    if (!processCommand(line)) {
+                        os.writeLine(line);
+                        os.flush();
+                    }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -199,5 +206,57 @@ public abstract class MailClient {
             if (i > minQop) sb.append(',');
         }
         return sb.toString();
+    }
+
+    private boolean processCommand(String line) throws IOException {
+        if (!line.startsWith("!")) return false;
+        line = line.substring(1);
+        String[] cmdLine = line.split(" ");
+        boolean success = false;
+        try {
+            success = processCommand(cmdLine);
+        } catch (IndexOutOfBoundsException e) {
+            // Fall through
+        }
+        if (!success) {
+            System.out.println(">> ERROR: Invalid command: " + line);
+        }
+        return true;
+    }
+
+    protected boolean processCommand(String[] cmdLine) throws IOException {
+        String cmd = cmdLine[0];
+        if (isMatch(cmd, "SHow")) {
+            return processShow(cmdLine);
+        } else if (isMatch(cmd, "SET")) {
+            return processSet(cmdLine);
+        }
+        return false;
+    }
+
+    protected boolean processShow(String[] cmdLine) throws IOException {
+        return false;
+    }
+    
+    protected boolean processSet(String[] cmdLine) throws IOException {
+        return false;
+    }
+
+    protected static boolean isMatch(String word, String fullword) {
+        if (word.length() > fullword.length()) return false;
+        boolean enough = false;
+        for (int i = 0; i < fullword.length(); i++) {
+            char c = fullword.charAt(i);
+            if (Character.isLowerCase(c)) {
+                enough = true;
+            } else {
+                c = Character.toLowerCase(c);
+            }
+            if (i >= word.length()) return enough;
+            if (Character.toLowerCase(word.charAt(i)) != c) {
+                return false;
+            }
+        }
+        return word.length() == fullword.length();
     }
 }

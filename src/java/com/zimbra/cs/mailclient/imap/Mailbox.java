@@ -23,7 +23,7 @@ import java.io.IOException;
 /**
  * IMAP Mailbox information.
  */
-public final class Mailbox {
+public final class Mailbox implements ResponseHandler {
     private String name;
     private Flags flags;
     private Flags permanentFlags;
@@ -34,10 +34,8 @@ public final class Mailbox {
     private long unseen = -1;
     private CAtom access;
 
-    public static final String INBOX = "INBOX";
-
     public Mailbox(String name) {
-        this.name = name.equalsIgnoreCase(INBOX) ? INBOX : name;
+        this.name = name;
     }
 
     private Mailbox() {}
@@ -58,7 +56,7 @@ public final class Mailbox {
     }
 
     private void parseStatus(ImapInputStream is) throws IOException {
-        name = is.readAString();
+        name = MailboxName.decode(is.readAString()).toString();
         is.skipChar(' ');
         is.skipChar('(');
         do {
@@ -89,47 +87,46 @@ public final class Mailbox {
         is.skipChar(')');
     }
 
-    /**
-     * Updates currently selected mailbox info according to the specified
-     * ImapResponse.
-     *
-     * @param res the ImapResponse containing possible updates
-     */
-    public void processResponse(ImapResponse res) {
+    public boolean handleResponse(ImapResponse res) {
         switch (res.getCode()) {
         case EXISTS:
             exists = res.getNumber();
-            break;
+            return true;
         case RECENT:
             recent = res.getNumber();
-            break;
+            return true;
         case FLAGS:
             flags = (Flags) res.getData();
-            break;
+            return true;
         case OK:
-            processResponseText(res.getResponseText());
+            return handleResponseText(res.getResponseText());
+        default:
+            return false;
         }
     }
 
-    private void processResponseText(ResponseText rt) {
+    private boolean handleResponseText(ResponseText rt) {
         switch (rt.getCode().getCAtom()) {
         case UNSEEN:
             unseen = (Long) rt.getData();
-            break;
+            return true;
         case UIDNEXT:
             uidNext = (Long) rt.getData();
-            break;
+            return true;
         case UIDVALIDITY:
             uidValidity = (Long) rt.getData();
-            break;
+            return true;
         case PERMANENTFLAGS:
             permanentFlags = (Flags) rt.getData();
-            break;
+            return true;
         case READ_WRITE:
             access = CAtom.READ_WRITE;
-            break;
+            return true;
         case READ_ONLY:
             access = CAtom.READ_ONLY;
+            return true;
+        default:
+            return false;
         }
     }
 
@@ -143,4 +140,16 @@ public final class Mailbox {
     public long getUnseen() { return unseen; }
     public boolean isReadOnly() { return access == CAtom.READ_ONLY; }
     public boolean isReadWrite() { return access == CAtom.READ_WRITE; }
+
+    public void setName(String name) { this.name = name; }
+
+    public String toString() {
+        String encoded = name != null ? new MailboxName(name).encode() : null;
+        return String.format(
+            "{name=%s, exists=%d, recent=%d, unseen=%d, flags=%s, " +
+            "permanent_flags=%s, uid_next=%d, uid_validity=%x, access=%s}",
+            encoded, exists, recent, unseen, flags, permanentFlags, uidNext,
+            uidValidity, access
+        );
+    }
 }

@@ -1,0 +1,156 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ *
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2007, 2008 Zimbra, Inc.
+ *
+ * The contents of this file are subject to the Yahoo! Public License
+ * Version 1.0 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ *
+ * ***** END LICENSE BLOCK *****
+ */
+package com.zimbra.cs.mailclient.imap;
+
+import com.zimbra.cs.mailclient.CommandFailedException;
+import com.zimbra.cs.mailclient.MailException;
+
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Arrays;
+import java.io.IOException;
+
+public class ImapRequest {
+    private final ImapConnection connection;
+    private final ImapOutputStream out;
+    private final String tag;
+    private final Atom cmd;
+    private List<Object> params;
+    private ResponseHandler handler;
+
+    public ImapRequest(ImapConnection connection, Atom cmd) {
+        this.connection = connection;
+        out = (ImapOutputStream) connection.getOutputStream();
+        this.tag = connection.newTag();
+        this.cmd = cmd;
+    }
+
+    public ImapRequest(ImapConnection connection, Atom cmd, Object... params) {
+        this(connection, cmd);
+        for (Object param : params) {
+            addParam(param);
+        }
+    }
+
+    public void addParam(Object data) {
+        if (params == null) {
+            params = new ArrayList<Object>();
+        }
+        params.add(data);
+    }
+
+    public void setResponseHandler(ResponseHandler handler) {
+        this.handler = handler;
+    }
+    
+    public String getTag() { return tag; }
+    public Atom getCommand() { return cmd; }
+    public List<Object> getParams() { return params; }
+    public ResponseHandler getResponseHandler() { return handler; }
+    
+    public ImapResponse send() throws IOException {
+        synchronized (connection) {
+            writeRequest();
+            return connection.waitForResponse(this);
+        }
+    }
+
+    public ImapResponse sendCheckStatus() throws IOException {
+        ImapResponse res = send();
+        checkStatus(res);
+        return res;
+    }
+
+    public void checkStatus(ImapResponse res) throws IOException {
+        if (!res.isTagged()) {
+             throw new MailException("Expected a tagged response");
+         }
+         if (!tag.equalsIgnoreCase(res.getTag())) {
+             throw new MailException(
+                 String.format(
+                     "Unexpected tag in response (expected %s but got %s)",
+                     tag, res.getTag()));
+         }
+         if (!res.isOK()) {
+             throw new CommandFailedException(
+                 cmd.getName(), res.getResponseText().getText());
+         }
+    }
+
+    public void writeRequest() throws IOException {
+        out.write(tag);
+        out.write(' ');
+        out.write(cmd.getName());
+        if (params != null && params.size() > 0) {
+            out.write(' ');
+            writeList(params);
+        }
+        out.newLine();
+        out.flush();
+    }
+
+    private void writeData(Object data) throws IOException {
+        if (data instanceof String) {
+            out.write((String) data);
+        } else if (data instanceof Atom) {
+            ((Atom) data).write(out);
+        } else if (data instanceof Quoted) {
+            ((Quoted) data).write(out);
+        } else if (data instanceof Literal) {
+            writeLiteral((Literal) data);
+        } else if (data instanceof Flags) {
+            ((Flags) data).write(out);
+        } else if (data instanceof MailboxName) {
+            String encoded = ((MailboxName) data).encode();
+            writeData(ImapData.asAString(encoded));
+        } else if (data instanceof Object[]) {
+            writeData(Arrays.asList((Object[]) data));
+        } else if (data instanceof List) {
+            out.write('(');
+            writeList((List) data);
+            out.write(')');
+        } else {
+            writeData(data.toString());
+        }
+    }
+
+    private void writeLiteral(Literal lit) throws IOException {
+        boolean lp = connection.hasLiteralPlus();
+        lit.writePrefix(out, lp);
+        if (!lp) {
+            out.flush();
+            ImapResponse res = connection.waitForResponse(this);
+            if (!res.isContinuation()) {
+                throw new CommandFailedException(
+                    cmd.getName(), "Expected a literal continuation response");
+            }
+        }
+        lit.writeData(out);
+    }
+    
+    private void writeList(List list) throws IOException {
+        Iterator it = list.iterator();
+        if (it.hasNext()) {
+            writeData(it.next());
+            while (it.hasNext()) {
+                out.write(' ');
+                writeData(it.next());
+            }
+        }
+    }
+}

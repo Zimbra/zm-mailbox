@@ -8,10 +8,18 @@ public final class Password {
     
     private static final Password INSTANCE = new Password();
 
-    public static Password getInstance() {
-        return INSTANCE;
+    /**
+     * Reads a password from the console. If Java version is at least 1.6 then
+     * uses java.io.Console to read the password without echo. Otherwise,
+     * defaults to reading password with echo.
+     *
+     * @param prompt the password prompt
+     * @return the password, or null if the password could not be read
+     */
+    public static String read(String prompt) {
+        return INSTANCE.readPassword(prompt);
     }
-
+    
     private Password() {
         readPassword = getReadPassword();
     }
@@ -26,18 +34,10 @@ public final class Password {
         return null;
     }
 
-    /**
-     * Reads a password from the console. If Java version is at least 1.6 then
-     * uses java.io.Console to read the password without echo. Otherwise,
-     * defaults to reading password with echo.
-     *
-     * @param prompt the password prompt
-     * @return the password, or null if the password could not be read
-     */
-    public char[] readPassword(String prompt) {
+    private String readPassword(String prompt) {
         if (readPassword != null) {
             try {
-                return (char[]) readPassword.invoke(null, "%s", prompt);
+                return new String((char[]) readPassword.invoke(null, "%s", prompt));
             } catch (Exception e) {
                 // e.printStackTrace();
             }
@@ -50,7 +50,7 @@ public final class Password {
     }
 
     // For Java version < 1.6 reading password with echo is our only option
-    private static char[] defaultReadPassword(String prompt) throws IOException {
+    private static String defaultReadPassword(String prompt) throws IOException {
         System.out.print(prompt);
         System.out.flush();
         StringBuilder sb = new StringBuilder();
@@ -58,6 +58,6 @@ public final class Password {
         while ((c = System.in.read()) != -1 && c != '\n') {
             if (c != '\r') sb.append((char) c);
         }
-        return sb.toString().toCharArray();
+        return sb.toString();
     }
 }
