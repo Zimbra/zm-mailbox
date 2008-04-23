@@ -33,7 +33,8 @@ public class ZVoiceMailPrefs extends ZCallFeature {
     }
 
     public String getEmailNotificationAddress() {
-        return this.get(VoiceConstants.A_vmPrefEmailNotifAddress);
+		String address = this.get(VoiceConstants.A_vmPrefEmailNotifAddress);
+		return address == null ? "" : address;
     }
 
     public void setEmailNotificationAddress(String address) {
