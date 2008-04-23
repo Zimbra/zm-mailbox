@@ -20,6 +20,7 @@ import com.zimbra.cs.mailclient.ParseException;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * IMAP response message.
@@ -81,7 +82,7 @@ public final class ImapResponse {
             // mailbox-list    = "(" [mbx-list-flags] ")" SP
             //                   (DQUOTE QUOTED-CHAR DQUOTE / nil) SP mailbox
             is.skipChar(' ');
-            data = MailboxList.read(is);
+            data = ListData.read(is);
             break;
         case SEARCH:
             // "SEARCH" *(SP nz-number)
@@ -107,12 +108,12 @@ public final class ImapResponse {
         }
     }
 
-    private Long[] readSearchData(ImapInputStream is) throws IOException {
-        ArrayList<Long> numbers = new ArrayList<Long>();
+    private List<Long> readSearchData(ImapInputStream is) throws IOException {
+        ArrayList<Long> ids = new ArrayList<Long>();
         do {
-            numbers.add(is.readNZNumber());
+            ids.add(is.readNZNumber());
         } while (is.match(' '));
-        return numbers.toArray(new Long[numbers.size()]);
+        return ids;
     }
     
     private void readTagged(ImapInputStream is) throws IOException {
@@ -181,6 +182,11 @@ public final class ImapResponse {
         return isStatus() ? (ResponseText) data : null;
     }
 
+    public Atom getResponseCode() {
+        ResponseText text = getResponseText();
+        return text != null ? text.getCode() : null;
+    }
+    
     public String getContinuation() {
         return isContinuation() ? (String) data : null;
     }

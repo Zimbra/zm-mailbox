@@ -60,6 +60,40 @@ public class ImapClient extends MailClient {
         for (String line : USAGE) ps.println(line);
     }
 
+    @Override
+    protected boolean processCommand(String[] cmdLine) throws IOException {
+        ImapConnection ic = getImapConnection();
+        String cmd = cmdLine[0];
+        if (isMatch(cmd, "SELect")) {
+            Mailbox mbox = ic.select(cmdLine[1]);
+            System.out.printf(">> Selected mailbox: %s\n", mbox);
+        } else if (isMatch(cmd, "CAPability")) {
+            ImapCapabilities cap = ic.capability();
+            System.out.printf(">> Capabilities: %s\n", cap);
+        } else {
+            super.processCommand(cmdLine);
+        }
+        return true;
+    }
+    
+    @Override
+    protected boolean processShow(String[] cmdLine) throws IOException {
+        ImapConnection ic = getImapConnection();
+        String arg = cmdLine[1];
+        if (isMatch(arg, "CAPability")) {
+            System.out.printf(">> Current capabilities: %s\n", ic.getCapabilities());
+        } else if (isMatch(arg, "MAILbox") || isMatch(arg, "MBox")) {
+            System.out.printf(">> Current mailbox: %s\n", ic.getMailbox());
+        } else {
+            return false;
+        }
+        return true;
+    }
+
+    public ImapConnection getImapConnection() {
+        return (ImapConnection) connection;
+    }
+    
     public static void main(String[] args) throws Exception {
         new ImapClient().run(args);
     }
