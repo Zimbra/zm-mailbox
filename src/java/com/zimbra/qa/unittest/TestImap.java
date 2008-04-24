@@ -19,15 +19,23 @@ package com.zimbra.qa.unittest;
 
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
+import com.zimbra.cs.mailclient.imap.ResponseHandler;
+import com.zimbra.cs.mailclient.imap.ImapResponse;
+import com.zimbra.cs.mailclient.imap.MessageData;
+import com.zimbra.cs.mailclient.imap.CAtom;
+import com.zimbra.cs.mailclient.imap.Mailbox;
 import com.zimbra.cs.mailclient.imap.MailboxName;
 import com.zimbra.cs.mailclient.util.SSLUtil;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import junit.framework.TestCase;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.apache.log4j.BasicConfigurator;
 
 public class TestImap extends TestCase {
-    private ImapConnection mConnection;
+    private ImapConnection connection;
 
     private static final String HOST = "localhost";
     private static final int PORT = 7143;
@@ -38,34 +46,56 @@ public class TestImap extends TestCase {
     private static final boolean DEBUG = true;
 
     public void tearDown() throws Exception {
-        if (mConnection != null) mConnection.logout();
+        if (connection != null) connection.logout();
     }
 
     public void testLogin() throws Exception {
         connect(false);
-        mConnection.login(PASS);
+        connection.login(PASS);
     }
 
     public void testSSLLogin() throws Exception {
         connect(true);
-        mConnection.login(PASS);
+        connection.login(PASS);
     }
 
     public void testPlainAuth() throws Exception {
         connect(false);
-        mConnection.authenticate(PASS);
+        connection.authenticate(PASS);
     }
 
     public void testBadAuth() throws Exception {
         connect(false);
         try {
-            mConnection.authenticate("foobaz");
+            connection.authenticate("foobaz");
         } catch (CommandFailedException e) {
             return;
         }
         throw new Exception("Expected auth failure");
     }
 
+    public void testSelect() throws Exception {
+        connect(false);
+        connection.login(PASS);
+        connection.select("INBOX");
+    }
+
+    public void testFetch() throws Exception {
+        connect(false);
+        connection.login(PASS);
+        connection.select("INBOX");
+        final AtomicInteger count = new AtomicInteger();
+        connection.fetch("1:*", "(ENVELOPE UID)", new ResponseHandler() {
+            public boolean handleResponse(ImapResponse res) {
+                if (res.getCode() != CAtom.FETCH) return false;
+                MessageData md = (MessageData) res.getData();
+                System.out.printf("Fetched uid = %s\n", md.getUid());
+                count.incrementAndGet();
+                return true;
+            }
+        });
+    }
+    
     /*
     public void testLiteral() throws Exception {
         connect(false);
@@ -114,7 +144,12 @@ public class TestImap extends TestCase {
         config.setTrace(true);
         config.setMechanism("PLAIN");
         config.setAuthenticationId(USER);
-        mConnection = new ImapConnection(config);
-        mConnection.connect();
+        BasicConfigurator.configure();
+        connection = new ImapConnection(config);
+        connection.connect();
+    }
+
+    public static void main(String[] args) throws Exception {
+        new TestImap().testFetch();
     }
 }

@@ -53,7 +53,7 @@ public class Envelope {
     private Address[] to;
     private Address[] cc;
     private Address[] bcc;
-    private Address[] inReplyTo;
+    private String inReplyTo;
     private String messageId;
 
     public static Envelope read(ImapInputStream is) throws IOException {
@@ -80,7 +80,7 @@ public class Envelope {
         is.skipChar(' ');
         bcc = readAList(is);
         is.skipChar(' ');
-        inReplyTo = readAList(is);
+        inReplyTo = is.readNString();
         is.skipChar(' ');
         messageId = is.readNString();
         is.skipChar(')');
@@ -122,7 +122,7 @@ public class Envelope {
     public Address[] getTo() { return to; }
     public Address[] getCc() { return cc; }
     public Address[] getBcc() { return bcc; }
-    public Address[] getInReplyTo() { return inReplyTo; }
+    public String getInReplyTo() { return inReplyTo; }
 
     public static class Address {
         private String name;

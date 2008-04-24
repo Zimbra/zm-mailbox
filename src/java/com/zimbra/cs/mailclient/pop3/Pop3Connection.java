@@ -26,8 +26,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-public class Pop3Connection extends MailConnection {
+import org.apache.log4j.Logger;
+
+public final class Pop3Connection extends MailConnection {
     private Pop3Response response;
+
+    private static final Logger LOGGER = Logger.getLogger(Pop3Connection.class);
     
     public Pop3Connection(Pop3Config config) {
         super(config);
@@ -39,6 +43,10 @@ public class Pop3Connection extends MailConnection {
 
     protected MailOutputStream getMailInputStream(OutputStream os) {
         return new MailOutputStream(os);
+    }
+
+    public Logger getLogger() {
+        return LOGGER;
     }
     
     protected void processGreeting() throws IOException {
