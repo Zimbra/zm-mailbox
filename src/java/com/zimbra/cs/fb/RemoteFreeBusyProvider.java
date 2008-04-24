@@ -16,23 +16,31 @@
  */
 package com.zimbra.cs.fb;
 
-import java.util.Collections;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.methods.GetMethod;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.mail.ToXML;
+import com.zimbra.cs.util.NetUtil;
 import com.zimbra.soap.ProxyTarget;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -40,6 +48,7 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
 	
 	public RemoteFreeBusyProvider(HttpServletRequest httpReq, ZimbraSoapContext zsc, long start, long end) {
 		mRemoteAccountMap = new HashMap<String,StringBuilder>();
+		mRequestList = new ArrayList<Request>();
 		mHttpReq = httpReq;
 		mSoapCtxt = zsc;
 		mStart = start;
@@ -56,6 +65,8 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
 	}
 	public void addFreeBusyRequest(Request req) {
 		Account account = (Account) req.data;
+		if (account == null)
+			return;
 		String hostname = account.getAttr(Provisioning.A_zimbraMailHost);
 		StringBuilder buf = mRemoteAccountMap.get(hostname);
 		if (buf == null)
@@ -63,15 +74,48 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
 		else
 			buf.append(",").append(req.email);
 		mRemoteAccountMap.put(hostname, buf);
+		mRequestList.add(req);
 	}
-	public void addFreeBusyRequest(Account acct, String id, long start, long end) {
-		Request req = new Request(acct, id, start, end);
+	public void addFreeBusyRequest(Account requestor, Account acct, String id, long start, long end) {
+		Request req = new Request(requestor, id, start, end);
 		req.data = acct;
 		addFreeBusyRequest(req);
 	}
 	public List<FreeBusy> getResults() {
-		// XXX unused, and not implemented
-		return Collections.emptyList();
+		ArrayList<FreeBusy> fb = new ArrayList<FreeBusy>();
+        for (Request req : mRequestList) {
+            HttpMethod method = null;
+            Account acct = (Account)req.data;
+            try {
+                StringBuilder targetUrl = new StringBuilder();
+                targetUrl.append(UserServlet.getRestUrl(acct));
+                targetUrl.append("/Calendar?fmt=ifb");
+                targetUrl.append("&start=");
+                targetUrl.append(mStart);
+                targetUrl.append("&end=");
+                targetUrl.append(mEnd);
+                HttpClient client = new HttpClient();
+                NetUtil.configureProxy(client);
+                method = new GetMethod(targetUrl.toString());
+                String fbMsg;
+                try {
+                    client.executeMethod(method);
+                    byte[] buf = ByteUtil.getContent(method.getResponseBodyAsStream(), 0);
+                    fbMsg = new String(buf, "UTF-8");
+                } catch (IOException ex) {
+                    // ignore this recipient and go on
+                    fbMsg = null;
+                }
+                if (fbMsg != null)
+                	fb.add(new FreeBusyString(req.email, mStart, mEnd, fbMsg));
+            } catch (ServiceException e) {
+            	ZimbraLog.fb.warn("can't get free/busy information for "+req.email, e);
+            } finally {
+                if (method != null)
+                    method.releaseConnection();
+            }
+        }
+		return fb;
 	}
 	
 	public int registerForItemTypes() {
@@ -134,6 +178,7 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
 		return REMOTE;
 	}
 	private Map<String,StringBuilder> mRemoteAccountMap;
+	private ArrayList<Request> mRequestList;
 	private HttpServletRequest mHttpReq;
 	private ZimbraSoapContext mSoapCtxt;
 	private long mStart;
@@ -160,5 +205,32 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
         response = proxy.dispatch(request, zscTarget).detach();
 
         return response;
+    }
+    
+    private static class FreeBusyString extends FreeBusy {
+    	private String mFbStr;
+    	public FreeBusyString(String name, long start, long end, String fbStr) {
+    		super(name, start, end);
+    		mFbStr = fbStr;
+    	}
+        public String toVCalendar(Method m, String organizer, String attendee, String url) {
+        	String ret = mFbStr;
+        	String org = "ORGANIZER:"+organizer;
+        	if (attendee != null) {
+        		if (ret.indexOf("ATTENDEE") > 0)
+                    ret = ret.replaceAll("ATTENDEE:.*", "ATTENDEE:"+attendee);
+        		else
+        			org += "\nATTENDEE:"+attendee;
+        	}
+        	if (url != null && ret.indexOf("URL") < 0) {
+        		if (ret.indexOf("URL") > 0)
+                    ret = ret.replaceAll("URL:.*", "URL:"+url);
+        		else
+        			org += "\nURL:"+url;
+        	}
+            ret = ret.replaceAll("METHOD:PUBLISH", "METHOD:"+m.toString());
+            ret = ret.replaceAll("ORGANIZER:.*", org);
+        	return ret;
+        }
     }
 }

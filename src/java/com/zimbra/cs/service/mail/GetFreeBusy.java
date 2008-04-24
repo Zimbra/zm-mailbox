@@ -17,24 +17,18 @@
 
 package com.zimbra.cs.service.mail;
 
-import java.util.ArrayList;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
 import com.zimbra.soap.SoapServlet;
-import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.fb.FreeBusyProvider;
-import com.zimbra.cs.fb.LocalFreeBusyProvider;
-import com.zimbra.cs.fb.RemoteFreeBusyProvider;
-import com.zimbra.cs.fb.FreeBusy;
+import com.zimbra.cs.fb.FreeBusyQuery;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetFreeBusy extends MailDocumentHandler {
@@ -76,88 +70,28 @@ public class GetFreeBusy extends MailDocumentHandler {
         String idParam = request.getAttribute(MailConstants.A_ID, null);    // comma-separated list of account zimbraId GUIDs
         String nameParam = request.getAttribute(MailConstants.A_NAME, null); // comma-separated list of account emails
 
-    	RemoteFreeBusyProvider remote = new RemoteFreeBusyProvider((HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST), zc, rangeStart, rangeEnd);
-    	ArrayList<String> nonZimbraIds = new ArrayList<String>();
+        Account requestor = Provisioning.getInstance().get(Provisioning.AccountBy.id, zc.getAuthtokenAccountId());
+    	FreeBusyQuery fbQuery = new FreeBusyQuery((HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST), zc, requestor, rangeStart, rangeEnd);
 
         String[] idStrs = null;
-    	Account acct = null;
 
         // uidParam should be deprecated at some point, bug 21776 comment #14
     	if (uidParam != null) {
     		idStrs = uidParam.split(",");
-    		for (String idStr : idStrs) {
-    			acct = getAccountFromUid(idStr);
-    			if (acct == null)
-    				nonZimbraIds.add(idStr);
-    			else
-    				getFreeBusyForZimbraUser(response, acct, idStr, rangeStart, rangeEnd, remote);
-    		}
+    		for (String idStr : idStrs)
+        		fbQuery.addId(idStr);
     	}
     	if (idParam != null) {
     		idStrs = idParam.split(",");
-    		for (String idStr : idStrs) {
-    			acct = getAccountFromId(idStr);
-    			if (acct == null)
-    				nonZimbraIds.add(idStr);
-    			else
-    				getFreeBusyForZimbraUser(response, acct, idStr, rangeStart, rangeEnd, remote);
-    		}
+    		for (String idStr : idStrs)
+        		fbQuery.addAccountId(idStr);
     	}
     	if (nameParam != null) {
     		idStrs = nameParam.split(",");
-    		for (String idStr : idStrs) {
-    			acct = getAccountFromName(idStr);
-    			if (acct == null)
-    				nonZimbraIds.add(idStr);
-    			else
-    				getFreeBusyForZimbraUser(response, acct, idStr, rangeStart, rangeEnd, remote);
-    		}
+    		for (String idStr : idStrs)
+        		fbQuery.addEmailAddress(idStr);
     	}
-    	remote.addResults(response);
-    	Account requestor = Provisioning.getInstance().get(AccountBy.id, zc.getRequestedAccountId());
-        FreeBusyProvider.getRemoteFreeBusy(requestor, response, nonZimbraIds, rangeStart, rangeEnd);
+    	fbQuery.getResults(response);
         return response;
-    }
-    
-    private Account getAccountFromUid(String uid) {
-    	Provisioning prov = Provisioning.getInstance();
-    	Account acct = null;
-    	try {
-    		if (Provisioning.isUUID(uid))
-    			acct = prov.get(AccountBy.id, uid);
-    		else
-    			acct = prov.get(AccountBy.name, uid);
-    	} catch (ServiceException e) {
-    		acct = null;
-    	}
-    	return acct;
-    }
-    private Account getAccountFromId(String id) {
-    	try {
-    		return Provisioning.getInstance().get(AccountBy.id, id);
-    	} catch (ServiceException e) {
-    	}
-    	return null;
-    }
-    private Account getAccountFromName(String name) {
-    	try {
-    		return Provisioning.getInstance().get(AccountBy.name, name);
-    	} catch (ServiceException e) {
-    	}
-    	return null;
-    }
-    private void getFreeBusyForZimbraUser(Element response, Account acct, String user, long start, long end, RemoteFreeBusyProvider remote) {
-    	// acct in LDAP is either local or remote.
-    	try {
-    		if (Provisioning.onLocalServer(acct)) {
-    			FreeBusy fb = LocalFreeBusyProvider.getFreeBusy(acct, user, start, end);
-    			ToXML.encodeFreeBusy(response, fb);
-    			return;
-    		} else {
-    			remote.addFreeBusyRequest(acct, user, start, end);
-    		}
-    	} catch (ServiceException e) {
-            ZimbraLog.misc.error("cannot get free/busy for "+user, e);
-    	}
     }
 }

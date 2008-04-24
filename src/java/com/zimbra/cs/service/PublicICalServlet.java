@@ -17,11 +17,8 @@
 package com.zimbra.cs.service;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -31,15 +28,9 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.fb.FreeBusy;
-import com.zimbra.cs.fb.FreeBusyProvider;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.fb.FreeBusyQuery;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.servlet.ZimbraServlet;
 
@@ -54,7 +45,12 @@ public class PublicICalServlet extends ZimbraServlet {
 
     public final void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
         ZimbraLog.clearContext();
-        String pathInfo = req.getPathInfo().toLowerCase();
+        String pathInfo = req.getPathInfo();
+        if (pathInfo == null) {
+        	resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+        	return;
+        }
+        pathInfo = pathInfo.toLowerCase();
         boolean isReply = pathInfo != null && pathInfo.endsWith("reply");
         boolean isFreeBusy = pathInfo != null && pathInfo.endsWith("freebusy.ifb");
 
@@ -86,7 +82,7 @@ public class PublicICalServlet extends ZimbraServlet {
 
         long now = new Date().getTime();
 
-        long rangeStart = now - Constants.MILLIS_PER_MONTH;
+        long rangeStart = now - Constants.MILLIS_PER_WEEK;
         long rangeEnd = now + (2 * Constants.MILLIS_PER_MONTH); 
 
         if (startStr != null)
@@ -106,49 +102,17 @@ public class PublicICalServlet extends ZimbraServlet {
             return;
         }
 
-        try {
-            Account acct = Provisioning.getInstance().get(AccountBy.name, acctName);
-            FreeBusy fb = null;
-            String email = null;
-            if (acct == null) {
-            	ArrayList<String> ids = new ArrayList<String>();
-            	ids.add(acctName);
-            	rangeStart = now - Constants.MILLIS_PER_WEEK;  // exchange doesn't like start date being now - 1 month.
-        		Calendar cal = GregorianCalendar.getInstance();
-        		cal.setTimeInMillis(rangeStart);
-        		cal.set(Calendar.MINUTE, 0);
-        		cal.set(Calendar.SECOND, 0);
-        		rangeStart = cal.getTimeInMillis();
-        		cal.setTimeInMillis(rangeEnd);
-        		cal.set(Calendar.MINUTE, 0);
-        		cal.set(Calendar.SECOND, 0);
-        		rangeEnd = cal.getTimeInMillis();
-            	List<FreeBusy> fblist = FreeBusyProvider.getRemoteFreeBusy(null, ids, rangeStart, rangeEnd);
-            	fb = fblist.get(0);
-            	email = acctName;
-            } else if (!Provisioning.onLocalServer(acct)) {
-                // request was sent to incorrect server, so proxy to the right one
-                proxyServletRequest(req, resp, Provisioning.getInstance().getServer(acct), null);
-                return;
-            } else {
-                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getId());
-                if (mbox == null) {
-                    resp.sendError(HttpServletResponse.SC_NOT_FOUND, "mailbox not found");
-                    return;             
-                }
-
-                fb = mbox.getFreeBusy(rangeStart, rangeEnd);
-                email = mbox.getAccount().getName();
-            }
-
-            String url = req.getRequestURL() + "?" + req.getQueryString();
-            String fbMsg = fb.toVCalendar(FreeBusy.Method.PUBLISH, email, null, url);
-            resp.getOutputStream().write(fbMsg.getBytes());
-
-        } catch (ServiceException e) {
-            e.printStackTrace();
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Caught exception: "+e);
-        }
+        FreeBusyQuery fbQuery = new FreeBusyQuery(req, null, rangeStart, rangeEnd);
+        fbQuery.addEmailAddress(acctName);
+        Collection<FreeBusy> result = fbQuery.getResults();
+        FreeBusy fb = null;
+        if (result.size() > 0)
+            fb = result.iterator().next();
+        else
+        	fb = FreeBusy.emptyFreeBusy(acctName, rangeStart, rangeEnd);
+        String url = req.getRequestURL() + "?" + req.getQueryString();
+        String fbMsg = fb.toVCalendar(FreeBusy.Method.PUBLISH, acctName, null, url);
+        resp.getOutputStream().write(fbMsg.getBytes());
     }
 
     public final void doReply(HttpServletRequest req, HttpServletResponse resp) {
