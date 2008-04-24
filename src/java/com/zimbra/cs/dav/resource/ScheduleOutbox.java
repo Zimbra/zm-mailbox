@@ -32,13 +32,9 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.methods.GetMethod;
 import org.dom4j.Element;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -48,6 +44,7 @@ import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.fb.FreeBusy;
+import com.zimbra.cs.fb.FreeBusyQuery;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -61,9 +58,7 @@ import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
-import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.util.NetUtil;
 
 public class ScheduleOutbox extends Collection {
 	public ScheduleOutbox(DavContext ctxt, Folder f) throws DavException, ServiceException {
@@ -137,47 +132,14 @@ public class ScheduleOutbox extends Collection {
 			throw new DavException("can't parse date", HttpServletResponse.SC_BAD_REQUEST, pe);
 		}
 
-		ZimbraLog.dav.debug("start: "+new Date(start)+", end: "+new Date(end));
-		Provisioning prov = Provisioning.getInstance();
 		rcpt = rcpt.trim();
-		String rcptAddr = this.getAddressFromPrincipalURL(rcpt);
-		Account rcptAcct = prov.get(Provisioning.AccountBy.name, rcptAddr);
-        String fbMsg = null;
-		if (rcptAcct == null)
-			throw new DavException("account not found "+rcptAddr, HttpServletResponse.SC_BAD_REQUEST);
-		if (Provisioning.onLocalServer(rcptAcct)) {
-			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(rcptAcct);
-			FreeBusy fb = mbox.getFreeBusy(start, end);
-			fbMsg = fb.toVCalendar(FreeBusy.Method.REPLY, originator, rcpt, null);
-		} else {
-            HttpMethod method = null;
-            try {
-                StringBuilder targetUrl = new StringBuilder();
-                targetUrl.append(UserServlet.getRestUrl(rcptAcct));
-                targetUrl.append("/Calendar?fmt=ifb");
-                targetUrl.append("&start=");
-                targetUrl.append(start);
-                targetUrl.append("&end=");
-                targetUrl.append(end);
-                HttpClient client = new HttpClient();
-                NetUtil.configureProxy(client);
-                method = new GetMethod(targetUrl.toString());
-                try {
-                    client.executeMethod(method);
-                    byte[] buf = ByteUtil.getContent(method.getResponseBodyAsStream(), 0);
-                    fbMsg = new String(buf, "UTF-8");
-                    fbMsg = fbMsg.replaceAll("METHOD:PUBLISH", "METHOD:REPLY");
-                    fbMsg = fbMsg.replaceAll("ORGANIZER:.*", "ORGANIZER:"+originator+"\nATTENDEE:"+rcpt);
-                } catch (IOException ex) {
-                    // ignore this recipient and go on
-                    fbMsg = null;
-                }
-            } finally {
-                if (method != null)
-                    method.releaseConnection();
-            }
-		}
-        if (fbMsg != null) {
+		ZimbraLog.dav.debug("rcpt: "+rcpt+", start: "+new Date(start)+", end: "+new Date(end));
+		
+    	FreeBusyQuery fbQuery = new FreeBusyQuery(ctxt.getRequest(), ctxt.getAuthAccount(), start, end);
+    	fbQuery.addEmailAddress(getAddressFromPrincipalURL(rcpt));
+    	java.util.Collection<FreeBusy> fbResult = fbQuery.getResults();
+        if (fbResult.size() > 0) {
+        	String fbMsg = fbResult.iterator().next().toVCalendar(FreeBusy.Method.REPLY, originator, rcpt, null);
             resp.addElement(DavElements.E_RECIPIENT).setText(rcpt);
             resp.addElement(DavElements.E_REQUEST_STATUS).setText("2.0;Success");
             resp.addElement(DavElements.E_CALENDAR_DATA).setText(fbMsg);
