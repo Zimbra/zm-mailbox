@@ -16,7 +16,6 @@
  */
 package com.zimbra.cs.session;
 
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.util.SyncToken;
 
 /**
@@ -56,16 +55,13 @@ public class WaitSetSession extends Session {
             // to signal IFF the passed-in changeId is after the current
             // synctoken...and we want to cancel the existing signalling
             // if the new synctoken is up to date with the mailbox
-            Mailbox mbox = this.getMailbox();
-            synchronized(mbox) {
-                int mboxHighestChange = mbox.getLastChangeID();
-                if (mboxHighestChange > mHighestChangeId)
-                    mHighestChangeId = mboxHighestChange;
-                if (mSyncToken.after(mHighestChangeId))
-                    mWs.unsignalDataReady(this);
-                else 
-                    mWs.signalDataReady(this);
-            }
+            int mboxHighestChange = getMailbox().getLastChangeID();
+            if (mboxHighestChange > mHighestChangeId)
+                mHighestChangeId = mboxHighestChange;
+            if (mSyncToken.after(mHighestChangeId))
+                mWs.unsignalDataReady(this);
+            else 
+                mWs.signalDataReady(this);
         }
     }
 
