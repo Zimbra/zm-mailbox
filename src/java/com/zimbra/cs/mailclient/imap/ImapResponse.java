@@ -196,4 +196,13 @@ public final class ImapResponse {
             ((MessageData) data).dispose();
         }
     }
+
+    public String toString() {
+        StringBuilder sb = new StringBuilder(tag);
+        sb.append(' ');
+        if (number != -1) sb.append(number).append(' ');
+        sb.append(code);
+        if (data != null) sb.append(" <data>");
+        return sb.toString();
+    }
 }

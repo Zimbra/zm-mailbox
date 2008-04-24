@@ -54,9 +54,11 @@ public final class Flags extends AbstractSet<Atom> {
     public static Flags read(ImapInputStream is) throws IOException {
         is.skipChar('(');
         Flags flags = new Flags();
-        do {
-            flags.set(is.readFlag());
-        } while (is.match(' '));
+        if (is.peekChar() != ')') {
+            do {
+                flags.set(is.readFlag());
+            } while (is.match(' '));
+        }
         is.skipChar(')');
         return flags;
     }

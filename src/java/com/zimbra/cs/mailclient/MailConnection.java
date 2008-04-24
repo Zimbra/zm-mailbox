@@ -1,6 +1,8 @@
 package com.zimbra.cs.mailclient;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.log4j.Logger;
+import org.apache.log4j.Level;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
@@ -32,15 +34,20 @@ public abstract class MailConnection {
     protected TraceOutputStream traceOut;
     protected MailInputStream mailIn;
     protected MailOutputStream mailOut;
-    protected boolean authenticated;
-    protected boolean closed;
+    protected State state = State.CLOSED;
 
+    protected enum State {
+        CLOSED, NOT_AUTHENTICATED, AUTHENTICATED, SELECTED, LOGOUT
+    }
     private static final String LOGIN = "LOGIN";
-    
+
     protected MailConnection() {}
 
     protected MailConnection(MailConfig config) {
         this.config = config;
+        if (config.isDebug()) {
+            getLogger().setLevel(Level.DEBUG);
+        }
     }
 
     public static MailConnection newInstance(MailConfig config) {
@@ -54,8 +61,8 @@ public abstract class MailConnection {
         }
     }
 
-    public void connect() throws IOException {
-        if (isClosed()) return;
+    public synchronized void connect() throws IOException {
+        if (!isClosed()) return;
         socket = newSocket();
         initStreams(new BufferedInputStream(socket.getInputStream()),
                     new BufferedOutputStream(socket.getOutputStream()));
@@ -63,10 +70,13 @@ public abstract class MailConnection {
         if (config.isTlsEnabled() && !config.isSslEnabled()) {
             startTls();
         }
+        if (state == State.CLOSED) {
+            setState(State.NOT_AUTHENTICATED);
+        }
     }
 
     protected void initStreams(InputStream is, OutputStream os)
-            throws IOException {
+        throws IOException {
         if (config.isTrace()) {
             is = traceIn = newTraceInputStream(is);
             os = traceOut = newTraceOutputStream(os);
@@ -81,21 +91,24 @@ public abstract class MailConnection {
     protected abstract void sendStartTls() throws IOException;
     protected abstract MailInputStream getMailInputStream(InputStream is);
     protected abstract MailOutputStream getMailInputStream(OutputStream os);
+    public abstract Logger getLogger();
 
     public abstract void logout() throws IOException;
 
     public synchronized void login(String pass) throws IOException {
         if (pass == null) throw new NullPointerException("password");
+        checkState(State.NOT_AUTHENTICATED);
         String user = config.getAuthenticationId();
         if (user == null) {
             throw new IllegalStateException("Authentication id missing");
         }
         sendLogin(user, pass);
-        authenticated = true;
+        setState(State.AUTHENTICATED);
     }
     
     public synchronized void authenticate(String pass)
         throws LoginException, IOException {
+        checkState(State.NOT_AUTHENTICATED);
         String mech = config.getMechanism();
         if (mech == null || mech.equalsIgnoreCase(LOGIN)) {
             login(pass);
@@ -109,7 +122,7 @@ public abstract class MailConnection {
             initStreams(authenticator.getUnwrappedInputStream(socket.getInputStream()),
                         authenticator.getWrappedOutputStream(socket.getOutputStream()));
         }
-        authenticated = true;
+        setState(State.AUTHENTICATED);
     }
 
     protected void processContinuation(String s) throws IOException {
@@ -136,7 +149,8 @@ public abstract class MailConnection {
         }
     }
 
-    public synchronized void startTls() throws IOException {
+    protected synchronized void startTls() throws IOException {
+        checkState(State.NOT_AUTHENTICATED);
         sendStartTls();
         SSLSocket sock = newSSLSocket(socket);
         try {
@@ -175,29 +189,40 @@ public abstract class MailConnection {
     }
 
     public synchronized boolean isClosed() {
-        return closed;
+        return state == State.CLOSED;
     }
 
     public synchronized boolean isAuthenticated() {
-        return authenticated;
+        return state == State.AUTHENTICATED;
+    }
+
+    protected synchronized void setState(State state) {
+        getLogger().debug("setState: " + this.state + " -> " + state);
+        this.state = state;
+        notifyAll();
+    }
+
+    protected void checkState(State expected) {
+        if (state != expected) {
+            throw new IllegalStateException(
+                "Operation not supported in " + state + " state");
+        }
     }
     
     public synchronized void close() {
-        if (!closed) {
+        if (isClosed()) return;
+        setState(State.CLOSED);
+        try {
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (authenticator != null) {
             try {
-                socket.close();
-            } catch (IOException e) {
+                authenticator.dispose();
+            } catch (SaslException e) {
                 e.printStackTrace();
             }
-            if (authenticator != null) {
-                try {
-                    authenticator.dispose();
-                } catch (SaslException e) {
-                    e.printStackTrace();
-                }
-            }
-            authenticator = null;
-            closed = true;
         }
     }
 

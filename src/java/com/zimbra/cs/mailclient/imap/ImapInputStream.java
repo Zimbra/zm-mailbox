@@ -52,10 +52,19 @@ public final class ImapInputStream extends MailInputStream {
         if (peek() == '\\') {
             sbuf.append((char) read());
             if (peek() == '*') {
-                return new Atom(sbuf.append((char) read()).toString());
+                sbuf.append((char) read());
+                return new Atom(sbuf.toString());
             }
         }
-        return new Atom(readChars(sbuf, Chars.ATOM_CHARS).toString());
+        int len = sbuf.length();
+        while (Chars.ATOM_CHARS[peekChar()]) {
+            sbuf.append((char) read());
+        }
+        if (sbuf.length() - len == 0) {
+            throw new ParseException(
+                "Invalid flag character '" + Ascii.pp((byte) peek()) + "'");
+        }
+        return new Atom(sbuf.toString());
     }
     
     public String readString() throws IOException {
@@ -80,7 +89,7 @@ public final class ImapInputStream extends MailInputStream {
         if (!as.isNString()) {
             throw new ParseException("Expected NIL or STRING, but got: " + as);
         }
-        return as.isNil() ? null : as;
+        return as;
     }
 
     public String readAString() throws IOException {
@@ -196,20 +205,23 @@ public final class ImapInputStream extends MailInputStream {
             }
             sbuf.append((char) read());
         }
+        if (sbuf.length() == 0) {
+            throw new ParseException(
+                "Invalid text character '" + Ascii.pp((byte) c) + "'");
+        }
         return sbuf.toString();
     }
 
     public String readChars(boolean[] chars) throws IOException {
         sbuf.setLength(0);
-        return readChars(sbuf, chars).toString();
-    }
-
-    public StringBuilder readChars(StringBuilder sb, boolean[] chars)
-            throws IOException {
         while (chars[peekChar()]) {
-            sb.append((char) read());
+            sbuf.append((char) read());
         }
-        return sb;
+        if (sbuf.length() == 0) {
+            throw new ParseException(
+                "Unexpected character '" + Ascii.pp((byte) peek()) + "'");
+        }
+        return sbuf.toString();
     }
 
     public void skipChar(char expectedChar) throws IOException {
