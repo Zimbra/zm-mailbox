@@ -71,13 +71,28 @@ public abstract class AttributeCallback {
             boolean isCreate);
     
     
+    protected static class SingleValueMod {
+        
+        static enum Mod {
+            SETTING,
+            UNSETTING
+        }
+        
+        Mod mMod;
+        String mValue;
+        
+        public boolean setting() { return mMod==Mod.SETTING; }
+        public boolean unsetting() { return mMod==Mod.UNSETTING; }
+        public String value() { return mValue; }
+    }
+    
     protected static class MultiValueMod {
         
         static enum Mod {
             ADDING,
-            REMOVING,
+            REMOVING,  // removing some values
             REPLACING,
-            DELETINGALL
+            DELETING   // removing all values
         }
         
         Mod mMod;
@@ -86,38 +101,74 @@ public abstract class AttributeCallback {
         public boolean adding() { return mMod==Mod.ADDING; }
         public boolean removing() { return mMod==Mod.REMOVING; }
         public boolean replacing() { return mMod==Mod.REPLACING; }
-        public boolean deletingall() { return mMod==Mod.DELETINGALL; }
+        public boolean deleting() { return mMod==Mod.DELETING; }
         public List<String> values() { return mValues; }
         public Set<String> valuesSet() { return new HashSet<String>(mValues); }
     }
     
-    protected MultiValueMod getMultiValue(Map attrsToModify, String attrName)  throws ServiceException {
+    protected SingleValueMod singleValueMod(String attrName, Object value)  throws ServiceException {
+        SingleValueMod svm = new SingleValueMod();
+        if (value == null)
+            svm.mMod = SingleValueMod.Mod.UNSETTING;
+        else if (!(value instanceof String))
+            throw ServiceException.INVALID_REQUEST(attrName + " is a single-valued attribute", null);
+        else {
+            String s = (String)value;
+            if ("".equals(s))
+                svm.mMod = SingleValueMod.Mod.UNSETTING;
+            else {
+                svm.mMod = SingleValueMod.Mod.SETTING;
+                svm.mValue = s;
+            }
+        }
+        return svm;
+    }
+    
+    /**
+     * 
+     * @param attrsToModify
+     * @param attrName
+     * @return how the attribute named attrName is being modified, returns null if it it not being modified.
+     *         Note, this can be called to test other attributes in the modifyAttr, not only the attribute for 
+     *         which the callback function is called.
+     *         If attrName is the attr for which the callback is invoked (i.e. is the attr passed in to preModify),
+     *         then multiValueMod should not return null.
+     *         Null can be returned only when attrName is not the attr for which the preModify callback is called.
+     *         
+     * @throws ServiceException
+     */
+    protected MultiValueMod multiValueMod(Map attrsToModify, String attrName)  throws ServiceException {
         MultiValueMod mvm = new MultiValueMod();
         Object v = attrsToModify.get(attrName);
         if (v != null) {
             if ((v instanceof String) && ((String)v).length() == 0)
-        	mvm.mMod = MultiValueMod.Mod.DELETINGALL;
+                mvm.mMod = MultiValueMod.Mod.DELETING;
             else
                 mvm.mMod = MultiValueMod.Mod.REPLACING;
-        }
+        } else if (attrsToModify.keySet().contains(attrName)) {
+            // attrsToModify contains attrName, and the value is null
+            mvm.mMod = MultiValueMod.Mod.DELETING;
+        }           
+           
         if (v == null) {
             v = attrsToModify.get("+" + attrName);
             if (v != null)
                 mvm.mMod = MultiValueMod.Mod.ADDING;
         }
+
         if (v == null) {
             v = attrsToModify.get("-" + attrName);
             if (v != null)
                 mvm.mMod = MultiValueMod.Mod.REMOVING;
         }
-        
-        if (v != null)
+                
+        if (mvm.mMod != null && mvm.mMod != MultiValueMod.Mod.DELETING)
             mvm.mValues = getMultiValue(v);
         
-        return (v == null?null:mvm);
+        return (mvm.mMod == null)? null : mvm;
     }
 
-    protected List<String> getMultiValue(Object value) throws ServiceException {
+    private List<String> getMultiValue(Object value) throws ServiceException {
         
         List<String> list = null;
         

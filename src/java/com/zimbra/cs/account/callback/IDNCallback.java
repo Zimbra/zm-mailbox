@@ -36,7 +36,7 @@ public class IDNCallback extends AttributeCallback {
     public void preModify(Map context, String attrName, Object value,
             Map attrsToModify, Entry entry, boolean isCreate) throws ServiceException {
         
-        MultiValueMod mod = getMultiValue(attrsToModify, attrName);
+        MultiValueMod mod = multiValueMod(attrsToModify, attrName);
         
         if (mod.adding() || mod.replacing()) {
             Set<String> asciiValues = new HashSet<String>();

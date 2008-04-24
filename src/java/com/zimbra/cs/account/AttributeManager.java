@@ -569,7 +569,7 @@ public class AttributeManager {
             Object value = attrs.get(name);
             if (name.charAt(0) == '-' || name.charAt(0) == '+') name = name.substring(1);
             AttributeInfo info = mAttrs.get(name.toLowerCase());
-            if (info != null && value != null) {
+            if (info != null) {
                 // IDN unicode to ACE conversion needs to happen before checkValue or else 
                 // regex attrs will be rejected by checkValue
                 if (isEmailOrIDN(name)) {

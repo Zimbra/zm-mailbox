@@ -39,10 +39,13 @@ public class AccountStatus extends AttributeCallback {
     public void preModify(Map context, String attrName, Object value,
             Map attrsToModify, Entry entry, boolean isCreate) throws ServiceException {
         
-        if (!(value instanceof String))
-            throw ServiceException.INVALID_REQUEST(Provisioning.A_zimbraAccountStatus+" is a single-valued attribute", null);
+        String status;
         
-        String status = (String) value;
+        SingleValueMod mod = singleValueMod(attrName, value);
+        if (mod.unsetting())
+            throw ServiceException.INVALID_REQUEST(Provisioning.A_zimbraAccountStatus+" is a required attribute", null);
+        else
+            status = mod.value();
 
         if (status.equals(Provisioning.ACCOUNT_STATUS_CLOSED)) {
             attrsToModify.put(Provisioning.A_zimbraMailStatus, Provisioning.MAIL_STATUS_DISABLED);
@@ -50,7 +53,6 @@ public class AccountStatus extends AttributeCallback {
             // the request is not also changing zimbraMailStatus, set = zimbraMailStatus to enabled
             attrsToModify.put(Provisioning.A_zimbraMailStatus, Provisioning.MAIL_STATUS_ENABLED);
         }
-       
         
         if ((entry instanceof Account) && (status.equals(Provisioning.ACCOUNT_STATUS_ACTIVE))) {
             if (entry.getAttr(Provisioning.A_zimbraPasswordLockoutFailureTime, null) != null) 

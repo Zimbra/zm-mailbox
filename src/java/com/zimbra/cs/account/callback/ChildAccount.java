@@ -17,17 +17,12 @@
 
 package com.zimbra.cs.account.callback;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.SetUtil;
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
@@ -40,7 +35,7 @@ public class ChildAccount extends AttributeCallback {
                           Map attrsToModify, Entry entry, boolean isCreate) throws ServiceException {
 
         /*
-         * This callback is for both imbraPrefChildVisibleAccount and zimbraChildAccount, and it handles
+         * This callback is for both zimbraPrefChildVisibleAccount and zimbraChildAccount, and it handles
          * both in one shot.  If we've been called just return.
          */ 
         Object done = context.get(KEY);
@@ -51,13 +46,13 @@ public class ChildAccount extends AttributeCallback {
         
         // the +/- has been striped off from attrName but we need that info, it is in attrsToModify
         
-        MultiValueMod visibleChildrenMod = getMultiValue(attrsToModify, Provisioning.A_zimbraPrefChildVisibleAccount);
-        MultiValueMod allChildrenMod = getMultiValue(attrsToModify, Provisioning.A_zimbraChildAccount);
+        MultiValueMod visibleChildrenMod = multiValueMod(attrsToModify, Provisioning.A_zimbraPrefChildVisibleAccount);
+        MultiValueMod allChildrenMod = multiValueMod(attrsToModify, Provisioning.A_zimbraChildAccount);
         
         Set<String> visibleChildren = newValuesToBe(visibleChildrenMod, entry, Provisioning.A_zimbraPrefChildVisibleAccount);
         Set<String> allChildren = newValuesToBe(allChildrenMod, entry, Provisioning.A_zimbraChildAccount);
         
-        if (allChildrenMod != null && allChildrenMod.deletingall()) {
+        if (allChildrenMod != null && allChildrenMod.deleting()) {
             attrsToModify.put(Provisioning.A_zimbraPrefChildVisibleAccount, "");
         } else {
             Set<String> vidsToRemove = new HashSet<String>();
@@ -82,9 +77,8 @@ public class ChildAccount extends AttributeCallback {
     
     private Set<String> newValuesToBe(MultiValueMod mod, Entry entry, String attrName) {
         Set<String> newValues = null; 
-        if (entry != null && entry instanceof Account) {
-            Account acct = (Account)entry;
-            Set<String> curValues = acct.getMultiAttrSet(attrName);
+        if (entry != null) {
+            Set<String> curValues = entry.getMultiAttrSet(attrName);
     
             if (mod == null) {
                 newValues = curValues;
@@ -94,7 +88,7 @@ public class ChildAccount extends AttributeCallback {
                     SetUtil.union(newValues, curValues, mod.valuesSet());
                 } else if (mod.removing()) {
                     newValues = SetUtil.subtract(curValues, mod.valuesSet());
-                } else if (mod.deletingall()) {
+                } else if (mod.deleting()) {
                     newValues = new HashSet<String>();
                 } else {
                     newValues = mod.valuesSet();
