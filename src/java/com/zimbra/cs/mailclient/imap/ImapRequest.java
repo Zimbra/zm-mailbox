@@ -27,7 +27,6 @@ import java.io.IOException;
 
 public class ImapRequest {
     private final ImapConnection connection;
-    private final ImapOutputStream out;
     private final String tag;
     private final Atom cmd;
     private List<Object> params;
@@ -35,7 +34,6 @@ public class ImapRequest {
 
     public ImapRequest(ImapConnection connection, Atom cmd) {
         this.connection = connection;
-        out = (ImapOutputStream) connection.getOutputStream();
         this.tag = connection.newTag();
         this.cmd = cmd;
     }
@@ -64,10 +62,7 @@ public class ImapRequest {
     public ResponseHandler getResponseHandler() { return handler; }
     
     public ImapResponse send() throws IOException {
-        synchronized (connection) {
-            writeRequest();
-            return connection.waitForResponse(this);
-        }
+        return connection.sendRequest(this);
     }
 
     public ImapResponse sendCheckStatus() throws IOException {
@@ -92,19 +87,20 @@ public class ImapRequest {
          }
     }
 
-    public void writeRequest() throws IOException {
+    public void write(ImapOutputStream out) throws IOException {
         out.write(tag);
         out.write(' ');
         out.write(cmd.getName());
         if (params != null && params.size() > 0) {
             out.write(' ');
-            writeList(params);
+            writeList(out, params);
         }
         out.newLine();
         out.flush();
     }
 
-    private void writeData(Object data) throws IOException {
+    private void writeData(ImapOutputStream out, Object data)
+        throws IOException {
         if (data instanceof String) {
             out.write((String) data);
         } else if (data instanceof Atom) {
@@ -112,45 +108,39 @@ public class ImapRequest {
         } else if (data instanceof Quoted) {
             ((Quoted) data).write(out);
         } else if (data instanceof Literal) {
-            writeLiteral((Literal) data);
+            connection.writeLiteral(this, (Literal) data);
         } else if (data instanceof Flags) {
             ((Flags) data).write(out);
         } else if (data instanceof MailboxName) {
             String encoded = ((MailboxName) data).encode();
-            writeData(ImapData.asAString(encoded));
+            writeData(out, ImapData.asAString(encoded));
         } else if (data instanceof Object[]) {
-            writeData(Arrays.asList((Object[]) data));
+            writeData(out, Arrays.asList((Object[]) data));
         } else if (data instanceof List) {
             out.write('(');
-            writeList((List) data);
+            writeList(out, (List) data);
             out.write(')');
         } else {
-            writeData(data.toString());
+            writeData(out, data.toString());
         }
     }
 
-    private void writeLiteral(Literal lit) throws IOException {
-        boolean lp = connection.hasLiteralPlus();
-        lit.writePrefix(out, lp);
-        if (!lp) {
-            out.flush();
-            ImapResponse res = connection.waitForResponse(this);
-            if (!res.isContinuation()) {
-                throw new CommandFailedException(
-                    cmd.getName(), "Expected a literal continuation response");
-            }
-        }
-        lit.writeData(out);
-    }
-    
-    private void writeList(List list) throws IOException {
+    private void writeList(ImapOutputStream out, List list)
+        throws IOException {
         Iterator it = list.iterator();
         if (it.hasNext()) {
-            writeData(it.next());
+            writeData(out, it.next());
             while (it.hasNext()) {
                 out.write(' ');
-                writeData(it.next());
+                writeData(out, it.next());
             }
         }
+    }
+
+    public String toString() {
+        StringBuilder sb = new StringBuilder(tag);
+        sb.append(' ').append(cmd);
+        if (params != null) sb.append(" <data>");
+        return sb.toString();
     }
 }
