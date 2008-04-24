@@ -596,7 +596,7 @@ public class TestDomainStatus extends TestCase {
             Element eId = req.addElement(AccountConstants.E_ID);
             eId.setText(mCtx.mTargetAcct.getId());
             Element eA = req.addElement(AccountConstants.E_A);
-            eA.addAttribute(AccountConstants.A_N, Provisioning.A_zimbraFeatureCalendarEnabled);
+            eA.addAttribute(AccountConstants.A_N, Provisioning.A_zimbraAttachmentsBlocked);
             mCtx.mSoapClient.invoke(req);
         }
         
