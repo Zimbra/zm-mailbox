@@ -34,7 +34,7 @@ public class MailHostPool extends AttributeCallback {
     public void preModify(Map context, String attrName, Object value,
             Map attrsToModify, Entry entry, boolean isCreate) throws ServiceException {
         
-        MultiValueMod mod = getMultiValue(attrsToModify, Provisioning.A_zimbraMailHostPool);
+        MultiValueMod mod = multiValueMod(attrsToModify, Provisioning.A_zimbraMailHostPool);
         
         if (mod.adding() || mod.replacing()) {
             Provisioning prov = Provisioning.getInstance();

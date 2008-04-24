@@ -70,7 +70,7 @@ public class CheckPortConflict extends AttributeCallback {
      * check port conflict
      * 
      */
-    public void preModify(Map context, String attrName, Object value,
+    public void preModify(Map context, String attrName, Object attrValue,
                           Map attrsToModify, Entry entry, boolean isCreate) throws ServiceException {
         
         Object done = context.get(KEY);
@@ -78,13 +78,6 @@ public class CheckPortConflict extends AttributeCallback {
             context.put(KEY, KEY);
         else
             return;
-        
-        String newPortValue; 
-        
-        if (!(value instanceof String))
-            throw ServiceException.INVALID_REQUEST(attrName + " is a single-valued attribute", null);
-        else
-            newPortValue = (String)value;
             
         if (!((entry instanceof Server)||(entry instanceof Config))) return;
             
@@ -126,7 +119,7 @@ public class CheckPortConflict extends AttributeCallback {
                             }
                         } 
                     }
-                } else 
+                } else if (obj != null)
                     throw ServiceException.INVALID_REQUEST(attrName + " is a single-valued attribute", null);
             } else {
                 if (server != null)
@@ -159,7 +152,7 @@ public class CheckPortConflict extends AttributeCallback {
                 if (obj instanceof String) {
                     String newPort = (String)obj;
                     newValue = newPort;
-                } else
+                } else if (obj != null)
                     throw ServiceException.INVALID_REQUEST(attrName + " is a single-valued attribute", null);
             } else {
                 if (config != null)

@@ -38,11 +38,15 @@ public class DisplayName extends AttributeCallback {
 
         if (!((entry instanceof Account)||(entry instanceof DistributionList))) return;
         
-        if (!(value instanceof String))
-            throw ServiceException.INVALID_REQUEST(Provisioning.A_displayName+" is a single-valued attribute", null);
+        String displayName;
         
-        String displayName = (String) value;
-
+        // update cn only if we are not unsetting display name(cn is required for organizationalPerson)
+        SingleValueMod mod = singleValueMod(attrName, value);
+        if (mod.unsetting())
+            return;
+        else
+            displayName = mod.value();
+        
         String namingRdnAttr = null;
         Provisioning prov = Provisioning.getInstance();
         if (prov instanceof LdapProvisioning) {
