@@ -293,6 +293,15 @@ public class TestAttr extends TestCase {
         // TODO
         // unsetTest(domain, attrName);
     }
+    
+    public void testCallbackMailSignature() throws Exception {
+        Account acct = getAccount();
+        String attrName = Provisioning.A_zimbraPrefMailSignature;
+        
+        unsetTest(acct, attrName);
+        
+        setAttr(acct, attrName, "blah");
+    }
  
     public static void main(String[] args) throws Exception {
         CliUtil.toolSetup();

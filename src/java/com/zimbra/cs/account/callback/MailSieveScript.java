@@ -35,13 +35,12 @@ public class MailSieveScript extends AttributeCallback {
     public void preModify(Map context, String attrName, Object value,
             Map attrsToModify, Entry entry, boolean isCreate) throws ServiceException {
 
+        SingleValueMod mod = singleValueMod(attrName, value);
+        
         if (!(entry instanceof Account)) 
             return;
         
         Account acct = (Account)entry;
-        
-        if (!(value instanceof String))
-            throw ServiceException.INVALID_REQUEST(Provisioning.A_zimbraMailSieveScript+" is a single-valued attribute", null);
         
         Provisioning prov = Provisioning.getInstance();
         

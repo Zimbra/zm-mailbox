@@ -38,20 +38,16 @@ public class MailCharset extends AttributeCallback {
     public void preModify(Map context, String attrName, Object value,
             Map attrsToModify, Entry entry, boolean isCreate) throws ServiceException {
 
-        if (!(value instanceof String))
-            throw ServiceException.INVALID_REQUEST(Provisioning.A_zimbraPrefMailDefaultCharset + " is a single-valued attribute", null);
-        
-        if (!((entry instanceof Account)||(entry instanceof Cos))) 
-            return;
-        
-        String charset = (String)value;
-        
-        if (StringUtil.isNullOrEmpty(charset)) {
-            if (entry instanceof Account)
-                return;
+        String charset = null;
+        SingleValueMod mod = singleValueMod(attrName, value);
+        if (mod.unsetting()) {
+            if (entry instanceof Cos)
+                throw ServiceException.INVALID_REQUEST("cannot unset " + Provisioning.A_zimbraPrefMailDefaultCharset + " on cos", null);
             else
-                throw ServiceException.INVALID_REQUEST("cannot set " + Provisioning.A_zimbraPrefMailDefaultCharset + " on cos to empty", null);
-        }
+                return;
+        } else
+            charset = mod.value();
+        
         
         try {
             Charset.forName(charset);

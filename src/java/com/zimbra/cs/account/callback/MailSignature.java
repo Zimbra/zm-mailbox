@@ -45,9 +45,10 @@ public class MailSignature extends AttributeCallback {
     public void preModify(Map context, String attrName, Object value,
             Map attrsToModify, Entry entry, boolean isCreate) throws ServiceException {
 
-        if (!(value instanceof String))
-            throw ServiceException.INVALID_REQUEST(Provisioning.A_zimbraPrefMailSignature + " is a single-valued attribute", null);
-        
+        SingleValueMod mod = singleValueMod(attrName, value);
+        if (mod.unsetting())
+            return;
+                
         if (entry != null && !((entry instanceof Account)||(entry instanceof Identity)||(entry instanceof Signature))) 
             return;
         
