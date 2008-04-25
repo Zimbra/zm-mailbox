@@ -777,6 +777,15 @@
         </genkey>
     </target>
 
+    <target name="keystore-backup">
+        <mkdir dir="${zimbra.home.dir}/conf/keystore-backup"/>
+        <copy file="${webserver.conf.dir}/keystore" tofile="${zimbra.home.dir}/conf/keystore-backup/keystore.backup" overwrite="true"/>
+    </target>
+	
+    <target name="keystore-restore">
+        <copy file="${zimbra.home.dir}/conf/keystore-backup/keystore.backup" tofile="${webserver.conf.dir}/keystore" overwrite="true"/>
+    </target>
+	
     <target name="dir-init">
         <echo message="If the following deletes fail, wait for your web server"/>
         <echo message="to stop (or stop jetty manually)"/>
