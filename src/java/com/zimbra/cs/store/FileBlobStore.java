@@ -324,23 +324,19 @@ public class FileBlobStore extends StoreManager {
     public boolean delete(MailboxBlob mboxBlob) throws IOException {
         if (mboxBlob == null)
             return false;
-        if (mLog.isDebugEnabled())
-            mLog.debug("deleting blob " + mboxBlob.getMessageId() +
-                      " in mailbox " + mboxBlob.getMailbox().getId());
         return deleteFile(mboxBlob.getBlob().getFile());
     }
 
     public boolean delete(Blob blob) throws IOException {
         if (blob == null)
             return false;
-        if (mLog.isDebugEnabled())
-            mLog.debug("deleting blob file (" + blob.toString() + ")");
         return deleteFile(blob.getFile());
     }
 
     private boolean deleteFile(File file) throws IOException {
         if (file == null)
             return false;
+        mLog.debug("Deleting %s.", file.getPath());
         boolean deleted = file.delete();
         if (deleted)
             return true;
