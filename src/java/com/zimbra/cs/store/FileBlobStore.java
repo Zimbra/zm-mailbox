@@ -322,20 +322,19 @@ public class FileBlobStore extends StoreManager {
     public boolean delete(MailboxBlob mboxBlob) throws IOException {
         if (mboxBlob == null)
             return false;
-        ZimbraLog.store.debug("Deleting %s.", mboxBlob);
         return deleteFile(mboxBlob.getBlob().getFile());
     }
 
     public boolean delete(Blob blob) throws IOException {
         if (blob == null)
             return false;
-        ZimbraLog.store.debug("Deleting %s.", blob);
         return deleteFile(blob.getFile());
     }
 
     private boolean deleteFile(File file) throws IOException {
         if (file == null)
             return false;
+        ZimbraLog.store.debug("Deleting %s.", file.getPath());
         boolean deleted = file.delete();
         if (deleted)
             return true;
@@ -499,12 +498,12 @@ public class FileBlobStore extends StoreManager {
                 // Sleep until next scheduled wake-up time, or until notified.
                 synchronized (this) {
                     if (!mShutdown) {
-                        long now = System.currentTimeMillis();
+                    	long now = System.currentTimeMillis();
                         long until = startTime + mSweepIntervalMS;
                         if (until > now) {
-                            try {
-                                wait(until - now);
-                            } catch (InterruptedException e) {}
+                        	try {
+    							wait(until - now);
+    						} catch (InterruptedException e) {}
                         }
                     }
                     shutdown = mShutdown;
@@ -517,55 +516,55 @@ public class FileBlobStore extends StoreManager {
                 // Delete old files in incoming directory of each volume.
                 List<Volume> allVolumes = Volume.getAll();
                 for (Volume volume : allVolumes) {
-                    short volType = volume.getType();
-                    if (volType != Volume.TYPE_MESSAGE &&
-                        volType != Volume.TYPE_MESSAGE_SECONDARY)
-                        continue;
-                    File directory = new File(volume.getIncomingMsgDir());
-                    if (!directory.exists()) continue;
-                    File[] files = directory.listFiles();
-                    if (files == null) continue;
-                    for (int i = 0; i < files.length; i++) {
-                        // Check for shutdown after every 100 files.
-                        if (i % 100 == 0) {
-                            synchronized (this) {
-                                shutdown = mShutdown;
-                            }
-                            if (shutdown) break;
-                        }
+                	short volType = volume.getType();
+                	if (volType != Volume.TYPE_MESSAGE &&
+                		volType != Volume.TYPE_MESSAGE_SECONDARY)
+                		continue;
+                	File directory = new File(volume.getIncomingMsgDir());
+                	if (!directory.exists()) continue;
+                	File[] files = directory.listFiles();
+                	if (files == null) continue;
+                	for (int i = 0; i < files.length; i++) {
+        				// Check for shutdown after every 100 files.
+                		if (i % 100 == 0) {
+        					synchronized (this) {
+        						shutdown = mShutdown;
+        					}
+        					if (shutdown) break;
+        				}
 
-                        File file = files[i];
-                        if (file.isDirectory()) continue;
-                        long lastMod = file.lastModified();
-                        // lastModified() returns 0L if file doesn't exist (i.e. deleted by another thread
-                        // after this thread did directory.listFiles())
-                        if (lastMod > 0L) {
-                            long age = startTime - lastMod;
-                            if (age >= mMaxAgeMS) {
-                                boolean deleted = file.delete();
-                                if (!deleted) {
-                                    // Let's warn only if delete failure wasn't caused by file having been
-                                    // by someone else already.
-                                    if (file.exists())
+        				File file = files[i];
+                		if (file.isDirectory()) continue;
+                		long lastMod = file.lastModified();
+                		// lastModified() returns 0L if file doesn't exist (i.e. deleted by another thread
+                		// after this thread did directory.listFiles())
+                		if (lastMod > 0L) {
+                    		long age = startTime - lastMod;
+                    		if (age >= mMaxAgeMS) {
+                    			boolean deleted = file.delete();
+                    			if (!deleted) {
+                    			    // Let's warn only if delete failure wasn't caused by file having been
+                    			    // by someone else already.
+                    			    if (file.exists())
                                         sLog.warn("Sweeper unable to delete " + file.getAbsolutePath());
                                 } else if (sLog.isDebugEnabled()) {
                                     sLog.debug("Sweeper deleted " +
-                                               file.getAbsolutePath());
-                                    numDeleted++;
-                                }
-                            }
-                        }
-                    }
-                    synchronized (this) {
-                        shutdown = mShutdown;
-                    }
-                    if (shutdown) break;
+                    						   file.getAbsolutePath());
+                    				numDeleted++;
+                    			}
+                    		}
+                		}
+                	}
+                	synchronized (this) {
+                		shutdown = mShutdown;
+                	}
+                	if (shutdown) break;
                 }
 
                 long elapsed = System.currentTimeMillis() - startTime;
 
                 sLog.debug("Incoming directory sweep deleted " + numDeleted +
-                           " files in " + elapsed + "ms");
+                		   " files in " + elapsed + "ms");
             }
 
             sLog.info(getName() + " thread exiting");
