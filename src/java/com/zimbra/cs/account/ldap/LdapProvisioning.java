@@ -271,14 +271,14 @@ public class LdapProvisioning extends Provisioning {
      * @param attrs
      * @throws ServiceException
      */
-    protected void modifyAttrsInternal(Entry entry, DirContext initCtxt, Map attrs)
+    protected void modifyAttrsInternal(Entry entry, ZimbraLdapContext initZlc, Map attrs)
             throws ServiceException {
-        DirContext ctxt = initCtxt;
+        ZimbraLdapContext zlc = initZlc;
         try {
-            if (ctxt == null)
-                ctxt = LdapUtil.getDirContext(true);
-            LdapUtil.modifyAttrs(ctxt, ((LdapEntry)entry).getDN(), attrs, entry);
-            refreshEntry(entry, ctxt, this);
+            if (zlc == null)
+                zlc = new ZimbraLdapContext(true);
+            LdapUtil.modifyAttrs(zlc, ((LdapEntry)entry).getDN(), attrs, entry);
+            refreshEntry(entry, zlc, this);
         } catch (InvalidAttributeIdentifierException e) {
             throw AccountServiceException.INVALID_ATTR_NAME(
                     "invalid attr name: " + e.getMessage(), e);
@@ -295,8 +295,8 @@ public class LdapProvisioning extends Provisioning {
             throw ServiceException.FAILURE("unable to modify attrs: "
                     + e.getMessage(), e);
         } finally {
-            if (initCtxt == null)
-                LdapUtil.closeContext(ctxt);
+            if (initZlc == null)
+                ZimbraLdapContext.closeContext(zlc);
         }
     }  
 
@@ -308,9 +308,9 @@ public class LdapProvisioning extends Provisioning {
         refreshEntry(e, null, this);
     }
 
-    void refreshEntry(Entry entry, DirContext initCtxt, LdapProvisioning prov)
+    void refreshEntry(Entry entry, ZimbraLdapContext initZlc, LdapProvisioning prov)
     throws ServiceException {
-        DirContext ctxt = initCtxt;
+        ZimbraLdapContext zlc = initZlc;
         try {
             Map<String,Object> defaults = null;
     
@@ -323,18 +323,18 @@ public class LdapProvisioning extends Provisioning {
                 defaults = prov.getConfig().getServerDefaults();            
             }
     
-            if (ctxt == null)
-                ctxt = LdapUtil.getDirContext();
+            if (zlc == null)
+                zlc = new ZimbraLdapContext();
             String dn = ((LdapEntry)entry).getDN();
             if (defaults == null)
-                entry.setAttrs(LdapUtil.getAttrs(LdapUtil.getAttributes(ctxt, dn)));
+                entry.setAttrs(LdapUtil.getAttrs(zlc.getAttributes(dn)));
             else 
-                entry.setAttrs(LdapUtil.getAttrs(LdapUtil.getAttributes(ctxt, dn)), defaults);                
+                entry.setAttrs(LdapUtil.getAttrs(zlc.getAttributes(dn)), defaults);                
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to refresh entry", e);
         } finally {
-            if (initCtxt == null)
-                LdapUtil.closeContext(ctxt);
+            if (initZlc == null)
+                ZimbraLdapContext.closeContext(zlc);
         }
     }
 
@@ -435,12 +435,12 @@ public class LdapProvisioning extends Provisioning {
     	return listAllZimlets();
     }
 
-    private Account getAccountByQuery(String base, String query, DirContext initCtxt, boolean loadFromMaster) throws ServiceException {
-        DirContext ctxt = initCtxt;
+    private Account getAccountByQuery(String base, String query, ZimbraLdapContext initZlc, boolean loadFromMaster) throws ServiceException {
+        ZimbraLdapContext zlc = initZlc;
         try {
-            if (ctxt == null)
-                ctxt = LdapUtil.getDirContext(loadFromMaster);
-            NamingEnumeration ne = LdapUtil.searchDir(ctxt, base, query, sSubtreeSC);
+            if (zlc == null)
+                zlc = new ZimbraLdapContext(loadFromMaster);
+            NamingEnumeration ne = zlc.searchDir(base, query, sSubtreeSC);
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 if (ne.hasMore()) {
@@ -457,13 +457,13 @@ public class LdapProvisioning extends Provisioning {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to lookup account via query: "+query+" message: "+e.getMessage(), e);
         } finally {
-            if (initCtxt == null)
-                LdapUtil.closeContext(ctxt);
+            if (initZlc == null)
+                ZimbraLdapContext.closeContext(zlc);
         }
         return null;
     }
 
-    private Account getAccountById(String zimbraId, DirContext ctxt, boolean loadFromMaster) throws ServiceException {
+    private Account getAccountById(String zimbraId, ZimbraLdapContext zlc, boolean loadFromMaster) throws ServiceException {
         if (zimbraId == null)
             return null;
         Account a = sAccountCache.getById(zimbraId);
@@ -471,11 +471,11 @@ public class LdapProvisioning extends Provisioning {
             zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
             String query = LdapFilter.accountById(zimbraId);
             
-            a = getAccountByQuery(mDIT.mailBranchBaseDN(), query, ctxt, loadFromMaster);
+            a = getAccountByQuery(mDIT.mailBranchBaseDN(), query, zlc, loadFromMaster);
             
             // search again under the admin base if not found and admin base is not under mail base
             if (a == null && !mDIT.isUnder(mDIT.mailBranchBaseDN(), mDIT.adminBaseDN()))
-                a = getAccountByQuery(mDIT.adminBaseDN(), query, ctxt, loadFromMaster);
+                a = getAccountByQuery(mDIT.adminBaseDN(), query, zlc, loadFromMaster);
             
             sAccountCache.put(a);
         }
@@ -588,11 +588,11 @@ public class LdapProvisioning extends Provisioning {
     }
 
     
-    private Cos lookupCos(String key, DirContext ctxt) throws ServiceException {
+    private Cos lookupCos(String key, ZimbraLdapContext zlc) throws ServiceException {
         Cos c = null;
-        c = getCosById(key, ctxt);
+        c = getCosById(key, zlc);
         if (c == null)
-            c = getCosByName(key, ctxt);
+            c = getCosByName(key, zlc);
         if (c == null)
             throw AccountServiceException.NO_SUCH_COS(key);
         else
@@ -633,11 +633,11 @@ public class LdapProvisioning extends Provisioning {
         AttributeManager.getInstance().preModify(acctAttrs, null, attrManagerContext, true, true);
 
         String dn = null;
-        DirContext ctxt = null;
+        ZimbraLdapContext zlc = null;
         try {
-            ctxt = LdapUtil.getDirContext(true);
+            zlc = new ZimbraLdapContext(true);
 
-            Domain d = getDomainByAsciiName(domain, ctxt);
+            Domain d = getDomainByAsciiName(domain, zlc);
             if (d == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(domain);
             String domainType = d.getAttr(Provisioning.A_zimbraDomainType, Provisioning.DOMAIN_TYPE_LOCAL);
@@ -686,7 +686,7 @@ public class LdapProvisioning extends Provisioning {
 
             if (cosIdAttr != null) {
                 cosId = (String) cosIdAttr.get();
-                cos = lookupCos(cosId, ctxt);
+                cos = lookupCos(cosId, zlc);
                 if (!cos.getId().equals(cosId)) {
                     cosId = cos.getId();
                 }
@@ -694,7 +694,7 @@ public class LdapProvisioning extends Provisioning {
             } else {
                 String domainCosId = domain != null ? d.getAttr(Provisioning.A_zimbraDomainDefaultCOSId, null) : null;
                 if (domainCosId != null) cos = get(CosBy.id, domainCosId);
-                if (cos == null) cos = getCosByName(Provisioning.DEFAULT_COS_NAME, ctxt);
+                if (cos == null) cos = getCosByName(Provisioning.DEFAULT_COS_NAME, zlc);
             }
 
             boolean hasMailTransport = (attrs.get(Provisioning.A_zimbraMailTransport) == null)?false:true;
@@ -751,8 +751,8 @@ public class LdapProvisioning extends Provisioning {
             
             dn = mDIT.accountDNCreate(baseDn, attrs, localPart, domain);
             
-            LdapUtil.createEntry(ctxt, dn, attrs, "createAccount");
-            Account acct = getAccountById(zimbraIdStr, ctxt, true);
+            zlc.createEntry(dn, attrs, "createAccount");
+            Account acct = getAccountById(zimbraIdStr, zlc, true);
             if (acct == null)
                 throw ServiceException.FAILURE("unable to get account after creating LDAP account entry: "+emailAddress+", check ldap log for possible BDB deadlock", null);
             AttributeManager.getInstance().postModify(acctAttrs, acct, attrManagerContext, true);
@@ -767,7 +767,7 @@ public class LdapProvisioning extends Provisioning {
         } catch (NamingException e) {
            throw ServiceException.FAILURE("unable to create account: "+emailAddress, e);
         } finally {
-            LdapUtil.closeContext(ctxt);
+            ZimbraLdapContext.closeContext(zlc);
         }
     }
 
@@ -1191,11 +1191,11 @@ public class LdapProvisioning extends Provisioning {
         String aliasName = parts[0];
         String aliasDomain = parts[1];
                 
-        DirContext ctxt = null;
+        ZimbraLdapContext zlc = null;
         try {
-            ctxt = LdapUtil.getDirContext(true);
+            zlc = new ZimbraLdapContext(true);
 
-            Domain domain = getDomainByAsciiName(aliasDomain, ctxt);
+            Domain domain = getDomainByAsciiName(aliasDomain, zlc);
             if (domain == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(aliasDomain);
             
@@ -1205,7 +1205,7 @@ public class LdapProvisioning extends Provisioning {
             String aliasUuid = LdapUtil.generateUUID();
             String targetEntryId = entry.getId();
             try {
-                LdapUtil.simpleCreate(ctxt, aliasDn, "zimbraAlias",
+                zlc.simpleCreate(aliasDn, "zimbraAlias",
                     new String[] { Provisioning.A_uid, aliasName, 
                                    Provisioning.A_zimbraId, aliasUuid,
                                    Provisioning.A_zimbraAliasTargetId, targetEntryId} );
@@ -1214,14 +1214,14 @@ public class LdapProvisioning extends Provisioning {
                  * check if the alias is a dangling alias.  If so remove the dangling alias
                  * and create a new one.
                  */
-                Attributes attrs = LdapUtil.getAttributes(ctxt, aliasDn);
+                Attributes attrs = zlc.getAttributes(aliasDn);
                 Alias aliasEntry = makeAlias(aliasDn, attrs, this);
                 if (aliasEntry.isDangling()) {
                     // remove the dangling alias 
                     removeAliasInternal(null, alias, null);
                     
                     // try creating teh alias again
-                    LdapUtil.simpleCreate(ctxt, aliasDn, "zimbraAlias",
+                    zlc.simpleCreate(aliasDn, "zimbraAlias",
                             new String[] { Provisioning.A_uid, aliasName, 
                                            Provisioning.A_zimbraId, aliasUuid,
                                            Provisioning.A_zimbraAliasTargetId, targetEntryId} );
@@ -1236,7 +1236,7 @@ public class LdapProvisioning extends Provisioning {
             attrs.put("+" + Provisioning.A_mail, alias);
                        
             // UGH
-            modifyAttrsInternal(((NamedEntry) entry), ctxt, attrs);
+            modifyAttrsInternal(((NamedEntry) entry), zlc, attrs);
         } catch (NameAlreadyBoundException nabe) {
             throw AccountServiceException.ACCOUNT_EXISTS(alias);
         } catch (InvalidNameException e) {
@@ -1244,7 +1244,7 @@ public class LdapProvisioning extends Provisioning {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to create alias: "+e.getMessage(), e);
         } finally {
-            LdapUtil.closeContext(ctxt);
+            ZimbraLdapContext.closeContext(zlc);
         }                
     }
     
@@ -1257,9 +1257,9 @@ public class LdapProvisioning extends Provisioning {
         if (entry == null)
             ZimbraLog.account.warn("target for alias "+alias+" does not exist, removing dangling alias");
         
-        DirContext ctxt = null;
+        ZimbraLdapContext zlc = null;
         try {
-            ctxt = LdapUtil.getDirContext(true);
+            zlc = new ZimbraLdapContext(true);
             
             alias = alias.toLowerCase();
             alias = IDNUtil.toAsciiEmail(alias);
@@ -1278,7 +1278,7 @@ public class LdapProvisioning extends Provisioning {
                     throw AccountServiceException.NO_SUCH_ALIAS(alias);
             }
 
-            Domain domain = getDomainByAsciiName(aliasDomain, ctxt);
+            Domain domain = getDomainByAsciiName(aliasDomain, zlc);
             if (domain == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(aliasDomain);
             
@@ -1300,7 +1300,7 @@ public class LdapProvisioning extends Provisioning {
                     HashMap<String, String> attrs = new HashMap<String, String>();
                     attrs.put("-" + Provisioning.A_mail, alias);
                     attrs.put("-" + Provisioning.A_zimbraMailAlias, alias); 
-                    modifyAttrsInternal(((NamedEntry)entry), ctxt, attrs);
+                    modifyAttrsInternal(((NamedEntry)entry), zlc, attrs);
                 } catch (ServiceException e) {
                   ZimbraLog.account.warn("unable to remove zimbraMailAlias/mail attrs: "+alias);
                   // try to remove alias
@@ -1311,11 +1311,11 @@ public class LdapProvisioning extends Provisioning {
             removeAddressFromAllDistributionLists(alias);
 
             try {
-                Attributes aliasAttrs = LdapUtil.getAttributes(ctxt, aliasDn);
+                Attributes aliasAttrs = zlc.getAttributes(aliasDn);
                 // make sure aliasedObjectName points to this account/dl(if the entry exists)
                 Attribute a = aliasAttrs.get(Provisioning.A_zimbraAliasTargetId);
                 if ( a != null && (entry==null || ((String)a.get()).equals(entry.getId())) ) {
-                	LdapUtil.unbindEntry(ctxt, aliasDn);
+                	zlc.unbindEntry(aliasDn);
                 } else {
                     ZimbraLog.account.warn("unable to remove alias object: "+alias);
                 }                
@@ -1326,7 +1326,7 @@ public class LdapProvisioning extends Provisioning {
             ZimbraLog.account.error("unable to remove alias: "+alias, e);                
             throw ServiceException.FAILURE("unable to remove alias", e);
         } finally {
-            LdapUtil.closeContext(ctxt);
+            ZimbraLdapContext.closeContext(zlc);
         }        
     }
 
@@ -1342,11 +1342,11 @@ public class LdapProvisioning extends Provisioning {
         
         validDomainName(name);
         
-        DirContext ctxt = null;
+        ZimbraLdapContext zlc = null;
         try {
-            ctxt = LdapUtil.getDirContext(true);
+            zlc = new ZimbraLdapContext(true);
             
-            LdapDomain d = (LdapDomain) getDomainByAsciiName(name, ctxt);
+            LdapDomain d = (LdapDomain) getDomainByAsciiName(name, zlc);
             if (d != null)
                 throw AccountServiceException.DOMAIN_EXISTS(name);
             
@@ -1376,7 +1376,7 @@ public class LdapProvisioning extends Provisioning {
             
             String parts[] = name.split("\\.");        
             String dns[] = mDIT.domainToDNs(parts);
-            createParentDomains(ctxt, parts, dns);
+            createParentDomains(zlc, parts, dns);
             
             Attributes attrs = new BasicAttributes(true);
             LdapUtil.mapToAttrs(domainAttrs, attrs);
@@ -1403,9 +1403,9 @@ public class LdapProvisioning extends Provisioning {
             String dn = dns[0];
             //NOTE: all four of these should be in a transaction...
             try {
-                LdapUtil.createEntry(ctxt, dn, attrs, "createDomain");
+                zlc.createEntry(dn, attrs, "createDomain");
             } catch (NameAlreadyBoundException e) {
-                LdapUtil.modifyAttributes(ctxt, dn, DirContext.REPLACE_ATTRIBUTE, attrs);
+                zlc.modifyAttributes(dn, DirContext.REPLACE_ATTRIBUTE, attrs);
             }
             
             String acctBaseDn = mDIT.domainDNToAccountBaseDN(dn);
@@ -1418,12 +1418,12 @@ public class LdapProvisioning extends Provisioning {
                  * according the BASE_RDN_ACCOUNT.  This is actually a design decision depending 
                  * on how far we want to allow the DIT to be customized.
                  */
-                LdapUtil.simpleCreate(ctxt, mDIT.domainDNToAccountBaseDN(dn),
-                                      "organizationalRole",
-                                      new String[] { A_ou, "people", A_cn, "people"});
+                zlc.simpleCreate(mDIT.domainDNToAccountBaseDN(dn),
+                                 "organizationalRole",
+                                 new String[] { A_ou, "people", A_cn, "people"});
             }
             
-            Domain domain = getDomainById(zimbraIdStr, ctxt);
+            Domain domain = getDomainById(zimbraIdStr, zlc);
             
             AttributeManager.getInstance().postModify(domainAttrs, domain, attrManagerContext, true);
             return domain;
@@ -1434,16 +1434,16 @@ public class LdapProvisioning extends Provisioning {
             //if (e instanceof )
             throw ServiceException.FAILURE("unable to create domain: "+name, e);
         } finally {
-            LdapUtil.closeContext(ctxt);
+            ZimbraLdapContext.closeContext(zlc);
         }
     }
     
-    private LdapDomain getDomainByQuery(String query, DirContext initCtxt) throws ServiceException {
-        DirContext ctxt = initCtxt;
+    private LdapDomain getDomainByQuery(String query, ZimbraLdapContext initZlc) throws ServiceException {
+        ZimbraLdapContext zlc = initZlc;
         try {
-            if (ctxt == null)
-                ctxt = LdapUtil.getDirContext();
-            NamingEnumeration ne = LdapUtil.searchDir(ctxt, mDIT.domainBaseDN(), query, sSubtreeSC);
+            if (zlc == null)
+                zlc = new ZimbraLdapContext();
+            NamingEnumeration ne = zlc.searchDir(mDIT.domainBaseDN(), query, sSubtreeSC);
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 if (ne.hasMore()) {
@@ -1460,8 +1460,8 @@ public class LdapProvisioning extends Provisioning {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to lookup domain via query: "+query+" message:"+e.getMessage(), e);
         } finally {
-            if (initCtxt == null)
-                LdapUtil.closeContext(ctxt);
+            if (initZlc == null)
+                ZimbraLdapContext.closeContext(zlc);
         }
         return null;
     }
@@ -1498,13 +1498,13 @@ public class LdapProvisioning extends Provisioning {
         }
     }
     
-    private Domain getDomainById(String zimbraId, DirContext ctxt) throws ServiceException {
+    private Domain getDomainById(String zimbraId, ZimbraLdapContext zlc) throws ServiceException {
         if (zimbraId == null)
             return null;
         LdapDomain domain = (LdapDomain) sDomainCache.getById(zimbraId);
         if (domain == null) {
             zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
-            domain = getDomainByQuery(LdapFilter.domainById(zimbraId), ctxt);
+            domain = getDomainByQuery(LdapFilter.domainById(zimbraId), zlc);
             sDomainCache.put(domain);
         }
         return domain;
@@ -1525,11 +1525,11 @@ public class LdapProvisioning extends Provisioning {
         return getDomainByAsciiName(asciiName, null);
     }        
         
-    private Domain getDomainByAsciiName(String name, DirContext ctxt) throws ServiceException {
+    private Domain getDomainByAsciiName(String name, ZimbraLdapContext zlc) throws ServiceException {
         LdapDomain domain = (LdapDomain) sDomainCache.getByName(name);
         if (domain == null) {
             name = LdapUtil.escapeSearchFilterArg(name);
-            domain = getDomainByQuery(LdapFilter.domainByName(name), ctxt);
+            domain = getDomainByQuery(LdapFilter.domainByName(name), zlc);
             sDomainCache.put(domain);
         }
         return domain;        
@@ -1580,9 +1580,9 @@ public class LdapProvisioning extends Provisioning {
         return result;
     }
 
-    private static boolean domainDnExists(DirContext ctxt, String dn) throws NamingException {
+    private static boolean domainDnExists(ZimbraLdapContext zlc, String dn) throws NamingException {
         try {
-            NamingEnumeration ne = LdapUtil.searchDir(ctxt, dn, LdapFilter.domainLabel(), sObjectSC);
+            NamingEnumeration ne = zlc.searchDir(dn, LdapFilter.domainLabel(), sObjectSC);
             boolean result = ne.hasMore();
             ne.close();
             return result;
@@ -1593,13 +1593,13 @@ public class LdapProvisioning extends Provisioning {
         }
     }
 
-    private static void createParentDomains(DirContext ctxt, String parts[], String dns[]) throws NamingException {
+    private static void createParentDomains(ZimbraLdapContext zlc, String parts[], String dns[]) throws NamingException {
         for (int i=dns.length-1; i > 0; i--) {        
-            if (!domainDnExists(ctxt, dns[i])) {
+            if (!domainDnExists(zlc, dns[i])) {
                 String dn = dns[i];
                 String domain = parts[i];
                 // don't create ZimbraDomain objects, since we don't want them to show up in list domains
-                LdapUtil.simpleCreate(ctxt, dn, new String[] {"dcObject", "organization"}, 
+                zlc.simpleCreate(dn, new String[] {"dcObject", "organization"}, 
                         new String[] { A_o, domain+" domain", A_dc, domain });
             }
         }
@@ -1647,9 +1647,9 @@ public class LdapProvisioning extends Provisioning {
         HashMap attrManagerContext = new HashMap();
         AttributeManager.getInstance().preModify(allAttrs, null, attrManagerContext, true, true);
         
-        DirContext ctxt = null;
+        ZimbraLdapContext zlc = null;
         try {
-            ctxt = LdapUtil.getDirContext(true);
+            zlc = new ZimbraLdapContext(true);
             
             Attributes attrs = new BasicAttributes(true);
             LdapUtil.mapToAttrs(allAttrs, attrs);
@@ -1659,15 +1659,15 @@ public class LdapProvisioning extends Provisioning {
             attrs.put(A_zimbraId, zimbraIdStr);
             attrs.put(A_cn, destCosName);
             String dn = mDIT.cosNametoDN(destCosName);
-            LdapUtil.createEntry(ctxt, dn, attrs, "createCos");
+            zlc.createEntry(dn, attrs, "createCos");
 
-            Cos cos = getCosById(zimbraIdStr, ctxt);
+            Cos cos = getCosById(zimbraIdStr, zlc);
             AttributeManager.getInstance().postModify(allAttrs, cos, attrManagerContext, true);
             return cos;
         } catch (NameAlreadyBoundException nabe) {
             throw AccountServiceException.COS_EXISTS(destCosName);
         } finally {
-            LdapUtil.closeContext(ctxt);
+            ZimbraLdapContext.closeContext(zlc);
         }
     }
     
@@ -1702,12 +1702,12 @@ public class LdapProvisioning extends Provisioning {
         }
     }
 
-    private LdapCos getCOSByQuery(String query, DirContext initCtxt) throws ServiceException {
-        DirContext ctxt = initCtxt;
+    private LdapCos getCOSByQuery(String query, ZimbraLdapContext initZlc) throws ServiceException {
+        ZimbraLdapContext zlc = initZlc;
         try {
-            if (ctxt == null)
-                ctxt = LdapUtil.getDirContext();
-            NamingEnumeration ne = LdapUtil.searchDir(ctxt, mDIT.cosBaseDN(), query, sSubtreeSC);
+            if (zlc == null)
+                zlc = new ZimbraLdapContext();
+            NamingEnumeration ne = zlc.searchDir(mDIT.cosBaseDN(), query, sSubtreeSC);
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 ne.close();
@@ -1720,8 +1720,8 @@ public class LdapProvisioning extends Provisioning {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to lookup cos via query: "+query+ " message: "+e.getMessage(), e);
         } finally {
-            if (initCtxt == null)
-                LdapUtil.closeContext(ctxt);
+            if (initZlc == null)
+                ZimbraLdapContext.closeContext(zlc);
         }
         return null;
     }
@@ -1729,14 +1729,14 @@ public class LdapProvisioning extends Provisioning {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#getCOSById(java.lang.String)
      */
-    private Cos getCosById(String zimbraId, DirContext ctxt ) throws ServiceException {
+    private Cos getCosById(String zimbraId, ZimbraLdapContext zlc) throws ServiceException {
         if (zimbraId == null)
             return null;
 
         LdapCos cos = sCosCache.getById(zimbraId);
         if (cos == null) {
             zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
-            cos = getCOSByQuery(LdapFilter.cosById(zimbraId), ctxt);
+            cos = getCOSByQuery(LdapFilter.cosById(zimbraId), zlc);
             sCosCache.put(cos);
         }
         return cos;
@@ -1768,17 +1768,17 @@ public class LdapProvisioning extends Provisioning {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#getCOSByName(java.lang.String)
      */
-    private Cos getCosByName(String name, DirContext initCtxt) throws ServiceException {
-        DirContext ctxt = initCtxt;
+    private Cos getCosByName(String name, ZimbraLdapContext initZlc) throws ServiceException {
+        ZimbraLdapContext zlc = initZlc;
         LdapCos cos = sCosCache.getByName(name);
         if (cos != null)
             return cos;
 
         try {
-            if (ctxt == null)
-                ctxt = LdapUtil.getDirContext();
+            if (zlc == null)
+                zlc = new ZimbraLdapContext();
             String dn = mDIT.cosNametoDN(name);            
-            Attributes attrs = LdapUtil.getAttributes(ctxt, dn);
+            Attributes attrs = zlc.getAttributes(dn);
             cos  = new LdapCos(dn, attrs);
             sCosCache.put(cos);            
             return cos;
@@ -1789,8 +1789,8 @@ public class LdapProvisioning extends Provisioning {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to lookup COS by name: "+name+" message: "+e.getMessage(), e);
         } finally {
-            if (initCtxt == null)
-                LdapUtil.closeContext(ctxt);
+            if (initZlc == null)
+                ZimbraLdapContext.closeContext(zlc);
         }
     }
 
@@ -1856,15 +1856,15 @@ public class LdapProvisioning extends Provisioning {
         newName = IDNUtil.toAsciiEmail(newName);
         validEmailAddress(newName);
         
-        DirContext ctxt = null;
-        Account acct = getAccountById(zimbraId, ctxt, true);
+        ZimbraLdapContext zlc = null;
+        Account acct = getAccountById(zimbraId, zlc, true);
         LdapEntry entry = (LdapEntry) acct;
         if (acct == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(zimbraId);
         String oldEmail = acct.getName();
         
         try {
-            ctxt = LdapUtil.getDirContext(true);
+            zlc = new ZimbraLdapContext(true);
 
             String oldDn = entry.getDN();
             String oldDomain = EmailUtil.getValidDomainPart(oldEmail);
@@ -1876,7 +1876,7 @@ public class LdapProvisioning extends Provisioning {
             String newLocal = parts[0];
             String newDomain = parts[1];
             
-            Domain domain = getDomainByAsciiName(newDomain, ctxt);
+            Domain domain = getDomainByAsciiName(newDomain, zlc);
             if (domain == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(newDomain);
             
@@ -1904,7 +1904,7 @@ public class LdapProvisioning extends Provisioning {
                 String newDomainDN = mDIT.domainToAccountSearchDN(newDomain);
                 
                 // check up front if any of renamed aliases already exists in the new domain (if domain also got changed)
-                if (domainChanged && addressExists(ctxt, newDomainDN, replacedAliases.newAddrs()))
+                if (domainChanged && addressExists(zlc, newDomainDN, replacedAliases.newAddrs()))
                     throw AccountServiceException.ACCOUNT_EXISTS(newName);    
             }
  
@@ -1912,12 +1912,12 @@ public class LdapProvisioning extends Provisioning {
             LdapUtil.mapToAttrs(newAttrs, attributes);
 
             if (dnChanged) {
-                LdapUtil.createEntry(ctxt, newDn, attributes, "createAccount");         
+                zlc.createEntry(newDn, attributes, "createAccount");         
             }
             
             try {
                 if (dnChanged)
-                    LdapUtil.moveChildren(ctxt, oldDn, newDn);
+                    zlc.moveChildren(oldDn, newDn);
                 
                 // rename the account and all it's renamed aliases to the new name in all distribution lists
                 // doesn't throw exceptions, just logs
@@ -1926,7 +1926,7 @@ public class LdapProvisioning extends Provisioning {
                 // MOVE OVER ALL aliases
                 // doesn't throw exceptions, just logs
                 if (domainChanged)
-                    moveAliases(ctxt, replacedAliases, newDomain, null, oldDn, newDn, oldDomain, newDomain);
+                    moveAliases(zlc, replacedAliases, newDomain, null, oldDn, newDn, oldDomain, newDomain);
                 
                 if (!dnChanged)
                     modifyAttrs(acct, newAttrs, false, false);
@@ -1934,7 +1934,7 @@ public class LdapProvisioning extends Provisioning {
                 throw e;
             } finally {
                 if (dnChanged)
-                    LdapUtil.unbindEntry(ctxt, oldDn);  // unbind old dn
+                    zlc.unbindEntry(oldDn);  // unbind old dn
             }
             
         } catch (NameAlreadyBoundException nabe) {
@@ -1944,19 +1944,19 @@ public class LdapProvisioning extends Provisioning {
         } finally {
             // prune cache
             sAccountCache.remove(acct);
-            LdapUtil.closeContext(ctxt);
+            ZimbraLdapContext.closeContext(zlc);
         }
     }
     
     public void deleteDomain(String zimbraId) throws ServiceException {
         // TODO: should only allow a domain delete to succeed if there are no people
         // if there aren't, we need to delete the people trees first, then delete the domain.
-        DirContext ctxt = null;
+        ZimbraLdapContext zlc = null;
         LdapDomain d = null;
         try {
-            ctxt = LdapUtil.getDirContext(true);
+            zlc = new ZimbraLdapContext(true);
 
-            d = (LdapDomain) getDomainById(zimbraId, ctxt);
+            d = (LdapDomain) getDomainById(zimbraId, zlc);
             if (d == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(zimbraId);
 
@@ -1964,10 +1964,10 @@ public class LdapProvisioning extends Provisioning {
 
             String acctBaseDn = mDIT.domainDNToAccountBaseDN(d.getDN());
             if (!acctBaseDn.equals(d.getDN()))
-                LdapUtil.unbindEntry(ctxt, acctBaseDn);
+                zlc.unbindEntry(acctBaseDn);
             
             try {
-            	LdapUtil.unbindEntry(ctxt, d.getDN());
+            	zlc.unbindEntry(d.getDN());
                 sDomainCache.remove(d);                
             } catch (ContextNotEmptyException e) {
                 // remove from cache before nuking all attrs
@@ -2002,7 +2002,7 @@ public class LdapProvisioning extends Provisioning {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to purge domain: "+zimbraId, e);
         } finally {
-            LdapUtil.closeContext(ctxt);
+            ZimbraLdapContext.closeContext(zlc);
         }
     }
     
@@ -2013,21 +2013,21 @@ public class LdapProvisioning extends Provisioning {
         newDomainName = IDNUtil.toAsciiDomainName(newDomainName);
         validDomainName(newDomainName);
         
-        DirContext ctxt = null;
+        ZimbraLdapContext zlc = null;
         
         try {
-            ctxt = LdapUtil.getDirContext(true);
+            zlc = new ZimbraLdapContext(true);
             
-            Domain oldDomain = getDomainById(zimbraId, ctxt);
+            Domain oldDomain = getDomainById(zimbraId, zlc);
             if (oldDomain == null)
                throw AccountServiceException.NO_SUCH_DOMAIN(zimbraId);
             
             String oldDomainName = oldDomain.getName();
             
-            RenameDomain rd = new RenameDomain(ctxt, this, oldDomain, newDomainName);
+            RenameDomain rd = new RenameDomain(zlc, this, oldDomain, newDomainName);
             rd.execute();
         } finally {
-            LdapUtil.closeContext(ctxt);
+            ZimbraLdapContext.closeContext(zlc);
         }
     }
     
@@ -2333,11 +2333,11 @@ public class LdapProvisioning extends Provisioning {
         HashMap attrManagerContext = new HashMap();
         AttributeManager.getInstance().preModify(listAttrs, null, attrManagerContext, true, true);
 
-        DirContext ctxt = null;
+        ZimbraLdapContext zlc = null;
         try {
-            ctxt = LdapUtil.getDirContext(true);
+            zlc = new ZimbraLdapContext(true);
 
-            Domain d = getDomainByAsciiName(domain, ctxt);
+            Domain d = getDomainByAsciiName(domain, zlc);
             if (d == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(domain);
             String domainType = d.getAttr(Provisioning.A_zimbraDomainType, Provisioning.DOMAIN_TYPE_LOCAL);
@@ -2368,9 +2368,9 @@ public class LdapProvisioning extends Provisioning {
             
             String dn = mDIT.distributionListDNCreate(baseDn, attrs, localPart, domain);
             
-            LdapUtil.createEntry(ctxt, dn, attrs, "createDistributionList");
+            zlc.createEntry(dn, attrs, "createDistributionList");
 
-            DistributionList dlist = getDistributionListById(zimbraIdStr, ctxt);
+            DistributionList dlist = getDistributionListById(zimbraIdStr, zlc);
             AttributeManager.getInstance().postModify(listAttrs, dlist, attrManagerContext, true);
             return dlist;
 
@@ -2379,7 +2379,7 @@ public class LdapProvisioning extends Provisioning {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to create distribution listt: "+listAddress, e);
         } finally {
-            LdapUtil.closeContext(ctxt);
+            ZimbraLdapContext.closeContext(zlc);
         }
     }
 
@@ -2388,12 +2388,12 @@ public class LdapProvisioning extends Provisioning {
         return getDistributionLists(addrs, directOnly, via, false);
     }
 
-    private DistributionList getDistributionListByQuery(String base, String query, DirContext initCtxt) throws ServiceException {
-        DirContext ctxt = initCtxt;
+    private DistributionList getDistributionListByQuery(String base, String query, ZimbraLdapContext initZlc) throws ServiceException {
+        ZimbraLdapContext zlc = initZlc;
         try {
-            if (ctxt == null)
-                ctxt = LdapUtil.getDirContext();
-            NamingEnumeration ne = LdapUtil.searchDir(ctxt, base, query, sSubtreeSC);
+            if (zlc == null)
+                zlc = new ZimbraLdapContext();
+            NamingEnumeration ne = zlc.searchDir(base, query, sSubtreeSC);
             if (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 ne.close();
@@ -2406,8 +2406,8 @@ public class LdapProvisioning extends Provisioning {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to lookup distribution list via query: "+query+ " message: "+e.getMessage(), e);
         } finally {
-            if (initCtxt == null)
-                LdapUtil.closeContext(ctxt);
+            if (initZlc == null)
+                ZimbraLdapContext.closeContext(zlc);
         }
         return null;
     }
@@ -2416,11 +2416,11 @@ public class LdapProvisioning extends Provisioning {
         newEmail = IDNUtil.toAsciiEmail(newEmail);
         validEmailAddress(newEmail);
         
-        DirContext ctxt = null;
+        ZimbraLdapContext zlc = null;
         try {
-            ctxt = LdapUtil.getDirContext(true);
+            zlc = new ZimbraLdapContext(true);
             
-            LdapDistributionList dl = (LdapDistributionList) getDistributionListById(zimbraId, ctxt);
+            LdapDistributionList dl = (LdapDistributionList) getDistributionListById(zimbraId, zlc);
             if (dl == null)
                 throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(zimbraId);
 
@@ -2436,7 +2436,7 @@ public class LdapProvisioning extends Provisioning {
 
             boolean domainChanged = !oldDomain.equals(newDomain);
 
-            Domain domain = getDomainByAsciiName(newDomain, ctxt);
+            Domain domain = getDomainByAsciiName(newDomain, zlc);
             if (domain == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(newDomain);
     
@@ -2457,7 +2457,7 @@ public class LdapProvisioning extends Provisioning {
                 String newDomainDN = mDIT.domainToAccountSearchDN(newDomain);
                 
                 // check up front if any of renamed aliases already exists in the new domain (if domain also got changed)
-                if (domainChanged && addressExists(ctxt, newDomainDN, replacedAliases.newAddrs()))
+                if (domainChanged && addressExists(zlc, newDomainDN, replacedAliases.newAddrs()))
                     throw AccountServiceException.DISTRIBUTION_LIST_EXISTS(newEmail);    
             }
             
@@ -2473,9 +2473,9 @@ public class LdapProvisioning extends Provisioning {
             boolean dnChanged = (!oldDn.equals(newDn));
             
             if (dnChanged)
-                LdapUtil.renameEntry(ctxt, oldDn, newDn);
+                zlc.renameEntry(oldDn, newDn);
             
-            dl = (LdapDistributionList) getDistributionListById(zimbraId,ctxt);
+            dl = (LdapDistributionList) getDistributionListById(zimbraId, zlc);
             
             // rename the distribution list and all it's renamed aliases to the new name in all distribution lists
             // doesn't throw exceptions, just logs
@@ -2485,13 +2485,13 @@ public class LdapProvisioning extends Provisioning {
             // doesn't throw exceptions, just logs
             if (domainChanged) {
             	String newUid = dl.getAttr(Provisioning.A_uid);
-                moveAliases(ctxt, replacedAliases, newDomain, newUid, oldDn, newDn, oldDomain, newDomain);
+                moveAliases(zlc, replacedAliases, newDomain, newUid, oldDn, newDn, oldDomain, newDomain);
             }
  
             // this is non-atomic. i.e., rename could succeed and updating A_mail
             // could fail. So catch service exception here and log error            
             try {
-                modifyAttrsInternal(dl, ctxt, attrs);
+                modifyAttrsInternal(dl, zlc, attrs);
             } catch (ServiceException e) {
                 ZimbraLog.account.error("distribution list renamed to " + newLocal +
                         " but failed to move old name's LDAP attributes", e);
@@ -2502,7 +2502,7 @@ public class LdapProvisioning extends Provisioning {
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to rename distribution list: " + zimbraId, e);
         } finally {
-            LdapUtil.closeContext(ctxt);
+            ZimbraLdapContext.closeContext(zlc);
         }
     }
 
@@ -2518,11 +2518,11 @@ public class LdapProvisioning extends Provisioning {
         }
     }
 
-    private DistributionList getDistributionListById(String zimbraId, DirContext ctxt) throws ServiceException {
+    private DistributionList getDistributionListById(String zimbraId, ZimbraLdapContext zlc) throws ServiceException {
         //zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
         return getDistributionListByQuery(mDIT.mailBranchBaseDN(),
                                           LdapFilter.distributionListById(zimbraId),
-                                          ctxt);
+                                          zlc);
     }
 
     private DistributionList getDistributionListById(String zimbraId) throws ServiceException {
@@ -4584,7 +4584,7 @@ public class LdapProvisioning extends Provisioning {
         return new ReplaceAddressResult(oldAddrs, newAddrs);
      }
     
-    protected boolean addressExists(DirContext ctxt, String baseDN, String[] addrs) throws ServiceException {
+    protected boolean addressExists(ZimbraLdapContext zlc, String baseDN, String[] addrs) throws ServiceException {
         StringBuilder query = new StringBuilder();
         query.append("(|");
         for (int i=0; i < addrs.length; i++) {
@@ -4594,7 +4594,7 @@ public class LdapProvisioning extends Provisioning {
         query.append(")");
         
         try {
-            NamingEnumeration ne = LdapUtil.searchDir(ctxt, baseDN, query.toString(), sSubtreeSC);
+            NamingEnumeration ne = zlc.searchDir(baseDN, query.toString(), sSubtreeSC);
             if (ne.hasMore()) 
                 return true;
             else
@@ -4613,7 +4613,7 @@ public class LdapProvisioning extends Provisioning {
     // There could be a race condition that the alias might get taken 
     // in the new domain post the check.  Anyone who calls this API must 
     // pay attention to the warning message
-    private void moveAliases(DirContext ctxt, ReplaceAddressResult addrs, String newDomain, String primaryUid, 
+    private void moveAliases(ZimbraLdapContext zlc, ReplaceAddressResult addrs, String newDomain, String primaryUid, 
                              String targetOldDn, String targetNewDn,
                              String targetOldDomain, String targetNewDomain)  throws ServiceException {
     	
@@ -4636,7 +4636,7 @@ public class LdapProvisioning extends Provisioning {
                 String newAliasLocal = newAliasParts[0];
                 if (!(primaryUid != null && newAliasLocal.equals(primaryUid))) {
                 	try {
-                		LdapUtil.renameEntry(ctxt, oldAliasDN, newAliasDN);
+                		zlc.renameEntry(oldAliasDN, newAliasDN);
                 	} catch (NameAlreadyBoundException nabe) {
                 		ZimbraLog.account.warn("unable to move alias from " + oldAliasDN + " to " + newAliasDN, nabe);
                 	} catch (NamingException ne) {
