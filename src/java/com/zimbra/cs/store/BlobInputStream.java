@@ -41,14 +41,37 @@ import com.zimbra.common.util.ZimbraLog;
 public class BlobInputStream extends InputStream
 implements SharedInputStream {
     
-    private static final int BUFFER_SIZE = Math.max(LC.zimbra_blob_input_stream_buffer_size_kb.intValue(), 1) * 1024;
+    private static int BUFFER_SIZE = Math.max(LC.zimbra_blob_input_stream_buffer_size_kb.intValue(), 1) * 1024;
 
     private File mFile;
+    
     private RandomAccessFile mRAF;
+    
+    // All indexes are relative to the file, not relative to mStart/mEnd.
+    
+    /**
+     * Position of the last call to {@link #mark}.
+     */
     private Long mMarkPos;
+    
+    /**
+     * Position of the next byte to read.
+     */
     private long mPos;
+    
+    /**
+     * Maximum bytes that can be read before reset() stops working. 
+     */
     private int mMarkReadLimit;
+    
+    /**
+     * Start index of this stream (inclusive).
+     */
     private long mStart;
+    
+    /**
+     * End index of this stream (exclusive).
+     */
     private long mEnd;
     
     /**
@@ -56,9 +79,22 @@ implements SharedInputStream {
      * This set is shared between the original stream and all substreams.
      */
     private Set<BlobInputStream> mSubStreams;
-    
+
+    /**
+     * Read buffer.
+     */
     private byte[] mBuf = new byte[BUFFER_SIZE];
-    private int mBufPos = 0;
+    
+    /**
+     * Position of the start of the read buffer, relative to the file
+     * on disk.
+     */
+    private long mBufStartPos = 0;
+    
+    /**
+     * Read buffer size (may be less than <tt>mBuf.length</tt>).  A value of
+     * 0 means that the buffer is not initialized.
+     */
     private int mBufSize = 0;
     
     /**
@@ -91,7 +127,7 @@ implements SharedInputStream {
     private BlobInputStream(File file, Long start, Long end, Set<BlobInputStream> subStreams)
     throws IOException {
         if (start != null && end != null && start > end) {
-            String msg = String.format("Start index %d is larger than end index %d", start, end);
+            String msg = String.format("Start index %d for file %s is larger than end index %d", start, file.getPath(), end);
             throw new IOException(msg);
         }
         mFile = file;
@@ -106,7 +142,7 @@ implements SharedInputStream {
             mEnd = mFile.length();
         } else {
             if (end > mFile.length()) {
-                String msg = String.format("End index %d exceeded file size %d", end, mFile.length());
+                String msg = String.format("End index %d for file %s exceeded file size %d", end, mFile.getPath(), mFile.length());
                 throw new IOException(msg);
             }
             mEnd = end;
@@ -119,16 +155,18 @@ implements SharedInputStream {
     }
     
     /**
-     * Initializes the file descriptor if necessary.
+     * Opens the file if necessary and seeks to the current position.
      */
-    private void openFile()
+    private void initFile()
     throws IOException {
-        if (mRAF != null) {
-            return;
+        if (mRAF == null) {
+            mRAF = new RandomAccessFile(mFile, "r");
+            if (mPos != 0) {
+                mRAF.seek(mPos);
+            }
+        } else {
+            mRAF.seek(mPos);
         }
-        mRAF = new RandomAccessFile(mFile, "r");
-        mRAF.seek(mPos);
-        resetBuffer();
     }
 
     /**
@@ -140,13 +178,7 @@ implements SharedInputStream {
         if (mRAF != null) {
             mRAF.close();
             mRAF = null;
-            resetBuffer();
         }
-    }
-    
-    private void resetBuffer() {
-    	mBufPos = 0;
-    	mBufSize = 0;
     }
     
     /**
@@ -203,22 +235,23 @@ implements SharedInputStream {
             closeMyFile();
             return -1;
         }
-        openFile();
         
-        if (mBufPos >= mBufSize) {
-        	// Read next chunk into buffer
-        	int numRead = mRAF.read(mBuf);
-        	if (numRead < 0) {
-        		closeMyFile();
-        		resetBuffer();
-        		return numRead;
-        	}
-        	mBufPos = 0;
-        	mBufSize = numRead;
+        // Return data from the read buffer if we're in the range.
+        int bufIndex = getBufferIndex();
+        if (bufIndex >= 0) {
+            byte b = mBuf[bufIndex];
+            mPos++;
+            return b;
         }
-
+        
+        // Read next byte from file.
+        int numRead = readNextChunkIntoBuffer();
+        if (numRead < 0) {
+            return numRead;
+        }
+        
         mPos++;
-        return mBuf[mBufPos++];
+        return mBuf[0];
     }
     
     @Override
@@ -227,44 +260,99 @@ implements SharedInputStream {
             closeMyFile();
             return -1;
         }
-        openFile();
+        if (len <= 0) {
+            return 0;
+        }
         
         // Make sure we don't read past the endpoint passed to the constructor
         len = (int) Math.min(len, mEnd - mPos);
 
         // Copy from buffer first
-        int numReadFromBuffer = Math.min(mBufSize - mBufPos, len);
-        if (numReadFromBuffer > 0) {
-        	System.arraycopy(mBuf, mBufPos, b, off, numReadFromBuffer);
-        	mBufPos += numReadFromBuffer;
-        	mPos += numReadFromBuffer;
+        int numReadFromBuffer = 0;
+        int bufIndex = getBufferIndex();
+        if (bufIndex >= 0) {
+            numReadFromBuffer = Math.min(mBufSize - bufIndex, len);
+            if (numReadFromBuffer > 0) {
+                System.arraycopy(mBuf, bufIndex, b, off, numReadFromBuffer);
+                mPos += numReadFromBuffer;
+            }
+            if (numReadFromBuffer == len) {
+                // Got all data from buffer
+                return numReadFromBuffer;
+            }
         }
 
+        // Need to read the rest from the file
+        int numToReadFromFile = len - numReadFromBuffer;
         int numReadFromFile = 0;
-        if (numReadFromBuffer < len) {
-        	// Read additional chunk
-        	numReadFromFile = mRAF.read(b, off + numReadFromBuffer, len - numReadFromBuffer);
+        if (numToReadFromFile <= mBuf.length) {
+            // Buffer if we're reading a small number of bytes. 
+            numReadFromFile = readNextChunkIntoBuffer();
+            if (numReadFromFile > 0) {
+                numReadFromFile = Math.min(numReadFromFile, numToReadFromFile);
+                System.arraycopy(mBuf, 0, b, off + numReadFromBuffer, numReadFromFile);
+                mPos += numReadFromFile;
+            }
+        } else {
+            // Number of bytes requested is greater than the buffer size, so
+            // read the next chunk without buffering.
+            initFile();
+        	numReadFromFile = mRAF.read(b, off + numReadFromBuffer, numToReadFromFile);
         	if (numReadFromFile >= 0) {
         		mPos += numReadFromFile;
         	} else {
+                // Hit the end of the file.
         		closeMyFile();
         	}
         }
 
         if (numReadFromFile >= 0) {
-        	// Read from file, possibly from buffer too 
-        	return numReadFromBuffer + numReadFromFile;
+        	// Read from file, possibly from buffer too.
+        	return numReadFromBuffer + numToReadFromFile;
         } else {
         	if (numReadFromBuffer > 0) {
-        		// Read from buffer, hit EOF in file
+        		// Read from buffer, hit EOF in file.
         		return numReadFromBuffer;
         	} else {
-        		// Didn't read from buffer, hit EOF in file
+        		// Didn't read from buffer, hit EOF in file.
         		return numReadFromFile;
         	}
         }
     }
 
+    /**
+     * Returns the current buffer index, or <tt>-1</tt> if the
+     * current position is outside the buffer.
+     */
+    private int getBufferIndex() {
+        if (mBufSize > 0 &&                     // Buffer has been initialized
+            mPos >= mBufStartPos &&             // Position is past the beginning of the buffer
+            mPos < (mBufStartPos + mBufSize)) { // Position is not past the end of the buffer
+            return (int) (mPos - mBufStartPos);
+        } else {
+            return -1;
+        }
+    }
+    
+    /**
+     * Fills the read buffer with data from the file on disk, starting
+     * at position {@link #mPos}.
+     */
+    private int readNextChunkIntoBuffer()
+    throws IOException {
+        initFile();
+        int numRead = mRAF.read(mBuf);
+        if (numRead < 0) {
+            // No more data available.
+            closeMyFile();
+        } else {
+            // Read something.  Update the indexes.
+            mBufStartPos = mPos;
+            mBufSize = numRead;
+        }
+        return numRead;
+    }
+    
     @Override
     public synchronized void reset() throws IOException {
         if (mMarkPos == null) {
@@ -273,10 +361,7 @@ implements SharedInputStream {
         if (mPos - mMarkPos > mMarkReadLimit) {
             throw new IOException("Mark position was invalidated because more than " + mMarkReadLimit + " bytes were read.");
         }
-        openFile();
-        mRAF.seek(mMarkPos);
         mPos = mMarkPos;
-        resetBuffer();
     }
 
     @Override
@@ -284,22 +369,12 @@ implements SharedInputStream {
         if (n <= 0) {
             return 0;
         }
-        if (mPos >= mEnd) {
-            closeMyFile();
-            return 0;
-        }
-        openFile();
-        
         long newPos = Math.min(mPos + n, mEnd);
-        long numSkipped = 0;
-        if (newPos != mPos) {
-        	mRAF.seek(newPos);
-        	numSkipped = newPos - mPos;
-        	mPos = newPos;
-        	resetBuffer();
-        } else {
+        if (newPos == mEnd) {
             closeMyFile();
         }
+        long numSkipped = newPos - mPos;
+        mPos = newPos;
         return numSkipped;
     }
     
@@ -333,5 +408,16 @@ implements SharedInputStream {
         }
         
         return newStream;
+    }
+    
+    /**
+     * Sets the the size of the read buffer used by <tt>BlobInputStream</tt>.
+     * To be used for unit testing only.
+     */
+    public static void setBufferSize(int bufferSize) {
+        if (bufferSize < 1) {
+            throw new IllegalArgumentException("Buffer size " + bufferSize + " must be at least 1");
+        }
+        BUFFER_SIZE = bufferSize;
     }
 }

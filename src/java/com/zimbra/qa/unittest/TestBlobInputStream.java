@@ -46,7 +46,20 @@ public class TestBlobInputStream extends TestCase {
     throws Exception {
     }
     
+    /**
+     * Runs tests with various buffer sizes.
+     */
     public void testBlobInputStream()
+    throws Exception {
+        int[] bufferSizes = new int[] { 1, 4, 5, 9, 10, 99, 999, 1000, 2000 }; 
+        for (int bufferSize : bufferSizes) {
+            BlobInputStream.setBufferSize(bufferSize);
+            runBlobInputStreamTest();
+            runLargeFileTest();
+        }
+    }
+    
+    public void runBlobInputStreamTest()
     throws Exception {
         String CONTENT = "0123456789";
         createFile(CONTENT);
@@ -172,7 +185,7 @@ public class TestBlobInputStream extends TestCase {
     /**
      * Tests reading a large file.  Exercises the buffering code.
      */
-    public void testLargeFile()
+    public void runLargeFileTest()
     throws Exception {
     	String content = createFile(5000);
     	BlobInputStream in = new BlobInputStream(mFile);
