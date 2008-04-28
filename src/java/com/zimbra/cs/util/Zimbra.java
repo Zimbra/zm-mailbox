@@ -22,7 +22,9 @@ import java.util.Timer;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.Versions;
+import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.im.IMRouter;
 import com.zimbra.cs.im.ZimbraIM;
@@ -101,6 +103,26 @@ public class Zimbra {
         checkForClass("javax.mail.internet.MimeMessage", "mail.jar");
         checkForClass("com.zimbra.znative.IO", "zimbra-native.jar");
     }
+    
+    private static void waitForDatabase() {
+        Connection conn = null;
+        final int RETRY_SECONDS = 5;
+        
+        while (conn == null) {
+            try {
+                conn = DbPool.getConnection();
+            } catch (ServiceException e) {
+                ZimbraLog.misc.warn("Could not establish a connection to the database.  Retrying in %d seconds.",
+                    RETRY_SECONDS, e);
+                try {
+                    Thread.sleep(RETRY_SECONDS * 1000);
+                } catch (InterruptedException e2) {
+                }
+            }
+        }
+        
+        DbPool.quietClose(conn);
+    }
 
     public static synchronized void startup() throws ServiceException {
         if (sInited)
@@ -112,6 +134,8 @@ public class Zimbra {
 
         checkForClasses();
 
+        waitForDatabase();
+        
     	if (!Versions.checkVersions())
             throw new RuntimeException("Data version mismatch.  Reinitialize or upgrade the backend data store.");
 
