@@ -37,6 +37,7 @@ import com.zimbra.cs.account.krb5.Krb5Principal;
 import com.zimbra.cs.account.ldap.LdapEntry;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -127,7 +128,7 @@ public abstract class AuthMechanism {
                     throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt), "invalid password"); 
                 }
             } else if (acct instanceof LdapEntry) {
-                String[] urls = new String[] { LdapUtil.getLdapURL() };
+                String[] urls = new String[] { ZimbraLdapContext.getLdapURL() };
                 try {
                     LdapUtil.ldapAuthenticate(urls, ((LdapEntry)acct).getDN(), password);
                     return; // good password, RETURN                

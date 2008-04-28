@@ -364,16 +364,16 @@ public class LdapProvisioning extends Provisioning {
         if (sConfig == null) {
             synchronized(LdapProvisioning.class) {
                 if (sConfig == null) {
-                    DirContext ctxt = null;
+                    ZimbraLdapContext zlc = null;
                     try {
                         String configDn = mDIT.configDN();
-                        ctxt = LdapUtil.getDirContext();
-                        Attributes attrs = LdapUtil.getAttributes(ctxt, configDn);
+                        zlc = new ZimbraLdapContext();
+                        Attributes attrs = zlc.getAttributes(configDn);
                         sConfig = new LdapConfig(configDn, attrs);
                     } catch (NamingException e) {
                         throw ServiceException.FAILURE("unable to get config", e);
                     } finally {
-                        LdapUtil.closeContext(ctxt);
+                        ZimbraLdapContext.closeContext(zlc);
                     }
                 }
             }
