@@ -1308,6 +1308,8 @@ public class ParsedMessage {
         if (mRawFileInputStream != null) {
             mRawFileInputStream.fileMoved(newFile);
         }
-        mRawFile = newFile;
+        if (mRawFile != null) {
+            mRawFile = newFile;
+        }
     }
 }
