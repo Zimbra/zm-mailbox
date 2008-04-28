@@ -100,39 +100,14 @@ public class LdapUtil {
     private static int SALT_LEN = 4; // to match LDAP SSHA password encoding
     private static String ENCODING = "{SSHA}";
 
-    private static String sLdapURL;
-    private static String sLdapMasterURL;    
-    
-    private static Hashtable<String, String> sEnvMasterAuth;
-    private static Hashtable<String, String> sEnvAuth;
     private static String[] sEmptyMulti = new String[0];
 
     static final SearchControls sSubtreeSC = new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, null, false, false);
     
-    static {
-        String ldapHost = LC.ldap_host.value();
-        String ldapPort = LC.ldap_port.value();
-        
-        sLdapURL = LC.ldap_url.value().trim();
-        if (sLdapURL.length() == 0) {
-            sLdapURL = "ldap://" + ldapHost + ":" + ldapPort + "/";
-        }
-        sLdapMasterURL = LC.ldap_master_url.value().trim();
-        if (sLdapMasterURL.length() == 0) sLdapMasterURL = sLdapURL;
 
-        /* See http://java.sun.com/products/jndi/tutorial/ldap/connect/config.html */
-        System.setProperty("com.sun.jndi.ldap.connect.pool.debug", LC.ldap_connect_pool_debug.value());
-        System.setProperty("com.sun.jndi.ldap.connect.pool.initsize", LC.ldap_connect_pool_initsize.value());
-        System.setProperty("com.sun.jndi.ldap.connect.pool.maxsize", LC.ldap_connect_pool_maxsize.value());
-        System.setProperty("com.sun.jndi.ldap.connect.pool.prefsize", LC.ldap_connect_pool_prefsize.value());
-        System.setProperty("com.sun.jndi.ldap.connect.pool.timeout", LC.ldap_connect_pool_timeout.value());
-        System.setProperty("com.sun.jndi.ldap.connect.pool.protocol", "plain ssl");
-    }
-    
-    public static String getLdapURL() {
-        return sLdapURL;
-    }
-
+    /*
+     * TODO 16601 delete 4
+     */
     public static void closeContext(Context ctxt) {
         try {
             if (ctxt != null) {
@@ -154,98 +129,32 @@ public class LdapUtil {
             //e.printStackTrace();
         }
     }
-
-// TODO: need options for get master or replica connections (write vs. read)
-    // and maybe admin vs non-admin access 
-
-    /**
-     * 
-     * @return
-     * @throws NamingException
-     */
-    private static synchronized Hashtable getDefaultEnv(boolean master) {
-        Hashtable<String, String> sEnv = null;
-        
-        if (master) {
-            if (sEnvMasterAuth != null) return sEnvMasterAuth;
-            else sEnv = sEnvMasterAuth = new Hashtable<String, String>(); 
-        } else {
-            if (sEnvAuth != null) return sEnvAuth;
-            else sEnv = sEnvAuth = new Hashtable<String, String>();             
-        }
-
-        sEnv.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-        sEnv.put(Context.PROVIDER_URL, master ? sLdapMasterURL : sLdapURL);
-        sEnv.put(Context.SECURITY_AUTHENTICATION, "simple");
-        sEnv.put(Context.SECURITY_PRINCIPAL, LC.zimbra_ldap_userdn.value());
-        sEnv.put(Context.SECURITY_CREDENTIALS, LC.zimbra_ldap_password.value());
-        sEnv.put(Context.REFERRAL, "follow");
-            
-        sEnv.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
-        sEnv.put("com.sun.jndi.ldap.read.timeout", LC.ldap_read_timeout.value());
-        
-        // enable connection pooling
-        if (master)
-            sEnv.put("com.sun.jndi.ldap.connect.pool", LC.ldap_connect_pool_master.value());
-        else
-            sEnv.put("com.sun.jndi.ldap.connect.pool", "true");
-            
-        
-        // env.put("java.naming.ldap.derefAliases", "never");
-        //
-        // default: env.put("java.naming.ldap.version", "3");
-        return sEnv;
-    }
     
-    private static synchronized Hashtable getNonPooledEnv(boolean master) {
-        Hashtable<String, String> env = new Hashtable<String, String>(); 
-        
-        env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-        env.put(Context.PROVIDER_URL, master ? sLdapMasterURL : sLdapURL);
-        env.put(Context.SECURITY_AUTHENTICATION, "simple");
-        env.put(Context.SECURITY_PRINCIPAL, LC.zimbra_ldap_userdn.value());
-        env.put(Context.SECURITY_CREDENTIALS, LC.zimbra_ldap_password.value());
-        env.put(Context.REFERRAL, "follow");
-            
-        env.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
-        env.put("com.sun.jndi.ldap.read.timeout", LC.ldap_read_timeout.value());
-        
-        // enable connection pooling
-        if (master)
-            env.put("com.sun.jndi.ldap.connect.pool", LC.ldap_connect_pool_master.value());
-        else 
-            env.put("com.sun.jndi.ldap.connect.pool", "false");
-        
-        return env;
-    }
-    
-    
-    /**
-     * 
-     * @return
-     * @throws NamingException
+    /*
+     * TODO 16601 delete 1
      */
     public static DirContext getDirContext() throws ServiceException {
         return getDirContext(false);
     }
 
-    /**
-     * 
-     * @return
-     * @throws NamingException
+    /*
+     * TODO 16601 delete 2
      */
     public static DirContext getDirContext(boolean master) throws ServiceException {
         return getDirContext(master, true);
     }
     
+    /*
+     * TODO 16601 delete 3
+     */
     public static DirContext getDirContext(boolean master, boolean useConnPool) throws ServiceException {
         try {
             long start = ZimbraPerf.STOPWATCH_LDAP_DC.start();
             DirContext dirContext = null;
             if (useConnPool)
-                dirContext = new InitialLdapContext(getDefaultEnv(master), null);
+                dirContext = new InitialLdapContext(ZimbraLdapContext.getDefaultEnv(master), null);
             else
-                dirContext = new InitialLdapContext(getNonPooledEnv(master), null);
+                dirContext = new InitialLdapContext(ZimbraLdapContext.getNonPooledEnv(master), null);
             ZimbraPerf.STOPWATCH_LDAP_DC.stop(start);
             //ZimbraLog.account.error("getDirContext", new RuntimeException("------------------- OPEN"));
             return dirContext;
@@ -1349,6 +1258,9 @@ public class LdapUtil {
      	ctxt.unbind(cpName);
     }
     
+    /*
+     * TODO 16601 delete 5
+     */
     public static Attributes getAttributes(DirContext ctxt, String dn) throws NamingException {
     	Name cpName = new CompositeName().add(dn);
     	return ctxt.getAttributes(cpName);

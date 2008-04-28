@@ -27,6 +27,7 @@ import junit.framework.TestSuite;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
@@ -42,23 +43,34 @@ public class TestAttr extends TestCase {
     private String DOMAIN_NAME;
     private String ACCT_EMAIL;
     private String SERVER_NAME;
+    private String COS_NAME;
     
     private Provisioning mProv;
     
     public void setUp() throws Exception {
         DOMAIN_NAME = TestProvisioningUtil.baseDomainName(TEST_NAME, TEST_ID);
         ACCT_EMAIL = "user1" + "@" + DOMAIN_NAME;
-        SERVER_NAME = "server-" + TEST_ID;
+        SERVER_NAME = "server-" + TEST_ID + "-" + TEST_NAME;
+        COS_NAME = "cos-" + TEST_ID + "-" + TEST_NAME;
         
         mProv = Provisioning.getInstance();        
     }
     
     private Account createAccount() throws Exception {
         Domain domain = getDomain();
+        Cos cos = getCos();
         
-        Account acct = mProv.createAccount(ACCT_EMAIL, PASSWORD, new HashMap<String, Object>());
+        HashMap<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraCOSId, cos.getId());
+        Account acct = mProv.createAccount(ACCT_EMAIL, PASSWORD, attrs);
         assertNotNull(acct);
         return acct;
+    }
+    
+    private Cos createCos() throws Exception{
+        Cos cos = mProv.createCos(COS_NAME, new HashMap<String, Object>());
+        assertNotNull(cos);
+        return cos;
     }
     
     private Domain createDomain() throws Exception{
@@ -79,6 +91,14 @@ public class TestAttr extends TestCase {
             acct = createAccount();
         assertNotNull(acct);
         return acct;        
+    }
+    
+    private Cos getCos() throws Exception {
+        Cos cos = mProv.get(Provisioning.CosBy.name, COS_NAME);
+        if (cos == null)
+            cos = createCos();
+        assertNotNull(cos);
+        return cos;        
     }
     
     private Domain getDomain() throws Exception {
@@ -300,7 +320,22 @@ public class TestAttr extends TestCase {
         
         unsetTest(acct, attrName);
         
-        setAttr(acct, attrName, "blah");
+        // set a limit on cos
+        Cos cos = getCos();
+        setAttr(cos, Provisioning.A_zimbraMailSignatureMaxLength, "10");
+        
+        // cannot have signature longer than the max len
+        boolean good = false;
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(attrName, "12345678901");
+        try {
+            mProv.modifyAttrs(acct, attrs);
+        } catch (ServiceException e) {
+            if (ServiceException.INVALID_REQUEST.equals(e.getCode()) && 
+                e.getMessage().contains("is longer than the limited value"))
+                good = true;
+        }
+        assertTrue(good); 
     }
  
     public static void main(String[] args) throws Exception {
