@@ -442,6 +442,9 @@ public class LdapUtil {
         return a;
     }
 
+    /*
+     * TODO 16601 delete 8
+     */
     public static void simpleCreate(DirContext ctxt, String dn, Object objectClass, String[] attrs) throws NamingException {
         Attributes battrs = new BasicAttributes(true);
         if (objectClass instanceof String) {
@@ -550,7 +553,7 @@ public class LdapUtil {
      *     in which case a multi-valued attr is updated</li>
      * </ul>
      */
-    public static void modifyAttrs(DirContext ctxt, String dn, Map attrs, com.zimbra.cs.account.Entry entry) throws NamingException, ServiceException {
+    public static void modifyAttrs(ZimbraLdapContext zlc, String dn, Map attrs, com.zimbra.cs.account.Entry entry) throws NamingException, ServiceException {
         ArrayList<ModificationItem> modlist = new ArrayList<ModificationItem>();
         for (Iterator mit=attrs.entrySet().iterator(); mit.hasNext(); ) {
             Map.Entry me = (Entry) mit.next();
@@ -611,7 +614,7 @@ public class LdapUtil {
         }
         ModificationItem[] mods = new ModificationItem[modlist.size()];
         modlist.toArray(mods);
-        modifyAttributes(ctxt, dn, mods);
+        zlc.modifyAttributes(dn, mods);
     }
 
     /**
@@ -1170,6 +1173,9 @@ public class LdapUtil {
         */
     }
 
+    /*
+     * TODO 16601 delete 12
+     */
     public static void moveChildren(DirContext ctxt, String oldDn, String newDn) throws ServiceException {
         NamingEnumeration ne = null;        
         try {
@@ -1210,6 +1216,9 @@ public class LdapUtil {
         }
     }
  
+    /*
+     * TODO 16601 delete 6
+     */
     public static NamingEnumeration<SearchResult> searchDir(DirContext ctxt, String base, String filter, SearchControls cons) throws NamingException {
     	if (base.length() == 0) {
     		return ctxt.search(base, filter, cons);
@@ -1220,6 +1229,9 @@ public class LdapUtil {
     }
     
    
+    /*
+     * TODO 16601 replace 7
+     */
     public static void createEntry(DirContext ctxt, String dn, Attributes attrs, String method)
     throws NameAlreadyBoundException, ServiceException {
         Context newCtxt = null;
@@ -1247,12 +1259,18 @@ public class LdapUtil {
         }
     }
     
+    /*
+     * TODO 16601 delete 13
+     */
     public static void renameEntry(DirContext ctxt, String oldDn, String newDn) throws NamingException {
     	Name oldCpName = new CompositeName().add(oldDn);
     	Name newCpName = new CompositeName().add(newDn);
      	ctxt.rename(oldCpName, newCpName);
     }
     
+    /*
+     * TODO 16601 delete 11
+     */
     public static void unbindEntry(DirContext ctxt, String dn) throws NamingException {
     	Name cpName = new CompositeName().add(dn);
      	ctxt.unbind(cpName);
@@ -1266,11 +1284,17 @@ public class LdapUtil {
     	return ctxt.getAttributes(cpName);
     }
     
+    /*
+     * TODO 16601 delete 9
+     */
     public static void modifyAttributes(DirContext ctxt, String dn, ModificationItem[] mods) throws NamingException {
     	Name cpName = new CompositeName().add(dn);
         ctxt.modifyAttributes(cpName, mods);
     }
     
+    /*
+     * TODO 16601 delete 10
+     */
     public static void modifyAttributes(DirContext ctxt, String dn, int mod_op, Attributes attrs) throws NamingException {
        	Name cpName = new CompositeName().add(dn);
         ctxt.modifyAttributes(cpName, mod_op, attrs);

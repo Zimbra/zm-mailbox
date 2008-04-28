@@ -54,14 +54,14 @@ class RenameDomain {
  
     private static final Log sRenameDomainLog = LogFactory.getLog("zimbra.provisioning.renamedomain");
     
-    private DirContext mDirCtxt;
+    private ZimbraLdapContext mZlc;
     private LdapProvisioning mProv;
     private Domain mOldDomain;
     private String mOldDomainId; // save old domain id because we still need it after the old domain is deleted
     private String mNewDomainName;
     
-    RenameDomain(DirContext dirCtxt, LdapProvisioning prov, Domain oldDomain, String newDomainName) {
-        mDirCtxt = dirCtxt;
+    RenameDomain(ZimbraLdapContext zlc, LdapProvisioning prov, Domain oldDomain, String newDomainName) {
+        mZlc = zlc;
         mProv = prov;
         mOldDomain = oldDomain;
         mOldDomainId = mOldDomain.getId();
@@ -69,7 +69,7 @@ class RenameDomain {
     }
     
     private RenameDomainVisitor getVisitor(RenamePhase phase) {
-        return new RenameDomainVisitor(mDirCtxt, mProv, mOldDomain.getName(), mNewDomainName, phase);
+        return new RenameDomainVisitor(mZlc, mProv, mOldDomain.getName(), mNewDomainName, phase);
     }
         
     
@@ -384,14 +384,14 @@ class RenameDomain {
         attrs.put(Provisioning.A_zimbraDomainRenameInfo, "");
         attrs.put(Provisioning.A_zimbraDomainStatus, Provisioning.DOMAIN_STATUS_ACTIVE);
         attrs.put(Provisioning.A_zimbraMailStatus, Provisioning.MAIL_STATUS_ENABLED);
-        mProv.modifyAttrsInternal(domain, mDirCtxt, attrs);  // skip callback
+        mProv.modifyAttrsInternal(domain, mZlc, attrs);  // skip callback
         
         mProv.flushCacheOnAllServers(CacheEntryType.domain);
     }
     
     static class RenameDomainVisitor implements NamedEntry.Visitor {
     
-        private DirContext mDirCtxt;
+        private ZimbraLdapContext mZlc;
         private LdapProvisioning mProv;
         private String mOldDomainName;
         private String mNewDomainName;
@@ -430,8 +430,8 @@ class RenameDomain {
             return (sAddrContainsDomainOnly.contains(addr));
         }
     
-        private RenameDomainVisitor(DirContext dirCtxt, LdapProvisioning prov, String oldDomainName, String newDomainName, RenamePhase phase) {
-            mDirCtxt = dirCtxt;
+        private RenameDomainVisitor(ZimbraLdapContext zlc, LdapProvisioning prov, String oldDomainName, String newDomainName, RenamePhase phase) {
+            mZlc = zlc;
             mProv = prov;
             mOldDomainName = oldDomainName;
             mNewDomainName = newDomainName;
@@ -517,7 +517,7 @@ class RenameDomain {
                         oldAliasDn = mProv.mDIT.aliasDN(oldDn, mOldDomainName, aliasLocal, mOldDomainName);
                         newAliasDn = mProv.mDIT.aliasDNRename(newTargetDn, mNewDomainName, aliasLocal+"@"+mNewDomainName);
                         if (!oldAliasDn.equals(newAliasDn))
-                            LdapUtil.renameEntry(mDirCtxt, oldAliasDn, newAliasDn);
+                            mZlc.renameEntry(oldAliasDn, newAliasDn);
                     } catch (NamingException e) {
                         // log the error and continue
                         warn(e, "moveEntry", "alias not moved", "alias=[%s], entry=[%s], oldAliasDn=[%s], newAliasDn=[%s]", aliases[i], targetEntry.getName(), oldAliasDn, newAliasDn);
@@ -536,7 +536,7 @@ class RenameDomain {
             if (!oldDn.equals(newDn)) {
                 // move the entry
                 try {
-                    LdapUtil.renameEntry(mDirCtxt, oldDn, newDn);
+                    mZlc.renameEntry(oldDn, newDn);
                 } catch (NamingException e) {
                     warn(e, "moveDistributionList", "renameEntry", "entry=[%s], oldDn=[%s], newDn=[%s]", entry.getName(), oldDn, newDn);
                 }
@@ -557,7 +557,7 @@ class RenameDomain {
         
             // modify the entry
             try {
-                mProv.modifyAttrsInternal(refreshedEntry, mDirCtxt, fixedAttrs);
+                mProv.modifyAttrsInternal(refreshedEntry, mZlc, fixedAttrs);
             } catch (ServiceException e) {
                 warn(e, "moveDistributionList", "modifyAttrsInternal", "entry=[%s], oldDn=[%s], newDn=[%s]", entry.getName(), oldDn, newDn);
             }
@@ -578,7 +578,7 @@ class RenameDomain {
                 Attributes attributes = new BasicAttributes(true);
                 LdapUtil.mapToAttrs(fixedAttrs, attributes);
                 try {
-                    LdapUtil.createEntry(mDirCtxt, newDn, attributes, "renameDomain-createAccount");
+                    mZlc.createEntry(newDn, attributes, "renameDomain-createAccount");
                 } catch (NameAlreadyBoundException e) {
                     warn(e, "moveAccount", "createEntry", "entry=[%s], oldDn=[%s], newDn=[%s]", entry.getName(), oldDn, newDn);
                 } catch (ServiceException e) {
@@ -587,13 +587,13 @@ class RenameDomain {
                     
                 try {
                     // move over all identities/sources/signatures etc. doesn't throw an exception, just logs
-                    LdapUtil.moveChildren(mDirCtxt, oldDn, newDn);
+                    mZlc.moveChildren(oldDn, newDn);
                 } catch (ServiceException e) {
                     warn(e, "moveAccount", "moveChildren", "entry=[%s], oldDn=[%s], newDn=[%s]", entry.getName(), oldDn, newDn);
                 }
                 
                 try {
-                    LdapUtil.unbindEntry(mDirCtxt, oldDn);
+                    mZlc.unbindEntry(oldDn);
                 } catch (NamingException e) {
                     warn(e, "moveAccount", "unbindEntry", "entry=[%s], oldDn=[%s], newDn=[%s]", entry.getName(), oldDn, newDn);
                 }
@@ -601,7 +601,7 @@ class RenameDomain {
                 // didn't need to move the account entry, still need to fixup the addr attrs
          
                 try {
-                    mProv.modifyAttrsInternal(refreshedEntry, mDirCtxt, fixedAttrs);
+                    mProv.modifyAttrsInternal(refreshedEntry, mZlc, fixedAttrs);
                 } catch (ServiceException e) {
                     warn(e, "moveAccount", "modifyAttrsInternal", "entry=[%s], oldDn=[%s], newDn=[%s]", entry.getName(), oldDn, newDn);
                 }

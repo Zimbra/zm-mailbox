@@ -5,10 +5,23 @@ import java.util.Hashtable;
 
 import javax.naming.CompositeName;
 import javax.naming.Context;
+import javax.naming.InvalidNameException;
 import javax.naming.Name;
+import javax.naming.NameAlreadyBoundException;
+import javax.naming.NameNotFoundException;
+import javax.naming.NameParser;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
+import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
+import javax.naming.directory.BasicAttribute;
+import javax.naming.directory.BasicAttributes;
+import javax.naming.directory.DirContext;
+import javax.naming.directory.InvalidAttributeIdentifierException;
+import javax.naming.directory.InvalidAttributeValueException;
+import javax.naming.directory.InvalidAttributesException;
+import javax.naming.directory.ModificationItem;
+import javax.naming.directory.SchemaViolationException;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 import javax.naming.ldap.InitialLdapContext;
@@ -19,6 +32,8 @@ import javax.naming.ldap.StartTlsResponse;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.stats.ZimbraPerf;
 
@@ -224,6 +239,127 @@ public class ZimbraLdapContext {
     public Attributes getAttributes(String dn) throws NamingException {
         Name cpName = new CompositeName().add(dn);
         return mDirContext.getAttributes(cpName);
+    }
+    
+    /*
+     * TODO 16601 replace 9
+     */
+    public void modifyAttributes(String dn, ModificationItem[] mods) throws NamingException {
+        Name cpName = new CompositeName().add(dn);
+        mDirContext.modifyAttributes(cpName, mods);
+    }
+    
+    /*
+     * TODO 16601 replace 10
+     */
+    public void modifyAttributes(String dn, int mod_op, Attributes attrs) throws NamingException {
+        Name cpName = new CompositeName().add(dn);
+        mDirContext.modifyAttributes(cpName, mod_op, attrs);
+    }
+    
+    /*
+     * TODO 16601 replace 6
+     */
+    public NamingEnumeration<SearchResult> searchDir(String base, String filter, SearchControls cons) throws NamingException {
+        if (base.length() == 0) {
+            return mDirContext.search(base, filter, cons);
+        } else {
+            Name cpName = new CompositeName().add(base);
+            return mDirContext.search(cpName, filter, cons);
+        }
+    }
+    
+    /*
+     * TODO 16601 replace 7
+     */
+    public void createEntry(String dn, Attributes attrs, String method)
+    throws NameAlreadyBoundException, ServiceException {
+        Context newCtxt = null;
+        try {
+            Name cpName = new CompositeName().add(dn);
+            newCtxt = mDirContext.createSubcontext(cpName, attrs);
+        } catch (NameAlreadyBoundException e) {            
+            throw e;
+        } catch (NameNotFoundException e){
+            throw ServiceException.INVALID_REQUEST(method+" dn not found: "+ LdapUtil.dnToRdnAndBaseDn(dn)[1] +e.getMessage(), e);
+        } catch (InvalidAttributeIdentifierException e) {
+            throw AccountServiceException.INVALID_ATTR_NAME(method+" invalid attr name: "+e.getMessage(), e);
+        } catch (InvalidAttributeValueException e) {
+            throw AccountServiceException.INVALID_ATTR_VALUE(method+" invalid attr value: "+e.getMessage(), e);
+        } catch (InvalidAttributesException e) {
+            throw ServiceException.INVALID_REQUEST(method+" invalid set of attributes: "+e.getMessage(), e);
+        } catch (InvalidNameException e) {
+            throw ServiceException.INVALID_REQUEST(method+" invalid name: "+e.getMessage(), e);
+        } catch (SchemaViolationException e) {
+            throw ServiceException.INVALID_REQUEST(method+" invalid schema change: "+e.getMessage(), e); 
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE(method, e);
+        } finally {
+            LdapUtil.closeContext(newCtxt);
+        }
+    }
+    
+    /*
+     * TODO 16601 replace 8
+     */
+    public void simpleCreate(String dn, Object objectClass, String[] attrs) throws NamingException {
+        Attributes battrs = new BasicAttributes(true);
+        if (objectClass instanceof String) {
+            battrs.put(Provisioning.A_objectClass, objectClass);
+        } else if (objectClass instanceof String[]) {
+            String[] oclasses = (String[]) objectClass;
+            Attribute a = new BasicAttribute(Provisioning.A_objectClass);
+            for (int i=0; i < oclasses.length; i++)
+                    a.add(oclasses[i]);
+            battrs.put(a);
+        }
+        for (int i=0; i < attrs.length; i += 2)
+            battrs.put(attrs[i], attrs[i+1]);
+        Name cpName = new CompositeName().add(dn);
+        Context newCtxt = mDirContext.createSubcontext(cpName, battrs);
+        newCtxt.close();
+    }
+    
+    /*
+     * TODO 16601 replace 11
+     */
+    public void unbindEntry(String dn) throws NamingException {
+        Name cpName = new CompositeName().add(dn);
+        mDirContext.unbind(cpName);
+    }
+    
+    /*
+     * TODO 16601 replace 12
+     */
+    public void moveChildren(String oldDn, String newDn) throws ServiceException {
+        NamingEnumeration ne = null;        
+        try {
+            // find children under old DN and move them
+            SearchControls sc = new SearchControls(SearchControls.ONELEVEL_SCOPE, 0, 0, null, false, false);
+            String query = "(objectclass=*)";
+            ne = searchDir(oldDn, query, sc);
+            NameParser ldapParser = mDirContext.getNameParser("");            
+            while (ne.hasMore()) {
+                SearchResult sr = (SearchResult) ne.next();
+                String oldChildDn = sr.getNameInNamespace();
+                Name oldChildName = ldapParser.parse(oldChildDn);
+                Name newChildName = ldapParser.parse(newDn).add(oldChildName.get(oldChildName.size()-1));
+                mDirContext.rename(oldChildName, newChildName);
+            }
+        } catch (NamingException e) {
+            ZimbraLog.account.warn("unable to move children", e);            
+        } finally {
+            LdapUtil.closeEnumContext(ne);            
+        }
+    }
+    
+    /*
+     * TODO 16601 replace 13
+     */
+    public void renameEntry(String oldDn, String newDn) throws NamingException {
+        Name oldCpName = new CompositeName().add(oldDn);
+        Name newCpName = new CompositeName().add(newDn);
+        mDirContext.rename(oldCpName, newCpName);
     }
 
     /**
