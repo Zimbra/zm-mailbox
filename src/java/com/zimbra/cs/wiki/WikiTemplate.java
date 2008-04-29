@@ -1114,8 +1114,9 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		}
 	}
 	public static class UrlWiklet extends Wiklet {
-		private static final String sLABEL = "label";		
-		private static final String sTYPE = "type";
+		private static final String sLABEL = "label";
+		private static final String sKEY = "key";
+        private static final String sTYPE = "type";
 		private static final String sVERSIONURL = "version";
 		private static final String sHISTORYURL = "history";
 		public String getName() {
@@ -1149,7 +1150,12 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 					}else{
 						wurl = new WikiUrl(ctxt.item);
 						title = params.get(sLABEL);
-						if(title==null){
+                        String msgKey = params.get(sKEY);
+                        if(msgKey != null) {
+                            MsgWiklet msgWiklet = (MsgWiklet) Wiklet.get("MSG");
+                            title = msgWiklet.getMessage(msgKey, ctxt);
+                         }
+                        if(title==null){
 							title = sHISTORYURL;
 						}
 						url = wurl.getFullUrl(ctxt.wctxt, ctxt.item.getMailbox().getAccountId())+"?view="+sHISTORYURL;
@@ -1158,7 +1164,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 					url = wurl.getFullUrl(ctxt.wctxt, ctxt.item.getMailbox().getAccountId());
 				}
 				if(url != null){
-                    if(ctxt.item.getId() == Wiki.WIKI_FOLDER_ID) {
+                    if((ctxt.item.getId() == Wiki.WIKI_FOLDER_ID)) {
                         MsgWiklet msgWiklet = (MsgWiklet) Wiklet.get("MSG");
                         String msgText = msgWiklet.getMessage(title, ctxt);
                         if(msgText !=null && !msgText.equals("")) {

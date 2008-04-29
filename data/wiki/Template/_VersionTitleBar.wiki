@@ -3,7 +3,7 @@
 		<td class="zmwiki-breadcrumbHeader zmwiki-breadcrumbs zmwiki-smallGrayLinks">
 			<table class="zmwiki-breadcrumb_table" cellpadding="0" cellspacing="0" width="100%">
 				<tr>
-					<td class="zmwiki-pageLink" width="100%"><wiklet class='URL' type="history" label="Page History"/></td>
+					<td class="zmwiki-pageLink" width="100%"><wiklet class='URL' type="history" key='wikiPageHistory'/></td>
 				</tr>
 			</table>
 		</td>
