@@ -24,13 +24,17 @@ import javax.naming.directory.ModificationItem;
 import javax.naming.directory.SchemaViolationException;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
+import javax.naming.ldap.Control;
 import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
+import javax.naming.ldap.PagedResultsControl;
+import javax.naming.ldap.PagedResultsResponseControl;
 import javax.naming.ldap.StartTlsRequest;
 import javax.naming.ldap.StartTlsResponse;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
@@ -160,8 +164,24 @@ public class ZimbraLdapContext {
         return env;
     }
     
+
+    /*
+     * TODO: 16601 make private
+     */
+    static String joinURLS(String urls[]) {
+        if (urls.length == 1) return urls[0];
+        StringBuffer url = new StringBuffer();
+        for (int i=0; i < urls.length; i++) {
+            if (i > 0) url.append(' ');
+            url.append(urls[i]);
+        }
+        return url.toString();
+    }
+    
     /*
      * TODO 16601 replace 1
+     * 
+     * Zimbra LDAP
      */
     public  ZimbraLdapContext() throws ServiceException {
         this(false);
@@ -169,6 +189,8 @@ public class ZimbraLdapContext {
 
     /*
      * TODO 16601 replace 2
+     * 
+     * Zimbra LDAP
      */
     public ZimbraLdapContext(boolean master) throws ServiceException {
         this(master, true);
@@ -176,6 +198,8 @@ public class ZimbraLdapContext {
     
     /*
      * TODO 16601 replace 3
+     * 
+     * Zimbra LDAP
      */
     public ZimbraLdapContext(boolean master, boolean useConnPool) throws ServiceException {
         try {
@@ -201,6 +225,66 @@ public class ZimbraLdapContext {
         } catch (IOException e) {
             throw ServiceException.FAILURE("getDirectContext", e);
         }
+    }
+    
+    /*
+     * TODO 16601 replace 14
+     */
+    public ZimbraLdapContext(String urls[], String bindDn, String bindPassword)  throws NamingException {
+        this(urls, null, bindDn, bindPassword);
+    }
+    
+    /*
+     * TODO 16601 replace 15
+     */
+    public ZimbraLdapContext(String urls[], LdapGalCredential credential)  throws NamingException {
+        this(urls, credential.getAuthMech(), credential.getBindDn(), credential.getBindPassword());
+    }
+    
+    /*
+     * TODO 16601 replace 16
+     */
+    public ZimbraLdapContext(String urls[], String authMech, String bindDn, String bindPassword)  throws NamingException {
+        Hashtable<String, String> env = new Hashtable<String, String>();
+        env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+        env.put(Context.PROVIDER_URL, joinURLS(urls));
+        
+        if (authMech == null) {
+            if (bindDn != null && bindPassword != null)
+                authMech = Provisioning.LDAP_AM_SIMPLE;
+            else
+                authMech = Provisioning.LDAP_AM_NONE;
+        }
+        
+        if (authMech.equals(Provisioning.LDAP_AM_NONE)) {
+            env.put(Context.SECURITY_AUTHENTICATION, "none");
+        } else if (authMech.equals(Provisioning.LDAP_AM_SIMPLE)) {
+            env.put(Context.SECURITY_AUTHENTICATION, "simple");
+            env.put(Context.SECURITY_PRINCIPAL, bindDn);
+            env.put(Context.SECURITY_CREDENTIALS, bindPassword);        
+        } else if (authMech.equals(Provisioning.LDAP_AM_KERBEROS5)) {
+            env.put(Context.SECURITY_AUTHENTICATION, "GSSAPI");
+            env.put("javax.security.sasl.qop", "auth-conf");
+        }
+        
+        env.put(Context.REFERRAL, "follow");
+        env.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
+        env.put("com.sun.jndi.ldap.read.timeout", LC.ldap_read_timeout.value());
+        
+        String derefAliases = LC.ldap_deref_aliases.value();
+        if (!StringUtil.isNullOrEmpty(derefAliases))
+            env.put("java.naming.ldap.derefAliases", LC.ldap_deref_aliases.value());
+        
+        // enable connection pooling
+        env.put("com.sun.jndi.ldap.connect.pool", "true");
+        mDirContext = new InitialLdapContext(env, null);
+    }
+    
+    /*
+     * TODO: retire after cleanup LdapUtil
+     */
+    public LdapContext getLdapContext() {
+        return mDirContext;
     }
     
     /*
@@ -252,9 +336,9 @@ public class ZimbraLdapContext {
     /*
      * TODO 16601 replace 10
      */
-    public void modifyAttributes(String dn, int mod_op, Attributes attrs) throws NamingException {
+    public void replaceAttributes(String dn, Attributes attrs) throws NamingException {
         Name cpName = new CompositeName().add(dn);
-        mDirContext.modifyAttributes(cpName, mod_op, attrs);
+        mDirContext.modifyAttributes(cpName, DirContext.REPLACE_ATTRIBUTE, attrs);
     }
     
     /*
@@ -353,6 +437,24 @@ public class ZimbraLdapContext {
         }
     }
     
+    public void deleteChildren(String dn) throws ServiceException {
+        NamingEnumeration ne = null;        
+        try {
+            // find children under old DN and remove them
+            SearchControls sc = new SearchControls(SearchControls.ONELEVEL_SCOPE, 0, 0, null, false, false);
+            String query = "(objectclass=*)";
+            ne = searchDir(dn, query, sc);
+            while (ne.hasMore()) {
+                SearchResult sr = (SearchResult) ne.next();
+                unbindEntry(sr.getNameInNamespace());
+            }
+        } catch (NamingException e) {
+            ZimbraLog.account.warn("unable to remove children", e);            
+        } finally {
+            LdapUtil.closeEnumContext(ne);            
+        }
+    }
+    
     /*
      * TODO 16601 replace 13
      */
@@ -360,6 +462,24 @@ public class ZimbraLdapContext {
         Name oldCpName = new CompositeName().add(oldDn);
         Name newCpName = new CompositeName().add(newDn);
         mDirContext.rename(oldCpName, newCpName);
+    }
+    
+    public void setPagedControl(int pageSize, byte[] cookie, boolean critical) throws NamingException, IOException {
+        mDirContext.setRequestControls(new Control[]{new PagedResultsControl(pageSize, cookie, critical?Control.CRITICAL:Control.NONCRITICAL)});
+    }
+    
+    public byte[] getCookie() throws NamingException {
+        Control[] controls = mDirContext.getResponseControls();
+        if (controls != null) {
+            for (int i = 0; i < controls.length; i++) {
+                if (controls[i] instanceof PagedResultsResponseControl) {
+                    PagedResultsResponseControl prrc =
+                        (PagedResultsResponseControl)controls[i];
+                    return prrc.getCookie();
+                }
+            }
+        }
+        return null;
     }
 
     /**

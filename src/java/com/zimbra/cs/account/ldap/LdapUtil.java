@@ -57,14 +57,9 @@ import javax.naming.directory.ModificationItem;
 import javax.naming.directory.SchemaViolationException;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
-import javax.naming.ldap.Control;
 import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
-import javax.naming.ldap.PagedResultsControl;
-import javax.naming.ldap.PagedResultsResponseControl;
 import javax.naming.ldap.Rdn;
-import javax.naming.PartialResultException;
-import javax.naming.ReferralException;
 import javax.security.auth.login.LoginException;
 
 import java.io.IOException;
@@ -163,43 +158,28 @@ public class LdapUtil {
         }
     }
 
-    private static String joinURLS(String urls[]) {
-        if (urls.length == 1) return urls[0];
-        StringBuffer url = new StringBuffer();
-        for (int i=0; i < urls.length; i++) {
-            if (i > 0) url.append(' ');
-            url.append(urls[i]);
-        }
-        return url.toString();
-    }
     
-    /**
-     * 
-     * @return
-     * @throws NamingException
+    /*
+     * TODO 16601 delete 14
      */
     public static DirContext getDirContext(String urls[], String bindDn, String bindPassword)  throws NamingException {
         return getDirContext(urls, null, bindDn, bindPassword);
     }
     
-    /**
-     * 
-     * @return
-     * @throws NamingException
+    /*
+     * TODO 16601 delete 15
      */
     private static DirContext getDirContext(String urls[], LdapGalCredential credential)  throws NamingException {
         return getDirContext(urls, credential.getAuthMech(), credential.getBindDn(), credential.getBindPassword());
     }
     
-    /**
-     * 
-     * @return
-     * @throws NamingException
+    /*
+     * TODO 16601 delete 16
      */
     private static DirContext getDirContext(String urls[], String authMech, String bindDn, String bindPassword)  throws NamingException {
         Hashtable<String, String> env = new Hashtable<String, String>();
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-        env.put(Context.PROVIDER_URL, joinURLS(urls));
+        env.put(Context.PROVIDER_URL, ZimbraLdapContext.joinURLS(urls));
         
         if (authMech == null) {
             if (bindDn != null && bindPassword != null)
@@ -245,7 +225,7 @@ public class LdapUtil {
             env.put("java.naming.ldap.derefAliases", LC.ldap_deref_aliases.value());
         
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-        env.put(Context.PROVIDER_URL, joinURLS(urls));
+        env.put(Context.PROVIDER_URL, ZimbraLdapContext.joinURLS(urls));
         env.put(Context.SECURITY_AUTHENTICATION, "simple");
         env.put(Context.SECURITY_PRINCIPAL, principal);
         env.put(Context.SECURITY_CREDENTIALS, password);
@@ -261,13 +241,13 @@ public class LdapUtil {
         if (password == null || password.equals("")) 
             throw new AuthenticationException("empty password");
 
-        DirContext ctxt = null;
+        ZimbraLdapContext zlc = null;
         String resultDn = null;;
         String tooMany = null;
         NamingEnumeration ne = null;
         try {
-            ctxt = getDirContext(url, searchDn, searchPassword);
-            ne = searchDir(ctxt, searchBase, searchFilter, sSubtreeSC);
+            zlc = new ZimbraLdapContext(url, searchDn, searchPassword);
+            ne = zlc.searchDir(searchBase, searchFilter, sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
                 if (resultDn == null) {
@@ -278,7 +258,7 @@ public class LdapUtil {
                 }
             }
         } finally {
-            closeContext(ctxt);
+            ZimbraLdapContext.closeContext(zlc);
             closeEnumContext(ne);
         }
         
@@ -784,21 +764,9 @@ public class LdapUtil {
          return LdapProvisioning.expandStr(bindDnRule, vars);
       }
       
-      public static byte[] getCookie(LdapContext lctxt) throws NamingException {
-          Control[] controls = lctxt.getResponseControls();
-          if (controls != null) {
-              for (int i = 0; i < controls.length; i++) {
-                  if (controls[i] instanceof PagedResultsResponseControl) {
-                      PagedResultsResponseControl prrc =
-                          (PagedResultsResponseControl)controls[i];
-                      return prrc.getCookie();
-                  }
-              }
-          }
-          return null;
-      }
+      
 
-      public static void searchGal(DirContext ctxt,
+      public static void searchGal(ZimbraLdapContext zlc,
                                    int pageSize,
                                    String base, 
                                    String query, 
@@ -821,11 +789,11 @@ public class LdapUtil {
             String url = null;
             String binddn = null;
             try {
-                Hashtable ctxtEnv = ctxt.getEnvironment();
-                Object urlObj = ctxtEnv.get(ctxt.PROVIDER_URL);
+                Hashtable ctxtEnv = zlc.getLdapContext().getEnvironment();
+                Object urlObj = ctxtEnv.get(zlc.getLdapContext().PROVIDER_URL);
                 if (urlObj != null)
                     url = urlObj.toString();
-                Object binddnObj = ctxtEnv.get(ctxt.SECURITY_PRINCIPAL);
+                Object binddnObj = ctxtEnv.get(zlc.getLdapContext().SECURITY_PRINCIPAL);
                 if (binddnObj != null)
                     binddn = binddnObj.toString();
             } catch (NamingException e) {
@@ -847,15 +815,13 @@ public class LdapUtil {
         int total = 0;
         byte[] cookie = null;
         
-        LdapContext lctxt = (LdapContext)ctxt; 
-        
         try {
             try {
                 do {
                     if (pageSize > 0)
-                        lctxt.setRequestControls(new Control[]{new PagedResultsControl(pageSize, cookie, Control.NONCRITICAL)});
+                        zlc.setPagedControl(pageSize, cookie, false);
                     
-                    ne = LdapUtil.searchDir(ctxt, base, query, sc);
+                    ne = zlc.searchDir(base, query, sc);
                     while (ne != null && ne.hasMore()) {
                         if (maxResults > 0 && total++ > maxResults) {
                             result.hadMore = true;
@@ -874,7 +840,7 @@ public class LdapUtil {
                         ZimbraLog.gal.debug("dn=" + dn + ", modifyTimeStamp=" + mts + ", createTimeStamp" + cts);
                     }
                     if (pageSize > 0)
-                        cookie = getCookie(lctxt);
+                        cookie = zlc.getCookie();
                 } while (cookie != null);
             /*    
             } catch (ReferralException e) {
@@ -955,45 +921,6 @@ public class LdapUtil {
         return result;
     }
     
-    /* original
-    private static void searchLdapGal(String url[],
-                                      LdapGalCredential credential,
-                                      String base, 
-                                      String query, 
-                                      int maxResults,
-                                      LdapGalMapRules rules,
-                                      String token,
-                                      SearchGalResult result) throws NamingException {
-        
-        SearchControls sc = new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, rules.getLdapAttrs(), false, false);
-        result.token = token != null && !token.equals("")? token : EARLIEST_SYNC_TOKEN;
-        DirContext ctxt = null;
-        NamingEnumeration ne = null;
-        
-        try {
-            ctxt = getDirContext(url, credential);
-            ne = searchDir(ctxt, base, query, sc);
-            while (ne.hasMore()) {
-                SearchResult sr = (SearchResult) ne.next();
-                String dn = sr.getNameInNamespace();
-                GalContact lgc = new GalContact(dn, rules.apply(sr.getAttributes()));
-                String mts = (String) lgc.getAttrs().get("modifyTimeStamp");
-                result.token = getLaterTimestamp(result.token, mts);
-                String cts = (String) lgc.getAttrs().get("createTimeStamp");
-                result.token = LdapUtil.getLaterTimestamp(result.token, cts);
-                result.matches.add(lgc);
-            }
-            ne.close();
-            ne = null;
-        } catch (SizeLimitExceededException sle) {
-            result.hadMore = true;
-        } finally {
-            closeContext(ctxt);
-            closeEnumContext(ne);
-        }
-    }
-    */
-    
     private static void searchLdapGal(
             GalParams.ExternalGalParams galParams,
             String query, 
@@ -1002,10 +929,10 @@ public class LdapUtil {
             String token,
             SearchGalResult result) throws ServiceException, NamingException {
         
-        DirContext ctxt = null;
+        ZimbraLdapContext zlc = null;
         try {
-            ctxt = getDirContext(galParams.url(), galParams.credential());
-            searchGal(ctxt,
+            zlc = new ZimbraLdapContext(galParams.url(), galParams.credential());
+            searchGal(zlc,
                       galParams.pageSize(),
                       galParams.searchBase(), 
                       query, 
@@ -1014,7 +941,7 @@ public class LdapUtil {
                       token,
                       result);
         } finally {
-            closeContext(ctxt);
+            ZimbraLdapContext.closeContext(zlc);
         }
     }
     
@@ -1106,7 +1033,7 @@ public class LdapUtil {
         //specify use of ssl
         //env.put(Context.SECURITY_PROTOCOL,"ssl");
  
-        env.put(Context.PROVIDER_URL, joinURLS(urls));
+        env.put(Context.PROVIDER_URL, ZimbraLdapContext.joinURLS(urls));
         
         LdapContext ctxt = null;
         NamingEnumeration ne = null;        
@@ -1198,23 +1125,6 @@ public class LdapUtil {
         }
     }
 
-    public static void deleteChildren(DirContext ctxt, String dn) throws ServiceException {
-        NamingEnumeration ne = null;        
-        try {
-            // find children under old DN and remove them
-            SearchControls sc = new SearchControls(SearchControls.ONELEVEL_SCOPE, 0, 0, null, false, false);
-            String query = "(objectclass=*)";
-            ne = searchDir(ctxt, dn, query, sc);
-            while (ne.hasMore()) {
-                SearchResult sr = (SearchResult) ne.next();
-                LdapUtil.unbindEntry(ctxt, sr.getNameInNamespace());
-            }
-        } catch (NamingException e) {
-            ZimbraLog.account.warn("unable to remove children", e);            
-        } finally {
-            closeEnumContext(ne);            
-        }
-    }
  
     /*
      * TODO 16601 delete 6
