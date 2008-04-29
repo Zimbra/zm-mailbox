@@ -56,33 +56,33 @@ public class ZimbraPerf {
     // Accumulators.  To add a new accumulator, create a static instance here,
     // add it to the CORE_ACCUMULATORS array and if necessary, set options
     // in the static init code below.
-    public static Counter COUNTER_LMTP_RCVD_MSGS = new Counter("lmtp_rcvd_msgs");
-    public static Counter COUNTER_LMTP_RCVD_BYTES = new Counter("lmtp_rcvd_bytes");
-    public static Counter COUNTER_LMTP_RCVD_RCPT = new Counter("lmtp_rcvd_rcpt");
-    public static Counter COUNTER_LMTP_DLVD_MSGS = new Counter("lmtp_dlvd_msgs");
-    public static Counter COUNTER_LMTP_DLVD_BYTES = new Counter("lmtp_dlvd_bytes");
-    public static StopWatch STOPWATCH_DB_CONN = new StopWatch("db_conn");
-    public static StopWatch STOPWATCH_LDAP_DC = new StopWatch("ldap_dc");
-    public static StopWatch STOPWATCH_MBOX_ADD_MSG = new StopWatch("mbox_add_msg");
-    public static StopWatch STOPWATCH_MBOX_GET = new StopWatch("mbox_get");         // Mailbox accessor response time
-    public static Counter COUNTER_MBOX_CACHE = new Counter("mbox_cache");           // Mailbox cache hit rate
-    public static Counter COUNTER_MBOX_MSG_CACHE = new Counter("mbox_msg_cache"); 
-    public static Counter COUNTER_MBOX_ITEM_CACHE = new Counter("mbox_item_cache");
-    public static StopWatch STOPWATCH_SOAP = new StopWatch("soap");
-    public static StopWatch STOPWATCH_IMAP = new StopWatch("imap");
-    public static StopWatch STOPWATCH_POP = new StopWatch("pop");
-    public static Counter COUNTER_IDX_WRT = new Counter("idx_wrt");
-    public static Counter COUNTER_IDX_WRT_OPENED = new Counter("idx_wrt_opened");
-    public static Counter COUNTER_IDX_WRT_OPENED_CACHE_HIT = new Counter("idx_wrt_opened_cache_hit");
-    public static Counter COUNTER_CALENDAR_CACHE_HIT = new Counter("calcache_hit");
-    public static Counter COUNTER_CALENDAR_CACHE_MEM_HIT = new Counter("calcache_mem_hit");
-    public static Counter COUNTER_CALENDAR_CACHE_LRU_SIZE = new Counter("calcache_lru_size");
-    public static Counter COUNTER_IDX_BYTES_WRITTEN = new Counter("idx_bytes_written");
-    public static Counter COUNTER_IDX_BYTES_READ = new Counter("idx_bytes_read");
+    public static final Counter COUNTER_LMTP_RCVD_MSGS = new Counter("lmtp_rcvd_msgs");
+    public static final Counter COUNTER_LMTP_RCVD_BYTES = new Counter("lmtp_rcvd_bytes");
+    public static final Counter COUNTER_LMTP_RCVD_RCPT = new Counter("lmtp_rcvd_rcpt");
+    public static final Counter COUNTER_LMTP_DLVD_MSGS = new Counter("lmtp_dlvd_msgs");
+    public static final Counter COUNTER_LMTP_DLVD_BYTES = new Counter("lmtp_dlvd_bytes");
+    public static final StopWatch STOPWATCH_DB_CONN = new StopWatch("db_conn");
+    public static final StopWatch STOPWATCH_LDAP_DC = new StopWatch("ldap_dc");
+    public static final StopWatch STOPWATCH_MBOX_ADD_MSG = new StopWatch("mbox_add_msg");
+    public static final StopWatch STOPWATCH_MBOX_GET = new StopWatch("mbox_get");         // Mailbox accessor response time
+    public static final Counter COUNTER_MBOX_CACHE = new Counter("mbox_cache");           // Mailbox cache hit rate
+    public static final Counter COUNTER_MBOX_MSG_CACHE = new Counter("mbox_msg_cache"); 
+    public static final Counter COUNTER_MBOX_ITEM_CACHE = new Counter("mbox_item_cache");
+    public static final StopWatch STOPWATCH_SOAP = new StopWatch("soap");
+    public static final StopWatch STOPWATCH_IMAP = new StopWatch("imap");
+    public static final StopWatch STOPWATCH_POP = new StopWatch("pop");
+    public static final Counter COUNTER_IDX_WRT = new Counter("idx_wrt");
+    public static final Counter COUNTER_IDX_WRT_OPENED = new Counter("idx_wrt_opened");
+    public static final Counter COUNTER_IDX_WRT_OPENED_CACHE_HIT = new Counter("idx_wrt_opened_cache_hit");
+    public static final Counter COUNTER_CALENDAR_CACHE_HIT = new Counter("calcache_hit");
+    public static final Counter COUNTER_CALENDAR_CACHE_MEM_HIT = new Counter("calcache_mem_hit");
+    public static final Counter COUNTER_CALENDAR_CACHE_LRU_SIZE = new Counter("calcache_lru_size");
+    public static final Counter COUNTER_IDX_BYTES_WRITTEN = new Counter("idx_bytes_written");
+    public static final Counter COUNTER_IDX_BYTES_READ = new Counter("idx_bytes_read");
     
-    public static ActivityTracker SOAP_TRACKER = new ActivityTracker("soap.csv");
-    public static ActivityTracker IMAP_TRACKER = new ActivityTracker("imap.csv");
-    public static ActivityTracker POP_TRACKER = new ActivityTracker("pop3.csv");
+    public static final ActivityTracker SOAP_TRACKER = new ActivityTracker("soap.csv");
+    public static final ActivityTracker IMAP_TRACKER = new ActivityTracker("imap.csv");
+    public static final ActivityTracker POP_TRACKER = new ActivityTracker("pop3.csv");
     
     private static RealtimeStats sRealtimeStats = 
         new RealtimeStats(new String[] {
