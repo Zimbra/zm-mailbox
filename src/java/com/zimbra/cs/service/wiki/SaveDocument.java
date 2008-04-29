@@ -116,6 +116,7 @@ public class SaveDocument extends WikiDocumentHandler {
 
         Doc doc = null;
         Element response = null;
+        boolean success = false;
         try {
             Element attElem = docElem.getOptionalElement(MailConstants.E_UPLOAD);
             if (attElem != null) {
@@ -152,10 +153,11 @@ public class SaveDocument extends WikiDocumentHandler {
             m.addAttribute(MailConstants.A_ID, new ItemIdFormatter(zsc).formatItemId(docItem));
             m.addAttribute(MailConstants.A_VERSION, docItem.getVersion());
             ToXML.encodeRestUrl(m, docItem);
+            success = true;
         } catch (IOException e) {
 			throw ServiceException.FAILURE("can't save document", e);
         } finally {
-        	if (doc != null)
+        	if (success && doc != null)
         		doc.cleanup();
         }
         return response;
