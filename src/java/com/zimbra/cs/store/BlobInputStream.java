@@ -377,7 +377,18 @@ implements SharedInputStream {
         mPos = newPos;
         return numSkipped;
     }
-    
+
+    @Override
+    /**
+     * Ensures that the file descriptor gets closed when this object is garbage
+     * collected.  We generally don't like finalizers, but we make an exception
+     * in this case because we have no control over how JavaMail uses BlobInputStream. 
+     */
+    protected void finalize() throws Throwable {
+        super.finalize();
+        closeMyFile();
+    }
+
     ////////////// SharedInputStream methods //////////////
 
     public long getPosition() {
