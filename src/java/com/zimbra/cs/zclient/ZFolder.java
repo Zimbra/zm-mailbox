@@ -354,6 +354,14 @@ public class ZFolder implements ZItem, Comparable {
     }
 
     /**
+     * Sets unread count.
+	 * @param count unread count.
+     */
+    public void setUnreadCount(int count) {
+        mUnreadCount = count;
+    }
+
+    /**
      *
      * @return size of all items in folder (not including sub folders) in bytes
      */

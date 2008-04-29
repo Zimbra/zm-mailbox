@@ -112,7 +112,12 @@ public class ZVoiceMailItemHit implements ZSearchHit {
 
     public void modifyNotification(ZModifyEvent event) throws ServiceException {
 		if (event instanceof ZModifyVoiceMailItemEvent) {
-			setFlag(ZMessage.Flag.unread.getFlagChar(), !((ZModifyVoiceMailItemEvent) event).getIsHeard());
+			ZModifyVoiceMailItemEvent voiceEvent = (ZModifyVoiceMailItemEvent) event;
+			boolean isUnheard = !voiceEvent.getIsHeard();
+			if (isUnheard != isUnheard()) {
+				setFlag(ZMessage.Flag.unread.getFlagChar(), isUnheard);
+				voiceEvent.setMadeChange();
+			}
 		}
 	}
 

@@ -22,10 +22,12 @@ import com.zimbra.common.service.ServiceException;
 public class ZModifyVoiceMailItemEvent implements ZModifyItemEvent {
 	private String mId;
 	private boolean mIsHeard;
+	private boolean mMadeChange;
 
 	public ZModifyVoiceMailItemEvent(String id, boolean isHeard) throws ServiceException {
 		mId = id;
 		mIsHeard = isHeard;
+		mMadeChange = false;
 	}
 
 	/**
@@ -40,5 +42,21 @@ public class ZModifyVoiceMailItemEvent implements ZModifyItemEvent {
 	 */
 	public boolean getIsHeard() {
 		return mIsHeard;
+	}
+
+	/**
+	 * Makes note that something actually changed. Used when marking (un)heard
+	 * so that we can try to keep track of the folder's unheard count,
+	 * which is never updated by the server.
+	 */
+	public void setMadeChange() {
+		mMadeChange = true;
+	}
+
+	/**
+	 * Returns true if something actually changed.
+	 */
+	public boolean getMadeChange() {
+		return mMadeChange;
 	}
 }

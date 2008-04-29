@@ -3860,9 +3860,19 @@ public class ZMailbox {
 	public ZActionResult markVoiceMailHeard(String phone, String idList, boolean heard) throws ServiceException {
         String op = heard ? "read" : "!read";
 		ZActionResult result = doAction(voiceAction(op, phone, idList, 0));
+		int changeCount = 0;
 		for (String id : sCOMMA.split(idList)) {
 			ZModifyVoiceMailItemEvent event = new ZModifyVoiceMailItemEvent(id, heard);
 			handleEvent(event);
+			if (event.getMadeChange()) {
+				changeCount++;
+			}
+		}
+		if (changeCount > 0) {
+			ZPhoneAccount account = getPhoneAccount(phone);
+			ZFolder inbox = account.getRootFolder().getSubFolderByPath(VoiceConstants.FNAME_VOICEMAILINBOX);
+			int diff = heard ? -changeCount : changeCount;
+			inbox.setUnreadCount(inbox.getUnreadCount() + diff);
 		}
 		return result;
     }
