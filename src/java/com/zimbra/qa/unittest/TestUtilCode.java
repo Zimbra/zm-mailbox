@@ -36,8 +36,12 @@ import com.zimbra.common.util.*;
  */
 public class TestUtilCode extends TestCase
 {
-    public void testFillTemplate()
-    {
+    public void setUp()
+    throws Exception {
+        cleanUp();
+    }
+    
+    public void testFillTemplate() {
         String template = "The quick ${COLOR} ${ANIMAL}\njumped over the ${ADJECTIVE} dogs.\n";
         Map<String, String> vars = new HashMap<String, String>();
         vars.put("COLOR", "brown");
@@ -48,8 +52,7 @@ public class TestUtilCode extends TestCase
         assertEquals(expected, result);
     }
 
-    public void testFillTemplateWithNewlineValue()
-    {
+    public void testFillTemplateWithNewlineValue() {
         String template = "New message received at ${RECIPIENT_ADDRESS}." +
             "${NEWLINE}Sender: ${SENDER_ADDRESS}${NEWLINE}Subject: ${SUBJECT}";
 
@@ -68,14 +71,12 @@ public class TestUtilCode extends TestCase
                 expected, actual);
     }
 
-    public void testJoin()
-    {
+    public void testJoin() {
         String[] lines = { "a", "b", "c" };
         assertEquals("a\nb\nc", StringUtil.join("\n", lines));
     }
 
-    public void testSimpleClassName()
-    {
+    public void testSimpleClassName() {
         assertEquals("MyClass", StringUtil.getSimpleClassName("my.package.MyClass"));
         Integer i = 0;
         assertEquals("Integer", StringUtil.getSimpleClassName(i));
@@ -257,6 +258,16 @@ public class TestUtilCode extends TestCase
             }
         }
         return true;
+    }
+    
+    public void tearDown()
+    throws Exception {
+        cleanUp();
+    }
+    
+    private void cleanUp()
+    throws Exception {
+        Log.deleteAccountLogger("zimbra.test", TestUtil.getAddress("user1"));
     }
 
     public static void main(String[] args)
