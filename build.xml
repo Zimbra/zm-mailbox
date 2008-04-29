@@ -877,6 +877,40 @@
         </antcall>
     </target>
 
+    <!-- 
+        Run this target after changing ldap schema in ZimbraServer/conf/attrs/zimbra-attrs.xml 
+        Note: this target does not set the default value for attrs.  It only make the schema 
+        change effective.
+    -->
+    <target name="refresh-ldap-schema" depends="generate-ldap-config">
+        <antcall target="stop-webserver"/>
+        <antcall target="stop-ldap"/>
+        <sleep seconds="2"/>
+        
+        <!-- dist ldap schem and ldif files -->
+        <copy todir="${dist.dir}/conf/attrs" overwrite="true">
+            <fileset dir="${build.dir}/attrs"/>
+        </copy>
+        <copy todir="${dist.dir}/${slapd.etc.dir}" overwrite="true">
+            <fileset dir="${build.dir}/ldap-config" includes="*.ldif"/>
+        </copy>
+        <copy todir="${dist.dir}/${slapd.etc.dir}/schema" overwrite="true">
+            <fileset dir="${build.dir}/ldap-config" includes="*.schema"/>
+        </copy>
+        
+        <!-- copy zimbra-attrs.xml(need by AttributeManager) and schema files to OpenLDAP schema dir -->
+        <copy todir="${zimbra.home.dir}/conf/attrs" overwrite="true">
+            <fileset dir="${dist.dir}/conf/attrs"/>
+        </copy>
+        <copy todir="${zimbra.home.dir}/${slapd.etc.dir}/schema" overwrite="true">
+            <fileset dir="${dist.dir}/${slapd.etc.dir}/schema" includes="*.schema"/>
+        </copy>
+        
+        <!-- sometimes start occurs too fast... -->
+        <antcall target="start-ldap"/>
+        <antcall target="start-webserver"/>
+    </target>
+	
     <target name="ldap-add">
         <echo>Loading ${ldif.file}</echo>
         <exec failonerror="true" executable="${ldapmodify}">
