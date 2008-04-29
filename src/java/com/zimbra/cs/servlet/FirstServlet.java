@@ -27,12 +27,11 @@ import java.util.GregorianCalendar;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import javax.naming.directory.DirContext;
 import javax.servlet.http.HttpServlet;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
-import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -49,12 +48,12 @@ public class FirstServlet extends HttpServlet {
     private static final long serialVersionUID = -1660545976482412029L;
 
     private static final int CHECK_LDAP_SLEEP_MILLIS = 10000;
-
-    private static void checkLDAP() {
+    
+    public static void checkLDAP() {
         while (true) {
-            DirContext ctxt = null;
+            ZimbraLdapContext zlc = null;
             try {
-                ctxt = LdapUtil.getDirContext();
+                zlc = new ZimbraLdapContext();
                 return;
             } catch (ServiceException e) {
                 System.err.println(new Date() + ": error communicating with LDAP (will retry)");
@@ -64,7 +63,7 @@ public class FirstServlet extends HttpServlet {
                 } catch (InterruptedException ie) {
                 }
             } finally {
-                LdapUtil.closeContext(ctxt);
+                ZimbraLdapContext.closeContext(zlc);
             }
         }
     }

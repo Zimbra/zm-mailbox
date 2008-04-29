@@ -21,6 +21,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.callback.IDNCallback;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -1053,10 +1054,10 @@ public class AttributeManager {
     }
     
     private static void dumpSchema(PrintWriter pw) throws ServiceException {
-        DirContext dc = null;
+        ZimbraLdapContext zlc = null;
         try {
-          dc = LdapUtil.getDirContext(true);
-          DirContext schema = dc.getSchema("");
+          zlc = new ZimbraLdapContext(true);
+          DirContext schema = zlc.getSchema();
 
           // Enumerate over ClassDefinition, AttributeDefinition, MatchingRule, SyntaxDefinition
           NamingEnumeration<NameClassPair> schemaTypeIter = schema.list("");
@@ -1075,12 +1076,12 @@ public class AttributeManager {
               }
           }
 
-          dumpAttrs(pw, "GlobalConfig", dc.getAttributes("cn=config,cn=zimbra"));
-          dumpAttrs(pw, "DefaultCOS", dc.getAttributes("cn=default,cn=cos,cn=zimbra"));
+          dumpAttrs(pw, "GlobalConfig", zlc.getAttributes("cn=config,cn=zimbra"));
+          dumpAttrs(pw, "DefaultCOS", zlc.getAttributes("cn=default,cn=cos,cn=zimbra"));
         } catch (NamingException ne) {
             ne.printStackTrace();
         } finally {
-            LdapUtil.closeContext(dc);
+            ZimbraLdapContext.closeContext(zlc);
         }
     }
     

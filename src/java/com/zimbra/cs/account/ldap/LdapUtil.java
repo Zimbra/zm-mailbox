@@ -74,6 +74,7 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -98,22 +99,6 @@ public class LdapUtil {
     private static String[] sEmptyMulti = new String[0];
 
     static final SearchControls sSubtreeSC = new SearchControls(SearchControls.SUBTREE_SCOPE, 0, 0, null, false, false);
-    
-
-    /*
-     * TODO 16601 delete 4
-     */
-    public static void closeContext(Context ctxt) {
-        try {
-            if (ctxt != null) {
-                //ZimbraLog.account.error("closeDirContext", new RuntimeException("------------------- CLOSE"));
-                ctxt.close();
-            }
-        } catch (NamingException e) {
-            // TODO log?
-            //e.printStackTrace();
-        }
-    }
 
     public static void closeEnumContext(NamingEnumeration ctxt) {
         try {
@@ -125,116 +110,11 @@ public class LdapUtil {
         }
     }
     
-    /*
-     * TODO 16601 delete 1
-     */
-    public static DirContext getDirContext() throws ServiceException {
-        return getDirContext(false);
-    }
-
-    /*
-     * TODO 16601 delete 2
-     */
-    public static DirContext getDirContext(boolean master) throws ServiceException {
-        return getDirContext(master, true);
-    }
-    
-    /*
-     * TODO 16601 delete 3
-     */
-    public static DirContext getDirContext(boolean master, boolean useConnPool) throws ServiceException {
-        try {
-            long start = ZimbraPerf.STOPWATCH_LDAP_DC.start();
-            DirContext dirContext = null;
-            if (useConnPool)
-                dirContext = new InitialLdapContext(ZimbraLdapContext.getDefaultEnv(master), null);
-            else
-                dirContext = new InitialLdapContext(ZimbraLdapContext.getNonPooledEnv(master), null);
-            ZimbraPerf.STOPWATCH_LDAP_DC.stop(start);
-            //ZimbraLog.account.error("getDirContext", new RuntimeException("------------------- OPEN"));
-            return dirContext;
-        } catch (NamingException e) {
-            throw ServiceException.FAILURE("getDirectContext", e);
-        }
-    }
-
-    
-    /*
-     * TODO 16601 delete 14
-     */
-    public static DirContext getDirContext(String urls[], String bindDn, String bindPassword)  throws NamingException {
-        return getDirContext(urls, null, bindDn, bindPassword);
-    }
-    
-    /*
-     * TODO 16601 delete 15
-     */
-    private static DirContext getDirContext(String urls[], LdapGalCredential credential)  throws NamingException {
-        return getDirContext(urls, credential.getAuthMech(), credential.getBindDn(), credential.getBindPassword());
-    }
-    
-    /*
-     * TODO 16601 delete 16
-     */
-    private static DirContext getDirContext(String urls[], String authMech, String bindDn, String bindPassword)  throws NamingException {
-        Hashtable<String, String> env = new Hashtable<String, String>();
-        env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-        env.put(Context.PROVIDER_URL, ZimbraLdapContext.joinURLS(urls));
-        
-        if (authMech == null) {
-            if (bindDn != null && bindPassword != null)
-                authMech = Provisioning.LDAP_AM_SIMPLE;
-            else
-                authMech = Provisioning.LDAP_AM_NONE;
-        }
-        
-        if (authMech.equals(Provisioning.LDAP_AM_NONE)) {
-            env.put(Context.SECURITY_AUTHENTICATION, "none");
-        } else if (authMech.equals(Provisioning.LDAP_AM_SIMPLE)) {
-            env.put(Context.SECURITY_AUTHENTICATION, "simple");
-            env.put(Context.SECURITY_PRINCIPAL, bindDn);
-            env.put(Context.SECURITY_CREDENTIALS, bindPassword);        
-        } else if (authMech.equals(Provisioning.LDAP_AM_KERBEROS5)) {
-            env.put(Context.SECURITY_AUTHENTICATION, "GSSAPI");
-            env.put("javax.security.sasl.qop", "auth-conf");
-        }
-        
-        env.put(Context.REFERRAL, "follow");
-        env.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
-        env.put("com.sun.jndi.ldap.read.timeout", LC.ldap_read_timeout.value());
-        
-        String derefAliases = LC.ldap_deref_aliases.value();
-        if (!StringUtil.isNullOrEmpty(derefAliases))
-            env.put("java.naming.ldap.derefAliases", LC.ldap_deref_aliases.value());
-        
-        // enable connection pooling
-        env.put("com.sun.jndi.ldap.connect.pool", "true");
-        return new InitialLdapContext(env, null);
-    }
-
     public static void ldapAuthenticate(String urls[], String principal, String password) throws NamingException {
         if (password == null || password.equals("")) 
             throw new AuthenticationException("empty password");
-
-        Hashtable<String, String> env = new Hashtable<String, String>();
-        env.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
-        env.put("com.sun.jndi.ldap.read.timeout", LC.ldap_read_timeout.value());
         
-        String derefAliases = LC.ldap_deref_aliases.value();
-        if (!StringUtil.isNullOrEmpty(derefAliases))
-            env.put("java.naming.ldap.derefAliases", LC.ldap_deref_aliases.value());
-        
-        env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-        env.put(Context.PROVIDER_URL, ZimbraLdapContext.joinURLS(urls));
-        env.put(Context.SECURITY_AUTHENTICATION, "simple");
-        env.put(Context.SECURITY_PRINCIPAL, principal);
-        env.put(Context.SECURITY_CREDENTIALS, password);
-        DirContext context = null;
-        try {
-            context = new InitialLdapContext(env, null);
-        } finally {
-            closeContext(context);
-        }
+        ZimbraLdapContext.ldapAuthenticate(urls, principal, password);
     }
 
     public static void ldapAuthenticate(String url[], String password, String searchBase, String searchFilter, String searchDn, String searchPassword) throws NamingException {
@@ -420,27 +300,6 @@ public class LdapUtil {
         a.add(value);
         attrs.put(a);
         return a;
-    }
-
-    /*
-     * TODO 16601 delete 8
-     */
-    public static void simpleCreate(DirContext ctxt, String dn, Object objectClass, String[] attrs) throws NamingException {
-        Attributes battrs = new BasicAttributes(true);
-        if (objectClass instanceof String) {
-            battrs.put(Provisioning.A_objectClass, objectClass);
-        } else if (objectClass instanceof String[]) {
-            String[] oclasses = (String[]) objectClass;
-            Attribute a = new BasicAttribute(Provisioning.A_objectClass);
-            for (int i=0; i < oclasses.length; i++)
-                    a.add(oclasses[i]);
-            battrs.put(a);
-        }
-        for (int i=0; i < attrs.length; i += 2)
-            battrs.put(attrs[i], attrs[i+1]);
-        Name cpName = new CompositeName().add(dn);
-        Context newCtxt = ctxt.createSubcontext(cpName, battrs);
-        newCtxt.close();
     }
 
     /**
@@ -763,8 +622,6 @@ public class LdapUtil {
          
          return LdapProvisioning.expandStr(bindDnRule, vars);
       }
-      
-      
 
       public static void searchGal(ZimbraLdapContext zlc,
                                    int pageSize,
@@ -1017,75 +874,7 @@ public class LdapUtil {
         return timeA.compareTo(timeB) > 0 ? timeA : timeB;
     }
 
-    /*
-     * is this function used??
-     */
-    public static void changeActiveDirectoryPassword(String urls[], String email, String oldPassword, String newPassword)
-        throws NamingException, ServiceException
-    {
-        Hashtable<String, String> env = new Hashtable<String, String>();
- 
-        //set security credentials, note using simple cleartext authentication
-        env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");        
-        env.put(Context.SECURITY_AUTHENTICATION,"simple");
-        env.put(Context.SECURITY_PRINCIPAL, email);
-        env.put(Context.SECURITY_CREDENTIALS, oldPassword);
-        //specify use of ssl
-        //env.put(Context.SECURITY_PROTOCOL,"ssl");
- 
-        env.put(Context.PROVIDER_URL, ZimbraLdapContext.joinURLS(urls));
-        
-        LdapContext ctxt = null;
-        NamingEnumeration ne = null;        
-        try {
-            // Create the initial directory context
-            ctxt = new InitialLdapContext(env,null);
-
-            // find the DN
-            SearchControls sc = new SearchControls(SearchControls.SUBTREE_SCOPE, 1, 0, null, false, false);
-            String query = "(userPrincipalName="+LdapUtil.escapeSearchFilterArg(email)+")";
-            String base = emailToDomainDN(email);
-            String dn = null;
-            ne = searchDir(ctxt, base, query, sc);
-            if (ne.hasMore()) {
-                SearchResult sr = (SearchResult) ne.next();
-                dn = sr.getNameInNamespace();
-            }
-            
-            if (dn == null) 
-                throw AuthFailedServiceException.AUTH_FAILED(email, email, "entry not found");
-        
-            System.out.println("DN = "+ dn);
-            
-            //if (true) return;
-            
-            //change password is a single ldap modify operation
-            //that deletes the old password and adds the new password
-            ModificationItem[] mods = new ModificationItem[2];
-
-            //Firstly delete the "unicdodePwd" attribute, using the old password
-            //Then add the new password,Passwords must be both Unicode and a quoted string
-            String oldQuotedPassword = "\"" + oldPassword + "\"";
-            byte[] oldUnicodePassword = oldQuotedPassword.getBytes("UTF-16LE");
-            String newQuotedPassword = "\"" + newPassword + "\"";
-            byte[] newUnicodePassword = newQuotedPassword.getBytes("UTF-16LE");
-
-            mods[0] = new ModificationItem(DirContext.REMOVE_ATTRIBUTE, new BasicAttribute("unicodePwd", oldUnicodePassword));
-            mods[1] = new ModificationItem(DirContext.ADD_ATTRIBUTE, new BasicAttribute("unicodePwd", newUnicodePassword));
-
-            // Perform the update
-            modifyAttributes(ctxt, dn, mods);
-        } catch (UnsupportedEncodingException e) {
-            throw ServiceException.FAILURE("encoding exception", e);
-        } finally {
-            closeContext(ctxt);
-            closeEnumContext(ne);            
-        }
-    }
-    
-
     public static void main(String args[]) throws NamingException, ServiceException {
-//        changeActiveDirectoryPassword(new String[] {"ldaps://host/"}, "email", "old", "new");
 
         System.out.println(verifySSHA("{SSHA}igJikWhEzFPLvXp4TNY1NADGOQPNjjWJ","test123"));
         System.out.println(verifySSHA("{SSHA}t14kg+LsEEtb6/3xj+PPYGHv+496XwslfHaxUQ==","welcome123!"));
@@ -1098,116 +887,6 @@ public class LdapUtil {
         Date pnow = generalizedTime(gts);
         System.out.println(pnow);        
         */
-    }
-
-    /*
-     * TODO 16601 delete 12
-     */
-    public static void moveChildren(DirContext ctxt, String oldDn, String newDn) throws ServiceException {
-        NamingEnumeration ne = null;        
-        try {
-            // find children under old DN and move them
-            SearchControls sc = new SearchControls(SearchControls.ONELEVEL_SCOPE, 0, 0, null, false, false);
-            String query = "(objectclass=*)";
-            ne = searchDir(ctxt, oldDn, query, sc);
-            NameParser ldapParser = ctxt.getNameParser("");            
-            while (ne.hasMore()) {
-                SearchResult sr = (SearchResult) ne.next();
-                String oldChildDn = sr.getNameInNamespace();
-                Name oldChildName = ldapParser.parse(oldChildDn);
-                Name newChildName = ldapParser.parse(newDn).add(oldChildName.get(oldChildName.size()-1));
-                ctxt.rename(oldChildName, newChildName);
-            }
-        } catch (NamingException e) {
-            ZimbraLog.account.warn("unable to move children", e);            
-        } finally {
-            closeEnumContext(ne);            
-        }
-    }
-
- 
-    /*
-     * TODO 16601 delete 6
-     */
-    public static NamingEnumeration<SearchResult> searchDir(DirContext ctxt, String base, String filter, SearchControls cons) throws NamingException {
-    	if (base.length() == 0) {
-    		return ctxt.search(base, filter, cons);
-    	} else {
-    	    Name cpName = new CompositeName().add(base);
-    	    return ctxt.search(cpName, filter, cons);
-    	}
-    }
-    
-   
-    /*
-     * TODO 16601 replace 7
-     */
-    public static void createEntry(DirContext ctxt, String dn, Attributes attrs, String method)
-    throws NameAlreadyBoundException, ServiceException {
-        Context newCtxt = null;
-        try {
-        	Name cpName = new CompositeName().add(dn);
-            newCtxt = ctxt.createSubcontext(cpName, attrs);
-        } catch (NameAlreadyBoundException e) {            
-            throw e;
-        } catch (NameNotFoundException e){
-            throw ServiceException.INVALID_REQUEST(method+" dn not found: "+ dnToRdnAndBaseDn(dn)[1] +e.getMessage(), e);
-        } catch (InvalidAttributeIdentifierException e) {
-            throw AccountServiceException.INVALID_ATTR_NAME(method+" invalid attr name: "+e.getMessage(), e);
-        } catch (InvalidAttributeValueException e) {
-            throw AccountServiceException.INVALID_ATTR_VALUE(method+" invalid attr value: "+e.getMessage(), e);
-        } catch (InvalidAttributesException e) {
-            throw ServiceException.INVALID_REQUEST(method+" invalid set of attributes: "+e.getMessage(), e);
-        } catch (InvalidNameException e) {
-            throw ServiceException.INVALID_REQUEST(method+" invalid name: "+e.getMessage(), e);
-        } catch (SchemaViolationException e) {
-            throw ServiceException.INVALID_REQUEST(method+" invalid schema change: "+e.getMessage(), e); 
-        } catch (NamingException e) {
-            throw ServiceException.FAILURE(method, e);
-        } finally {
-            LdapUtil.closeContext(newCtxt);
-        }
-    }
-    
-    /*
-     * TODO 16601 delete 13
-     */
-    public static void renameEntry(DirContext ctxt, String oldDn, String newDn) throws NamingException {
-    	Name oldCpName = new CompositeName().add(oldDn);
-    	Name newCpName = new CompositeName().add(newDn);
-     	ctxt.rename(oldCpName, newCpName);
-    }
-    
-    /*
-     * TODO 16601 delete 11
-     */
-    public static void unbindEntry(DirContext ctxt, String dn) throws NamingException {
-    	Name cpName = new CompositeName().add(dn);
-     	ctxt.unbind(cpName);
-    }
-    
-    /*
-     * TODO 16601 delete 5
-     */
-    public static Attributes getAttributes(DirContext ctxt, String dn) throws NamingException {
-    	Name cpName = new CompositeName().add(dn);
-    	return ctxt.getAttributes(cpName);
-    }
-    
-    /*
-     * TODO 16601 delete 9
-     */
-    public static void modifyAttributes(DirContext ctxt, String dn, ModificationItem[] mods) throws NamingException {
-    	Name cpName = new CompositeName().add(dn);
-        ctxt.modifyAttributes(cpName, mods);
-    }
-    
-    /*
-     * TODO 16601 delete 10
-     */
-    public static void modifyAttributes(DirContext ctxt, String dn, int mod_op, Attributes attrs) throws NamingException {
-       	Name cpName = new CompositeName().add(dn);
-        ctxt.modifyAttributes(cpName, mod_op, attrs);
     }
     
     //

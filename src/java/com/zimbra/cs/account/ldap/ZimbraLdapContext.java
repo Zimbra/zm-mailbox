@@ -3,6 +3,7 @@ package com.zimbra.cs.account.ldap;
 import java.io.IOException;
 import java.util.Hashtable;
 
+import javax.naming.AuthenticationException;
 import javax.naming.CompositeName;
 import javax.naming.Context;
 import javax.naming.InvalidNameException;
@@ -100,10 +101,7 @@ public class ZimbraLdapContext {
         return LC.ldap_require_tls.booleanValue();
     }
     
-    /*
-     * TODO: 16601 make private
-     */
-    static synchronized Hashtable getDefaultEnv(boolean master) {
+    private static synchronized Hashtable getDefaultEnv(boolean master) {
         Hashtable<String, String> sEnv = null;
         
         if (master) {
@@ -140,9 +138,8 @@ public class ZimbraLdapContext {
     
     /*
      * TODO: handle startTLS
-     * TODO: 16601 make private
      */
-    static synchronized Hashtable getNonPooledEnv(boolean master) {
+    private static synchronized Hashtable getNonPooledEnv(boolean master) {
         Hashtable<String, String> env = new Hashtable<String, String>(); 
         
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
@@ -164,11 +161,7 @@ public class ZimbraLdapContext {
         return env;
     }
     
-
-    /*
-     * TODO: 16601 make private
-     */
-    static String joinURLS(String urls[]) {
+    private static String joinURLS(String urls[]) {
         if (urls.length == 1) return urls[0];
         StringBuffer url = new StringBuffer();
         for (int i=0; i < urls.length; i++) {
@@ -179,17 +172,13 @@ public class ZimbraLdapContext {
     }
     
     /*
-     * TODO 16601 replace 1
-     * 
      * Zimbra LDAP
      */
-    public  ZimbraLdapContext() throws ServiceException {
+    public ZimbraLdapContext() throws ServiceException {
         this(false);
     }
 
     /*
-     * TODO 16601 replace 2
-     * 
      * Zimbra LDAP
      */
     public ZimbraLdapContext(boolean master) throws ServiceException {
@@ -197,8 +186,6 @@ public class ZimbraLdapContext {
     }
     
     /*
-     * TODO 16601 replace 3
-     * 
      * Zimbra LDAP
      */
     public ZimbraLdapContext(boolean master, boolean useConnPool) throws ServiceException {
@@ -228,21 +215,21 @@ public class ZimbraLdapContext {
     }
     
     /*
-     * TODO 16601 replace 14
+     * External LDAP
      */
     public ZimbraLdapContext(String urls[], String bindDn, String bindPassword)  throws NamingException {
         this(urls, null, bindDn, bindPassword);
     }
     
     /*
-     * TODO 16601 replace 15
+     * External LDAP
      */
     public ZimbraLdapContext(String urls[], LdapGalCredential credential)  throws NamingException {
         this(urls, credential.getAuthMech(), credential.getBindDn(), credential.getBindPassword());
     }
     
     /*
-     * TODO 16601 replace 16
+     * External LDAP
      */
     public ZimbraLdapContext(String urls[], String authMech, String bindDn, String bindPassword)  throws NamingException {
         Hashtable<String, String> env = new Hashtable<String, String>();
@@ -280,6 +267,36 @@ public class ZimbraLdapContext {
         mDirContext = new InitialLdapContext(env, null);
     }
     
+    /**
+     * authenticate to external LDAP
+     *  
+     * @param urls
+     * @param principal
+     * @param password
+     * @throws NamingException
+     */
+    static void ldapAuthenticate(String urls[], String principal, String password) throws NamingException {
+        Hashtable<String, String> env = new Hashtable<String, String>();
+        env.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
+        env.put("com.sun.jndi.ldap.read.timeout", LC.ldap_read_timeout.value());
+        
+        String derefAliases = LC.ldap_deref_aliases.value();
+        if (!StringUtil.isNullOrEmpty(derefAliases))
+            env.put("java.naming.ldap.derefAliases", LC.ldap_deref_aliases.value());
+        
+        env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+        env.put(Context.PROVIDER_URL, ZimbraLdapContext.joinURLS(urls));
+        env.put(Context.SECURITY_AUTHENTICATION, "simple");
+        env.put(Context.SECURITY_PRINCIPAL, principal);
+        env.put(Context.SECURITY_CREDENTIALS, password);
+        DirContext context = null;
+        try {
+            context = new InitialLdapContext(env, null);
+        } finally {
+            closeContext(context);
+        }
+    }
+    
     /*
      * TODO: retire after cleanup LdapUtil
      */
@@ -287,17 +304,22 @@ public class ZimbraLdapContext {
         return mDirContext;
     }
     
-    /*
-     * TODO 16601 replace 4
-     */
+    private static void closeContext(Context ctxt) {
+        try {
+            if (ctxt != null) {
+                ctxt.close();
+            }
+        } catch (NamingException e) {
+            // TODO log?
+            //e.printStackTrace();
+        }
+    }
+    
     public static void closeContext(ZimbraLdapContext zlc) {
         if (zlc != null)
             zlc.closeContext();
     }
     
-    /*
-     * TODO 16601 replace 4
-     */
     private void closeContext() {
         try {
             // stop TLS
@@ -317,33 +339,25 @@ public class ZimbraLdapContext {
         }
     }
     
-    /*
-     * TODO 16601 replace 5
-     */
+    public DirContext getSchema() throws NamingException {
+        return mDirContext.getSchema("");
+    }
+    
     public Attributes getAttributes(String dn) throws NamingException {
         Name cpName = new CompositeName().add(dn);
         return mDirContext.getAttributes(cpName);
     }
     
-    /*
-     * TODO 16601 replace 9
-     */
     public void modifyAttributes(String dn, ModificationItem[] mods) throws NamingException {
         Name cpName = new CompositeName().add(dn);
         mDirContext.modifyAttributes(cpName, mods);
     }
     
-    /*
-     * TODO 16601 replace 10
-     */
     public void replaceAttributes(String dn, Attributes attrs) throws NamingException {
         Name cpName = new CompositeName().add(dn);
         mDirContext.modifyAttributes(cpName, DirContext.REPLACE_ATTRIBUTE, attrs);
     }
     
-    /*
-     * TODO 16601 replace 6
-     */
     public NamingEnumeration<SearchResult> searchDir(String base, String filter, SearchControls cons) throws NamingException {
         if (base.length() == 0) {
             return mDirContext.search(base, filter, cons);
@@ -353,9 +367,6 @@ public class ZimbraLdapContext {
         }
     }
     
-    /*
-     * TODO 16601 replace 7
-     */
     public void createEntry(String dn, Attributes attrs, String method)
     throws NameAlreadyBoundException, ServiceException {
         Context newCtxt = null;
@@ -379,14 +390,11 @@ public class ZimbraLdapContext {
         } catch (NamingException e) {
             throw ServiceException.FAILURE(method, e);
         } finally {
-            LdapUtil.closeContext(newCtxt);
+            closeContext(newCtxt);
         }
     }
     
-    /*
-     * TODO 16601 replace 8
-     */
-    public void simpleCreate(String dn, Object objectClass, String[] attrs) throws NamingException {
+    void simpleCreate(String dn, Object objectClass, String[] attrs) throws NamingException {
         Attributes battrs = new BasicAttributes(true);
         if (objectClass instanceof String) {
             battrs.put(Provisioning.A_objectClass, objectClass);
@@ -404,17 +412,11 @@ public class ZimbraLdapContext {
         newCtxt.close();
     }
     
-    /*
-     * TODO 16601 replace 11
-     */
     public void unbindEntry(String dn) throws NamingException {
         Name cpName = new CompositeName().add(dn);
         mDirContext.unbind(cpName);
     }
     
-    /*
-     * TODO 16601 replace 12
-     */
     public void moveChildren(String oldDn, String newDn) throws ServiceException {
         NamingEnumeration ne = null;        
         try {
@@ -455,9 +457,6 @@ public class ZimbraLdapContext {
         }
     }
     
-    /*
-     * TODO 16601 replace 13
-     */
     public void renameEntry(String oldDn, String newDn) throws NamingException {
         Name oldCpName = new CompositeName().add(oldDn);
         Name newCpName = new CompositeName().add(newDn);
