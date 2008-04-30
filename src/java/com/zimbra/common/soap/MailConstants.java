@@ -321,7 +321,7 @@ public class MailConstants {
     // browse
     public static final String A_BROWSE_BY = "browseBy";
     public static final String A_BROWSE_DOMAIN_HEADER = "h";
-    public static final String A_FREQUENCY = "frq";
+    public static final String A_FREQUENCY = "freq";
     public static final String A_MAX_TO_RETURN = "maxToReturn";
     public static final String A_REGEX = "regex";
 
