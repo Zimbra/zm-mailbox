@@ -196,14 +196,14 @@ public class ZimbraLdapContext {
             long start = ZimbraPerf.STOPWATCH_LDAP_DC.start();
             
             if (ZimbraLog.ldap.isDebugEnabled())
-                ZimbraLog.ldap.debug("get dir ctxt: " + "url=" + env.get(Context.PROVIDER_URL) + ", binddn="+ env.get(Context.SECURITY_PRINCIPAL) + ", startTLS=" + startTLS);
+                ZimbraLog.ldap.debug("GET DIR CTXT: " + "url=" + env.get(Context.PROVIDER_URL) + ", binddn="+ env.get(Context.SECURITY_PRINCIPAL) + ", startTLS=" + startTLS);
             mDirContext = new InitialLdapContext(env, null);
                         
             if (startTLS) {
                 // start TLS
                 mTlsResp = (StartTlsResponse) mDirContext.extendedOperation(new StartTlsRequest());
                 
-                ZimbraLog.ldap.debug("start TLS negotiate");
+                ZimbraLog.ldap.debug("START TLS");
                 mTlsResp.negotiate();
 
                 mDirContext.addToEnvironment(Context.SECURITY_AUTHENTICATION, "simple");
@@ -330,7 +330,7 @@ public class ZimbraLdapContext {
         try {
             // stop TLS
             if (mTlsResp != null) {
-                ZimbraLog.ldap.debug("stop TLS");
+                ZimbraLog.ldap.debug("STOP TLS");
                 mTlsResp.close();
             }
         } catch (IOException e) {
@@ -340,7 +340,7 @@ public class ZimbraLdapContext {
         try {
             // close the dir context
             if (mDirContext != null) {
-                ZimbraLog.ldap.debug("close dir ctxt");
+                ZimbraLog.ldap.debug("CLOSE DIR CTXT");
                 mDirContext.close();
             }
             
@@ -357,7 +357,7 @@ public class ZimbraLdapContext {
         Name cpName = new CompositeName().add(dn);
         
         if (ZimbraLog.ldap.isDebugEnabled())
-            ZimbraLog.ldap.debug("get attrs: dn=" + dn);
+            ZimbraLog.ldap.debug("GET ATTRS: dn=" + dn);
         return mDirContext.getAttributes(cpName);
     }
     
@@ -365,7 +365,7 @@ public class ZimbraLdapContext {
         Name cpName = new CompositeName().add(dn);
         
         if (ZimbraLog.ldap.isDebugEnabled())
-            ZimbraLog.ldap.debug("modify attrs: dn=" + dn + ", mods=" + dumpMods(mods));
+            ZimbraLog.ldap.debug("MODIFY ATTRS: dn=" + dn + ", mods=" + dumpMods(mods));
         mDirContext.modifyAttributes(cpName, mods);
     }
     
@@ -373,13 +373,13 @@ public class ZimbraLdapContext {
         Name cpName = new CompositeName().add(dn);
         
         if (ZimbraLog.ldap.isDebugEnabled())
-            ZimbraLog.ldap.debug("replace attrs: dn=" + dn + ", mods=" + attrs.toString());
+            ZimbraLog.ldap.debug("REPLACE ATTRS: dn=" + dn + ", mods=" + attrs.toString());
         mDirContext.modifyAttributes(cpName, DirContext.REPLACE_ATTRIBUTE, attrs);
     }
     
     public NamingEnumeration<SearchResult> searchDir(String base, String filter, SearchControls cons) throws NamingException {
         if (ZimbraLog.ldap.isDebugEnabled())
-            ZimbraLog.ldap.debug("search: base=" + base + ", filter=" + filter);
+            ZimbraLog.ldap.debug("SEARCH: base=" + base + ", filter=" + filter);
         
         if (base.length() == 0) {
             return mDirContext.search(base, filter, cons);
@@ -395,7 +395,7 @@ public class ZimbraLdapContext {
             Name cpName = new CompositeName().add(dn);
             
             if (ZimbraLog.ldap.isDebugEnabled())
-                ZimbraLog.ldap.debug("create entry: method=" + method + ", dn=" + dn + ", attrs=" + attrs.toString());
+                ZimbraLog.ldap.debug("CREATE ENTRY: method=" + method + ", dn=" + dn + ", attrs=" + attrs.toString());
             newCtxt = mDirContext.createSubcontext(cpName, attrs);
         } catch (NameAlreadyBoundException e) {            
             throw e;
@@ -434,7 +434,7 @@ public class ZimbraLdapContext {
         Name cpName = new CompositeName().add(dn);
         
         if (ZimbraLog.ldap.isDebugEnabled())
-            ZimbraLog.ldap.debug("create entry: dn=" + dn + ", attrs=" + battrs.toString());
+            ZimbraLog.ldap.debug("CREATE ENTRY: dn=" + dn + ", attrs=" + battrs.toString());
         Context newCtxt = mDirContext.createSubcontext(cpName, battrs);
         newCtxt.close();
     }
@@ -443,7 +443,7 @@ public class ZimbraLdapContext {
         Name cpName = new CompositeName().add(dn);
         
         if (ZimbraLog.ldap.isDebugEnabled())
-            ZimbraLog.ldap.debug("delete entry: dn=" + dn);
+            ZimbraLog.ldap.debug("DELETE ENTRY: dn=" + dn);
         mDirContext.unbind(cpName);
     }
     
@@ -462,7 +462,7 @@ public class ZimbraLdapContext {
                 Name newChildName = ldapParser.parse(newDn).add(oldChildName.get(oldChildName.size()-1));
                 
                 if (ZimbraLog.ldap.isDebugEnabled())
-                    ZimbraLog.ldap.debug("rename entry: oldDn=" + oldDn + ", newDn=" + newDn);
+                    ZimbraLog.ldap.debug("RENAME ENTRY: old=" + oldChildName + ", new=" + newChildName);
                 mDirContext.rename(oldChildName, newChildName);
             }
         } catch (NamingException e) {
@@ -495,7 +495,7 @@ public class ZimbraLdapContext {
         Name newCpName = new CompositeName().add(newDn);
         
         if (ZimbraLog.ldap.isDebugEnabled())
-            ZimbraLog.ldap.debug("rename entry: oldDn=" + oldDn + ", newDn=" + newDn);
+            ZimbraLog.ldap.debug("RENAME ENTRY: old=" + oldCpName + ", new=" + newCpName);
         mDirContext.rename(oldCpName, newCpName);
     }
     
