@@ -45,7 +45,7 @@ import java.io.InputStream;
 
 public class SoapHttpTransport extends SoapTransport {
 
-    public static final String X_ORIGINATING_IP = "X-Originating-IP";
+    private static final String X_ORIGINATING_IP = "X-Originating-IP";
     
     private boolean mKeepAlive;
     private int mRetryCount;
