@@ -3,7 +3,6 @@ package com.zimbra.cs.account.ldap;
 import java.io.IOException;
 import java.util.Hashtable;
 
-import javax.naming.AuthenticationException;
 import javax.naming.CompositeName;
 import javax.naming.Context;
 import javax.naming.InvalidNameException;
@@ -118,7 +117,7 @@ public class ZimbraLdapContext {
         sEnv.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
         sEnv.put("com.sun.jndi.ldap.read.timeout", LC.ldap_read_timeout.value());
         
-        // enable connection pooling
+        // connection pooling
         if (master)
             sEnv.put("com.sun.jndi.ldap.connect.pool", LC.ldap_connect_pool_master.value());
         else
@@ -127,11 +126,11 @@ public class ZimbraLdapContext {
         // env.put("java.naming.ldap.derefAliases", "never");
         // default: env.put("java.naming.ldap.version", "3");
         
-        // TODO: the folowing 3 lines can be, and should be removed after all 
-        // functions have been migrated to use ZimbraLdapContext
-        sEnv.put(Context.SECURITY_AUTHENTICATION, "simple");
-        sEnv.put(Context.SECURITY_PRINCIPAL, LC.zimbra_ldap_userdn.value());
-        sEnv.put(Context.SECURITY_CREDENTIALS, LC.zimbra_ldap_password.value());
+        if (!requireStartTLS()) {
+            sEnv.put(Context.SECURITY_AUTHENTICATION, "simple");
+            sEnv.put(Context.SECURITY_PRINCIPAL, LC.zimbra_ldap_userdn.value());
+            sEnv.put(Context.SECURITY_CREDENTIALS, LC.zimbra_ldap_password.value());
+        }
         
         return sEnv;
     }
@@ -190,15 +189,21 @@ public class ZimbraLdapContext {
      */
     public ZimbraLdapContext(boolean master, boolean useConnPool) throws ServiceException {
         try {
-            long start = ZimbraPerf.STOPWATCH_LDAP_DC.start();
-            if (useConnPool)
-                mDirContext = new InitialLdapContext(getDefaultEnv(master), null);
-            else
-                mDirContext = new InitialLdapContext(getNonPooledEnv(master), null);
+            Hashtable env = useConnPool? getDefaultEnv(master) : getNonPooledEnv(master);
+            boolean startTLS = requireStartTLS();
             
-            if (requireStartTLS()) {
+            
+            long start = ZimbraPerf.STOPWATCH_LDAP_DC.start();
+            
+            if (ZimbraLog.ldap.isDebugEnabled())
+                ZimbraLog.ldap.debug("get dir ctxt: " + "url=" + env.get(Context.PROVIDER_URL) + ", binddn="+ env.get(Context.SECURITY_PRINCIPAL) + ", startTLS=" + startTLS);
+            mDirContext = new InitialLdapContext(env, null);
+                        
+            if (startTLS) {
                 // start TLS
                 mTlsResp = (StartTlsResponse) mDirContext.extendedOperation(new StartTlsRequest());
+                
+                ZimbraLog.ldap.debug("start TLS negotiate");
                 mTlsResp.negotiate();
 
                 mDirContext.addToEnvironment(Context.SECURITY_AUTHENTICATION, "simple");
@@ -321,18 +326,23 @@ public class ZimbraLdapContext {
     }
     
     private void closeContext() {
+        
         try {
             // stop TLS
-            if (mTlsResp != null)
+            if (mTlsResp != null) {
+                ZimbraLog.ldap.debug("stop TLS");
                 mTlsResp.close();
+            }
         } catch (IOException e) {
             ZimbraLog.account.error("failed to close tls", e);
         }
         
         try {
             // close the dir context
-            if (mDirContext != null)
+            if (mDirContext != null) {
+                ZimbraLog.ldap.debug("close dir ctxt");
                 mDirContext.close();
+            }
             
         } catch (NamingException e) {
             ZimbraLog.account.error("failed to close dir context", e);
@@ -345,20 +355,32 @@ public class ZimbraLdapContext {
     
     public Attributes getAttributes(String dn) throws NamingException {
         Name cpName = new CompositeName().add(dn);
+        
+        if (ZimbraLog.ldap.isDebugEnabled())
+            ZimbraLog.ldap.debug("get attrs: dn=" + dn);
         return mDirContext.getAttributes(cpName);
     }
     
     public void modifyAttributes(String dn, ModificationItem[] mods) throws NamingException {
         Name cpName = new CompositeName().add(dn);
+        
+        if (ZimbraLog.ldap.isDebugEnabled())
+            ZimbraLog.ldap.debug("modify attrs: dn=" + dn + ", mods=" + dumpMods(mods));
         mDirContext.modifyAttributes(cpName, mods);
     }
     
     public void replaceAttributes(String dn, Attributes attrs) throws NamingException {
         Name cpName = new CompositeName().add(dn);
+        
+        if (ZimbraLog.ldap.isDebugEnabled())
+            ZimbraLog.ldap.debug("replace attrs: dn=" + dn + ", mods=" + attrs.toString());
         mDirContext.modifyAttributes(cpName, DirContext.REPLACE_ATTRIBUTE, attrs);
     }
     
     public NamingEnumeration<SearchResult> searchDir(String base, String filter, SearchControls cons) throws NamingException {
+        if (ZimbraLog.ldap.isDebugEnabled())
+            ZimbraLog.ldap.debug("search: base=" + base + ", filter=" + filter);
+        
         if (base.length() == 0) {
             return mDirContext.search(base, filter, cons);
         } else {
@@ -367,11 +389,13 @@ public class ZimbraLdapContext {
         }
     }
     
-    public void createEntry(String dn, Attributes attrs, String method)
-    throws NameAlreadyBoundException, ServiceException {
+    public void createEntry(String dn, Attributes attrs, String method) throws NameAlreadyBoundException, ServiceException {
         Context newCtxt = null;
         try {
             Name cpName = new CompositeName().add(dn);
+            
+            if (ZimbraLog.ldap.isDebugEnabled())
+                ZimbraLog.ldap.debug("create entry: method=" + method + ", dn=" + dn + ", attrs=" + attrs.toString());
             newCtxt = mDirContext.createSubcontext(cpName, attrs);
         } catch (NameAlreadyBoundException e) {            
             throw e;
@@ -408,12 +432,18 @@ public class ZimbraLdapContext {
         for (int i=0; i < attrs.length; i += 2)
             battrs.put(attrs[i], attrs[i+1]);
         Name cpName = new CompositeName().add(dn);
+        
+        if (ZimbraLog.ldap.isDebugEnabled())
+            ZimbraLog.ldap.debug("create entry: dn=" + dn + ", attrs=" + battrs.toString());
         Context newCtxt = mDirContext.createSubcontext(cpName, battrs);
         newCtxt.close();
     }
     
     public void unbindEntry(String dn) throws NamingException {
         Name cpName = new CompositeName().add(dn);
+        
+        if (ZimbraLog.ldap.isDebugEnabled())
+            ZimbraLog.ldap.debug("delete entry: dn=" + dn);
         mDirContext.unbind(cpName);
     }
     
@@ -430,6 +460,9 @@ public class ZimbraLdapContext {
                 String oldChildDn = sr.getNameInNamespace();
                 Name oldChildName = ldapParser.parse(oldChildDn);
                 Name newChildName = ldapParser.parse(newDn).add(oldChildName.get(oldChildName.size()-1));
+                
+                if (ZimbraLog.ldap.isDebugEnabled())
+                    ZimbraLog.ldap.debug("rename entry: oldDn=" + oldDn + ", newDn=" + newDn);
                 mDirContext.rename(oldChildName, newChildName);
             }
         } catch (NamingException e) {
@@ -460,6 +493,9 @@ public class ZimbraLdapContext {
     public void renameEntry(String oldDn, String newDn) throws NamingException {
         Name oldCpName = new CompositeName().add(oldDn);
         Name newCpName = new CompositeName().add(newDn);
+        
+        if (ZimbraLog.ldap.isDebugEnabled())
+            ZimbraLog.ldap.debug("rename entry: oldDn=" + oldDn + ", newDn=" + newDn);
         mDirContext.rename(oldCpName, newCpName);
     }
     
@@ -480,13 +516,19 @@ public class ZimbraLdapContext {
         }
         return null;
     }
+    
+    private static String dumpMods(ModificationItem[] mods) {
+        StringBuffer sb = new StringBuffer();
+        for (int i=0; i<mods.length; i++)
+            sb.append(mods[i].toString() + ", ");
+        return sb.toString();
+    }
 
     /**
      * @param args
      */
-    public static void main(String[] args) {
-        // TODO Auto-generated method stub
-
+    public static void main(String[] args) throws Exception {
+        
     }
 
 }
