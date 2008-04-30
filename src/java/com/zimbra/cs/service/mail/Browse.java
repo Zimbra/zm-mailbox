@@ -74,7 +74,7 @@ public class Browse extends MailDocumentHandler  {
                     String flags = domain.getHeaderFlags();
                     if (!flags.equals(""))
                         e.addAttribute(MailConstants.A_BROWSE_DOMAIN_HEADER, flags);
-                    e.addAttribute("freq", domain.freq);
+                    e.addAttribute(MailConstants.A_FREQUENCY, domain.freq);
                 } else if (o instanceof BrowseTerm) {
                     BrowseTerm bt = (BrowseTerm)o;
                     Element e = response.addElement(MailConstants.E_BROWSE_DATA).setText(bt.term);
