@@ -238,6 +238,8 @@ public class ProxyServlet extends ZimbraServlet {
             Header ctHeader = method.getResponseHeader("Content-Type");
             String contentType = ctHeader == null || ctHeader.getValue() == null ? DEFAULT_CTYPE : ctHeader.getValue();
 
+            InputStream targetResponseBody = method.getResponseBodyAsStream();
+            
             if (asUpload) {
                 String filename = req.getParameter(FILENAME_PARAM);
                 if (filename == null || filename.equals(""))
@@ -248,15 +250,19 @@ public class ProxyServlet extends ZimbraServlet {
                     filename = "unknown";
 
                 List<Upload> uploads = null;
-                try {
-                    Upload up = FileUploadServlet.saveUpload(method.getResponseBodyAsStream(), filename, contentType, authToken.getAccountId());
-                    uploads = Arrays.asList(up);
-                } catch (ServiceException e) {
-                    if (e.getCode().equals(MailServiceException.UPLOAD_REJECTED))
-                        status = HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE;
-                    else
-                        status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+                
+                if (targetResponseBody != null) {
+                    try {
+                        Upload up = FileUploadServlet.saveUpload(targetResponseBody, filename, contentType, authToken.getAccountId());
+                        uploads = Arrays.asList(up);
+                    } catch (ServiceException e) {
+                        if (e.getCode().equals(MailServiceException.UPLOAD_REJECTED))
+                            status = HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE;
+                        else
+                            status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+                    }
                 }
+
                 resp.setStatus(status);
                 FileUploadServlet.sendResponse(resp, status, req.getParameter(FORMAT_PARAM), null, uploads, null);
             } else {
@@ -265,7 +271,8 @@ public class ProxyServlet extends ZimbraServlet {
                 for (Header h : method.getResponseHeaders())
                     if (canProxyHeader(h.getName()))
                         resp.addHeader(h.getName(), h.getValue());
-                ByteUtil.copy(method.getResponseBodyAsStream(), false, resp.getOutputStream(), false);
+                if (targetResponseBody != null)
+                	ByteUtil.copy(targetResponseBody, true, resp.getOutputStream(), true);
             }
         } finally {
             if (method != null)
