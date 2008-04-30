@@ -269,6 +269,12 @@ public class ZimbraLdapContext {
         
         // enable connection pooling
         env.put("com.sun.jndi.ldap.connect.pool", "true");
+        
+        // TODO: add ldap attr for external LDAP start TLS and pass the param in
+        boolean startTLS = false;
+        if (ZimbraLog.ldap.isDebugEnabled())
+            ZimbraLog.ldap.debug("GET DIR CTXT(external): " + "url=" + env.get(Context.PROVIDER_URL) + ", binddn="+ env.get(Context.SECURITY_PRINCIPAL) + ", authMech=" + env.get(Context.SECURITY_AUTHENTICATION) + ", startTLS=" + startTLS);
+
         mDirContext = new InitialLdapContext(env, null);
     }
     
@@ -294,8 +300,15 @@ public class ZimbraLdapContext {
         env.put(Context.SECURITY_AUTHENTICATION, "simple");
         env.put(Context.SECURITY_PRINCIPAL, principal);
         env.put(Context.SECURITY_CREDENTIALS, password);
+        
+        // TODO: add ldap attr for external LDAP start TLS and pass the param in
+        boolean startTLS = false;
+        
         DirContext context = null;
         try {
+            if (ZimbraLog.ldap.isDebugEnabled())
+                ZimbraLog.ldap.debug("GET DIR CTXT(external): " + "url=" + env.get(Context.PROVIDER_URL) + ", binddn="+ env.get(Context.SECURITY_PRINCIPAL) + ", authMech=" + env.get(Context.SECURITY_AUTHENTICATION) + ", startTLS=" + startTLS);
+
             context = new InitialLdapContext(env, null);
         } finally {
             closeContext(context);
@@ -312,6 +325,7 @@ public class ZimbraLdapContext {
     private static void closeContext(Context ctxt) {
         try {
             if (ctxt != null) {
+                ZimbraLog.ldap.debug("CLOSE DIR CTXT");
                 ctxt.close();
             }
         } catch (NamingException e) {

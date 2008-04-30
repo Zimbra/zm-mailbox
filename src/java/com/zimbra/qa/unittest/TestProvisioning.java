@@ -1807,8 +1807,8 @@ public class TestProvisioning extends TestCase {
     }
    
     public static void main(String[] args) throws Exception {
-        // CliUtil.toolSetup("INFO");  // need to invoke this or else soap provisioning can't talk to server because SSL is not inited
-        CliUtil.toolSetup();
+        // CliUtil.toolSetup("INFO");
+        CliUtil.toolSetup("DEBUG");
         // TestUtil.runTest(new TestSuite(TestProvisioning.class));
 
         TestProvisioning t = new TestProvisioning();
