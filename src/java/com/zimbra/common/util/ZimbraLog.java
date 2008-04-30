@@ -181,6 +181,11 @@ public class ZimbraLog {
     public static final Log gal = LogFactory.getLog("zimbra.gal");
     
     /**
+     * the "zimbra.ldap" logger. For ldap-related events.
+     */
+    public static final Log ldap = LogFactory.getLog("zimbra.ldap");
+    
+    /**
      * the "zimbra.security" logger. For security-related events
      */
     public static final Log security = LogFactory.getLog("zimbra.security");    
