@@ -250,7 +250,7 @@ public class SoapServlet extends ZimbraServlet {
         String remoteAddr = req.getRemoteAddr();
         context.put(SoapEngine.SOAP_REQUEST_IP, remoteAddr); 
         
-        String origIp = req.getHeader(SoapHttpTransport.X_ORIGINATING_IP);
+        String origIp = req.getHeader(X_ORIGINATING_IP_HEADER);
         if (TrustedNetwork.isIpTrusted(remoteAddr)) {
             context.put(SoapEngine.ORIG_REQUEST_IP, origIp);
             remoteAddr = origIp;
