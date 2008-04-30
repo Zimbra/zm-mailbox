@@ -51,6 +51,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.TrustedNetwork;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthContext;
 import com.zimbra.cs.account.AuthToken;
@@ -88,7 +89,7 @@ public class ZimbraServlet extends HttpServlet {
     protected static final String WWW_AUTHENTICATE_HEADER = "WWW-Authenticate";
     protected String getRealmHeader()  { return "BASIC realm=\"Zimbra\""; }
     
-    protected static final String X_ORIGINATING_IP_HEADER = "X-Originating-IP";
+    protected static final String X_ORIGINATING_IP_HEADER = LC.zimbra_http_originating_ip_header.value();
     
     protected static final String ZIMBRA_FAULT_CODE_HEADER    = "X-Zimbra-Fault-Code";
     protected static final String ZIMBRA_FAULT_MESSAGE_HEADER = "X-Zimbra-Fault-Message";
