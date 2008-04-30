@@ -141,6 +141,8 @@ public class LC {
     public static final KnownKey zimbra_im_chat_flush_time;
     public static final KnownKey zimbra_im_chat_close_time;
 
+    public static final KnownKey zimbra_http_originating_ip_header;
+
     public static final KnownKey zimbra_session_limit_imap;
     public static final KnownKey zimbra_session_timeout_soap;
     public static final KnownKey zimbra_session_max_pending_notifications;
@@ -518,6 +520,8 @@ public class LC {
 
         zimbra_im_chat_flush_time = new KnownKey("zimbra_im_chat_flush_time", "300");
         zimbra_im_chat_close_time = new KnownKey("zimbra_im_chat_close_time", "3600");
+
+        zimbra_http_originating_ip_header = new KnownKey("zimbra_originating_ip_header", "X-Originating-IP");
 
         zimbra_session_limit_imap = new KnownKey("zimbra_session_limit_imap");
         zimbra_session_limit_imap.setDefault("5");
