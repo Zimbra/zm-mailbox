@@ -54,7 +54,7 @@ public class GZIPFilter implements Filter {
     private List<Pattern> mNoCompressionUserAgents;
     private LRUMap mUAMap;
 
-    public void init(FilterConfig filterConfig) {
+    public void init(FilterConfig filterConfig) throws ServletException {
         mNoCompressionUserAgents = new ArrayList<Pattern>();
 
         String mimeTypes = filterConfig.getInitParameter(P_COMPRESSABLE_MIME_TYPES);
