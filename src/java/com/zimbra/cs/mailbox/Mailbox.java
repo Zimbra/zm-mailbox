@@ -3593,7 +3593,7 @@ public class Mailbox {
      * 
      * @throws ServiceException
      */
-    public void redoIndexItem(MailItem item, boolean deleteFirst, int itemId, byte itemType, long timestamp, 
+    synchronized public void redoIndexItem(MailItem item, boolean deleteFirst, int itemId, byte itemType, long timestamp, 
         boolean noRedo, List<org.apache.lucene.document.Document> docList)
     throws IOException, ServiceException {
         IndexItem redo = null;
