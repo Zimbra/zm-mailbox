@@ -1208,7 +1208,8 @@ public class LdapProvisioning extends Provisioning {
                  */
                 Attributes attrs = zlc.getAttributes(aliasDn);
                 Alias aliasEntry = makeAlias(aliasDn, attrs, this);
-                if (aliasEntry.isDangling()) {
+                NamedEntry targetEntry = aliasEntry.searchTarget(false);
+                if (targetEntry == null) {
                     // remove the dangling alias 
                     removeAliasInternal(null, alias, null);
                     
@@ -1217,8 +1218,20 @@ public class LdapProvisioning extends Provisioning {
                             new String[] { Provisioning.A_uid, aliasName, 
                                            Provisioning.A_zimbraId, aliasUuid,
                                            Provisioning.A_zimbraAliasTargetId, targetEntryId} );
+                } else if (targetEntryId.equals(targetEntry.getId())) {
+                    // the alias target points this account/DL
+                    Set<String> mailAliases = entry.getMultiAttrSet(Provisioning.A_zimbraMailAlias);
+                    Set<String> mails = entry.getMultiAttrSet(Provisioning.A_mail);
+                    if (mailAliases != null && mailAliases.contains(alias) &&
+                        mails != null && mails.contains(alias))
+                        throw e;
+                    else
+                        ZimbraLog.account.warn("alias entry exists at " + aliasDn + 
+                                               ", but either mail or zimbraMailAlias of the target does not contain " + alias +
+                                               ", adding " + alias + " to entry " + entry.getName());
                 } else {
-                    // not dangling, rethrow the naming exception
+                    // not dangling, neither is the target the same entry as the account/DL
+                    // for which the alias is being added for, rethrow the naming exception
                     throw e;
                 }
             }
@@ -1260,14 +1273,12 @@ public class LdapProvisioning extends Provisioning {
             String aliasName = parts[0];
             String aliasDomain = parts[1];
             
-            if (entry != null) { 
-                boolean found = false;
-                for (int i=0; !found && i < aliases.length; i++) {
-                    found = aliases[i].equalsIgnoreCase(alias);
+            boolean missing = false;
+            if (entry != null) {
+                missing = true;
+                for (int i=0; missing && i < aliases.length; i++) {
+                    missing = !(aliases[i].equalsIgnoreCase(alias));
                 }
-            
-                if (!found)
-                    throw AccountServiceException.NO_SUCH_ALIAS(alias);
             }
 
             Domain domain = getDomainByAsciiName(aliasDomain, zlc);
@@ -1309,10 +1320,16 @@ public class LdapProvisioning extends Provisioning {
                 if ( a != null && (entry==null || ((String)a.get()).equals(entry.getId())) ) {
                 	zlc.unbindEntry(aliasDn);
                 } else {
-                    ZimbraLog.account.warn("unable to remove alias object: "+alias);
+                    if (missing)
+                        throw AccountServiceException.NO_SUCH_ALIAS(alias);
+                    else
+                        ZimbraLog.account.warn("unable to remove alias object: "+alias);
                 }                
             } catch (NameNotFoundException e) {
-                ZimbraLog.account.warn("unable to remove alias object: "+alias);                
+                if (missing)
+                    throw AccountServiceException.NO_SUCH_ALIAS(alias);
+                else
+                    ZimbraLog.account.warn("unable to remove alias object: "+alias);                
             }
         } catch (NamingException e) {
             ZimbraLog.account.error("unable to remove alias: "+alias, e);                
