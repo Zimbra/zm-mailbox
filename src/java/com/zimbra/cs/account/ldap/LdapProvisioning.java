@@ -2604,25 +2604,30 @@ public class LdapProvisioning extends Provisioning {
               accountStatus.equals(Provisioning.ACCOUNT_STATUS_LOCKOUT)))
             throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), AuthMechanism.namePassedIn(authCtxt), "account(or domain) status is "+accountStatus);
     }
-    
+
     @Override
     public void preAuthAccount(Account acct, String acctValue, String acctBy, long timestamp, long expires, String preAuth, Map<String, Object> authCtxt) throws ServiceException {
+        preAuthAccount(acct, acctValue, acctBy, timestamp, expires, preAuth, false, authCtxt);
+    }
+    
+    @Override
+    public void preAuthAccount(Account acct, String acctValue, String acctBy, long timestamp, long expires, String preAuth, boolean admin, Map<String, Object> authCtxt) throws ServiceException {
         try {
-            preAuth(acct, acctValue, acctBy, timestamp, expires, preAuth, authCtxt);
+            preAuth(acct, acctValue, acctBy, timestamp, expires, preAuth, admin, authCtxt);
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "PreAuth","account", acct.getName()}));
+                    new String[] {"cmd", "PreAuth","account", acct.getName(), "admin", admin+""}));
         } catch (AuthFailedServiceException e) {
             ZimbraLog.security.warn(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "PreAuth","account", acct.getName(), "error", e.getMessage()+e.getReason(", %s")}));             
+                    new String[] {"cmd", "PreAuth","account", acct.getName(), "admin", admin+"", "error", e.getMessage()+e.getReason(", %s")}));
             throw e;
         } catch (ServiceException e) {
             ZimbraLog.security.warn(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "PreAuth","account", acct.getName(), "error", e.getMessage()}));             
+                    new String[] {"cmd", "PreAuth","account", acct.getName(), "admin", admin+"", "error", e.getMessage()}));             
             throw e;
         }
     }
     
-    private void preAuth(Account acct, String acctValue, String acctBy, long timestamp, long expires, String preAuth, Map<String, Object> authCtxt) throws ServiceException {
+    private void preAuth(Account acct, String acctValue, String acctBy, long timestamp, long expires, String preAuth, boolean admin, Map<String, Object> authCtxt) throws ServiceException {
         
         checkAccountStatus(acct, authCtxt);
         if (preAuth == null || preAuth.length() == 0)
@@ -2647,6 +2652,7 @@ public class LdapProvisioning extends Provisioning {
         // compute expected preAuth
         HashMap<String,String> params = new HashMap<String,String>();
         params.put("account", acctValue);
+        if (admin) params.put("admin", "1");
         params.put("by", acctBy);
         params.put("timestamp", timestamp+"");
         params.put("expires", expires+"");

@@ -53,6 +53,7 @@ public class PreAuthServlet extends ZimbraServlet {
     public static final String PARAM_PREAUTH = "preauth";
     public static final String PARAM_AUTHTOKEN = "authtoken";
     public static final String PARAM_ACCOUNT = "account";
+    public static final String PARAM_ADMIN = "admin";
     public static final String PARAM_ISREDIRECT = "isredirect";
     public static final String PARAM_BY = "by";
     public static final String PARAM_REDIRECT_URL = "redirectURL";
@@ -65,6 +66,7 @@ public class PreAuthServlet extends ZimbraServlet {
         sPreAuthParams.add(PARAM_PREAUTH);
         sPreAuthParams.add(PARAM_AUTHTOKEN);
         sPreAuthParams.add(PARAM_ACCOUNT);
+        sPreAuthParams.add(PARAM_ADMIN);
         sPreAuthParams.add(PARAM_ISREDIRECT);
         sPreAuthParams.add(PARAM_BY);
         sPreAuthParams.add(PARAM_TIMESTAMP);
@@ -108,13 +110,14 @@ public class PreAuthServlet extends ZimbraServlet {
             AuthToken authToken = null;
             if (rawAuthToken != null)
                 authToken = AuthProvider.getAuthToken(rawAuthToken);
-            
+
             if (isRedirect.equals("1") && rawAuthToken != null) {
                 setCookieAndRedirect(req, resp, authToken);
             } else if (rawAuthToken != null) {
                 // see if we need a redirect to the correct server
+                boolean isAdmin = authToken != null && (authToken.isDomainAdmin() || authToken.isAdmin());
                 Account acct = prov.get(AccountBy.id, authToken.getAccountId(), authToken);
-                if (Provisioning.onLocalServer(acct) || revPxyMode) {
+                if (isAdmin || Provisioning.onLocalServer(acct) || revPxyMode) {
                     setCookieAndRedirect(req, resp, authToken);
                 } else {
                     redirectToCorrectServer(req, resp, acct, rawAuthToken);
@@ -123,6 +126,8 @@ public class PreAuthServlet extends ZimbraServlet {
                 String preAuth = getRequiredParam(req, resp, PARAM_PREAUTH);            
                 String account = getRequiredParam(req, resp, PARAM_ACCOUNT);
                 String accountBy = getOptionalParam(req, PARAM_BY, AccountBy.name.name());
+
+                boolean admin = getOptionalParam(req, PARAM_ADMIN, "0").equals("1") && isAdminRequest(req);
                 long timestamp = Long.parseLong(getRequiredParam(req, resp, PARAM_TIMESTAMP));
                 long expires = Long.parseLong(getRequiredParam(req, resp, PARAM_EXPIRES));
             
@@ -131,16 +136,31 @@ public class PreAuthServlet extends ZimbraServlet {
             
                 if (acct == null)
                     throw AuthFailedServiceException.AUTH_FAILED(account, account, "account not found");
-                
+
+                if (admin) {
+                    boolean isDomainAdminAccount = acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
+                    boolean isAdminAccount = acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);
+                    boolean ok = (isDomainAdminAccount || isAdminAccount);
+                    if (!ok)
+                        throw ServiceException.PERM_DENIED("not an admin account");
+                }
+
                 Map<String, Object> authCtxt = new HashMap<String, Object>();
                 authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, getRemoteIp(req));
                 authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, account);
-                prov.preAuthAccount(acct, account, accountBy, timestamp, expires, preAuth, authCtxt);
+                prov.preAuthAccount(acct, account, accountBy, timestamp, expires, preAuth, admin, authCtxt);
             
-                AuthToken at = (expires ==  0) ? AuthToken.getAuthToken(acct) : AuthToken.getAuthToken(acct, expires);
+                AuthToken at;
+
+                if (admin) {
+                    at = (expires ==  0) ? AuthToken.getAuthToken(acct, admin) : AuthToken.getAuthToken(acct, expires, admin, null);
+                } else {
+                    at = (expires ==  0) ? AuthToken.getAuthToken(acct) : AuthToken.getAuthToken(acct, expires);
+                }
+
                 try {
                     rawAuthToken = at.getEncoded();
-                    if (Provisioning.onLocalServer(acct) || revPxyMode) {
+                    if (Provisioning.onLocalServer(acct) || revPxyMode || admin) {
                         setCookieAndRedirect(req, resp, at);
                     } else {
                         redirectToCorrectServer(req, resp, acct, rawAuthToken);
@@ -191,9 +211,11 @@ public class PreAuthServlet extends ZimbraServlet {
     }
 
     private static final String DEFAULT_MAIL_URL = "/zimbra";
+    private static final String DEFAULT_ADMIN_URL = "/zimbraAdmin";
 
     private void setCookieAndRedirect(HttpServletRequest req, HttpServletResponse resp, AuthToken authToken) throws IOException, ServiceException {
-        authToken.encode(resp, false);
+        boolean isAdmin = authToken.isDomainAdmin() || authToken.isAdmin();
+        authToken.encode(resp, isAdmin);
 
         String redirectURL = getOptionalParam(req, PARAM_REDIRECT_URL, null);
         if (redirectURL != null) {
@@ -203,12 +225,18 @@ public class PreAuthServlet extends ZimbraServlet {
             addNonPreAuthParams(req, sb, true);
             Provisioning prov = Provisioning.getInstance();
             Server server = prov.getLocalServer();
-            String redirectUrl = server.getAttr(Provisioning.A_zimbraMailURL, DEFAULT_MAIL_URL);
-            // NB: do we really have to add the mail app to the end?
-            if (redirectUrl.charAt(redirectUrl.length() - 1) == '/') {
-                redirectUrl += "mail";
+            String redirectUrl;
+
+            if (isAdmin) {
+                redirectUrl = server.getAttr(Provisioning.A_zimbraAdminURL, DEFAULT_ADMIN_URL);
             } else {
-                redirectUrl += "/mail";
+                redirectUrl = server.getAttr(Provisioning.A_zimbraMailURL, DEFAULT_MAIL_URL);
+                // NB: do we really have to add the mail app to the end?
+                if (redirectUrl.charAt(redirectUrl.length() - 1) == '/') {
+                    redirectUrl += "mail";
+                } else {
+                    redirectUrl += "/mail";
+                }
             }
             if (sb.length() > 0) {
                 resp.sendRedirect(redirectUrl + "?" + sb.toString());
