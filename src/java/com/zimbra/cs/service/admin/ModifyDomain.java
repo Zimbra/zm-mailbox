@@ -37,6 +37,10 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class ModifyDomain extends AdminDocumentHandler {
 
+    public boolean domainAuthSufficient(Map context) {
+        return true;
+    }
+    
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
         ZimbraSoapContext lc = getZimbraSoapContext(context);
@@ -48,6 +52,9 @@ public class ModifyDomain extends AdminDocumentHandler {
 	    Domain domain = prov.get(DomainBy.id, id);
         if (domain == null)
             throw AccountServiceException.NO_SUCH_DOMAIN(id);
+        
+        if (!canAccessDomain(lc, domain)) 
+            throw ServiceException.PERM_DENIED("can not access domain"); 
         
         if (domain.isShutdown())
             throw ServiceException.PERM_DENIED("can not access domain, domain is in " + domain.getDomainStatus() + " status");
