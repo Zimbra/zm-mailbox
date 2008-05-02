@@ -67,8 +67,8 @@ public class WaitSetRequest extends MailDocumentHandler {
         MIN_ADMIN_TIMEOUT = LC.zimbra_admin_waitset_min_request_timeout.longValueWithinRange(0, Constants.SECONDS_PER_DAY) * 1000;
         MAX_ADMIN_TIMEOUT = LC.zimbra_admin_waitset_max_request_timeout.longValueWithinRange(0, Constants.SECONDS_PER_DAY) * 1000;
         
-        INITIAL_SLEEP_TIME = LC.zimbra_waitset_initial_sleep_time.longValueWithinRange(0,5*Constants.SECONDS_PER_MINUTE) * 1000;
-        NODATA_SLEEP_TIME = LC.zimbra_waitset_nodata_sleep_time.longValueWithinRange(0,5*Constants.SECONDS_PER_MINUTE) * 1000;
+        INITIAL_SLEEP_TIME = LC.zimbra_waitset_initial_sleep_time.longValueWithinRange(0,5*Constants.SECONDS_PER_MINUTE * 1000);
+        NODATA_SLEEP_TIME = LC.zimbra_waitset_nodata_sleep_time.longValueWithinRange(0,5*Constants.SECONDS_PER_MINUTE * 1000);
     }
     
     private static long getTimeout(Element request, boolean isAdminRequest) throws ServiceException {
