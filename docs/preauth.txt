@@ -67,10 +67,11 @@ The URL interface uses the /service/reauth URL:
 
 /service/preauth?
         account={account-identifier}
-        by={by-value}
-        timestamp={time}
-        expires={expires}
-        preauth={computed-preauth}
+        &by={by-value}
+        &timestamp={time}
+        &expires={expires}
+        [&admin=1]
+        &preauth={computed-preauth}
 
 The values are as follows:
 
@@ -89,6 +90,12 @@ The values are as follows:
                         account. Can be used to sync the auth token expiration
                         time with the external system's notion of expiration
                         (like a Kerberos TGT lifetime, for example).
+
+ {admin}                set to "1" if this preauth is for admin console. This
+                        only works if given account is an admin, and the request
+                        comes in on the admin port (https 7071 by default).
+                        If admin is specified, then include its value while computing the
+                        HMAC below, after the "account" value, and before the "by" value.
 
 {computed-preauth}      the computed pre-auth value. See below for details.
 
@@ -112,7 +119,7 @@ by: name
 expires: 0
 timestamp: 1135280708088
 
-You would concat the account/by/expires/timestamp values together to get:
+You would concat the account/by/expires/timestamp values together (alphabetical order, based on key name) to get:
 
 john.doe@domain.com|name|0|1135280708088
 
@@ -137,6 +144,15 @@ followed by a redirect to /zimbra/mail with the auth token in a cookie.
 If a URL other then /zimbra/mail is desired, then you can also pass in a redirectURL:
 
  ...&redirectURL=/zimbra/h/
+
+
+If you are pre-authing an admin, the value to use with the hmac would be:
+
+john.doe@domain.com|1|name|0|1135280708088
+
+and you would include "&admin=1" in the URL.
+
+If you are not pre-authing an admin, then you must *NOT* include any value for it in string passed to the hmac.
 
 ------------------------------------------------------------
 SOAP Interface

@@ -212,7 +212,7 @@ public class ProvUtil implements DebugListener {
         DELETE_SERVER("deleteServer", "ds", "{name|id}", Category.SERVER, 1, 1),
         EXIT("exit", "quit", "", Category.MISC, 0, 0),
         FLUSH_CACHE("flushCache", "fc", "{skin|locale|account|config|cos|domain|server|zimlet} [name1|id1 [name2|id2...]]", Category.MISC, 1, Integer.MAX_VALUE),
-        GENERATE_DOMAIN_PRE_AUTH("generateDomainPreAuth", "gdpa", "{domain|id} {name} {name|id|foreignPrincipal} {timestamp|0} {expires|0}", Category.MISC, 5, 5),
+        GENERATE_DOMAIN_PRE_AUTH("generateDomainPreAuth", "gdpa", "{domain|id} {name} {name|id|foreignPrincipal} {timestamp|0} {expires|0}", Category.MISC, 5, 6),
         GENERATE_DOMAIN_PRE_AUTH_KEY("generateDomainPreAuthKey", "gdpak", "[-f] {domain|id}", Category.MISC, 1, 2),
         GET_ACCOUNT("getAccount", "ga", "[-e] {name@domain|id} [attr1 [attr2...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
         GET_DATA_SOURCES("getDataSources", "gds", "{name@domain|id} [arg1 [arg2...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),                
@@ -2070,7 +2070,8 @@ public class ProvUtil implements DebugListener {
         params.put("by", by);            
         params.put("timestamp", timestamp+"");
         params.put("expires", expires+"");
-        System.out.printf("account: %s\nby: %s\ntimestamp: %s\nexpires: %s\npreAuth: %s\n", name, by, timestamp, expires,PreAuthKey.computePreAuth(params, preAuthKey));
+        if (args.length == 7) params.put("admin", args[6]);
+        System.out.printf("account: %s\nby: %s\ntimestamp: %s\nexpires: %s\npreauth: %s\n", name, by, timestamp, expires,PreAuthKey.computePreAuth(params, preAuthKey));
     }
         
     private void doGetAllMtaAuthURLs(String[] args) throws ServiceException {

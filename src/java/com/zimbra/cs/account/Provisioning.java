@@ -1068,6 +1068,8 @@ public abstract class Provisioning {
     public static final String A_zimbraMailSSLPort = "zimbraMailSSLPort";
     public static final String A_zimbraMailMode = "zimbraMailMode";
     public static final String A_zimbraMailURL = "zimbraMailURL";
+    public static final String A_zimbraAdminURL = "zimbraAdminURL";
+
     public static final String A_zimbraMailReferMode = "zimbraMailReferMode";
 
     public static final String A_zimbraAdminPort = "zimbraAdminPort";
@@ -1864,7 +1866,18 @@ public abstract class Provisioning {
     public abstract void authAccount(Account acct, String password, String proto) throws ServiceException;
     
     public abstract void authAccount(Account acct, String password, String proto, Map<String, Object> authCtxt) throws ServiceException;
-    
+
+    public void preAuthAccount(Account acct, String accountName, String accountBy, long timestamp, long expires, 
+                                        String preAuth,
+                                        boolean admin,
+                                        Map<String, Object> authCtxt) throws ServiceException
+    {
+        if (admin)
+            throw ServiceException.FAILURE("preAuthAccount unimplemented", null);
+        else
+            preAuthAccount(acct, accountName, accountBy, timestamp, expires, preAuth, authCtxt);
+    }
+
     public abstract void preAuthAccount(Account acct, String accountName, String accountBy, long timestamp, long expires, String preAuth, Map<String, Object> authCtxt) throws ServiceException;
     
     public abstract void changePassword(Account acct, String currentPassword, String newPassword) throws ServiceException;

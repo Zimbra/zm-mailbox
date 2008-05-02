@@ -334,13 +334,15 @@ public class ZimbraServlet extends HttpServlet {
         }
         ByteUtil.copy(method.getResponseBodyAsStream(), false, resp.getOutputStream(), false);
     }
-    
+
+    protected boolean isAdminRequest(HttpServletRequest req) throws ServiceException {
+        int adminPort = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, -1);
+        return (req.getLocalPort() == adminPort);
+    }
 
     public Account cookieAuthRequest(HttpServletRequest req, HttpServletResponse resp, boolean doNotSendHttpError) 
     throws IOException, ServiceException {
-        int adminPort = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, -1);
-        boolean isAdminRequest = (req.getLocalPort() == adminPort);
-        AuthToken at = isAdminRequest ? getAdminAuthTokenFromCookie(req, resp, true) : getAuthTokenFromCookie(req, resp, true);
+        AuthToken at = isAdminRequest(req) ? getAdminAuthTokenFromCookie(req, resp, true) : getAuthTokenFromCookie(req, resp, true);
         return at == null ? null : Provisioning.getInstance().get(AccountBy.id, at.getAccountId(), at); 
     }
 

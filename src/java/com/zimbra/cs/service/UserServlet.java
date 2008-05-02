@@ -253,7 +253,7 @@ public class UserServlet extends ZimbraServlet {
     
     private void getAccount(Context context) throws IOException, ServletException {
         try {
-            boolean isAdminRequest = isAdminRequest(context);
+            boolean isAdminRequest = isAdminRequest(context.req);
             // check cookie first
             if (context.cookieAuthAllowed()) {
                 context.authAccount = cookieAuthRequest(context.req, context.resp, true);
@@ -309,11 +309,6 @@ public class UserServlet extends ZimbraServlet {
         } catch (ServiceException e) {
             throw new ServletException(e);
         }
-    }
-
-    private boolean isAdminRequest(Context context) throws ServiceException {
-        int adminPort = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, -1);
-        return (context.req.getLocalPort() == adminPort);
     }
 
     private void sendError(Context ctxt, HttpServletRequest req, HttpServletResponse resp, String message) throws IOException {
@@ -415,7 +410,7 @@ public class UserServlet extends ZimbraServlet {
             ZimbraLog.mailbox.debug("UserServlet: " + reqURL.toString());
         }
 
-        context.opContext = new OperationContext(context.authAccount, isAdminRequest(context));
+        context.opContext = new OperationContext(context.authAccount, isAdminRequest(req));
         Mailbox mbox = getTargetMailbox(context);
         if (mbox != null) {
             ZimbraLog.addMboxToContext(mbox.getId());
@@ -485,7 +480,7 @@ public class UserServlet extends ZimbraServlet {
     
                 ZimbraLog.mailbox.info("UserServlet (POST): " + context.req.getRequestURL().toString());
     
-                context.opContext = new OperationContext(context.authAccount, isAdminRequest(context));
+                context.opContext = new OperationContext(context.authAccount, isAdminRequest(req));
 
                 try {
                     context.target = resolveItem(context, false);
