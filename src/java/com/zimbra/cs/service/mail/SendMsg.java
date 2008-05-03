@@ -310,6 +310,7 @@ public class SendMsg extends MailDocumentHandler {
         }
 
         @Override protected boolean visitMessage(MimeMessage mm, VisitPhase visitKind) throws MessagingException {
+            boolean modified = false;
             if (VisitPhase.VISIT_BEGIN.equals(visitKind)) {
                 mMsgDepth++;
                 if (mMsgDepth == 1) {
@@ -344,13 +345,17 @@ public class SendMsg extends MailDocumentHandler {
                         mNeedFixup = true;
                         mFromEmails = froms;
                         mSentBy = "MAILTO:" + sender;
+
+                        // Set Reply-To header because Outlook doesn't.  (bug 19283)
+                        mm.setReplyTo(new Address[] { senderAddr });
+                        modified = true;
                     }
                 }
             } else if (VisitPhase.VISIT_END.equals(visitKind)) {
                 mMsgDepth--;
             }
 
-            return false;
+            return modified;
         }
 
         @Override
