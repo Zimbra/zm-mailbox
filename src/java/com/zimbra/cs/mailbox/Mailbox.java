@@ -174,7 +174,7 @@ public class Mailbox {
         boolean    active;
         Connection conn      = null;
         RedoableOp recorder  = null;
-        Map<MailItem, IndexItemEntry>  indexItems = new HashMap<MailItem, IndexItemEntry>();
+        Map<MailItem, IndexItemEntry> indexItems = new HashMap<MailItem, IndexItemEntry>();
         List<Integer> indexItemsToDelete = new ArrayList<Integer>();
         Map<Integer, MailItem> itemCache = null;
         OperationContext octxt = null;
@@ -1152,7 +1152,7 @@ public class Mailbox {
             recorder.setChangeConstraint(octxt.changetype, octxt.change);
 
         // if we're redoing an op, preserve the old change ID
-        if (octxt != null && octxt.getChangeId() >= 0)
+        if (octxt != null && octxt.getChangeId() > 0)
             setOperationChangeID(octxt.getChangeId());
         if (recorder != null && needRedo)
             recorder.setChangeId(getOperationChangeID());

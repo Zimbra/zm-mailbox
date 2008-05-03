@@ -108,8 +108,7 @@ public class DbMailbox {
         public int groupId;
     }
 
-    public synchronized static NewMboxId createMailbox(
-            Connection conn, int mailboxId, String accountId, String comment, int lastBackupAt)
+    public synchronized static NewMboxId createMailbox(Connection conn, int mailboxId, String accountId, String comment, int lastBackupAt)
     throws ServiceException {
         String limitClause = Db.supports(Db.Capability.LIMIT_CLAUSE) ? " ORDER BY index_volume_id LIMIT 1" : "";
         boolean explicitId = (mailboxId != Mailbox.ID_AUTO_INCREMENT);
@@ -436,7 +435,7 @@ public class DbMailbox {
 
                 if (config != null) {
                     stmt = conn.prepareStatement("INSERT INTO mailbox_metadata (mailbox_id, section, metadata)" +
-                    " VALUES (?, ?, ?)");
+                        " VALUES (?, ?, ?)");
                     stmt.setInt(1, mbox.getId());
                     stmt.setString(2, section);
                     stmt.setString(3, config.toString());
@@ -455,7 +454,7 @@ public class DbMailbox {
                     // deadlock.  See bug 19404 for more info.
                     try {
                         stmt = conn.prepareStatement("INSERT INTO mailbox_metadata (mailbox_id, section, metadata) " +
-                        "VALUES (?, ?, ?)");
+                            "VALUES (?, ?, ?)");
                         stmt.setInt(1, mbox.getId());
                         stmt.setString(2, section);
                         stmt.setString(3, config.toString());
@@ -545,7 +544,7 @@ public class DbMailbox {
         }
     }
 
-    public static final int CHANGE_CHECKPOINT_INCREMENT = 100;
+    public static final int CHANGE_CHECKPOINT_INCREMENT = Math.max(1, LC.zimbra_mailbox_change_checkpoint_frequency.intValue());
     public static final int ITEM_CHECKPOINT_INCREMENT   = 20;
 
     public static Mailbox.MailboxData getMailboxStats(Connection conn, int mailboxId) throws ServiceException {
