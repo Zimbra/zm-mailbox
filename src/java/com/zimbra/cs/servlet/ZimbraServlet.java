@@ -263,7 +263,7 @@ public class ZimbraServlet extends HttpServlet {
             return;
         }
     	HttpMethod method;
-    	String url = getServiceUrl(server, null, uri);
+    	String url = getProxyUrl(req, server, uri);
         if (req.getMethod().equalsIgnoreCase("GET")) {
         	method = new GetMethod(url.toString());
         } else if (req.getMethod().equalsIgnoreCase("POST") || req.getMethod().equalsIgnoreCase("PUT")) {
@@ -429,10 +429,16 @@ public class ZimbraServlet extends HttpServlet {
     
 
     public static String getServiceUrl(Server server, Domain domain, String path) throws ServiceException {
-	return URLUtil.getServiceUrl(server, domain, path, true, true);
+        return URLUtil.getServiceUrl(server, domain, path, true, true);
     }
 
-
+    protected static String getProxyUrl(HttpServletRequest req, Server server, String path) throws ServiceException {
+    	int servicePort = req.getLocalPort();
+    	if (servicePort == server.getIntAttr(Provisioning.A_zimbraAdminPort, 0))
+    		return URLUtil.getAdminURL(server, path);
+    	else
+    		return URLUtil.getServiceUrl(server, null, path, true, true);
+    }
     
     protected void returnError(HttpServletResponse resp, ServiceException e) {
     	resp.setHeader(ZIMBRA_FAULT_CODE_HEADER, e.getCode());
