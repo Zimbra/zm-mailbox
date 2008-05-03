@@ -29,6 +29,7 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -124,6 +125,8 @@ public class Mime {
     // default value for charset
     public static final String P_CHARSET_ASCII = "us-ascii";
     public static final String P_CHARSET_UTF8 = "utf-8";
+    public static final String P_CHARSET_LATIN1 = "iso-8859-1";
+    public static final String P_CHARSET_CP1252 = "windows-1252";
     public static final String P_CHARSET_DEFAULT = P_CHARSET_ASCII;
 
     private static final int MAX_DECODE_BUFFER = 2048;
@@ -752,7 +755,16 @@ public class Mime {
         }
         return buffer.toString();
 	}
-	 
+
+    private static boolean SUPPORTS_CP1252 = false;
+        static {
+            try {
+                SUPPORTS_CP1252 = Charset.forName(P_CHARSET_CP1252) != null;
+            } catch (java.nio.charset.UnsupportedCharsetException uce) { }
+        }
+
+    private static final boolean DEFAULT_CP1252 = SUPPORTS_CP1252 && Charset.defaultCharset().name().equals(P_CHARSET_LATIN1);
+
     /** Returns a reader that decodes the specified <code>InputStream</code>.
      *  <code>contentType</code> must of type "text/*".  If a valid charset
      *  parameter is present in the Content-Type string, it is used as the
@@ -766,6 +778,9 @@ public class Mime {
     public static Reader getTextReader(InputStream input, String contentType, String defaultCharset) {
     	String charset = getCharset(contentType);
         if (charset != null) {
+            // windows-1252 is a superset of iso-8859-1 and they're often confused, so use cp1252 in its place
+            if (SUPPORTS_CP1252 && charset.equalsIgnoreCase(P_CHARSET_LATIN1))
+                charset = P_CHARSET_CP1252;
             try {
                 return new InputStreamReader(input, charset);
             } catch (UnsupportedEncodingException e) { }
@@ -773,8 +788,18 @@ public class Mime {
 
         // if we're here, either there was no explicit charset on the part or it was invalid, so try the user's personal default charset
         if (defaultCharset != null && !defaultCharset.trim().equals("")) {
+            // windows-1252 is a superset of iso-8859-1 and they're often confused, so use cp1252 in its place
+            if (SUPPORTS_CP1252 && defaultCharset.equalsIgnoreCase(P_CHARSET_LATIN1))
+                defaultCharset = P_CHARSET_CP1252;
             try {
                 return new InputStreamReader(input, defaultCharset);
+            } catch (UnsupportedEncodingException e) { }
+        }
+
+        // if we're here and the JVM's default charset is iso-8859-1 and cp1252 is installed, try to use that instead
+        if (DEFAULT_CP1252) {
+            try {
+                return new InputStreamReader(input, P_CHARSET_CP1252);
             } catch (UnsupportedEncodingException e) { }
         }
 
