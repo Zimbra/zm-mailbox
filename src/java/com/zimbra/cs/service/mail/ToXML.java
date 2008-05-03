@@ -1595,6 +1595,8 @@ public class ToXML {
             return;
 
         MimePart mp = mpi.getMimePart();
+        Mime.repairTransferEncoding(mp);
+
         String data = null;
         if (ctype.equals(Mime.CT_TEXT_HTML)) {
             String charset = mpi.getContentTypeParameter(Mime.P_CHARSET);
