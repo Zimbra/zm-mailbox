@@ -20,12 +20,22 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-public class ImapFolderCollection
-implements Iterable<ImapFolder>
-{
-    private Map<String, ImapFolder> mByLocalPath = new HashMap<String, ImapFolder>();
-    private Map<String, ImapFolder> mByRemotePath = new HashMap<String, ImapFolder>();
-    private Map<Integer, ImapFolder> mByItemId = new HashMap<Integer, ImapFolder>();
+public class ImapFolderCollection implements Iterable<ImapFolder> {
+    private final Map<Integer, ImapFolder> mByItemId;
+    private final Map<String, ImapFolder> mByLocalPath;
+    private final Map<String, ImapFolder> mByRemotePath;
+
+    public ImapFolderCollection() {
+        mByItemId = new HashMap<Integer, ImapFolder>();
+        mByLocalPath = new HashMap<String, ImapFolder>();
+        mByRemotePath = new HashMap<String, ImapFolder>();
+    }
+
+    public ImapFolderCollection(ImapFolderCollection folders) {
+        mByItemId = new HashMap<Integer, ImapFolder>(folders.mByItemId);
+        mByLocalPath = new HashMap<String, ImapFolder>(folders.mByLocalPath);
+        mByRemotePath = new HashMap<String, ImapFolder>(folders.mByRemotePath);
+    }
     
     public void add(ImapFolder imapFolder) {
         mByLocalPath.put(imapFolder.getLocalPath(), imapFolder);

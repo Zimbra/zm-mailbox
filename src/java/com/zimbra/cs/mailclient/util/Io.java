@@ -22,7 +22,7 @@ public final class Io {
     }
     
     public static void copyBytes(InputStream is, OutputStream os, int len)
-            throws IOException {
+        throws IOException {
         byte[] b = new byte[4096];
         while (len > 0) {
             int n = is.read(b, 0, Math.min(b.length, len));
@@ -33,6 +33,17 @@ public final class Io {
             len -= n;
         }
     }
+
+    public static void copyBytes(InputStream is, OutputStream os)
+        throws IOException {
+        byte[] b = new byte[4096];
+        int len;
+        while ((len = is.read(b, 0, b.length)) != -1) {
+            os.write(b, 0, len);
+        }
+    }
+
+
 
     public static String toString(List<Object> items, String separator) {
         StringBuilder sb = new StringBuilder();
