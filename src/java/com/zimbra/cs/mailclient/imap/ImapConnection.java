@@ -47,6 +47,12 @@ public final class ImapConnection extends MailConnection {
     private static final Logger LOGGER = Logger.getLogger(ImapConnection.class);
     
     private static final String TAG_FORMAT = "C%02d";
+
+    private static final String UID_COPY = "UID COPY";
+    private static final String UID_FETCH = "UID FETCH";
+    private static final String UID_STORE = "UID STORE";
+    private static final String UID_SEARCH = "UID SEARCH";
+
     
     public ImapConnection(ImapConfig config) {
         super(config);
@@ -174,13 +180,23 @@ public final class ImapConnection extends MailConnection {
         newRequest(CAtom.UNSUBSCRIBE, new MailboxName(name)).sendCheckStatus();
     }
 
-    public void append(String mbox, Flags flags, Date date, Literal data)
-            throws IOException {
+    public long append(String mbox, Flags flags, Date date, Literal data)
+        throws IOException {
         ImapRequest req = newRequest(CAtom.APPEND, new MailboxName(mbox));
         if (flags != null) req.addParam(flags);
         if (date != null) req.addParam(date);
         req.addParam(data);
-        req.sendCheckStatus();
+        ImapResponse res = req.sendCheckStatus();
+        ResponseText rt = res.getResponseText();
+        if (CAtom.APPENDUID.atom().equals(rt.getCode())) {
+            // Supports UIDPLUS (RFC 2359):
+            // resp_code_apnd ::= "APPENDUID" SPACE nz_number SPACE uniqueid
+            String[] s = ((String) rt.getData()).split(" ");
+            if (s.length == 2) {
+                return Chars.getNumber(s[1]); // message UID
+            }
+        }
+        return 0;
     }
 
     public void expunge() throws IOException {
@@ -198,7 +214,7 @@ public final class ImapConnection extends MailConnection {
         final Mailbox[] mbox = new Mailbox[0];
         req.setResponseHandler(new ResponseHandler() {
             public boolean handleResponse(ImapResponse res) {
-                if (res.isUntagged() && res.getCode() == CAtom.STATUS) {
+                if (res.getCode() == CAtom.STATUS) {
                     mbox[0] = (Mailbox) res.getData();
                     return true;
                 }
@@ -227,7 +243,7 @@ public final class ImapConnection extends MailConnection {
         final List<ListData> results = new ArrayList<ListData>();
         req.setResponseHandler(new ResponseHandler() {
             public boolean handleResponse(ImapResponse res) {
-                if (res.isUntagged() && res.getCode() == CAtom.LIST) {
+                if (res.getCode() == CAtom.LIST) {
                     results.add((ListData) res.getData());
                     return true;
                 }
@@ -238,43 +254,72 @@ public final class ImapConnection extends MailConnection {
         return results;
     }
 
+    
     public void copy(String seq, String mbox) throws IOException {
         newRequest(CAtom.COPY, seq, new MailboxName(mbox)).sendCheckStatus();
     }
 
     public void uidCopy(String seq, String mbox) throws IOException {
-        newRequest("UID COPY", seq, new MailboxName(mbox)).sendCheckStatus();
+        newRequest(UID_COPY, seq, new MailboxName(mbox)).sendCheckStatus();
     }
     
     public void fetch(String seq, Object param, ResponseHandler handler)
-            throws IOException {
-        ImapRequest req = newRequest(CAtom.FETCH, seq, param);
-        req.setResponseHandler(handler);
-        req.sendCheckStatus();
+        throws IOException {
+        fetch(CAtom.FETCH.name(), seq, param, handler);
     }
 
     public void uidFetch(String seq, Object param, ResponseHandler handler)
-            throws IOException {
-        ImapRequest req = newRequest("UID FETCH", seq, param);
+        throws IOException {
+        fetch(UID_FETCH, seq, param, handler);
+    }
+
+    public List<MessageData> fetch(String seq, Object param)
+        throws IOException {
+        return fetch(CAtom.FETCH.name(), seq, param);
+    }
+
+    public List<MessageData> uidFetch(String seq, Object param)
+        throws IOException {
+        return fetch(UID_FETCH, seq, param);
+    }
+    
+    private List<MessageData> fetch(String cmd, String seq, Object param)
+        throws IOException {
+        final List<MessageData> mds = new ArrayList<MessageData>();
+        fetch(cmd, seq, param, new ResponseHandler() {
+            public boolean handleResponse(ImapResponse res) {
+                if (res.getCode() == CAtom.FETCH) {
+                    mds.add((MessageData) res.getData());
+                    return true;
+                }
+                return false;
+            }
+        });
+        return mds;
+    }
+
+    private void fetch(String cmd, String seq, Object param,
+                       ResponseHandler handler) throws IOException {
+        ImapRequest req = newRequest(cmd, seq, param);
         req.setResponseHandler(handler);
         req.sendCheckStatus();
     }
 
-    public void search(Object... params) throws IOException {
-        doSearch(CAtom.SEARCH.atom(), params);
+    public List<Long> search(Object... params) throws IOException {
+        return doSearch(CAtom.SEARCH.name(), params);
     }
 
-    public void uidSearch(Object... params) throws IOException {
-        doSearch(new Atom("UID SEARCH"), params);
+    public List<Long> uidSearch(Object... params) throws IOException {
+        return doSearch(UID_SEARCH, params);
     }
 
     @SuppressWarnings("unchecked")
-    private List<Long> doSearch(Atom cmd, Object... params) throws IOException {
+    private List<Long> doSearch(String cmd, Object... params) throws IOException {
         final List<Long> ids = new ArrayList<Long>();
         ImapRequest req = newRequest(cmd, params);
         req.setResponseHandler(new ResponseHandler() {
             public boolean handleResponse(ImapResponse res) {
-                if (res.isUntagged() && res.getCode() == CAtom.SEARCH) {
+                if (res.getCode() == CAtom.SEARCH) {
                     ids.addAll((List<Long>) res.getData());
                     return true;
                 }
@@ -285,18 +330,26 @@ public final class ImapConnection extends MailConnection {
         return ids;
     }
 
-    public void store(String seq, String item, Flags flags,
+    public void store(String seq, String item, Object flags) throws IOException {
+        store(seq, item, flags, null);
+    }
+    
+    public void store(String seq, String item, Object flags,
                       ResponseHandler handler)
-            throws IOException {
+        throws IOException {
         ImapRequest req = newRequest(CAtom.STORE, seq, item, flags);
         req.setResponseHandler(handler);
         req.sendCheckStatus();
     }
-    
-    public void uidStore(String seq, String item, Flags flags,
-                         ResponseHandler handler)
-            throws IOException {
-        ImapRequest req = newRequest("UID STORE", seq, item, flags);
+
+    public void uidStore(String seq, String item, Object flags)
+        throws IOException {
+        uidStore(seq, item, flags, null);
+    }
+        
+    public void uidStore(String seq, String item, Object flags,
+                         ResponseHandler handler) throws IOException {
+        ImapRequest req = newRequest(UID_STORE, seq, item, flags);
         req.setResponseHandler(handler);
         req.sendCheckStatus();
     }
@@ -441,9 +494,9 @@ public final class ImapConnection extends MailConnection {
     }
     
     /*
-     * Process IMAP response. Returns true if not a tagged or continuation
-     * response and reading should continue. Returns false if tagged,
-     * untagged BAD, or continuation response.
+     * Process IMAP response. Returns true if this is not a tagged or
+     * continuation response and reading should continue. Returns false
+     * if tagged, untagged BAD, or continuation response.
      */
     private synchronized boolean processResponse(ImapResponse res)
         throws IOException {
@@ -453,10 +506,10 @@ public final class ImapConnection extends MailConnection {
         if (request != null) {
             // Request pending, try response handler first
             ResponseHandler handler = request.getResponseHandler();
-            if (handler != null) {
+            if (res.isUntagged() && handler != null) {
                 try {
                     if (handler.handleResponse(res)) {
-                        return res.isUntagged(); // Handler processed response
+                        return true; // Handler processed response
                     }
                 } catch (Throwable e) {
                     throw new MailException("Exception in response handler", e);

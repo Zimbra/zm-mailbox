@@ -1,128 +1,134 @@
 package com.zimbra.cs.datasource;
 
-import com.sun.mail.imap.IMAPFolder;
-import com.sun.mail.imap.IMAPStore;
-import com.sun.mail.imap.IMAPMessage;
-import com.sun.mail.imap.protocol.Status;
-import com.sun.mail.imap.protocol.IMAPProtocol;
-import com.sun.mail.iap.ProtocolException;
-import com.sun.mail.iap.CommandFailedException;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.mailclient.imap.ImapData;
+import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailclient.imap.Literal;
+import com.zimbra.cs.mailclient.imap.ImapConfig;
+import com.zimbra.cs.mailclient.imap.ImapConnection;
+import com.zimbra.cs.mailclient.imap.Flags;
+import com.zimbra.cs.mailclient.imap.ListData;
+import com.zimbra.cs.mailclient.imap.ResponseHandler;
+import com.zimbra.cs.mailclient.imap.ImapResponse;
+import com.zimbra.cs.mailclient.imap.CAtom;
+import com.zimbra.cs.mailclient.imap.MessageData;
 
 import javax.mail.MessagingException;
-import javax.mail.Folder;
-import javax.mail.Flags;
+import javax.mail.internet.MimeMessage;
 import java.util.List;
-import java.util.ArrayList;
+import java.util.Date;
 import java.util.Set;
 import java.util.HashSet;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.ArrayList;
 import java.io.IOException;
 import java.io.File;
+import java.io.OutputStream;
+import java.io.FileOutputStream;
 
-/**
- * IMAP support utility methods.
- */
 final class ImapUtil {
-     /*
-     * List subfolders given specified root and pattern. Returns folders
-     * in ascending order of folder name length with duplicate names removed.
-     */
-    public static List<IMAPFolder> listFolders(IMAPFolder root, String pattern)
-            throws MessagingException {
-        // Get list of remote subfolders, removing duplicates (see bug 26483)
-        Folder[] folders = root.list(pattern);
-        List<IMAPFolder> folderList = new ArrayList<IMAPFolder>(folders.length);
-        Set<String> names = new HashSet<String>(folders.length);
-        for (Folder folder : folders) {
-            String name = getNormalizedName(folder.getFullName(), folder.getSeparator());
-            if (names.contains(name)) {
-                ZimbraLog.datasource.warn("Ignoring duplicate folder name: " + folder.getFullName());
-            } else {
-                names.add(name);
-                folderList.add((IMAPFolder) folder);
+    public static void append(ImapConnection ic, String mbox, Message msg)
+        throws ServiceException, IOException {
+        append(ic, mbox, msg, false);
+    }
+
+    public static long appendUid(ImapConnection ic, String mbox, Message msg)
+        throws ServiceException, IOException {
+        return append(ic, mbox, msg, true);
+    }
+    
+    private static long append(ImapConnection ic, String mailbox, Message msg,
+                               boolean searchUid)
+        throws ServiceException, IOException {
+        ImapConfig config = (ImapConfig) ic.getConfig();
+        File tmp = null;
+        OutputStream os = null;
+        MimeMessage mm = msg.getMimeMessage(false);
+        long uid;
+        try {
+            tmp = File.createTempFile("lit", null, config.getLiteralDataDir());
+            os = new FileOutputStream(tmp);
+            mm.writeTo(os);
+            os.close();
+            Date date = mm.getReceivedDate();
+            if (date == null) {
+                date = mm.getSentDate();
             }
+            Flags flags = FlagsUtil.zimbraToImapFlags(msg.getFlagBitmask());
+            uid = ic.append(mailbox, flags, date, new Literal(tmp));
+            if (uid <= 0 && searchUid) {
+                // If server doesn't support UIDPLUS, search for UID of message
+                if (!mailbox.equals(ic.getMailbox().getName())) {
+                    ic.select(mailbox);
+                }                                                             
+                List<Long> uids = ic.uidSearch(
+                    "ON", date, "HEADER", "Message-Id", mm.getMessageID());
+                if (uids.size() == 1) {
+                    uid = uids.get(0);
+                }
+            }
+            return uid;
+        } catch (MessagingException e) {
+            throw ServiceException.FAILURE("Error appending message", e);
+        } finally {
+            if (os != null) os.close();
+            if (tmp != null) tmp.delete();
         }
-        // When deleting remote folders we delete children before parents to
-        // avoid complications, so sort in descending order by full name length.
-        Collections.sort(folderList, new Comparator<Folder>() {
-            public int compare(Folder f1, Folder f2) {
-                return f2.getFullName().length() - f1.getFullName().length();
+    }
+
+    public static List<MessageData> fetch(ImapConnection ic, String seq,
+                                          Object param) throws IOException {
+        final List<MessageData> mds = new ArrayList<MessageData>();
+        ic.uidFetch(seq, param, new ResponseHandler() {
+            public boolean handleResponse(ImapResponse res) {
+                if (res.getCode() == CAtom.FETCH) {
+                    mds.add((MessageData) res.getData());
+                    return true;
+                }
+                return false;
             }
         });
-        return folderList;
+        return mds;
+    }
+
+    public static char getDelimiter(ImapConnection connection)
+        throws IOException {
+        List<ListData> ld = connection.list("", "");
+        return ld.size() == 1 ? ld.get(0).getDelimiter() : 0;
+    }
+    
+    public static List<ListData> listFolders(ImapConnection ic)
+        throws IOException {
+        List<ListData> list = ic.list("", "*");
+        Set<String> names = new HashSet<String>(list.size());
+        ListIterator<ListData> it = list.listIterator();
+        while (it.hasNext()) {
+            ListData ld = it.next();
+            String name = fixFolderName(ld.getMailbox(), ld.getDelimiter());
+            if (!names.add(name)) {
+                ZimbraLog.datasource.warn(
+                    "Not importing duplicate folder name: " + ld.getMailbox());
+                it.remove();
+            }
+        }
+        return list;
     }
 
     /*
-     * Normalize IMAP path name. If specified path is INBOX or a subfolder
-     * of INBOX, then return path with INBOX converted to upper case. This
-     * is needed to workaround issues where GMail sometimes returns the same
-     * folder differing only in the case of the INBOX part (see bug 26483).
+     * Workaround for bug 26483. Convert INBOX part of folder name to upper
+     * case. This is needed to fix an issue where GMail's LIST command
+     * sometimes returns the same folder name twice where INBOX differs
+     * only in case.
      */
-    private static String getNormalizedName(String path, char separator) {
-        int len = path.length();
-        if (len < 5 || !path.substring(0, 5).equalsIgnoreCase("INBOX")) {
-            return path;
+    private static String fixFolderName(String name, char separator) {
+        int len = name.length();
+        if (len < 5 || !name.substring(0, 5).equalsIgnoreCase("INBOX")) {
+            return name;
         }
         if (len == 5) return "INBOX";
-        return path.charAt(5) == separator ? "INBOX" + path.substring(5) : path;
-    }
-
-    public static Status getStatus(IMAPFolder folder) throws MessagingException {
-        Status status = doStatus(folder, "UIDVALIDITY", "UIDNEXT");
-        if (status != null && status.uidvalidity == 0) {
-            IMAPStore store = (IMAPStore) folder.getStore();
-            if (store.hasCapability("XAOL-NETMAIL")) {
-                // Workaround for bug 25623: if this is AOL mail and STATUS
-                // returns a UIDVALIDITY of 0, then assume a correct value of 1.
-                status.uidvalidity = 1;
-            }
-        }
-        if (status == null || status.uidvalidity <= 0 || status.uidnext <= 0) {
-            throw new MessagingException("STATUS command failed");
-        }
-        return status;
-    }
-
-    private static Status doStatus(final IMAPFolder folder, final String... items)
-            throws MessagingException {
-        return (Status) folder.doCommand(new IMAPFolder.ProtocolCommand() {
-            public Object doCommand(final IMAPProtocol protocol) throws ProtocolException {
-                try {
-                    return protocol.status(folder.getFullName(), items);
-                } catch (CommandFailedException e) {
-                    return null;
-                }
-            }
-        });
-    }
-
-    public static boolean isSelectable(IMAPFolder folder) throws MessagingException {
-        return !hasAttribute(folder, "\\Noselect");
-    }
-
-    public static boolean hasAttribute(IMAPFolder folder, String attribute)
-            throws MessagingException {
-        String[] attrs = folder.getAttributes();
-        if (attrs != null) {
-            for (String attr : attrs) {
-                if (attribute.equalsIgnoreCase(attr)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    public static void rename(Folder folder, String newName) throws MessagingException {
-        if (!folder.renameTo(folder.getStore().getFolder(newName))) {
-            throw new MessagingException("Unable to rename folder '" +
-                folder.getFullName() + "' to '" + newName + "'");
-        }
+        return name.charAt(5) == separator ?
+            "INBOX" + name.substring(5) : name;
     }
 }

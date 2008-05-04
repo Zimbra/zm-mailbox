@@ -226,6 +226,7 @@ public class ImapImport extends AbstractMailItemImport {
                                 ZimbraLog.datasource.info("Local folder %s was renamed to %s",
                                     folderTracker.getLocalPath(), localFolder.getPath());
                                 renameJavaMailFolder(remoteFolder, jmPath);
+                                // XXX What about new remote path?s
                                 folderTracker.setLocalPath(localFolder.getPath());
                                 ds.updateImapFolder(folderTracker);
                             } else {
@@ -258,7 +259,8 @@ public class ImapImport extends AbstractMailItemImport {
                                 // If no UID returned by APPEND, then store the message locally with a negative UID.
                                 // When we sync again we will calculate the checksum of remote message and use that
                                 // to find the corresponding local entry and update the UID with the correct value.
-                                DbImapMessage.storeImapMessage(mbox, localFolder.getId(), uid, id, flags);
+                                // NO NEED TO DO THIS
+                                // DbImapMessage.storeImapMessage(mbox, localFolder.getId(), uid, id, flags);
                             }
 
                             // Empty local folder so that it will be resynced later and store the new UIDVALIDITY value.

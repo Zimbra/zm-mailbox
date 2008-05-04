@@ -88,7 +88,7 @@ public final class ResponseText {
         is.skipChar(')');
         return cs.toArray(new String[cs.size()]);
     }
-           
+
     public Atom getCode() { return code; }
     public Object getData() { return data; }
     public String getText() { return text; }

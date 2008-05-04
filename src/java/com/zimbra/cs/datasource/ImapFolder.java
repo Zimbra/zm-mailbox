@@ -18,21 +18,32 @@ package com.zimbra.cs.datasource;
 
 
 public class ImapFolder {
-    private int mMailboxId;
-    private int mItemId;
-    private String mDataSourceId;
+    private final int mMailboxId;
+    private final int mItemId;
+    private final String mDataSourceId;
     private String mLocalPath;
     private String mRemotePath;
     private Long mUidValidity;
     private long mUidNext = -1; // Used to optimize offline data source
     
-    public ImapFolder(int mailboxId, int id, String dataSourceId, String localPath, String remotePath, Long uidValidity) {
+    public ImapFolder(int mailboxId, int id, String dataSourceId,
+                      String localPath, String remotePath, Long uidValidity) {
         mMailboxId = mailboxId;
         mItemId = id;
         mDataSourceId = dataSourceId;
         mLocalPath = localPath;
         mRemotePath = remotePath;
         mUidValidity = uidValidity;
+    }
+
+    public ImapFolder(ImapFolder folder) {
+        mMailboxId = folder.mMailboxId;
+        mItemId = folder.mItemId;
+        mDataSourceId = folder.mDataSourceId;
+        mLocalPath = folder.mLocalPath;
+        mRemotePath = folder.mRemotePath;
+        mUidValidity = folder.mUidValidity;
+        mUidNext = folder.mUidNext;
     }
     
     public int getMailboxId() { return mMailboxId; }
@@ -44,6 +55,7 @@ public class ImapFolder {
     public long getUidNext() { return mUidNext; }
     
     void setLocalPath(String localPath) { mLocalPath = localPath; }
+    void setRemotePath(String remotePath) { mRemotePath = remotePath; }
     void setUidValidity(Long uidValidity) { mUidValidity = uidValidity; }
     void setUidNext(long uidNext) { mUidNext = uidNext; }
 
