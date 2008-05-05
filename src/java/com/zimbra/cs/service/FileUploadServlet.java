@@ -39,12 +39,9 @@ import org.apache.commons.fileupload.DiskFileUpload;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadBase;
 import org.apache.commons.fileupload.FileUploadException;
-import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
 
@@ -78,6 +75,12 @@ import com.zimbra.cs.util.Zimbra;
 
 public class FileUploadServlet extends ZimbraServlet {
     private static final long serialVersionUID = -3156986245375108467L;
+    
+    // bug 27610
+    // We now limit file upload size for messages by zimbraMtaMaxMessageSize
+    // If this query param is present in the URI, upload size is limited by zimbraFileUploadMaxSize,
+    // This allows customer to allow larger documents/briefcase files than messages sent via SMTP.
+    protected static final String PARAM_LIMIT_BY_FILE_UPLOAD_MAX_SIZE = "lbfums";
 
     /** The character separating upload IDs in a list */
     public static final String UPLOAD_DELIMITER = ",";
@@ -228,7 +231,7 @@ public class FileUploadServlet extends ZimbraServlet {
         boolean success = false;
         try {
             // store the fetched file as a normal upload
-            DiskFileUpload upload = getUploader();
+            DiskFileUpload upload = getUploader(false);
             fi = upload.getFileItemFactory().createItem("upload", contentType, false, filename);
             int size = ByteUtil.copy(is, true, fi.getOutputStream(), true, upload.getSizeMax() * 3);
             if (size > upload.getSizeMax())
@@ -348,11 +351,13 @@ public class FileUploadServlet extends ZimbraServlet {
         			ZimbraLog.addMboxToContext(mbox.getId());
         	}
 
+        	boolean limitByFileUploadMaxSize = (req.getParameter(FileUploadServlet.PARAM_LIMIT_BY_FILE_UPLOAD_MAX_SIZE) != null);
+        	
         	// file upload requires multipart enctype
         	if (FileUploadBase.isMultipartContent(req))
-        		handleMultipartUpload(req, resp, fmt, at.getAccountId());
+        		handleMultipartUpload(req, resp, fmt, at.getAccountId(), limitByFileUploadMaxSize);
         	else
-        		handlePlainUpload(req, resp, fmt, at.getAccountId());
+        		handlePlainUpload(req, resp, fmt, at.getAccountId(), limitByFileUploadMaxSize);
         } catch (ServiceException e) {
             mLog.info("File upload failed", e);
             drainRequestStream(req);
@@ -361,11 +366,11 @@ public class FileUploadServlet extends ZimbraServlet {
     }
 
     @SuppressWarnings("unchecked")
-    private void handleMultipartUpload(HttpServletRequest req, HttpServletResponse resp, String fmt, String accountId) throws IOException, ServiceException {
+    private void handleMultipartUpload(HttpServletRequest req, HttpServletResponse resp, String fmt, String accountId, boolean limitByFileUploadMaxSize) throws IOException, ServiceException {
         List<FileItem> items = null;
         String reqId = null;
 
-        DiskFileUpload upload = getUploader();
+        DiskFileUpload upload = getUploader(limitByFileUploadMaxSize);
         try {
             items = upload.parseRequest(req);
         } catch (FileUploadBase.SizeLimitExceededException e) {
@@ -442,7 +447,7 @@ public class FileUploadServlet extends ZimbraServlet {
         sendResponse(resp, HttpServletResponse.SC_OK, fmt, reqId, uploads, items);
     }
 
-    private void handlePlainUpload(HttpServletRequest req, HttpServletResponse resp, String fmt, String accountId) throws IOException, ServiceException {
+    private void handlePlainUpload(HttpServletRequest req, HttpServletResponse resp, String fmt, String accountId, boolean limitByFileUploadMaxSize) throws IOException, ServiceException {
         // metadata is encoded in the response's HTTP headers
         ContentType ctype = new ContentType(req.getContentType());
         String contentType = ctype.getValue(), filename = ctype.getParameter("name");
@@ -456,7 +461,7 @@ public class FileUploadServlet extends ZimbraServlet {
         }
 
         // store the fetched file as a normal upload
-        DiskFileUpload upload = getUploader();
+        DiskFileUpload upload = getUploader(limitByFileUploadMaxSize);
         FileItem fi = upload.getFileItemFactory().createItem("upload", contentType, false, filename);
         try {
             // write the upload to disk, but make sure not to exceed the permitted max upload size
@@ -563,14 +568,19 @@ public class FileUploadServlet extends ZimbraServlet {
         }
     }
 
-    private static DiskFileUpload getUploader() {
+    private static DiskFileUpload getUploader(boolean limitByFileUploadMaxSize) {
         // look up the maximum file size for uploads
         long maxSize = DEFAULT_MAX_SIZE;
         try {
-            Server config = Provisioning.getInstance().getLocalServer();
-            maxSize = config.getLongAttr(Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_SIZE);
+            if (limitByFileUploadMaxSize) {
+                maxSize = Provisioning.getInstance().getLocalServer().getLongAttr(Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_SIZE);
+            } else {
+                maxSize = Provisioning.getInstance().getConfig().getLongAttr(Provisioning.A_zimbraMtaMaxMessageSize, DEFAULT_MAX_SIZE);
+            }
         } catch (ServiceException e) {
-            mLog.error("Unable to read " + Provisioning.A_zimbraFileUploadMaxSize + " attribute", e);
+            mLog.error("Unable to read " + 
+                      ((limitByFileUploadMaxSize)?Provisioning.A_zimbraFileUploadMaxSize:Provisioning.A_zimbraMtaMaxMessageSize) + 
+                      " attribute", e);
         }
 
         DiskFileUpload upload = new DiskFileUpload();
