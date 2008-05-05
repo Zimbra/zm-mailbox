@@ -53,7 +53,6 @@ public class ZCallFeature {
 
     public synchronized void assignFrom(ZCallFeature that) {
         this.mName = that.mName;
-        this.mIsSubscribed = that.mIsSubscribed;
         this.mIsActive = that.mIsActive;
         this.mData.clear();
         this.mData.putAll(that.mData);
