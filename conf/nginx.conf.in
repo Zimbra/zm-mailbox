@@ -38,8 +38,7 @@ events {
     worker_connections  10240;
 }
 
-mail {
-
+memcache {
     # memcached server configuration
     # configure one or more memcached servers that will cache the route 
     # information for pop/imap users
@@ -50,16 +49,13 @@ mail {
     # server, after which the request will be considered timed out,
     # and NGINX will fall back to an http routing lookup handler
     # 
-    memcache_timeout              3000ms;
-
-    # POP/IMAP timeout
-    timeout                       3600s;
+    timeout     3000ms;
 
     # The amount of time that NGINX will wait before attempting to reconnect
     # to a memcache server that unexpectedly terminated (or shut down) its 
     # connection with NGINX
     # 
-    memcache_reconnect_interval   60000ms;
+    reconnect   1m;
 
     # The time to live (TTL) for an entry added to the memcached server 
     # This value represents the amount of time that the route information 
@@ -71,7 +67,7 @@ mail {
     # defaults to 0, which indicates an infinite time to live for the 
     # routing information
     # 
-    memcache_entry_ttl             3600s;
+    ttl         1h;
 
     # Whether or not to cache unqualified login names - this is useful in 
     # deployments where there is only one domain, but many users, so that a 
@@ -85,7 +81,14 @@ mail {
     # name will benefit from the previously cached route information, if any
     # By default, this value is off
     # 
-    memcache_entry_allow_unqualified    off;
+    allow_unqualified    off;
+
+}
+
+mail {
+
+    # POP/IMAP timeout
+    timeout                       3600s;
 
     # pass error messages from the backend server to the client
     # if true, the error messages are passed to the client verbatim, else
