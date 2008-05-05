@@ -974,7 +974,9 @@ public class Folder extends MailItem {
             info.cascadeIds = DbMailItem.markDeletionTargets(mMailbox, info.itemIds.getIds(TYPE_MESSAGE, TYPE_CHAT), info.modifiedIds);
         else
             info.cascadeIds = DbMailItem.markDeletionTargets(this, info.modifiedIds);
-        info.modifiedIds.removeAll(info.cascadeIds);
+
+        if (info.cascadeIds != null)
+            info.modifiedIds.removeAll(info.cascadeIds);
         super.propagateDeletion(info);
     }
 
