@@ -943,8 +943,8 @@ public class UserServlet extends ZimbraServlet {
 
         // don't use this for a large upload.  use getUpload() instead.
         public byte[] getPostBody() throws ServiceException, IOException {
-            long sizeLimit = Provisioning.getInstance().getLocalServer().getLongAttr(
-                    Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_POST_SIZE);
+            long sizeLimit = Provisioning.getInstance().getConfig().getLongAttr(
+                    Provisioning.A_zimbraMtaMaxMessageSize, DEFAULT_MAX_POST_SIZE);
             return ByteUtil.getContent(req.getInputStream(), req.getContentLength(), sizeLimit);
         }
         

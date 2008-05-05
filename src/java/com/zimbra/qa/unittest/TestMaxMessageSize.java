@@ -54,7 +54,7 @@ extends TestCase {
         mOrigFileUploadMaxSize = prov.getLocalServer().getAttr(Provisioning.A_zimbraFileUploadMaxSize, null); 
     }
     
-    public void testMaxMessageSize()
+    public void testMaxMessageSizeBelowThreshold()
     throws Exception {
         setMaxMessageSize(TEST_MAX_MESSAGE_SIZE);
         Map<String, byte[]> attachments = new HashMap<String, byte[]>();
@@ -63,9 +63,16 @@ extends TestCase {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String aid = mbox.uploadAttachments(attachments, 5000);
         TestUtil.sendMessage(mbox, USER_NAME, NAME_PREFIX, "Message size below threshold", aid);
-        
-        attachments.put("file3.exe", new byte[1000]);
-        aid = mbox.uploadAttachments(attachments, 5000);
+    }
+    
+    public void testMaxMessageSizeAboveThreshold()
+    throws Exception {
+        setMaxMessageSize(TEST_MAX_MESSAGE_SIZE);
+        Map<String, byte[]> attachments = new HashMap<String, byte[]>();
+        attachments.put("file1.exe", new byte[800]);
+        attachments.put("file2.exe", new byte[700]);
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        String aid = mbox.uploadAttachments(attachments, 5000);
         try {
             TestUtil.sendMessage(mbox, USER_NAME, NAME_PREFIX, "Message size above threshold", aid);
             fail("sendMessage() should not have succeeded");
@@ -122,8 +129,12 @@ extends TestCase {
     
     public void testUploadMaxSize()
     throws Exception {
-        TestUtil.setServerAttr(Provisioning.A_zimbraFileUploadMaxSize, "900");
-
+        /*
+         * bug 27610, default file upload size for messages is now limited by zimbraMtaMaxMessageSize
+         */
+        // TestUtil.setServerAttr(Provisioning.A_zimbraFileUploadMaxSize, "900");
+        setMaxMessageSize(900); 
+        
         // Upload an attachment that exceeds the max size
         Map<String, byte[]> attachments = new HashMap<String, byte[]>();
         attachments.put("file1.exe", new byte[1000]);

@@ -84,7 +84,7 @@ public class ImapConfig extends ServerConfig {
         mSaslGssapiEnabled = server.getBooleanAttr(
             A_zimbraImapSaslGssapiEnabled, false);
         // enough space to hold the largest possible message, plus a bit extra to cover IMAP protocol chatter
-        mMaxRequestSize = server.getIntAttr(A_zimbraFileUploadMaxSize, -1);
+        mMaxRequestSize = config.getIntAttr(A_zimbraMtaMaxMessageSize, -1);
         if (mMaxRequestSize <= 0) {
             mMaxRequestSize = DEFAULT_MAX_REQUEST_SIZE;
         } else {

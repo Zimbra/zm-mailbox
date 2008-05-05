@@ -99,7 +99,7 @@ public class ParseMimeMessage {
         Element contentElement = msgElem.getElement(MailConstants.E_CONTENT);
 
         byte[] content = contentElement.getText().getBytes();
-        long maxSize = Provisioning.getInstance().getLocalServer().getLongAttr(Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_SIZE);
+        long maxSize = Provisioning.getInstance().getConfig().getLongAttr(Provisioning.A_zimbraMtaMaxMessageSize, DEFAULT_MAX_SIZE);
         if (content.length > maxSize)
             throw ServiceException.INVALID_REQUEST("inline message too large", null);
 
