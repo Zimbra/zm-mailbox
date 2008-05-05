@@ -3155,4 +3155,13 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Logo URL for chameleon skin for the domain</desc>
 </attr>
 
+<attr id="650" name="zimbraPrefMarkMsgRead" type="integer" cardinality="single" min="-1" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>0</defaultCOSValue>
+  <desc>whether and mark a message as read
+          -1: Do not mark read
+           0: Mark read
+        1..n: Mark read after this many seconds
+  </desc>
+</attr>
+
 </attrs>
