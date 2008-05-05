@@ -2300,22 +2300,19 @@ public abstract class MailItem implements Comparable<MailItem> {
         // actually delete the items from the DB
         if (info.incomplete || item == null) {
             if (ZimbraLog.mailop.isInfoEnabled()) {
-                if (item != null) {
-                    ZimbraLog.mailop.info("Deleting items from %s.", getMailopContext(item));
-                }
-                List<Integer> all = info.itemIds.getAll();
-                if (all != null && all.size() > 0) {
-                    for (List<Integer> idList : ListUtil.split(all, 200)) {
-                        ZimbraLog.mailop.info("Deleting items: " + StringUtil.join(",", idList));
-                    }
+                if (item != null)
+                    ZimbraLog.mailop.info("Deleting items from " + getMailopContext(item));
+                if (!info.itemIds.isEmpty()) {
+                    for (List<Integer> idList : ListUtil.split(info.itemIds.getAll(), 200))
+                        ZimbraLog.mailop.info("Deleting items: " + idList);
                 }
             }
             DbMailItem.delete(mbox, info.itemIds.getAll());
         } else if (scope == DeleteScope.CONTENTS_ONLY) {
-            ZimbraLog.mailop.info("Deleting contents of %s.", getMailopContext(item));
+            ZimbraLog.mailop.info("Deleting contents of " + getMailopContext(item));
             DbMailItem.deleteContents(item);
         } else {
-            ZimbraLog.mailop.info("Deleting %s.", getMailopContext(item));
+            ZimbraLog.mailop.info("Deleting " + getMailopContext(item));
             DbMailItem.delete(item);
         }
 
@@ -2323,7 +2320,8 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (item != null) {
             item.purgeCache(info, !info.incomplete && scope == DeleteScope.ENTIRE_ITEM);
         } else if (!info.itemIds.isEmpty()) {
-            info.cascadeIds = DbMailItem.markDeletionTargets(mbox, info.itemIds.getIds(TYPE_MESSAGE), info.modifiedIds);
+            // we're doing an old-item expunge or the like rather than a single delete/empty op
+            info.cascadeIds = DbMailItem.markDeletionTargets(mbox, info.itemIds.getIds(TYPE_MESSAGE, TYPE_CHAT), info.modifiedIds);
             if (info.cascadeIds != null)
                 info.modifiedIds.removeAll(info.cascadeIds);
             mbox.purge(TYPE_CONVERSATION);

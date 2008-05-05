@@ -28,7 +28,6 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1255,24 +1254,25 @@ public class DbMailItem {
 
     private static List<Integer> getPurgedConversations(Mailbox mbox, Set<Integer> candidates) throws ServiceException {
         if (candidates == null || candidates.isEmpty())
-            return Collections.emptyList();
-        List<Integer> convIDs = new ArrayList<Integer>(candidates);
-
+            return null;
         List<Integer> purgedConvs = new ArrayList<Integer>();
 
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            for (int i = 0; i < convIDs.size(); i += Db.getINClauseBatchSize()) {
-                int count = Math.min(Db.getINClauseBatchSize(), convIDs.size() - i);
+            // note: be somewhat careful making changes here, as <tt>i</tt> and <tt>it</tt> operate separately
+            Iterator<Integer> it = candidates.iterator();
+            for (int i = 0; i < candidates.size(); i += Db.getINClauseBatchSize()) {
+                int count = Math.min(Db.getINClauseBatchSize(), candidates.size() - i);
                 stmt = conn.prepareStatement("SELECT id FROM " + getMailItemTableName(mbox) +
                             " WHERE " + IN_THIS_MAILBOX_AND + "id IN" + DbUtil.suitableNumberOfVariables(count) + "AND size <= 0");
                 int pos = 1;
                 stmt.setInt(pos++, mbox.getId());
                 for (int index = i; index < i + count; index++)
-                    stmt.setInt(pos++, convIDs.get(index));
+                    stmt.setInt(pos++, it.next());
                 rs = stmt.executeQuery();
+
                 while (rs.next())
                     purgedConvs.add(rs.getInt(1));
             }
