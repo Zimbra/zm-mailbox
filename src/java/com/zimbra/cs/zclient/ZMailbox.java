@@ -904,12 +904,13 @@ public class ZMailbox {
      * @return top-level JSON respsonse
      * @throws ServiceException on error
      */
-    public static Element getBootstrapJSON(String url, ZAuthToken authToken, boolean doSearch, String itemsPerPage, String searchTypes) throws ServiceException {
+    public static Element getBootstrapJSON(String url, String remoteAddr, ZAuthToken authToken, boolean doSearch, String itemsPerPage, String searchTypes) throws ServiceException {
         ZMailbox.Options options = new ZMailbox.Options(authToken, url);
         JsonDebugListener debug = new JsonDebugListener();
         options.setNoSession(false);
         options.setAuthAuthToken(false);
         options.setDebugListener(debug);
+        options.setClientIp(remoteAddr);
         options.setResponseProtocol(SoapProtocol.SoapJS);
 
         ZMailbox mbox = getMailbox(options);
