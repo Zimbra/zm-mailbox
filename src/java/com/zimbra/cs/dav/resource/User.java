@@ -38,8 +38,13 @@ public class User extends DavResource {
         String url = UrlNamespace.getPrincipalUrl(user);
         addResourceType(DavElements.E_PRINCIPAL);
         addProperty(CalDavProperty.getCalendarHomeSet(user));
-        addProperty(CalDavProperty.getScheduleInboxURL(user));
-        addProperty(CalDavProperty.getScheduleOutboxURL(user));
+        
+        boolean schedulingDisabled = Provisioning.getInstance().getConfig().getBooleanAttr(Provisioning.A_zimbraCalendarCalDavDisableScheduling, false);
+        if (!schedulingDisabled) {
+            addProperty(CalDavProperty.getScheduleInboxURL(user));
+            addProperty(CalDavProperty.getScheduleOutboxURL(user));
+        }
+        
         ArrayList<String> addrs = new ArrayList<String>();
         addrs.add(owner.getAttr(Provisioning.A_zimbraMailDeliveryAddress));
         addrs.add(url);

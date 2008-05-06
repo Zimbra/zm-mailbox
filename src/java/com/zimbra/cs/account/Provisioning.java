@@ -1498,6 +1498,9 @@ public abstract class Provisioning {
     
     public static final String A_zimbraNotebookSanitizeHtml = "zimbraNotebookSanitizeHtml";
     
+    public static final String A_zimbraCalendarCalDavAlternateCalendarHomeSet = "zimbraCalendarCalDavAlternateCalendarHomeSet";
+    public static final String A_zimbraCalendarCalDavDisableScheduling = "zimbraCalendarCalDavDisableScheduling";
+    
     public static final int MAX_ZIMBRA_ID_LEN = 127;
     
     private static Provisioning sProvisioning;

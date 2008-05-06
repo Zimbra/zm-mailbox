@@ -3164,4 +3164,13 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
+<attr id="651" name="zimbraCalendarCalDavAlternateCalendarHomeSet" type="string" cardinality="multi" optionalIn="globalConfig">
+  <desc>alternate location for calendar and task folders</desc>
+</attr>
+
+<attr id="652" name="zimbraCalendarCalDavDisableScheduling" type="boolean" cardinality="single" optionalIn="globalConfig">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>set true to turn off handling scheduling message for CalDAV</desc>
+</attr>
+
 </attrs>
