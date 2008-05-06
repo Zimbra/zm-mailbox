@@ -305,16 +305,20 @@ public abstract class MailItem implements Comparable<MailItem> {
         /** list of types included in this map, see @link{MailItem#typeToBitmask} */
         public int getTypesMask() {
             int mask = 0;
-            for (Byte b : types())
+            for (byte b : types())
                 mask |= MailItem.typeToBitmask(b);
             return mask;
         }
         public List<Integer> getIds(byte... types) {
-            List<Integer> toRet = new ArrayList<Integer>();
+            List<Integer> ids = null, typedIds;
             for (byte b : types) {
-                toRet.addAll(getIds(b));
+                if ((typedIds = getIds(b)) == null)
+                    continue;
+                if (ids == null)
+                    ids = new ArrayList<Integer>();
+                ids.addAll(typedIds);
             }
-            return toRet;
+            return ids;
         }
         public List<Integer> getIds(byte type) {
             return mIds.get(type);
