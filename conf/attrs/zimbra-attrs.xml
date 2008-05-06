@@ -2198,7 +2198,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="472" name="zimbraReverseProxyMailHostQuery" type="string" cardinality="single" optionalIn="globalConfig">
-  <globalConfigValue>(|(zimbraMailDeliveryAddress=${USER})(zimbraMailAlias=${USER}))</globalConfigValue>
+  <globalConfigValue>(|(zimbraMailDeliveryAddress=${USER})(zimbraMailAlias=${USER})(zimbraId=${USER}))</globalConfigValue>
   <desc>LDAP query to find a user</desc>
 </attr>
 
