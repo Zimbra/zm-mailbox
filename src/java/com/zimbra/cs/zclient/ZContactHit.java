@@ -33,7 +33,7 @@ public class ZContactHit implements ZSearchHit {
     private String mTagIds;
     private String mSortField;
     private String mFileAsStr;
-    private String mEmail, mEmail2, mEmail3;
+    private String mEmail, mEmail2, mEmail3, mWorkEmail1, mWorkEmail2, mWorkEmail3;
     private String mRevision;
     private String mFolderId;
     private String mType;
@@ -55,6 +55,9 @@ public class ZContactHit implements ZSearchHit {
         mEmail = e.getAttribute(Contact.A_email, null);
         mEmail2 = e.getAttribute(Contact.A_email2, null);
         mEmail3 = e.getAttribute(Contact.A_email3, null);
+        mWorkEmail1 = e.getAttribute(Contact.A_workEmail1, null);
+        mWorkEmail2 = e.getAttribute(Contact.A_workEmail2, null);
+        mWorkEmail3 = e.getAttribute(Contact.A_workEmail3, null);
         mMetaDataDate = e.getAttributeLong(MailConstants.A_MODIFIED_DATE, 0) * 1000;
         mDlist = e.getAttribute(Contact.A_dlist, null);
         mFullName = e.getAttribute(Contact.A_fullName,null);
@@ -76,6 +79,9 @@ public class ZContactHit implements ZSearchHit {
         sb.add(Contact.A_email, mEmail);
         sb.add(Contact.A_email2, mEmail2);
         sb.add(Contact.A_email3, mEmail3);
+        sb.add(Contact.A_workEmail1, mWorkEmail1);
+        sb.add(Contact.A_workEmail2, mWorkEmail2);
+        sb.add(Contact.A_workEmail3, mWorkEmail3);
         sb.add(Contact.A_fullName, mFullName);
         sb.endStruct();
         return sb.toString();
@@ -111,6 +117,18 @@ public class ZContactHit implements ZSearchHit {
 
     public String getEmail3() {
         return mEmail3;
+    }
+
+    public String getWorkEmail1() {
+        return mWorkEmail1;
+    }
+
+    public String getWorkEmail2() {
+        return mWorkEmail2;
+    }
+
+    public String getWorkEmail3() {
+        return mWorkEmail3;
     }
 
     public String getFileAsStr() {
