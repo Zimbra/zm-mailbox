@@ -24,7 +24,10 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.session.WaitSetAccount;
 import com.zimbra.cs.session.WaitSetError;
 import com.zimbra.cs.session.WaitSetMgr;
@@ -71,6 +74,19 @@ public class CreateWaitSet extends MailDocumentHandler {
         
         List<WaitSetAccount> add = WaitSetRequest.parseAddUpdateAccounts(
             request.getOptionalElement(MailConstants.E_WAITSET_ADD), defaultInterests, allowedAccountIds);
+        
+        // workaround for 27480: load the mailboxes NOW, before we grab the waitset lock
+        List<Mailbox> referencedMailboxes = new ArrayList<Mailbox>();
+        for (WaitSetAccount acct : add) {
+            try {
+                MailboxManager.FetchMode fetchMode = MailboxManager.FetchMode.AUTOCREATE;
+                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.accountId, fetchMode);
+                referencedMailboxes.add(mbox);
+            } catch (ServiceException e) {
+                ZimbraLog.session.debug("Caught exception preloading mailbox for waitset", e);
+            }
+        }
+        
 
         Pair<String, List<WaitSetError>> result = WaitSetMgr.create(zsc.getAuthtokenAccountId(), adminAllowed, defaultInterests, allAccts, add);
         String wsId = result.getFirst();

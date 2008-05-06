@@ -34,6 +34,8 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.service.admin.AdminServiceException;
 import com.zimbra.cs.service.util.SyncToken;
 import com.zimbra.cs.session.IWaitSet;
@@ -180,11 +182,32 @@ public class WaitSetRequest extends MailDocumentHandler {
                 allowedAccountIds.add(zsc.getAuthtokenAccountId());
             }
             
+            
             List<WaitSetAccount> add = parseAddUpdateAccounts(
                 request.getOptionalElement(MailConstants.E_WAITSET_ADD), cb.ws.getDefaultInterest(), allowedAccountIds);
             List<WaitSetAccount> update = parseAddUpdateAccounts(
                 request.getOptionalElement(MailConstants.E_WAITSET_UPDATE), cb.ws.getDefaultInterest(), allowedAccountIds);
             List<String> remove = parseRemoveAccounts(request.getOptionalElement(MailConstants.E_WAITSET_REMOVE), allowedAccountIds);
+
+            // workaround for 27480: load the mailboxes NOW, before we grab the waitset lock
+            List<Mailbox> referencedMailboxes = new ArrayList<Mailbox>();
+            for (WaitSetAccount acct : add) {
+                try {
+                    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.accountId, MailboxManager.FetchMode.AUTOCREATE);
+                    referencedMailboxes.add(mbox);
+                } catch (ServiceException e) {
+                    ZimbraLog.session.debug("Caught exception preloading mailbox for waitset", e);
+                }
+            }
+            for (WaitSetAccount acct : update) {
+                try {
+                    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.accountId, MailboxManager.FetchMode.AUTOCREATE);
+                    referencedMailboxes.add(mbox);
+                } catch (ServiceException e) {
+                    ZimbraLog.session.debug("Caught exception preloading mailbox for waitset", e);
+                }
+            }
+            
             
             // Force the client to wait briefly before processing -- this will stop 'bad' clients from polling 
             // the server in a very fast loop (they should be using the 'block' mode)

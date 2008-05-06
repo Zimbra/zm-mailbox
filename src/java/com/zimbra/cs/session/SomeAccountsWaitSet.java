@@ -72,12 +72,12 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
     }
 
     /* @see com.zimbra.cs.mailbox.MailboxManager.Listener#mailboxAvailable(com.zimbra.cs.mailbox.Mailbox) */
-    public synchronized void mailboxAvailable(Mailbox mbox) {
+    public void mailboxAvailable(Mailbox mbox) {
         this.mailboxLoaded(mbox);
     }
     
     /* @see com.zimbra.cs.mailbox.MailboxManager.Listener#mailboxCreated(com.zimbra.cs.mailbox.Mailbox) */
-    public synchronized void mailboxCreated(Mailbox mbox) {
+    public void mailboxCreated(Mailbox mbox) {
         this.mailboxLoaded(mbox);
     }
     
