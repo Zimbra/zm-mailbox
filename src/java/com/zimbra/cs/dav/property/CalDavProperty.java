@@ -22,7 +22,9 @@ import java.util.Collection;
 import org.dom4j.Element;
 import org.dom4j.QName;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.property.ResourceProperty;
@@ -151,9 +153,23 @@ public class CalDavProperty extends ResourceProperty {
 	private static class CalendarHomeSet extends CalDavProperty {
 		public CalendarHomeSet(String user) {
 			super(DavElements.E_CALENDAR_HOME_SET);
-			Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
-			e.setText(DavServlet.DAV_PATH + "/" + user + "/");
-			mChildren.add(e);
+			String[] homeSets = null;
+			try {
+				homeSets = Provisioning.getInstance().getConfig().getMultiAttr(Provisioning.A_zimbraCalendarCalDavAlternateCalendarHomeSet);
+			} catch (ServiceException se) {
+				
+			}
+			if (homeSets == null || homeSets.length == 0) {
+				Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
+				e.setText(DavServlet.DAV_PATH + "/" + user + "/");
+				mChildren.add(e);
+			} else {
+				for (String calHome : homeSets) {
+					Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
+					e.setText(DavServlet.DAV_PATH + "/" + user + "/" + calHome + "/");
+					mChildren.add(e);
+				}
+			}
 		}
 	}
 	

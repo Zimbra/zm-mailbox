@@ -375,7 +375,7 @@ public class UrlNamespace {
 				else if (f.getId() == Mailbox.ID_FOLDER_SENT)
 					resource = new ScheduleOutbox(ctxt, f);
 				else if (viewType == MailItem.TYPE_APPOINTMENT)
-					resource = new CalendarCollection(ctxt, f);
+					resource = getCalendarCollection(ctxt, f);
 				else
 					resource = new Collection(ctxt, f);
 				break;
@@ -398,6 +398,17 @@ public class UrlNamespace {
 			ZimbraLog.dav.info("cannot create DavResource", e);
 		}
 		return resource;
+	}
+	
+	private static MailItemResource getCalendarCollection(DavContext ctxt, Folder f) throws ServiceException, DavException {
+		String[] homeSets = Provisioning.getInstance().getConfig().getMultiAttr(Provisioning.A_zimbraCalendarCalDavAlternateCalendarHomeSet);
+		// if alternate homeSet is set then default Calendar and Tasks folders 
+		// are no longer being used to store appointments and tasks.
+		if (homeSets.length > 0 && 
+				(f.getId() == Mailbox.ID_FOLDER_CALENDAR ||
+				 f.getId() == Mailbox.ID_FOLDER_TASKS))
+			return new Collection(ctxt, f);
+		return new CalendarCollection(ctxt, f);
 	}
 	
 	private static DavResource getPhantomResource(DavContext ctxt, String user) throws DavException {
