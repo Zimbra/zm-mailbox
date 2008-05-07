@@ -49,7 +49,7 @@ public class DataSourceManager {
         new HashMap<String, Map<String, ImportStatus>>();
 
     private static final boolean NEW_SYNC_ENABLED =
-        true; // LC.data_source_new_sync_enabled.booleanValue();
+        LC.data_source_new_sync_enabled.booleanValue();
 
     /**
      * Tests connecting to a data source.  Do not actually create the
