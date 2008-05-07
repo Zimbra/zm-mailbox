@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.service;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
@@ -69,6 +70,7 @@ import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
@@ -109,16 +111,10 @@ public class FileUploadServlet extends ZimbraServlet {
 
         public String getName()         { return name; }
         public String getId()           { return uuid; }
-        public String getContentType()  { return file.getContentType(); }
+        public String getContentType()  { return file == null ? Mime.CT_TEXT_PLAIN : file.getContentType(); }
+        public long getSize()           { return file == null ? 0 : file.getSize(); }
         public InputStream getInputStream() throws IOException {
-            return file.getInputStream();
-        }
-        
-        public long getSize() {
-            if (this.file == null) {
-                return 0;
-            }
-            return this.file.getSize();
+            return file == null ? new ByteArrayInputStream(new byte[0]) : file.getInputStream();
         }
 
         boolean accessedAfter(long checkpoint)  { return time > checkpoint; }
@@ -514,6 +510,7 @@ public class FileUploadServlet extends ZimbraServlet {
                     elt.addAttribute(MailConstants.A_ATTACHMENT_ID, up.uuid);
                     elt.addAttribute(MailConstants.A_CONTENT_TYPE, up.getContentType());
                     elt.addAttribute(MailConstants.A_CONTENT_FILENAME, up.name);
+                    elt.addAttribute(MailConstants.A_SIZE, up.getSize());
                     results.append(first ? "" : ",").append(elt.toString());
                     first = false;
                 }
