@@ -480,10 +480,21 @@ public abstract class CalendarItem extends MailItem {
                     }
                 }
             }
+            // Find the earliest DTSTART.  It is not necessarily the DTSTART of the recurrence series
+            // because an exception can move the first instance to an earlier time.
+            ParsedDateTime earliestStart = null;
+            for (Invite cur : mInvites) {
+                ParsedDateTime start = cur.getStartTime();
+                if (earliestStart == null) {
+                    earliestStart = start;
+                } else if (start != null && start.compareTo(earliestStart) < 1) {
+                    earliestStart = start;
+                }
+            }
             
             // update the start and end time in the CalendarItem table if
             // necessary
-            ParsedDateTime dtStartTime = mRecurrence.getStartTime();
+            ParsedDateTime dtStartTime = earliestStart;
             ParsedDateTime dtEndTime = mRecurrence.getEndTime();
             
             startTime = dtStartTime != null ? dtStartTime.getUtcTime() : 0;
