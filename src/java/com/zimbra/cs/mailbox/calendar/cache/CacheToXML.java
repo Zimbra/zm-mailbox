@@ -230,10 +230,10 @@ public class CacheToXML {
         if (showAll) {
             alarmElem.addAttribute(MailConstants.A_NAME, alarmData.getSummary());
             alarmElem.addAttribute(MailConstants.A_CAL_LOCATION, alarmData.getLocation());
+            Alarm alarmObj = alarmData.getAlarm();
+            if (alarmObj != null)
+                alarmObj.toXml(alarmElem);
         }
-        Alarm alarmObj = alarmData.getAlarm();
-        if (alarmObj != null)
-            alarmObj.toXml(alarmElem);  // TODO: pay attention to showAll boolean
     }
 
     public static Element encodeCalendarItemData(ZimbraSoapContext zsc,

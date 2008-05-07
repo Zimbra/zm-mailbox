@@ -167,10 +167,10 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                         if (calItemElem == null) {
                             calItemElem = lc.createElement(isAppointment ? MailConstants.E_APPOINTMENT : MailConstants.E_TASK);
 
-                            if (alarmData != null)
-                                ToXML.encodeAlarmData(calItemElem, calItem, alarmData);
-
                             if (showAll) {
+                                if (alarmData != null)
+                                    ToXML.encodeAlarmData(calItemElem, calItem, alarmData);
+
                                 // flags and tags
                                 String flags = calItem.getFlagString();
                                 if (flags != null && !flags.equals(""))
