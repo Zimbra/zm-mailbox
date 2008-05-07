@@ -63,10 +63,9 @@ import com.zimbra.common.mime.MimeCompoundHeader;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-
-import com.zimbra.cs.util.JMSession;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.util.JMSession;
 
 /**
  * @author schemers
@@ -131,9 +130,9 @@ public class Mime {
 
     private static final int MAX_DECODE_BUFFER = 2048;
 
-    private static final Set<String> TRANSFER_ENCODINGS = new HashSet<String>(Arrays.asList(new String[] {
+    private static final Set<String> TRANSFER_ENCODINGS = new HashSet<String>(Arrays.asList(
             ET_7BIT, ET_8BIT, ET_BINARY, ET_QUOTED_PRINTABLE, ET_BASE64
-    }));
+    ));
 
     public static class FixedMimeMessage extends MimeMessage {
         public FixedMimeMessage(Session s)  { super(s); }
@@ -176,7 +175,8 @@ public class Mime {
 	// so we get as many as possible
 	private static void handlePart(MimePart mp, String prefix, List<MPartInfo> partList, MPartInfo parent, int partNum)
     throws IOException, MessagingException {
-		String cts = getContentType(mp);
+        String ctdefault = parent != null && parent.mContentType.equals(CT_MULTIPART_DIGEST) ? CT_MESSAGE_RFC822 : CT_DEFAULT;
+		String cts = getContentType(mp, ctdefault);
         boolean isMultipart = cts.startsWith(CT_MULTIPART_PREFIX); 
         boolean isMessage = !isMultipart && cts.equals(CT_MESSAGE_RFC822);
         boolean digestParent = parent != null && parent.mContentType.equalsIgnoreCase(CT_MULTIPART_DIGEST);
@@ -449,18 +449,24 @@ public class Mime {
      *  content-type "message/rfc822".  Use this method instead of
      *  {@link Part#getContent()} to work around JavaMail's fascism about
      *  proper MIME format and failure to support RFC 2184. */
-    public static Object getMessageContent(MimePart message822Part) throws IOException, MessagingException {
-        Object content = message822Part.getContent();
-        if (content instanceof InputStream) {
-            try {
-                // handle unparsed content due to miscapitalization of content-type value
-                return new FixedMimeMessage(JMSession.getSession(), (InputStream) content);
-            } catch (Exception e) {
-            } finally {
-                ByteUtil.closeStream((InputStream) content);
-            }
+    public static MimeMessage getMessageContent(MimePart message822Part) throws IOException, MessagingException {
+        String ctype = getContentType(message822Part);
+        if (CT_MESSAGE_RFC822.equals(ctype)) {
+            // JavaMail will only return a correct MimeMessage if the Content-Type header was set correctly
+            Object content = message822Part.getContent();
+            if (content instanceof MimeMessage)
+                return (MimeMessage) content;
         }
-        return content;
+
+        InputStream is = null;
+        try {
+            // handle unparsed content due to multipart/digest or miscapitalization of content-type value
+            return new FixedMimeMessage(JMSession.getSession(), is = message822Part.getInputStream());
+        } catch (Exception e) {
+        } finally {
+            ByteUtil.closeStream(is);
+        }
+        return null;
     }
 
     /** Returns the MimeMultipart object encapsulating the body of a MIME
@@ -548,14 +554,15 @@ public class Mime {
                 // the top-level part of a non-multipart message is numbered "1"
                 break;
             } else if (ct.startsWith(CT_MESSAGE_RFC822)) {
-                Object content = getMessageContent(mp);
-                if (content instanceof MimeMessage) {
+                MimeMessage content = getMessageContent(mp);
+                if (content != null) {
                     if (mp instanceof MimeMessage) {
                         // the top-level part of a non-multipart message is numbered "1"
                         if (index != 1)
                             return null;
-                    } else
+                    } else {
                     	i--;
+                    }
                     mp = (MimePart) content;
                     continue;
                 }
@@ -716,9 +723,19 @@ public class Mime {
     /** Determines the "primary/subtype" part of a Part's Content-Type
      *  header.  Uses a permissive, RFC2231-capable parser, and defaults
      *  when appropriate. */
-    public static final String getContentType(Part part) {
+    public static final String getContentType(MimePart mp) {
+        return getContentType(mp, CT_DEFAULT);
+    }
+
+    /** Determines the "primary/subtype" part of a Part's Content-Type
+     *  header.  Uses a permissive, RFC2231-capable parser, and defaults
+     *  as indicated. */
+    public static final String getContentType(MimePart mp, String ctdefault) {
         try {
-            return getContentType(part.getContentType());
+            String cthdr = mp.getHeader("Content-Type", null);
+            if (cthdr == null || cthdr.trim().equals(""))
+                return ctdefault;
+            return getContentType(cthdr);
         } catch (MessagingException e) {
             ZimbraLog.extensions.warn("could not fetch part's content-type; defaulting to " + CT_DEFAULT, e);
             return CT_DEFAULT;
