@@ -61,6 +61,10 @@ public class ImapRequest {
     public List<Object> getParams() { return params; }
     public ResponseHandler getResponseHandler() { return handler; }
     
+    public boolean isAuthenticate() {
+        return CAtom.AUTHENTICATE.atom().equals(cmd);
+    }
+    
     public ImapResponse send() throws IOException {
         return connection.sendRequest(this);
     }
@@ -77,9 +81,8 @@ public class ImapRequest {
          }
          if (!tag.equalsIgnoreCase(res.getTag())) {
              throw new MailException(
-                 String.format(
-                     "Unexpected tag in response (expected %s but got %s)",
-                     tag, res.getTag()));
+                 "Unexpected tag in response(expected " + tag + " but got " +
+                 res.getTag() + ")");
          }
          if (!res.isOK()) {
              throw new CommandFailedException(
@@ -108,7 +111,7 @@ public class ImapRequest {
         } else if (data instanceof Quoted) {
             ((Quoted) data).write(out);
         } else if (data instanceof Literal) {
-            connection.writeLiteral(this, (Literal) data);
+            connection.writeLiteral((Literal) data);
         } else if (data instanceof Flags) {
             ((Flags) data).write(out);
         } else if (data instanceof MailboxName) {

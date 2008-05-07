@@ -26,25 +26,28 @@ import java.util.List;
  * IMAP response message.
  */
 public final class ImapResponse {
-    private String tag;         // Response tag
-    private long number = -1;   // Optional message number
-    private CAtom code;         // Response code or status
-    private Object data;        // Optional response data
+    private String tag;             // Response tag
+    private long number = -1;       // Optional message number
+    private CAtom code;             // Response code or status
+    private Object data;            // Optional response data
 
     public static final String CONTINUATION = "+";
     public static final String UNTAGGED = "*";
 
-    public static ImapResponse read(ImapInputStream is) throws IOException {
+    public static ImapResponse read(ImapInputStream is)
+        throws IOException {
         ImapResponse ir = new ImapResponse();
         ir.readResponse(is);
         return ir;
     }
 
+    private ImapResponse() {}
+    
     private void readResponse(ImapInputStream is) throws IOException {
         tag = is.readText(' ');
         is.skipChar(' ');
         if (tag.equals(CONTINUATION)) {
-            data = is.readText();
+            data = ResponseText.read(is);
         } else if (tag.equals(UNTAGGED)) {
             readUntagged(is);
         } else if (Chars.isTag(tag)) {
@@ -179,16 +182,15 @@ public final class ImapResponse {
     }
 
     public ResponseText getResponseText() {
-        return isStatus() ? (ResponseText) data : null;
+        try {
+            return (ResponseText) data;
+        } catch (ClassCastException e) {
+            return null;
+        }
     }
 
-    public Atom getResponseCode() {
-        ResponseText text = getResponseText();
-        return text != null ? text.getCode() : null;
-    }
-    
     public String getContinuation() {
-        return isContinuation() ? (String) data : null;
+        return isContinuation() ? getResponseText().getText() : null;
     }
     
     public void dispose() {
@@ -201,7 +203,7 @@ public final class ImapResponse {
         StringBuilder sb = new StringBuilder(tag);
         sb.append(' ');
         if (number != -1) sb.append(number).append(' ');
-        sb.append(code);
+        if (code != null) sb.append(code);
         if (data != null) sb.append(" <data>");
         return sb.toString();
     }

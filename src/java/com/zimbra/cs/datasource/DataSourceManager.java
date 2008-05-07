@@ -23,6 +23,7 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
@@ -46,6 +47,9 @@ public class DataSourceManager {
     // accountId -> dataSourceId -> ImportStatus
     private static final Map<String, Map<String, ImportStatus>> sImportStatus =
         new HashMap<String, Map<String, ImportStatus>>();
+
+    private static final boolean NEW_SYNC_ENABLED =
+        true; // LC.data_source_new_sync_enabled.booleanValue();
 
     /**
      * Tests connecting to a data source.  Do not actually create the
@@ -72,7 +76,7 @@ public class DataSourceManager {
             throws ServiceException {
         switch (ds.getType()) {
         case imap:
-            return new ImapImport(ds);
+            return NEW_SYNC_ENABLED ? new ImapSync(ds) : new ImapImport(ds);
         case pop3:
             return new Pop3Import(ds);
         default:

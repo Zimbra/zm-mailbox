@@ -37,11 +37,11 @@ public final class Pop3Connection extends MailConnection {
         super(config);
     }
 
-    protected MailInputStream getMailInputStream(InputStream is) {
+    protected MailInputStream newMailInputStream(InputStream is) {
         return new MailInputStream(is);
     }
 
-    protected MailOutputStream getMailInputStream(OutputStream os) {
+    protected MailOutputStream newMailOutputStream(OutputStream os) {
         return new MailOutputStream(os);
     }
 

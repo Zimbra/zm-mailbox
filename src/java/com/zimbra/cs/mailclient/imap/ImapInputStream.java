@@ -42,9 +42,12 @@ public final class ImapInputStream extends MailInputStream {
     }
 
     public Atom readAtom() throws IOException {
-        Atom atom = new Atom(readChars(Chars.ATOM_CHARS));
-        if (DEBUG) pd("readAtom: %s", atom);
-        return atom;
+        String s = readChars(Chars.ATOM_CHARS);
+        if (s.length() == 0) {
+            throw new ParseException("Zero-length atom");
+        }
+        if (DEBUG) pd("readAtom: %s", s);
+        return new Atom(s);
     }
 
     public Atom readFlag() throws IOException {
@@ -98,6 +101,7 @@ public final class ImapInputStream extends MailInputStream {
     
     public ImapData readAStringData() throws IOException {
         ImapData as;
+        String s;
         switch (peekChar()) {
         case '"':
             as = readQuoted();
@@ -106,7 +110,11 @@ public final class ImapInputStream extends MailInputStream {
             as = readLiteral();
             break;
         default:
-            as = new Atom(readChars(Chars.ASTRING_CHARS));
+            s = readChars(Chars.ASTRING_CHARS);
+            if (s.length() == 0) {
+                throw new ParseException("Zero-length atom");
+            }
+            as = new Atom(s);
         }
         if (DEBUG) pd("readAString: %s (%s)", as, as.getType());
         return as;
@@ -126,6 +134,9 @@ public final class ImapInputStream extends MailInputStream {
 
     private long readNumber(boolean nz) throws IOException {
         String s = readChars(Chars.NUMBER_CHARS);
+        if (s.length() == 0) {
+            throw new ParseException("Zero-length number");
+        }
         long n = Chars.getNumber(s);
         if (n == -1) {
             throw new ParseException("Invalid number format: " + s);
@@ -216,10 +227,6 @@ public final class ImapInputStream extends MailInputStream {
         sbuf.setLength(0);
         while (chars[peekChar()]) {
             sbuf.append((char) read());
-        }
-        if (sbuf.length() == 0) {
-            throw new ParseException(
-                "Unexpected character '" + Ascii.pp((byte) peek()) + "'");
         }
         return sbuf.toString();
     }
