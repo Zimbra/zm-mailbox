@@ -99,6 +99,8 @@ public class SaveDocument extends WikiDocumentHandler {
         doc.up = up;
         doc.name = up.getName();
         doc.contentType = up.getContentType();
+        if (doc.contentType == null)
+        	doc.contentType = "application/octet-stream";
         return doc;
 	}
 	
