@@ -117,16 +117,19 @@ public class ZimbraLdapContext {
         sEnv.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
         sEnv.put("com.sun.jndi.ldap.read.timeout", LC.ldap_read_timeout.value());
         
-        // connection pooling
-        if (master)
-            sEnv.put("com.sun.jndi.ldap.connect.pool", LC.ldap_connect_pool_master.value());
-        else
-            sEnv.put("com.sun.jndi.ldap.connect.pool", "true");
-
         // env.put("java.naming.ldap.derefAliases", "never");
         // default: env.put("java.naming.ldap.version", "3");
         
-        if (!requireStartTLS()) {
+        if (requireStartTLS()) {
+            // cannot use connection pooling if requiring start TLS
+            // see http://java.sun.com/products/jndi/tutorial/ldap/connect/pool.html
+            sEnv.put("com.sun.jndi.ldap.connect.pool", "false");
+        } else {
+            if (master)
+                sEnv.put("com.sun.jndi.ldap.connect.pool", LC.ldap_connect_pool_master.value());
+            else
+                sEnv.put("com.sun.jndi.ldap.connect.pool", "true");
+            
             sEnv.put(Context.SECURITY_AUTHENTICATION, "simple");
             sEnv.put(Context.SECURITY_PRINCIPAL, LC.zimbra_ldap_userdn.value());
             sEnv.put(Context.SECURITY_CREDENTIALS, LC.zimbra_ldap_password.value());
