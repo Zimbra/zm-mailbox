@@ -35,6 +35,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.zimbra.cs.mailclient.imap.ImapData.asAString;
 import org.apache.log4j.Logger;
 
+import javax.security.auth.login.LoginException;
+
 public final class ImapConnection extends MailConnection {
     private ImapCapabilities capabilities;
     private Mailbox mailbox;
@@ -45,7 +47,7 @@ public final class ImapConnection extends MailConnection {
     private final AtomicInteger tagCount = new AtomicInteger();
 
     private static final Logger LOGGER = Logger.getLogger(ImapConnection.class);
-    
+
     private static final String TAG_FORMAT = "C%02d";
 
     private static final String UID_COPY = "UID COPY";
@@ -53,23 +55,25 @@ public final class ImapConnection extends MailConnection {
     private static final String UID_STORE = "UID STORE";
     private static final String UID_SEARCH = "UID SEARCH";
 
-    
     public ImapConnection(ImapConfig config) {
         super(config);
     }
 
-    protected MailInputStream getMailInputStream(InputStream is) {
+    @Override
+    protected MailInputStream newMailInputStream(InputStream is) {
         return new ImapInputStream(is, (ImapConfig) config);
     }
 
-    protected MailOutputStream getMailInputStream(OutputStream os) {
+    @Override
+    protected MailOutputStream newMailOutputStream(OutputStream os) {
         return new ImapOutputStream(os);
     }
 
+    @Override
     public Logger getLogger() {
         return LOGGER;
     }
-    
+
     @Override
     public synchronized void connect() throws IOException {
         super.connect();
@@ -77,35 +81,53 @@ public final class ImapConnection extends MailConnection {
             startReader();
         }
     }
-    
+
+    @Override
     protected void processGreeting() throws IOException {
         ImapResponse res = readResponse();
         if (res.isUntagged()) {
             switch (res.getCode()) {
-            case BYE:
-                throw new MailException(
-                    "IMAP connection refused: "+ res.getResponseText().getText());
-            case PREAUTH: case OK:
-                setState(res.isOK() ?
-                    State.NOT_AUTHENTICATED : State.AUTHENTICATED);
-                ResponseText rt = res.getResponseText();
-                if (CAtom.CAPABILITY.atom().equals(rt.getCode())) {
-                    capabilities = (ImapCapabilities) rt.getData();
-                } else {
-                    capability();
-                }
-                return;
+                case BYE:
+                    throw new MailException(
+                            "IMAP connection refused: " + res.getResponseText().getText());
+                case PREAUTH:
+                case OK:
+                    if (res.isOK()) {
+                        setState(State.NOT_AUTHENTICATED);
+                    } else {
+                        setState(State.AUTHENTICATED);
+                        startReader();
+                    }
+                    ResponseText rt = res.getResponseText();
+                    if (CAtom.CAPABILITY.atom().equals(rt.getCode())) {
+                        capabilities = (ImapCapabilities) rt.getData();
+                    } else {
+                        capability();
+                    }
+                    return;
             }
         }
         throw new MailException("Expected server greeting but got: " + res);
     }
 
+    @Override
+    public synchronized void login(String pass) throws IOException {
+        super.login(pass);
+        startReader();
+    }
+
+    @Override
     protected void sendLogin(String user, String pass) throws IOException {
         newRequest(CAtom.LOGIN, asAString(user), asAString(pass)).sendCheckStatus();
     }
 
+    @Override
     public synchronized void logout() throws IOException {
-        if (state == State.LOGOUT) return;
+        Thread.dumpStack();
+        if (isShutdown()) return;
+        if (request != null) {
+            throw new IllegalStateException("Request pending");
+        }
         setState(State.LOGOUT);
         try {
             newRequest(CAtom.LOGOUT).sendCheckStatus();
@@ -115,19 +137,24 @@ public final class ImapConnection extends MailConnection {
         }
     }
 
+    @Override
+    public synchronized void authenticate(String pass)
+            throws LoginException, IOException {
+        super.authenticate(pass);
+        startReader();
+    }
+
+    @Override
     protected void sendAuthenticate(boolean ir) throws IOException {
         ImapRequest req = newRequest(CAtom.AUTHENTICATE, config.getMechanism());
         if (ir) {
             byte[] response = authenticator.getInitialResponse();
             req.addParam(encodeBase64(response));
         }
-        ImapResponse res = req.send();
-        while (res.isContinuation()) {
-            processContinuation(res.getContinuation());
-        }
-        req.checkStatus(res);
+        req.sendCheckStatus();
     }
 
+    @Override
     protected void sendStartTls() throws IOException {
         newRequest(CAtom.STARTTLS).sendCheckStatus();
     }
@@ -140,7 +167,7 @@ public final class ImapConnection extends MailConnection {
     public void noop() throws IOException {
         newRequest(CAtom.NOOP).sendCheckStatus();
     }
-    
+
     public synchronized Mailbox select(String name) throws IOException {
         mailbox = doSelectOrExamine(CAtom.SELECT, name);
         setState(State.SELECTED);
@@ -169,7 +196,7 @@ public final class ImapConnection extends MailConnection {
 
     public void rename(String from, String to) throws IOException {
         newRequest(CAtom.RENAME, new MailboxName(from),
-                   new MailboxName(to)).sendCheckStatus();
+                new MailboxName(to)).sendCheckStatus();
     }
 
     public void subscribe(String name) throws IOException {
@@ -181,7 +208,7 @@ public final class ImapConnection extends MailConnection {
     }
 
     public long append(String mbox, Flags flags, Date date, Literal data)
-        throws IOException {
+            throws IOException {
         ImapRequest req = newRequest(CAtom.APPEND, new MailboxName(mbox));
         if (flags != null) req.addParam(flags);
         if (date != null) req.addParam(date);
@@ -208,7 +235,7 @@ public final class ImapConnection extends MailConnection {
         mailbox = null;
         setState(State.AUTHENTICATED);
     }
-    
+
     public Mailbox status(String name, Object... params) throws IOException {
         ImapRequest req = newRequest(CAtom.STATUS, new MailboxName(name), params);
         final Mailbox[] mbox = new Mailbox[0];
@@ -236,9 +263,9 @@ public final class ImapConnection extends MailConnection {
     public List<ListData> lsub(String reference, String mailbox) throws IOException {
         return doList(CAtom.LSUB, reference, mailbox);
     }
-    
+
     private List<ListData> doList(CAtom cmd, String reference, String mailbox)
-        throws IOException {
+            throws IOException {
         ImapRequest req = newRequest(cmd, reference, mailbox);
         final List<ListData> results = new ArrayList<ListData>();
         req.setResponseHandler(new ResponseHandler() {
@@ -254,7 +281,7 @@ public final class ImapConnection extends MailConnection {
         return results;
     }
 
-    
+
     public void copy(String seq, String mbox) throws IOException {
         newRequest(CAtom.COPY, seq, new MailboxName(mbox)).sendCheckStatus();
     }
@@ -262,29 +289,29 @@ public final class ImapConnection extends MailConnection {
     public void uidCopy(String seq, String mbox) throws IOException {
         newRequest(UID_COPY, seq, new MailboxName(mbox)).sendCheckStatus();
     }
-    
+
     public void fetch(String seq, Object param, ResponseHandler handler)
-        throws IOException {
+            throws IOException {
         fetch(CAtom.FETCH.name(), seq, param, handler);
     }
 
     public void uidFetch(String seq, Object param, ResponseHandler handler)
-        throws IOException {
+            throws IOException {
         fetch(UID_FETCH, seq, param, handler);
     }
 
     public List<MessageData> fetch(String seq, Object param)
-        throws IOException {
+            throws IOException {
         return fetch(CAtom.FETCH.name(), seq, param);
     }
 
     public List<MessageData> uidFetch(String seq, Object param)
-        throws IOException {
+            throws IOException {
         return fetch(UID_FETCH, seq, param);
     }
-    
+
     private List<MessageData> fetch(String cmd, String seq, Object param)
-        throws IOException {
+            throws IOException {
         final List<MessageData> mds = new ArrayList<MessageData>();
         fetch(cmd, seq, param, new ResponseHandler() {
             public boolean handleResponse(ImapResponse res) {
@@ -333,20 +360,20 @@ public final class ImapConnection extends MailConnection {
     public void store(String seq, String item, Object flags) throws IOException {
         store(seq, item, flags, null);
     }
-    
+
     public void store(String seq, String item, Object flags,
                       ResponseHandler handler)
-        throws IOException {
+            throws IOException {
         ImapRequest req = newRequest(CAtom.STORE, seq, item, flags);
         req.setResponseHandler(handler);
         req.sendCheckStatus();
     }
 
     public void uidStore(String seq, String item, Object flags)
-        throws IOException {
+            throws IOException {
         uidStore(seq, item, flags, null);
     }
-        
+
     public void uidStore(String seq, String item, Object flags,
                          ResponseHandler handler) throws IOException {
         ImapRequest req = newRequest(UID_STORE, seq, item, flags);
@@ -360,7 +387,7 @@ public final class ImapConnection extends MailConnection {
 
     public ImapRequest newRequest(Atom cmd, Object... params) {
         return new ImapRequest(this, cmd, params);
-    }    
+    }
 
     public ImapRequest newRequest(String cmd, Object... params) {
         return new ImapRequest(this, new Atom(cmd), params);
@@ -373,7 +400,7 @@ public final class ImapConnection extends MailConnection {
     public Mailbox getMailbox() {
         return mailbox;
     }
-    
+
     public boolean hasCapability(String cap) {
         return capabilities != null && capabilities.hasCapability(cap);
     }
@@ -384,32 +411,59 @@ public final class ImapConnection extends MailConnection {
         if (isClosed()) {
             throw new IllegalStateException("Connection is closed");
         }
-        req.write((ImapOutputStream) mailOut);
-        return waitForResponse(req);
-    }
-
-    // Called from ImapRequest
-    void writeLiteral(ImapRequest req, Literal lit) throws IOException {
-        boolean lp = hasCapability(ImapCapabilities.LITERAL_PLUS);
-        ImapOutputStream out = (ImapOutputStream) mailOut; 
-        lit.writePrefix(out, lp);
-        if (!lp) {
-            out.flush();
-            ImapResponse res = waitForResponse(req);
-            if (!res.isContinuation()) {
-                throw new ParseException(
-                    "Expected a literal continuation response");
-            }
-        }
-        lit.writeData(out);
-    }
-    
-    // Wait for tagged or continuation response
-    private ImapResponse waitForResponse(ImapRequest req) throws IOException {
         if (request != null) {
             throw new IllegalStateException("Request already pending");
         }
         request = req;
+        try {
+            req.write((ImapOutputStream) mailOut);
+        } catch (LiteralException e) {
+            request = null;
+            return e.res; 
+        }
+        // Wait for final response, handle continuation response
+        while (true) {
+            ImapResponse res = waitForResponse();
+            if (res.isTagged()) {
+                request = null;
+                return res;
+            }
+            assert res.isContinuation();
+            if (!req.isAuthenticate()) {
+                throw new CommandFailedException(
+                    req.getCommand().getName(), "Unexpected continuation response");
+            }
+            processContinuation(res.getResponseText().getText());
+        }
+
+    }
+
+    // Called from ImapRequest
+    void writeLiteral(Literal lit) throws IOException {
+        boolean lp = hasCapability(ImapCapabilities.LITERAL_PLUS);
+        ImapOutputStream out = (ImapOutputStream) mailOut;
+        lit.writePrefix(out, lp);
+        if (!lp) {
+            out.flush();
+            ImapResponse res = waitForResponse();
+            if (!res.isContinuation()) {
+                assert res.isTagged();
+                throw new LiteralException(res);
+            }
+        }
+        lit.writeData(out);
+    }
+
+    // Exception thrown if we get an unexpected response to literal data
+    private static class LiteralException extends IOException {
+        ImapResponse res;
+        LiteralException(ImapResponse res) {
+            this.res = res;
+        }
+    }
+    
+    // Wait for tagged response
+    private ImapResponse waitForResponse() throws IOException {
         try {
             if (reader == null) {
                 // Reader thread not active, so read response inline
@@ -427,9 +481,8 @@ public final class ImapConnection extends MailConnection {
                 return response;
             }
             throw (IOException) new IOException(
-                "Exception in response handler").initCause(error);
+                    "Exception in response handler").initCause(error);
         } finally {
-            request = null;
             response = null;
         }
     }
@@ -437,16 +490,17 @@ public final class ImapConnection extends MailConnection {
     private synchronized void setResponse(ImapResponse res) {
         if (request == null) {
             getLogger().warn("Ignoring tagged or continuation response while" +
-                             " no request pending: " + res);
+                    " no request pending: " + res);
         } else if (response != null) {
             getLogger().warn("Ignoring unexpected tagged or continuation" +
-                             " response: " + res);
+                    " response: " + res);
         }
         response = res;
         notifyAll();
     }
-    
+
     private void startReader() {
+        if (config.isRawMode()) return;
         reader = new Runnable() {
             public void run() {
                 try {
@@ -454,7 +508,7 @@ public final class ImapConnection extends MailConnection {
                         setResponse(nextResponse());
                     }
                 } catch (Throwable e) {
-                    readError(e);
+                    readerError(e);
                 }
             }
         };
@@ -463,9 +517,9 @@ public final class ImapConnection extends MailConnection {
         t.start();
     }
 
-    private synchronized void readError(Throwable e) {
+    private synchronized void readerError(Throwable e) {
         if (!(e instanceof IOException && isShutdown())) {
-            // Only record an error if shutting down
+            // Only record an error if not shutting down
             this.error = e;
         }
         super.close();
@@ -473,14 +527,14 @@ public final class ImapConnection extends MailConnection {
     }
 
     private boolean isShutdown() {
-        return isClosed() || state == State.LOGOUT;
+        return isClosed() || isLogout();
     }
-    
+
     /*
-     * Read and process responses until next tagged or continuation response
-     * has been received. Throws EOFException if end of stream has been
-     * reached.
-     */
+    * Read and process responses until next tagged or continuation response
+    * has been received. Throws EOFException if end of stream has been
+    * reached.
+    */
     private ImapResponse nextResponse() throws IOException {
         ImapResponse res;
         do {
@@ -492,16 +546,20 @@ public final class ImapConnection extends MailConnection {
     private ImapResponse readResponse() throws IOException {
         return ImapResponse.read((ImapInputStream) mailIn);
     }
-    
+
     /*
-     * Process IMAP response. Returns true if this is not a tagged or
-     * continuation response and reading should continue. Returns false
-     * if tagged, untagged BAD, or continuation response.
-     */
+    * Process IMAP response. Returns true if this is not a tagged or
+    * continuation response and reading should continue. Returns false
+    * if tagged, untagged BAD, or continuation response.
+    */
     private synchronized boolean processResponse(ImapResponse res)
         throws IOException {
-        if (res.isContinuation() || res.isUntagged() && res.isBAD()) {
+        if (res.isUntagged() && res.isBAD()) {
+            getLogger().error("Untagged BAD response: " + res);
             return true;
+        }
+        if (res.isContinuation() || res.isUntagged() && res.isBAD()) {
+            return false;
         }
         if (request != null) {
             // Request pending, try response handler first
@@ -518,7 +576,7 @@ public final class ImapConnection extends MailConnection {
         } else if (res.isTagged()) {
             // If no pending request, then must be untagged response
             throw new MailException(
-                "Received tagged response with no request pending: " + res);
+                    "Received tagged response with no request pending: " + res);
 
         }
         if (res.isOK()) {

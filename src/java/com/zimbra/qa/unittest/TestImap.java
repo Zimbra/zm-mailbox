@@ -23,8 +23,6 @@ import com.zimbra.cs.mailclient.imap.ResponseHandler;
 import com.zimbra.cs.mailclient.imap.ImapResponse;
 import com.zimbra.cs.mailclient.imap.MessageData;
 import com.zimbra.cs.mailclient.imap.CAtom;
-import com.zimbra.cs.mailclient.imap.Mailbox;
-import com.zimbra.cs.mailclient.imap.MailboxName;
 import com.zimbra.cs.mailclient.util.SSLUtil;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import junit.framework.TestCase;
@@ -45,8 +43,12 @@ public class TestImap extends TestCase {
 
     private static final boolean DEBUG = true;
 
+    static {
+        BasicConfigurator.configure();
+    }
+    
     public void tearDown() throws Exception {
-        if (connection != null) connection.logout();
+        if (connection != null) connection.close();
     }
 
     public void testLogin() throws Exception {
@@ -60,8 +62,12 @@ public class TestImap extends TestCase {
     }
 
     public void testPlainAuth() throws Exception {
+        try {
         connect(false);
         connection.authenticate(PASS);
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
     }
 
     public void testBadAuth() throws Exception {
@@ -144,7 +150,7 @@ public class TestImap extends TestCase {
         config.setTrace(true);
         config.setMechanism("PLAIN");
         config.setAuthenticationId(USER);
-        BasicConfigurator.configure();
+        config.setRawMode(true);
         connection = new ImapConnection(config);
         connection.connect();
     }

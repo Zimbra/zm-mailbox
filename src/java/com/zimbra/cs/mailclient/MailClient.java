@@ -3,6 +3,10 @@ package com.zimbra.cs.mailclient;
 import static com.zimbra.cs.mailclient.ClientAuthenticator.*;
 import com.zimbra.cs.mailclient.util.SSLUtil;
 import com.zimbra.cs.mailclient.util.Password;
+import com.zimbra.cs.mailclient.imap.ImapConfig;
+import com.zimbra.cs.mailclient.imap.ImapConnection;
+import com.zimbra.cs.mailclient.pop3.Pop3Config;
+import com.zimbra.cs.mailclient.pop3.Pop3Connection;
 
 import javax.security.sasl.Sasl;
 import javax.security.auth.login.LoginException;
@@ -45,11 +49,22 @@ public abstract class MailClient {
         }
         config.setTraceStream(System.out);
         config.setSSLSocketFactory(SSLUtil.getDummySSLContext().getSocketFactory());
-        connection = MailConnection.newInstance(config);
+        connection = newConnection(config);
         connection.connect();
         connection.authenticate(password);
         String qop = connection.getNegotiatedQop();
         if (qop != null) System.out.printf("[Negotiated QOP is %s]\n", qop); 
+    }
+
+    private static MailConnection newConnection(MailConfig config) {
+        if (config instanceof ImapConfig) {
+            return new ImapConnection((ImapConfig) config);
+        } else if (config instanceof Pop3Config) {
+            return new Pop3Connection((Pop3Config) config);
+        } else {
+            throw new IllegalArgumentException(
+                "Unsupported protocol: " + config.getProtocol());
+        }
     }
 
     private void startCommandLoop() throws IOException {

@@ -19,10 +19,6 @@ import java.io.InputStream;
 import java.net.Socket;
 import java.util.Map;
 
-import com.zimbra.cs.mailclient.imap.ImapConfig;
-import com.zimbra.cs.mailclient.imap.ImapConnection;
-import com.zimbra.cs.mailclient.pop3.Pop3Config;
-import com.zimbra.cs.mailclient.pop3.Pop3Connection;
 import com.zimbra.cs.mailclient.util.TraceInputStream;
 import com.zimbra.cs.mailclient.util.TraceOutputStream;
 
@@ -50,17 +46,6 @@ public abstract class MailConnection {
         }
     }
 
-    public static MailConnection newInstance(MailConfig config) {
-        if (config instanceof ImapConfig) {
-            return new ImapConnection((ImapConfig) config);
-        } else if (config instanceof Pop3Config) {
-            return new Pop3Connection((Pop3Config) config);
-        } else {
-            throw new IllegalArgumentException(
-                "Unsupported protocol: " + config.getProtocol());
-        }
-    }
-
     public synchronized void connect() throws IOException {
         if (!isClosed()) return;
         socket = newSocket();
@@ -70,9 +55,6 @@ public abstract class MailConnection {
         if (config.isTlsEnabled() && !config.isSslEnabled()) {
             startTls();
         }
-        if (state == State.CLOSED) {
-            setState(State.NOT_AUTHENTICATED);
-        }
     }
 
     protected void initStreams(InputStream is, OutputStream os)
@@ -81,16 +63,16 @@ public abstract class MailConnection {
             is = traceIn = newTraceInputStream(is);
             os = traceOut = newTraceOutputStream(os);
         }
-        mailIn = getMailInputStream(is);
-        mailOut = getMailInputStream(os);
+        mailIn = newMailInputStream(is);
+        mailOut = newMailOutputStream(os);
     }
 
     protected abstract void processGreeting() throws IOException;
     protected abstract void sendLogin(String user, String pass) throws IOException;
     protected abstract void sendAuthenticate(boolean ir) throws IOException;
     protected abstract void sendStartTls() throws IOException;
-    protected abstract MailInputStream getMailInputStream(InputStream is);
-    protected abstract MailOutputStream getMailInputStream(OutputStream os);
+    protected abstract MailInputStream newMailInputStream(InputStream is);
+    protected abstract MailOutputStream newMailOutputStream(OutputStream os);
     public abstract Logger getLogger();
 
     public abstract void logout() throws IOException;
@@ -133,7 +115,7 @@ public abstract class MailConnection {
         }
     }
 
-    private static byte[] decodeBase64(String s) throws SaslException {
+    protected static byte[] decodeBase64(String s) throws SaslException {
         try {
             return Base64.decodeBase64(s.getBytes("us-ascii"));
         } catch (UnsupportedEncodingException e) {
@@ -149,7 +131,7 @@ public abstract class MailConnection {
         }
     }
 
-    protected synchronized void startTls() throws IOException {
+    private void startTls() throws IOException {
         checkState(State.NOT_AUTHENTICATED);
         sendStartTls();
         SSLSocket sock = newSSLSocket(socket);
@@ -196,6 +178,10 @@ public abstract class MailConnection {
         return state == State.AUTHENTICATED;
     }
 
+    public synchronized boolean isLogout() {
+        return state == State.LOGOUT;
+    }
+    
     protected synchronized void setState(State state) {
         getLogger().debug("setState: " + this.state + " -> " + state);
         this.state = state;

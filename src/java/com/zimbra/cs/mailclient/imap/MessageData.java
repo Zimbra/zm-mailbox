@@ -72,7 +72,11 @@ public final class MessageData {
 
     private void readAttribute(ImapInputStream is) throws IOException {
         // Need to special case BODY[] since '[' is also a valid atom char
-        Atom attr = new Atom(is.readChars(Chars.FETCH_CHARS));
+        String s = is.readChars(Chars.FETCH_CHARS);
+        if (s.length() == 0) {
+            throw new ParseException("Zero-length attribute");
+        }
+        Atom attr = new Atom(s);
         CAtom cattr = attr.getCAtom();
         if (cattr == CAtom.BODY && is.peek() == '[') {
             if (bodySections == null) {
