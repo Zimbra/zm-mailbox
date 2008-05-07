@@ -194,7 +194,7 @@ public class Mailbox {
         PendingModifications mDirty = new PendingModifications();
         List<Object> mOtherDirtyStuff = new LinkedList<Object>();
 
-        void setTimestamp(long millis)   {
+        void setTimestamp(long millis) {
             if (depth == 1)
                 timestamp = millis;
         }
@@ -209,7 +209,7 @@ public class Mailbox {
             } else {
                 if (ZimbraLog.mailbox.isDebugEnabled())
                     ZimbraLog.mailbox.debug("  increasing stack depth to " + depth + " (" + caller + ')');
-        }
+            }
         }
         boolean endChange() {
             if (ZimbraLog.mailbox.isDebugEnabled()) {
@@ -253,6 +253,15 @@ public class Mailbox {
             indexItemsToDelete.add(id);
         }
 
+        boolean isMailboxRowDirty(MailboxData data) {
+            if (recent != NO_CHANGE || size != NO_CHANGE || contacts != NO_CHANGE || idxDeferredCount != NO_CHANGE)
+                return true;
+            if (itemId != NO_CHANGE && itemId / DbMailbox.ITEM_CHECKPOINT_INCREMENT > data.lastItemId / DbMailbox.ITEM_CHECKPOINT_INCREMENT)
+                return true;
+            if (changeId != NO_CHANGE && changeId / DbMailbox.CHANGE_CHECKPOINT_INCREMENT > data.lastChangeId / DbMailbox.CHANGE_CHECKPOINT_INCREMENT)
+                return true;
+            return false;
+        }
         void reset() {
             if (conn != null)
                 DbPool.quietClose(conn);
@@ -705,6 +714,12 @@ public class Mailbox {
     }
 
 
+    /** Returns the current count of messages with the INDEXING_DEFERRED flag set. */
+    public int getIndexDeferredCount() {
+        return (mCurrentChange.idxDeferredCount == MailboxChange.NO_CHANGE ? mData.idxDeferredCount : mCurrentChange.idxDeferredCount);
+    }
+
+
     /** Returns the change sequence number for the most recent
      *  transaction.  This will be either the change number for the
      *  current transaction or, if no database changes have yet been
@@ -713,16 +728,7 @@ public class Mailbox {
      * 
      * @see #getOperationChangeID */
     public int getLastChangeID() {
-        return (mCurrentChange.changeId == MailboxChange.NO_CHANGE ? mData.lastChangeId : mCurrentChange.changeId);
-    }
-    
-    /**
-     * Returns the current count of messages with the INDEXING_DEFERRED flag set.  
-     *  
-     * @return
-     */
-    public int getIndexDeferredCount() {
-        return (mCurrentChange.idxDeferredCount == MailboxChange.NO_CHANGE ? mData.idxDeferredCount : mCurrentChange.idxDeferredCount);
+        return (mCurrentChange.changeId == MailboxChange.NO_CHANGE ? mData.lastChangeId : Math.max(mData.lastChangeId, mCurrentChange.changeId));
     }
 
     private void setOperationChangeID(int changeFromRedo) throws ServiceException {
@@ -737,8 +743,6 @@ public class Mailbox {
 
         // need to keep the current change ID regardless of whether it's a highwater mark
         mCurrentChange.changeId = nextId;
-        if (nextId / DbMailbox.CHANGE_CHECKPOINT_INCREMENT > lastId / DbMailbox.CHANGE_CHECKPOINT_INCREMENT)
-            DbMailbox.updateMailboxStats(this);
     }
 
     /** Returns the change sequence number for the current transaction.
@@ -791,11 +795,8 @@ public class Mailbox {
         int lastId = getLastItemId();
         int nextId = (idFromRedo == ID_AUTO_INCREMENT ? lastId + 1 : idFromRedo);
 
-        if (nextId > lastId) {
+        if (nextId > lastId)
             mCurrentChange.itemId = nextId;
-            if (nextId / DbMailbox.ITEM_CHECKPOINT_INCREMENT > lastId / DbMailbox.ITEM_CHECKPOINT_INCREMENT)
-                DbMailbox.updateMailboxStats(this);
-        }
         return nextId;
     }
 
@@ -6819,8 +6820,7 @@ public class Mailbox {
                 mCurrentChange.recent = 0;
         }
 
-        if (mCurrentChange.recent != MailboxChange.NO_CHANGE || mCurrentChange.size != MailboxChange.NO_CHANGE || mCurrentChange.contacts != MailboxChange.NO_CHANGE 
-                    || mCurrentChange.idxDeferredCount != MailboxChange.NO_CHANGE)
+        if (mCurrentChange.isMailboxRowDirty(mData))
             DbMailbox.updateMailboxStats(this);
 
         if (mCurrentChange.mDirty != null && mCurrentChange.mDirty.hasNotifications()) {
