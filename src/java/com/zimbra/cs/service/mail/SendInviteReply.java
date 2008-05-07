@@ -75,6 +75,7 @@ public class SendInviteReply extends CalendarRequest {
         Mailbox mbox = getRequestedMailbox(zsc);
         Account acct = getRequestedAccount(zsc);
         Account authAcct = getAuthenticatedAccount(zsc);
+        boolean isAdmin = zsc.isUsingAdminPrivileges();
         OperationContext octxt = getOperationContext(zsc, context);
 
         boolean onBehalfOf = zsc.isDelegatedRequest();
@@ -131,7 +132,7 @@ public class SendInviteReply extends CalendarRequest {
 
             // Don't allow creating/editing a private appointment on behalf of another user,
             // unless that other user is a calendar resource.
-            boolean hidePrivate = !calItem.allowPrivateAccess(authAcct);
+            boolean hidePrivate = !calItem.allowPrivateAccess(authAcct, zsc.isUsingAdminPrivileges());
             boolean isCalendarResource = acct instanceof CalendarResource;
             if (hidePrivate && !oldInv.isPublic() && !isCalendarResource)
                 throw ServiceException.PERM_DENIED("Cannot reply to a private appointment/task on behalf of another user");
@@ -170,7 +171,7 @@ public class SendInviteReply extends CalendarRequest {
                 CalSendData csd = new CalSendData();
                 csd.mOrigId = new ItemId(mbox, oldInv.getMailItemId());
                 csd.mReplyType = MailSender.MSGTYPE_REPLY;
-                csd.mInvite = CalendarMailSender.replyToInvite(acct, authAcct, onBehalfOf, oldInv, verb, replySubject, exceptDt);
+                csd.mInvite = CalendarMailSender.replyToInvite(acct, authAcct, isAdmin, onBehalfOf, oldInv, verb, replySubject, exceptDt);
                 
                 ZVCalendar iCal = csd.mInvite.newToICalendar(true);
                 
@@ -193,7 +194,7 @@ public class SendInviteReply extends CalendarRequest {
                 } else {
                     // build a default "Accepted" response
                     csd.mMm = CalendarMailSender.createDefaultReply(
-                            acct, authAcct, onBehalfOf, calItem, oldInv, null, replySubject,
+                            acct, authAcct, isAdmin, onBehalfOf, calItem, oldInv, null, replySubject,
                             verb, null, iCal);
                 }
 

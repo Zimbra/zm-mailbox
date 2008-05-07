@@ -75,7 +75,7 @@ public class RssFormatter extends Formatter {
                     if (itItem instanceof CalendarItem) {
                         // Don't return private appointments/tasks if the requester is not the mailbox owner.
                         CalendarItem calItem = (CalendarItem) itItem;
-                        if (calItem.isPublic() || calItem.allowPrivateAccess(context.authAccount))
+                        if (calItem.isPublic() || calItem.allowPrivateAccess(context.authAccount, context.isUsingAdminPrivileges()))
                             addCalendarItem(calItem, channel, context);
                     } else if (itItem instanceof Message) {
                         addMessage((Message) itItem, channel, context);

@@ -119,11 +119,12 @@ public class Account extends MailTarget {
      * Returns true if authAccount is the same as this account, or authAccount has
      * admin rights over this account.
      * @param authAccount
+     * @param asAdmin true if authAccount is authenticated with admin privileges
      * @return
      * @throws ServiceException
      */
-    public boolean allowPrivateAccess(Account authAccount) throws ServiceException {
-        return Account.allowPrivateAccess(authAccount, this);
+    public boolean allowPrivateAccess(Account authAccount, boolean asAdmin) throws ServiceException {
+        return Account.allowPrivateAccess(authAccount, this, asAdmin);
     }
     
     /**
@@ -132,15 +133,16 @@ public class Account extends MailTarget {
      * authAccount has admin rights over targetAccount.
      * @param authAccount
      * @param targetAccount
+     * @param asAdmin true if authAccount is authenticated with admin privileges
      * @return
      * @throws ServiceException
      */
-    public static boolean allowPrivateAccess(Account authAccount, Account targetAccount)
+    public static boolean allowPrivateAccess(Account authAccount, Account targetAccount, boolean asAdmin)
     throws ServiceException {
         if (authAccount != null && targetAccount != null) {
             if (authAccount.getId().equalsIgnoreCase(targetAccount.getId()))
                 return true;
-            if (AccessManager.getInstance().canAccessAccount(authAccount, targetAccount))
+            if (AccessManager.getInstance().canAccessAccount(authAccount, targetAccount, asAdmin))
                 return true;
         }
         return false;

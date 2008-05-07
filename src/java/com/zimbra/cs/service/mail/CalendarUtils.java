@@ -267,7 +267,7 @@ public class CalendarUtils {
             throw ServiceException.INVALID_REQUEST("Missing uid in a cancel invite", null);
 
         Invite sanitized =
-            cancelInvite(account, null, false, cancel, cancel.getComment(),
+            cancelInvite(account, null, false, false, cancel, cancel.getComment(),
                          cancel.getAttendees(), cancel.getRecurId(),
                          false);
         
@@ -1007,21 +1007,24 @@ public class CalendarUtils {
     }
 
     public static Invite buildCancelInviteCalendar(
-            Account acct, Account senderAcct, boolean onBehalfOf, Invite inv,
+            Account acct, Account senderAcct, boolean asAdmin,
+            boolean onBehalfOf, Invite inv,
             String comment, List<ZAttendee> forAttendees) throws ServiceException {
-        return cancelInvite(acct, senderAcct, onBehalfOf, inv, comment, forAttendees, null);
+        return cancelInvite(acct, senderAcct, asAdmin, onBehalfOf, inv, comment, forAttendees, null);
     }
 
     public static Invite buildCancelInviteCalendar(
-            Account acct, Account senderAcct, boolean onBehalfOf, Invite inv,
+            Account acct, Account senderAcct, boolean asAdmin,
+            boolean onBehalfOf, Invite inv,
             String comment) throws ServiceException {
-        return cancelInvite(acct, senderAcct, onBehalfOf, inv, comment, null, null);
+        return cancelInvite(acct, senderAcct, asAdmin, onBehalfOf, inv, comment, null, null);
     }
 
     public static Invite buildCancelInstanceCalendar(
-            Account acct, Account senderAcct, boolean onBehalfOf, Invite inv,
+            Account acct, Account senderAcct, boolean asAdmin,
+            boolean onBehalfOf, Invite inv,
             String comment, RecurId recurId) throws ServiceException {
-        return cancelInvite(acct, senderAcct, onBehalfOf, inv, comment, null, recurId);
+        return cancelInvite(acct, senderAcct, asAdmin, onBehalfOf, inv, comment, null, recurId);
     }
 
     /**
@@ -1058,16 +1061,18 @@ public class CalendarUtils {
      * @throws ServiceException
      */
     static Invite cancelInvite(
-            Account acct, Account senderAcct, boolean onBehalfOf,
+            Account acct, Account senderAcct, boolean asAdmin,
+            boolean onBehalfOf,
             Invite inv, String comment,
             List<ZAttendee> forAttendees, RecurId recurId)
     throws ServiceException {
-        return cancelInvite(acct, senderAcct, onBehalfOf,
+        return cancelInvite(acct, senderAcct, asAdmin, onBehalfOf,
                             inv, comment, forAttendees, recurId, true);
     }
 
     private static Invite cancelInvite(
-            Account acct, Account senderAcct, boolean onBehalfOf,
+            Account acct, Account senderAcct, boolean asAdmin,
+            boolean onBehalfOf,
             Invite inv, String comment,
             List<ZAttendee> forAttendees, RecurId recurId,
             boolean incrementSeq)
@@ -1090,7 +1095,7 @@ public class CalendarUtils {
             cancel.addAttendee(a);
 
         cancel.setClassProp(inv.getClassProp());
-        boolean hidePrivate = !inv.isPublic() && !Account.allowPrivateAccess(senderAcct, acct);
+        boolean hidePrivate = !inv.isPublic() && !Account.allowPrivateAccess(senderAcct, acct, asAdmin);
         Locale locale = acct.getLocale();
         if (hidePrivate) {
             // SUMMARY

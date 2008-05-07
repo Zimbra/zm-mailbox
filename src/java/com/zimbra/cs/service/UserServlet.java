@@ -820,6 +820,10 @@ public class UserServlet extends ZimbraServlet {
             targetAccount = prov.get(AccountBy.name, accountPath, authToken);                
         }
 
+        public boolean isUsingAdminPrivileges() {
+            return authToken != null && (authToken.isAdmin() || authToken.isDomainAdmin());
+        }
+
         public Servlet getServlet() { return servlet; }
         
         public long getStartTime() {
