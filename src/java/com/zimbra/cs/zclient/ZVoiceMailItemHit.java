@@ -122,9 +122,10 @@ public class ZVoiceMailItemHit implements ZSearchHit {
 	}
 
     public String serialize() {
-        return  mId + "/" +
+		String flags = mFlags == null ? "" : mFlags;
+		return  mId + "/" +
                 mSortField + "/" +
-                mFlags + "/" +
+				flags + "/" +
                 mDate + "/" +
                 mDuration + "/" +
                 mCaller.getName();
