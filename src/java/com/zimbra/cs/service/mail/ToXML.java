@@ -1712,6 +1712,11 @@ public class ToXML {
             m.addAttribute(MailConstants.A_DATE, doc.getDate());
         if (needToOutput(fields, Change.MODIFIED_FOLDER))
             m.addAttribute(MailConstants.A_FOLDER, new ItemId(doc.getMailbox().getAccountId(), doc.getFolderId()).toString(ifmt));
+        if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
+        	m.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, doc.getModifiedSequence());
+        	m.addAttribute(MailConstants.A_CHANGE_DATE, (doc.getChangeDate() / 1000));
+            m.addAttribute(MailConstants.A_REVISION, doc.getSavedSequence());
+        }
         recordItemTags(m, doc, fields);
 
         if (needToOutput(fields, Change.MODIFIED_CONTENT)) {

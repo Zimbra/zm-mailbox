@@ -139,6 +139,8 @@ public class Sync extends MailDocumentHandler {
                     initialItemSync(f, MailConstants.E_NOTE, mbox.listItemIds(octxt, MailItem.TYPE_NOTE, folder.getId()));
                     initialItemSync(f, MailConstants.E_APPOINTMENT, mbox.listItemIds(octxt, MailItem.TYPE_APPOINTMENT, folder.getId()));
                     initialItemSync(f, MailConstants.E_TASK, mbox.listItemIds(octxt, MailItem.TYPE_TASK, folder.getId()));
+                    initialItemSync(f, MailConstants.E_DOC, mbox.listItemIds(octxt, MailItem.TYPE_DOCUMENT, folder.getId()));
+                    initialItemSync(f, MailConstants.E_WIKIWORD, mbox.listItemIds(octxt, MailItem.TYPE_WIKI, folder.getId()));
                 }
             } else {
                 // anything else to be done for searchfolders?
