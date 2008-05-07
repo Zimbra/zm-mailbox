@@ -99,7 +99,8 @@ public class IcsFormatter extends Formatter {
 
         Browser browser = HttpUtil.guessBrowser(context.req);
         boolean useOutlookCompatMode = Browser.IE.equals(browser);
-        boolean allowPrivateAccess = Account.allowPrivateAccess(context.authAccount, context.targetAccount);
+        boolean allowPrivateAccess =
+            Account.allowPrivateAccess(context.authAccount, context.targetAccount, context.isUsingAdminPrivileges());
         boolean forceOlsonTZID = Browser.APPLE_ICAL.equals(browser);  // bug 15549
         context.targetMailbox.writeICalendarForCalendarItems(
                 context.resp.getWriter(), calItems,

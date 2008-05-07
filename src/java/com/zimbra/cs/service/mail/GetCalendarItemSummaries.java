@@ -97,7 +97,7 @@ public class GetCalendarItemSummaries extends CalendarRequest {
         EncodeCalendarItemResult toRet = new EncodeCalendarItemResult();
         ItemIdFormatter ifmt = new ItemIdFormatter(lc);
         Account authAccount = getAuthenticatedAccount(lc);
-        boolean hidePrivate = !calItem.allowPrivateAccess(authAccount);
+        boolean hidePrivate = !calItem.allowPrivateAccess(authAccount, lc.isUsingAdminPrivileges());
 
         try {
             boolean expandRanges = (rangeStart > 0 && rangeEnd > 0 && rangeStart < rangeEnd);

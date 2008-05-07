@@ -113,7 +113,7 @@ public class CancelCalendarItem extends CalendarRequest {
             sLog.debug("Sending cancellation message for \"" + defaultInv.getName() + "\" for instance " + recurId + " of invite " + defaultInv);
         }
 
-        Invite cancelInvite = CalendarUtils.buildCancelInstanceCalendar(acct, authAcct, onBehalfOf, defaultInv, text, recurId);
+        Invite cancelInvite = CalendarUtils.buildCancelInstanceCalendar(acct, authAcct, zsc.isUsingAdminPrivileges(), onBehalfOf, defaultInv, text, recurId);
         CalSendData dat = new CalSendData();
         dat.mOrigId = new ItemId(mbox, defaultInv.getMailItemId());
         dat.mReplyType = MailSender.MSGTYPE_REPLY;
@@ -140,7 +140,7 @@ public class CancelCalendarItem extends CalendarRequest {
         } else {
             List<Address> rcpts = CalendarMailSender.toListFromAttendees(defaultInv.getAttendees());
             dat.mMm = CalendarMailSender.createCancelMessage(
-                    acct, rcpts, onBehalfOf, authAcct,
+                    acct, authAcct, zsc.isUsingAdminPrivileges(), onBehalfOf, rcpts,
                     calItem, cancelInvite, text, iCal);
         }
         
@@ -171,7 +171,7 @@ public class CancelCalendarItem extends CalendarRequest {
         CalSendData csd = new CalSendData();
         csd.mOrigId = new ItemId(mbox, inv.getMailItemId());
         csd.mReplyType = MailSender.MSGTYPE_REPLY;
-        csd.mInvite = CalendarUtils.buildCancelInviteCalendar(acct, authAcct, onBehalfOf, inv, text);
+        csd.mInvite = CalendarUtils.buildCancelInviteCalendar(acct, authAcct, zsc.isUsingAdminPrivileges(), onBehalfOf, inv, text);
         
         ZVCalendar iCal = csd.mInvite.newToICalendar(true);
 
@@ -192,7 +192,9 @@ public class CancelCalendarItem extends CalendarRequest {
             
         } else {
             List<Address> rcpts = CalendarMailSender.toListFromAttendees(inv.getAttendees());
-            csd.mMm = CalendarMailSender.createCancelMessage(acct, rcpts, onBehalfOf, authAcct, calItem, inv, text, iCal);
+            csd.mMm = CalendarMailSender.createCancelMessage(
+                    acct, authAcct, zsc.isUsingAdminPrivileges(), onBehalfOf, rcpts,
+                    calItem, inv, text, iCal);
         }
         
         if (!inv.isOrganizer()) {

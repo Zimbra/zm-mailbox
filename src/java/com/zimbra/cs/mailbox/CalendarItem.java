@@ -918,11 +918,12 @@ public abstract class CalendarItem extends MailItem {
      * Returns true if authAccount is the account that owns the appointment, or authAccount has
      * admin rights over the owner account.
      * @param authAccount
+     * @param asAdmin true if authAccount is authenticated with admin privileges
      * @return
      * @throws ServiceException
      */
-    public boolean allowPrivateAccess(Account authAccount) throws ServiceException {
-        return getAccount().allowPrivateAccess(authAccount);
+    public boolean allowPrivateAccess(Account authAccount, boolean asAdmin) throws ServiceException {
+        return getAccount().allowPrivateAccess(authAccount, asAdmin);
     }
 
     boolean processNewInvite(ParsedMessage pm, Invite invite,
@@ -1006,7 +1007,8 @@ public abstract class CalendarItem extends MailItem {
         boolean isCalendarResource = getMailbox().getAccount() instanceof CalendarResource;
         OperationContext octxt = getMailbox().getOperationContext();
         Account authAccount = octxt != null ? octxt.getAuthenticatedUser() : null;
-        boolean denyPrivateAccess = authAccount != null && !allowPrivateAccess(authAccount);
+        boolean asAdmin = octxt != null ? octxt.isUsingAdminPrivileges() : false;
+        boolean denyPrivateAccess = authAccount != null && !allowPrivateAccess(authAccount, asAdmin);
         if (denyPrivateAccess && !newInvite.isPublic() && !isCalendarResource)
             throw ServiceException.PERM_DENIED("private appointment/task cannot be created/edited on behalf of another user");
 

@@ -1199,7 +1199,8 @@ public class ToXML {
     private static boolean allowPrivateAccess(OperationContext octxt, CalendarItem calItem)
     throws ServiceException {
         Account authAccount = octxt != null ? octxt.getAuthenticatedUser() : null;
-        return calItem.allowPrivateAccess(authAccount);
+        boolean asAdmin = octxt != null ? octxt.isUsingAdminPrivileges() : false;
+        return calItem.allowPrivateAccess(authAccount, asAdmin);
     }
 
     public static Element encodeInviteComponent(Element parent,

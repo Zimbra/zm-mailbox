@@ -350,6 +350,9 @@ public class ZimbraSoapContext {
         return !mAuthTokenAccountId.equalsIgnoreCase(getRequestedAccountId());
     }
 
+    public boolean isUsingAdminPrivileges() {
+        return mAuthToken != null && (mAuthToken.isAdmin() || mAuthToken.isDomainAdmin());
+    }
 
     public boolean isNotificationEnabled() {
         return mSessionEnabled;

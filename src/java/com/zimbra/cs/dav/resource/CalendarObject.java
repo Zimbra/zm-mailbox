@@ -145,7 +145,9 @@ public interface CalendarObject {
                     continue;
                 CharArrayWriter wr = new CharArrayWriter();
                 try {
-                    boolean allowPrivateAccess = Account.allowPrivateAccess(ctxt.getAuthAccount(), mAccount);
+                    boolean allowPrivateAccess =
+                        Account.allowPrivateAccess(ctxt.getAuthAccount(), mAccount,
+                                                   ctxt.getOperationContext().isUsingAdminPrivileges());
                     inv.newToVComponent(false, allowPrivateAccess).toICalendar(wr);
                 } catch (ServiceException se) {
                     ZimbraLog.dav.error("cannot convert to ICalendar", se);
