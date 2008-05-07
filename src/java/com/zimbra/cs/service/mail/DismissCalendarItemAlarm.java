@@ -29,6 +29,7 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -59,6 +60,7 @@ public class DismissCalendarItemAlarm extends DocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
+        Account authAcct = getAuthenticatedAccount(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
 
         Element response = getResponseElement(zsc);
@@ -72,15 +74,20 @@ public class DismissCalendarItemAlarm extends DocumentHandler {
                 mbox.dismissCalendarItemAlarm(octxt, calItemId, dismissedAt);
 
                 CalendarItem calItem = mbox.getCalendarItemById(octxt, calItemId);
-                AlarmData alarmData = calItem.getAlarmData();
                 Element calItemRespElem;
                 if (calItem instanceof Appointment)
                     calItemRespElem = response.addElement(MailConstants.E_APPOINTMENT);
                 else
                     calItemRespElem = response.addElement(MailConstants.E_TASK);
                 calItemRespElem.addAttribute(MailConstants.A_CAL_ID, calItem.getId());
-                if (alarmData != null)
-                    ToXML.encodeAlarmData(calItemRespElem, calItem, alarmData);
+
+                boolean hidePrivate = !calItem.allowPrivateAccess(authAcct, zsc.isUsingAdminPrivileges());
+                boolean showAll = !hidePrivate || calItem.isPublic();
+                if (showAll) {
+                    AlarmData alarmData = calItem.getAlarmData();
+                    if (alarmData != null)
+                        ToXML.encodeAlarmData(calItemRespElem, calItem, alarmData);
+                }
             }
         }
         return response;
