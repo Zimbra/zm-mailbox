@@ -22,6 +22,8 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import com.zimbra.common.util.ByteUtil;
+
 public enum ContentTransferEncoding {
     QUOTED_PRINTABLE("quoted-printable"), BASE64("base64"), SEVEN_BIT("7bit"), EIGHT_BIT("8bit"), BINARY("binary");
 
@@ -260,6 +262,17 @@ public enum ContentTransferEncoding {
                     throw ioe;
             }
             return i == 0 ? -1 : i;
+        }
+
+        @Override public boolean markSupported()                { return false; }
+        @Override public synchronized void mark(int readlimit)  { }
+        @Override public synchronized void reset() throws IOException {
+            throw new IOException("mark/reset not supported");
+        }
+
+        @Override public long skip(long n) throws IOException {
+            // can't just skip in the underlying stream, since there isn't a 1-to-1 mapping of underlying bytes and decoded bytes
+            return ByteUtil.skip(this, n);
         }
     }
 }

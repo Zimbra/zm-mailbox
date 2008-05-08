@@ -489,6 +489,27 @@ public class ByteUtil {
         return false;
     }
 
+    private static final int SKIP_BUFFER_SIZE = 4096;
+    private static byte[] skipBuffer;
+
+    public static long skip(InputStream is, long n) throws IOException {
+        if (n <= 0)
+            return 0;
+
+        if (skipBuffer == null)
+            skipBuffer = new byte[SKIP_BUFFER_SIZE];
+        byte[] localSkipBuffer = skipBuffer;
+
+        long remaining = n;
+        while (remaining > 0) {
+            int nr = is.read(localSkipBuffer, 0, (int) Math.min(SKIP_BUFFER_SIZE, remaining));
+            if (nr < 0)
+                break;
+            remaining -= nr;
+        }
+        return n - remaining;
+    }
+
     /**
      * Copies an input stream fully to output stream.
      * @param in the <tt>InputStream</tt>
@@ -647,8 +668,9 @@ public class ByteUtil {
             byte[] buf = str.getBytes("UTF-8");
             out.writeInt(buf.length);
             out.write(buf);
-        } else
+        } else {
             out.writeInt(0);
+        }
     }
 
     public static String readUTF8(DataInput in) throws IOException {
