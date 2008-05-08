@@ -55,10 +55,13 @@ public final class Pop3Connection extends MailConnection {
             throw new MailException(
                 "Expected greeting, but got: " + response.getMessage());
         }
+        setState(State.NOT_AUTHENTICATED);
     }
 
     public void logout() throws IOException {
+        setState(State.LOGOUT);
         sendCommandCheckStatus("QUIT", null);
+        setState(State.CLOSED);
     }
 
     protected void sendLogin(String user, String pass) throws IOException {
