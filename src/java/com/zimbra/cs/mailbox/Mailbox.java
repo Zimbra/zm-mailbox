@@ -2382,13 +2382,13 @@ public class Mailbox {
         }
     }
 
-    public synchronized List<Pop3Message> openPop3Folder(OperationContext octxt, int folderId) throws ServiceException {
+    public synchronized List<Pop3Message> openPop3Folder(OperationContext octxt, int folderId, Date popSince) throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("openPop3Folder", octxt);
 
             Folder folder = getFolderById(folderId);
-            List<Pop3Message> p3list = DbMailItem.loadPop3Folder(folder);
+            List<Pop3Message> p3list = DbMailItem.loadPop3Folder(folder, popSince);
             success = true;
             return p3list;
         } finally {

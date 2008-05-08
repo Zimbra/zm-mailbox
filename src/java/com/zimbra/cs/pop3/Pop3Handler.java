@@ -23,7 +23,6 @@ package com.zimbra.cs.pop3;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
@@ -36,7 +35,6 @@ import com.zimbra.cs.security.sasl.AuthenticatorUser;
 import com.zimbra.cs.security.sasl.AuthenticatorUtil;
 import com.zimbra.cs.security.sasl.GssAuthenticator;
 import com.zimbra.cs.security.sasl.PlainAuthenticator;
-import com.zimbra.cs.stats.ActivityTracker;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.util.Config;
@@ -95,7 +93,6 @@ public abstract class Pop3Handler extends ProtocolHandler {
         mConfig = (Pop3Config) server.getConfig();
     }
 
-    
     Pop3Handler(MinaPop3Server server) {
         super(null);
         mConfig = (Pop3Config) server.getConfig();
@@ -443,7 +440,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
         sendOK(numUndeleted+ " message(s) undeleted");
     }    
     
-    private void doUSER(String user) throws Pop3CmdException, IOException, ServiceException {
+    private void doUSER(String user) throws Pop3CmdException, IOException {
         checkIfLoginPermitted();
         
         if (mState != STATE_AUTHORIZATION)

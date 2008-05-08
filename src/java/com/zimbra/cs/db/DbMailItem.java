@@ -28,6 +28,7 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -2395,21 +2396,25 @@ public class DbMailItem {
     private static final String POP3_FIELDS = "mi.id, mi.size, mi.blob_digest";
     private static final String POP3_TYPES = "(" + MailItem.TYPE_MESSAGE + ")";
 
-    public static List<Pop3Message> loadPop3Folder(Folder folder) throws ServiceException {
+    public static List<Pop3Message> loadPop3Folder(Folder folder, Date popSince) throws ServiceException {
         Mailbox mbox = folder.getMailbox();
+        long popDate = popSince == null ? -1 : Math.max(popSince.getTime(), -1);
         List<Pop3Message> result = new ArrayList<Pop3Message>();
 
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
+            String dateConstraint = popDate < 0 ? "" : " AND date > ?";
             stmt = conn.prepareStatement("SELECT " + POP3_FIELDS +
                         " FROM " + getMailItemTableName(mbox, " mi") +
                         " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type IN " + POP3_TYPES +
-                        " AND NOT " + Db.bitmaskAND("flags", Flag.BITMASK_DELETED));
+                        " AND NOT " + Db.bitmaskAND("flags", Flag.BITMASK_DELETED) + dateConstraint);
             int pos = 1;
             stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, folder.getId());
+            if (popDate >= 0)
+                stmt.setInt(pos++, (int) (popDate / 1000L));
             rs = stmt.executeQuery();
 
             while (rs.next())
