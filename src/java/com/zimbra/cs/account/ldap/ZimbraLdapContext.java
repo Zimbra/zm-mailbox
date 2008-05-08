@@ -50,12 +50,15 @@ public class ZimbraLdapContext {
 
     private static String sLdapURL;
     private static String sLdapMasterURL;    
+    private static boolean sLdapRequireStartTLS;
+    private static boolean sLdapMasterRequireStartTLS;
     
     private static Hashtable<String, String> sEnvMasterAuth;
     private static Hashtable<String, String> sEnvAuth;
     
     private LdapContext mDirContext;
     private StartTlsResponse mTlsResp;
+    
 
     static {
         String ldapHost = LC.ldap_host.value();
@@ -77,27 +80,27 @@ public class ZimbraLdapContext {
         System.setProperty("com.sun.jndi.ldap.connect.pool.protocol", "plain ssl");
         
         // TODO: should we use mailboxd_keystore or mailboxd_truststore? 
-        if (requireStartTLS())
-            System.setProperty("javax.net.ssl.trustStore", LC.mailboxd_keystore.value());
-
+        sLdapRequireStartTLS = requireStartTLS(sLdapURL);
+        sLdapMasterRequireStartTLS = requireStartTLS(sLdapMasterURL);
+        if (sLdapRequireStartTLS || sLdapMasterRequireStartTLS)
+            System.setProperty("javax.net.ssl.trustStore", LC.mailboxd_truststore.value());
     }
-    
     
     public static String getLdapURL() {
         return sLdapURL;
     }
     
-    /**
-     * TODO:  also need to check
-     * 1. ldap protocol - cannot be ldaps
-     * 2. ldap port - cannot be 636
-     * 3. ldap_starttls_supported
-     * 4. 
-     * 
-     * @return
-     */
-    private static boolean requireStartTLS() {
-        return LC.ldap_require_tls.booleanValue();
+    private static boolean requireStartTLS(String urls) {
+        return LC.ldap_starttls_supported.booleanValue() && 
+               LC.zimbra_require_interprocess_security.booleanValue() &&
+               !urls.toLowerCase().contains("ldaps://");
+    }
+    
+    private static boolean requireStartTLS(boolean master) {
+        if (master)
+            return sLdapMasterRequireStartTLS;
+        else
+            return sLdapRequireStartTLS;
     }
     
     private static synchronized Hashtable getDefaultEnv(boolean master) {
@@ -120,7 +123,7 @@ public class ZimbraLdapContext {
         // env.put("java.naming.ldap.derefAliases", "never");
         // default: env.put("java.naming.ldap.version", "3");
         
-        if (requireStartTLS()) {
+        if (requireStartTLS(master)) {
             // cannot use connection pooling if requiring start TLS
             // see http://java.sun.com/products/jndi/tutorial/ldap/connect/pool.html
             sEnv.put("com.sun.jndi.ldap.connect.pool", "false");
@@ -193,8 +196,7 @@ public class ZimbraLdapContext {
     public ZimbraLdapContext(boolean master, boolean useConnPool) throws ServiceException {
         try {
             Hashtable env = useConnPool? getDefaultEnv(master) : getNonPooledEnv(master);
-            boolean startTLS = requireStartTLS();
-            
+            boolean startTLS = requireStartTLS(master);
             
             long start = ZimbraPerf.STOPWATCH_LDAP_DC.start();
             
