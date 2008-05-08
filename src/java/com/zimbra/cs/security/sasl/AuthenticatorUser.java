@@ -77,8 +77,8 @@ public interface AuthenticatorUser {
     /**
      * Authenticates the user with the server.
      * 
-     * @param authorizationId   the authorization id for the user
-     * @param authenticationId  the authentication id for the user
+     * @param authorizationId   the authorization id for the user, or null if none
+     * @param authenticationId  the authentication id for the user (required)
      * @param password          the user password, or null if none
      * @param auth              the Authenticator performing the authentication
      * @return true if the user was authenticated, false otherwise
