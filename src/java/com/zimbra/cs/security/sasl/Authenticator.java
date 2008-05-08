@@ -98,7 +98,7 @@ public abstract class Authenticator {
     }
 
     protected boolean authenticate(String authorizationId, String authenticationId, String password)
-    throws IOException {
+        throws IOException {
         mAuthenticated = mAuthUser.authenticate(authorizationId, authenticationId, password, this);
         mComplete = true;
         return mAuthenticated;

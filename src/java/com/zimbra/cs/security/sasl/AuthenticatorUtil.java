@@ -23,6 +23,7 @@ import com.zimbra.cs.account.AuthContext;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 
 import java.io.IOException;
 
@@ -31,47 +32,64 @@ import java.io.IOException;
  */
 public final class AuthenticatorUtil {
     public static Account authenticate(String username, String authenticateId,
-                                       String password, String protocol, String origRemoteIp)
-            throws ServiceException, IOException {
+                                       String password, String protocol,
+                                       String origRemoteIp)
+        throws ServiceException, IOException {
         Provisioning prov = Provisioning.getInstance();
-        Account account = prov.get(Provisioning.AccountBy.name, username);
-        Account authacct = authenticateId == null || authenticateId.equals("") ?
-            account : prov.get(Provisioning.AccountBy.name, authenticateId);
-        if (account == null || authacct == null) {
+        Account account = prov.get(Provisioning.AccountBy.name, authenticateId);
+        if (account == null) {
+            ZimbraLog.account.warn(
+                "No account associated with authentication id '%s'", authenticateId);
             return null;
         }
         // authenticate the authentication principal
         Map<String, Object> authCtxt = new HashMap<String, Object>();
         authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, origRemoteIp);
-        prov.authAccount(authacct, password, protocol, authCtxt);
-
-        // authorize as the target user
-        if (!account.getId().equals(authacct.getId())) {
-            // check domain/global admin if auth credentials != target account
-            if (!AccessManager.getInstance().canAccessAccount(authacct, account)) {
-                return null;
-            }
-        }
-        return account;
+        prov.authAccount(account, password, protocol, authCtxt);
+        return authorize(account, username);
     }
-
+    
     public static Account authenticateKrb5(String username, String principal)
-            throws ServiceException, IOException {
+        throws ServiceException, IOException {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(Provisioning.AccountBy.krb5Principal, principal);
         if (account == null) {
+            ZimbraLog.account.warn(
+                "No account associated with Kerberos principle '%s'", principal);
             return null;
         }
-        if (username != null) {
-            // If username (authorization id) is specified, then return the
-            // user's account only if it can be accessed by the account
-            // associated with the Kerberos principal (authentication id).
-            Account userAcct = prov.get(Provisioning.AccountBy.name, username);
-            if (userAcct == null) {
-                return null;
+        return authorize(account, username);
+    }
+
+    private static Account authorize(Account account, String username)
+        throws ServiceException {
+        if (username == null || username.length() == 0) {
+            return account;
+        }
+        Provisioning prov = Provisioning.getInstance();
+        Account userAcct = prov.get(Provisioning.AccountBy.name, username);
+        if (userAcct == null) {
+            // If username not found, check username again using the domain
+            // associated with the authorization account.
+            int i = username.indexOf('@');
+            if (i != -1) {
+                String domain = account.getDomainName();
+                if (domain != null) {
+                    username = username.substring(0, i) + '@' + domain;
+                    userAcct = prov.get(Provisioning.AccountBy.name, username);
+                }
             }
-            AccessManager am = AccessManager.getInstance();
-            return am.canAccessAccount(account, userAcct) ? userAcct : null;
+        }
+        if (userAcct == null) {
+            ZimbraLog.account.warn(
+                "No account associated with username '%s'", username);
+            return null;
+        }
+        if (!AccessManager.getInstance().canAccessAccount(account, userAcct)) {
+            ZimbraLog.account.warn(
+                "Account for username '%s' cannot be accessed by '%s'",
+                username, account.getName());
+            return null;
         }
         return account;
     }

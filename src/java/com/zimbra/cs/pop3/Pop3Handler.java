@@ -486,7 +486,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
         if (password.length() > 1024)
             throw new Pop3CmdException("password length too long");
 
-        authenticate(mUser, "", password, null);
+        authenticate(null, mUser, password, null);
         sendOK("server ready");
     }
 

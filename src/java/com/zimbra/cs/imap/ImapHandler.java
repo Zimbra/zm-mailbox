@@ -1031,7 +1031,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             return CONTINUE_PROCESSING;
         }
 
-        boolean cont = authenticate(username, "", password, tag, null);
+        boolean cont = authenticate(null, username, password, tag, null);
         if (isAuthenticated()) {
             // 6.2.3: "A server MAY include a CAPABILITY response code in the tagged OK
             //         response of a successful LOGIN command in order to send capabilities
@@ -1046,7 +1046,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                          String tag, String mechanism) throws IOException {
         // the Windows Mobile 5 hacks are enabled by appending "/wm" to the username, etc.
         EnabledHack enabledHack = EnabledHack.NONE;
-        if (username != null) {
+        if (username != null && username.length() != 0) {
             for (EnabledHack hack : EnabledHack.values()) {
                 if (hack.toString() != null && username.endsWith(hack.toString())) {
                     enabledHack = hack;

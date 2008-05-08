@@ -17,6 +17,10 @@ import java.util.Arrays;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Logger;
+import org.apache.log4j.Level;
+
 public abstract class MailClient {
     private MailConfig config;
     protected MailConnection connection;
@@ -30,6 +34,8 @@ public abstract class MailClient {
     }
 
     public void run(String[] args) throws LoginException, IOException {
+        BasicConfigurator.configure();
+        Logger.getRootLogger().setLevel(Level.INFO);
         config.setTrace(true);
         config.setRawMode(true);
         parseArguments(args);

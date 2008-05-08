@@ -59,7 +59,6 @@ public class PlainAuthenticator extends Authenticator {
         String authorizeId = message.substring(0, nul1);
         String authenticateId = message.substring(nul1 + 1, nul2);
         String password = message.substring(nul2 + 1);
-        if (authorizeId.equals("")) authorizeId = authenticateId;
         authenticate(authorizeId, authenticateId, password);
     }
 }
