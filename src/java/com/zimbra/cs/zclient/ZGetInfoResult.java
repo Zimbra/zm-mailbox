@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Date;
 
 public class ZGetInfoResult {
 
@@ -51,6 +52,7 @@ public class ZGetInfoResult {
     private List<ZSignature> mSignatures;
     private List<String> mMailURLs;
     private Set<String> mEmailAddresses;
+    private Date mPrevSession;
 
     static Map<String, List<String>> getMap(Element e, String root, String elName) throws ServiceException {
         Map<String, List<String>> result = new HashMap<String, List<String>>();
@@ -85,6 +87,8 @@ public class ZGetInfoResult {
         mFeatures = new ZFeatures(mAttrs);
         mRecent = e.getAttribute(AccountConstants.E_RECENT_MSGS, "0");
         mRestURLBase = e.getAttribute(AccountConstants.E_REST, null);
+		long prevSession = e.getAttributeLong(AccountConstants.E_PREVIOUS_SESSION, 0);
+		mPrevSession = prevSession != 0 ? new Date(prevSession) : null;
 
         mMailURLs = new ArrayList<String>();
         String mailUrl = e.getAttribute(AccountConstants.E_SOAP_URL, null);
@@ -233,5 +237,9 @@ public class ZGetInfoResult {
     public String getVersion() {
     	return mVersion;
     }
+
+	public Date getPrevSession() {
+		return mPrevSession;
+	}
 }
 
