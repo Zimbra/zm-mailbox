@@ -162,7 +162,13 @@ class ImapPartSpecifier {
             long statedLength = contents.getFirst();
             long realLength = Math.max(0, Math.min(statedLength < 0 ? Integer.MAX_VALUE : statedLength, mOctetEnd) - mOctetStart);
             try {
-                is = ByteUtil.SegmentInputStream.create(is, mOctetStart, mOctetStart + realLength);
+                int start = mOctetStart;
+                // the JavaMail implementations of the content-transfer decoders don't do skip() correctly
+                if (is instanceof com.sun.mail.util.BASE64DecoderStream || is instanceof com.sun.mail.util.QPDecoderStream) {
+                    ByteUtil.skip(is, start);
+                    start = 0;
+                }
+                is = ByteUtil.SegmentInputStream.create(is, start, start + realLength);
             } catch (IOException ioe) {
                 ByteUtil.closeStream(is);
                 throw ioe;
