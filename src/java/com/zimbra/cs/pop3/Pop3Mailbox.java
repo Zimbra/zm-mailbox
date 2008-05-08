@@ -25,10 +25,13 @@ package com.zimbra.cs.pop3;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.DateUtil;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
@@ -38,7 +41,6 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
-
 
 class Pop3Mailbox {
     private int mId; // id of the mailbox
@@ -65,7 +67,10 @@ class Pop3Mailbox {
         mOpContext = new Mailbox.OperationContext(acct);
 
         if (query == null || query.equals("")) {
-            mMessages = mbox.openPop3Folder(mOpContext, Mailbox.ID_FOLDER_INBOX);
+            String dateConstraint = acct.getAttr(Provisioning.A_zimbraPrefPop3DownloadSince);
+            Date popSince = dateConstraint == null ? null : DateUtil.parseGeneralizedTime(dateConstraint);
+
+            mMessages = mbox.openPop3Folder(mOpContext, Mailbox.ID_FOLDER_INBOX, popSince);
             for (Pop3Message p3m : mMessages)
                 mTotalSize += p3m.getSize();
         } else {
