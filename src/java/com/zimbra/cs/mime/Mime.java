@@ -532,15 +532,18 @@ public class Mime {
             return mp;
         part = part.trim();
 
+        boolean digestParent = false;
         String[] subpart = part.split("\\.");
         for (int i = 0; i < subpart.length; i++) {
             int index = Integer.parseInt(subpart[i]);
             if (index <= 0)
                 return null;
             // the content-type determines the expected substructure
-            String ct = mp.getContentType().toLowerCase();
+            String ct = getContentType(mp, digestParent ? CT_MESSAGE_RFC822 : CT_DEFAULT);
             if (ct == null)
                 return null;
+            digestParent = ct.equals(CT_MULTIPART_DIGEST);
+
             if (ct.startsWith(CT_MULTIPART_PREFIX)) {
                 Object content = getMultipartContent(mp, ct);
                 if (content instanceof MimeMultipart && ((MimeMultipart) content).getCount() >= index) {
@@ -553,7 +556,7 @@ public class Mime {
             } else if (mp instanceof MimeMessage && index == 1 && i == subpart.length - 1) {
                 // the top-level part of a non-multipart message is numbered "1"
                 break;
-            } else if (ct.startsWith(CT_MESSAGE_RFC822)) {
+            } else if (ct.equals(CT_MESSAGE_RFC822)) {
                 MimeMessage content = getMessageContent(mp);
                 if (content != null) {
                     if (mp instanceof MimeMessage) {
@@ -563,7 +566,7 @@ public class Mime {
                     } else {
                     	i--;
                     }
-                    mp = (MimePart) content;
+                    mp = content;
                     continue;
                 }
             }
