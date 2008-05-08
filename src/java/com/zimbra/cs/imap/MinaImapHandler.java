@@ -54,7 +54,7 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
         }
 
         MinaServer.startTLS(mSession, mConfig);
-        sendOK(tag, "Begin TLS negotiation now");
+        sendOK(tag, "begin TLS negotiation now");
         mStartedTLS = true;
         return true;
     }
@@ -102,7 +102,8 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
 
         long start = ZimbraPerf.STOPWATCH_IMAP.start();
         try {
-            if (!processRequest(imapReq)) dropConnection();
+            if (!processRequest(imapReq))
+                dropConnection();
         } finally {
             ZimbraPerf.STOPWATCH_IMAP.stop(start);
             if (mLastCommand != null)

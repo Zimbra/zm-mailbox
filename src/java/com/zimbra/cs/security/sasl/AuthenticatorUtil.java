@@ -22,6 +22,9 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthContext;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.AccessManager;
+import com.zimbra.cs.account.ZimbraAuthToken;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -48,7 +51,7 @@ public final class AuthenticatorUtil {
         prov.authAccount(account, password, protocol, authCtxt);
         return authorize(account, username);
     }
-    
+
     public static Account authenticateKrb5(String username, String principal)
         throws ServiceException, IOException {
         Provisioning prov = Provisioning.getInstance();
@@ -92,5 +95,24 @@ public final class AuthenticatorUtil {
             return null;
         }
         return account;
+    }
+
+    public static Account authenticateZToken(String username, String authtoken) throws ServiceException {
+        if (username == null || username.equals(""))
+            return null;
+
+        Provisioning prov = Provisioning.getInstance();
+        try {
+            AuthToken at = ZimbraAuthToken.getAuthToken(authtoken);
+            if (at == null || at.isExpired() || !at.isAdmin() || at.getAdminAccountId() != null)
+                return null;
+            Account admin = prov.get(Provisioning.AccountBy.id, at.getAccountId());
+            if (admin == null || !admin.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
+                return null;
+        } catch (AuthTokenException e) {
+            return null;
+        }
+
+        return prov.get(Provisioning.AccountBy.name, username);
     }
 }

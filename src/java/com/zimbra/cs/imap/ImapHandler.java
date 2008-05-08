@@ -24,21 +24,7 @@ import java.io.PrintStream;
 import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import javax.mail.MessagingException;
@@ -80,11 +66,7 @@ import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.security.sasl.Authenticator;
-import com.zimbra.cs.security.sasl.AuthenticatorUser;
-import com.zimbra.cs.security.sasl.AuthenticatorUtil;
-import com.zimbra.cs.security.sasl.GssAuthenticator;
-import com.zimbra.cs.security.sasl.PlainAuthenticator;
+import com.zimbra.cs.security.sasl.*;
 import com.zimbra.cs.service.mail.FolderAction;
 import com.zimbra.cs.service.mail.ItemActionHelper;
 import com.zimbra.cs.service.util.ItemId;
@@ -108,9 +90,6 @@ public abstract class ImapHandler extends ProtocolHandler {
 
     static final char[] LINE_SEPARATOR       = { '\r', '\n' };
     static final byte[] LINE_SEPARATOR_BYTES = { '\r', '\n' };
-
-    private static final String MECHANISM_PLAIN  = PlainAuthenticator.MECHANISM;
-    private static final String MECHANISM_GSSAPI = GssAuthenticator.MECHANISM;
 
     private DateFormat mTimeFormat   = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss Z", Locale.US);
     private DateFormat mDateFormat   = new SimpleDateFormat("dd-MMM-yyyy", Locale.US);
@@ -846,7 +825,8 @@ public abstract class ImapHandler extends ProtocolHandler {
         String starttls = mStartedTLS || authenticated || !extensionEnabled("STARTTLS")   ? "" : " STARTTLS";
         String plain    = !allowCleartextLogins() || authenticated || !extensionEnabled("AUTH=PLAIN") ? "" : " AUTH=PLAIN";
         String gss      = authenticated || !isGssAuthEnabled() ? "" : " AUTH=GSSAPI";
-        StringBuilder capability = new StringBuilder("CAPABILITY IMAP4rev1" + nologin + starttls + plain + gss);
+        String zimbra   = authenticated || !extensionEnabled("AUTH=ZIMBRA") ? "" : " AUTH=ZIMBRA";
+        StringBuilder capability = new StringBuilder("CAPABILITY IMAP4rev1" + nologin + starttls + plain + gss + zimbra);
         for (String extension : SUPPORTED_EXTENSIONS) {
             if (extensionEnabled(extension))
                 capability.append(' ').append(extension);
@@ -975,12 +955,12 @@ public abstract class ImapHandler extends ProtocolHandler {
         return STOP_PROCESSING;
     }
 
-    boolean doAUTHENTICATE(String tag, String mechanism, byte[] response) throws IOException {
+    boolean doAUTHENTICATE(String tag, String mechanism, byte[] initial) throws IOException {
         if (!checkState(tag, State.NOT_AUTHENTICATED))
             return CONTINUE_PROCESSING;
 
         AuthenticatorUser authUser = new ImapAuthenticatorUser(this, tag);
-        if (MECHANISM_PLAIN.equals(mechanism) && mechanismEnabled(mechanism)) {
+        if (PlainAuthenticator.MECHANISM.equals(mechanism) && mechanismEnabled(mechanism)) {
             // RFC 2595 6: "The PLAIN SASL mechanism MUST NOT be advertised or used
             //              unless a strong encryption layer (such as the provided by TLS)
             //              is active or backwards compatibility dictates otherwise."
@@ -989,8 +969,10 @@ public abstract class ImapHandler extends ProtocolHandler {
                 return CONTINUE_PROCESSING;
             }
             mAuthenticator = new PlainAuthenticator(authUser);
-        } else if (MECHANISM_GSSAPI.equals(mechanism) && isGssAuthEnabled()) {
+        } else if (GssAuthenticator.MECHANISM.equals(mechanism) && isGssAuthEnabled()) {
             mAuthenticator = new GssAuthenticator(authUser);
+        } else if (ZimbraAuthenticator.MECHANISM.equals(mechanism) && mechanismEnabled(mechanism)) {
+            mAuthenticator = new ZimbraAuthenticator(authUser);
         } else {
             // no other AUTHENTICATE mechanisms are supported yet
             sendNO(tag, "mechanism not supported");
@@ -1007,9 +989,9 @@ public abstract class ImapHandler extends ProtocolHandler {
         //       command that is defined in Section 6.2.2 of [IMAP4].  If this second
         //       argument is present, it represents the contents of the "initial
         //       client response" defined in section 5.1 of [SASL]."
-        if (response != null) {
-            return continueAuthentication(response);
-        }
+        if (initial != null)
+            return continueAuthentication(initial);
+
         sendContinuation("");
         return CONTINUE_PROCESSING;
     }
@@ -1042,8 +1024,8 @@ public abstract class ImapHandler extends ProtocolHandler {
         return cont;
     }
     
-    boolean authenticate(String username, String authenticateId, String password,
-                         String tag, String mechanism) throws IOException {
+    boolean authenticate(String username, String authenticateId, String password, String tag, String mechanism)
+    throws IOException {
         // the Windows Mobile 5 hacks are enabled by appending "/wm" to the username, etc.
         EnabledHack enabledHack = EnabledHack.NONE;
         if (username != null && username.length() != 0) {
@@ -1055,45 +1037,52 @@ public abstract class ImapHandler extends ProtocolHandler {
                 }
 	    }
         }
-        String type = mechanism != null ? "authentication" : "login";
+
+        String command = mechanism != null ? "AUTHENTICATE" : "LOGIN";
         try {
-            Account account = MECHANISM_GSSAPI.equals(mechanism) ?
-                AuthenticatorUtil.authenticateKrb5(username, authenticateId) :
-                AuthenticatorUtil.authenticate(username, authenticateId, password, "imap", getOrigRemoteIpAddr());
-            if (account == null) {
-                sendNO(tag, type + " failed");
+            Account acct;
+            if (GssAuthenticator.MECHANISM.equals(mechanism))
+                acct = AuthenticatorUtil.authenticateKrb5(username, authenticateId);
+            else if (ZimbraAuthenticator.MECHANISM.equals(mechanism))
+                acct = AuthenticatorUtil.authenticateZToken(username, password);
+            else
+                acct = AuthenticatorUtil.authenticate(username, authenticateId, password, "imap", getOrigRemoteIpAddr());
+            if (acct == null) {
+                sendNO(tag, command + " failed");
                 return CONTINUE_PROCESSING;
             }
-            ImapCredentials session = startSession(account, enabledHack, tag, mechanism);
-            if (session == null)
+
+            ImapCredentials creds = startSession(acct, enabledHack, tag, mechanism);
+            if (creds == null)
                 return CONTINUE_PROCESSING;
         } catch (ServiceException e) {
-            ZimbraLog.imap.warn(type + " failed", e);
+            ZimbraLog.imap.warn(command + " failed", e);
             if (e.getCode().equals(AccountServiceException.CHANGE_PASSWORD))
                 sendNO(tag, "[ALERT] password must be changed before IMAP login permitted");
             else if (e.getCode().equals(AccountServiceException.MAINTENANCE_MODE))
                 sendNO(tag, "[ALERT] account undergoing maintenance; please try again later");
             else
-                sendNO(tag, type + " failed");
+                sendNO(tag, command + " failed");
             return canContinue(e);
         }
 
         return CONTINUE_PROCESSING;
     }
 
-    private ImapCredentials startSession(Account account, EnabledHack hack, String tag, String mechanism) throws ServiceException, IOException {
-        String type = mechanism != null ? "authentication" : "login";
+    private ImapCredentials startSession(Account account, EnabledHack hack, String tag, String mechanism)
+    throws ServiceException, IOException {
+        String command = mechanism != null ? "AUTHENTICATE" : "LOGIN";
         // make sure we can actually login via IMAP on this host
         if (!account.getBooleanAttr(Provisioning.A_zimbraImapEnabled, false)) {
             sendNO(tag, "account does not have IMAP access enabled");
             return null;
-        } else if (!Provisioning.onLocalServer(account)) { 
+        } else if (!ZimbraAuthenticator.MECHANISM.equals(mechanism) && !Provisioning.onLocalServer(account)) { 
             String correctHost = account.getAttr(Provisioning.A_zimbraMailHost);
-            ZimbraLog.imap.info(type + " failed; should be on host " + correctHost);
+            ZimbraLog.imap.info(command + " failed; should be on host " + correctHost);
             if (correctHost == null || correctHost.trim().equals("") || !extensionEnabled("LOGIN_REFERRALS"))
-                sendNO(tag, type + " failed (wrong host)");
+                sendNO(tag, command + " failed [wrong host]");
             else
-                sendNO(tag, "[REFERRAL imap://" + URLEncoder.encode(account.getName(), "utf-8") + '@' + correctHost + "/] " + type + " failed");
+                sendNO(tag, "[REFERRAL imap://" + URLEncoder.encode(account.getName(), "utf-8") + '@' + correctHost + "/] " + command + " failed");
             return null;
         }
 
@@ -1102,7 +1091,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             mCredentials.getMailbox().beginTrackingImap();
         
         ZimbraLog.addAccountNameToContext(mCredentials.getUsername());
-        ZimbraLog.imap.info("user " + mCredentials.getUsername() + " authenticated, mechanism=" + type);
+        ZimbraLog.imap.info("user " + mCredentials.getUsername() + " authenticated, mechanism=" + (mechanism == null ? "LOGIN" : mechanism));
         
         return mCredentials;
     }
