@@ -1125,6 +1125,7 @@ public abstract class Provisioning {
     public static final String A_zimbraPop3ProxyBindPort = "zimbraPop3ProxyBindPort";
     public static final String A_zimbraPop3SSLProxyBindPort = "zimbraPop3SSLProxyBindPort";
     public static final String A_zimbraPop3SaslGssapiEnabled = "zimbraPop3SaslGssapiEnabled";
+    public static final String A_zimbraPrefPop3DownloadSince = "zimbraPrefPop3DownloadSince";
     
     public static final String A_zimbraNotifyServerEnabled = "zimbraNotifyServerEnabled";
     public static final String A_zimbraNotifyBindAddress = "zimbraNotifyBindAddress";
