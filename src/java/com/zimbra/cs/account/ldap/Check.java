@@ -141,6 +141,11 @@ public class Check {
 
         String url[] = getRequiredMultiAttr(attrs, Provisioning.A_zimbraAuthLdapURL);
         
+        // TODO, need admin UI work for zimbraAuthLdapStartTlsEnabled
+        String startTLSEnabled = (String) attrs.get(Provisioning.A_zimbraAuthLdapStartTlsEnabled);
+        boolean startTLS = startTLSEnabled == null ? false : Provisioning.TRUE.equals(startTLSEnabled);
+        boolean requireStartTLS = ZimbraLdapContext.requireStartTLS(url,  startTLS);
+        
         try {
             String searchFilter = (String) attrs.get(Provisioning.A_zimbraAuthLdapSearchFilter);
             if (searchFilter != null) {
@@ -150,7 +155,7 @@ public class Check {
                 if (searchBase == null) searchBase = "";
                 searchFilter = LdapUtil.computeAuthDn(name, searchFilter);
                 if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with search filter of "+searchFilter);
-                LdapUtil.ldapAuthenticate(url, password, searchBase, searchFilter, searchDn, searchPassword);
+                LdapUtil.ldapAuthenticate(url, requireStartTLS, password, searchBase, searchFilter, searchDn, searchPassword);
                 return new Result(STATUS_OK, "", searchFilter);                
             }
         
@@ -158,14 +163,16 @@ public class Check {
             if (bindDn != null) {
                 String dn = LdapUtil.computeAuthDn(name, bindDn);
                 if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with bind dn template of "+dn);
-                LdapUtil.ldapAuthenticate(url, dn, password);
+                LdapUtil.ldapAuthenticate(url, requireStartTLS, dn, password);
                 return new Result(STATUS_OK, "", dn);
             }
             
             throw ServiceException.INVALID_REQUEST("must specify "+Provisioning.A_zimbraAuthLdapSearchFilter+" or "+Provisioning.A_zimbraAuthLdapBindDn, null);
         } catch (NamingException e) {
             return toResult(e, "");
-        }
+        } catch (IOException e) {
+            return toResult(e, "");
+        } 
     }
 
     
@@ -209,17 +216,25 @@ public class Check {
                 return new Result(STATUS_AUTH_FAILED, "", null);
         	}
     	} catch (IOException e) {
-            if (e instanceof UnknownHostException) {
-                return new Result(STATUS_UNKNOWN_HOST, e, null);
-            } else if (e instanceof ConnectException) {
-                return new Result(STATUS_CONNECTION_REFUSED, e, null);
-            } else if (e instanceof SSLHandshakeException) {
-                return new Result(STATUS_SSL_HANDSHAKE_FAILURE, e, null);
-            } else {
-                return new Result(STATUS_COMMUNICATION_FAILURE, e, null);
-            }
-    	}
+    	    return toResult(e);
+        }
     	return new Result(STATUS_OK, "", null);
+    }
+    
+    private static Result toResult(IOException e) {
+        return toResult(e, null);
+    }
+    
+    private static Result toResult(IOException e, String dn) {
+        if (e instanceof UnknownHostException) {
+            return new Result(STATUS_UNKNOWN_HOST, e, dn);
+        } else if (e instanceof ConnectException) {
+            return new Result(STATUS_CONNECTION_REFUSED, e, dn);
+        } else if (e instanceof SSLHandshakeException) {
+            return new Result(STATUS_SSL_HANDSHAKE_FAILURE, e, dn);
+        } else {
+            return new Result(STATUS_COMMUNICATION_FAILURE, e, dn);
+        }
     }
     
     private static Result toResult(NamingException e, String dn) {

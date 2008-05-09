@@ -6,6 +6,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapGalCredential;
+import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 
 public abstract class GalParams {
     
@@ -89,6 +90,7 @@ public abstract class GalParams {
     
     public static class ExternalGalParams extends GalParams {
         String mUrl[];
+        boolean mRequireStartTLS;
         String mSearchBase;
         String mFilter;
         LdapGalCredential mCredential;
@@ -96,6 +98,7 @@ public abstract class GalParams {
         public ExternalGalParams(Domain domain, GalOp galOp) throws ServiceException {
             super(domain, galOp);
             
+            String startTlsEnabled;
             String authMech;
             String bindDn;
             String bindPassword;
@@ -107,6 +110,7 @@ public abstract class GalParams {
                 mSearchBase = domain.getAttr(Provisioning.A_zimbraGalSyncLdapSearchBase);
                 mFilter = domain.getAttr(Provisioning.A_zimbraGalSyncLdapFilter);
                 
+                startTlsEnabled = domain.getAttr(Provisioning.A_zimbraGalSyncLdapStartTlsEnabled);
                 authMech = domain.getAttr(Provisioning.A_zimbraGalSyncLdapAuthMech);
                 bindDn = domain.getAttr(Provisioning.A_zimbraGalSyncLdapBindDn);
                 bindPassword = domain.getAttr(Provisioning.A_zimbraGalSyncLdapBindPassword);
@@ -121,6 +125,8 @@ public abstract class GalParams {
                 if (mFilter == null)
                     mFilter = domain.getAttr(Provisioning.A_zimbraGalLdapFilter);
                 
+                if (startTlsEnabled == null)
+                    startTlsEnabled = domain.getAttr(Provisioning.A_zimbraGalLdapStartTlsEnabled);
                 if (authMech == null)
                     authMech = domain.getAttr(Provisioning.A_zimbraGalLdapAuthMech);
                 if (bindDn == null)
@@ -141,6 +147,7 @@ public abstract class GalParams {
                 else
                     mFilter = domain.getAttr(Provisioning.A_zimbraGalLdapFilter);
             
+                startTlsEnabled = domain.getAttr(Provisioning.A_zimbraGalLdapStartTlsEnabled);
                 authMech = domain.getAttr(Provisioning.A_zimbraGalLdapAuthMech);
                 bindDn = domain.getAttr(Provisioning.A_zimbraGalLdapBindDn);
                 bindPassword = domain.getAttr(Provisioning.A_zimbraGalLdapBindPassword);
@@ -148,16 +155,21 @@ public abstract class GalParams {
                 krb5Keytab = domain.getAttr(Provisioning.A_zimbraGalLdapKerberos5Keytab);
             }
             
+            boolean startTLS = startTlsEnabled == null ? false : Provisioning.TRUE.equals(startTlsEnabled);
+            mRequireStartTLS = ZimbraLdapContext.requireStartTLS(mUrl,  startTLS);
             mCredential = new LdapGalCredential(authMech, bindDn, bindPassword, krb5Principal, krb5Keytab);
         }
         
         
         /*
          * called from Check, where there isn't a domain object
+         * 
+         * TODO, need admin UI work for zimbraGalLdapStartTlsEnabled/zimbraGalSyncLdapStartTlsEnabled
          */
         public ExternalGalParams(Map attrs, GalOp galOp) throws ServiceException {
             super(attrs, galOp);
             
+            String startTlsEnabled;
             String authMech;
             String bindDn;
             String bindPassword;
@@ -169,6 +181,7 @@ public abstract class GalParams {
                 mSearchBase = (String)attrs.get(Provisioning.A_zimbraGalSyncLdapSearchBase);
                 mFilter = (String)attrs.get(Provisioning.A_zimbraGalSyncLdapFilter);
                 
+                startTlsEnabled = (String)attrs.get(Provisioning.A_zimbraGalSyncLdapStartTlsEnabled);
                 authMech = (String)attrs.get(Provisioning.A_zimbraGalSyncLdapAuthMech);
                 bindDn = (String)attrs.get(Provisioning.A_zimbraGalSyncLdapBindDn);
                 bindPassword = (String)attrs.get(Provisioning.A_zimbraGalSyncLdapBindPassword);
@@ -183,6 +196,8 @@ public abstract class GalParams {
                 if (mFilter == null)
                     mFilter = getRequiredAttr(attrs, Provisioning.A_zimbraGalLdapFilter);
                 
+                if (startTlsEnabled == null)
+                    startTlsEnabled = (String)attrs.get(Provisioning.A_zimbraGalLdapStartTlsEnabled);
                 if (authMech == null)
                     authMech = (String)attrs.get(Provisioning.A_zimbraGalLdapAuthMech);
                 if (bindDn == null)
@@ -203,6 +218,7 @@ public abstract class GalParams {
                 else
                     mFilter = getRequiredAttr(attrs, Provisioning.A_zimbraGalLdapFilter);
             
+                startTlsEnabled = (String)attrs.get(Provisioning.A_zimbraGalLdapStartTlsEnabled);
                 authMech = (String)attrs.get(Provisioning.A_zimbraGalLdapAuthMech);
                 bindDn = (String)attrs.get(Provisioning.A_zimbraGalLdapBindDn);
                 bindPassword = (String)attrs.get(Provisioning.A_zimbraGalLdapBindPassword);
@@ -210,6 +226,8 @@ public abstract class GalParams {
                 krb5Keytab = (String)attrs.get(Provisioning.A_zimbraGalLdapKerberos5Keytab);
             }
                 
+            boolean startTLS = startTlsEnabled == null ? false : Provisioning.TRUE.equals(startTlsEnabled);
+            mRequireStartTLS = ZimbraLdapContext.requireStartTLS(mUrl,  startTLS);
             mCredential = new LdapGalCredential(authMech, bindDn, bindPassword, krb5Principal, krb5Keytab);
         }
         
@@ -235,6 +253,7 @@ public abstract class GalParams {
         }
         
         public String[] url() { return mUrl; }
+        public boolean requireStartTLS() { return mRequireStartTLS; }
         public String searchBase() { return mSearchBase; }
         public String filter() { return mFilter; }
         public LdapGalCredential credential() { return mCredential; }

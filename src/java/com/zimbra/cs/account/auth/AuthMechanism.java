@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.account.auth;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -128,15 +129,17 @@ public abstract class AuthMechanism {
                     throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt), "invalid password"); 
                 }
             } else if (acct instanceof LdapEntry) {
-                String[] urls = new String[] { ZimbraLdapContext.getLdapURL() };
+                // not SSHA, authenticate to Zimbra LDAP
                 try {
-                    LdapUtil.ldapAuthenticate(urls, ((LdapEntry)acct).getDN(), password);
+                    ZimbraLdapContext.ldapAuthenticate(((LdapEntry)acct).getDN(), password);
                     return; // good password, RETURN                
                 } catch (AuthenticationException e) {
                     throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt), e.getMessage(), e);
                 } catch (AuthenticationNotSupportedException e) {
                     throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), namePassedIn(authCtxt), e.getMessage(), e);
                 } catch (NamingException e) {
+                    throw ServiceException.FAILURE(e.getMessage(), e);
+                } catch (IOException e) {
                     throw ServiceException.FAILURE(e.getMessage(), e);
                 }
             }

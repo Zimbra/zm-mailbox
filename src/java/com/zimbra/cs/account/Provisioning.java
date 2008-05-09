@@ -357,6 +357,8 @@ public abstract class Provisioning {
      * LDAP URL (ldap://ldapserver[:port]/ or ldaps://ldapserver[:port]/)
      */
     public static final String A_zimbraAuthLdapURL = "zimbraAuthLdapURL";
+    
+    public static final String A_zimbraAuthLdapStartTlsEnabled = "zimbraAuthLdapStartTlsEnabled";
 
     public static final String A_zimbraAuthLdapSearchBase = "zimbraAuthLdapSearchBase";
 
@@ -472,6 +474,7 @@ public abstract class Provisioning {
      * GAL attributes
      */
     public static final String A_zimbraGalLdapURL = "zimbraGalLdapURL";
+    public static final String A_zimbraGalLdapStartTlsEnabled = "zimbraGalLdapStartTlsEnabled";
     
     /**
      *  external LDAP GAL authentication mechanism
@@ -496,6 +499,7 @@ public abstract class Provisioning {
      * external GAL sync params
      */
     public static final String A_zimbraGalSyncLdapURL                = "zimbraGalSyncLdapURL";
+    public static final String A_zimbraGalSyncLdapStartTlsEnabled    = "zimbraGalSyncLdapStartTlsEnabled";
     public static final String A_zimbraGalSyncLdapAuthMech           = "zimbraGalSyncLdapAuthMech";
     public static final String A_zimbraGalSyncLdapBindDn             = "zimbraGalSyncLdapBindDn";
     public static final String A_zimbraGalSyncLdapBindPassword       = "zimbraGalSyncLdapBindPassword";

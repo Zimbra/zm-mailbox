@@ -1807,8 +1807,7 @@ public class TestProvisioning extends TestCase {
     }
    
     public static void main(String[] args) throws Exception {
-        // CliUtil.toolSetup("INFO");
-        CliUtil.toolSetup("DEBUG");
+        CliUtil.toolSetup("INFO");
         // TestUtil.runTest(new TestSuite(TestProvisioning.class));
 
         TestProvisioning t = new TestProvisioning();
