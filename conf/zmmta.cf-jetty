@@ -61,45 +61,50 @@ SECTION mta DEPENDS amavis
   if VAR zimbraMtaMyHostname
     POSTCONF myhostname VAR zimbraMtaMyHostname
   fi
-	POSTCONF recipient_delimiter	VAR zimbraMtaRecipientDelimiter
-	POSTCONF smtpd_sasl_auth_enable VAR zimbraMtaAuthEnabled
-	POSTCONF smtpd_tls_auth_only	VAR zimbraMtaTlsAuthOnly
-	POSTCONF smtpd_use_tls			yes
-	POSTCONF disable_dns_lookups	VAR !zimbraMtaDnsLookupsEnabled	
-	POSTCONF message_size_limit		VAR zimbraMtaMaxMessageSize
-	POSTCONF mailbox_size_limit		0
-	POSTCONF relayhost				VAR zimbraMtaRelayHost
+	POSTCONF recipient_delimiter	                VAR zimbraMtaRecipientDelimiter
+	POSTCONF smtpd_sasl_auth_enable               VAR zimbraMtaAuthEnabled
+	POSTCONF smtpd_tls_auth_only	                VAR zimbraMtaTlsAuthOnly
+	POSTCONF smtpd_use_tls			                  yes
+	POSTCONF disable_dns_lookups	                VAR !zimbraMtaDnsLookupsEnabled	
+	POSTCONF message_size_limit		                VAR zimbraMtaMaxMessageSize
+	POSTCONF mailbox_size_limit		                0
+	POSTCONF relayhost				                    VAR zimbraMtaRelayHost
 	POSTCONF smtpd_recipient_restrictions FILE postfix_recipient_restrictions.cf
-
-	POSTCONF alias_maps 						LOCAL postfix_alias_maps
-	POSTCONF broken_sasl_auth_clients			LOCAL postfix_broken_sasl_auth_clients
-  POSTCONF mail_owner                 LOCAL postfix_mail_owner
-  POSTCONF setgid_group                 LOCAL postfix_setgid_group
-	POSTCONF command_directory					LOCAL postfix_command_directory
-	POSTCONF daemon_directory					LOCAL postfix_daemon_directory
-	POSTCONF header_checks						LOCAL postfix_header_checks
-	POSTCONF mailq_path							LOCAL postfix_mailq_path
-	POSTCONF manpage_directory					LOCAL postfix_manpage_directory
-	POSTCONF newaliases_path					LOCAL postfix_newaliases_path
-	POSTCONF queue_directory					LOCAL postfix_queue_directory
-	POSTCONF sender_canonical_maps				LOCAL postfix_sender_canonical_maps
-	POSTCONF sendmail_path						LOCAL postfix_sendmail_path
-	POSTCONF smtpd_client_restrictions			LOCAL postfix_smtpd_client_restrictions
-	POSTCONF smtpd_data_restrictions			LOCAL postfix_smtpd_data_restrictions
-	POSTCONF smtpd_helo_required				LOCAL postfix_smtpd_helo_required
-	POSTCONF smtpd_reject_unlisted_recipient	no
-	POSTCONF smtpd_tls_cert_file				LOCAL postfix_smtpd_tls_cert_file
-	POSTCONF smtpd_tls_key_file					LOCAL postfix_smtpd_tls_key_file
-	POSTCONF smtpd_tls_loglevel					LOCAL postfix_smtpd_tls_loglevel
-  POSTCONF in_flow_delay              LOCAL postfix_in_flow_delay
-	POSTCONF transport_maps						LOCAL postfix_transport_maps
-	POSTCONF version							LOCAL postfix_version
-	POSTCONF virtual_alias_domains				LOCAL postfix_virtual_alias_domains
-	POSTCONF virtual_alias_maps					LOCAL postfix_virtual_alias_maps
-	POSTCONF virtual_mailbox_domains			LOCAL postfix_virtual_mailbox_domains
-	POSTCONF virtual_mailbox_maps				LOCAL postfix_virtual_mailbox_maps
-	POSTCONF virtual_transport					LOCAL postfix_virtual_transport
   POSTCONF local_header_rewrite_clients permit_mynetworks,permit_sasl_authenticated
+
+	POSTCONF alias_maps 						              LOCAL postfix_alias_maps
+	POSTCONF broken_sasl_auth_clients			        LOCAL postfix_broken_sasl_auth_clients
+  POSTCONF mail_owner                           LOCAL postfix_mail_owner
+  POSTCONF setgid_group                         LOCAL postfix_setgid_group
+	POSTCONF command_directory					          LOCAL postfix_command_directory
+	POSTCONF daemon_directory					            LOCAL postfix_daemon_directory
+	POSTCONF header_checks						            LOCAL postfix_header_checks
+	POSTCONF mailq_path							              LOCAL postfix_mailq_path
+	POSTCONF manpage_directory					          LOCAL postfix_manpage_directory
+	POSTCONF newaliases_path					            LOCAL postfix_newaliases_path
+	POSTCONF queue_directory					            LOCAL postfix_queue_directory
+	POSTCONF sender_canonical_maps				        LOCAL postfix_sender_canonical_maps
+	POSTCONF sendmail_path						            LOCAL postfix_sendmail_path
+	POSTCONF smtpd_client_restrictions			      LOCAL postfix_smtpd_client_restrictions
+	POSTCONF smtpd_data_restrictions			        LOCAL postfix_smtpd_data_restrictions
+	POSTCONF smtpd_helo_required				          LOCAL postfix_smtpd_helo_required
+	POSTCONF smtpd_reject_unlisted_recipient	    no
+	POSTCONF smtpd_tls_cert_file				          LOCAL postfix_smtpd_tls_cert_file
+	POSTCONF smtpd_tls_key_file					          LOCAL postfix_smtpd_tls_key_file
+	POSTCONF smtpd_tls_loglevel					          LOCAL postfix_smtpd_tls_loglevel
+  POSTCONF in_flow_delay                        LOCAL postfix_in_flow_delay
+  POSTCONF queue_run_delay                      LOCAL postfix_queue_run_delay
+  POSTCONF minimal_backoff_time                 LOCAL postfix_minimal_backoff_time
+  POSTCONF maximal_backoff_time                 LOCAL postfix_maximal_backoff_time
+  POSTCONF lmtp_connection_cache_destinations   LOCAL postfix_lmtp_connection_cache_destinations
+  POSTCONF lmtp_connection_cache_time_limit     LOCAL postfix_lmtp_connection_cache_time_limit
+	POSTCONF transport_maps						            LOCAL postfix_transport_maps
+	POSTCONF version							                LOCAL postfix_version
+	POSTCONF virtual_alias_domains				        LOCAL postfix_virtual_alias_domains
+	POSTCONF virtual_alias_maps					          LOCAL postfix_virtual_alias_maps
+	POSTCONF virtual_mailbox_domains			        LOCAL postfix_virtual_mailbox_domains
+	POSTCONF virtual_mailbox_maps				          LOCAL postfix_virtual_mailbox_maps
+	POSTCONF virtual_transport					          LOCAL postfix_virtual_transport
   RESTART mta
 
 SECTION sasl
