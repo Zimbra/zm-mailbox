@@ -416,7 +416,10 @@ public class ImapMessage implements Comparable<ImapMessage> {
     private String nATOM(String value) { return value == null ? "NIL" : '"' + value.toUpperCase() + '"'; }
 
     void serializeStructure(PrintStream ps, MimePart mp, boolean extensions) throws IOException, MessagingException {
-        ContentType ctype = new ContentType(mp.getContentType());
+        serializeStructure(ps, mp, extensions, false);
+    }
+    void serializeStructure(PrintStream ps, MimePart mp, boolean extensions, boolean inDigest) throws IOException, MessagingException {
+        ContentType ctype = new ContentType(Mime.getContentType(mp, inDigest ? Mime.CT_MESSAGE_RFC822 : Mime.CT_DEFAULT));
         if (ctype.getValue().equals(Mime.CT_TEXT_PLAIN) && (ctype.getParameter(Mime.P_CHARSET) == null || ctype.getParameter(Mime.P_CHARSET).trim().equals("")))
             ctype.setParameter(Mime.P_CHARSET, Mime.P_CHARSET_DEFAULT);
 
@@ -429,7 +432,7 @@ public class ImapMessage implements Comparable<ImapMessage> {
             //         list is the multipart subtype (mixed, digest, parallel, alternative, etc.)."
             MimeMultipart multi = (MimeMultipart) Mime.getMultipartContent(mp, mp.getContentType());
             for (int i = 0; i < multi.getCount(); i++)
-                serializeStructure(ps, (MimePart) multi.getBodyPart(i), extensions);
+                serializeStructure(ps, (MimePart) multi.getBodyPart(i), extensions, subtype.equals("\"DIGEST\""));
             if (multi.getCount() <= 0)
                 ps.print("NIL");
             ps.write(' ');  ps.print(subtype);
