@@ -231,6 +231,11 @@ public class LC {
     public static final KnownKey postfix_smtpd_tls_key_file;
     public static final KnownKey postfix_smtpd_tls_loglevel;
     public static final KnownKey postfix_in_flow_delay;
+    public static final KnownKey postfix_queue_run_delay;
+    public static final KnownKey postfix_minimal_backoff_time;
+    public static final KnownKey postfix_maximal_backoff_time;
+    public static final KnownKey postfix_lmtp_connection_cache_destinations;
+    public static final KnownKey postfix_lmtp_connection_cache_time_limit;
     public static final KnownKey postfix_transport_maps;
     public static final KnownKey postfix_version;
     public static final KnownKey postfix_virtual_alias_domains;
@@ -751,6 +756,21 @@ public class LC {
 
         postfix_in_flow_delay  = new KnownKey("postfix_in_flow_delay");
         postfix_in_flow_delay.setDefault("1s");
+
+        postfix_queue_run_delay  = new KnownKey("postfix_queue_run_delay");
+        postfix_queue_run_delay.setDefault("300s");
+
+        postfix_minimal_backoff_time  = new KnownKey("postfix_minimal_backoff_time");
+        postfix_minimal_backoff_time.setDefault("300s");
+
+        postfix_maximal_backoff_time  = new KnownKey("postfix_maximal_backoff_time");
+        postfix_maximal_backoff_time.setDefault("4000s");
+
+        postfix_lmtp_connection_cache_destinations  = new KnownKey("postfix_lmtp_connection_cache_destinations");
+        postfix_lmtp_connection_cache_destinations.setDefault("");
+
+        postfix_lmtp_connection_cache_time_limit  = new KnownKey("postfix_lmtp_connection_cache_time_limit");
+        postfix_lmtp_connection_cache_time_limit.setDefault("4s");
 
         postfix_transport_maps  = new KnownKey("postfix_transport_maps");
         postfix_transport_maps.setDefault("ldap:${zimbra_home}" + FS + "conf" + FS + "ldap-transport.cf");
