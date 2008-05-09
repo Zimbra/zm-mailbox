@@ -17,15 +17,16 @@ import java.io.UnsupportedEncodingException;
 import java.io.OutputStream;
 import java.io.InputStream;
 import java.net.Socket;
-import java.util.Map;
 
 import com.zimbra.cs.mailclient.util.TraceInputStream;
 import com.zimbra.cs.mailclient.util.TraceOutputStream;
+import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
+import com.zimbra.cs.mailclient.auth.Authenticator;
 
 public abstract class MailConnection {
     protected MailConfig config;
     protected Socket socket;
-    protected ClientAuthenticator authenticator;
+    protected Authenticator authenticator;
     protected TraceInputStream traceIn;
     protected TraceOutputStream traceOut;
     protected MailInputStream mailIn;
@@ -96,17 +97,24 @@ public abstract class MailConnection {
             login(pass);
             return;
         }                  
-        authenticator = newAuthenticator();
-        authenticator.setPassword(pass);
-        authenticator.initialize();
+        authenticator = newAuthenticator(pass);
         sendAuthenticate(false);
         if (authenticator.isEncryptionEnabled()) {
-            initStreams(authenticator.getUnwrappedInputStream(socket.getInputStream()),
-                        authenticator.getWrappedOutputStream(socket.getOutputStream()));
+            initStreams(authenticator.unwrap(socket.getInputStream()),
+                        authenticator.wrap(socket.getOutputStream()));
         }
         setState(State.AUTHENTICATED);
     }
 
+    private Authenticator newAuthenticator(String pass)
+        throws LoginException, SaslException {
+        AuthenticatorFactory af = config.getAuthenticatorFactory();
+        if (af == null) {
+            af = AuthenticatorFactory.getDefault();
+        }
+        return af.newAuthenticator(config, pass);
+    }
+    
     protected void processContinuation(String s) throws IOException {
         byte[] response = authenticator.evaluateChallenge(decodeBase64(s));
         if (response != null) {
@@ -210,23 +218,6 @@ public abstract class MailConnection {
                 e.printStackTrace();
             }
         }
-    }
-
-    public ClientAuthenticator newAuthenticator() {
-        if (config.getAuthenticationId() == null) {
-            throw new IllegalStateException("Missing required authentication id");
-        }
-        ClientAuthenticator ca = new ClientAuthenticator(
-            config.getMechanism(), config.getProtocol(), config.getHost());
-        ca.setAuthorizationId(config.getAuthorizationId());
-        ca.setAuthenticationId(config.getAuthenticationId());
-        ca.setRealm(config.getRealm());
-        ca.setDebug(config.isDebug());
-        Map<String, String> props = config.getSaslProperties();
-        if (props != null) {
-            ca.getProperties().putAll(props);
-        }
-        return ca;
     }
 
     private Socket newSocket() throws IOException {

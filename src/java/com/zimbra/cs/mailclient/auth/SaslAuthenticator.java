@@ -1,8 +1,9 @@
-package com.zimbra.cs.mailclient;
+package com.zimbra.cs.mailclient.auth;
 
 import com.zimbra.cs.security.sasl.SaslInputStream;
 import com.zimbra.cs.security.sasl.SaslOutputStream;
 import com.zimbra.cs.security.sasl.SaslSecurityLayer;
+import com.zimbra.cs.mailclient.MailConfig;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
@@ -26,43 +27,42 @@ import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ClientAuthenticator {
-    private final String mechanism;
-    private final String protocol;
-    private final String serverName;
-    private Map<String,String> properties;
-    private String authorizationId;
-    private String authenticationId;
-    private String realm;
+public class SaslAuthenticator extends Authenticator {
+    private MailConfig config;
     private String password;
     private LoginContext loginContext;
     private Subject subject;
     private SaslClient saslClient;
-    private boolean debug;
 
     public static final String MECHANISM_GSSAPI = "GSSAPI";
     public static final String MECHANISM_PLAIN = "PLAIN";
+    public static final String MECHANISM_CRAM_MD5 = "CRAM-MD5";
 
     public static final String QOP_AUTH = "auth";
     public static final String QOP_AUTH_CONF = "auth-conf";
     public static final String QOP_AUTH_INT = "auth-int";
     
-    protected ClientAuthenticator(String mechanism, String protocol,
-                                  String serverName) {
-        if (mechanism  == null) throw new NullPointerException("mechanism");
-        if (protocol   == null) throw new NullPointerException("protocol");
-        if (serverName == null) throw new NullPointerException("serverName");
-        this.mechanism = mechanism;
-        this.protocol = protocol;
-        this.serverName = serverName;
-        authenticationId = System.getProperty("user.name");
+    public SaslAuthenticator() {}
+
+    public void init(MailConfig config, String password)
+        throws LoginException, SaslException {
+        this.config = config;
+        this.password = password;
+        String mechanism = config.getMechanism();
+        checkRequired("mechanism", mechanism);
+        checkRequired("host", config.getHost());
+        checkRequired("protocol", config.getProtocol());
+        checkRequired("authentication id", config.getAuthenticationId());
+        saslClient = mechanism.equals(MECHANISM_GSSAPI) ?
+            createGssSaslClient() : createSaslClient();
+        String qop = config.getSaslProperty(Sasl.QOP);
+        debug("Requested QOP is %s", qop != null ? qop : "auth");
     }
 
-    public void initialize() throws LoginException, SaslException {
-        saslClient = MECHANISM_GSSAPI.equals(mechanism) ?
-            createGssSaslClient() : createSaslClient();
-        String qop = properties != null ? properties.get(Sasl.QOP) : null;
-        debug("Requested QOP is %s", qop != null ? qop : "auth");
+    private static void checkRequired(String name, String value) {
+        if (value == null) {
+            throw new IllegalArgumentException("Missing required " + name);
+        }
     }
 
     private SaslClient createGssSaslClient() throws LoginException, SaslException {
@@ -96,7 +96,7 @@ public class ClientAuthenticator {
 
     private LoginContext getLoginContext() throws LoginException {
         Map<String, String> options = new HashMap<String, String>();
-        options.put("debug", Boolean.toString(debug));
+        options.put("debug", Boolean.toString(config.isDebug()));
         options.put("principal", getPrincipal());
         // options.put("useTicketCache", "true");
         // options.put("storeKey", "true");
@@ -114,18 +114,23 @@ public class ClientAuthenticator {
     }
 
     private String getPrincipal() {
+        String realm = config.getRealm();
+        String authenticationId = config.getAuthenticationId();
         return realm != null && authenticationId.indexOf('@') == -1 ?
             authenticationId + '@' + realm : authenticationId;
     }
 
     private SaslClient createSaslClient() throws SaslException {
-        return Sasl.createSaslClient(new String[] { mechanism },
-            authorizationId, protocol, serverName, properties,
+        return Sasl.createSaslClient(
+            new String[] { config.getMechanism() },
+            config.getAuthorizationId(),
+            config.getProtocol(),
+            config.getHost(),
+            config.getSaslProperties(),
             new SaslCallbackHandler());
     }
 
     public byte[] evaluateChallenge(final byte[] challenge) throws SaslException {
-        checkInitialized();
         if (isComplete()) {
             throw new IllegalStateException("Authentication already completed");
         }
@@ -153,7 +158,6 @@ public class ClientAuthenticator {
     }
     
     public byte[] getInitialResponse() throws SaslException {
-        checkInitialized();
         if (!hasInitialResponse()) {
             throw new IllegalStateException(
                 "Mechanism does not support initial response");
@@ -162,12 +166,10 @@ public class ClientAuthenticator {
     }
    
     public boolean hasInitialResponse() {
-        checkInitialized();
         return saslClient.hasInitialResponse();
     }
 
     public boolean isComplete() {
-        checkInitialized();
         return saslClient.isComplete();
     }
 
@@ -176,14 +178,20 @@ public class ClientAuthenticator {
             throws IOException, UnsupportedCallbackException {
             for (Callback cb : cbs) {
                 if (cb instanceof NameCallback) {
-                    ((NameCallback) cb).setName(authenticationId);
+                    ((NameCallback) cb).setName(config.getAuthenticationId());
                 } else if (cb instanceof PasswordCallback) {
                     if (password == null) {
-                        throw new MailException("Authentication password not specified");
+                        throw new IllegalStateException(
+                            "Password missing but required");
                     }
                     ((PasswordCallback) cb).setPassword(password.toCharArray());
                     password = null; // Clear password once finished
                 } else if (cb instanceof RealmCallback) {
+                    String realm = config.getRealm();
+                    if (realm == null) {
+                        throw new IllegalStateException(
+                            "Realm missing but required");
+                    }
                     ((RealmCallback) cb).setText(realm);
                 } else {
                     throw new UnsupportedCallbackException(cb);
@@ -193,59 +201,24 @@ public class ClientAuthenticator {
     }
 
     public boolean isEncryptionEnabled() {
-        checkInitialized();
         return SaslSecurityLayer.getInstance(saslClient).isEnabled();
     }
 
-    public OutputStream getWrappedOutputStream(OutputStream os) {
-        checkInitialized();
+    public OutputStream wrap(OutputStream os) {
         return isEncryptionEnabled() ?
             new SaslOutputStream(os, saslClient) : os;
     }
 
-    public InputStream getUnwrappedInputStream(InputStream is) {
-        checkInitialized();
+    public InputStream unwrap(InputStream is) {
         return isEncryptionEnabled() ?
             new SaslInputStream(is, saslClient) : is;
     }
     
-    public Map<String,String> getProperties() {
-        if (properties == null) {
-            properties = new HashMap<String, String>();
-        }
-        return properties;
-    }
-
-    public void setProperty(String name, String value) {
-        getProperties().put(name, value);
-    }
-
     public String getNegotiatedProperty(String name) {
         return (String) saslClient.getNegotiatedProperty(name);
     }
     
-    public void setAuthorizationId(String id) {
-        authorizationId = id;
-    }
-
-    public void setAuthenticationId(String id) {
-        authenticationId = id;
-    }
-
-    public void setRealm(String realm) {
-        this.realm = realm;
-    }                  
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public void setDebug(boolean debug) {
-        this.debug = debug;
-    }
-    
     public void dispose() throws SaslException {
-        checkInitialized();
         saslClient.dispose();
         if (loginContext != null) {
             try {
@@ -257,16 +230,9 @@ public class ClientAuthenticator {
         }
     }
 
-    private void checkInitialized() {
-        if (saslClient == null) {
-            throw new IllegalStateException("Authenticator is not initialized");
-        }
-    }
-
     private void debug(String format, Object... args) {
-        if (debug) {
-            System.out.printf("[ClientAuthenticator] " + format + "\n", args);
+        if (config.isDebug()) {
+            System.out.printf("[SaslAuthenticator] " + format + "\n", args);
         }
     }
-
 }
