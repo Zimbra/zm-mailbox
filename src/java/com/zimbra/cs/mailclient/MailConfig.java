@@ -1,5 +1,8 @@
 package com.zimbra.cs.mailclient;
 
+import com.zimbra.cs.mailclient.auth.SaslAuthenticator;
+import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
+
 import javax.net.ssl.SSLSocketFactory;
 import java.util.Map;
 import java.util.HashMap;
@@ -22,6 +25,7 @@ public abstract class MailConfig {
     protected boolean trace;
     protected PrintStream traceOut;
     protected SSLSocketFactory sslSocketFactory;
+    protected AuthenticatorFactory authenticatorFactory;
     protected int timeout;
     protected boolean rawMode;
 
@@ -88,14 +92,18 @@ public abstract class MailConfig {
         saslProperties.put(name, value);
     }
 
-    public void setTimeout(int secs) {
-        timeout = secs;
-    }
-    
     public Map<String, String> getSaslProperties() {
         return saslProperties;
     }
-    
+
+    public String getSaslProperty(String name) {
+        return saslProperties != null ? saslProperties.get(name) : null;
+    }
+
+    public void setTimeout(int secs) {
+        timeout = secs;
+    }
+
     public void setSSLSocketFactory(SSLSocketFactory sf) {
         sslSocketFactory = sf;
     }
@@ -106,9 +114,17 @@ public abstract class MailConfig {
 
     public boolean isPasswordRequired() {
         return mechanism == null ||
-               mechanism.equals(ClientAuthenticator.MECHANISM_PLAIN);
+               mechanism.equals(SaslAuthenticator.MECHANISM_PLAIN);
     }
 
+    public AuthenticatorFactory getAuthenticatorFactory() {
+        return authenticatorFactory;
+    }
+
+    public void setAuthenticatorFactory(AuthenticatorFactory af) {
+        authenticatorFactory = af;
+    }
+    
     public void setRawMode(boolean raw) {
         rawMode = raw;
     }

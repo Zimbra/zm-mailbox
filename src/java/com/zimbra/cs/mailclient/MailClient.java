@@ -1,6 +1,6 @@
 package com.zimbra.cs.mailclient;
 
-import static com.zimbra.cs.mailclient.ClientAuthenticator.*;
+import static com.zimbra.cs.mailclient.auth.SaslAuthenticator.*;
 import com.zimbra.cs.mailclient.util.SSLUtil;
 import com.zimbra.cs.mailclient.util.Password;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
