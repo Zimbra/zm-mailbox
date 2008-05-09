@@ -419,7 +419,10 @@ public class ImapMessage implements Comparable<ImapMessage> {
         serializeStructure(ps, mp, extensions, false);
     }
     void serializeStructure(PrintStream ps, MimePart mp, boolean extensions, boolean inDigest) throws IOException, MessagingException {
-        ContentType ctype = new ContentType(Mime.getContentType(mp, inDigest ? Mime.CT_MESSAGE_RFC822 : Mime.CT_DEFAULT));
+        String cthdr = mp.getHeader("Content-Type", null);
+        if (cthdr == null || cthdr.trim().equals(""))
+            cthdr = inDigest ? Mime.CT_MESSAGE_RFC822 : Mime.CT_DEFAULT;
+        ContentType ctype = new ContentType(cthdr);
         if (ctype.getValue().equals(Mime.CT_TEXT_PLAIN) && (ctype.getParameter(Mime.P_CHARSET) == null || ctype.getParameter(Mime.P_CHARSET).trim().equals("")))
             ctype.setParameter(Mime.P_CHARSET, Mime.P_CHARSET_DEFAULT);
 
