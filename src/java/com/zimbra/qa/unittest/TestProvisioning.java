@@ -34,6 +34,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
@@ -538,6 +539,22 @@ public class TestProvisioning extends TestCase {
             
         return entry;
     }
+    
+    private void externalAuthTest(Account account, boolean startTLS) throws Exception {
+        Domain domain = mProv.getDomain(account);
+        Map attrsToMod = new HashMap<String, Object>();
+        attrsToMod.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_LDAP);
+        attrsToMod.put(Provisioning.A_zimbraAuthLdapURL, "ldap://" + LC.zimbra_server_hostname.value() + ":389");
+        attrsToMod.put(Provisioning.A_zimbraAuthLdapSearchFilter, "(zimbraMailDeliveryAddress=%n)");
+        attrsToMod.put(Provisioning.A_zimbraAuthLdapSearchBindPassword, LC.zimbra_ldap_password.value());
+        attrsToMod.put(Provisioning.A_zimbraAuthLdapSearchBindDn, LC.zimbra_ldap_userdn.value());
+        
+        if (startTLS)
+            attrsToMod.put(Provisioning.A_zimbraAuthLdapStartTlsEnabled, "TRUE");
+        
+        mProv.modifyAttrs(domain, attrsToMod, true);
+        mProv.authAccount(account, PASSWORD, "unittest");
+    }
 
     private void authTest(Account account) throws Exception  {
         System.out.println("Testing auth");
@@ -545,16 +562,13 @@ public class TestProvisioning extends TestCase {
         // zimbra auth
         mProv.authAccount(account, PASSWORD, "unittest");
         
-        // ldap auth, test using our own ldap
+        // external ldap auth, test using our own ldap
+        externalAuthTest(account, false);
+        externalAuthTest(account, true);
+        
         Domain domain = mProv.getDomain(account);
         Map attrsToMod = new HashMap<String, Object>();
-        attrsToMod.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_LDAP);
-        attrsToMod.put(Provisioning.A_zimbraAuthLdapURL, "ldap://localhost:389");
-        attrsToMod.put(Provisioning.A_zimbraAuthLdapSearchFilter, "(zimbraMailDeliveryAddress=%n)");
-        attrsToMod.put(Provisioning.A_zimbraAuthLdapSearchBindPassword, LC.zimbra_ldap_password.value());
-        attrsToMod.put(Provisioning.A_zimbraAuthLdapSearchBindDn, LC.zimbra_ldap_userdn.value());
-        mProv.modifyAttrs(domain, attrsToMod, true);
-        mProv.authAccount(account, PASSWORD, "unittest");
+        
                 
         // ad auth
         // need an AD, can't test
@@ -1315,6 +1329,34 @@ public class TestProvisioning extends TestCase {
         mProv.reload(entry);
     }
     
+    private void externalGalTest(Domain domain, boolean startTLS) throws Exception {
+        Map<String, String> attrs = new HashMap<String, String>();
+        attrs.put(Provisioning.A_zimbraGalMode, Provisioning.AM_LDAP);
+        attrs.put(Provisioning.A_zimbraGalLdapURL, "ldap://" + LC.zimbra_server_hostname.value() + ":389"); // cannot be localhost for startTLS
+        
+        attrs.put(Provisioning.A_zimbraGalLdapBindDn, LC.zimbra_ldap_userdn.value());
+        attrs.put(Provisioning.A_zimbraGalLdapBindPassword, "zimbra");
+        attrs.put(Provisioning.A_zimbraGalLdapFilter, "(mail=*%s*)");
+        
+        // attrs.put(Provisioning.A_zimbraGalLdapAuthMech, Provisioning.LDAP_AM_KERBEROS5);
+        attrs.put(Provisioning.A_zimbraGalLdapKerberos5Principal, "ldap/phoebe.local@PHOEBE.LOCAL");
+        attrs.put(Provisioning.A_zimbraGalLdapKerberos5Keytab, "/etc/krb5.keytab");
+        
+        if (startTLS) {
+            attrs.put(Provisioning.A_zimbraGalLdapStartTlsEnabled, "TRUE");
+            attrs.put(Provisioning.A_zimbraGalSyncLdapStartTlsEnabled, "TRUE");
+        }
+        
+        mProv.modifyAttrs(domain, attrs, true);
+        Provisioning.SearchGalResult galResult = mProv.searchGal(domain, 
+                ACCT_EMAIL,
+                Provisioning.GAL_SEARCH_TYPE.ALL, 
+                null);
+        List<GalContact> matches = galResult.matches;
+        assertEquals(1, matches.size());
+        assertEquals(ACCT_FULL_NAME, matches.get(0).getAttrs().get("fullName"));
+    }
+    
     private void galTest(Domain domain) throws Exception {
         System.out.println("Testing gal");
         
@@ -1341,26 +1383,8 @@ public class TestProvisioning extends TestCase {
         assertEquals(ACCT_FULL_NAME, matches.get(0).getAttrs().get("fullName"));
         
         // search external gal
-        Map<String, String> attrs = new HashMap<String, String>();
-        attrs.put(Provisioning.A_zimbraGalMode, Provisioning.AM_LDAP);
-        attrs.put(Provisioning.A_zimbraGalLdapURL, "ldap://localhost:389");
-        attrs.put(Provisioning.A_zimbraGalLdapBindDn, LC.zimbra_ldap_userdn.value());
-        attrs.put(Provisioning.A_zimbraGalLdapBindPassword, "zimbra");
-        attrs.put(Provisioning.A_zimbraGalLdapFilter, "(mail=*%s*)");
-        
-        // attrs.put(Provisioning.A_zimbraGalLdapAuthMech, Provisioning.LDAP_AM_KERBEROS5);
-        attrs.put(Provisioning.A_zimbraGalLdapKerberos5Principal, "ldap/phoebe.local@PHOEBE.LOCAL");
-        attrs.put(Provisioning.A_zimbraGalLdapKerberos5Keytab, "/etc/krb5.keytab");
-        
-        mProv.modifyAttrs(domain, attrs, true);
-        galResult = mProv.searchGal(domain, 
-                ACCT_EMAIL,
-                Provisioning.GAL_SEARCH_TYPE.ALL, 
-                null);
-        matches = galResult.matches;
-        assertEquals(1, matches.size());
-        assertEquals(ACCT_FULL_NAME, matches.get(0).getAttrs().get("fullName"));
-
+        externalGalTest(domain, false);
+        externalGalTest(domain, true);
     }
     
     private void searchTest(Domain domain) throws Exception {
@@ -1808,6 +1832,7 @@ public class TestProvisioning extends TestCase {
    
     public static void main(String[] args) throws Exception {
         CliUtil.toolSetup("INFO");
+        ZimbraLog.toolSetupLog4j("DEBUG", "/Users/pshao/p4/main/ZimbraServer/conf/log4j.properties.zmprov-l");
         // TestUtil.runTest(new TestSuite(TestProvisioning.class));
 
         TestProvisioning t = new TestProvisioning();

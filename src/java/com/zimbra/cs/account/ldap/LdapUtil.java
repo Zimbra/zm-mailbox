@@ -117,7 +117,9 @@ public class LdapUtil {
         ZimbraLdapContext.ldapAuthenticate(urls, requireStartTLS, principal, password, "external LDAP auth");
     }
 
-    public static void ldapAuthenticate(String url[], boolean requireStartTLS, String password, String searchBase, String searchFilter, String searchDn, String searchPassword) throws NamingException, IOException {
+    public static void ldapAuthenticate(String url[], boolean requireStartTLS, String password, String searchBase, String searchFilter, String searchDn, String searchPassword) 
+        throws NamingException, IOException {
+        
         if (password == null || password.equals("")) 
             throw new AuthenticationException("empty password");
 
@@ -742,7 +744,7 @@ public class LdapUtil {
             String n,
             int maxResults,
             LdapGalMapRules rules,
-            String token) throws NamingException, ServiceException {
+            String token) throws ServiceException, NamingException, IOException {
         
         String url[] = galParams.url();
         String base = galParams.searchBase();
@@ -784,7 +786,7 @@ public class LdapUtil {
             int maxResults,
             LdapGalMapRules rules,
             String token,
-            SearchGalResult result) throws ServiceException, NamingException {
+            SearchGalResult result) throws ServiceException, NamingException, IOException {
         
         ZimbraLdapContext zlc = null;
         try {
@@ -818,12 +820,12 @@ public class LdapUtil {
             throw ServiceException.FAILURE("login failed, unable to search GAL", le);
         } catch (PrivilegedActionException pae) {
             // e.getException() should be an instance of NamingException,
-            // as only "checked" exceptions will be "wrapped" in a PrivilegedActionException.
+            // as only "checked" exceptions will be wrapped in a PrivilegedActionException.
             Exception e = pae.getException();
             if (e instanceof NamingException)
                 throw (NamingException)e;
             else // huh?
-                throw ServiceException.FAILURE("caught unknown excweption, unable to search GAL", e); 
+                throw ServiceException.FAILURE("caught exception, unable to search GAL", e); 
         }
     }
     
@@ -850,7 +852,7 @@ public class LdapUtil {
             result = arg_result;
         }
             
-        public Object run() throws NamingException, ServiceException {
+        public Object run() throws ServiceException, NamingException, IOException {
             searchLdapGal(galParams, query, maxResults, rules, token, result);
             return null;
         }
