@@ -423,14 +423,16 @@ extends TestCase {
         mbox.sendMessage(msg, null, false);
         TestUtil.waitForMessage(mbox, "in:inbox " + outerSubject);
         
-        // Test search for inner message subject
+        // Test search for message subject
         List<ZMessage> msgs = TestUtil.search(mbox, "in:inbox " + innerSubject);
         assertEquals(1, msgs.size());
         msgs = TestUtil.search(mbox, "in:sent " + innerSubject);
         assertEquals(1, msgs.size());
         
-        // Test search for inner message body
-        msgs = TestUtil.search(mbox, NAME_PREFIX + " waves");
+        // Test search for message body
+        msgs = TestUtil.search(mbox, "in:inbox " + NAME_PREFIX + " waves");
+        assertEquals(1, msgs.size());
+        msgs = TestUtil.search(mbox, "in:sent " + NAME_PREFIX + " waves");
         assertEquals(1, msgs.size());
     }
     
