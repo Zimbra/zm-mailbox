@@ -304,7 +304,7 @@ public class ItemActionHelper {
         boolean targeted = mOperation == Op.MOVE || mOperation == Op.SPAM || mOperation == Op.COPY || mOperation == Op.RENAME || mOperation == Op.UPDATE;
 
         // deal with local mountpoints pointing at local folders here
-        if (targeted && mIidFolder.belongsTo(mMailbox) && mIidFolder.getId() > 0) {
+        if (targeted && mIidFolder.belongsTo(mMailbox) && mIidFolder.getId() > 0 && mIidFolder.getId() != Mailbox.ID_FOLDER_TRASH && mIidFolder.getId() != Mailbox.ID_FOLDER_SPAM) {
             Folder folder = mMailbox.getFolderById(mOpCtxt, mIidFolder.getId());
             if (folder instanceof Mountpoint && !((Mountpoint) folder).getOwnerId().equals(mIidFolder.getAccountId())) {
                 mIidFolder = new ItemId(((Mountpoint) folder).getOwnerId(), ((Mountpoint) folder).getRemoteId());
