@@ -3990,6 +3990,8 @@ public class LdapProvisioning extends Provisioning {
                                           token);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to search GAL", e);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("unable to search GAL", e);
         }
     }
 

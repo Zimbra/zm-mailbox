@@ -31,6 +31,9 @@ zimbraGalSyncInternalSearchBase           domain,globalConfig    zimbra         
 zimbraGalLdapURL                          domain                 external         autocomplete, search, (sync if zimbraGalSyncLdapURL is not set)
 zimbraGalSyncLdapURL                      domain                 external         sync
 
+zimbraGalLdapStartTlsEnabled              domain                 external         autocomplete, search, (sync if zimbraGalSyncLdapURL is not set)
+zimbraGalSyncLdapStartTlsEnabled          domain                 external         sync
+
 zimbraGalLdapSearchBase                   domain                 external         autocomplete, search, (sync if zimbraGalSyncLdapSearchBase is not set)
 zimbraGalSyncLdapSearchBase               domain                 external         sync
 

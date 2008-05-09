@@ -200,7 +200,9 @@ public class Check {
             List contacts = result.matches;
             return new Result(STATUS_OK, "", contacts);
         } catch (NamingException e) {
-            return toResult(e, null);
+            return toResult(e, "");
+        } catch (IOException e) {
+            return toResult(e, "");
         }
     }
 
@@ -216,13 +218,9 @@ public class Check {
                 return new Result(STATUS_AUTH_FAILED, "", null);
         	}
     	} catch (IOException e) {
-    	    return toResult(e);
+    	    return toResult(e, "");
         }
     	return new Result(STATUS_OK, "", null);
-    }
-    
-    private static Result toResult(IOException e) {
-        return toResult(e, null);
     }
     
     private static Result toResult(IOException e, String dn) {

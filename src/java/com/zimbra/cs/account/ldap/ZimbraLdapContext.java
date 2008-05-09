@@ -144,10 +144,16 @@ public class ZimbraLdapContext {
         // env.put("java.naming.ldap.derefAliases", "never");
         // default: env.put("java.naming.ldap.version", "3");
         
+        /*
+         * if startTLS is required:
+         *     1. cannot use connection pooling.
+         *        see http://java.sun.com/products/jndi/tutorial/ldap/connect/pool.html
+         * 
+         *     2. do not send credentials over before TLS negotiation
+         */
         if (requireStartTLS(master)) {
-            // cannot use connection pooling if requiring start TLS
-            // see http://java.sun.com/products/jndi/tutorial/ldap/connect/pool.html
             sEnv.put("com.sun.jndi.ldap.connect.pool", "false");
+
         } else {
             if (master)
                 sEnv.put("com.sun.jndi.ldap.connect.pool", LC.ldap_connect_pool_master.value());
@@ -174,9 +180,14 @@ public class ZimbraLdapContext {
         env.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
         env.put("com.sun.jndi.ldap.read.timeout", LC.ldap_read_timeout.value());
         
+        /*
+         * if startTLS is required:
+         *     1. cannot use connection pooling.
+         *        see http://java.sun.com/products/jndi/tutorial/ldap/connect/pool.html
+         * 
+         *     2. do not send credentials over before TLS negotiation
+         */
         if (requireStartTLS(master)) {
-            // cannot use connection pooling if requiring start TLS
-            // see http://java.sun.com/products/jndi/tutorial/ldap/connect/pool.html
             env.put("com.sun.jndi.ldap.connect.pool", "false");
         } else {
             if (master)
@@ -244,54 +255,37 @@ public class ZimbraLdapContext {
             
             ZimbraPerf.STOPWATCH_LDAP_DC.stop(start);
         } catch (NamingException e) {
-            throw ServiceException.FAILURE("getDirectContext", e);
+            throw ServiceException.FAILURE("ZimbraLdapContext", e);
         } catch (IOException e) {
-            throw ServiceException.FAILURE("getDirectContext", e);
+            throw ServiceException.FAILURE("ZimbraLdapContext", e);
         }
     }
     
     /*
      * External LDAP
      */
-    public ZimbraLdapContext(String urls[], boolean requireStartTLS, String bindDn, String bindPassword, String note)  throws NamingException {
+    public ZimbraLdapContext(String urls[], boolean requireStartTLS, String bindDn, String bindPassword, String note) throws NamingException, IOException {
         this(urls, requireStartTLS, null, bindDn, bindPassword, note);
     }
     
     /*
      * External LDAP
      */
-    public ZimbraLdapContext(String urls[], boolean requireStartTLS, LdapGalCredential credential, String note)  throws NamingException {
+    public ZimbraLdapContext(String urls[], boolean requireStartTLS, LdapGalCredential credential, String note)  throws NamingException, IOException {
         this(urls, requireStartTLS, credential.getAuthMech(), credential.getBindDn(), credential.getBindPassword(), note);
     }
     
     /*
      * External LDAP
      * 
-     * TODO: handle startTLS
+     * Naming or IO exceptions are not caught then wrapped in a ServiceException like in the ZimbraLdapContext for Zimbra internal directory, 
+     * because callsites of this method need to check for Naming/IOExceptions and log/handle/throw accordingly.  
      */
-    public ZimbraLdapContext(String urls[], boolean requireStartTLS, String authMech, String bindDn, String bindPassword, String note)  throws NamingException {
+    public ZimbraLdapContext(String urls[], boolean requireStartTLS, String authMech, String bindDn, String bindPassword, String note)  throws NamingException, IOException {
         Hashtable<String, String> env = new Hashtable<String, String>();
+        
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
         env.put(Context.PROVIDER_URL, joinURLS(urls));
-        
-        if (authMech == null) {
-            if (bindDn != null && bindPassword != null)
-                authMech = Provisioning.LDAP_AM_SIMPLE;
-            else
-                authMech = Provisioning.LDAP_AM_NONE;
-        }
-        
-        if (authMech.equals(Provisioning.LDAP_AM_NONE)) {
-            env.put(Context.SECURITY_AUTHENTICATION, "none");
-        } else if (authMech.equals(Provisioning.LDAP_AM_SIMPLE)) {
-            env.put(Context.SECURITY_AUTHENTICATION, "simple");
-            env.put(Context.SECURITY_PRINCIPAL, bindDn);
-            env.put(Context.SECURITY_CREDENTIALS, bindPassword);        
-        } else if (authMech.equals(Provisioning.LDAP_AM_KERBEROS5)) {
-            env.put(Context.SECURITY_AUTHENTICATION, "GSSAPI");
-            env.put("javax.security.sasl.qop", "auth-conf");
-        }
-        
         env.put(Context.REFERRAL, "follow");
         env.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
         env.put("com.sun.jndi.ldap.read.timeout", LC.ldap_read_timeout.value());
@@ -300,15 +294,64 @@ public class ZimbraLdapContext {
         if (!StringUtil.isNullOrEmpty(derefAliases))
             env.put("java.naming.ldap.derefAliases", LC.ldap_deref_aliases.value());
         
-        // enable connection pooling
-        env.put("com.sun.jndi.ldap.connect.pool", "true");
+        if (authMech == null) {
+            if (bindDn != null && bindPassword != null)
+                authMech = Provisioning.LDAP_AM_SIMPLE;
+            else
+                authMech = Provisioning.LDAP_AM_NONE;
+        }
         
-        // TODO: add ldap attr for external LDAP start TLS and pass the param in
-        boolean startTLS = false;
-        if (ZimbraLog.ldap.isDebugEnabled())
-            ZimbraLog.ldap.debug("GET DIR CTXT(" + note + "): " + "url=" + env.get(Context.PROVIDER_URL) + ", binddn="+ env.get(Context.SECURITY_PRINCIPAL) + ", authMech=" + env.get(Context.SECURITY_AUTHENTICATION) + ", startTLS=" + startTLS);
+        // do startTLS only if auth mech is simple
+        boolean startTLS = (requireStartTLS && authMech.equals(Provisioning.LDAP_AM_SIMPLE));
+        
+        /*
+         * if startTLS is required:
+         *     1. cannot use connection pooling.
+         *        see http://java.sun.com/products/jndi/tutorial/ldap/connect/pool.html
+         * 
+         *     2. do not send credentials over before TLS negotiation
+         */
+        
+        if (authMech.equals(Provisioning.LDAP_AM_NONE)) {
+            env.put(Context.SECURITY_AUTHENTICATION, "none");
+        } else if (authMech.equals(Provisioning.LDAP_AM_SIMPLE)) {
+            if (!startTLS) {
+                env.put(Context.SECURITY_AUTHENTICATION, "simple");
+                env.put(Context.SECURITY_PRINCIPAL, bindDn);
+                env.put(Context.SECURITY_CREDENTIALS, bindPassword);  
+            }
+        } else if (authMech.equals(Provisioning.LDAP_AM_KERBEROS5)) {
+            env.put(Context.SECURITY_AUTHENTICATION, "GSSAPI");
+            env.put("javax.security.sasl.qop", "auth-conf");
+        }
+        
+        // enable connection pooling if not doing startTLS
+        if (!startTLS)
+            env.put("com.sun.jndi.ldap.connect.pool", "true");
+        
 
-        mDirContext = new InitialLdapContext(env, null);
+        try {
+            if (ZimbraLog.ldap.isDebugEnabled())
+                ZimbraLog.ldap.debug("GET DIR CTXT(" + note + "): " + "url=" + env.get(Context.PROVIDER_URL) + ", binddn="+ bindDn + ", authMech=" + authMech + ", startTLS=" + requireStartTLS);
+            mDirContext = new InitialLdapContext(env, null);
+            if (startTLS) {
+                // start TLS
+                mTlsResp = (StartTlsResponse) mDirContext.extendedOperation(new StartTlsRequest());
+                
+                ZimbraLog.ldap.debug("START TLS");
+                mTlsResp.negotiate();
+    
+                mDirContext.addToEnvironment(Context.SECURITY_AUTHENTICATION, "simple");
+                mDirContext.addToEnvironment(Context.SECURITY_PRINCIPAL, bindDn);
+                mDirContext.addToEnvironment(Context.SECURITY_CREDENTIALS, bindPassword);
+            }
+        } catch (NamingException e) {
+            ZimbraLog.ldap.debug("GET DIR CTXT(" + note + ") failed", e);
+            throw e;
+        } catch (IOException e) {
+            ZimbraLog.ldap.debug("GET DIR CTXT(" + note + ") failed", e);
+            throw e;
+        }
     }
     
     /**
@@ -336,14 +379,16 @@ public class ZimbraLdapContext {
     static void ldapAuthenticate(String urls[], boolean requireStartTLS, String principal, String password, String note) throws NamingException, IOException {
         Hashtable<String, String> env = new Hashtable<String, String>();
         
-        String derefAliases = LC.ldap_deref_aliases.value();
-        if (!StringUtil.isNullOrEmpty(derefAliases))
-            env.put("java.naming.ldap.derefAliases", LC.ldap_deref_aliases.value());
-        
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
         env.put(Context.PROVIDER_URL, ZimbraLdapContext.joinURLS(urls));
         env.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
         env.put("com.sun.jndi.ldap.read.timeout", LC.ldap_read_timeout.value());
+        
+        String derefAliases = LC.ldap_deref_aliases.value();
+        if (!StringUtil.isNullOrEmpty(derefAliases))
+            env.put("java.naming.ldap.derefAliases", LC.ldap_deref_aliases.value());
+        
+        // do NOT use connection pooling for LDAP auth, since each credential is different.
         
         if (!requireStartTLS) {
             env.put(Context.SECURITY_AUTHENTICATION, "simple");
@@ -355,7 +400,7 @@ public class ZimbraLdapContext {
         StartTlsResponse tlsResp = null;
         try {
             if (ZimbraLog.ldap.isDebugEnabled())
-                ZimbraLog.ldap.debug("GET DIR CTXT(" + note + "): " + "url=" + env.get(Context.PROVIDER_URL) + ", binddn="+ env.get(Context.SECURITY_PRINCIPAL) + ", authMech=" + env.get(Context.SECURITY_AUTHENTICATION) + ", startTLS=" + requireStartTLS);
+                ZimbraLog.ldap.debug("GET DIR CTXT(" + note + "): " + "url=" + env.get(Context.PROVIDER_URL) + ", binddn="+ principal + ", authMech=" + "simple" + ", startTLS=" + requireStartTLS);
 
             context = new InitialLdapContext(env, null);
             if (requireStartTLS) {
@@ -370,6 +415,12 @@ public class ZimbraLdapContext {
                 ldapCtxt.addToEnvironment(Context.SECURITY_PRINCIPAL, LC.zimbra_ldap_userdn.value());
                 ldapCtxt.addToEnvironment(Context.SECURITY_CREDENTIALS, LC.zimbra_ldap_password.value());
             }
+        } catch (NamingException e) {   
+            ZimbraLog.ldap.debug("GET DIR CTXT(" + note + ") failed", e);
+            throw e;
+        } catch (IOException e) { 
+            ZimbraLog.ldap.debug("GET DIR CTXT(" + note + ") failed", e);
+            throw e;
         } finally {
             closeContext(context, tlsResp);
         }
