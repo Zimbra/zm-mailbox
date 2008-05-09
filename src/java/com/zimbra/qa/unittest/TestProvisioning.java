@@ -478,7 +478,6 @@ public class TestProvisioning extends TestCase {
             TestProvisioningUtil.verifySameEntry(entry, entryGot);
         }
         
-        
         Domain otherEntry = mProv.createDomain(OTHER_DOMAIN_NAME, attrs);
         Domain specialCharEntry = mProv.createDomain(DOMAIN_NAME_SPECIAL_CHARS, attrs);
                 
@@ -509,14 +508,21 @@ public class TestProvisioning extends TestCase {
         entryGot = mProv.get(Provisioning.ServerBy.name, SERVER_NAME);
         TestProvisioningUtil.verifySameEntry(entry, entryGot);
         
-        Server localeServer = mProv.getLocalServer();
-        assertNotNull(localeServer);
+        // modify server
+        /*
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraServiceEnabled, "blah");
+        mProv.modifyAttrs(entry, attrs);
+        */
+        
+        Server localServer = mProv.getLocalServer();
+        assertNotNull(localServer);
         
         List list = mProv.getAllServers();
-        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{localeServer, entry}, false);
+        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{localServer, entry}, false);
         
         list = mProv.getAllServers(Provisioning.SERVICE_MAILBOX);
-        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{localeServer}, false);
+        TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{localServer}, false);
         
         return entry;
     }

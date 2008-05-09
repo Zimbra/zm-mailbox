@@ -150,6 +150,8 @@ public class ZimbraLdapContext {
          *        see http://java.sun.com/products/jndi/tutorial/ldap/connect/pool.html
          * 
          *     2. do not send credentials over before TLS negotiation
+         *        also note that after TLS negotiation, the credentials in env would be wiped, 
+         *        so we'll have to add the credentials to the env again after TLS negotiation anyway.
          */
         if (requireStartTLS(master)) {
             sEnv.put("com.sun.jndi.ldap.connect.pool", "false");
@@ -180,13 +182,6 @@ public class ZimbraLdapContext {
         env.put("com.sun.jndi.ldap.connect.timeout", LC.ldap_connect_timeout.value());
         env.put("com.sun.jndi.ldap.read.timeout", LC.ldap_read_timeout.value());
         
-        /*
-         * if startTLS is required:
-         *     1. cannot use connection pooling.
-         *        see http://java.sun.com/products/jndi/tutorial/ldap/connect/pool.html
-         * 
-         *     2. do not send credentials over before TLS negotiation
-         */
         if (requireStartTLS(master)) {
             env.put("com.sun.jndi.ldap.connect.pool", "false");
         } else {
@@ -304,14 +299,6 @@ public class ZimbraLdapContext {
         // do startTLS only if auth mech is simple
         boolean startTLS = (requireStartTLS && authMech.equals(Provisioning.LDAP_AM_SIMPLE));
         
-        /*
-         * if startTLS is required:
-         *     1. cannot use connection pooling.
-         *        see http://java.sun.com/products/jndi/tutorial/ldap/connect/pool.html
-         * 
-         *     2. do not send credentials over before TLS negotiation
-         */
-        
         if (authMech.equals(Provisioning.LDAP_AM_NONE)) {
             env.put(Context.SECURITY_AUTHENTICATION, "none");
         } else if (authMech.equals(Provisioning.LDAP_AM_SIMPLE)) {
@@ -412,8 +399,12 @@ public class ZimbraLdapContext {
                 tlsResp.negotiate();
 
                 ldapCtxt.addToEnvironment(Context.SECURITY_AUTHENTICATION, "simple");
-                ldapCtxt.addToEnvironment(Context.SECURITY_PRINCIPAL, LC.zimbra_ldap_userdn.value());
-                ldapCtxt.addToEnvironment(Context.SECURITY_CREDENTIALS, LC.zimbra_ldap_password.value());
+                ldapCtxt.addToEnvironment(Context.SECURITY_PRINCIPAL, principal);
+                ldapCtxt.addToEnvironment(Context.SECURITY_CREDENTIALS, password);
+                
+                // do something to trigger a BIND with the principal/password, or else the credentials added to the env after the TLS negotiation will 
+                // not be sent to the LDP server
+                Attributes attrs = ldapCtxt.getAttributes(principal, new String[0]);
             }
         } catch (NamingException e) {   
             ZimbraLog.ldap.debug("GET DIR CTXT(" + note + ") failed", e);
