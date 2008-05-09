@@ -27,7 +27,6 @@ package com.zimbra.cs.store;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.RandomAccessFile;
 import java.util.Set;
 
 import javax.mail.internet.SharedInputStream;
@@ -43,9 +42,7 @@ implements SharedInputStream {
     
     private static int BUFFER_SIZE = Math.max(LC.zimbra_blob_input_stream_buffer_size_kb.intValue(), 1) * 1024;
 
-    private File mFile;
-    
-    private RandomAccessFile mRAF;
+    private SharedFile mSharedFile;
     
     // All indexes are relative to the file, not relative to mStart/mEnd.
     
@@ -118,19 +115,25 @@ implements SharedInputStream {
     
     /**
      * Constructs a <tt>BlobInputStream</tt> that reads a section of a file.
-     * @param file the file
+     * @param file the file.  Only used if <tt>parent</tt> is <tt>null</tt>.
      * @param start starting index, or <tt>null</tt> for beginning of file
      * @param end ending index (exclusive), or <tt>null</tt> for end of file
-     * @param subStreams the <tt>Set</tt> of substreams, or <tt>null</tt>
-     * if this is the original stream
+     * @param parent the parent stream, or <tt>null</tt> if this is the first stream.
+     * If non-null, the file from the parent is used.
      */
-    private BlobInputStream(File file, Long start, Long end, Set<BlobInputStream> subStreams)
+    private BlobInputStream(File file, Long start, Long end, BlobInputStream parent)
     throws IOException {
+        if (parent != null) {
+            file = parent.mSharedFile.getFile();
+        }
+        
+        if (!file.exists()) {
+            throw new IOException(file.getPath() + " does not exist.");
+        }
         if (start != null && end != null && start > end) {
             String msg = String.format("Start index %d for file %s is larger than end index %d", start, file.getPath(), end);
             throw new IOException(msg);
         }
-        mFile = file;
         if (start == null) {
             mStart = 0;
             mPos = 0;
@@ -139,45 +142,20 @@ implements SharedInputStream {
             mPos = start;
         }
         if (end == null) {
-            mEnd = mFile.length();
+            mEnd = file.length();
         } else {
-            if (end > mFile.length()) {
-                String msg = String.format("End index %d for file %s exceeded file size %d", end, mFile.getPath(), mFile.length());
+            if (end > file.length()) {
+                String msg = String.format("End index %d for file %s exceeded file size %d", end, file.getPath(), file.length());
                 throw new IOException(msg);
             }
             mEnd = end;
         }
-        mSubStreams = subStreams;
-        if (mSubStreams == null) {
+        if (parent == null) {
+            mSharedFile = new SharedFile(file);
             mSubStreams = new ConcurrentHashSet<BlobInputStream>();
-        }
-        mSubStreams.add(this);
-    }
-    
-    /**
-     * Opens the file if necessary and seeks to the current position.
-     */
-    private void initFile()
-    throws IOException {
-        if (mRAF == null) {
-            mRAF = new RandomAccessFile(mFile, "r");
-            if (mPos != 0) {
-                mRAF.seek(mPos);
-            }
         } else {
-            mRAF.seek(mPos);
-        }
-    }
-
-    /**
-     * Closes the file descriptor for this stream only.  A subsequent call
-     * to <tt>read()</tt>, <tt>skip</tt>, etc. may reopen it.
-     */
-    private void closeMyFile()
-    throws IOException {
-        if (mRAF != null) {
-            mRAF.close();
-            mRAF = null;
+            mSharedFile = parent.mSharedFile;
+            mSubStreams = parent.mSubStreams;
         }
     }
     
@@ -188,9 +166,7 @@ implements SharedInputStream {
      */
     public void closeFile()
     throws IOException {
-        for (BlobInputStream subStream : mSubStreams) {
-            subStream.closeMyFile();
-        }
+        mSharedFile.close();
     }
     
     /**
@@ -198,10 +174,7 @@ implements SharedInputStream {
      */
     public void fileMoved(File newFile)
     throws IOException {
-        for (BlobInputStream subStream : mSubStreams) {
-            subStream.closeMyFile();
-            subStream.mFile = newFile;
-        }
+        mSharedFile.fileMoved(newFile);
     }
     
     ////////////// InputStream methods //////////////
@@ -213,9 +186,11 @@ implements SharedInputStream {
 
     @Override
     public void close() throws IOException {
-        closeMyFile();
-        mSubStreams.remove(this);
         mPos = mEnd;
+        mSubStreams.remove(this);
+        if (mSubStreams.size() == 0) {
+            closeFile();
+        }
     }
 
     @Override
@@ -232,7 +207,6 @@ implements SharedInputStream {
     @Override
     public int read() throws IOException {
         if (mPos >= mEnd) {
-            closeMyFile();
             return -1;
         }
         
@@ -257,7 +231,6 @@ implements SharedInputStream {
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
         if (mPos >= mEnd) {
-            closeMyFile();
             return -1;
         }
         if (len <= 0) {
@@ -296,13 +269,9 @@ implements SharedInputStream {
         } else {
             // Number of bytes requested is greater than the buffer size, so
             // read the next chunk without buffering.
-            initFile();
-        	numReadFromFile = mRAF.read(b, off + numReadFromBuffer, numToReadFromFile);
+        	numReadFromFile = mSharedFile.read(mPos, b, off + numReadFromBuffer, numToReadFromFile);
         	if (numReadFromFile >= 0) {
         		mPos += numReadFromFile;
-        	} else {
-                // Hit the end of the file.
-        		closeMyFile();
         	}
         }
 
@@ -340,12 +309,8 @@ implements SharedInputStream {
      */
     private int readNextChunkIntoBuffer()
     throws IOException {
-        initFile();
-        int numRead = mRAF.read(mBuf);
-        if (numRead < 0) {
-            // No more data available.
-            closeMyFile();
-        } else {
+        int numRead = mSharedFile.read(mPos, mBuf, 0, mBuf.length);
+        if (numRead >= 0) {
             // Read something.  Update the indexes.
             mBufStartPos = mPos;
             mBufSize = numRead;
@@ -365,14 +330,11 @@ implements SharedInputStream {
     }
 
     @Override
-    public long skip(long n) throws IOException {
+    public long skip(long n) {
         if (n <= 0) {
             return 0;
         }
         long newPos = Math.min(mPos + n, mEnd);
-        if (newPos == mEnd) {
-            closeMyFile();
-        }
         long numSkipped = newPos - mPos;
         mPos = newPos;
         return numSkipped;
@@ -386,7 +348,9 @@ implements SharedInputStream {
      */
     protected void finalize() throws Throwable {
         super.finalize();
-        closeMyFile();
+        if (mSubStreams.size() == 0) {
+            closeFile();
+        }
     }
 
     ////////////// SharedInputStream methods //////////////
@@ -412,10 +376,11 @@ implements SharedInputStream {
         }
         
         BlobInputStream newStream = null;
+        File file = mSharedFile.getFile();
         try {
-            newStream = new BlobInputStream(mFile, start, end, mSubStreams);
+            newStream = new BlobInputStream(file, start, end, this);
         } catch (IOException e) {
-            ZimbraLog.misc.warn("Unable to create substream for %s", mFile.getPath(), e);
+            ZimbraLog.misc.warn("Unable to create substream for %s", file.getPath(), e);
         }
         
         return newStream;

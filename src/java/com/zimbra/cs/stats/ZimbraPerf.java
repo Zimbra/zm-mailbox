@@ -79,6 +79,8 @@ public class ZimbraPerf {
     public static final Counter COUNTER_CALENDAR_CACHE_LRU_SIZE = new Counter("calcache_lru_size");
     public static final Counter COUNTER_IDX_BYTES_WRITTEN = new Counter("idx_bytes_written");
     public static final Counter COUNTER_IDX_BYTES_READ = new Counter("idx_bytes_read");
+    public static final Counter COUNTER_BLOB_INPUT_STREAM_READ = new Counter("bis_read");
+    public static final Counter COUNTER_BLOB_INPUT_STREAM_SEEK_RATE = new Counter("bis_seek_rate");
     
     public static final ActivityTracker SOAP_TRACKER = new ActivityTracker("soap.csv");
     public static final ActivityTracker IMAP_TRACKER = new ActivityTracker("imap.csv");
@@ -110,6 +112,7 @@ public class ZimbraPerf {
                         COUNTER_CALENDAR_CACHE_LRU_SIZE,
                         COUNTER_IDX_BYTES_WRITTEN,
                         COUNTER_IDX_BYTES_READ,
+                        COUNTER_BLOB_INPUT_STREAM_READ, COUNTER_BLOB_INPUT_STREAM_SEEK_RATE,
                         sRealtimeStats
                     }
         );
@@ -224,6 +227,11 @@ public class ZimbraPerf {
         COUNTER_IDX_BYTES_READ.setShowAverage(true);
         COUNTER_IDX_BYTES_READ.setShowCount(false);
         COUNTER_IDX_BYTES_READ.setShowTotal(true);
+        
+        COUNTER_BLOB_INPUT_STREAM_SEEK_RATE.setShowAverage(true);
+        COUNTER_BLOB_INPUT_STREAM_SEEK_RATE.setAverageName("bis_seek_rate");
+        COUNTER_BLOB_INPUT_STREAM_SEEK_RATE.setShowCount(false);
+        COUNTER_BLOB_INPUT_STREAM_SEEK_RATE.setShowTotal(false);
         
         StatsDumper.schedule(new MailboxdStats(), CSV_DUMP_FREQUENCY);
         ThreadStats threadStats = new ThreadStats(THREAD_NAME_PREFIXES, "threads.csv");
