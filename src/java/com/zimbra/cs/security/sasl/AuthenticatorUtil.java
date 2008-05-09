@@ -88,7 +88,8 @@ public final class AuthenticatorUtil {
                 "No account associated with username '%s'", username);
             return null;
         }
-        if (!AccessManager.getInstance().canAccessAccount(account, userAcct)) {
+        if (!account.getUid().equals(userAcct.getUid()) &&
+            !AccessManager.getInstance().canAccessAccount(account, userAcct)) {
             ZimbraLog.account.warn(
                 "Account for username '%s' cannot be accessed by '%s'",
                 username, account.getName());
