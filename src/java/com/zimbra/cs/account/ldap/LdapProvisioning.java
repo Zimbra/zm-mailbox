@@ -2765,6 +2765,8 @@ public class LdapProvisioning extends Provisioning {
             ZimbraLog.account.fatal(msg);
             throw ServiceException.FAILURE(msg, null);
         }
+        
+        boolean requireStartTLS = d.getBooleanAttr(Provisioning.A_zimbraAuthLdapStartTlsEnabled, false);
 
         try {
             // try explicit externalDn first
@@ -2772,7 +2774,7 @@ public class LdapProvisioning extends Provisioning {
 
             if (externalDn != null) {
                 if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with explicit dn of "+externalDn);
-                LdapUtil.ldapAuthenticate(url, externalDn, password);
+                LdapUtil.ldapAuthenticate(url, requireStartTLS, externalDn, password);
                 return;
             }
 
@@ -2784,7 +2786,7 @@ public class LdapProvisioning extends Provisioning {
                 if (searchBase == null) searchBase = "";
                 searchFilter = LdapUtil.computeAuthDn(acct.getName(), searchFilter);
                 if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with search filter of "+searchFilter);
-                LdapUtil.ldapAuthenticate(url, password, searchBase, searchFilter, searchDn, searchPassword);
+                LdapUtil.ldapAuthenticate(url, requireStartTLS, password, searchBase, searchFilter, searchDn, searchPassword);
                 return;
             }
             
@@ -2792,7 +2794,7 @@ public class LdapProvisioning extends Provisioning {
             if (bindDn != null) {
                 String dn = LdapUtil.computeAuthDn(acct.getName(), bindDn);
                 if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with bind dn template of "+dn);
-                LdapUtil.ldapAuthenticate(url, dn, password);
+                LdapUtil.ldapAuthenticate(url, requireStartTLS, dn, password);
                 return;
             }
 
@@ -2801,6 +2803,8 @@ public class LdapProvisioning extends Provisioning {
         } catch (AuthenticationNotSupportedException e) {
             throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), AuthMechanism.namePassedIn(authCtxt), "external LDAP auth failed, "+e.getMessage(), e);
         } catch (NamingException e) {
+            throw ServiceException.FAILURE(e.getMessage(), e);
+        } catch (IOException e) {
             throw ServiceException.FAILURE(e.getMessage(), e);
         }
         

@@ -3177,5 +3177,18 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>download pop3 messages since</desc>
 </attr>
 
+<attr id="654" name="zimbraAuthLdapStartTlsEnabled" type="boolean" cardinality="single" optionalIn="domain">
+  <desc>whether to use startTLS for external LDAP auth</desc>
+</attr>
+
+<attr id="655" name="zimbraGalLdapStartTlsEnabled" type="boolean" cardinality="single" optionalIn="domain">
+  <desc>whether to use startTLS for external GAL.
+        startTLS will be used for external GAL access only if this attribute is true and zimbraGalLdapURL(or zimbraGalSyncLdapURL for sync) does not contain a ldaps URL.
+  </desc>
+</attr>
+
+<attr id="656" name="zimbraGalSyncLdapStartTlsEnabled"  type="boolean" cardinality="single" optionalIn="domain">
+  <desc>whether to use startTLS for external GAL sync, if not set fallback to zimbraGalLdapStartTlsEnabled</desc>
+</attr>
 
 </attrs>

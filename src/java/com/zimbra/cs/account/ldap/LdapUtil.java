@@ -110,14 +110,14 @@ public class LdapUtil {
         }
     }
     
-    public static void ldapAuthenticate(String urls[], String principal, String password) throws NamingException {
+    public static void ldapAuthenticate(String urls[], boolean requireStartTLS, String principal, String password) throws NamingException, IOException {
         if (password == null || password.equals("")) 
             throw new AuthenticationException("empty password");
         
-        ZimbraLdapContext.ldapAuthenticate(urls, principal, password);
+        ZimbraLdapContext.ldapAuthenticate(urls, requireStartTLS, principal, password, "external LDAP auth");
     }
 
-    public static void ldapAuthenticate(String url[], String password, String searchBase, String searchFilter, String searchDn, String searchPassword) throws NamingException {
+    public static void ldapAuthenticate(String url[], boolean requireStartTLS, String password, String searchBase, String searchFilter, String searchDn, String searchPassword) throws NamingException, IOException {
         if (password == null || password.equals("")) 
             throw new AuthenticationException("empty password");
 
@@ -126,7 +126,7 @@ public class LdapUtil {
         String tooMany = null;
         NamingEnumeration ne = null;
         try {
-            zlc = new ZimbraLdapContext(url, searchDn, searchPassword);
+            zlc = new ZimbraLdapContext(url, requireStartTLS, searchDn, searchPassword, "external LDAP auth");
             ne = zlc.searchDir(searchBase, searchFilter, sSubtreeSC);
             while (ne.hasMore()) {
                 SearchResult sr = (SearchResult) ne.next();
@@ -149,7 +149,7 @@ public class LdapUtil {
             throw new AuthenticationException("empty search");
         }
         if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("search filter matched: "+resultDn);
-        ldapAuthenticate(url, resultDn, password); 
+        ldapAuthenticate(url, requireStartTLS, resultDn, password); 
     }
     
     public static boolean isSSHA(String encodedPassword) {
@@ -788,7 +788,7 @@ public class LdapUtil {
         
         ZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(galParams.url(), galParams.credential());
+            zlc = new ZimbraLdapContext(galParams.url(), galParams.requireStartTLS(), galParams.credential(), "external GAL");
             searchGal(zlc,
                       galParams.pageSize(),
                       galParams.searchBase(), 
