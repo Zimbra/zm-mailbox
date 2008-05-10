@@ -68,10 +68,10 @@ public final class ListData {
         if (flags.isNoselect()) count++;
         if (flags.isMarked()) count++;
         if (flags.isUnmarked()) count++;
-        if (count > 0) {
+        if (count > 1) {
             throw new ParseException(
                 "Invalid LIST flags - only one of \\Noselect, \\Marked, or" +
-                 " \\Unmarked expected");
+                 " \\Unmarked expected: " + flags);
         }
         return flags;
     }

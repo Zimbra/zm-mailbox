@@ -23,12 +23,14 @@ import com.zimbra.cs.mailclient.imap.ResponseHandler;
 import com.zimbra.cs.mailclient.imap.ImapResponse;
 import com.zimbra.cs.mailclient.imap.MessageData;
 import com.zimbra.cs.mailclient.imap.CAtom;
+import com.zimbra.cs.mailclient.imap.ListData;
 import com.zimbra.cs.mailclient.util.SSLUtil;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import junit.framework.TestCase;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.List;
 
 import org.apache.log4j.BasicConfigurator;
 
@@ -81,11 +83,16 @@ public class TestImap extends TestCase {
     }
 
     public void testSelect() throws Exception {
-        connect(false);
-        connection.login(PASS);
-        connection.select("INBOX");
+        login();
     }
 
+    public void testList() throws Exception {
+        login();
+        List<ListData> lds = connection.list("", "");
+        assertTrue(lds.size() == 1);
+        assertEquals('/', (char) lds.get(0).getDelimiter());
+    }
+    
     public void testFetch() throws Exception {
         connect(false);
         connection.login(PASS);
@@ -139,6 +146,18 @@ public class TestImap extends TestCase {
 
     */
 
+    private void login() throws IOException {
+        if (connection == null) {
+            connect();
+        }
+        connection.login(PASS);
+        connection.select("INBOX");
+    }
+    
+    private void connect() throws IOException {
+        connect(false);
+    }
+    
     private void connect(boolean ssl) throws IOException {
         System.out.println("---------");
         ImapConfig config = new ImapConfig(HOST, ssl);

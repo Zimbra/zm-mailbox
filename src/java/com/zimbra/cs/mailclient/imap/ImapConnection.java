@@ -92,12 +92,8 @@ public final class ImapConnection extends MailConnection {
                             "IMAP connection refused: " + res.getResponseText().getText());
                 case PREAUTH:
                 case OK:
-                    if (res.isOK()) {
-                        setState(State.NOT_AUTHENTICATED);
-                    } else {
-                        setState(State.AUTHENTICATED);
-                        startReader();
-                    }
+                    setState(res.isOK() ?
+                        State.NOT_AUTHENTICATED : State.AUTHENTICATED);
                     ResponseText rt = res.getResponseText();
                     if (CAtom.CAPABILITY.atom().equals(rt.getCode())) {
                         capabilities = (ImapCapabilities) rt.getData();
@@ -108,12 +104,6 @@ public final class ImapConnection extends MailConnection {
             }
         }
         throw new MailException("Expected server greeting but got: " + res);
-    }
-
-    @Override
-    public synchronized void login(String pass) throws IOException {
-        super.login(pass);
-        startReader();
     }
 
     @Override
@@ -135,13 +125,6 @@ public final class ImapConnection extends MailConnection {
             getLogger().warn("Logout failed, force closing connection", e);
             close();
         }
-    }
-
-    @Override
-    public synchronized void authenticate(String pass)
-            throws LoginException, IOException {
-        super.authenticate(pass);
-        startReader();
     }
 
     @Override
@@ -489,18 +472,18 @@ public final class ImapConnection extends MailConnection {
 
     private synchronized void setResponse(ImapResponse res) {
         if (request == null) {
-            getLogger().warn("Ignoring tagged or continuation response while" +
-                    " no request pending: " + res);
+            getLogger().warn("Ignoring tagged or continuation response since" +
+                             " no request pending: " + res);
         } else if (response != null) {
             getLogger().warn("Ignoring unexpected tagged or continuation" +
-                    " response: " + res);
+                             " response: " + res);
         }
         response = res;
         notifyAll();
     }
 
     private void startReader() {
-        if (config.isRawMode()) return;
+        if (reader != null) return;
         reader = new Runnable() {
             public void run() {
                 try {
