@@ -105,7 +105,8 @@ public class ImapRequest {
     private void writeData(ImapOutputStream out, Object data)
         throws IOException {
         if (data instanceof String) {
-            out.write((String) data);
+            String s = (String) data;
+            out.write(s.length() > 0 ? s : "\"\"");
         } else if (data instanceof Atom) {
             ((Atom) data).write(out);
         } else if (data instanceof Quoted) {

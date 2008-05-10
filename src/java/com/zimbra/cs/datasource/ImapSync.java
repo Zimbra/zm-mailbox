@@ -23,6 +23,8 @@ public class ImapSync extends AbstractMailItemImport {
 
     private static final Log LOG = ZimbraLog.datasource;
 
+    private static final boolean DEBUG = true; 
+
     public ImapSync(DataSource ds) throws ServiceException {
         super(ds);
         connection = new ImapConnection(getImapConfig(ds));
@@ -39,6 +41,9 @@ public class ImapSync extends AbstractMailItemImport {
         config.setMaxLiteralMemSize(LC.data_source_max_message_memory_size.intValue());
         config.setTlsEnabled(LC.javamail_imap_enable_starttls.booleanValue());
         config.setSslEnabled(ds.isSslEnabled());
+        config.setDebug(DEBUG);
+        config.setTrace(DEBUG);
+        // config.setRawMode(true);
         if (LC.data_source_trust_self_signed_certs.booleanValue()) {
             config.setSSLSocketFactory(new DummySSLSocketFactory());
         } else {
@@ -78,7 +83,7 @@ public class ImapSync extends AbstractMailItemImport {
                 trackedFolders.remove(tracker);
             } catch (Exception e) {
                 LOG.error("Skipping synchronization of IMAP folder '%s' " +
-                          "due to error", e);
+                          "due to error", ld.getMailbox(), e);
             }
         }
         for (Folder folder : localRootFolder.getSubfolderHierarchy()) {
@@ -89,7 +94,7 @@ public class ImapSync extends AbstractMailItemImport {
                     trackedFolders.remove(tracker);
                 } catch (Exception e) {
                     LOG.error("Skipping synchronization of local folder " +
-                              "'%s'due to error", e);
+                              "'%s'due to error", folder.getName(), e);
                 }
             }
         }
