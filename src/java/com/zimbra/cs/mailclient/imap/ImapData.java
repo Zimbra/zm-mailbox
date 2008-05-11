@@ -45,14 +45,17 @@ public abstract class ImapData {
     }
 
     private static Type getType(String s) {
-        Type type = Type.ATOM; // Assume it's an atom for now
+        if (s.length() == 0) {
+            return Type.QUOTED; // Empty string
+        }
+        Type type = Type.ATOM;  // Assume it's an atom for now
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
             if (!Chars.isText(c) || Chars.isQuotedSpecial(c)) {
                 return Type.LITERAL;
             }
             if (!Chars.isAString(c)) {
-                type = Type.QUOTED;
+                type = Type.QUOTED; // Must be QUOTED or LITERAL
             }
         }
         return type;

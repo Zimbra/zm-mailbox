@@ -14,6 +14,8 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.StringUtil;
 
 import java.io.IOException;
+import java.util.Set;
+import java.util.HashSet;
 
 public class ImapSync extends AbstractMailItemImport {
     private final ImapConnection connection;
@@ -76,29 +78,41 @@ public class ImapSync extends AbstractMailItemImport {
     }
 
     private void syncFolders(boolean fs) throws ServiceException, IOException {
+        Set<Integer> excludedIds = new HashSet<Integer>();
+        excludedIds.add(localRootFolder.getId());
+        // Synchronize remote IMAP folders -> local folders
         for (ListData ld : ImapUtil.listFolders(connection)) {
-            ImapFolder tracker = trackedFolders.getByRemotePath(ld.getMailbox());
-            try {
-                new ImapFolderSync(this, tracker).syncFolder(ld, fs);
+            String path = ld.getMailbox();
+            ImapFolder tracker = trackedFolders.getByRemotePath(path);
+            if (tracker != null) {
                 trackedFolders.remove(tracker);
+            }
+            try {
+                tracker = new ImapFolderSync(this, tracker).syncFolder(ld, fs);
+                excludedIds.add(tracker.getItemId());
             } catch (Exception e) {
                 LOG.error("Skipping synchronization of IMAP folder '%s' " +
-                          "due to error", ld.getMailbox(), e);
+                          "due to error", path, e);
             }
         }
+        // Synchronize local folders -> IMAP folders
         for (Folder folder : localRootFolder.getSubfolderHierarchy()) {
-            if (folder.getId() != localRootFolder.getId()) {
-                ImapFolder tracker = trackedFolders.getByItemId(folder.getId());
+            int id = folder.getId();
+            if (!excludedIds.contains(id)) {
+                ImapFolder tracker = trackedFolders.getByItemId(id);
+                if (tracker != null) {
+                    trackedFolders.remove(tracker);
+                }
                 try {
                     new ImapFolderSync(this, tracker).syncFolder(folder, fs);
-                    trackedFolders.remove(tracker);
                 } catch (Exception e) {
                     LOG.error("Skipping synchronization of local folder " +
-                              "'%s'due to error", folder.getName(), e);
+                              "'%s' due to error", folder.getName(), e);
                 }
             }
         }
-        // Any remaining tracked folders should be deleted
+        // Any remaining trackers represent folders which were deleted both
+        // locally and remotely and should be removed.
         for (ImapFolder tracker : trackedFolders) {
             dataSource.deleteImapFolder(tracker);
         }
