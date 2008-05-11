@@ -23,7 +23,9 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Arrays;
+import java.util.Date;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 
 public class ImapRequest {
     private final ImapConnection connection;
@@ -118,6 +120,8 @@ public class ImapRequest {
         } else if (data instanceof MailboxName) {
             String encoded = ((MailboxName) data).encode();
             writeData(out, ImapData.asAString(encoded));
+        } else if (data instanceof Date) {
+            writeData(out, new Quoted(toInternalDate((Date) data)));
         } else if (data instanceof Object[]) {
             writeData(out, Arrays.asList((Object[]) data));
         } else if (data instanceof List) {
@@ -129,6 +133,11 @@ public class ImapRequest {
         }
     }
 
+    // Format is dd-MMM-yyyy HH:mm:ss Z
+    private String toInternalDate(Date date) {
+        return new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss Z").format(date);
+    }
+    
     private void writeList(ImapOutputStream out, List list)
         throws IOException {
         Iterator it = list.iterator();

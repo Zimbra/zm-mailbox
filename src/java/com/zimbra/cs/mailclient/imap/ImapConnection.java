@@ -239,17 +239,18 @@ public final class ImapConnection extends MailConnection {
         return mbox[0];
     }
 
-    public List<ListData> list(String reference, String mailbox) throws IOException {
-        return doList(CAtom.LIST, reference, mailbox);
+    public List<ListData> list(String ref, String mbox) throws IOException {
+        return doList(CAtom.LIST, ref, mbox);
     }
 
-    public List<ListData> lsub(String reference, String mailbox) throws IOException {
-        return doList(CAtom.LSUB, reference, mailbox);
+    public List<ListData> lsub(String ref, String mbox) throws IOException {
+        return doList(CAtom.LSUB, ref, mbox);
     }
 
-    private List<ListData> doList(CAtom cmd, String reference, String mailbox)
+    private List<ListData> doList(CAtom cmd, String ref, String mbox)
             throws IOException {
-        ImapRequest req = newRequest(cmd, reference, mailbox);
+        ImapRequest req =
+            newRequest(cmd, new MailboxName(ref), new MailboxName(mbox));
         final List<ListData> results = new ArrayList<ListData>();
         req.setResponseHandler(new ResponseHandler() {
             public boolean handleResponse(ImapResponse res) {

@@ -20,9 +20,9 @@ import java.util.Date;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.ListIterator;
-import java.util.Map;
-import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.io.IOException;
 import java.io.File;
 import java.io.OutputStream;
@@ -113,6 +113,14 @@ final class ImapUtil {
                 it.remove();
             }
         }
+        // Return list data sorted in descending order of mailbox name length.
+        // This allows us to avoid problems if a parent mailbox is deleted
+        // before its child.
+        Collections.sort(list, new Comparator<ListData>() {
+            public int compare(ListData ld1, ListData ld2) {
+                return ld2.getMailbox().length() - ld1.getMailbox().length();
+            }
+        });
         return list;
     }
 
