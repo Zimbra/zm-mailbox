@@ -231,7 +231,7 @@ class ImapFolderSync {
             folder = mailbox.createFolder(
                 null, localPath, (byte) 0, MailItem.TYPE_UNKNOWN);
         }
-        ds.initializedLocalFolder(localPath);
+        ds.initializedLocalFolder(localPath, false);
         tracker = ds.createImapFolder(
             folder.getId(), localPath, remotePath, uidValidity);
     }
