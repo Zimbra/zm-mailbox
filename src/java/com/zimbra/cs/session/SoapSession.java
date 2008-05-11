@@ -690,18 +690,27 @@ public class SoapSession extends Session {
 
         // dump recursive folder hierarchy starting at USER_ROOT (i.e. folders visible to the user)
         GetFolder.FolderNode root = GetFolder.getFolderTree(octxt, mbox, null, false);
-        Map<String, Folder> mountpoints = new HashMap<String, Folder>();
-        expandMountpoints(octxt, root, mountpoints);
         GetFolder.encodeFolderNode(ifmt, octxt, eRefresh, root);
+
+        Map<ItemId, Element> mountpoints = new HashMap<ItemId, Element>();
+        // for mountpoints pointing to this host, get the serialized folder subhierarchy
+        expandLocalMountpoints(octxt, root, eRefresh.getFactory(), mountpoints);
+
+        // graft in subfolder trees from the other user's mailbox, making sure that mountpoints reflect the counts (etc.) of the target folder
         if (!mountpoints.isEmpty())
-            transferMountpointCounts(eRefresh.getOptionalElement(MailConstants.E_FOLDER), octxt, mountpoints);
+            transferMountpointContents(eRefresh.getOptionalElement(MailConstants.E_FOLDER), octxt, mountpoints);
     }
 
-    private void expandMountpoints(OperationContext octxt, GetFolder.FolderNode node, Map<String, Folder> mountpoints) {
+    private void expandLocalMountpoints(OperationContext octxt, GetFolder.FolderNode node, Element.ElementFactory factory, Map<ItemId, Element> mountpoints) {
         if (node.mFolder == null || mountpoints == null) {
             return;
         } else if (node.mFolder instanceof Mountpoint) {
             Mountpoint mpt = (Mountpoint) node.mFolder;
+            // don't bother generating the subhierarchy more than once
+            ItemId iidTarget = new ItemId(mpt.getOwnerId(), mpt.getRemoteId());
+            if (mountpoints.containsKey(iidTarget))
+                return;
+            
             try {
                 Account owner = Provisioning.getInstance().get(Provisioning.AccountBy.id, mpt.getOwnerId(), octxt.getAuthToken());
                 if (owner == null || owner.getId().equals(mAuthenticatedAccountId))
@@ -713,8 +722,9 @@ public class SoapSession extends Session {
                 Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(owner);
                 GetFolder.FolderNode remote = GetFolder.getFolderTree(octxt, mbox, new ItemId(mbox, mpt.getRemoteId()), false);
                 if (remote != null && remote.mFolder != null && !remote.mFolder.isHidden()) {
-                    node.mSubfolders.addAll(remote.mSubfolders);
-                    mountpoints.put(node.mId + "", remote.mFolder);
+                    ItemIdFormatter ifmt = new ItemIdFormatter(octxt.getAuthenticatedUser(), mbox, false);
+                    Element subhierarchy = GetFolder.encodeFolderNode(ifmt, octxt, factory.createElement("ignored"), remote).detach();
+                    mountpoints.put(iidTarget, subhierarchy);
                     // fault in a delegate session because there's actually something to listen on...
                     getDelegateSession(mpt.getOwnerId());
                 }
@@ -723,26 +733,36 @@ public class SoapSession extends Session {
             }
         } else {
             for (GetFolder.FolderNode child : node.mSubfolders)
-                expandMountpoints(octxt, child, mountpoints);
+                expandLocalMountpoints(octxt, child, factory, mountpoints);
         }
     }
 
-    private void transferMountpointCounts(Element elem, OperationContext octxt, Map<String, Folder> mountpoints) {
+    private void transferMountpointContents(Element elem, OperationContext octxt, Map<ItemId, Element> mountpoints) throws ServiceException {
         if (elem == null)
             return;
 
-        Folder target = mountpoints.get(elem.getAttribute(MailConstants.A_ID, null));
-        if (target != null) {
-            elem.addAttribute(MailConstants.A_UNREAD, target.getUnreadCount());
-            elem.addAttribute(MailConstants.A_NUM, target.getSize());
-            elem.addAttribute(MailConstants.A_SIZE, target.getTotalSize());
-            elem.addAttribute(MailConstants.A_URL, "".equals(target.getUrl()) ? null : ToXML.sanitizeURL(target.getUrl()));
-            elem.addAttribute(MailConstants.A_RIGHTS, ToXML.encodeEffectivePermissions(target, octxt));
-            if (target.isUnread())
-                elem.addAttribute(MailConstants.A_FLAGS, "u" + elem.getAttribute(MailConstants.A_FLAGS, "").replace("u", ""));
-        } else {
+        ItemId iidTarget = new ItemId(elem.getAttribute(MailConstants.A_ZIMBRA_ID, null), (int) elem.getAttributeLong(MailConstants.A_REMOTE_ID, -1));
+        Element target = mountpoints.get(iidTarget);
+        if (target == null) {
             for (Element child : elem.listElements())
-                transferMountpointCounts(child, octxt, mountpoints);
+                transferMountpointContents(child, octxt, mountpoints);
+        } else {
+            // transfer folder counts to the serialized mountpoint from the serialized remote folder
+            elem.addAttribute(MailConstants.A_UNREAD, target.getAttribute(MailConstants.A_UNREAD, null));
+            elem.addAttribute(MailConstants.A_NUM, target.getAttribute(MailConstants.A_NUM, null));
+            elem.addAttribute(MailConstants.A_SIZE, target.getAttribute(MailConstants.A_SIZE, null));
+            elem.addAttribute(MailConstants.A_URL, target.getAttribute(MailConstants.A_URL, null));
+            elem.addAttribute(MailConstants.A_RIGHTS, target.getAttribute(MailConstants.A_RIGHTS, null));
+            if (target.getAttribute(MailConstants.A_FLAGS, "").indexOf("u") != -1)
+                elem.addAttribute(MailConstants.A_FLAGS, "u" + elem.getAttribute(MailConstants.A_FLAGS, "").replace("u", ""));
+
+            // transfer ACL and child folders to the serialized mountpoint from the serialized remote folder
+            for (Element child : target.listElements()) {
+                if (child.getName().equals(MailConstants.E_ACL))
+                    elem.addUniqueElement(child.clone().detach());
+                else
+                    elem.addElement(child.clone().detach());
+            }
         }
     }
 
