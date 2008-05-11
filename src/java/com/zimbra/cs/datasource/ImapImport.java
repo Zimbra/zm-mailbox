@@ -288,7 +288,7 @@ public class ImapImport extends AbstractMailItemImport {
 	                        localFolder = mbox.createFolder(null, zimbraPath, (byte) 0,
 	                            MailItem.TYPE_UNKNOWN);
 	                    }
-	                    ds.initializedLocalFolder(zimbraPath); //offline can disable sync this way
+	                    ds.initializedLocalFolder(zimbraPath, false); //offline can disable sync this way
 	                    folderTracker = ds.createImapFolder(localFolder.getId(),
 	                        localFolder.getPath(), remoteFolder.getFullName(), remoteUvv);
 	                    imapFolders.add(folderTracker);
@@ -338,7 +338,7 @@ public class ImapImport extends AbstractMailItemImport {
                     String jmPath = localPathToRemotePath(ds, localRootFolder, zimbraFolder, remoteRootFolder.getSeparator());
                     if (jmPath != null) { //null means don't sync up
                     	ZimbraLog.datasource.info("Found new local folder %s.  Creating remote folder %s.", zimbraFolder.getPath(), jmPath);
-                    	ds.initializedLocalFolder(zimbraFolder.getPath()); //offline can disable sync this way
+                    	ds.initializedLocalFolder(zimbraFolder.getPath(), true); //offline can disable sync this way
 	                    IMAPFolder jmFolder = createJavaMailFolder(store, jmPath);
 	                    imapFolder = ds.createImapFolder(zimbraFolder.getId(),
 	                        zimbraFolder.getPath(), jmFolder.getFullName(), jmFolder.getUIDValidity());

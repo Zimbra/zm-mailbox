@@ -237,7 +237,7 @@ public class DataSource extends NamedEntry implements Comparable {
      * 
      * @param localPath
      */
-    public void initializedLocalFolder(String localPath) {
+    public void initializedLocalFolder(String localPath, boolean isLocallyCreated) {
     	//do nothing
     }
     
