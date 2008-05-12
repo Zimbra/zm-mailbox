@@ -3515,7 +3515,7 @@ public class Mailbox {
                 } catch (MailItem.TemporaryIndexingException e) {
                     // temporary error
                     if (ZimbraLog.index.isInfoEnabled())
-                        ZimbraLog.index.info("Temporary error generating index data for item ID: " + item.getId() + ".  Indexing will be retried");
+                        ZimbraLog.index.info("Temporary error generating index data for item ID: " + item.getId() + ".  Indexing will be retried", e);
                 }
             } else {
                 if (ZimbraLog.index.isDebugEnabled())
