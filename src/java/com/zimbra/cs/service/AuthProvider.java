@@ -158,6 +158,71 @@ public abstract class AuthProvider {
     protected AuthToken authToken(String encoded) throws AuthProviderException, AuthTokenException {
         throw AuthProviderException.NOT_SUPPORTED();
     }
+    
+    /**
+     * Returns an AuthToken from the account object.
+     * Should never return null.
+     * 
+     * @param acct
+     * @return
+     * @throws AuthProviderException
+     */
+    protected AuthToken authToken(Account acct) throws AuthProviderException {
+        return authToken(acct, false);
+    }
+    
+    /**
+     * Returns an AuthToken from the account object.
+     * Should never return null.
+     * 
+     * @param acct
+     * @param isAdmin
+     * @return
+     * @throws AuthProviderException
+     */
+    protected AuthToken authToken(Account acct, boolean isAdmin) throws AuthProviderException {
+        if (acct == null)
+            throw AuthProviderException.NOT_SUPPORTED();
+        
+        long lifetime = isAdmin ?
+                acct.getTimeInterval(Provisioning.A_zimbraAdminAuthTokenLifetime, AuthToken.DEFAULT_AUTH_LIFETIME * 1000) :                                    
+                acct.getTimeInterval(Provisioning.A_zimbraAuthTokenLifetime, AuthToken.DEFAULT_AUTH_LIFETIME * 1000);
+        return authToken(acct, lifetime);        
+    }
+    
+    /**
+     * Returns an AuthToken from the account object with specified lifetime.
+     * Should never return null.
+     * 
+     * @param acct
+     * @param expires
+     * @return
+     * @throws AuthProviderException
+     */
+    protected AuthToken authToken(Account acct, long expires) throws AuthProviderException {
+        throw AuthProviderException.NOT_SUPPORTED();
+    }
+    
+    /**
+     * Returns an AuthToken from the account object with specified expiration.
+     * Should never return null.
+     * 
+     * @param acct
+     * @param expires
+     * @param isAdmin
+     * @param adminAcct
+     * 
+     * @param acct account authtoken will be valid for
+     * @param expires when the token expires
+     * @param isAdmin true if acct is using its admin privileges
+     * @param adminAcct the admin account accessing acct's information, if this token was created by an admin. 
+     *        
+     * @return
+     * @throws AuthProviderException
+     */
+    protected AuthToken authToken(Account acct, long expires, boolean isAdmin, Account adminAcct) throws AuthProviderException {
+        throw AuthProviderException.NOT_SUPPORTED();
+    }
 
     /**
      * The static getAuthToken methods go through all the providers, trying them in order until one returns an AuthToken
@@ -292,24 +357,88 @@ public abstract class AuthProvider {
         return null;
     }
     
-    // TODO
-    public static AuthToken getAuthToken(Account acct) {
-        return new ZimbraAuthToken(acct);
+    public static AuthToken getAuthToken(Account acct) throws AuthProviderException {
+        List<AuthProvider> providers = getProviders();
+        for (AuthProvider ap : providers) {
+            try {
+                AuthToken at = ap.authToken(acct);
+                // sanity check, should not be null, if a provider returns null we throw AuthTokenException here
+                if (at == null)
+                    throw AuthProviderException.FAILURE("auth provider " + ap.getName() + " returned null");
+                else
+                    return at;
+            } catch (AuthProviderException e) {
+                if (e.canIgnore())
+                    logger().debug(ap.getName() + ":" + e.getMessage());
+                else
+                    throw e;
+            } 
+        }
+        
+        throw AuthProviderException.FAILURE("cannot get authtoken from account " + acct.getName());
     }
     
-    // TODO
-    public static AuthToken getAuthToken(Account acct, boolean isAdmin) {
-        return new ZimbraAuthToken(acct, isAdmin);
+    public static AuthToken getAuthToken(Account acct, boolean isAdmin) throws AuthProviderException {
+        List<AuthProvider> providers = getProviders();
+        for (AuthProvider ap : providers) {
+            try {
+                AuthToken at = ap.authToken(acct, isAdmin);
+                // sanity check, should not be null, if a provider returns null we throw AuthTokenException here
+                if (at == null)
+                    throw AuthProviderException.FAILURE("auth provider " + ap.getName() + " returned null");
+                else
+                    return at;
+            } catch (AuthProviderException e) {
+                if (e.canIgnore())
+                    logger().debug(ap.getName() + ":" + e.getMessage());
+                else
+                    throw e;
+            } 
+        }
+        
+        throw AuthProviderException.FAILURE("cannot get authtoken from account " + acct.getName());
     }
     
-    // TODO
-    public static AuthToken getAuthToken(Account acct, long expires) {
-        return new ZimbraAuthToken(acct, expires);
+    public static AuthToken getAuthToken(Account acct, long expires) throws AuthProviderException {
+        List<AuthProvider> providers = getProviders();
+        for (AuthProvider ap : providers) {
+            try {
+                AuthToken at = ap.authToken(acct, expires);
+                // sanity check, should not be null, if a provider returns null we throw AuthTokenException here
+                if (at == null)
+                    throw AuthProviderException.FAILURE("auth provider " + ap.getName() + " returned null");
+                else
+                    return at;
+            } catch (AuthProviderException e) {
+                if (e.canIgnore())
+                    logger().debug(ap.getName() + ":" + e.getMessage());
+                else
+                    throw e;
+            } 
+        }
+        
+        throw AuthProviderException.FAILURE("cannot get authtoken from account " + acct.getName());
     }
     
-    // TODO
-    public static AuthToken getAuthToken(Account acct, long expires, boolean isAdmin, Account adminAcct) {
-        return new ZimbraAuthToken(acct, expires, isAdmin, adminAcct);
+    public static AuthToken getAuthToken(Account acct, long expires, boolean isAdmin, Account adminAcct) throws AuthProviderException {
+        List<AuthProvider> providers = getProviders();
+        for (AuthProvider ap : providers) {
+            try {
+                AuthToken at = ap.authToken(acct, expires, isAdmin, adminAcct);
+                // sanity check, should not be null, if a provider returns null we throw AuthTokenException here
+                if (at == null)
+                    throw AuthProviderException.FAILURE("auth provider " + ap.getName() + " returned null");
+                else
+                    return at;
+            } catch (AuthProviderException e) {
+                if (e.canIgnore())
+                    logger().debug(ap.getName() + ":" + e.getMessage());
+                else
+                    throw e;
+            } 
+        }
+        
+        throw AuthProviderException.FAILURE("cannot get authtoken from account " + acct.getName());
     }
     
     

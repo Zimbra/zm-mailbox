@@ -419,7 +419,7 @@ public class ItemActionHelper {
         }
     }
 
-    private AuthToken getAuthToken() {
+    private AuthToken getAuthToken() throws ServiceException {
         AuthToken authToken = null;
         
         if (mOpCtxt != null)

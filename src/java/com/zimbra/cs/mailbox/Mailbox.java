@@ -361,11 +361,11 @@ public class Mailbox {
             return authuser;
         }
         
-        public AuthToken getAuthToken() {
+        public AuthToken getAuthToken() throws ServiceException {
             return getAuthToken(true);
         }
         
-        public AuthToken getAuthToken(boolean constructIfNotPresent) {
+        public AuthToken getAuthToken(boolean constructIfNotPresent) throws ServiceException {
             if (authToken != null)
                 return authToken;
             else if (constructIfNotPresent) {

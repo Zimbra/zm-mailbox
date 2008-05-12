@@ -71,8 +71,6 @@ import com.zimbra.common.util.StringUtil;
  */
 public class ZimbraAuthToken extends AuthToken {
 
-    private static final long DEFAULT_AUTH_LIFETIME = 60*60*12;
-    
     // TODO: config
     private static final int AUTHTOKEN_CACHE_SIZE = 5000;
     

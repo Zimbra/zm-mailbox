@@ -38,6 +38,8 @@ import com.zimbra.common.service.ServiceException;
  */
 public abstract class AuthToken {
     
+    public static final long DEFAULT_AUTH_LIFETIME = 60*60*12;
+    
     public static String generateDigest(String a, String b) {
         if (a == null)
             return null;

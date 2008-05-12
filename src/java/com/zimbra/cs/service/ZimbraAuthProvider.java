@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletRequest;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.ZimbraAuthToken;
@@ -76,6 +77,22 @@ public class ZimbraAuthProvider extends AuthProvider{
             throw AuthProviderException.NO_AUTH_DATA();
         
         return ZimbraAuthToken.getAuthToken(encodedAuthToken);
+    }
+    
+    protected AuthToken authToken(Account acct) {
+        return new ZimbraAuthToken(acct);
+    }
+    
+    protected AuthToken authToken(Account acct, boolean isAdmin) {
+        return new ZimbraAuthToken(acct, isAdmin);
+    }
+    
+    protected AuthToken authToken(Account acct, long expires) {
+        return new ZimbraAuthToken(acct, expires);
+    }
+    
+    protected AuthToken authToken(Account acct, long expires, boolean isAdmin, Account adminAcct) {
+        return new ZimbraAuthToken(acct, expires, isAdmin, adminAcct);
     }
     
 }
