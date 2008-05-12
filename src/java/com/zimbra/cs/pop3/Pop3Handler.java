@@ -551,11 +551,8 @@ public abstract class Pop3Handler extends ProtocolHandler {
         return GSS_ENABLED || mConfig.isSaslGssapiEnabled();
     }
     
-    protected void authenticate(String username,
-                                String authenticateId,
-                                String password,
-                                String mechanism)
-            throws Pop3CmdException, IOException {
+    protected void authenticate(String username, String authenticateId, String password, String mechanism)
+    throws Pop3CmdException {
         String type = mechanism != null ? "authentication" : "login";
         try {
             Account acct = MECHANISM_GSSAPI.equals(mechanism) ?
