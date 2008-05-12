@@ -78,7 +78,7 @@ class ImapFolderSync {
         this.tracker = tracker;
     }
 
-    // Synchronizes existing IMAP folder -> local folder
+    // Synchronizes existing remote IMAP folder -> local folder
     public ImapFolder syncFolder(ListData ld, boolean fullSync)
         throws ServiceException, IOException {
         if (tracker != null) {
@@ -93,13 +93,13 @@ class ImapFolderSync {
         return tracker;
     }
 
-    // Synchronize local folder with no corresponding IMAP folder
+    // Synchronize local folder -> remote IMAP folder
     public void syncFolder(Folder folder, boolean fullSync)
         throws ServiceException, IOException {
         this.folder = folder;
         if (tracker != null) {
             // IMAP folder was deleted, delete local folder
-            info("IMAP folder '%s' deleted, deleting local folder",
+            info("Remote IMAP folder '%s' deleted, deleting local folder",
                  tracker.getRemotePath());
             mailbox.delete(null, folder.getId(), folder.getType());
             ds.deleteImapFolder(tracker);
@@ -107,7 +107,7 @@ class ImapFolderSync {
         }
         // New local folder, create IMAP folder
         String remotePath = imapSync.getRemotePath(folder);
-        connection.create(remotePath);
+        createImapFolder(remotePath);
         Mailbox mb = selectImapFolder(remotePath);
         tracker = ds.createImapFolder(folder.getId(), folder.getPath(),
                                       remotePath, mb.getUidValidity());
@@ -395,9 +395,7 @@ class ImapFolderSync {
     private void fetchNewMessages(long lastUid)
         throws ServiceException, IOException {
         debug("Fetching new messages");
-        long uidNext = getMailbox().getUidNext();
-        String end = uidNext > 0 ? String.valueOf(uidNext) : "*";
-        String seq = (lastUid + 1) + ":" + end;
+        String seq = (lastUid + 1) + ":*";
         connection.uidFetch(seq, "(BODY.PEEK[] FLAGS INTERNALDATE)",
             new ResponseHandler() {
                 public boolean handleResponse(ImapResponse res)

@@ -49,12 +49,17 @@ public abstract class MailConnection {
 
     public synchronized void connect() throws IOException {
         if (!isClosed()) return;
-        socket = newSocket();
-        initStreams(new BufferedInputStream(socket.getInputStream()),
-                    new BufferedOutputStream(socket.getOutputStream()));
-        processGreeting();
-        if (config.isTlsEnabled() && !config.isSslEnabled()) {
-            startTls();
+        try {
+            socket = newSocket();
+            initStreams(new BufferedInputStream(socket.getInputStream()),
+                        new BufferedOutputStream(socket.getOutputStream()));
+            processGreeting();
+            if (config.isTlsEnabled() && !config.isSslEnabled()) {
+                startTls();
+            }
+        } catch (IOException e) {
+            close();
+            throw e;
         }
     }
 
@@ -143,13 +148,8 @@ public abstract class MailConnection {
         checkState(State.NOT_AUTHENTICATED);
         sendStartTls();
         SSLSocket sock = newSSLSocket(socket);
-        try {
-            sock.startHandshake();
-            initStreams(sock.getInputStream(), sock.getOutputStream());
-        } catch (IOException e) {
-            close();
-            throw e;
-        }
+        sock.startHandshake();
+        initStreams(sock.getInputStream(), sock.getOutputStream());
     }
 
     public String getNegotiatedQop() {
@@ -209,13 +209,13 @@ public abstract class MailConnection {
         try {
             socket.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            getLogger().info("Error while closing connection", e);
         }
         if (authenticator != null) {
             try {
                 authenticator.dispose();
             } catch (SaslException e) {
-                e.printStackTrace();
+                getLogger().debug("Error while deleting authenticator", e);
             }
         }
     }
