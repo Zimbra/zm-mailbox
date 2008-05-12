@@ -140,6 +140,7 @@ public class MailService implements DocumentService {
         dispatcher.registerHandler(MailConstants.SAVE_WIKI_REQUEST, new com.zimbra.cs.service.wiki.SaveWiki());
         dispatcher.registerHandler(MailConstants.GET_WIKI_REQUEST, new com.zimbra.cs.service.wiki.GetWiki());
         dispatcher.registerHandler(MailConstants.WIKI_ACTION_REQUEST, new com.zimbra.cs.service.wiki.WikiAction());
+        dispatcher.registerHandler(MailConstants.DIFF_DOCUMENT_REQUEST, new com.zimbra.cs.service.wiki.DiffDocument());
 
         // data source
         dispatcher.registerHandler(MailConstants.GET_DATA_SOURCES_REQUEST, new GetDataSources());

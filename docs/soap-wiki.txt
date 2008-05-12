@@ -210,11 +210,53 @@
 
 
 //
-// DiffWiki
-<DiffWikiRequest>
-  <w name="{word}" v1="{version}" v2="{version}"/>
-</DiffWikiRequest>
+// DiffDocument
+//
+// performs line by line diff of two revisions of a Document or WikiItem,
+// then returns a list of <chunk/> containing the result.  Sections of text
+// that are identical to both versions are indicated with disp="common".
+// For each conflict the chunk will show disp="first", disp="second" or both.
+// 
+//
+// v3:
+// line 1<br>
+// line 2<br>
+// line 3<br>
+// line 4<br>
+// line 5<br>
+// <br>
+//
+// v4:
+// line 1<br>
+// line 2<br>
+// line 3.6<br>
+// line 4<br>
+// line 5<br>
+// <br>
+// 
+// REQUEST:
+// -------------
+// <DiffDocumentRequest xmlns:ns0="urn:zimbraMail">
+//   <doc v1="3" v2="4" id="641"/>
+// </DiffDocumentRequest>
+// 
+// RESPONSE:
+// --------------
+// <DiffDocumentResponse xmlns:ns0="urn:zimbraMail">
+//   <chunk disp="common">line 1&lt;br&gt;
+// line 2&lt;br&gt;</chunk>
+//   <chunk disp="first">line 3&lt;br&gt;</chunk>
+//   <chunk disp="second">line 3.6&lt;br&gt;</chunk>
+//   <chunk disp="common">line 4&lt;br&gt;
+// line 5&lt;br&gt;
+// &lt;br&gt;</chunk>
+// </DiffDocumentResponse>
+//
 
-<DiffWikiResponse>
-  <!-- TBD -->
-</DiffWikiResponse>
+<DiffDocumentRequest>
+  <doc id="{item-id}" v1="{version}" v2="{version}"/>
+</DiffDocumentRequest>
+
+<DiffDocumentResponse>
+  <chunk disp="common|first|second"> ... text ... </chunk>+
+</DiffDocumentResponse>
