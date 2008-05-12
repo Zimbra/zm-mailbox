@@ -294,7 +294,7 @@ public class UserServlet extends ZimbraServlet {
                 if (context.authAccount != null) {
                     context.basicAuthHappened = true;
                     
-                    context.authToken = AuthToken.getAuthToken(context.authAccount, isAdminRequest);  
+                    context.authToken = AuthProvider.getAuthToken(context.authAccount, isAdminRequest);  
                     
                     // send cookie back if need be. 
                     if (!context.noSetCookie()) {

@@ -153,9 +153,9 @@ public class PreAuthServlet extends ZimbraServlet {
                 AuthToken at;
 
                 if (admin) {
-                    at = (expires ==  0) ? AuthToken.getAuthToken(acct, admin) : AuthToken.getAuthToken(acct, expires, admin, null);
+                    at = (expires ==  0) ? AuthProvider.getAuthToken(acct, admin) : AuthProvider.getAuthToken(acct, expires, admin, null);
                 } else {
-                    at = (expires ==  0) ? AuthToken.getAuthToken(acct) : AuthToken.getAuthToken(acct, expires);
+                    at = (expires ==  0) ? AuthProvider.getAuthToken(acct) : AuthProvider.getAuthToken(acct, expires);
                 }
 
                 try {

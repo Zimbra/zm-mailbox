@@ -105,6 +105,7 @@ import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.session.PendingModifications.Change;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
@@ -369,7 +370,7 @@ public class Mailbox {
                 return authToken;
             else if (constructIfNotPresent) {
                 if (getAuthenticatedUser() != null)
-                    return AuthToken.getAuthToken(getAuthenticatedUser(), isUsingAdminPrivileges());  // AP-TODO-9: CLEANUP/RETIRE THIS
+                    return AuthProvider.getAuthToken(getAuthenticatedUser(), isUsingAdminPrivileges());
             }
             return null;
         }
@@ -4370,7 +4371,7 @@ public class Mailbox {
         if (authToken == null) {
             Account authuser = octxt == null ? getAccount() : octxt.getAuthenticatedUser();
             boolean isAdminRequest = octxt == null ? false : octxt.isUsingAdminPrivileges();
-            authToken = AuthToken.getAuthToken(authuser, isAdminRequest);
+            authToken = AuthProvider.getAuthToken(authuser, isAdminRequest);
         }
         return authToken;
     }

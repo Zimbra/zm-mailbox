@@ -30,9 +30,11 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ZimbraAuthToken;
 import com.zimbra.soap.SoapServlet;
 
 public abstract class AuthProvider {
@@ -289,7 +291,27 @@ public abstract class AuthProvider {
         // there is no auth data for any of the enabled providers
         return null;
     }
-
+    
+    // TODO
+    public static AuthToken getAuthToken(Account acct) {
+        return new ZimbraAuthToken(acct);
+    }
+    
+    // TODO
+    public static AuthToken getAuthToken(Account acct, boolean isAdmin) {
+        return new ZimbraAuthToken(acct, isAdmin);
+    }
+    
+    // TODO
+    public static AuthToken getAuthToken(Account acct, long expires) {
+        return new ZimbraAuthToken(acct, expires);
+    }
+    
+    // TODO
+    public static AuthToken getAuthToken(Account acct, long expires, boolean isAdmin, Account adminAcct) {
+        return new ZimbraAuthToken(acct, expires, isAdmin, adminAcct);
+    }
+    
     
     public static void main(String[] args) throws Exception {
         AuthToken at = getAuthToken(null, null);

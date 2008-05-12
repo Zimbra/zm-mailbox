@@ -51,6 +51,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -153,7 +154,7 @@ public class SearchConv extends Search {
                     // now create a soap transport to talk to the remote account
                     Account target = Provisioning.getInstance().get(AccountBy.id, cid.getAccountId(), zsc.getAuthToken());
                     SoapHttpTransport soapTransp = new SoapHttpTransport(AccountUtil.getSoapUri(target));
-                    soapTransp.setAuthToken(AuthToken.getAuthToken(acct).getEncoded());
+                    soapTransp.setAuthToken(AuthProvider.getAuthToken(acct).getEncoded());
                     soapTransp.setTargetAcctId(target.getId());
                     soapTransp.setRequestProtocol(zsc.getResponseProtocol());
 

@@ -42,6 +42,7 @@ import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.caldav.TimeRange;
 import com.zimbra.cs.dav.service.DavServlet;
 import com.zimbra.cs.mailbox.Mountpoint;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.UserServlet.HttpInputStream;
 import com.zimbra.cs.service.util.ItemId;
@@ -89,7 +90,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
         mAppointments = new HashMap<String,DavResource>();
         String authToken = null;
         try {
-            authToken = AuthToken.getAuthToken(ctxt.getAuthAccount()).getEncoded();
+            authToken = AuthProvider.getAuthToken(ctxt.getAuthAccount()).getEncoded();
         } catch (AuthTokenException e) {
             return Collections.emptyList();
         }
@@ -128,7 +129,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
     public DavResource createItem(DavContext ctxt, String name) throws DavException, IOException {
         AuthToken authToken;
         try {
-            authToken = AuthToken.getAuthToken(ctxt.getAuthAccount());
+            authToken = AuthProvider.getAuthToken(ctxt.getAuthAccount());
             
             Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteId);
             ZMailbox.Options zoptions = new ZMailbox.Options(authToken.getEncoded(), AccountUtil.getSoapUri(target));
@@ -172,7 +173,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
     public void deleteAppointment(DavContext ctxt, int id) throws DavException {
         try {
             String authToken = null;
-            authToken = AuthToken.getAuthToken(ctxt.getAuthAccount()).getEncoded();
+            authToken = AuthProvider.getAuthToken(ctxt.getAuthAccount()).getEncoded();
             Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mRemoteId);
             ZMailbox.Options zoptions = new ZMailbox.Options(authToken, AccountUtil.getSoapUri(target));
             zoptions.setNoSession(true);

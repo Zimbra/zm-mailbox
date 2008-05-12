@@ -123,26 +123,6 @@ public abstract class AuthToken {
     }
     
     // AP-TODO-5: REMOVE AFTER CLEANUP
-    public static AuthToken getAuthToken(Account acct) {
-        return new ZimbraAuthToken(acct);
-    }
-    
-    // AP-TODO-5: REMOVE AFTER CLEANUP
-    public static AuthToken getAuthToken(Account acct, boolean isAdmin) {
-        return new ZimbraAuthToken(acct, isAdmin);
-    }
-    
-    // AP-TODO-5: REMOVE AFTER CLEANUP
-    public static AuthToken getAuthToken(Account acct, long expires) {
-        return new ZimbraAuthToken(acct, expires);
-    }
-    
-    // AP-TODO-5: REMOVE AFTER CLEANUP
-    public static AuthToken getAuthToken(Account acct, long expires, boolean isAdmin, Account adminAcct) {
-        return new ZimbraAuthToken(acct, expires, isAdmin, adminAcct);
-    }
-    
-    // AP-TODO-5: REMOVE AFTER CLEANUP
     public static AuthToken getAuthToken(String acctId, String externalEmail, String pass, String digest, long expires) {
         return new ZimbraAuthToken(acctId, externalEmail, pass, digest, expires);
     }

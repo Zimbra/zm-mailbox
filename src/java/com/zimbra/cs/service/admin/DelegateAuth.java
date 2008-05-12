@@ -30,6 +30,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.soap.ZimbraSoapContext;
 
 import java.util.Map;
@@ -89,7 +90,7 @@ public class DelegateAuth extends AdminDocumentHandler {
         if (adminAcct == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(zsc.getAuthtokenAccountId());
 
-        AuthToken at = AuthToken.getAuthToken(account, expires, false, adminAcct); 
+        AuthToken at = AuthProvider.getAuthToken(account, expires, false, adminAcct); 
         try {
             token = at.getEncoded();
         } catch (AuthTokenException e) {

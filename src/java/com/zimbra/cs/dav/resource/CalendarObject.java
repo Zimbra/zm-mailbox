@@ -39,6 +39,7 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.zclient.ZAppointmentHit;
@@ -252,7 +253,7 @@ public interface CalendarObject {
 	    
         public byte[] getRawContent(DavContext ctxt) throws IOException {
             AuthToken authToken;
-            authToken = AuthToken.getAuthToken(ctxt.getAuthAccount());
+            authToken = AuthProvider.getAuthToken(ctxt.getAuthAccount());
             
             try {
                 ItemId iid = new ItemId(mRemoteId, mItemId);

@@ -33,6 +33,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.session.Session;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AccountConstants;
@@ -113,7 +114,7 @@ public class Auth extends AdminDocumentHandler {
         }
 
         Element response = zsc.createElement(AdminConstants.AUTH_RESPONSE);
-        AuthToken at = AuthToken.getAuthToken(acct, true);
+        AuthToken at = AuthProvider.getAuthToken(acct, true);
         at.encodeAuthResp(response, true);
         
         response.addAttribute(AdminConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);

@@ -37,6 +37,7 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.zclient.ZFolder;
@@ -291,7 +292,7 @@ public class ImapPath {
             throw AccountServiceException.NO_SUCH_ACCOUNT(mCredentials.getUsername());
 
         try {
-            ZMailbox.Options options = new ZMailbox.Options(AuthToken.getAuthToken(acct).getEncoded(), AccountUtil.getSoapUri(target));
+            ZMailbox.Options options = new ZMailbox.Options(AuthProvider.getAuthToken(acct).getEncoded(), AccountUtil.getSoapUri(target));
             options.setTargetAccount(target.getName());
             options.setNoSession(true);
             return ZMailbox.getMailbox(options);
@@ -416,7 +417,7 @@ public class ImapPath {
             if (acct == null)
                 return mReferent;
             try {
-                ZMailbox.Options options = new ZMailbox.Options(AuthToken.getAuthToken(acct).getEncoded(), AccountUtil.getSoapUri(target));
+                ZMailbox.Options options = new ZMailbox.Options(AuthProvider.getAuthToken(acct).getEncoded(), AccountUtil.getSoapUri(target));
                 options.setTargetAccount(target.getName());
                 options.setNoSession(true);
                 ZMailbox zmbx = ZMailbox.getMailbox(options);

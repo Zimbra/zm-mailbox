@@ -37,6 +37,7 @@ import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.SkinUtil;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -126,7 +127,7 @@ public class Auth extends AccountDocumentHandler {
                 throw ServiceException.INVALID_REQUEST("must specify "+AccountConstants.E_PASSWORD, null);
             }
 
-            AuthToken at = expires ==  0 ? AuthToken.getAuthToken(acct) : AuthToken.getAuthToken(acct, expires);
+            AuthToken at = expires ==  0 ? AuthProvider.getAuthToken(acct) : AuthProvider.getAuthToken(acct, expires);
             return doResponse(request, at, zsc, acct);
         }
     }

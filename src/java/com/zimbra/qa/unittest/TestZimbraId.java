@@ -20,6 +20,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -163,7 +164,7 @@ public class TestZimbraId extends TestCase {
         Upload ulSaved = FileUploadServlet.saveUpload(new ByteArrayInputStream(body), "zimbraId-test", "text/plain", acct.getId());
         // System.out.println("Upload id is: " + ulSaved.getId());
         
-        AuthToken authToken = AuthToken.getAuthToken(acct);
+        AuthToken authToken = AuthProvider.getAuthToken(acct);
         Upload ulFetched = FileUploadServlet.fetchUpload(acct.getId(), ulSaved.getId(), authToken);
         
         assertEquals(ulSaved.getId(), ulFetched.getId());
