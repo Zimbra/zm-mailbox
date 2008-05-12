@@ -47,11 +47,11 @@ public class Move extends DavMethod {
 		MailItemResource mir = (MailItemResource) rs;
 		mir.move(ctxt, col);
 
-		renameIfNecessary(ctxt, mir, destination);
+		renameIfNecessary(ctxt, mir, destination, col);
 		ctxt.setStatus(HttpServletResponse.SC_NO_CONTENT);
 	}
 	
-	protected void renameIfNecessary(DavContext ctxt, MailItemResource rs, String dest) throws DavException {
+	protected void renameIfNecessary(DavContext ctxt, MailItemResource rs, String dest, MailItemResource destCollection) throws DavException {
 		String oldName = ctxt.getItem();
 		int begin, end;
 		end = dest.length();
@@ -60,6 +60,6 @@ public class Move extends DavMethod {
 		begin = dest.lastIndexOf("/", end-1);
 		String newName = dest.substring(begin+1, end);
 		if (!oldName.equals(newName))
-			rs.rename(ctxt, newName);
+			rs.rename(ctxt, newName, destCollection);
 	}
 }

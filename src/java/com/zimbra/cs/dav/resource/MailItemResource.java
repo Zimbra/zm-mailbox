@@ -185,13 +185,13 @@ public abstract class MailItemResource extends DavResource {
 	}
 
 	/* Renames this resource. */
-	public void rename(DavContext ctxt, String newName) throws DavException {
+	public void rename(DavContext ctxt, String newName, MailItemResource destCollection) throws DavException {
 		try {
 			Mailbox mbox = getMailbox(ctxt);
 			if (isCollection()) {
-				mbox.rename(ctxt.getOperationContext(), mId, MailItem.TYPE_FOLDER, newName);
+				mbox.rename(ctxt.getOperationContext(), mId, MailItem.TYPE_FOLDER, newName, destCollection.mId);
 			} else {
-                mbox.rename(ctxt.getOperationContext(), mId, mType, newName);
+                mbox.rename(ctxt.getOperationContext(), mId, mType, newName, destCollection.mId);
 			}
 		} catch (ServiceException se) {
 			throw new DavException("cannot rename item", HttpServletResponse.SC_FORBIDDEN, se);
@@ -244,7 +244,7 @@ public abstract class MailItemResource extends DavResource {
 					String val = e.getText();
 					String uri = getUri();
 					Mailbox mbox = getMailbox(ctxt);
-					mbox.rename(ctxt.getOperationContext(), mId, mType, val);
+					mbox.rename(ctxt.getOperationContext(), mId, mType, val, mFolderId);
 					setProperty(DavElements.P_DISPLAYNAME, val);
 					UrlNamespace.addToRenamedResource(uri, this);
 					UrlNamespace.addToRenamedResource(uri.substring(0, uri.length()-1), this);
