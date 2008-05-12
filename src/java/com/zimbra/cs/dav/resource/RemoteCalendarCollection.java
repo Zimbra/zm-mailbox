@@ -43,6 +43,7 @@ import com.zimbra.cs.dav.caldav.TimeRange;
 import com.zimbra.cs.dav.service.DavServlet;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.service.AuthProviderException;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.UserServlet.HttpInputStream;
 import com.zimbra.cs.service.util.ItemId;
@@ -92,6 +93,8 @@ public class RemoteCalendarCollection extends CalendarCollection {
         try {
             authToken = AuthProvider.getAuthToken(ctxt.getAuthAccount()).getEncoded();
         } catch (AuthTokenException e) {
+            return Collections.emptyList();
+        } catch (AuthProviderException e) {
             return Collections.emptyList();
         }
 

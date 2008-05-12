@@ -30,6 +30,9 @@ public class AuthProviderException extends ServiceException {
     // auth method is not supported by the auth provider
     public static final String NOT_SUPPORTED       = "authprovider.NOT_SUPPORTED";
     
+    // internal auth provider error
+    public static final String FAILURE             = "authprovider.FAILURE";
+    
     private AuthProviderException(String message, String code, boolean isReceiversFault) {
         super(message, code, isReceiversFault);
         setCanIgnore(true);
@@ -54,5 +57,9 @@ public class AuthProviderException extends ServiceException {
     
     public static AuthProviderException NOT_SUPPORTED() {
         return new AuthProviderException("not suported", NOT_SUPPORTED, SENDERS_FAULT, null);
+    }
+    
+    public static AuthProviderException FAILURE(String message) {
+        return new AuthProviderException("failure:" + message, FAILURE, SENDERS_FAULT, null);
     }
 }

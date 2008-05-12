@@ -252,15 +252,13 @@ public interface CalendarObject {
 	    }
 	    
         public byte[] getRawContent(DavContext ctxt) throws IOException {
-            AuthToken authToken;
-            authToken = AuthProvider.getAuthToken(ctxt.getAuthAccount());
-            
             try {
+                AuthToken authToken = AuthProvider.getAuthToken(ctxt.getAuthAccount());
                 ItemId iid = new ItemId(mRemoteId, mItemId);
                 HashMap<String,String> params = new HashMap<String,String>();
                 return UserServlet.getRemoteContent(authToken, iid, params);
             } catch (ServiceException e) {
-                ZimbraLog.dav.warn("can't get remote contents for "+mRemoteId+", "+mItemId);
+                ZimbraLog.dav.warn("can't get remote contents for "+mRemoteId+", "+mItemId, e);
             }
             return null;
         }

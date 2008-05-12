@@ -32,6 +32,7 @@ import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.service.AuthProviderException;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMailbox;
@@ -73,6 +74,8 @@ public class RemoteCollection extends Collection {
         try {
             authToken = AuthProvider.getAuthToken(ctxt.getAuthAccount()).getEncoded();
         } catch (AuthTokenException e) {
+            return Collections.emptyList();
+        } catch (AuthProviderException e) {
             return Collections.emptyList();
         }
 
