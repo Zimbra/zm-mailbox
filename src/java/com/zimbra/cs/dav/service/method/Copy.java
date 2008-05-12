@@ -46,7 +46,7 @@ public class Copy extends Move {
 		MailItemResource mir = (MailItemResource) rs;
 		MailItemResource copy = mir.copy(ctxt, col);
 
-		renameIfNecessary(ctxt, copy, destination);
+		renameIfNecessary(ctxt, copy, destination, col);
 		ctxt.setStatus(HttpServletResponse.SC_NO_CONTENT);
 	}
 }
