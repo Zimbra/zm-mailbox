@@ -402,9 +402,15 @@ public class ZimbraLdapContext {
                 ldapCtxt.addToEnvironment(Context.SECURITY_PRINCIPAL, principal);
                 ldapCtxt.addToEnvironment(Context.SECURITY_CREDENTIALS, password);
                 
-                // do something to trigger a BIND with the principal/password, or else the credentials added to the env after the TLS negotiation will 
-                // not be sent to the LDP server
-                Attributes attrs = ldapCtxt.getAttributes(principal, new String[0]);
+                /*
+                 * reconnect to the LDAP server using the credentials added to the env after TLS negotiation
+                 * 
+                 * This is not needed if the LdapContext will be used fpr operations (e.g. search, getAttributes) later, 
+                 * because JNDI will do the bind when the op is executed.  reconnect is explicitly done here because the sole 
+                 * purpose of this LdapContext is for authentication, and there is no op needed before closing the context.
+                 * If we do not reconnect using the crendential, no auth is being done.
+                 */ 
+                ldapCtxt.reconnect(null);
             }
         } catch (NamingException e) {   
             ZimbraLog.ldap.debug("GET DIR CTXT(" + note + ") failed", e);
