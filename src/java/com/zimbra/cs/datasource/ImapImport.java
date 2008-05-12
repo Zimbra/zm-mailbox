@@ -63,6 +63,7 @@ import com.zimbra.common.util.CustomSSLSocketFactory;
 import com.zimbra.common.util.DummySSLSocketFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.SystemUtil;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.db.DbImapMessage;
 import com.zimbra.cs.mailbox.Flag;
@@ -136,7 +137,22 @@ public class ImapImport extends AbstractMailItemImport {
         store = getStore(ds);
     }
 
-    public void importData(boolean fullSync) throws ServiceException {
+    public synchronized String test() throws ServiceException {
+        validateDataSource();
+        try {
+            connect();
+        } catch (ServiceException e) {
+            Throwable except = SystemUtil.getInnermostException(e);
+            if (except == null) except = e;
+            ZimbraLog.datasource.info("Error connecting to mail store: ", except);
+            return except.toString();
+        } finally {
+            close();
+        }
+        return null;
+    }
+    
+    public synchronized void importData(boolean fullSync) throws ServiceException {
         validateDataSource();
         connect();
         DataSource ds = getDataSource();
@@ -376,23 +392,25 @@ public class ImapImport extends AbstractMailItemImport {
                     }
                 }
             }
-
-            store.close();
         } catch (MessagingException e) {
             throw ServiceException.FAILURE(e.getMessage(), e);
         } catch (IOException e) {
             throw ServiceException.FAILURE(e.getMessage(), e);
         } finally {
-            if (store != null) {
-                try {
-                    store.close();
-                } catch (MessagingException e) {
-                    ZimbraLog.datasource.warn("Error closing IMAP store", e);
-                }
-            }
+            close();
         }
     }
 
+    private void close() {
+        if (store != null) {
+            try {
+                store.close();
+            } catch (MessagingException e) {
+                ZimbraLog.datasource.warn("Error closing IMAP store", e);
+            }
+        }
+    }
+    
     /*
      * Returns list of subfolders, removing duplicates (see bug 26483).
      */

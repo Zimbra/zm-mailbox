@@ -12,10 +12,13 @@ import com.zimbra.common.util.CustomSSLSocketFactory;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.SystemUtil;
 
 import java.io.IOException;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Collections;
 
 public class ImapSync extends AbstractMailItemImport {
     private final ImapConnection connection;
@@ -54,26 +57,45 @@ public class ImapSync extends AbstractMailItemImport {
         return config;
     }
 
-    protected void connect() throws ServiceException {
+    public synchronized String test() throws ServiceException {
+        validateDataSource();
+        try {
+            connect();
+        } catch (ServiceException e) {
+            Throwable except = SystemUtil.getInnermostException(e);
+            if (except == null) except = e;
+            ZimbraLog.datasource.info("Error connecting to mail store: ", except);
+            return except.toString();
+        } finally {
+            connection.close();
+        }
+        return null;
+    }
+    
+    public synchronized void importData(boolean fullSync)
+        throws ServiceException {
+        validateDataSource();
+        connect();
+        try {
+            trackedFolders = dataSource.getImapFolders();
+            syncFolders(fullSync);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Folder sync failed", e);
+        } finally {
+            connection.close();
+        }
+    }
+
+    private void connect() throws ServiceException {
         if (!connection.isClosed()) return;
         try {
             connection.connect();
             connection.login(dataSource.getDecryptedPassword());
             delimiter = ImapUtil.getDelimiter(connection);
         } catch (IOException e) {
+            connection.close();
             throw ServiceException.FAILURE(
                 "Unable to connect to IMAP server: " + dataSource, e);
-        }
-    }
-
-    public void importData(boolean fullSync) throws ServiceException {
-        validateDataSource();
-        connect();
-        trackedFolders = dataSource.getImapFolders();
-        try {
-            syncFolders(fullSync);
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("Folder sync failed", e);
         }
     }
 
@@ -96,7 +118,12 @@ public class ImapSync extends AbstractMailItemImport {
             }
         }
         // Synchronize local folders -> IMAP folders
-        for (Folder folder : localRootFolder.getSubfolderHierarchy()) {
+        List<Folder> folders = localRootFolder.getSubfolderHierarchy();
+        // Folder list is in depth-first order, so reverse entries so that
+        // children are before parents. This avoids problems when deleting
+        // folders.
+        Collections.reverse(folders);
+        for (Folder folder : folders) {
             int id = folder.getId();
             if (!excludedIds.contains(id)) {
                 ImapFolder tracker = trackedFolders.getByItemId(id);

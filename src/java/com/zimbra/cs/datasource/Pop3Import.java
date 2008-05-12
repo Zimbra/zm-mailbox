@@ -43,6 +43,7 @@ import com.zimbra.common.util.CustomSSLSocketFactory;
 import com.zimbra.common.util.DummySSLSocketFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.SystemUtil;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.db.DbPop3Message;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
@@ -104,8 +105,23 @@ public class Pop3Import extends AbstractMailItemImport {
         super(ds);
         store = getStore(ds);
     }
-    
-    public void importData(boolean fullSync) throws ServiceException {
+
+    public synchronized String test() throws ServiceException {
+        validateDataSource();
+        try {
+            connect();
+        } catch (ServiceException e) {
+            Throwable except = SystemUtil.getInnermostException(e);
+            if (except == null) except = e;
+            ZimbraLog.datasource.info("Error connecting to mail store: ", except);
+            return except.toString();
+        } finally {
+            disconnect();
+        }
+        return null;
+    }
+
+    public synchronized void importData(boolean fullSync) throws ServiceException {
         validateDataSource();
         connect();
         try {

@@ -20,7 +20,6 @@ import com.zimbra.cs.mailclient.MailConnection;
 import com.zimbra.cs.mailclient.MailException;
 import com.zimbra.cs.mailclient.MailInputStream;
 import com.zimbra.cs.mailclient.MailOutputStream;
-import com.zimbra.cs.mailclient.ParseException;
 import com.zimbra.cs.mailclient.CommandFailedException;
 
 import java.io.IOException;
@@ -34,8 +33,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.zimbra.cs.mailclient.imap.ImapData.asAString;
 import org.apache.log4j.Logger;
-
-import javax.security.auth.login.LoginException;
 
 public final class ImapConnection extends MailConnection {
     private ImapCapabilities capabilities;
@@ -165,7 +162,7 @@ public final class ImapConnection extends MailConnection {
         Mailbox mbox = new Mailbox(name);
         ImapRequest req = newRequest(cmd, new MailboxName(name));
         req.setResponseHandler(mbox);
-        req.sendCheckStatus();
+        mbox.handleResponse(req.sendCheckStatus());
         return mbox;
     }
 
@@ -464,8 +461,8 @@ public final class ImapConnection extends MailConnection {
             if (response != null) {
                 return response;
             }
-            throw (IOException) new IOException(
-                    "Exception in response handler").initCause(error);
+            throw (IOException)
+                new IOException("Error in response handler").initCause(error);
         } finally {
             response = null;
         }
@@ -560,7 +557,7 @@ public final class ImapConnection extends MailConnection {
         } else if (res.isTagged()) {
             // If no pending request, then must be untagged response
             throw new MailException(
-                    "Received tagged response with no request pending: " + res);
+                "Received tagged response with no request pending: " + res);
 
         }
         if (res.isOK()) {

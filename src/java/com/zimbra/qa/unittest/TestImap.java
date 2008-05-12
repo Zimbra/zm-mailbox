@@ -24,6 +24,7 @@ import com.zimbra.cs.mailclient.imap.ImapResponse;
 import com.zimbra.cs.mailclient.imap.MessageData;
 import com.zimbra.cs.mailclient.imap.CAtom;
 import com.zimbra.cs.mailclient.imap.ListData;
+import com.zimbra.cs.mailclient.imap.Mailbox;
 import com.zimbra.cs.mailclient.util.SSLUtil;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import junit.framework.TestCase;
@@ -84,6 +85,11 @@ public class TestImap extends TestCase {
 
     public void testSelect() throws Exception {
         login();
+        Mailbox mb = connection.getMailbox();
+        assertNotNull(mb);
+        assertTrue(mb.isReadWrite());
+        assertTrue(mb.getUidValidity() > 0);
+        assertTrue(mb.getUidNext() > 0);
     }
 
     public void testList() throws Exception {

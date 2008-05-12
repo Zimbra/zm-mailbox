@@ -23,22 +23,6 @@ public abstract class AbstractMailItemImport implements MailItemImport {
     protected AbstractMailItemImport(DataSource ds) {
         dataSource = ds;
     }
-    
-    public synchronized String test() throws ServiceException {
-        validateDataSource();
-        try {
-            connect();
-            // disconnect();
-        } catch (ServiceException e) {
-            Throwable except = SystemUtil.getInnermostException(e);
-            if (except == null) except = e;
-            ZimbraLog.datasource.info("Error connecting to mail store: ", except);
-            return except.toString();
-        }
-        return null;
-    }
-
-    protected abstract void connect() throws ServiceException;
 
     protected void validateDataSource() throws ServiceException {
         DataSource ds = getDataSource();

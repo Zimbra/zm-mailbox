@@ -147,7 +147,7 @@ public final class Mailbox implements ResponseHandler {
         String encoded = name != null ? new MailboxName(name).encode() : null;
         return String.format(
             "{name=%s, exists=%d, recent=%d, unseen=%d, flags=%s, " +
-            "permanent_flags=%s, uid_next=%d, uid_validity=%x, access=%s}",
+            "permanent_flags=%s, uid_next=%d, uid_validity=%d, access=%s}",
             encoded, exists, recent, unseen, flags, permanentFlags, uidNext,
             uidValidity, access
         );
