@@ -167,6 +167,8 @@ public class MailConstants {
     public static final QName GET_WIKI_RESPONSE = QName.get("GetWikiResponse", NAMESPACE);
     public static final QName WIKI_ACTION_REQUEST = QName.get("WikiActionRequest", NAMESPACE);
     public static final QName WIKI_ACTION_RESPONSE = QName.get("WikiActionResponse", NAMESPACE);
+    public static final QName DIFF_DOCUMENT_REQUEST = QName.get("DiffDocumentRequest", NAMESPACE);
+    public static final QName DIFF_DOCUMENT_RESPONSE = QName.get("DiffDocumentResponse", NAMESPACE);
 
     // data sources
     public static final QName CREATE_DATA_SOURCE_REQUEST = QName.get("CreateDataSourceRequest", NAMESPACE);
@@ -581,6 +583,10 @@ public class MailConstants {
     public static final String A_TRAVERSE = "tr";
     public static final String A_ARGS = "args";
     public static final String A_REST_URL = "rest";
+    public static final String A_V1 = "v1";
+    public static final String A_V2 = "v2";
+    public static final String E_CHUNK = "chunk";
+    public static final String A_DISP = "disp";
     
     // WaitSet
     public static final String E_WAITSET_ADD = "add";
