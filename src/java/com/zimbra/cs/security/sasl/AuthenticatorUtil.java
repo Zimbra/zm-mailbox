@@ -28,21 +28,16 @@ import com.zimbra.cs.account.ZimbraAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
-import java.io.IOException;
-
 /**
  * Miscellaneous utility methods to support SASL authentication.
  */
 public final class AuthenticatorUtil {
-    public static Account authenticate(String username, String authenticateId,
-                                       String password, String protocol,
-                                       String origRemoteIp)
-        throws ServiceException, IOException {
+    public static Account authenticate(String username, String authenticateId, String password, String protocol, String origRemoteIp)
+    throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(Provisioning.AccountBy.name, authenticateId);
         if (account == null) {
-            ZimbraLog.account.warn(
-                "No account associated with authentication id '%s'", authenticateId);
+            ZimbraLog.account.warn("No account associated with authentication id '%s'", authenticateId);
             return null;
         }
         // authenticate the authentication principal
@@ -52,28 +47,45 @@ public final class AuthenticatorUtil {
         return authorize(account, username);
     }
 
-    public static Account authenticateKrb5(String username, String principal)
-        throws ServiceException, IOException {
+    public static Account authenticateKrb5(String username, String principal) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(Provisioning.AccountBy.krb5Principal, principal);
         if (account == null) {
-            ZimbraLog.account.warn(
-                "No account associated with Kerberos principle '%s'", principal);
+            ZimbraLog.account.warn("No account associated with Kerberos principle '%s'", principal);
             return null;
         }
         return authorize(account, username);
     }
 
-    private static Account authorize(Account account, String username)
-        throws ServiceException {
-        if (username == null || username.length() == 0) {
-            return account;
+    public static Account authenticateZToken(String username, String authtoken) throws ServiceException {
+        if (username == null || username.equals(""))
+            return null;
+
+        Provisioning prov = Provisioning.getInstance();
+        AuthToken at;
+        try {
+            at = ZimbraAuthToken.getAuthToken(authtoken);
+        } catch (AuthTokenException e) {
+            return null;
         }
+        if (at == null || at.isExpired() || !at.isAdmin() || at.getAdminAccountId() != null)
+            return null;
+
+        Account admin = prov.get(Provisioning.AccountBy.id, at.getAccountId(), at);
+        if (admin == null || !admin.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
+            return null;
+
+        return authorize(admin, username);
+    }
+
+    private static Account authorize(Account account, String username) throws ServiceException {
+        if (username == null || username.length() == 0)
+            return account;
+
         Provisioning prov = Provisioning.getInstance();
         Account userAcct = prov.get(Provisioning.AccountBy.name, username);
         if (userAcct == null) {
-            // If username not found, check username again using the domain
-            // associated with the authorization account.
+            // if username not found, check username again using the domain associated with the authorization account
             int i = username.indexOf('@');
             if (i != -1) {
                 String domain = account.getDomainName();
@@ -84,37 +96,13 @@ public final class AuthenticatorUtil {
             }
         }
         if (userAcct == null) {
-            ZimbraLog.account.warn(
-                "No account associated with username '%s'", username);
+            ZimbraLog.account.warn("No account associated with username '%s'", username);
             return null;
         }
-        if (!account.getUid().equals(userAcct.getUid()) &&
-            !AccessManager.getInstance().canAccessAccount(account, userAcct)) {
-            ZimbraLog.account.warn(
-                "Account for username '%s' cannot be accessed by '%s'",
-                username, account.getName());
+        if (!account.getUid().equals(userAcct.getUid()) && !AccessManager.getInstance().canAccessAccount(account, userAcct)) {
+            ZimbraLog.account.warn("Account for username '%s' cannot be accessed by '%s'", username, account.getName());
             return null;
         }
-        return account;
-    }
-
-    public static Account authenticateZToken(String username, String authtoken) throws ServiceException {
-        if (username == null || username.equals("")) {
-            return null;
-        }
-        Provisioning prov = Provisioning.getInstance();
-        try {
-            AuthToken at = ZimbraAuthToken.getAuthToken(authtoken);
-            if (at == null || at.isExpired() || !at.isAdmin() || at.getAdminAccountId() != null) {
-                return null;
-            }
-            Account admin = prov.get(Provisioning.AccountBy.id, at.getAccountId(), at);
-            if (admin == null || !admin.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE)) {
-                return null;
-            }
-        } catch (AuthTokenException e) {
-            return null;
-        }
-        return prov.get(Provisioning.AccountBy.name, username);
+        return userAcct;
     }
 }
