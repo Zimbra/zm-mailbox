@@ -44,6 +44,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
     public static final String SORT_PERCENT_USED = "percentUsed";
     public static final String SORT_TOTAL_USED = "totalUsed";
     public static final String SORT_QUOTA_LIMIT = "quotaLimit";
+    public static final String SORT_ACCOUNT = "account";
         
     
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -58,7 +59,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
         String sortBy = request.getAttribute(AdminConstants.A_SORT_BY, SORT_TOTAL_USED);
         final boolean sortAscending = request.getAttributeBool(AdminConstants.A_SORT_ASCENDING, false);
 
-        if (!(sortBy.equals(SORT_TOTAL_USED) || sortBy.equals(SORT_PERCENT_USED) || sortBy.equals(SORT_QUOTA_LIMIT)))
+        if (!(sortBy.equals(SORT_TOTAL_USED) || sortBy.equals(SORT_PERCENT_USED) || sortBy.equals(SORT_QUOTA_LIMIT) || sortBy.equals(SORT_ACCOUNT)))
             throw ServiceException.INVALID_REQUEST("sortBy must be percentUsed or totalUsed", null);
 
         // if we are a domain admin only, restrict to domain
@@ -179,6 +180,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
 
             final boolean sortByTotal = mSortBy.equals(SORT_TOTAL_USED);
             final boolean sortByQuota = mSortBy.equals(SORT_QUOTA_LIMIT);
+            final boolean sortByAccount = mSortBy.equals(SORT_ACCOUNT);
 
             Comparator<AccountQuota> comparator = new Comparator<AccountQuota>() {
                 public int compare(AccountQuota a, AccountQuota b) {
@@ -189,6 +191,8 @@ public class GetQuotaUsage extends AdminDocumentHandler {
                     } else if (sortByQuota) {
                         if (a.sortQuotaLimit > b.sortQuotaLimit) comp = 1;
                         else if (a.sortQuotaLimit < b.sortQuotaLimit) comp = -1;                            
+                    } else if(sortByAccount) {
+                    	comp=a.name.compareToIgnoreCase(b.name);
                     } else {
                         if (a.percentQuotaUsed > b.percentQuotaUsed) comp = 1;
                         else if (a.percentQuotaUsed < b.percentQuotaUsed) comp = -1;
