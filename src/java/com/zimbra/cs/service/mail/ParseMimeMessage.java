@@ -41,6 +41,7 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mime.BlobDataSource;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
@@ -851,7 +852,7 @@ public class ParseMimeMessage {
 
         Account acct = Provisioning.getInstance().get(Provisioning.AccountBy.name, "user1");
         HashMap<String, Object> context = new HashMap<String, Object>();
-        context.put(com.zimbra.soap.SoapServlet.ZIMBRA_AUTH_TOKEN, com.zimbra.cs.account.AuthToken.getAuthToken(acct).getEncoded());
+        context.put(com.zimbra.soap.SoapServlet.ZIMBRA_AUTH_TOKEN, AuthProvider.getAuthToken(acct).getEncoded());
         ZimbraSoapContext zsc = new ZimbraSoapContext(null, context, com.zimbra.common.soap.SoapProtocol.SoapJS);
         OperationContext octxt = new OperationContext(acct);
 

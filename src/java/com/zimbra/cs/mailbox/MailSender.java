@@ -48,6 +48,7 @@ import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.Mime.FixedMimeMessage;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.util.ItemId;
@@ -340,7 +341,7 @@ public class MailSender {
                 if (octxt != null)
                     authToken = octxt.getAuthToken(false);
                 if (authToken == null)
-                    authToken = AuthToken.getAuthToken(authuser, isAdminRequest);
+                    authToken = AuthProvider.getAuthToken(authuser, isAdminRequest);
                     
                 ZMailbox.Options options = new ZMailbox.Options(authToken.toZAuthToken(), uri);
                 options.setNoSession(true);

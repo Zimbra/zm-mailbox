@@ -43,6 +43,7 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.service.util.SpamHandler;
@@ -425,7 +426,7 @@ public class ItemActionHelper {
             authToken = mOpCtxt.getAuthToken();
         
         if (authToken == null)
-            authToken = AuthToken.getAuthToken(mAuthenticatedAccount);
+            authToken = AuthProvider.getAuthToken(mAuthenticatedAccount);
 
         return authToken;
     }

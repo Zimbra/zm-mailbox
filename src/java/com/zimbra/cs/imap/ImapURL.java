@@ -39,6 +39,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.common.service.ServiceException;
@@ -241,7 +242,7 @@ class ImapURL {
             // last option: handle off-server URLs
             if (content == null) {
                 Account authacct = Provisioning.getInstance().get(AccountBy.id, creds.getAccountId());
-                AuthToken auth = AuthToken.getAuthToken(authacct, System.currentTimeMillis() + 60 * 1000);
+                AuthToken auth = AuthProvider.getAuthToken(authacct, System.currentTimeMillis() + 60 * 1000);
                 HashMap<String, String> params = new HashMap<String, String>();
                 params.put(UserServlet.QP_IMAP_ID, Integer.toString(mUid));
                 content = UserServlet.getRemoteContent(auth, acct, mPath.asResolvedPath(), params);

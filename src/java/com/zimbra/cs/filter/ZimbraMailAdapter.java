@@ -68,6 +68,7 @@ import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMailbox;
@@ -576,7 +577,7 @@ public class ZimbraMailAdapter implements MailAdapter
             authToken = opCtxt.getAuthToken();
         }
         if (authToken == null) {
-            authToken = AuthToken.getAuthToken(mMailbox.getAccount());
+            authToken = AuthProvider.getAuthToken(mMailbox.getAccount());
         }
         
         // Get ZMailbox
