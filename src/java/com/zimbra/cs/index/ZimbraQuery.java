@@ -1542,6 +1542,9 @@ public final class ZimbraQuery {
          */
         public TextQuery(Mailbox mbox, Analyzer analyzer, int modifier, int qType, String text) throws ServiceException {
             super(modifier, qType);
+            
+            if (mbox == null)
+                throw new IllegalArgumentException("Must not pass a null mailbox into TextQuery constructor");
 
             mMailbox = mbox;
             mOredTokens = new LinkedList<String>();
