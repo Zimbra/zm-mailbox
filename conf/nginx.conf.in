@@ -43,7 +43,7 @@ memcache {
     # configure one or more memcached servers that will cache the route 
     # information for pop/imap users
     # 
-%%uncomment VAR:getAllMemcachedServers%%  servers %%getAllMemcachedServers%%;
+    %%uncomment VAR:getAllMemcachedServers%% %%explode servers VAR:getAllMemcachedServers;%%
 
     # The time that NGINX will wait for a cached result from a memcached
     # server, after which the request will be considered timed out,
