@@ -101,7 +101,7 @@ mail {
     # pop3/imap login
     # see http://wiki.codemongers.com/NginxMailCoreModule
     # 
-    auth_http %%getAllReverseProxyURLs%%;
+    %%explode auth_http VAR:getAllReverseProxyURLs;%%
 
 	pop3_capabilities        "TOP" "USER" "UIDL" "EXPIRE 31 USER";
 	imap_capabilities        "IMAP4rev1" "ID" "LITERAL+" "SASL-IR";
@@ -346,7 +346,7 @@ http {
     # http/https login
     # see http://wiki.codemongers.com/NginxMailCoreModule
     # 
-%%uncomment VAR:zimbraReverseProxyHttpEnabled%%    zmroutehandlers %%getAllReverseProxyURLs%%;
+%%uncomment VAR:zimbraReverseProxyHttpEnabled%% %%explode zmroutehandlers VAR:getAllReverseProxyURLs;%%
 %%uncomment VAR:zimbraReverseProxyHttpEnabled%%    zmroute_timeout 15s;
 
 %%uncomment VAR:zimbraReverseProxyHttpEnabled%% server {
