@@ -240,12 +240,14 @@ public class IMPersona extends ClassLogger {
     public void setIdleState(Session session, boolean isIdle, long idleStartTime) throws ServiceException {
         synchronized(getLock()) {
             IdleInfo info = mListeners.get(session);
-            if (info == null) 
-                throw ServiceException.INVALID_REQUEST("Could not find referenced session "+session, null);
-            
-            info.isIdle = isIdle;
-            info.idleStartTime = idleStartTime;
-            updateSynthesizedIdle();
+            if (info == null) {
+                ZimbraLog.im.debug("Skipping IMSetIdleRequest - couldn't find referenced session "+session);
+//                throw ServiceException.INVALID_REQUEST("Could not find referenced session "+session, null);
+            } else {
+                info.isIdle = isIdle;
+                info.idleStartTime = idleStartTime;
+                updateSynthesizedIdle();
+            }
         }
     }
     
