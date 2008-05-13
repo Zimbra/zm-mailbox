@@ -240,6 +240,7 @@ public abstract class CalendarUser {
         return prop;
     }
 
+    public List<ZParameter> getXParams() { return mXParams; }
     public Iterator<ZParameter> xparamsIterator() { return mXParams.iterator(); }
     public void addXParam(ZParameter param) {
         mXParams.add(param);
