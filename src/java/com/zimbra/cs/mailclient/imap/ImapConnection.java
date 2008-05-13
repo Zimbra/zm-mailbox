@@ -48,10 +48,11 @@ public final class ImapConnection extends MailConnection {
 
     private static final String TAG_FORMAT = "C%02d";
 
-    private static final String UID_COPY = "UID COPY";
-    private static final String UID_FETCH = "UID FETCH";
-    private static final String UID_STORE = "UID STORE";
-    private static final String UID_SEARCH = "UID SEARCH";
+    private static final String UID_COPY    = "UID COPY";
+    private static final String UID_FETCH   = "UID FETCH";
+    private static final String UID_STORE   = "UID STORE";
+    private static final String UID_SEARCH  = "UID SEARCH";
+    private static final String UID_EXPUNGE = "UID EXPUNGE";
 
     public ImapConnection(ImapConfig config) {
         super(config);
@@ -209,6 +210,10 @@ public final class ImapConnection extends MailConnection {
 
     public void expunge() throws IOException {
         newRequest(CAtom.EXPUNGE).sendCheckStatus();
+    }
+
+    public void uidExpunge(String seq) throws IOException {
+        newRequest(UID_EXPUNGE, seq).sendCheckStatus();
     }
 
     public synchronized void mclose() throws IOException {

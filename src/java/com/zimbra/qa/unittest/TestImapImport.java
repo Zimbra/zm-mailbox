@@ -294,7 +294,9 @@ extends TestCase {
                 compare(mbox1, child1, mbox2, child2);
             }
         }
-        assertEquals("Message count doesn't match", folder1.getMessageCount(), folder2.getMessageCount());
+        assertEquals("Message count doesn't match (folder1 = " + folder1 +
+                     ", folder2 = " + folder2 + ")",
+                     folder1.getMessageCount(), folder2.getMessageCount());
         
         // Compare folders as long as neither one is the user root
         if (!(folder1.getPath().equals("/") || folder2.getPath().equals("/"))) {
