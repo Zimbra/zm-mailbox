@@ -164,7 +164,7 @@ abstract class ImapSearch {
         }
 
         ImapMessageSet evaluate(ImapFolder i4folder) throws ImapParseException {
-            return i4folder.getSubsequence(mTag, mSubSequence, mIsUidSearch);
+            return i4folder.getSubsequence(mTag, mSubSequence, mIsUidSearch, true);
         }
     }
 
