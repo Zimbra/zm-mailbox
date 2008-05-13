@@ -636,8 +636,7 @@ abstract class ImapRequest {
             else if (key.equals("UNDRAFT"))     child = new NotOperation(new FlagSearch("\\Draft"));
             else if (key.equals("UNFLAGGED"))   child = new NotOperation(new FlagSearch("\\Flagged"));
             else if (key.equals("UNSEEN"))      child = new NotOperation(new FlagSearch("\\Seen"));
-            // XXX: BCC always returns no results because we don't separately index that field
-            else if (key.equals("BCC"))         { skipSpace(); child = new NoneSearch(); readAstring(charset); }
+            else if (key.equals("BCC"))         { skipSpace(); child = new HeaderSearch(HeaderSearch.Header.BCC, readAstring(charset)); }
             else if (key.equals("BEFORE"))      { skipSpace(); child = new DateSearch(DateSearch.Relation.before, readDate()); }
             else if (key.equals("BODY"))        { skipSpace(); child = new ContentSearch(readAstring(charset)); }
             else if (key.equals("CC"))          { skipSpace(); child = new HeaderSearch(HeaderSearch.Header.CC, readAstring(charset)); }

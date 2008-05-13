@@ -295,11 +295,12 @@ abstract class ImapSearch {
             static final Header FROM = new Header("from", "from");
             static final Header TO = new Header("to", "to");
             static final Header CC = new Header("cc", "cc");
+            static final Header BCC = new Header("cc", "#bcc");
             static final Header MSGID = new Header("message-id", "msgid");
 
             private static final Header[] SPECIAL_HEADERS = new Header[] { SUBJECT, FROM, TO, CC, MSGID };
 
-            final String mField, mKey;
+            private final String mField, mKey;
             private Header(String fieldName, String searchKey) {
                 mField = fieldName;  mKey = searchKey;
             }
