@@ -23,6 +23,7 @@ package com.zimbra.cs.mailbox;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -655,7 +656,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             flags = flags | Flag.BITMASK_UNREAD;
         return flags;
     }
-    
+
     /**
      * Convienence function.  Equvialent to ((getFlagBitmask() & FLAG)!=0)
      * 
@@ -663,7 +664,7 @@ public abstract class MailItem implements Comparable<MailItem> {
      * @return
      */
     boolean isFlagSet(int mask) {
-        return ((getFlagBitmask() & mask)!=0); 
+        return ((getFlagBitmask() & mask) != 0); 
     }
 
     /** Returns the "internal" flag bitmask, which does not include
@@ -691,14 +692,14 @@ public abstract class MailItem implements Comparable<MailItem> {
     public String getTagString() {
         return Tag.bitmaskToTags(mData.tags);
     }
+    
+    public List<Tag> getTagList() throws ServiceException {
+        return Tag.bitmaskToTagList(mMailbox, mData.tags);
+    }
 
     public boolean isTagged(Tag tag) {
         long bitmask = (tag instanceof Flag ? mData.flags : mData.tags);
         return ((bitmask & tag.getBitmask()) != 0);
-    }
-    
-    public List<Tag> getTagList() throws ServiceException {
-        return Tag.bitmaskToTagList(mMailbox, mData.tags);
     }
 
     private boolean isTagged(int tagId) {
@@ -1423,7 +1424,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             folder.updateSize(0, mData.size);
             mMailbox.updateSize(mData.size);
 
-            ZimbraLog.mailop.debug("Saving revision %d for %s", mVersion, getMailopContext(this));
+            ZimbraLog.mailop.debug("saving revision %d for %s", mVersion, getMailopContext(this));
             DbMailItem.snapshotRevision(this, mVersion);
             if (!isTagged(mMailbox.mVersionedFlag))
                 tagChanged(mMailbox.mVersionedFlag, true);
@@ -1576,17 +1577,42 @@ public abstract class MailItem implements Comparable<MailItem> {
         DbMailItem.alterTag(this, tag, newValue);
     }
 
+    final void alterSystemFlag(Flag flag, boolean newValue) throws ServiceException {
+        if (flag == null)
+            throw ServiceException.FAILURE("no tag supplied when trying to tag item " + mId, null);
+        if ((flag.getBitmask() & Flag.FLAG_SYSTEM) == 0)
+            throw ServiceException.FAILURE("requested to alter a non-system tag", null);
+        if (newValue && !flag.canTag(this))
+            throw MailServiceException.CANNOT_TAG(flag, this);
+        if (newValue == isTagged(flag))
+            return;
+
+        // change our cached tags
+        tagChanged(flag, newValue);
+
+        // tell our parent about the tag change (note: must precede DbMailItem.alterTag)
+        MailItem parent = getCachedParent();
+        if (parent != null)
+            parent.inheritedTagChanged(flag, newValue);
+
+        // alter our tags in the DB
+        DbMailItem.alterTag(flag, Arrays.asList(getId()), newValue);
+    }
+
     /** Updates the object's in-memory state to reflect a {@link Tag} change.
      *  Does not update the database.
      * 
      * @param tag  The tag that was added or rmeoved from this object.
      * @param add  <tt>true</tt> if the item was tagged,
-     *             <tt>false</tt> if the item was untagged.*/
+     *             <tt>false</tt> if the item was untagged. */
     protected void tagChanged(Tag tag, boolean add) throws ServiceException {
-        markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
-        mData.metadataChanged(mMailbox);
+        boolean isFlag = tag instanceof Flag;
+        markItemModified(isFlag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
+        // changing a system flag is not a syncable event
+        if (isFlag && (tag.getBitmask() & Flag.FLAG_SYSTEM) != 0)
+            mData.metadataChanged(mMailbox);
 
-        if (tag instanceof Flag) {
+        if (isFlag) {
             if (add)  mData.flags |= tag.getBitmask();
             else      mData.flags &= ~tag.getBitmask();
         } else {
@@ -1734,16 +1760,11 @@ public abstract class MailItem implements Comparable<MailItem> {
                 indexId = folder.inSpam() ? -1 : id;
         }
         boolean shared = indexId > 0 && indexId == mData.indexId;
-        
-        // FIXME: can't use MailItem.alterTag() directly because it's a change to a system tag
+
         if (shared && !isTagged(mMailbox.mCopiedFlag)) {
-            if (ZimbraLog.mailop.isDebugEnabled()) {
-                ZimbraLog.mailop.debug("Setting copied flag for %s.", getMailopContext(this));
-            }
-            DbMailItem.alterTag(this, mMailbox.mCopiedFlag, true);
-            tagChanged(mMailbox.mCopiedFlag, true);
-            if (mData.parentId > 0)
-                getParent().inheritedTagChanged(mMailbox.mCopiedFlag, true);
+            alterSystemFlag(mMailbox.mCopiedFlag, true);
+            if (ZimbraLog.mailop.isDebugEnabled())
+                ZimbraLog.mailop.debug("setting copied flag for %s", getMailopContext(this));
         }
         
         // if the copy or original is in Spam, put the copy in its own conversation
@@ -1765,7 +1786,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
         
         ZimbraLog.mailop.info("Copying %s: copyId=%d, folderId=%d, folderName=%s, parentId=%d.",
-            getMailopContext(this), id, folder.getId(), folder.getName(), data.parentId);
+                              getMailopContext(this), id, folder.getId(), folder.getName(), data.parentId);
         DbMailItem.copy(this, id, folder, data.indexId, data.parentId, data.volumeId, data.metadata);
         
         MailItem copy = constructItem(mMailbox, data);
