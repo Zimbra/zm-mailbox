@@ -386,7 +386,11 @@ public abstract class LmtpHandler extends ProtocolHandler {
                 numDelivered++;
     			sendResponse("250 2.1.5 OK");
     		} else if (status == LmtpStatus.OVERQUOTA) {
-                sendResponse("452 4.2.2 Over quota");
+                if (permanentFailureWhenOverQuota()) {
+                    sendResponse("552 5.2.2 Over quota");
+                } else {
+                    sendResponse("452 4.2.2 Over quota");
+                }
             } else if (status == LmtpStatus.TRYAGAIN) {
                 sendResponse("451 4.0.0 Temporary message delivery failure try again");
             } else {
@@ -398,6 +402,18 @@ public abstract class LmtpHandler extends ProtocolHandler {
         ZimbraPerf.COUNTER_LMTP_DLVD_BYTES.increment(numDelivered * in.getMessageSize());
         
     	reset();
+    }
+    
+    private boolean permanentFailureWhenOverQuota() {
+        boolean isPermanent = false;
+        try {
+            isPermanent = Provisioning.getInstance().getLocalServer().getBooleanAttr(
+                Provisioning.A_zimbraLmtpPermanentFailureWhenOverQuota, false);
+        } catch (ServiceException e) {
+            ZimbraLog.lmtp.warn("Unable to determine value of %s.  Defaulting to false.",
+                Provisioning.A_zimbraLmtpPermanentFailureWhenOverQuota);
+        }
+        return isPermanent;
     }
 
     /*
