@@ -33,6 +33,12 @@ public final class Pop3Connection extends MailConnection {
 
     private static final Logger LOGGER = Logger.getLogger(Pop3Connection.class);
     
+    private static final String PASS = "PASS";
+    private static final String USER = "USER";
+    private static final String AUTH = "AUTH";
+    private static final String STLR = "STLR";
+    private static final String QUIT = "QUIT";
+
     public Pop3Connection(Pop3Config config) {
         super(config);
     }
@@ -60,13 +66,13 @@ public final class Pop3Connection extends MailConnection {
 
     public void logout() throws IOException {
         setState(State.LOGOUT);
-        sendCommandCheckStatus("QUIT", null);
+        sendCommandCheckStatus(QUIT, null);
         setState(State.CLOSED);
     }
 
     protected void sendLogin(String user, String pass) throws IOException {
-        sendCommandCheckStatus("USER", user);
-        sendCommandCheckStatus("PASS", pass);
+        sendCommandCheckStatus(USER, user);
+        sendCommandCheckStatus(PASS, pass);
     }
     
     protected void sendAuthenticate(boolean ir) throws IOException {
@@ -75,17 +81,24 @@ public final class Pop3Connection extends MailConnection {
             byte[] response = authenticator.getInitialResponse();
             sb.append(' ').append(encodeBase64(response));
         }
-        sendCommandCheckStatus("AUTH", sb.toString());
+        sendCommandCheckStatus(AUTH, sb.toString());
     }
 
     protected void sendStartTls() throws IOException {
-        sendCommandCheckStatus("STLR", null);
+        sendCommandCheckStatus(STLR, null);
     }
 
     public Pop3Response sendCommand(String cmd, String args) throws IOException {
-        String line = cmd;
-        if (args != null) line += " " + args;
-        mailOut.writeLine(line);
+        mailOut.write(cmd);
+        if (args != null) {
+            mailOut.write(' ');
+            if (cmd.equalsIgnoreCase(PASS)) {
+                writeUntraced(args);
+            } else {
+                mailOut.write(args);
+            }
+        }
+        mailOut.newLine();
         mailOut.flush();
         while (true) {
             response = Pop3Response.read(cmd, mailIn);
@@ -93,6 +106,20 @@ public final class Pop3Connection extends MailConnection {
             processContinuation(response.getMessage());
         }
         return response;
+    }
+
+    private void writeUntraced(String s) throws IOException {
+        if (traceOut != null && traceOut.isEnabled()) {
+            traceOut.setEnabled(false);
+            try {
+                traceOut.getTraceStream().print("<password>");
+                mailOut.write(s);
+            } finally {
+                traceOut.setEnabled(true);
+            }
+        } else {
+            mailOut.write(s);
+        }
     }
 
     public Pop3Response sendCommandCheckStatus(String cmd, String args)

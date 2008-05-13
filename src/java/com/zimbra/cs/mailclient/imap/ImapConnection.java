@@ -21,6 +21,7 @@ import com.zimbra.cs.mailclient.MailException;
 import com.zimbra.cs.mailclient.MailInputStream;
 import com.zimbra.cs.mailclient.MailOutputStream;
 import com.zimbra.cs.mailclient.CommandFailedException;
+import com.zimbra.cs.mailclient.util.TraceOutputStream;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -382,6 +383,10 @@ public final class ImapConnection extends MailConnection {
         return mailbox;
     }
 
+    public TraceOutputStream getTraceOutputStream() {
+        return traceOut;
+    }
+
     public boolean hasCapability(String cap) {
         return capabilities != null && capabilities.hasCapability(cap);
     }
@@ -416,7 +421,6 @@ public final class ImapConnection extends MailConnection {
             }
             processContinuation(res.getResponseText().getText());
         }
-
     }
 
     // Called from ImapRequest

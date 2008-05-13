@@ -73,6 +73,7 @@ public abstract class MailConnection {
         mailOut = newMailOutputStream(os);
     }
 
+    
     protected abstract void processGreeting() throws IOException;
     protected abstract void sendLogin(String user, String pass) throws IOException;
     protected abstract void sendAuthenticate(boolean ir) throws IOException;
