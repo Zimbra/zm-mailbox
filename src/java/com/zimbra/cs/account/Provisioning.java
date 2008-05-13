@@ -1092,6 +1092,8 @@ public abstract class Provisioning {
     public static final String A_zimbraLmtpBindOnStartup = "zimbraLmtpBindOnStartup";
     public static final String A_zimbraLmtpBindAddress = "zimbraLmtpBindAddress";
     public static final String A_zimbraLmtpNumThreads = "zimbraLmtpNumThreads";
+    public static final String A_zimbraLmtpPermanentFailureWhenOverQuota = "zimbraLmtpPermanentFailureWhenOverQuota";
+    
     public static final String A_zimbraMailDiskStreamingThreshold = "zimbraMailDiskStreamingThreshold";
 
     public static final String A_zimbraSSLExcludeCipherSuites = "zimbraSSLExcludeCipherSuites";
