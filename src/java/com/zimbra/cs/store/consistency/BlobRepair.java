@@ -18,8 +18,10 @@ package com.zimbra.cs.store.consistency;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.nio.channels.FileChannel;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -32,13 +34,6 @@ public class BlobRepair implements Runnable {
 
     private final static String JDBC_URL =
             "jdbc:mysql://localhost:7306/mboxgroup";
-    private final static String WRONG_VOLUME_UPDATE_REV =
-            "UPDATE revision SET volume_id = ?" +
-            " WHERE mailbox_id = ? AND item_id = ?" +
-            " AND version = ? AND volume_id = ?";
-    private final static String WRONG_VOLUME_UPDATE_MB =
-            "UPDATE mail_item SET volume_id = ?" +
-            " WHERE mailbox_id = ? AND id = ? AND volume_id = ?";
     private final static String DELETE_MISSING_BLOB_MB =
             "DELETE FROM mail_item WHERE mailbox_id = ? AND id = ?";
     private final static String DELETE_MISSING_BLOB_REV =
@@ -113,20 +108,20 @@ public class BlobRepair implements Runnable {
             break;
         case WRONG_VOLUME:
             if (isRev) {
-                updatedRows = e.update(WRONG_VOLUME_UPDATE_REV, new Object[] {
-                    fault.volumeId,
-                    fault.item.mailboxId,
-                    fault.item.id,
-                    fault.faultRevision.version,
-                    fault.faultRevision.volumeId
-                });
+                File oldLoc = volumes.get(
+                        fault.item.volumeId).getItemRevisionFile(
+                                fault.item, fault.faultRevision);
+                File fixLoc = volumes.get(fault.volumeId).getItemRevisionFile(
+                        fault.item, fault.faultRevision);
+                if (moveFile(oldLoc, fixLoc))
+                    updatedRows = 1;
             } else {
-                updatedRows = e.update(WRONG_VOLUME_UPDATE_MB, new Object[] {
-                    fault.volumeId,
-                    fault.item.mailboxId,
-                    fault.item.id,
-                    fault.item.volumeId
-                });
+                File oldLoc = volumes.get(fault.item.volumeId).getItemFile(
+                        fault.item);
+                File fixLoc = volumes.get(fault.volumeId).getItemFile(
+                        fault.item);
+                if (moveFile(oldLoc, fixLoc))
+                    updatedRows = 1;
             }
             break;
         case WRONG_SIZE:
@@ -134,5 +129,28 @@ public class BlobRepair implements Runnable {
             break;
         }
         return updatedRows > 0;
+    }
+    
+    private static boolean moveFile(File src, File dest) {
+        boolean success = false;
+        try {
+            FileChannel in = null;
+            FileChannel out = null;
+            try {
+                in = new FileInputStream(src).getChannel();
+                out = new FileOutputStream(dest).getChannel();
+                in.transferTo(0, in.size(), out);
+            }
+            finally {
+                if (in  != null) in.close();
+                if (out != null) out.close();
+            }
+            src.delete();
+            success = true;
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        return success;
     }
 }

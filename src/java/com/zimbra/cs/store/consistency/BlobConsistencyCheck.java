@@ -53,10 +53,10 @@ public class BlobConsistencyCheck {
     final static Object[][] OPTION_LIST = {
         { "p", "password", "zimbra user mysql password",    true,  false },
         { "h", "help",     "this help message",             false, false },
-        { "r", "repair",   "repair/delete missing blobs",   false, false },
+        //{ "r", "repair",   "repair/delete missing blobs",   false, false },
         { "f", "file",     "save/load report to/from file", true,  false },
         { "l", "load",     "display report from file",      true,  false },
-        { "c", "force",    "required when repairing",       false, false },
+        //{ "c", "force",    "required when repairing",       false, false },
     };
 
     public static void main(String[] args) throws Exception {
