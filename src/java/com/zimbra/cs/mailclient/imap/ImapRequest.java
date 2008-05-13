@@ -18,6 +18,7 @@ package com.zimbra.cs.mailclient.imap;
 
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.MailException;
+import com.zimbra.cs.mailclient.util.TraceOutputStream;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -98,12 +99,35 @@ public class ImapRequest {
         out.write(cmd.getName());
         if (params != null && params.size() > 0) {
             out.write(' ');
-            writeList(out, params);
+            if (cmd.getCAtom() == CAtom.LOGIN && params.size() > 1) {
+                writeData(out, params.get(0));
+                out.write(' ');
+                writeUntracedList(
+                    out, params.subList(1, params.size()), "<password>");
+            } else {
+                writeList(out, params);
+            }
         }
         out.newLine();
         out.flush();
     }
 
+    private void writeUntracedList(ImapOutputStream out, List<Object> data,
+                                   String msg) throws IOException {
+        TraceOutputStream os = connection.getTraceOutputStream();
+        if (os == null || !os.isEnabled()) {
+            writeList(out, data);
+            return;
+        }
+        os.setEnabled(false);
+        try {
+            os.getTraceStream().print(msg);
+            writeList(out, data);
+        } finally {
+            os.setEnabled(true);
+        }
+    }
+    
     private void writeData(ImapOutputStream out, Object data)
         throws IOException {
         if (data instanceof String) {

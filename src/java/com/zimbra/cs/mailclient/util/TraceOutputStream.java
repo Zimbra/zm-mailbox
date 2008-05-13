@@ -42,6 +42,14 @@ public class TraceOutputStream extends OutputStream {
         this.enabled = enabled;
     }
 
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public PrintStream getTraceStream() {
+        return traceOut;
+    }
+    
     @Override
     public void write(int b) throws IOException {
         out.write(b);
