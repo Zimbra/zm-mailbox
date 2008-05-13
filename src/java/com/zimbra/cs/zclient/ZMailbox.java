@@ -3846,6 +3846,7 @@ public class ZMailbox {
 		ZActionResult result = doAction(voiceAction("move", phone, id, folderId));
 		ZModifyEvent event = new ZModifyVoiceMailItemFolderEvent(Integer.toString(folderId));
 		handleEvent(event);
+		refreshVoiceMailInbox(phone);
 		return result;
 	}
 
@@ -3858,18 +3859,51 @@ public class ZMailbox {
 		return result;
 	}
 
+	/** Makes a server call to get updated message/unheard counts for the folders */ 
+	private void refreshVoiceMailInbox(String phone) throws ServiceException {
+		ZPhoneAccount account = getPhoneAccount(phone);
+		if (account == null) {
+			return;
+		}
+
+		Element req = newRequestElement(VoiceConstants.GET_VOICE_FOLDER_REQUEST);
+		setVoiceStorePrincipal(req);
+		Element phoneEl = req.addElement(VoiceConstants.E_PHONE);
+		phoneEl.addAttribute(MailConstants.A_NAME, phone);
+		Element response = invoke(req);
+
+		Element phoneResponse = response.getElement(VoiceConstants.E_PHONE);
+		if (phoneResponse != null) {
+			ZFolder rootFolder = account.getRootFolder();
+			Element rootEl = phoneResponse.getElement(MailConstants.E_FOLDER);
+			for (Element childEl : rootEl.listElements(MailConstants.E_FOLDER)) {
+				String name = childEl.getAttribute(MailConstants.A_NAME);
+				ZFolder childFolder = rootFolder.getSubFolderByPath(name);
+				if (childFolder != null) {
+					childFolder.setUnreadCount((int) childEl.getAttributeLong(MailConstants.A_UNREAD, 0));
+					childFolder.setMessageCount((int) childEl.getAttributeLong(MailConstants.A_NUM, 0));
+				}
+			}
+		}
+	}
+
 	public ZActionResult markVoiceMailHeard(String phone, String idList, boolean heard) throws ServiceException {
         String op = heard ? "read" : "!read";
 		ZActionResult result = doAction(voiceAction(op, phone, idList, 0));
 		int changeCount = 0;
+		boolean needRefresh = false;
 		for (String id : sCOMMA.split(idList)) {
 			ZModifyVoiceMailItemEvent event = new ZModifyVoiceMailItemEvent(id, heard);
 			handleEvent(event);
 			if (event.getMadeChange()) {
 				changeCount++;
+			} else {
+				needRefresh = true;
 			}
 		}
-		if (changeCount > 0) {
+		if (needRefresh) {
+			refreshVoiceMailInbox(phone);
+		} else if (changeCount > 0) {
 			ZPhoneAccount account = getPhoneAccount(phone);
 			ZFolder inbox = account.getRootFolder().getSubFolderByPath(VoiceConstants.FNAME_VOICEMAILINBOX);
 			int diff = heard ? -changeCount : changeCount;

@@ -376,6 +376,14 @@ public class ZFolder implements ZItem, Comparable {
         return mMessageCount;
     }
 
+	/**
+	 * Sets message count.
+	 * @param count message count.
+	 */
+    public void setMessageCount(int count) {
+        mMessageCount = count;
+    }
+
     /** Returns the "hint" as to which view to use to display the folder's
      *  contents.
      */
