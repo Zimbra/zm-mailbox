@@ -21,6 +21,8 @@ import com.zimbra.cs.mailclient.util.Ascii;
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.List;
+import java.util.Iterator;
 
 /**
  * Base class for basic IMAP data types.
@@ -44,6 +46,19 @@ public abstract class ImapData {
         return null;
     }
 
+    public static String asSequenceSet(List<? extends Number> ids) {
+        StringBuilder sb = new StringBuilder();
+        if (ids.isEmpty()) {
+            return null;
+        }
+        Iterator<? extends Number> it = ids.iterator();
+        sb.append(it.next().longValue());
+        while (it.hasNext()) {
+            sb.append(',').append(it.next().longValue());
+        }
+        return sb.toString();
+    }
+    
     private static Type getType(String s) {
         if (s.length() == 0) {
             return Type.QUOTED; // Empty string

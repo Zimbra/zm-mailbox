@@ -26,6 +26,7 @@ import com.zimbra.cs.mailclient.imap.Mailbox;
 import com.zimbra.cs.mailclient.imap.ImapData;
 import com.zimbra.cs.mailclient.imap.Literal;
 import com.zimbra.cs.mailclient.imap.ListData;
+import com.zimbra.cs.mailclient.imap.ImapCapabilities;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
@@ -46,6 +47,8 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.Date;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 class ImapFolderSync {
     private final ImapSync imapSync;
@@ -81,31 +84,33 @@ class ImapFolderSync {
     // Synchronizes existing remote IMAP folder -> local folder
     public ImapFolder syncFolder(ListData ld, boolean fullSync)
         throws ServiceException, IOException {
+        boolean syncMsgs = true;
         if (tracker != null) {
-            checkTrackedFolder(ld);
+            syncMsgs = checkTrackedFolder(ld);
         } else {
             createLocalFolder(ld);
         }
-        if (isSelectable()) {
+        if (syncMsgs && isSelectable()) {
             selectImapFolder(ld.getMailbox());
             syncMessages(fullSync);
         }
         return tracker;
     }
 
-    // Synchronize local folder -> remote IMAP folder
+    // Synchronize local folder with remote IMAP folder
     public void syncFolder(Folder folder, boolean fullSync)
         throws ServiceException, IOException {
         this.folder = folder;
         if (tracker != null) {
-            // IMAP folder was deleted, delete local folder
-            info("Remote IMAP folder '%s' deleted, deleting local folder",
-                 tracker.getRemotePath());
+            // Remote IMAP folder deleted, empty local folder
+            String remotePath = tracker.getRemotePath();
+            info("Remote IMAP folder '%s' was deleted, deleting local folder",
+                 remotePath);
             mailbox.delete(null, folder.getId(), folder.getType());
             ds.deleteImapFolder(tracker);
             return;
         }
-        // New local folder, create IMAP folder
+        // Create and track new remote IMAP folder
         String remotePath = imapSync.getRemotePath(folder);
         createImapFolder(remotePath);
         Mailbox mb = selectImapFolder(remotePath);
@@ -120,6 +125,7 @@ class ImapFolderSync {
             connection.create(name);
         } catch (CommandFailedException e) {
             // Create failed, so check if folder already exists
+            info("Attemping to create IMAP folder '%s' which already exists", name);
             if (connection.list("", name).isEmpty()) {
                 throw e;
             }
@@ -182,7 +188,7 @@ class ImapFolderSync {
         return mb.getExists() > 0 && (uidNext <= 0 || lastUid + 1 < uidNext);
     }
 
-    private void checkTrackedFolder(ListData ld)
+    private boolean checkTrackedFolder(ListData ld)
         throws ServiceException, IOException {
         // Check if folder has been deleted locally
         try {
@@ -192,16 +198,17 @@ class ImapFolderSync {
                      " '%s'", tracker.getLocalPath(), tracker.getRemotePath());
             connection.delete(tracker.getRemotePath());
             imapSync.getDataSource().deleteImapFolder(tracker);
-            return;
+            return false;
         }
         // Check if folder exists but was renamed locally
         if (!folder.getPath().equals(tracker.getLocalPath())) {
-            renameFolder(ld);
+            return renameFolder(ld);
         }
+        return true;
     }
 
-
-    private void renameFolder(ListData ld) throws ServiceException, IOException {
+    private boolean renameFolder(ListData ld)
+        throws ServiceException, IOException {
         String localPath = folder.getPath();
         String remotePath = tracker.getRemotePath();
         String newRemotePath = imapSync.getRemotePath(folder);
@@ -214,16 +221,16 @@ class ImapFolderSync {
             tracker.setLocalPath(localPath);
             tracker.setRemotePath(newRemotePath);
             ds.updateImapFolder(tracker);
-            return;
+            return true;
         }
         // Folder was moved outside of the data source root, or
         // folder should no longer be synchronized
         info("Folder was renamed (originally '%s') and moved outside the " +
              "data source root", tracker.getLocalPath());
         ds.deleteImapFolder(tracker);
-        tracker = null;
         // Create new local folder for remote path
         createLocalFolder(ld);
+        return true;
     }
 
     Mailbox selectImapFolder(String path) throws IOException {
@@ -320,6 +327,7 @@ class ImapFolderSync {
         debug("Syncing message flags");
         List<MessageData> mds =
             ImapUtil.fetch(connection, "1:" + lastUid, "FLAGS");
+        List<Long> deletedUids = new ArrayList<Long>();
         for (MessageData md : mds) {
             Long uid = md.getUid();
             ImapMessage trackedMsg = trackedMsgs.getByUid(uid);
@@ -338,9 +346,44 @@ class ImapFolderSync {
                     // Message was deleted locally
                 }
             }
-            debug("Deleting IMAP message with uid %d", uid);
-            connection.uidStore(uid.toString(), "+FLAGS.SILENT", "(\\Deleted)");
-            DbImapMessage.deleteImapMessage(mailbox, msgId, tracker.getItemId());
+            deletedUids.add(uid);
+        }
+        if (!deletedUids.isEmpty()) {
+            deleteMsgs(deletedUids);
+        }
+    }
+
+    private void deleteMsgs(List<Long> uids)
+        throws IOException, ServiceException {
+        int size = uids.size();
+        debug("Deleting and expunging %d IMAP messages", size);
+        boolean uidPlus = connection.hasCapability(ImapCapabilities.UIDPLUS);
+        for (int i = 0; i < size; i += 16) {
+            deleteMsgs(uids.subList(i, Math.min(size - i, 16)), uidPlus);
+        }
+        // If UIDPLUS not supported, then all we can do is expunge all messages
+        // which unfortunately may end up removing some messages we ourselves
+        // did not flag for deletion.
+        if (!uidPlus) {
+            connection.expunge();
+        }
+    }
+
+    private void deleteMsgs(List<Long> uids, boolean uidPlus)
+        throws IOException, ServiceException {
+        String seq = ImapData.asSequenceSet(uids);
+        debug("Deleting IMAP messages for sequence set: " + seq);
+        // Mark remote messages for deletion
+        connection.uidStore(seq, "+FLAGS.SILENT", "(\\Deleted)");
+        // If UIDPLUS supported, then expunge deleted messages
+        if (uidPlus) {
+            connection.uidExpunge(seq);
+        }
+        // Finally, remove local messages
+        for (long uid : uids) {
+            ImapMessage msg = trackedMsgs.getByUid(uid);
+            DbImapMessage.deleteImapMessage(
+                mailbox, msg.getItemId(), tracker.getItemId());
             stats.deletedRemotely++;
         }
     }

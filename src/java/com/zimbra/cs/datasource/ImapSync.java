@@ -28,7 +28,8 @@ public class ImapSync extends AbstractMailItemImport {
 
     private static final Log LOG = ZimbraLog.datasource;
 
-    private static final boolean DEBUG = true; 
+    private static final boolean DEBUG = true;
+    private static final boolean FAIL_ON_SYNC_ERROR = true;
 
     public ImapSync(DataSource ds) throws ServiceException {
         super(ds);
@@ -111,10 +112,14 @@ public class ImapSync extends AbstractMailItemImport {
             }
             try {
                 tracker = new ImapFolderSync(this, tracker).syncFolder(ld, fs);
+                LOG.info("Tracker path = %s, id = %d", tracker.getRemotePath(), tracker.getItemId()); // DEBUG
                 excludedIds.add(tracker.getItemId());
             } catch (Exception e) {
                 LOG.error("Skipping synchronization of IMAP folder '%s' " +
                           "due to error", path, e);
+                if (FAIL_ON_SYNC_ERROR) {
+                    return;
+                }
             }
         }
         // Synchronize local folders -> IMAP folders
@@ -134,7 +139,11 @@ public class ImapSync extends AbstractMailItemImport {
                     new ImapFolderSync(this, tracker).syncFolder(folder, fs);
                 } catch (Exception e) {
                     LOG.error("Skipping synchronization of local folder " +
-                              "'%s' due to error", folder.getName(), e);
+                              "'%s' (id = %d) due to error", folder.getName(),
+                              folder.getId(), e);
+                    if (FAIL_ON_SYNC_ERROR) {
+                        return;
+                    }
                 }
             }
         }
