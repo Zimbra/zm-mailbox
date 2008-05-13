@@ -32,9 +32,11 @@ import java.io.InputStream;
 import java.nio.channels.FileChannel;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -257,7 +259,62 @@ public class FileUtil {
         }
         return filesCopied;
     }
+    
+    /**
+     * Returns a <tt>List</tt> of files in the given directory and all of
+     * its subdirectories.  Files are returned in depth-first order.
+     * 
+     * @return the list of files, or an empty <tt>List</tt> if <tt>dir</tt>
+     * is empty, does not exist, or is not a directory.
+     */
+    public static List<File> listFilesRecursively(File dir) {
+        List<File> files = new ArrayList<File>();
+        addFilesRecursively(dir, files);
+        return files;
+    }
+    
+    private static void addFilesRecursively(File dir, List<File> files) {
+        File[] myFiles = dir.listFiles();
+        if (myFiles == null || myFiles.length == 0) {
+            return;
+        }
+        for (File file : myFiles) {
+            if (file.isDirectory()) {
+                addFilesRecursively(file, files);
+            } else {
+                files.add(file);
+            }
+        }
+    }
 
+    /**
+     * Returns a <tt>List</tt> that contains the given directory
+     * and all of its subdirectories.  Directories are returned in depth-first
+     * order.
+     * 
+     * @return the list of files, or an empty <tt>List</tt> if <tt>dir</tt>
+     * is empty, does not exist, or is not a directory.
+     */
+    public static List<File> listDirsRecursively(File dir) {
+        List<File> dirs = new ArrayList<File>();
+        if (dir.exists()) {
+            addDirsRecursively(dir, dirs);
+        }
+        return dirs;
+    }
+    
+    private static void addDirsRecursively(File dir, List<File> dirs) {
+        File[] myFiles = dir.listFiles();
+        if (myFiles != null) {
+            for (File file : myFiles) {
+                if (file.isDirectory()) {
+                    addDirsRecursively(file, dirs);
+                }
+            }
+        }
+        dirs.add(dir);
+    }
+    
     public static void ensureDirExists(File dir) throws IOException {
         if (!mkdirs(dir))
             throw new IOException("Unable to create directory " + dir.getPath());
