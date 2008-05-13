@@ -731,6 +731,9 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
     }
 
     ImapMessageSet getSubsequence(String tag, String subseqStr, boolean byUID) throws ImapParseException {
+        return getSubsequence(tag, subseqStr, byUID, false);
+    }
+    ImapMessageSet getSubsequence(String tag, String subseqStr, boolean byUID, boolean isSEARCH) throws ImapParseException {
         ImapMessageSet result = new ImapMessageSet();
         if (subseqStr == null || subseqStr.trim().equals(""))
             return result;
@@ -739,7 +742,7 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
 
         for (Pair<Integer, Integer> range : normalizeSubsequence(subseqStr, byUID)) {
             int lower = range.getFirst(), upper = range.getSecond();
-            if (!byUID && (lower < 1 || upper > getSize())) {
+            if (!byUID && (lower < 1 || upper > getSize()) && !isSEARCH) {
                 // 9: "The server should respond with a tagged BAD response to a command that uses a message
                 //     sequence number greater than the number of messages in the selected mailbox.  This
                 //     includes "*" if the selected mailbox is empty."
@@ -750,6 +753,7 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
             } else {
                 // range of messages -- get them and add them (may be null)
                 if (!byUID) {
+                    upper = Math.max(getSize(), upper);
                     for (int seq = Math.max(0, lower); seq <= upper; seq++)
                         result.add(getBySequence(seq));
                 } else {
