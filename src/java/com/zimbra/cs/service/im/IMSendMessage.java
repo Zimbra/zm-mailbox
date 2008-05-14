@@ -34,6 +34,8 @@ import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class IMSendMessage extends IMDocumentHandler {
+    
+    public static final String XHTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -57,13 +59,30 @@ public class IMSendMessage extends IMDocumentHandler {
         Element bodyElt = msgElt.getOptionalElement(IMConstants.E_BODY);
         if (bodyElt != null) {
             try {
-                String s = bodyElt.getText();
-                org.dom4j.Element root = org.dom4j.DocumentHelper.createElement("root");
-                org.dom4j.Element parsed = org.dom4j.DocumentHelper.parseText(s).getRootElement();
-                org.dom4j.Element xhtmlBody = root.addElement("body", "http://www.w3.org/1999/xhtml");
-                xhtmlBody.add(parsed);
-                xhtmlBody.detach();
-                bodyPart = new TextPart(xhtmlBody);
+                Element xhtmlElt = bodyElt.getOptionalElement(IMConstants.E_HTML);
+                Element plainElt = bodyElt.getOptionalElement(IMConstants.E_TEXT);
+                
+                if (xhtmlElt != null || plainElt != null) {
+                    // NEW style API
+                    if (plainElt == null)
+                        throw ServiceException.INVALID_REQUEST("IMSendMessage: plaintext <text> element is required even if <xhtml> is sent", null); 
+                    String plainText = plainElt.getText();
+                    String xhtmlText = null;
+                    if (xhtmlElt != null) {
+                        xhtmlText = xhtmlElt.getText();
+                    }
+                    org.dom4j.Element parsed = org.dom4j.DocumentHelper.parseText("<body xmlns=\""+XHTML_NAMESPACE+"\">"+xhtmlText+"</body>").getRootElement();
+                    org.dom4j.Element xhtmlBody = parsed;
+                    xhtmlBody.detach();
+                    bodyPart = new TextPart(plainText, xhtmlBody);
+                } else {
+                    // OLD style API
+                    String s = bodyElt.getText();
+                    org.dom4j.Element parsed = org.dom4j.DocumentHelper.parseText("<body xmlns=\""+XHTML_NAMESPACE+"\">"+s+"</body>").getRootElement();
+                    org.dom4j.Element xhtmlBody = parsed;
+                    xhtmlBody.detach();
+                    bodyPart = new TextPart(xhtmlBody);
+                }
             } catch (DocumentException e) {
                 bodyPart = new TextPart(bodyElt.getText());
             }

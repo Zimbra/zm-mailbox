@@ -69,7 +69,8 @@ IMGetChat -- return the chat history (param = num messages)
       <messages>
          <message seq="sequence-number" ts="timestamp" from="id">
             [<subject [lang="LANGUAGE"]>SUBJECT</subject>]*   // HTML
-            [<body [lang="LANGUAGE">BODY</body>]              // HTML
+            [<body [lang="LANGUAGE">PLAINTEXT BODY</body>]              // plaintext
+            [<html>HTML BODY</html>]
          </message>
       </messages>   
    </chat>
@@ -82,12 +83,17 @@ To an existing chat:
 <IMSendMessageRequest>
    <message thread="threadID">
       [<subject [lang="LANGUAGE"]>
-         SUBJECT_AS_XML
+         Plaintext Subject
       </subject>]*   // HTML
-      [<body [lang="LANGUAGE">
-         BODY
-      </body>]              // HTML
+      <body>
+         <text>
+            PLAINTEXT
+         </text>
+      [  <html>
+            HTML text (xhtml required: balance tags)
+         </html>]
       [<typing/>]
+      </body>
    </message>
 </IMSendMessageRequest>
    
