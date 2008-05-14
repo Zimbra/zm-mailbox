@@ -71,7 +71,7 @@ import com.zimbra.cs.util.JMSession;
  * @author schemers
  */
 public class Mime {
-    
+
     static Log mLog = LogFactory.getLog(Mime.class);
 
     // content types
@@ -101,9 +101,9 @@ public class Mime {
     public static final String CT_MULTIPART_WILD = "multipart/.*";
     public static final String CT_TEXT_WILD = "text/.*";
     public static final String CT_XML_WILD = "xml/.*";
-    
+
     public static final String CT_DEFAULT = CT_TEXT_PLAIN;
-	
+
 	// encodings
     public static final String ET_7BIT = "7bit";
     public static final String ET_8BIT = "8bit";
@@ -794,35 +794,44 @@ public class Mime {
      * @param contentType  The Content-Type of the stream, which must be "text/*".
      * @parame defaultCharset  The user's default charset preference */
     public static Reader getTextReader(InputStream input, String contentType, String defaultCharset) {
+        Reader reader = null;
+
     	String charset = getCharset(contentType);
         if (charset != null) {
             // windows-1252 is a superset of iso-8859-1 and they're often confused, so use cp1252 in its place
             if (SUPPORTS_CP1252 && charset.equalsIgnoreCase(P_CHARSET_LATIN1))
-                charset = P_CHARSET_CP1252;
-            try {
-                return new InputStreamReader(input, charset);
-            } catch (UnsupportedEncodingException e) { }
+                reader = getReader(input, P_CHARSET_CP1252);
+            if (reader == null)
+                reader = getReader(input, charset);
         }
 
-        // if we're here, either there was no explicit charset on the part or it was invalid, so try the user's personal default charset
-        if (defaultCharset != null && !defaultCharset.trim().equals("")) {
+        // if either there was no explicit charset on the part or it was invalid, try the user's personal default charset
+        if (reader == null && defaultCharset != null && !defaultCharset.trim().equals("")) {
             // windows-1252 is a superset of iso-8859-1 and they're often confused, so use cp1252 in its place
             if (SUPPORTS_CP1252 && defaultCharset.equalsIgnoreCase(P_CHARSET_LATIN1))
-                defaultCharset = P_CHARSET_CP1252;
-            try {
-                return new InputStreamReader(input, defaultCharset);
-            } catch (UnsupportedEncodingException e) { }
+                reader = getReader(input, P_CHARSET_CP1252);
+            if (reader == null)
+                reader = getReader(input, defaultCharset);
         }
 
-        // if we're here and the JVM's default charset is iso-8859-1 and cp1252 is installed, try to use that instead
-        if (DEFAULT_CP1252) {
-            try {
-                return new InputStreamReader(input, P_CHARSET_CP1252);
-            } catch (UnsupportedEncodingException e) { }
-        }
+        // if the user's default charset was also either unspecified or unavailable, go with the JVM's default charset
+        if (reader == null && DEFAULT_CP1252)
+            reader = getReader(input, P_CHARSET_CP1252);
+        if (reader == null)
+            reader = new InputStreamReader(input);
 
-        // if we're here, the user's default charset was also either unspecified or unavailable, so go with the JVM's default charset
-        return new InputStreamReader(input);
+        return reader;
+    }
+
+    /** Returns a <code>Reader</code> for the <code>InputStream</code> using
+     *  the supplied <tt>charset</tt> to decode.  Returns <tt>null</tt> if
+     *  that charset is not available. */
+    private static Reader getReader(InputStream is, String charset) {
+        try {
+            return new InputStreamReader(is, charset);
+        } catch (UnsupportedEncodingException e) {
+            return null;
+        }
     }
 
     public static String getCharset(String contentType) {
@@ -857,7 +866,7 @@ public class Mime {
         } catch (MessagingException me) { }
 
         // if we didn't find anything, check the Content-Type header for the "name" parameter
-        if (name == null)
+        if (name == null) {
             try {
                 String ctype = mp.getHeader("Content-Type", null);
                 if (ctype != null) {
@@ -868,6 +877,7 @@ public class Mime {
                         name = mhdr.getParameter("name");
                 }
             } catch (MessagingException me) { }
+        }
 
         if (name == null)
             return null;
