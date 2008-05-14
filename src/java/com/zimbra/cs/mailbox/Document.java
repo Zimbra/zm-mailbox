@@ -78,8 +78,7 @@ public class Document extends MailItem {
     @Override public List<org.apache.lucene.document.Document> generateIndexData(boolean doConsistencyCheck) throws MailItem.TemporaryIndexingException {
         ParsedDocument pd = null;
         try {
-        	StoreManager sm = StoreManager.getInstance();
-        	MailboxBlob blob = sm.getMailboxBlob(mMailbox, mId, mVersion, getVolumeId());
+        	MailboxBlob blob = getBlob();
         	if (blob == null) {
         	    ZimbraLog.index.warn("Unable to fetch blob for Document id "+mId+" version "+mVersion+" on volume "+getVolumeId());  
         	    throw new MailItem.TemporaryIndexingException();
