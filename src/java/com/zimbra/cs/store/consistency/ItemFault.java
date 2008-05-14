@@ -16,6 +16,8 @@
  */
 package com.zimbra.cs.store.consistency;
 
+import java.io.File;
+
 public class ItemFault implements java.io.Serializable {
     public final Item item;
     public final Item faultItem;
@@ -23,19 +25,21 @@ public class ItemFault implements java.io.Serializable {
     public final Code faultCode;
     public final byte volumeId;
     public final long size;
+    public final File faultFile;
     
     private final static long serialVersionUID = 200805091631L;
 
     public ItemFault(Item item,
             Item faultItem, Item.Revision faultRevision, Code faultCode,
-            byte volumeId, long size) {
+            byte volumeId, long size, File faultFile) {
         this.item = item;
         this.faultItem = faultItem;
         this.faultRevision = faultRevision;
         this.faultCode = faultCode;
+        this.faultFile = faultFile;
         this.volumeId = volumeId;
         this.size = size;
     }
 
-    public static enum Code { NOT_FOUND, WRONG_VOLUME, WRONG_SIZE }
+    public static enum Code { NOT_FOUND, WRONG_VOLUME, WRONG_SIZE, NO_METADATA }
 }

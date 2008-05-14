@@ -45,7 +45,14 @@ public class Item implements Serializable {
         this.mod = mod;
     }
 
-    public static class Revision implements Serializable {
+    public static class Revision implements Serializable, Comparable<Revision> {
+        /**
+         * Sort descending
+         */
+        public int compareTo(Revision o) {
+            return o.version - version;
+        }
+
         public final int version;
         public final long size;
         public final String digest;

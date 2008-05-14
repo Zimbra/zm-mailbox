@@ -59,43 +59,56 @@ public class ReportDisplay implements Runnable {
 
     public static String getFaultMessage(
             Map<Byte,Volume> volumes, ItemFault fault) {
-        String itemName = String.format(
-                " * MailboxGroup=%d, mailbox=%d, item=%d",
-                fault.item.group, fault.item.mailboxId, fault.item.id);
+        String itemName = null;
         Volume v;
-        File file;
-        long size;
+        File file = null;
+        long size = -1;
 
-        if (fault.faultRevision != null) {
-            itemName += ", version=" + fault.faultRevision.version;
-            v = volumes.get(fault.faultRevision.volumeId);
-            file = v.getItemRevisionFile(fault.item, fault.faultRevision);
-            size = fault.faultRevision.size;
-        } else {
-            v = volumes.get(fault.item.volumeId);
-            file = v.getItemFile(fault.item);
-            size = fault.item.size;
+        if (fault.faultCode != ItemFault.Code.NO_METADATA) {
+            itemName = String.format(
+                    " * MailboxGroup=%d, mailbox=%d, item=%d",
+                    fault.item.group, fault.item.mailboxId, fault.item.id);
+            if (fault.faultRevision != null) {
+                itemName += ", version=" + fault.faultRevision.version;
+                v = volumes.get(fault.faultRevision.volumeId);
+                file = v.getItemRevisionFile(fault.item, fault.faultRevision);
+                size = fault.faultRevision.size;
+            } else {
+                v = volumes.get(fault.item.volumeId);
+                file = v.getItemFile(fault.item);
+                size = fault.item.size;
+            }
         }
 
         String msg = "UNKNOWN ERRORCODE: " + fault.faultCode;
         switch (fault.faultCode) {
         case NOT_FOUND:
-            msg = ": file not found: " + file;
+            if (fault.faultItem != null && fault.item.revisions.size() > 0) {
+                msg = String.format(": file not found: %s" +
+                		" (revert to previous revision %d)",
+                        file, fault.item.revisions.get(0));
+            } else {
+                msg = ": file not found: " + file +
+                        " (delete associated metadata)";
+            }
             break;
         case WRONG_VOLUME:
             Volume fv = volumes.get(fault.volumeId);
             File ff = fault.faultItem != null ?
                     fv.getItemFile(fault.faultItem) :
                     fv.getItemRevisionFile(fault.item, fault.faultRevision);
-            msg = String.format(": wrong volume, expected at %s, found at %s",
-                    file, ff);
+            msg = String.format(": wrong volume, expected at %s, found at %s" +
+                    " (move to correct volume)", file, ff);
             break;
         case WRONG_SIZE:
-            msg = String.format(": wrong size: expected %d, was %s: %s",
-                    size, fault.size, file);
+            msg = String.format(": wrong size: expected %d, was %s: %s" +
+                    " (no action, unrecoverable)", size, fault.size, file);
             break;
+        case NO_METADATA:
+            msg = String.format(" * %s: no associated metadata (delete blob)",
+                    fault.faultFile);
         }
-        return itemName + msg;
+        return itemName != null ? itemName + msg : msg;
     }
     private static void printFault(Map<Byte,Volume> volumes, ItemFault fault) {
         System.out.println(getFaultMessage(volumes, fault));

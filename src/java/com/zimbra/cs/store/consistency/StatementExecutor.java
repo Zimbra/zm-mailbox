@@ -32,6 +32,34 @@ public class StatementExecutor {
         public void mapRow(ResultSet rs) throws SQLException;
     }
 
+    public Object query(String query) throws SQLException {
+        return query(query, (Object[]) null);
+    }
+
+    public Object query(String query, Object[] args) throws SQLException {
+        final Object[] ref = new Object[1];
+        ObjectMapper mapper = new ObjectMapper() {
+            public void mapRow(ResultSet rs) throws SQLException {
+                ref[0] = rs.getObject(1);
+            }
+        };
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement(query);
+            for (int i = 1; args != null && i <= args.length; i++)
+                stmt.setObject(i, args[i-1]);
+            rs = stmt.executeQuery();
+            while (rs.next())
+                mapper.mapRow(rs);
+        }
+        finally {
+            if (rs != null)   rs.close();
+            if (stmt != null) stmt.close();
+        }
+        return ref[0];
+    }
+
     public void query(String query, ObjectMapper mapper) throws SQLException {
         query(query, null, mapper);
     }

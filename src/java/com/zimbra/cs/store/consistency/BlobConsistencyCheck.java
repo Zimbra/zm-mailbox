@@ -71,7 +71,7 @@ public class BlobConsistencyCheck {
 
         if (cmdLine.hasOption("h")) {
             HelpFormatter fmt = new HelpFormatter();
-            fmt.printHelp("java -jar zimbra-blobc.jar", options);
+            fmt.printHelp("zmblobchk", options);
             return;
         }
 
