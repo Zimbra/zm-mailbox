@@ -604,7 +604,7 @@ public class Conversation extends MailItem {
                     }
                     ids.append(moved.get(i).getId());
                 }
-                ZimbraLog.mailop.info("Moving %s to %s.  Affected message ids: %s",
+                ZimbraLog.mailop.info("Moving %s to %s.  Affected message ids: %s.",
                     getMailopContext(this), getMailopContext(target), ids);
             }
             DbMailItem.setFolder(moved, target);

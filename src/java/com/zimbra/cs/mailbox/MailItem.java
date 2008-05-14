@@ -2326,19 +2326,21 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (info.incomplete || item == null) {
             if (ZimbraLog.mailop.isInfoEnabled()) {
                 if (item != null)
-                    ZimbraLog.mailop.info("Deleting items from " + getMailopContext(item));
+                    ZimbraLog.mailop.info("Deleting items from %s.", getMailopContext(item));
                 if (!info.itemIds.isEmpty()) {
                     for (List<Integer> idList : ListUtil.split(info.itemIds.getAll(), 200))
-                        ZimbraLog.mailop.info("Deleting items: " + idList);
+                        ZimbraLog.mailop.info("Deleting items: %s.", idList);
                 }
             }
             DbMailItem.delete(mbox, info.itemIds.getAll());
         } else if (scope == DeleteScope.CONTENTS_ONLY) {
-            ZimbraLog.mailop.info("Deleting contents of " + getMailopContext(item));
+            ZimbraLog.mailop.info("Deleting contents of %s.", getMailopContext(item));
             DbMailItem.deleteContents(item);
         } else {
-            if (!(item instanceof VirtualConversation)) {
-                ZimbraLog.mailop.info("Deleting " + getMailopContext(item));
+            if (item instanceof VirtualConversation) {
+                ZimbraLog.mailop.info("Deleting Message %d.", ((VirtualConversation) item).getMessageId());
+            } else {
+                ZimbraLog.mailop.info("Deleting %s.", getMailopContext(item));
             }
             DbMailItem.delete(item);
         }
