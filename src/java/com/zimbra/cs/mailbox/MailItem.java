@@ -2112,7 +2112,7 @@ public abstract class MailItem implements Comparable<MailItem> {
                 getMailbox().queueForIndexing(this, false, null);
             }
 
-        ZimbraLog.mailop.info("Moving %s to %s.", getMailopContext(this), target);
+        ZimbraLog.mailop.info("Moving %s to %s.", getMailopContext(this), getMailopContext(target));
         DbMailItem.setFolder(this, target);
         folderChanged(target, 0);
         return true;
@@ -2337,7 +2337,9 @@ public abstract class MailItem implements Comparable<MailItem> {
             ZimbraLog.mailop.info("Deleting contents of " + getMailopContext(item));
             DbMailItem.deleteContents(item);
         } else {
-            ZimbraLog.mailop.info("Deleting " + getMailopContext(item));
+            if (!(item instanceof VirtualConversation)) {
+                ZimbraLog.mailop.info("Deleting " + getMailopContext(item));
+            }
             DbMailItem.delete(item);
         }
 
