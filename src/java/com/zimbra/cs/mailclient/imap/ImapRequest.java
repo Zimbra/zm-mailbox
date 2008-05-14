@@ -115,16 +115,14 @@ public class ImapRequest {
     private void writeUntracedList(ImapOutputStream out, List<Object> data,
                                    String msg) throws IOException {
         TraceOutputStream os = connection.getTraceOutputStream();
-        if (os == null || !os.isEnabled()) {
+        if (os != null && os.suspendTrace(msg)) {
+            try {
+                writeList(out, data);
+            } finally {
+                os.resumeTrace();
+            }
+        } else {
             writeList(out, data);
-            return;
-        }
-        os.setEnabled(false);
-        try {
-            os.getTraceStream().print(msg);
-            writeList(out, data);
-        } finally {
-            os.setEnabled(true);
         }
     }
     

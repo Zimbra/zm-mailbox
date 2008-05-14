@@ -26,9 +26,12 @@ import java.io.OutputStream;
 public class TraceOutputStream extends OutputStream {
     private final OutputStream out;
     private final PrintStream traceOut;
+    private String prefix = PREFIX;
     private boolean enabled = true;
     private boolean eol = true;
 
+    private static final String PREFIX = "C: ";
+    
     public TraceOutputStream(OutputStream out, PrintStream traceOut) {
         this.out = out;
         this.traceOut = traceOut;
@@ -38,6 +41,10 @@ public class TraceOutputStream extends OutputStream {
         this(out, System.out);
     }
 
+    public void setPrefix(String prefix) {
+        this.prefix = prefix;
+    }
+    
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
@@ -45,16 +52,27 @@ public class TraceOutputStream extends OutputStream {
     public boolean isEnabled() {
         return enabled;
     }
+    
+    public boolean suspendTrace(String msg) {
+        if (!enabled) return false;
+        if (msg != null) {
+            if (eol) traceOut.print(prefix);
+            traceOut.print(msg);
+            eol = msg.endsWith("\n");
+        }
+        enabled = false;
+        return true;
+    }
 
-    public PrintStream getTraceStream() {
-        return traceOut;
+    public void resumeTrace() {
+        enabled = true;
     }
     
     @Override
     public void write(int b) throws IOException {
         out.write(b);
         if (enabled) {
-            if (eol) traceOut.print("C: ");
+            if (eol) traceOut.print(prefix);
             printByte((byte) b);
             eol = (b == '\n');
         }

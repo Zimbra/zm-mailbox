@@ -441,7 +441,23 @@ public final class ImapConnection extends MailConnection {
                 throw new LiteralException(res);
             }
         }
+        if (traceOut != null && traceOut.isEnabled()) {
+            int maxSize = getImapConfig().getMaxLiteralTraceSize();
+            if (maxSize >= 0 && lit.getSize() > maxSize) {
+                traceOut.suspendTrace("<<< literal data not shown >>>");
+                try {
+                    lit.writeData(out);
+                } finally {
+                    traceOut.resumeTrace();
+                }
+                return;
+            }
+        }
         lit.writeData(out);
+    }
+
+    public ImapConfig getImapConfig() {
+        return (ImapConfig) config;
     }
 
     // Exception thrown if we get an unexpected response to literal data

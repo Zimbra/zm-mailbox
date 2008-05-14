@@ -9,9 +9,7 @@ import java.io.IOException;
 public final class MailboxName {
     private String name; // Decoded name
 
-    private static final String INBOX_STR = "INBOX";
-
-    public static final MailboxName INBOX = new MailboxName(INBOX_STR);
+    public static final MailboxName INBOX = new MailboxName("INBOX");
 
     private static final char ENCODE_PEM[] = {
         'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
@@ -47,7 +45,7 @@ public final class MailboxName {
     }
     
     public MailboxName(String name) {
-        this.name = name.equalsIgnoreCase(INBOX_STR) ? INBOX_STR : name;
+        this.name = name;
     }
 
     private static String decodeBytes(ByteBuffer bb) throws ParseException {

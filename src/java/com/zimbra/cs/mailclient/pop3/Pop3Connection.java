@@ -93,7 +93,7 @@ public final class Pop3Connection extends MailConnection {
         if (args != null) {
             mailOut.write(' ');
             if (cmd.equalsIgnoreCase(PASS)) {
-                writeUntraced(args);
+                writePass(args);
             } else {
                 mailOut.write(args);
             }
@@ -108,17 +108,15 @@ public final class Pop3Connection extends MailConnection {
         return response;
     }
 
-    private void writeUntraced(String s) throws IOException {
-        if (traceOut != null && traceOut.isEnabled()) {
-            traceOut.setEnabled(false);
+    private void writePass(String pass) throws IOException {
+        if (traceOut != null && traceOut.suspendTrace("<password>")) {
             try {
-                traceOut.getTraceStream().print("<password>");
-                mailOut.write(s);
+                mailOut.write(pass);
             } finally {
-                traceOut.setEnabled(true);
+                traceOut.resumeTrace();
             }
         } else {
-            mailOut.write(s);
+            mailOut.write(pass);
         }
     }
 

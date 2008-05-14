@@ -79,4 +79,9 @@ public final class ListData {
     public Flags getFlags() { return flags; }
     public String getMailbox() { return mailbox; }
     public Character getDelimiter() { return delimiter; }
+
+    public String toString() {
+        return String.format("{mailbox=%s, delimiter=\"%c\", flags=%s}",
+                             mailbox, delimiter, flags);
+    }
 }
