@@ -25,6 +25,7 @@ import java.io.File;
  */
 public class ImapConfig extends MailConfig {
     private int maxLiteralMemSize = DEFAULT_MAX_LITERAL_MEM_SIZE;
+    private int maxLiteralTraceSize = DEFAULT_MAX_LITERAL_TRACE_SIZE;
     private File literalDataDir = new File(System.getProperty("java.io.tmpdir"));
     
     public static final String PROTOCOL = "imap";
@@ -32,6 +33,7 @@ public class ImapConfig extends MailConfig {
     public static final int DEFAULT_PORT = 143;
     public static final int DEFAULT_SSL_PORT = 993;
     public static final int DEFAULT_MAX_LITERAL_MEM_SIZE = 8 * 1024 * 1024;
+    public static final int DEFAULT_MAX_LITERAL_TRACE_SIZE = 80;
     
     public ImapConfig() {}
 
@@ -55,6 +57,14 @@ public class ImapConfig extends MailConfig {
         return maxLiteralMemSize;
     }
 
+    public void setMaxLiteralTraceSize(int size) {
+        maxLiteralTraceSize = size;
+    }
+
+    public int getMaxLiteralTraceSize() {
+        return maxLiteralTraceSize;
+    }
+    
     public void setLiteralDataDir(File dir) {
         literalDataDir = dir;
     }

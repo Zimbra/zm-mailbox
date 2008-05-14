@@ -18,6 +18,7 @@ package com.zimbra.cs.mailclient.imap;
 
 import com.zimbra.cs.mailclient.util.Io;
 import com.zimbra.cs.mailclient.util.Ascii;
+import com.zimbra.cs.mailclient.util.TraceInputStream;
 import com.zimbra.cs.mailclient.ParseException;
 import com.zimbra.cs.mailclient.MailInputStream;
 
@@ -177,6 +178,19 @@ public final class ImapInputStream extends MailInputStream {
         if (DEBUG) pd("readLiteral: size = %d", len);
         skipChar('}');
         skipCRLF();
+        TraceInputStream is =
+            (in instanceof TraceInputStream) ? (TraceInputStream) in : null;
+        if (is != null && is.isEnabled()) {
+            int maxSize = config.getMaxLiteralTraceSize();
+            if (maxSize >= 0 && len > maxSize) {
+                is.suspendTrace("<<< literal data not shown >>>");
+                try {
+                    return readLiteral((int) len);
+                } finally {
+                    is.resumeTrace();
+                }
+            }
+        }
         return readLiteral((int) len);
     }
 

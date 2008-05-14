@@ -54,9 +54,15 @@ public final class ResponseText {
         switch (code.getCAtom()) {
         case ALERT: case PARSE: case READ_ONLY: case READ_WRITE: case TRYCREATE:
             break;
-        case UIDNEXT: case UIDVALIDITY: case UNSEEN:
+        case UIDNEXT: case UIDVALIDITY:
             is.skipChar(' ');
             data = is.readNZNumber();
+            break;
+        case UNSEEN:
+            is.skipChar(' ');
+            // Technically, this should be "UNSEEN" SP nz-number but some
+            // servers (i.e. GMail) actually return "0".
+            data = is.readNumber();
             break;
         case BADCHARSET:
             if (is.match(' ')) {
