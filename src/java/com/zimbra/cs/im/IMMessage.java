@@ -47,8 +47,6 @@ public class IMMessage {
         }
         
         public TextPart(org.dom4j.Element body) {
-            String s = body.asXML();
-            System.out.println(s);
             mXHTML = body;
         }
         
@@ -56,6 +54,11 @@ public class IMMessage {
             this(Lang.DEFAULT, plaintext);
         }
         
+        public TextPart(String plaintext, org.dom4j.Element body) {
+            mXHTML = body;
+            mPlaintext = plaintext;
+        }
+            
         public Lang getLang() { return mLang; }
         
         public String getXHTMLAsString() {
@@ -63,16 +66,17 @@ public class IMMessage {
                 return mXHTMLAsText;
             if (mXHTML == null)
                 return null;
-
+            
             // mXHTML is the <body>...</body> -- we don't want to include the
-            // body tag, so we iterate all the dom4j internal nodes underneath body and 
-            // add them to the string
-            StringBuilder sb = new StringBuilder();
-            for (Iterator nodeIter = mXHTML.nodeIterator(); nodeIter.hasNext();) {
-                org.dom4j.Node node = (org.dom4j.Node)nodeIter.next();
-                sb.append(node.asXML());
+            // body tag, so we'll just hack it out of the text for now
+            String s = mXHTML.asXML();
+            int start = s.indexOf('>');
+            int end = s.lastIndexOf('<');
+            if (start > 0 && end > 0) {
+                mXHTMLAsText = s.substring(start+1, end);
+            } else {
+                mXHTMLAsText = s;
             }
-            mXHTMLAsText = sb.toString();
             return mXHTMLAsText;
         }
         
@@ -81,7 +85,7 @@ public class IMMessage {
                 return mPlaintext;
             if (mXHTML == null)
                 return mPlaintext;
-
+            
             mPlaintext = depthFirstTextExtract(mXHTML);
             return mPlaintext;
         }
@@ -90,11 +94,9 @@ public class IMMessage {
             return mXHTML;
         }
         
-        
         public boolean hasXHTML() {
             return getXHTMLAsString() != null;
         }
-        
         
         private String depthFirstTextExtract(org.dom4j.Element cur) {
             StringBuilder toRet = new StringBuilder();
@@ -102,10 +104,12 @@ public class IMMessage {
                 org.dom4j.Node node = (org.dom4j.Node)nodeIter.next();
                 if (node instanceof org.dom4j.Element)
                     toRet.append(depthFirstTextExtract((org.dom4j.Element)node));
+                else if (node instanceof org.dom4j.Namespace) 
+                    ;
                 else
                     toRet.append(node.asXML());
             }
-                
+            
             return toRet.toString();
         }
         
@@ -190,11 +194,12 @@ public class IMMessage {
         {
             if (mBody != null) {
                 Element e = parent.addElement("body");
-                try {
-                    e.setText(HtmlDefang.defang(mBody.toString(), true));
-                } catch(IOException ex) {
-                    ZimbraLog.im.warn("Caught exception while HtmlDefang-ing IM message: \""+mBody.toString()+"\"", ex);
-                }
+//                try {
+//                    e.setText(HtmlDefang.defang(mBody.toString(), true));
+                    e.setText(mBody.toString());
+//                } catch(IOException ex) {
+//                    ZimbraLog.im.warn("Caught exception while HtmlDefang-ing IM message: \""+mBody.toString()+"\"", ex);
+//                }
             }
         }
         return parent;

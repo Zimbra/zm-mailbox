@@ -352,7 +352,7 @@ public class IMChat extends ClassLogger {
                     List<org.dom4j.Element> elements = htmlElt.elements("body");
                     for (org.dom4j.Element e : elements) {
                         if ("http://www.w3.org/1999/xhtml".equals(e.getNamespaceURI())) {
-                            bodyPart = new TextPart(e);
+                            bodyPart = new TextPart(msg.getBody(), e);
                         }
                     }
                 }
