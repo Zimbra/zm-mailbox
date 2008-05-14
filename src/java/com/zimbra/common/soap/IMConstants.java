@@ -101,4 +101,6 @@ public class IMConstants {
     public static final String E_GATEWAY_STATUS = "gwStatus";
     public static final String E_OTHER_LOCATION = "otherLocation";
     public static final String E_TYPING         = "typing";
+    public static final String E_HTML          = "html";
+    public static final String E_TEXT           = "text";
 }
