@@ -55,6 +55,7 @@ import com.zimbra.cs.store.StoreManager;
  */
 public class Zimbra {
     private static boolean sInited = false;
+    private static boolean sIsMailboxd = false;
     
     private static void checkForClass(String clzName, String jarName) {
         try {
@@ -124,11 +125,27 @@ public class Zimbra {
         DbPool.quietClose(conn);
     }
 
-    public static synchronized void startup() throws ServiceException {
+    public static void startup() throws ServiceException {
+        startup(true);
+    }
+
+    public static void startupCLI() throws ServiceException {
+        startup(false);
+    }
+
+    /**
+     * Initialize the various subsystems at server/CLI startup time.
+     * @param forMailboxd true if this is the mailboxd process; false for CLI processes
+     * @throws ServiceException
+     */
+    private static synchronized void startup(boolean forMailboxd) throws ServiceException {
         if (sInited)
             return;
-        
-        FirstServlet.waitForInitialization();
+
+        sIsMailboxd = forMailboxd;
+
+        if (sIsMailboxd)
+            FirstServlet.waitForInitialization();
 
         logVersionAndSysInfo();
 
@@ -160,49 +177,54 @@ public class Zimbra {
         MailboxIndex.startup();
 
         RedoLogProvider redoLog = RedoLogProvider.getInstance();
-        redoLog.startup();
+        if (sIsMailboxd)
+            redoLog.startup();
+        else
+            redoLog.initRedoLogManager();
 
         System.setProperty("ical4j.unfolding.relaxed", "true");
 
         MailboxManager.getInstance().startup();
-        
-        SessionCache.startup();
 
-        if (!redoLog.isSlave()) {
-            Server server = Provisioning.getInstance().getLocalServer();
+        if (sIsMailboxd) {
+            SessionCache.startup();
 
-            if (app.supports(ZimbraIM.class.getName()) && server.getBooleanAttr(Provisioning.A_zimbraXMPPEnabled, false)) {
-                ZimbraIM.startup();
+            if (!redoLog.isSlave()) {
+                Server server = Provisioning.getInstance().getLocalServer();
+    
+                if (app.supports(ZimbraIM.class.getName()) && server.getBooleanAttr(Provisioning.A_zimbraXMPPEnabled, false)) {
+                    ZimbraIM.startup();
+                }
+
+                if (app.supports(LmtpServer.class.getName()))
+                	LmtpServer.startupLmtpServer();
+                if (app.supports(Pop3Server.class.getName()) && server.getBooleanAttr(Provisioning.A_zimbraPop3ServerEnabled, false))
+                    Pop3Server.startupPop3Server();
+                if (app.supports(Pop3Server.class.getName()) && server.getBooleanAttr(Provisioning.A_zimbraPop3SSLServerEnabled, false))
+                    Pop3Server.startupPop3SSLServer();
+                if (app.supports(ImapServer.class.getName()) && server.getBooleanAttr(Provisioning.A_zimbraImapServerEnabled, false))
+                    ImapServer.startupImapServer();
+                if (app.supports(ImapServer.class.getName()) && server.getBooleanAttr(Provisioning.A_zimbraImapSSLServerEnabled, false))
+                    ImapServer.startupImapSSLServer();
             }
-            
-            if (app.supports(LmtpServer.class.getName()))
-            	LmtpServer.startupLmtpServer();
-            if (app.supports(Pop3Server.class.getName()) && server.getBooleanAttr(Provisioning.A_zimbraPop3ServerEnabled, false))
-                Pop3Server.startupPop3Server();
-            if (app.supports(Pop3Server.class.getName()) && server.getBooleanAttr(Provisioning.A_zimbraPop3SSLServerEnabled, false))
-                Pop3Server.startupPop3SSLServer();
-            if (app.supports(ImapServer.class.getName()) && server.getBooleanAttr(Provisioning.A_zimbraImapServerEnabled, false))
-                ImapServer.startupImapServer();
-            if (app.supports(ImapServer.class.getName()) && server.getBooleanAttr(Provisioning.A_zimbraImapSSLServerEnabled, false))
-                ImapServer.startupImapSSLServer();
-        }
-        
-        if (app.supports(WaitSetMgr.class.getName()))
-        	WaitSetMgr.startup();
-        
-        if (app.supports(MemoryStats.class.getName()))
-        	MemoryStats.startup();
-        
-        if (app.supports(ScheduledTaskManager.class.getName()))
-        	ScheduledTaskManager.startup();
-        
-        if (app.supports(PurgeThread.class.getName()))
-        	PurgeThread.startup();
 
-        // should be last, so that other subsystems can add dynamic stats counters
-        if (app.supports(ZimbraPerf.class.getName()))
-        	ZimbraPerf.initialize();
-        
+            if (app.supports(WaitSetMgr.class.getName()))
+                WaitSetMgr.startup();
+
+            if (app.supports(MemoryStats.class.getName()))
+            	MemoryStats.startup();
+
+            if (app.supports(ScheduledTaskManager.class.getName()))
+            	ScheduledTaskManager.startup();
+
+            if (app.supports(PurgeThread.class.getName()))
+            	PurgeThread.startup();
+
+            // should be last, so that other subsystems can add dynamic stats counters
+            if (app.supports(ZimbraPerf.class.getName()))
+            	ZimbraPerf.initialize();
+        }
+
         if (app.supports(ExtensionUtil.class.getName()))
         	ExtensionUtil.postInitAll();
         
@@ -215,39 +237,47 @@ public class Zimbra {
 
         sInited = false;
 
-        PurgeThread.shutdown();
+        if (sIsMailboxd)
+            PurgeThread.shutdown();
         
         ZimbraApplication app = ZimbraApplication.getInstance();
-        
-        if (app.supports(MemoryStats.class.getName()))
-        	MemoryStats.shutdown();
-        
-        if (app.supports(WaitSetMgr.class.getName()))
-        	WaitSetMgr.shutdown();
-        
-        RedoLogProvider redoLog = RedoLogProvider.getInstance();
-        if (!redoLog.isSlave()) {
-        	if (app.supports(LmtpServer.class.getName()))
-        		LmtpServer.shutdownLmtpServer();
-        	
-        	if (app.supports(Pop3Server.class.getName()))
-        		Pop3Server.shutdownPop3Servers();
-        	
-        	if (app.supports(ImapServer.class.getName()))
-        		ImapServer.shutdownImapServers();
+
+        if (sIsMailboxd) {
+            if (app.supports(MemoryStats.class.getName()))
+            	MemoryStats.shutdown();
+
+            if (app.supports(WaitSetMgr.class.getName()))
+            	WaitSetMgr.shutdown();
         }
-        
-        if (app.supports(ZimbraIM.class.getName()))
-        	ZimbraIM.shutdown();
 
-        SessionCache.shutdown();
-        
+        RedoLogProvider redoLog = RedoLogProvider.getInstance();
+        if (sIsMailboxd) {
+            if (!redoLog.isSlave()) {
+            	if (app.supports(LmtpServer.class.getName()))
+            		LmtpServer.shutdownLmtpServer();
+
+            	if (app.supports(Pop3Server.class.getName()))
+            		Pop3Server.shutdownPop3Servers();
+
+            	if (app.supports(ImapServer.class.getName()))
+            		ImapServer.shutdownImapServers();
+            }
+
+            if (app.supports(ZimbraIM.class.getName()))
+            	ZimbraIM.shutdown();
+
+            SessionCache.shutdown();
+        }
+
         MailboxIndex.shutdown();
-        
-        if (app.supports(IMRouter.class.getName()))
-        	IMRouter.getInstance().shutdown();
 
-        redoLog.shutdown();
+        if (sIsMailboxd) {
+            if (app.supports(IMRouter.class.getName()))
+            	IMRouter.getInstance().shutdown();
+        }
+
+        if (sIsMailboxd)
+            redoLog.shutdown();
 
         StoreManager.getInstance().shutdown();
 
