@@ -54,6 +54,7 @@ import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
+import com.zimbra.common.util.Pair;
 
 public class NativeFormatter extends Formatter {
     
@@ -251,10 +252,11 @@ public class NativeFormatter extends Formatter {
 
     public void saveCallback(Context context, String contentType, Folder folder, String filename) throws IOException, ServiceException, UserServletException {
         Mailbox mbox = folder.getMailbox();
+        MailItem item = null;
         if (filename == null) {
             try {
                 ParsedMessage pm = new ParsedMessage(context.getPostBody(), mbox.attachmentsIndexingEnabled());
-                mbox.addMessage(context.opContext, pm, folder.getId(), true, 0, null);
+                item = mbox.addMessage(context.opContext, pm, folder.getId(), true, 0, null);
                 return;
             } catch (MessagingException e) {
                 throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "error parsing message");
@@ -265,16 +267,23 @@ public class NativeFormatter extends Formatter {
     	FileUploadServlet.Upload upload = context.getUpload();
         ParsedDocument pd = new ParsedDocument(upload.getInputStream(), filename, contentType, System.currentTimeMillis(), creator);
         try {
-            MailItem item = mbox.getItemByPath(context.opContext, filename, folder.getId());
+            item = mbox.getItemByPath(context.opContext, filename, folder.getId());
             // XXX: should we just overwrite here instead?
             if (!(item instanceof Document))
                 throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "cannot overwrite existing object at that path");
 
-            mbox.addDocumentRevision(context.opContext, item.getId(), item.getType(), pd);
+            item = mbox.addDocumentRevision(context.opContext, item.getId(), item.getType(), pd);
         } catch (NoSuchItemException nsie) {
-            mbox.createDocument(context.opContext, folder.getId(), pd, MailItem.TYPE_DOCUMENT);
+            item = mbox.createDocument(context.opContext, folder.getId(), pd, MailItem.TYPE_DOCUMENT);
         } finally {
         	FileUploadServlet.deleteUpload(upload);
+        }
+        if (item != null) {
+        	context.resp.addHeader("X-Zimbra-ItemId", item.getId() + "");
+        	context.resp.addHeader("X-Zimbra-Version", item.getVersion() + "");
+        	context.resp.addHeader("X-Zimbra-Modified", item.getChangeDate() + "");
+        	context.resp.addHeader("X-Zimbra-Change", item.getModifiedSequence() + "");
+        	context.resp.addHeader("X-Zimbra-Revision", item.getSavedSequence() + "");
         }
     }
     

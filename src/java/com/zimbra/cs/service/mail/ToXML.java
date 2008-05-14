@@ -1691,7 +1691,7 @@ public class ToXML {
     }
 
     public static Element encodeDocument(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Document doc) {
-        return encodeDocument(parent, ifmt, octxt, doc, NOTIFY_FIELDS);
+        return encodeDocument(parent, ifmt, octxt, doc, Change.ALL_FIELDS);
     }
 
     public static Element encodeDocument(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Document doc, int fields) {
