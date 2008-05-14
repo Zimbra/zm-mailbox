@@ -1171,7 +1171,11 @@ public class UserServlet extends ZimbraServlet {
         Provisioning prov = Provisioning.getInstance();
         Server server = (target == null ? prov.getLocalServer() : prov.getServer(target));
         String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
+        return putRemoteResource(authToken, url, hostname, req, headers, null, 0, null, null);
+    }
 
+    public static Pair<Header[], HttpInputStream> putRemoteResource(ZAuthToken authToken, String url, String hostname,
+    		InputStream req, Header[] headers, String proxyHost, int proxyPort, String proxyUser, String proxyPass) throws ServiceException, IOException {
         StringBuilder u = new StringBuilder(url);
         u.append("?").append(QP_AUTH).append('=').append(AUTH_COOKIE);
         PutMethod method = new PutMethod(u.toString());
@@ -1185,7 +1189,7 @@ public class UserServlet extends ZimbraServlet {
             }
         }
         method.setRequestEntity(new InputStreamRequestEntity(req, contentType));
-        Pair<Header[], HttpMethod> pair = doHttpOp(authToken, hostname, null, 0, null, null, method);
+        Pair<Header[], HttpMethod> pair = doHttpOp(authToken, hostname, proxyHost, proxyPort, proxyUser, proxyPass, method);
         return new Pair<Header[], HttpInputStream>(pair.getFirst(), new HttpInputStream(pair.getSecond()));
     }
 
