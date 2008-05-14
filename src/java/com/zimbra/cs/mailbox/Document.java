@@ -80,8 +80,10 @@ public class Document extends MailItem {
         try {
         	StoreManager sm = StoreManager.getInstance();
         	MailboxBlob blob = sm.getMailboxBlob(mMailbox, mId, mVersion, getVolumeId());
-        	if (blob == null)
-                throw new MailItem.TemporaryIndexingException();
+        	if (blob == null) {
+        	    ZimbraLog.index.warn("Unable to fetch blob for Document id "+mId+" version "+mVersion+" on volume "+getVolumeId());  
+        	    throw new MailItem.TemporaryIndexingException();
+        	}
         		
             synchronized(this.getMailbox()) {
                 pd = new ParsedDocument(blob.getBlob(), getName(), getContentType(), getChangeDate(), getCreator());
