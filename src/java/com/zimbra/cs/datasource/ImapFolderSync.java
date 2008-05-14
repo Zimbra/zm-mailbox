@@ -48,7 +48,6 @@ import java.util.HashSet;
 import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Iterator;
 
 class ImapFolderSync {
     private final ImapSync imapSync;
@@ -90,9 +89,13 @@ class ImapFolderSync {
         } else {
             createLocalFolder(ld);
         }
-        if (syncMsgs && isSelectable()) {
-            selectImapFolder(ld.getMailbox());
-            syncMessages(fullSync);
+        if (syncMsgs && tracker != null) {
+            if (tracker.getUidValidity() > 0) {
+                syncMessages(fullSync);
+            } else {
+                info("Synchronization disabled for this folder (IMAP " +
+                     "folder is flagged '\\Noselect')");
+            }
         }
         return tracker;
     }
@@ -112,6 +115,10 @@ class ImapFolderSync {
         }
         // Create and track new remote IMAP folder
         String remotePath = imapSync.getRemotePath(folder);
+        if (remotePath == null) {
+            // info("Synchronization disabled for this folder");
+            return;
+        }
         createImapFolder(remotePath);
         Mailbox mb = selectImapFolder(remotePath);
         tracker = ds.createImapFolder(folder.getId(), folder.getPath(),
@@ -144,6 +151,11 @@ class ImapFolderSync {
      */
     private void syncMessages(boolean fullSync)
         throws ServiceException, IOException {
+        if (!ds.isSyncEnabled(tracker.getLocalPath())) {
+            info("Synchronization disabled for this folder");
+            return;
+        }
+        selectImapFolder(tracker.getRemotePath());
         checkUidValidity();
         trackedMsgs = DbImapMessage.getImapMessages(mailbox, ds, tracker);
         localIds = getLocalIds();
@@ -246,6 +258,11 @@ class ImapFolderSync {
         throws ServiceException, IOException {
         String remotePath = ld.getMailbox();
         String localPath = imapSync.getLocalPath(remotePath, ld.getDelimiter());
+        if (localPath == null) {
+            LOG.info("Remote IMAP folder '%s' is not being synchronized",
+                     remotePath);
+            return;
+        }
         long uidValidity = 0;
         if (!ld.getFlags().isNoselect()) {
             uidValidity = selectImapFolder(remotePath).getUidValidity();
@@ -279,13 +296,23 @@ class ImapFolderSync {
         debug("Appending new local message with item id %d", id);
         Message msg = mailbox.getMessageById(null, id);
         if (msg != null) {
-            Mailbox mb = connection.getMailbox();
-            long uid = ImapUtil.appendUid(connection, mb.getName(), msg);
+            long uid = ImapUtil.appendUid(connection, getMailbox().getName(), msg);
             if (uid <= 0) {
                 throw ServiceException.FAILURE(
                     "Cannot determine UID for message with id " + id +
                     " appended to folder '" + folder.getPath() + "'", null);
             }
+            // TODO FIX THIS!!!
+            // If message was moved from one folder to another then the item
+            // id will be the same. If we happen to process the destination
+            // folder first, then there will be an existing tracker for the
+            // message that has not yet been deleted. This will cause the
+            // next call to fail with a duplicate key since the primary key
+            // is (mbox_id, item_id) and does not include the folder id.
+            // We need to figure out a way around this without changing
+            // the schema. Simply updating the existing tracker does not
+            // work since we won't find a tracker when processing the source
+            // folder and won't delete the remote message.
             DbImapMessage.storeImapMessage(
                 mailbox, folder.getId(), uid, id, msg.getFlagBitmask());
             stats.addedRemotely++;
@@ -459,11 +486,11 @@ class ImapFolderSync {
         throws ServiceException, IOException {
         long uid = md.getUid();
         if (trackedMsgs.getByUid(uid) != null) {
-            debug("Skipped fetched message with uid %x because it already " +
+            debug("Skipped fetched message with uid %d because it already " +
                   "exists locally", uid);
             return;
         }
-        debug("Found new IMAP message with uid %x", uid);
+        debug("Found new IMAP message with uid %d", uid);
         // TODO Handle no uid messages
         ParsedMessage pm = newParsedMessage(md);
         if (pm != null) {

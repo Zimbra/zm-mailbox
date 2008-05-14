@@ -112,8 +112,9 @@ public class ImapSync extends AbstractMailItemImport {
             }
             try {
                 tracker = new ImapFolderSync(this, tracker).syncFolder(ld, fs);
-                LOG.info("Tracker path = %s, id = %d", tracker.getRemotePath(), tracker.getItemId()); // DEBUG
-                excludedIds.add(tracker.getItemId());
+                if (tracker != null) {
+                    excludedIds.add(tracker.getItemId());
+                }
             } catch (Exception e) {
                 LOG.error("Skipping synchronization of IMAP folder '%s' " +
                           "due to error", path, e);

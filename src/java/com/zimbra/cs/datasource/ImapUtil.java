@@ -109,7 +109,7 @@ final class ImapUtil {
             String name = fixFolderName(ld.getMailbox(), ld.getDelimiter());
             if (!names.add(name)) {
                 ZimbraLog.datasource.warn(
-                    "Not importing duplicate folder name: " + ld.getMailbox());
+                    "Skipping duplicate IMAP folder name: " + ld.getMailbox());
                 it.remove();
             }
         }
