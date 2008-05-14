@@ -208,7 +208,11 @@ public class UrlNamespace {
 		StringBuilder buf = null;
 		for (int i = 0; i < str.length(); i++) {
             char c = str.charAt(i);
-            String escaped = sUrlEscapeMap.get(c);
+            String escaped = null;
+            if (c < 0x7F)
+            	escaped = sUrlEscapeMap.get(c);
+            else
+            	escaped = "%" + Integer.toHexString((int)c).toUpperCase();
             if (escaped != null) {
                 if (buf == null) {
                     buf = new StringBuilder();
