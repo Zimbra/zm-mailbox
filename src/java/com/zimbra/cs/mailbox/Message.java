@@ -436,10 +436,28 @@ public class Message extends MailItem {
                             continue; // for now, just ignore this Invitation
                         }
                     } else {
-                        // When updating an existing calendar item, ignore the
-                        // passed-in folderId which will usually be Inbox.  Leave
-                        // the calendar item in the folder it's currently in.
-                        modifiedCalItem = calItem.processNewInvite(pm, cur, calItem.getFolderId(), volumeId);
+                        // bug 27887: Ignore when calendar request email somehow made a loop back to the
+                        // organizer address.  Necessary conditions are:
+                        // 1) This mailbox is currently organizer.
+                        // 2) ORGANIZER in the request is this mailbox.
+                        // If ORGANIZER in the reuqest is a different user this is an organizer change request,
+                        // which should be allowed to happen.
+                        boolean ignore = false;
+                        Invite defInv = calItem.getDefaultInviteOrNull();
+                        if (defInv != null && defInv.isOrganizer())
+                            ignore = getAccount().equals(cur.getOrganizerAccount());
+
+                        if (ignore) {
+                            ZimbraLog.calendar.info(
+                                    "Ignoring calendar request emailed from organizer to self, " +
+                                    "possibly in a mail loop involving mailing lists and/or forwards; " +
+                                    "calItemId=" + calItem.getId() + ", msgId=" + getId());
+                        } else {
+                            // When updating an existing calendar item, ignore the
+                            // passed-in folderId which will usually be Inbox.  Leave
+                            // the calendar item in the folder it's currently in.
+                            modifiedCalItem = calItem.processNewInvite(pm, cur, calItem.getFolderId(), volumeId);
+                        }
                     }
                 }
                 
