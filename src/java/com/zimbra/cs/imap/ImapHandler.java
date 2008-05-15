@@ -786,8 +786,8 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     private static final Set<String> SUPPORTED_EXTENSIONS = new LinkedHashSet<String>(Arrays.asList(
-        "ACL", "BINARY", "CATENATE", "CHILDREN", "CONDSTORE", "ENABLE", "ESEARCH", "ID", "IDLE",
-        "LIST-EXTENDED", "LITERAL+", "LOGIN-REFERRALS", "MULTIAPPEND", "NAMESPACE", "QRESYNC",
+        "ACL", "BINARY", "CATENATE", "CHILDREN", "CONDSTORE", "ENABLE", "ESEARCH", "I18NLEVEL=1", "ID",
+        "IDLE", "LIST-EXTENDED", "LITERAL+", "LOGIN-REFERRALS", "MULTIAPPEND", "NAMESPACE", "QRESYNC",
         "QUOTA", "RIGHTS=ektx", "SASL-IR", "UIDPLUS", "UNSELECT", "WITHIN", "X-DRAFT-I05-SEARCHRES"
     ));
 
@@ -804,6 +804,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         // [CONDSTORE]        RFC 4551: IMAP Extension for Conditional STORE Operation or Quick Flag Changes Resynchronization
         // [ENABLE]           RFC 5161: The IMAP ENABLE Extension
         // [ESEARCH]          RFC 4731: IMAP4 Extension to SEARCH Command for Controlling What Kind of Information Is Returned
+        // [I18NLEVEL=1]      draft-ietf-imapext-i18n-15: Internet Message Access Protocol Internationalization
         // [ID]               RFC 2971: IMAP4 ID Extension
         // [IDLE]             RFC 2177: IMAP4 IDLE command
         // [LIST-EXTENDED]    draft-ietf-imapext-list-extensions-18: IMAP4 LIST Command Extensions
