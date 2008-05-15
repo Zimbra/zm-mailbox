@@ -322,21 +322,29 @@ public class PlaybackUtil {
             mPlayer = new ParallelRedoPlayer(false, true, !mParams.stopOnError, mParams.threads, mParams.queueCapacity);
     }
 
-    public void playback() throws ServiceException, IOException {
+    public void playback() throws Throwable {
         try {
             for (File redolog : mParams.logfiles) {
                 System.out.println("Processing log file: " + redolog.getAbsolutePath());
                 long until = mParams.toTime;
                 if (until < Long.MAX_VALUE)
                     until++;
-                mPlayer.scanLog(redolog, true, null, mParams.fromTime, until);
+                try {
+                    mPlayer.scanLog(redolog, true, null, mParams.fromTime, until);
+                } catch (OutOfMemoryError oome) {
+                    Zimbra.halt("OutOfMemoryError while replaying redolog: " + oome.getMessage(), oome);
+                } catch (Throwable t) {
+                    if (mParams.stopOnError)
+                        throw t;
+                    ZimbraLog.redolog.warn("Ignoring error and moving on: " + t.getMessage(), t);
+                }
             }
         } finally {
             mPlayer.shutdown();
         }
     }
 
-    public static void main(String[] cmdlineargs) throws Exception {
+    public static void main(String[] cmdlineargs) throws Throwable {
         setup();
         try {
             CommandLine cl = parseArgs(cmdlineargs);
