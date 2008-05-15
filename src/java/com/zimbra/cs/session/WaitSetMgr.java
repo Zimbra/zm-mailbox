@@ -35,7 +35,7 @@ import com.zimbra.cs.util.Zimbra;
  * 
  */
 public class WaitSetMgr {
-    public static final String ALL_ACCOUNTS_ID_PREFIX = "AllWaitSet";
+    public static final String ALL_ACCOUNTS_ID_PREFIX = "AllWaitSet-";
 
     private static final int MAX_WAITSETS_PER_NONADMIN_ACCOUNT = LC.zimbra_waitset_max_per_account.intValueWithinRange(1,Integer.MAX_VALUE);
     private static final TimerTask sSweeper = new TimerTask() { 
@@ -50,8 +50,6 @@ public class WaitSetMgr {
             }
         }
     };
-    
-    private static int sWaitSetNumber = 1;
     
     private static final HashMap<String, WaitSetBase> sWaitSets = new HashMap<String, WaitSetBase>();
 
@@ -104,10 +102,8 @@ public class WaitSetMgr {
             if (allAccts) {
 //                id = ALL_ACCOUNTS_ID_PREFIX+sWaitSetNumber;
                 id = ALL_ACCOUNTS_ID_PREFIX+LdapUtil.generateUUID();
-                sWaitSetNumber++;
             } else {
-                id = "WaitSet"+sWaitSetNumber;
-                sWaitSetNumber++;
+                id = "WaitSet-"+LdapUtil.generateUUID();
             }
             
             // create the proper kind of WaitSet
