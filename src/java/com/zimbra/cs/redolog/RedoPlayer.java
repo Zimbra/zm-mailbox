@@ -128,7 +128,7 @@ public class RedoPlayer {
 				if (mLog.isDebugEnabled())
 					mLog.debug("Read: " + op);
 
-                playOp(op, redoCommitted, mboxIDsMap, startTime, endTime);
+                processOp(op, redoCommitted, mboxIDsMap, startTime, endTime);
 			}
 		} catch (IOException e) {
 			// The IOException could be a real I/O problem or it could mean
@@ -165,11 +165,11 @@ public class RedoPlayer {
     private Map<TransactionId, RedoableOp> mOrphanOps =
     	new HashMap<TransactionId, RedoableOp>();
 
-    public void playOp(RedoableOp op,
-                       boolean redoCommitted,
-                       Map<Integer, Integer> mboxIDsMap,
-                       long startTime,
-                       long endTime)
+    private final void processOp(RedoableOp op,
+                                 boolean redoCommitted,
+                                 Map<Integer, Integer> mboxIDsMap,
+                                 long startTime,
+                                 long endTime)
     throws ServiceException {
 
         if (op.isStartMarker()) {
@@ -311,9 +311,9 @@ public class RedoPlayer {
                             if (mLog.isDebugEnabled())
                                 mLog.debug("Redoing: " + prepareOp.toString());
                             prepareOp.setUnloggedReplay(mUnloggedReplay);
-                            prepareOp.redo();
+                            playOp(prepareOp);
                         } catch(Exception e) {
-                            if (!mIgnoreReplayErrors)
+                            if (!ignoreReplayErrors())
                                 throw ServiceException.FAILURE("Error executing redoOp", e);
                             else
                                 ZimbraLog.redolog.warn(
@@ -323,6 +323,17 @@ public class RedoPlayer {
                 }
             }
         }
+    }
+
+    protected boolean ignoreReplayErrors() { return mIgnoreReplayErrors; }
+
+    /**
+     * Actually execute the operation.
+     * @param op
+     * @throws Exception
+     */
+    protected void playOp(RedoableOp op) throws Exception {
+        op.redo();
     }
 
     /**
