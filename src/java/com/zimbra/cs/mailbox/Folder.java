@@ -859,7 +859,7 @@ public class Folder extends MailItem {
         target.addChild(this);
 
         // and update the folder's data (in memory and DB)
-        ZimbraLog.mailop.info("Moving %s to new parent %s.", this, target);
+        ZimbraLog.mailop.info("Moving %s to new parent %s.", getMailopContext(this), getMailopContext(target));
         DbMailItem.setFolder(this, target);
         mData.folderId = target.getId();
         mData.parentId = target.getId();
