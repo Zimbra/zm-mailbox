@@ -33,20 +33,21 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbSearch;
+import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.Volume;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ListUtil;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
 
 /**
  * @author dkarp
@@ -2322,26 +2323,49 @@ public abstract class MailItem implements Comparable<MailItem> {
                 mbox.getItem(data).updateUnread(-1);
         }
 
-        // actually delete the items from the DB
-        if (info.incomplete || item == null) {
-            if (ZimbraLog.mailop.isInfoEnabled()) {
-                if (item != null)
-                    ZimbraLog.mailop.info("Deleting items from %s.", getMailopContext(item));
-                if (!info.itemIds.isEmpty()) {
-                    for (List<Integer> idList : ListUtil.split(info.itemIds.getAll(), 200))
-                        ZimbraLog.mailop.info("Deleting items: %s.", idList);
+        // Log mailop statements if necessary
+        if (ZimbraLog.mailop.isInfoEnabled()) {
+            if (item != null) {
+                if (item instanceof VirtualConversation) {
+                    ZimbraLog.mailop.info("Deleting Message (id=%d).", ((VirtualConversation) item).getMessageId());
+                } else {
+                    String contentString = "";
+                    if (scope == DeleteScope.CONTENTS_ONLY) {
+                        contentString = "contents of ";
+                    }
+                    ZimbraLog.mailop.info("Deleting %s%s.", contentString, getMailopContext(item));
                 }
             }
+            
+            // If there are any related items being deleted, log them in blocks of 200.
+            int itemId = 0;
+            if (item != null) {
+                itemId = Math.abs(item.getId()); // Use abs() for VirtualConversations
+            }
+            Set<Integer> idSet = new TreeSet<Integer>();
+            for (int id : info.itemIds.getAll()) {
+                id = Math.abs(id); // Use abs() for VirtualConversations
+                if (id != itemId) {
+                    idSet.add(id);
+                }
+                if (idSet.size() >= 200) {
+                    // More than 200 items.
+                    ZimbraLog.mailop.info("Deleting items: %s.", StringUtil.join(",", idSet));
+                    idSet.clear();
+                }
+            }
+            if (idSet.size() > 0) {
+                // Less than 200 items or remainder.
+                ZimbraLog.mailop.info("Deleting items: %s.", StringUtil.join(",", idSet));
+            }
+        }
+
+        // actually delete the items from the DB
+        if (info.incomplete || item == null) {
             DbMailItem.delete(mbox, info.itemIds.getAll());
         } else if (scope == DeleteScope.CONTENTS_ONLY) {
-            ZimbraLog.mailop.info("Deleting contents of %s.", getMailopContext(item));
             DbMailItem.deleteContents(item);
         } else {
-            if (item instanceof VirtualConversation) {
-                ZimbraLog.mailop.info("Deleting Message %d.", ((VirtualConversation) item).getMessageId());
-            } else {
-                ZimbraLog.mailop.info("Deleting %s.", getMailopContext(item));
-            }
             DbMailItem.delete(item);
         }
 
