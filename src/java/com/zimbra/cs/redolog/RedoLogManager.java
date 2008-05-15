@@ -225,8 +225,11 @@ public class RedoLogManager {
 				mLogWriter.open();
                 mRolloverMgr.initSequence(mLogWriter.getSequence());
 				RedoPlayer redoPlayer = new RedoPlayer(true);
-				numRecoveredOps = redoPlayer.runCrashRecovery(this, postStartupRecoveryOps);
-                redoPlayer.shutdown();
+				try {
+				    numRecoveredOps = redoPlayer.runCrashRecovery(this, postStartupRecoveryOps);
+				} finally {
+				    redoPlayer.shutdown();
+				}
 				mLogWriter.close();
 			} catch (Exception e) {
 				mLog.fatal("Exception during crash recovery");

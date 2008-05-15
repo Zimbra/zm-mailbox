@@ -99,10 +99,15 @@ public class CreateVolume extends RedoableOp {
     }
 
     public void redo() throws Exception {
-        Volume vol = Volume.getById(mId);
-        if (vol != null) {
-            mLog.info("Volume " + mId + " already exists");
-            return;
+        try {
+            Volume vol = Volume.getById(mId);
+            if (vol != null) {
+                mLog.info("Volume " + mId + " already exists");
+                return;
+            }
+        } catch (VolumeServiceException e) {
+            if (e.getCode() != VolumeServiceException.NO_SUCH_VOLUME)
+                throw e;
         }
         try {
             Volume.create(mId, mType, mName, mRootPath,

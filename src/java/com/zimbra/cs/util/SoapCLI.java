@@ -325,9 +325,9 @@ public abstract class SoapCLI {
         "yyyyMMddHHmmssSSS",
         "yyyyMMddHHmmss"
     };
-    protected static final String CANONICAL_DATETIME_FORMAT = DATETIME_FORMATS[0];
+    public static final String CANONICAL_DATETIME_FORMAT = DATETIME_FORMATS[0];
 
-    protected static Date parseDatetime(String str) {
+    public static Date parseDatetime(String str) {
         for (String formatStr: DATETIME_FORMATS) {
             SimpleDateFormat fmt = new SimpleDateFormat(formatStr);
             fmt.setLenient(false);
@@ -339,7 +339,7 @@ public abstract class SoapCLI {
         return null;
     }
 
-    protected static String getAllowedDatetimeFormatsHelp() {
+    public static String getAllowedDatetimeFormatsHelp() {
         StringBuilder sb = new StringBuilder();
         sb.append("Specify date/time in one of these formats:\n\n");
         Date d = new Date();
