@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.service.mail;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -887,7 +888,7 @@ public class CalendarUtils {
         Element orgElt = element
                 .getOptionalElement(MailConstants.E_CAL_ORGANIZER);
         if (orgElt == null) {
-            if (hasAttendees)
+            if (hasAttendees && !LC.calendar_allow_null_organizer_with_attendees.booleanValue())
                 throw ServiceException.INVALID_REQUEST(
                         "missing organizer when attendees are present", null);
         } else {
