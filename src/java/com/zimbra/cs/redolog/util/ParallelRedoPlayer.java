@@ -177,11 +177,8 @@ public class ParallelRedoPlayer extends RedoPlayer {
                     Zimbra.halt("Out of memory while executing redo op", oome);
                 } catch (Throwable e) {
                     ZimbraLog.redolog.error("Unable to execute redo op: " + op.toString(), e);
-                    if (!ignoreReplayErrors()) {
+                    if (!ignoreReplayErrors())
                         raiseError(e);
-                        mQueue.clear();
-                        break;
-                    }
                 }
             }
         }
