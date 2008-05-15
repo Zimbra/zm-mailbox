@@ -21,7 +21,6 @@ import org.dom4j.QName;
 public class HeaderConstants {
     public static final QName CONTEXT = QName.get("context", ZimbraNamespace.ZIMBRA);
     public static final String E_A          = "a";
-    public static final String E_NO_NOTIFY  = "nonotify";
     public static final String E_FORMAT     = "format";
     public static final String A_TYPE       = "type";
     public static final String E_AUTH_TOKEN = "authToken";
@@ -30,8 +29,9 @@ public class HeaderConstants {
     public static final String A_HOPCOUNT   = "hops";
     public static final String A_MOUNTPOINT = "link";
     public static final String E_NO_QUALIFY = "noqualify";
+    public static final String E_NO_NOTIFY  = "nonotify";
     public static final String E_NO_SESSION = "nosession";
-    public static final String E_SESSION_ID = "sessionId";
+    public static final String E_SESSION    = "session";
     public static final String A_ACCOUNT_ID = "acct";
     public static final String A_ID         = "id";
     public static final String E_NOTIFY     = "notify";
