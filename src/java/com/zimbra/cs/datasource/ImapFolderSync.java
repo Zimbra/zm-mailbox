@@ -34,6 +34,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.db.DbImapMessage;
+import com.zimbra.cs.db.Db;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.common.service.ServiceException;
@@ -48,6 +49,8 @@ import java.util.HashSet;
 import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.sql.SQLException;
 
 class ImapFolderSync {
     private final ImapSync imapSync;
@@ -58,7 +61,8 @@ class ImapFolderSync {
     private Folder folder;
     private ImapFolder tracker;
     private ImapMessageCollection trackedMsgs;
-    private Set<Integer> localIds;
+    private Set<Integer> msgIds;
+    private List<Integer> newMsgIds;
 
     private static final Log LOG = ZimbraLog.datasource;
 
@@ -139,10 +143,6 @@ class ImapFolderSync {
         }
     }
     
-    private boolean isSelectable() {
-        return tracker != null && tracker.getUidValidity() > 0;
-    }
-
     /*
      * Synchronizes messages between local and remote folder.
      * Get list of all local ids:
@@ -158,9 +158,9 @@ class ImapFolderSync {
         selectImapFolder(tracker.getRemotePath());
         checkUidValidity();
         trackedMsgs = DbImapMessage.getImapMessages(mailbox, ds, tracker);
-        localIds = getLocalIds();
+        msgIds = getMessageIds();
         long lastUid = trackedMsgs.getMaxUid();
-        boolean newMsgs = hasNewImapMessages(lastUid);
+        boolean newMsgs = hasNewRemoteMessages(lastUid);
         // Sync flags if there are changes or fullsync requested
         if (lastUid > 0 && (fullSync || newMsgs || hasLocalChanges())) {
             syncFlags(lastUid);
@@ -169,32 +169,34 @@ class ImapFolderSync {
         if (newMsgs) {
             fetchNewMessages(lastUid);
         }
+        newMsgIds = new ArrayList<Integer>();
         // Remaining local ids are for new or deleted messages
-        for (int id : localIds) {
+        for (int id : msgIds) {
             ImapMessage msg = trackedMsgs.getByItemId(id);
             if (msg != null) {
-                deleteMessage(id);
+                deleteMessage(id); // Message deleted remotely
             } else {
-                appendMessage(id);
+                newMsgIds.add(id);
+                stats.addedRemotely++;
             }
         }
     }
 
     private boolean hasLocalChanges() {
-        for (int id : localIds) {
+        for (int id : msgIds) {
             if (!trackedMsgs.containsItemId(id)) {
                 return true; // Has new local message
             }
         }
         for (ImapMessage msg : trackedMsgs) {
-            if (!localIds.contains(msg.getItemId())) {
+            if (!msgIds.contains(msg.getItemId())) {
                 return true; // Has deleted local message
             }
         }
         return false;
     }
 
-    private boolean hasNewImapMessages(long lastUid) {
+    private boolean hasNewRemoteMessages(long lastUid) {
         Mailbox mb = getMailbox();
         long uidNext = mb.getUidNext();
         return mb.getExists() > 0 && (uidNext <= 0 || lastUid + 1 < uidNext);
@@ -286,36 +288,50 @@ class ImapFolderSync {
         try {
             mailbox.delete(null, id, MailItem.TYPE_UNKNOWN);
         } catch (MailServiceException.NoSuchItemException e) {
-            // Ignore
+            debug("Local message with id %d not found", id);
         }
         DbImapMessage.deleteImapMessage(mailbox, tracker.getItemId(), id);
         stats.deletedLocally++;
     }
 
+    public void appendNewMessages() throws ServiceException, IOException {
+        if (newMsgIds == null || newMsgIds.isEmpty()) {
+            return; // No messages to be appended
+        }
+        info("Appending %d new message(s) to remote IMAP folder", newMsgIds.size());
+        Iterator<Integer> it = newMsgIds.iterator();
+        while (it.hasNext()) {
+            appendMessage(it.next());
+            it.remove();
+        }
+    }
+    
     private void appendMessage(int id) throws ServiceException, IOException {
         debug("Appending new local message with item id %d", id);
         Message msg = mailbox.getMessageById(null, id);
-        if (msg != null) {
-            long uid = ImapUtil.appendUid(connection, getMailbox().getName(), msg);
-            if (uid <= 0) {
-                throw ServiceException.FAILURE(
-                    "Cannot determine UID for message with id " + id +
-                    " appended to folder '" + folder.getPath() + "'", null);
+        if (msg == null) {
+            return; // Must have been deleted while syncing
+        }
+        String error = null;
+        long uid = ImapUtil.appendUid(connection, tracker.getRemotePath(), msg);
+        if (uid <= 0) {
+            error = "Cannot determine UID for message";
+        } else {
+            try {
+                DbImapMessage.storeImapMessage(
+                    mailbox, folder.getId(), uid, id, msg.getFlagBitmask());
+            } catch (ServiceException e) {
+                Throwable cause = e.getCause();
+                if (cause != null && cause instanceof SQLException &&
+                    Db.errorMatches((SQLException) cause, Db.Error.DUPLICATE_ROW)) {
+                    error = "A tracker already exists for the message";
+                } else {
+                    throw e;
+                }
             }
-            // TODO FIX THIS!!!
-            // If message was moved from one folder to another then the item
-            // id will be the same. If we happen to process the destination
-            // folder first, then there will be an existing tracker for the
-            // message that has not yet been deleted. This will cause the
-            // next call to fail with a duplicate key since the primary key
-            // is (mbox_id, item_id) and does not include the folder id.
-            // We need to figure out a way around this without changing
-            // the schema. Simply updating the existing tracker does not
-            // work since we won't find a tracker when processing the source
-            // folder and won't delete the remote message.
-            DbImapMessage.storeImapMessage(
-                mailbox, folder.getId(), uid, id, msg.getFlagBitmask());
-            stats.addedRemotely++;
+        }
+        if (error != null) {
+            warn("Unable to append message with id " + id + ": " + error, null);
         }
     }
 
@@ -364,8 +380,8 @@ class ImapFolderSync {
                 continue;
             }
             int msgId = trackedMsg.getItemId();
-            if (localIds.contains(msgId)) {
-                localIds.remove(msgId);
+            if (msgIds.contains(msgId)) {
+                msgIds.remove(msgId);
                 try {
                     updateFlags(trackedMsg, md.getFlags());
                     continue;
@@ -410,7 +426,7 @@ class ImapFolderSync {
         for (long uid : uids) {
             ImapMessage msg = trackedMsgs.getByUid(uid);
             DbImapMessage.deleteImapMessage(
-                mailbox, msg.getItemId(), tracker.getItemId());
+                mailbox, tracker.getItemId(), msg.getItemId());
             stats.deletedRemotely++;
         }
     }
@@ -523,7 +539,7 @@ class ImapFolderSync {
         }
     }
 
-    private Set<Integer> getLocalIds() throws ServiceException {
+    private Set<Integer> getMessageIds() throws ServiceException {
         Set<Integer> localIds = new HashSet<Integer>();
         int fid = folder.getId();
         for (int id : mailbox.listItemIds(null, MailItem.TYPE_MESSAGE, fid)) {
@@ -551,9 +567,12 @@ class ImapFolderSync {
         LOG.info("[" + folder.getPath() + "] " + String.format(fmt, args));
     }
 
-    private void error(String msg, Throwable e) {
+    private void warn(String msg, Throwable e) {
         LOG.error("[" + folder.getPath() + "] " + msg, e);
     }
 
+    private void error(String msg, Throwable e) {
+        LOG.error("[" + folder.getPath() + "] " + msg, e);
+    }
 }
 
