@@ -32,6 +32,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -42,7 +43,6 @@ import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
 
 import org.apache.commons.codec.EncoderException;
@@ -60,6 +60,7 @@ import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.cs.util.JMSession;
@@ -393,7 +394,7 @@ public class ImapMessage implements Comparable<ImapMessage> {
         }
     }
 
-    void serializeEnvelope(PrintStream ps, MimeMessage mm) throws MessagingException {
+    static void serializeEnvelope(PrintStream ps, MimeMessage mm) throws MessagingException {
         // 7.4.2: "The fields of the envelope structure are in the following order: date, subject,
         //         from, sender, reply-to, to, cc, bcc, in-reply-to, and message-id.  The date,
         //         subject, in-reply-to, and message-id fields are strings.  The from, sender,
@@ -413,85 +414,111 @@ public class ImapMessage implements Comparable<ImapMessage> {
         ps.write(')');
     }
 
-    private String nATOM(String value) { return value == null ? "NIL" : '"' + value.toUpperCase() + '"'; }
+    private static String nATOM(String value) { return value == null ? "NIL" : '"' + value.toUpperCase() + '"'; }
 
-    void serializeStructure(PrintStream ps, MimePart mp, boolean extensions) throws IOException, MessagingException {
-        serializeStructure(ps, mp, extensions, false);
-    }
-    void serializeStructure(PrintStream ps, MimePart mp, boolean extensions, boolean inDigest) throws IOException, MessagingException {
-        String cthdr = mp.getHeader("Content-Type", null);
-        if (cthdr == null || cthdr.trim().equals(""))
-            cthdr = inDigest ? Mime.CT_MESSAGE_RFC822 : Mime.CT_DEFAULT;
-        ContentType ctype = new ContentType(cthdr);
-        if (ctype.getValue().equals(Mime.CT_TEXT_PLAIN) && (ctype.getParameter(Mime.P_CHARSET) == null || ctype.getParameter(Mime.P_CHARSET).trim().equals("")))
-            ctype.setParameter(Mime.P_CHARSET, Mime.P_CHARSET_DEFAULT);
+    static void serializeStructure(PrintStream ps, MimeMessage root, boolean extensions) throws IOException, MessagingException {
+        LinkedList<LinkedList<MPartInfo>> queue = new LinkedList<LinkedList<MPartInfo>>();
+        LinkedList<MPartInfo> level = new LinkedList<MPartInfo>();
+        level.add(Mime.getParts(root).get(0));
+        queue.add(level);
 
-        ps.write('(');
-        String primary = nATOM(ctype.getPrimaryType()), subtype = nATOM(ctype.getSubType());
-        if (primary.equals("\"MULTIPART\"")) {
-            // 7.4.2: "Multiple parts are indicated by parenthesis nesting.  Instead of a body type
-            //         as the first element of the parenthesized list, there is a sequence of one
-            //         or more nested body structures.  The second element of the parenthesized
-            //         list is the multipart subtype (mixed, digest, parallel, alternative, etc.)."
-            MimeMultipart multi = (MimeMultipart) Mime.getMultipartContent(mp, mp.getContentType());
-            for (int i = 0; i < multi.getCount(); i++)
-                serializeStructure(ps, (MimePart) multi.getBodyPart(i), extensions, subtype.equals("\"DIGEST\""));
-            if (multi.getCount() <= 0)
-                ps.print("NIL");
-            ps.write(' ');  ps.print(subtype);
-            if (extensions) {
-                // 7.4.2: "Extension data follows the multipart subtype.  Extension data is never
-                //         returned with the BODY fetch, but can be returned with a BODYSTRUCTURE
-                //         fetch.  Extension data, if present, MUST be in the defined order.  The
-                //         extension data of a multipart body part are in the following order:
-                //         body parameter parenthesized list, body disposition, body language,
-                //         body location"
-                ps.write(' ');  nparams(ps, ctype);
-                ps.write(' ');  ndisposition(ps, mp.getHeader("Content-Disposition", null));
-                ps.write(' ');  nlist(ps, mp.getContentLanguage());
-                ps.write(' ');  nstring(ps, mp.getHeader("Content-Location", null));
+        boolean pop = false;
+        while (!queue.isEmpty()) {
+            level = queue.getLast();
+            if (level.isEmpty()) {
+                queue.removeLast();  pop = true;  continue;
             }
-        } else {
-            // 7.4.2: "The basic fields of a non-multipart body part are in the following order:
-            //         body type, body subtype, body parameter parenthesized list, body id, body
-            //         description, body encoding, body size."
-            String cte = mp.getEncoding();
-            cte = (cte == null || cte.trim().equals("") ? "7bit" : cte);
-            boolean rfc822 = primary.equals("\"MESSAGE\"") && subtype.equals("\"RFC822\"");
-            aSTRING(ps, ctype.getPrimaryType());  ps.write(' ');  aSTRING(ps, ctype.getSubType());
-            ps.write(' ');  nparams(ps, ctype);
-            ps.write(' ');  nstring(ps, mp.getContentID());
-            ps.write(' ');  nstring2047(ps, mp.getDescription());
-            ps.write(' ');  aSTRING(ps, cte);
-            ps.write(' ');  ps.print(Math.max(mp.getSize(), 0));
-            if (rfc822) {
-                // 7.4.2: "A body type of type MESSAGE and subtype RFC822 contains, immediately
-                //         after the basic fields, the envelope structure, body structure, and
-                //         size in text lines of the encapsulated message."
-                Object content = Mime.getMessageContent(mp);
-                ps.write(' ');  serializeEnvelope(ps, (MimeMessage) content);
-                ps.write(' ');  serializeStructure(ps, (MimePart) content, extensions);
-                ps.write(' ');  ps.print(getLineCount(mp));
-            } else if (primary.equals("\"TEXT\"")) {
-                // 7.4.2: "A body type of type TEXT contains, immediately after the basic fields, the
-                //         size of the body in text lines.  Note that this size is the size in its
-                //         content transfer encoding and not the resulting size after any decoding."
-                ps.write(' ');  ps.print(getLineCount(mp));
+
+            MPartInfo mpart = level.getFirst();
+            MimePart mp = mpart.getMimePart();
+            boolean hasChildren = mpart.getChildren() != null && !mpart.getChildren().isEmpty();
+
+            // we used to force unset charsets on text/plain parts to US-ASCII, but that always seemed unwise...
+            ContentType ctype = new ContentType(mp.getHeader("Content-Type", null)).setValue(mpart.getContentType());
+            String primary = nATOM(ctype.getPrimaryType()), subtype = nATOM(ctype.getSubType());
+
+            if (!pop)
+                ps.write('(');
+            if (primary.equals("\"MULTIPART\"")) {
+                if (!pop) {
+                    // 7.4.2: "Multiple parts are indicated by parenthesis nesting.  Instead of a body type
+                    //         as the first element of the parenthesized list, there is a sequence of one
+                    //         or more nested body structures.  The second element of the parenthesized
+                    //         list is the multipart subtype (mixed, digest, parallel, alternative, etc.)."
+                    if (!hasChildren) {
+                        ps.print("NIL");
+                    } else {
+                        queue.addLast(new LinkedList<MPartInfo>(mpart.getChildren()));
+                        continue;
+                    }
+                }
+                ps.write(' ');  ps.print(subtype);
+                if (extensions) {
+                    // 7.4.2: "Extension data follows the multipart subtype.  Extension data is never
+                    //         returned with the BODY fetch, but can be returned with a BODYSTRUCTURE
+                    //         fetch.  Extension data, if present, MUST be in the defined order.  The
+                    //         extension data of a multipart body part are in the following order:
+                    //         body parameter parenthesized list, body disposition, body language,
+                    //         body location"
+                    ps.write(' ');  nparams(ps, ctype);
+                    ps.write(' ');  ndisposition(ps, mp.getHeader("Content-Disposition", null));
+                    ps.write(' ');  nlist(ps, mp.getContentLanguage());
+                    ps.write(' ');  nstring(ps, mp.getHeader("Content-Location", null));
+                }
+            } else {
+                if (!pop) {
+                    // 7.4.2: "The basic fields of a non-multipart body part are in the following order:
+                    //         body type, body subtype, body parameter parenthesized list, body id, body
+                    //         description, body encoding, body size."
+                    String cte = mp.getEncoding();
+                    cte = (cte == null || cte.trim().equals("") ? "7bit" : cte);
+                    aSTRING(ps, ctype.getPrimaryType());  ps.write(' ');  aSTRING(ps, ctype.getSubType());
+                    ps.write(' ');  nparams(ps, ctype);
+                    ps.write(' ');  nstring(ps, mp.getContentID());
+                    ps.write(' ');  nstring2047(ps, mp.getDescription());
+                    ps.write(' ');  aSTRING(ps, cte);
+                    ps.write(' ');  ps.print(Math.max(mp.getSize(), 0));
+                }
+                boolean rfc822 = primary.equals("\"MESSAGE\"") && subtype.equals("\"RFC822\"");
+                if (rfc822) {
+                    // 7.4.2: "A body type of type MESSAGE and subtype RFC822 contains, immediately
+                    //         after the basic fields, the envelope structure, body structure, and
+                    //         size in text lines of the encapsulated message."
+                    if (!pop) {
+                        if (!hasChildren) {
+                            ps.print(" NIL NIL");
+                        } else {
+                            MimeMessage mm = (MimeMessage) mpart.getChildren().get(0).getMimePart();
+                            ps.write(' ');  serializeEnvelope(ps, mm);  ps.write(' ');
+                            queue.addLast(new LinkedList<MPartInfo>(mpart.getChildren()));
+                            continue;
+                        }
+                    }
+                    ps.write(' ');  ps.print(getLineCount(mp));
+                } else if (primary.equals("\"TEXT\"")) {
+                    // 7.4.2: "A body type of type TEXT contains, immediately after the basic fields, the
+                    //         size of the body in text lines.  Note that this size is the size in its
+                    //         content transfer encoding and not the resulting size after any decoding."
+                    ps.write(' ');  ps.print(getLineCount(mp));
+                }
+                if (extensions) {
+                    // 7.4.2: "Extension data follows the basic fields and the type-specific fields
+                    //         listed above.  Extension data is never returned with the BODY fetch,
+                    //         but can be returned with a BODYSTRUCTURE fetch.  Extension data, if
+                    //         present, MUST be in the defined order.  The extension data of a
+                    //         non-multipart body part are in the following order: body MD5, body
+                    //         disposition, body language, body location"
+                    ps.write(' ');  nstring(ps, mp.getContentMD5());
+                    ps.write(' ');  ndisposition(ps, mp.getHeader("Content-Disposition", null));
+                    ps.write(' ');  nlist(ps, mp.getContentLanguage());
+                    ps.write(' ');  nstring(ps, mp.getHeader("Content-Location", null));
+                }
             }
-            if (extensions) {
-                // 7.4.2: "Extension data follows the basic fields and the type-specific fields
-                //         listed above.  Extension data is never returned with the BODY fetch,
-                //         but can be returned with a BODYSTRUCTURE fetch.  Extension data, if
-                //         present, MUST be in the defined order.  The extension data of a
-                //         non-multipart body part are in the following order: body MD5, body
-                //         disposition, body language, body location"
-                ps.write(' ');  nstring(ps, mp.getContentMD5());
-                ps.write(' ');  ndisposition(ps, mp.getHeader("Content-Disposition", null));
-                ps.write(' ');  nlist(ps, mp.getContentLanguage());
-                ps.write(' ');  nstring(ps, mp.getHeader("Content-Location", null));
-            }
+            ps.write(')');
+
+            level.removeFirst();
+            pop = false;
         }
-        ps.write(')');
     }
 
     private static int getLineCount(MimePart mp) {
@@ -523,5 +550,17 @@ public class ImapMessage implements Comparable<ImapMessage> {
         for (String s : samples) {
             nstring2047(ps, s);  ps.write(' ');  nstring(ps, s);  ps.write(' ');  astring(ps, s);  ps.write(' ');  aSTRING(ps, s);  ps.write('\n');
         }
+
+//        java.io.File dir = new java.io.File("C:\\Temp\\mail");
+//        for (java.io.File file : dir.listFiles()) {
+//            MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), new java.io.FileInputStream(file));
+//            ByteArrayOutputStream baosold = new ByteArrayOutputStream(), baosnew = new ByteArrayOutputStream();
+//            serializeStructure(new PrintStream(baosold), mm, true);
+//            iterativeSerializeStructure(new PrintStream(baosnew), mm, true);
+//            if (!(new String(baosold.toByteArray())).equals(new String(baosnew.toByteArray())))
+//                System.out.println("mismatch on file: " + file.getName());
+//            else
+//                System.out.println("success on file: " + file.getName());
+//        }
     }
 }
