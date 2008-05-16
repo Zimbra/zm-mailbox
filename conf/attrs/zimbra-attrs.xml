@@ -3196,4 +3196,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>If true, a permanent failure (552) is returned when the user is over quota.  If false, a temporary failure (452) is returned.</desc>
 </attr>
 
+<attr id="658" name="zimbraYahooId" type="string" max="256" cardinality="single" optionalIn="account" flags="domainAdminModifiable">
+  <desc>Yahoo ID</desc>
+</attr>
+
 </attrs>

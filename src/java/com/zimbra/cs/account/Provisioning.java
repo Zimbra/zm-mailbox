@@ -400,6 +400,11 @@ public abstract class Provisioning {
      * UUID for the entry
      */
     public static final String A_zimbraId = "zimbraId";
+    
+    /**
+     * access control list for the entry
+     */
+    public static final String A_zimbraACE = "zimbraACE";
 
     /**
      * pointer to the aliased id
@@ -1250,6 +1255,8 @@ public abstract class Provisioning {
     public static final String A_zimbraForeignPrincipal = "zimbraForeignPrincipal";
     public static final String A_zimbraFileUploadMaxSize = "zimbraFileUploadMaxSize";
     public static final String A_zimbraSoapRequestMaxSize = "zimbraSoapRequestMaxSize";
+    
+    public static final String A_zimbraYahooId = "zimbraYahooId";
 
     public static final String A_zimbraHttpProxyURL = "zimbraHttpProxyURL";
     
@@ -1640,7 +1647,7 @@ public abstract class Provisioning {
      * @throws ServiceException
      */
     public abstract boolean inDistributionList(Account acct, String zimbraId) throws ServiceException;
-
+    
     /**
      * @return set of all the zimbraId's of lists this account belongs to, including any list in other list. 
      * @throws ServiceException
