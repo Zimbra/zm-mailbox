@@ -47,6 +47,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.TrustedNetwork;
@@ -250,7 +251,7 @@ public class ZimbraServlet extends HttpServlet {
 
     protected void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, Server server, AuthToken authToken)
     throws IOException, ServiceException {
-        String uri = req.getRequestURI(), qs = req.getQueryString();
+        String uri = HttpUtil.encodePath(req.getRequestURI()), qs = req.getQueryString();
         if (qs != null)
             uri += '?' + qs;
         proxyServletRequest(req, resp, server, uri, authToken);
