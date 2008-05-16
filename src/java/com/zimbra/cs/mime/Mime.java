@@ -35,6 +35,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -159,88 +160,89 @@ public class Mime {
      * @throws MessagingException
      */
     public static List<MPartInfo> getParts(MimeMessage mm) throws IOException, MessagingException {
-        List<MPartInfo> parts = new ArrayList<MPartInfo>();
-        if (mm != null)
-            handlePart(mm, "", parts, null, 0);
-
+        List<MPartInfo> parts = listParts(mm);
         Set<MPartInfo> bodies = getBody(parts, true);
         for (MPartInfo mpi : parts) {
             mpi.mIsFilterableAttachment = isFilterableAttachment(mpi, bodies);
             if (mpi.mIsFilterableAttachment && !mpi.getContentType().equals(CT_XML_ZIMBRA_SHARE))
                 mpi.mIsToplevelAttachment = bodies == null || !bodies.contains(mpi) || !INLINEABLE_TYPES.contains(mpi.mContentType);
         }
+        return parts;
+    }
+
+    private static List<MPartInfo> listParts(MimePart root) throws MessagingException, IOException {
+        List<MPartInfo> parts = new ArrayList<MPartInfo>();
+
+        LinkedList<MPartInfo> queue = new LinkedList<MPartInfo>();
+        queue.add(generateMPartInfo(root, null, "", 0));
+
+        while (!queue.isEmpty()) {
+            MPartInfo mpart = queue.removeFirst();
+            MimePart mp = mpart.getMimePart();
+            parts.add(mpart);
+
+            String cts = mpart.mContentType;
+            boolean isMultipart = cts.startsWith(CT_MULTIPART_PREFIX); 
+            boolean isMessage = !isMultipart && cts.equals(CT_MESSAGE_RFC822);
+
+            if (isMultipart) {
+                // IMAP part numbering is screwy: top-level multipart doesn't get a number
+                String prefix = mpart.mPartName.length() > 0 ? (mpart.mPartName + '.') : "";
+                if (mp instanceof MimeMessage)
+                    mpart.mPartName = prefix + "TEXT";
+                Object content = getMultipartContent(mp, cts);
+                if (content instanceof MimeMultipart) {
+                    MimeMultipart multi = (MimeMultipart) content;
+                    mpart.mChildren = new ArrayList<MPartInfo>(multi.getCount());
+                    for (int i = 1; i <= multi.getCount(); i++)
+                        mpart.mChildren.add(generateMPartInfo((MimePart) multi.getBodyPart(i - 1), mpart, prefix + i, i));
+                    queue.addAll(0, mpart.mChildren);
+                }
+            } else if (isMessage) {
+                MimeMessage mm = getMessageContent(mp);
+                if (mm != null) {
+                    MPartInfo child = generateMPartInfo(mm, mpart, mpart.mPartName, 0);
+                    queue.addFirst(child);
+                    mpart.mChildren = Arrays.asList(child);
+                }
+            } else {
+                // nothing to do at this stage
+            }
+        }
 
         return parts;
     }
 
-	// FIXME: this needs to be more robust and ignore exceptions on parts it can't handle
-	// so we get as many as possible
-	private static void handlePart(MimePart mp, String prefix, List<MPartInfo> partList, MPartInfo parent, int partNum)
-    throws IOException, MessagingException {
-        String ctdefault = parent != null && parent.mContentType.equals(CT_MULTIPART_DIGEST) ? CT_MESSAGE_RFC822 : CT_DEFAULT;
-		String cts = getContentType(mp, ctdefault);
-        boolean isMultipart = cts.startsWith(CT_MULTIPART_PREFIX); 
-        boolean isMessage = !isMultipart && cts.equals(CT_MESSAGE_RFC822);
-        boolean digestParent = parent != null && parent.mContentType.equalsIgnoreCase(CT_MULTIPART_DIGEST);
+    private static MPartInfo generateMPartInfo(MimePart mp, MPartInfo parent, String prefix, int partNum) {
+        boolean inDigest = parent != null && parent.mContentType.equals(CT_MULTIPART_DIGEST);
+        String ctdefault = inDigest ? CT_MESSAGE_RFC822 : CT_DEFAULT;
+        String cts = getContentType(mp, ctdefault);
 
-        String disp = null, filename = null;
-        try {
-            disp = mp.getDisposition();
-            filename = getFilename(mp);
-        } catch (ParseException pe) { }
+        String disp = null, filename = getFilename(mp);
         int size = 0;
         try {
-        	size = mp.getSize();
+            disp = mp.getDisposition();
+        } catch (Exception e) { }
+        try {
+            size = mp.getSize();
         } catch (MessagingException me) { }
 
         // the top-level part of a non-multipart message is numbered "1"
+        boolean isMultipart = cts.startsWith(CT_MULTIPART_PREFIX); 
         if (!isMultipart && mp instanceof MimeMessage)
             prefix = (prefix.length() > 0 ? (prefix + ".") : "") + '1';
 
         MPartInfo mpart = new MPartInfo();
-		mpart.mPart = mp;
-		mpart.mParent = parent;
-		mpart.mContentType = cts;
-		mpart.mPartName = prefix;
-		mpart.mPartNum = partNum;
-		mpart.mSize = size;
-		mpart.mChildren = null;
-        mpart.mDisposition = (disp == null ? (digestParent ? Part.ATTACHMENT : "") : disp.toLowerCase());
+        mpart.mPart = mp;
+        mpart.mParent = parent;
+        mpart.mContentType = cts;
+        mpart.mPartName = prefix;
+        mpart.mPartNum = partNum;
+        mpart.mSize = size;
+        mpart.mChildren = null;
+        mpart.mDisposition = (disp == null ? (inDigest  && cts.equals(CT_MESSAGE_RFC822) ? Part.ATTACHMENT : "") : disp.toLowerCase());
         mpart.mFilename = (filename == null ? "" : filename.toLowerCase());
-		partList.add(mpart);
-		if (parent != null) {
-			if (parent.mChildren == null)
-				parent.mChildren = new ArrayList<MPartInfo>();
-			parent.mChildren.add(mpart);
-		}
-
-		// System.out.println("    " + mpart.info);
-
-		if (isMultipart) {
-            // IMAP part numbering is screwy: top-level multipart doesn't get a number
-			String newPrefix = prefix.length() > 0 ? (prefix + '.') : "";
-            if (mp instanceof MimeMessage)
-                mpart.mPartName = newPrefix + "TEXT";
-			mpart.mContent = getMultipartContent(mp, cts);
-			if (mpart.mContent instanceof MimeMultipart)
-				handleMultipart((MimeMultipart) mpart.mContent, newPrefix, partList, mpart);
-		} else if (isMessage) {
-			mpart.mContent = getMessageContent(mp);
-			if (mpart.mContent instanceof MimeMessage)
-				handlePart((MimeMessage) mpart.mContent, prefix, partList, mpart, 0);
-		} else {
-			// nothing to do at this stage
-		}
-	}
-
-    private static void handleMultipart(MimeMultipart multi, String prefix, List<MPartInfo> partList, MPartInfo parent)
-    throws IOException, MessagingException {
-        for (int i = 0; i < multi.getCount(); i++) {
-            BodyPart bp = multi.getBodyPart(i);
-            if (!(bp instanceof MimePart))
-                continue;
-            handlePart((MimePart) bp, prefix + (i + 1), partList, parent, i+1);
-        }
+        return mpart;
     }
 
     private static MimeMultipart validateMultipart(MimeMultipart multi, MimePart mp) throws MessagingException, IOException {

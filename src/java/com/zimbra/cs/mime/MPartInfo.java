@@ -32,12 +32,11 @@ public class MPartInfo {
 	MPartInfo mParent;
 	List<MPartInfo> mChildren;
 	String mPartName;
-	String mContentType = "";
-    String mDisposition = "";
-    String mFilename = "";
+	String mContentType;
+    String mDisposition;
+    String mFilename;
 	int mPartNum;
 	int mSize;
-	Object mContent; // content set to MimeMultipart or MimeMessage if it was a multipart and/or message
     boolean mIsFilterableAttachment;
     boolean mIsToplevelAttachment;
 
