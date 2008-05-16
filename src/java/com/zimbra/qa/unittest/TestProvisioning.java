@@ -51,6 +51,9 @@ import com.zimbra.soap.SoapEngine;
 
 public class TestProvisioning extends TestCase {
     
+    // whether to test start TLS for external GAL and auth
+    private static final boolean TEST_STARTTLS = false;
+    
     private Provisioning mProv;
     LdapProvisioning mLdapProv;
     CustomProvTester mCustomProvTester;
@@ -570,7 +573,8 @@ public class TestProvisioning extends TestCase {
         
         // external ldap auth, test using our own ldap
         externalAuthTest(account, false);
-        externalAuthTest(account, true);
+        if (TEST_STARTTLS)
+            externalAuthTest(account, true);
         
         Domain domain = mProv.getDomain(account);
         Map attrsToMod = new HashMap<String, Object>();
@@ -698,6 +702,7 @@ public class TestProvisioning extends TestCase {
         
         String krb5Principal1 = "fp1@FOO.COM";
         String krb5Principal2 = "fp2@BAR.COM";
+        
         // create an account
         Map<String, Object> acctAttrs = new HashMap<String, Object>();
         mCustomProvTester.addAttr(acctAttrs, BASE_DN_PSEUDO_ATTR, ACCT_BASE_DN);
@@ -753,25 +758,54 @@ public class TestProvisioning extends TestCase {
         else
             TestProvisioningUtil.verifySameEntry(entry, entryGot);        
         
-        // get account by krb5Principal
+        // get account by krb5Principal using account foreign principal
+        // account has multiple kerberos principals
         entryGot = mProv.get(Provisioning.AccountBy.krb5Principal, krb5Principal1);
         TestProvisioningUtil.verifySameEntry(entry, entryGot);
         entryGot = mProv.get(Provisioning.AccountBy.krb5Principal, krb5Principal2);
         TestProvisioningUtil.verifySameEntry(entry, entryGot);
+        
+        // test dup zFP on multiple accounts - should fail
+        String krb5PrincipalDup = "fp-dup@FOO.COM";
+        acctAttrs.clear();
+        acctAttrs.put(Provisioning.A_zimbraForeignPrincipal, new String[]{"kerberos5:"+krb5PrincipalDup});
+        Account acctX = mProv.createAccount("acctx-dup-kerberos@" + DOMAIN_NAME, "test123", acctAttrs);
+        Account acctY = mProv.createAccount("accty-dup-kerberos@" + DOMAIN_NAME, "test123", acctAttrs);
+        try {
+            mProv.get(Provisioning.AccountBy.krb5Principal, krb5PrincipalDup);
+            fail();
+        } catch (ServiceException e) {
+            assertEquals(AccountServiceException.MULTIPLE_ACCOUNTS_MATCHED, e.getCode());
+        }
+        
+        // get account by krb5Principal using domain realm mapping
+        Map<String, Object> domainAttrs = new HashMap<String, Object>();
+        domainAttrs.put(Provisioning.A_zimbraAuthMech, "kerberos5"); // not necessary, put it to make sure if it is present things should still work
+        domainAttrs.put(Provisioning.A_zimbraAuthKerberos5Realm, "JUNKREALM.COM");
+        String krb5DomainName = "krb-test." + DOMAIN_NAME;
+        Domain krb5TestDomain = mProv.createDomain(krb5DomainName, domainAttrs);
+        Account krb5TestAcct = mProv.createAccount("user1@"+krb5DomainName, "test123", null);
+        entryGot = mProv.get(Provisioning.AccountBy.krb5Principal, "user1@JUNKREALM.COM");
+        TestProvisioningUtil.verifySameEntry(krb5TestAcct, entryGot);
+        
+        
+        
         
         List list = null;
         
         // get all accounts in a domain
         if (!Flag.needLdapPaging("getAllAccounts_domain")) {
             list = mProv.getAllAccounts(domain);
-            TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{entry, adminAcct}, mCustomProvTester.verifyAccountCountForDomainBasedSearch());
+            TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{entry, adminAcct, acctX, acctY}, 
+                                               mCustomProvTester.verifyAccountCountForDomainBasedSearch());
         }
         
         // get all accounts in a domain, visitor version
         if (!Flag.needLdapPaging("getAllAccounts_domain_visitor")) {
             TestVisitor visitor = new TestVisitor();
             mProv.getAllAccounts(domain, visitor);
-            TestProvisioningUtil.verifyEntries(visitor.visited(), new NamedEntry[]{entry, adminAcct}, mCustomProvTester.verifyAccountCountForDomainBasedSearch());
+            TestProvisioningUtil.verifyEntries(visitor.visited(), new NamedEntry[]{entry, adminAcct, acctX, acctY}, 
+                                               mCustomProvTester.verifyAccountCountForDomainBasedSearch());
         }
         
         // get all accounts in a domain and on a server, visitor version
@@ -779,7 +813,8 @@ public class TestProvisioning extends TestCase {
             TestVisitor visitor = new TestVisitor();
             Server server = mProv.getLocalServer();
             mProv.getAllAccounts(domain, server, visitor);
-            TestProvisioningUtil.verifyEntries(visitor.visited(), new NamedEntry[]{entry, adminAcct}, mCustomProvTester.verifyAccountCountForDomainBasedSearch());
+            TestProvisioningUtil.verifyEntries(visitor.visited(), new NamedEntry[]{entry, adminAcct, acctX, acctY}, 
+                                               mCustomProvTester.verifyAccountCountForDomainBasedSearch());
         }
         
         // modify account status
@@ -896,7 +931,7 @@ public class TestProvisioning extends TestCase {
         entry = mProv.get(Provisioning.AccountBy.id, entryId);
         mProv.setCOS(entry, cos);
                 
-        return new Account[]{entry,entrySpecialChars};
+        return new Account[]{entry, entrySpecialChars, acctX, acctY};
     }
     
     private void passwordTest(Account account) throws Exception {
@@ -1390,7 +1425,9 @@ public class TestProvisioning extends TestCase {
         
         // search external gal
         externalGalTest(domain, false);
-        externalGalTest(domain, true);
+        
+        if (TEST_STARTTLS)
+            externalGalTest(domain, true);
     }
     
     private void searchTest(Domain domain) throws Exception {
