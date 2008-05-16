@@ -2966,15 +2966,15 @@ public abstract class ImapHandler extends ProtocolHandler {
                     mm = ImapMessage.getMimeMessage(item);
                     if ((attributes & FETCH_BODY) != 0) {
                         result.print(empty ? "" : " ");  result.print("BODY ");
-                        i4msg.serializeStructure(result, mm, false);  empty = false;
+                        ImapMessage.serializeStructure(result, mm, false);  empty = false;
                     }
                     if ((attributes & FETCH_BODYSTRUCTURE) != 0) {
                         result.print(empty ? "" : " ");  result.print("BODYSTRUCTURE ");
-                        i4msg.serializeStructure(result, mm, true);  empty = false;
+                        ImapMessage.serializeStructure(result, mm, true);  empty = false;
                     }
                     if ((attributes & FETCH_ENVELOPE) != 0) {
                         result.print(empty ? "" : " ");  result.print("ENVELOPE ");
-                        i4msg.serializeEnvelope(result, mm);  empty = false;
+                        ImapMessage.serializeEnvelope(result, mm);  empty = false;
                     }
                     for (ImapPartSpecifier pspec : parts) {
                         result.print(empty ? "" : " ");  pspec.write(result, os, mm);  empty = false;
@@ -3447,8 +3447,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             flushOutput();
     }
 
-    @Override
-    public void dropConnection() {
+    @Override public void dropConnection() {
         dropConnection(true);
     }
     
