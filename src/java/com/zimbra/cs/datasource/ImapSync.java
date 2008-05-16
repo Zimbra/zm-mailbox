@@ -1,5 +1,5 @@
 package com.zimbra.cs.datasource;
-
+                             
 import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.ListData;
@@ -15,16 +15,18 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.SystemUtil;
 
 import java.io.IOException;
-import java.util.Set;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Collections;
+import java.util.Map;
+import java.util.HashMap;
 
 public class ImapSync extends AbstractMailItemImport {
     private final ImapConnection connection;
     private final Folder localRootFolder;
-    private char delimiter; // IMAP hierarchy delimiter (or 0 if flat)
+    private char delimiter; // IMAP hierarchy delimiter (0 if flat)
     private ImapFolderCollection trackedFolders;
+    private Map<Integer, ImapFolderSync> syncedFolders;
+    private boolean fullSync;
 
     private static final Log LOG = ZimbraLog.datasource;
 
@@ -77,9 +79,9 @@ public class ImapSync extends AbstractMailItemImport {
         throws ServiceException {
         validateDataSource();
         connect();
+        this.fullSync = fullSync;
         try {
-            trackedFolders = dataSource.getImapFolders();
-            syncFolders(fullSync);
+            syncFolders();
         } catch (IOException e) {
             throw ServiceException.FAILURE("Folder sync failed", e);
         } finally {
@@ -100,10 +102,28 @@ public class ImapSync extends AbstractMailItemImport {
         }
     }
 
-    private void syncFolders(boolean fs) throws ServiceException, IOException {
-        Set<Integer> excludedIds = new HashSet<Integer>();
-        excludedIds.add(localRootFolder.getId());
-        // Synchronize remote IMAP folders -> local folders
+    private void syncFolders() throws ServiceException, IOException {
+        trackedFolders = dataSource.getImapFolders();
+        syncedFolders = new HashMap<Integer, ImapFolderSync>();
+        // Synchronize local and remote folders
+        syncRemoteFolders();
+        syncLocalFolders();
+        // Append new IMAP messages for folders which have been synchronized.
+        // This is done after IMAP messages have been deleted in order to
+        // avoid problems when local messages are moved between folders
+        // (see bug 27924).
+        for (ImapFolderSync ifs : syncedFolders.values()) {
+            ifs.appendNewMessages();
+        }
+        // Any remaining folder trackers are for folders which were deleted
+        // both locally and remotely.
+        for (ImapFolder tracker : trackedFolders) {
+            dataSource.deleteImapFolder(tracker);
+        }
+    }
+
+    // Synchronize remote IMAP folders -> local folders
+    private void syncRemoteFolders() throws ServiceException, IOException {
         for (ListData ld : ImapUtil.listFolders(connection)) {
             String path = ld.getMailbox();
             ImapFolder tracker = trackedFolders.getByRemotePath(path);
@@ -111,19 +131,24 @@ public class ImapSync extends AbstractMailItemImport {
                 trackedFolders.remove(tracker);
             }
             try {
-                tracker = new ImapFolderSync(this, tracker).syncFolder(ld, fs);
+                ImapFolderSync ifs = new ImapFolderSync(this, tracker);
+                tracker = ifs.syncFolder(ld, fullSync);
                 if (tracker != null) {
-                    excludedIds.add(tracker.getItemId());
+                    syncedFolders.put(tracker.getItemId(), ifs);
                 }
             } catch (Exception e) {
                 LOG.error("Skipping synchronization of IMAP folder '%s' " +
                           "due to error", path, e);
                 if (FAIL_ON_SYNC_ERROR) {
-                    return;
+                    throw ServiceException.FAILURE(
+                        "Synchronization of IMAP foldr '%s' failed", e);
                 }
             }
         }
-        // Synchronize local folders -> IMAP folders
+    }
+
+    // Synchronize local folders -> IMAP folders
+    private void syncLocalFolders() throws ServiceException, IOException {
         List<Folder> folders = localRootFolder.getSubfolderHierarchy();
         // Folder list is in depth-first order, so reverse entries so that
         // children are before parents. This avoids problems when deleting
@@ -131,35 +156,32 @@ public class ImapSync extends AbstractMailItemImport {
         Collections.reverse(folders);
         for (Folder folder : folders) {
             int id = folder.getId();
-            if (!excludedIds.contains(id)) {
+            if (id != localRootFolder.getId() && !syncedFolders.containsKey(id)) {
                 ImapFolder tracker = trackedFolders.getByItemId(id);
                 if (tracker != null) {
                     trackedFolders.remove(tracker);
                 }
                 try {
-                    new ImapFolderSync(this, tracker).syncFolder(folder, fs);
+                    ImapFolderSync ifs = new ImapFolderSync(this, tracker);
+                    ifs.syncFolder(folder, fullSync);
+                    syncedFolders.put(id, ifs);
                 } catch (Exception e) {
                     LOG.error("Skipping synchronization of local folder " +
                               "'%s' (id = %d) due to error", folder.getName(),
                               folder.getId(), e);
                     if (FAIL_ON_SYNC_ERROR) {
-                        return;
+                        throw ServiceException.FAILURE(
+                            "Synchronization of local folder '%s' failed", e);
                     }
                 }
             }
-        }
-        // Any remaining trackers represent folders which were deleted both
-        // locally and remotely and should be removed.
-        for (ImapFolder tracker : trackedFolders) {
-            dataSource.deleteImapFolder(tracker);
         }
     }
 
     /*
      * Returns the path to the Zimbra folder that stores messages for the given
-     * JavaMail folder. The Zimbra folder has the same path as the JavaMail
-     * folder, but is relative to the root folder specified by the
-     * <tt>DataSource</tt>.
+     * IMAP folder. The Zimbra folder has the same path as the IMAP folder,
+     * but is relative to the root folder specified by the DataSource.
      */
     String getLocalPath(String remotePath, char delimiter) {
         String relativePath = remotePath;

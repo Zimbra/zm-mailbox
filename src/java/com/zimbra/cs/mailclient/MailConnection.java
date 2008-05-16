@@ -190,11 +190,12 @@ public abstract class MailConnection {
     public synchronized boolean isLogout() {
         return state == State.LOGOUT;
     }
-    
+
     protected synchronized void setState(State state) {
-        getLogger().debug("setState: " + this.state + " -> " + state);
-        this.state = state;
-        notifyAll();
+        if (this.state != state) {
+            getLogger().debug("setState: " + this.state + " -> " + state);
+            this.state = state;
+        }
     }
 
     protected void checkState(State expected) {
