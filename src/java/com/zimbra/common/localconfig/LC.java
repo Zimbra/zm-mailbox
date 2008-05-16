@@ -194,6 +194,7 @@ public class LC {
     public static final KnownKey mysql_socket;
     public static final KnownKey mysql_pidfile;
     public static final KnownKey mysql_mycnf;
+    public static final KnownKey mysql_errlogfile;
     public static final KnownKey mysql_bind_address;
     public static final KnownKey mysql_port;
     public static final KnownKey mysql_root_password;
@@ -209,6 +210,7 @@ public class LC {
     public static final KnownKey logger_mysql_socket;
     public static final KnownKey logger_mysql_pidfile;
     public static final KnownKey logger_mysql_mycnf;
+    public static final KnownKey logger_mysql_errlogfile;
     public static final KnownKey logger_mysql_bind_address;
     public static final KnownKey logger_mysql_port;
     public static final KnownKey zimbra_logger_mysql_password;
@@ -651,6 +653,9 @@ public class LC {
         mysql_mycnf = new KnownKey("mysql_mycnf");
         mysql_mycnf.setDefault("${zimbra_home}" + FS + "conf" + FS + "my.cnf");
 
+        mysql_errlogfile = new KnownKey("mysql_errlogfile");
+        mysql_errlogfile.setDefault("${zimbra_home}" + FS + "log" + FS + "mysql_error.log");
+
         mysql_bind_address = new KnownKey("mysql_bind_address");
         mysql_bind_address.setDefault("localhost");
 
@@ -697,6 +702,9 @@ public class LC {
 
         logger_mysql_mycnf = new KnownKey("logger_mysql_mycnf");
         logger_mysql_mycnf.setDefault("${zimbra_home}" + FS + "conf" + FS + "my.logger.cnf");
+
+        logger_mysql_errlogfile = new KnownKey("logger_mysql_errlogfile");
+        logger_mysql_errlogfile.setDefault("${zimbra_home}" + FS + "log" + FS + "logger_mysql_error.log");
 
         logger_mysql_bind_address = new KnownKey("logger_mysql_bind_address");
         logger_mysql_bind_address.setDefault("localhost");
