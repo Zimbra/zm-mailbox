@@ -315,8 +315,6 @@ public class Conversation extends MailItem {
             Message msg = msgs[i];
             if (msg == null)
                 throw ServiceException.FAILURE("null Message in list", null);
-            if (!msg.canAccess(ACL.RIGHT_READ))
-                throw ServiceException.PERM_DENIED("you do not have sufficient rights on one of the messages");
             date = Math.max(date, msg.mData.date);
             unread += msg.mData.unreadCount;
             children.add(msg.mId);
