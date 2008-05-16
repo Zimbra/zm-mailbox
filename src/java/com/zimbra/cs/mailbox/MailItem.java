@@ -1610,7 +1610,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         boolean isFlag = tag instanceof Flag;
         markItemModified(isFlag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
         // changing a system flag is not a syncable event
-        if (isFlag && (tag.getBitmask() & Flag.FLAG_SYSTEM) != 0)
+        if (!isFlag || (tag.getBitmask() & Flag.FLAG_SYSTEM) == 0)
             mData.metadataChanged(mMailbox);
 
         if (isFlag) {
