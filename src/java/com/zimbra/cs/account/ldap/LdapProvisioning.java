@@ -522,12 +522,19 @@ public class LdapProvisioning extends Provisioning {
 
     private Account getAccountByForeignPrincipal(String foreignPrincipal, boolean loadFromMaster) throws ServiceException {
         Account a = sAccountCache.getByForeignPrincipal(foreignPrincipal);
+        
+        // bug 27966, always do a search so dup entries can be thrown
+        foreignPrincipal = LdapUtil.escapeSearchFilterArg(foreignPrincipal);
+        Account acct = getAccountByQuery(
+                mDIT.mailBranchBaseDN(),
+                LdapFilter.accountByForeignPrincipal(foreignPrincipal),
+                null, loadFromMaster);
+        
+        // all is well, put the account in cache if it was not in cache
+        // this is so we don't change our caching behavior - the above search was just to check for dup - we did that anyway 
+        // before bug 23372 was fixed. 
         if (a == null) {
-            foreignPrincipal = LdapUtil.escapeSearchFilterArg(foreignPrincipal);
-            a = getAccountByQuery(
-                    mDIT.mailBranchBaseDN(),
-                    LdapFilter.accountByForeignPrincipal(foreignPrincipal),
-                    null, loadFromMaster);
+            a = acct;
             sAccountCache.put(a);
         }
         return a;
