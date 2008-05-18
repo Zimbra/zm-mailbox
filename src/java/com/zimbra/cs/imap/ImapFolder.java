@@ -753,7 +753,7 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
             } else {
                 // range of messages -- get them and add them (may be null)
                 if (!byUID) {
-                    upper = Math.max(getSize(), upper);
+                    upper = Math.min(getSize(), upper);
                     for (int seq = Math.max(0, lower); seq <= upper; seq++)
                         result.add(getBySequence(seq));
                 } else {
