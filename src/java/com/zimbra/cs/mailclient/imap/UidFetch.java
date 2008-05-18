@@ -76,7 +76,7 @@ public class UidFetch {
                     }
                     break;
                 }
-                if (res.getCode() == CAtom.FETCH) {
+                if (res.getCCode() == CAtom.FETCH) {
                     handleResponse((MessageData) res.getData(), handler);
                 }
             } finally {

@@ -88,7 +88,7 @@ public final class Mailbox implements ResponseHandler {
     }
 
     public boolean handleResponse(ImapResponse res) {
-        switch (res.getCode()) {
+        switch (res.getCCode()) {
         case EXISTS:
             exists = res.getNumber();
             return true;
@@ -106,7 +106,7 @@ public final class Mailbox implements ResponseHandler {
     }
 
     private boolean handleResponseText(ResponseText rt) {
-        switch (rt.getCode().getCAtom()) {
+        switch (rt.getCCode()) {
         case UNSEEN:
             unseen = (Long) rt.getData();
             return true;

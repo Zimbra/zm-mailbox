@@ -1,3 +1,19 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ *
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2007, 2008 Zimbra, Inc.
+ *
+ * The contents of this file are subject to the Yahoo! Public License
+ * Version 1.0 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ *
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.cs.mailclient;
 
 import static com.zimbra.cs.mailclient.auth.SaslAuthenticator.*;
@@ -40,12 +56,20 @@ public abstract class MailClient {
         config.setRawMode(true);
         parseArguments(args);
         connect();
+        authenticate();
         startCommandLoop();
     }
 
     protected abstract void printUsage(PrintStream ps);
     
-    protected void connect() throws LoginException, IOException {
+    protected void connect() throws IOException {
+        config.setTraceStream(System.out);
+        config.setSSLSocketFactory(SSLUtil.getDummySSLContext().getSocketFactory());
+        connection = newConnection(config);
+        connection.connect();
+    }
+
+    protected void authenticate() throws LoginException, IOException {
         if (password == null && config.isPasswordRequired()) {
             password = Password.read("Password: ");
         }
@@ -53,15 +77,11 @@ public abstract class MailClient {
             // Authentication id defaults to login username
             config.setAuthenticationId(System.getProperty("user.name"));
         }
-        config.setTraceStream(System.out);
-        config.setSSLSocketFactory(SSLUtil.getDummySSLContext().getSocketFactory());
-        connection = newConnection(config);
-        connection.connect();
         connection.authenticate(password);
         String qop = connection.getNegotiatedQop();
-        if (qop != null) System.out.printf("[Negotiated QOP is %s]\n", qop); 
+        if (qop != null) System.out.printf("[Negotiated QOP is %s]\n", qop);
     }
-
+    
     private static MailConnection newConnection(MailConfig config) {
         if (config instanceof ImapConfig) {
             return new ImapConnection((ImapConfig) config);

@@ -142,6 +142,8 @@ public class ImapRequest {
         } else if (data instanceof MailboxName) {
             String encoded = ((MailboxName) data).encode();
             writeData(out, ImapData.asAString(encoded));
+        } else if (data instanceof IDInfo) {
+            writeData(out, ((IDInfo) data).toRequestParam());
         } else if (data instanceof Date) {
             writeData(out, new Quoted(toInternalDate((Date) data)));
         } else if (data instanceof Object[]) {

@@ -486,7 +486,7 @@ class ImapFolderSync {
             new ResponseHandler() {
                 public boolean handleResponse(ImapResponse res)
                     throws ServiceException, IOException {
-                    if (res.getCode() == CAtom.FETCH) {
+                    if (res.getCCode() == CAtom.FETCH) {
                         handleFetchResponse((MessageData) res.getData());
                     }
                     return true;
