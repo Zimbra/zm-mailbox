@@ -96,6 +96,7 @@ public final class ResponseText {
     }
 
     public Atom getCode() { return code; }
+    public CAtom getCCode() { return code.getCAtom(); }
     public Object getData() { return data; }
     public String getText() { return text; }
 }

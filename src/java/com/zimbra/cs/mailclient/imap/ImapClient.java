@@ -12,6 +12,7 @@ import java.util.ListIterator;
  */
 public class ImapClient extends MailClient {
     private String mailbox;
+    private IDInfo idInfo;
     
     private static final String[] USAGE = {
         "Usage: java " + ImapClient.class.getName() + " [options] hostname",
@@ -29,6 +30,7 @@ public class ImapClient extends MailClient {
         "  -f mbox  : select specified mailbox",
         "  -d       : enable debug output",
         "  -q       : enable silent mode",
+        "  -i id    : send ID info (name=value,...)",
         "  -h       : print this help message"
     };
 
@@ -37,10 +39,13 @@ public class ImapClient extends MailClient {
     }
 
     @Override
-    protected void connect() throws LoginException, IOException {
-        super.connect();
+    protected void authenticate() throws LoginException, IOException {
+        if (idInfo != null) {
+            getImapConnection().id(idInfo);
+        }
+        super.authenticate();
         if (mailbox != null) {
-            ((ImapConnection) connection).select(mailbox);
+            getImapConnection().select(mailbox);
         }
     }
 
@@ -50,11 +55,26 @@ public class ImapClient extends MailClient {
         if (arg.equals("-f") && args.hasNext()) {
             mailbox = args.next();
             return true;
+        } else if (arg.equals("-i") && args.hasNext()) {
+            parseIDInfo(args.next());
+            return true;
         }
         args.previous();
         return super.parseArgument(args);
     }
 
+    private void parseIDInfo(String id) {
+        if (idInfo == null) {
+            idInfo = new IDInfo();
+        }
+        for (String s : id.split(",")) {
+            int i = s.indexOf('=');
+            if (i > 0) {
+                idInfo.put(s.substring(0, i), s.substring(i + 1));
+            }
+        }
+    }
+    
     @Override
     protected void printUsage(PrintStream ps) {
         for (String line : USAGE) ps.println(line);

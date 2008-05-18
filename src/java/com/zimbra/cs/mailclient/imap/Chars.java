@@ -89,6 +89,10 @@ public final class Chars {
         return isValid(s, ATOM_CHARS);
     }
 
+    public static boolean isText(String s) {
+        return isValid(s, TEXT_CHARS);
+    }
+    
     public static long getNumber(String s) {
         long n = 0;
         for (int i = 0; i < s.length(); i++) {

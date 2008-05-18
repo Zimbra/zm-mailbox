@@ -28,7 +28,8 @@ import java.util.List;
 public final class ImapResponse {
     private String tag;             // Response tag
     private long number = -1;       // Optional message number
-    private CAtom code;             // Response code or status
+    private Atom code;              // Response code or status
+    private CAtom ccode;            // Response code or status as CAtom
     private Object data;            // Optional response data
 
     public static final String CONTINUATION = "+";
@@ -59,14 +60,14 @@ public final class ImapResponse {
     }
 
     private void readUntagged(ImapInputStream is) throws IOException {
-        Atom code = is.readAtom();
+        code = is.readAtom();
         number = code.getNumber();
         if (number != -1) {
             is.skipChar(' ');
             code = is.readAtom();
         }
-        this.code = code.getCAtom();
-        switch (this.code) {
+        ccode = code.getCAtom();
+        switch (ccode) {
         case OK: case BAD: case NO: case BYE:
             is.skipChar(' ');
             data = ResponseText.read(is);
@@ -80,7 +81,7 @@ public final class ImapResponse {
             is.skipChar(' ');
             data = Flags.read(is);
             break;
-        case LIST: case LSUB:
+        case LIST: case LSUB:                       
             // "LIST" SP mailbox-list / "LSUB" SP mailbox-list
             // mailbox-list    = "(" [mbx-list-flags] ")" SP
             //                   (DQUOTE QUOTED-CHAR DQUOTE / nil) SP mailbox
@@ -106,6 +107,9 @@ public final class ImapResponse {
             break;
         case EXISTS: case RECENT: case EXPUNGE:
             break;
+        case ID:
+            data = IDInfo.read(is);
+            break;
         default:
             throw new ParseException("Unknown response code: " + code);
         }
@@ -120,15 +124,15 @@ public final class ImapResponse {
     }
     
     private void readTagged(ImapInputStream is) throws IOException {
-        Atom atom = is.readAtom();
-        code = atom.getCAtom();
+        code = is.readAtom();
         is.skipChar(' ');
-        switch (code) {
+        ccode = code.getCAtom();
+        switch (ccode) {
         case OK: case NO: case BAD:
             data = ResponseText.read(is);
             break;
         default:
-            throw new ParseException("Invalid tagged response code: " + atom);
+            throw new ParseException("Invalid tagged response code: " + code);
         }
     }
 
@@ -152,21 +156,25 @@ public final class ImapResponse {
         return number;
     }
 
-    public CAtom getCode() {
+    public Atom getCode() {
         return code;
     }
 
+    public CAtom getCCode() {
+        return ccode;
+    }
+    
     public Object getData() {
         return data;
     }
 
-    public boolean isOK()  { return code == CAtom.OK; }
-    public boolean isBAD() { return code == CAtom.BAD; }
-    public boolean isNO()  { return code == CAtom.NO; }
-    public boolean isBYE() { return code == CAtom.BYE; }
+    public boolean isOK()  { return ccode == CAtom.OK; }
+    public boolean isBAD() { return ccode == CAtom.BAD; }
+    public boolean isNO()  { return ccode == CAtom.NO; }
+    public boolean isBYE() { return ccode == CAtom.BYE; }
     
     public boolean isStatus() {
-        switch (code) {
+        switch (ccode) {
         case OK: case BAD: case NO: case BYE:
             return true;
         }
@@ -194,7 +202,7 @@ public final class ImapResponse {
     }
     
     public void dispose() {
-        if (code == CAtom.FETCH) {
+        if (ccode == CAtom.FETCH) {
             ((MessageData) data).dispose();
         }
     }

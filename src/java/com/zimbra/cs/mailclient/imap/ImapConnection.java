@@ -85,10 +85,9 @@ public final class ImapConnection extends MailConnection {
     protected void processGreeting() throws IOException {
         ImapResponse res = readResponse();
         if (res.isUntagged()) {
-            switch (res.getCode()) {
+            switch (res.getCCode()) {
                 case BYE:
-                    throw new MailException(
-                            "IMAP connection refused: " + res.getResponseText().getText());
+                    throw new MailException(res.getResponseText().getText());
                 case PREAUTH:
                 case OK:
                     setState(res.isOK() ?
@@ -150,6 +149,18 @@ public final class ImapConnection extends MailConnection {
         newRequest(CAtom.NOOP).sendCheckStatus();
     }
 
+    public IDInfo id() throws IOException {
+        return id(null);
+    }
+    
+    public IDInfo id(IDInfo info) throws IOException {
+        ImapRequest req = newRequest(CAtom.ID, info != null ? info : Atom.NIL);
+        List<IDInfo> results = new ArrayList<IDInfo>(1);
+        req.setResponseHandler(new BasicResponseHandler(CAtom.ID, results));
+        req.sendCheckStatus();
+        return results.isEmpty() ? null : results.get(0);
+    }
+    
     public synchronized Mailbox select(String name) throws IOException {
         mailbox = doSelectOrExamine(CAtom.SELECT, name);
         setState(State.SELECTED);
@@ -197,7 +208,7 @@ public final class ImapConnection extends MailConnection {
         req.addParam(data);
         ImapResponse res = req.sendCheckStatus();
         ResponseText rt = res.getResponseText();
-        if (CAtom.APPENDUID.atom().equals(rt.getCode())) {
+        if (rt.getCCode() == CAtom.APPENDUID) {
             // Supports UIDPLUS (RFC 2359):
             // resp_code_apnd ::= "APPENDUID" SPACE nz_number SPACE uniqueid
             String[] s = ((String) rt.getData()).split(" ");
@@ -224,22 +235,14 @@ public final class ImapConnection extends MailConnection {
 
     public Mailbox status(String name, Object... params) throws IOException {
         ImapRequest req = newRequest(CAtom.STATUS, new MailboxName(name), params);
-        final Mailbox[] mbox = new Mailbox[0];
-        req.setResponseHandler(new ResponseHandler() {
-            public boolean handleResponse(ImapResponse res) {
-                if (res.getCode() == CAtom.STATUS) {
-                    mbox[0] = (Mailbox) res.getData();
-                    return true;
-                }
-                return false;
-            }
-        });
+        List<Mailbox> results = new ArrayList<Mailbox>(1);
+        req.setResponseHandler(new BasicResponseHandler(CAtom.STATUS, results));
         req.sendCheckStatus();
-        if (mbox[0] == null) {
+        if (results.isEmpty()) {
             throw new MailException("Missing STATUS response data");
         }
-        mbox[0].setName(name);
-        return mbox[0];
+        results.get(0).setName(name);
+        return results.get(0);
     }
 
     public List<ListData> list(String ref, String mbox) throws IOException {
@@ -254,16 +257,8 @@ public final class ImapConnection extends MailConnection {
             throws IOException {
         ImapRequest req =
             newRequest(cmd, new MailboxName(ref), new MailboxName(mbox));
-        final List<ListData> results = new ArrayList<ListData>();
-        req.setResponseHandler(new ResponseHandler() {
-            public boolean handleResponse(ImapResponse res) {
-                if (res.getCode() == CAtom.LIST) {
-                    results.add((ListData) res.getData());
-                    return true;
-                }
-                return false;
-            }
-        });
+        List<ListData> results = new ArrayList<ListData>();
+        req.setResponseHandler(new BasicResponseHandler(CAtom.LIST.atom(), results));
         req.sendCheckStatus();
         return results;
     }
@@ -299,17 +294,9 @@ public final class ImapConnection extends MailConnection {
 
     private List<MessageData> fetch(String cmd, String seq, Object param)
             throws IOException {
-        final List<MessageData> mds = new ArrayList<MessageData>();
-        fetch(cmd, seq, param, new ResponseHandler() {
-            public boolean handleResponse(ImapResponse res) {
-                if (res.getCode() == CAtom.FETCH) {
-                    mds.add((MessageData) res.getData());
-                    return true;
-                }
-                return false;
-            }
-        });
-        return mds;
+        List<MessageData> results = new ArrayList<MessageData>();
+        fetch(cmd, seq, param, new BasicResponseHandler(CAtom.FETCH, results));
+        return results;
     }
 
     private void fetch(String cmd, String seq, Object param,
@@ -329,19 +316,19 @@ public final class ImapConnection extends MailConnection {
 
     @SuppressWarnings("unchecked")
     private List<Long> doSearch(String cmd, Object... params) throws IOException {
-        final List<Long> ids = new ArrayList<Long>();
+        final List<Long> results = new ArrayList<Long>();
         ImapRequest req = newRequest(cmd, params);
         req.setResponseHandler(new ResponseHandler() {
             public boolean handleResponse(ImapResponse res) {
-                if (res.getCode() == CAtom.SEARCH) {
-                    ids.addAll((List<Long>) res.getData());
+                if (res.getCCode() == CAtom.SEARCH) {
+                    results.addAll((List<Long>) res.getData());
                     return true;
                 }
                 return false;
             }
         });
         req.sendCheckStatus();
-        return ids;
+        return results;
     }
 
     public void store(String seq, String item, Object flags) throws IOException {
@@ -349,8 +336,7 @@ public final class ImapConnection extends MailConnection {
     }
 
     public void store(String seq, String item, Object flags,
-                      ResponseHandler handler)
-            throws IOException {
+                      ResponseHandler handler) throws IOException {
         ImapRequest req = newRequest(CAtom.STORE, seq, item, flags);
         req.setResponseHandler(handler);
         req.sendCheckStatus();
@@ -591,7 +577,7 @@ public final class ImapConnection extends MailConnection {
             if (code != null && code.getCAtom() == CAtom.CAPABILITY) {
                 capabilities = (ImapCapabilities) rt.getData();
             }
-        } else if (res.getCode() == CAtom.CAPABILITY) {
+        } else if (res.getCCode() == CAtom.CAPABILITY) {
             capabilities = (ImapCapabilities) res.getData();
         } else if (mailbox != null) {
             mailbox.handleResponse(res);

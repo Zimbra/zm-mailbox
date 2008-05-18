@@ -1,10 +1,29 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ *
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2007, 2008 Zimbra, Inc.
+ *
+ * The contents of this file are subject to the Yahoo! Public License
+ * Version 1.0 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ *
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.cs.datasource;
                              
 import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.ListData;
+import com.zimbra.cs.mailclient.imap.IDInfo;
+import com.zimbra.cs.mailclient.imap.ImapCapabilities;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.DummySSLSocketFactory;
@@ -30,6 +49,14 @@ public class ImapSync extends AbstractMailItemImport {
 
     private static final Log LOG = ZimbraLog.datasource;
 
+    private static final IDInfo ID_INFO = new IDInfo();
+    static {
+        ID_INFO.setVendor("Zimbra");
+        ID_INFO.setOs(System.getProperty("os.name"));
+        ID_INFO.setOsVersion(System.getProperty("os.version"));
+        ID_INFO.put("guid", BuildInfo.TYPE);
+    }
+    
     private static final boolean DEBUG = true;
     private static final boolean FAIL_ON_SYNC_ERROR = true;
 
@@ -93,6 +120,10 @@ public class ImapSync extends AbstractMailItemImport {
         if (!connection.isClosed()) return;
         try {
             connection.connect();
+            if (connection.hasCapability(ImapCapabilities.ID)) {
+                IDInfo id = connection.id(ID_INFO);
+                LOG.info("Server ID: " + id);
+            }
             connection.login(dataSource.getDecryptedPassword());
             delimiter = ImapUtil.getDelimiter(connection);
         } catch (IOException e) {

@@ -28,6 +28,7 @@ import java.io.OutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.EOFException;
+import java.util.List;
 
 /**
  * An input stream for reading IMAP response data.
@@ -255,9 +256,9 @@ public final class ImapInputStream extends MailInputStream {
     }
 
     public void skipNil() throws IOException {
-        Atom a = readAtom();
-        if (!a.isNil()) {
-            throw new ParseException("Expecting NIL but got " + a);
+        Atom atom = readAtom();
+        if (!atom.isNil()) {
+            throw new ParseException("Expecting NIL but got " + atom);
         }
     }
     

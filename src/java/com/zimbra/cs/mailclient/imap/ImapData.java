@@ -31,8 +31,7 @@ public abstract class ImapData {
     public static enum Type { ATOM, QUOTED, LITERAL }
 
     public static ImapData asAString(String s) {
-        if (s.length() > 1024) {
-            // Always treat data larger than 1K bytes as literal data
+        if (s.length() > 64) {
             return new Literal(Ascii.getBytes(s));
         }
         switch (getType(s)) {
@@ -46,6 +45,32 @@ public abstract class ImapData {
         return null;
     }
 
+    public static ImapData asNString(String s) {
+        return s != null ? asString(s) : Atom.NIL;
+    }
+    
+    public static ImapData asString(String s) {
+        return s.length() <= 64 && Chars.isText(s) ?
+            new Quoted(s) : new Literal(Ascii.getBytes(s));
+    }
+
+    private static Type getType(String s) {
+        if (s.length() == 0) {
+            return Type.QUOTED; // Empty string
+        }
+        Type type = Type.ATOM;  // Assume it's an atom for now
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (!Chars.isText(c)) {
+                return Type.LITERAL;
+            }
+            if (!Chars.isAString(c)) {
+                type = Type.QUOTED; // Must be QUOTED or LITERAL
+            }
+        }
+        return type;
+    }
+    
     public static String asSequenceSet(List<? extends Number> ids) {
         StringBuilder sb = new StringBuilder();
         if (ids.isEmpty()) {
@@ -57,23 +82,6 @@ public abstract class ImapData {
             sb.append(',').append(it.next().longValue());
         }
         return sb.toString();
-    }
-    
-    private static Type getType(String s) {
-        if (s.length() == 0) {
-            return Type.QUOTED; // Empty string
-        }
-        Type type = Type.ATOM;  // Assume it's an atom for now
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
-            if (!Chars.isText(c) || Chars.isQuotedSpecial(c)) {
-                return Type.LITERAL;
-            }
-            if (!Chars.isAString(c)) {
-                type = Type.QUOTED; // Must be QUOTED or LITERAL
-            }
-        }
-        return type;
     }
         
     public abstract Type getType();

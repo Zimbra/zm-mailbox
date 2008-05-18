@@ -25,6 +25,7 @@ import com.zimbra.cs.mailclient.imap.MessageData;
 import com.zimbra.cs.mailclient.imap.CAtom;
 import com.zimbra.cs.mailclient.imap.ListData;
 import com.zimbra.cs.mailclient.imap.Mailbox;
+import com.zimbra.cs.mailclient.imap.IDInfo;
 import com.zimbra.cs.mailclient.util.SSLUtil;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import junit.framework.TestCase;
@@ -106,13 +107,20 @@ public class TestImap extends TestCase {
         final AtomicInteger count = new AtomicInteger();
         connection.fetch("1:*", "(ENVELOPE UID)", new ResponseHandler() {
             public boolean handleResponse(ImapResponse res) {
-                if (res.getCode() != CAtom.FETCH) return false;
+                if (res.getCCode() != CAtom.FETCH) return false;
                 MessageData md = (MessageData) res.getData();
                 System.out.printf("Fetched uid = %s\n", md.getUid());
                 count.incrementAndGet();
                 return true;
             }
         });
+    }
+
+    public void testID() throws Exception {
+        connect(false);
+        IDInfo id = connection.id();
+        System.out.println("ID = " + id);
+        assertNotNull(id);
     }
     
     /*
