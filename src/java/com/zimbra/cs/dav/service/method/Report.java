@@ -44,6 +44,7 @@ public class Report extends DavMethod {
 		sReports.put(DavElements.E_CALENDAR_QUERY, new CalendarQuery());
 		sReports.put(DavElements.E_CALENDAR_MULTIGET, new CalendarMultiget());
 		sReports.put(DavElements.E_FREE_BUSY_QUERY, new FreeBusyQuery());
+		sReports.put(DavElements.E_PRINCIPAL_PROPERTY_SEARCH, new AclReports());
 	}
 	public void handle(DavContext ctxt) throws DavException, IOException, ServiceException {
 		if (!ctxt.hasRequestMessage())

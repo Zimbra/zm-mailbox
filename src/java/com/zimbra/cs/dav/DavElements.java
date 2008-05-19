@@ -43,12 +43,14 @@ public class DavElements {
 	public static final String P_ABSTRACT = "abstract";
 	public static final String P_ACE = "ace";
 	public static final String P_ACL = "acl";
+	public static final String P_ACL_PRINCIPAL_PROP_SET = "acl-principal-prop-set";
 	public static final String P_ACL_RESTRICTIONS = "acl-restrictions";
 	public static final String P_ACTIVELOCK = "activelock";
 	public static final String P_ALL = "all";
 	public static final String P_ALLCOMP = "allcomp";
 	public static final String P_ALLPROP = "allprop";
 	public static final String P_ALTERNATE_URI_SET = "alternate-URI-set";
+	public static final String P_APPLY_TO_PRINCIPAL_COLLECTION_SET = "apply-to-principal-collection-set";
 	public static final String P_AUTHENTICATED = "authenticated";
 	
 	public static final String P_BIND = "bind";
@@ -110,6 +112,7 @@ public class DavElements {
 	public static final String P_LOCKTOKEN = "locktoken";
 	public static final String P_LOCKTYPE = "locktype";
 
+	public static final String P_MATCH = "match";
 	public static final String P_MAX_ATTENDEES_PER_INSTANCE = "max-attendees-per-instance";
 	public static final String P_MAX_DATE_TIME = "max-date-time";
 	public static final String P_MAX_INSTANCES = "max-instances";
@@ -128,12 +131,16 @@ public class DavElements {
 	public static final String P_PARAM_FILTER = "param-filter";
 	public static final String P_PRINCIPAL = "principal";
 	public static final String P_PRINCIPAL_COLLECTION_SET = "principal-collection-set";
+	public static final String P_PRINCIPAL_MATCH = "principal-match";
+	public static final String P_PRINCIPAL_PROPERTY_SEARCH = "principal-property-search";
+	public static final String P_PRINCIPAL_SEARCH_PROPERTY_SET = "principal-search-property-set";
 	public static final String P_PRINCIPAL_URL = "principal-URL";
 	public static final String P_PRIVILEGE = "privilege";
 	public static final String P_PROP = "prop";
 	public static final String P_PROP_FILTER = "prop-filter";
 	public static final String P_PROPFIND = "propfind";
 	public static final String P_PROPERTY = "property";
+	public static final String P_PROPERTY_SEARCH = "property-search";
 	public static final String P_PROPERTYUPDATE = "propertyupdate";
 	public static final String P_PROPNAME = "propname";
 	public static final String P_PROPSTAT = "propstat";
@@ -200,6 +207,7 @@ public class DavElements {
 	public static final QName E_ABSTRACT = QName.get(P_ABSTRACT, WEBDAV_NS);
 	public static final QName E_ACE = QName.get(P_ACE, WEBDAV_NS);
 	public static final QName E_ACL = QName.get(P_ACL, WEBDAV_NS);
+	public static final QName E_ACL_PRINCIPAL_PROP_SET = QName.get(P_ACL_PRINCIPAL_PROP_SET, WEBDAV_NS);
 	public static final QName E_ACL_RESTRICTIONS = QName.get(P_ACL_RESTRICTIONS, WEBDAV_NS);
 	public static final QName E_ACTIVELOCK = QName.get(P_ACTIVELOCK, WEBDAV_NS);
 	public static final QName E_ALL    = QName.get(P_ALL, WEBDAV_NS);
@@ -207,6 +215,7 @@ public class DavElements {
 	public static final QName E_ALLPROP = QName.get(P_ALLPROP, WEBDAV_NS);
 	public static final QName E_ALLPROP_CALDAV = QName.get(P_ALLPROP, CALDAV_NS);
 	public static final QName E_ALTERNATE_URI_SET = QName.get(P_ALTERNATE_URI_SET, WEBDAV_NS);
+	public static final QName E_APPLY_TO_PRINCIPAL_COLLECTION_SET = QName.get(P_APPLY_TO_PRINCIPAL_COLLECTION_SET, WEBDAV_NS);
 	public static final QName E_AUTHENTICATED = QName.get(P_AUTHENTICATED, WEBDAV_NS);
 
 	public static final QName E_BIND    = QName.get(P_BIND, WEBDAV_NS);
@@ -259,6 +268,7 @@ public class DavElements {
 	public static final QName E_LOCKSCOPE = QName.get(P_LOCKSCOPE, WEBDAV_NS);
 	public static final QName E_LOCKTYPE = QName.get(P_LOCKTYPE, WEBDAV_NS);
 	
+	public static final QName E_MATCH = QName.get(P_MATCH, WEBDAV_NS);
 	public static final QName E_MULTISTATUS = QName.get(P_MULTISTATUS, WEBDAV_NS);
 	
 	public static final QName E_NEED_PRIVILEGES = QName.get(P_NEED_PRIVILEGES, WEBDAV_NS);
@@ -269,12 +279,16 @@ public class DavElements {
 	public static final QName E_PARAM_FILTER = QName.get(P_PARAM_FILTER, CALDAV_NS);
 	public static final QName E_PRINCIPAL = QName.get(P_PRINCIPAL, WEBDAV_NS);
 	public static final QName E_PRINCIPAL_COLLECTION_SET = QName.get(P_PRINCIPAL_COLLECTION_SET, WEBDAV_NS);
+	public static final QName E_PRINCIPAL_MATCH = QName.get(P_PRINCIPAL_MATCH, WEBDAV_NS);
+	public static final QName E_PRINCIPAL_PROPERTY_SEARCH = QName.get(P_PRINCIPAL_PROPERTY_SEARCH, WEBDAV_NS);
+	public static final QName E_PRINCIPAL_SEARCH_PROPERTY_SET = QName.get(P_PRINCIPAL_SEARCH_PROPERTY_SET, WEBDAV_NS);
 	public static final QName E_PRINCIPAL_URL = QName.get(P_PRINCIPAL_URL, WEBDAV_NS);
 	public static final QName E_PRIVILEGE = QName.get(P_PRIVILEGE, WEBDAV_NS);
 	public static final QName E_PROP = QName.get(P_PROP, WEBDAV_NS);
 	public static final QName E_PROPNAME = QName.get(P_PROPNAME, WEBDAV_NS);
 	public static final QName E_PROP_CALDAV = QName.get(P_PROP, CALDAV_NS);
 	public static final QName E_PROP_FILTER = QName.get(P_PROP_FILTER, CALDAV_NS);
+	public static final QName E_PROPERTY_SEARCH = QName.get(P_PROPERTY_SEARCH, WEBDAV_NS);
 	public static final QName E_PROPSTAT = QName.get(P_PROPSTAT, WEBDAV_NS);
 	
 	public static final QName E_READ = QName.get(P_READ, WEBDAV_NS);
