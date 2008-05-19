@@ -278,23 +278,23 @@ public final class ParsedDuration
         
         return retVal;
     }
-    int getWeeks() {
+    public int getWeeks() {
         return mWeeks * (mNegative ? -1 : 1);
     }
 
-    int getDays() {
+    public int getDays() {
         return mDays * (mNegative ? -1 : 1);
     }
 
-    int getHours() {
+    public int getHours() {
         return mHours * (mNegative ? -1 : 1);
     }
 
-    int getMins() {
+    public int getMins() {
         return mMins * (mNegative ? -1 : 1);
     }
 
-    int getSecs() {
+    public int getSecs() {
         return mSecs * (mNegative ? -1 : 1);
     }
 }
