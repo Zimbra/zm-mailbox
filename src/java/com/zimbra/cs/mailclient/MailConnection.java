@@ -70,7 +70,7 @@ public abstract class MailConnection {
             initStreams(new BufferedInputStream(socket.getInputStream()),
                         new BufferedOutputStream(socket.getOutputStream()));
             processGreeting();
-            if (config.isTlsEnabled() && !config.isSslEnabled()) {
+            if (isTlsEnabled()) {
                 startTls();
             }
         } catch (IOException e) {
@@ -89,6 +89,9 @@ public abstract class MailConnection {
         mailOut = newMailOutputStream(os);
     }
 
+    protected boolean isTlsEnabled() {
+        return config.isTlsEnabled() && !config.isSslEnabled();
+    }
     
     protected abstract void processGreeting() throws IOException;
     protected abstract void sendLogin(String user, String pass) throws IOException;

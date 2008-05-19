@@ -122,6 +122,22 @@ public class TestImap extends TestCase {
         System.out.println("ID = " + id);
         assertNotNull(id);
     }
+
+    public void testYahoo() throws Exception {
+        ImapConfig config = new ImapConfig();
+        config.setDebug(true);
+        config.setTrace(true);
+        config.setHost("imap.mail.yahoo.com");
+        config.setAuthenticationId("jjztest");
+        connection = new ImapConnection(config);
+        connection.connect();
+        IDInfo id = new IDInfo();
+        id.put("guid", "unknown");
+        connection.id(id);
+        connection.login("test1234");
+        char delim = connection.getDelimiter();
+        assertNull(delim);
+    }
     
     /*
     public void testLiteral() throws Exception {

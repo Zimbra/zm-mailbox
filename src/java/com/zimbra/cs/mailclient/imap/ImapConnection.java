@@ -84,23 +84,28 @@ public final class ImapConnection extends MailConnection {
     }
 
     @Override
+    protected boolean isTlsEnabled() {
+        return super.isTlsEnabled() && hasCapability(ImapCapabilities.STARTTLS);
+    }
+
+    @Override
     protected void processGreeting() throws IOException {
         ImapResponse res = readResponse();
         if (res.isUntagged()) {
             switch (res.getCCode()) {
-                case BYE:
-                    throw new MailException(res.getResponseText().getText());
-                case PREAUTH:
-                case OK:
-                    setState(res.isOK() ?
-                        State.NOT_AUTHENTICATED : State.AUTHENTICATED);
-                    ResponseText rt = res.getResponseText();
-                    if (CAtom.CAPABILITY.atom().equals(rt.getCode())) {
-                        capabilities = (ImapCapabilities) rt.getData();
-                    } else {
-                        capability();
-                    }
-                    return;
+            case BYE:
+                throw new MailException(res.getResponseText().getText());
+            case PREAUTH:
+            case OK:
+                setState(res.isOK() ?
+                    State.NOT_AUTHENTICATED : State.AUTHENTICATED);
+                ResponseText rt = res.getResponseText();
+                if (CAtom.CAPABILITY.atom().equals(rt.getCode())) {
+                    capabilities = (ImapCapabilities) rt.getData();
+                } else {
+                    capability();
+                }
+                return;
             }
         }
         throw new MailException("Expected server greeting but got: " + res);
@@ -257,14 +262,17 @@ public final class ImapConnection extends MailConnection {
 
     private List<ListData> doList(CAtom cmd, String ref, String mbox)
         throws IOException {
-        ImapRequest req =
-            newRequest(cmd, new MailboxName(ref), new MailboxName(mbox));
+        ImapRequest req = newRequest(cmd, new MailboxName(ref), new MailboxName(mbox));
         List<ListData> results = new ArrayList<ListData>();
         req.setResponseHandler(new BasicResponseHandler(CAtom.LIST.atom(), results));
         req.sendCheckStatus();
         return results;
     }
 
+    public char getDelimiter() throws IOException {
+        List<ListData> ld = list("", "");
+        return ld.isEmpty() ? 0 : ld.get(0).getDelimiter();
+    }
 
     public void copy(String seq, String mbox) throws IOException {
         newRequest(CAtom.COPY, seq, new MailboxName(mbox)).sendCheckStatus();
