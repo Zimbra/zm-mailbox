@@ -32,7 +32,9 @@ import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
+import com.zimbra.cs.dav.property.Acl.Ace;
 import com.zimbra.cs.dav.resource.DavResource;
+import com.zimbra.cs.dav.resource.MailItemResource;
 import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavResponse;
 import com.zimbra.cs.mailbox.Contact;
@@ -42,6 +44,8 @@ public class AclReports extends Report {
 		Element query = ctxt.getRequestMessage().getRootElement();
 		if (query.getQName().equals(DavElements.E_PRINCIPAL_PROPERTY_SEARCH))
 			handlePrincipalPropertySearch(ctxt, query);
+		else if (query.getQName().equals(DavElements.E_ACL_PRINCIPAL_PROP_SET))
+			handleAclPrincipalPropSet(ctxt, query);
 		else
 			throw new DavException("msg "+query.getName()+" is not an ACL report", HttpServletResponse.SC_BAD_REQUEST, null);
 	}
@@ -97,6 +101,30 @@ public class AclReports extends Report {
 			Account acct = prov.get(Provisioning.AccountBy.name, match);
 			if (acct != null)
         		ret.add(UrlNamespace.getPrincipal(acct));
+		}
+		return ret;
+	}
+	
+	private void handleAclPrincipalPropSet(DavContext ctxt, Element query) throws DavException, ServiceException {
+		RequestProp reqProp = getRequestProp(ctxt);
+		DavResponse resp = ctxt.getDavResponse();
+		for (DavResource rs : getAclPrincipals(ctxt))
+            resp.addResource(ctxt, rs, reqProp, false);
+	}
+	
+	private ArrayList<DavResource> getAclPrincipals(DavContext ctxt) throws DavException, ServiceException {
+		ArrayList<DavResource> ret = new ArrayList<DavResource>();
+		DavResource res = ctxt.getRequestedResource();
+		if (!(res instanceof MailItemResource))
+			return ret;
+		List<Ace> aces = ((MailItemResource)res).getAce(ctxt);
+		Provisioning prov = Provisioning.getInstance();
+		for (Ace ace : aces) {
+			if (ace.hasHref()) {
+				Account acct = prov.get(Provisioning.AccountBy.id, ace.getZimbraId());
+				if (acct != null)
+					ret.add(UrlNamespace.getPrincipal(acct));
+			}
 		}
 		return ret;
 	}

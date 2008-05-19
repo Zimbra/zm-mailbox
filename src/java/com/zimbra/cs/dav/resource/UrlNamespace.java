@@ -201,12 +201,8 @@ public class UrlNamespace {
         return urlEscape(PRINCIPALS_PATH + user + "/");
     }
 	
-    public static String getPrincipalCollectionUrl(Account acct) throws DavException {
-    	try {
-        	return getAbsoluteUrl(acct, PRINCIPALS_PATH);
-    	} catch (ServiceException se) {
-    		throw new DavException("cannot get principal-collection-url for "+acct.getName(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-    	}
+    public static String getPrincipalCollectionUrl(Account acct) throws ServiceException {
+    	return getAbsoluteUrl(acct, PRINCIPALS_PATH);
     }
     
     private static String getAbsoluteUrl(Account user, String path) throws ServiceException {
