@@ -137,8 +137,19 @@ public class ImapSync extends AbstractMailItemImport {
         trackedFolders = dataSource.getImapFolders();
         syncedFolders = new HashMap<Integer, ImapFolderSync>();
         // Synchronize local and remote folders
-        syncRemoteFolders();
-        syncLocalFolders();
+        for (ListData ld : ImapUtil.listFolders(connection)) {
+            syncRemoteFolder(ld);
+        }
+        // Folder list is in depth-first order, which ensures that children
+        // are processed before parents (this avoids problems when deleting
+        // folder).
+        List<Folder> folders = localRootFolder.getSubfolderHierarchy();
+        for (Folder folder : folders) {
+            int id = folder.getId();
+            if (id != localRootFolder.getId() && !syncedFolders.containsKey(id)) {
+                syncLocalFolder(folder);
+            }
+        }
         // Append new IMAP messages for folders which have been synchronized.
         // This is done after IMAP messages have been deleted in order to
         // avoid problems when local messages are moved between folders
@@ -153,31 +164,27 @@ public class ImapSync extends AbstractMailItemImport {
         }
     }
 
-    // Synchronize remote IMAP folders -> local folders
-    private void syncRemoteFolders() throws ServiceException, IOException {
-        for (ListData ld : ImapUtil.listFolders(connection)) {
-            String path = ld.getMailbox();
-            ImapFolder tracker = trackedFolders.getByRemotePath(path);
+    private void syncRemoteFolder(ListData ld) throws ServiceException, IOException {
+        String path = ld.getMailbox();
+        ImapFolder tracker = trackedFolders.getByRemotePath(path);
+        if (tracker != null) {
+            trackedFolders.remove(tracker);
+        }
+        try {
+            ImapFolderSync ifs = new ImapFolderSync(this, tracker);
+            tracker = ifs.syncFolder(ld, fullSync);
             if (tracker != null) {
-                trackedFolders.remove(tracker);
+                syncedFolders.put(tracker.getItemId(), ifs);
             }
-            try {
-                ImapFolderSync ifs = new ImapFolderSync(this, tracker);
-                tracker = ifs.syncFolder(ld, fullSync);
-                if (tracker != null) {
-                    syncedFolders.put(tracker.getItemId(), ifs);
-                }
-            } catch (Exception e) {
-                LOG.error("Skipping synchronization of IMAP folder '%s' " +
-                          "due to error", path, e);
-                if (FAIL_ON_SYNC_ERROR) {
-                    throw ServiceException.FAILURE(
-                        "Synchronization of IMAP foldr '%s' failed", e);
-                }
+        } catch (Exception e) {
+            LOG.error("Skipped synchronization of IMAP folder '%s' due to error", path, e);
+            if (FAIL_ON_SYNC_ERROR) {
+                throw ServiceException.FAILURE(
+                    "Synchronization of IMAP folder '" + path + "' failed", e);
             }
         }
     }
-
+    
     // Synchronize local folders -> IMAP folders
     private void syncLocalFolders() throws ServiceException, IOException {
         List<Folder> folders = localRootFolder.getSubfolderHierarchy();
@@ -188,23 +195,28 @@ public class ImapSync extends AbstractMailItemImport {
         for (Folder folder : folders) {
             int id = folder.getId();
             if (id != localRootFolder.getId() && !syncedFolders.containsKey(id)) {
-                ImapFolder tracker = trackedFolders.getByItemId(id);
-                if (tracker != null) {
-                    trackedFolders.remove(tracker);
-                }
-                try {
-                    ImapFolderSync ifs = new ImapFolderSync(this, tracker);
-                    ifs.syncFolder(folder, fullSync);
-                    syncedFolders.put(id, ifs);
-                } catch (Exception e) {
-                    LOG.error("Skipping synchronization of local folder " +
-                              "'%s' (id = %d) due to error", folder.getName(),
-                              folder.getId(), e);
-                    if (FAIL_ON_SYNC_ERROR) {
-                        throw ServiceException.FAILURE(
-                            "Synchronization of local folder '%s' failed", e);
-                    }
-                }
+                syncLocalFolder(folder);
+            }
+        }
+    }
+
+    private void syncLocalFolder(Folder folder) throws ServiceException, IOException {
+        int id = folder.getId();
+        ImapFolder tracker = trackedFolders.getByItemId(id);
+        if (tracker != null) {
+            trackedFolders.remove(tracker);
+        }
+        try {
+            ImapFolderSync ifs = new ImapFolderSync(this, tracker);
+            ifs.syncFolder(folder, fullSync);
+            syncedFolders.put(id, ifs);
+        } catch (Exception e) {
+            LOG.error("Skipped synchronization of local folder '%s' (id = %d) due to error",
+                      folder.getName(), id, e);
+            if (FAIL_ON_SYNC_ERROR) {
+                String name = folder.getName();
+                throw ServiceException.FAILURE(
+                    "Synchronization of local folder '" + name + "' failed", e);
             }
         }
     }

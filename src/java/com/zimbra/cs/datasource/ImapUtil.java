@@ -28,6 +28,7 @@ import com.zimbra.cs.mailclient.imap.ResponseHandler;
 import com.zimbra.cs.mailclient.imap.ImapResponse;
 import com.zimbra.cs.mailclient.imap.CAtom;
 import com.zimbra.cs.mailclient.imap.MessageData;
+import com.zimbra.cs.mailclient.imap.FetchResponseHandler;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;

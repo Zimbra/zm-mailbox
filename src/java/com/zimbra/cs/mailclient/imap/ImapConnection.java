@@ -30,6 +30,8 @@ import java.util.Formatter;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.zimbra.cs.mailclient.imap.ImapData.asAString;
@@ -254,7 +256,7 @@ public final class ImapConnection extends MailConnection {
     }
 
     private List<ListData> doList(CAtom cmd, String ref, String mbox)
-            throws IOException {
+        throws IOException {
         ImapRequest req =
             newRequest(cmd, new MailboxName(ref), new MailboxName(mbox));
         List<ListData> results = new ArrayList<ListData>();
@@ -273,30 +275,13 @@ public final class ImapConnection extends MailConnection {
     }
 
     public void fetch(String seq, Object param, ResponseHandler handler)
-            throws IOException {
+        throws IOException {
         fetch(CAtom.FETCH.name(), seq, param, handler);
     }
 
     public void uidFetch(String seq, Object param, ResponseHandler handler)
-            throws IOException {
+        throws IOException {
         fetch(UID_FETCH, seq, param, handler);
-    }
-
-    public List<MessageData> fetch(String seq, Object param)
-            throws IOException {
-        return fetch(CAtom.FETCH.name(), seq, param);
-    }
-
-    public List<MessageData> uidFetch(String seq, Object param)
-            throws IOException {
-        return fetch(UID_FETCH, seq, param);
-    }
-
-    private List<MessageData> fetch(String cmd, String seq, Object param)
-            throws IOException {
-        List<MessageData> results = new ArrayList<MessageData>();
-        fetch(cmd, seq, param, new BasicResponseHandler(CAtom.FETCH, results));
-        return results;
     }
 
     private void fetch(String cmd, String seq, Object param,
@@ -306,6 +291,35 @@ public final class ImapConnection extends MailConnection {
         req.sendCheckStatus();
     }
 
+    public List<Long> getUids(String seq) throws IOException {
+        final List<Long> uids = new ArrayList<Long>();
+        uidFetch(seq, "UID", new FetchResponseHandler() {
+            public void handleFetchResponse(MessageData md) {
+                uids.add(md.getUid());
+            }
+        });
+        return uids;
+    }
+
+    public Map<Long, MessageData> uidFetch(String seq, Object param)
+        throws IOException {
+        final Map<Long, MessageData> results = new HashMap<Long, MessageData>();
+        uidFetch(seq, param, new FetchResponseHandler() {
+            public void handleFetchResponse(MessageData md) {
+                long uid = md.getUid();
+                if (uid != -1) {
+                    MessageData omd = results.get(uid);
+                    if (omd != null) {
+                        omd.addFields(md);
+                    } else {
+                        results.put(uid, md);
+                    }
+                }
+            }
+        });
+        return results;
+    }
+    
     public List<Long> search(Object... params) throws IOException {
         return doSearch(CAtom.SEARCH.name(), params);
     }
@@ -553,23 +567,17 @@ public final class ImapConnection extends MailConnection {
         if (res.isContinuation() || res.isUntagged() && res.isBAD()) {
             return false;
         }
-        if (request != null) {
-            // Request pending, try response handler first
-            ResponseHandler handler = request.getResponseHandler();
-            if (res.isUntagged() && handler != null) {
-                try {
-                    if (handler.handleResponse(res)) {
-                        return true; // Handler processed response
-                    }
-                } catch (Throwable e) {
-                    throw new MailException("Exception in response handler", e);
+        if (res.isUntagged()) {
+            try {
+                if (processUntagged(res)) {
+                    return true;
                 }
+            } finally {
+                res.dispose(); // Clean up any associated literal data
             }
-        } else if (res.isTagged()) {
-            // If no pending request, then must be untagged response
+        } else if (request == null) {
             throw new MailException(
                 "Received tagged response with no request pending: " + res);
-
         }
         if (res.isOK()) {
             ResponseText rt = res.getResponseText();
@@ -583,6 +591,23 @@ public final class ImapConnection extends MailConnection {
             mailbox.handleResponse(res);
         }
         return res.isUntagged();
+    }
+
+    private boolean processUntagged(ImapResponse res) throws IOException {
+        if (request != null) {
+            // Request pending, check for response handler
+            ResponseHandler handler = request.getResponseHandler();
+            if (handler != null) {
+                try {
+                    if (handler.handleResponse(res)) {
+                        return true; // Handler processed response
+                    }
+                } catch (Throwable e) {
+                    throw new MailException("Exception in response handler", e);
+                }
+            }
+        }
+        return false;
     }
 
     public String newTag() {

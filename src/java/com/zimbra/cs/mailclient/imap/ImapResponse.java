@@ -190,11 +190,7 @@ public final class ImapResponse {
     }
 
     public ResponseText getResponseText() {
-        try {
-            return (ResponseText) data;
-        } catch (ClassCastException e) {
-            return null;
-        }
+        return (ResponseText) data;
     }
 
     public String getContinuation() {
@@ -202,7 +198,7 @@ public final class ImapResponse {
     }
     
     public void dispose() {
-        if (ccode == CAtom.FETCH) {
+        if (data instanceof MessageData) {
             ((MessageData) data).dispose();
         }
     }
