@@ -54,7 +54,9 @@ public class ImapSync extends AbstractMailItemImport {
         ID_INFO.setVendor("Zimbra");
         ID_INFO.setOs(System.getProperty("os.name"));
         ID_INFO.setOsVersion(System.getProperty("os.version"));
-        ID_INFO.put("guid", BuildInfo.TYPE);
+        String type = BuildInfo.TYPE != null && BuildInfo.TYPE.length() > 0 ?
+                      BuildInfo.TYPE : "unknown";
+        ID_INFO.put("guid", type);
     }
     
     private static final boolean DEBUG = true;
@@ -125,7 +127,7 @@ public class ImapSync extends AbstractMailItemImport {
                 LOG.info("Server ID: " + id);
             }
             connection.login(dataSource.getDecryptedPassword());
-            delimiter = ImapUtil.getDelimiter(connection);
+            delimiter = connection.getDelimiter();
         } catch (IOException e) {
             connection.close();
             throw ServiceException.FAILURE(

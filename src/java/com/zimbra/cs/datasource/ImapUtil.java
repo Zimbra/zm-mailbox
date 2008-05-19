@@ -28,7 +28,6 @@ import com.zimbra.cs.mailclient.imap.ResponseHandler;
 import com.zimbra.cs.mailclient.imap.ImapResponse;
 import com.zimbra.cs.mailclient.imap.CAtom;
 import com.zimbra.cs.mailclient.imap.MessageData;
-import com.zimbra.cs.mailclient.imap.FetchResponseHandler;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -110,12 +109,6 @@ final class ImapUtil {
         return mds;
     }
 
-    public static char getDelimiter(ImapConnection connection)
-        throws IOException {
-        List<ListData> ld = connection.list("", "");
-        return ld.size() == 1 ? ld.get(0).getDelimiter() : 0;
-    }
-    
     public static List<ListData> listFolders(ImapConnection ic)
         throws IOException {
         List<ListData> list = ic.list("", "*");

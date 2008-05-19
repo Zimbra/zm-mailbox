@@ -17,6 +17,7 @@
 package com.zimbra.cs.mailclient.imap;
 
 import com.zimbra.cs.mailclient.ParseException;
+import com.zimbra.cs.mailclient.util.Ascii;
 
 import java.io.IOException;
 
@@ -38,7 +39,7 @@ import java.io.IOException;
  */
 public final class ListData {
     private Flags flags;
-    private Character delimiter;
+    private char delimiter;
     private String mailbox;
 
     public static ListData read(ImapInputStream is) throws IOException {
@@ -78,10 +79,10 @@ public final class ListData {
 
     public Flags getFlags() { return flags; }
     public String getMailbox() { return mailbox; }
-    public Character getDelimiter() { return delimiter; }
+    public char getDelimiter() { return delimiter; }
 
     public String toString() {
-        return String.format("{mailbox=%s, delimiter=\"%c\", flags=%s}",
-                             mailbox, delimiter, flags);
+        return String.format("{mailbox=%s, delimiter=%s, flags=%s}",
+                             mailbox, Ascii.pp((byte) delimiter), flags);
     }
 }
