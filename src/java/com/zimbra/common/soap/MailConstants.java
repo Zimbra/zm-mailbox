@@ -193,6 +193,15 @@ public class MailConstants {
     public static final QName DESTROY_WAIT_SET_REQUEST = QName.get("DestroyWaitSetRequest", NAMESPACE);
     public static final QName DESTROY_WAIT_SET_RESPONSE = QName.get("DestroyWaitSetResponse", NAMESPACE);
     
+    // account ACL
+    public static final QName GET_PERMISSIONS_REQUEST = QName.get("GetPermissionsRequest", NAMESPACE);
+    public static final QName GET_PERMISSIONS_RESPONSE = QName.get("GetPermissionsResponse", NAMESPACE);
+    public static final QName GRANT_PERMISSIONS_REQUEST = QName.get("GrantPermissionsRequest", NAMESPACE);
+    public static final QName GRANT_PERMISSIONS_RESPONSE = QName.get("GrantPermissionsResponse", NAMESPACE);
+    public static final QName REVOKE_PERMISSIONS_REQUEST = QName.get("RevokePermissionsRequest", NAMESPACE);
+    public static final QName REVOKE_PERMISSIONS_RESPONSE = QName.get("RevokePermissionsResponse", NAMESPACE);
+    
+    
     public static final String E_MAILBOX = "mbx";
     public static final String E_ITEM = "item";
     public static final String E_MSG = "m";
@@ -230,6 +239,11 @@ public class MailConstants {
     public static final String A_RIGHTS = "perm";
     public static final String A_GRANT_TYPE = "gt";
     public static final String A_PASSWORD = "pw";
+    
+    // account ACLs
+    public static final String E_ACE = "ace";
+    public static final String A_DENY = "deny";
+    public static final String A_RIGHT = "right";
 
     // email addresses
     public static final String E_EMAIL = "e";
