@@ -59,14 +59,17 @@ public class Acl extends ResourceProperty {
 		String owner = rs.getOwner();
 		ACL acl = folder.getEffectiveACL();
 		props.add(getSupportedPrivilegeSet());
-		props.add(getCurrentUserPrivilegeSet(acl, folder.getAccount()));
+		if (folder != null) {
+			props.add(getCurrentUserPrivilegeSet(acl, folder.getAccount()));
+			props.add(getPrincipalCollectionSet(folder.getAccount()));
+		}
 		props.add(getAcl(acl, owner));
 		props.add(getAclRestrictions());
 		
 		ResourceProperty p = new ResourceProperty(DavElements.E_OWNER);
 		p.setProtected(true);
 		Element href = p.addChild(DavElements.E_HREF);
-		href.setText(UrlNamespace.getAclUrl(owner, owner, UrlNamespace.ACL_USER));
+		href.setText(UrlNamespace.getPrincipalUrl(owner));
 		props.add(p);
 		
 		// empty properties
@@ -74,9 +77,6 @@ public class Acl extends ResourceProperty {
 		p.setProtected(true);
 		props.add(p);
 		p = new ResourceProperty(DavElements.E_INHERITED_ACL_SET);
-		p.setProtected(true);
-		props.add(p);
-		p = new ResourceProperty(DavElements.E_PRINCIPAL_COLLECTION_SET);
 		p.setProtected(true);
 		props.add(p);
 		return props;
@@ -97,6 +97,9 @@ public class Acl extends ResourceProperty {
 		return new AclRestrictions();
 	}
 	
+	public static ResourceProperty getPrincipalCollectionSet(Account acct) {
+		return new PrincipalCollectionSet(acct);
+	}
 	
 	protected ACL mAcl;
 	protected String mOwner;
@@ -130,22 +133,22 @@ public class Acl extends ResourceProperty {
 				case ACL.GRANTEE_GUEST:
 					// maybe use different href for guest and internal users.
 					e = principal.addElement(DavElements.E_HREF);
-					e.setText(UrlNamespace.getAclUrl(mOwner, g.getGranteeId(), UrlNamespace.ACL_USER));
+					e.setText(UrlNamespace.getAclUrl(g.getGranteeId(), UrlNamespace.ACL_USER));
 					break;
 				case ACL.GRANTEE_AUTHUSER:
 					principal.addElement(DavElements.E_AUTHENTICATED);
 					break;
 				case ACL.GRANTEE_COS:
 					e = principal.addElement(DavElements.E_HREF);
-					e.setText(UrlNamespace.getAclUrl(mOwner, g.getGranteeId(), UrlNamespace.ACL_COS));
+					e.setText(UrlNamespace.getAclUrl(g.getGranteeId(), UrlNamespace.ACL_COS));
 					break;
 				case ACL.GRANTEE_DOMAIN:
 					e = principal.addElement(DavElements.E_HREF);
-					e.setText(UrlNamespace.getAclUrl(mOwner, g.getGranteeId(), UrlNamespace.ACL_DOMAIN));
+					e.setText(UrlNamespace.getAclUrl(g.getGranteeId(), UrlNamespace.ACL_DOMAIN));
 					break;
 				case ACL.GRANTEE_GROUP:
 					e = principal.addElement(DavElements.E_HREF);
-					e.setText(UrlNamespace.getAclUrl(mOwner, g.getGranteeId(), UrlNamespace.ACL_GROUP));
+					e.setText(UrlNamespace.getAclUrl(g.getGranteeId(), UrlNamespace.ACL_GROUP));
 					break;
 				case ACL.GRANTEE_PUBLIC:
 					principal.addElement(DavElements.E_UNAUTHENTICATED);
@@ -203,6 +206,19 @@ public class Acl extends ResourceProperty {
 		sRightsMap.put(DavElements.P_UNLOCK, ACL.RIGHT_WRITE); // XXX
 	}
 	
+	private static class PrincipalCollectionSet extends ResourceProperty {
+		public PrincipalCollectionSet(Account acct) {
+			super(DavElements.E_PRINCIPAL_COLLECTION_SET);
+			setProtected(true);
+			Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
+			try {
+				e.setText(UrlNamespace.getPrincipalCollectionUrl(acct));
+				mChildren.add(e);
+			} catch (DavException ex) {
+				ZimbraLog.dav.warn("can't generate principal-collection-url", ex);
+			}
+		}
+	}
 	private static class SupportedPrivilegeSet extends Acl {
 
 		public SupportedPrivilegeSet() {
