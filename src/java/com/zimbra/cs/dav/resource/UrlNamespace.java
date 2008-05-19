@@ -28,8 +28,10 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.service.DavServlet;
@@ -150,30 +152,28 @@ public class UrlNamespace {
 		return getResourceFromMailItem(ctxt, item);
 	}
 	
-	/* Returns the root URL of the user. */
-	public static String getHomeUrl(String user) {
-		return getResourceUrl(user, "/");
-	}
-	
-	public static final String ACL_USER   = "/acl/user";
-	public static final String ACL_GROUP  = "/acl/group";
-	public static final String ACL_COS    = "/acl/cos";
-	public static final String ACL_DOMAIN = "/acl/domain";
-    
     public static final String PRINCIPALS      = "principals";
     public static final String PRINCIPAL_USERS = "users";
     public static final String PRINCIPALS_PATH = "/" + PRINCIPALS + "/" + PRINCIPAL_USERS + "/";
 	
+	public static final String ACL_USER   = PRINCIPALS_PATH;
+	public static final String ACL_GROUP  = "/" + PRINCIPALS + "/" + "group" + "/";
+	public static final String ACL_COS    = "/" + PRINCIPALS + "/" + "cos" + "/";
+	public static final String ACL_DOMAIN = "/" + PRINCIPALS + "/" + "domain" + "/";
+    
 	/* RFC 3744 */
-	public static String getAclUrl(String owner, String principal, String type) throws DavException {
-		StringBuilder buf = new StringBuilder();
-		buf.append(type).append("/").append(principal);
+	public static String getAclUrl(String principal, String type) throws DavException {
+		Account account = null;
+		Provisioning prov = Provisioning.getInstance();
 		try {
-			Provisioning prov = Provisioning.getInstance();
-			Account account = prov.get(AccountBy.name, owner);
-			if (account == null)
-				throw new DavException("unknown user "+owner, HttpServletResponse.SC_NOT_FOUND, null);
-			return DavServlet.getServiceUrl(account, buf.toString());
+			account = prov.get(AccountBy.id, principal);
+			StringBuilder buf = new StringBuilder();
+			buf.append(type);
+			if (account != null)
+				buf.append(account.getName());
+			else
+				buf.append(principal);
+			return getAbsoluteUrl(null, buf.toString());
 		} catch (ServiceException e) {
 			throw new DavException("cannot create ACL URL for principal "+principal, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
 		}
@@ -193,6 +193,25 @@ public class UrlNamespace {
         return urlEscape(PRINCIPALS_PATH + user + "/");
     }
 	
+    public static String getPrincipalCollectionUrl(Account acct) throws DavException {
+    	try {
+        	return getAbsoluteUrl(acct, PRINCIPALS_PATH);
+    	} catch (ServiceException se) {
+    		throw new DavException("cannot get principal-collection-url for "+acct.getName(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+    	}
+    }
+    
+    private static String getAbsoluteUrl(Account user, String path) throws ServiceException {
+		Provisioning prov = Provisioning.getInstance();
+		Domain domain = null;
+		Server server = prov.getLocalServer();
+		if (user != null) {
+			domain = prov.getDomain(user);
+			server = prov.getServer(user);
+		}
+		return DavServlet.getServiceUrl(server, domain, path);
+    }
+    
     private static final Map<Character,String> sUrlEscapeMap = new java.util.HashMap<Character,String>();
     
     static {
