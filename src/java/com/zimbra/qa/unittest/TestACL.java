@@ -1,7 +1,9 @@
 package com.zimbra.qa.unittest;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -14,6 +16,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.PermUtil;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.mailbox.ACL;
@@ -110,15 +113,14 @@ public class TestACL extends TestCase {
         /*
          * setup targets
          */
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraACE, 
-                  new String[] {new ZimbraACE(goodguy, Right.viewFreeBusy, false).serialize(), 
-                                new ZimbraACE(badguy, Right.viewFreeBusy, true).serialize(),
-                                new ZimbraACE(wrongguy, Right.viewFreeBusy, true).serialize(),
-                                new ZimbraACE(wrongguy, Right.viewFreeBusy, false).serialize(),
-                                new ZimbraACE(ACL.ANONYMOUS_ACCT, Right.viewFreeBusy, false).serialize()
-                               });
-        Account target = prov.createAccount(getEmailAddr("target-test-zimbra"), "test123", attrs);
+        Account target = prov.createAccount(getEmailAddr("target-test-zimbra"), "test123", null);
+        Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
+        aces.add(new ZimbraACE(goodguy, Right.viewFreeBusy, false));
+        aces.add(new ZimbraACE(badguy, Right.viewFreeBusy, true));
+        aces.add(new ZimbraACE(wrongguy, Right.viewFreeBusy, true));
+        aces.add(new ZimbraACE(wrongguy, Right.viewFreeBusy, false));
+        aces.add(new ZimbraACE(ACL.ANONYMOUS_ACCT, Right.viewFreeBusy, false));
+        PermUtil.modifyACEs(target, aces);
         
         // specifically allowed
         verify(goodguy, target, Right.viewFreeBusy, true);
@@ -151,10 +153,10 @@ public class TestACL extends TestCase {
         /*
          * setup targets
          */
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraACE, 
-                  new String[] {new ZimbraACE(ACL.ANONYMOUS_ACCT, Right.viewFreeBusy, false).serialize()});
-        Account target = prov.createAccount(getEmailAddr("target-test-guest"), "test123", attrs);
+        Account target = prov.createAccount(getEmailAddr("target-test-guest"), "test123", null);
+        Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
+        aces.add(new ZimbraACE(ACL.ANONYMOUS_ACCT, Right.viewFreeBusy, false));
+        PermUtil.modifyACEs(target, aces);
         
         // right allowed for PUB
         verify(guest, target, Right.viewFreeBusy, true);
@@ -177,10 +179,10 @@ public class TestACL extends TestCase {
         /*
          * setup targets
          */
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraACE, 
-                  new String[] {new ZimbraACE(ACL.ANONYMOUS_ACCT, Right.viewFreeBusy, false).serialize()});
-        Account target = prov.createAccount(getEmailAddr("target-test-anon"), "test123", attrs);
+        Account target = prov.createAccount(getEmailAddr("target-test-anon"), "test123", null);
+        Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
+        aces.add(new ZimbraACE(ACL.ANONYMOUS_ACCT, Right.viewFreeBusy, false));
+        PermUtil.modifyACEs(target, aces);
         
         verify(anon, target, Right.viewFreeBusy, true);
         verify(anon, target, Right.invite, false);
@@ -205,12 +207,11 @@ public class TestACL extends TestCase {
         /*
          * setup targets
          */
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraACE, 
-                  new String[] {new ZimbraACE(user1, Right.viewFreeBusy, true).serialize(), 
-                                new ZimbraACE(groupA, Right.viewFreeBusy, false).serialize(), 
-                               });
-        Account target = prov.createAccount(getEmailAddr("target-test-group"), "test123", attrs);
+        Account target = prov.createAccount(getEmailAddr("target-test-group"), "test123", null);
+        Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
+        aces.add(new ZimbraACE(user1, Right.viewFreeBusy, true));
+        aces.add(new ZimbraACE(groupA, Right.viewFreeBusy, false));
+        PermUtil.modifyACEs(target, aces);
         
         // group member, but account is specifically denied
         verify(user1, target, Right.viewFreeBusy, false);
