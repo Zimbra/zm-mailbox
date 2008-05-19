@@ -61,7 +61,7 @@ public final class MessageData {
         md.readResponse(is);
         return md;
     }
-
+    
     private void readResponse(ImapInputStream is) throws IOException {
         is.skipChar('(');
         do {
@@ -143,6 +143,18 @@ public final class MessageData {
         return bodySections.toArray(new Body[bodySections.size()]);
     }
 
+    public void addFields(MessageData md) {
+        if (md.flags != null) flags = md.flags;
+        if (md.envelope != null) envelope = md.envelope;
+        if (md.internalDate != null) internalDate = md.internalDate;
+        if (md.rfc822Header != null) rfc822Header = md.rfc822Header;
+        if (md.rfc822Text != null) rfc822Text = md.rfc822Text;
+        if (md.rfc822Size != -1) rfc822Size = md.rfc822Size;
+        if (md.bodyStructure != null) bodyStructure = md.bodyStructure;
+        if (md.bodySections != null) bodySections = md.bodySections;
+        if (md.uid != -1) uid = md.uid;
+    }
+    
     public void dispose() {
         if (rfc822Header != null) rfc822Header.dispose();
         if (rfc822Text != null) rfc822Text.dispose();
