@@ -29,6 +29,7 @@ import org.dom4j.QName;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -214,7 +215,7 @@ public class Acl extends ResourceProperty {
 			try {
 				e.setText(UrlNamespace.getPrincipalCollectionUrl(acct));
 				mChildren.add(e);
-			} catch (DavException ex) {
+			} catch (ServiceException ex) {
 				ZimbraLog.dav.warn("can't generate principal-collection-url", ex);
 			}
 		}
@@ -357,7 +358,26 @@ public class Acl extends ResourceProperty {
 			}
 		}
 		
+		public Ace(String id, short rights, byte type) {
+			mId = id;
+			mRights = rights;
+			mGranteeType = type;
+		}
+		
 		public String getPrincipalUrl() {
+			if (mPrincipalUrl != null)
+				return mPrincipalUrl;
+
+			switch (mGranteeType) {
+			case ACL.GRANTEE_USER:
+				try {
+					Account acct = Provisioning.getInstance().get(Provisioning.AccountBy.id, mId);
+					mPrincipalUrl = UrlNamespace.getPrincipalCollectionUrl(acct);
+				} catch (ServiceException se) {
+					ZimbraLog.dav.warn("can't lookup account "+mId, se);
+				}
+				break;
+			}
 			return mPrincipalUrl;
 		}
 		
@@ -371,6 +391,10 @@ public class Acl extends ResourceProperty {
 		
 		public short getRights() {
 			return mRights;
+		}
+		
+		public boolean hasHref() {
+			return mGranteeType == ACL.GRANTEE_USER;
 		}
 	}
 }

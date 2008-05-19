@@ -48,6 +48,7 @@ import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.dav.property.Acl.Ace;
 import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -394,5 +395,22 @@ public abstract class MailItemResource extends DavResource {
 
 		Mailbox mbox = getMailbox(ctxt);
 		mbox.setPermissions(ctxt.getOperationContext(), getId(), acl);
+	}
+	
+	public List<Ace> getAce(DavContext ctxt) throws ServiceException, DavException {
+		ArrayList<Ace> aces = new ArrayList<Ace>();
+		Mailbox mbox = getMailbox(ctxt);
+		MailItem item = mbox.getItemById(ctxt.getOperationContext(), mId, MailItem.TYPE_UNKNOWN);
+		Folder f = null;
+		if (item.getType() == MailItem.TYPE_FOLDER)
+			f = (Folder)item;
+		else
+			f = mbox.getFolderById(ctxt.getOperationContext(), item.getParentId());
+		for (ACL.Grant g : f.getEffectiveACL().getGrants()) {
+			if (!g.hasGrantee())
+				continue;
+			aces.add(new Ace(g.getGranteeId(), g.getGrantedRights(), g.getGranteeType()));
+		}
+		return aces;
 	}
 }
