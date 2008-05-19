@@ -21,6 +21,7 @@ import java.util.Set;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.accesscontrol.Right;
 
 public class DomainAccessManager extends AccessManager {
 
@@ -202,4 +203,39 @@ public class DomainAccessManager extends AccessManager {
                 throw ServiceException.PERM_DENIED("domain is " + domain.getDomainStatus());
         }
     }
+    
+    
+    /* ===========================================================================================
+     * ACL based accesses
+     * 
+     * - not allowed by DomainAccessManager
+     * - DomainAccessManager will be retired after ACL based access control is fully implemented.
+     * 
+     * ===========================================================================================
+     */
+    
+    public boolean canPerform(AuthToken grantee, Account target, Right rightNeeded, boolean defaultGrant) {
+        return false;
+    }
+    
+    public boolean canPerform(Account grantee, Account target, Right rightNeeded, boolean defaultGrant) {
+        return false;
+    }
+    
+    public boolean canPerform(String grantee, Account target, Right rightNeeded, boolean defaultGrant) {
+        return false;
+    }
+    
+    public boolean canPerform(AuthToken grantee, CalendarResource target, Right rightNeeded, boolean defaultGrant) {
+        return false;
+    }
+    
+    public boolean canPerform(Account grantee, CalendarResource target, Right rightNeeded, boolean defaultGrant) {
+        return false;
+    }
+    
+    public boolean canPerform(String grantee, CalendarResource target, Right rightNeeded, boolean defaultGrant) {
+        return false;
+    }
+
 }

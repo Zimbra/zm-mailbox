@@ -25,8 +25,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.jsieve.parser.generated.Node;
+
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.ZimbraACL;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -44,6 +47,11 @@ public abstract class Entry {
     protected Entry(Map<String,Object> attrs, Map<String,Object> defaults) {
         mAttrs = attrs;
         mDefaults = defaults;
+    }
+    
+    // for debugging/logging, subclass should define a proper "label" for the entry by that it is best identified
+    public String getLabel() {
+        return "unknown";
     }
     
     public synchronized void setAttrs(Map<String,Object> attrs, Map<String,Object> defaults) {
@@ -361,6 +369,25 @@ public abstract class Entry {
         //return Collections.unmodifiableMap(defaults);
     }
 
+    private static final String ACL_CACHE_KEY = "ENTRY.ACL_CACHE";
+    
+    public ZimbraACL getACL() throws ServiceException {
+        ZimbraACL acl = (ZimbraACL)getCachedData(ACL_CACHE_KEY);
+        if (acl != null)
+            return acl;
+        else {
+            String[] aces = getMultiAttr(Provisioning.A_zimbraACE);
+            if (aces.length == 0)
+                return null;
+            else {
+                acl = new ZimbraACL(aces);
+                setCachedData(ACL_CACHE_KEY, acl);
+            }
+        }
+        return acl;
+    }
+    
+    
     public synchronized String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(getClass().getName()).append(": {  ");        

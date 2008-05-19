@@ -34,6 +34,7 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.index.SearchParams;
@@ -209,6 +210,7 @@ public class ToXML {
         }
     }
 
+    // encode mailbox ACL
     public static Element encodeACL(Element parent, ACL acl) {
         Element eACL = parent.addUniqueElement(MailConstants.E_ACL);
         if (acl == null)
@@ -224,6 +226,20 @@ public class ToXML {
                 .addAttribute(MailConstants.A_PASSWORD, grant.getPassword());
         }
         return eACL;
+    }
+    
+    // encode account ACE
+    public static Element encodeACE(Element parent, ZimbraACE ace) {
+        Element eACE = parent.addElement(MailConstants.E_ACE)
+                .addAttribute(MailConstants.A_ZIMBRA_ID, ace.getGranteeId())
+                .addAttribute(MailConstants.A_GRANT_TYPE, ace.getGranteeType().getCode())
+                .addAttribute(MailConstants.A_RIGHT, ace.getRight().getCode())
+                .addAttribute(MailConstants.A_DISPLAY, ace.getGranteeDisplayName());
+        
+        if (ace.denied())
+            eACE.addAttribute(MailConstants.A_DENY, ace.denied());
+       
+        return eACE;
     }
 
     private static Element encodeFolderCommon(Element elem, ItemIdFormatter ifmt, Folder folder, int fields) {

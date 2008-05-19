@@ -2580,3 +2580,51 @@ WaitSet: scalable mechanism for listening for changes to one or more accounts
 
 ---------------------------
 
+Get account level permissions.
+
+<GetPermissionsRequest>
+   <!-- get only the permissions for the specified rights -->
+   [<ace right="{right1}"/>
+    <ace right="{right2}"/>]
+</GetPermissionsRequest>
+
+If no <ace> elements are provided, all ACEs are returned in the response.
+If <ace> elements are provided, only those ACEs with specified rights are returned in the response.
+
+<GetPermissionsResponse>
+  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"]/>*
+</GetPermissionsResponse>
+
+    {right}       = viewFreeBusy | invite
+    
+    {deny}         = 1 | 0(default)
+                     if a right is specifically denied
+    
+    {grantee-type} = the type of grantee: 
+                     usr - (Zimbra user), 
+                     grp - (Zimbra group(distribution list)),
+                     pub - (public authenticated and unauthenticated access),
+    {grantee-name} = the display name (*not* the zimbra id) of the principal being granted rights;
+                     optional if {grantee-type} is "pub"
+ 
+---------------------------
+
+Grant account level permissions.
+
+<GrantPermissionsRequest/>
+
+<GrantPermissionsResponse>
+  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"]/>*
+</GrantPermissionsResponse>
+
+---------------------------
+
+Revoke account level permissions.
+
+<RevokePermissionsRequest/>
+
+<RevokePermissionsResponse>
+  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"]/>*
+</RevokePermissionsResponse>
+
+---------------------------

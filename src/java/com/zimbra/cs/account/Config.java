@@ -41,6 +41,10 @@ public class Config extends Entry {
         super(attrs, null);
         resetData();
     }
+    
+    public String getLabel() {
+        return "globalconfig";
+    }
 
     @Override
     public void resetData() {

@@ -42,6 +42,10 @@ public abstract class NamedEntry extends Entry implements Comparable {
         mId = id;
     }
 
+    public String getLabel() {
+        return getName();
+    }
+    
     public String getId() {
         return mId;
     }
