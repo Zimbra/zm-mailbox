@@ -121,6 +121,14 @@ public class UrlNamespace {
         }
     }
     
+    public static DavResource getPrincipal(Account acct) throws DavException {
+        try {
+            return new User(getPrincipalUrl(acct.getName()), acct);
+        } catch (ServiceException se) {
+            throw new DavException("user not found", HttpServletResponse.SC_NOT_FOUND, null);
+        }
+    }
+    
 	/* Returns DavResource in the user's mailbox at the specified path. */
 	public static DavResource getResourceAt(DavContext ctxt, String user, String path) throws DavException {
         ZimbraLog.dav.debug("getResource at "+user+" "+path);
