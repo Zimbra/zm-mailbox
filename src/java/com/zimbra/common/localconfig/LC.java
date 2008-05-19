@@ -931,7 +931,7 @@ public class LC {
         debug_mailboxindex_use_new_locking.setDefault("true");
 
         zimbra_class_provisioning = new KnownKey("zimbra_class_provisioning", "com.zimbra.cs.account.ldap.LdapProvisioning");
-        zimbra_class_accessmanager = new KnownKey("zimbra_class_accessmanager", "com.zimbra.cs.account.DomainAccessManager");
+        zimbra_class_accessmanager = new KnownKey("zimbra_class_accessmanager", "com.zimbra.cs.account.accesscontrol.AclAccessManager");
         zimbra_class_mboxmanager = new KnownKey("zimbra_class_mboxmanager", "com.zimbra.cs.mailbox.MailboxManager");
         zimbra_class_database = new KnownKey("zimbra_class_database", "com.zimbra.cs.db.MySQL");
         zimbra_class_application = new KnownKey("zimbra_class_application", "com.zimbra.cs.util.ZimbraApplication");
