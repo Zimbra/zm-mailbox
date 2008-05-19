@@ -361,7 +361,6 @@ public class DbMailbox {
             stmt.setInt(pos++, mbox.getIndexDeferredCount());
             stmt.setInt(pos++, mbox.getId());
             int num = stmt.executeUpdate();
-            assert(num == 1);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("updating mailbox statistics for mailbox " + mbox.getId(), e);
         } finally {
