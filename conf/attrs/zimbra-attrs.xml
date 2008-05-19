@@ -3200,4 +3200,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Yahoo ID</desc>
 </attr>
 
+<attr id="659" name="zimbraACE" type="string" cardinality="multi" optionalIn="account,calendarResource">
+  <desc>Zimbra access control list</desc>
+</attr>
+
 </attrs>

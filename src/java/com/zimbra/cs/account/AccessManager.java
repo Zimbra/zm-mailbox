@@ -21,6 +21,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.accesscontrol.Right;
 
 public abstract class AccessManager {
 
@@ -81,4 +82,13 @@ public abstract class AccessManager {
     public abstract boolean canAccessEmail(AuthToken at, String email) throws ServiceException;
 
     public abstract boolean canModifyMailQuota(AuthToken at, Account targetAccount, long mailQuota) throws ServiceException;
+    
+    // ACL based methods
+    public abstract boolean canPerform(AuthToken grantee, Account target, Right rightNeeded, boolean defaultGrant);
+    public abstract boolean canPerform(Account grantee, Account target, Right rightNeeded, boolean defaultGrant);
+    public abstract boolean canPerform(String grantee, Account target, Right rightNeeded, boolean defaultGrant);
+    public abstract boolean canPerform(AuthToken grantee, CalendarResource target, Right rightNeeded, boolean defaultGrant);
+    public abstract boolean canPerform(Account grantee, CalendarResource target, Right rightNeeded, boolean defaultGrant);
+    public abstract boolean canPerform(String grantee, CalendarResource target, Right rightNeeded, boolean defaultGrant);
+
 }

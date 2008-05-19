@@ -39,6 +39,10 @@ class LdapMimeType extends Entry implements LdapEntry, MimeTypeInfo {
         super(LdapUtil.getAttrs(attrs), null);
         mDn = dn;
     }
+    
+    public String getLabel() {
+        return mDn;
+    }
 
     public String[] getMimeTypes() {
         return super.getMultiAttr(Provisioning.A_zimbraMimeType);
