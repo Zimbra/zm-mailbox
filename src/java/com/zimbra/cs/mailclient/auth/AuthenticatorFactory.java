@@ -17,7 +17,7 @@ public final class AuthenticatorFactory {
         return DEFAULT;
     }
 
-    private AuthenticatorFactory() {
+    public AuthenticatorFactory() {
         authenticators = new HashMap<String, Class>();
         register(SaslAuthenticator.MECHANISM_PLAIN, SaslAuthenticator.class);
         register(SaslAuthenticator.MECHANISM_GSSAPI, SaslAuthenticator.class);
