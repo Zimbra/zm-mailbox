@@ -24,10 +24,7 @@ import org.dom4j.QName;
 
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavElements;
-import com.zimbra.cs.dav.property.CalDavProperty;
-import com.zimbra.cs.dav.property.CalDavProperty.CalComponent;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.ZCalendar;
 
 /*
  * draft-dusseault-caldav section 9.7
@@ -54,112 +51,156 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 public abstract class Filter {
 	protected String mName;
 	protected boolean mIsNotDefinedSet;
+	protected TimeRange mTimeRange;
+	protected HashSet<CompFilter> mComps;
+	protected HashSet<PropFilter> mProps;
+	protected HashSet<ParamFilter> mParams;
+	protected HashSet<TextMatch> mTextMatches;
 
 	public Filter(Element elem) {
+		mProps = new HashSet<PropFilter>();
+		mComps = new HashSet<CompFilter>();
+		mParams = new HashSet<ParamFilter>();
+		mTextMatches = new HashSet<TextMatch>();
 		mName = elem.attributeValue(DavElements.P_NAME);
+		if (mName.equals("VCALENDAR")) {
+			elem = (Element)elem.elementIterator().next();
+			mName = elem.attributeValue(DavElements.P_NAME);
+		}
+		parse(elem);
 	}
 
 	public String getName() {
 		return mName;
 	}
 	
-	public abstract boolean match(Invite invite);
+	protected void parse(Element elem) {
+		for (Object o : elem.elements()) {
+			if (o instanceof Element) {
+				Element e = (Element) o;
+				QName name = e.getQName();
+				if (canHaveCompFilter() && name.equals(DavElements.E_COMP_FILTER))
+					mComps.add(new CompFilter(e));
+				else if (canHavePropFilter() && name.equals(DavElements.E_PROP_FILTER))
+					mProps.add(new PropFilter(e));
+				else if (canHaveParamFilter() && name.equals(DavElements.E_PARAM_FILTER))
+					mParams.add(new ParamFilter(e));
+				else if (name.equals(DavElements.E_TEXT_MATCH))
+					mTextMatches.add(new TextMatch(e));
+				else if (name.equals(DavElements.E_TIME_RANGE))
+					mTimeRange = new TimeRange(e);
+				else
+					ZimbraLog.dav.info("unrecognized filter "+name.getNamespaceURI()+":"+name.getName());
+			}
+		}
+		if (mTimeRange == null)
+			mTimeRange = new TimeRange(null);
+	}
+
+	public boolean match(ZCalendar.ZComponent comp) {
+		return comp.getName().equals(mName);
+	}
 	
 	public boolean mIsNotDefinedSet() {
 		return mIsNotDefinedSet;
 	}
 
-	/* TODO: implement */
-	public static class TextMatch extends Filter {
+	protected boolean runTextMatch(String text) {
+		boolean matched = true;
+		for (TextMatch tm : mTextMatches)
+			matched &= tm.match(text);
+		return matched;
+	}
+	protected boolean canHaveCompFilter()  { return true; }
+	protected boolean canHavePropFilter()  { return true; }
+	protected boolean canHaveParamFilter() { return true; }
+	
+	public static class TextMatch {
+		private String mCollation;
+		private String mText;
+		
 		public TextMatch(Element elem) {
-			super(elem);
+			mCollation = elem.attributeValue(DavElements.P_COLLATION);
+			mText = elem.getText();
 		}
 		
-		public boolean match(Invite invite) {
-			return true;
+		public boolean match(String val) {
+			boolean ignoreCase = mCollation.equals(DavElements.ASCII);
+			
+			if (ignoreCase)
+				return val.equalsIgnoreCase(mText);
+			else
+				return val.equals(mText);
 		}
 	}
-	/* TODO: implement */
 	public static class ParamFilter extends Filter {
 		public ParamFilter(Element elem) {
 			super(elem);
-			
 		}
-		public boolean match(Invite invite) {
-			return true;
+		public boolean match(ZCalendar.ZProperty prop) {
+			ZCalendar.ICalTok tok = ZCalendar.ICalTok.lookup(mName);
+			ZCalendar.ZParameter param = prop.getParameter(tok);
+			if (param == null)
+				return false;
+			return runTextMatch(param.getValue());
 		}
+		protected boolean canHaveCompFilter()  { return false; }
+		protected boolean canHavePropFilter()  { return false; }
+		protected boolean canHaveParamFilter() { return false; }
 	}
-	/* TODO: implement */
 	public static class PropFilter extends Filter {
-		private HashSet<ParamFilter> mParams;
 		
 		public PropFilter(Element elem) {
 			super(elem);
-			
 		}
 		
-		public boolean match(Invite invite) {
-			return true;
+		public boolean match(ZCalendar.ZComponent comp) {
+			ZCalendar.ICalTok tok = ZCalendar.ICalTok.lookup(mName);
+			if (tok == null)
+				return false;
+			boolean matched = true;
+			ZCalendar.ZProperty prop = comp.getProperty(tok);
+			for (ParamFilter pf : mParams)
+				matched &= pf.match(prop);
+			matched &= runTextMatch(prop.getValue());
+			return matched;
 		}
 
-		public Collection<ParamFilter> getParamFilters() {
-			return mParams;
-		}
+		protected boolean canHaveCompFilter()  { return false; }
+		protected boolean canHavePropFilter()  { return false; }
 	}
 	public static class CompFilter extends Filter {
-		private CalComponent mComponent;
-		private TimeRange mTimeRange;
-		private HashSet<PropFilter> mProps;
-		private HashSet<CompFilter> mComps;
 		
 		public CompFilter(Element elem) {
 			super(elem);
-			mProps = new HashSet<PropFilter>();
-			mComps = new HashSet<CompFilter>();
-			parse(elem);
-			String name = elem.attributeValue(DavElements.P_NAME);
-			mComponent = CalDavProperty.getCalComponent(name);
 		}
 		
-		void parse(Element elem) {
-			for (Object o : elem.elements()) {
-				if (o instanceof Element) {
-					Element e = (Element) o;
-					QName name = e.getQName();
-					if (name.equals(DavElements.E_COMP_FILTER))
-						mComps.add(new CompFilter(e));
-					else if (name.equals(DavElements.E_PROP_FILTER))
-						mProps.add(new PropFilter(e));
-					else if (name.equals(DavElements.E_TIME_RANGE))
-						mTimeRange = new TimeRange(e);
-					else
-						ZimbraLog.dav.info("unrecognized filter "+name.getNamespaceURI()+":"+name.getName());
-				}
-			}
-			if (mTimeRange == null)
-				mTimeRange = new TimeRange(null);
-		}
-
-		public boolean match(Invite invite) {
-			boolean matched = false;
-            byte type = invite.getItemType();
+		public boolean match(ZCalendar.ZComponent comp) {
+			boolean matched = super.match(comp);
 			
-			if (mComponent == CalComponent.VCALENDAR)
-				matched = true;
-            else if (type == MailItem.TYPE_APPOINTMENT)
-				matched = (mComponent == CalComponent.VEVENT);
-            else if (type == MailItem.TYPE_TASK)
-				matched = (mComponent == CalComponent.VTODO);
-
 			if (matched && mComps.size() > 0) {
 				matched = false;
 				// needs to match at least one subcomponent
 				for (CompFilter cf : mComps) {
-					matched |= cf.match(invite);
+					ZCalendar.ICalTok tok = ZCalendar.ICalTok.lookup(cf.mName);
+					if (tok != null) {
+						ZCalendar.ZComponent sub = comp.getComponent(tok);
+						if (sub != null)
+							matched |= cf.match(sub);
+					}
+				}
+			}
+			
+			if (matched && mProps.size() > 0) {
+				// needs to match all the properties
+				for (PropFilter pf : mProps) {
+					matched &= pf.match(comp);
 				}
 			}
 			return matched;
 		}
+		
+		protected boolean canHaveParamFilter() { return false; }
 		
 		public TimeRange getTimeRange() {
 			return mTimeRange;

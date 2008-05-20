@@ -36,5 +36,6 @@ public class Delete extends DavMethod {
 		if (rsc == null)
 			throw new DavException("cannot find the resource", HttpServletResponse.SC_NOT_FOUND, null);
 		rsc.delete(ctxt);
+		ctxt.setStatus(HttpServletResponse.SC_NO_CONTENT);
 	}
 }

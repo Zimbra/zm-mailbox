@@ -118,16 +118,14 @@ public class CalDavProperty extends ResourceProperty {
 	}
 	
 	private static class SupportedCollationSet extends CalDavProperty {
-		public static final String ASCII = "i;ascii-casemap";  // case insensitive
-		public static final String OCTET = "i;octet";
 		
 		public SupportedCollationSet() {
 			super(DavElements.E_SUPPORTED_COLLATION_SET);
 			Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_SUPPORTED_COLLATION);
-			e.setText(ASCII);
+			e.setText(DavElements.ASCII);
 			mChildren.add(e);
 			e = org.dom4j.DocumentHelper.createElement(DavElements.E_SUPPORTED_COLLATION);
-			e.setText(OCTET);
+			e.setText(DavElements.OCTET);
 			mChildren.add(e);
 		}
 	}

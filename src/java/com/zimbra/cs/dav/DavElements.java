@@ -39,6 +39,9 @@ public class DavElements {
 	public static final QName  E_LANG = QName.get(P_LANG);
 	//public static final QName  E_LANG = QName.get(P_LANG, XML_NS);
 
+	public static final String ASCII = "i;ascii-casemap";  // case insensitive
+	public static final String OCTET = "i;octet";
+	
 	// properties strings in alphabetical order
 	public static final String P_ABSTRACT = "abstract";
 	public static final String P_ACE = "ace";
@@ -64,6 +67,7 @@ public class DavElements {
 	public static final String P_CALENDAR_QUERY = "calendar-query";
 	public static final String P_CALENDAR_TIMEZONE = "calendar-timezone";
 	public static final String P_CALENDAR_USER_ADDRESS_SET = "calendar-user-address-set";
+	public static final String P_COLLATION = "collation";
 	public static final String P_COLLECTION = "collection";
 	public static final String P_COMP = "comp";
 	public static final String P_COMP_FILTER = "comp-filter";
@@ -231,6 +235,7 @@ public class DavElements {
 	public static final QName E_CALENDAR_QUERY = QName.get(P_CALENDAR_QUERY, CALDAV_NS);
 	public static final QName E_CALENDAR_TIMEZONE = QName.get(P_CALENDAR_TIMEZONE, CALDAV_NS);
 	public static final QName E_CALENDAR_USER_ADDRESS_SET = QName.get(P_CALENDAR_USER_ADDRESS_SET, CALDAV_NS);
+	public static final QName E_COLLATION = QName.get(P_COLLATION, WEBDAV_NS);
 	public static final QName E_COLLECTION = QName.get(P_COLLECTION, WEBDAV_NS);
 	public static final QName E_COMP = QName.get(P_COMP, CALDAV_NS);
 	public static final QName E_COMP_FILTER = QName.get(P_COMP_FILTER, CALDAV_NS);

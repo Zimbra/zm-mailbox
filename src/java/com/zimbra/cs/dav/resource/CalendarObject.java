@@ -116,9 +116,16 @@ public interface CalendarObject {
 
         /* Returns true if the supplied Filter matches this calendar object. */
         public boolean match(Filter filter) {
-            for (Invite inv : mInvites)
-                if (filter.match(inv))
-                    return true;
+            for (Invite inv : mInvites) {
+            	try {
+            		ZCalendar.ZComponent vcomp = inv.newToVComponent(false, false);
+            		if (filter.match(vcomp))
+            			return true;
+            	} catch (ServiceException se) {
+                    ZimbraLog.dav.warn("cannot convert to ICalendar", se);
+            		continue;
+            	}
+            }
 
             return false;
         }
@@ -142,16 +149,18 @@ public interface CalendarObject {
                 wr.close();
             }
             for (Invite inv : mInvites) {
-                if (filter != null && !filter.match(inv))
-                    continue;
                 CharArrayWriter wr = new CharArrayWriter();
                 try {
                     boolean allowPrivateAccess =
                         Account.allowPrivateAccess(ctxt.getAuthAccount(), mAccount,
                                                    ctxt.getOperationContext().isUsingAdminPrivileges());
-                    inv.newToVComponent(false, allowPrivateAccess).toICalendar(wr);
+                    ZCalendar.ZComponent vcomp = inv.newToVComponent(false, allowPrivateAccess);
+                    if (filter != null && !filter.match(vcomp))
+                        continue;
+                    vcomp.toICalendar(wr);
                 } catch (ServiceException se) {
-                    ZimbraLog.dav.error("cannot convert to ICalendar", se);
+                    ZimbraLog.dav.warn("cannot convert to ICalendar", se);
+                    continue;
                 }
                 wr.flush();
                 buf.append(wr.toCharArray());
