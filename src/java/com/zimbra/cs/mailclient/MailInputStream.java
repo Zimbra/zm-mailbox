@@ -35,7 +35,7 @@ public class MailInputStream extends InputStream {
             b[off++] = (byte) nextByte;
             nextByte = -1;
             len = in.read(b, off, len - 1);
-            return len != -1 ? len + 1 : -1;
+            return len != -1 ? len + 1 : 1;
         }
         return in.read(b, off, len);
     }
