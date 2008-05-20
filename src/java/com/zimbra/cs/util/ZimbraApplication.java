@@ -32,6 +32,10 @@ public class ZimbraApplication {
 		return sServices;
 	}
 	
+	public String getId() {
+		return "zimbra";
+	}
+	
 	public boolean supports(String className) {
 		return true;
 	}
