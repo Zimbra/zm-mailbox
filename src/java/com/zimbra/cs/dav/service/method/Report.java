@@ -60,6 +60,8 @@ public class Report extends DavMethod {
 		if (report == null)
 			throw new DavException("msg "+top.getName()+" not implemented in REPORT", HttpServletResponse.SC_BAD_REQUEST, null);
 		
+		if (ctxt.getDepth() != DavContext.Depth.zero)
+			ctxt.getDavResponse().createResponse(ctxt);
 		report.handle(ctxt);
 		sendResponse(ctxt);
 	}
