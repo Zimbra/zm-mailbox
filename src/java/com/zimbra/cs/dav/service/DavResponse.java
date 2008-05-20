@@ -165,6 +165,10 @@ public class DavResponse {
         resp.addElement(DavElements.E_STATUS).setText(sStatusTextMap.get(status));
     }
     
+    public void createResponse(DavContext ctxt) {
+    	ctxt.setStatus(DavProtocol.STATUS_MULTI_STATUS);
+    	getTop(DavElements.E_MULTISTATUS);
+    }
 	private Element findProp(Element top, Map<Integer,Element> propstatMap, int status) {
 		Element propstat = findPropstat(top, propstatMap, status);
 		return propstat.element(DavElements.E_PROP);
