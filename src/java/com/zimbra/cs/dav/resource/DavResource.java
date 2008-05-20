@@ -57,12 +57,14 @@ public abstract class DavResource {
 	protected String mOwner;
 	protected Map<QName,ResourceProperty> mProps;
 	protected Collection<Compliance> mDavCompliance;
+	protected boolean mNewlyCreated;
 	
 	public DavResource(String uri, Account acct) throws ServiceException {
 		this(uri, getOwner(acct));
 	}
 	
 	public DavResource(String uri, String owner) {
+		mNewlyCreated = false;
 		mOwner = owner;
 		mProps = new HashMap<QName,ResourceProperty>();
 		mUri = uri;
@@ -91,6 +93,10 @@ public abstract class DavResource {
 			setProperty(DavElements.E_GETETAG, getEtag(), true);
 		if (isCollection())
 			addResourceType(DavElements.E_COLLECTION);
+	}
+	
+	public boolean isNewlyCreated() {
+		return mNewlyCreated;
 	}
 	
 	protected static String getOwner(Account acct) throws ServiceException {

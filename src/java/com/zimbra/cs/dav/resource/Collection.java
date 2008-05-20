@@ -167,7 +167,9 @@ public class Collection extends MailItemResource {
 		// create
 		try {
 			Document doc = mbox.createDocument(ctxt.getOperationContext(), mId, name, ctype, author, upload.getInputStream());
-			return new Notebook(ctxt, doc);
+			Notebook notebook =  new Notebook(ctxt, doc);
+			notebook.mNewlyCreated = true;
+			return notebook;
 		} catch (ServiceException se) {
 			throw new DavException("cannot create ", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, se);
 		}

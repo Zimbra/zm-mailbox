@@ -75,7 +75,12 @@ public interface CalendarObject {
     public static class LocalCalendarObject extends MailItemResource implements CalendarObject {
 
         public LocalCalendarObject(DavContext ctxt, CalendarItem calItem) throws ServiceException {
+            this(ctxt, calItem, false);
+        }
+
+        public LocalCalendarObject(DavContext ctxt, CalendarItem calItem, boolean newItem) throws ServiceException {
             this(ctxt, getCalendarPath(calItem), calItem);
+            mNewlyCreated = newItem;
         }
 
         protected LocalCalendarObject(DavContext ctxt, String path, CalendarItem calItem) throws ServiceException {
