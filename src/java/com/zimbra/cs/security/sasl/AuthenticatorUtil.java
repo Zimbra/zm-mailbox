@@ -35,32 +35,36 @@ public final class AuthenticatorUtil {
     public static Account authenticate(String username, String authenticateId, String password, String protocol, String origRemoteIp)
     throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
-        Account account = prov.get(Provisioning.AccountBy.name, authenticateId);
-        if (account == null) {
-            ZimbraLog.account.warn("No account associated with authentication id '%s'", authenticateId);
+        Account authAccount = prov.get(Provisioning.AccountBy.name, authenticateId);
+        if (authAccount == null) {
+            ZimbraLog.account.info("authentication failed for " + authenticateId + " (no such account)");
             return null;
         }
+
         // authenticate the authentication principal
         Map<String, Object> authCtxt = new HashMap<String, Object>();
         authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, origRemoteIp);
-        prov.authAccount(account, password, protocol, authCtxt);
-        return authorize(account, username);
+        authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, authenticateId);
+        prov.authAccount(authAccount, password, protocol, authCtxt);
+
+        return authorize(authAccount, username, true);
     }
 
     public static Account authenticateKrb5(String username, String principal) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
-        Account account = prov.get(Provisioning.AccountBy.krb5Principal, principal);
-        if (account == null) {
-            ZimbraLog.account.warn("No account associated with Kerberos principle '%s'", principal);
+        Account authAccount = prov.get(Provisioning.AccountBy.krb5Principal, principal);
+        if (authAccount == null) {
+            ZimbraLog.account.warn("authentication failed (no account associated with Kerberos principal " + principal + ')');
             return null;
         }
-        return authorize(account, username);
+        return authorize(authAccount, username, true);
     }
 
-    public static Account authenticateZToken(String username, String authtoken) throws ServiceException {
-        if (username == null || username.equals(""))
+    public static Account authenticateZToken(String username, String authenticateId, String authtoken) throws ServiceException {
+        if (authenticateId == null || authenticateId.equals(""))
             return null;
 
+        // validate the auth token
         Provisioning prov = Provisioning.getInstance();
         AuthToken at;
         try {
@@ -68,19 +72,24 @@ public final class AuthenticatorUtil {
         } catch (AuthTokenException e) {
             return null;
         }
-        if (at == null || at.isExpired() || !at.isAdmin() || at.getAdminAccountId() != null)
+        if (at == null || at.isExpired())
             return null;
 
-        Account admin = prov.get(Provisioning.AccountBy.id, at.getAccountId(), at);
-        if (admin == null || !admin.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
+        // make sure that the authentication account is valid
+        Account authAccount = prov.get(Provisioning.AccountBy.name, authenticateId, at);
+        if (authAccount == null || !authAccount.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
+            return null;
+        // make sure the auth token belongs to authenticatedId
+        if (!at.getAccountId().equalsIgnoreCase(authAccount.getId()))
             return null;
 
-        return authorize(admin, username);
+        // if necessary, check that the authenticated user can authorize as the target user
+        return authorize(authAccount, username, at.isAdmin() || at.isDomainAdmin());
     }
 
-    private static Account authorize(Account account, String username) throws ServiceException {
+    private static Account authorize(Account authAccount, String username, boolean asAdmin) throws ServiceException {
         if (username == null || username.length() == 0)
-            return account;
+            return authAccount;
 
         Provisioning prov = Provisioning.getInstance();
         Account userAcct = prov.get(Provisioning.AccountBy.name, username);
@@ -88,7 +97,7 @@ public final class AuthenticatorUtil {
             // if username not found, check username again using the domain associated with the authorization account
             int i = username.indexOf('@');
             if (i != -1) {
-                String domain = account.getDomainName();
+                String domain = authAccount.getDomainName();
                 if (domain != null) {
                     username = username.substring(0, i) + '@' + domain;
                     userAcct = prov.get(Provisioning.AccountBy.name, username);
@@ -96,11 +105,13 @@ public final class AuthenticatorUtil {
             }
         }
         if (userAcct == null) {
-            ZimbraLog.account.warn("No account associated with username '%s'", username);
+            ZimbraLog.account.info("authorization failed for " + username + " (account not found)", username);
             return null;
         }
-        if (!account.getUid().equals(userAcct.getUid()) && !AccessManager.getInstance().canAccessAccount(account, userAcct)) {
-            ZimbraLog.account.warn("Account for username '%s' cannot be accessed by '%s'", username, account.getName());
+
+        // check whether the authenticated user is able to access the target
+        if (!authAccount.getId().equals(userAcct.getId()) && !AccessManager.getInstance().canAccessAccount(authAccount, userAcct, asAdmin)) {
+            ZimbraLog.account.warn("authorization failed for " + username + " (authenticated user " + authAccount.getName() + " has insufficient rights)");
             return null;
         }
         return userAcct;

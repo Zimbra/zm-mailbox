@@ -23,7 +23,7 @@ import java.io.OutputStream;
 import javax.security.sasl.SaslServer;
 
 public class ZimbraAuthenticator extends Authenticator {
-    public static final String MECHANISM = "ZIMBRA";
+    public static final String MECHANISM = "X-ZIMBRA";
 
     public ZimbraAuthenticator(AuthenticatorUser user) {
         super(MECHANISM, user);
@@ -45,15 +45,14 @@ public class ZimbraAuthenticator extends Authenticator {
 
         String message = new String(data, "utf-8");
 
-        int nul = message.indexOf('\0');
-        if (nul == -1) {
+        int nul1 = message.indexOf('\0'), nul2 = message.indexOf('\0', nul1 + 1);
+        if (nul1 == -1 || nul2 == -1) {
             sendBadRequest();
             return;
         }
-
-        String username = message.substring(0, nul);
-        String authtoken = message.substring(nul + 1);
-
-        authenticate(username, null, authtoken);
+        String authorizeId = message.substring(0, nul1);
+        String authenticateId = message.substring(nul1 + 1, nul2);
+        String authtoken = message.substring(nul2 + 1);
+        authenticate(authorizeId, authenticateId, authtoken);
     }
 }
