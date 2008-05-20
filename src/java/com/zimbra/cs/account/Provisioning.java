@@ -2310,16 +2310,29 @@ public abstract class Provisioning {
     }
 
     /**
-     * 
+     * @param d domain
      * @param query LDAP search query
      * @param type address type to search
+     * @param token return entries created/modified after timestamp 
      * @return List of GalContact objects
      * @throws ServiceException
      */
-    public abstract SearchGalResult searchGal(Domain d, String query,
-                                     GAL_SEARCH_TYPE type,
-                                     String token)
-    throws ServiceException;
+    public abstract SearchGalResult searchGal(Domain d, String query, GAL_SEARCH_TYPE type, String token) throws ServiceException;
+    
+    /**
+     * Interface for CalDAV.  it needs to always search in Zimbra only, regardless of zimbraGalMode configured on the domain.
+     * 
+     * @param d domain
+     * @param query LDAP search query
+     * @param type address type to search
+     * @param mode if given, use the provided mode, if null, use mode(zimbraGalMode) configured on the domain
+     * @param token return entries created/modified after timestamp
+     * @return List of GalContact objects
+     * @throws ServiceException
+     */
+    public SearchGalResult searchGal(Domain d, String query, GAL_SEARCH_TYPE type, String mode, String token) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
     
     
     public static class SearchGalResult {

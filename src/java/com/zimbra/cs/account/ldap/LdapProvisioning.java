@@ -3757,6 +3757,15 @@ public class LdapProvisioning extends Provisioning {
                                      Provisioning.GAL_SEARCH_TYPE type,
                                      String token)
     throws ServiceException {
+        return searchGal(d, n, type, null, token);
+    }
+    
+    @Override
+    public SearchGalResult searchGal(Domain d, String n,
+                                     Provisioning.GAL_SEARCH_TYPE type,
+                                     String galMode,
+                                     String token)
+    throws ServiceException {
         GalOp galOp = token != null ? GalOp.sync : GalOp.search;
         // escape user-supplied string
         n = LdapUtil.escapeSearchFilterArg(n);
@@ -3765,7 +3774,7 @@ public class LdapProvisioning extends Provisioning {
         if (type == Provisioning.GAL_SEARCH_TYPE.CALENDAR_RESOURCE)
             return searchResourcesGal(d, n, maxResults, token, galOp);
 
-        String mode = d.getAttr(Provisioning.A_zimbraGalMode);
+        String mode = galMode != null ? galMode : d.getAttr(Provisioning.A_zimbraGalMode);
         SearchGalResult results = null;
         if (mode == null || mode.equals(Provisioning.GM_ZIMBRA)) {
             results = searchZimbraGal(d, n, maxResults, token, galOp);
