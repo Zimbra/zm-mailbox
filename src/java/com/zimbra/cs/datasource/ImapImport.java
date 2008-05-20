@@ -72,7 +72,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.util.BuildInfo;
+import com.zimbra.cs.util.ZimbraApplication;
 import com.zimbra.cs.mailclient.imap.UidFetch;
 import com.zimbra.cs.mailclient.imap.Literal;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
@@ -93,7 +93,7 @@ public class ImapImport extends AbstractMailItemImport {
 
     private static final String ID_EXT = "(\"vendor\" \"Zimbra\" \"os\" \"" +
         System.getProperty("os.name") + "\" \"os-version\" \"" +
-        System.getProperty("os.version") + "\" \"guid\" \"" + BuildInfo.TYPE + "\")";
+        System.getProperty("os.version") + "\" \"guid\" \"" + ZimbraApplication.getInstance().getId() + "\")";
 
     private static final long TIMEOUT =
         LC.javamail_imap_timeout.longValue() * Constants.MILLIS_PER_SECOND;
