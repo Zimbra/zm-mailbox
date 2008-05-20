@@ -57,6 +57,7 @@ public class PermUtil {
     private static void serialize(Entry target, ZimbraACL acl) throws ServiceException {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraACE, acl.serialize());
+        // modifyAttrs will erase cached ACL on the target
         Provisioning.getInstance().modifyAttrs(target, attrs);
     }
     
@@ -85,16 +86,17 @@ public class PermUtil {
         NamedEntry nentry = null;
         if (name != null)
             switch (type) {
-                case GT_USER:    nentry = lookupEmailAddress(name);                 break;
-                case GT_GROUP:   nentry = prov.get(DistributionListBy.name, name);  break;
+                case GT_USER:  nentry = lookupEmailAddress(name);                 break;
+                case GT_GROUP: nentry = prov.get(DistributionListBy.name, name);  break;
             }
 
         if (nentry != null)
             return nentry;
+        
         switch (type) {
-            case GT_USER:    throw AccountServiceException.NO_SUCH_ACCOUNT(name);
-            case GT_GROUP:   throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(name);
-            default:  throw ServiceException.FAILURE("LDAP entry not found for " + name + " : " + type, null);
+            case GT_USER:  throw AccountServiceException.NO_SUCH_ACCOUNT(name);
+            case GT_GROUP: throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(name);
+            default:       throw ServiceException.FAILURE("LDAP entry not found for " + name + " : " + type, null);
         }
     }
     
@@ -105,7 +107,7 @@ public class PermUtil {
                 case GT_USER:    return prov.get(AccountBy.id, zid);
                 case GT_GROUP:   return prov.get(DistributionListBy.id, zid);
                 case GT_PUBLIC:
-                default:                  return null;
+                default:         return null;
             }
         } catch (ServiceException e) {
             return null;

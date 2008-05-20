@@ -432,10 +432,10 @@ public class Message extends MailItem {
                 if (octxt != null) {
                     Account authAcct = octxt.getAuthenticatedUser();
                     senderEmail = authAcct.getName();
-                    canInvite = accessMgr.canPerform(authAcct, getAccount(), Right.invite, allowInviteIfNoAceDefined);
+                    canInvite = accessMgr.canPerform(authAcct, getAccount(), Right.invite, mMailbox.isUsingAdminPrivileges(), allowInviteIfNoAceDefined);
                 } else {
                     senderEmail = pm != null ? pm.getSenderEmail(false) : null;
-                    canInvite = accessMgr.canPerform(senderEmail, getAccount(), Right.invite, allowInviteIfNoAceDefined);
+                    canInvite = accessMgr.canPerform(senderEmail, getAccount(), Right.invite, mMailbox.isUsingAdminPrivileges(), allowInviteIfNoAceDefined);
                 }
                 if (!canInvite) {
                     String sender = senderEmail != null ? senderEmail : "unkonwn sender";

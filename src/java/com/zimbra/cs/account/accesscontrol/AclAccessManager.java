@@ -3,11 +3,13 @@ package com.zimbra.cs.account.accesscontrol;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.DomainAccessManager;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ACL;
 
@@ -18,32 +20,33 @@ import com.zimbra.cs.mailbox.ACL;
  */
 public class AclAccessManager extends DomainAccessManager {
     
-    public boolean canPerform(Account grantee, Account target, Right rightNeeded, boolean defaultGrant) {
-        return hasRight(grantee, target, rightNeeded, defaultGrant);
+    public boolean canPerform(Account grantee, NamedEntry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
+        return hasRight(grantee, target, rightNeeded, asAdmin, defaultGrant);
     }
     
-    public boolean canPerform(AuthToken grantee, Account target, Right rightNeeded, boolean defaultGrant) {
-        return hasRight(grantee, target, rightNeeded, defaultGrant);
+    public boolean canPerform(AuthToken grantee, NamedEntry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
+        return hasRight(grantee, target, rightNeeded, asAdmin, defaultGrant);
     }
     
-    public boolean canPerform(String granteeEmail, Account target, Right rightNeeded, boolean defaultGrant) {
-        return hasRight(granteeEmail, target, rightNeeded, defaultGrant);
+    public boolean canPerform(String granteeEmail, NamedEntry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
+        return hasRight(granteeEmail, target, rightNeeded, asAdmin, defaultGrant);
     }
     
-    public boolean canPerform(Account grantee, CalendarResource target, Right rightNeeded, boolean defaultGrant) {
-        return hasRight(grantee, target, rightNeeded, defaultGrant);
-    }
-    
-    public boolean canPerform(AuthToken grantee, CalendarResource target, Right rightNeeded, boolean defaultGrant) {
-        return hasRight(grantee, target, rightNeeded, defaultGrant);
-    }
-    
-    public boolean canPerform(String granteeEmail, CalendarResource target, Right rightNeeded, boolean defaultGrant) {
-        return hasRight(granteeEmail, target, rightNeeded, defaultGrant);
-    }
-    
-    private boolean hasRight(Account grantee, Entry target, Right rightNeeded, boolean defaultGrant) {
+    private boolean hasRight(Account grantee, NamedEntry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
         try {
+            // 1. always allow self
+            if (grantee != null) {
+                if (target.getId().equals(grantee.getId()))
+                    return true;
+            }
+            
+            // 2. check admin access
+            if (target instanceof Account) {
+                if (canAccessAccount(grantee, (Account)target, asAdmin))
+                    return true;
+            }
+            
+            // 3. check ACL
             ZimbraACL acl = target.getACL();
             if (acl != null)
                 return acl.hasRight(grantee, rightNeeded);
@@ -62,7 +65,7 @@ public class AclAccessManager extends DomainAccessManager {
         return false;
     }
     
-    private boolean hasRight(AuthToken grantee, Entry target, Right rightNeeded, boolean defaultGrant) {
+    private boolean hasRight(AuthToken grantee, NamedEntry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
         try {
             Account granteeAcct;
             if (grantee.isZimbraUser())
@@ -70,7 +73,7 @@ public class AclAccessManager extends DomainAccessManager {
             else
                 granteeAcct = new ACL.GuestAccount(grantee);
             
-            return hasRight(granteeAcct, target, rightNeeded, defaultGrant);
+            return hasRight(granteeAcct, target, rightNeeded, asAdmin, defaultGrant);
         } catch (ServiceException e) {
             ZimbraLog.account.warn("failed checking ACL for: " +
                                    "grantee=" + grantee.getAccountId() +
@@ -82,7 +85,7 @@ public class AclAccessManager extends DomainAccessManager {
         return false;
     }
 
-    private boolean hasRight(String granteeEmail, Entry target, Right rightNeeded, boolean defaultGrant) {
+    private boolean hasRight(String granteeEmail, NamedEntry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
         try {
             Account granteeAcct = null;
             
@@ -91,7 +94,7 @@ public class AclAccessManager extends DomainAccessManager {
             if (granteeAcct == null)
                 granteeAcct = ACL.ANONYMOUS_ACCT;
             
-            return hasRight(granteeAcct, target, rightNeeded, defaultGrant);
+            return hasRight(granteeAcct, target, rightNeeded, asAdmin, defaultGrant);
         } catch (ServiceException e) {
             ZimbraLog.account.warn("failed checking ACL for: " + 
                                    "grantee=" + granteeEmail + 

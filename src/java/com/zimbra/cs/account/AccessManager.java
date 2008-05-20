@@ -84,11 +84,8 @@ public abstract class AccessManager {
     public abstract boolean canModifyMailQuota(AuthToken at, Account targetAccount, long mailQuota) throws ServiceException;
     
     // ACL based methods
-    public abstract boolean canPerform(AuthToken grantee, Account target, Right rightNeeded, boolean defaultGrant);
-    public abstract boolean canPerform(Account grantee, Account target, Right rightNeeded, boolean defaultGrant);
-    public abstract boolean canPerform(String grantee, Account target, Right rightNeeded, boolean defaultGrant);
-    public abstract boolean canPerform(AuthToken grantee, CalendarResource target, Right rightNeeded, boolean defaultGrant);
-    public abstract boolean canPerform(Account grantee, CalendarResource target, Right rightNeeded, boolean defaultGrant);
-    public abstract boolean canPerform(String grantee, CalendarResource target, Right rightNeeded, boolean defaultGrant);
+    public abstract boolean canPerform(AuthToken grantee, NamedEntry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant);
+    public abstract boolean canPerform(Account grantee, NamedEntry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant);
+    public abstract boolean canPerform(String grantee, NamedEntry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant);
 
 }
