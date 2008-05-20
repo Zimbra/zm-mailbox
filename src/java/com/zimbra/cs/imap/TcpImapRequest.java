@@ -46,8 +46,6 @@ public class TcpImapRequest extends ImapRequest {
         mStream = tsis;
     }
 
-    TcpImapRequest rewind()  { mIndex = mOffset = 0;  return this; }
-
     void continuation() throws IOException, ImapParseException {
         if (mLiteral >= 0) continueLiteral();
 

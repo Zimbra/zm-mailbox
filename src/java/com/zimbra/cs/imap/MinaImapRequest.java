@@ -56,7 +56,7 @@ public class MinaImapRequest extends ImapRequest implements MinaRequest {
                 }
             }
         } catch (ImapParseException e) {
-            mHandler.handleImapParseException(e);
+            mHandler.handleParseException(e);
             throw new IllegalArgumentException("Bad request line", e);
         }
     }

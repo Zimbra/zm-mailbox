@@ -39,6 +39,7 @@ class ImapParseException extends Exception {
     ImapParseException(String tag, String code, String message, boolean parseError) {
         super((parseError ? "parse error: " : "") + message);
         mTag = tag;
-        mCode = code; 
+        mCode = code;
+        mNO = code != null;
     }
 }

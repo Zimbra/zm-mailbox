@@ -33,7 +33,7 @@ import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 
-public class ImapCredentials {
+class ImapCredentials {
 
     /** The various special modes the server can be thrown into in order to
      *  deal with client weirdnesses.  These modes are specified by appending
@@ -56,7 +56,7 @@ public class ImapCredentials {
     private final boolean     mIsLocal;
     private final EnabledHack mEnabledHack;
 
-    public ImapCredentials(Account acct, EnabledHack hack) throws ServiceException {
+    ImapCredentials(Account acct, EnabledHack hack) throws ServiceException {
         mAccountId = acct.getId();
         mUsername = acct.getName();
         mIsLocal = Provisioning.onLocalServer(acct);
