@@ -35,9 +35,9 @@ import com.zimbra.common.util.SystemUtil;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Collections;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Collections;
 
 public class ImapSync extends AbstractMailItemImport {
     private final ImapConnection connection;
@@ -47,7 +47,13 @@ public class ImapSync extends AbstractMailItemImport {
     private Map<Integer, ImapFolderSync> syncedFolders;
     private boolean fullSync;
 
+    private static final boolean DEBUG = true;
+    private static final boolean FAIL_ON_SYNC_ERROR = true;
+    
     private static final Log LOG = ZimbraLog.datasource;
+    static {
+        if (DEBUG) LOG.setLevel(Log.Level.debug);
+    }
 
     private static final IDInfo ID_INFO = new IDInfo();
     static {
@@ -58,9 +64,7 @@ public class ImapSync extends AbstractMailItemImport {
                       BuildInfo.TYPE : "unknown";
         ID_INFO.put("guid", type);
     }
-    
-    private static final boolean DEBUG = true;
-    private static final boolean FAIL_ON_SYNC_ERROR = true;
+
 
     public ImapSync(DataSource ds) throws ServiceException {
         super(ds);
@@ -142,10 +146,10 @@ public class ImapSync extends AbstractMailItemImport {
         for (ListData ld : ImapUtil.listFolders(connection)) {
             syncRemoteFolder(ld);
         }
-        // Folder list is in depth-first order, which ensures that children
-        // are processed before parents (this avoids problems when deleting
-        // folder).
+        // Reverse order of local folders to ensure that children are processed
+        // before parent folders. This avoids problems when deleting folders.
         List<Folder> folders = localRootFolder.getSubfolderHierarchy();
+        Collections.reverse(folders);
         for (Folder folder : folders) {
             int id = folder.getId();
             if (id != localRootFolder.getId() && !syncedFolders.containsKey(id)) {
@@ -168,6 +172,7 @@ public class ImapSync extends AbstractMailItemImport {
 
     private void syncRemoteFolder(ListData ld) throws ServiceException, IOException {
         String path = ld.getMailbox();
+        LOG.debug("Processing remote folder '%s'", path);
         ImapFolder tracker = trackedFolders.getByRemotePath(path);
         if (tracker != null) {
             trackedFolders.remove(tracker);
@@ -188,6 +193,7 @@ public class ImapSync extends AbstractMailItemImport {
     }
     
     private void syncLocalFolder(Folder folder) throws ServiceException, IOException {
+        LOG.debug("Processing local folder '%s'", folder.getPath());
         String name = folder.getName();
         int id = folder.getId();
         ImapFolder tracker = trackedFolders.getByItemId(id);
