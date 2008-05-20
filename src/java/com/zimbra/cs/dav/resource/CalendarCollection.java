@@ -230,10 +230,12 @@ public class CalendarCollection extends Collection {
 			if (calItem == null && useEtag)
 				throw new DavException("event not found", HttpServletResponse.SC_NOT_FOUND, null);
 			
+			boolean isNewItem = true;
 			if (useEtag) {
 				String itemEtag = MailItemResource.getEtag(calItem);
 				if (!itemEtag.equals(etag))
 					throw new DavException("event has different etag ("+itemEtag+") vs "+etag, HttpServletResponse.SC_CONFLICT, null);
+				isNewItem = false;
 			}
 			boolean first = true;
 			for (Invite i : invites) {
@@ -276,7 +278,7 @@ public class CalendarCollection extends Collection {
 			    first = false;
 			}
 			calItem = mbox.getCalendarItemByUid(ctxt.getOperationContext(), uid);
-			return new CalendarObject.LocalCalendarObject(ctxt, calItem);
+			return new CalendarObject.LocalCalendarObject(ctxt, calItem, isNewItem);
 		} catch (ServiceException e) {
 			throw new DavException("cannot create icalendar item", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
 		}

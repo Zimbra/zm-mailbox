@@ -42,7 +42,10 @@ public class Put extends DavMethod {
 		
 		Collection col = UrlNamespace.getCollectionAtUrl(ctxt, ctxt.getPath());
 		DavResource rs = col.createItem(ctxt, name);
-		ctxt.setStatus(HttpServletResponse.SC_CREATED);
+		if (rs.isNewlyCreated())
+			ctxt.setStatus(HttpServletResponse.SC_CREATED);
+		else
+			ctxt.setStatus(HttpServletResponse.SC_OK);
 		if (rs.hasEtag())
 			ctxt.getResponse().setHeader(DavProtocol.HEADER_ETAG, rs.getEtag());
 	}
