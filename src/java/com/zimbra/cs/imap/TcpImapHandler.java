@@ -20,7 +20,6 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.NetUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.tcpserver.TcpServerInputStream;
 import com.zimbra.cs.util.Config;
@@ -38,7 +37,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-public class TcpImapHandler extends ImapHandler {
+class TcpImapHandler extends ImapHandler {
     private TcpServerInputStream mInputStream;
     private String         mRemoteAddress;
     private TcpImapRequest mIncompleteRequest = null;
@@ -100,16 +99,16 @@ public class TcpImapHandler extends ImapHandler {
             if (origRemoteIp != null)
                 ZimbraLog.addOrigIpToContext(origRemoteIp);
             ZimbraLog.addIpToContext(mRemoteAddress);
-            
+
             req = mIncompleteRequest;
             if (req == null)
                 req = new TcpImapRequest(mInputStream, this);
             req.continuation();
-            
+
             if (req.isMaxRequestSizeExceeded()) {
-                req.sendNO("[TOOBIG] request too long");
                 setIdle(false);
                 mIncompleteRequest = null;
+                handleParseException(new ImapParseException(req.getTag(), "TOOBIG", "request too long", false));
                 return CONTINUE_PROCESSING;
             }
 
@@ -130,7 +129,7 @@ public class TcpImapHandler extends ImapHandler {
             if (mLastCommand != null)
                 ZimbraPerf.IMAP_TRACKER.addStat(mLastCommand.toUpperCase(), start);
         } catch (TcpImapRequest.ImapContinuationException ice) {
-            mIncompleteRequest = req.rewind();
+            mIncompleteRequest = (TcpImapRequest) req.rewind();
             if (ice.sendContinuation)
                 sendContinuation("send literal data");
         } catch (TcpImapRequest.ImapTerminatedException ite) {
@@ -138,7 +137,7 @@ public class TcpImapHandler extends ImapHandler {
             keepGoing = STOP_PROCESSING;
         } catch (ImapParseException ipe) {
             mIncompleteRequest = null;
-            handleImapParseException(ipe);
+            handleParseException(ipe);
         } finally {
             ZimbraLog.clearContext();
         }
@@ -173,12 +172,9 @@ public class TcpImapHandler extends ImapHandler {
     }
 
     @Override protected void dropConnection(boolean sendBanner) {
-        ImapFolder i4selected = mSelectedFolder;
-        if (i4selected != null) {
-            i4selected.setHandler(null);
-            SessionCache.clearSession(i4selected);
-            mSelectedFolder = null;
-        }
+        try {
+            unsetSelectedFolder(false);
+        } catch (Exception e) { }
 
         // wait at most 10 seconds for the untagged BYE to be sent, then force the stream closed
         new Thread() {
@@ -238,9 +234,8 @@ public class TcpImapHandler extends ImapHandler {
     @Override protected void completeAuthentication() throws IOException {
         mAuthenticator.sendSuccess();
         if (mAuthenticator.isEncryptionEnabled()) {
-            // Switch to encrypted streams
-            mInputStream = new TcpServerInputStream(
-                mAuthenticator.unwrap(mConnection.getInputStream()));
+            // switch to encrypted streams
+            mInputStream = new TcpServerInputStream(mAuthenticator.unwrap(mConnection.getInputStream()));
             mOutputStream = mAuthenticator.wrap(mConnection.getOutputStream());
         }
     }
@@ -254,7 +249,6 @@ public class TcpImapHandler extends ImapHandler {
     }
 
     void sendLine(String line, boolean flush) throws IOException {
-        // FIXME: throw an exception instead?
         OutputStream os = mOutputStream;
         if (os == null)
             return;

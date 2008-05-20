@@ -24,7 +24,6 @@ import com.zimbra.cs.mina.MinaIoSessionOutputStream;
 import com.zimbra.cs.mina.MinaOutputStream;
 import com.zimbra.cs.mina.MinaRequest;
 import com.zimbra.cs.mina.MinaServer;
-import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.Config;
 import org.apache.mina.common.IdleStatus;
@@ -33,7 +32,7 @@ import org.apache.mina.common.IoSession;
 import java.io.IOException;
 import java.net.Socket;
 
-public class MinaImapHandler extends ImapHandler implements MinaHandler {
+class MinaImapHandler extends ImapHandler implements MinaHandler {
     private IoSession mSession;
 
     // Maximum number of milliseconds to wait for last write operation to
@@ -81,7 +80,7 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
         MinaImapRequest imapReq = (MinaImapRequest) req;
         
         if (imapReq.isMaxRequestSizeExceeded()) {
-            imapReq.sendNO("[TOOBIG] request too big");
+            handleParseException(new ImapParseException(imapReq.getTag(), "TOOBIG", "request too long", false));
             return;
         }
 
@@ -127,17 +126,6 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
         }
     }
 
-    private void handleParseException(ImapParseException e) throws IOException {
-        if (e.mTag == null)
-            sendUntagged("BAD " + e.getMessage(), true);
-        else if (e.mCode != null)
-            sendNO(e.mTag, '[' + e.mCode + "] " + e.getMessage());
-        else if (e.mNO)
-            sendNO(e.mTag, e.getMessage());
-        else
-            sendBAD(e.mTag, e.getMessage());
-    }
-
     /**
      * Called when connection is closed. No need to worry about concurrent
      * execution since requests are processed in sequence for any given
@@ -179,12 +167,9 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
     }
 
     private void cleanup() {
-        ImapFolder i4selected = mSelectedFolder;
-        if (i4selected != null) {
-            i4selected.setHandler(null);
-            SessionCache.clearSession(i4selected);
-            mSelectedFolder = null;
-        }
+        try {
+            unsetSelectedFolder(false);
+        } catch (Exception e) { }
     }
     
     public void connectionIdle() {
@@ -217,7 +202,7 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
     @Override protected void flushOutput() throws IOException {
         mOutputStream.flush();
     }
-    
+
     @Override void sendLine(String line, boolean flush) throws IOException {
         MinaOutputStream out = (MinaOutputStream) mOutputStream;
         if (out != null) {
@@ -238,8 +223,4 @@ public class MinaImapHandler extends ImapHandler implements MinaHandler {
         else
             ZimbraLog.imap.info(sb.toString());
     }
-
-//    private void info(String msg) {
-//        info(msg, null);
-//    }
 }

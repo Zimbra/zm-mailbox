@@ -81,7 +81,7 @@ import com.zimbra.cs.zclient.ZMailbox;
 /**
  * @author dkarp
  */
-public abstract class ImapHandler extends ProtocolHandler {
+abstract class ImapHandler extends ProtocolHandler {
     enum State { NOT_AUTHENTICATED, AUTHENTICATED, SELECTED, LOGOUT }
 
     enum ActivatedExtension { CONDSTORE, QRESYNC };
@@ -101,6 +101,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     protected ImapCredentials mCredentials;
     protected boolean         mStartedTLS;
     protected String          mLastCommand;
+    private   ImapProxy       mProxy;
     protected ImapFolder      mSelectedFolder;
     private   String          mIdleTag;
     private   String          mOrigRemoteAddress;
@@ -133,15 +134,14 @@ public abstract class ImapHandler extends ProtocolHandler {
     
     static final boolean STOP_PROCESSING = false, CONTINUE_PROCESSING = true;
 
-    protected void handleImapParseException(ImapParseException e) throws IOException {
+    protected void handleParseException(ImapParseException e) throws IOException {
+        String message = (e.mCode == null ? "" : '[' + e.mCode + "] ") + e.getMessage();
         if (e.mTag == null)
-            sendUntagged("BAD " + e.getMessage(), true);
-        else if (e.mCode != null)
-            sendNO(e.mTag, '[' + e.mCode + "] " + e.getMessage());
+            sendUntagged("BAD " + message, true);
         else if (e.mNO)
-            sendNO(e.mTag, e.getMessage());
+            sendNO(e.mTag, message);
         else
-            sendBAD(e.mTag, e.getMessage());
+            sendBAD(e.mTag, message);
     }
 
     void checkEOF(String tag, ImapRequest req) throws ImapParseException {
@@ -249,12 +249,14 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     boolean executeRequest(ImapRequest req) throws IOException, ImapParseException {
+        boolean isProxied = mProxy != null;
+
         if (isIdle()) {
             boolean clean = false;
             try {
                 clean = req.readATOM().equals("DONE") && req.eof();
             } catch (ImapParseException ipe) { }
-            return doIDLE(null, IDLE_STOP, clean);
+            return isProxied ? mProxy.proxy(req) : doIDLE(null, IDLE_STOP, clean);
         }
 
         String tag = req.readTag();
@@ -314,7 +316,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                         req.skipSpace();  String sequence = req.readSequence();
                         req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mCredentials);
                         checkEOF(tag, req);
-                        return doCOPY(tag, sequence, path, byUID);
+                        return isProxied ? mProxy.proxy(req) : doCOPY(tag, sequence, path, byUID);
                     } else if (command.equals("CLOSE")) {
                         checkEOF(tag, req);
                         return doCLOSE(tag);
@@ -346,7 +348,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                             req.skipSpace();  sequence = req.readSequence();
                         }
                         checkEOF(tag, req);
-                        return doEXPUNGE(tag, byUID, sequence);
+                        return isProxied ? mProxy.proxy(req) : doEXPUNGE(tag, byUID, sequence);
                     } else if (command.equals("EXAMINE")) {
                         byte params = 0;  QResyncInfo qri = null;
                         req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mCredentials);
@@ -418,7 +420,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                             req.skipChar(')');
                         }
                         checkEOF(tag, req);
-                        return doFETCH(tag, sequence, attributes, parts, byUID, modseq);
+                        return isProxied ? mProxy.proxy(req) : doFETCH(tag, sequence, attributes, parts, byUID, modseq);
                     }
                     break;
                 case 'G':
@@ -443,7 +445,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                         return doID(tag, params);
                     } else if (command.equals("IDLE") && extensionEnabled("IDLE")) {
                         checkEOF(tag, req);
-                        return doIDLE(tag, IDLE_START, true);
+                        return isProxied ? mProxy.proxy(req) : doIDLE(tag, IDLE_START, true);
                     }
                     break;
                 case 'L':
@@ -528,7 +530,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                 case 'N':
                     if (command.equals("NOOP")) {
                         checkEOF(tag, req);
-                        return doNOOP(tag);
+                        return isProxied ? mProxy.proxy(req) : doNOOP(tag);
                     } else if (command.equals("NAMESPACE") && extensionEnabled("NAMESPACE")) {
                         checkEOF(tag, req);
                         return doNAMESPACE(tag);
@@ -564,7 +566,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                         req.skipSpace();  List<String> flags = req.readFlags();
 
                         checkEOF(tag, req);
-                        return doSTORE(tag, sequence, flags, operation, silent, modseq, byUID);
+                        return isProxied ? mProxy.proxy(req) : doSTORE(tag, sequence, flags, operation, silent, modseq, byUID);
                     } else if (command.equals("SELECT")) {
                         byte params = 0;  QResyncInfo qri = null;
                         req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mCredentials);
@@ -626,7 +628,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                         }
                         ImapSearch i4search = req.readSearch();
                         checkEOF(tag, req);
-                        return doSEARCH(tag, i4search, byUID, options);
+                        return isProxied ? mProxy.proxy(req) : doSEARCH(tag, i4search, byUID, options);
                     } else if (command.equals("STARTTLS") && extensionEnabled("STARTTLS")) {
                         checkEOF(tag, req);
                         return doSTARTTLS(tag);
@@ -704,7 +706,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     State getState() {
         if (mGoodbyeSent)
             return State.LOGOUT;
-        else if (mSelectedFolder != null)
+        else if (mSelectedFolder != null || mProxy != null)
             return State.SELECTED;
         else if (isAuthenticated())
             return State.AUTHENTICATED;
@@ -736,14 +738,22 @@ public abstract class ImapHandler extends ProtocolHandler {
         return getState() == State.LOGOUT ? null : mSelectedFolder;
     }
 
-    void unsetSelectedFolder() throws IOException {
+    void unsetSelectedFolder(boolean sendClosed) throws IOException {
         ImapFolder i4selected = mSelectedFolder;
+        mSelectedFolder = null;
         if (i4selected != null) {
             i4selected.unregister();
-            if (sessionActivated(ActivatedExtension.QRESYNC))
+            if (sendClosed && sessionActivated(ActivatedExtension.QRESYNC))
                 sendUntagged("OK [CLOSED] mailbox closed");
         }
-        mSelectedFolder = null;
+
+        ImapProxy proxy = mProxy;
+        mProxy = null;
+        if (proxy != null) {
+            proxy.dropConnection();
+            if (sendClosed && sessionActivated(ActivatedExtension.QRESYNC))
+                sendUntagged("OK [CLOSED] mailbox closed");
+        }
     }
 
     void setSelectedFolder(ImapFolder i4folder) throws ServiceException, IOException {
@@ -753,7 +763,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             return;
         }
 
-        unsetSelectedFolder();
+        unsetSelectedFolder(true);
         if (i4folder == null)
             return;
 
@@ -826,7 +836,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         String starttls = mStartedTLS || authenticated || !extensionEnabled("STARTTLS")   ? "" : " STARTTLS";
         String plain    = !allowCleartextLogins() || authenticated || !extensionEnabled("AUTH=PLAIN") ? "" : " AUTH=PLAIN";
         String gss      = authenticated || !isGssAuthEnabled() ? "" : " AUTH=GSSAPI";
-        String zimbra   = authenticated || !extensionEnabled("AUTH=ZIMBRA") ? "" : " AUTH=ZIMBRA";
+        String zimbra   = authenticated || !extensionEnabled("AUTH=" + ZimbraAuthenticator.MECHANISM) ? "" : " AUTH=" + ZimbraAuthenticator.MECHANISM;
         StringBuilder capability = new StringBuilder("CAPABILITY IMAP4rev1" + nologin + starttls + plain + gss + zimbra);
         for (String extension : SUPPORTED_EXTENSIONS) {
             if (extensionEnabled(extension))
@@ -1045,7 +1055,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             if (GssAuthenticator.MECHANISM.equals(mechanism))
                 acct = AuthenticatorUtil.authenticateKrb5(username, authenticateId);
             else if (ZimbraAuthenticator.MECHANISM.equals(mechanism))
-                acct = AuthenticatorUtil.authenticateZToken(username, password);
+                acct = AuthenticatorUtil.authenticateZToken(username, authenticateId, password);
             else
                 acct = AuthenticatorUtil.authenticate(username, authenticateId, password, "imap", getOrigRemoteIpAddr());
             if (acct == null) {
@@ -1056,6 +1066,10 @@ public abstract class ImapHandler extends ProtocolHandler {
             ImapCredentials creds = startSession(acct, enabledHack, tag, mechanism);
             if (creds == null)
                 return CONTINUE_PROCESSING;
+        } catch (AccountServiceException.AuthFailedServiceException afe) {
+            ZimbraLog.imap.info(afe.getMessage() + " (" + afe.getReason() + ')');
+            sendNO(tag, command + " failed");
+            return CONTINUE_PROCESSING;
         } catch (ServiceException e) {
             ZimbraLog.imap.warn(command + " failed", e);
             if (e.getCode().equals(AccountServiceException.CHANGE_PASSWORD))
@@ -1097,7 +1111,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         return mCredentials;
     }
 
-    private static class QResyncInfo {
+    static class QResyncInfo {
         int uvv, modseq;
         String knownUIDs, seqMilestones, uidMilestones;
     }
@@ -1123,10 +1137,13 @@ public abstract class ImapHandler extends ProtocolHandler {
                 // 6.3.1: "The SELECT command automatically deselects any currently selected mailbox 
                 //         before attempting the new selection.  Consequently, if a mailbox is selected
                 //         and a SELECT command that fails is attempted, no mailbox is selected."
-                unsetSelectedFolder();
+                unsetSelectedFolder(true);
 
-                ZimbraLog.imap.info("cannot select folder on other server: " + path);
-                sendNO(tag, command + " failed: cannot open mailbox on other server");
+                ImapProxy proxy = new ImapProxy(this, path);
+                if (proxy.select(tag, params, qri))
+                    mProxy = proxy;
+                else
+                    proxy.dropConnection();
                 return CONTINUE_PROCESSING;
             }
 
@@ -1159,7 +1176,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             // 6.3.1: "The SELECT command automatically deselects any currently selected mailbox 
             //         before attempting the new selection.  Consequently, if a mailbox is selected
             //         and a SELECT command that fails is attempted, no mailbox is selected."
-            unsetSelectedFolder();
+            unsetSelectedFolder(true);
 
             if (e.getCode().equals(MailServiceException.NO_SUCH_FOLDER))
                 ZimbraLog.imap.info(command + " failed: no such folder: " + path);
@@ -1276,8 +1293,12 @@ public abstract class ImapHandler extends ProtocolHandler {
                     throw ImapServiceException.CANNOT_DELETE_SYSTEM_FOLDER(folder.getPath());
 
                 // don't want the DELETE to cause *this* connection to drop if the deleted folder is currently selected
-                if (mSelectedFolder != null && path.isEquivalent(mSelectedFolder.getPath()))
-                    unsetSelectedFolder();
+                if (getState() == State.SELECTED) {
+                    if (mSelectedFolder != null && path.isEquivalent(mSelectedFolder.getPath()))
+                        unsetSelectedFolder(true);
+                    else if (mProxy != null && path.isEquivalent(mProxy.getPath()))
+                        unsetSelectedFolder(true);
+                }
 
                 if (!folder.hasSubfolders()) {
                     mbox.delete(getContext(), folder.getId(), MailItem.TYPE_FOLDER);
@@ -1470,6 +1491,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         if (selectOptions == 0 && returnOptions == 0 && mailboxNames.size() == 1 && mailboxNames.contains("")) {
             // 6.3.8: "An empty ("" string) mailbox name argument is a special request to return
             //         the hierarchy delimiter and the root name of the name given in the reference."
+            sendNotifications(true, false);
             sendUntagged("LIST (\\NoSelect) \"/\" \"\"");
             sendOK(tag, "LIST completed");
             return CONTINUE_PROCESSING;
@@ -2542,6 +2564,14 @@ public abstract class ImapHandler extends ProtocolHandler {
         if (!checkState(tag, State.SELECTED))
             return CONTINUE_PROCESSING;
 
+        ImapProxy proxy = mProxy;
+        if (proxy != null) {
+            proxy.proxy(tag, "CLOSE");
+            unsetSelectedFolder(false);
+            return CONTINUE_PROCESSING;
+        }
+
+        ImapFolder i4folder = mSelectedFolder;
         boolean expunged = false;
         try {
             // 6.4.2: "The CLOSE command permanently removes all messages that have the \Deleted
@@ -2550,8 +2580,8 @@ public abstract class ImapHandler extends ProtocolHandler {
             //
             //         No messages are removed, and no error is given, if the mailbox is
             //         selected by an EXAMINE command or is otherwise selected read-only."
-            if (mSelectedFolder.isWritable() && mSelectedFolder.getPath().isWritable(ACL.RIGHT_DELETE))
-                expunged = expungeMessages(tag, mSelectedFolder, null);
+            if (i4folder.isWritable() && i4folder.getPath().isWritable(ACL.RIGHT_DELETE))
+                expunged = expungeMessages(tag, i4folder, null);
         } catch (ServiceException e) {
             // log the error but keep going...
             ZimbraLog.imap.warn("error during CLOSE", e);
@@ -2559,13 +2589,13 @@ public abstract class ImapHandler extends ProtocolHandler {
 
         String status = "";
         try {
-            if (expunged && !mSelectedFolder.isVirtual() && sessionActivated(ActivatedExtension.QRESYNC))
-                status = "[HIGHESTMODSEQ " + mSelectedFolder.getCurrentMODSEQ() + "] ";
+            if (expunged && !i4folder.isVirtual() && sessionActivated(ActivatedExtension.QRESYNC))
+                status = "[HIGHESTMODSEQ " + i4folder.getCurrentMODSEQ() + "] ";
         } catch (ServiceException e) {
             ZimbraLog.imap.info("error while determining HIGHESTMODSEQ of selected folder", e);
         }
 
-        unsetSelectedFolder();
+        unsetSelectedFolder(true);
 
         sendOK(tag, status + "CLOSE completed");
         return CONTINUE_PROCESSING;
@@ -2579,7 +2609,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         if (!checkState(tag, State.SELECTED))
             return CONTINUE_PROCESSING;
 
-        unsetSelectedFolder();
+        unsetSelectedFolder(true);
 
         sendOK(tag, "UNSELECT completed");
         return CONTINUE_PROCESSING;
@@ -3388,6 +3418,12 @@ public abstract class ImapHandler extends ProtocolHandler {
 
 
     public void sendNotifications(boolean notifyExpunges, boolean flush) throws IOException {
+        ImapProxy proxy = mProxy;
+        if (proxy != null) {
+            proxy.fetchNotifications();
+            return;
+        }
+
         ImapFolder i4folder = mSelectedFolder;
         if (i4folder == null)
             return;
@@ -3468,11 +3504,11 @@ public abstract class ImapHandler extends ProtocolHandler {
     void sendUntagged(String response, boolean flush) throws IOException { sendResponse("*", response, flush); }
     void sendContinuation(String response) throws IOException    { sendResponse("+", response, true); }
 
-    private void sendResponse(String status, String msg, boolean flush) throws IOException {
-        String response = status + ' ' + (msg == null ? "" : msg);
+    void sendResponse(String tag, String msg, boolean flush) throws IOException {
+        String response = (tag == null ? "" : tag + ' ') + (msg == null ? "" : msg);
         if (ZimbraLog.imap.isDebugEnabled())
             ZimbraLog.imap.debug("  S: " + response);
-        else if (status.startsWith("BAD"))
+        else if (msg.startsWith("BAD"))
             ZimbraLog.imap.info("  S: " + response);
         sendLine(response, flush);
     }

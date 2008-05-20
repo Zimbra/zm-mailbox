@@ -20,6 +20,7 @@
  */
 package com.zimbra.cs.imap;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
@@ -83,11 +84,20 @@ abstract class ImapRequest {
         mHandler = handler;
     }
 
+    ImapRequest rewind() {
+        mIndex = mOffset = 0;
+        return this;
+    }
+
     void incrementSize(long increment) {
         mSize += increment;
         if (mSize > mHandler.getConfig().getMaxRequestSize()) {
             mMaxRequestSizeExceeded = true;
         }
+    }
+
+    long getSize() {
+        return mSize;
     }
 
     void addPart(Object obj) {
@@ -111,14 +121,18 @@ abstract class ImapRequest {
         return mMaxRequestSizeExceeded;
     }
 
-    void sendNO(String msg) throws IOException {
-        String tag = getTag();
-        if (tag != null) {
-            mHandler.sendNO(tag, msg);
-        } else {
-            mHandler.sendUntagged("BAD " + msg, true);
+    byte[] toByteArray() {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        for (Object part : mParts) {
+            boolean isLiteral = part instanceof byte[];
+            byte[] content = isLiteral ? (byte[]) part : part.toString().getBytes();
+            baos.write(content, 0, content.length);
+            if (!isLiteral)
+                baos.write(ImapHandler.LINE_SEPARATOR_BYTES, 0, 2);
         }
+        return baos.toByteArray();
     }
+
 
     String getTag() {
         if (mTag == null && mIndex == 0 && mOffset == 0 && mParts.size() > 0) {
