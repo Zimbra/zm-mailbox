@@ -53,6 +53,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Comparator;
 import java.sql.SQLException;
 
 class ImapFolderSync {
@@ -485,7 +486,8 @@ class ImapFolderSync {
 
     private void fetchMsgs(long lastUid) throws ServiceException, IOException {
         List<Long> uids = connection.getUids((lastUid + 1) + ":*");
-        Collections.sort(uids);
+        // Sort UIDs in reverse order so we download latest messages first
+        Collections.sort(uids, Collections.reverseOrder());
         debug("Fetching %d new IMAP message(s)", uids.size());
         for (int i = 0; i < uids.size(); i += FETCH_SIZE) {
             int j = Math.min(i + FETCH_SIZE - 1, uids.size() - 1);
@@ -494,7 +496,8 @@ class ImapFolderSync {
     }
 
     private void fetchMsgs(String seq) throws ServiceException, IOException {
-        final Map<Long, MessageData> mds = connection.uidFetch(seq, "(FLAGS INTERNALDATE)");
+        final Map<Long, MessageData> mds =
+            connection.uidFetch(seq, "(FLAGS INTERNALDATE)");
         connection.uidFetch(seq, "BODY.PEEK[]",
             new FetchResponseHandler() {
                 public void handleFetchResponse(MessageData md) throws Exception {
