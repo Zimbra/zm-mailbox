@@ -28,9 +28,12 @@ import java.util.List;
 
 import javax.mail.internet.MimeMessage;
 
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.*;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
@@ -412,6 +415,34 @@ public class Message extends MailItem {
         boolean ignoreOrganizerAlarm = false;
 
         for (Invite cur : invites) {
+            // Check if the sender is allowed to invite this user.  Only do this for invite-type methods,
+            // namely REQUEST/PUBLISH/CANCEL/ADD/DECLINECOUNTER.  REPLY/REFRESH/COUNTER don't undergo
+            // the check because they are not organizer-to-attendee methods.
+            if (ICalTok.REQUEST.toString().equals(method) ||
+                ICalTok.PUBLISH.toString().equals(method) ||
+                ICalTok.CANCEL.toString().equals(method) ||
+                ICalTok.ADD.toString().equals(method) ||
+                ICalTok.DECLINECOUNTER.toString().equals(method)) {
+
+                String senderEmail;
+                boolean allowInviteIfNoAceDefined = true;
+                boolean canInvite;
+                AccessManager accessMgr = AccessManager.getInstance();
+                OperationContext octxt = getMailbox().getOperationContext();
+                if (octxt != null) {
+                    Account authAcct = octxt.getAuthenticatedUser();
+                    senderEmail = authAcct.getName();
+                    canInvite = accessMgr.canPerform(authAcct, getAccount(), Right.invite, allowInviteIfNoAceDefined);
+                } else {
+                    senderEmail = pm != null ? pm.getSenderEmail(false) : null;
+                    canInvite = accessMgr.canPerform(senderEmail, getAccount(), Right.invite, allowInviteIfNoAceDefined);
+                }
+                if (!canInvite) {
+                    String sender = senderEmail != null ? senderEmail : "unkonwn sender";
+                    throw ServiceException.PERM_DENIED("calendar invite not allowed from " + sender);
+                }
+            }
+
             if (ignoreOrganizerAlarm)
                 cur.clearAlarms();
 
