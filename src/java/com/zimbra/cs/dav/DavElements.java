@@ -132,7 +132,9 @@ public class DavElements {
 	public static final String P_PRINCIPAL = "principal";
 	public static final String P_PRINCIPAL_COLLECTION_SET = "principal-collection-set";
 	public static final String P_PRINCIPAL_MATCH = "principal-match";
+	public static final String P_PRINCIPAL_PROPERTY = "principal-property";
 	public static final String P_PRINCIPAL_PROPERTY_SEARCH = "principal-property-search";
+	public static final String P_PRINCIPAL_SEARCH_PROPERTY = "principal-search-property";
 	public static final String P_PRINCIPAL_SEARCH_PROPERTY_SET = "principal-search-property-set";
 	public static final String P_PRINCIPAL_URL = "principal-URL";
 	public static final String P_PRIVILEGE = "privilege";
@@ -280,7 +282,9 @@ public class DavElements {
 	public static final QName E_PRINCIPAL = QName.get(P_PRINCIPAL, WEBDAV_NS);
 	public static final QName E_PRINCIPAL_COLLECTION_SET = QName.get(P_PRINCIPAL_COLLECTION_SET, WEBDAV_NS);
 	public static final QName E_PRINCIPAL_MATCH = QName.get(P_PRINCIPAL_MATCH, WEBDAV_NS);
+	public static final QName E_PRINCIPAL_PROPERTY = QName.get(P_PRINCIPAL_PROPERTY, WEBDAV_NS);
 	public static final QName E_PRINCIPAL_PROPERTY_SEARCH = QName.get(P_PRINCIPAL_PROPERTY_SEARCH, WEBDAV_NS);
+	public static final QName E_PRINCIPAL_SEARCH_PROPERTY = QName.get(P_PRINCIPAL_SEARCH_PROPERTY, WEBDAV_NS);
 	public static final QName E_PRINCIPAL_SEARCH_PROPERTY_SET = QName.get(P_PRINCIPAL_SEARCH_PROPERTY_SET, WEBDAV_NS);
 	public static final QName E_PRINCIPAL_URL = QName.get(P_PRINCIPAL_URL, WEBDAV_NS);
 	public static final QName E_PRIVILEGE = QName.get(P_PRIVILEGE, WEBDAV_NS);
