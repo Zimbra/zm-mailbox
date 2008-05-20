@@ -29,6 +29,7 @@ urn:zimbra  -- top-level namespace for global attributes/elements
        [<change token="{change-id}" [type="mod|new"]/>]
        [<targetServer>{proxy-target-server-id}</targetServer>]
        [<userAgent name="{client-name}" [version="{client-version}"]/>]
+       [<format type="{response-format}" />]
     </context>
   </soap:Header>
   <soap:Body>
@@ -218,6 +219,65 @@ User Agent
 userAgent is an optional context element that is used for identifying the
 type of SOAP client that's making the request.  The user agent is written
 to mailbox.log messages with the context string "ua".
+
+Request and Response Formats
+
+The requests and responses can be specified in XML or JSON format. The
+server determines the request format automatically but JSON requests
+MUST follow these requirements:
+
+* request encoded in UTF-8
+* start with '{' for server to identify JSON content
+* do not include "Envelope" object
+* elements specified as "name": { ... }
+* attributes specified as "name": "value"
+* namespace attribute specified as "_jsns": "ns-uri"
+* element text content specified as "_content": "content"
+* element list specified as "name": [ ... ]
+
+Example:
+
+  {
+    "Header": {
+      "context": {
+        "_jsns": "urn:zimbra",
+        "authToken": {
+          "_content": "0_3e761bdc...303b"
+        }
+      }
+    },
+    "Body": {
+      "FooRequest": {
+        "_jsns": "urn:zimbra",
+        "name": "attribute content",
+        "_content": "element content"
+      }
+    }
+  }
+
+The response format is XML by default. To change, specify a "format"
+element in the request's Header element with a "type" attribute. The
+value must be either "xml" or "js".
+
+SOAP request with JSON response:
+
+  <soap:Envelope ...>
+    <soap:Header>
+      ...
+      <format type='js' />
+    </soap:Header>
+    ...
+  </soap:Envelope>
+
+JSON request with XML response:
+
+  {
+    "Header": {
+      ...
+      "format": { "type": "xml" }
+     },
+     ...
+  }
 
 -----------------------------
 
