@@ -772,13 +772,33 @@ public class ParsedMessage {
      * <tt>Sender</tt> header.
      */
     public String getSenderEmail() {
+        return getSenderEmail(true);
+    }
+
+    /**
+     * If fromFirst is true, returns the email address of the first <tt>From</tt>
+     * or <tt>Sender</tt> header.  If fromFirst is false, returns the email address
+     * of the first <tt>Sender</tt> or <tt>From</tt> header.
+     */
+    public String getSenderEmail(boolean fromFirst) {
         try {
-            Address[] froms = getMimeMessage().getFrom();
-            if (froms != null && froms.length > 0 && froms[0] instanceof InternetAddress)
-                return ((InternetAddress) froms[0]).getAddress();
-            Address sender = getMimeMessage().getSender();
-            if (sender instanceof InternetAddress)
-                return ((InternetAddress) sender).getAddress();
+            if (fromFirst) {
+                // From header first, then Sender
+                Address[] froms = getMimeMessage().getFrom();
+                if (froms != null && froms.length > 0 && froms[0] instanceof InternetAddress)
+                    return ((InternetAddress) froms[0]).getAddress();
+                Address sender = getMimeMessage().getSender();
+                if (sender instanceof InternetAddress)
+                    return ((InternetAddress) sender).getAddress();
+            } else {
+                // Sender header first, then From
+                Address sender = getMimeMessage().getSender();
+                if (sender instanceof InternetAddress)
+                    return ((InternetAddress) sender).getAddress();
+                Address[] froms = getMimeMessage().getFrom();
+                if (froms != null && froms.length > 0 && froms[0] instanceof InternetAddress)
+                    return ((InternetAddress) froms[0]).getAddress();
+            }
         } catch (MessagingException e) {}
         return null;
     }
