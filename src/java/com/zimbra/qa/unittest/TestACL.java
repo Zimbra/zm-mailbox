@@ -53,15 +53,25 @@ public class TestACL extends TestCase {
     
     /*
      * verify we always get the expected result, regardless what the default value is
+     * This test does NOT use the admin privileges 
      * 
      * This is for testing target entry with some ACL.
      */
     private void verify(Account grantee, Account target, Right right, boolean expected) throws Exception {
+        verify(grantee, target, right, false, true, expected);
+    }
+    
+    /*
+     * verify we always get the expected result, regardless what the default value is
+     * 
+     * This is for testing target entry with some ACL.
+     */
+    private void verify(Account grantee, Account target, Right right, boolean asAdmin, boolean expected) throws Exception {
         // 1. pass true as the default value, result should not be affected by the default value
-        verify(grantee, target, right, true, expected);
+        verify(grantee, target, right, asAdmin, true, expected);
         
         // 2. pass false as the default value, result should not be affected by the default value
-        verify(grantee, target, right, false, expected);
+        verify(grantee, target, right, asAdmin, false, expected);
     }
     
     /*
@@ -70,29 +80,31 @@ public class TestACL extends TestCase {
      * This is for testing target entry without any ACL.
      */
     private void verifyDefault(Account grantee, Account target, Right right) throws Exception {
-        // 1. pass true as the default value, result should be true
-        verify(grantee, target, right, true, true);
+        boolean asAdmin = false; // TODO: test admin case
         
+        // 1. pass true as the default value, result should be true
+        verify(grantee, target, right, asAdmin, true, true);
+            
         // 2. pass false as the default value, result should be false
-        verify(grantee, target, right, false, false);
+        verify(grantee, target, right, asAdmin, false, false);
     }
     
     /*
      * verify expected result
      */
-    private void verify(Account grantee, Account target, Right right, boolean defaultValue, boolean expected) throws Exception {
+    private void verify(Account grantee, Account target, Right right, boolean asAdmin, boolean defaultValue, boolean expected) throws Exception {
         boolean result;
         
         // Account interface
-        result = mAM.canPerform(grantee, target, right, defaultValue);
+        result = mAM.canPerform(grantee, target, right, asAdmin, defaultValue);
         assertEquals(expected, result);
         
         // AuthToken interface
-        result = mAM.canPerform(AuthProvider.getAuthToken(grantee), target, right, defaultValue);
+        result = mAM.canPerform(AuthProvider.getAuthToken(grantee), target, right, asAdmin, defaultValue);
         assertEquals(expected, result);
         
         // String interface
-        result = mAM.canPerform(grantee.getName(), target, right, defaultValue);
+        result = mAM.canPerform(grantee.getName(), target, right, asAdmin, defaultValue);
         assertEquals(expected, result);
     }
     
@@ -110,20 +122,35 @@ public class TestACL extends TestCase {
         Account wrongguy = prov.createAccount(getEmailAddr("wrongguy"), "test123", null);
         Account nobody = prov.createAccount(getEmailAddr("nobody"), "test123", null);
         
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraIsDomainAdminAccount, Provisioning.TRUE);
+        Account admin = prov.createAccount(getEmailAddr("admin"), "test123", attrs);
+        
         /*
          * setup targets
          */
         Account target = prov.createAccount(getEmailAddr("target-test-zimbra"), "test123", null);
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(new ZimbraACE(goodguy, Right.viewFreeBusy, false));
+        aces.add(new ZimbraACE(goodguy, Right.invite, false));
         aces.add(new ZimbraACE(badguy, Right.viewFreeBusy, true));
         aces.add(new ZimbraACE(wrongguy, Right.viewFreeBusy, true));
         aces.add(new ZimbraACE(wrongguy, Right.viewFreeBusy, false));
         aces.add(new ZimbraACE(ACL.ANONYMOUS_ACCT, Right.viewFreeBusy, false));
         PermUtil.modifyACEs(target, aces);
         
+        // self should always be allowed
+        verify(target, target, Right.invite, true);
+        
+        // admin access using admin privileges
+        verify(admin, target, Right.invite, true, true);
+        
+        // admin access NOT using admin privileges
+        verify(admin, target, Right.invite, false, false);
+        
         // specifically allowed
         verify(goodguy, target, Right.viewFreeBusy, true);
+        verify(goodguy, target, Right.invite, true);
         
         // specifically denied
         verify(badguy, target, Right.viewFreeBusy, false);

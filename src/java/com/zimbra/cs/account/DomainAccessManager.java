@@ -214,28 +214,17 @@ public class DomainAccessManager extends AccessManager {
      * ===========================================================================================
      */
     
-    public boolean canPerform(AuthToken grantee, Account target, Right rightNeeded, boolean defaultGrant) {
+    public boolean canPerform(AuthToken grantee, NamedEntry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
         return false;
     }
     
-    public boolean canPerform(Account grantee, Account target, Right rightNeeded, boolean defaultGrant) {
+    public boolean canPerform(Account grantee, NamedEntry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
         return false;
     }
     
-    public boolean canPerform(String grantee, Account target, Right rightNeeded, boolean defaultGrant) {
+    public boolean canPerform(String grantee, NamedEntry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
         return false;
     }
-    
-    public boolean canPerform(AuthToken grantee, CalendarResource target, Right rightNeeded, boolean defaultGrant) {
-        return false;
-    }
-    
-    public boolean canPerform(Account grantee, CalendarResource target, Right rightNeeded, boolean defaultGrant) {
-        return false;
-    }
-    
-    public boolean canPerform(String grantee, CalendarResource target, Right rightNeeded, boolean defaultGrant) {
-        return false;
-    }
+
 
 }
