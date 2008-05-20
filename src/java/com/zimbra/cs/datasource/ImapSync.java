@@ -187,36 +187,23 @@ public class ImapSync extends AbstractMailItemImport {
         }
     }
     
-    // Synchronize local folders -> IMAP folders
-    private void syncLocalFolders() throws ServiceException, IOException {
-        List<Folder> folders = localRootFolder.getSubfolderHierarchy();
-        // Folder list is in depth-first order, so reverse entries so that
-        // children are before parents. This avoids problems when deleting
-        // folders.
-        Collections.reverse(folders);
-        for (Folder folder : folders) {
-            int id = folder.getId();
-            if (id != localRootFolder.getId() && !syncedFolders.containsKey(id)) {
-                syncLocalFolder(folder);
-            }
-        }
-    }
-
     private void syncLocalFolder(Folder folder) throws ServiceException, IOException {
+        String name = folder.getName();
         int id = folder.getId();
         ImapFolder tracker = trackedFolders.getByItemId(id);
         if (tracker != null) {
             trackedFolders.remove(tracker);
+        } else if (!dataSource.isSyncEnabled(folder.getPath())) {
+            LOG.info("Synchronization disabled for local folder '%s'", name);
+            return;
         }
         try {
             ImapFolderSync ifs = new ImapFolderSync(this, tracker);
             ifs.syncFolder(folder, fullSync);
             syncedFolders.put(id, ifs);
         } catch (Exception e) {
-            LOG.error("Skipped synchronization of local folder '%s' (id = %d) due to error",
-                      folder.getName(), id, e);
+            LOG.error("Skipped synchronization of local folder '%s' due to error", name, e);
             if (FAIL_ON_SYNC_ERROR) {
-                String name = folder.getName();
                 throw ServiceException.FAILURE(
                     "Synchronization of local folder '" + name + "' failed", e);
             }

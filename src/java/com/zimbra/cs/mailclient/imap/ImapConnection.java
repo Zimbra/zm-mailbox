@@ -156,6 +156,14 @@ public final class ImapConnection extends MailConnection {
         newRequest(CAtom.NOOP).sendCheckStatus();
     }
 
+    public void check() throws IOException {
+        newRequest(CAtom.CHECK).sendCheckStatus();
+    }
+
+    public void xatom(String cmd, Object... params) throws IOException {
+        newRequest(cmd, params).sendCheckStatus();
+    }
+    
     public IDInfo id() throws IOException {
         return id(null);
     }
