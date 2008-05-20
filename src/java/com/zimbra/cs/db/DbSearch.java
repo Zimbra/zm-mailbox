@@ -124,7 +124,7 @@ public class DbSearch {
     public static final byte DEFAULT_SORT_ORDER = SORT_BY_DATE | SORT_DESCENDING;
 
     public static final byte SORT_DIRECTION_MASK = 0x01;
-    public static final byte SORT_FIELD_MASK     = 0x6E;
+    public static final byte SORT_FIELD_MASK     = 0x7E;
     
     // alias the sort column b/c of ambiguity problems (the sort column is included twice in the 
     // result set, and MySQL chokes on the ORDER BY when we do a UNION query (doesn't know
