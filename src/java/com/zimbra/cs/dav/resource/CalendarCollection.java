@@ -287,7 +287,7 @@ public class CalendarCollection extends Collection {
 	/* Returns iCalalendar (RFC 2445) representation of freebusy report for specified time range. */
 	public String getFreeBusyReport(DavContext ctxt, TimeRange range) throws ServiceException, DavException {
 		Mailbox mbox = getMailbox(ctxt);
-		FreeBusy fb = mbox.getFreeBusy(range.getStart(), range.getEnd());
+		FreeBusy fb = mbox.getFreeBusy(ctxt.getOperationContext(), range.getStart(), range.getEnd());
 		return fb.toVCalendar(FreeBusy.Method.REPLY, ctxt.getAuthAccount().getName(), mbox.getAccount().getName(), null);
 	}
 }
