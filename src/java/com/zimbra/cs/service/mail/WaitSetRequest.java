@@ -213,12 +213,14 @@ public class WaitSetRequest extends MailDocumentHandler {
             // the server in a very fast loop (they should be using the 'block' mode)
             try { Thread.sleep(INITIAL_SLEEP_TIME); } catch (InterruptedException ex) {}
 
-            synchronized(cb) {
-                cb.errors = cb.ws.doWait(cb, lastKnownSeqNo, add, update, remove);
-                // after this point, the ws has a pointer to the cb and so we *MUST NOT* lock
-                // the ws until we release the cb lock!
-                if (cb.completed)
-                    block = false;
+            synchronized(cb.ws) { // bug 28190: always grab the WS lock before the CB lock.
+                synchronized(cb) {
+                    cb.errors = cb.ws.doWait(cb, lastKnownSeqNo, add, update, remove);
+                    // after this point, the ws has a pointer to the cb and so we *MUST NOT* lock
+                    // the ws until we release the cb lock!
+                    if (cb.completed)
+                        block = false;
+                }
             }
             
             if (block) {
