@@ -5525,16 +5525,18 @@ public class Mailbox {
             }
 
             // deletes have already been collected, so fetch the tombstones and write once
-            if (isTrackingSync() && mCurrentChange.deletes != null) {
-                MailItem.TypedIdList tombstones = mCurrentChange.deletes.itemIds;
-                if (tombstones != null && !tombstones.isEmpty())
-                    DbMailItem.writeTombstones(this, tombstones);
-            }
+            MailItem.TypedIdList tombstones = collectPendingTombstones();
+            if (tombstones != null && !tombstones.isEmpty())
+                DbMailItem.writeTombstones(this, tombstones);
 
             success = true;
         } finally {
             endTransaction(success);
         }
+    }
+
+    MailItem.TypedIdList collectPendingTombstones() {
+        return !isTrackingSync() ? null : new MailItem.TypedIdList(mCurrentChange.deletes.itemIds);
     }
 
     public synchronized Tag createTag(OperationContext octxt, String name, byte color) throws ServiceException {
