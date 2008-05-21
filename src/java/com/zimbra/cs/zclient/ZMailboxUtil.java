@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.zclient;
 
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -106,6 +107,7 @@ public class ZMailboxUtil implements DebugListener {
     private String mAdminAccountName = null;
     private String mMailboxName = null;
     private String mPassword = null;
+    private ZAuthToken mAdminAuthToken = null;
 
     private static final String DEFAULT_ADMIN_URL = "https://"+LC.zimbra_zmprov_default_soap_server.value()+":" + LC.zimbra_admin_service_port.intValue()+"/";
     private static final String DEFAULT_URL = "http://"+LC.zimbra_zmprov_default_soap_server.value()+"/";
@@ -146,6 +148,8 @@ public class ZMailboxUtil implements DebugListener {
     public void setMailboxName(String account) { mMailboxName = account; }
 
     public void setPassword(String password) { mPassword = password; }
+    
+    public void setAdminAuthToken(ZAuthToken authToken) { mAdminAuthToken = authToken; }
 
     private SoapProtocol parseProto(String proto) throws ZClientException {
         if ("soap11".equals(proto)) return SoapProtocol.Soap11;
@@ -565,6 +569,14 @@ public class ZMailboxUtil implements DebugListener {
         if (listener != null) mProv.soapSetTransportDebugListener(listener);
         mProv.soapAdminAuthenticate(name, password);
     }
+    
+    private void adminAuth(ZAuthToken zat, String uri) throws ServiceException {
+        SoapTransport.DebugListener listener = mDebug ? this : null;
+        mProv = new SoapProvisioning();
+        mProv.soapSetURI(resolveUrl(uri, true));
+        if (listener != null) mProv.soapSetTransportDebugListener(listener);
+        mProv.soapAdminAuthenticate(zat);
+    }
 
     private void auth(String name, String password, String uri) throws ServiceException {
         mMailboxName = name;
@@ -607,10 +619,12 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     public void initMailbox() throws ServiceException {
-        if (mPassword == null) return;
+        if (mPassword == null && mAdminAuthToken == null) return;
 
         if (mAdminAccountName != null) {
             adminAuth(mAdminAccountName, mPassword, mUrl);
+        } else if (mAdminAuthToken != null) {
+            adminAuth(mAdminAuthToken, mUrl);
         }
 
         if (mMailboxName == null) return;
@@ -2177,7 +2191,9 @@ public class ZMailboxUtil implements DebugListener {
         CommandLineParser parser = new GnuParser();
         Options options = new Options();
         options.addOption("a", "admin", true, "admin account name to auth as");
-        options.addOption("z", "zadmin", false, "use zimbra admin name/password from localconfig for admin/password");        
+        options.addOption("z", "zadmin", false, "use zimbra admin name/password from localconfig for admin/password");
+        options.addOption("t", "authtoken", true, "use auth token string(has to be in JSON format) from command line");
+        options.addOption("T", "authtokenfile", true, "use auth token string(has to be in JSON format) from the specified file");
         options.addOption("h", "help", false, "display usage");
         options.addOption("f", "file", true, "use file as input stream"); 
         options.addOption("u", "url", true, "http[s]://host[:port] of server to connect to");
@@ -2186,7 +2202,8 @@ public class ZMailboxUtil implements DebugListener {
         options.addOption("p", "password", true, "password for admin/mailbox");
         options.addOption("P", "passfile", true, "filename with password in it");
         options.addOption("v", "verbose", false, "verbose mode");
-        options.addOption("d", "debug", false, "debug mode");        
+        options.addOption("d", "debug", false, "debug mode");
+        
         
         CommandLine cl = null;
         boolean err = false;
@@ -2215,6 +2232,18 @@ public class ZMailboxUtil implements DebugListener {
             pu.setUrl(DEFAULT_ADMIN_URL, true);
             isAdmin = true;
         }
+        if (cl.hasOption('t')) {
+            pu.setAdminAuthToken(ZAuthToken.fromJSONString(cl.getOptionValue('t')));
+            pu.setUrl(DEFAULT_ADMIN_URL, true);
+            isAdmin = true;
+        }
+        if (cl.hasOption('T')) {
+            String authToken = StringUtil.readSingleLineFromFile(cl.getOptionValue('T'));
+            pu.setAdminAuthToken(ZAuthToken.fromJSONString(authToken));
+            pu.setUrl(DEFAULT_ADMIN_URL, true);
+            isAdmin = true;
+        }     
+        
         if (cl.hasOption('u')) pu.setUrl(cl.getOptionValue('u'), isAdmin);
         if (cl.hasOption('m')) pu.setMailboxName(cl.getOptionValue('m'));        
         if (cl.hasOption('p')) pu.setPassword(cl.getOptionValue('p'));

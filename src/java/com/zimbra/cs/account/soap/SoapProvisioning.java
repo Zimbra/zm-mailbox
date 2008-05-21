@@ -143,12 +143,23 @@ public class SoapProvisioning extends Provisioning {
        req.addElement(AdminConstants.E_NAME).setText(name);
        req.addElement(AdminConstants.E_PASSWORD).setText(password);
        Element response = invoke(req);
-       // mAuthToken = response.getElement(AdminConstants.E_AUTH_TOKEN).getText();
        mAuthToken = new ZAuthToken(response.getElement(AdminConstants.E_AUTH_TOKEN), true);
        mAuthTokenLifetime = response.getAttributeLong(AdminConstants.E_LIFETIME);
        mAuthTokenExpiration = System.currentTimeMillis() + mAuthTokenLifetime;
        mTransport.setAuthToken(mAuthToken);
     }
+    
+    public void soapAdminAuthenticate(ZAuthToken zat) throws ServiceException {
+        if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling adminAuthenticate", null);
+        XMLElement req = new XMLElement(AdminConstants.AUTH_REQUEST);
+        zat.encodeAuthReq(req, true);
+        Element response = invoke(req);
+        mAuthToken = new ZAuthToken(response.getElement(AdminConstants.E_AUTH_TOKEN), true);
+        mAuthTokenLifetime = response.getAttributeLong(AdminConstants.E_LIFETIME);
+        mAuthTokenExpiration = System.currentTimeMillis() + mAuthTokenLifetime;
+        mTransport.setAuthToken(mAuthToken);
+     }
+
 
     /**
      * auth as zimbra admin (over SOAP) using password from localconfig. Can only be called after
