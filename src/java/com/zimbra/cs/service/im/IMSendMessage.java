@@ -67,14 +67,16 @@ public class IMSendMessage extends IMDocumentHandler {
                     if (plainElt == null)
                         throw ServiceException.INVALID_REQUEST("IMSendMessage: plaintext <text> element is required even if <xhtml> is sent", null); 
                     String plainText = plainElt.getText();
-                    String xhtmlText = null;
+                    
                     if (xhtmlElt != null) {
-                        xhtmlText = xhtmlElt.getText();
+                        String xhtmlText = xhtmlElt.getText();
+                        org.dom4j.Element parsed = org.dom4j.DocumentHelper.parseText("<body xmlns=\""+XHTML_NAMESPACE+"\">"+xhtmlText+"</body>").getRootElement();
+                        org.dom4j.Element xhtmlBody = parsed;
+                        xhtmlBody.detach();
+                        bodyPart = new TextPart(plainText, xhtmlBody);
+                    } else {
+                        bodyPart = new TextPart(plainText);
                     }
-                    org.dom4j.Element parsed = org.dom4j.DocumentHelper.parseText("<body xmlns=\""+XHTML_NAMESPACE+"\">"+xhtmlText+"</body>").getRootElement();
-                    org.dom4j.Element xhtmlBody = parsed;
-                    xhtmlBody.detach();
-                    bodyPart = new TextPart(plainText, xhtmlBody);
                 } else {
                     // OLD style API
                     String s = bodyElt.getText();
