@@ -2671,20 +2671,20 @@ If <ace> elements are provided, only those ACEs with specified rights are return
 
 Grant account level permissions.
 
-<GrantPermissionsRequest/>
-
-<GrantPermissionsResponse>
+<GrantPermissionsRequest>
   <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"]/>*
-</GrantPermissionsResponse>
+</GrantPermissionsRequest>
+
+<GrantPermissionsResponse/>
 
 ---------------------------
 
 Revoke account level permissions.
 
-<RevokePermissionsRequest/>
-
-<RevokePermissionsResponse>
+<RevokePermissionsRequest>
   <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"]/>*
-</RevokePermissionsResponse>
+</RevokePermissionsRequest>
+
+<RevokePermissionsResponse/>
 
 ---------------------------

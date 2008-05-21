@@ -3965,5 +3965,40 @@ public class ZMailbox {
         invoke(req);
         updateSigs();
     }
+    
+    public List<ZAce> getPermissions(String[] rights) throws ServiceException {
+        Element req = newRequestElement(MailConstants.GET_PERMISSIONS_REQUEST);
+        if (rights != null && rights.length > 0) {
+            for (String right : rights)
+                req.addElement(MailConstants.E_ACE).addAttribute(MailConstants.A_RIGHT, right);
+        }
+        Element resp = invoke(req);
+        List<ZAce> result = new ArrayList<ZAce>();
+        for (Element ace : resp.listElements(MailConstants.E_ACE)) {
+            result.add(new ZAce(ace));
+        }
+        return result;
+    }
+    
+    public List<ZAce> grantPermissions(ZAce ace) throws ServiceException {
+        Element req = newRequestElement(MailConstants.GRANT_PERMISSIONS_REQUEST);
+        ace.toElement(req);
+        Element resp = invoke(req);
+        List<ZAce> result = new ArrayList<ZAce>();
+        for (Element a : resp.listElements(MailConstants.E_ACE)) {
+            result.add(new ZAce(a));
+        }
+        return result;
+    }
 
+    public List<ZAce> revokePermissions(ZAce ace) throws ServiceException {
+        Element req = newRequestElement(MailConstants.REVOKE_PERMISSIONS_REQUEST);
+        ace.toElement(req);
+        Element resp = invoke(req);
+        List<ZAce> result = new ArrayList<ZAce>();
+        for (Element a : resp.listElements(MailConstants.E_ACE)) {
+            result.add(new ZAce(a));
+        }
+        return result;
+    }
 }
