@@ -18,7 +18,11 @@
 package com.zimbra.common.auth;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
@@ -38,6 +42,7 @@ public class ZAuthToken {
     private static final String YAHOO_AUTHTOKEN_TYPE = "YAHOO_CALENDAR_AUTH_PROVIDER";
     private static final String YAHOO_Y_COOKIE = "Y"; 
     private static final String YAHOO_T_COOKIE = "T";
+    private static final String YAHOO_ADMIN_COOKIE = "ADMIN_AUTH_KEY";
 
     private String mType;
     private String mValue;
@@ -87,6 +92,43 @@ public class ZAuthToken {
     // AP-TODO: retire them
     public ZAuthToken(String value) {
         init(null, value, null);
+    }
+    
+    /**
+     * Parse a JSON string to ZAuthToken, use by CLI tools to pass an auth token string from command line
+     * 
+     * e.g.
+     * {"type": "foo", "value": "bar", "attrs": { "k1" : "v1", "k2" : "v2"}}
+     * 
+     * or should we use keys like they appear in our AuthResponse? probably not.
+     * e.g.
+     * {"_content": "bar", "type": "foo", "_attrs": { "k1": "v1", "k2": "v2"}}
+     */
+    public static ZAuthToken fromJSONString(String jsonString) throws ServiceException {
+        String type = null;
+        String value = null;
+        Map<String, String> attrs = null;
+        
+        try {
+            JSONObject json = new JSONObject(jsonString);
+            type = json.optString("type", null);
+            value = json.optString("value", null);
+            
+            attrs = null;
+            JSONObject jAttrs = json.optJSONObject("attrs");
+            if (jAttrs != null) {
+                attrs = new HashMap<String, String>();
+                for (Iterator iter = jAttrs.keys(); iter.hasNext(); ) {
+                    String k = (String)iter.next();
+                    String v = jAttrs.getString(k);
+                    attrs.put(k, v);
+                }
+            }
+        } catch (JSONException e) {
+            throw ServiceException.PARSE_ERROR("cannnot parse JSON auth token", e);
+        }
+        
+        return new ZAuthToken(type, value, attrs);
     }
     
     public String getType() { return mType; }
@@ -151,6 +193,7 @@ public class ZAuthToken {
         clearCookie(response, COOKIE_ZM_AUTH_TOKEN);
         clearCookie(response, YAHOO_T_COOKIE);
         clearCookie(response, YAHOO_Y_COOKIE);
+        clearCookie(response, YAHOO_ADMIN_COOKIE);
     }
     
     private void fromSoap(com.zimbra.common.soap.Element eAuthToken, boolean isAdmin) throws ServiceException {
@@ -269,13 +312,16 @@ public class ZAuthToken {
     private boolean fromYahooCookies(Map<String, String> cookieMap, boolean isAdmin) {
         String yCookie = cookieMap.get(YAHOO_Y_COOKIE);
         String tCookie = cookieMap.get(YAHOO_T_COOKIE);
+        String aCookie = cookieMap.get(YAHOO_ADMIN_COOKIE);
         
-        if (yCookie != null || tCookie != null) {
+        if (yCookie != null || tCookie != null || aCookie != null) {
             Map<String, String> attrs = new HashMap<String, String>();
             if (yCookie != null)
                 attrs.put(YahooAuthData.cookieNameToAttrName(YAHOO_Y_COOKIE), yCookie);
             if (tCookie != null)
                 attrs.put(YahooAuthData.cookieNameToAttrName(YAHOO_T_COOKIE), tCookie);
+            if (aCookie != null)
+                attrs.put(YahooAuthData.cookieNameToAttrName(YAHOO_ADMIN_COOKIE), aCookie);
             
             init(YAHOO_AUTHTOKEN_TYPE, null, attrs);
             return true;
