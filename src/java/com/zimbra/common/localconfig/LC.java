@@ -568,8 +568,8 @@ public class LC {
         ldap_master_url = new KnownKey("ldap_master_url");
         ldap_master_url.setDefault("");
 
-        ldap_master_url = new KnownKey("ldap_bind_url");
-        ldap_master_url.setDefault("");
+        ldap_bind_url = new KnownKey("ldap_bind_url");
+        ldap_bind_url.setDefault("");
 
         ldap_is_master = new KnownKey("ldap_is_master");
         ldap_is_master.setDefault("false");
