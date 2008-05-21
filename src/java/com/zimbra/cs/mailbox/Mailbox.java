@@ -6196,11 +6196,9 @@ public class Mailbox {
                 Folder.purgeMessages(this, sent, getOperationTimestamp() - userSentTimeout, null);
 
             // deletes have already been collected, so fetch the tombstones and write once
-            if (isTrackingSync() && mCurrentChange.deletes != null) {
-                MailItem.TypedIdList tombstones = mCurrentChange.deletes.itemIds;
-                if (tombstones != null && !tombstones.isEmpty())
-                    DbMailItem.writeTombstones(this, tombstones);
-            }
+            MailItem.TypedIdList tombstones = collectPendingTombstones();
+            if (tombstones != null && !tombstones.isEmpty())
+                DbMailItem.writeTombstones(this, tombstones);
 
             success = true;
         } finally {
