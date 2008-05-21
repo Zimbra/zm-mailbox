@@ -61,70 +61,101 @@ public class Auth extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-
-        String namePassedIn = request.getAttribute(AdminConstants.E_NAME);
-        String name = namePassedIn;
-		String password = request.getAttribute(AdminConstants.E_PASSWORD);
-		Provisioning prov = Provisioning.getInstance();
-		Account acct = null;
-        boolean isDomainAdmin = false;
+        AuthToken at = null;
+        Account acct = null;
         
-        Element virtualHostEl = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST);
-        String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
- 
-        try {
-            
-            if (name.indexOf("@") == -1) {
-
-                acct = prov.get(AccountBy.adminName, name, zsc.getAuthToken());
+        Element authTokenEl = request.getOptionalElement(AdminConstants.E_AUTH_TOKEN);
+        if (authTokenEl != null) {
+            try {
+                at = AuthProvider.getAuthToken(authTokenEl, new HashMap<String, Object>());
+                if (at == null)
+                    throw ServiceException.AUTH_EXPIRED();
+                if (at.isExpired())
+                    throw ServiceException.AUTH_EXPIRED();
                 
-                if (acct == null) {
-                    if (virtualHost != null) {
-                        Domain d = prov.get(DomainBy.virtualHostname, virtualHost);
-                        if (d != null)
-                            name = name + "@" + d.getName();
-                    }                    
-                } 
+                // make sure that the authenticated account is active and has not been deleted/disabled since the last request
+                acct = Provisioning.getInstance().get(AccountBy.id, at.getAccountId(), at);
+                if (acct == null || !acct.getAccountStatus().equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
+                    throw ServiceException.AUTH_EXPIRED();
+                
+                // make sure the authenticated account is an admin account
+                checkAdmin(acct);
+            } catch (AuthTokenException e) {
+                throw ServiceException.AUTH_REQUIRED();
             }
-
-            if (acct == null)
-                acct = prov.get(AccountBy.name, name);
-
-            if (acct == null)
-                throw AuthFailedServiceException.AUTH_FAILED(name, namePassedIn, "account not found");
-        
-            ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "AdminAuth","account", name})); 
-        
-            Map<String, Object> authCtxt = new HashMap<String, Object>();
-            authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, (String)context.get(SoapEngine.ORIG_REQUEST_IP));
-            authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, namePassedIn);
-            prov.authAccount(acct, password, "soap", authCtxt);
             
-            isDomainAdmin = acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
-            boolean isAdmin= acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);            
-            boolean ok = (isDomainAdmin || isAdmin);
-            if (!ok) 
-                    throw ServiceException.PERM_DENIED("not an admin account");
-
-        } catch (ServiceException se) {
-            ZimbraLog.security.warn(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "AdminAuth","account", name, "error", se.getMessage()}));    
-            throw se;
+        } else {
+            String namePassedIn = request.getAttribute(AdminConstants.E_NAME);
+            String name = namePassedIn;
+    		String password = request.getAttribute(AdminConstants.E_PASSWORD);
+    		Provisioning prov = Provisioning.getInstance();
+            
+            Element virtualHostEl = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST);
+            String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
+     
+            try {
+                
+                if (name.indexOf("@") == -1) {
+    
+                    acct = prov.get(AccountBy.adminName, name, zsc.getAuthToken());
+                    
+                    if (acct == null) {
+                        if (virtualHost != null) {
+                            Domain d = prov.get(DomainBy.virtualHostname, virtualHost);
+                            if (d != null)
+                                name = name + "@" + d.getName();
+                        }                    
+                    } 
+                }
+    
+                if (acct == null)
+                    acct = prov.get(AccountBy.name, name);
+    
+                if (acct == null)
+                    throw AuthFailedServiceException.AUTH_FAILED(name, namePassedIn, "account not found");
+            
+                ZimbraLog.security.info(ZimbraLog.encodeAttrs(
+                        new String[] {"cmd", "AdminAuth","account", name})); 
+            
+                Map<String, Object> authCtxt = new HashMap<String, Object>();
+                authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, (String)context.get(SoapEngine.ORIG_REQUEST_IP));
+                authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, namePassedIn);
+                prov.authAccount(acct, password, "soap", authCtxt);
+                checkAdmin(acct);
+                at = AuthProvider.getAuthToken(acct, true);
+                
+            } catch (ServiceException se) {
+                ZimbraLog.security.warn(ZimbraLog.encodeAttrs(
+                        new String[] {"cmd", "AdminAuth","account", name, "error", se.getMessage()}));    
+                throw se;
+            }
         }
+        
+        return doResponse(at, zsc, acct);
+	}
+	
+	private void checkAdmin(Account acct) throws ServiceException {
+	    boolean isDomainAdmin = acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
+        boolean isAdmin= acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);            
+        boolean ok = (isDomainAdmin || isAdmin);
+        if (!ok) 
+            throw ServiceException.PERM_DENIED("not an admin account");
+	}
 
-        Element response = zsc.createElement(AdminConstants.AUTH_RESPONSE);
-        AuthToken at = AuthProvider.getAuthToken(acct, true);
+	private Element doResponse(AuthToken at, ZimbraSoapContext zsc, Account acct) throws ServiceException {
+	    Element response = zsc.createElement(AdminConstants.AUTH_RESPONSE);
         at.encodeAuthResp(response, true);
         
         response.addAttribute(AdminConstants.E_LIFETIME, at.getExpires() - System.currentTimeMillis(), Element.Disposition.CONTENT);
+        
+        boolean isDomainAdmin = acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
         response.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, Provisioning.A_zimbraIsDomainAdminAccount).setText(isDomainAdmin+"");
         Session session = updateAuthenticatedAccount(zsc, at, true);
         if (session != null)
             ZimbraSoapContext.encodeSession(response, session.getSessionId(), session.getSessionType());
-		return response;
+        return response;
 	}
-
+	
     public boolean needsAuth(Map<String, Object> context) {
         // can't require auth on auth request
         return false;

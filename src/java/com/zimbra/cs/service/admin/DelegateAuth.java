@@ -90,13 +90,8 @@ public class DelegateAuth extends AdminDocumentHandler {
         if (adminAcct == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(zsc.getAuthtokenAccountId());
 
-        AuthToken at = AuthProvider.getAuthToken(account, expires, false, adminAcct); 
-        try {
-            token = at.getEncoded();
-        } catch (AuthTokenException e) {
-            throw  ServiceException.FAILURE("unable to encode auth token", e);
-        }
-        response.addAttribute(AdminConstants.E_AUTH_TOKEN, token, Element.Disposition.CONTENT);
+        AuthToken at = AuthProvider.getAuthToken(account, expires, false, adminAcct);
+        at.encodeAuthResp(response, true);
         response.addAttribute(AdminConstants.E_LIFETIME, lifetime, Element.Disposition.CONTENT);
         return response;
     }
