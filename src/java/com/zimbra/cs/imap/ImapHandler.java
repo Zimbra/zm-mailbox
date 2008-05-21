@@ -1024,7 +1024,7 @@ abstract class ImapHandler extends ProtocolHandler {
             return CONTINUE_PROCESSING;
         }
 
-        boolean cont = authenticate(null, username, password, tag, null);
+        boolean cont = authenticate(username, null, password, tag, null);
         if (isAuthenticated()) {
             // 6.2.3: "A server MAY include a CAPABILITY response code in the tagged OK
             //         response of a successful LOGIN command in order to send capabilities
@@ -1049,7 +1049,12 @@ abstract class ImapHandler extends ProtocolHandler {
             }
         }
 
+        // for LOGIN, there's no distinction between authcid and authzid
+        //   thus we need to set authcid *after* the EnabledHack suffix stripping
         String command = mechanism != null ? "AUTHENTICATE" : "LOGIN";
+        if (command.equals("LOGIN"))
+            authenticateId = username;
+
         try {
             Account acct;
             if (GssAuthenticator.MECHANISM.equals(mechanism))
