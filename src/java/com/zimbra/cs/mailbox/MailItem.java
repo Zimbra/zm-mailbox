@@ -266,7 +266,7 @@ public abstract class MailItem implements Comparable<MailItem> {
                 return;
             List<Integer> items = mIds.get(type);
             if (items == null)
-                mIds.put(type, items = new ArrayList<Integer>());
+                mIds.put(type, items = new ArrayList<Integer>(1));
             items.add(id);
         }
         public void add(byte type, List<Integer> ids) {
@@ -274,7 +274,7 @@ public abstract class MailItem implements Comparable<MailItem> {
                 return;
             List<Integer> items = mIds.get(type);
             if (items == null)
-                mIds.put(type, items = new ArrayList<Integer>());
+                mIds.put(type, items = new ArrayList<Integer>(1));
             items.addAll(ids);
         }
         public void add(TypedIdList other) {
@@ -317,7 +317,7 @@ public abstract class MailItem implements Comparable<MailItem> {
                 if ((typedIds = getIds(b)) == null)
                     continue;
                 if (ids == null)
-                    ids = new ArrayList<Integer>();
+                    ids = new ArrayList<Integer>(typedIds.size());
                 ids.addAll(typedIds);
             }
             return ids;
@@ -2199,7 +2199,7 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         /** The ids of all unread items being deleted.  This is a subset of
          *  {@link #itemIds}. */
-        public List<Integer> unreadIds = new ArrayList<Integer>();
+        public List<Integer> unreadIds = new ArrayList<Integer>(1);
 
         /** The ids of all items that must be deleted but whose deletion
          *  must be deferred because of foreign key constraints. (E.g.
@@ -2210,10 +2210,10 @@ public abstract class MailItem implements Comparable<MailItem> {
         /** The ids of all items that have been <u>modified</u> but not deleted
          *  during the delete.  (E.g. {@link Conversation}s whose messages are
          *  <b>not</b> all deleted during a {@link Folder} delete.)  */
-        public Set<Integer> modifiedIds = new HashSet<Integer>();
+        public Set<Integer> modifiedIds = new HashSet<Integer>(2);
 
         /** The document ids that need to be removed from the index. */
-        public List<Integer> indexIds = new ArrayList<Integer>();
+        public List<Integer> indexIds = new ArrayList<Integer>(1);
 
         /** The ids of all items with the {@link Flag#BITMASK_COPIED} flag being
          *  deleted.  Items in <tt>sharedIndex</tt> whose last copies are
@@ -2223,14 +2223,14 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         /** The {@link com.zimbra.cs.store.Blob}s for all items being deleted that have content
          *  persisted in the store. */
-        public List<MailboxBlob> blobs = new ArrayList<MailboxBlob>();
+        public List<MailboxBlob> blobs = new ArrayList<MailboxBlob>(1);
 
         /** Maps {@link Folder} ids to {@link DbMailItem.LocationCount}s
          *  tracking various per-folder counts for items being deleted. */
-        public Map<Integer, DbMailItem.LocationCount> messages = new HashMap<Integer, DbMailItem.LocationCount>();
+        public Map<Integer, DbMailItem.LocationCount> messages = new HashMap<Integer, DbMailItem.LocationCount>(2);
 
         /** Digests of all blobs being deleted. */
-        public Set<String> blobDigests = new HashSet<String>();
+        public Set<String> blobDigests = new HashSet<String>(2);
 
         /** Combines the data from another <tt>PendingDelete</tt> into
          *  this object.  The other <tt>PendingDelete</tt> is unmodified.
@@ -2401,11 +2401,6 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (writeTombstones && mbox.isTrackingSync() && !info.itemIds.isEmpty())
             DbMailItem.writeTombstones(mbox, info.itemIds);
         
-        // remove cached messages
-        for (String digest : info.blobDigests) {
-            MessageCache.purge(digest);
-        }
-
         // don't actually delete the blobs or index entries here; wait until after the commit
     }
     
