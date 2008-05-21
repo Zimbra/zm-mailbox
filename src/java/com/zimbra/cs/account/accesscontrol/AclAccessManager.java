@@ -3,12 +3,9 @@ package com.zimbra.cs.account.accesscontrol;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
-import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.DomainAccessManager;
-import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ACL;

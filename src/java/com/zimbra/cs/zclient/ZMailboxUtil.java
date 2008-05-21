@@ -30,9 +30,13 @@ import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Alias;
+import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.SearchOptions;
 import com.zimbra.cs.account.soap.SoapAccountInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
@@ -86,6 +90,8 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -284,6 +290,7 @@ public class ZMailboxUtil implements DebugListener {
         ITEM("help on item-related commands"),
         MESSAGE("help on message-related commands"),
         MISC("help on misc commands"),
+        PERMISSION("help on permission commands"),
         SEARCH("help on search-related commands"),
         TAG("help on tag-related commands");
 
@@ -372,8 +379,10 @@ public class ZMailboxUtil implements DebugListener {
         GET_FOLDER_GRANT("getFolderGrant", "gfg", "{folder-path}", "get folder grants", Category.FOLDER, 1, 1, O_VERBOSE),
         GET_MESSAGE("getMessage", "gm", "{msg-id}", "get a message", Category.MESSAGE, 1, 1, O_VERBOSE),
         GET_MAILBOX_SIZE("getMailboxSize", "gms", "", "get mailbox size", Category.MISC, 0, 0, O_VERBOSE),
+        GET_PERMISSION("getPermission", "gp", "[right1 [right2...]]", "get permissions", Category.PERMISSION, 0, Integer.MAX_VALUE, O_VERBOSE),
         GET_REST_URL("getRestURL", "gru", "{relative-path}", "do a GET on a REST URL relative to the mailbox", Category.MISC, 1, 1, O_OUTPUT_FILE),
         GET_SIGNATURES("getSignatures", "gsig", "", "get all signatures", Category.ACCOUNT, 0, 0, O_VERBOSE),
+        GRANT_PERMISSION("grantPermission", "grtp", "{account {name}|group {name}|public {[-]permission}}", "allow or deny a permission. to deny a permission, put a '-' in front of the permittion name", Category.PERMISSION, 2, 3),
         HELP("help", "?", "commands", "return help on a group of commands, or all commands. Use -v for detailed help.", Category.MISC, 0, 1, O_VERBOSE),
         IMPORT_URL_INTO_FOLDER("importURLIntoFolder", "iuif", "{folder-path} {url}", "add the contents to the remote feed at {target-url} to the folder", Category.FOLDER, 2, 2),
         MARK_CONVERSATION_READ("markConversationRead", "mcr", "{conv-ids} [0|1*]", "mark conversation(s) as read/unread", Category.CONVERSATION, 1, 2),
@@ -404,6 +413,7 @@ public class ZMailboxUtil implements DebugListener {
         RENAME_FOLDER("renameFolder", "rf", "{folder-path} {new-folder-path}", "rename folder", Category.FOLDER, 2, 2),
         RENAME_SIGNATURE("renameSignature", "rsig", "{signature-name|signature-id} {new-name}", "rename signature", Category.ACCOUNT, 2, 2),
         RENAME_TAG("renameTag", "rt", "{tag-name} {new-tag-name}", "rename tag", Category.TAG, 2, 2),
+        REVOKE_PERMISSION("revokePermission", "rvkp", "{account {name}|group {name}|public {[-]permission}}", "revoke a permission. to revoke a denied permission, put a '-' in front of the permittion name", Category.PERMISSION, 2, 3),
         SEARCH("search", "s", "{query}", "perform search", Category.SEARCH, 0, 1, O_LIMIT, O_SORT, O_TYPES, O_VERBOSE, O_CURRENT, O_NEXT, O_PREVIOUS),
         SEARCH_CONVERSATION("searchConv", "sc", "{conv-id} {query}", "perform search on conversation", Category.SEARCH, 0, 2, O_LIMIT, O_SORT, O_TYPES, O_VERBOSE, O_CURRENT, O_NEXT, O_PREVIOUS),
         SELECT_MAILBOX("selectMailbox", "sm", "{account-name}", "select a different mailbox. can only be used by an admin", Category.ADMIN, 1, 1),
@@ -992,8 +1002,14 @@ public class ZMailboxUtil implements DebugListener {
         case GET_MESSAGE:
             doGetMessage(args);
             break;
+        case GET_PERMISSION:
+            doGetPermission(args);
+            break;
         case GET_REST_URL:
             doGetRestURL(args);
+            break;
+        case GRANT_PERMISSION:
+            doGrantPermission(args);
             break;
         case HELP:
             doHelp(args);
@@ -1084,6 +1100,9 @@ public class ZMailboxUtil implements DebugListener {
             break;
         case RENAME_TAG:
             mMbox.renameTag(lookupTag(args[0]).getId(), args[1]);
+            break;
+        case REVOKE_PERMISSION:
+            doRevokePermission(args);
             break;
         case SEARCH:
             doSearch(args);
@@ -1397,6 +1416,81 @@ public class ZMailboxUtil implements DebugListener {
         } else {
             mMbox.modifyFolderGrant(folderId, type, grantee, perms, arg);
         }
+    }
+    
+    private void doGetPermission(String[] args) throws ServiceException {
+        if (verboseOpt()) {
+            StringBuilder sb = new StringBuilder();            
+            for (ZAce g : mMbox.getPermissions(args)) {
+                if (sb.length() > 0) sb.append(",\n");
+                sb.append(g);
+            }
+            System.out.format("[%n%s%n]%n", sb.toString());
+        } else {
+            String format = "%16.16s  %8.8s  %s%n";
+            System.out.format(format, "Permission",       "Type",     "Display");
+            System.out.format(format, "----------------", "--------", "-------");
+
+            List<ZAce> result = mMbox.getPermissions(args);
+            Comparator<ZAce> comparator = new Comparator<ZAce>() {
+                public int compare(ZAce a, ZAce b) {
+                    // sort by right -> grantee type -> grantee name
+                    String aKey = a.getRight() + a.getGranteeTypeSortOrder() + (a.getGranteeName()==null?"":a.getGranteeName());
+                    String bKey = b.getRight() + b.getGranteeTypeSortOrder() + (b.getGranteeName()==null?"":b.getGranteeName());
+                    int order = aKey.compareTo(bKey);
+                    if (order == 0) // a grantee is denied and allowed, not likely, but put the deny before allow if such entry does exist
+                        order = a.getDeny()?-1:1;
+                    return order;
+                }
+            };
+            Collections.sort(result, comparator);  
+            
+            for (ZAce ace : result) {
+                ZAce.GranteeType gt = ace.getGranteeType();
+                String dn = (gt == ZAce.GranteeType.pub) ? "" : ace.getGranteeName(); 
+                System.out.format(format, ace.getRightDisplay(), ace.getGranteeTypeDisplay(), dn);
+            }
+        }
+        System.out.println();
+    }
+    
+    private ZAce getAceFromArgs(String[] args) throws ServiceException {
+        ZAce.GranteeType type = ZAce.getGranteeTypeFromDisplay(args[0]);
+        String granteeName = null;
+        String granteeId = null;
+        String right = null;
+        boolean deny = false;
+        
+        switch (type) {
+        case usr:
+        case grp:
+            if (args.length != 3) throw ZClientException.CLIENT_ERROR("not enough args", null);
+            granteeName = args[1];
+            right = args[2];
+            break;
+        case pub:
+            if (args.length != 2) throw ZClientException.CLIENT_ERROR("not enough args", null);
+            granteeId = ACL.GUID_PUBLIC;
+            right = args[1];
+            break;
+        }
+        
+        if (right.charAt(0) == '-') {
+            deny = true;
+            right = right.substring(1);
+        }
+        
+        return new ZAce(type, granteeId, granteeName, right, deny);
+    }
+    
+    private void doGrantPermission(String[] args) throws ServiceException {
+        ZAce ace = getAceFromArgs(args);
+        mMbox.grantPermissions(ace);
+    }
+    
+    private void doRevokePermission(String[] args) throws ServiceException {
+        ZAce ace = getAceFromArgs(args);
+        mMbox.revokePermissions(ace);
     }
 
     private void doAdminAuth(String[] args) throws ServiceException {
