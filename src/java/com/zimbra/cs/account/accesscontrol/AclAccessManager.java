@@ -71,7 +71,9 @@ public class AclAccessManager extends DomainAccessManager {
     private boolean hasRight(AuthToken grantee, NamedEntry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
         try {
             Account granteeAcct;
-            if (grantee.isZimbraUser())
+            if (grantee == null)
+                granteeAcct = ACL.ANONYMOUS_ACCT;
+            else if (grantee.isZimbraUser())
                 granteeAcct = Provisioning.getInstance().get(Provisioning.AccountBy.id, grantee.getAccountId());
             else
                 granteeAcct = new ACL.GuestAccount(grantee);

@@ -3701,7 +3701,7 @@ public class Mailbox {
             asAdmin = false;
         }
         AccessManager accessMgr = AccessManager.getInstance();
-        if (accessMgr.canPerform(authAcct, getAccount(), Right.viewFreeBusy, asAdmin, true))
+        if (accessMgr.canPerform(authAcct, getAccount(), Right.RT_viewFreeBusy, asAdmin, true))
             return com.zimbra.cs.fb.LocalFreeBusyProvider.getFreeBusyList(this, name, start, end, exAppt);
         else
             return FreeBusy.emptyFreeBusy(name, start, end);

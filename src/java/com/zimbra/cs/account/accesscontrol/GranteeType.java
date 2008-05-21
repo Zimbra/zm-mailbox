@@ -62,6 +62,7 @@ public enum GranteeType {
     }
     
     private String mCode;
+    
     GranteeType(String code) {
         mCode = code;
         GT.sCodeMap.put(code, this);
@@ -70,7 +71,7 @@ public enum GranteeType {
     public static GranteeType fromCode(String granteeType) throws ServiceException {
         GranteeType gt = GT.sCodeMap.get(granteeType);
         if (gt == null)
-            throw ServiceException.PARSE_ERROR("invalid grantee type: " + gt, null);
+            throw ServiceException.PARSE_ERROR("invalid grantee type: " + granteeType, null);
         return gt;
     }
     
