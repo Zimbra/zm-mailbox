@@ -243,7 +243,7 @@ public class PlaybackUtil {
 
         if (cl.hasOption(OPT_MAILBOX_ID)) {
             params.mboxId = Integer.parseInt(cl.getOptionValue(OPT_MAILBOX_ID));
-            System.out.printf("Replaying operations for mailbox %d only\n");
+            System.out.printf("Replaying operations for mailbox %d only\n", params.mboxId);
         } else {
             System.out.println("Replaying operations for all mailboxes");
         }
