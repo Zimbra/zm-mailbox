@@ -224,6 +224,18 @@ public class UrlNamespace {
         sUrlEscapeMap.put('\'', "%27");
         sUrlEscapeMap.put('{', "%7B");
         sUrlEscapeMap.put('}', "%7D");
+        sUrlEscapeMap.put(';', "%3B");
+        sUrlEscapeMap.put('?', "%3F");
+        sUrlEscapeMap.put('!', "%21");
+        sUrlEscapeMap.put(':', "%3A");
+        sUrlEscapeMap.put('@', "%40");
+        sUrlEscapeMap.put('#', "%23");
+        sUrlEscapeMap.put('%', "%25");
+        sUrlEscapeMap.put('&', "%26");
+        sUrlEscapeMap.put('=', "%3D");
+        sUrlEscapeMap.put('+', "%2B");
+        sUrlEscapeMap.put('$', "%24");
+        sUrlEscapeMap.put(',', "%2C");
     }
     
 	public static String urlEscape(String str) {
