@@ -20,10 +20,8 @@
  */
 package com.zimbra.cs.service.account;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AttributeFlag;
 import com.zimbra.cs.account.AttributeManager;
@@ -53,18 +51,6 @@ import java.util.Set;
  * @author schemers
  */
 public class Auth extends AccountDocumentHandler {
-
-    /** Returns (or creates) the in-memory {@link Session} object appropriate
-     *  for this request.<p>
-     * 
-     *  Auth commands do not create a session by default, as issues with the 
-     *  ordering of operations might cause the new session to be for the old
-     *  credentials rather than for the new ones.
-     * 
-     * @return <code>null</code> in all cases */
-    public Session getSession(Map context) {
-        return null;
-    }
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -113,9 +99,9 @@ public class Auth extends AccountDocumentHandler {
             long expires = 0;
 
             Map<String, Object> authCtxt = new HashMap<String, Object>();
-            authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, (String)context.get(SoapEngine.ORIG_REQUEST_IP));
+            authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, context.get(SoapEngine.ORIG_REQUEST_IP));
             authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, valuePassedIn);
-            
+
             if (password != null) {
                 prov.authAccount(acct, password, "soap", authCtxt);
             } else if (preAuthEl != null) {

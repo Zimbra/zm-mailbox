@@ -47,19 +47,7 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class Auth extends AdminDocumentHandler {
 
-    /** Returns (or creates) the in-memory {@link Session} object appropriate
-     *  for this request.<p>
-     * 
-     *  Auth commands do not create a session by default, as issues with the 
-     *  ordering of operations might cause the new session to be for the old
-     *  credentials rather than for the new ones.
-     * 
-     * @return <code>null</code> in all cases */
-    public Session getSession(Map context) {
-        return null;
-    }
-
-	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         AuthToken at = null;
         Account acct = null;
@@ -118,7 +106,7 @@ public class Auth extends AdminDocumentHandler {
                         new String[] {"cmd", "AdminAuth","account", name})); 
             
                 Map<String, Object> authCtxt = new HashMap<String, Object>();
-                authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, (String)context.get(SoapEngine.ORIG_REQUEST_IP));
+                authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, context.get(SoapEngine.ORIG_REQUEST_IP));
                 authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, namePassedIn);
                 prov.authAccount(acct, password, "soap", authCtxt);
                 checkAdmin(acct);
