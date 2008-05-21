@@ -52,6 +52,7 @@ public class TestWaitSet extends TestCase {
     public void cleanUp()
     throws Exception {
         TestUtil.deleteTestData(USER_1_NAME, NAME_PREFIX);
+        TestUtil.deleteTestData(USER_2_NAME, NAME_PREFIX);
         try {
             Mailbox wsMbox = TestUtil.getMailbox(WS_USER_NAME);
             wsMbox.deleteMailbox();
