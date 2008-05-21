@@ -186,7 +186,7 @@ public class ZMailboxUtil implements DebugListener {
             }
             return url;
         } catch (URISyntaxException e) {
-            throw ZClientException.CLIENT_ERROR("invlaid URL: "+url, e);
+            throw ZClientException.CLIENT_ERROR("invalid URL: "+url, e);
         }
     }
 
