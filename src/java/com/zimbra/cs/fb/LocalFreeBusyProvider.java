@@ -39,19 +39,6 @@ import com.zimbra.cs.mailbox.calendar.cache.InstanceData;
 
 public class LocalFreeBusyProvider {
 
-    public static FreeBusy getFreeBusy(Account acct, String name, long start, long end) 
-    	throws ServiceException {
-    	return getFreeBusyList(MailboxManager.getInstance().getMailboxByAccount(acct), name, start, end);
-    }
-	public static FreeBusy getFreeBusyList(Mailbox mbox, String name, long start, long end)
-		throws ServiceException {
-		return getFreeBusyList(mbox, name, start, end, null);
-	}
-	public static FreeBusy getFreeBusyList(Mailbox mbox, long start, long end)
-		throws ServiceException {
-		return getFreeBusyList(mbox, start, end, null);
-	}
-
 	/**
 	 * 
 	 * @param mbox
@@ -62,11 +49,6 @@ public class LocalFreeBusyProvider {
 	 * @return
 	 * @throws ServiceException
 	 */
-	public static FreeBusy getFreeBusyList(Mailbox mbox, long start, long end, Appointment exAppt)
-	throws ServiceException {
-		return getFreeBusyList(mbox, mbox.getAccount().getName(), start, end, exAppt);
-	}
-
 	public static FreeBusy getFreeBusyList(Mailbox mbox, String name, long start, long end, Appointment exAppt)
     throws ServiceException {
 	    // Check if this account is an always-free calendar resource.
@@ -163,7 +145,7 @@ public class LocalFreeBusyProvider {
 
         try {
             Mailbox mbox = MailboxManager.getInstance().getMailboxById(1);
-            FreeBusy fb = getFreeBusyList(mbox, 0, Long.MAX_VALUE);
+            FreeBusy fb = getFreeBusyList(mbox, mbox.getAccount().getName(), 0, Long.MAX_VALUE, null);
             System.out.println(fb.toString());
         } catch (ServiceException e){
             System.out.println("EXCEPTION: "+e);

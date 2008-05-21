@@ -34,6 +34,9 @@ public class AclAccessManager extends DomainAccessManager {
     
     private boolean hasRight(Account grantee, NamedEntry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
         try {
+            if (grantee == null)
+                grantee = ACL.ANONYMOUS_ACCT;
+
             // 1. always allow self
             if (grantee != null) {
                 if (target.getId().equals(grantee.getId()))

@@ -28,6 +28,9 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -117,7 +120,11 @@ public class FreeBusyQuery {
     					user2 = false;
     			}
         		if (Provisioning.onLocalServer(acct) && !user2) {
-        			local.add(LocalFreeBusyProvider.getFreeBusy(acct, id, mStart, mEnd));
+        		    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+        		    OperationContext octxt = null;
+        		    if (mCtxt != null)
+        		        octxt = new OperationContext(mCtxt.getAuthToken());
+        		    local.add(mbox.getFreeBusy(octxt, id, mStart, mEnd));
         		} else {
         			remote.addFreeBusyRequest(mRequestor, acct, id, mStart, mEnd);
         		}

@@ -162,7 +162,7 @@ public abstract class FreeBusyProvider {
 		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(accountId);
 		if (mbox == null)
 			return null;
-		return mbox.getFreeBusy(cachedFreeBusyStartTime(), cachedFreeBusyEndTime());
+		return mbox.getFreeBusy(null, cachedFreeBusyStartTime(), cachedFreeBusyEndTime());
 	}
 	
 	protected String getEmailAddress(String accountId) throws ServiceException {

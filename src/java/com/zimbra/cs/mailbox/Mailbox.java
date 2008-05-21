@@ -49,6 +49,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
@@ -3672,9 +3673,38 @@ public class Mailbox {
         ZimbraQuery zq = new ZimbraQuery(this, params);
         return zq.toQueryString();
     }
-    
-    public synchronized FreeBusy getFreeBusy(long start, long end) throws ServiceException {
-        return com.zimbra.cs.fb.LocalFreeBusyProvider.getFreeBusyList(this, start, end);
+
+    public synchronized FreeBusy getFreeBusy(OperationContext octxt, long start, long end)
+    throws ServiceException {
+        return getFreeBusy(octxt, getAccount().getName(), start, end, null);
+    }
+
+    public synchronized FreeBusy getFreeBusy(OperationContext octxt, long start, long end, Appointment exAppt)
+    throws ServiceException {
+        return getFreeBusy(octxt, getAccount().getName(), start, end, exAppt);
+    }
+
+    public synchronized FreeBusy getFreeBusy(OperationContext octxt, String name, long start, long end)
+    throws ServiceException {
+        return getFreeBusy(octxt, name, start, end, null);
+    }
+
+    public synchronized FreeBusy getFreeBusy(OperationContext octxt, String name, long start, long end, Appointment exAppt)
+    throws ServiceException {
+        Account authAcct;
+        boolean asAdmin;
+        if (octxt != null) {
+            authAcct = octxt.getAuthenticatedUser();
+            asAdmin = octxt.isUsingAdminPrivileges();
+        } else {
+            authAcct = null;
+            asAdmin = false;
+        }
+        AccessManager accessMgr = AccessManager.getInstance();
+        if (accessMgr.canPerform(authAcct, getAccount(), Right.viewFreeBusy, asAdmin, true))
+            return com.zimbra.cs.fb.LocalFreeBusyProvider.getFreeBusyList(this, name, start, end, exAppt);
+        else
+            return FreeBusy.emptyFreeBusy(name, start, end);
     }
 
     private void addDomains(HashMap<String, DomainItem> domainItems, HashSet<BrowseTerm> newDomains, int flag) {

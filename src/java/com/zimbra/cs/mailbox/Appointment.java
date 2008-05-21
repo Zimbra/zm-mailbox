@@ -205,6 +205,7 @@ public class Appointment extends CalendarItem {
         if (et < now)
             return null;
 
+        OperationContext octxt = new OperationContext(getAccount());
         Collection<Instance> instances = expandInstances(st, et, false);
         List<Availability> list = new ArrayList<Availability>(instances.size());
         int numConflicts = 0;
@@ -215,7 +216,7 @@ public class Appointment extends CalendarItem {
                 long start = inst.getStart();
                 long end = inst.getEnd();
                 FreeBusy fb =
-                    com.zimbra.cs.fb.LocalFreeBusyProvider.getFreeBusyList(getMailbox(), start, end, this);
+                    getMailbox().getFreeBusy(octxt, start, end, this);
                 String status = fb.getBusiest();
                 if (!IcalXmlStrMap.FBTYPE_FREE.equals(status)) {
                     list.add(new Availability(start, end, status, fb));
