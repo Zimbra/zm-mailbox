@@ -13,6 +13,7 @@ import com.zimbra.common.util.CliUtil;
 
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
@@ -96,15 +97,15 @@ public class TestACL extends TestCase {
         boolean result;
         
         // Account interface
-        result = mAM.canPerform(grantee, target, right, asAdmin, defaultValue);
+        result = mAM.canPerform(grantee==null?null:grantee, target, right, asAdmin, defaultValue);
         assertEquals(expected, result);
         
         // AuthToken interface
-        result = mAM.canPerform(AuthProvider.getAuthToken(grantee), target, right, asAdmin, defaultValue);
+        result = mAM.canPerform(grantee==null?null:AuthProvider.getAuthToken(grantee), target, right, asAdmin, defaultValue);
         assertEquals(expected, result);
         
         // String interface
-        result = mAM.canPerform(grantee.getName(), target, right, asAdmin, defaultValue);
+        result = mAM.canPerform(grantee==null?null:grantee.getName(), target, right, asAdmin, defaultValue);
         assertEquals(expected, result);
     }
     
@@ -131,38 +132,38 @@ public class TestACL extends TestCase {
          */
         Account target = prov.createAccount(getEmailAddr("target-test-zimbra"), "test123", null);
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
-        aces.add(new ZimbraACE(goodguy, Right.viewFreeBusy, false));
-        aces.add(new ZimbraACE(goodguy, Right.invite, false));
-        aces.add(new ZimbraACE(badguy, Right.viewFreeBusy, true));
-        aces.add(new ZimbraACE(wrongguy, Right.viewFreeBusy, true));
-        aces.add(new ZimbraACE(wrongguy, Right.viewFreeBusy, false));
-        aces.add(new ZimbraACE(ACL.ANONYMOUS_ACCT, Right.viewFreeBusy, false));
+        aces.add(new ZimbraACE(goodguy, Right.RT_viewFreeBusy, false));
+        aces.add(new ZimbraACE(goodguy, Right.RT_invite, false));
+        aces.add(new ZimbraACE(badguy, Right.RT_viewFreeBusy, true));
+        aces.add(new ZimbraACE(wrongguy, Right.RT_viewFreeBusy, true));
+        aces.add(new ZimbraACE(wrongguy, Right.RT_viewFreeBusy, false));
+        aces.add(new ZimbraACE(ACL.ANONYMOUS_ACCT, Right.RT_viewFreeBusy, false));
         PermUtil.modifyACEs(target, aces);
         
         // self should always be allowed
-        verify(target, target, Right.invite, true);
+        verify(target, target, Right.RT_invite, true);
         
         // admin access using admin privileges
-        verify(admin, target, Right.invite, true, true);
+        verify(admin, target, Right.RT_invite, true, true);
         
         // admin access NOT using admin privileges
-        verify(admin, target, Right.invite, false, false);
+        verify(admin, target, Right.RT_invite, false, false);
         
         // specifically allowed
-        verify(goodguy, target, Right.viewFreeBusy, true);
-        verify(goodguy, target, Right.invite, true);
+        verify(goodguy, target, Right.RT_viewFreeBusy, true);
+        verify(goodguy, target, Right.RT_invite, true);
         
         // specifically denied
-        verify(badguy, target, Right.viewFreeBusy, false);
+        verify(badguy, target, Right.RT_viewFreeBusy, false);
         
         // specifically allowed and denied
-        verify(wrongguy, target, Right.viewFreeBusy, false);
+        verify(wrongguy, target, Right.RT_viewFreeBusy, false);
         
         // not specifically allowed or denied, but PUB is allowed
-        verify(nobody, target, Right.viewFreeBusy, true);
+        verify(nobody, target, Right.RT_viewFreeBusy, true);
         
         // not specifically allowed or denied
-        verify(nobody, target, Right.invite, false);
+        verify(nobody, target, Right.RT_invite, false);
     }
     
     /*
@@ -182,14 +183,14 @@ public class TestACL extends TestCase {
          */
         Account target = prov.createAccount(getEmailAddr("target-test-guest"), "test123", null);
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
-        aces.add(new ZimbraACE(ACL.ANONYMOUS_ACCT, Right.viewFreeBusy, false));
+        aces.add(new ZimbraACE(ACL.ANONYMOUS_ACCT, Right.RT_viewFreeBusy, false));
         PermUtil.modifyACEs(target, aces);
         
         // right allowed for PUB
-        verify(guest, target, Right.viewFreeBusy, true);
+        verify(guest, target, Right.RT_viewFreeBusy, true);
         
         // right not in ACL
-        verify(guest, target, Right.invite, false);
+        verify(guest, target, Right.RT_invite, false);
     }
     
     /*
@@ -208,11 +209,16 @@ public class TestACL extends TestCase {
          */
         Account target = prov.createAccount(getEmailAddr("target-test-anon"), "test123", null);
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
-        aces.add(new ZimbraACE(ACL.ANONYMOUS_ACCT, Right.viewFreeBusy, false));
+        aces.add(new ZimbraACE(ACL.ANONYMOUS_ACCT, Right.RT_viewFreeBusy, false));
         PermUtil.modifyACEs(target, aces);
         
-        verify(anon, target, Right.viewFreeBusy, true);
-        verify(anon, target, Right.invite, false);
+        // anon grantee
+        verify(anon, target, Right.RT_viewFreeBusy, true);
+        verify(anon, target, Right.RT_invite, false);
+        
+        // null grantee
+        verify(null, target, Right.RT_viewFreeBusy, true);
+        verify(null, target, Right.RT_invite, false);
     }
     
     public void testGroup() throws Exception {
@@ -236,18 +242,18 @@ public class TestACL extends TestCase {
          */
         Account target = prov.createAccount(getEmailAddr("target-test-group"), "test123", null);
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
-        aces.add(new ZimbraACE(user1, Right.viewFreeBusy, true));
-        aces.add(new ZimbraACE(groupA, Right.viewFreeBusy, false));
+        aces.add(new ZimbraACE(user1, Right.RT_viewFreeBusy, true));
+        aces.add(new ZimbraACE(groupA, Right.RT_viewFreeBusy, false));
         PermUtil.modifyACEs(target, aces);
         
         // group member, but account is specifically denied
-        verify(user1, target, Right.viewFreeBusy, false);
+        verify(user1, target, Right.RT_viewFreeBusy, false);
         
         // group member
-        verify(user2, target, Right.viewFreeBusy, true);
+        verify(user2, target, Right.RT_viewFreeBusy, true);
         
         // not group member
-        verify(user3, target, Right.viewFreeBusy, false);
+        verify(user3, target, Right.RT_viewFreeBusy, false);
     }
     
     /*
@@ -275,7 +281,6 @@ public class TestACL extends TestCase {
         }
     }
 
-    
     public static void main(String[] args) throws Exception {
         CliUtil.toolSetup("INFO");
         TestUtil.runTest(new TestSuite(TestACL.class));
