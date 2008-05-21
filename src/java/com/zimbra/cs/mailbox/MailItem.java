@@ -260,7 +260,9 @@ public abstract class MailItem implements Comparable<MailItem> {
 
     public static final class TypedIdList implements Iterable<Map.Entry<Byte,List<Integer>>> {
         private Map<Byte,List<Integer>> mIds = new HashMap<Byte,List<Integer>>();
-        
+        public TypedIdList()                   {}
+        public TypedIdList(TypedIdList other)  { this();  if (other != null) add(other); }
+
         public void add(byte type, Integer id) {
             if (id == null)
                 return;
