@@ -183,11 +183,10 @@ public abstract class StoreManager {
     /**
      * Deletes a user's entire store.  SHOULD BE CALLED CAREFULLY.  No going back.
      * @param mbox
-     * @param volume 
      * @return true if store was actually deleted
      * @throws IOException
      * @throws ServiceException
      */
-    public abstract boolean deleteStore(Mailbox mbox, int volume)
+    public abstract boolean deleteStore(Mailbox mbox)
     throws IOException, ServiceException;
 }
