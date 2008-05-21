@@ -481,19 +481,20 @@ public class IMChat extends ClassLogger {
             xmppMsg.setThread(this.getThreadId());
             xmppMsg.setType(org.xmpp.packet.Message.Type.chat);
         }
-        
-        if (message.getBody(Lang.DEFAULT) != null)
-            xmppMsg.setBody(message.getBody(Lang.DEFAULT).getPlainText());
 
         if (message.getSubject(Lang.DEFAULT) != null)
             xmppMsg.setSubject(message.getSubject(Lang.DEFAULT).getPlainText());
+        
+        if (message.getBody(Lang.DEFAULT) != null) {
+            xmppMsg.setBody(message.getBody(Lang.DEFAULT).getPlainText());
 
-        if (message.getBody().hasXHTML()) {
-            //
-            // ADD XHTML BODY PART HERE
-            //
-            org.dom4j.Element html = xmppMsg.addChildElement("html", "http://jabber.org/protocol/xhtml-im");
-            html.add(message.getBody().getXHTML().createCopy());
+            if (message.getBody().hasXHTML()) {
+                //
+                // ADD XHTML BODY PART HERE
+                //
+                org.dom4j.Element html = xmppMsg.addChildElement("html", "http://jabber.org/protocol/xhtml-im");
+                html.add(message.getBody().getXHTML().createCopy());
+            }
         }
         
         if (message.isTyping()) {
