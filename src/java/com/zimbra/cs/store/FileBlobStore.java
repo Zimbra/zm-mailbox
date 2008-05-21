@@ -387,10 +387,10 @@ public class FileBlobStore extends StoreManager {
         return is;
     }
 
-	public boolean deleteStore(Mailbox mbox, int volume)
+	public boolean deleteStore(Mailbox mbox)
     throws IOException {
         for (Volume vol : Volume.getAll()) {
-            FileUtil.deleteDir(new File(vol.getMailboxDir(mbox.getId(), Volume.TYPE_MESSAGE)));
+            FileUtil.deleteDir(new File(vol.getMessageRootDir(mbox.getId())));
         }
         return true;
 	}

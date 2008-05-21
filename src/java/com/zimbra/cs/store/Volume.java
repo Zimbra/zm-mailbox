@@ -685,8 +685,10 @@ public class Volume {
         sb = new StringBuffer(capacity);
         sb.append(mRootPath)
             .append(File.separator).append(dir)
-            .append(File.separator).append(mboxId)
-            .append(File.separator).append(subdir);
+            .append(File.separator).append(mboxId);
+        if (subdir != null) {
+            sb.append(File.separator).append(subdir);
+        }
         return sb;
     }
 
@@ -696,16 +698,16 @@ public class Volume {
     }
 
     public String getBlobDir(int mboxId, int itemId) {
-        return getItemDir(mboxId, itemId, SUBDIR_MESSAGE);
-    }
-
-    public String getItemDir(int mboxId, int itemId, String subdir) {
         long dir = itemId >> mFileBits;
         dir &= mFileGroupBitMask;
 
-        StringBuffer sb = getMailboxDirStringBuffer(mboxId, subdir, 10);
+        StringBuffer sb = getMailboxDirStringBuffer(mboxId, SUBDIR_MESSAGE, 10);
         sb.append(File.separator).append(dir);
         return sb.toString();
+    }
+    
+    public String getMessageRootDir(int mboxId) {
+        return getMailboxDirStringBuffer(mboxId, null, 0).toString();
     }
 
     public String toString() {

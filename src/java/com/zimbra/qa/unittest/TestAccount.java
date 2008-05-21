@@ -17,9 +17,14 @@
 
 package com.zimbra.qa.unittest;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
+import junit.framework.TestCase;
+
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -28,12 +33,9 @@ import com.zimbra.cs.client.soap.LmcDeleteAccountRequest;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbResults;
 import com.zimbra.cs.db.DbUtil;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.common.util.ZimbraLog;
-
-import junit.framework.TestCase;
+import com.zimbra.cs.store.Volume;
 
 
 /**
@@ -42,7 +44,6 @@ import junit.framework.TestCase;
 public class TestAccount extends TestCase {
 
     private static String USER_NAME = "TestAccount";
-    // xxx move this to TestUtil
     private static String PASSWORD = "test123";
 
     public void setUp()
@@ -79,6 +80,13 @@ public class TestAccount extends TestCase {
         results = DbUtil.executeQuery("SHOW DATABASES LIKE '" + dbName + "'");
         assertEquals("Could not find mailbox database", 1, results.size());
         
+        // Add a message to the account and confirm that the message directory exists
+        TestUtil.addMessage(mbox, "TestAccount testDeleteAccount");
+        String storePath = Volume.getCurrentMessageVolume().getMessageRootDir(mbox.getId());
+        File storeDir = new File(storePath);
+        assertTrue(storePath + " does not exist", storeDir.exists());
+        assertTrue(storePath + " is not a directory", storeDir.isDirectory());
+        
         // Delete the account
         LmcSession session = TestUtil.getAdminSoapSession();
         LmcDeleteAccountRequest req = new LmcDeleteAccountRequest(account.getId());
@@ -89,6 +97,9 @@ public class TestAccount extends TestCase {
         results = DbUtil.executeQuery(
             "SELECT COUNT(*) FROM mailbox WHERE id = " + mbox.getId());
         assertEquals("Unexpected row in mailbox table", 0, results.getInt(1));
+        
+        // Confirm that the message directory was deleted
+        assertFalse(storePath + " exists", storeDir.exists());
     }
     
     private void cleanUp()

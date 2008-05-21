@@ -1584,12 +1584,14 @@ public class Mailbox {
                 try {
                     if (mMailboxIndex != null)
                         mMailboxIndex.deleteIndex();
-                } catch (IOException iox) { }
+                } catch (IOException iox) {
+                    ZimbraLog.store.warn("Unable to delete index data.", iox);
+                }
                 try {
-                    StoreManager sm = StoreManager.getInstance();
-                    for (Volume vol : Volume.getAll())
-                        sm.deleteStore(this, vol.getId());
-                } catch (IOException iox) { }
+                    StoreManager.getInstance().deleteStore(this);
+                } catch (IOException iox) {
+                    ZimbraLog.store.warn("Unable to delete message data.", iox);
+                }
 
                 // twiddle the mailbox lock [must be the last command of this function!]
                 //   (so even *we* can't access this Mailbox going forward)
