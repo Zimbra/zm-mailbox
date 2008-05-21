@@ -694,16 +694,24 @@ abstract class ImapRequest {
         return parent;
     }
 
-    ImapSearch readSearch() throws IOException, ImapParseException {
+    ImapSearch readSearch(boolean forSort) throws IOException, ImapParseException {
         String charset = null;
-        if ("CHARSET".equals(peekATOM())) {
-            skipAtom("CHARSET");  skipSpace();  charset = readAstring();  skipSpace();
+        // SORT requires a charset; for SEARCH it's optional
+        if (forSort || "CHARSET".equals(peekATOM())) {
+            // in SEARCH, it's "CHARSET utf-8"; in SORT there's no "CHARSET "
+            if (!forSort) {
+                skipAtom("CHARSET");  skipSpace();
+            }
+            // read and validate the charset; unsupported charsets get tagged "NO [BADCHARSET]"
+            charset = readAstring();
             boolean charsetOK = false;
             try {
                 charsetOK = Charset.isSupported(charset);
             } catch (IllegalCharsetNameException icne) { }
             if (!charsetOK)
-                throw new ImapParseException(mTag, "BADCHARSET", "unknown charset: " + charset, true);
+                throw new ImapParseException(mTag, "BADCHARSET", "unknown charset: " + charset.replace('\r', ' ').replace('\n', ' '), true);
+            // go back to parsing the search
+            skipSpace();
         }
         return readSearchClause(charset, MULTIPLE_CLAUSES, new AndOperation());
     }

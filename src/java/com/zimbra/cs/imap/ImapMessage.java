@@ -29,6 +29,7 @@ import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
@@ -68,7 +69,8 @@ import com.zimbra.cs.util.JMSession;
 public class ImapMessage implements Comparable<ImapMessage> {
     static class ImapMessageSet extends TreeSet<ImapMessage> {
         private static final long serialVersionUID = 4831178352505203361L;
-        ImapMessageSet()  { super(new SequenceComparator()); }
+        ImapMessageSet()                              { super(new SequenceComparator()); }
+        ImapMessageSet(Collection<ImapMessage> msgs)  { this();  addAll(msgs); }
     }
 
     public static final List<Byte> SUPPORTED_TYPES = Arrays.asList(MailItem.TYPE_MESSAGE, MailItem.TYPE_CHAT, MailItem.TYPE_CONTACT);

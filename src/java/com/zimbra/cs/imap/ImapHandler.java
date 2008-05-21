@@ -626,7 +626,7 @@ abstract class ImapHandler extends ProtocolHandler {
                             if (options == 0)
                                 options = RETURN_ALL;
                         }
-                        ImapSearch i4search = req.readSearch();
+                        ImapSearch i4search = req.readSearch(false);
                         checkEOF(tag, req);
                         return isProxied ? mProxy.proxy(req) : doSEARCH(tag, i4search, byUID, options);
                     } else if (command.equals("STARTTLS") && extensionEnabled("STARTTLS")) {
@@ -652,6 +652,55 @@ abstract class ImapHandler extends ProtocolHandler {
                         req.skipChar(')');
                         checkEOF(tag, req);
                         return doSTATUS(tag, path, status);
+                    } else if (command.equals("SORT") && extensionEnabled("SORT")) {
+                        Integer options = null;
+                        req.skipSpace();
+                        if ("RETURN".equals(req.peekATOM()) && extensionEnabled("ESORT")) {
+                            options = 0;
+                            req.skipAtom("RETURN");  req.skipSpace();  req.skipChar('(');
+                            while (req.peekChar() != ')') {
+                                if (options != 0)
+                                    req.skipSpace();
+                                String option = req.readATOM();
+                                if (option.equals("MIN"))         options |= RETURN_MIN;
+                                else if (option.equals("MAX"))    options |= RETURN_MAX;
+                                else if (option.equals("ALL"))    options |= RETURN_ALL;
+                                else if (option.equals("COUNT"))  options |= RETURN_COUNT;
+                                else if (option.equals("SAVE") && extensionEnabled("X-DRAFT-I05-SEARCHRES"))  options |= RETURN_SAVE;
+                                else
+                                    throw new ImapParseException(tag, "unknown RETURN option \"" + option + '"');
+                            }
+                            req.skipChar(')');  req.skipSpace();
+                            if (options == 0)
+                                options = RETURN_ALL;
+                        }
+                        req.skipChar('(');
+                        boolean desc = false;  List<MailboxIndex.SortBy> order = new ArrayList<MailboxIndex.SortBy>(2);
+                        do {
+                            if (desc || !order.isEmpty())
+                                req.skipSpace();
+                            MailboxIndex.SortBy sort;
+                            String key = req.readATOM();
+                            if (key.equals("REVERSE") && !desc)  { desc = true;  continue; }
+                            else if (key.equals("ARRIVAL"))      sort = desc ? MailboxIndex.SortBy.DATE_DESCENDING : MailboxIndex.SortBy.DATE_ASCENDING;
+                            // FIXME: CC sort not implemented
+                            else if (key.equals("CC"))           sort = MailboxIndex.SortBy.NONE;
+                            // FIXME: DATE sorts on INTERNALDATE, not the Date header
+                            else if (key.equals("DATE"))         sort = desc ? MailboxIndex.SortBy.DATE_DESCENDING : MailboxIndex.SortBy.DATE_ASCENDING;
+                            else if (key.equals("FROM"))         sort = desc ? MailboxIndex.SortBy.NAME_DESCENDING : MailboxIndex.SortBy.NAME_ASCENDING;
+                            // FIXME: SIZE sort not implemented
+                            else if (key.equals("SIZE"))         sort = MailboxIndex.SortBy.NONE;
+                            else if (key.equals("SUBJECT"))      sort = desc ? MailboxIndex.SortBy.SUBJ_DESCENDING : MailboxIndex.SortBy.SUBJ_ASCENDING;
+                            // FIXME: TO sort not implemented
+                            else if (key.equals("TO"))           sort = MailboxIndex.SortBy.NONE;
+                            else
+                                throw new ImapParseException(tag, "unknown SORT key \"" + key + '"');
+                            order.add(sort);  desc = false;
+                        } while (order.isEmpty() || req.peekChar() != ')');
+                        req.skipChar(')');  req.skipSpace();
+                        ImapSearch i4search = req.readSearch(true);
+                        checkEOF(tag, req);
+                        return isProxied ? mProxy.proxy(req) : doSORT(tag, i4search, byUID, options, order.get(0));
                     } else if (command.equals("SUBSCRIBE")) {
                         req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mCredentials);
                         checkEOF(tag, req);
@@ -683,7 +732,8 @@ abstract class ImapHandler extends ProtocolHandler {
                 case 'U':
                     if (command.equals("UID")) {
                         req.skipSpace();  command = req.readATOM();
-                        if (command.equals("FETCH") || command.equals("SEARCH") || command.equals("COPY") || command.equals("STORE") || (command.equals("EXPUNGE") && extensionEnabled("UIDPLUS"))) {
+                        if (command.equals("FETCH") || command.equals("SEARCH") || command.equals("COPY") || command.equals("STORE") ||
+                                (command.equals("EXPUNGE") && extensionEnabled("UIDPLUS")) || (command.equals("SORT") && extensionEnabled("SORT"))) {
                             byUID = true;
                             continue;
                         }
@@ -796,9 +846,9 @@ abstract class ImapHandler extends ProtocolHandler {
     }
 
     private static final Set<String> SUPPORTED_EXTENSIONS = new LinkedHashSet<String>(Arrays.asList(
-        "ACL", "BINARY", "CATENATE", "CHILDREN", "CONDSTORE", "ENABLE", "ESEARCH", "I18NLEVEL=1", "ID",
+        "ACL", "BINARY", "CATENATE", "CHILDREN", "CONDSTORE", "ENABLE", "ESEARCH", "ESORT", "I18NLEVEL=1", "ID",
         "IDLE", "LIST-EXTENDED", "LITERAL+", "LOGIN-REFERRALS", "MULTIAPPEND", "NAMESPACE", "QRESYNC",
-        "QUOTA", "RIGHTS=ektx", "SASL-IR", "UIDPLUS", "UNSELECT", "WITHIN", "X-DRAFT-I05-SEARCHRES"
+        "QUOTA", "RIGHTS=ektx", "SASL-IR", "SORT", "UIDPLUS", "UNSELECT", "WITHIN", "X-DRAFT-I05-SEARCHRES"
     ));
 
     protected String getCapabilityString() {
@@ -814,6 +864,7 @@ abstract class ImapHandler extends ProtocolHandler {
         // [CONDSTORE]        RFC 4551: IMAP Extension for Conditional STORE Operation or Quick Flag Changes Resynchronization
         // [ENABLE]           RFC 5161: The IMAP ENABLE Extension
         // [ESEARCH]          RFC 4731: IMAP4 Extension to SEARCH Command for Controlling What Kind of Information Is Returned
+        // [ESORT]            draft-cridland-imap-context-05: Contexts for IMAP4
         // [I18NLEVEL=1]      draft-ietf-imapext-i18n-15: Internet Message Access Protocol Internationalization
         // [ID]               RFC 2971: IMAP4 ID Extension
         // [IDLE]             RFC 2177: IMAP4 IDLE command
@@ -826,14 +877,15 @@ abstract class ImapHandler extends ProtocolHandler {
         // [QUOTA]            RFC 2087: IMAP4 QUOTA extension
         // [RIGHTS=ektx]      RFC 4314: IMAP4 Access Control List (ACL) Extension
         // [SASL-IR]          RFC 4959: IMAP Extension for Simple Authentication and Security Layer (SASL) Initial Client Response
+        // [SORT]             draft-ietf-imapext-sort-20: INTERNET MESSAGE ACCESS PROTOCOL - SORT AND THREAD EXTENSIONS
         // [UIDPLUS]          RFC 4315: Internet Message Access Protocol (IMAP) - UIDPLUS extension
         // [UNSELECT]         RFC 3691: IMAP UNSELECT command
         // [WITHIN]           RFC 5032: WITHIN Search Extension to the IMAP Protocol
         // [X-DRAFT-I05-SEARCHRES]  draft-melnikov-imap-search-res-05: IMAP extension for referencing the last SEARCH result
 
         boolean authenticated = isAuthenticated();
-        String nologin  = mStartedTLS || authenticated || mConfig.allowCleartextLogins()  ? "" : " LOGINDISABLED";
-        String starttls = mStartedTLS || authenticated || !extensionEnabled("STARTTLS")   ? "" : " STARTTLS";
+        String nologin  = mStartedTLS || authenticated || mConfig.allowCleartextLogins() ? "" : " LOGINDISABLED";
+        String starttls = mStartedTLS || authenticated || !extensionEnabled("STARTTLS") ? "" : " STARTTLS";
         String plain    = !allowCleartextLogins() || authenticated || !extensionEnabled("AUTH=PLAIN") ? "" : " AUTH=PLAIN";
         String gss      = authenticated || !isGssAuthEnabled() ? "" : " AUTH=GSSAPI";
         String zimbra   = authenticated || !extensionEnabled("AUTH=" + ZimbraAuthenticator.MECHANISM) ? "" : " AUTH=" + ZimbraAuthenticator.MECHANISM;
@@ -2718,6 +2770,14 @@ abstract class ImapHandler extends ProtocolHandler {
     public static final byte[] ITEM_TYPES = ArrayUtil.toByteArray(ImapMessage.SUPPORTED_TYPES);
 
     boolean doSEARCH(String tag, ImapSearch i4search, boolean byUID, Integer options) throws IOException, ImapParseException {
+        return search(tag, "SEARCH", i4search, byUID, options, MailboxIndex.SortBy.NONE);
+    }
+
+    boolean doSORT(String tag, ImapSearch i4search, boolean byUID, Integer options, MailboxIndex.SortBy sort) throws IOException, ImapParseException {
+        return search(tag, "SORT", i4search, byUID, options, sort);
+    }
+
+    boolean search(String tag, String command, ImapSearch i4search, boolean byUID, Integer options, MailboxIndex.SortBy sort) throws IOException, ImapParseException {
         if (!checkState(tag, State.SELECTED))
             return CONTINUE_PROCESSING;
 
@@ -2734,12 +2794,14 @@ abstract class ImapHandler extends ProtocolHandler {
             throw new ImapParseException(tag, "NOMODSEQ", "cannot SEARCH MODSEQ in this mailbox", true);
 
         boolean saveResults = (options != null && (options & RETURN_SAVE) != 0);
-        ImapMessageSet hits;
+        boolean unsorted = sort == MailboxIndex.SortBy.NONE;
+        ImapMessageSet hits = null;
+        List<ImapMessage> hitlist = null;
         int modseq = 0;
 
         try {
             Mailbox mbox = mSelectedFolder.getMailbox();
-            if (i4search.canBeRunLocally()) {
+            if (unsorted && i4search.canBeRunLocally()) {
                 synchronized (mbox) {
                     hits = i4search.evaluate(mSelectedFolder);
                     hits.remove(null);
@@ -2761,19 +2823,21 @@ abstract class ImapHandler extends ProtocolHandler {
                 params.setIncludeTagDeleted(true);
                 params.setQueryStr(search);
                 params.setTypes(ITEM_TYPES);
-                params.setSortBy(MailboxIndex.SortBy.NONE);
+                params.setSortBy(sort);
                 params.setChunkSize(2000);
                 params.setPrefetch(false);
                 params.setMode(requiresMODSEQ ? Mailbox.SearchResultMode.MODSEQ : Mailbox.SearchResultMode.IDS);
                 ZimbraQueryResults zqr = mbox.search(SoapProtocol.Soap12, getContext(), params);
 
-                hits = new ImapMessageSet();
+                if (unsorted)  hits = new ImapMessageSet();
+                else           hitlist = new ArrayList<ImapMessage>();
                 try {
                     for (ZimbraHit hit = zqr.getNext(); hit != null; hit = zqr.getNext()) {
                         ImapMessage i4msg = mSelectedFolder.getById(hit.getItemId());
                         if (i4msg == null || i4msg.isExpunged())
                             continue;
-                        hits.add(i4msg);
+                        if (unsorted)  hits.add(i4msg);
+                        else           hitlist.add(i4msg);
                         if (requiresMODSEQ)
                             modseq = Math.max(modseq, Math.max(hit.getModifiedSequence(), i4msg.getFlagModseq(mSelectedFolder.getTagset())));
                     }
@@ -2782,46 +2846,50 @@ abstract class ImapHandler extends ProtocolHandler {
                 }
             }
         } catch (ParseException pe) {
-            ZimbraLog.imap.warn("SEARCH failed (bad query)", pe);
-            sendNO(tag, "SEARCH failed");
+            ZimbraLog.imap.warn(command + " failed (bad query)", pe);
+            sendNO(tag, command + " failed");
             return CONTINUE_PROCESSING;
         } catch (ServiceException e) {
-            ZimbraLog.imap.warn("SEARCH failed", e);
-            sendNO(tag, "SEARCH failed");
+            ZimbraLog.imap.warn(command + " failed", e);
+            sendNO(tag, command + " failed");
             return CONTINUE_PROCESSING;
         }
 
+        int size = (unsorted ? hits : hitlist).size();
+        ImapMessage first = size == 0 ? null : (unsorted ? hits.first() : hitlist.get(0));
+        ImapMessage last = size == 0 ? null : (unsorted ? hits.last() : hitlist.get(size - 1));
+
         StringBuilder result = null;
         if (options == null) {
-            result = new StringBuilder("SEARCH");
-            for (ImapMessage i4msg : hits)
+            result = new StringBuilder(command);
+            for (ImapMessage i4msg : unsorted ? hits : hitlist)
                 result.append(' ').append(byUID ? i4msg.imapUid : i4msg.sequence);
         } else if (options != RETURN_SAVE) {
-            result = new StringBuilder("ESEARCH (TAG \"").append(tag).append("\")");
+            result = new StringBuilder("E" + command + " (TAG \"").append(tag).append("\")");
             if (byUID)
                 result.append(" UID");
-            if (!hits.isEmpty() && (options & RETURN_MIN) != 0)
-                result.append(" MIN ").append(byUID ? hits.first().imapUid : hits.first().sequence);
-            if (!hits.isEmpty() && (options & RETURN_MAX) != 0)
-                result.append(" MAX ").append(byUID ? hits.last().imapUid : hits.last().sequence);
+            if (size != 0 && (options & RETURN_MIN) != 0)
+                result.append(" MIN ").append(byUID ? first.imapUid : first.sequence);
+            if (size != 0 && (options & RETURN_MAX) != 0)
+                result.append(" MAX ").append(byUID ? last.imapUid : last.sequence);
             if ((options & RETURN_COUNT) != 0)
-                result.append(" COUNT ").append(hits.size());
-            if (!hits.isEmpty() && (options & RETURN_ALL) != 0)
-                result.append(" ALL ").append(ImapFolder.encodeSubsequence(hits, byUID));
+                result.append(" COUNT ").append(size);
+            if (size != 0 && (options & RETURN_ALL) != 0)
+                result.append(" ALL ").append(ImapFolder.encodeSubsequence(unsorted ? hits : hitlist, byUID));
         }
 
         if (modseq > 0)
             result.append(" (MODSEQ ").append(modseq).append(')');
 
         if (saveResults) {
-            if (hits.isEmpty() || options == RETURN_SAVE || (options & (RETURN_COUNT | RETURN_ALL)) != 0) {
-                mSelectedFolder.saveSearchResults(hits);
+            if (size == 0 || options == RETURN_SAVE || (options & (RETURN_COUNT | RETURN_ALL)) != 0) {
+                mSelectedFolder.saveSearchResults(unsorted ? hits : new ImapMessageSet(hitlist));
             } else {
                 ImapMessageSet saved = new ImapMessageSet();
                 if ((options & RETURN_MIN) != 0)
-                    saved.add(hits.first());
+                    saved.add(first);
                 if ((options & RETURN_MAX) != 0)
-                    saved.add(hits.last());
+                    saved.add(last);
                 mSelectedFolder.saveSearchResults(saved);
             }
         }
@@ -2829,7 +2897,7 @@ abstract class ImapHandler extends ProtocolHandler {
         if (result != null)
             sendUntagged(result.toString());
         sendNotifications(false, false);
-        sendOK(tag, (byUID ? "UID " : "") + "SEARCH completed");
+        sendOK(tag, (byUID ? "UID " : "") + command + " completed");
         return CONTINUE_PROCESSING;
     }
 

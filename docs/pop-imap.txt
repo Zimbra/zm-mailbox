@@ -12,6 +12,7 @@ IMAP protocol and extensions supported:
     [CONDSTORE]        RFC 4551: IMAP Extension for Conditional STORE Operation or Quick Flag Changes Resynchronization
     [ENABLE]           RFC 5161: The IMAP ENABLE Extension
     [ESEARCH]          RFC 4731: IMAP4 Extension to SEARCH Command for Controlling What Kind of Information Is Returned
+    [ESORT]            draft-cridland-imap-context-05: Contexts for IMAP4
     [I18NLEVEL=1]      draft-ietf-imapext-i18n-15: Internet Message Access Protocol Internationalization
     [ID]               RFC 2971: IMAP4 ID Extension
     [IDLE]             RFC 2177: IMAP4 IDLE command
@@ -25,6 +26,7 @@ IMAP protocol and extensions supported:
     [QUOTA]            RFC 2087: IMAP4 QUOTA extension
     [RIGHTS=ektx]      RFC 4314: IMAP4 Access Control List (ACL) Extension
     [SASL-IR]          RFC 4959: IMAP Extension for Simple Authentication and Security Layer (SASL) Initial Client Response
+    [SORT]             draft-ietf-imapext-sort-20: INTERNET MESSAGE ACCESS PROTOCOL - SORT AND THREAD EXTENSIONS
     [UIDPLUS]          RFC 4315: Internet Message Access Protocol (IMAP) - UIDPLUS extension
     [UNSELECT]         RFC 3691: IMAP UNSELECT command
     [WITHIN]           RFC 5032: WITHIN Search Extension to the IMAP Protocol
