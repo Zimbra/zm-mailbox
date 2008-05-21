@@ -74,6 +74,7 @@ import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.BrowseResult.DomainItem;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
+import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
@@ -190,11 +191,12 @@ public class Mailbox {
         int     contacts = NO_CHANGE;
         int     accessed = NO_CHANGE;
         int     recent   = NO_CHANGE;
-        int     idxDeferredCount = NO_CHANGE;
-        Pair<String,Metadata> config = null;
+        int     idxDeferred = NO_CHANGE;
+        Pair<String, Metadata> config = null;
 
         PendingModifications mDirty = new PendingModifications();
         List<Object> mOtherDirtyStuff = new LinkedList<Object>();
+        PendingDelete deletes = null;
 
         void setTimestamp(long millis) {
             if (depth == 1)
@@ -255,8 +257,15 @@ public class Mailbox {
             indexItemsToDelete.add(id);
         }
 
+        void addPendingDelete(PendingDelete info) {
+            if (deletes == null)
+                deletes = info;
+            else
+                deletes.add(info);
+        }
+
         boolean isMailboxRowDirty(MailboxData data) {
-            if (recent != NO_CHANGE || size != NO_CHANGE || contacts != NO_CHANGE || idxDeferredCount != NO_CHANGE)
+            if (recent != NO_CHANGE || size != NO_CHANGE || contacts != NO_CHANGE || idxDeferred != NO_CHANGE)
                 return true;
             if (itemId != NO_CHANGE && itemId / DbMailbox.ITEM_CHECKPOINT_INCREMENT > data.lastItemId / DbMailbox.ITEM_CHECKPOINT_INCREMENT)
                 return true;
@@ -270,8 +279,8 @@ public class Mailbox {
             active = false;
             conn = null;  octxt = null;  tcon = null;
             depth = 0;
-            size = changeId = itemId = contacts = accessed = recent = idxDeferredCount = NO_CHANGE;
-            sync = null;  config = null;
+            size = changeId = itemId = contacts = accessed = recent = idxDeferred = NO_CHANGE;
+            sync = null;  config = null;  deletes = null;
             itemCache = null;  indexItems.clear(); indexItemsToDelete.clear();
             mDirty.clear();  mOtherDirtyStuff.clear();
             if (ZimbraLog.mailbox.isDebugEnabled())
@@ -718,7 +727,7 @@ public class Mailbox {
     /** Returns the current count of messages with the
      *  {@link Flag#BITMASK_INDEXING_DEFERRED} flag set. */
     public int getIndexDeferredCount() {
-        return (mCurrentChange.idxDeferredCount == MailboxChange.NO_CHANGE ? mData.idxDeferredCount : mCurrentChange.idxDeferredCount);
+        return (mCurrentChange.idxDeferred == MailboxChange.NO_CHANGE ? mData.idxDeferredCount : mCurrentChange.idxDeferred);
     }
 
 
@@ -1009,8 +1018,8 @@ public class Mailbox {
      *  objects affected during the transaction.  Among these "dirty" items
      *  can be:<ul>
      *    <li>The {@link Blob} or {@link MailboxBlob} for a newly-created file.
-     *    <li>The {@link MailItem.PendingDelete} holding blobs and index
-     *        entries to be cleaned up after a {@link MailItem#delete}.
+     *    <li>The {@link PendingDelete} holding blobs and index
+     *        entries to be cleaned up after a {@link MailItem#deletes}.
      *    <li>The SHA1 hash of a conversation's subject stored in
      *        {@link #mConvHashes}.</ul>
      * 
@@ -1018,7 +1027,10 @@ public class Mailbox {
      * @see #commitCache(Mailbox.MailboxChange)
      * @see #rollbackCache(Mailbox.MailboxChange) */
     void markOtherItemDirty(Object obj) {
-        mCurrentChange.mOtherDirtyStuff.add(obj);
+        if (obj instanceof PendingDelete)
+            mCurrentChange.addPendingDelete((PendingDelete) obj);
+        else
+            mCurrentChange.mOtherDirtyStuff.add(obj);
     }
 
     /** Adds the MailItem to the current change's list of things that need
@@ -1056,8 +1068,8 @@ public class Mailbox {
 
     void incrementIndexDeferredCount(int i) {
         assert(Thread.holdsLock(this));
-        int oldCount = mCurrentChange.idxDeferredCount == MailboxChange.NO_CHANGE ? mData.idxDeferredCount : mCurrentChange.idxDeferredCount;
-        mCurrentChange.idxDeferredCount = Math.max(0, oldCount + i);
+        int oldCount = mCurrentChange.idxDeferred == MailboxChange.NO_CHANGE ? mData.idxDeferredCount : mCurrentChange.idxDeferred;
+        mCurrentChange.idxDeferred = Math.max(0, oldCount + i);
     }
 
     /** Returns the maximum number of items to be batched in a single indexing
@@ -3040,8 +3052,7 @@ public class Mailbox {
     }
 
 
-    public synchronized ZVCalendar getZCalendarForCalendarItems(
-            Collection<CalendarItem> calItems,
+    public synchronized ZVCalendar getZCalendarForCalendarItems(Collection<CalendarItem> calItems,
             boolean useOutlookCompatMode, boolean ignoreErrors, boolean allowPrivateAccess)
     throws ServiceException {
         ZVCalendar cal = new ZVCalendar();
@@ -3146,6 +3157,34 @@ public class Mailbox {
     }
 
 
+    public synchronized CalendarData getCalendarSummaryForRange(OperationContext octxt, int folderId, byte itemType, long start, long end)
+    throws ServiceException {
+        Folder folder = getFolderById(folderId);
+        if (!folder.canAccess(ACL.RIGHT_READ))
+            throw MailServiceException.PERM_DENIED("you do not have sufficient permissions on folder " + folder.getName());
+        return CalendarCache.getInstance().getCalendarSummary(octxt, this, folderId, itemType, start, end, true);
+    }
+
+    public synchronized List<CalendarData> getAllCalendarsSummaryForRange(OperationContext octxt, byte itemType, long start, long end)
+    throws ServiceException {
+        List<CalendarData> list = new ArrayList<CalendarData>();
+        for (Folder folder : listAllFolders()) {
+            if (folder.inTrash() || folder.inSpam())
+                continue;
+            // Only look at folders of right view type.  We might have to relax this to allow appointments/tasks
+            // in any folder, but that requires scanning too many folders each time, most of which don't contain
+            // any calendar items.
+            if (folder.getDefaultView() != itemType)
+                continue;
+            if (!folder.canAccess(ACL.RIGHT_READ))
+                continue;
+            CalendarData calData = CalendarCache.getInstance().getCalendarSummary(octxt, this, folder.getId(), itemType, start, end, true);
+            if (calData != null)
+                list.add(calData);
+        }
+        return list;
+    }
+
     /** Returns a <tt>Collection</tt> of all {@link CalendarItem}s which
      *  overlap the specified time period.  There is no guarantee that the
      *  returned calendar items actually contain a recurrence within the range;
@@ -3213,7 +3252,6 @@ public class Mailbox {
         return getCalendarItemsForRange(
                 MailItem.TYPE_UNKNOWN, octxt, start, end, folderId, excludeFolders);
     }
-
     
      public synchronized Collection<CalendarItem> getCalendarItemsAll(
             byte type,
@@ -3425,7 +3463,7 @@ public class Mailbox {
                     if (items.size() != deferredCount) {
                         if (ZimbraLog.mailbox.isDebugEnabled())
                             ZimbraLog.mailbox.debug("IndexDeferredItems: Deferred count out of sync - found "+items.size()+" deferred items (count="+getIndexDeferredCount()+")");
-                        mCurrentChange.idxDeferredCount = items.size();
+                        mCurrentChange.idxDeferred = items.size();
                     } else {
                         if (ZimbraLog.mailbox.isDebugEnabled())
                             ZimbraLog.mailbox.debug("IndexDeferredItems: found "+items.size()+" deferred items (count="+getIndexDeferredCount()+")");
@@ -5486,26 +5524,17 @@ public class Mailbox {
                 item.delete(MailItem.DeleteScope.ENTIRE_ITEM, false);
             }
 
-            // collect all the tombstones and write once
-            MailItem.TypedIdList tombstones = collectPendingTombstones();
-            if (tombstones != null && !tombstones.isEmpty())
+            // deletes have already been collected, so fetch the tombstones and write once
+            if (isTrackingSync() && mCurrentChange.deletes != null) {
+                MailItem.TypedIdList tombstones = mCurrentChange.deletes.itemIds;
+                if (tombstones != null && !tombstones.isEmpty())
                     DbMailItem.writeTombstones(this, tombstones);
+            }
 
             success = true;
         } finally {
             endTransaction(success);
         }
-    }
-
-    MailItem.TypedIdList collectPendingTombstones() {
-        if (!isTrackingSync())
-            return null;
-
-        MailItem.TypedIdList tombstones = new MailItem.TypedIdList();
-        for (Object obj : mCurrentChange.mOtherDirtyStuff)
-            if (obj instanceof MailItem.PendingDelete)
-                tombstones.add(((MailItem.PendingDelete) obj).itemIds);
-        return tombstones;
     }
 
     public synchronized Tag createTag(OperationContext octxt, String name, byte color) throws ServiceException {
@@ -6164,10 +6193,12 @@ public class Mailbox {
             if (userSentTimeout > 0)
                 Folder.purgeMessages(this, sent, getOperationTimestamp() - userSentTimeout, null);
 
-            // collect all the tombstones and write once
-            MailItem.TypedIdList tombstones = collectPendingTombstones();
-            if (tombstones != null && !tombstones.isEmpty())
-                DbMailItem.writeTombstones(this, tombstones);
+            // deletes have already been collected, so fetch the tombstones and write once
+            if (isTrackingSync() && mCurrentChange.deletes != null) {
+                MailItem.TypedIdList tombstones = mCurrentChange.deletes.itemIds;
+                if (tombstones != null && !tombstones.isEmpty())
+                    DbMailItem.writeTombstones(this, tombstones);
+            }
 
             success = true;
         } finally {
@@ -6192,7 +6223,7 @@ public class Mailbox {
             beginTransaction("purgeImapDeleted", octxt, redoRecorder);
 
             Set<Folder> purgeable = getAccessibleFolders((short) (ACL.RIGHT_READ | ACL.RIGHT_DELETE));
-            MailItem.PendingDelete info = DbMailItem.getImapDeleted(this, purgeable);
+            PendingDelete info = DbMailItem.getImapDeleted(this, purgeable);
             MailItem.delete(this, info, null, MailItem.DeleteScope.ENTIRE_ITEM, true);
             success = true;
         } finally {
@@ -6909,33 +6940,33 @@ public class Mailbox {
                     mData.configKeys.add(change.config.getFirst());
                 }
             }
-            if (change.idxDeferredCount != MailboxChange.NO_CHANGE)
-                mData.idxDeferredCount = change.idxDeferredCount;
-
-            // accumulate all the info about deleted items; don't care about committed changes to external items
-            MailItem.PendingDelete deleted = null;
-            for (Object obj : change.mOtherDirtyStuff) {
-                if (obj instanceof MailItem.PendingDelete)
-                    deleted = ((MailItem.PendingDelete) obj).add(deleted);
-            }
+            if (change.idxDeferred != MailboxChange.NO_CHANGE)
+                mData.idxDeferredCount = change.idxDeferred;
 
             // delete any index entries associated with items deleted from db
-            if (deleted != null && deleted.indexIds != null && deleted.indexIds.size() > 0 && mMailboxIndex != null) {
+            PendingDelete deletes = mCurrentChange.deletes;
+            if (deletes != null && deletes.indexIds != null && !deletes.indexIds.isEmpty() && mMailboxIndex != null) {
                 try {
-                    List<Integer> idxDeleted = mMailboxIndex.deleteDocuments(deleted.indexIds);
-                    if (idxDeleted.size() != deleted.indexIds.size()) {
+                    List<Integer> idxDeleted = mMailboxIndex.deleteDocuments(deletes.indexIds);
+                    if (idxDeleted.size() != deletes.indexIds.size()) {
                         if (ZimbraLog.index.isInfoEnabled()) 
-                            ZimbraLog.index.info("could not delete all index entries for items: " + deleted.itemIds.getAll());
+                            ZimbraLog.index.info("could not delete all index entries for items: " + deletes.itemIds.getAll());
                     }
                 } catch (IOException e) {
-                    ZimbraLog.index.info("ignoring error while deleting index entries for items: " + deleted.itemIds.getAll(), e);
+                    ZimbraLog.index.info("ignoring error while deleting index entries for items: " + deletes.itemIds.getAll(), e);
                 }
+            }
+
+            // remove cached messages
+            if (deletes != null && deletes.blobs != null) {
+                for (String digest : deletes.blobDigests)
+                    MessageCache.purge(digest);
             }
 
             // delete any blobs associated with items deleted from db/index
             StoreManager sm = StoreManager.getInstance();
-            if (deleted != null && deleted.blobs != null) {
-                for (MailboxBlob blob : deleted.blobs) {
+            if (deletes != null && deletes.blobs != null) {
+                for (MailboxBlob blob : deletes.blobs) {
                     try {
                         if (blob != null)
                         sm.delete(blob);
@@ -7076,8 +7107,7 @@ public class Mailbox {
             ZimbraPerf.COUNTER_MBOX_ITEM_CACHE.increment(item == null ? 0 : 100);
         }
 
-        // The per-access log only gets updated when cache or perf debug logging
-        // is on
+        // the per-access log only gets updated when cache or perf debug logging is on
         if (!ZimbraLog.cache.isDebugEnabled())
             return;
 
@@ -7098,7 +7128,7 @@ public class Mailbox {
     private static final String CN_NEXT_ID    = "next_item_id";
     private static final String CN_SIZE       = "size";
 
-    public String toString() {
+    @Override public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("mailbox: {");
         sb.append(CN_ID).append(": ").append(mId).append(", ");
@@ -7107,39 +7137,5 @@ public class Mailbox {
         sb.append(CN_SIZE).append(": ").append(mData.size);
         sb.append("}");
         return sb.toString();
-    }
-
-    public synchronized CalendarData getCalendarSummaryForRange(
-            OperationContext octxt, int folderId, byte itemType, long start, long end)
-    throws ServiceException {
-        Folder folder = getFolderById(folderId);
-        if (!folder.canAccess(ACL.RIGHT_READ))
-            throw MailServiceException.PERM_DENIED(
-                    "you do not have sufficient permissions on folder " + folder.getName());
-        return CalendarCache.getInstance().getCalendarSummary(
-                octxt, this, folderId, itemType, start, end, true);
-    }
-
-    public synchronized List<CalendarData> getAllCalendarsSummaryForRange(
-            OperationContext octxt, byte itemType, long start, long end)
-    throws ServiceException {
-        List<CalendarData> list = new ArrayList<CalendarData>();
-        for (Folder folder : listAllFolders()) {
-            int fid = folder.getId();
-            if (fid == ID_FOLDER_TRASH || fid == ID_FOLDER_SPAM)
-                continue;
-            // Only look at folders of right view type.  We might have to relax this to allow appointments/tasks
-            // in any folder, but that requires scanning too many folders each time, most of which don't contain
-            // any calendar items.
-            if (folder.getDefaultView() != itemType)
-                continue;
-            if (!folder.canAccess(ACL.RIGHT_READ))
-                continue;
-            CalendarData calData = CalendarCache.getInstance().getCalendarSummary(
-                    octxt, this, fid, itemType, start, end, true);
-            if (calData != null)
-                list.add(calData);
-        }
-        return list;
     }
 }
