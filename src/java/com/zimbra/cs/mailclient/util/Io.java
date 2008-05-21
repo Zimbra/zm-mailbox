@@ -59,8 +59,6 @@ public final class Io {
         }
     }
 
-
-
     public static String toString(List<Object> items, String separator) {
         StringBuilder sb = new StringBuilder();
         Iterator<Object> it = items.iterator();

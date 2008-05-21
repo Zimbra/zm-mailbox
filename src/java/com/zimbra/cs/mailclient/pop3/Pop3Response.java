@@ -28,7 +28,7 @@ public class Pop3Response {
     private final String command;
     private String status;
     private String message;
-    private ContentInputStream in;
+    private ContentInputStream cis;
     
     private static final String OK = "+OK";
     private static final String ERR = "-ERR";
@@ -64,7 +64,7 @@ public class Pop3Response {
             message = line.substring(i).trim();
         }
         if (isOK() && hasContent(command)) {
-            in = new ContentInputStream(is);
+            cis = new ContentInputStream(is);
         }
     }
 
@@ -80,6 +80,16 @@ public class Pop3Response {
     public String getMessage() { return message; }
         
     public ContentInputStream getContentInputStream() {
-        return in;
+        return cis;
+    }
+
+    public void dispose() {
+        if (cis != null) {
+            try {
+                cis.close();
+            } catch (IOException e) {
+                // Ignore
+            }
+        }
     }
 }
