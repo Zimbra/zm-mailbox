@@ -18,32 +18,39 @@ package com.zimbra.cs.mailclient.pop3;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.util.TreeSet;
+import java.util.TreeMap;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Arrays;
 import java.io.IOException;
 
 /**
  * Result of POP3 CAPA extension (see rfc2449)
  */
 public class Pop3Capabilities {
-    private Map<String, String[]> capabilities;
+    private Map<String, List<String>> capabilities;
     
     public static final String TOP = "TOP";
     public static final String USER = "USER";
+    public static final String STLS = "STLS";
     public static final String SASL = "SASL";
     public static final String RESP_CODES = "RESP-CODES";
     public static final String LOGIN_DELAY = "LOGIN-DELAY";
     public static final String PIPELINING = "PIPELINING";
     public static final String EXPIRE = "EXPIRE";
     public static final String UIDL = "UIDL";
-    public static final String IMPLENTATION = "IMPLEMENTATION";
+    public static final String IMPLEMENTATION = "IMPLEMENTATION";
 
-    public Pop3Capabilities read(ContentInputStream is) throws IOException {
+    public static Pop3Capabilities read(ContentInputStream is) throws IOException {
         Pop3Capabilities caps = new Pop3Capabilities();
         caps.readCapabilities(is);
         return caps;
     }
     
     private Pop3Capabilities() {
-        capabilities = new HashMap<String, String[]>();
+        capabilities = new HashMap<String, List<String>>();
     }
 
     private void readCapabilities(ContentInputStream is) throws IOException {
@@ -51,13 +58,15 @@ public class Pop3Capabilities {
         while ((line = is.readLine()) != null) {
             String[] words = line.split(" ");
             if (words.length > 0) {
-                String keyword = words[0];
-                String[] params = null;
-                if (words.length > 1) {
-                    params = new String[words.length - 1];
-                    System.arraycopy(words, 1, params, 0, params.length);
+                String key = words[0];
+                List<String> params = capabilities.get(key);
+                if (params == null) {
+                    params = new ArrayList<String>();
+                    capabilities.put(key, params);
                 }
-                capabilities.put(keyword, params);
+                for (int i = 1; i < words.length; i++) {
+                    params.add(words[i]);
+                }
             }
         }
     }
@@ -66,7 +75,7 @@ public class Pop3Capabilities {
         return capabilities.containsKey(cap);
     }
 
-    public String[] getParameters(String cap) {
+    public List<String> getParameters(String cap) {
         return capabilities.get(cap);
     }
 }

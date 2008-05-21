@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.io.EOFException;
 
 /**
- * Input stream for reading POP3 message data.
+ * Input stream for reading POP3 response content.
  */
 public final class ContentInputStream extends InputStream {
     private final InputStream in;
@@ -57,6 +57,16 @@ public final class ContentInputStream extends InputStream {
         return line;
     }
 
+    public void close() throws IOException {
+        skipRemaining();
+    }
+
+    private void skipRemaining() throws IOException {
+        while (read() != -1) {
+            // Do nothing...
+        }
+    }
+    
     private boolean fillBuffer() throws IOException {
         sbuf.setLength(0);
         int b;
@@ -83,5 +93,4 @@ public final class ContentInputStream extends InputStream {
         pos = 0;
         return true;
     }
-
 }

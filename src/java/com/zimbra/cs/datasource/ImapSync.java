@@ -115,6 +115,7 @@ public class ImapSync extends AbstractMailItemImport {
         this.fullSync = fullSync;
         try {
             syncFolders();
+            connection.logout();
         } catch (IOException e) {
             throw ServiceException.FAILURE("Folder sync failed", e);
         } finally {
