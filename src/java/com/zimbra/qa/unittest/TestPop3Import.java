@@ -43,24 +43,21 @@ import com.zimbra.cs.zclient.ZPop3DataSource;
 
 
 public class TestPop3Import extends TestCase {
-
     private static final String USER_NAME = "user1";
     private static final String NAME_PREFIX = TestPop3Import.class.getSimpleName();
     private static final String DATA_SOURCE_NAME = NAME_PREFIX;
     private static final String TEMP_USER_NAME = NAME_PREFIX + "Temp";
 
     @Override
-    public void setUp()
-    throws Exception {
+    public void setUp() throws Exception {
         cleanUp();
         createDataSource();
     }
 
-    /**
+    /*
      * Tests the UID persistence methods in {@link DbPop3Message}.
      */
-    public void testUidPersistence()
-    throws Exception {
+    public void testUidPersistence() throws Exception {
         DataSource ds = getDataSource();
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
 
@@ -96,12 +93,11 @@ public class TestPop3Import extends TestCase {
         assertEquals("Test 3: set size", 0, matchingUids.size());
     }
     
-    /**
+    /*
      * Confirms that the UID database gets cleared when the host name, account
      * name or leave on server flag are changed. 
      */
-    public void testModifyDataSource()
-    throws Exception {
+    public void testModifyDataSource() throws Exception {
         // Test modifying host
         ZPop3DataSource zds = getZDataSource();
         zds.setHost(zds.getHost() + "2");
@@ -118,12 +114,11 @@ public class TestPop3Import extends TestCase {
         modifyAndCheck(zds, true);
     }
     
-    /**
+    /*
      * Confirms that POP3 data is deleted when the mailbox is deleted (bug 14574).  Any leftover POP3
      * data will cause a foreign key violation.
      */
-    public void testDeleteMailbox()
-    throws Exception {
+    public void testDeleteMailbox() throws Exception {
         // Create temp account and mailbox
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.createAccount(TestUtil.getAddress(TEMP_USER_NAME), "test123", null);
@@ -135,11 +130,10 @@ public class TestPop3Import extends TestCase {
         mbox.deleteMailbox();
     }
     
-    /**
+    /*
      * Tests import of a message with a date in the future (bug 17031).
      */
-    public void testBogusDate()
-    throws Exception {
+    public void testBogusDate() throws Exception {
         // Create source account
         Provisioning.getInstance().createAccount(TestUtil.getAddress(TEMP_USER_NAME), "test123", null);
         
@@ -166,11 +160,11 @@ public class TestPop3Import extends TestCase {
         assertEquals("Imported message not found", 1, messages.size());
     }
     
-    /**
+    /*
      * Modifies the data source and confirms whether UID data was deleted.
      */
     private void modifyAndCheck(ZPop3DataSource zds, boolean shouldDeleteData)
-    throws Exception {
+        throws Exception {
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         DataSource ds = getDataSource();
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
@@ -190,8 +184,7 @@ public class TestPop3Import extends TestCase {
         assertEquals("matching UID's: " + StringUtil.join(",", matchingUids), expected, matchingUids.size());
     }
 
-    private ZPop3DataSource getZDataSource()
-    throws Exception {
+    private ZPop3DataSource getZDataSource() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         List<ZDataSource> dataSources = mbox.getAllDataSources();
         for (ZDataSource ds : dataSources) {
@@ -204,13 +197,11 @@ public class TestPop3Import extends TestCase {
     }
     
     @Override
-    public void tearDown()
-    throws Exception {
+    public void tearDown() throws Exception {
         cleanUp();
     }
     
-    private void createDataSource()
-    throws Exception {
+    private void createDataSource() throws Exception {
         Provisioning prov = Provisioning.getInstance();
         Account account = TestUtil.getAccount(USER_NAME);
         int port = Integer.parseInt(TestUtil.getServerAttr(Provisioning.A_zimbraPop3BindPort));
@@ -226,15 +217,13 @@ public class TestPop3Import extends TestCase {
         prov.createDataSource(account, DataSource.Type.pop3, DATA_SOURCE_NAME, attrs);
     }
     
-    private DataSource getDataSource()
-    throws Exception {
+    private DataSource getDataSource() throws Exception {
         Provisioning prov = Provisioning.getInstance();
         Account account = TestUtil.getAccount(USER_NAME);
         return prov.get(account, DataSourceBy.name, DATA_SOURCE_NAME);
     }
     
-    private void cleanUp()
-    throws Exception {
+    private void cleanUp() throws Exception {
         // Delete data source
         Provisioning prov = Provisioning.getInstance();
         DataSource ds = getDataSource();
@@ -245,7 +234,16 @@ public class TestPop3Import extends TestCase {
             prov.deleteDataSource(account, ds.getId());
         }
         TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
-        
         TestUtil.deleteAccount(TEMP_USER_NAME);
+    }
+
+    public static void main(String[] args) throws Exception {
+        TestPop3Import test = new TestPop3Import();
+        test.setUp();
+        try {
+            test.testModifyDataSource();
+        } finally {
+            test.cleanUp();
+        }
     }
 }
