@@ -84,10 +84,10 @@ public class IMGlobalProperties implements PropertyProvider {
         // "xmpp.component.socket.port" // 10015
         // "xmpp.server.socket.port" // 5269
         mLocalConfigMap.put("xmpp.cloudrouting.port", "7335");
-        mLocalConfigMap.put("xmpp.cloudrouting.ssl", "false");
-        
-        // "xmpp.multiplex.socket.port" // 5262
-        
+        mLocalConfigMap.put("xmpp.cloudrouting.ssl", "true");
+
+        mLocalConfigMap.put("xmpp.socket.ssl.allow.untrusted.certs", 
+                            LC.ssl_allow_untrusted_certs.booleanValue() ? "true" : "false");
     }
     
     public String get(String key) {
