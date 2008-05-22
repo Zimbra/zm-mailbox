@@ -700,7 +700,7 @@ abstract class ImapHandler extends ProtocolHandler {
                         req.skipChar(')');  req.skipSpace();
                         ImapSearch i4search = req.readSearch(true);
                         checkEOF(tag, req);
-                        return isProxied ? mProxy.proxy(req) : doSORT(tag, i4search, byUID, options, order.get(0));
+                        return isProxied ? mProxy.proxy(req) : doSORT(tag, i4search, byUID, options, order);
                     } else if (command.equals("SUBSCRIBE")) {
                         req.skipSpace();  ImapPath path = new ImapPath(req.readFolder(), mCredentials);
                         checkEOF(tag, req);
@@ -2770,14 +2770,15 @@ abstract class ImapHandler extends ProtocolHandler {
     public static final byte[] ITEM_TYPES = ArrayUtil.toByteArray(ImapMessage.SUPPORTED_TYPES);
 
     boolean doSEARCH(String tag, ImapSearch i4search, boolean byUID, Integer options) throws IOException, ImapParseException {
-        return search(tag, "SEARCH", i4search, byUID, options, MailboxIndex.SortBy.NONE);
+        return search(tag, "SEARCH", i4search, byUID, options, null);
     }
 
-    boolean doSORT(String tag, ImapSearch i4search, boolean byUID, Integer options, MailboxIndex.SortBy sort) throws IOException, ImapParseException {
-        return search(tag, "SORT", i4search, byUID, options, sort);
+    boolean doSORT(String tag, ImapSearch i4search, boolean byUID, Integer options, List<MailboxIndex.SortBy> order) throws IOException, ImapParseException {
+        return search(tag, "SORT", i4search, byUID, options, order);
     }
 
-    boolean search(String tag, String command, ImapSearch i4search, boolean byUID, Integer options, MailboxIndex.SortBy sort) throws IOException, ImapParseException {
+    boolean search(String tag, String command, ImapSearch i4search, boolean byUID, Integer options, List<MailboxIndex.SortBy> order)
+    throws IOException, ImapParseException {
         if (!checkState(tag, State.SELECTED))
             return CONTINUE_PROCESSING;
 
@@ -2792,6 +2793,15 @@ abstract class ImapHandler extends ProtocolHandler {
         //                  MUST reject any such command with the tagged BAD response."
         if (requiresMODSEQ && !sessionActivated(ActivatedExtension.CONDSTORE))
             throw new ImapParseException(tag, "NOMODSEQ", "cannot SEARCH MODSEQ in this mailbox", true);
+
+        // only supporting one level of sorting sort at this point
+        MailboxIndex.SortBy sort = MailboxIndex.SortBy.NONE;
+        if (order != null && !order.isEmpty()) {
+            for (MailboxIndex.SortBy level : order) {
+                if ((sort = level) != MailboxIndex.SortBy.NONE)
+                    break;
+            }
+        }
 
         boolean saveResults = (options != null && (options & RETURN_SAVE) != 0);
         boolean unsorted = sort == MailboxIndex.SortBy.NONE;
