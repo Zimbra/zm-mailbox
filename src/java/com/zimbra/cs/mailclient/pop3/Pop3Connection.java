@@ -25,10 +25,8 @@ import com.zimbra.cs.mailclient.CommandFailedException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Map;
-import java.util.HashMap;
 import java.util.List;
-import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 
@@ -37,13 +35,14 @@ import javax.security.auth.login.LoginException;
 public final class Pop3Connection extends MailConnection {
     private Pop3Capabilities capabilities;
     private int messageCount;
+    private int maildropSize;
 
     private static final Logger LOGGER = Logger.getLogger(Pop3Connection.class);
     
     private static final String PASS = "PASS";
     private static final String USER = "USER";
     private static final String AUTH = "AUTH";
-    private static final String STLR = "STLR";
+    private static final String STLS = "STLS";
     private static final String QUIT = "QUIT";
     private static final String CAPA = "CAPA";
     private static final String STAT = "STAT";
@@ -85,10 +84,17 @@ public final class Pop3Connection extends MailConnection {
     }
 
     @Override
+    public void login(String pass) throws IOException {
+        super.login(pass);
+        capabilities = capa();
+        stat();
+    }
+    
+    @Override
     public void authenticate(String pass) throws LoginException, IOException {
         super.authenticate(pass);
         capabilities = capa();
-        messageCount = stat();
+        stat();
     }
     
     @Override
@@ -119,7 +125,7 @@ public final class Pop3Connection extends MailConnection {
 
     @Override
     protected void sendStartTls() throws IOException {
-        sendCommandCheckStatus(STLR, null);
+        sendCommandCheckStatus(STLS, null);
     }
 
     private Pop3Capabilities capa() throws IOException {
@@ -131,12 +137,14 @@ public final class Pop3Connection extends MailConnection {
         }
     }
 
-    private int stat() throws IOException {
+    private void stat() throws IOException {
         Pop3Response res = sendCommandCheckStatus(STAT, null);
         String[] parts = res.getMessage().split(" ");
-        if (parts.length > 0) {
+        if (parts.length > 1) {
             try {
-                return Integer.parseInt(parts[0]);
+                messageCount = Integer.parseInt(parts[0]);
+                maildropSize = Integer.parseInt(parts[1]);
+                return;
             } catch (NumberFormatException e) {
                 // Fall through...
             }
@@ -145,8 +153,16 @@ public final class Pop3Connection extends MailConnection {
             STAT, "Invalid STAT response: " + res.getMessage());
     }
 
+    public Pop3Capabilities getCapabilities() {
+        return capabilities;
+    }
+    
     public int getMessageCount() {
         return messageCount;
+    }
+
+    public int getMaildropSize() {
+        return maildropSize;
     }
     
     public int getMessageSize(int msgno) throws IOException {
@@ -167,7 +183,7 @@ public final class Pop3Connection extends MailConnection {
     }
 
     public List<Integer> getMessageSizes() throws IOException {
-        List<Integer> sizes = new ArrayList<Integer>(messageCount);
+        Integer[] sizes = new Integer[messageCount];
         Pop3Response res = sendCommandCheckStatus(LIST, null);
         try {
             ContentInputStream is = res.getContentInputStream();
@@ -180,7 +196,7 @@ public final class Pop3Connection extends MailConnection {
                 try {
                     int msgno = Integer.parseInt(parts[0]);
                     int size = Integer.parseInt(parts[1]);
-                    sizes.set(msgno - 1, size);
+                    sizes[msgno - 1] = size;
                 } catch (Exception e) {
                     break;
                 }
@@ -189,7 +205,7 @@ public final class Pop3Connection extends MailConnection {
                 throw new CommandFailedException(
                     LIST, "Invalid LIST response: " + line);
             }
-            return sizes;
+            return Arrays.asList(sizes);
         } finally {
             res.dispose();
         }
@@ -209,7 +225,7 @@ public final class Pop3Connection extends MailConnection {
     }
 
     public List<String> getMessageUids() throws IOException {
-        List<String> uids = new ArrayList<String>(messageCount);
+        String[] uids = new String[messageCount];
         Pop3Response res = sendCommandCheckStatus(UIDL, null);
         try {
             ContentInputStream is = res.getContentInputStream();
@@ -222,7 +238,7 @@ public final class Pop3Connection extends MailConnection {
                 try {
                     int msgno = Integer.parseInt(parts[0]);
                     String uid = parts[1];
-                    uids.set(msgno - 1, uid);
+                    uids[msgno - 1] = uid;
                 } catch (Exception e) {
                     break;
                 }
@@ -231,7 +247,7 @@ public final class Pop3Connection extends MailConnection {
                 throw new CommandFailedException(
                     LIST, "Invalid UIDL response: " + line);
             }
-            return uids;
+            return Arrays.asList(uids);
         } finally {
             res.dispose();
         }
@@ -241,7 +257,7 @@ public final class Pop3Connection extends MailConnection {
         return sendCommandCheckStatus(RETR, msgno).getContentInputStream();
     }
     
-    public boolean delete(int msgno) throws IOException {
+    public boolean deleteMessage(int msgno) throws IOException {
         return sendCommand(DELE, msgno).isOK();
     }
 

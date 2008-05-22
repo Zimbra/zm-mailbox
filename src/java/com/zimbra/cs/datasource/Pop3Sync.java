@@ -35,6 +35,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.localconfig.LC;
 
 import javax.mail.MessagingException;
+import javax.mail.internet.MailDateFormat;
+import javax.mail.internet.MimeMessage;
 import java.io.IOException;
 import java.io.File;
 import java.io.InputStream;
@@ -44,12 +46,15 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.Set;
 import java.util.List;
+import java.util.Date;
+import java.text.ParseException;
 
 public class Pop3Sync extends AbstractMailItemImport {
     private final Pop3Connection connection;
     private final Mailbox mbox;
     private final boolean attachmentsIndexingEnabled;
     private final byte[] buffer = new byte[4096];
+    private final MailDateFormat mdf = new MailDateFormat();
 
     private static final boolean DEBUG = true;
 
@@ -126,6 +131,7 @@ public class Pop3Sync extends AbstractMailItemImport {
         if (!connection.isClosed()) return;
         try {
             connection.connect();
+            connection.login(dataSource.getDecryptedPassword());
         } catch (IOException e) {
             connection.close();
             throw ServiceException.FAILURE(
@@ -136,15 +142,15 @@ public class Pop3Sync extends AbstractMailItemImport {
     private void fetchAndDeleteMessages()
         throws ServiceException, MessagingException, IOException {
         int count = connection.getMessageCount();
-        LOG.info("Found %d new messages on remote server", count);
-        for (int i = 1; i <= count; i++) {
-            InputStream is = connection.getMessage(i);
+        LOG.info("Found %d new message(s) on remote server", count);
+        for (int msgno = count; msgno > 0; --msgno) {
+            InputStream is = connection.getMessage(msgno);
             try {
                 addMessage(is, null);
             } finally {
                 is.close();
             }
-            connection.delete(i);
+            connection.deleteMessage(msgno);
         }
     }
 
@@ -158,7 +164,7 @@ public class Pop3Sync extends AbstractMailItemImport {
         Set<String> existingUids =
             DbPop3Message.getMatchingUids(mbox, dataSource, uids);
         int count = uids.size() - existingUids.size();
-        LOG.info("Found %d new messages on remote server", count);
+        LOG.info("Found %d new message(s) on remote server", count);
         if (count == 0) {
             return; // No new messages
         }
@@ -166,11 +172,11 @@ public class Pop3Sync extends AbstractMailItemImport {
             throw ServiceException.INVALID_REQUEST(
                 "User attempted to import messages from his own mailbox", null);
         }
-        for (int i = 0; i < uids.size(); i++) {
-            String uid = uids.get(i);
+        for (int msgno = uids.size(); msgno > 0; --msgno) {
+            String uid = uids.get(msgno - 1);
             if (!existingUids.contains(uid)) {
                 LOG.debug("Fetching message with uid = %s", uid);
-                InputStream is = connection.getMessage(i + 1);
+                InputStream is = connection.getMessage(msgno);
                 try {
                     addMessage(is, uid);
                 } finally {
@@ -185,6 +191,11 @@ public class Pop3Sync extends AbstractMailItemImport {
         File tmp = newTempFile(is);
         try {
             ParsedMessage pm = new ParsedMessage(tmp, null, attachmentsIndexingEnabled);
+            Date date = getDateHeader(pm.getMimeMessage(), "Date");
+            if (date != null) {
+                pm.setReceivedDate(date.getTime());
+            }
+            pm.getMimeMessage().getHeader("Date");
             int msgId = addMessage(pm, dataSource.getFolderId(), Flag.BITMASK_UNREAD);
             if (uid != null) {
                 DbPop3Message.storeUid(mbox, dataSource.getId(), uid, msgId);
@@ -194,6 +205,20 @@ public class Pop3Sync extends AbstractMailItemImport {
         }
     }
 
+    private Date getDateHeader(MimeMessage mm, String name) {
+        try {
+            String value = mm.getHeader(name, null);
+            if (value != null && value.trim().length() > 0) {
+                return mdf.parse(value);
+            }
+        } catch (MessagingException e) {
+            // Fall through
+        } catch (ParseException e) {
+            // Fall through
+        }
+        return null;
+    }
+    
     private File newTempFile(InputStream is) throws IOException {
         File tmp = File.createTempFile("pop", null);
         tmp.deleteOnExit();

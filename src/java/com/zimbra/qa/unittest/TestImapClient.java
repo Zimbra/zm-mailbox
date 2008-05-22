@@ -36,7 +36,7 @@ import java.util.List;
 
 import org.apache.log4j.BasicConfigurator;
 
-public class TestImap extends TestCase {
+public class TestImapClient extends TestCase {
     private ImapConnection connection;
 
     private static final String HOST = "localhost";
@@ -205,6 +205,6 @@ public class TestImap extends TestCase {
     }
 
     public static void main(String[] args) throws Exception {
-        new TestImap().testFetch();
+        new TestImapClient().testFetch();
     }
 }

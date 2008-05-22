@@ -79,7 +79,7 @@ public abstract class MailConnection {
         }
     }
 
-    protected void initStreams(InputStream is, OutputStream os)
+    private void initStreams(InputStream is, OutputStream os)
         throws IOException {
         if (config.isTrace()) {
             is = traceIn = newTraceInputStream(is);

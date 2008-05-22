@@ -34,7 +34,7 @@ public class TraceInputStream extends InputStream {
     
     public TraceInputStream(InputStream in, PrintStream traceOut) {
         this.in = in;
-        this.traceOut = traceOut;
+        this.traceOut = traceOut != null ? traceOut : System.out;
     }
 
     public TraceInputStream(InputStream in) {

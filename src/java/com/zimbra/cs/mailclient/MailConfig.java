@@ -34,6 +34,11 @@ public abstract class MailConfig {
         authenticationId = System.getProperty("user.name");
     }
 
+    public MailConfig(String host, boolean sslEnabled) {
+        this.host = host;
+        this.sslEnabled = sslEnabled;
+    }
+
     public abstract String getProtocol();
                                                              
     public void setHost(String host) { this.host = host; }

@@ -40,7 +40,7 @@ public final class Ascii {
         }
         return b >= 0x20 && b <= 0x7e ?
             String.valueOf((char) b) :
-            "\\0x" + toHexChar(b >> 8) + toHexChar(b & 0xf);
+            "\\0x" + toHexChar((b >> 4) & 0xf) + toHexChar(b & 0xf);
     }
 
     public static char toHexChar(int digit) {
@@ -51,7 +51,7 @@ public final class Ascii {
         case 10: case 11: case 12: case 13: case 14: case 15:
             return (char)('a' + digit - 10);
         default:
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException(String.valueOf(digit));
         }
     }
 
