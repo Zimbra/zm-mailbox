@@ -19,6 +19,8 @@ package com.zimbra.cs.im.provider;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
+import javax.net.ssl.SSLSocketFactory;
+
 import org.dom4j.Element;
 import org.jivesoftware.wildfire.ChannelHandler;
 import org.jivesoftware.wildfire.Connection;
@@ -30,6 +32,7 @@ import org.jivesoftware.wildfire.StreamID;
 import org.jivesoftware.wildfire.XMPPServer;
 import org.jivesoftware.wildfire.auth.UnauthorizedException;
 import org.jivesoftware.wildfire.net.CloudRoutingSocketReader;
+import org.jivesoftware.wildfire.net.SSLConfig;
 import org.jivesoftware.wildfire.net.SocketConnection;
 import org.jivesoftware.wildfire.net.StdSocketConnection;
 import org.xmpp.packet.IQ;
@@ -37,6 +40,7 @@ import org.xmpp.packet.JID;
 import org.xmpp.packet.Message;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.PacketError;
+import org.xmpp.packet.PacketExtension;
 import org.xmpp.packet.Presence;
 import org.xmpp.packet.StreamError;
 
@@ -80,7 +84,7 @@ public class CloudRouteSession extends Session {
         
         AuthToken adminAuthToken = ZimbraAuthToken.getZimbraAdminAuthToken();
         
-        Socket socket = new Socket();
+        Socket socket = SSLConfig.createSSLSocket();
         try {
             
             ZimbraLog.im.info("LocalCloudRoute: Trying to connect (3)  " + hostname + ":" + port);
@@ -194,7 +198,11 @@ public class CloudRouteSession extends Session {
     }
     
     public void process(Packet packet) throws UnauthorizedException, PacketException {
-        if (conn != null&& !conn.isClosed()) {
+//        PacketExtension pe = new PacketExtension("hopcount", "zimbra:cloudrouting");
+        String curHopCount = packet.getElement().attributeValue("x-zimbra-hopcount", "0");
+        int hopCount = Integer.parseInt(curHopCount);
+        packet.getElement().addAttribute("x-zimbra-hopcount", Integer.toString(++hopCount));
+        if (hopCount<5 && conn != null&& !conn.isClosed()) {
             ZimbraLog.im.debug("CloudRouteSession delivering packet: "+packet);
             conn.deliver(packet);
         } else {
