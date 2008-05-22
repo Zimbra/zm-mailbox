@@ -54,6 +54,7 @@ public class L10nUtil {
         calendarReplySubjectAccept,
         calendarReplySubjectTentative,
         calendarReplySubjectDecline,
+        calendarReplySubjectPermissionDenied,
 
         calendarDefaultReplyAccept,
         calendarDefaultReplyTentativelyAccept,
@@ -62,6 +63,7 @@ public class L10nUtil {
         calendarResourceDefaultReplyAccept,
         calendarResourceDefaultReplyTentativelyAccept,
         calendarResourceDefaultReplyDecline,
+        calendarResourceDefaultReplyPermissionDenied,
 
         calendarResourceReplyOriginalInviteSeparatorLabel,
 
