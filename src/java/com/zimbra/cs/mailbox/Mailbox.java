@@ -5538,7 +5538,9 @@ public class Mailbox {
     }
 
     MailItem.TypedIdList collectPendingTombstones() {
-        return !isTrackingSync() ? null : new MailItem.TypedIdList(mCurrentChange.deletes.itemIds);
+        if (!isTrackingSync() || mCurrentChange.deletes == null)
+            return null;
+        return new MailItem.TypedIdList(mCurrentChange.deletes.itemIds);
     }
 
     public synchronized Tag createTag(OperationContext octxt, String name, byte color) throws ServiceException {
