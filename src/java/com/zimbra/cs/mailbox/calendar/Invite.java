@@ -1966,7 +1966,7 @@ public class Invite {
                 mFreeBusy, mTransparency, mClass,
                 mStart, mEnd, mDuration,
                 mRecurrence,
-                mIsOrganizer, mOrganizer, mAttendees,
+                mIsOrganizer, mOrganizer, new ArrayList<ZAttendee>(mAttendees),
                 mName, mComment, mLocation,
                 mFlags, mPartStat, mRsvp, mRecurrenceId, mDTStamp, mSeqNo,
                 0, // mMailboxId
