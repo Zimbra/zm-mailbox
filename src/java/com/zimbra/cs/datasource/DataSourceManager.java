@@ -51,15 +51,14 @@ public class DataSourceManager {
     private static final boolean NEW_SYNC_ENABLED =
         LC.data_source_new_sync_enabled.booleanValue();
 
-    /**
+    /*
      * Tests connecting to a data source.  Do not actually create the
      * data source.
      * 
      * @return <code>null</code> if the test succeeded, or the error message
      * if it didn't.
      */
-    public static String test(DataSource ds)
-    throws ServiceException {
+    public static String test(DataSource ds) throws ServiceException {
         ZimbraLog.datasource.info("Testing %s", ds);
         MailItemImport mii = newMailItemImport(ds);
         String error = mii.test();
@@ -73,19 +72,20 @@ public class DataSourceManager {
     }
 
     private static MailItemImport newMailItemImport(DataSource ds)
-            throws ServiceException {
+        throws ServiceException {
         switch (ds.getType()) {
         case imap:
             return NEW_SYNC_ENABLED ? new ImapSync(ds) : new ImapImport(ds);
         case pop3:
-            return new Pop3Import(ds);
+            return NEW_SYNC_ENABLED ? new Pop3Sync(ds) : new Pop3Import(ds);
         default:
             throw new IllegalArgumentException(
                 "Unknown data import type: " + ds.getType());
         }
     }
+
     public static List<ImportStatus> getImportStatus(Account account)
-    throws ServiceException {
+        throws ServiceException {
         List<DataSource> dsList = Provisioning.getInstance().getAllDataSources(account);
         List<ImportStatus> allStatus = new ArrayList<ImportStatus>();
         for (DataSource ds : dsList) {
@@ -163,7 +163,7 @@ public class DataSourceManager {
     }
 
     static void cancelTask(Mailbox mbox, String dsId)
-    throws ServiceException {
+        throws ServiceException {
         ScheduledTaskManager.cancel(DataSourceTask.class.getName(), dsId, mbox.getId(), false);
         DbScheduledTask.deleteTask(DataSourceTask.class.getName(), dsId);
     }
@@ -173,7 +173,7 @@ public class DataSourceManager {
      * <tt>data_source_task</tt> database table.
      */
     public static void updateSchedule(String accountId, String dsId)
-    throws ServiceException {
+        throws ServiceException {
         ZimbraLog.datasource.debug("Updating schedule for account %s, data source %s", accountId, dsId);
         
         // Look up account and data source
