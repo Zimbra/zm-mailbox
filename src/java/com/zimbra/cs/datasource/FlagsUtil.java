@@ -23,6 +23,11 @@ import com.zimbra.cs.mailbox.Flag;
 final class FlagsUtil {
     private static final Flags EMPTY_FLAGS = new Flags();
 
+    // Excludes flags which have no IMAP equivalent
+    private static int ZFLAGS_MASK =
+         Flag.BITMASK_REPLIED | Flag.BITMASK_DELETED |
+         Flag.BITMASK_DRAFT | Flag.BITMASK_FLAGGED | Flag.BITMASK_UNREAD;
+    
     public static int imapToZimbraFlags(Flags flags) {
         int zflags = 0;
         if (flags.isAnswered()) zflags |= Flag.BITMASK_REPLIED;
@@ -35,6 +40,10 @@ final class FlagsUtil {
 
     public static Flags zimbraToImapFlags(int zflags) {
         return getFlagsToAdd(EMPTY_FLAGS, zflags);
+    }
+
+    public static int imapFlagsOnly(int zflags) {
+        return zflags & ZFLAGS_MASK;
     }
     
     public static Flags getFlagsToAdd(Flags flags, int zflags) {

@@ -53,7 +53,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Comparator;
 import java.sql.SQLException;
 
 class ImapFolderSync {
@@ -65,7 +64,7 @@ class ImapFolderSync {
     private Folder folder;
     private ImapFolder tracker;
     private ImapMessageCollection trackedMsgs;
-    private Set<Integer> msgIds;
+    private Set<Integer> existingMsgIds;
     private List<Integer> newMsgIds;
 
     private static final Log LOG = ZimbraLog.datasource;
@@ -164,24 +163,27 @@ class ImapFolderSync {
         selectImapFolder(tracker.getRemotePath());
         checkUidValidity();
         trackedMsgs = DbImapMessage.getImapMessages(mailbox, ds, tracker);
-        msgIds = getLocalMsgIds();
+        existingMsgIds = getLocalMsgIds();
         long lastUid = trackedMsgs.getMaxUid();
         boolean newMsgs = hasNewRemoteMessages(lastUid);
         // Sync flags if there are changes or fullsync requested
         if (lastUid > 0 && (fullSync || newMsgs || hasLocalChanges())) {
             syncFlags(lastUid);
+            // Remaining message ids with trackers were deleted remotely
+            for (int id : existingMsgIds) {
+                if (trackedMsgs.getByItemId(id) != null) {
+                    deleteMessage(id);
+                }
+            }
         }
         // Fetch new messages
         if (newMsgs) {
             fetchMsgs(lastUid);
         }
+        // Message ids without trackers are for new local messages
         newMsgIds = new ArrayList<Integer>();
-        // Remaining local ids are for new or deleted messages
-        for (int id : msgIds) {
-            ImapMessage msg = trackedMsgs.getByItemId(id);
-            if (msg != null) {
-                deleteMessage(id); // Message deleted remotely
-            } else {
+        for (int id : existingMsgIds) {
+            if (trackedMsgs.getByItemId(id) == null) {
                 newMsgIds.add(id);
                 stats.addedRemotely++;
             }
@@ -189,13 +191,13 @@ class ImapFolderSync {
     }
 
     private boolean hasLocalChanges() {
-        for (int id : msgIds) {
+        for (int id : existingMsgIds) {
             if (!trackedMsgs.containsItemId(id)) {
                 return true; // Has new local message
             }
         }
         for (ImapMessage msg : trackedMsgs) {
-            if (!msgIds.contains(msg.getItemId())) {
+            if (!existingMsgIds.contains(msg.getItemId())) {
                 return true; // Has deleted local message
             }
         }
@@ -387,8 +389,8 @@ class ImapFolderSync {
                 continue;
             }
             int msgId = trackedMsg.getItemId();
-            if (msgIds.contains(msgId)) {
-                msgIds.remove(msgId);
+            if (existingMsgIds.contains(msgId)) {
+                existingMsgIds.remove(msgId);
                 try {
                     updateFlags(trackedMsg, md.getFlags());
                     continue;
@@ -445,17 +447,18 @@ class ImapFolderSync {
         int localFlags = msg.getFlags();
         int trackedFlags = msg.getTrackedFlags();
         int remoteFlags = FlagsUtil.imapToZimbraFlags(flags);
-        int newFlags = mergeFlags(localFlags, trackedFlags, remoteFlags);
+        int newLocalFlags = mergeFlags(localFlags, trackedFlags, remoteFlags);
+        int newRemoteFlags = FlagsUtil.imapFlagsOnly(newLocalFlags);
         boolean updated = false;
-        if (newFlags != localFlags) {
-            mailbox.setTags(null, id, MailItem.TYPE_MESSAGE, newFlags,
+        if (newLocalFlags != localFlags) {
+            mailbox.setTags(null, id, MailItem.TYPE_MESSAGE, newLocalFlags,
                             MailItem.TAG_UNCHANGED);
             updated = true;
         }
-        if (newFlags != remoteFlags) {
+        if (newRemoteFlags != remoteFlags) {
             String uids = String.valueOf(msg.getUid());
-            Flags toAdd = FlagsUtil.getFlagsToAdd(flags, newFlags);
-            Flags toRemove = FlagsUtil.getFlagsToRemove(flags, newFlags);
+            Flags toAdd = FlagsUtil.getFlagsToAdd(flags, newRemoteFlags);
+            Flags toRemove = FlagsUtil.getFlagsToRemove(flags, newRemoteFlags);
             // UID STORE never fails even if message was deleted
             if (!toAdd.isEmpty()) {
                 connection.uidStore(uids, "+FLAGS.SILENT", toAdd);
@@ -465,19 +468,20 @@ class ImapFolderSync {
             }
             updated = true;
         }
-        if (newFlags != trackedFlags) {
-            DbImapMessage.setFlags(mailbox, id, newFlags);
+        if (newRemoteFlags != trackedFlags) {
+            DbImapMessage.setFlags(mailbox, id, newRemoteFlags);
             updated = true;
         }
         if (updated) {
             stats.updated++;
             if (LOG.isDebugEnabled()) {
-                debug("Updated flags for message with uid %d: local=%s, " +
-                    "tracked=%s, remote=%s, new=%s", msg.getUid(),
-                    Flag.bitmaskToFlags(localFlags),
-                    Flag.bitmaskToFlags(trackedFlags),
-                    Flag.bitmaskToFlags(remoteFlags),
-                    Flag.bitmaskToFlags(newFlags));
+                debug("Updated flags for message with item id %d: local=%s, " +
+                      "tracked=%s, remote=%s, new_local=%s, new_remote=%s", id,
+                      Flag.bitmaskToFlags(localFlags),
+                      Flag.bitmaskToFlags(trackedFlags),
+                      Flag.bitmaskToFlags(remoteFlags),
+                      Flag.bitmaskToFlags(newLocalFlags),
+                      Flag.bitmaskToFlags(newRemoteFlags));
             }
         } else {
             stats.matched++;
@@ -545,6 +549,7 @@ class ImapFolderSync {
     private ParsedMessage parseMessage(ImapData body, MessageData md)
         throws ServiceException, IOException {
         Date date = md.getInternalDate();
+        LOG.info("date = " + date);
         Long time = date != null ? (Long) date.getTime() : null;
         try {
             boolean indexAttachments = mailbox.attachmentsIndexingEnabled();

@@ -24,6 +24,7 @@ import com.zimbra.cs.mailclient.imap.ImapCapabilities;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.util.BuildInfo;
+import com.zimbra.cs.util.ZimbraApplication;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.DummySSLSocketFactory;
@@ -47,7 +48,7 @@ public class ImapSync extends AbstractMailItemImport {
     private Map<Integer, ImapFolderSync> syncedFolders;
     private boolean fullSync;
 
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = LC.javamail_imap_debug.booleanValue();
     private static final boolean FAIL_ON_SYNC_ERROR = true;
     
     private static final Log LOG = ZimbraLog.datasource;
@@ -60,9 +61,7 @@ public class ImapSync extends AbstractMailItemImport {
         ID_INFO.setVendor("Zimbra");
         ID_INFO.setOs(System.getProperty("os.name"));
         ID_INFO.setOsVersion(System.getProperty("os.version"));
-        String type = BuildInfo.TYPE != null && BuildInfo.TYPE.length() > 0 ?
-                      BuildInfo.TYPE : "unknown";
-        ID_INFO.put("guid", type);
+        ID_INFO.put("guid", ZimbraApplication.getInstance().getId());
     }
 
 
