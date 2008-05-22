@@ -118,7 +118,6 @@ public final class ImapConnection extends MailConnection {
 
     @Override
     public synchronized void logout() throws IOException {
-        Thread.dumpStack();
         if (isShutdown()) return;
         if (request != null) {
             throw new IllegalStateException("Request pending");

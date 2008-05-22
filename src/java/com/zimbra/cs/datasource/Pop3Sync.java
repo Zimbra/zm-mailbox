@@ -56,7 +56,7 @@ public class Pop3Sync extends AbstractMailItemImport {
     private final byte[] buffer = new byte[4096];
     private final MailDateFormat mdf = new MailDateFormat();
 
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = LC.javamail_pop3_debug.booleanValue();
 
     private static final Log LOG = ZimbraLog.datasource;
     static {
