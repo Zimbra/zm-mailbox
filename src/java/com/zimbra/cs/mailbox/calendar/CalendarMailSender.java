@@ -389,6 +389,70 @@ public class CalendarMailSender {
         }
     }
 
+    private static MimeMessage createCalendarResourceInviteDeniedMessage(
+            Locale lc, Address fromAddr, List<Address> toAddrs, Invite inv)
+    throws ServiceException {
+        String subject = L10nUtil.getMessage(MsgKey.calendarReplySubjectPermissionDenied, lc) + ": " + inv.getName();
+        String text = L10nUtil.getMessage(MsgKey.calendarResourceDefaultReplyPermissionDenied, lc);
+        try {
+            MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
+
+            MimeMultipart mmp = new MimeMultipart("alternative");
+            mm.setContent(mmp);
+
+            // ///////
+            // TEXT part (add me first!)
+            MimeBodyPart textPart = new MimeBodyPart();
+            textPart.setText(text, Mime.P_CHARSET_UTF8);
+            mmp.addBodyPart(textPart);
+
+            // HTML part is needed to keep Outlook happy as it doesn't know
+            // how to deal with a message with only text/plain but no HTML.
+            MimeBodyPart htmlPart = new MimeBodyPart();
+            htmlPart.setDataHandler(new DataHandler(new HtmlPartDataSource(text)));
+            mmp.addBodyPart(htmlPart);
+
+            // ///////
+            // MESSAGE HEADERS
+            if (subject != null)
+                mm.setSubject(subject, Mime.P_CHARSET_UTF8);
+
+            if (toAddrs != null) {
+                Address[] addrs = new Address[toAddrs.size()];
+                toAddrs.toArray(addrs);
+                mm.addRecipients(javax.mail.Message.RecipientType.TO, addrs);
+            }
+            if (fromAddr != null)
+                mm.setFrom(fromAddr);
+            mm.setSentDate(new Date());
+            mm.saveChanges();
+
+            return mm;
+        } catch (MessagingException e) {
+            throw ServiceException.FAILURE(
+                    "Messaging Exception while building MimeMessage", e);
+        }
+    }
+
+    public static void sendCalendarResourceInviteDeniedMessage(
+            OperationContext octxt, Mailbox mbox, ItemId origMsgId, String toEmail, Invite inv)
+    throws ServiceException {
+        Address fromAddr;
+        Address toAddr;
+        try {
+            fromAddr = new InternetAddress(mbox.getAccount().getName());
+            toAddr = new InternetAddress(toEmail);
+        } catch (AddressException e) {
+            throw ServiceException.FAILURE("Bad address: " + mbox.getAccount().getName(), e);
+        }
+        List<Address> toAddrs = new ArrayList<Address>(1);
+        toAddrs.add(toAddr);
+        Locale lc = mbox.getAccount().getLocale();
+        MimeMessage mm = createCalendarResourceInviteDeniedMessage(lc, fromAddr, toAddrs, inv);
+        mbox.getMailSender().sendMimeMessage(octxt, mbox, false, mm, null, null,
+                origMsgId, MailSender.MSGTYPE_REPLY, null, true, true);
+    }
+
     /**
      * RFC2446 4.2.2:
      * 
