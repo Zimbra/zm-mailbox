@@ -2795,8 +2795,7 @@ abstract class ImapHandler extends ProtocolHandler {
 
         boolean saveResults = (options != null && (options & RETURN_SAVE) != 0);
         boolean unsorted = sort == MailboxIndex.SortBy.NONE;
-        ImapMessageSet hits = null;
-        List<ImapMessage> hitlist = null;
+        Collection<ImapMessage> hits = null;
         int modseq = 0;
 
         try {
@@ -2829,15 +2828,13 @@ abstract class ImapHandler extends ProtocolHandler {
                 params.setMode(requiresMODSEQ ? Mailbox.SearchResultMode.MODSEQ : Mailbox.SearchResultMode.IDS);
                 ZimbraQueryResults zqr = mbox.search(SoapProtocol.Soap12, getContext(), params);
 
-                if (unsorted)  hits = new ImapMessageSet();
-                else           hitlist = new ArrayList<ImapMessage>();
+                hits = unsorted ? new ImapMessageSet() : new ArrayList<ImapMessage>();
                 try {
                     for (ZimbraHit hit = zqr.getNext(); hit != null; hit = zqr.getNext()) {
                         ImapMessage i4msg = mSelectedFolder.getById(hit.getItemId());
                         if (i4msg == null || i4msg.isExpunged())
                             continue;
-                        if (unsorted)  hits.add(i4msg);
-                        else           hitlist.add(i4msg);
+                        hits.add(i4msg);
                         if (requiresMODSEQ)
                             modseq = Math.max(modseq, Math.max(hit.getModifiedSequence(), i4msg.getFlagModseq(mSelectedFolder.getTagset())));
                     }
@@ -2855,27 +2852,33 @@ abstract class ImapHandler extends ProtocolHandler {
             return CONTINUE_PROCESSING;
         }
 
-        int size = (unsorted ? hits : hitlist).size();
-        ImapMessage first = size == 0 ? null : (unsorted ? hits.first() : hitlist.get(0));
-        ImapMessage last = size == 0 ? null : (unsorted ? hits.last() : hitlist.get(size - 1));
+        int size = hits.size();
+        ImapMessage first = null, last = null;
+        if (size != 0 && options != null && (options & (RETURN_MIN | RETURN_MAX)) != 0) {
+            if (unsorted) {
+                first = ((ImapMessageSet) hits).first();  last = ((ImapMessageSet) hits).last();
+            } else {
+                first = ((List<ImapMessage>) hits).get(0);  last = ((List<ImapMessage>) hits).get(size - 1);
+            }
+        }
 
         StringBuilder result = null;
         if (options == null) {
             result = new StringBuilder(command);
-            for (ImapMessage i4msg : unsorted ? hits : hitlist)
+            for (ImapMessage i4msg : hits)
                 result.append(' ').append(byUID ? i4msg.imapUid : i4msg.sequence);
         } else if (options != RETURN_SAVE) {
             result = new StringBuilder("E" + command + " (TAG \"").append(tag).append("\")");
             if (byUID)
                 result.append(" UID");
-            if (size != 0 && (options & RETURN_MIN) != 0)
+            if (first != null && (options & RETURN_MIN) != 0)
                 result.append(" MIN ").append(byUID ? first.imapUid : first.sequence);
-            if (size != 0 && (options & RETURN_MAX) != 0)
+            if (last != null && (options & RETURN_MAX) != 0)
                 result.append(" MAX ").append(byUID ? last.imapUid : last.sequence);
             if ((options & RETURN_COUNT) != 0)
                 result.append(" COUNT ").append(size);
             if (size != 0 && (options & RETURN_ALL) != 0)
-                result.append(" ALL ").append(ImapFolder.encodeSubsequence(unsorted ? hits : hitlist, byUID));
+                result.append(" ALL ").append(ImapFolder.encodeSubsequence(hits, byUID));
         }
 
         if (modseq > 0)
@@ -2883,12 +2886,12 @@ abstract class ImapHandler extends ProtocolHandler {
 
         if (saveResults) {
             if (size == 0 || options == RETURN_SAVE || (options & (RETURN_COUNT | RETURN_ALL)) != 0) {
-                mSelectedFolder.saveSearchResults(unsorted ? hits : new ImapMessageSet(hitlist));
+                mSelectedFolder.saveSearchResults(unsorted ? (ImapMessageSet) hits : new ImapMessageSet(hits));
             } else {
                 ImapMessageSet saved = new ImapMessageSet();
-                if ((options & RETURN_MIN) != 0)
+                if (first != null && (options & RETURN_MIN) != 0)
                     saved.add(first);
-                if ((options & RETURN_MAX) != 0)
+                if (last != null && (options & RETURN_MAX) != 0)
                     saved.add(last);
                 mSelectedFolder.saveSearchResults(saved);
             }
