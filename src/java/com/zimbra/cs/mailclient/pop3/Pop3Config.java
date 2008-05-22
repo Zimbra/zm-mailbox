@@ -27,6 +27,12 @@ public class Pop3Config extends MailConfig {
     public static final int DEFAULT_PORT = 110;
     public static final int DEFAULT_SSL_PORT = 995;
 
+    public Pop3Config() {}
+
+    public Pop3Config(String host, boolean sslEnabled) {
+        super(host, sslEnabled);
+    }
+    
     public String getProtocol() { return PROTOCOL; }
 
     public int getPort() {

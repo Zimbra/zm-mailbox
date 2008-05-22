@@ -38,7 +38,7 @@ public final class ContentInputStream extends InputStream {
 
     public int read() throws IOException {
         if (pos == -1) return -1;
-        if (pos > sbuf.length()) {
+        if (pos >= sbuf.length()) {
             if (!fillBuffer()) return -1;
         }
         return sbuf.charAt(pos++);
@@ -46,14 +46,13 @@ public final class ContentInputStream extends InputStream {
 
     public String readLine() throws IOException {
         if (pos == -1) return null;
-        int len = sbuf.length();
-        if (pos >= len) {
+        if (pos >= sbuf.length()) {
             if (!fillBuffer()) return null;
         }
-        // Remove trailing '\n' or '\r\n'
-        len -= Math.min(len - pos, 2);
-        String line = sbuf.substring(pos, len);
-        pos = 0;
+        // Return rest of line excluding trailing "\r\n"
+        int len = sbuf.length() - pos;
+        String line = len > 2 ? sbuf.substring(pos, len - 2) : "";
+        pos = sbuf.length();
         return line;
     }
 
@@ -66,7 +65,8 @@ public final class ContentInputStream extends InputStream {
             // Do nothing...
         }
     }
-    
+
+    // Fill input buffer with next line of content
     private boolean fillBuffer() throws IOException {
         sbuf.setLength(0);
         int b;
@@ -79,14 +79,16 @@ public final class ContentInputStream extends InputStream {
             sbuf.append((char) b);
         } while (b != '\n');
         int len = sbuf.length();
+        // Make sure line ends with "\r\n"
         if (len < 2 || sbuf.charAt(len - 2) != '\r') {
             throw new ParseException("Invalid end of line character");
         }
+        // Check for end of content
         if (len == 3 && sbuf.charAt(0) == '.') {
-            // Buffer always ends with "\r\n"
             pos = -1;
             return false;
         }
+        // Check for quoted "." at beginning of line
         if (len == 4 && sbuf.charAt(0) == '.' && sbuf.charAt(1) == '.') {
             sbuf.deleteCharAt(0);
         }

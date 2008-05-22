@@ -38,8 +38,7 @@ public class ImapConfig extends MailConfig {
     public ImapConfig() {}
 
     public ImapConfig(String host, boolean sslEnabled) {
-        this.host = host;
-        this.sslEnabled = sslEnabled;
+        super(host, sslEnabled);
     }
 
     public String getProtocol() { return PROTOCOL; }

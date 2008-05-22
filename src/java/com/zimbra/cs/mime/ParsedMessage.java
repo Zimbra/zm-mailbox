@@ -838,7 +838,7 @@ public class ParsedMessage {
         return mDateHeader;
     }
 
-    private void setReceivedDate(long date) {
+    public void setReceivedDate(long date) {
         // round to nearest second...
         if (date != -1)
             mReceivedDate = (Math.max(0, date) / 1000) * 1000;
