@@ -91,6 +91,8 @@ public class DebugConfig {
     // unaffected by this switch.
     public static boolean calendarForceUTC;
 
+    public static boolean disableCalendarResourcePermissionDeniedReply;
+
     public static final int numMailboxGroups;
 
     static {
@@ -117,6 +119,8 @@ public class DebugConfig {
 
         disableRedoLogFsync = booleanValue("debug_disable_redolog_fsync", false);
         disableMessageStoreFsync = booleanValue("debug_disable_message_store_fsync", false);
+
+        disableCalendarResourcePermissionDeniedReply = booleanValue("debug_disable_calendar_resource_permission_denied_reply", false);
 
         numMailboxGroups = Math.max(LC.zimbra_mailbox_groups.intValue(), 1);
     }

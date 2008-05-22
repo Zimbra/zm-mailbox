@@ -30,9 +30,11 @@ import javax.mail.internet.MimeMessage;
 
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.*;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
@@ -40,6 +42,9 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.TnefConverter;
+import com.zimbra.cs.redolog.RedoLogProvider;
+import com.zimbra.cs.redolog.op.RedoableOp;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.common.service.ServiceException;
@@ -438,6 +443,19 @@ public class Message extends MailItem {
                     canInvite = accessMgr.canPerform(senderEmail, getAccount(), Right.RT_invite, false, allowInviteIfNoAceDefined);
                 }
                 if (!canInvite) {
+                    if ((getAccount() instanceof CalendarResource) && senderEmail != null &&
+                        !DebugConfig.disableCalendarResourcePermissionDeniedReply) {
+                        RedoableOp redoPlayer = octxt != null ? octxt.getPlayer() : null;
+                        RedoLogProvider redoProvider = RedoLogProvider.getInstance();
+                        boolean needAutoReply =
+                            redoProvider.isMaster() &&
+                            (redoPlayer == null || redoProvider.getRedoLogManager().getInCrashRecovery());
+                        if (needAutoReply) {
+                            ItemId origMsgId = new ItemId(getMailbox(), getId());
+                            CalendarMailSender.sendCalendarResourceInviteDeniedMessage(
+                                    octxt, getMailbox(), origMsgId, senderEmail, cur);
+                        }
+                    }
                     String sender = senderEmail != null ? senderEmail : "unkonwn sender";
                     throw ServiceException.PERM_DENIED("calendar invite not allowed from " + sender);
                 }
