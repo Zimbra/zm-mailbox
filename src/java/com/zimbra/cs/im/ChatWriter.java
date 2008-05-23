@@ -135,6 +135,8 @@ class ChatWriter {
         "#00FF00",
         "#FF00FF",
     };
+    
+    private static final String TAB_STR = "&nbsp;&nbsp;&nbsp;&nbsp;";
 
     static ParsedMessage writeChat(IMChat chat) throws MessagingException {
         MimeMessage mm = new MimeMessage(JMSession.getSession());
@@ -174,6 +176,11 @@ class ChatWriter {
                 highestDate = msg.getDate();
 
             String msgBodyHtml = msg.getBody() != null ? msg.getBody().toString() : "";
+            
+            msgBodyHtml = msgBodyHtml.replaceAll(" ", "&nbsp;");
+            msgBodyHtml = msgBodyHtml.replaceAll("\t", TAB_STR);
+            msgBodyHtml = msgBodyHtml.replaceAll("\r\n", "<br/>");
+            msgBodyHtml = msgBodyHtml.replaceAll("\n", "<br/>");
 
             // find the color for this user
             if (!colorMap.containsKey(from)) {
