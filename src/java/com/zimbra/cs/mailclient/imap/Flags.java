@@ -62,6 +62,29 @@ public final class Flags extends AbstractSet<Atom> {
         is.skipChar(')');
         return flags;
     }
+
+    public static Flags fromSpec(String spec) throws IOException {
+        Flags flags = new Flags();
+        for (int i = 0; i < spec.length(); i++) {
+            flags.set(getMask(spec.charAt(i)));
+        }
+        return flags;
+    }
+
+    private static int getMask(char c) {
+        switch (c) {
+        case 'a': return MASK_ANSWERED;
+        case 'f': return MASK_FLAGGED;
+        case 'd': return MASK_DELETED;
+        case 's': return MASK_SEEN;
+        case 'r': return MASK_RECENT;
+        case 't': return MASK_STAR;
+        case 'x' : return MASK_DRAFT;
+        default:
+            throw new IllegalArgumentException(
+                "Invalid flag spec char '" + c + "'");
+        }
+    }
     
     public Flags() {}
 

@@ -319,7 +319,7 @@ public final class ImapConnection extends MailConnection {
     public Map<Long, MessageData> uidFetch(String seq, Object param)
         throws IOException {
         final Map<Long, MessageData> results = new HashMap<Long, MessageData>();
-        uidFetch(seq, param, new FetchResponseHandler() {
+        uidFetch(seq, param, new FetchResponseHandler(false) {
             public void handleFetchResponse(MessageData md) {
                 long uid = md.getUid();
                 if (uid != -1) {
@@ -333,6 +333,10 @@ public final class ImapConnection extends MailConnection {
             }
         });
         return results;
+    }
+
+    public MessageData uidFetch(long uid, Object param) throws IOException {
+        return uidFetch(String.valueOf(uid), param).get(uid);
     }
     
     public List<Long> search(Object... params) throws IOException {
@@ -583,13 +587,10 @@ public final class ImapConnection extends MailConnection {
             return false;
         }
         if (res.isUntagged()) {
-            try {
-                if (processUntagged(res)) {
-                    return true;
-                }
-            } finally {
-                res.dispose(); // Clean up any associated literal data
+            if (processUntagged(res)) {
+                return true;
             }
+            res.dispose(); // Clean up any associated literal data
         } else if (request == null) {
             throw new MailException(
                 "Received tagged response with no request pending: " + res);

@@ -17,9 +17,6 @@
 package com.zimbra.cs.mailclient.imap;
 
 import java.util.Map;
-import java.util.AbstractMap;
-import java.util.Set;
-import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.TreeMap;
@@ -28,9 +25,7 @@ import java.io.IOException;
 /**
  * IMAP4 ID extension (RFC 2971) information.
  */
-public class IDInfo extends AbstractMap<String, String> {
-    private final Map<String, String> attributes;
-    
+public class IDInfo extends TreeMap<String, String> {
     private static final String NAME = "name";
     private static final String VERSION = "version";
     private static final String OS = "os";
@@ -63,78 +58,36 @@ public class IDInfo extends AbstractMap<String, String> {
     }
     
     public IDInfo() {
-        attributes = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+        super(String.CASE_INSENSITIVE_ORDER);
     }
 
-    public String getName() { return attributes.get(NAME); }
-    public String getVersion() { return attributes.get(VERSION); }
-    public String getOs() { return attributes.get(OS); }
-    public String getOsVersion() { return attributes.get(OS_VERSION); }
-    public String getVendor() { return attributes.get(VENDOR); }
-    public String getSupportUrl() { return attributes.get(SUPPORT_URL); }
-    public String getAddress() { return attributes.get(ADDRESS); }
-    public String getDate() { return attributes.get(DATE); }
-    public String getCommmand() { return attributes.get(COMMAND); }
-    public String getArguments() { return attributes.get(ARGUMENTS); }
-    public String getEnvironment() { return attributes.get(ENVIRONMENT); }
+    public String getName() { return get(NAME); }
+    public String getVersion() { return get(VERSION); }
+    public String getOs() { return get(OS); }
+    public String getOsVersion() { return get(OS_VERSION); }
+    public String getVendor() { return get(VENDOR); }
+    public String getSupportUrl() { return get(SUPPORT_URL); }
+    public String getAddress() { return get(ADDRESS); }
+    public String getDate() { return get(DATE); }
+    public String getCommmand() { return get(COMMAND); }
+    public String getArguments() { return get(ARGUMENTS); }
+    public String getEnvironment() { return get(ENVIRONMENT); }
 
-    @Override
-    public String put(String name, String value) {
-        return attributes.put(name, value);
-    }
-
-    @Override
-    public Set<Entry<String, String>> entrySet() {
-        return attributes.entrySet();
-    }
-    
-    public void setName(String name) {
-        attributes.put(NAME, name);
-    }
-
-    public void setVersion(String version) {
-        attributes.put(VERSION, version);
-    }
-
-    public void setOs(String os) {
-        attributes.put(OS, os);
-    }
-
-    public void setOsVersion(String version) {
-        attributes.put(OS_VERSION, version);
-    }
-
-    public void setVendor(String vendor) {
-        attributes.put(VENDOR, vendor);
-    }
-
-    public void setSupportUrl(String url) {
-        attributes.put(SUPPORT_URL, url);
-    }
-
-    public void setAddress(String address) {
-        attributes.put(ADDRESS, address);
-    }
-
-    public void setDate(String date) {
-        attributes.put(DATE, date);
-    }
-
-    public void setCommand(String command) {
-        attributes.put(COMMAND, command);
-    }
-
-    public void setArguments(String args) {
-        attributes.put(ARGUMENTS, args);
-    }
-
-    public void setEnvironment(String env) {
-        attributes.put(ENVIRONMENT, env);
-    }
+    public void setName(String name) { put(NAME, name); }
+    public void setVersion(String version) { put(VERSION, version); }
+    public void setOs(String os) { put(OS, os); }
+    public void setOsVersion(String version) { put(OS_VERSION, version); }
+    public void setVendor(String vendor) { put(VENDOR, vendor); }
+    public void setSupportUrl(String url) { put(SUPPORT_URL, url); }
+    public void setAddress(String address) { put(ADDRESS, address); }
+    public void setDate(String date) { put(DATE, date); }
+    public void setCommand(String command) { put(COMMAND, command); }
+    public void setArguments(String args) { put(ARGUMENTS, args); }
+    public void setEnvironment(String env) { put(ENVIRONMENT, env); }
 
     public List<ImapData> toRequestParam() {
-        List<ImapData> data = new ArrayList<ImapData>(attributes.size());
-        for (Entry<String, String> e : entrySet()) {
+        List<ImapData> data = new ArrayList<ImapData>(size());
+        for (Map.Entry<String, String> e : entrySet()) {
             data.add(ImapData.asString(e.getKey()));
             data.add(ImapData.asNString(e.getValue()));
         }
