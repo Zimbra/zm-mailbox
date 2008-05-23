@@ -13,7 +13,7 @@ public enum Right {
     
     static {        
         
-        RT_invite.setDesc("automatically add meeting invites from grantee to the taeget's calender");
+        RT_invite.setDesc("automatically add meeting invites from grantee to the target's calender");
         RT_invite.setDoc("e.g. " +
         		         "(1) When user Y is invited to a meeting, an appt is added to his calendar automatically(tentatively) only if invite is from A, B, C or anyone in group G. " +
                          "(2) Conf room Y can only be booked by users A, B, C and group G.");
@@ -58,11 +58,11 @@ public enum Right {
         return mCode;
     }
     
-    String getDesc() {
+    public String getDesc() {
         return mDesc;
     }
     
-    String getDoc() {
+    public String getDoc() {
         return mDoc;
     }
     

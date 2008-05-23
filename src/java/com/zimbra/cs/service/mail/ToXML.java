@@ -231,13 +231,14 @@ public class ToXML {
     // encode account ACE
     public static Element encodeACE(Element parent, ZimbraACE ace) {
         Element eACE = parent.addElement(MailConstants.E_ACE)
-                .addAttribute(MailConstants.A_ZIMBRA_ID, ace.getGranteeId())
+                .addAttribute(MailConstants.A_ZIMBRA_ID, ace.getGrantee())
                 .addAttribute(MailConstants.A_GRANT_TYPE, ace.getGranteeType().getCode())
                 .addAttribute(MailConstants.A_RIGHT, ace.getRight().getCode())
-                .addAttribute(MailConstants.A_DISPLAY, ace.getGranteeDisplayName());
+                .addAttribute(MailConstants.A_DISPLAY, ace.getGranteeDisplayName())
+                .addAttribute(MailConstants.A_PASSWORD, ace.getPassword());
         
-        if (ace.denied())
-            eACE.addAttribute(MailConstants.A_DENY, ace.denied());
+        if (ace.deny())
+            eACE.addAttribute(MailConstants.A_DENY, ace.deny());
        
         return eACE;
     }

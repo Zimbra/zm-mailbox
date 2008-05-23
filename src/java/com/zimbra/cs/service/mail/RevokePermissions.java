@@ -28,9 +28,12 @@ public class RevokePermissions extends GrantPermissions {
             aces.add(ace);
         }
 
-        PermUtil.revokeACEs(account, aces);
+        Set<ZimbraACE> revoked = PermUtil.revokeAccess(account, aces);
         Element response = zsc.createElement(MailConstants.REVOKE_PERMISSIONS_RESPONSE);
-
+        if (aces != null) {
+            for (ZimbraACE ace : revoked)
+                ToXML.encodeACE(response, ace);
+        }
         return response;
     }
     

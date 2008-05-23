@@ -6,7 +6,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 
-
 public class ZAce {
 
     private String mGranteeName;
@@ -14,6 +13,7 @@ public class ZAce {
     private ZAce.GranteeType mGranteeType;
     private String mRight;
     private boolean mDeny;
+    private String mArgs; // for password
 
     /** Stolen shamelessly from ACL.java. */
     /** The pseudo-GUID signifying "all authenticated users". */
@@ -33,10 +33,21 @@ public class ZAce {
         /**
          * accesss is granted to public. no authentication needed.
          */
-        pub;
+        pub,
+        /**
+         * access is granted to all authenticated users
+         */
+        all, 
+        /**
+         * access is granted to a non-Zimbra email address and a password 
+         */
+        gst;
 
         public static GranteeType fromString(String s) throws ServiceException {
             try {
+                // GUEST-TODO master control for turning off guest grantee for now
+                if (gst.name().equals(s))
+                    throw ZClientException.CLIENT_ERROR("guest grantee not yet supported", null);
                 return GranteeType.valueOf(s);
             } catch (IllegalArgumentException e) {
                 throw ZClientException.CLIENT_ERROR("invalid grantee: "+s+", valid values: "+Arrays.asList(GranteeType.values()), e);
@@ -44,21 +55,22 @@ public class ZAce {
         }
     }
 
-
     public ZAce(Element e) throws ServiceException {
         mRight = e.getAttribute(MailConstants.A_RIGHT);
         mDeny = e.getAttributeBool(MailConstants.A_DENY, false);
         mGranteeName = e.getAttribute(MailConstants.A_DISPLAY, null);
         mGranteeId = e.getAttribute(MailConstants.A_ZIMBRA_ID, null);
         mGranteeType = GranteeType.fromString(e.getAttribute(MailConstants.A_GRANT_TYPE));
+        mArgs = e.getAttribute(MailConstants.A_ARGS, null);
     }
     
-    public ZAce(ZAce.GranteeType granteeType, String granteeId, String granteeName, String right, boolean deny) throws ServiceException {
+    public ZAce(ZAce.GranteeType granteeType, String granteeId, String granteeName, String right, boolean deny, String args) throws ServiceException {
         mRight = right;
         mDeny = deny;
         mGranteeName = granteeName;
         mGranteeId = granteeId;
         mGranteeType = granteeType;
+        mArgs = args;
     }
 
     public void toElement(Element parent) {
@@ -67,6 +79,7 @@ public class ZAce {
         ace.addAttribute(MailConstants.A_GRANT_TYPE, mGranteeType.name());
         ace.addAttribute(MailConstants.A_ZIMBRA_ID, mGranteeId);
         ace.addAttribute(MailConstants.A_DISPLAY, mGranteeName);
+        ace.addAttribute(MailConstants.A_ARGS, mArgs);
         if (mDeny)
             ace.addAttribute(MailConstants.A_DENY, mDeny);
     }
@@ -84,9 +97,12 @@ public class ZAce {
     }
     
     /**
-     * the type of grantee: "usr", "grp", "dom" (domain),
-     * "all" (all authenticated users), "pub" (public authenticated and unauthenticated access), 
+     * the type of grantee: 
+     * "usr", 
+     * "grp",
+     * "all" (all authenticated users),
      * "guest" (non-Zimbra email address and password)
+     * "pub" (public authenticated and unauthenticated access), 
      */
     public ZAce.GranteeType getGranteeType() {
         return mGranteeType;
@@ -97,7 +113,10 @@ public class ZAce {
      * optional if {grantee-type} is "all"
      */
     public String getGranteeName() {
-        return mGranteeName;
+        if (mGranteeName == null)
+            return "";
+        else
+            return mGranteeName;
     }
 
     /***
@@ -105,6 +124,13 @@ public class ZAce {
      */
     public String getGranteeId() {
         return mGranteeId;                                                                          
+    }
+    
+    /**
+     *  optional argument.  password when {grantee-type} is "guest"
+     */
+    public String getArgs() {
+        return mArgs;
     }
 
     /**
@@ -134,6 +160,8 @@ public class ZAce {
         case usr: return "account";
         case grp: return "group";
         case pub: return "public";
+        case all: return "all";
+        case gst: return "guest";
         default: return "unknown";
         }
     }
@@ -142,15 +170,19 @@ public class ZAce {
         switch (mGranteeType) {
         case usr: return 0;
         case grp: return 1;
-        case pub: return 2;
-        default: return 3; // ??
+        case pub: return 4;
+        case all: return 3;
+        case gst: return 2;
+        default: return 5; // ??
         }
     }
     
-    public static ZAce.GranteeType getGranteeTypeFromDisplay(String gt) throws ServiceException {
-        if (gt.equalsIgnoreCase("account")) return ZAce.GranteeType.usr;
-        else if (gt.equalsIgnoreCase("group")) return ZAce.GranteeType.grp;        
-        else if (gt.equalsIgnoreCase("public")) return ZAce.GranteeType.pub;
-        else throw ZClientException.CLIENT_ERROR("unnown grantee type: "+gt, null);
+    public static ZAce.GranteeType getGranteeTypeFromDisplay(String name) throws ServiceException {
+        if (name.equalsIgnoreCase("account")) return GranteeType.usr;
+        else if (name.equalsIgnoreCase("group")) return GranteeType.grp; 
+        else if (name.equalsIgnoreCase("public")) return GranteeType.pub;
+        else if (name.equalsIgnoreCase("all")) return GranteeType.all;
+        // else if (name.equalsIgnoreCase("guest")) return GranteeType.gst;  // GUEST-TODO master control for turning off guest grantee for now  
+        else throw ZClientException.CLIENT_ERROR("unknown grantee type: "+name, null);
     }
 }

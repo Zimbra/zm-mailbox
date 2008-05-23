@@ -2,6 +2,7 @@ package com.zimbra.cs.account.accesscontrol;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
@@ -32,26 +33,31 @@ public class PermUtil {
             return null;
     }
     
-    public static void modifyACEs(Entry target, Set<ZimbraACE> aces) throws ServiceException {
+    public static Set<ZimbraACE> grantAccess(Entry target, Set<ZimbraACE> aces) throws ServiceException {
         ZimbraACL acl = target.getACL(); 
-        if (acl == null)
+        Set<ZimbraACE> granted = null;
+        
+        if (acl == null) {
             acl = new ZimbraACL(aces);
-        else
-            acl.modifyACEs(aces); 
+            granted = acl.getACEs(null);
+        } else
+            granted = acl.grantAccess(aces); 
         
         serialize(target, acl);
+        return granted;
     }
     
     /** Removes the right granted to the specified id.  If the right 
      *  was not previously granted to the target, no error is thrown.
      */
-    public static void revokeACEs(Entry target, Set<ZimbraACE> aces) throws ServiceException {
+    public static Set<ZimbraACE> revokeAccess(Entry target, Set<ZimbraACE> aces) throws ServiceException {
         ZimbraACL acl = target.getACL(); 
         if (acl == null)
-            throw ServiceException.INVALID_REQUEST("no such aces", null);
+            return null;
         
-        acl.revokeACEs(aces);
+        Set<ZimbraACE> revoked = acl.revokeAccess(aces);
         serialize(target, acl);
+        return revoked;
     }
     
     private static void serialize(Entry target, ZimbraACL acl) throws ServiceException {
@@ -60,7 +66,15 @@ public class PermUtil {
         // modifyAttrs will erase cached ACL on the target
         Provisioning.getInstance().modifyAttrs(target, attrs);
     }
+
+    /*
+     * 
+     * lookupEmailAddress, lookupGranteeByName, lookupGranteeByZimbraId borrowed from FolderAction
+     * and transplanted to work with ACL in accesscontrol package.
+     * 
+     */
     
+    // orig: FolderAction.lookupEmailAddress
     public static NamedEntry lookupEmailAddress(String name) throws ServiceException {
         NamedEntry nentry = null;
         Provisioning prov = Provisioning.getInstance();
@@ -70,8 +84,9 @@ public class PermUtil {
         return nentry;
     }
     
+    // orig: FolderAction.lookupGranteeByName
     public static NamedEntry lookupGranteeByName(String name, GranteeType type, ZimbraSoapContext zsc) throws ServiceException {
-        if (type == GranteeType.GT_PUBLIC)
+        if (type == GranteeType.GT_AUTHUSER || type == GranteeType.GT_PUBLIC || type == GranteeType.GT_GUEST)
             return null;
 
         Provisioning prov = Provisioning.getInstance();
@@ -86,33 +101,34 @@ public class PermUtil {
         NamedEntry nentry = null;
         if (name != null)
             switch (type) {
-                case GT_USER:  nentry = lookupEmailAddress(name);                 break;
-                case GT_GROUP: nentry = prov.get(DistributionListBy.name, name);  break;
+                case GT_USER:    nentry = lookupEmailAddress(name);                 break;
+                case GT_GROUP:   nentry = prov.get(DistributionListBy.name, name);  break;
             }
 
         if (nentry != null)
             return nentry;
-        
         switch (type) {
-            case GT_USER:  throw AccountServiceException.NO_SUCH_ACCOUNT(name);
-            case GT_GROUP: throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(name);
-            default:       throw ServiceException.FAILURE("LDAP entry not found for " + name + " : " + type, null);
+            case GT_USER:    throw AccountServiceException.NO_SUCH_ACCOUNT(name);
+            case GT_GROUP:   throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(name);
+            default:  throw ServiceException.FAILURE("LDAP entry not found for " + name + " : " + type, null);
         }
     }
-    
-    public static NamedEntry lookupGranteeByZimbraId(String zid, GranteeType granteeType) {
+
+    // orig: FolderAction.lookupGranteeByZimbraId
+    public static NamedEntry lookupGranteeByZimbraId(String zid, GranteeType type) {
         Provisioning prov = Provisioning.getInstance();
         try {
-            switch (granteeType) {
+            switch (type) {
                 case GT_USER:    return prov.get(AccountBy.id, zid);
                 case GT_GROUP:   return prov.get(DistributionListBy.id, zid);
+                case GT_GUEST:
+                case GT_AUTHUSER:
                 case GT_PUBLIC:
-                default:         return null;
+                default:                  return null;
             }
         } catch (ServiceException e) {
             return null;
         }
     }
-    
 
 }
