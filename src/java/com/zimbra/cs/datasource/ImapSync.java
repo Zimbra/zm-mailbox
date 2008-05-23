@@ -42,7 +42,7 @@ import java.util.Collections;
 public class ImapSync extends AbstractMailItemImport {
     private final ImapConnection connection;
     private final Folder localRootFolder;
-    private char delimiter; // IMAP hierarchy delimiter (0 if flat)
+    private char delimiter; // Default IMAP hierarchy delimiter (0 if flat)
     private ImapFolderCollection trackedFolders;
     private Map<Integer, ImapFolderSync> syncedFolders;
     private boolean fullSync;
@@ -216,8 +216,10 @@ public class ImapSync extends AbstractMailItemImport {
      * IMAP folder. The Zimbra folder has the same path as the IMAP folder,
      * but is relative to the root folder specified by the DataSource.
      */
-    String getLocalPath(String remotePath, char delimiter) {
-        String relativePath = remotePath;
+    String getLocalPath(ListData ld) {
+        String remotePath = ld.getMailbox();
+        char delimiter = ld.getDelimiter();
+        String relativePath = ld.getMailbox();
         if (delimiter != '/' && (remotePath.indexOf(delimiter) >= 0 ||
                                  remotePath.indexOf('/') >= 0)) {
             // Change remote path to use our separator
