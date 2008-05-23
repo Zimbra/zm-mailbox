@@ -163,6 +163,7 @@ public class PlaybackUtil {
             cl = parser.parse(sOptions, args);
         } catch (ParseException pe) {
             usage(pe.getMessage());
+            System.exit(1);
         }
         return cl;
     }
