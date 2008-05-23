@@ -2652,39 +2652,51 @@ If no <ace> elements are provided, all ACEs are returned in the response.
 If <ace> elements are provided, only those ACEs with specified rights are returned in the response.
 
 <GetPermissionsResponse>
-  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"]/>*
+  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"] [args="{args}"]/>*
 </GetPermissionsResponse>
 
-    {right}       = viewFreeBusy | invite
+    {right}        = viewFreeBusy | invite
     
     {deny}         = 1 | 0(default)
                      if a right is specifically denied
     
     {grantee-type} = the type of grantee: 
-                     usr - (Zimbra user), 
-                     grp - (Zimbra group(distribution list)),
-                     pub - (public authenticated and unauthenticated access),
+                     usr - Zimbra user
+                     grp - Zimbra group(distribution list)
+                     all - all authenticated users
+                     pub - public authenticated and unauthenticated access
+                     gst - non-Zimbra email address and password (not yet supported)
+                     
     {grantee-name} = the display name (*not* the zimbra id) of the principal being granted rights;
                      optional if {grantee-type} is "pub"
+ 
+    {args}         = optional argument.  password when {grantee-type} is "guest"
  
 ---------------------------
 
 Grant account level permissions.
 
 <GrantPermissionsRequest>
-  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"]/>*
+  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"] [args="{args}"]/>*
 </GrantPermissionsRequest>
 
-<GrantPermissionsResponse/>
+GrantPermissionsResponse returns permissions that are successfully granted.
 
+<GrantPermissionsResponse>
+  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"] [args="{args}"]/>*
+</GrantPermissionsRequest>
 ---------------------------
 
 Revoke account level permissions.
 
 <RevokePermissionsRequest>
-  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"]/>*
+  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"] [args="{args}"]/>*
 </RevokePermissionsRequest>
 
-<RevokePermissionsResponse/>
+GrantPermissionsResponse returns permissions that are successfully revoked.
+
+<RevokePermissionsResponse>
+  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"] [args="{args}"]/>*
+</RevokePermissionsResponse>
 
 ---------------------------

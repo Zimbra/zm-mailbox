@@ -17,6 +17,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.PermUtil;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
@@ -28,6 +29,7 @@ public class TestACL extends TestCase {
     private static final AccessManager mAM = AccessManager.getInstance();
     private static final String TEST_ID = TestProvisioningUtil.genTestId();
     private static final String DOMAIN_NAME = TestProvisioningUtil.baseDomainName("test-ACL", TEST_ID);
+    private static final String PASSWORD = "test123";
     
     static {
         Provisioning prov = Provisioning.getInstance();
@@ -112,33 +114,30 @@ public class TestACL extends TestCase {
     /*
      * test Zimbra user grantee
      */
-    public void testZimbra() throws Exception {
+    public void testGranteeUser() throws Exception {
         Provisioning prov = Provisioning.getInstance();
         
         /*
          * setup grantees
          */
-        Account goodguy = prov.createAccount(getEmailAddr("goodguy"), "test123", null);
-        Account badguy = prov.createAccount(getEmailAddr("badguy"), "test123", null);
-        Account wrongguy = prov.createAccount(getEmailAddr("wrongguy"), "test123", null);
-        Account nobody = prov.createAccount(getEmailAddr("nobody"), "test123", null);
+        Account goodguy = prov.createAccount(getEmailAddr("testGranteeUser-goodguy"), PASSWORD, null);
+        Account badguy = prov.createAccount(getEmailAddr("testGranteeUser-badguy"), PASSWORD, null);
+        Account nobody = prov.createAccount(getEmailAddr("testGranteeUser-nobody"), PASSWORD, null);
         
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraIsDomainAdminAccount, Provisioning.TRUE);
-        Account admin = prov.createAccount(getEmailAddr("admin"), "test123", attrs);
+        Account admin = prov.createAccount(getEmailAddr("testGranteeUser-admin"), PASSWORD, attrs);
         
         /*
          * setup targets
          */
-        Account target = prov.createAccount(getEmailAddr("target-test-zimbra"), "test123", null);
+        Account target = prov.createAccount(getEmailAddr("testGranteeUser-target"), PASSWORD, null);
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(new ZimbraACE(goodguy, Right.RT_viewFreeBusy, false));
         aces.add(new ZimbraACE(goodguy, Right.RT_invite, false));
         aces.add(new ZimbraACE(badguy, Right.RT_viewFreeBusy, true));
-        aces.add(new ZimbraACE(wrongguy, Right.RT_viewFreeBusy, true));
-        aces.add(new ZimbraACE(wrongguy, Right.RT_viewFreeBusy, false));
         aces.add(new ZimbraACE(ACL.ANONYMOUS_ACCT, Right.RT_viewFreeBusy, false));
-        PermUtil.modifyACEs(target, aces);
+        PermUtil.grantAccess(target, aces);
         
         // self should always be allowed
         verify(target, target, Right.RT_invite, true);
@@ -156,9 +155,6 @@ public class TestACL extends TestCase {
         // specifically denied
         verify(badguy, target, Right.RT_viewFreeBusy, false);
         
-        // specifically allowed and denied
-        verify(wrongguy, target, Right.RT_viewFreeBusy, false);
-        
         // not specifically allowed or denied, but PUB is allowed
         verify(nobody, target, Right.RT_viewFreeBusy, true);
         
@@ -167,10 +163,41 @@ public class TestACL extends TestCase {
     }
     
     /*
+     * test all(all authed Zimbra users) grantee
+     */
+    public void testGranteeAllAuthUser() throws Exception {
+        Provisioning prov = Provisioning.getInstance();
+        
+        /*
+         * setup grantees
+         */
+        Account guest = guestAccount("guest@external.com", "whocares");
+        Account zimbra = prov.createAccount(getEmailAddr("testGranteeAllAuthUser-zimbra"), PASSWORD, null);
+        
+        /*
+         * setup targets
+         */
+        Account target = prov.createAccount(getEmailAddr("testGranteeAllAuthUser-target"), PASSWORD, null);
+        Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
+        aces.add(new ZimbraACE(ACL.GUID_AUTHUSER, GranteeType.GT_AUTHUSER, Right.RT_viewFreeBusy, false));
+        PermUtil.grantAccess(target, aces);
+        
+        // zimbra user should be allowed
+        verify(zimbra, target, Right.RT_viewFreeBusy, true);
+        
+        // external usr should not be allowed
+        verify(guest, target, Right.RT_viewFreeBusy, false);
+        
+        // no one should be allowed for a non-granted right
+        verify(zimbra, target, Right.RT_invite, false);
+        verify(guest, target, Right.RT_invite, false);
+    }
+    
+    /*
      * test guest(with a non-Zimbra email address, and a password) grantee
      * Note: GST grantee is not yet implemented for now, the result will be the same as PUB grantee, which is supported)
      */
-    public void testGuest() throws Exception {
+    public void testGranteeGuest() throws Exception {
         Provisioning prov = Provisioning.getInstance();
         
         /*
@@ -181,10 +208,10 @@ public class TestACL extends TestCase {
         /*
          * setup targets
          */
-        Account target = prov.createAccount(getEmailAddr("target-test-guest"), "test123", null);
+        Account target = prov.createAccount(getEmailAddr("testGranteeGuest-target"), PASSWORD, null);
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(new ZimbraACE(ACL.ANONYMOUS_ACCT, Right.RT_viewFreeBusy, false));
-        PermUtil.modifyACEs(target, aces);
+        PermUtil.grantAccess(target, aces);
         
         // right allowed for PUB
         verify(guest, target, Right.RT_viewFreeBusy, true);
@@ -196,7 +223,7 @@ public class TestACL extends TestCase {
     /*
      * test anonymous(without any identity) grantee
      */
-    public void testAnon() throws Exception {
+    public void testGranteeAnon() throws Exception {
         Provisioning prov = Provisioning.getInstance();
         
         /*
@@ -207,10 +234,10 @@ public class TestACL extends TestCase {
         /*
          * setup targets
          */
-        Account target = prov.createAccount(getEmailAddr("target-test-anon"), "test123", null);
+        Account target = prov.createAccount(getEmailAddr("testGranteeAnon-target"), PASSWORD, null);
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(new ZimbraACE(ACL.ANONYMOUS_ACCT, Right.RT_viewFreeBusy, false));
-        PermUtil.modifyACEs(target, aces);
+        PermUtil.grantAccess(target, aces);
         
         // anon grantee
         verify(anon, target, Right.RT_viewFreeBusy, true);
@@ -221,30 +248,30 @@ public class TestACL extends TestCase {
         verify(null, target, Right.RT_invite, false);
     }
     
-    public void testGroup() throws Exception {
+    public void testGranteeGroup() throws Exception {
         Provisioning prov = Provisioning.getInstance();
         
         /*
          * setup grantees
          */
-        Account user1 = prov.createAccount(getEmailAddr("user1"), "test123", null);
-        Account user2 = prov.createAccount(getEmailAddr("user2"), "test123", null);
-        Account user3 = prov.createAccount(getEmailAddr("user3"), "test123", null);
+        Account user1 = prov.createAccount(getEmailAddr("testGranteeGroup-user1"), PASSWORD, null);
+        Account user2 = prov.createAccount(getEmailAddr("testGranteeGroup-user2"), PASSWORD, null);
+        Account user3 = prov.createAccount(getEmailAddr("testGranteeGroup-user3"), PASSWORD, null);
         
         /*
          * setup groups
          */
-        DistributionList groupA = prov.createDistributionList(getEmailAddr("group-a"), new HashMap<String, Object>());
+        DistributionList groupA = prov.createDistributionList(getEmailAddr("testGranteeGroup-groupA"), new HashMap<String, Object>());
         prov.addMembers(groupA, new String[] {user1.getName(), user2.getName()});
         
         /*
          * setup targets
          */
-        Account target = prov.createAccount(getEmailAddr("target-test-group"), "test123", null);
+        Account target = prov.createAccount(getEmailAddr("testGroup-target"), PASSWORD, null);
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         aces.add(new ZimbraACE(user1, Right.RT_viewFreeBusy, true));
         aces.add(new ZimbraACE(groupA, Right.RT_viewFreeBusy, false));
-        PermUtil.modifyACEs(target, aces);
+        PermUtil.grantAccess(target, aces);
         
         // group member, but account is specifically denied
         verify(user1, target, Right.RT_viewFreeBusy, false);
@@ -265,20 +292,108 @@ public class TestACL extends TestCase {
         /*
          * setup grantees
          */
-        Account zimbraUser = prov.createAccount(getEmailAddr("zimbra-user"), "test123", null);
+        Account zimbraUser = prov.createAccount(getEmailAddr("zimbra-user"), PASSWORD, null);
         Account guest = guestAccount("guest@external.com", "whocares");
         Account anon = anonAccount();
         
         /*
          * setup targets
          */
-        Account target = prov.createAccount(getEmailAddr("target-no-acl"), "test123", null);
+        Account target = prov.createAccount(getEmailAddr("testNoACL-target"), PASSWORD, null);
         
         for (Right right : Right.values()) {
             verifyDefault(zimbraUser, target, right);
             verifyDefault(guest, target, right);
             verifyDefault(anon, target, right);
         }
+    }
+    
+    public void testGrantConflict() throws Exception {
+        Provisioning prov = Provisioning.getInstance();
+        
+        /*
+         * setup grantees
+         */
+        Account conflict = prov.createAccount(getEmailAddr("testGrantConflict-conflict"), PASSWORD, null);
+        
+        /*
+         * setup targets
+         */
+        Account target = prov.createAccount(getEmailAddr("testGrantConflict-target"), PASSWORD, null);
+        Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
+        aces.add(new ZimbraACE(conflict, Right.RT_viewFreeBusy, true));
+        aces.add(new ZimbraACE(conflict, Right.RT_viewFreeBusy, false));
+        PermUtil.grantAccess(target, aces);
+        
+        // verify that only one is added 
+        Set<ZimbraACE> acl = PermUtil.getACEs(target, null);
+        assertEquals(1, acl.size());
+    }
+    
+    public void testGrantDuplicate() throws Exception {
+        Provisioning prov = Provisioning.getInstance();
+        
+        /*
+         * setup grantees
+         */
+        Account duplicate = prov.createAccount(getEmailAddr("testGrantDuplicate-duplicate"), PASSWORD, null);
+        
+        /*
+         * setup targets
+         */
+        Account target = prov.createAccount(getEmailAddr("testGrantDuplicate-target"), PASSWORD, null);
+        Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
+        aces.add(new ZimbraACE(duplicate, Right.RT_viewFreeBusy, true));
+        aces.add(new ZimbraACE(duplicate, Right.RT_viewFreeBusy, true));
+        PermUtil.grantAccess(target, aces);
+        
+        // verify that only one is added 
+        Set<ZimbraACE> acl = PermUtil.getACEs(target, null);
+        assertEquals(1, acl.size());
+    }
+    
+    public void testGrant() throws Exception {
+        Provisioning prov = Provisioning.getInstance();
+        
+        /*
+         * setup grantees
+         */
+        Account user = prov.createAccount(getEmailAddr("testGrant-user"), PASSWORD, null);
+        DistributionList group = prov.createDistributionList(getEmailAddr("testGrant-group"), new HashMap<String, Object>());
+        
+        /*
+         * setup targets
+         */
+        Account target = prov.createAccount(getEmailAddr("testGrant-target"), PASSWORD, null);
+        
+        // grant some permissions 
+        Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
+        aces.add(new ZimbraACE(user, Right.RT_viewFreeBusy, true));
+        aces.add(new ZimbraACE(group, Right.RT_viewFreeBusy, true));
+        PermUtil.grantAccess(target, aces);
+        
+        // verify the grants were added
+        Set<ZimbraACE> acl = PermUtil.getACEs(target, null);
+        assertEquals(2, acl.size());
+        
+        // grant some more
+        aces.clear();
+        aces.add(new ZimbraACE(ACL.ANONYMOUS_ACCT, Right.RT_viewFreeBusy, false));
+        PermUtil.grantAccess(target, aces);
+        
+        // verify the grants were added
+        acl = PermUtil.getACEs(target, null);
+        assertEquals(3, acl.size());
+        
+        // grant some more
+        aces.clear();
+        aces.add(new ZimbraACE(ACL.GUID_AUTHUSER, GranteeType.GT_AUTHUSER, Right.RT_viewFreeBusy, false));
+        PermUtil.grantAccess(target, aces);
+        
+        // verify the grants were added
+        acl = PermUtil.getACEs(target, null);
+        assertEquals(4, acl.size());
+        
     }
 
     public static void main(String[] args) throws Exception {

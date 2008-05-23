@@ -1,6 +1,8 @@
 package com.zimbra.cs.account.accesscontrol;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
@@ -11,85 +13,193 @@ import com.zimbra.cs.account.Provisioning;
 
 public class ZimbraACL {
     
-    // put ACEs in buckets by grantee type
-    Set<ZimbraACE> mUSRGrants;
-    Set<ZimbraACE> mGRPGrants;
-    Set<ZimbraACE> mPUBGrants;
+    // non-public, non-authuser aces
+    Set<ZimbraACE> mAces;
+        
+    // authuer aces
+    Set<ZimbraACE> mAuthuserAces;
+    
+    // public aces
+    Set<ZimbraACE> mPublicAces;
+
     
     /**
-     * ctor for checking permissions, 
+     * ctor for deserializing from LDAP
+     * 
+     * It is assumed that the ACL in LDAP is correctly built and saved.
+     * For perf reason, this ctor does not check for duplicate/conflict ACEs, 
+     * it just loads all ACEs.
+     * 
      * @param aces
      * @throws ServiceException
      */
     public ZimbraACL(String[] aces) throws ServiceException {
-        for (String ace : aces) {
-            ZimbraACE zACE = new ZimbraACE(ace);
-            addGrant(zACE);
+        for (String aceStr : aces) {
+            ZimbraACE ace = new ZimbraACE(aceStr);
+            Set<ZimbraACE> aceSet = aceSetByGranteeType(ace.getGranteeType(), true);
+            aceSet.add(ace);
         }
     }
     
-    public ZimbraACL(Set<ZimbraACE> aces) throws ServiceException {
-        for (ZimbraACE ace : aces) {
-            addGrant(ace);
-        }
-    }
-    
-    /*
-     * add an ACE to the proper bucket
+    /**
+     * ctor for modifying ACEs
+     * 
+     * This ctor DOES check for duplicate/conflict(allow and deny a right to the same grantee).
+     * 
+     * @param aces
+     * @throws ServiceException
      */
-    private void addGrant(ZimbraACE ace) throws ServiceException {
-        switch (ace.getGranteeType()) {
-        case GT_USER: 
-            if (mUSRGrants == null) mUSRGrants = new HashSet<ZimbraACE>();
-            mUSRGrants.add(ace);
-            break;
-        case GT_GROUP:
-            if (mGRPGrants == null) mGRPGrants = new HashSet<ZimbraACE>();
-            mGRPGrants.add(ace);
-            break;
-        case GT_PUBLIC:
-            if (mPUBGrants == null) mPUBGrants = new HashSet<ZimbraACE>();
-            mPUBGrants.add(ace);
-            break;
-        default: throw ServiceException.FAILURE("unknown ACL grantee type: " + ace.getGranteeType().name(), null);
+    public ZimbraACL(Set<ZimbraACE> aces) throws ServiceException {
+        grantAccess(aces);
+    }
+
+    private Set<ZimbraACE> aceSetByGranteeType(GranteeType granteeType, boolean createIfNotExist) {
+        if (GranteeType.GT_AUTHUSER == granteeType) {
+            if (mAuthuserAces == null && createIfNotExist)
+                mAuthuserAces = new HashSet<ZimbraACE>();
+            return mAuthuserAces;
+        } else if (GranteeType.GT_PUBLIC == granteeType) {
+            if (mPublicAces == null && createIfNotExist)
+                mPublicAces = new HashSet<ZimbraACE>();
+            return mPublicAces;
+        } else {
+            if (mAces == null && createIfNotExist)
+                mAces = new HashSet<ZimbraACE>();
+            return mAces;
         }
     }
     
-    private Boolean hasRight(Set<ZimbraACE> grants, Account grantee, Right rightNeeded) throws ServiceException {
-        if (grants == null)
-            return null;
-        
-        Boolean result = null;
-        for (ZimbraACE ace : grants) {
-            if (ace.match(grantee, rightNeeded)) {
-                // if denied, return denied
-                if (ace.denied())
-                    return Boolean.FALSE;
-                else
-                    result = Boolean.TRUE;  // allowed, don't return yet - still need to check if there are any denied
+    /**
+     * @param aceToGrant ace to revoke
+     * @return whether aceToGrant was actually added to the ACL. 
+     */
+    private boolean grant(Set<ZimbraACE> aceSet, ZimbraACE aceToGrant) {
+        for (ZimbraACE ace : aceSet) {
+            if (ace.isGrantee(aceToGrant.getGrantee()) &&
+                ace.getRight() == aceToGrant.getRight()) {
+                if (ace.deny() == aceToGrant.deny()) {
+                    // already has this ACE, return "not added"
+                    return false;
+                } else {
+                    // the grantee had been granted the right, but was for a different allow/deny,
+                    // set it to the new allow/deny and return "added"
+                    ace.setDeny(aceToGrant.deny());
+                    return true;
+                }
             }
         }
         
+        // the right had not been granted to the grantee, add it
+        aceSet.add(aceToGrant);
+        return true;
+    }
+    
+    /**
+     * @param aceToRevoke ace to revoke
+     * @return whether aceToRevoke was actually removed from the ACL. 
+     */
+    private boolean revoke(Set<ZimbraACE> aceSet, ZimbraACE aceToRevoke) {
+        if (aceSet == null)
+            return false;
+        
+        for (ZimbraACE ace : aceSet) {
+            if (ace.isGrantee(aceToRevoke.getGrantee()) &&
+                ace.getRight() == aceToRevoke.getRight() &&
+                ace.deny() == aceToRevoke.deny()) {
+                aceSet.remove(ace);
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    public Set<ZimbraACE> grantAccess(Set<ZimbraACE> acesToGrant) {
+        Set<ZimbraACE> granted = new HashSet<ZimbraACE>();
+        for (ZimbraACE ace : acesToGrant) {
+            Set<ZimbraACE> aceSet = aceSetByGranteeType(ace.getGranteeType(), true);
+            if (grant(aceSet, ace))
+                granted.add(ace);
+        }
+        return granted; 
+    }
+    
+    /**
+     * Removes the right granted(allow or deny) to the specified id.  
+     * If the right was not previously granted to the target, no error is 
+     * thrown.
+     * 
+     * Note, the deny flag of aceToRevoke has to match the deny flag in the 
+     * current grants, or else the ACE won't be removed.
+     * 
+     * e.g. if the current ACL has: user-A usr -invite
+     *      and aceToRevoke has: user-A usr invite
+     *      then the aceToRevoke will NOT be revoked, because it does not match.
+     * 
+     * @param aceToRevoke ace to revoke
+     * @return the set of ZimbraACE that are successfully revoked.
+     */
+    public Set<ZimbraACE> revokeAccess(Set<ZimbraACE> acesToRevoke) {
+        Set<ZimbraACE> revoked = new HashSet<ZimbraACE>();
+        for (ZimbraACE ace : acesToRevoke) {
+            Set<ZimbraACE> aceSet = aceSetByGranteeType(ace.getGranteeType(), false);
+            if (revoke(aceSet, ace))
+                revoked.add(ace);
+        }
+        return revoked;    
+    }
+    
+    /**
+     * Returns if grantee, as a Zimbra user, is allowed by the set of ACEs in acesByType.
+     * Returns null if there isn't a match for grantee as a Zimbra user
+     * 
+     * @param acesByType
+     * @param grantee
+     * @param rightNeeded
+     * @return
+     * @throws ServiceException
+     */
+    private Boolean hasRightAsUser(Account grantee, Right rightNeeded) throws ServiceException {
+        if (mAces == null)
+            return null;
+        
+        Boolean result = null;
+        for (ZimbraACE ace : mAces) {
+            if (ace.getGranteeType() == GranteeType.GT_USER) {
+                if (ace.matches(grantee, rightNeeded)) {
+                    if (ace.deny())
+                        return Boolean.FALSE;
+                    else
+                        return Boolean.TRUE;
+                }
+            }
+        }
         return result;
     }
     
-    private Boolean hasRightGRP(Account grantee, Right rightNeeded) throws ServiceException {
-        if (mGRPGrants == null)
+    private Boolean hasRightAsGroup(Account grantee, Right rightNeeded) throws ServiceException {
+        if (mAces == null)
             return null;
         
         // Boolean result = null;
         DistributionList mostSpecificMatched = null; // keep tract of the most specific group that matches grantee
         Provisioning prov = Provisioning.getInstance();
-        for (ZimbraACE ace : mGRPGrants) {
-            if (ace.match(grantee, rightNeeded)) {
-                DistributionList dl = prov.get(Provisioning.DistributionListBy.id, ace.getGranteeId());
+        for (ZimbraACE ace : mAces) {
+            if (ace.matches(grantee, rightNeeded)) {
+                DistributionList dl = prov.get(Provisioning.DistributionListBy.id, ace.getGrantee());
                 if (dl == null) {
-                    ZimbraLog.account.warn("cannot find DL " + ace.getGranteeId() +  ", ACE " + ace.toString() + " ignored");
+                    ZimbraLog.account.warn("cannot find DL " + ace.getGrantee() +  ", ACE " + ace.toString() + " ignored");
                     continue;
                 }
                 
                 if (mostSpecificMatched == null) {
                     mostSpecificMatched = dl;
+                    
+                    // TODO
+                    if (ace.deny())
+                        return Boolean.FALSE;
+                    else
+                        return Boolean.TRUE;
+                    
                 } else {
                     /*
                      * TODO: need to take care of matching DLs that are not members of one another,
@@ -107,21 +217,66 @@ public class ZimbraACL {
             }
         }
         
-        return (mostSpecificMatched != null);
+        return null;
+    }
+    
+    private Boolean hasRightAsAuthuser(Account grantee, Right rightNeeded) throws ServiceException {
+        if (mAuthuserAces == null)
+            return null;
+        
+        Boolean result = null;
+        for (ZimbraACE ace : mAuthuserAces) {
+            if (ace.matches(grantee, rightNeeded)) {
+                if (ace.deny())
+                    return Boolean.FALSE;
+                else
+                    return Boolean.TRUE;
+            }
+        }
+        return result;
+    }
+    
+    
+    private Boolean hasRightAsGuest(Account grantee, Right rightNeeded) throws ServiceException {
+        return null;  //TODO
+    }
+    
+    private Boolean hasRightAsPublic(Account grantee, Right rightNeeded) throws ServiceException {
+        if (mPublicAces == null)
+            return null;
+        
+        Boolean result = null;
+        for (ZimbraACE ace : mPublicAces) {
+            if (ace.matches(grantee, rightNeeded)) {
+                if (ace.deny())
+                    return Boolean.FALSE;
+                else
+                    return Boolean.TRUE;
+            }
+        }
+        return result;
     }
     
     boolean hasRight(Account grantee, Right rightNeeded) throws ServiceException {
         Boolean result = null;
         
-        result = hasRight(mUSRGrants, grantee, rightNeeded);
+        result = hasRightAsUser(grantee, rightNeeded);
         if (result != null)
             return result;
         
-        result = hasRightGRP(grantee, rightNeeded);
+        result = hasRightAsGroup(grantee, rightNeeded);
         if (result != null)
             return result;
         
-        result = hasRight(mPUBGrants, grantee, rightNeeded);
+        result = hasRightAsAuthuser(grantee, rightNeeded);
+        if (result != null)
+            return result;
+        
+        result = hasRightAsGuest(grantee, rightNeeded);
+        if (result != null)
+            return result;
+        
+        result = hasRightAsPublic(grantee, rightNeeded);
         if (result != null)
             return result;
         
@@ -137,82 +292,50 @@ public class ZimbraACL {
      */
     Set<ZimbraACE> getACEs(Set<Right> rights) {
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
-        if (mUSRGrants != null) {
-            for (ZimbraACE ace : mUSRGrants)
-                if (rights == null || rights.contains(ace.getRight()))
-                    aces.add(ace);
-        }
         
-        if (mGRPGrants != null) {
-            for (ZimbraACE ace : mGRPGrants)
-                if (rights == null || rights.contains(ace.getRight()))
-                    aces.add(ace);
-        }
-        
-        if (mPUBGrants != null) {
-            for (ZimbraACE ace : mPUBGrants)
-                if (rights == null || rights.contains(ace.getRight()))
-                    aces.add(ace);
+        if (rights == null) {
+            if (mAces != null) aces.addAll(mAces);
+            if (mAuthuserAces != null) aces.addAll(mAuthuserAces);
+            if (mPublicAces != null) aces.addAll(mPublicAces);
+        } else {
+            if (mAces != null) {
+                for (ZimbraACE ace : mAces) {
+                    if (rights.contains(ace.getRight()))
+                        aces.add(ace);
+                }
+            }
+            if (mAuthuserAces != null) {
+                for (ZimbraACE ace : mAuthuserAces) {
+                    if (rights.contains(ace.getRight()))
+                        aces.add(ace);
+                }
+            }
+            if (mPublicAces != null) {
+                for (ZimbraACE ace : mPublicAces) {
+                    if (rights.contains(ace.getRight()))
+                        aces.add(ace);
+                }
+            }
         }
         
         return aces;
     }
     
-    void modifyACEs(Set<ZimbraACE> aces) throws ServiceException {
-        // TODO
-    }
-    
-    void revokeACEs(Set<ZimbraACE> acesToRevoke) throws ServiceException {
-        Set<ZimbraACE> aces = null;
-        for (ZimbraACE ace : acesToRevoke) {
-            switch (ace.getGranteeType()) {
-            case GT_USER: aces = mUSRGrants; break;
-            case GT_GROUP: aces = mGRPGrants; break;
-            case GT_PUBLIC: aces = mPUBGrants; break;     
-            default: throw ServiceException.FAILURE("unknown ACL grantee type: " + ace.getGranteeType().name(), null);
-            }
-            
-            revoke(aces, ace);
-        }
-    }
-    
-    /** Removes the right granted to the specified id.  If the right 
-     *  was not previously granted to the target, no error is thrown.
-     */
-    private void revoke(Set<ZimbraACE> aces, ZimbraACE aceToRevoke) {
-        for (ZimbraACE ace : aces) {
-            if (ace.isGrantee(aceToRevoke.getGranteeId()) &&
-                ace.getRight() == aceToRevoke.getRight() &&
-                ace.denied() == aceToRevoke.denied()) {
-                aces.remove(ace);
-                return;
-            }
-        }
-    }
-    
-    /**
-     * serialize ACL to a set of Strings
-     * 
-     * @return A set of ACEs in Strin, null if the ACL is empty.
-     */
-    public Set<String> serialize() {
-        Set<String> aces = new HashSet<String>();
+    public List<String> serialize() {
+        List<String> aces = new ArrayList<String>();
         
-        if (mUSRGrants != null) {
-            for (ZimbraACE ace : mUSRGrants)
+        if (mAces != null) {
+            for (ZimbraACE ace : mAces)
                 aces.add(ace.serialize());
         }
-        
-        if (mGRPGrants != null) {
-            for (ZimbraACE ace : mGRPGrants)
+        if (mAuthuserAces != null) {
+            for (ZimbraACE ace : mAuthuserAces)
                 aces.add(ace.serialize());
         }
-         
-        if (mPUBGrants != null) {
-            for (ZimbraACE ace : mPUBGrants)
+        if (mPublicAces != null) {
+            for (ZimbraACE ace : mPublicAces)
                 aces.add(ace.serialize());
         }
-        
         return aces;
     }
 
@@ -230,7 +353,7 @@ public class ZimbraACL {
         
         try {
             ZimbraACL acl = new ZimbraACL(aces);
-            Set<String> serialized = acl.serialize();
+            List<String> serialized = acl.serialize();
             for (String ace : serialized)
                 System.out.println(ace);
         } catch (ServiceException e) {
