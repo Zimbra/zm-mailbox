@@ -34,6 +34,7 @@ import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.caldav.Filter;
 import com.zimbra.cs.dav.property.CalDavProperty;
 import com.zimbra.cs.mailbox.CalendarItem;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
@@ -144,6 +145,8 @@ public interface CalendarObject {
             buf.append("BEGIN:VCALENDAR\r\n");
             buf.append("VERSION:").append(ZCalendar.sIcalVersion).append("\r\n");
             buf.append("PRODID:").append(ZCalendar.sZimbraProdID).append("\r\n");
+			if (mFolderId == Mailbox.ID_FOLDER_INBOX)
+	            buf.append("METHOD:REQUEST").append("\r\n");
             Iterator<ICalTimeZone> iter = mTzmap.tzIterator();
             while (iter.hasNext()) {
                 ICalTimeZone tz = (ICalTimeZone) iter.next();
