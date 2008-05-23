@@ -495,7 +495,7 @@ class ImapFolderSync {
         debug("Fetching %d new IMAP message(s)", uids.size());
         for (int i = 0; i < uids.size(); i += FETCH_SIZE) {
             int j = Math.min(i + FETCH_SIZE - 1, uids.size() - 1);
-            fetchMsgs(uids.get(i) + ":" + uids.get(j));
+            fetchMsgs(uids.get(j) + ":" + uids.get(i));
         }
     }
 
