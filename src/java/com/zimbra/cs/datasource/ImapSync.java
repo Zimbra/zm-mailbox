@@ -23,7 +23,6 @@ import com.zimbra.cs.mailclient.imap.IDInfo;
 import com.zimbra.cs.mailclient.imap.ImapCapabilities;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.ZimbraApplication;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.localconfig.LC;
@@ -49,7 +48,6 @@ public class ImapSync extends AbstractMailItemImport {
     private boolean fullSync;
 
     private static final boolean DEBUG = LC.javamail_imap_debug.booleanValue();
-    private static final boolean FAIL_ON_SYNC_ERROR = true;
     
     private static final Log LOG = ZimbraLog.datasource;
     static {
@@ -161,7 +159,12 @@ public class ImapSync extends AbstractMailItemImport {
         // avoid problems when local messages are moved between folders
         // (see bug 27924).
         for (ImapFolderSync ifs : syncedFolders.values()) {
-            ifs.appendNewMessages();
+            try {
+                ifs.appendNewMessages();
+            } catch (Exception e) {
+                String name = ifs.getFolder().getName();
+                LOG.error("Synchronization of folder '%s' failed", name, e);
+            }
         }
         // Any remaining folder trackers are for folders which were deleted
         // both locally and remotely.
@@ -184,23 +187,19 @@ public class ImapSync extends AbstractMailItemImport {
                 syncedFolders.put(tracker.getItemId(), ifs);
             }
         } catch (Exception e) {
-            LOG.error("Skipped synchronization of IMAP folder '%s' due to error", path, e);
-            if (FAIL_ON_SYNC_ERROR) {
-                throw ServiceException.FAILURE(
-                    "Synchronization of IMAP folder '" + path + "' failed", e);
-            }
+            LOG.error("Synchronization of IMAP folder '%s' failed", path, e);
         }
     }
     
     private void syncLocalFolder(Folder folder) throws ServiceException, IOException {
-        LOG.debug("Processing local folder '%s'", folder.getPath());
+        LOG.debug("Processing local folder '%s'", folder.getName());
         String name = folder.getName();
         int id = folder.getId();
         ImapFolder tracker = trackedFolders.getByItemId(id);
         if (tracker != null) {
             trackedFolders.remove(tracker);
         } else if (!dataSource.isSyncEnabled(folder.getPath())) {
-            LOG.info("Synchronization disabled for local folder '%s'", name);
+            LOG.info("Synchronization disabled for folder '%s'", name);
             return;
         }
         try {
@@ -208,11 +207,7 @@ public class ImapSync extends AbstractMailItemImport {
             ifs.syncFolder(folder, fullSync);
             syncedFolders.put(id, ifs);
         } catch (Exception e) {
-            LOG.error("Skipped synchronization of local folder '%s' due to error", name, e);
-            if (FAIL_ON_SYNC_ERROR) {
-                throw ServiceException.FAILURE(
-                    "Synchronization of local folder '" + name + "' failed", e);
-            }
+            LOG.error("Synchronization of folder '%s' failed", name, e);
         }
     }
 
