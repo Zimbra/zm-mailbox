@@ -28,13 +28,12 @@ import java.io.OutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.EOFException;
-import java.util.List;
 
 /**
  * An input stream for reading IMAP response data.
  */
 public final class ImapInputStream extends MailInputStream {
-    private ImapConfig config;
+    private final ImapConfig config;
 
     private static final boolean DEBUG = false;
 
@@ -181,7 +180,7 @@ public final class ImapInputStream extends MailInputStream {
         skipCRLF();
         TraceInputStream is =
             (in instanceof TraceInputStream) ? (TraceInputStream) in : null;
-        if (is != null && is.isEnabled()) {
+        if (is != null && is.isEnabled() && config != null) {
             int maxSize = config.getMaxLiteralTraceSize();
             if (maxSize >= 0 && len > maxSize) {
                 is.suspendTrace("<<< literal data not shown >>>");
@@ -196,7 +195,7 @@ public final class ImapInputStream extends MailInputStream {
     }
 
     private Literal readLiteral(int len) throws IOException {
-        if (len <= config.getMaxLiteralMemSize()) {
+        if (config == null || len <= config.getMaxLiteralMemSize()) {
             // Cache literal data in memory
             byte[] b = new byte[len];
             Io.readFully(in, b);

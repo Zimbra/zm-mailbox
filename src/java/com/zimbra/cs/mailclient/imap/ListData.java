@@ -38,9 +38,9 @@ import java.io.IOException;
  *                   ; Selectability flags; only one per LIST response
  */
 public final class ListData {
-    private Flags flags;
-    private char delimiter;
     private String mailbox;
+    private char delimiter;
+    private Flags flags;
 
     public static ListData read(ImapInputStream is) throws IOException {
         ListData mb = new ListData();
@@ -48,6 +48,8 @@ public final class ListData {
         return mb;
     }
 
+    private ListData() {}
+    
     private void readMailboxList(ImapInputStream is) throws IOException {
         flags = readFlags(is);
         is.skipChar(' ');
@@ -80,6 +82,7 @@ public final class ListData {
     public Flags getFlags() { return flags; }
     public String getMailbox() { return mailbox; }
     public char getDelimiter() { return delimiter; }
+
 
     public String toString() {
         return String.format("{mailbox=%s, delimiter=%s, flags=%s}",

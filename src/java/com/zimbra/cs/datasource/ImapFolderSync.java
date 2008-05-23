@@ -270,7 +270,7 @@ class ImapFolderSync {
     private void createLocalFolder(ListData ld)
         throws ServiceException, IOException {
         String remotePath = ld.getMailbox();
-        String localPath = imapSync.getLocalPath(remotePath, ld.getDelimiter());
+        String localPath = imapSync.getLocalPath(ld);
         if (localPath == null) {
             // LOG.info("Remote IMAP folder '%s' is not being synchronized", remotePath);
             return;

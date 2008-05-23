@@ -17,7 +17,6 @@
 package com.zimbra.cs.datasource;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailclient.imap.Literal;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
@@ -33,9 +32,6 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import java.util.List;
 import java.util.Date;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.ListIterator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -44,7 +40,7 @@ import java.io.File;
 import java.io.OutputStream;
 import java.io.FileOutputStream;
 
-final class ImapUtil {
+public final class ImapUtil {
     public static void append(ImapConnection ic, String mbox, Message msg)
         throws ServiceException, IOException {
         append(ic, mbox, msg, false);
@@ -109,44 +105,75 @@ final class ImapUtil {
         return mds;
     }
 
+    private static final String INBOX = "INBOX";
+    private static final int INBOX_LEN = INBOX.length();
+
+    // Used for sorting ListData lexicographically in reverse order. This
+    // ensures that inferior mailboxes will be processed before their
+    // parents, which avoids problems when deleting folders. Also, ignore
+    // case of INBOX part when comparing INBOX or its inferiors.
+    private static final Comparator<ListData> COMPARATOR =
+        new Comparator<ListData>() {
+            public int compare(ListData ld1, ListData ld2) {
+                String name1 = getNormalizedName(ld1);
+                String name2 = getNormalizedName(ld2);
+                return name2.compareTo(name1);
+            }
+        };
+
     public static List<ListData> listFolders(ImapConnection ic)
         throws IOException {
-        List<ListData> list = ic.list("", "*");
-        Set<String> names = new HashSet<String>(list.size());
-        ListIterator<ListData> it = list.listIterator();
-        while (it.hasNext()) {
-            ListData ld = it.next();
-            String name = fixFolderName(ld.getMailbox(), ld.getDelimiter());
-            if (!names.add(name)) {
-                ZimbraLog.datasource.warn(
-                    "Skipping duplicate IMAP folder name: " + ld.getMailbox());
-                it.remove();
-            }
-        }
-        // Return list data sorted in descending order of mailbox name length.
-        // This allows us to avoid problems if a parent mailbox is deleted
-        // before its child.
-        Collections.sort(list, new Comparator<ListData>() {
-            public int compare(ListData ld1, ListData ld2) {
-                return ld2.getMailbox().length() - ld1.getMailbox().length();
-            }
-        });
-        return list;
+        return sortFolders(ic.list("", "*"));
     }
 
-    /*
-     * Workaround for bug 26483. Convert INBOX part of folder name to upper
-     * case. This is needed to fix an issue where GMail's LIST command
-     * sometimes returns the same folder name twice where INBOX differs
-     * only in case.
-     */
-    private static String fixFolderName(String name, char separator) {
-        int len = name.length();
-        if (len < 5 || !name.substring(0, 5).equalsIgnoreCase("INBOX")) {
+    public static List<ListData> sortFolders(List<ListData> folders) {
+        // Keep INBOX and inferiors separate so we can return them first
+        ListData inbox = null;
+        List<ListData> inboxInferiors = new ArrayList<ListData>();
+        List<ListData> otherFolders = new ArrayList<ListData>();
+        for (ListData ld : folders) {
+            String name = ld.getMailbox();
+            if (name.equalsIgnoreCase(INBOX)) {
+                if (inbox == null) {
+                    inbox = ld; // Ignore duplicate INBOX (fixes bug 26483)
+                }
+            } else if (isInboxInferior(ld)) {
+                inboxInferiors.add(ld);
+            } else {
+                otherFolders.add(ld);
+            }
+        }
+        List<ListData> sorted = new ArrayList<ListData>(folders.size());
+        if (inbox != null) {
+            sorted.add(inbox);
+        }
+        Collections.sort(inboxInferiors, COMPARATOR);
+        sorted.addAll(inboxInferiors);
+        Collections.sort(otherFolders, COMPARATOR);
+        sorted.addAll(otherFolders);
+        return sorted;
+    }
+
+    private static String getNormalizedName(ListData ld) {
+        String name = ld.getMailbox();
+        if (name.equalsIgnoreCase(INBOX)) {
+            return INBOX;
+        } else if (isInboxInferior(ld)) {
+            return INBOX + name.substring(INBOX_LEN);
+        } else {
             return name;
         }
-        if (len == 5) return "INBOX";
-        return name.charAt(5) == separator ?
-            "INBOX" + name.substring(5) : name;
     }
+    
+    /*
+     * Returns true if specified ListData refers to am inferior of INBOX
+     * (i.e. "INBOX/Foo").
+     */
+    private static boolean isInboxInferior(ListData ld) {
+        String name = ld.getMailbox();
+        return name.length() > INBOX_LEN &&
+               name.substring(0, INBOX_LEN).equalsIgnoreCase(INBOX) &&
+               name.charAt(INBOX_LEN) == ld.getDelimiter();
+    }
+
 }
