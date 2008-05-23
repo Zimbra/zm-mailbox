@@ -196,7 +196,14 @@ public class IMMessage {
                 Element e = parent.addElement("body");
 //                try {
 //                    e.setText(HtmlDefang.defang(mBody.toString(), true));
-                    e.setText(mBody.toString());
+                if (mBody.hasXHTML()) {
+                    e.addAttribute("html", true);
+                    e.setText(mBody.getXHTMLAsString());
+                } else {
+                    e.addAttribute("html", false);
+                    e.setText(mBody.getPlainText());
+                }
+                e.setText(mBody.toString());
 //                } catch(IOException ex) {
 //                    ZimbraLog.im.warn("Caught exception while HtmlDefang-ing IM message: \""+mBody.toString()+"\"", ex);
 //                }
