@@ -107,6 +107,10 @@ public class ZContactHit implements ZSearchHit {
         return mTagIds;
     }
 
+    public boolean hasTags() {
+        return mTagIds != null && mTagIds.length() > 0;
+    }
+
     public String getEmail() {
         return mEmail;
     }
@@ -141,6 +145,18 @@ public class ZContactHit implements ZSearchHit {
 
     public String getId() {
         return mId;
+    }
+
+    public String getFlags() {
+        return mFlags;
+    }
+
+    public boolean hasFlags() {
+        return mFlags != null && mFlags.length() > 0;
+    }
+
+    public boolean isFlagged() {
+        return hasFlags() && mFlags.indexOf(ZContact.Flag.flagged.getFlagChar()) != -1;
     }
 
     public String getRevision() {
