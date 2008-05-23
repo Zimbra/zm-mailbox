@@ -118,7 +118,13 @@ public class CloudRouteSession extends Session {
             return toRet;
         }
         catch (Exception e) {
-            ZimbraLog.im.warn("Error trying to connect to remote server: " + hostname + ":" + port, e);
+            if (ZimbraLog.im.isDebugEnabled()) {
+                ZimbraLog.im.debug("Error trying to connect to remote server: " + hostname + ":" + port, e);
+            } else {
+                if (ZimbraLog.im.isInfoEnabled()) {
+                    ZimbraLog.im.info("Error trying to connect to remote server: " + hostname + ":" + port);
+                }
+            }
             throw e;
         }
     }
