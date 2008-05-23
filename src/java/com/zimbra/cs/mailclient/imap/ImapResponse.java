@@ -90,9 +90,7 @@ public final class ImapResponse {
             break;
         case SEARCH:
             // "SEARCH" *(SP nz-number)
-            if (is.match(' ')) {
-                data = readSearchData(is);
-            }
+            data = readSearchData(is);
             break;
         case STATUS:
             // "STATUS" SP mailbox SP "(" [status-att-list] ")"
@@ -117,9 +115,9 @@ public final class ImapResponse {
 
     private List<Long> readSearchData(ImapInputStream is) throws IOException {
         ArrayList<Long> ids = new ArrayList<Long>();
-        do {
+        while (is.match(' ')) {
             ids.add(is.readNZNumber());
-        } while (is.match(' '));
+        }
         return ids;
     }
     

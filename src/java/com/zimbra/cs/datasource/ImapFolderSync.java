@@ -135,6 +135,10 @@ class ImapFolderSync {
         syncMessages(fullSync);
     }
 
+    public Folder getFolder() {
+        return folder;
+    }
+
     private void createImapFolder(String name) throws IOException {
         debug("Creating IMAP folder '%s'", name);
         try {
@@ -147,7 +151,7 @@ class ImapFolderSync {
             }
         }
     }
-    
+
     /*
      * Synchronizes messages between local and remote folder.
      * Get list of all local ids:
