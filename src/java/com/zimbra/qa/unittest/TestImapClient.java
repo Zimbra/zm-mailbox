@@ -26,17 +26,26 @@ import com.zimbra.cs.mailclient.imap.CAtom;
 import com.zimbra.cs.mailclient.imap.ListData;
 import com.zimbra.cs.mailclient.imap.Mailbox;
 import com.zimbra.cs.mailclient.imap.IDInfo;
+import com.zimbra.cs.mailclient.imap.MailboxName;
+import com.zimbra.cs.mailclient.imap.Flags;
+import com.zimbra.cs.mailclient.imap.Literal;
+import com.zimbra.cs.mailclient.imap.BodyStructure;
+import com.zimbra.cs.mailclient.imap.Body;
 import com.zimbra.cs.mailclient.util.SSLUtil;
+import com.zimbra.cs.mailclient.util.Ascii;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import junit.framework.TestCase;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.List;
+import java.util.Date;
 
 import org.apache.log4j.BasicConfigurator;
 
 public class TestImapClient extends TestCase {
+    private ImapConfig config;
     private ImapConnection connection;
 
     private static final String HOST = "localhost";
@@ -45,6 +54,14 @@ public class TestImapClient extends TestCase {
     private static final String USER = "user1";
     private static final String PASS = "test123";
 
+    private static final String MESSAGE =
+        "Return-Path: dac@zimbra.com\r\n" +
+        "Date: Fri, 27 Feb 2004 15:24:43 -0800 (PST)\r\n" +
+        "From: dac <dac@zimbra.com>\r\n" +
+        "To: bozo <bozo@foo.com>\r\n" +
+        "\r\n" +
+        "This is a test message.\r\n";
+
     private static final boolean DEBUG = true;
 
     static {
@@ -52,7 +69,11 @@ public class TestImapClient extends TestCase {
     }
     
     public void tearDown() throws Exception {
-        if (connection != null) connection.close();
+        if (connection != null) {
+            connection.close();
+        }
+        config = null;
+        connection = null;
     }
 
     public void testLogin() throws Exception {
@@ -97,30 +118,76 @@ public class TestImapClient extends TestCase {
         login();
         List<ListData> lds = connection.list("", "");
         assertTrue(lds.size() == 1);
-        assertEquals('/', (char) lds.get(0).getDelimiter());
+        assertEquals('/', lds.get(0).getDelimiter());
     }
-    
+
+    public void testAppend() throws Exception {
+        login();
+        Mailbox mb = connection.select("INBOX");
+        long exists = mb.getExists();
+        Date date = new Date((System.currentTimeMillis() / 1000) * 1000);
+        Flags flags = Flags.fromSpec("fs");
+        long uid = connection.append("INBOX", Flags.fromSpec("fs"), date,
+                                     new Literal(Ascii.getBytes(MESSAGE)));
+        assertTrue(uid > 0);
+        mb = connection.select("INBOX");
+        assertEquals(1, mb.getExists() - exists);
+        MessageData md = connection.uidFetch(uid, "(FLAGS BODY.PEEK[] INTERNALDATE)");
+        assertNotNull(md);
+        assertEquals(date, md.getInternalDate());
+        assertEquals(uid, md.getUid());
+        assertEquals(flags, md.getFlags());
+        Body[] parts = md.getBodySections();
+        assertNotNull(parts);
+        assertEquals(1, parts.length);
+    }
+
+    public void testDelete() throws Exception {
+        login();
+        Mailbox mb = connection.select("INBOX");
+        long exists = mb.getExists();
+        long uid = connection.append("INBOX", Flags.fromSpec("fs"),
+            new Date(System.currentTimeMillis()), new Literal(Ascii.getBytes(MESSAGE)));
+        assertTrue(uid > 0);
+        mb = connection.select("INBOX");
+        assertEquals(exists, mb.getExists() - 1);
+        connection.uidStore(String.valueOf(uid), "+FLAGS.SILENT", Flags.fromSpec("d"));
+        mb = connection.select("INBOX");
+        assertEquals(exists, mb.getExists() - 1);
+        connection.expunge();
+        assertEquals(exists, mb.getExists());
+    }
+
     public void testFetch() throws Exception {
-        connect(false);
-        connection.login(PASS);
-        connection.select("INBOX");
-        final AtomicInteger count = new AtomicInteger();
-        connection.fetch("1:*", "(ENVELOPE UID)", new ResponseHandler() {
+        login();
+        Mailbox mb = connection.select("INBOX");
+        final AtomicLong count = new AtomicLong(mb.getExists());
+        connection.uidFetch("1:*", "(ENVELOPE UID)", new ResponseHandler() {
             public boolean handleResponse(ImapResponse res) {
                 if (res.getCCode() != CAtom.FETCH) return false;
                 MessageData md = (MessageData) res.getData();
+                assertNotNull(md);
+                assertNotNull(md.getEnvelope());
+                assertNotNull(md.getUid());
+                count.decrementAndGet();
                 System.out.printf("Fetched uid = %s\n", md.getUid());
-                count.incrementAndGet();
                 return true;
             }
         });
+        assertEquals(0, count.longValue());
     }
 
     public void testID() throws Exception {
+        IDInfo id = new IDInfo();
+        id.setName("foo");
+        assertEquals("foo", id.getName());
+        assertEquals("foo", id.get("Name"));
         connect(false);
-        IDInfo id = connection.id();
-        System.out.println("ID = " + id);
-        assertNotNull(id);
+        IDInfo id1 = connection.id(id);
+        assertNotNull(id1);
+        assertEquals("Zimbra", id1.getName());
+        IDInfo id2 = connection.id();
+        assertEquals(id1, id2);
     }
 
     public void testYahoo() throws Exception {
@@ -136,7 +203,7 @@ public class TestImapClient extends TestCase {
         connection.id(id);
         connection.login("test1234");
         char delim = connection.getDelimiter();
-        assertNull(delim);
+        assertEquals(0, delim);
     }
     
     /*
@@ -177,9 +244,7 @@ public class TestImapClient extends TestCase {
     */
 
     private void login() throws IOException {
-        if (connection == null) {
-            connect();
-        }
+        connect();
         connection.login(PASS);
         connection.select("INBOX");
     }
@@ -189,7 +254,15 @@ public class TestImapClient extends TestCase {
     }
     
     private void connect(boolean ssl) throws IOException {
+        if (config == null) {
+            config = getConfig(ssl);
+        }
         System.out.println("---------");
+        connection = new ImapConnection(config);
+        connection.connect();
+    }
+
+    private static ImapConfig getConfig(boolean ssl) throws IOException {
         ImapConfig config = new ImapConfig(HOST, ssl);
         config.setPort(ssl ? SSL_PORT : PORT);
         if (ssl) {
@@ -199,9 +272,8 @@ public class TestImapClient extends TestCase {
         config.setTrace(true);
         config.setMechanism("PLAIN");
         config.setAuthenticationId(USER);
-        config.setRawMode(true);
-        connection = new ImapConnection(config);
-        connection.connect();
+        //config.setRawMode(true);
+        return config;
     }
 
     public static void main(String[] args) throws Exception {

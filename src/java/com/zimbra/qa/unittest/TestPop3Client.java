@@ -160,7 +160,6 @@ public class TestPop3Client extends TestCase {
         config.setTrace(true);
         config.setMechanism("PLAIN");
         config.setAuthenticationId(USER);
-        config.setRawMode(true);
         return config;
     }
 
