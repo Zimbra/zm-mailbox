@@ -108,12 +108,13 @@ public class Recurrence
     public interface IRecurrence extends Cloneable {
         public Metadata encodeMetadata();
         
-        abstract List<Instance> expandInstances(CalendarItem calItem, long start, long end);
+        abstract List<Instance> expandInstances(CalendarItem calItem, long start, long end)
+        throws ServiceException;
         
         // get the first time for which the rule has instances
         public ParsedDateTime getStartTime();
         // get the last time (-1 means forever) for which the rule has instances 
-        public ParsedDateTime getEndTime();
+        public ParsedDateTime getEndTime() throws ServiceException;
 
         public Object clone();
         
@@ -276,7 +277,8 @@ public class Recurrence
             return parent;
         }
 
-        public List<Instance> expandInstances(CalendarItem calItem, long start, long end) {
+        public List<Instance> expandInstances(CalendarItem calItem, long start, long end)
+        throws ServiceException {
             List lists[] = new ArrayList[mRules.size()];
             int num = 0;
             for (Iterator iter = mRules.iterator(); iter.hasNext();) {
@@ -313,7 +315,7 @@ public class Recurrence
             return earliestStart;
         }
         
-        public ParsedDateTime getEndTime() {
+        public ParsedDateTime getEndTime() throws ServiceException {
             ParsedDateTime latestEnd = null;
             for (Iterator iter = mRules.iterator(); iter.hasNext();) {
                 IRecurrence cur = (IRecurrence)iter.next();
@@ -682,17 +684,24 @@ public class Recurrence
         public ParsedDateTime getStartTime() {
             return mDtStart;
         }
-        public ParsedDateTime getEndTime() {
-            if (mRecur != null) {
+        public ParsedDateTime getEndTime() throws ServiceException {
+            if (mDtStart == null) {
+                // VTODOs don't have to have DTSTART
+                return ParsedDateTime.MAX_DATETIME;
+            } else if (mRecur != null) {
+                long endMillis = mRecur.getEstimatedEndTime(mDtStart).getTime();
+                ParsedDateTime end = ParsedDateTime.fromUTCTime(endMillis, mDtStart.getTimeZone());
                 ParsedDateTime until = mRecur.getUntil();
-                if (until != null && mDtStart != null) {
-                    assert(mDuration != null);
-                    ParsedDateTime endPdt = mDtStart.add(mDuration);
-                    ParsedDateTime end = endPdt.cloneWithNewDate(until);
-                    return end;
-                }
+                if (until != null && until.compareTo(end) < 0)
+                    end = until;
+                if (mDuration != null)
+                    end = end.add(mDuration);
+                return end;
+            } else {
+                // non-recurring or invalid rule; assume single instance, end = start + duration
+                ParsedDuration dur = mDuration != null ? mDuration : ParsedDuration.parse(false, 0, 0, 0, 0, 1);
+                return mDtStart.add(dur);
             }
-            return ParsedDateTime.MAX_DATETIME;
         }
 
         public String toString() {
@@ -804,8 +813,8 @@ public class Recurrence
         }
         
         
-        public List<Instance> expandInstances(CalendarItem calItem, long start, long end) 
-        {
+        public List<Instance> expandInstances(CalendarItem calItem, long start, long end)
+        throws ServiceException {
             if (mDtStart == null) {
                 ZimbraLog.calendar.warn("Unable to expand a recurrence with no DTSTART");
                 return new ArrayList<Instance>(0);
@@ -862,7 +871,7 @@ public class Recurrence
             return mDtStart;
         }
         
-        public ParsedDateTime getEndTime() {
+        public ParsedDateTime getEndTime() throws ServiceException {
             if (mAddRules != null) {
                 return mAddRules.getEndTime(); // FIXME should take into account EXCEPTIONS?
             } else if (mDtStart != null) {
@@ -1113,8 +1122,8 @@ public class Recurrence
         
         public int getType() { return TYPE_EXCEPTION; }
 
-        public List<Instance> expandInstances(CalendarItem calItem, long start, long end) 
-        {
+        public List<Instance> expandInstances(CalendarItem calItem, long start, long end)
+        throws ServiceException {
             List<Instance> toRet = super.expandInstances(calItem, start, end);
             
             for (Iterator iter = toRet.iterator(); iter.hasNext();) {
@@ -1248,7 +1257,7 @@ public class Recurrence
             mExceptions.add(rule);
         }
         
-        public List<Instance> expandInstances(CalendarItem calItem, long start, long end) {
+        public List<Instance> expandInstances(CalendarItem calItem, long start, long end) throws ServiceException {
             long startAdjusted = start;
             long endAdjusted = end;
             // Stretch the start/end times to ensure all exception instances are included.

@@ -3204,4 +3204,34 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Zimbra access control list</desc>
 </attr>
 
+<attr id="660" name="zimbraCalendarRecurrenceMaxInstances" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>0</globalConfigValue>
+  <desc>Maximum number of instances expanded per recurrence rule; 0 means unlimited</desc>
+</attr>
+
+<attr id="661" name="zimbraCalendarRecurrenceDailyMaxDays" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>730</globalConfigValue>
+  <desc>Maximum number of days a DAILY recurrence rule can span; 0 means unlimited</desc>
+</attr>
+
+<attr id="662" name="zimbraCalendarRecurrenceWeeklyMaxWeeks" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>520</globalConfigValue>
+  <desc>Maximum number of weeks a WEEKLY recurrence rule can span; 0 means unlimited</desc>
+</attr>
+
+<attr id="663" name="zimbraCalendarRecurrenceMonthlyMaxMonths" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>360</globalConfigValue>
+  <desc>Maximum number of months a MONTHLY recurrence rule can span; 0 means unlimited</desc>
+</attr>
+
+<attr id="664" name="zimbraCalendarRecurrenceYearlyMaxYears" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>100</globalConfigValue>
+  <desc>Maximum number of years a YEARLY recurrence rule can span; 0 means unlimited</desc>
+</attr>
+
+<attr id="665" name="zimbraCalendarRecurrenceOtherFrequencyMaxYears" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>1</globalConfigValue>
+  <desc>Maximum number of years a recurrence rule can span for frequencies other than DAILY/WEEKLY/MONTHLY/YEARLY; 0 means unlimited</desc>
+</attr>
+
 </attrs>

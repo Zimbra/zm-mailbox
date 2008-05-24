@@ -379,11 +379,10 @@ public abstract class CalendarItem extends MailItem {
         item.createBlob(pm, firstInvite, volumeId);
         item.finishCreation(null);
 
-        Pair<Long, Collection<Instance>> pair = item.recomputeRecurrenceEndTime(item.mEndTime);
-        item.mEndTime = pair.getFirst();
+        item.mEndTime = item.recomputeRecurrenceEndTime(item.mEndTime);
 
         if (firstInvite.hasAlarm()) {
-            item.recomputeNextAlarm(nextAlarm, pair.getSecond());
+            item.recomputeNextAlarm(nextAlarm);
             item.saveMetadata();
             AlarmData alarmData = item.getAlarmData();
             if (alarmData != null) {
@@ -402,26 +401,20 @@ public abstract class CalendarItem extends MailItem {
         return item;
     }
 
-    private Pair<Long, Collection<Instance>> recomputeRecurrenceEndTime(long defaultVal)
+    private long recomputeRecurrenceEndTime(long defaultVal)
     throws ServiceException {
         long endTime = defaultVal;
-        Collection<Instance> instances = null;
-        if (isRecurring()) {
-            instances = expandInstances(mStartTime, Long.MAX_VALUE, false);
-            Instance lastInst = null;
-            for (Iterator<Instance> iter = instances.iterator(); iter.hasNext(); ) {
-                lastInst = iter.next();
-            }
-            if (lastInst != null)
-                endTime = lastInst.getEnd();
+        if (mRecurrence != null) {
+            ParsedDateTime e = mRecurrence.getEndTime();
+            if (e != null)
+                endTime = e.getUtcTime();
         }
-        return new Pair<Long, Collection<Instance>>(endTime, instances);
+        return endTime;
     }
 
     // for migration of old data
     public int fixRecurrenceEndTime() throws ServiceException {
-        Pair<Long, Collection<Instance>> pair = recomputeRecurrenceEndTime(mEndTime);
-        long endTime = pair.getFirst();
+        long endTime = recomputeRecurrenceEndTime(mEndTime);
         if (endTime != mEndTime) {
             mEndTime = endTime;
             DbMailItem.updateInCalendarItemTable(this);
@@ -432,7 +425,6 @@ public abstract class CalendarItem extends MailItem {
 
     private boolean updateRecurrence(long nextAlarm) throws ServiceException {
         long startTime, endTime;
-        Collection<Instance> instances = null;
 
         // update our recurrence rule, start with the initial rule
         Invite firstInv = getDefaultInviteOrNull();
@@ -499,9 +491,7 @@ public abstract class CalendarItem extends MailItem {
             
             startTime = dtStartTime != null ? dtStartTime.getUtcTime() : 0;
             endTime = dtEndTime != null ? dtEndTime.getUtcTime() : 0;
-            Pair<Long, Collection<Instance>> pair = recomputeRecurrenceEndTime(mEndTime);
-            endTime = pair.getFirst();
-            instances = pair.getSecond();
+            endTime = recomputeRecurrenceEndTime(mEndTime);
         } else {
             mRecurrence = null;
             ParsedDateTime dtStart = firstInv.getStartTime();
@@ -513,7 +503,7 @@ public abstract class CalendarItem extends MailItem {
 
         // Recompute next alarm.  Bring appointment start time forward to the alarm time,
         // if the next alarm is before the first instance.
-        recomputeNextAlarm(nextAlarm, instances);
+        recomputeNextAlarm(nextAlarm);
         if (mAlarmData != null) {
             long newNextAlarm = mAlarmData.getNextAt();
             if (newNextAlarm > 0 && newNextAlarm < startTime)
@@ -621,7 +611,8 @@ public abstract class CalendarItem extends MailItem {
      * @param includeAlarmOnlyInstances
      * @return list of Instances for the specified time period
      */
-    public Collection<Instance> expandInstances(long start, long end, boolean includeAlarmOnlyInstances) {
+    public Collection<Instance> expandInstances(long start, long end, boolean includeAlarmOnlyInstances)
+    throws ServiceException {
         long endAdjusted = end;
         long alarmInstStart = 0;
         if (includeAlarmOnlyInstances) {
@@ -2373,7 +2364,7 @@ public abstract class CalendarItem extends MailItem {
 
     public void updateNextAlarm(long nextAlarm) throws ServiceException {
         boolean hadAlarm = mAlarmData != null;
-        recomputeNextAlarm(nextAlarm, null);
+        recomputeNextAlarm(nextAlarm);
         if (mAlarmData != null) {
             long newNextAlarm = mAlarmData.getNextAt();
             if (newNextAlarm > 0 && newNextAlarm < mStartTime)
@@ -2388,13 +2379,14 @@ public abstract class CalendarItem extends MailItem {
             saveMetadata();
     }
 
+    private static final long MILLIS_IN_YEAR = 365L * 24L * 60L * 60L * 1000L;
+
     /**
      * Recompute the next alarm trigger time that is at or later than "nextAlarm".
      * @param nextAlarm next alarm should go off at or after this time
-     * @param instances result of recurrence expansion; if null, this method will
-     *                  do the expansion internally
      */
-    private void recomputeNextAlarm(long nextAlarm, Collection<Instance> instances) {
+    private void recomputeNextAlarm(long nextAlarm)
+    throws ServiceException {
         if (!hasAlarm()) {
             mAlarmData = null;
             return;
@@ -2409,8 +2401,10 @@ public abstract class CalendarItem extends MailItem {
         long triggerAt = Long.MAX_VALUE;
         Instance alarmInstance = null;
         Alarm theAlarm = null;
-        if (instances == null)
-            instances = expandInstances(nextAlarm, getEndTime(), false);
+
+        long endTime = getStartTime() + 2L * MILLIS_IN_YEAR;  // 2-year window
+        endTime = Math.min(endTime, getEndTime());
+        Collection<Instance> instances = expandInstances(nextAlarm, endTime, false);
         for (Instance inst : instances) {
             long instStart = inst.getStart();
             if (instStart < nextAlarm && !inst.isTimeless())
@@ -2494,7 +2488,7 @@ public abstract class CalendarItem extends MailItem {
      *         It will not contain alarm position if that alarm doesn't have next trigger time later
      *         than its last trigger time.
      */
-    public NextAlarms computeNextAlarms(Invite inv, long lastAt) {
+    public NextAlarms computeNextAlarms(Invite inv, long lastAt) throws ServiceException {
         int numAlarms = inv.getAlarms().size();
         Map<Integer, Long> lastAlarmsAt = new HashMap<Integer, Long>(numAlarms);
         for (int i = 0; i < numAlarms; i++) {
@@ -2512,7 +2506,8 @@ public abstract class CalendarItem extends MailItem {
      *         It will not contain alarm position if that alarm doesn't have next trigger time later
      *         than its last trigger time.
      */
-    public NextAlarms computeNextAlarms(Invite inv, Map<Integer, Long> lastAlarmsAt) {
+    public NextAlarms computeNextAlarms(Invite inv, Map<Integer, Long> lastAlarmsAt)
+    throws ServiceException {
         NextAlarms result = new NextAlarms();
 
         if (inv.getRecurrence() == null) {
