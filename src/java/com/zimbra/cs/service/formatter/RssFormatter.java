@@ -101,7 +101,7 @@ public class RssFormatter extends Formatter {
         return System.currentTimeMillis() + (7*Constants.MILLIS_PER_DAY);
     }
     
-    private void addCalendarItem(CalendarItem calItem, Element channel, Context context) {
+    private void addCalendarItem(CalendarItem calItem, Element channel, Context context) throws ServiceException {
         Collection instances = calItem.expandInstances(context.getStartTime(), context.getEndTime(), false);
         for (Iterator instIt = instances.iterator(); instIt.hasNext(); ) {
             CalendarItem.Instance inst = (CalendarItem.Instance) instIt.next();

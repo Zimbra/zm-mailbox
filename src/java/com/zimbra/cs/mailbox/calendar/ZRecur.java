@@ -31,6 +31,9 @@ import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.util.Zimbra;
 
 public class ZRecur {
 
@@ -86,16 +89,157 @@ public class ZRecur {
         BYDAY, BYHOUR, BYMINUTE, BYMONTH, BYMONTHDAY, BYSECOND, BYSETPOS, BYWEEKNO, 
         BYYEARDAY, COUNT, FREQ, INTERVAL, UNTIL, WKST;
     }
-    
-    /**
-     * For performance reasons,we stop expanding instances of a recurrence once
-     * this many instances have been returned.  This only counts instances actually
-     * returned, it does not count any instances in intermediate values.
-     */
-    private static final int MAXIMUM_INSTANCES_RETURNED = 366;
-    private static final int MAXIMUM_INSTANCES_EXPANDED = 1200;
-    private static final int MAXIMUM_TIME_RANGE_YEARS = 30;
-    
+
+    // hard limits to recurrence expansion
+    private static class ExpansionLimits {
+        public int maxInstances;
+        public int maxDays;
+        public int maxWeeks;
+        public int maxMonths;
+        public int maxYears;
+        public int maxYearsOtherFreqs;
+    }
+    private static ExpansionLimits sExpansionLimits;
+    static {
+        sExpansionLimits = new ExpansionLimits();
+        try {
+            Server server = Provisioning.getInstance().getLocalServer();
+            String val;
+            val = server.getAttr(Provisioning.A_zimbraCalendarRecurrenceMaxInstances);
+            sExpansionLimits.maxInstances = Integer.parseInt(val);
+            val = server.getAttr(Provisioning.A_zimbraCalendarRecurrenceDailyMaxDays);
+            sExpansionLimits.maxDays = Integer.parseInt(val);
+            val = server.getAttr(Provisioning.A_zimbraCalendarRecurrenceWeeklyMaxWeeks);
+            sExpansionLimits.maxWeeks = Integer.parseInt(val);
+            val = server.getAttr(Provisioning.A_zimbraCalendarRecurrenceMonthlyMaxMonths);
+            sExpansionLimits.maxMonths = Integer.parseInt(val);
+            val = server.getAttr(Provisioning.A_zimbraCalendarRecurrenceYearlyMaxYears);
+            sExpansionLimits.maxYears = Integer.parseInt(val);
+            val = server.getAttr(Provisioning.A_zimbraCalendarRecurrenceOtherFrequencyMaxYears);
+            sExpansionLimits.maxYearsOtherFreqs = Integer.parseInt(val);
+        } catch (NumberFormatException e) {
+            Zimbra.halt("Can't initialize recurrence expansion limits", e);
+        } catch (ServiceException e) {
+            Zimbra.halt("Can't initialize recurrence expansion limits", e);
+        }
+    }
+
+    private Date estimateEndTimeByUntilAndHardLimits(ParsedDateTime dtStart) throws ServiceException {
+        boolean forever = false;
+        Calendar hardEnd = dtStart.getCalendarCopy();
+        Frequency freq = mFreq;
+        if (freq == null)
+            freq = Frequency.WEEKLY;
+        switch (freq) {
+        case WEEKLY:
+            int weeks = sExpansionLimits.maxWeeks;
+            if (weeks <= 0)
+                forever = true;
+            else
+                hardEnd.add(Calendar.WEEK_OF_YEAR, weeks);
+            break;
+        case MONTHLY:
+            int months = sExpansionLimits.maxMonths;
+            if (months <= 0)
+                forever = true;
+            else
+                hardEnd.add(Calendar.MONTH, months);
+            break;
+        case YEARLY:
+            int years = sExpansionLimits.maxYears;
+            if (years <= 0)
+                forever = true;
+            else
+                hardEnd.add(Calendar.YEAR, years);
+            break;
+        case DAILY:
+            int days = sExpansionLimits.maxDays;
+            if (days <= 0)
+                forever = true;
+            else
+                hardEnd.add(Calendar.DAY_OF_YEAR, days);
+            break;
+        default:
+            int otherFreqYears = Math.max(sExpansionLimits.maxYearsOtherFreqs, 1);
+            hardEnd.add(Calendar.YEAR, otherFreqYears);
+        }
+        Date d;
+        if (forever)
+            d = new Date(Long.MAX_VALUE);
+        else
+            d = hardEnd.getTime();
+        if (mUntil != null) {
+            Date until = mUntil.getDateForRecurUntil(dtStart.getTimeZone());
+            if (until.before(d))
+                d = until;
+        }
+        return d;
+    }
+
+    private Date estimateEndTimeByCount(ParsedDateTime dtStart) {
+        if (mCount <= 0)
+            return null;
+        Calendar end = dtStart.getCalendarCopy();
+        Frequency freq = mFreq;
+        if (freq == null)
+            freq = Frequency.WEEKLY;
+        int interval = Math.max(mInterval, 1) * mCount;
+        switch (freq) {
+        case WEEKLY:
+            end.add(Calendar.WEEK_OF_YEAR, interval);
+            break;
+        case MONTHLY:
+            end.add(Calendar.MONTH, interval);
+            break;
+        case YEARLY:
+            // If rule mentions February 29th, multiply the estimated number of years by 4.
+            // This is a very conservative over-estimate.
+            boolean hasFebruary = false;
+            if (mByMonthList != null) {
+                for (int month : mByMonthList) {
+                    if (month == 2) {
+                        hasFebruary = true;
+                        break;
+                    }
+                }
+            }
+            boolean hasLeapDay = false;
+            if (hasFebruary && mByMonthDayList != null) {
+                for (int day : mByMonthDayList) {
+                    if (day == 29) {
+                        hasLeapDay = true;
+                        break;
+                    }
+                }
+            }
+            if (hasLeapDay)
+                interval *= 4;
+            end.add(Calendar.YEAR, interval);
+            break;
+        case DAILY:
+            end.add(Calendar.DAY_OF_YEAR, interval);
+            break;
+        default:
+            return null;
+        }
+        return end.getTime();
+    }
+
+    public Date getEstimatedEndTime(ParsedDateTime dtStart) throws ServiceException {
+        if (dtStart == null)
+            return null;
+
+        Date byUntil = estimateEndTimeByUntilAndHardLimits(dtStart);
+        Date byCount = estimateEndTimeByCount(dtStart);
+        if (byCount == null)
+            return byUntil;
+        if (byUntil == null)
+            return byCount;
+        if (byCount.before(byUntil))
+            return byCount;
+        return byUntil;
+    }
+
     public static String listAsStr(List<? extends Object> l) {
         StringBuffer toRet = new StringBuffer();
         boolean first = true;
@@ -482,34 +626,21 @@ public class ZRecur {
         return this.mByDayList;
     }
 
-    public List<java.util.Date> expandRecurrenceOverRange(
+    public List<Date> expandRecurrenceOverRange(
         ParsedDateTime dtStart,
         long rangeStart,
         long rangeEnd)
     throws ServiceException {
-        List<java.util.Date> toRet = new LinkedList<java.util.Date>();
+        List<Date> toRet = new LinkedList<Date>();
         
-        // Cutoff time for expansions.  
-        Calendar startCal = dtStart.getCalendarCopy();
-        startCal.add(Calendar.YEAR, 1);
-        java.util.Date expansionEndDate = startCal.getTime();
-        if (Frequency.DAILY.equals(mFreq)) {
-            startCal.add(Calendar.YEAR, 9);  // +9 = 10 years
-            expansionEndDate = startCal.getTime();
-        }
-        if (Frequency.WEEKLY.equals(mFreq) || Frequency.MONTHLY.equals(mFreq) || Frequency.YEARLY.equals(mFreq) ) {
-            startCal.add(Calendar.YEAR, 39);  // +39 = 40 years
-            expansionEndDate = startCal.getTime();
-        }
-
-        java.util.Date rangeStartDate = new java.util.Date(rangeStart);
+        Date rangeStartDate = new Date(rangeStart);
         // subtract 1000ms (1sec) because the code in the method treats
         // end time as inclusive while the rangeEnd input argument is
         // exclusive value
-        java.util.Date rangeEndDate = new java.util.Date(rangeEnd - 1000);
-        java.util.Date dtStartDate = new java.util.Date(dtStart.getUtcTime());
+        Date rangeEndDate = new Date(rangeEnd - 1000);
+        Date dtStartDate = new Date(dtStart.getUtcTime());
 
-        java.util.Date earliestDate;
+        Date earliestDate;
         if (dtStartDate.after(rangeStartDate))
             earliestDate = dtStartDate;
         else
@@ -521,10 +652,19 @@ public class ZRecur {
                 rangeEndDate = until;
         }
 
-        // Check hard limit of expansion time range.  (bug 21989)
-        GregorianCalendar hardEnd = dtStart.getCalendarCopy();
-        hardEnd.add(Calendar.YEAR, MAXIMUM_TIME_RANGE_YEARS);
-        Date hardEndDate = hardEnd.getTime();
+        // Set limit of expansion count.
+        int maxInstancesFromConfig = sExpansionLimits.maxInstances;
+        int maxInstancesExpanded;
+        if (maxInstancesFromConfig <= 0)
+            maxInstancesExpanded = mCount;
+        else if (mCount <= 0)
+            maxInstancesExpanded = maxInstancesFromConfig;
+        else
+            maxInstancesExpanded = Math.min(mCount, maxInstancesFromConfig);
+        int numInstancesExpanded = 1;  // initially 1 rather than 0 because DTSTART is always included
+
+        // Set hard limit of expansion time range.  (bug 21989)
+        Date hardEndDate = getEstimatedEndTime(dtStart);
         if (hardEndDate.before(rangeEndDate))
             rangeEndDate = hardEndDate;
         
@@ -549,33 +689,20 @@ public class ZRecur {
         int interval = mInterval;
         if (interval <= 0) 
             interval = 1;
-        
-        int expansionsLeft = MAXIMUM_INSTANCES_EXPANDED;
-        if (mCount > 0)
-        	expansionsLeft = mCount;
-        
-        if (expansionsLeft > MAXIMUM_INSTANCES_EXPANDED)
-        	expansionsLeft = MAXIMUM_INSTANCES_EXPANDED;
 
         // DTSTART is always part of the expansion, as long as it falls within
         // the range.
-        if (!dtStartDate.before(earliestDate) &&
-            !dtStartDate.after(rangeEndDate)) {
+        if (!dtStartDate.before(earliestDate) && !dtStartDate.after(rangeEndDate))
             toRet.add(dtStartDate);
-        }
-        // Count DTSTART as an expansion, even if we don't return it.
-        expansionsLeft--;
-        
-        while (expansionsLeft > 0 &&
-        	   toRet.size() < MAXIMUM_INSTANCES_RETURNED) {
+
+        int numConsecutiveIterationsWithoutMatchingInstance = 0;
+        boolean pastHardEndTime = false;
+        while (!pastHardEndTime && (maxInstancesExpanded <= 0 || numInstancesExpanded < maxInstancesExpanded)) {
+            boolean curIsAtOrAfterEarliestDate = !cur.getTime().before(earliestDate);
             boolean curIsAfterEndDate = cur.getTime().after(rangeEndDate);
             List<Calendar> addList = new LinkedList<Calendar>();
             
             switch (mFreq) {
-            case SECONDLY:
-            case MINUTELY:
-                // intentionally not supported (performance)
-                return toRet;
             case HOURLY:
                 /*
                  * BYSECOND - for each listed second
@@ -762,6 +889,9 @@ public class ZRecur {
                 addList = expandSecondList(addList);
                 
                 break;
+            default:
+                // MINUTELY and SECONDLY are intentionally not supported for performance reasons.
+                return toRet;
             }
             
             addList = handleSetPos(addList);
@@ -774,15 +904,17 @@ public class ZRecur {
 
                 // We already counted DTSTART before the main loop, so don't
                 // count it twice.
-                if (toAdd.compareTo(dtStartDate) == 0)
+                if (toAdd.compareTo(dtStartDate) == 0) {
+                    noInstanceFound = false;
                     continue;
+                }
 
                 // we still have expanded this instance, even if it isn't in our
                 // current date window
                 if (toAdd.after(dtStartDate))
-                    expansionsLeft--;
+                    numInstancesExpanded++;
 
-                if (!toAdd.after(rangeEndDate) && toAdd.before(expansionEndDate)) {
+                if (!toAdd.after(rangeEndDate)) {
                     if (!toAdd.before(earliestDate)) {
                         toRet.add(toAdd);
                         noInstanceFound = false;
@@ -792,13 +924,31 @@ public class ZRecur {
                     break;
                 }
 
-                // quick dropout if we know we're done
-                if (expansionsLeft <= 0 ||
-                    toRet.size() >= MAXIMUM_INSTANCES_RETURNED)
-                	break;;
+                if (maxInstancesExpanded > 0 && numInstancesExpanded >= maxInstancesExpanded)
+                    break;
             }
-            if (foundInstancePastEndDate || (noInstanceFound && curIsAfterEndDate))
-                break;
+
+            // Detect invalid rule.  If the rule was invalid the current iteration, which is for the current
+            // frequency interval, would have found no matching instance.  The next iteration will also find
+            // no matching instance, and there is no need to keep iterating until we go past the hard end
+            // time or COUNT/UNTIL limit.
+            //
+            // However, we have to make an exception for leap year.  An yearly rule looking for February 29th
+            // will find no instance in up to 3 consecutive years before finding Feb 29th in the fourth year.
+            //
+            // So the invalid rule detection must look for at least 4 consecutive failed iterations.
+            if (curIsAtOrAfterEarliestDate) {
+                if (noInstanceFound)
+                    numConsecutiveIterationsWithoutMatchingInstance++;
+                else
+                    numConsecutiveIterationsWithoutMatchingInstance = 0;
+                if (numConsecutiveIterationsWithoutMatchingInstance >= 4) {
+                    ZimbraLog.calendar.warn("Invalid recurrence rule: " + toString());
+                    return toRet;
+                }
+            }
+
+            pastHardEndTime = foundInstancePastEndDate || (noInstanceFound && curIsAfterEndDate);
         }
 
         return toRet;

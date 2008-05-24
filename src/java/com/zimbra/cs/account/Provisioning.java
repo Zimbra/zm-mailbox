@@ -1514,7 +1514,14 @@ public abstract class Provisioning {
     
     public static final String A_zimbraCalendarCalDavAlternateCalendarHomeSet = "zimbraCalendarCalDavAlternateCalendarHomeSet";
     public static final String A_zimbraCalendarCalDavDisableScheduling = "zimbraCalendarCalDavDisableScheduling";
-    
+
+    public static final String A_zimbraCalendarRecurrenceMaxInstances = "zimbraCalendarRecurrenceMaxInstances";
+    public static final String A_zimbraCalendarRecurrenceDailyMaxDays = "zimbraCalendarRecurrenceDailyMaxDays";
+    public static final String A_zimbraCalendarRecurrenceWeeklyMaxWeeks = "zimbraCalendarRecurrenceWeeklyMaxWeeks";
+    public static final String A_zimbraCalendarRecurrenceMonthlyMaxMonths = "zimbraCalendarRecurrenceMonthlyMaxMonths";
+    public static final String A_zimbraCalendarRecurrenceYearlyMaxYears = "zimbraCalendarRecurrenceYearlyMaxYears";
+    public static final String A_zimbraCalendarRecurrenceOtherFrequencyMaxYears = "zimbraCalendarRecurrenceOtherFrequencyMaxYears";
+
     public static final int MAX_ZIMBRA_ID_LEN = 127;
     
     private static Provisioning sProvisioning;
