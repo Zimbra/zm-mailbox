@@ -931,14 +931,11 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
 
         AddedItems added = new AddedItems();
         if (pns.deleted != null)
-            if (!handleDeletes(changeId, pns.deleted.values()))
-                return;
+            handleDeletes(changeId, pns.deleted.values());
         if (pns.created != null)
-            if (!handleCreates(changeId, pns.created.values(), added))
-                return;
+            handleCreates(changeId, pns.created.values(), added);
         if (pns.modified != null)
-            if (!handleModifies(changeId, pns.modified.values(), added))
-                return;
+            handleModifies(changeId, pns.modified.values(), added);
 
         // add new messages to the currently selected mailbox
         if (mSequence != null && added != null && !added.isEmpty()) {
@@ -998,7 +995,7 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
         }
     }
 
-    private boolean handleDeletes(int changeId, Collection<Object> deleted) {
+    private void handleDeletes(int changeId, Collection<Object> deleted) {
         for (Object obj : deleted) {
             int id = (obj instanceof MailItem ? ((MailItem) obj).getId() : ((Integer) obj).intValue());
             if (Tag.validateId(id)) {
@@ -1020,10 +1017,9 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
                 }
             }
         }
-        return true;
     }
 
-    private boolean handleCreates(int changeId, Collection<MailItem> created, AddedItems newItems) {
+    private void handleCreates(int changeId, Collection<MailItem> created, AddedItems newItems) {
         for (MailItem item : created) {
             if (item instanceof Tag) {
                 cacheTag((Tag) item);
@@ -1042,10 +1038,9 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
                 ZimbraLog.imap.debug("  ** created (ntfn): " + msgId);
             }
         }
-        return true;
     }
 
-    private boolean handleModifies(int changeId, Collection<Change> modified, AddedItems newItems) {
+    private void handleModifies(int changeId, Collection<Change> modified, AddedItems newItems) {
         boolean debug = ZimbraLog.imap.isDebugEnabled();
         for (Change chg : modified) {
             if (chg.what instanceof Tag && (chg.why & Change.MODIFIED_NAME) != 0) {
@@ -1092,7 +1087,6 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
                 }
             }
         }
-        return true;
     }
 
     @Override protected void cleanup() {
