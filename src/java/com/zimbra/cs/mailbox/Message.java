@@ -434,7 +434,7 @@ public class Message extends MailItem {
                 boolean canInvite;
                 AccessManager accessMgr = AccessManager.getInstance();
                 OperationContext octxt = getMailbox().getOperationContext();
-                if (octxt != null) {
+                if (octxt != null && octxt.getAuthenticatedUser() != null) {
                     Account authAcct = octxt.getAuthenticatedUser();
                     senderEmail = authAcct.getName();
                     canInvite = accessMgr.canPerform(authAcct, getAccount(), Right.RT_invite, octxt.isUsingAdminPrivileges(), allowInviteIfNoAceDefined);
