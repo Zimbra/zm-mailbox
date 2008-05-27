@@ -66,8 +66,8 @@ public class TestMailItem extends TestCase {
             Folder folder = mbox.getFolderById(null, folderId);
             assertNotNull("Folder not found", folder);
 
-            int ids[] = mbox.listItemIds(null, type, folderId);
-            assertEquals("Item count does not match", count, ids.length);
+            List<Integer> ids = mbox.listItemIds(null, type, folderId);
+            assertEquals("Item count does not match", count, ids.size());
         }
     }
     

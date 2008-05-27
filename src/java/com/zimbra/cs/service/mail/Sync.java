@@ -32,20 +32,21 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mailbox.MailItem.TypedIdList;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class Sync extends MailDocumentHandler {
 
 	protected static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.A_FOLDER };
-	protected String[] getProxiedIdPath(Element request)  { return TARGET_FOLDER_PATH; }
+	@Override protected String[] getProxiedIdPath(Element request)  { return TARGET_FOLDER_PATH; }
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -75,6 +76,9 @@ public class Sync extends MailDocumentHandler {
         }
         boolean initialSync = tokenInt <= 0;
 
+        // permit the caller to restrict initial sync only to calendar items with a recurrence after a given date
+        long calendarStart = request.getAttributeLong(MailConstants.A_CALENDAR_CUTOFF, -1);
+
         // if the sync is constrained to a folder subset, we need to first figure out what can be seen
         Folder root = null;
         try {
@@ -93,7 +97,7 @@ public class Sync extends MailDocumentHandler {
                 response.addAttribute(MailConstants.A_TOKEN, mbox.getLastChangeID());
                 response.addAttribute(MailConstants.A_SIZE, mbox.getSize());
 
-                boolean anyFolders = folderSync(response, octxt, ifmt, mbox, root, visible, SyncPhase.INITIAL);
+                boolean anyFolders = folderSync(response, octxt, ifmt, mbox, root, visible, calendarStart, SyncPhase.INITIAL);
                 // if no folders are visible, add an empty "<folder/>" as a hint
                 if (!anyFolders)
                     response.addElement(MailConstants.E_FOLDER);
@@ -110,7 +114,8 @@ public class Sync extends MailDocumentHandler {
     private static final int DEFAULT_FOLDER_ID = Mailbox.ID_FOLDER_ROOT;
     private static enum SyncPhase { INITIAL, DELTA };
 
-    private static boolean folderSync(Element response, OperationContext octxt, ItemIdFormatter ifmt, Mailbox mbox, Folder folder, Set<Folder> visible, SyncPhase phase)
+    private static boolean folderSync(Element response, OperationContext octxt, ItemIdFormatter ifmt, Mailbox mbox, Folder folder,
+            Set<Folder> visible, long calendarStart, SyncPhase phase)
     throws ServiceException {
         if (folder == null)
             return false;
@@ -126,24 +131,19 @@ public class Sync extends MailDocumentHandler {
         // write this folder's data to the response
         boolean initial = phase == SyncPhase.INITIAL;
         Element f = ToXML.encodeFolder(response, ifmt, octxt, folder, Change.ALL_FIELDS);
-        if (initial && isVisible) {
+        if (initial && isVisible && folder.getType() == MailItem.TYPE_FOLDER) {
             // we're in the middle of an initial sync, so serialize the item ids
-            boolean isSearch = folder instanceof SearchFolder;
-            if (!isSearch) {
-                if (folder.getId() == Mailbox.ID_FOLDER_TAGS) {
-                    initialTagSync(f, octxt, ifmt, mbox);
-                } else {
-                    initialItemSync(f, MailConstants.E_MSG, mbox.listItemIds(octxt, MailItem.TYPE_MESSAGE, folder.getId()));
-                    initialItemSync(f, MailConstants.E_CHAT, mbox.listItemIds(octxt, MailItem.TYPE_CHAT, folder.getId()));
-                    initialItemSync(f, MailConstants.E_CONTACT, mbox.listItemIds(octxt, MailItem.TYPE_CONTACT, folder.getId()));
-                    initialItemSync(f, MailConstants.E_NOTE, mbox.listItemIds(octxt, MailItem.TYPE_NOTE, folder.getId()));
-                    initialItemSync(f, MailConstants.E_APPOINTMENT, mbox.listItemIds(octxt, MailItem.TYPE_APPOINTMENT, folder.getId()));
-                    initialItemSync(f, MailConstants.E_TASK, mbox.listItemIds(octxt, MailItem.TYPE_TASK, folder.getId()));
-                    initialItemSync(f, MailConstants.E_DOC, mbox.listItemIds(octxt, MailItem.TYPE_DOCUMENT, folder.getId()));
-                    initialItemSync(f, MailConstants.E_WIKIWORD, mbox.listItemIds(octxt, MailItem.TYPE_WIKI, folder.getId()));
-                }
+            if (folder.getId() == Mailbox.ID_FOLDER_TAGS) {
+                initialTagSync(f, octxt, ifmt, mbox);
             } else {
-                // anything else to be done for searchfolders?
+                TypedIdList idlist = mbox.getItemIds(octxt, folder.getId());
+                initialItemSync(f, MailConstants.E_MSG, idlist.getIds(MailItem.TYPE_MESSAGE));
+                initialItemSync(f, MailConstants.E_CHAT, idlist.getIds(MailItem.TYPE_CHAT));
+                initialItemSync(f, MailConstants.E_CONTACT, idlist.getIds(MailItem.TYPE_CONTACT));
+                initialItemSync(f, MailConstants.E_NOTE, idlist.getIds(MailItem.TYPE_NOTE));
+                initialCalendarSync(f, idlist, octxt, mbox, folder, calendarStart);
+                initialItemSync(f, MailConstants.E_DOC, idlist.getIds(MailItem.TYPE_DOCUMENT));
+                initialItemSync(f, MailConstants.E_WIKIWORD, idlist.getIds(MailItem.TYPE_WIKI));
             }
         }
 
@@ -153,7 +153,7 @@ public class Sync extends MailDocumentHandler {
         // write the subfolders' data to the response
         for (Folder subfolder : subfolders) {
             if (subfolder != null)
-                isVisible |= folderSync(f, octxt, ifmt, mbox, subfolder, visible, phase);
+                isVisible |= folderSync(f, octxt, ifmt, mbox, subfolder, visible, calendarStart, phase);
         }
 
         // if this folder and all its subfolders are not visible (oops!), remove them from the response
@@ -163,21 +163,29 @@ public class Sync extends MailDocumentHandler {
         return isVisible;
     }
 
-    private static void initialTagSync(Element response, OperationContext octxt, ItemIdFormatter ifmt, Mailbox mbox) throws ServiceException {
+    private static void initialTagSync(Element f, OperationContext octxt, ItemIdFormatter ifmt, Mailbox mbox) throws ServiceException {
         for (Tag tag : mbox.getTagList(octxt)) {
             if (tag != null && !(tag instanceof Flag))
-                ToXML.encodeTag(response, ifmt, tag, Change.ALL_FIELDS);
+                ToXML.encodeTag(f, ifmt, tag, Change.ALL_FIELDS);
         }
     }
 
-    private static void initialItemSync(Element f, String ename, int[] items) {
-        if (items == null || items.length == 0)
+    private static final int CALENDAR_TYPES_BITMASK = MailItem.typeToBitmask(MailItem.TYPE_APPOINTMENT) |
+                                                      MailItem.typeToBitmask(MailItem.TYPE_TASK);
+
+    private static void initialCalendarSync(Element f, TypedIdList idlist, OperationContext octxt, Mailbox mbox, Folder folder, long calendarStart)
+    throws ServiceException {
+        if (calendarStart > 0 && (idlist.getTypesMask() & CALENDAR_TYPES_BITMASK) != 0)
+            idlist = mbox.listCalendarItemsForRange(octxt, MailItem.TYPE_UNKNOWN, calendarStart, -1, folder.getId());
+
+        initialItemSync(f, MailConstants.E_APPOINTMENT, idlist.getIds(MailItem.TYPE_APPOINTMENT));
+        initialItemSync(f, MailConstants.E_TASK, idlist.getIds(MailItem.TYPE_TASK));
+    }
+
+    private static void initialItemSync(Element f, String ename, List<Integer> items) {
+        if (items == null || items.isEmpty())
             return;
-        Element e = f.addElement(ename);
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < items.length; i++)
-            sb.append(i == 0 ? "" : ",").append(items[i]);
-        e.addAttribute(MailConstants.A_IDS, sb.toString());
+        f.addElement(ename).addAttribute(MailConstants.A_IDS, StringUtil.join(",", items));
     }
 
     private static final int FETCH_BATCH_SIZE = 200;
@@ -200,7 +208,7 @@ public class Sync extends MailDocumentHandler {
             return newToken;
 
         // first, fetch deleted items
-        MailItem.TypedIdList tombstones = mbox.getTombstoneSet(begin);
+        TypedIdList tombstones = mbox.getTombstones(begin);
         Element eDeleted = response.addElement(MailConstants.E_DELETED);
 
         // then, put together the requested folder hierarchy in 2 different flavors
@@ -215,7 +223,7 @@ public class Sync extends MailDocumentHandler {
             // first, make sure that something changed...
             if (!mbox.getModifiedFolders(begin).isEmpty() || (tombstones != null && (tombstones.getTypesMask() & FOLDER_TYPES_BITMASK) != 0)) {
                 // special-case the folder hierarchy for delegated delta sync
-                boolean anyFolders = folderSync(response, octxt, ifmt, mbox, root, visible, SyncPhase.DELTA);
+                boolean anyFolders = folderSync(response, octxt, ifmt, mbox, root, visible, -1, SyncPhase.DELTA);
                 // if no folders are visible, add an empty "<folder/>" as a hint
                 if (!anyFolders)
                     response.addElement(MailConstants.E_FOLDER);
@@ -235,7 +243,7 @@ public class Sync extends MailDocumentHandler {
 
         // finally, handle created/modified "other items"
         int itemCount = 0;
-        Pair<List<Integer>,MailItem.TypedIdList> changed = mbox.getModifiedItems(octxt, begin, MailItem.TYPE_UNKNOWN, targetIds);
+        Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, begin, MailItem.TYPE_UNKNOWN, targetIds);
         List<Integer> modified = changed.getFirst();
         delta: while (!modified.isEmpty()) {
             List<Integer> batch = modified.subList(0, Math.min(modified.size(), FETCH_BATCH_SIZE));

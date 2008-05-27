@@ -438,7 +438,7 @@ public class GetCalendarItemSummaries extends CalendarRequest {
             }
         } else {
 	        Collection<CalendarItem> calItems = mbox.getCalendarItemsForRange(
-	                getItemType(), octxt, rangeStart, rangeEnd, iidFolder.getId(), null);
+	                octxt, getItemType(), rangeStart, rangeEnd, iidFolder.getId(), null);
 	        for (CalendarItem calItem : calItems) {
 	            EncodeCalendarItemResult encoded = encodeCalendarItemInstances(
 	                    zsc, octxt, calItem, acct, rangeStart, rangeEnd, false);

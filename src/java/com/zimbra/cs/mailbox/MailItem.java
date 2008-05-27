@@ -259,7 +259,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     public static final class TypedIdList implements Iterable<Map.Entry<Byte,List<Integer>>> {
-        private Map<Byte,List<Integer>> mIds = new HashMap<Byte,List<Integer>>();
+        private Map<Byte,List<Integer>> mIds = new HashMap<Byte,List<Integer>>(4);
         public TypedIdList()                   {}
         public TypedIdList(TypedIdList other)  { this();  if (other != null) add(other); }
 
@@ -347,6 +347,13 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
         public void clear() {
             mIds.clear();
+        }
+        @Override public String toString() {
+            if (isEmpty())  return "<empty>";
+            StringBuilder sb = new StringBuilder();
+            for (Map.Entry<Byte,List<Integer>> entry : mIds.entrySet())
+                sb.append(sb.length() == 0 ? "" : ",").append(getNameForType(entry.getKey())).append('=').append(entry.getValue());
+            return sb.toString();
         }
     }
 
@@ -485,8 +492,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     /** Returns the item's ID.  IDs are unique within a {@link Mailbox} and
-     *  are assigned in monotonically-increasing (though not necessarily
-     *  gap-free) order. */
+     *  are assigned in increasing (though not necessarily gap-free) order. */
     public int getId() {
         return mData.id;
     }
@@ -1025,10 +1031,12 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
     
     /**
-     * This class intentionally does not inherit from ServiceException, the exception is internal-only
-     * and should never be exposed outside of this package.
+     * This class intentionally does not inherit from ServiceException, the
+     *  exception is internal-only and should never be exposed outside of this package.
      */
-    static class TemporaryIndexingException extends Exception { }
+    static class TemporaryIndexingException extends Exception {
+        private static final long serialVersionUID = 730987946876783701L;
+    }
 
     /**
      * Returns the indexable data to be passed into reIndex.  This API is generally 
@@ -1082,8 +1090,8 @@ public abstract class MailItem implements Comparable<MailItem> {
     /** Returns the item's {@link Folder}.  All items in the system must
      *  have a containing folder.
      * 
-     * @throws ServiceException if there is a problem fetching folder data
-     *         from the database. */
+     * @throws ServiceException should never be thrown, as the set of all
+     *                          folders must already be cached. */
     Folder getFolder() throws ServiceException {
         return mMailbox.getFolderById(mData.folderId);
     }

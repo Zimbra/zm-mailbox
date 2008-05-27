@@ -828,7 +828,7 @@ public class ImapImport extends AbstractMailItemImport {
      */
     private void addMailItemIds(Set<Integer> idSet, Mailbox mbox, int folderId, byte type)
     throws ServiceException {
-        int[] ids = mbox.listItemIds(null, type, folderId);
+        List<Integer> ids = mbox.listItemIds(null, type, folderId);
         for (int id : ids) {
             idSet.add(id);
         }

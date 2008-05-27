@@ -76,6 +76,7 @@ import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
+import com.zimbra.cs.mailbox.MailItem.TypedIdList;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.MailboxManager.MailboxLock;
@@ -802,7 +803,7 @@ public class Mailbox {
 
     // Don't make this method package-visible.  Keep it private.
     //   idFromRedo: specific ID value to use during redo execution, or ID_AUTO_INCREMENT
-    private int getNextItemId(int idFromRedo) throws ServiceException {
+    private int getNextItemId(int idFromRedo) {
         int lastId = getLastItemId();
         int nextId = (idFromRedo == ID_AUTO_INCREMENT ? lastId + 1 : idFromRedo);
 
@@ -2338,21 +2339,21 @@ public class Mailbox {
                     Collections.sort(result, comp);
                 success = true;
             } else {
-            List<MailItem.UnderlyingData> dataList = null;
-            if (folder != null)
-                dataList = DbMailItem.getByFolder(folder, type, sort);
-            else
-                dataList = DbMailItem.getByType(this, type, sort);
-            if (dataList == null)
-                return Collections.emptyList();
-            for (MailItem.UnderlyingData data : dataList)
-                if (data != null)
-                    result.add(getItem(data));
-            	// except for sort == SORT_BY_NAME_NAT,
-            // sort was already done by the DbMailItem call...
+                List<MailItem.UnderlyingData> dataList = null;
+                if (folder != null)
+                    dataList = DbMailItem.getByFolder(folder, type, sort);
+                else
+                    dataList = DbMailItem.getByType(this, type, sort);
+                if (dataList == null)
+                    return Collections.emptyList();
+                for (MailItem.UnderlyingData data : dataList)
+                    if (data != null)
+                        result.add(getItem(data));
+                	// except for sort == SORT_BY_NAME_NAT,
+                // sort was already done by the DbMailItem call...
             	if ((sort & DbSearch.SORT_BY_NAME_NATURAL_ORDER) > 0)
                     Collections.sort(result, MailItem.getComparator(sort));
-            success = true;
+                success = true;
             }
         } finally {
             endTransaction(success);
@@ -2362,20 +2363,29 @@ public class Mailbox {
 
     /** returns the list of IDs of items of the given type in the given folder 
      * @param octxt TODO*/
-    public synchronized int[] listItemIds(OperationContext octxt, byte type, int folderId) throws ServiceException {
+    public synchronized List<Integer> listItemIds(OperationContext octxt, byte type, int folderId) throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("listItemIds", octxt);
 
             Folder folder = getFolderById(folderId);
-            List<SearchResult> srList = DbMailItem.listByFolder(folder, type, true);
-            if (srList == null)
-                return null;
-            int i = 0, result[] = new int[srList.size()];
-            for (SearchResult sr : srList)
-                result[i++] = sr.id;
+            List<Integer> ids = DbMailItem.listByFolder(folder, type, true);
             success = true;
-            return result;
+            return ids;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public synchronized TypedIdList getItemIds(OperationContext octxt, int folderId) throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("listAllItemIds", octxt);
+
+            Folder folder = getFolderById(folderId);
+            TypedIdList ids = DbMailItem.listByFolder(folder, true);
+            success = true;
+            return ids;
         } finally {
             endTransaction(success);
         }
@@ -2473,29 +2483,18 @@ public class Mailbox {
     }
 
 
-    public synchronized List<Integer> getTombstones(int lastSync) throws ServiceException {
-        if (!isTrackingSync())
-            throw ServiceException.FAILURE("not tracking sync", null);
-
-        boolean success = false;
-        try {
-            beginTransaction("getTombstones", null);
-            MailItem.TypedIdList tombstones = DbMailItem.readTombstones(this, lastSync);
-            success = true;
-            return tombstones.getAll();
-        } finally {
-            endTransaction(success);
-        }
+    public synchronized List<Integer> listTombstones(int lastSync) throws ServiceException {
+        return getTombstones(lastSync).getAll();
     }
 
-    public synchronized MailItem.TypedIdList getTombstoneSet(int lastSync) throws ServiceException {
+    public synchronized TypedIdList getTombstones(int lastSync) throws ServiceException {
         if (!isTrackingSync())
             throw ServiceException.FAILURE("not tracking sync", null);
 
         boolean success = false;
         try {
             beginTransaction("getTombstones", null);
-            MailItem.TypedIdList tombstones = DbMailItem.readTombstones(this, lastSync);
+            TypedIdList tombstones = DbMailItem.readTombstones(this, lastSync);
             success = true;
             return tombstones;
         } finally {
@@ -2564,7 +2563,7 @@ public class Mailbox {
      *             given type modified since the checkpoint, and
      *         <li>a List of the IDs of all items modified since the checkpoint
      *             but not currently visible to the caller</ul> */
-    public synchronized Pair<List<Integer>,MailItem.TypedIdList> getModifiedItems(OperationContext octxt, int lastSync) throws ServiceException {
+    public synchronized Pair<List<Integer>,TypedIdList> getModifiedItems(OperationContext octxt, int lastSync) throws ServiceException {
         return getModifiedItems(octxt, lastSync, MailItem.TYPE_UNKNOWN, null);
     }
 
@@ -2586,15 +2585,15 @@ public class Mailbox {
      *         <li>a List of the IDs of all items of the given type modified
      *             since the checkpoint but not currently visible to the
      *             caller</ul> */
-    public synchronized Pair<List<Integer>,MailItem.TypedIdList> getModifiedItems(OperationContext octxt, int lastSync, byte type) throws ServiceException {
+    public synchronized Pair<List<Integer>,TypedIdList> getModifiedItems(OperationContext octxt, int lastSync, byte type) throws ServiceException {
         return getModifiedItems(octxt, lastSync, type, null);
     }
 
     private static final List<Integer> EMPTY_ITEMS = Collections.emptyList();
 
-    public synchronized Pair<List<Integer>,MailItem.TypedIdList> getModifiedItems(OperationContext octxt, int lastSync, byte type, Set<Integer> folderIds) throws ServiceException {
+    public synchronized Pair<List<Integer>,TypedIdList> getModifiedItems(OperationContext octxt, int lastSync, byte type, Set<Integer> folderIds) throws ServiceException {
         if (lastSync >= getLastChangeID())
-            return new Pair<List<Integer>,MailItem.TypedIdList>(EMPTY_ITEMS, new MailItem.TypedIdList());
+            return new Pair<List<Integer>,TypedIdList>(EMPTY_ITEMS, new TypedIdList());
 
         boolean success = false;
         try {
@@ -2606,7 +2605,7 @@ public class Mailbox {
             else if (visible != null)
                 folderIds = SetUtil.intersect(folderIds, visible);
 
-            Pair<List<Integer>,MailItem.TypedIdList> dataList = DbMailItem.getModifiedItems(this, type, lastSync, folderIds);
+            Pair<List<Integer>,TypedIdList> dataList = DbMailItem.getModifiedItems(this, type, lastSync, folderIds);
             if (dataList == null)
                 return null;
             success = true;
@@ -2846,6 +2845,7 @@ public class Mailbox {
     public synchronized SearchFolder getSearchFolderById(OperationContext octxt, int searchId) throws ServiceException {
         return (SearchFolder) getItemById(octxt, searchId, MailItem.TYPE_SEARCHFOLDER);
     }
+
     SearchFolder getSearchFolderById(int searchId) throws ServiceException {
         return (SearchFolder) getItemById(searchId, MailItem.TYPE_SEARCHFOLDER);
     }
@@ -2859,9 +2859,11 @@ public class Mailbox {
     public synchronized Note getNoteById(OperationContext octxt, int noteId) throws ServiceException {
         return (Note) getItemById(octxt, noteId, MailItem.TYPE_NOTE);
     }
+
     Note getNoteById(int noteId) throws ServiceException {
         return (Note) getItemById(noteId, MailItem.TYPE_NOTE);
     }
+
     public synchronized List getNoteList(OperationContext octxt, int folderId) throws ServiceException {
         return getItemList(octxt, MailItem.TYPE_NOTE, folderId);
     }
@@ -3026,7 +3028,7 @@ public class Mailbox {
     public synchronized List getCalendarItemList(OperationContext octxt, int folderId) throws ServiceException {
         return getItemList(octxt, MailItem.TYPE_UNKNOWN, folderId);
     }
-
+    
 
     public synchronized Appointment getAppointmentById(OperationContext octxt, int id) throws ServiceException {
         return (Appointment) getItemById(octxt, id, MailItem.TYPE_APPOINTMENT);
@@ -3051,6 +3053,96 @@ public class Mailbox {
 
     public synchronized List getTaskList(OperationContext octxt, int folderId) throws ServiceException {
         return getItemList(octxt, MailItem.TYPE_TASK, folderId);
+    }
+
+
+    public synchronized TypedIdList listCalendarItemsForRange(OperationContext octxt, byte type, long start, long end, int folderId)
+    throws ServiceException {
+        if (folderId == ID_AUTO_INCREMENT)
+            return new TypedIdList();
+
+        boolean success = false;
+        try {
+            beginTransaction("listCalendarItemsForRange", octxt);
+
+            // if they specified a folder, make sure it actually exists
+            getFolderById(folderId);
+
+            // get the list of all visible calendar items in the specified folder
+            TypedIdList ids = DbMailItem.listCalendarItems(this, type, start, end, folderId, null);
+            success = true;
+            return ids;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public synchronized List<CalendarItem> getCalendarItems(OperationContext octxt, byte type, int folderId)
+    throws ServiceException {
+        return getCalendarItemsForRange(octxt, type, -1, -1, folderId, null);
+    }
+
+    public synchronized List<CalendarItem> getCalendarItemsForRange(OperationContext octxt, long start, long end, int folderId, int[] excludeFolders)
+    throws ServiceException {
+        return getCalendarItemsForRange(octxt, MailItem.TYPE_UNKNOWN, start, end, folderId, excludeFolders);
+    }
+    
+    /** Returns a <tt>Collection</tt> of all {@link CalendarItem}s which
+     *  overlap the specified time period.  There is no guarantee that the
+     *  returned calendar items actually contain a recurrence within the range;
+     *  all that is required is that there is some intersection between the
+     *  (<tt>start</tt>, <tt>end</tt>) range and the period from the
+     *  start time of the calendar item's first recurrence to the end time of
+     *  its last recurrence.<p>
+     * 
+     *  If a <tt>folderId</tt> is specified, only calendar items
+     *  in that folder are returned.  If {@link #ID_AUTO_INCREMENT} is passed
+     *  in as the <tt>folderId</tt>, all calendar items not in
+     *  <tt>Spam</tt> or <tt>Trash</tt> are returned.
+     * @param octxt     The {@link Mailbox.OperationContext}.
+     * @param type      If MailItem.TYPE_APPOINTMENT, return only appointments.
+     *                  If MailItem.TYPE_TASK, return only tasks.
+     *                  If MailItem.TYPE_UNKNOWN, return both.
+     * @param start     The start time of the range, in milliseconds.
+     *                  <tt>-1</tt> means to leave the start time unconstrained.
+     * @param end       The end time of the range, in milliseconds.
+     *                  <tt>-1</tt> means to leave the end time unconstrained.
+     * @param folderId  The folder to search for matching calendar items, or
+     *                  {@link #ID_AUTO_INCREMENT} to search all non-Spam and
+     *                  Trash folders in the mailbox.
+     * 
+     * @perms {@link ACL#RIGHT_READ} on all returned calendar items.
+     * @throws ServiceException */
+    public synchronized List<CalendarItem> getCalendarItemsForRange(OperationContext octxt, byte type,
+            long start, long end, int folderId, int[] excludeFolders)
+    throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("getCalendarItemsForRange", octxt);
+
+            // if they specified a folder, make sure it actually exists
+            if (folderId != ID_AUTO_INCREMENT)
+                getFolderById(folderId);
+
+            // get the list of all visible calendar items in the specified folder
+            List<CalendarItem> calItems = new ArrayList<CalendarItem>();
+            List<UnderlyingData> invData = DbMailItem.getCalendarItems(this, type, start, end, folderId, excludeFolders);
+            for (MailItem.UnderlyingData data : invData) {
+                try {
+                    CalendarItem calItem = getCalendarItem(data);
+                    if (folderId == calItem.getFolderId() || (folderId == ID_AUTO_INCREMENT && calItem.inMailbox())) {
+                        if (calItem.canAccess(ACL.RIGHT_READ))
+                            calItems.add(calItem);
+                    }
+                } catch (ServiceException e) {
+                    ZimbraLog.calendar.warn("Error while retrieving calendar item " + data.id + " in mailbox " + mId + "; skipping item", e);
+                }
+            }
+            success = true;
+            return calItems;
+        } finally {
+            endTransaction(success);
+        }
     }
 
 
@@ -3187,110 +3279,6 @@ public class Mailbox {
         return list;
     }
 
-    /** Returns a <tt>Collection</tt> of all {@link CalendarItem}s which
-     *  overlap the specified time period.  There is no guarantee that the
-     *  returned calendar items actually contain a recurrence within the range;
-     *  all that is required is that there is some intersection between the
-     *  (<tt>start</tt>, <tt>end</tt>) range and the period from the
-     *  start time of the calendar item's first recurrence to the end time of
-     *  its last recurrence.<p>
-     * 
-     *  If a <tt>folderId</tt> is specified, only calendar items
-     *  in that folder are returned.  If {@link #ID_AUTO_INCREMENT} is passed
-     *  in as the <tt>folderId</tt>, all calendar items not in
-     *  <tt>Spam</tt> or <tt>Trash</tt> are returned.
-     * 
-     * @param type      If MailItem.TYPE_APPOINTMENT, return only appointments.
-     *                  If MailItem.TYPE_TASK, return only tasks.
-     *                  If MailItem.TYPE_UNKNOWN, return both.
-     * @param octxt     The {@link Mailbox.OperationContext}.
-     * @param start     The start time of the range, in milliseconds.
-     * @param end       The end time of the range, in milliseconds.
-     * @param folderId  The folder to search for matching calendar items, or
-     *                  {@link #ID_AUTO_INCREMENT} to search all non-Spam and
-     *                  Trash folders in the mailbox.
-     * @perms {@link ACL#RIGHT_READ} on all returned calendar items.
-     * @throws ServiceException */
-    public synchronized Collection<CalendarItem> getCalendarItemsForRange(
-            byte type,
-            OperationContext octxt, long start, long end, 
-            int folderId, int[] excludeFolders)
-            throws ServiceException {
-        boolean success = false;
-        try {
-            beginTransaction("getCalendarItemsForRange", octxt);
-
-            // if they specified a folder, make sure it actually exists
-            if (folderId != ID_AUTO_INCREMENT)
-                getFolderById(folderId);
-
-            // get the list of all visible calendar items in the specified folder
-            List<CalendarItem> calItems = new ArrayList<CalendarItem>();
-            List<UnderlyingData> invData = DbMailItem.getCalendarItems(this, type, start, end, folderId, excludeFolders);
-            for (MailItem.UnderlyingData data : invData) {
-                try {
-                    CalendarItem calItem = getCalendarItem(data);
-                    if (folderId == calItem.getFolderId() || (folderId == ID_AUTO_INCREMENT && calItem.inMailbox()))
-                        if (calItem.canAccess(ACL.RIGHT_READ))
-                            calItems.add(calItem);
-                } catch (ServiceException e) {
-                    ZimbraLog.calendar.warn(
-                            "Error while retrieving calendar item " +
-                            data.id + " in mailbox " + mId +
-                            "; skipping item", e);
-                }
-            }
-            success = true;
-            return calItems;
-        } finally {
-            endTransaction(success);
-        }
-    }
-
-    public synchronized Collection<CalendarItem> getCalendarItemsForRange(
-            OperationContext octxt, long start, long end, 
-            int folderId, int[] excludeFolders)
-            throws ServiceException {
-        return getCalendarItemsForRange(
-                MailItem.TYPE_UNKNOWN, octxt, start, end, folderId, excludeFolders);
-    }
-    
-     public synchronized Collection<CalendarItem> getCalendarItemsAll(
-            byte type,
-            OperationContext octxt,
-            int folderId, int[] excludeFolders)
-            throws ServiceException {
-        boolean success = false;
-        try {
-            beginTransaction("getCalendarItemsAll", octxt);
-
-            // if they specified a folder, make sure it actually exists
-            if (folderId != ID_AUTO_INCREMENT)
-                getFolderById(folderId);
-
-            // get the list of all visible calendar items in the specified folder
-            List<CalendarItem> calItems = new ArrayList<CalendarItem>();
-            List<UnderlyingData> invData = DbMailItem.getCalendarItemsAll(this, type, folderId, excludeFolders);
-            for (MailItem.UnderlyingData data : invData) {
-                try {
-                    CalendarItem calItem = getCalendarItem(data);
-                    if (folderId == calItem.getFolderId() || (folderId == ID_AUTO_INCREMENT && calItem.inMailbox()))
-                        if (calItem.canAccess(ACL.RIGHT_READ))
-                            calItems.add(calItem);
-                } catch (ServiceException e) {
-                    ZimbraLog.calendar.warn(
-                            "Error while retrieving calendar item " +
-                            data.id + " in mailbox " + mId +
-                            "; skipping item", e);
-                }
-            }
-            success = true;
-            return calItems;
-        } finally {
-            endTransaction(success);
-        }
-    }
-    
     /**
      * Specifies the type of result we want from the call to search()
      */
@@ -5527,7 +5515,7 @@ public class Mailbox {
             }
 
             // deletes have already been collected, so fetch the tombstones and write once
-            MailItem.TypedIdList tombstones = collectPendingTombstones();
+            TypedIdList tombstones = collectPendingTombstones();
             if (tombstones != null && !tombstones.isEmpty())
                 DbMailItem.writeTombstones(this, tombstones);
 
@@ -5537,10 +5525,10 @@ public class Mailbox {
         }
     }
 
-    MailItem.TypedIdList collectPendingTombstones() {
+    TypedIdList collectPendingTombstones() {
         if (!isTrackingSync() || mCurrentChange.deletes == null)
             return null;
-        return new MailItem.TypedIdList(mCurrentChange.deletes.itemIds);
+        return new TypedIdList(mCurrentChange.deletes.itemIds);
     }
 
     public synchronized Tag createTag(OperationContext octxt, String name, byte color) throws ServiceException {
@@ -5989,10 +5977,8 @@ public class Mailbox {
                              folder.getDefaultView() == MailItem.TYPE_TASK;
         Set<Integer> existingCalItems = new HashSet<Integer>();
         if (subscription && isCalendar) {
-            int[] itemIds = listItemIds(octxt, MailItem.TYPE_UNKNOWN, folderId);
-            for (int i : itemIds) {
+            for (int i : listItemIds(octxt, MailItem.TYPE_UNKNOWN, folderId))
                 existingCalItems.add(i);
-            }
         }
 
         // if there's nothing to add, we can short-circuit here
@@ -6200,7 +6186,7 @@ public class Mailbox {
                 Folder.purgeMessages(this, sent, getOperationTimestamp() - userSentTimeout, null);
 
             // deletes have already been collected, so fetch the tombstones and write once
-            MailItem.TypedIdList tombstones = collectPendingTombstones();
+            TypedIdList tombstones = collectPendingTombstones();
             if (tombstones != null && !tombstones.isEmpty())
                 DbMailItem.writeTombstones(this, tombstones);
 
