@@ -1,0 +1,267 @@
+OVERVIEW
+========
+Currently, we have a "mail object" based access control mechanism in that 
+ACLs are generally associated with a single object in a user's Mailbox,
+either a folder or a tag.  The ACLs for mail object based access controls 
+are persisted in the user's database, in the METADATA column on the 
+MAIL_ITEM row for the folder or tag.   ZimbraServer/docs/acl.txt describes 
+the design of "mail object" based access controls.
+
+In addition to the above mail item based access controls, it is required 
+to support access control on the account level, where permissions are 
+granted on the account level, instead of on individual folders or tags.
+
+Implementation of account based access controls is not changing any aspect 
+of "mail object" based access controls.   However many of the terminologies 
+and concepts are shared between the two.
+
+This document describes the account based access control mechanism.  
+On a side note, the role based delegated admin feature in GnR will be built 
+on the same model.
+
+
+RIGHTS
+======
+Unlike mail object based access controls, rights for account based controls 
+are defined on a "higher", or "functionality" level.  For example, instead 
+of the generic combination of "read', 'write" rights that can be applied to 
+all mail objects, rights for account based access controls are like 
+"viewFreeBusy", "invite", ...
+
+Currently, the following rights are supported:
+    - invite
+    - private
+    - viewFreeBusy
+
+zmmailbox helpPermissions command describes each rights in more details.
+
+
+NEGATIVE RIGHTS
+===============
+Negative right are to specifically deny certain privileges to the "grantee".
+Negative rights will take precedence over positive rights.
+
+For example, if you granted "no invite" to user A, then invites from user A 
+would not be able to automatically book the target account's calendar for the 
+appointment.  Regardless of what other grants for the same right is applied to 
+user A(e.g. allow all authed users).
+
+
+GRANTEES
+========
+Like mail object based access controls, to avoid support calls:
+(1) a user always has full, irrevocable rights to their own mailbox.
+and 
+(2) administrators are allowed full access to everything on the system,
+    until we have a full-featured role based delegated admin implementation.
+
+Rights can be granted(allowed or denied) to other principals.  
+The type of supported grantees are:
+
+        user        - a Zimbra user
+        group       - a Zimbra group(distribution list)
+        all-authed  - all authed Zimbra usres
+        public      - the public
+
+
+
+ACL STORAGE AND SERIALIZATION FORMAT
+====================================
+ACLs are persisted in LDAP in the multi-valued "zimbraACE" attribute on the 
+target LDAP entry.  ACE stands for "access control entry", multiple ACEs makes 
+an ACL(access control list).
+
+ACEs are serialized in LDAP in the following format:
+
+    <grantee> <grantee-type> [-]<right>
+
+        grantee: For user and group grantees, zimbraId of the account/distribution list
+                 For all-authed and public grantees, pseudo UUID recognized by the code.
+                 
+        grantee-type: usr | grp | all | pub
+        
+        right: one of the supported right.
+               if a '-' (minus sign) is prepended to the right, it means the right is 
+               specifically denied.
+                        
+    e.g. fe0e1a88-e6e3-4fe1-b608-3ab6ce50351f grp -viewFreeBusy
+         fd6227f2-87e6-4453-9ccc-16853a6f8d27 usr viewFreeBusy
+         00000000-0000-0000-0000-000000000000 all viewFreeBusy
+         99999999-9999-9999-9999-999999999999 pub invite
+         
+Note: zimbraACE should NOT be directly modified via zmprov or any LDAP tools.  
+      They should only be modified via zmmailbox commands.  See GRANTING TOOLS below.
+      
+      
+GRANTING TOOLS
+==============
+Before WEB UI is available for granting, revoking, viewing rights, zmmailbox is the sole 
+tool that should be used for those tasks.
+
+zmmailbox commands:
+
+1. List all permission related commands
+   command: help permission
+   
+   scope: any
+   
+   example:
+       mbox> help permission
+
+          getPermission(gp)            [opts] [right1 [right2...]]
+            -v/--verbose                 verbose output
+        
+          grantPermission(grp)         {account {name}|group {name}|all|public {[-]permission}}
+        
+          listPermission(lp)           [opts] 
+            -v/--verbose                 verbose output
+        
+          revokePermission(rvp)        {account {name}|group {name}|all|public {[-]permission}}
+            
+       
+2. List and describe all permissions that can be granted 
+   command: listPermission(lp) [opts] 
+              -v/--verbose     verbose output
+            
+   scope: after a mailbox is selected
+   
+   example:
+       mbox> sm user1@example.com
+       mailbox: user1@example.com, size: 0 B, messages: 0, unread: 0
+       
+       mbox user1@example.com> lp -v
+         invite: automatically add meeting invites from grantee to the target's calendar
+             e.g. (1) When user Y is invited to a meeting, an appt is added to his calendar 
+                      automatically(tentatively) only if invite is from A, B, C or anyone in group G. 
+                  (2) Conf room Y can only be booked by users A, B, C and group G.
+
+         private: view, create, delete, modify private content
+             e.g. view, create, delete, modify private appointments
+        
+         viewFreeBusy: view free/busy
+             e.g. Free/busy for Y can only be seen by users A, B, C and group G.
+   
+       
+3. Get ACL associated with the target account
+   command: getPermission(gp) [opts] [right1 [right2...]]
+              -v/--verbose    verbose output
+              
+            Optional right(s) can be specified to get only ACEs for those rights.
+            
+   scope: after a mailbox is selected
+   
+   example:
+       mbox> sm user1@example.com
+       mailbox: user1@example.com, size: 0 B, messages: 0, unread: 0
+       
+       mbox user1@example.com> gp
+             Permission      Type  Display
+       ----------------  --------  -------
+                 invite       all  
+          -viewFreeBusy   account  user2@example.com
+          -viewFreeBusy     group  groupX@example.com
+           viewFreeBusy       all  
+           viewFreeBusy    public  
+           
+       mbox user1@example.com> gp invite
+             Permission      Type  Display
+       ----------------  --------  -------
+                 invite       all 
+
+   Note: 
+       - grants are sorted by Permission, then type(from the most specific to the least specific: 
+         account, group, all, public), then grantee display name. 
+       - To be consistent with the modifyFolderGrant(mfg) command, which is for mail object based permissions, 
+         grantee types are displayed as account(for user grantee), group(for group grantee), all(for all-authed 
+         grantee), and public(for public grantee).
+         
+         
+4. Grant a right for the target account
+   command: grantPermission(grp) {account {name}|group {name}|all|public {[-]permission}}
+   
+   scope: after a mailbox is selected
+   
+   example:
+       mbox> sm user1@example.com
+       mailbox: user1@example.com, size: 0 B, messages: 0, unread: 0
+       
+       mbox user1@example.com> grp account user3 invite
+         granted: 
+           account user3@example.com invite
+           
+       mbox user1@example.com> grp group group1@foo.com -viewFreeBusy
+         granted: 
+           group group1@foo.com -viewFreeBusy
+           
+       mbox user1@example.com> grp group group2 invite
+          granted: 
+            group group2@example.com invite
+            
+       mbox user1@example.com> grp all private
+          granted: 
+            all  private
+            
+       mbox user1@example.com> grp public -private
+          granted: 
+            public  -private
+ 
+       mbox user1@example.com> gp
+             Permission      Type  Display
+       ----------------  --------  -------
+                 invite   account  user3@example.com
+                 invite     group  group2@example.com
+                private       all  
+               -private    public  
+          -viewFreeBusy     group  group1@foo.com
+   
+   Note: if domain is not given for account or group grantee, the domain of the selected 
+         mailbox will be used. 
+         
+         
+5. Revoke a right for the target account
+   command: revokePermission(rvp) {account {name}|group {name}|all|public {[-]permission}}
+   
+   scope: after a mailbox is selected
+   
+   example: 
+       mbox> sm user1@example.com
+       mailbox: user1@example.com, size: 0 B, messages: 0, unread: 0
+       
+       mbox user1@example.com> gp
+             Permission      Type  Display
+       ----------------  --------  -------
+                 invite   account  user3@example.com
+                 invite     group  group2@example.com
+                private       all  
+               -private    public  
+          -viewFreeBusy     group  group1@foo.com
+
+       mbox user1@example.com> rvp group group1@foo.com viewFreeBusy
+         revoked 0 permission
+         (didn't revoke any permission because group1@foo.com does not have a viewFreeBusy 
+          grant, it only has a -viewFreeBusy grant)
+          
+       mbox user1@example.com> rvp group group1@foo.com -viewFreeBusy
+         revoked: 
+           group group1@foo.com -viewFreeBusy 
+           
+       mbox user1@example.com> rvp all private
+         revoked: 
+           all  private 
+           
+       mbox user1@example.com> rvp account  user3@example.com invite
+         revoked: 
+           account user3@example.com invite
+           
+       mbox user1@example.com> gp
+             Permission      Type  Display
+       ----------------  --------  -------
+                 invite     group  group2@example.com
+               -private    public
+               
+               
+   Note: when revoking a negative permission, "-" has to be prepended to the right, 
+         otherwise the permission will not be revoked.  See example above.
+         
+          
+   
