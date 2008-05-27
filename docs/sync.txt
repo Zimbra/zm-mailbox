@@ -1,9 +1,10 @@
 <-- initial sync request -->
 
-<SyncRequest [l="{root-folder-id}"]/>
+<SyncRequest [l="{root-folder-id}"] [calCutoff="{earliest-calendar-date}"]/>
 
    <-- no token = initial sync -->
    <--  if {root-folder-id} present, we start sync there rather than at folder 11 -->
+   <--  if {earliest-calendar-date} present, omit all appointments and tasks that don't have a recurrence ending after that time (specified in ms) -->
 
 <SyncResponse token="403" md="1077924283" s="78624627">
   <folder id="11">

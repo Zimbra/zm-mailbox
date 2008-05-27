@@ -46,14 +46,13 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.TimeoutMap;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbPool.Connection;
-import com.zimbra.cs.db.DbSearch.SearchResult;
 import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
+import com.zimbra.cs.mailbox.MailItem.TypedIdList;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.pop3.Pop3Message;
 import com.zimbra.cs.store.StoreManager;
-
 
 /**
  * @author dkarp
@@ -1362,7 +1361,7 @@ public class DbMailItem {
         }
     }
 
-    public static void writeTombstones(Mailbox mbox, MailItem.TypedIdList tombstones) throws ServiceException {
+    public static void writeTombstones(Mailbox mbox, TypedIdList tombstones) throws ServiceException {
         if (tombstones == null || tombstones.isEmpty())
             return;
 
@@ -1410,8 +1409,8 @@ public class DbMailItem {
         }
     }
 
-    public static MailItem.TypedIdList readTombstones(Mailbox mbox, long lastSync) throws ServiceException {
-        MailItem.TypedIdList tombstones = new MailItem.TypedIdList();
+    public static TypedIdList readTombstones(Mailbox mbox, long lastSync) throws ServiceException {
+        TypedIdList tombstones = new TypedIdList();
 
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -1879,13 +1878,13 @@ public class DbMailItem {
         }
     }
 
-    public static Pair<List<Integer>,MailItem.TypedIdList> getModifiedItems(Mailbox mbox, byte type, long lastSync, Set<Integer> visible)
+    public static Pair<List<Integer>,TypedIdList> getModifiedItems(Mailbox mbox, byte type, long lastSync, Set<Integer> visible)
     throws ServiceException {
         if (Mailbox.isCachedType(type))
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
 
         List<Integer> modified = new ArrayList<Integer>();
-        MailItem.TypedIdList missed = new MailItem.TypedIdList();
+        TypedIdList missed = new TypedIdList();
 
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -1908,7 +1907,7 @@ public class DbMailItem {
                     missed.add(rs.getByte(2), rs.getInt(1));
             }
 
-            return new Pair<List<Integer>,MailItem.TypedIdList>(modified, missed);
+            return new Pair<List<Integer>,TypedIdList>(modified, missed);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("getting items modified since " + lastSync, e);
         } finally {
@@ -2458,22 +2457,17 @@ public class DbMailItem {
         }
     }
 
-    
-    public static List<SearchResult> listByFolder(Folder folder, byte type) throws ServiceException {
-        return listByFolder(folder, type, true);
-    }
-
-    public static List<SearchResult> listByFolder(Folder folder, byte type, boolean descending) throws ServiceException {
+    public static List<Integer> listByFolder(Folder folder, byte type, boolean descending) throws ServiceException {
         Mailbox mbox = folder.getMailbox();
         Connection conn = mbox.getOperationConnection();
         boolean allTypes = type == MailItem.TYPE_UNKNOWN;
 
-        ArrayList<SearchResult> result = new ArrayList<SearchResult>();
+        List<Integer> result = new ArrayList<Integer>();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
             String typeConstraint = allTypes ? "" : "type = ? AND ";
-            stmt = conn.prepareStatement("SELECT id, index_id, type, date FROM " + getMailItemTableName(folder) +
+            stmt = conn.prepareStatement("SELECT id FROM " + getMailItemTableName(folder) +
                         " WHERE " + IN_THIS_MAILBOX_AND + typeConstraint + "folder_id = ?" +
                         " ORDER BY date" + (descending ? " DESC" : ""));
             int pos = 1;
@@ -2484,7 +2478,34 @@ public class DbMailItem {
             rs = stmt.executeQuery();
 
             while (rs.next())
-                result.add(SearchResult.createResult(rs, DbSearch.SORT_BY_DATE));
+                result.add(rs.getInt(1));
+            return result;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("fetching item list for folder " + folder.getId(), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    public static TypedIdList listByFolder(Folder folder, boolean descending) throws ServiceException {
+        Mailbox mbox = folder.getMailbox();
+        Connection conn = mbox.getOperationConnection();
+
+        TypedIdList result = new TypedIdList();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT id, type FROM " + getMailItemTableName(folder) +
+                        " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ?" +
+                        " ORDER BY date" + (descending ? " DESC" : ""));
+            int pos = 1;
+            stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, folder.getId());
+            rs = stmt.executeQuery();
+
+            while (rs.next())
+                result.add(rs.getByte(2), rs.getInt(1));
             return result;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("fetching item list for folder " + folder.getId(), e);
@@ -2596,11 +2617,7 @@ public class DbMailItem {
     // CALENDAR STUFF BELOW HERE!
     //////////////////////////////////////
 
-    private static final String APPOINTMENT_TYPE = "(" + MailItem.TYPE_APPOINTMENT + ")";
-    private static final String TASK_TYPE = "(" + MailItem.TYPE_TASK + ")";
-
-    public static UnderlyingData getCalendarItem(Mailbox mbox, String uid)
-    throws ServiceException {
+    public static UnderlyingData getCalendarItem(Mailbox mbox, String uid) throws ServiceException {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -2626,10 +2643,9 @@ public class DbMailItem {
         }
     }
 
-
     /**
-     * Return all of the Invite records within the range start<=Invites<end.  IE "Give me all the 
-     * invites between 7:00 and 9:00 will return you everything from 7:00 to 8:59:59.99
+     * Return all of the Invite records within the range start&lt;=Invites&lt;end.  IE "Give me all the 
+     * invites between 7:00 and 9:00" will return you everything from 7:00 to 8:59:59.99
      * @param start
      * @param end
      * @param folderId 
@@ -2641,36 +2657,7 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            boolean folderSpecified = folderId != Mailbox.ID_AUTO_INCREMENT;
-
-            String excludeFolderPart = "";
-            if (excludeFolderIds != null) 
-                excludeFolderPart = " AND folder_id NOT IN" + DbUtil.suitableNumberOfVariables(excludeFolderIds);
-
-            String typeList;
-            if (type == MailItem.TYPE_APPOINTMENT)
-                typeList = APPOINTMENT_TYPE;
-            else if (type == MailItem.TYPE_TASK)
-                typeList = TASK_TYPE;
-            else
-                typeList = CALENDAR_TYPES;
-            stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
-                        " FROM " + getCalendarItemTableName(mbox, "ci") + ", " + getMailItemTableName(mbox, "mi") +
-                        " WHERE ci.start_time < ? AND ci.end_time > ? AND mi.id = ci.item_id AND mi.type IN " + typeList +
-                        " AND ci.mailbox_id = ? AND mi.mailbox_id = ci.mailbox_id" +
-                        (folderSpecified ? " AND folder_id = ?" : "") + excludeFolderPart);
-
-            int param = 1;
-            stmt.setTimestamp(param++, new Timestamp(end));
-            stmt.setTimestamp(param++, new Timestamp(start));
-            stmt.setInt(param++, mbox.getId());
-            if (folderSpecified)
-                stmt.setInt(param++, folderId);
-            if (excludeFolderIds != null) {
-                for (int id : excludeFolderIds)
-                    stmt.setInt(param++, id);
-            }
-
+            stmt = calendarItemStatement(conn, DB_FIELDS, mbox, type, start, end, folderId, excludeFolderIds);
             rs = stmt.executeQuery();
 
             List<UnderlyingData> result = new ArrayList<UnderlyingData>();
@@ -2685,55 +2672,60 @@ public class DbMailItem {
         }
     }
 
-
-     public static List<UnderlyingData> getCalendarItemsAll(Mailbox mbox, byte type,
-                                                            int folderId, int[] excludeFolderIds) 
+    public static TypedIdList listCalendarItems(Mailbox mbox, byte type, long start, long end, int folderId, int[] excludeFolderIds) 
     throws ServiceException {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            boolean folderSpecified = folderId != Mailbox.ID_AUTO_INCREMENT;
-
-            String excludeFolderPart = "";
-            if (excludeFolderIds != null) 
-                excludeFolderPart = " AND folder_id NOT IN" + DbUtil.suitableNumberOfVariables(excludeFolderIds);
-
-            String typeList;
-            if (type == MailItem.TYPE_APPOINTMENT)
-                typeList = APPOINTMENT_TYPE;
-            else if (type == MailItem.TYPE_TASK)
-                typeList = TASK_TYPE;
-            else
-                typeList = CALENDAR_TYPES;
-            stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
-                        " FROM " + getCalendarItemTableName(mbox, "ci") + ", " + getMailItemTableName(mbox, "mi") +
-                        " WHERE mi.id = ci.item_id AND mi.type IN " + typeList +
-                        " AND ci.mailbox_id = ? AND mi.mailbox_id = ci.mailbox_id" +
-                        (folderSpecified ? " AND folder_id = ?" : "") + excludeFolderPart);
-
-            int param = 1;
-
-            stmt.setInt(param++, mbox.getId());
-            if (folderSpecified)
-                stmt.setInt(param++, folderId);
-            if (excludeFolderIds != null) {
-                for (int id : excludeFolderIds)
-                    stmt.setInt(param++, id);
-            }
-
+            stmt = calendarItemStatement(conn, "mi.id, mi.type", mbox, type, start, end, folderId, excludeFolderIds);
             rs = stmt.executeQuery();
 
-            List<UnderlyingData> result = new ArrayList<UnderlyingData>();
+            TypedIdList result = new TypedIdList();
             while (rs.next())
-                result.add(constructItem(rs));
+                result.add(rs.getByte(2), rs.getInt(1));
             return result;
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("fetching calendar items for mailbox " + mbox.getId(), e);
+            throw ServiceException.FAILURE("listing calendar items for mailbox " + mbox.getId(), e);
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
         }
+    }
+
+    private static PreparedStatement calendarItemStatement(Connection conn, String fields,
+            Mailbox mbox, byte type, long start, long end, int folderId, int[] excludeFolderIds)
+    throws SQLException {
+        boolean folderSpecified = folderId != Mailbox.ID_AUTO_INCREMENT;
+
+        String endConstraint = end > 0 ? " AND ci.start_time < ?" : "";
+        String startConstraint = start > 0 ? " AND ci.end_time > ?" : "";
+        String typeList = (type == MailItem.TYPE_UNKNOWN ? CALENDAR_TYPES : typeConstraint(type));
+
+        String excludeFolderPart = "";
+        if (excludeFolderIds != null && excludeFolderIds.length > 0) 
+            excludeFolderPart = " AND folder_id NOT IN" + DbUtil.suitableNumberOfVariables(excludeFolderIds);
+
+        PreparedStatement stmt = conn.prepareStatement("SELECT " + fields +
+                    " FROM " + getCalendarItemTableName(mbox, "ci") + ", " + getMailItemTableName(mbox, "mi") +
+                    " WHERE mi.id = ci.item_id" + endConstraint + startConstraint + " AND mi.type IN " + typeList +
+                    " AND ci.mailbox_id = ? AND mi.mailbox_id = ci.mailbox_id" +
+                    (folderSpecified ? " AND folder_id = ?" : "") + excludeFolderPart);
+
+        int param = 1;
+        if (end > 0)
+            stmt.setTimestamp(param++, new Timestamp(end));
+        if (start > 0)
+            stmt.setTimestamp(param++, new Timestamp(start));
+        stmt.setInt(param++, mbox.getId());
+        if (folderSpecified)
+            stmt.setInt(param++, folderId);
+        if (excludeFolderIds != null) {
+            for (int id : excludeFolderIds)
+                stmt.setInt(param++, id);
+        }
+
+        return stmt;
     }
 
     public static void addToCalendarItemTable(CalendarItem calItem) throws ServiceException {

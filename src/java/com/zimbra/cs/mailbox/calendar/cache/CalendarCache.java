@@ -245,7 +245,7 @@ public class CalendarCache {
         Folder folder = mbox.getFolderById(octxt, folderId);
         CalendarData calData = new CalendarData(folderId, folder.getImapMODSEQ(), rangeStart, rangeEnd);
         Collection<CalendarItem> calItems =
-            mbox.getCalendarItemsForRange(itemType, octxt, rangeStart, rangeEnd, folderId, null);
+            mbox.getCalendarItemsForRange(octxt, itemType, rangeStart, rangeEnd, folderId, null);
         for (CalendarItem calItem : calItems) {
             CalendarItemData calItemData = reloadCalendarItemOverRange(mbox, calItem, rangeStart, rangeEnd);
             if (calItemData != null)
