@@ -27,7 +27,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -437,14 +436,18 @@ public class StringUtil {
         }
         return buf.toString();
     }
-    
-    public static <E> String join(String delimiter, Collection<E> col) {
-        if (col == null) {
+
+    public static String join(String delimiter, Iterable array) {
+        if (array == null)
             return null;
+
+        StringBuilder buf = new StringBuilder();
+        for (Object obj : array) {
+            if (buf.length() != 0)
+                buf.append(delimiter);
+            buf.append(obj);
         }
-        Object[] array = new Object[col.size()];
-        col.toArray(array);
-        return join(delimiter, array);
+        return buf.toString();
     }
     
     /**
