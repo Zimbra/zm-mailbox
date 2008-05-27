@@ -159,6 +159,7 @@ public class LC {
     public static final KnownKey ldap_port;
     public static final KnownKey ldap_url;
     public static final KnownKey ldap_master_url;
+    public static final KnownKey ldap_bind_url;
     public static final KnownKey ldap_is_master;
     public static final KnownKey ldap_root_password;
     public static final KnownKey ldap_connect_timeout;
@@ -567,6 +568,9 @@ public class LC {
         ldap_url.setDefault("");
 
         ldap_master_url = new KnownKey("ldap_master_url");
+        ldap_master_url.setDefault("");
+
+        ldap_master_url = new KnownKey("ldap_bind_url");
         ldap_master_url.setDefault("");
 
         ldap_is_master = new KnownKey("ldap_is_master");
