@@ -45,7 +45,6 @@ import javax.activation.DataSource;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-
 /**
  * @author dkarp
  */
@@ -265,9 +264,9 @@ public class Contact extends MailItem {
         }
 
         Attachment(Metadata meta) throws ServiceException {
-            this(null, meta.get("ctype"), meta.get("field"), meta.get("name"));
-            setPartName(meta.get("part"));
-            mSize = (int) meta.getLong("size");
+            this(null, meta.get(FN_CTYPE), meta.get(FN_FIELD), meta.get(FN_NAME));
+            setPartName(meta.get(FN_PART));
+            mSize = (int) meta.getLong(FN_SIZE);
         }
 
         public void setPartName(String name)  { mPartName = name; }
@@ -289,8 +288,10 @@ public class Contact extends MailItem {
             return ByteUtil.getContent(Mime.getMimePart(con.getMimeMessage(false), mPartName).getInputStream(), mSize);
         }
 
+        private static final String FN_SIZE = "size", FN_NAME = "name", FN_PART = "part", FN_CTYPE = "ctype", FN_FIELD = "field";
+
         Metadata asMetadata() {
-            return new Metadata().put("size", mSize).put("name", mFilename).put("part", mPartName).put("ctype", mContentType).put("field", mFieldName);
+            return new Metadata().put(FN_SIZE, mSize).put(FN_NAME, mFilename).put(FN_PART, mPartName).put(FN_CTYPE, mContentType).put(FN_FIELD, mFieldName);
         }
 
         @Override public String toString() {
@@ -625,7 +626,6 @@ public class Contact extends MailItem {
         Mailbox mbox = folder.getMailbox();
         mbox.updateContactCount(1);
 
-        // XXX: should maintain size on contacts with attachments
         UnderlyingData data = new UnderlyingData();
         data.id          = id;
         data.type        = TYPE_CONTACT;
@@ -635,6 +635,7 @@ public class Contact extends MailItem {
         data.imapId      = id;
         data.volumeId    = volumeId;
         data.setBlobDigest(pc.getDigest());
+        data.size        = pc.getSize();
         data.date        = mbox.getOperationTimestamp();
         data.flags       = flags | (pc.hasAttachment() ? Flag.BITMASK_ATTACHED : 0);
         data.tags        = Tag.tagsToBitmask(tags);
@@ -660,14 +661,16 @@ public class Contact extends MailItem {
         return con;
     }
 
-    @Override public List<org.apache.lucene.document.Document> generateIndexData(boolean doConsistencyCheck) throws MailItem.TemporaryIndexingException {
-        synchronized(mMailbox) {
+    @Override public List<org.apache.lucene.document.Document> generateIndexData(boolean doConsistencyCheck) throws TemporaryIndexingException {
+        synchronized (mMailbox) {
             try {
                 ParsedContact pc = new ParsedContact(this);
                 pc.analyze(mMailbox);
                 if (pc.hasTemporaryAnalysisFailure())
-                    throw new MailItem.TemporaryIndexingException();
+                    throw new TemporaryIndexingException();
                 return pc.getLuceneDocuments(mMailbox);
+            } catch (TemporaryIndexingException tie) {
+                throw tie;
             } catch (Exception e) {
                 return new ArrayList<org.apache.lucene.document.Document>(); 
             }
