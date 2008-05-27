@@ -45,7 +45,7 @@ public class Put extends DavMethod {
 		if (rs.isNewlyCreated())
 			ctxt.setStatus(HttpServletResponse.SC_CREATED);
 		else
-			ctxt.setStatus(HttpServletResponse.SC_OK);
+			ctxt.setStatus(HttpServletResponse.SC_NO_CONTENT);
 		if (rs.hasEtag())
 			ctxt.getResponse().setHeader(DavProtocol.HEADER_ETAG, rs.getEtag());
 	}
