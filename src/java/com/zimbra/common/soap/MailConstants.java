@@ -376,6 +376,7 @@ public class MailConstants {
     public static final String A_MODIFIED_SEQUENCE = "ms";
     public static final String A_SYNC = "sync";
     public static final String A_TYPED_DELETES = "typed";
+    public static final String A_CALENDAR_CUTOFF = "calCutoff";
 
     // filter rules
     public static final String A_LHS = "k0";
