@@ -184,6 +184,8 @@ public class LC {
     public static final KnownKey ldap_cache_cos_maxage;
     public static final KnownKey ldap_cache_domain_maxsize;
     public static final KnownKey ldap_cache_domain_maxage;
+    public static final KnownKey ldap_cache_group_maxsize;
+    public static final KnownKey ldap_cache_group_maxage;
     public static final KnownKey ldap_cache_server_maxsize;
     public static final KnownKey ldap_cache_server_maxage;
     public static final KnownKey ldap_cache_timezone_maxsize;
@@ -631,6 +633,10 @@ public class LC {
         ldap_cache_domain_maxsize = new KnownKey("ldap_cache_domain_maxsize", "100");
 
         ldap_cache_domain_maxage = new KnownKey("ldap_cache_domain_maxage", "15");
+        
+        ldap_cache_group_maxsize = new KnownKey("ldap_cache_group_maxsize", "200");
+
+        ldap_cache_group_maxage = new KnownKey("ldap_cache_group_maxage", "15");
 
         ldap_cache_server_maxsize = new KnownKey("ldap_cache_server_maxsize", "100");
 
