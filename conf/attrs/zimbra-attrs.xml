@@ -3235,12 +3235,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="666" name="zimbraPrefMailSoundsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
-  <defaultCOSValue>FALSE</defaultCOSValue>
+  <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether audible alert is enabled when a new email arrives</desc>
 </attr>
 
 <attr id="667" name="zimbraPrefCalendarReminderSoundsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
-  <defaultCOSValue>FALSE</defaultCOSValue>
+  <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether audible alert is enabled when appointment notification is played</desc>
 </attr>
 
