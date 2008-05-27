@@ -1,17 +1,22 @@
 package com.zimbra.cs.account.accesscontrol;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 
 public class ZimbraACL {
+    private static final Log sLog = LogFactory.getLog(ZimbraACL.class);
+
     
     // non-public, non-authuser aces
     Set<ZimbraACE> mAces;
@@ -164,13 +169,14 @@ public class ZimbraACL {
         
         Boolean result = null;
         for (ZimbraACE ace : mAces) {
-            if (ace.getGranteeType() == GranteeType.GT_USER) {
-                if (ace.matches(grantee, rightNeeded)) {
-                    if (ace.deny())
-                        return Boolean.FALSE;
-                    else
-                        return Boolean.TRUE;
-                }
+            if (ace.getGranteeType() != GranteeType.GT_USER)
+                continue;
+            
+            if (ace.matches(grantee, rightNeeded)) {
+                if (ace.deny())
+                    return Boolean.FALSE;
+                else
+                    return Boolean.TRUE;
             }
         }
         return result;
@@ -180,44 +186,64 @@ public class ZimbraACL {
         if (mAces == null)
             return null;
         
-        // Boolean result = null;
-        DistributionList mostSpecificMatched = null; // keep tract of the most specific group that matches grantee
         Provisioning prov = Provisioning.getInstance();
+        
+        // keep track of the most specific group in each unrelated trees that has a matched group
+        Map<Integer, ZimbraACE> mostSpecificInMatchedTrees = null;  
+        int key = 0;
         for (ZimbraACE ace : mAces) {
-            if (ace.matches(grantee, rightNeeded)) {
-                DistributionList dl = prov.get(Provisioning.DistributionListBy.id, ace.getGrantee());
-                if (dl == null) {
-                    ZimbraLog.account.warn("cannot find DL " + ace.getGrantee() +  ", ACE " + ace.toString() + " ignored");
-                    continue;
+            if (ace.getGranteeType() != GranteeType.GT_GROUP)
+                continue;
+            
+            if (!ace.matches(grantee, rightNeeded)) 
+                continue;
+            
+            // we now have a matched group, go through the current matched trees and remember only the 
+            // most specific group in each tree
+            if (mostSpecificInMatchedTrees == null)
+                mostSpecificInMatchedTrees = new HashMap<Integer, ZimbraACE>();
+            boolean inATree = false;
+            for (Map.Entry<Integer, ZimbraACE> t : mostSpecificInMatchedTrees.entrySet()) {
+                if (prov.inGroup(ace.getGrantee(), t.getValue().getGrantee())) {
+                    // encountered a more specific group, replace it 
+                    if (sLog.isDebugEnabled())
+                        sLog.debug("hasRightAsGroup: replace " + t.getValue().dump() + " with " + ace.dump() + " in tree " + t.getKey());
+                    t.setValue(ace);
+                    inATree = true;
+                } else if (prov.inGroup(t.getValue().getGrantee(), ace.getGrantee())) {
+                    // encountered a less specific group, ignore it
+                    if (sLog.isDebugEnabled())
+                        sLog.debug("hasRightAsGroup: ignore " + ace.dump() + " for tree " + t.getKey());
+                    inATree = true;
                 }
-                
-                if (mostSpecificMatched == null) {
-                    mostSpecificMatched = dl;
-                    
-                    // TODO
-                    if (ace.deny())
-                        return Boolean.FALSE;
-                    else
-                        return Boolean.TRUE;
-                    
-                } else {
-                    /*
-                     * TODO: need to take care of matching DLs that are not members of one another,
-                     *       and see of any of them are specifically denied.  If so, the grant should 
-                     *       be denied.
-                     *       
-                    if (prov.inDistributionList(dl, mostSpecificMatched.getId()))
-                        // found a more specific group
-                        mostSpecificMatched = dl;
-                    else if (!prov.inDistributionList(mostSpecificMatched, dl.getId())) {
-                        // 
-                    }
-                    */
-                }
+            }
+            
+            // not in any tree, put it in a new tree
+            if (!inATree) {
+                if (sLog.isDebugEnabled())
+                    sLog.debug("hasRightAsGroup: " + "put " + ace.dump() + " in tree " + key);
+                mostSpecificInMatchedTrees.put(key++, ace);
             }
         }
         
-        return null;
+        // no match found
+        if (mostSpecificInMatchedTrees == null)
+            return null;
+        
+        // we now have the most specific group of each unrelated trees that matched this grantee/right
+        // if they all agree on the allow/deny, good.  If they don't, honor the deny.
+        for (ZimbraACE a : mostSpecificInMatchedTrees.values()) {
+            if (a.deny()) {
+                if (sLog.isDebugEnabled())
+                    sLog.debug("hasRightAsGroup: grantee "+ grantee.getName() + " denied for right " + rightNeeded.getCode() + " via ACE: " + a.dump());
+                return Boolean.FALSE;
+            }
+        }
+        
+        // Okay, every group says yes, allow it.
+        if (sLog.isDebugEnabled())
+            sLog.debug("hasRightAsGroup: grantee "+ grantee.getName() + " allowed for right " + rightNeeded.getCode() + " via ACE: " + dump(mostSpecificInMatchedTrees.values()));
+        return Boolean.TRUE;
     }
     
     private Boolean hasRightAsAuthuser(Account grantee, Right rightNeeded) throws ServiceException {
@@ -257,6 +283,68 @@ public class ZimbraACL {
         return result;
     }
     
+    /**
+     * Conflict resolution rules for multiple matches:
+     * 
+     * Rule 1. If multiple ACEs for a target apply to a grantee, the most specific ACE takes precedence.
+     *         e.g. - ACL has: allow user A and deny group G
+     *              - user A is in group G
+     *              => user A will be allowed
+     * 
+     * Rule 2. If the grantee is in multiple matching groups in the ACL, the ACE for the most specific group takes precedence.
+     *         e.g. - ALC has: allow group G1 and deny group G2
+     *              - user A is in both group G1 and G2
+     *              - group G1 is in Group G2
+     *              => user A will be allowed
+     *   
+     * Rule 3. If multiple unrelated group ACEs conflict for a target, then denied take precedence over allowed and not granted.
+     *         e.g. - ACL says: allow group G1 and deny group G2
+     *              - user A is in both group G1 and G2; G1 is not a member of G2 and G2 is not a member of G1
+     *              => user A will be denied.
+     *                      
+     * Rule 4. If multiple ACEs conflict for a target, this is a wrong setting and should not happen using 
+     *         the supported granting/revoking interface: SOAP and zmmailbox.
+     *         The result is unexpectedIf an ACL does contain such ACEs.  The result would be whichever ACE is seen first, and the 
+     *         order is not guaranteed. 
+     *         e.g. - ACL has: allow user A and deny user A
+     *              => result is unexpected.
+     * 
+     * 
+     * A more complete example - not realistic, but an example:
+     * 
+     * For ACL:
+     *      acct-A             usr  rightR
+     *      group-G1           grp -rightR
+     *      group-G2           grp  rightR
+     *      all-authed(000...) all -rightR
+     *      the-public(999...) pub  rightR
+     *      
+     * and group membership:
+     *      group-G1 has members acct-A and acct-B and acct-C
+     *      group-G2 has members acct-A and acct-B and account-D and account-E
+     *      group-G3 has members group G2 and account-E
+     *      
+     *                     G1(-R)                G3
+     *                   / | \                  /  \
+     *               A(R)  B  C                E   G2(R)
+     *                                            / | | \
+     *                                           A  B D  E
+     *                                                 
+     * then for rightR:
+     *                         acct-A is allowed (via "acct-A             usr  rightR"  (rule 1)
+     *                         acct-B is denied  (via "group-G1           grp -rightR"  (rule 3)
+     *                         acct-C is denied  (via "group-G1           grp -rightR"  (single match)
+     *                         acct-D is allowed (via "group-G2           grp  rightR"  (single match)
+     *                         acct-E is allowed (via "group-G2           grp  rightR"  (rule 2)
+     *                         acct-F is denied  (via "all-authed(000...) all -rightR"  (single match)
+     *     external email foo@bar.com is allowed (via "the-public(999...) pub  rightR"  (single match)
+     *       
+     *
+     * @param grantee
+     * @param rightNeeded
+     * @return
+     * @throws ServiceException
+     */
     boolean hasRight(Account grantee, Right rightNeeded) throws ServiceException {
         Boolean result = null;
         
@@ -337,6 +425,19 @@ public class ZimbraACL {
                 aces.add(ace.serialize());
         }
         return aces;
+    }
+    
+    /*
+        debugging/logging methods
+    */
+    
+    // dump a colection of ZimrbaACE to [...] [...] ...
+    private static String dump(Collection<ZimbraACE> aces) {
+        StringBuffer sb = new StringBuffer();
+        for (ZimbraACE ace : aces)
+            sb.append(ace.dump() + " ");
+        
+        return sb.toString();
     }
 
 

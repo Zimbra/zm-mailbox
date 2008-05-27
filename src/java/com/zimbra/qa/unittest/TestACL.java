@@ -10,6 +10,7 @@ import junit.framework.TestSuite;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -248,20 +249,20 @@ public class TestACL extends TestCase {
         verify(null, target, Right.RT_invite, false);
     }
     
-    public void testGranteeGroup() throws Exception {
+    public void testGranteeGroupSimple() throws Exception {
         Provisioning prov = Provisioning.getInstance();
         
         /*
          * setup grantees
          */
-        Account user1 = prov.createAccount(getEmailAddr("testGranteeGroup-user1"), PASSWORD, null);
-        Account user2 = prov.createAccount(getEmailAddr("testGranteeGroup-user2"), PASSWORD, null);
-        Account user3 = prov.createAccount(getEmailAddr("testGranteeGroup-user3"), PASSWORD, null);
+        Account user1 = prov.createAccount(getEmailAddr("testGranteeGroupSimple-user1"), PASSWORD, null);
+        Account user2 = prov.createAccount(getEmailAddr("testGranteeGroupSimple-user2"), PASSWORD, null);
+        Account user3 = prov.createAccount(getEmailAddr("testGranteeGroupSimple-user3"), PASSWORD, null);
         
         /*
          * setup groups
          */
-        DistributionList groupA = prov.createDistributionList(getEmailAddr("testGranteeGroup-groupA"), new HashMap<String, Object>());
+        DistributionList groupA = prov.createDistributionList(getEmailAddr("testGranteeGroupSimple-groupA"), new HashMap<String, Object>());
         prov.addMembers(groupA, new String[] {user1.getName(), user2.getName()});
         
         /*
@@ -281,6 +282,60 @@ public class TestACL extends TestCase {
         
         // not group member
         verify(user3, target, Right.RT_viewFreeBusy, false);
+    }
+    
+    /*
+     * Test this insane membership: user1 should be DENIED via G6(D)
+     * 
+     *          G1(A)                      G4(D)
+     *          / \                        / \
+     *      user1  G2(D)                usr1  G5(A)
+     *             / \                        / \
+     *         user1  G3(A)               user1  G6(D)
+     *                 |                          |
+     *               user1                      user1
+     * 
+     */
+    public void testGranteeGroup() throws Exception {
+        Provisioning prov = Provisioning.getInstance();
+        
+        /*
+         * setup grantees
+         */
+        Account user1 = prov.createAccount(getEmailAddr("testGranteeGroup-user1"), PASSWORD, null);
+        
+        /*
+         * setup groups
+         */
+        DistributionList G1 = prov.createDistributionList(getEmailAddr("testGranteeGroup-G1"), new HashMap<String, Object>());
+        DistributionList G2 = prov.createDistributionList(getEmailAddr("testGranteeGroup-G2"), new HashMap<String, Object>());
+        DistributionList G3 = prov.createDistributionList(getEmailAddr("testGranteeGroup-G3"), new HashMap<String, Object>());
+        DistributionList G4 = prov.createDistributionList(getEmailAddr("testGranteeGroup-G4"), new HashMap<String, Object>());
+        DistributionList G5 = prov.createDistributionList(getEmailAddr("testGranteeGroup-G5"), new HashMap<String, Object>());
+        DistributionList G6 = prov.createDistributionList(getEmailAddr("testGranteeGroup-G6"), new HashMap<String, Object>());
+
+        prov.addMembers(G1, new String[] {user1.getName(), G2.getName()});
+        prov.addMembers(G2, new String[] {user1.getName(), G3.getName()});
+        prov.addMembers(G3, new String[] {user1.getName()});
+        prov.addMembers(G4, new String[] {user1.getName(), G5.getName()});
+        prov.addMembers(G5, new String[] {user1.getName(), G6.getName()});
+        prov.addMembers(G6, new String[] {user1.getName()});
+        
+        
+        /*
+         * setup targets
+         */
+        Account target = prov.createAccount(getEmailAddr("testGranteeGroup-target"), PASSWORD, null);
+        Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
+        aces.add(new ZimbraACE(G1, Right.RT_viewFreeBusy, false));
+        aces.add(new ZimbraACE(G2, Right.RT_viewFreeBusy, true));
+        aces.add(new ZimbraACE(G3, Right.RT_viewFreeBusy, false));
+        aces.add(new ZimbraACE(G4, Right.RT_viewFreeBusy, true));
+        aces.add(new ZimbraACE(G5, Right.RT_viewFreeBusy, false));
+        aces.add(new ZimbraACE(G6, Right.RT_viewFreeBusy, true));
+        PermUtil.grantAccess(target, aces);
+        
+        verify(user1, target, Right.RT_viewFreeBusy, false);
     }
     
     /*
@@ -398,6 +453,8 @@ public class TestACL extends TestCase {
 
     public static void main(String[] args) throws Exception {
         CliUtil.toolSetup("INFO");
+        ZimbraLog.toolSetupLog4j("DEBUG", "/Users/pshao/sandbox/conf/log4j.properties.phoebe");
+
         TestUtil.runTest(new TestSuite(TestACL.class));
     }
 }

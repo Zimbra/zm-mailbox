@@ -221,8 +221,8 @@ public class ZimbraACE {
     }
     
     // for logging, debugging
-    public String toString() {
-        return serialize();
+    public String dump() {
+        return "[" + serialize() + "]";
     }
 
 

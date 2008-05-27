@@ -1656,6 +1656,16 @@ public abstract class Provisioning {
     public abstract boolean inDistributionList(Account acct, String zimbraId) throws ServiceException;
     
     /**
+     * @param groupInner
+     * @param groupOuter 
+     * @return true if the group signified by groupInner is a member of the group signified by groupOuter
+     * @throws ServiceException
+     */
+    public boolean inGroup(String groupInner, String groupOuter) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
+    
+    /**
      * @return set of all the zimbraId's of lists this account belongs to, including any list in other list. 
      * @throws ServiceException
      */
