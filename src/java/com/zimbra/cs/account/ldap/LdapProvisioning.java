@@ -50,7 +50,9 @@ import com.zimbra.cs.account.DomainCache;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.GalContact;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Identity;
+import com.zimbra.cs.account.IDedEntryCache;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.krb5.Krb5Principal;
 import com.zimbra.cs.account.NamedEntry;
@@ -176,6 +178,12 @@ public class LdapProvisioning extends Provisioning {
                 LC.ldap_cache_zimlet_maxage.intValue() * Constants.MILLIS_PER_MINUTE);                
     
 
+    // use the same TTL and max size as those for account, if needed we can add own LC keys
+    private static IDedEntryCache<Group> sGroupCache =
+        new IDedEntryCache<Group>(
+                LC.ldap_cache_group_maxsize.intValue(),
+                LC.ldap_cache_group_maxage.intValue() * Constants.MILLIS_PER_MINUTE); 
+    
     private static final int BY_ID = 1;
 
     private static final int BY_EMAIL = 2;
@@ -3585,6 +3593,28 @@ public class LdapProvisioning extends Provisioning {
     @Override
     public boolean inDistributionList(Account acct, String zimbraId) throws ServiceException {
         return getDistributionLists(acct).contains(zimbraId);        
+    }
+    
+    @Override
+    public boolean inGroup(String groupInner, String groupOuter) throws ServiceException {
+        Group group = sGroupCache.getById(groupInner);
+        if (group == null) {
+            DistributionList inner = Provisioning.getInstance().get(DistributionListBy.id, groupInner);
+            if (inner == null)
+                throw ServiceException.FAILURE("dl " + groupInner + " does not exist", null);
+            
+            List<DistributionList> inDLs = getDistributionLists(inner, false, null);
+            if (ZimbraLog.account.isDebugEnabled()) {
+                StringBuffer sb = new StringBuffer();
+                for (DistributionList d : inDLs)
+                    sb.append("[" + d.getName() + "] ");
+                ZimbraLog.account.debug("inGroup: dl " + inner.getName() + " is in:" + sb.toString());
+            }
+            
+            group = new Group(inner.getName(), inner.getId(), inDLs);
+            sGroupCache.put(group);
+        }
+        return group.isMemberOf(groupOuter);
     }
     
     public List<DistributionList> getDistributionLists(Account acct, boolean directOnly, Map<String, String> via) throws ServiceException {
