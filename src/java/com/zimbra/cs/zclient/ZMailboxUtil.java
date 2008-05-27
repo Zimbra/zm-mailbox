@@ -373,10 +373,10 @@ public class ZMailboxUtil implements DebugListener {
         GET_PERMISSION("getPermission", "gp", "[right1 [right2...]]", "get permissions", Category.PERMISSION, 0, Integer.MAX_VALUE, O_VERBOSE),
         GET_REST_URL("getRestURL", "gru", "{relative-path}", "do a GET on a REST URL relative to the mailbox", Category.MISC, 1, 1, O_OUTPUT_FILE),
         GET_SIGNATURES("getSignatures", "gsig", "", "get all signatures", Category.ACCOUNT, 0, 0, O_VERBOSE),
-        GRANT_PERMISSION("grantPermission", "grp", "{account {name}|group {name}|public {[-]permission}}", "allow or deny a permission. to deny a permission, put a '-' in front of the permittion name", Category.PERMISSION, 2, 3),
+        GRANT_PERMISSION("grantPermission", "grp", "{account {name}|group {name}|all|public {[-]permission}}", "allow or deny a permission. to deny a permission, put a '-' in front of the permittion name", Category.PERMISSION, 2, 3),
         HELP("help", "?", "commands", "return help on a group of commands, or all commands. Use -v for detailed help.", Category.MISC, 0, 1, O_VERBOSE),
-        HELP_PERMISSION("helpPermission", "hp", "", "list and description of all permissions that can be granted", Category.PERMISSION, 0, 0, O_VERBOSE),
         IMPORT_URL_INTO_FOLDER("importURLIntoFolder", "iuif", "{folder-path} {url}", "add the contents to the remote feed at {target-url} to the folder", Category.FOLDER, 2, 2),
+        LIST_PERMISSION("listPermission", "lp", "", "list and describe all permissions that can be granted", Category.PERMISSION, 0, 0, O_VERBOSE),
         MARK_CONVERSATION_READ("markConversationRead", "mcr", "{conv-ids} [0|1*]", "mark conversation(s) as read/unread", Category.CONVERSATION, 1, 2),
         MARK_CONVERSATION_SPAM("markConversationSpam", "mcs", "{conv} [0|1*] [{dest-folder-path}]", "mark conversation as spam/not-spam, and optionally move", Category.CONVERSATION, 1, 3),
         MARK_ITEM_READ("markItemRead", "mir", "{item-ids} [0|1*]", "mark item(s) as read/unread", Category.ITEM, 1, 2),
@@ -405,7 +405,7 @@ public class ZMailboxUtil implements DebugListener {
         RENAME_FOLDER("renameFolder", "rf", "{folder-path} {new-folder-path}", "rename folder", Category.FOLDER, 2, 2),
         RENAME_SIGNATURE("renameSignature", "rsig", "{signature-name|signature-id} {new-name}", "rename signature", Category.ACCOUNT, 2, 2),
         RENAME_TAG("renameTag", "rt", "{tag-name} {new-tag-name}", "rename tag", Category.TAG, 2, 2),
-        REVOKE_PERMISSION("revokePermission", "rvp", "{account {name}|group {name}|public {[-]permission}}", "revoke a permission. to revoke a denied permission, put a '-' in front of the permittion name", Category.PERMISSION, 2, 3),
+        REVOKE_PERMISSION("revokePermission", "rvp", "{account {name}|group {name}|all|public {[-]permission}}", "revoke a permission. to revoke a denied permission, put a '-' in front of the permittion name", Category.PERMISSION, 2, 3),
         SEARCH("search", "s", "{query}", "perform search", Category.SEARCH, 0, 1, O_LIMIT, O_SORT, O_TYPES, O_VERBOSE, O_CURRENT, O_NEXT, O_PREVIOUS),
         SEARCH_CONVERSATION("searchConv", "sc", "{conv-id} {query}", "perform search on conversation", Category.SEARCH, 0, 2, O_LIMIT, O_SORT, O_TYPES, O_VERBOSE, O_CURRENT, O_NEXT, O_PREVIOUS),
         SELECT_MAILBOX("selectMailbox", "sm", "{account-name}", "select a different mailbox. can only be used by an admin", Category.ADMIN, 1, 1),
@@ -1006,11 +1006,11 @@ public class ZMailboxUtil implements DebugListener {
         case HELP:
             doHelp(args);
             break;
-        case HELP_PERMISSION:
-            doHelpPermission();
-            break;
         case IMPORT_URL_INTO_FOLDER:
             mMbox.importURLIntoFolder(lookupFolderId(args[0]), args[1]);
+            break;
+        case LIST_PERMISSION:
+            doListPermission();
             break;
         case MARK_CONVERSATION_READ:
             mMbox.markConversationRead(id(args[0]), paramb(args, 1, true), param(args, 2));
@@ -1413,7 +1413,7 @@ public class ZMailboxUtil implements DebugListener {
         }
     }
     
-    private void doHelpPermission() {
+    private void doListPermission() {
         for (Right r : Right.values()) {
             System.out.println("  " + r.getCode() + ": " + r.getDesc());
             if (verboseOpt())
