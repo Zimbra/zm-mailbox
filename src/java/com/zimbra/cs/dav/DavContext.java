@@ -27,6 +27,7 @@ import org.dom4j.DocumentException;
 import org.dom4j.io.SAXReader;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavResponse;
@@ -279,5 +280,13 @@ public class DavContext {
 	
 	public boolean isIcalClient() {
 		return userAgentHeaderContains(ICAL);
+	}
+	
+	public boolean isSchedulingEnabled() {
+		try {
+			return !Provisioning.getInstance().getConfig().getBooleanAttr(Provisioning.A_zimbraCalendarCalDavDisableScheduling, false);
+		} catch (ServiceException se) {
+			return false;
+		}
 	}
 }

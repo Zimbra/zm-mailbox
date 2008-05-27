@@ -52,6 +52,8 @@ public class ScheduleInbox extends Collection {
 	
 	protected java.util.Collection<DavResource> getScheduleMessages(DavContext ctxt) throws ServiceException, DavException {
 		ArrayList<DavResource> result = new ArrayList<DavResource>();
+        if (!ctxt.isSchedulingEnabled())
+        	return result;
 		String query = "after:-1month is:invite inid:" + getId();
 		Mailbox mbox = getMailbox(ctxt);
 		ZimbraQueryResults zqr = null;

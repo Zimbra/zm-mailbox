@@ -135,18 +135,31 @@ public class ScheduleOutbox extends Collection {
 		rcpt = rcpt.trim();
 		ZimbraLog.dav.debug("rcpt: "+rcpt+", start: "+new Date(start)+", end: "+new Date(end));
 		
-    	FreeBusyQuery fbQuery = new FreeBusyQuery(ctxt.getRequest(), ctxt.getAuthAccount(), start, end);
-    	fbQuery.addEmailAddress(getAddressFromPrincipalURL(rcpt));
-    	java.util.Collection<FreeBusy> fbResult = fbQuery.getResults();
-        if (fbResult.size() > 0) {
-        	String fbMsg = fbResult.iterator().next().toVCalendar(FreeBusy.Method.REPLY, originator, rcpt, null);
+		FreeBusy fb = null;
+        if (ctxt.isSchedulingEnabled()) {
+        	FreeBusyQuery fbQuery = new FreeBusyQuery(ctxt.getRequest(), ctxt.getAuthAccount(), start, end);
+        	fbQuery.addEmailAddress(getAddressFromPrincipalURL(rcpt));
+        	java.util.Collection<FreeBusy> fbResult = fbQuery.getResults();
+            if (fbResult.size() > 0)
+            	fb = fbResult.iterator().next();
+        }
+        if (fb != null) {
+        	String fbMsg = fb.toVCalendar(FreeBusy.Method.REPLY, originator, rcpt, null);
             resp.addElement(DavElements.E_RECIPIENT).setText(rcpt);
             resp.addElement(DavElements.E_REQUEST_STATUS).setText("2.0;Success");
             resp.addElement(DavElements.E_CALENDAR_DATA).setText(fbMsg);
+        } else {
+            resp.addElement(DavElements.E_RECIPIENT).setText(rcpt);
+            resp.addElement(DavElements.E_REQUEST_STATUS).setText("5.3;No f/b for the user");
         }
 	}
 
     private void handleEventRequest(DavContext ctxt, ZCalendar.ZVCalendar cal, ZComponent req, String originator, String rcpt, Element resp) throws ServiceException,DavException {
+        if (!ctxt.isSchedulingEnabled()) {
+            resp.addElement(DavElements.E_RECIPIENT).setText(rcpt);
+            resp.addElement(DavElements.E_REQUEST_STATUS).setText("5.3;No scheduling for the user");
+            return;
+        }
         Address from, to;
         try {
             from = AccountUtil.getFriendlyEmailAddress(ctxt.getAuthAccount());
@@ -211,6 +224,8 @@ public class ScheduleOutbox extends Collection {
             resp.addElement(DavElements.E_RECIPIENT).setText(rcpt);
             resp.addElement(DavElements.E_REQUEST_STATUS).setText("5.1");
         }
+        resp.addElement(DavElements.E_RECIPIENT).setText(rcpt);
+        resp.addElement(DavElements.E_REQUEST_STATUS).setText("2.0;Success");
     }
     
     /*
