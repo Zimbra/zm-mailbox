@@ -26,7 +26,7 @@ public class PermUtil {
      * @throws ServiceException
      */
     public static Set<ZimbraACE> getACEs(Entry target, Set<Right> rights) throws ServiceException {
-        ZimbraACL acl = target.getACL(); 
+        ZimbraACL acl = getACL(target); 
         if (acl != null)
             return acl.getACEs(rights);
         else
@@ -34,7 +34,7 @@ public class PermUtil {
     }
     
     public static Set<ZimbraACE> grantAccess(Entry target, Set<ZimbraACE> aces) throws ServiceException {
-        ZimbraACL acl = target.getACL(); 
+        ZimbraACL acl = getACL(target); 
         Set<ZimbraACE> granted = null;
         
         if (acl == null) {
@@ -51,7 +51,7 @@ public class PermUtil {
      *  was not previously granted to the target, no error is thrown.
      */
     public static Set<ZimbraACE> revokeAccess(Entry target, Set<ZimbraACE> aces) throws ServiceException {
-        ZimbraACL acl = target.getACL(); 
+        ZimbraACL acl = getACL(target); 
         if (acl == null)
             return null;
         
@@ -65,6 +65,25 @@ public class PermUtil {
         attrs.put(Provisioning.A_zimbraACE, acl.serialize());
         // modifyAttrs will erase cached ACL on the target
         Provisioning.getInstance().modifyAttrs(target, attrs);
+    }
+    
+
+    private static final String ACL_CACHE_KEY = "ENTRY.ACL_CACHE";
+    
+    static ZimbraACL getACL(Entry entry) throws ServiceException {
+        ZimbraACL acl = (ZimbraACL)entry.getCachedData(ACL_CACHE_KEY);
+        if (acl != null)
+            return acl;
+        else {
+            String[] aces = entry.getMultiAttr(Provisioning.A_zimbraACE);
+            if (aces.length == 0)
+                return null;
+            else {
+                acl = new ZimbraACL(aces);
+                entry.setCachedData(ACL_CACHE_KEY, acl);
+            }
+        }
+        return acl;
     }
 
     /*

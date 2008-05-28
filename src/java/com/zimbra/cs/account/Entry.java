@@ -369,23 +369,6 @@ public abstract class Entry {
         //return Collections.unmodifiableMap(defaults);
     }
 
-    private static final String ACL_CACHE_KEY = "ENTRY.ACL_CACHE";
-    
-    public ZimbraACL getACL() throws ServiceException {
-        ZimbraACL acl = (ZimbraACL)getCachedData(ACL_CACHE_KEY);
-        if (acl != null)
-            return acl;
-        else {
-            String[] aces = getMultiAttr(Provisioning.A_zimbraACE);
-            if (aces.length == 0)
-                return null;
-            else {
-                acl = new ZimbraACL(aces);
-                setCachedData(ACL_CACHE_KEY, acl);
-            }
-        }
-        return acl;
-    }
     
     
     public synchronized String toString() {

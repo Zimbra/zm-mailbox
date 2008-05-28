@@ -47,7 +47,7 @@ public class AclAccessManager extends DomainAccessManager {
             }
             
             // 3. check ACL
-            ZimbraACL acl = target.getACL();
+            ZimbraACL acl = PermUtil.getACL(target);
             if (acl != null)
                 return acl.hasRight(grantee, rightNeeded);
             else {

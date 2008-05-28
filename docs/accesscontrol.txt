@@ -64,6 +64,53 @@ The type of supported grantees are:
         public      - the public
 
 
+CONFLICTING GRANTEES
+====================
+When more than one ACEs of an ACL on the same right match a grantee and all ACEs 
+don't agree on the same allow/deny for the right, the ACE with the most specific 
+match takes precedence; and if all matching ACEs are equally related to the grantee, 
+the negative ACE takes precedence.
+
+example 1:
+    - ACL has:
+          . allow user A for right R
+          . deny group G for right R
+    - user A is in group G
+    => user A will be allowed for right R, because user match is more specific than group match.
+     
+     
+example 2:
+    - ACL has:
+          . allow group G1 for right R
+          . deny group G2 for right R
+    - group G2 is a member of group G1
+    - user A is a member of group G2
+    => user A will be denied for right R, because G2 is a more specific match than G1.
+     
+     
+example 3:
+    - ACL has:
+          . allow group G1 for right R
+          . deny group G2 for right R
+    - group G1 and G2 are not member of each other
+    - user A is in both group G1 and group G2
+    => user A will be denied, because negative ACE takes precedence.
+    
+                
+If multiple ACEs conflict for a right, this is a wrong setting and should not 
+happen if all modification to ACLs are done via the supported granting/revoking 
+interfaces: SOAP and zmmailbox.   If for any reason such ACL does exist (e.g. 
+via ldapmodify, or zmprov ma command(should we make zimberaACE immutable so 
+it cannot be modified by zmprov?)), the result is **unexpected**, depending on 
+which ACE is encountered first when we iterate through the ACL.  We could've 
+spent more cycles detecting such settings and honor the negative ACE if there 
+is one, but currently the implementation choice is not to do so.
+
+e.g. - ACL has:
+           . allow user A for right R
+           . deny user A for right R
+     => user A could be allowed or denied for right R, randomly.  
+  
 
 ACL STORAGE AND SERIALIZATION FORMAT
 ====================================
@@ -214,9 +261,16 @@ zmmailbox commands:
                -private    public  
           -viewFreeBusy     group  group1@foo.com
    
-   Note: if domain is not given for account or group grantee, the domain of the selected 
-         mailbox will be used. 
-         
+   Note: 
+       (1) if domain is not given for account or group grantee, the domain of the selected 
+           mailbox will be used. 
+       (2) if a grantee currently has a grant(positive or negative) for a right, granting 
+           to the same grantee with a different privilege overwrite the grant.  For example, 
+           if user A currently is allowed the right to invite, "grp account A -invite" will 
+           change the grant(i.e. ACE) from allowed to denied.
+       (3) to complete remove a grant(i.e. an ACE) from a grantee, use the revokePermission(rvp) 
+           command, see 5. below.    
+                    
          
 5. Revoke a right for the target account
    command: revokePermission(rvp) {account {name}|group {name}|all|public {[-]permission}}
