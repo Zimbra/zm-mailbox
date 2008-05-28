@@ -241,6 +241,7 @@ public class LC {
     public static final KnownKey postfix_maximal_backoff_time;
     public static final KnownKey postfix_lmtp_connection_cache_destinations;
     public static final KnownKey postfix_lmtp_connection_cache_time_limit;
+    public static final KnownKey postfix_lmtp_host_lookup;;
     public static final KnownKey postfix_transport_maps;
     public static final KnownKey postfix_version;
     public static final KnownKey postfix_virtual_alias_domains;
@@ -790,6 +791,9 @@ public class LC {
 
         postfix_lmtp_connection_cache_time_limit  = new KnownKey("postfix_lmtp_connection_cache_time_limit");
         postfix_lmtp_connection_cache_time_limit.setDefault("4s");
+
+        postfix_lmtp_host_lookup  = new KnownKey("postfix_lmtp_host_lookup");
+        postfix_lmtp_host_lookup.setDefault("dns");
 
         postfix_transport_maps  = new KnownKey("postfix_transport_maps");
         postfix_transport_maps.setDefault("ldap:${zimbra_home}" + FS + "conf" + FS + "ldap-transport.cf");
