@@ -85,8 +85,7 @@ extends TestCase {
         pm = new ParsedMessage(mFile, null, true);
         verifyParsedMessage(pm, expected);
         
-        // Test ParsedMessage created from MimeMessage.  We can't do an exact comparison of
-        // the data returned byt the MimeMessage because JavaMail adds headers. 
+        // Test ParsedMessage created from MimeMessage. 
         MimeMessage mimeMsg = new MimeMessage(JMSession.getSession(), new ByteArrayInputStream(expected.rawContent.getBytes()));
         pm = new ParsedMessage(mimeMsg, false);
         verifyParsedMessage(pm, expected);
@@ -218,6 +217,52 @@ extends TestCase {
         assertTrue((new String(data)).contains(substring));
         data = pm.getRawData();
         assertTrue((new String(data)).contains(substring));
+    }
+    
+    /**
+     * Confirms that the digest returned by a <tt>ParsedMessage</tt> is the same,
+     * regardless of whether the source comes from a byte array, file or <tt>MimeMessage</tt>. 
+     */
+    public void testGetData()
+    throws Exception {
+        String msg = TestUtil.getTestMessage(NAME_PREFIX + " testGetData", SENDER_NAME, SENDER_NAME, null);
+        
+        // Test ParsedMessage from byte[]
+        ParsedMessage pm = new ParsedMessage(msg.getBytes(), true);
+        runContentTests(msg, pm);
+        
+        // Test ParsedMessage from File
+        mFile = File.createTempFile("TestParsedMessage", null);
+        FileOutputStream out = new FileOutputStream(mFile);
+        out.write(msg.getBytes());
+        pm = new ParsedMessage(mFile, null, true);
+        runContentTests(msg, pm);
+        
+        // Test ParsedMessage from MimeMessage
+        MimeMessage mimeMsg = new MimeMessage(JMSession.getSession(), new ByteArrayInputStream(msg.getBytes()));
+        pm = new ParsedMessage(mimeMsg, true);
+        runContentTests(msg, pm);
+    }
+    
+    private void runContentTests(String originalMsg, ParsedMessage pm)
+    throws Exception {
+        int size = originalMsg.length();
+        
+        // Test InputStream accessor
+        String msg = new String(ByteUtil.getContent(pm.getRawInputStream(), size));
+        assertEquals("expected: " + originalMsg + "\ngot: " + msg, originalMsg, msg);
+        
+        // Test byte[] accessor
+        msg = new String(pm.getRawData());
+        assertEquals("expected: " + originalMsg + "\ngot: " + msg, originalMsg, msg);
+        
+        // Test digest
+        String originalDigest = ByteUtil.getSHA1Digest(originalMsg.getBytes(), true);
+        String digest = pm.getRawDigest();
+        assertEquals("expected: " + digest + ", got: " + digest, originalDigest, digest);
+        
+        // Test size
+        assertEquals(size, pm.getRawSize());
     }
     
     private String getContent(MimeMessage msg)

@@ -27,8 +27,13 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -116,6 +121,7 @@ public class ParsedMessage {
     private String mRawDigest;
     private BlobInputStream mRawFileInputStream;
     private boolean mWasMutated;
+    private Integer mRawSize;
 
     public ParsedMessage(MimeMessage msg, boolean indexAttachments) {
         this(msg, getZimbraDateHeader(msg), indexAttachments);
@@ -489,24 +495,11 @@ public class ParsedMessage {
      * Returns the size of the raw MIME message.  Affected by mutation but
      * not conversion.
      */
-    public int getRawSize() throws IOException, MessagingException {
-        if (mRawData != null) {
-            return mRawData.length;
+    public int getRawSize() throws IOException, ServiceException {
+        if (mRawSize == null) {
+            initializeDigestAndSize();
         }
-        if (mRawFile != null) {
-            return (int) mRawFile.length();
-        }
-        if (mMimeMessage != null) {
-            int size = mMimeMessage.getSize();
-            if (size < 0) {
-                return getRawData().length;
-            } else {
-                return size;
-            }
-        }
-        ZimbraLog.mailbox.warn("%s.getRawSize(): Unable to get MIME message data..",
-            ParsedMessage.class.getSimpleName());
-        return 0;
+        return mRawSize;
     }
 
     /**
@@ -544,26 +537,47 @@ public class ParsedMessage {
      * Returns the SHA1 digest of the raw MIME message data, encoded as base64.  Affected by mutation but
      * not conversion.
      */
-    public String getRawDigest() throws IOException, MessagingException {
-        if (mRawDigest != null) {
-            return mRawDigest;
-        }
-        if (mRawData != null) {
-            mRawDigest = ByteUtil.getSHA1Digest(mRawData, true);
-        } else if (mRawFile != null) {
-            InputStream in = new FileInputStream(mRawFile);
-            mRawDigest = ByteUtil.getSHA1Digest(in, true);
-            in.close();
-        } else if (mMimeMessage != null) {
-            mRawData = getByteArray(mMimeMessage);
-            mRawDigest = ByteUtil.getSHA1Digest(mRawData, true);
-        } else {
-            ZimbraLog.mailbox.warn("%s.getRawDigest(): Cannot calculate digest because message data is not available.",
-                ParsedMessage.class.getSimpleName());
+    public String getRawDigest() throws IOException, ServiceException {
+        if (mRawDigest == null) {
+            initializeDigestAndSize();
         }
         return mRawDigest;
     }
     
+    private void initializeDigestAndSize() throws IOException, ServiceException {
+        if (mRawDigest != null && mRawSize != null) {
+            return;
+        }
+        if (mRawData != null) {
+            mRawDigest = ByteUtil.getSHA1Digest(mRawData, true);
+            mRawSize = mRawData.length;
+        } else {
+            int size = 0;
+            InputStream in = null;
+            MessageDigest digest;
+
+            // Initialize streams and digest calculator.
+            try {
+                digest = MessageDigest.getInstance("SHA1");
+            } catch (NoSuchAlgorithmException e) {
+                throw ServiceException.FAILURE("Unable to calculate digest", e);
+            }
+            
+            try {
+                in = getRawInputStream();
+                DigestInputStream digestStream = new DigestInputStream(in, digest);
+                int numRead = -1;
+                byte[] buf = new byte[1024];
+                while ((numRead = digestStream.read(buf)) >= 0) {
+                    size += numRead;
+                }
+                mRawSize = size;
+                mRawDigest = ByteUtil.encodeFSSafeBase64(digest.digest());
+            } finally {
+                ByteUtil.closeStream(in);
+            }
+        }
+    }
     /**
      * Returns a stream to the raw MIME message.  Affected by mutation but
      * not conversion.
@@ -577,12 +591,17 @@ public class ParsedMessage {
                 return new FileInputStream(mRawFile);
             }
             if (mMimeMessage != null) {
-                mRawData = getByteArray(mMimeMessage);
-                return new ByteArrayInputStream(mRawData);
+                // Nasty hack because JavaMail doesn't provide an InputStream accessor
+                // to the entire RFC 822 content of a MimeMessage.  Start a thread that
+                // serves up the content of the MimeMessage via PipedOutputStream.
+                PipedInputStream in = new PipedInputStream();
+                PipedOutputStream out = new PipedOutputStream(in);
+                Thread thread = new Thread(new MimeMessageOutputThread(mMimeMessage, out));
+                thread.setName("MimeMessageThread");
+                thread.start();
+                return in;
             }
         } catch (IOException e) {
-            throw ServiceException.FAILURE("Unable to get InputStream.", e);
-        } catch (MessagingException e) {
             throw ServiceException.FAILURE("Unable to get InputStream.", e);
         }
         
@@ -1097,8 +1116,6 @@ public class ParsedMessage {
                 handler.setFilename(mpi.getFilename());
                 try {
                     handler.setMessageDigest(getRawDigest());
-                } catch (MessagingException e) {
-                    throw new MimeHandlerException("unable to get message digest", e);
                 } catch (IOException e) {
                     throw new MimeHandlerException("unable to get message digest", e);
                 }
