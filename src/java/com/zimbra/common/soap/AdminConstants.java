@@ -315,6 +315,11 @@ public class AdminConstants {
     public static final QName PUSH_FREE_BUSY_REQUEST = QName.get("PushFreeBusyRequest", NAMESPACE);
     public static final QName PUSH_FREE_BUSY_RESPONSE = QName.get("PushFreeBusyResponse", NAMESPACE);
     
+    // permissions
+    public static final QName CHECK_PERMISSION_REQUEST = QName.get("CheckPermissionRequest", NAMESPACE);
+    public static final QName CHECK_PERMISSION_RESPONSE = QName.get("CheckPermissionResponse", NAMESPACE);
+    
+    
     // DumpSessions
     public static final String E_SESSION = "session";
     public static final String A_ZIMBRA_ID = "zid";
@@ -376,6 +381,7 @@ public class AdminConstants {
     public static final String E_DIRECTORY = "directory";
     public static final String E_PROVIDER = "provider";
     public static final String E_STATS = "stats";
+    public static final String E_PRINCIPAL = "principal";
     
     public static final String A_ACTION = "action";
     public static final String A_APPLY_CONFIG = "applyConfig";
@@ -501,4 +507,7 @@ public class AdminConstants {
     // mailbox stats
     public static final String A_NUM_MBOXES = "numMboxes";
     public static final String A_TOTAL_SIZE = "totalSize";
+    
+    // permissions
+    public static final String E_RIGHT = "right";
 }
