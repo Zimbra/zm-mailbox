@@ -3143,11 +3143,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether to strip off potentially harming HTML tags in Wiki and HTML Documents.</desc>
 </attr>
 
-<attr id="647" name="zimbraSkinForegroundColor" type="string" max="64" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo">
+<attr id="647" name="zimbraSkinForegroundColor" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo">
   <desc>foreground color for chameleon skin for the domain</desc>
 </attr>
 
-<attr id="648" name="zimbraSkinBackgroundColor" type="string" max="64" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo">
+<attr id="648" name="zimbraSkinBackgroundColor" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo">
   <desc>background color for chameleon skin for the domain</desc>
 </attr>
 
@@ -3244,8 +3244,24 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether audible alert is enabled when appointment notification is played</desc>
 </attr>
 
-<attr id="668" name="zimbraMtaMilters" type="astring" max="1024" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="668" name="zimbraMtaMilters" type="string" max="1024" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited">
   <desc>value of postfix smtpd_milters</desc>
 </attr>
 
+<attr id="669" name="zimbraSkinSecondaryColor" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo">
+  <desc>secondary color for chameleon skin for the domain</desc>
+</attr>
+
+<attr id="670" name="zimbraSkinSelectionColor" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo">
+  <desc>selection color for chameleon skin for the domain</desc>
+</attr>
+
+<attr id="671" name="zimbraSkinLogoLoginBanner" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo">
+  <desc>logo login banner for chameleon skin for the domain</desc>
+</attr>
+
+<attr id="672" name="zimbraSkinLogoAppBanner" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo">
+  <desc>logo app banner for chameleon skin for the domain</desc>
+</attr>
+  
 </attrs>
