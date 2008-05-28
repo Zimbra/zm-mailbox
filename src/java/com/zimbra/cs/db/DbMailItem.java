@@ -49,8 +49,8 @@ import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
-import com.zimbra.cs.mailbox.MailItem.TypedIdList;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
+import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.pop3.Pop3Message;
 import com.zimbra.cs.store.StoreManager;
 
