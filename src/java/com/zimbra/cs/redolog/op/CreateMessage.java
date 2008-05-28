@@ -265,6 +265,10 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
     public String getRcptEmail() {
         return mRcptEmail;
     }
+    
+    protected RedoableOpData getData() {
+        return mData;
+    }
 
     protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("id=").append(mMsgId);

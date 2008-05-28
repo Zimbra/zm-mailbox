@@ -4602,9 +4602,8 @@ public class Mailbox {
             msgSize = pm.getRawSize();
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to get message properties.", e);
-        } catch (MessagingException e) {
-            throw ServiceException.FAILURE("Unable to get message properties.", e);
         }
+        
         CreateMessage redoRecorder = new CreateMessage(mId, rcptEmail, pm.getReceivedDate(), sharedDeliveryCtxt.getShared(),
                                                        digest, msgSize, folderId, noICal, flags, tagStr);
         StoreIncomingBlob storeRedoRecorder = null;
@@ -4930,14 +4929,9 @@ public class Mailbox {
     throws IOException, ServiceException {
         maybeIndexDeferredItems();
         
-        // make sure the message has been analzyed before taking the Mailbox lock
+        // make sure the message has been analyzed before taking the Mailbox lock
         if (getBatchedIndexingCount() == 0)
             pm.analyzeFully();
-        try {
-            pm.getRawData();
-        } catch (MessagingException me) {
-            throw MailServiceException.MESSAGE_PARSE_ERROR(me);
-        }
 
         // special-case saving a new draft
         if (id == ID_AUTO_INCREMENT) {
@@ -4952,20 +4946,14 @@ public class Mailbox {
     }
 
     private synchronized Message saveDraftInternal(OperationContext octxt, ParsedMessage pm, int id) throws IOException, ServiceException {
-        byte[] data;
-        String digest;
-        int size;
+        String digest = pm.getRawDigest();
+        int size = pm.getRawSize();
         
-        try {
-            data = pm.getRawData();  digest = pm.getRawDigest();  size = pm.getRawSize();
-        } catch (MessagingException me) {
-            throw MailServiceException.MESSAGE_PARSE_ERROR(me);
-        }
-
         SaveDraft redoRecorder = new SaveDraft(mId, id, digest, size);
         boolean success = false;
         
         boolean deferIndexing = this.getBatchedIndexingCount() > 0 || pm.hasTemporaryAnalysisFailure();
+        InputStream in = null;
             
         try {
             beginTransaction("saveDraft", octxt, redoRecorder);
@@ -4984,8 +4972,9 @@ public class Mailbox {
             short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId() : redoPlayer.getVolumeId();
 
             // update the content and increment the revision number
-            Blob blob = msg.setContent(data, digest, volumeId, pm);
-            redoRecorder.setMessageBodyInfo(data, blob.getPath(), blob.getVolumeId());
+            in = pm.getRawInputStream();
+            Blob blob = msg.setContent(in, size, digest, volumeId, pm);
+            redoRecorder.setMessageBodyInfo(blob.getFile(), blob.getVolumeId());
 
             queueForIndexing(msg, true, deferIndexing ? null : pm.getLuceneDocuments());
                 
@@ -4999,6 +4988,7 @@ public class Mailbox {
             
             return msg;
         } finally {
+            ByteUtil.closeStream(in);
             endTransaction(success);
         }
     }

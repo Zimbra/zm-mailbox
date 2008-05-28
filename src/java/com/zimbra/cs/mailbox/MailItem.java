@@ -20,6 +20,7 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -1253,8 +1254,15 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         getFolder().updateUIDNEXT();
     }
-
+    
     Blob setContent(byte[] data, String digest, short volumeId, Object content)
+    throws ServiceException, IOException {
+        InputStream dataStream = (data == null ? null : new ByteArrayInputStream(data));
+        int dataLength = (data == null ? 0 : data.length);
+        return setContent(dataStream, dataLength, digest, volumeId, content);
+    }
+
+    Blob setContent(InputStream dataStream, int dataLength, String digest, short volumeId, Object content)
     throws ServiceException, IOException {
         // catch the "was no blob, is no blob" case
         if (digest == null && getDigest() == null)
@@ -1271,7 +1279,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         markItemModified(Change.MODIFIED_CONTENT  | Change.MODIFIED_DATE |
                          Change.MODIFIED_IMAP_UID | Change.MODIFIED_SIZE);
 
-        int size = (data == null ? 0 : data.length);
+        int size = dataStream == null ? 0 : dataLength;
         if (mData.size != size) {
             mMailbox.updateSize(size - mData.size, false);
             getFolder().updateSize(0, size - mData.size);
@@ -1279,7 +1287,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
         mData.setBlobDigest(digest);
         mData.date     = mMailbox.getOperationTimestamp();
-        mData.volumeId = data == null ? -1 : volumeId;
+        mData.volumeId = dataStream == null ? -1 : volumeId;
         mData.imapId   = mMailbox.isTrackingImap() ? 0 : mData.id;
         mData.contentChanged(mMailbox);
         mBlob = null;
@@ -1287,16 +1295,16 @@ public abstract class MailItem implements Comparable<MailItem> {
         // rewrite the DB row to reflect our new view (MUST call saveData)
         reanalyze(content);
 
-        if (data == null)
+        if (dataStream == null)
             return null;
 
         // write the content to the store
         StoreManager sm = StoreManager.getInstance();
-        Blob blob = sm.storeIncoming(data, digest, null, volumeId);
+        Blob blob = sm.storeIncoming(dataStream, dataLength, null, volumeId);
         MailboxBlob mblob = sm.renameTo(blob, mMailbox, mId, getSavedSequence(), volumeId);
         mMailbox.markOtherItemDirty(mblob);
 
-        return blob;
+        return mblob.getBlob();
     }
 
     @SuppressWarnings("unused")

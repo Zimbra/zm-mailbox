@@ -549,9 +549,9 @@ public class ZimbraMailAdapter implements MailAdapter
             return size;
         } catch (IOException ioe) {
             throw new SieveMailException(ioe);
-        } catch (MessagingException me) {
-            throw new SieveMailException(me);
-        } 
+        } catch (ServiceException se) {
+            throw new SieveMailException(se);
+        }
     }
     
     /**
