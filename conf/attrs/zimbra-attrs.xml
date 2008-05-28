@@ -3244,4 +3244,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether audible alert is enabled when appointment notification is played</desc>
 </attr>
 
+<attr id="668" name="zimbraMtaMilters" type="astring" max="1024" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited">
+  <desc>value of postfix smtpd_milters</desc>
+</attr>
+
 </attrs>
