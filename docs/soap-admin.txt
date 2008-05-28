@@ -2057,3 +2057,22 @@ in soap-waitset.txt
   <message>...</message>*
 </CheckExchangeAuthResponse>
 
+----------------------------------------
+
+<CheckPermissionRequest>
+  <principal by="id|name">...</principal>
+  <account by="id|name">...</account>
+  <right>...</right>
+</CheckPermissionRequest>  
+
+    Check if principal has the specified right on account.
+
+
+<CheckPermissionResponse/>
+
+    A successful return means the principal is allowed for the specified right on the 
+    target account.  If a ServerException.PERM_DENIED is thrown, it indicates either 
+    the authed user does not have privilege to run this SOAP command, 
+    or the principal dose not have the specified right on the target account.
+  
+                    
