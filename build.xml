@@ -882,11 +882,15 @@
         Note: this target does not set the default value for attrs.  It only make the schema 
         change effective.
     -->
-    <target name="refresh-ldap-schema" depends="generate-ldap-config">
+    <target name="refresh-ldap-schema">
         <antcall target="stop-webserver"/>
         <antcall target="stop-ldap"/>
         <sleep seconds="2"/>
         
+    	<delete dir="${build.dir}/attrs"/>
+    	<delete dir="${build.dir}/ldap-config"/>
+    	<antcall target="generate-ldap-config"/>
+    	
         <!-- dist ldap schem and ldif files -->
         <copy todir="${dist.dir}/conf/attrs" overwrite="true">
             <fileset dir="${build.dir}/attrs"/>
