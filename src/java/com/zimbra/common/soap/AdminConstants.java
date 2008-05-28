@@ -382,6 +382,7 @@ public class AdminConstants {
     public static final String E_PROVIDER = "provider";
     public static final String E_STATS = "stats";
     public static final String E_PRINCIPAL = "principal";
+    public static final String E_RIGHT = "right";
     
     public static final String A_ACTION = "action";
     public static final String A_APPLY_CONFIG = "applyConfig";
@@ -507,7 +508,5 @@ public class AdminConstants {
     // mailbox stats
     public static final String A_NUM_MBOXES = "numMboxes";
     public static final String A_TOTAL_SIZE = "totalSize";
-    
-    // permissions
-    public static final String E_RIGHT = "right";
+
 }
