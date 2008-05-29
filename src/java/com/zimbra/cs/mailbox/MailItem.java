@@ -389,7 +389,6 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (mData.children != null && !canHaveChildren())
             mData.children = null;
         decodeMetadata(mData.metadata);
-        mData.metadata = null;
         // store the item in the mailbox's cache
         mbox.cache(this);
     }
@@ -544,6 +543,12 @@ public abstract class MailItem implements Comparable<MailItem> {
         return (mData.subject == null ? "" : mData.subject);
     }
 
+    /** Returns the item's underlying storage data so that it may be persisted
+     * somewhere besides the database - usually in encoded form */
+    public UnderlyingData getUnderlyingData() {
+        return mData;
+    }
+
     public abstract String getSender();
 
     /** Returns the SORT-FORM (UPPERCASED, maybe truncated, etc) of the subject
@@ -570,7 +575,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     /**
-     * Convienence function.  Equvialent to ((getFlagBitmask() & FLAG)!=0)
+     * Convenience function.  Equivalent to ((getFlagBitmask() & FLAG)!=0)
      * 
      * @param bitmask
      * @return
@@ -1040,7 +1045,7 @@ public abstract class MailItem implements Comparable<MailItem> {
      * 
      * @param mbox  The {@link Mailbox} the item is created in.
      * @param data  The contents of a <tt>MAIL_ITEM</tt> database row. */
-    static MailItem constructItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
+    public static MailItem constructItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
         if (data == null)
             throw noSuchItem(-1, TYPE_UNKNOWN);
         switch (data.type) {
