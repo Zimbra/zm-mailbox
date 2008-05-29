@@ -2,7 +2,6 @@ package com.zimbra.cs.account.accesscontrol;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.List;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
@@ -40,8 +39,11 @@ public class PermUtil {
         if (acl == null) {
             acl = new ZimbraACL(aces);
             granted = acl.getACEs(null);
-        } else
+        } else {
+            // make a copy so we don't interfere with others that are using the acl
+            acl = acl.clone();
             granted = acl.grantAccess(aces); 
+        }
         
         serialize(target, acl);
         return granted;
@@ -55,6 +57,8 @@ public class PermUtil {
         if (acl == null)
             return null;
         
+        // make a copy so we don't interfere with others that are using the acl
+        acl = acl.clone();
         Set<ZimbraACE> revoked = acl.revokeAccess(aces);
         serialize(target, acl);
         return revoked;
@@ -79,7 +83,7 @@ public class PermUtil {
             if (aces.length == 0)
                 return null;
             else {
-                acl = new ZimbraACL(aces);
+                acl = new ZimbraACL(aces, RightManager.getInstance());
                 entry.setCachedData(ACL_CACHE_KEY, acl);
             }
         }

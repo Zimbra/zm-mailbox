@@ -44,7 +44,7 @@ public class ZimbraACE {
      * ACEs format:
      * <grantee id> [{<encoded grantee password for guest grantee>}] <grantee type> <right>
      */
-    ZimbraACE(String ace) throws ServiceException {
+    ZimbraACE(String ace, RightManager rm) throws ServiceException {
         String[] parts = ace.split(S_DELIMITER);
         if (parts.length != 3 && parts.length != 4)
             throw ServiceException.PARSE_ERROR("bad ACE: " + ace, null);
@@ -67,11 +67,32 @@ public class ZimbraACE {
         
         if (right.charAt(0) == S_DENY) {
             mDeny = true;
-            mRight = Right.fromCode(right.substring(1));
+            mRight = rm.getRight(right.substring(1));
         } else {
             mDeny = false;
-            mRight = Right.fromCode(right);
+            mRight = rm.getRight(right);
         }
+    }
+    
+    /**
+     * copy ctor for cloning
+     * 
+     * @param other
+     */
+    private ZimbraACE(ZimbraACE other) {
+        mGrantee = new String(other.mGrantee);
+        mGranteeType = other.mGranteeType;
+        mRight = other.mRight;
+        mDeny = other.mDeny;
+        if (other.mPassword != null)
+            mPassword = new String(other.mPassword);
+    }
+    
+    /**
+     * returns a deep copy of the ZimbraACE object 
+     */
+    public ZimbraACE clone() {
+        return new ZimbraACE(this);
     }
     
     private String decryptPassword(String encryptedPassword) throws ServiceException {
@@ -160,7 +181,7 @@ public class ZimbraACE {
     private boolean matches(Account acct) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         if (acct == null)
-            return mGranteeType == mGranteeType.GT_PUBLIC;
+            return mGranteeType == GranteeType.GT_PUBLIC;
         switch (mGranteeType) {
             case GT_PUBLIC:   return true;
             case GT_AUTHUSER: return !(acct instanceof ACL.GuestAccount); // return !acct.equals(ACL.ANONYMOUS_ACCT);

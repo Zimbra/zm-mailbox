@@ -34,6 +34,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.soap.SoapAccountInfo;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
@@ -1413,10 +1414,10 @@ public class ZMailboxUtil implements DebugListener {
         }
     }
     
-    private void doListPermission() {
-        for (Right r : Right.values()) {
+    private void doListPermission() throws ServiceException {
+        for (Right r : RightManager.getInstance().getAllRights().values()) {
             System.out.println("  " + r.getCode() + ": " + r.getDesc());
-            if (verboseOpt())
+            if (verboseOpt() && r.getDoc() != null)
                 System.out.println("      " + r.getDoc());
             System.out.println();
         }

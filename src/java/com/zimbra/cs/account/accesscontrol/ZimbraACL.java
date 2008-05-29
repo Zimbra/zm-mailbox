@@ -32,22 +32,22 @@ public class ZimbraACL {
      * ctor for deserializing from LDAP
      * 
      * It is assumed that the ACL in LDAP is correctly built and saved.
-     * For perf reason, this ctor does not check for duplicate/conflict ACEs, 
+     * For perf reason, this ctor does NOT check for duplicate/conflict ACEs, 
      * it just loads all ACEs.
      * 
      * @param aces
      * @throws ServiceException
      */
-    public ZimbraACL(String[] aces) throws ServiceException {
+    public ZimbraACL(String[] aces, RightManager rm) throws ServiceException {
         for (String aceStr : aces) {
-            ZimbraACE ace = new ZimbraACE(aceStr);
+            ZimbraACE ace = new ZimbraACE(aceStr, rm);
             Set<ZimbraACE> aceSet = aceSetByGranteeType(ace.getGranteeType(), true);
             aceSet.add(ace);
         }
     }
     
     /**
-     * ctor for modifying ACEs
+     * ctor for setting initial ACL (when there is currently no ACL for an entry)
      * 
      * This ctor DOES check for duplicate/conflict(allow and deny a right to the same grantee).
      * 
@@ -56,6 +56,38 @@ public class ZimbraACL {
      */
     public ZimbraACL(Set<ZimbraACE> aces) throws ServiceException {
         grantAccess(aces);
+    }
+    
+    /**
+     * copy ctor for cloning
+     * 
+     * @param other
+     */
+    private ZimbraACL(ZimbraACL other) {
+        if (other.mAces != null) {
+            mAces = new HashSet<ZimbraACE>();
+            for (ZimbraACE ace : other.mAces)
+                mAces.add(ace.clone());
+        }
+        
+        if (other.mAuthuserAces != null) {
+            mAuthuserAces = new HashSet<ZimbraACE>();
+            for (ZimbraACE ace : other.mAuthuserAces)
+                mAuthuserAces.add(ace.clone());
+        }
+        
+        if (other.mPublicAces != null) {
+            mPublicAces = new HashSet<ZimbraACE>();
+            for (ZimbraACE ace : other.mPublicAces)
+                mPublicAces.add(ace.clone());
+        }
+    }
+    
+    /**
+     * returns a deep copy of the ZimbraACL object 
+     */
+    public ZimbraACL clone() {
+        return new ZimbraACL(this);
     }
 
     private Set<ZimbraACE> aceSetByGranteeType(GranteeType granteeType, boolean createIfNotExist) {
@@ -453,7 +485,7 @@ public class ZimbraACL {
         // aces.add("00000000-0000-0000-0000-000000000000 ALL -invite");
         
         try {
-            ZimbraACL acl = new ZimbraACL(aces);
+            ZimbraACL acl = new ZimbraACL(aces, RightManager.getInstance());
             List<String> serialized = acl.serialize();
             for (String ace : serialized)
                 System.out.println(ace);
