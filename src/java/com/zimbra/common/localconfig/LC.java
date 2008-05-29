@@ -73,6 +73,7 @@ public class LC {
     public static final KnownKey zimbra_ldap_password;
     public static final KnownKey zimbra_server_hostname;
     public static final KnownKey zimbra_attrs_directory;
+    public static final KnownKey zimbra_rights_directory;
     public static final KnownKey zimbra_user;
     public static final KnownKey zimbra_uid;
     public static final KnownKey zimbra_gid;
@@ -439,6 +440,9 @@ public class LC {
 
         zimbra_attrs_directory = new KnownKey("zimbra_attrs_directory");
         zimbra_attrs_directory.setDefault("${zimbra_home}" + FS + "conf" + FS + "attrs");
+        
+        zimbra_rights_directory = new KnownKey("zimbra_rights_directory");
+        zimbra_rights_directory.setDefault("${zimbra_home}" + FS + "conf" + FS + "rights");
 
         localized_msgs_directory = new KnownKey("localized_msgs_directory");
         localized_msgs_directory.setDefault("${zimbra_home}" + FS + "conf" + FS + "msgs");
