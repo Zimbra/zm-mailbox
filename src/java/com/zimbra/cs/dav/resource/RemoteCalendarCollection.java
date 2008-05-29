@@ -41,6 +41,7 @@ import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.caldav.TimeRange;
 import com.zimbra.cs.dav.service.DavServlet;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.AuthProviderException;
@@ -150,7 +151,7 @@ public class RemoteCalendarCollection extends CalendarCollection {
                 if (!hdr.equals("Host") && !hdr.equals("Cookie"))
                     headerList.add(new Header(hdr, ctxt.getRequest().getHeader(hdr)));
             }
-            String url = UrlNamespace.urlEscape(f.getPath() + "/" + ctxt.getItem());
+            String url = URLUtil.urlEscape(f.getPath() + "/" + ctxt.getItem());
             url = DavServlet.getDavUrl(target.getName()) + url;
             Pair<Header[], HttpInputStream> response = UserServlet.putRemoteResource(authToken, url, target, ctxt.getUpload().getInputStream(), headerList.toArray(new Header[0]));
             for (Header h : response.getFirst())

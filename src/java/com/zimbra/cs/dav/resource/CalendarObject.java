@@ -33,6 +33,7 @@ import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.caldav.Filter;
 import com.zimbra.cs.dav.property.CalDavProperty;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -70,7 +71,7 @@ public interface CalendarObject {
             path.append(uid);
             path.append(CAL_EXTENSION);
             // XXX iCal doesn't handle unescaped URL in some cases
-            return UrlNamespace.urlEscape(path.toString());
+            return URLUtil.urlEscape(path.toString());
         }
     }
     public static class LocalCalendarObject extends MailItemResource implements CalendarObject {
