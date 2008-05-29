@@ -896,10 +896,15 @@ public class DbMailItem {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
-            String relation, column = (tag instanceof Flag ? "flags" : "tags");
-            String operation = (add ? " + " : " - ");
+            boolean isFlag = tag instanceof Flag;
+            boolean altersModseq = !isFlag || (tag.getBitmask() & Flag.FLAG_SYSTEM) == 0;
+            String column = (isFlag ? "flags" : "tags");
+
+            String primaryUpdate = column + " = " + column + (add ? " + ?" : " - ?");
+            String updateChangeID = (altersModseq ? ", mod_metadata = ?, change_date = ?" : "");
             String precondition = (add ? "NOT " : "") + Db.bitmaskAND(column);
 
+            String relation;
             if (item instanceof VirtualConversation)  relation = "id = ?";
             else if (item instanceof Conversation)    relation = "parent_id = ?";
             else if (item instanceof Folder)          relation = "folder_id = ?";
@@ -908,13 +913,15 @@ public class DbMailItem {
             else                                      relation = "id = ?";
 
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                    " SET " + column + " = " + column + operation + "?, mod_metadata = ?, change_date = ?" +
+                    " SET " + primaryUpdate + updateChangeID +
                     " WHERE " + IN_THIS_MAILBOX_AND + precondition + " AND " + relation);
 
             int pos = 1;
             stmt.setLong(pos++, tag.getBitmask());
-            stmt.setInt(pos++, mbox.getOperationChangeID());
-            stmt.setInt(pos++, mbox.getOperationTimestamp());
+            if (altersModseq) {
+                stmt.setInt(pos++, mbox.getOperationChangeID());
+                stmt.setInt(pos++, mbox.getOperationTimestamp());
+            }
             stmt.setInt(pos++, mbox.getId());
             stmt.setLong(pos++, tag.getBitmask());
             if (item instanceof Tag)
@@ -950,19 +957,26 @@ public class DbMailItem {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
-            String column = (tag instanceof Flag ? "flags" : "tags");
-            String operation = (add ? " + " : " - ");
+            boolean isFlag = tag instanceof Flag;
+            boolean altersModseq = !isFlag || (tag.getBitmask() & Flag.FLAG_SYSTEM) == 0;
+            String column = (isFlag ? "flags" : "tags");
+
+            String primaryUpdate = column + " = " + column + (add ? " + ?" : " - ?");
+            String updateChangeID = (altersModseq ? ", mod_metadata = ?, change_date = ?" : "");
             String precondition = (add ? "NOT " : "") + Db.bitmaskAND(column);
 
             for (int i = 0; i < itemIDs.size(); i += Db.getINClauseBatchSize()) {
                 int count = Math.min(Db.getINClauseBatchSize(), itemIDs.size() - i);
                 stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(tag) +
-                            " SET " + column + " = " + column + operation + "?, mod_metadata = ?, change_date = ?" +
+                            " SET " + primaryUpdate + updateChangeID +
                             " WHERE " + IN_THIS_MAILBOX_AND + precondition + " AND id IN " + DbUtil.suitableNumberOfVariables(count));
+
                 int pos = 1;
                 stmt.setLong(pos++, tag.getBitmask());
-                stmt.setInt(pos++, mbox.getOperationChangeID());
-                stmt.setInt(pos++, mbox.getOperationTimestamp());
+                if (altersModseq) {
+                    stmt.setInt(pos++, mbox.getOperationChangeID());
+                    stmt.setInt(pos++, mbox.getOperationTimestamp());
+                }
                 stmt.setInt(pos++, mbox.getId());
                 stmt.setLong(pos++, tag.getBitmask());
                 for (int index = i; index < i + count; index++)

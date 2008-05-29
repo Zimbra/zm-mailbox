@@ -448,7 +448,10 @@ public class Conversation extends MailItem {
             return;
         if (tag.getId() == Flag.ID_FLAG_UNREAD)
             throw ServiceException.FAILURE("unread state must be set with alterUnread", null);
-        
+        // don't let the user tag things as "has attachments" or "draft"
+        if (tag instanceof Flag && (tag.getBitmask() & Flag.FLAG_SYSTEM) != 0)
+            throw MailServiceException.CANNOT_TAG(tag, this);
+
         markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
 
         boolean excludeAccess = false;
@@ -463,6 +466,8 @@ public class Conversation extends MailItem {
                 excludeAccess = true;  continue;
             } else if (!msg.checkChangeID() || !TargetConstraint.checkItem(tcon, msg)) {
                 continue;
+            } else if (add && !tag.canTag(msg)) {
+                throw MailServiceException.CANNOT_TAG(tag, this);
             }
 
             // don't let the user tag things as "has attachments" or "draft"
