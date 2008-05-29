@@ -524,7 +524,7 @@
               overwrite="true"/>
         <copy tofile="${dist.dir}/conf/zimbra-contact-fields.xml"
               file="${config.dir}/contacts/zimbra-contact-fields.xml" overwrite="true"/>
-        <if>
+    	<if>
             <not>
                 <isset property="is-production"/>
             </not>
@@ -552,6 +552,9 @@
         </copy>
         <copy todir="${dist.dir}/conf/attrs" overwrite="true">
             <fileset dir="${build.dir}/attrs"/>
+        </copy>
+        <copy todir="${dist.dir}/conf/rights" overwrite="true">
+            <fileset dir="${config.dir}/rights"/>
         </copy>
         <fixcrlf srcdir="${dist.dir}/conf" eol="unix" includes="**"/>
 
@@ -801,6 +804,7 @@
         <delete dir="${zimbra.home.dir}/backup"/>
         <delete dir="${zimbra.home.dir}/lib/ext"/>
         <delete dir="${zimbra.home.dir}/conf/attrs"/>
+    	<delete dir="${zimbra.home.dir}/conf/rights"/>
         <delete dir="${zimbra.home.dir}/conf/msgs"/>
         <delete failonerror="no">
             <fileset dir="${zimbra.home.dir}/log" includes="*.log"/>
