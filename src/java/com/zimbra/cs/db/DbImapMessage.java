@@ -182,6 +182,37 @@ public class DbImapMessage {
         }
     }
 
+    // Returns local message item id for specified folder id and remote uid
+    // if a tracker exists, otherwise returns 0.
+    public static int getLocalMessageId(Mailbox mbox, int localFolderId, long remoteUid)
+        throws ServiceException {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        ZimbraLog.datasource.debug(
+            "Getting local message id for tracked message: mboxId=%d, localFolderId=%d, remoteUid=%d",
+            mbox.getId(), localFolderId, remoteUid);
+        try {
+            conn = DbPool.getConnection();
+            stmt = conn.prepareStatement(
+                "SELECT item_id" +
+                " FROM " + getTableName(mbox) +
+                " WHERE mailbox_id = ? AND imap_folder_id = ? AND uid = ?");
+            stmt.setInt(1, mbox.getId());
+            stmt.setInt(2, localFolderId);
+            stmt.setLong(3, remoteUid);
+            rs = stmt.executeQuery();
+            return rs.next() ? rs.getInt(1) : 0;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Unable to get IMAP message data", e);
+        } finally {
+            if (rs != null) DbPool.closeResults(rs);
+            if (stmt != null) DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+    }
+    
     /**
      * Returns a collection of tracked IMAP messages for the given data source.
      */

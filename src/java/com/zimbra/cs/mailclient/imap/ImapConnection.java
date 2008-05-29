@@ -174,11 +174,15 @@ public final class ImapConnection extends MailConnection {
         req.sendCheckStatus();
         return results.isEmpty() ? null : results.get(0);
     }
+
+    public synchronized boolean isSelected(String name) {
+        return mailbox != null && mailbox.getName().equals(name);
+    }
     
     public synchronized Mailbox select(String name) throws IOException {
         mailbox = doSelectOrExamine(CAtom.SELECT, name);
         setState(State.SELECTED);
-        return mailbox;
+        return getMailbox();
     }
 
     public Mailbox examine(String name) throws IOException {
@@ -404,7 +408,10 @@ public final class ImapConnection extends MailConnection {
     }
 
     public Mailbox getMailbox() {
-        return mailbox;
+        // Make sure we return a copy of the actual mailbox since it can
+        // be modified in-place in response to unsolicited messages from
+        // the server.
+        return mailbox != null ? new Mailbox(mailbox) : null;
     }
 
     public TraceOutputStream getTraceOutputStream() {
