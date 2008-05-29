@@ -16,8 +16,6 @@
  */
 package com.zimbra.cs.datasource;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailclient.imap.Literal;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
@@ -27,6 +25,7 @@ import com.zimbra.cs.mailclient.imap.ResponseHandler;
 import com.zimbra.cs.mailclient.imap.ImapResponse;
 import com.zimbra.cs.mailclient.imap.CAtom;
 import com.zimbra.cs.mailclient.imap.MessageData;
+import com.zimbra.cs.mailclient.MailException;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -41,49 +40,20 @@ import java.io.OutputStream;
 import java.io.FileOutputStream;
 
 public final class ImapUtil {
-    public static void append(ImapConnection ic, String mbox, Message msg)
-        throws ServiceException, IOException {
-        append(ic, mbox, msg, false);
-    }
-
-    public static long appendUid(ImapConnection ic, String mbox, Message msg)
-        throws ServiceException, IOException {
-        return append(ic, mbox, msg, true);
-    }
-    
-    private static long append(ImapConnection ic, String mailbox, Message msg,
-                               boolean searchUid)
-        throws ServiceException, IOException {
+    public static long append(ImapConnection ic, String mailbox,
+                              MimeMessage msg, Flags flags, Date date)
+        throws IOException {
         ImapConfig config = (ImapConfig) ic.getConfig();
         File tmp = null;
         OutputStream os = null;
-        MimeMessage mm = msg.getMimeMessage(false);
-        long uid;
         try {
             tmp = File.createTempFile("lit", null, config.getLiteralDataDir());
             os = new FileOutputStream(tmp);
-            mm.writeTo(os);
+            msg.writeTo(os);
             os.close();
-            Date date = mm.getReceivedDate();
-            if (date == null) {
-                date = mm.getSentDate();
-            }
-            Flags flags = FlagsUtil.zimbraToImapFlags(msg.getFlagBitmask());
-            uid = ic.append(mailbox, flags, date, new Literal(tmp));
-            if (uid <= 0 && searchUid) {
-                // If server doesn't support UIDPLUS, search for UID of message
-                if (!mailbox.equals(ic.getMailbox().getName())) {
-                    ic.select(mailbox);
-                }                                                             
-                List<Long> uids = ic.uidSearch(
-                    "ON", date, "HEADER", "Message-Id", mm.getMessageID());
-                if (uids.size() == 1) {
-                    uid = uids.get(0);
-                }
-            }
-            return uid;
+            return ic.append(mailbox, flags, date, new Literal(tmp));
         } catch (MessagingException e) {
-            throw ServiceException.FAILURE("Error appending message", e);
+            throw new MailException("Error appending message", e);
         } finally {
             if (os != null) os.close();
             if (tmp != null) tmp.delete();
@@ -100,6 +70,7 @@ public final class ImapUtil {
                     return true;
                 }
                 return false;
+
             }
         });
         return mds;

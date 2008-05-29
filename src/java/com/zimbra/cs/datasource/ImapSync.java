@@ -175,7 +175,7 @@ public class ImapSync extends AbstractMailItemImport {
 
     private void syncRemoteFolder(ListData ld) throws ServiceException, IOException {
         String path = ld.getMailbox();
-        LOG.debug("Processing remote folder '%s'", path);
+        // LOG.debug("Processing remote folder '%s'", path);
         ImapFolder tracker = trackedFolders.getByRemotePath(path);
         if (tracker != null) {
             trackedFolders.remove(tracker);
@@ -192,7 +192,7 @@ public class ImapSync extends AbstractMailItemImport {
     }
     
     private void syncLocalFolder(Folder folder) throws ServiceException, IOException {
-        LOG.debug("Processing local folder '%s'", folder.getName());
+        // LOG.debug("Processing local folder '%s'", folder.getName());
         String name = folder.getName();
         int id = folder.getId();
         ImapFolder tracker = trackedFolders.getByItemId(id);

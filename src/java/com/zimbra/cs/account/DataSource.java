@@ -55,6 +55,7 @@ public class DataSource extends NamedEntry implements Comparable {
         StringUtil.getSimpleClassName(DataSource.class.getName());
     
     private final String mAcctId;
+    private Mailbox mailbox;
     
     public enum Type {
         pop3, imap;
@@ -257,19 +258,41 @@ public class DataSource extends NamedEntry implements Comparable {
 
     public void deleteImapFolder(ImapFolder folder) throws ServiceException {
         DbImapFolder.deleteImapFolder(getMailbox(), this, folder);
+        clearLastSyncUid(folder.getItemId());
     }
 
     public void updateImapFolder(ImapFolder folder) throws ServiceException {
         DbImapFolder.updateImapFolder(folder);
+        clearLastSyncUid(folder.getItemId());
     }
 
     public ImapFolder createImapFolder(int itemId, String localPath,
-                                       String remotePath, long uidValidity) throws ServiceException {
-        return DbImapFolder.createImapFolder(getMailbox(), this, itemId, localPath, remotePath, uidValidity);
+                                       String remotePath, long uidValidity)
+        throws ServiceException {
+        return DbImapFolder.createImapFolder(
+            getMailbox(), this, itemId, localPath, remotePath, uidValidity);
     }
 
+    // Overridden in OfflineDataSource
+    public long getLastSyncUid(int folderId) {
+        return 0;
+    }
+
+    // Overridden in OfflineDataSource
+    public void updateLastSyncUid(int folderId, long uid) {
+        // Do nothing by default
+    }
+
+    // Overridden in OfflineDataSource
+    public void clearLastSyncUid(int folderId) {
+        // Do nothing by default
+    }
+    
     public Mailbox getMailbox() throws ServiceException {
-        return MailboxManager.getInstance().getMailboxByAccount(getAccount());
+        if (mailbox == null) {
+            mailbox = MailboxManager.getInstance().getMailboxByAccount(getAccount());
+        }
+        return mailbox;
     }
     
     private static byte[] randomSalt() {
@@ -353,7 +376,7 @@ public class DataSource extends NamedEntry implements Comparable {
         return String.format("%s: { %s }",
             SIMPLE_CLASS_NAME, StringUtil.join(", ", parts));
     }
-    
+
     public static void main(String args[]) throws ServiceException {
         String dataSourceId = UUID.randomUUID().toString();
         String enc = encryptData(dataSourceId, "helloworld");

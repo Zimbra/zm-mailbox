@@ -38,6 +38,18 @@ public final class Mailbox implements ResponseHandler {
         this.name = name;
     }
 
+    public Mailbox(Mailbox mb) {
+        name = mb.name;
+        flags = mb.flags;
+        permanentFlags = mb.permanentFlags;
+        exists = mb.exists;
+        recent = mb.recent;
+        uidNext = mb.uidNext;
+        uidValidity = mb.uidValidity;
+        unseen = mb.unseen;
+        access = mb.access;
+    }
+    
     private Mailbox() {}
     
     // IMAP mailbox STATUS response:

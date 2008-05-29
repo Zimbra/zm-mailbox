@@ -27,8 +27,8 @@ public class ImapMessageCollection implements Iterable<ImapMessage> {
     private Map<Integer, ImapMessage> mByItemId = new HashMap<Integer, ImapMessage>();
     private Map<Long, ImapMessage> mByUid = new HashMap<Long, ImapMessage>();
     // Tracked message with a UID of 0 did not return a UID when appended to a
-    // remote folder. In this case, we will look up the message by checksum
-    // later when it is downloaded (see bug 26347).
+    // remote folder. In this case, we will try to fill in the correct uid
+    // when we fetch the message later (see bug 26347).
     private Map<Integer, ImapMessage> mNoUid = new HashMap<Integer, ImapMessage>();
 
     public void add(ImapMessage msg) {
@@ -41,6 +41,7 @@ public class ImapMessageCollection implements Iterable<ImapMessage> {
         }
     }
 
+    /*
     public void remove(ImapMessage msg) {
         mByItemId.remove(msg.getItemId());
         long uid = msg.getUid();
@@ -50,6 +51,7 @@ public class ImapMessageCollection implements Iterable<ImapMessage> {
             mNoUid.remove(msg.getItemId());
         }
     }
+    */
     
     public ImapMessage getByItemId(int itemId) {
         return mByItemId.get(itemId);

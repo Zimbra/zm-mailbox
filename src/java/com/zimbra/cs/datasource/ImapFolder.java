@@ -54,10 +54,10 @@ public class ImapFolder {
     public Long getUidValidity() { return mUidValidity; }
     public long getUidNext() { return mUidNext; }
     
-    void setLocalPath(String localPath) { mLocalPath = localPath; }
-    void setRemotePath(String remotePath) { mRemotePath = remotePath; }
-    void setUidValidity(Long uidValidity) { mUidValidity = uidValidity; }
-    void setUidNext(long uidNext) { mUidNext = uidNext; }
+    public void setLocalPath(String localPath) { mLocalPath = localPath; }
+    public void setRemotePath(String remotePath) { mRemotePath = remotePath; }
+    public void setUidValidity(Long uidValidity) { mUidValidity = uidValidity; }
+    public void setUidNext(long uidNext) { mUidNext = uidNext; }
 
     public String toString() {
         return String.format("ImapFolder: { mailboxId=%d, itemId=%d, dataSourceId=%s, localPath=%s, remotePath=%s, uidValidity=%d }",
