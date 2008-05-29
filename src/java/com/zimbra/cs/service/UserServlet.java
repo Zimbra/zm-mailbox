@@ -39,8 +39,6 @@ import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.HttpURL;
-import org.apache.commons.httpclient.HttpsURL;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.cookie.CookiePolicy;
@@ -65,6 +63,7 @@ import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -194,14 +193,7 @@ public class UserServlet extends ZimbraServlet {
     /** Returns the REST URL for the mail item. */
     public static String getRestUrl(MailItem item) throws ServiceException, IOException {
     	Account acct = item.getMailbox().getAccount();
-        String url = getRestUrl(acct) + item.getPath();
-
-        if (url.startsWith("https"))
-            url = new HttpsURL(url).toString();
-        else
-            url = new HttpURL(url).toString();    		
-
-    	return url;
+        return getRestUrl(acct) + URLUtil.urlEscape(item.getPath());
     }
 
     public UserServlet() {

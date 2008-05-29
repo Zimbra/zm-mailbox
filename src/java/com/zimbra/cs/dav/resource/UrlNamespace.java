@@ -35,6 +35,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.service.DavServlet;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
@@ -194,11 +195,11 @@ public class UrlNamespace {
 
 	public static String getResourceUrl(String user, String resourcePath) {
 	    //return urlEscape(DavServlet.getDavUrl(user) + resourcePath);
-        return urlEscape(DavServlet.DAV_PATH + "/" + user + resourcePath);
+        return URLUtil.urlEscape(DavServlet.DAV_PATH + "/" + user + resourcePath);
 	}
     
     public static String getPrincipalUrl(String user) {
-        return urlEscape(PRINCIPALS_PATH + user + "/");
+        return URLUtil.urlEscape(PRINCIPALS_PATH + user + "/");
     }
 	
     public static String getPrincipalCollectionUrl(Account acct) throws ServiceException {
@@ -216,53 +217,6 @@ public class UrlNamespace {
 		return DavServlet.getServiceUrl(server, domain, path);
     }
     
-    private static final Map<Character,String> sUrlEscapeMap = new java.util.HashMap<Character,String>();
-    
-    static {
-        sUrlEscapeMap.put(' ', "%20");
-        sUrlEscapeMap.put('"', "%22");
-        sUrlEscapeMap.put('\'', "%27");
-        sUrlEscapeMap.put('{', "%7B");
-        sUrlEscapeMap.put('}', "%7D");
-        sUrlEscapeMap.put(';', "%3B");
-        sUrlEscapeMap.put('?', "%3F");
-        sUrlEscapeMap.put('!', "%21");
-        sUrlEscapeMap.put(':', "%3A");
-        sUrlEscapeMap.put('@', "%40");
-        sUrlEscapeMap.put('#', "%23");
-        sUrlEscapeMap.put('%', "%25");
-        sUrlEscapeMap.put('&', "%26");
-        sUrlEscapeMap.put('=', "%3D");
-        sUrlEscapeMap.put('+', "%2B");
-        sUrlEscapeMap.put('$', "%24");
-        sUrlEscapeMap.put(',', "%2C");
-    }
-    
-	public static String urlEscape(String str) {
-		// rfc 2396 url escape.
-		StringBuilder buf = null;
-		for (int i = 0; i < str.length(); i++) {
-            char c = str.charAt(i);
-            String escaped = null;
-            if (c < 0x7F)
-            	escaped = sUrlEscapeMap.get(c);
-            else
-            	escaped = "%" + Integer.toHexString((int)c).toUpperCase();
-            if (escaped != null) {
-                if (buf == null) {
-                    buf = new StringBuilder();
-                    buf.append(str.substring(0, i));
-                }
-                buf.append(escaped);
-            } else if (buf != null) {
-                buf.append(c);
-            }
-		}
-        if (buf != null)
-            return buf.toString();
-        return str;
-	}
-	
 	private static LRUMap sApptSummariesMap = new LRUMap(100);
 	private static LRUMap sRenamedResourceMap = new LRUMap(100);
 	
