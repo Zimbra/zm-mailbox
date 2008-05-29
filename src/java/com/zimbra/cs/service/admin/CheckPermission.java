@@ -25,14 +25,13 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.cs.service.account.ToXML;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class CheckPermission extends AdminDocumentHandler {
@@ -77,7 +76,7 @@ public class CheckPermission extends AdminDocumentHandler {
         }
         
         Element r = request.getElement(AdminConstants.E_RIGHT);
-        Right right = Right.fromCode(r.getText());
+        Right right = RightManager.getInstance().getRight(r.getText());
         
         if (!AccessManager.getInstance().canPerform(principalValue, account, right, false, false))
             throw ServiceException.PERM_DENIED("credential " + principalValue + " is not allowed for right " + right.getCode() + " on target " + account.getName());

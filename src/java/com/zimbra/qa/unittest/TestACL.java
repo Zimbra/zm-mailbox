@@ -21,6 +21,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.PermUtil;
 import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.service.AuthProvider;
@@ -356,7 +357,7 @@ public class TestACL extends TestCase {
          */
         Account target = prov.createAccount(getEmailAddr("testNoACL-target"), PASSWORD, null);
         
-        for (Right right : Right.values()) {
+        for (Right right : RightManager.getInstance().getAllRights().values()) {
             verifyDefault(zimbraUser, target, right);
             verifyDefault(guest, target, right);
             verifyDefault(anon, target, right);

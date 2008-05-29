@@ -17,6 +17,11 @@ import com.zimbra.cs.mailbox.ACL;
  */
 public class AclAccessManager extends DomainAccessManager {
     
+    public AclAccessManager() throws ServiceException {
+        // initialize RightManager
+        RightManager.getInstance();
+    }
+    
     public boolean canPerform(Account grantee, NamedEntry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
         return hasRight(grantee, target, rightNeeded, asAdmin, defaultGrant);
     }

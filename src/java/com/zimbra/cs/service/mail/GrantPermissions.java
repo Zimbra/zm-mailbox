@@ -13,6 +13,7 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.PermUtil;
 import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -55,7 +56,7 @@ public class GrantPermissions extends MailDocumentHandler {
     
     // orig: FolderAction
     ZimbraACE handleACE(Element eACE, ZimbraSoapContext zsc) throws ServiceException {
-        Right right = Right.fromCode(eACE.getAttribute(MailConstants.A_RIGHT));
+        Right right = RightManager.getInstance().getRight(eACE.getAttribute(MailConstants.A_RIGHT));
         GranteeType gtype = GranteeType.fromCode(eACE.getAttribute(MailConstants.A_GRANT_TYPE));
         String zid = eACE.getAttribute(MailConstants.A_ZIMBRA_ID, null);
         boolean deny = eACE.getAttributeBool(MailConstants.A_DENY, false);
