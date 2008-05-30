@@ -90,6 +90,9 @@ public class ZRecur {
         BYYEARDAY, COUNT, FREQ, INTERVAL, UNTIL, WKST;
     }
 
+    // Max date known to calendaring = 01/01/9000 00:00:00 in UTC
+    // This value is comfortably smaller than MySQL DATETIME column's max value of 9999-12-31 23:59:59
+    private static final long MAX_DATE_MILLIS = 221845392000000L;
     // hard limits to recurrence expansion
     private static class ExpansionLimits {
         public int maxInstances;
@@ -165,7 +168,7 @@ public class ZRecur {
         }
         Date d;
         if (forever)
-            d = new Date(Long.MAX_VALUE);
+            d = new Date(MAX_DATE_MILLIS);
         else
             d = hardEnd.getTime();
         if (mUntil != null) {
@@ -697,7 +700,9 @@ public class ZRecur {
 
         int numConsecutiveIterationsWithoutMatchingInstance = 0;
         boolean pastHardEndTime = false;
+        long numIterations = 0;  // track how many times we looped
         while (!pastHardEndTime && (maxInstancesExpanded <= 0 || numInstancesExpanded < maxInstancesExpanded)) {
+            numIterations++;
             boolean curIsAtOrAfterEarliestDate = !cur.getTime().before(earliestDate);
             boolean curIsAfterEndDate = cur.getTime().after(rangeEndDate);
             List<Calendar> addList = new LinkedList<Calendar>();
