@@ -50,7 +50,10 @@ abstract class ImapSearch {
     }
 
     static String stringAsSearchTerm(String content) {
-        return '"' + content.replace('"', ' ') + '"';
+        content = content.replace('*', ' ').replace('"', ' ');
+        if (content.length() == 0 || !Character.isWhitespace(content.charAt(content.length() - 1)))
+            content += '*';
+        return '"' + content + '"';
     }
 
 
@@ -282,9 +285,11 @@ abstract class ImapSearch {
         private String mValue;
         ContentSearch(String value)  { mValue = value; }
 
-        boolean canBeRunLocally()                   { return false; }
+        boolean canBeRunLocally()                   { return mValue.trim().equals(""); }
         String toZimbraSearch(ImapFolder i4folder)  { return stringAsSearchTerm(mValue); }
         ImapMessageSet evaluate(ImapFolder i4folder) {
+            if (canBeRunLocally())
+                return i4folder.getAllMessages();
             throw new UnsupportedOperationException("evaluate of " + toZimbraSearch(i4folder));
         }
     }
@@ -295,23 +300,28 @@ abstract class ImapSearch {
             static final Header FROM = new Header("from", "from");
             static final Header TO = new Header("to", "to");
             static final Header CC = new Header("cc", "cc");
-            static final Header BCC = new Header("cc", "#bcc");
+            static final Header BCC = new Header("bcc", "#bcc");
             static final Header MSGID = new Header("message-id", "msgid");
 
-            private static final Header[] SPECIAL_HEADERS = new Header[] { SUBJECT, FROM, TO, CC, MSGID };
+            private static final Header[] SPECIAL_HEADERS = new Header[] { SUBJECT, FROM, TO, CC, BCC, MSGID };
 
             private final String mField, mKey;
             private Header(String fieldName, String searchKey) {
                 mField = fieldName;  mKey = searchKey;
             }
 
-            static Header parse(String fieldName) {
-                fieldName = fieldName.toLowerCase();
+            static Header parse(String field) {
+                field = field.toLowerCase();
                 for (Header syshdr : SPECIAL_HEADERS) {
-                    if (fieldName.equals(syshdr.mField))
+                    if (field.equals(syshdr.mField))
                         return syshdr;
                 }
-                return new Header(fieldName, '#' + fieldName.replace(' ', '-').replace('\t', '-').replace('"', '-'));
+                String key = field.replaceAll("[ \t\":()]", "");
+                while (key.startsWith("-"))
+                    key = key.substring(1);
+                if (key.equals(""))
+                    key = "*";
+                return new Header(field, '#' + key);
             }
 
             @Override public String toString()  { return mKey; }
@@ -324,14 +334,16 @@ abstract class ImapSearch {
                 value = value.substring(1);
             if (header == Header.MSGID && value.endsWith(">"))
                 value = value.substring(0, value.length());
-            value = value.replace('*', ' ');
-            if (value.trim().equals(""))
-                value = "*";
             mValue = value;  mHeader = header;
         }
 
-        boolean canBeRunLocally()                   { return false; }
-        String toZimbraSearch(ImapFolder i4folder)  { return mHeader + ":" + stringAsSearchTerm(mValue); }
+        boolean canBeRunLocally()  { return false; }
+        String toZimbraSearch(ImapFolder i4folder) {
+            String value = stringAsSearchTerm(mValue);
+            if ((mHeader == Header.FROM || mHeader == Header.TO || mHeader == Header.CC) && mValue.indexOf('@') == -1)
+                value += " or " + stringAsSearchTerm('@' + mValue);
+            return mHeader + ":(" + value + ")";
+        }
         ImapMessageSet evaluate(ImapFolder i4folder) {
             throw new UnsupportedOperationException("evaluate of " + toZimbraSearch(i4folder));
         }
