@@ -580,7 +580,14 @@ public class ParsedMessage {
     }
     /**
      * Returns a stream to the raw MIME message.  Affected by mutation but
-     * not conversion.
+     * not conversion.<p>
+     * 
+     * <b>Important</b>: when the content comes from a <tt>MimeMessage</tt>,
+     * JavaMail requires us to start a {@link MimeMessageOutputThread} to
+     * serve up the content.  As a result, all calls to this method must
+     * be wrapped in a try/finally with a call to {@link ByteUtil#closeStream(InputStream)}
+     * in the finally block.  This guarantees that the stream is drained and
+     * the <tt>MimeMessageOutputThread</tt> exits.
      */
     public InputStream getRawInputStream() throws ServiceException {
         if (mRawData != null) {

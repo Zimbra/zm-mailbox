@@ -18,6 +18,7 @@
 package com.zimbra.cs.filter;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -47,6 +48,7 @@ import org.apache.jsieve.mail.MailUtils;
 import org.apache.jsieve.mail.SieveMailException;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -291,13 +293,15 @@ public class ZimbraMailAdapter implements MailAdapter
                     boolean filedRemotely = false;
                     if (folder instanceof Mountpoint) {
                         Mountpoint mountpoint = (Mountpoint) folder;
+                        InputStream msgStream = null;
                         try {
                             // Do a REST POST to the mountpoint.  UserServlet will then
                             // redirect to the target mailbox.
                             ZMailbox zMailbox = getZMailbox();
                             String path = HttpUtil.encodePath(mountpoint.getPath());
+                            msgStream = mParsedMessage.getRawInputStream();
                             zMailbox.postRESTResource(
-                                path, mParsedMessage.getRawInputStream(), true,
+                                path, msgStream, true,
                                 mParsedMessage.getRawSize(), Mime.CT_MESSAGE_RFC822, false,
                                 (int) (60 * Constants.MILLIS_PER_MINUTE));
                             filedRemotely = true;
@@ -305,6 +309,8 @@ public class ZimbraMailAdapter implements MailAdapter
                             ZimbraLog.filter.warn("Unable to file to %s.  Filing to INBOX instead.",
                                 mountpoint.getPath(), e);
                             folder = mMailbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX);
+                        } finally {
+                            ByteUtil.closeStream(msgStream);
                         }
                     }
                     

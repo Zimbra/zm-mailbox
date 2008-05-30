@@ -4774,16 +4774,20 @@ public class Mailbox {
                 // it's not already there.
                 Blob preexisting = sharedDeliveryCtxt.getPreexistingBlob();
                 if (preexisting == null) {
-                    InputStream in = pm.getRawInputStream();
-                    if (!isRedo) {
-                        blob = sm.storeIncoming(in, msgSize, null, msg.getVolumeId());
-                    } else {
-                        // If message was delivered to a single recipient, ignore the path in the
-                        // redo item and store to a new incoming path.  (bug 22873)
-                        String path = sharedDeliveryCtxt.getShared() ? redoPlayer.getPath() : null;
-                        blob = sm.storeIncoming(in, msgSize, path, redoPlayer.getVolumeId());
+                    InputStream in = null;
+                    try {
+                        in = pm.getRawInputStream();
+                        if (!isRedo) {
+                            blob = sm.storeIncoming(in, msgSize, null, msg.getVolumeId());
+                        } else {
+                            // If message was delivered to a single recipient, ignore the path in the
+                            // redo item and store to a new incoming path.  (bug 22873)
+                            String path = sharedDeliveryCtxt.getShared() ? redoPlayer.getPath() : null;
+                            blob = sm.storeIncoming(in, msgSize, path, redoPlayer.getVolumeId());
+                        }
+                    } finally {
+                        ByteUtil.closeStream(in);
                     }
-                    in.close();
                 } else {
                     // Blob was already stored in incoming by the caller.
                     sharedDeliveryCtxt.setBlob(preexisting);
