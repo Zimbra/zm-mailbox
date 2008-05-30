@@ -2061,18 +2061,19 @@ in soap-waitset.txt
 
 <CheckPermissionRequest>
   <principal by="id|name">...</principal>
-  <account by="id|name">...</account>
+  <target type="{target-type}" by="id|name">...</target>
   <right>...</right>
-</CheckPermissionRequest>  
+</CheckPermissionRequest>
 
-    Check if principal has the specified right on account.
+{target-type} = account|calresource|cos|distributionlist|domain|server  
 
-
+    Check if principal has the specified right on target.
+ 
 <CheckPermissionResponse/>
 
     A successful return means the principal is allowed for the specified right on the 
-    target account.  If a ServerException.PERM_DENIED is thrown, it indicates either 
+    target object.  If ServerException.PERM_DENIED is thrown, it indicates either 
     the authed user does not have privilege to run this SOAP command, 
-    or the principal dose not have the specified right on the target account.
+    or the principal dose not have the specified right on the target object.
   
                     
