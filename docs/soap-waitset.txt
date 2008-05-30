@@ -1,6 +1,8 @@
 WaitSet: scalable mechanism for listening for changes to one or more accounts
 --------------------------------------------------------------------------------
 
+Non-admin versions in the 'zimbraMail' Namespace:
+-------------------------------------------------
 <CreateWaitSetRequest>
 <CreateWaitSetResponse>
 <WaitSetRequest>
@@ -8,7 +10,24 @@ WaitSet: scalable mechanism for listening for changes to one or more accounts
 <DestroyWaitSet>
 <DestroyWaitSetResponse>
 
----------------------------
+
+Admin versions in the 'zimbraMail' Namespace:
+-------------------------------------------------
+<AdminCreateWaitSetRequest>
+<AdminCreateWaitSetResponse>
+<AdminWaitSetRequest>
+<AdminWaitSetResponse>
+<AdminDestroyWaitSet>
+<AdminDestroyWaitSetResponse>
+
+note that the admin versions of the APIs are identical in any way,
+except that they can be used to wait on non-owner accounts and can be
+used to wait on "all accounts".
+
+
+*************************************
+
+
 
 INTEREST_TYPES: comma-separated list.  Currently:
    c: contacts
@@ -18,8 +37,8 @@ INTEREST_TYPES: comma-separated list.  Currently:
 
 
 *************************************
-CreateWaitSet: must be called once to initialize the WaitSet
-and to set its "default interest types"
+CreateWaitSet/AdminCreateWaitSet: must be called once to initialize
+the WaitSet and to set its "default interest types"
 
 - Non-Admin requests may only specify their own account ID.
 
@@ -39,15 +58,15 @@ previous sequence number.  The server will attempt to resynchronize
 the waitset using the sequence number you provide (the server's
 ability to do this is limited by the RedoLogs that are available)
 ================
-<CreateWaitSetRequest defTypes="DEFAULT INTEREST_TYPES" [allAccounts=1]>
+<[Admin]CreateWaitSetRequest defTypes="DEFAULT INTEREST_TYPES" [allAccounts=1]>
   [ <add>
       [<a id="ACCTID" [token="lastKnownSyncToken"] [types="if_not_default"]/>]+
     </add> ]
-</CreateWaitSetRequest>
+</[Admin]CreateWaitSetRequest>
 
-<CreateWaitSetResponse waitSet="setId" defTypes="types" seq="0">
+<[Admin]CreateWaitSetResponse waitSet="setId" defTypes="types" seq="0">
   [ <error ...something.../>]*
-</CreateWaitSetResponse>
+</[Admin]CreateWaitSetResponse>
 
 ***IMPORTANT: Note that the seq number is **NOT** guaranteed to be an
 integer.  Clients MUST treat this value as an opaque string.***
@@ -56,9 +75,9 @@ integer.  Clients MUST treat this value as an opaque string.***
 
 
 ************************************
-WaitSetRequest:  optionally modifies the wait set and checks
-for any notifications.  If block=1 and there are no notificatins, then
-this API will BLOCK until there is data.
+WaitSetRequest/AdminWaitSetRequest: optionally modifies the wait set
+and checks for any notifications.  If block=1 and there are no
+notificatins, then this API will BLOCK until there is data.
 
 Client should always set 'seq' to be the highest known value it has
 received from the server.  The server will use this information to
@@ -86,7 +105,7 @@ zimbra_admin_waitset_max_request_timeout
 
 
 ================
-<WaitSetRequest waitSet="setId" defTypes="DEFAULT INTEREST TYPES"
+<[Admin]WaitSetRequest waitSet="setId" defTypes="DEFAULT INTEREST TYPES"
                 seq="highestSeqKnown" [block="1"] [timeout="timeout"]>
   [ <add>
       [<a id="ACCTID" [token="lastKnownSyncToken"] [types]/>]+
@@ -97,12 +116,12 @@ zimbra_admin_waitset_max_request_timeout
   [ <remove>
       [<a id="ACCTID"/>]+
     </remove> ]  
-</WaitSetRequest>
+</[Admin]WaitSetRequest>
 
-<WaitSetResponse waitSet="setId" [seq="seqNo" OR canceled="1"]>
+<[Admin]WaitSetResponse waitSet="setId" [seq="seqNo" OR canceled="1"]>
   [ <n id="ACCTID"/>]*
   [ <error ...something.../>]*
-</WaitSetResponse>
+</[Admin]WaitSetResponse>
 
 If the specified wait set does not exist, the server will throw an
 admin.NO_SUCH_WAITSET exception.
@@ -121,13 +140,13 @@ will return with the "canceled" flag set.
 
 
 *************************************
-DestroyWaitSet: Use this to close out the wait set.  Note that the
-server will automatically time out a wait set if there is no reference
-to it for (default of) 20 minutes.
+DestroyWaitSet/AdminDestroyWaitSet: Use this to close out the wait
+set.  Note that the server will automatically time out a wait set if
+there is no reference to it for (default of) 20 minutes.
 *************************************
-<DestroyWaitSetRequest waitSet="setId"/>
+<[Admin]DestroyWaitSetRequest waitSet="setId"/>
 
-<DestroyWaitSetResponse waitSet="setId"/>
+<[Admin]DestroyWaitSetResponse waitSet="setId"/>
 
 
 
@@ -151,15 +170,16 @@ There are three basic use cases for WaitSets:
 <DestroyWaitSetRequest waitSet="id"/>
 
 
-2) Wait on many accounts (admin-only):
-<CreateWaitSetRequest defTypes="TYPES"/>
+2) Wait on many accounts (admin-only -- Remember to use the
+   zimbraAdmin namespace):
+<AdminCreateWaitSetRequest defTypes="TYPES"/>
    <add>
       <a id="ACCTID" [token="lastKnownSyncToken"]/>
       <a id="ACCTID" [token="lastKnownSyncToken"]/>
    </add>
-</CreateWaitSetRequest>
+</AdminCreateWaitSetRequest>
 
-<WaitSetRequest defTypes="TYPES" waitSet="id" seq="seqno">
+<AdminWaitSetRequest defTypes="TYPES" waitSet="id" seq="seqno">
    <update>
       <a id="ACCTID" [token="lastKnownSyncToken"]/>
    </update>
@@ -169,21 +189,21 @@ There are three basic use cases for WaitSets:
    <add>
       <a id="ACCTID" [token="lastKnownSyncToken"]/>
    </update>
-</WaitSetRequest>
+</AdminWaitSetRequest>
 
-<DestroyWaitSetRequest waitSet="id"/>
+<AdminDestroyWaitSetRequest waitSet="id"/>
 
 
 3) Wait on ALL accounts (admin-only):
-<CreateWaitSetRequest defTypes="TYPES" allAccounts="1"/>
+<AdminCreateWaitSetRequest defTypes="TYPES" allAccounts="1"/>
 
-<WaitSetRequest waitSet="id" seq="seqno" defTypes="TYPES"/>
+<AdminWaitSetRequest waitSet="id" seq="seqno" defTypes="TYPES"/>
 ...
 // SERVER RESTARTS!
 ...
-<WaitSetRequest waitSet="id" seq="seqno" defTypes="TYPES"/> // server will re-sync using RedoLogs
+<AdminWaitSetRequest waitSet="id" seq="seqno" defTypes="TYPES"/> // server will re-sync using RedoLogs
 
-<DestroyWaitSetRequest waitSet="id"/>
+<AdminDestroyWaitSetRequest waitSet="id"/>
 
 
 
@@ -191,37 +211,37 @@ There are three basic use cases for WaitSets:
 **********************************************************************
 A Detailed Example:
 **********************************************************************
-<CreateWaitSetRequest defTypes="c">
+<AdminCreateWaitSetRequest defTypes="c">
   <add>
     <a id="a1"/>
   </add>  
-</CreateWaitSetRequest>
+</AdminCreateWaitSetRequest>
 <!-- a1 receives a contact update -->
-<CreateWaitSetResponse waitSet="foo" defTypes="c" seq="0"/>
+<AdminCreateWaitSetResponse waitSet="foo" defTypes="c" seq="0"/>
 
 <!--client syncs to a1 state AFTER added to WaitSet (not using sync token) -->
 <!-- a3 receives a contact update (token goes to 100)-->
 <!--client syncs to a3 BEFORE adding to WaitSet (client has token 100) -->
 
-<WaitSetRequest waitSet="foo" seq="0" block="1">
+<AdminWaitSetRequest waitSet="foo" seq="0" block="1">
   <add>
     <a id="a3" token="100"/>
   </add>
-</WaitSetRequest>
+</AdminWaitSetRequest>
 <!-- Will return *immediately* b/c a1 has changed since the <add> -->
-<WaitSetResponse waitSet="foo" seq="1">
+<AdminWaitSetResponse waitSet="foo" seq="1">
   <n id="a1"/>
-</WaitSetResponse>
+</AdminWaitSetResponse>
 
 <!-- At this point, client *must* sync with a1, even though the a1 update might have
      happened before we synched with a1 there is no way to know.  a3 is not notified
      and does not have to sync, because it is using sync tokens.  -->
 
-<WaitSetRequest waitSet="foo" seq="1" block="1">
+<AdminWaitSetRequest waitSet="foo" seq="1" block="1">
   <add>
     <a id="a2"/>
   </add>
-</WaitSetRequest>
+</AdminWaitSetRequest>
 <!-- the client must sync with a2 state AFTER setting a2 wait, however because
      block="1" the wait will not return until some account has new data: therefore
      the client MUST sync a2 using another thread here.  The client cannot sync
@@ -229,17 +249,17 @@ A Detailed Example:
      multi-threaded, then it should issue the <add> as block="0" in this case -->
 <!-- ...BLOCKS until... -->
 <!-- a3 receives a contact update (sync token goes to 107) -->
-<WaitSetResponse waitSet="foo" seq="2">
+<AdminWaitSetResponse waitSet="foo" seq="2">
   <n id="a3"/>
-</WaitSetResponse>
+</AdminWaitSetResponse>
 
 <!-- client syncs to a3 -->
 
-<WaitSetRequest waitSet="foo" seq="2" block="1">
+<AdminWaitSetRequest waitSet="foo" seq="2" block="1">
   <update>
     <a id="a3" token="107"/>
   </update>  
-</WaitSetRequest>
+</AdminWaitSetRequest>
   
 <!-- Client is up to date, server  blocks until there is new data 
      on a1,a2 or a3 -->
