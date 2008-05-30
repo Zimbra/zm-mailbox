@@ -56,6 +56,12 @@ public class CreateWaitSet extends MailDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Element response = zsc.createElement(MailConstants.CREATE_WAIT_SET_RESPONSE);
+        return staticHandle(request, context, response);
+    }
+    
+    static public Element staticHandle(Element request, Map<String, Object> context, Element response) throws ServiceException {
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         
         String defInterestStr = request.getAttribute(MailConstants.A_DEFTYPES);
         int defaultInterests = WaitSetRequest.parseInterestStr(defInterestStr, 0);
@@ -92,7 +98,6 @@ public class CreateWaitSet extends MailDocumentHandler {
         String wsId = result.getFirst();
         List<WaitSetError> errors = result.getSecond();
         
-        Element response = zsc.createElement(MailConstants.CREATE_WAIT_SET_RESPONSE);
         response.addAttribute(MailConstants.A_WAITSET_ID, wsId);
         response.addAttribute(MailConstants.A_DEFTYPES, WaitSetRequest.interestToStr(defaultInterests));
         response.addAttribute(MailConstants.A_SEQ, 0);

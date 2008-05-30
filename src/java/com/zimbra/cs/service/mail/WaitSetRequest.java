@@ -135,7 +135,13 @@ public class WaitSetRequest extends MailDocumentHandler {
      */
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        boolean adminAllowed = zsc.getAuthToken().isAdmin(); 
+        Element response = zsc.createElement(MailConstants.WAIT_SET_RESPONSE);
+        return staticHandle(request, context, response, adminAllowed);
+    }
     
+    public static Element staticHandle(Element request, Map<String, Object> context, Element response, boolean adminAllowed) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         HttpServletRequest servletRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
         Continuation continuation;
@@ -143,8 +149,6 @@ public class WaitSetRequest extends MailDocumentHandler {
         String waitSetId = request.getAttribute(MailConstants.A_WAITSET_ID);
         String lastKnownSeqNo = request.getAttribute(MailConstants.A_SEQ);
         boolean block = request.getAttributeBool(MailConstants.A_BLOCK, false);
-        
-        boolean adminAllowed = zsc.getAuthToken().isAdmin(); 
         
         Callback cb;
         
@@ -189,6 +193,7 @@ public class WaitSetRequest extends MailDocumentHandler {
                 request.getOptionalElement(MailConstants.E_WAITSET_UPDATE), cb.ws.getDefaultInterest(), allowedAccountIds);
             List<String> remove = parseRemoveAccounts(request.getOptionalElement(MailConstants.E_WAITSET_REMOVE), allowedAccountIds);
 
+            ///////////////////
             // workaround for 27480: load the mailboxes NOW, before we grab the waitset lock
             List<Mailbox> referencedMailboxes = new ArrayList<Mailbox>();
             for (WaitSetAccount acct : add) {
@@ -207,6 +212,8 @@ public class WaitSetRequest extends MailDocumentHandler {
                     ZimbraLog.session.debug("Caught exception preloading mailbox for waitset", e);
                 }
             }
+            // END workaround for 27480
+            ///////////////////
             
             
             // Force the client to wait briefly before processing -- this will stop 'bad' clients from polling 
@@ -244,7 +251,6 @@ public class WaitSetRequest extends MailDocumentHandler {
         // clear the 
         cb.ws.doneWaiting();
         
-        Element response = zsc.createElement(MailConstants.WAIT_SET_RESPONSE);
         response.addAttribute(MailConstants.A_WAITSET_ID, waitSetId);
         if (cb.canceled) {
             response.addAttribute(MailConstants.A_CANCELED, true);

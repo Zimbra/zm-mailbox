@@ -43,13 +43,19 @@ public class DestroyWaitSet extends MailDocumentHandler {
     /* (non-Javadoc)
      * @see com.zimbra.soap.DocumentHandler#handle(com.zimbra.common.soap.Element, java.util.Map)
      */
+    
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Element response = zsc.createElement(MailConstants.DESTROY_WAIT_SET_RESPONSE);
+        return staticHandle(request, context, response);
+    }
+    
+    static public Element staticHandle(Element request, Map<String, Object> context, Element response) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         String waitSetId = request.getAttribute(MailConstants.A_WAITSET_ID);
         WaitSetMgr.destroy(zsc.getAuthtokenAccountId(), waitSetId);
         
-        Element response = zsc.createElement(MailConstants.DESTROY_WAIT_SET_RESPONSE);
         response.addAttribute(MailConstants.A_WAITSET_ID, waitSetId);
         return response;
     }
