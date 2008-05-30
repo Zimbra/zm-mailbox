@@ -340,7 +340,6 @@ public class AdminConstants {
     public static final String E_CACHE = "cache";
     public static final String E_CODE = "code";
     public static final String E_COS = "cos";
-    public static final String A_COS = "cos";
     public static final String E_CN = "cn";
     public static final String E_DOMAIN = "domain";
     public static final String E_DL = "dl";
@@ -383,6 +382,14 @@ public class AdminConstants {
     public static final String E_STATS = "stats";
     public static final String E_PRINCIPAL = "principal";
     public static final String E_RIGHT = "right";
+    public static final String E_TARGET = "target";
+    
+    public static final String A_ACCOUNT = "account";
+    public static final String A_CALENDAR_RESOURCE = "calresource";
+    public static final String A_COS = "cos";
+    public static final String A_DISTRIBUTION_LIST = "distributionlist";
+    public static final String A_DOMAIN = "domain";
+    public static final String A_SERVER = "server";
     
     public static final String A_ACTION = "action";
     public static final String A_APPLY_CONFIG = "applyConfig";
@@ -391,7 +398,6 @@ public class AdminConstants {
     public static final String A_MAX_RESULTS = "maxResults";
     public static final String A_LIMIT = "limit";
     public static final String A_OFFSET = "offset";
-    public static final String A_DOMAIN = "domain";
     public static final String A_ATTRS = "attrs";
     public static final String A_SEARCH_TOTAL = "searchTotal";
     public static final String A_SORT_BY = "sortBy";
@@ -435,7 +441,6 @@ public class AdminConstants {
     public static final String A_HEALTHY = "healthy";
     public static final String A_SIZE = "s";
     public static final String A_SERVICE = "service";
-    public static final String A_SERVER = "server";
     public static final String A_STATUS = "status";
     public static final String A_TIME = "time";
     public static final String A_TYPES = "types";
