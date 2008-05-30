@@ -319,6 +319,14 @@ public class AdminConstants {
     public static final QName CHECK_PERMISSION_REQUEST = QName.get("CheckPermissionRequest", NAMESPACE);
     public static final QName CHECK_PERMISSION_RESPONSE = QName.get("CheckPermissionResponse", NAMESPACE);
     
+    // admin-version of WaitSetRequest
+    public static final QName ADMIN_CREATE_WAIT_SET_REQUEST = QName.get("AdminCreateWaitSetRequest", NAMESPACE);
+    public static final QName ADMIN_CREATE_WAIT_SET_RESPONSE = QName.get("AdminCreateWaitSetResponse", NAMESPACE);
+    public static final QName ADMIN_WAIT_SET_REQUEST = QName.get("AdminWaitSetRequest", NAMESPACE);
+    public static final QName ADMIN_WAIT_SET_RESPONSE = QName.get("AdminWaitSetResponse", NAMESPACE);
+    public static final QName ADMIN_DESTROY_WAIT_SET_REQUEST = QName.get("AdminDestroyWaitSetRequest", NAMESPACE);
+    public static final QName ADMIN_DESTROY_WAIT_SET_RESPONSE = QName.get("AdminDestroyWaitSetResponse", NAMESPACE);
+    
     
     // DumpSessions
     public static final String E_SESSION = "session";
