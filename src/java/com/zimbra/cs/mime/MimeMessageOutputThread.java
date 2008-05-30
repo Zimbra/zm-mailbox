@@ -6,6 +6,7 @@ import java.io.PipedOutputStream;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 /**
@@ -20,6 +21,12 @@ public class MimeMessageOutputThread implements Runnable {
     private MimeMessage mMsg;
     
     MimeMessageOutputThread(MimeMessage msg, PipedOutputStream out) {
+        if (msg == null) {
+            throw new NullPointerException("msg cannot be null");
+        }
+        if (out == null) {
+            throw new NullPointerException("out cannot be null");
+        }
         mMsg = msg;
         mOut = out;
     }
@@ -27,11 +34,12 @@ public class MimeMessageOutputThread implements Runnable {
     public void run() {
         try {
             mMsg.writeTo(mOut);
-            mOut.close();
         } catch (IOException e) {
             ZimbraLog.misc.warn("Unable to write MimeMessage to output stream.", e);
         } catch (MessagingException e) {
             ZimbraLog.misc.warn("Unable to write MimeMessage to output stream.", e);
+        } finally {
+            ByteUtil.closeStream(mOut);
         }
     }
 
