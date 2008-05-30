@@ -24,15 +24,23 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.common.util.Constants;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.fb.FreeBusyQuery;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.soap.ZimbraSoapContext;
 
 
 public class PublicICalServlet extends ZimbraServlet {
@@ -61,6 +69,11 @@ public class PublicICalServlet extends ZimbraServlet {
         }
     }
 
+    private static final String QP_AUTH_TOKEN = "zauthtoken";
+    private static final String QP_ACCOUNT    = "acct";
+    private static final String QP_START_TIME = "s";
+    private static final String QP_END_TIME   = "e";
+
     /**
      * 
      * http://localhost:7070/service/pubcal/freebusy.ifb?acct=user@host.com
@@ -71,13 +84,13 @@ public class PublicICalServlet extends ZimbraServlet {
      * @throws ServletException
      */
     public final void doGetFreeBusy(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
-        String acctName = req.getParameter("acct");
-        String startStr = req.getParameter("s");
-        String endStr = req.getParameter("e");
+        String acctName = req.getParameter(QP_ACCOUNT);
+        String startStr = req.getParameter(QP_START_TIME);
+        String endStr = req.getParameter(QP_END_TIME);
 
         resp.setContentType(Mime.CT_TEXT_CALENDAR);
 
-        if (checkBlankOrNull(resp, "acct", acctName))
+        if (checkBlankOrNull(resp, QP_ACCOUNT, acctName))
             return;
 
         long now = new Date().getTime();
@@ -102,7 +115,42 @@ public class PublicICalServlet extends ZimbraServlet {
             return;
         }
 
-        FreeBusyQuery fbQuery = new FreeBusyQuery(req, null, rangeStart, rangeEnd);
+        String targetAccountId = null;
+        try {
+            Account targetAccount = Provisioning.getInstance().get(AccountBy.name, acctName);
+            if (targetAccount != null)
+                targetAccountId = targetAccount.getId();
+        } catch (ServiceException e) {}
+
+        AuthToken at = getAuthTokenFromCookie(req, resp, true);
+        if (at == null) {
+            String authTokenParam = req.getParameter(QP_AUTH_TOKEN);
+            if (authTokenParam != null) {
+                try {
+                    at = AuthProvider.getAuthToken(authTokenParam);
+                } catch (AuthTokenException e) {
+                    sLog.warn("Auth error: " + e.getMessage(), e);
+                }
+            }
+        }
+        Account authAccount = null;
+        ZimbraSoapContext zsc = null;
+        if (at != null) {
+            try {
+                authAccount = Provisioning.getInstance().get(AccountBy.id, at.getAccountId(), at);
+            } catch (ServiceException e) {
+                sLog.warn("Auth error: " + e.getMessage(), e);
+            }
+            try {
+                zsc = new ZimbraSoapContext(at, targetAccountId, SoapProtocol.SoapJS, SoapProtocol.SoapJS);
+            } catch (ServiceException e) {
+                sLog.error("Error initializing request context", e);
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error initializing request context");
+                return;
+            }
+        }
+
+        FreeBusyQuery fbQuery = new FreeBusyQuery(req, zsc, authAccount, rangeStart, rangeEnd);
         fbQuery.addEmailAddress(acctName);
         Collection<FreeBusy> result = fbQuery.getResults();
         FreeBusy fb = null;

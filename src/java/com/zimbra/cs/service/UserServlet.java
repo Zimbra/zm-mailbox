@@ -115,6 +115,7 @@ public class UserServlet extends ZimbraServlet {
 
     public static final String SERVLET_PATH = "/home";
 
+    public static final String QP_ZAUTHTOKEN = "zauthtoken";
     public static final String QP_AUTHTOKEN = "authToken";
     
     public static final String QP_FMT = "fmt"; // format query param
@@ -259,7 +260,9 @@ public class UserServlet extends ZimbraServlet {
 
             // check query string
             if (context.queryParamAuthAllowed()) {
-                String auth = context.params.get(QP_AUTHTOKEN);
+                String auth = context.params.get(QP_ZAUTHTOKEN);
+                if (auth == null)
+                    auth = context.params.get(QP_AUTHTOKEN);  // not sure who uses this parameter; zauthtoken is preferred
                 if (auth != null) {
                     try {
                         // Only supported by ZimbraAuthProvider
@@ -365,16 +368,10 @@ public class UserServlet extends ZimbraServlet {
             context.targetAccount = context.authAccount;
         }
 
-        // auth is required if we haven't yet authed and they've specified a formatter that requires auth (including write ops).
-        boolean authRequired = context.authAccount == null &&
-                (context.formatter == null || context.formatter.requiresAuth() || req.getMethod().equalsIgnoreCase("POST"));
-
         // need this before proxy if we want to support sending cookie from a basic-auth
-        if (authRequired) {
-            getAccount(context);
-            if (context.authAccount == null) {
-                context.setAnonymousRequest();
-            }
+        getAccount(context);
+        if (context.authAccount == null) {
+            context.setAnonymousRequest();
         }
 
         return true;
