@@ -108,8 +108,8 @@ class ImapFolderSync {
             if (tracker.getUidValidity() > 0) {
                 syncMessages(fullSync);
             } else {
-                info("Synchronization disabled for this folder (IMAP " +
-                     "folder is flagged '\\Noselect')");
+                debug("Synchronization disabled for this folder (IMAP " +
+                      "folder is flagged '\\Noselect')");
             }
         }
         return tracker;
@@ -167,7 +167,7 @@ class ImapFolderSync {
     private void syncMessages(boolean fullSync)
         throws ServiceException, IOException {
         if (!ds.isSyncEnabled(tracker.getLocalPath())) {
-            info("Synchronization disabled for this folder");
+            debug("Synchronization disabled for this folder");
             return;
         }
         int folderId = tracker.getItemId();
@@ -246,8 +246,8 @@ class ImapFolderSync {
         }
         // Folder was moved outside of the data source root, or
         // folder should no longer be synchronized
-        info("Folder was renamed (originally '%s') and moved outside the data source root",
-             tracker.getLocalPath());
+        info("Folder was renamed (originally '%s') and moved outside the " +
+             " data source root", tracker.getLocalPath());
         ds.deleteImapFolder(tracker);          
         // Create new local folder for remote path
         createLocalFolder(ld);
@@ -578,6 +578,16 @@ class ImapFolderSync {
         int remoteFlags = FlagsUtil.imapToZimbraFlags(flags);
         int newLocalFlags = mergeFlags(localFlags, trackedFlags, remoteFlags);
         int newRemoteFlags = FlagsUtil.imapFlagsOnly(newLocalFlags);
+        if (LOG.isDebugEnabled() && (newLocalFlags != localFlags ||
+            newRemoteFlags != remoteFlags || newRemoteFlags != trackedFlags)) {
+            debug("Updated flags for message with item id %d: local=%s, " +
+                  "tracked=%s, remote=%s, new_local=%s, new_remote=%s", id,
+                Flag.bitmaskToFlags(localFlags),
+                Flag.bitmaskToFlags(trackedFlags),
+                Flag.bitmaskToFlags(remoteFlags),
+                Flag.bitmaskToFlags(newLocalFlags),
+                Flag.bitmaskToFlags(newRemoteFlags));
+        }
         boolean updated = false;
         if (newLocalFlags != localFlags) {
             mailbox.setTags(null, id, MailItem.TYPE_MESSAGE, newLocalFlags,
@@ -603,15 +613,6 @@ class ImapFolderSync {
         }
         if (updated) {
             stats.updated++;
-            if (LOG.isDebugEnabled()) {
-                debug("Updated flags for message with item id %d: local=%s, " +
-                      "tracked=%s, remote=%s, new_local=%s, new_remote=%s", id,
-                      Flag.bitmaskToFlags(localFlags),
-                      Flag.bitmaskToFlags(trackedFlags),
-                      Flag.bitmaskToFlags(remoteFlags),
-                      Flag.bitmaskToFlags(newLocalFlags),
-                      Flag.bitmaskToFlags(newRemoteFlags));
-            }
         } else {
             stats.matched++;
         }
