@@ -34,6 +34,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -41,6 +42,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.formatter.WikiFormatter;
 import com.zimbra.cs.service.util.ItemId;
@@ -381,7 +383,10 @@ public abstract class Wiki {
 			String url = URLUtil.getSoapURL(remoteServer, true);
 			SoapHttpTransport transport = new SoapHttpTransport(url);
 			try {
-			    transport.setAuthToken(ctxt.auth.getEncoded());
+				AuthToken at = ctxt.auth;
+				if (at == null)
+					at = AuthProvider.getAuthToken(ACL.ANONYMOUS_ACCT);
+			    transport.setAuthToken(at.getEncoded());
 			} catch (AuthTokenException e) {
 			    throw ServiceException.FAILURE("cannot get raw auth token", e);
 			}
@@ -411,13 +416,13 @@ public abstract class Wiki {
 			WikiPage page = (WikiPage)mWikiPages.get(wikiWord);
 			if (page != null)
 				return page;
-			synchronized (mWikiPages) {
-				page = (WikiPage)mWikiPages.get(wikiWord);
-				if (page == null) {
-					page = load(ctxt, wikiWord);
-					if (page != null)
+			page = (WikiPage)mWikiPages.get(wikiWord);
+			if (page == null) {
+				page = load(ctxt, wikiWord);
+				if (page != null)
+					synchronized (mWikiPages) {
 						mWikiPages.put(wikiWord, page);
-				}
+					}
 			}
 			return page;
 		}
