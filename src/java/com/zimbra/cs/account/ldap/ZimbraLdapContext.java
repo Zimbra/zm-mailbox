@@ -98,8 +98,11 @@ public class ZimbraLdapContext {
     }
     
     private static boolean requireStartTLS(String urls) {
-        return LC.ldap_starttls_supported.booleanValue() && 
-               LC.zimbra_require_interprocess_security.booleanValue() &&
+        boolean ldap_starttls_supported = "1".equals(LC.ldap_starttls_supported.value());
+        boolean zimbra_require_interprocess_security = "1".equals(LC.zimbra_require_interprocess_security.value());
+        
+        return ldap_starttls_supported && 
+               zimbra_require_interprocess_security &&
                !urls.toLowerCase().contains("ldaps://");
     }
     
