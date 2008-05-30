@@ -2402,8 +2402,11 @@ public abstract class CalendarItem extends MailItem {
         Instance alarmInstance = null;
         Alarm theAlarm = null;
 
-        long endTime = getStartTime() + 2L * MILLIS_IN_YEAR;  // 2-year window
-        endTime = Math.min(endTime, getEndTime());
+        long fromTime = Math.max(getStartTime(), System.currentTimeMillis());        
+        long endTime = fromTime + MILLIS_IN_YEAR;  // 1-year window to search for next alarm
+        long itemEndTime = getEndTime();
+        if (itemEndTime < endTime && itemEndTime >= getStartTime())  // avoid huge negative numbers due to wraparound
+            endTime = itemEndTime;
         Collection<Instance> instances = expandInstances(nextAlarm, endTime, false);
         for (Instance inst : instances) {
             long instStart = inst.getStart();
