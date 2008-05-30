@@ -17,6 +17,8 @@
 package com.zimbra.cs.fb;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,6 +37,7 @@ import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -94,6 +97,17 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
                 targetUrl.append(mStart);
                 targetUrl.append("&end=");
                 targetUrl.append(mEnd);
+                String authToken = null;
+                try {
+                    if (mSoapCtxt != null)
+                        authToken = mSoapCtxt.getAuthToken().getEncoded();
+                } catch (AuthTokenException e) {}
+                if (authToken != null) {
+                    targetUrl.append("&").append(UserServlet.QP_ZAUTHTOKEN).append("=");
+                    try {
+                        targetUrl.append(URLEncoder.encode(authToken, "UTF-8"));
+                    } catch (UnsupportedEncodingException e) {}
+                }
                 HttpClient client = new HttpClient();
                 NetUtil.configureProxy(client);
                 method = new GetMethod(targetUrl.toString());

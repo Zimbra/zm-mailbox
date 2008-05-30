@@ -103,8 +103,6 @@ public class FreeBusyQuery {
     	return null;
     }
     
-    private static boolean user2;
-    
     private void prepareRequests(ArrayList<FreeBusy> local, RemoteFreeBusyProvider remote, ArrayList<String> external) {
     	for (String id : mTargets.keySet()) {
     		Account acct = mTargets.get(id);
@@ -113,17 +111,13 @@ public class FreeBusyQuery {
     			continue;
     		}
     		try {
-    			if (id.startsWith("user2")) {
-    				if (!user2)
-    					user2 = true;
-    				else
-    					user2 = false;
-    			}
-        		if (Provisioning.onLocalServer(acct) && !user2) {
+        		if (Provisioning.onLocalServer(acct)) {
         		    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
         		    OperationContext octxt = null;
         		    if (mCtxt != null)
         		        octxt = new OperationContext(mCtxt.getAuthToken());
+        		    else if (mRequestor != null)
+        		        octxt = new OperationContext(mRequestor);
         		    local.add(mbox.getFreeBusy(octxt, id, mStart, mEnd));
         		} else {
         			remote.addFreeBusyRequest(mRequestor, acct, id, mStart, mEnd);
