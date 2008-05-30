@@ -199,7 +199,7 @@ public class ImapSync extends AbstractMailItemImport {
         if (tracker != null) {
             trackedFolders.remove(tracker);
         } else if (!dataSource.isSyncEnabled(folder.getPath())) {
-            LOG.info("Synchronization disabled for folder '%s'", name);
+            LOG.debug("Synchronization disabled for folder '%s'", name);
             return;
         }
         try {
