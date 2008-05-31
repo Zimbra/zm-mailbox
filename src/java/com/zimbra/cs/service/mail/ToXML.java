@@ -1622,20 +1622,18 @@ public class ToXML {
             try {
                 if (charset != null && !charset.trim().equals("")) {
                     stream = mp.getInputStream();
-                    // MimePart.getContentType() returns the entire content-type line
-                    // including charset attribute.
-                    // MPartInfo.getContentType() returns just type/subtype part.
-                    // Mime.getTextReader() expects charset attribute in the content type
-                    // otherwise it defaults to us-ascii, and that's not what we
-                    // want.
+                    // make sure to feed getTextReader() a full Content-Type header, not just the primary/subtype portion
                     Reader reader = Mime.getTextReader(stream, mp.getContentType(), defaultCharset);
                     data = HtmlDefang.defang(reader, neuter);
                 } else {
                     String cte = mp.getEncoding();
                     if (cte != null && !cte.trim().toLowerCase().equals(Mime.ET_7BIT)) {
-                        stream = mp.getInputStream();
-                        data = HtmlDefang.defang(stream, neuter);
-                    } else {
+                        try {
+                            stream = mp.getInputStream();
+                            data = HtmlDefang.defang(stream, neuter);
+                        } catch (IOException ioe) { }
+                    }
+                    if (data == null) {
                         data = Mime.getStringContent(mp, defaultCharset);
                         data = HtmlDefang.defang(data, neuter);
                     }
