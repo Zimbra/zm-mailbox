@@ -357,7 +357,7 @@ class ImapFolderSync {
             debug("Appending new message with item id %d", id);
             MimeMessage mm = msg.getMimeMessage(false);
             AppendInfo ai = new AppendInfo(msg, mm);
-            Flags flags = FlagsUtil.zimbraToImapFlags(ai.flags);
+            Flags flags = FlagsUtil.zimbraToImapFlags(ai.zflags);
             Date date = getInternalDate(msg, mm);
             ImapUtil.append(connection, remotePath, mm, flags, date);
             appended.put(appendKey(mm.getSentDate(), ai.messageId), ai);
@@ -375,7 +375,7 @@ class ImapFolderSync {
                     AppendInfo ai = appended.remove(key);
                     if (ai != null) {
                         long uid = md.getUid();
-                        storeImapMessage(uid, ai.itemId, ai.flags);
+                        storeImapMessage(uid, ai.itemId, ai.zflags);
                         ds.updateLastSyncUid(folderId, uid);
                     }
                 }
@@ -399,7 +399,7 @@ class ImapFolderSync {
                          ai.itemId, uid);
                     mailbox.delete(null, ai.itemId, MailItem.TYPE_UNKNOWN);
                 } else {
-                    storeImapMessage(uid, ai.itemId, ai.flags);
+                    storeImapMessage(uid, ai.itemId, ai.zflags);
                 }
             } else {
                 warn("Unable to determine UID for appended message with item id " +
@@ -429,14 +429,14 @@ class ImapFolderSync {
         final String subject;
         final Date sentDate;
         final String messageId;
-        final int flags;
+        final int zflags;
 
         AppendInfo(Message msg, MimeMessage mm) throws MessagingException {
             itemId = msg.getId();
             subject = mm.getSubject();
             messageId = mm.getMessageID();
             sentDate = mm.getSentDate();
-            flags = msg.getFlagBitmask();
+            zflags = msg.getFlagBitmask();
         }
     }
 
@@ -514,8 +514,8 @@ class ImapFolderSync {
             Long uid = md.getUid();
             ImapMessage trackedMsg = trackedMsgs.getByUid(uid);
             if (trackedMsg == null) {
-                info("Ignoring flags for message with uid %d because it is " +
-                     "not being tracked", uid);
+                info("Ignoring flags for message with uid %d because it " +
+                     " is not being tracked", uid);
                 continue;
             }
             int msgId = trackedMsg.getItemId();
@@ -649,7 +649,7 @@ class ImapFolderSync {
                 }
             });
     }
-    
+
     private void handleFetch(MessageData md, Map<Long, MessageData> mds)
         throws ServiceException, IOException {
         long uid = md.getUid();
@@ -670,11 +670,10 @@ class ImapFolderSync {
         if (pm == null) {
             return; // Parse error
         }
-
-        int flags = FlagsUtil.imapToZimbraFlags(flagsData.getFlags());
-        int msgId = imapSync.addMessage(pm, folder.getId(), flags);
+        int zflags = FlagsUtil.imapToZimbraFlags(flagsData.getFlags());
+        int msgId = imapSync.addMessage(pm, folder.getId(), zflags);
         DbImapMessage.storeImapMessage(
-            mailbox, tracker.getItemId(), uid, msgId, flags);
+            mailbox, tracker.getItemId(), uid, msgId, zflags);
         stats.addedLocally++;
     }
 
