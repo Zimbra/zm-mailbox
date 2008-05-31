@@ -142,8 +142,9 @@ public final class ImapConnection extends MailConnection {
     }
 
     @Override
-    protected void sendStartTls() throws IOException {
+    protected boolean sendStartTls() throws IOException {
         newRequest(CAtom.STARTTLS).sendCheckStatus();
+        return true;
     }
 
     public ImapCapabilities capability() throws IOException {
