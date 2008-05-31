@@ -96,7 +96,7 @@ public abstract class MailConnection {
     protected abstract void processGreeting() throws IOException;
     protected abstract void sendLogin(String user, String pass) throws IOException;
     protected abstract void sendAuthenticate(boolean ir) throws IOException;
-    protected abstract void sendStartTls() throws IOException;
+    protected abstract boolean sendStartTls() throws IOException;
     protected abstract MailInputStream newMailInputStream(InputStream is);
     protected abstract MailOutputStream newMailOutputStream(OutputStream os);
     public abstract Logger getLogger();
@@ -166,10 +166,11 @@ public abstract class MailConnection {
 
     private void startTls() throws IOException {
         checkState(State.NOT_AUTHENTICATED);
-        sendStartTls();
-        SSLSocket sock = newSSLSocket(socket);
-        sock.startHandshake();
-        initStreams(sock.getInputStream(), sock.getOutputStream());
+        if (sendStartTls()) {
+            SSLSocket sock = newSSLSocket(socket);
+            sock.startHandshake();
+            initStreams(sock.getInputStream(), sock.getOutputStream());
+        }
     }
 
     public String getNegotiatedQop() {

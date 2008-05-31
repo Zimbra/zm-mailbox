@@ -120,16 +120,23 @@ public final class Pop3Connection extends MailConnection {
 
     @Override
     protected boolean isTlsEnabled() {
-        return super.isTlsEnabled() && hasCapability(Pop3Capabilities.STLS);
+        // Bug 28276: failed CAPA command shouldn't prevent us from trying
+        // STLS. This supports servers with broken support for RFC 2449.
+        return super.isTlsEnabled() &&
+            (capabilities == null || hasCapability(Pop3Capabilities.STLS));
     }
 
     @Override
-    protected void sendStartTls() throws IOException {
-        sendCommandCheckStatus(STLS, null);
+    protected boolean sendStartTls() throws IOException {
+        Pop3Response res = sendCommand(STLS, null);
+        return res.isOK();
     }
 
     private Pop3Capabilities capa() throws IOException {
-        Pop3Response res = sendCommandCheckStatus(CAPA, null);
+        Pop3Response res = sendCommand(CAPA, null);
+        if (!res.isOK()) {
+            return null; // RFC 2449 not supported
+        }
         try {
             return Pop3Capabilities.read(res.getContentInputStream());
         } finally {
