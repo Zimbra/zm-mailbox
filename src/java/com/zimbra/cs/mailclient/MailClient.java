@@ -17,6 +17,7 @@
 package com.zimbra.cs.mailclient;
 
 import static com.zimbra.cs.mailclient.auth.SaslAuthenticator.*;
+import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
 import com.zimbra.cs.mailclient.util.SSLUtil;
 import com.zimbra.cs.mailclient.util.Password;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
@@ -32,6 +33,8 @@ import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
+import java.util.Map;
+import java.util.HashMap;
 
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
@@ -53,7 +56,7 @@ public abstract class MailClient {
         BasicConfigurator.configure();
         Logger.getRootLogger().setLevel(Level.INFO);
         config.setTrace(true);
-        config.setRawMode(true);
+        config.setSynchronousMode(true);
         parseArguments(args);
         connect();
         authenticate();
@@ -70,7 +73,7 @@ public abstract class MailClient {
     }
 
     protected void authenticate() throws LoginException, IOException {
-        if (password == null && config.isPasswordRequired()) {
+        if (password == null && isPasswordRequired()) {
             password = Password.read("Password: ");
         }
         if (config.getAuthenticationId() == null) {
@@ -80,6 +83,15 @@ public abstract class MailClient {
         connection.authenticate(password);
         String qop = connection.getNegotiatedQop();
         if (qop != null) System.out.printf("[Negotiated QOP is %s]\n", qop);
+    }
+
+    private boolean isPasswordRequired() {
+        String mech = config.getMechanism();
+        if (mech != null) {
+            AuthenticatorFactory af = config.getAuthenticatorFactory();
+            return af != null && af.isPasswordRequired(mech);
+        }
+        return false;
     }
     
     private static MailConnection newConnection(MailConfig config) {
@@ -220,7 +232,9 @@ public abstract class MailClient {
         }
         // If SSL is enabled then only QOP_AUTH is supported
         if (!config.isSslEnabled()) {
-            config.setSaslProperty(Sasl.QOP, getQop(minQop, maxQop));
+            Map<String, String> props = new HashMap<String, String>();
+            props.put(Sasl.QOP, getQop(minQop, maxQop));
+            config.setSaslProperties(props);
         }
         return true;
     }

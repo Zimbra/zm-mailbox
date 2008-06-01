@@ -26,10 +26,8 @@ import com.zimbra.cs.mailclient.imap.CAtom;
 import com.zimbra.cs.mailclient.imap.ListData;
 import com.zimbra.cs.mailclient.imap.Mailbox;
 import com.zimbra.cs.mailclient.imap.IDInfo;
-import com.zimbra.cs.mailclient.imap.MailboxName;
 import com.zimbra.cs.mailclient.imap.Flags;
 import com.zimbra.cs.mailclient.imap.Literal;
-import com.zimbra.cs.mailclient.imap.BodyStructure;
 import com.zimbra.cs.mailclient.imap.Body;
 import com.zimbra.cs.mailclient.util.SSLUtil;
 import com.zimbra.cs.mailclient.util.Ascii;
@@ -37,7 +35,6 @@ import com.zimbra.cs.mailclient.CommandFailedException;
 import junit.framework.TestCase;
 
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.List;
 import java.util.Date;
@@ -155,6 +152,7 @@ public class TestImapClient extends TestCase {
         mb = connection.select("INBOX");
         assertEquals(exists, mb.getExists() - 1);
         connection.expunge();
+        mb = connection.select("INBOX");
         assertEquals(exists, mb.getExists());
     }
 
@@ -263,7 +261,8 @@ public class TestImapClient extends TestCase {
     }
 
     private static ImapConfig getConfig(boolean ssl) throws IOException {
-        ImapConfig config = new ImapConfig(HOST, ssl);
+        ImapConfig config = new ImapConfig(HOST);
+        config.setSslEnabled(ssl);
         config.setPort(ssl ? SSL_PORT : PORT);
         if (ssl) {
             config.setSSLSocketFactory(SSLUtil.getDummySSLContext().getSocketFactory());

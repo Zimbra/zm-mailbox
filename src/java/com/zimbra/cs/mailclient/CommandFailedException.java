@@ -16,8 +16,30 @@
  */
 package com.zimbra.cs.mailclient;
 
+/**
+ * Indicates that a mail protocol command has failed.
+ */
 public class CommandFailedException extends MailException {
+    private final String cmd;
+
+    /**
+     * Creates a new <tt>CommandFailedException</tt> for the specified
+     * command and detail message.
+     * 
+     * @param cmd the name of the failed command
+     * @param msg the detail message, or <tt>null</tt> if none
+     */
     public CommandFailedException(String cmd, String msg) {
         super(cmd + " failed: " + msg);
+        this.cmd = cmd;
+    }
+
+    /**
+     * Returns the name of the command that failed.
+     * 
+     * @return the name of the failed command
+     */
+    public String getCommand() {
+        return cmd;
     }
 }
