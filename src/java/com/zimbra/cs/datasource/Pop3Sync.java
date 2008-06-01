@@ -19,6 +19,7 @@ package com.zimbra.cs.datasource;
 import com.zimbra.cs.mailclient.pop3.Pop3Connection;
 import com.zimbra.cs.mailclient.pop3.Pop3Config;
 import com.zimbra.cs.mailclient.pop3.Pop3Capabilities;
+import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
@@ -144,12 +145,8 @@ public class Pop3Sync extends AbstractMailItemImport {
         int count = connection.getMessageCount();
         LOG.info("Found %d new message(s) on remote server", count);
         for (int msgno = count; msgno > 0; --msgno) {
-            InputStream is = connection.getMessage(msgno);
-            try {
-                addMessage(is, null);
-            } finally {
-                is.close();
-            }
+            LOG.debug("Fetching message number %d", msgno);
+            fetchAndAddMessage(msgno, null);
             connection.deleteMessage(msgno);
         }
     }
@@ -175,14 +172,23 @@ public class Pop3Sync extends AbstractMailItemImport {
         for (int msgno = uids.size(); msgno > 0; --msgno) {
             String uid = uids.get(msgno - 1);
             if (!existingUids.contains(uid)) {
-                LOG.debug("Fetching message with uid = %s", uid);
-                InputStream is = connection.getMessage(msgno);
-                try {
-                    addMessage(is, uid);
-                } finally {
-                    is.close();
-                }
+                LOG.debug("Fetching message with uid %s", uid);
+                fetchAndAddMessage(msgno, uid);
             }
+        }
+    }
+
+    private void fetchAndAddMessage(int msgno, String uid)
+        throws ServiceException, MessagingException, IOException {
+        try {
+            InputStream is = connection.getMessage(msgno);
+            try {
+                addMessage(is, uid);
+            } finally {
+                is.close();
+            }
+        } catch (CommandFailedException e) {
+            LOG.warn("Error fetching message number %d: %s", msgno, e.getMessage());
         }
     }
 
