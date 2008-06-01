@@ -55,7 +55,11 @@ public class SaslAuthenticator extends Authenticator {
         checkRequired("authentication id", config.getAuthenticationId());
         saslClient = mechanism.equals(MECHANISM_GSSAPI) ?
             createGssSaslClient() : createSaslClient();
-        String qop = config.getSaslProperty(Sasl.QOP);
+        Map<String, String> props = config.getSaslProperties();
+        String qop = QOP_AUTH;
+        if (props != null) {
+            qop = props.get(Sasl.QOP);
+        }
         debug("Requested QOP is %s", qop != null ? qop : "auth");
     }
 

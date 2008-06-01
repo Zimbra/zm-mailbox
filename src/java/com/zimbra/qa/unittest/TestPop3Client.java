@@ -153,7 +153,8 @@ public class TestPop3Client extends TestCase {
     }
 
     private static Pop3Config getConfig(boolean ssl) throws IOException {
-        Pop3Config config = new Pop3Config(HOST, ssl);
+        Pop3Config config = new Pop3Config(HOST);
+        config.setSslEnabled(ssl);
         config.setPort(ssl ? SSL_PORT : PORT);
         config.setSSLSocketFactory(SSLUtil.getDummySSLContext().getSocketFactory());
         config.setDebug(DEBUG);

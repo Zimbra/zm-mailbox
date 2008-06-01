@@ -19,24 +19,53 @@ package com.zimbra.cs.mailclient.pop3;
 import com.zimbra.cs.mailclient.MailConfig;
 
 /**
- * POP3 client configuration.
+ * Represents POP3 mail client configuration.
  */
 public class Pop3Config extends MailConfig {
+    /** POP3 configuration protocol name */
     public static final String PROTOCOL = "pop3";
-    
+
+    /** Default port for POP3 plain text connection */
     public static final int DEFAULT_PORT = 110;
+
+    /** Default port for POP3 SSL connection */
     public static final int DEFAULT_SSL_PORT = 995;
 
+    /**
+     * Creates a new <tt>Pop3Config</tt>.
+     */
     public Pop3Config() {}
 
-    public Pop3Config(String host, boolean sslEnabled) {
-        super(host, sslEnabled);
+    /**
+     * Creates a new <tt>Pop3Config</tt> for the specified server host.
+     *  
+     * @param host the server host name
+     */
+    public Pop3Config(String host) {
+        super(host);
     }
-    
-    public String getProtocol() { return PROTOCOL; }
 
+    /**
+     * Returns the POP3 protocol name (value of {@link #PROTOCOL}).
+     *
+     * @return the POP3 protocol name
+     */
+    @Override
+    public String getProtocol() {
+        return PROTOCOL;
+    }
+
+    /**
+     * Returns the POP3 server port number. If not set, the default is
+     * {@link #DEFAULT_PORT} for a plain text connection and
+     * {@link #DEFAULT_SSL_PORT} for an SSL connection.
+     *
+     * @return the POP3 server port number
+     */
+    @Override
     public int getPort() {
+        int port = super.getPort();
         if (port != -1) return port;
-        return sslEnabled ? DEFAULT_SSL_PORT : DEFAULT_PORT;
+        return isSslEnabled() ? DEFAULT_SSL_PORT : DEFAULT_PORT;
     }
 }

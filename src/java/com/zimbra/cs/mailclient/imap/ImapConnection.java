@@ -78,7 +78,7 @@ public final class ImapConnection extends MailConnection {
     @Override
     public synchronized void connect() throws IOException {
         super.connect();
-        if (!config.isRawMode()) {
+        if (!config.isSynchronousMode()) {
             startReader();
         }
     }
