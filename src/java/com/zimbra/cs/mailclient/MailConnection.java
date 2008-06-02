@@ -29,16 +29,19 @@ import javax.security.sasl.SaslException;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.io.OutputStream;
 import java.io.InputStream;
 import java.net.Socket;
 
 import com.zimbra.cs.mailclient.util.TraceInputStream;
 import com.zimbra.cs.mailclient.util.TraceOutputStream;
+import com.zimbra.cs.mailclient.util.Ascii;
 import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
 import com.zimbra.cs.mailclient.auth.Authenticator;
 
+/**
+ * Base class for all mail protocol connection types.
+ */
 public abstract class MailConnection {
     protected MailConfig config;
     protected Socket socket;
@@ -49,13 +52,16 @@ public abstract class MailConnection {
     protected MailOutputStream mailOut;
     protected State state = State.CLOSED;
 
+    /** Connection states */
     protected enum State {
         CLOSED, NOT_AUTHENTICATED, AUTHENTICATED, SELECTED, LOGOUT
     }
-    private static final String LOGIN = "LOGIN";
-
-    protected MailConnection() {}
-
+    
+    /**
+     * Creates a new <tt>MailConnection<tt> for the specified configuration.
+     *
+     * @param config the <tt>MailConfig</tt> for the connection
+     */
     protected MailConnection(MailConfig config) {
         this.config = config;
         if (config.isDebug()) {
@@ -63,6 +69,13 @@ public abstract class MailConnection {
         }
     }
 
+    /**
+     * Opens connection to the mail server. Does nothing if the connection
+     * is already open. If TLS is enabled then automatically initiated TLS
+     * handshake.
+     *
+     * @throws IOException if an I/O error occurs
+     */
     public synchronized void connect() throws IOException {
         if (!isClosed()) return;
         try {
@@ -89,20 +102,97 @@ public abstract class MailConnection {
         mailOut = newMailOutputStream(os);
     }
 
+    /**
+     * Returns <tt>true</tt> if TLS should be enabled for this connection.
+     * By default, TLS is enabled if the mail configuration specifies that TLS
+     * should be enabled and SSL is <i>not</i> enabled.
+     *
+     * @return <tt>true</tt> if TLS should be enabled, <tt>false</tt> if not
+     */
     protected boolean isTlsEnabled() {
         return config.isTlsEnabled() && !config.isSslEnabled();
     }
-    
+
+    /**
+     * Processes greeting message from mail server.
+     *
+     * @throws IOException if an I/O error occurs
+     */
     protected abstract void processGreeting() throws IOException;
+
+    /**
+     * Sends login information to server. This is used if SASL authentication
+     * has not been specified in the mail configuration.
+     *
+     * @param user the login username
+     * @param pass the login password
+     * @throws CommandFailedException if the login command failed
+     * @throws IOException if an I/O error occurs
+     */
     protected abstract void sendLogin(String user, String pass) throws IOException;
+
+    /**
+     * Sents authentication information to server. This is used if SASL
+     * authentication has been specified in the mail configuration for
+     * the connection. The method {@link MailConfig#getMechanism()} returns
+     * the SASL mechanism to use for authentication.
+     *
+     * @param ir if <tt>true</tt> then sends initial response
+     * @throws CommandFailedException if the authentication command failed
+     * @throws IOException if an I/O error occurs
+     */
     protected abstract void sendAuthenticate(boolean ir) throws IOException;
-    protected abstract boolean sendStartTls() throws IOException;
+
+    /**
+     * Sends TLS start command to the server. This will be called if
+     * {@link #isTlsEnabled()} returns <tt>true</tt>.
+     *
+     * @throws CommandFailedException if the start TLS command failed
+     * @throws IOException if an I/O error occurs
+     */
+    protected abstract void sendStartTls() throws IOException;
+
+    /**
+     * Creates a new <tt>MailInputStream</tt> for the specified input stream.
+     * This method should be overriden to return a <tt>MailInputStream</tt>
+     * suitable for the specific protocol type.
+     *
+     * @param is the underlying input stream
+     * @return the new <tt>MailInputStream</tt>
+     */
     protected abstract MailInputStream newMailInputStream(InputStream is);
+
+    /**
+     * Creates a new <tt>MailOutputStream</tt> for the specified output stream.
+     * This method should be overriden to return a <tt>MailOutputStream</tt>
+     * suitable for the specific protocol type.
+     *
+     * @param os the underlying output stream
+     * @return the new <tt>MailOutputStream</tt>
+     */
     protected abstract MailOutputStream newMailOutputStream(OutputStream os);
+
+    /**
+     * Returns the <tt>Logger</tt> to use for logging mail client errors.
+     * @return the <tt>Logger</tt> for mail client errors
+     */
     public abstract Logger getLogger();
 
+    /**
+     * Logs out current user from server.
+     *
+     * @throws IOException if an I/O error occurs
+     */
     public abstract void logout() throws IOException;
 
+    /**
+     * Logs in configured user using the specified password. The login user
+     * is obtained by calling {@link MailConfig#getAuthenticationId()}.
+     *
+     * @param pass the login password
+     * @throws CommandFailedException if the login command failed
+     * @throws IOException if an I/O error occurs
+     */
     public synchronized void login(String pass) throws IOException {
         if (pass == null) throw new NullPointerException("password");
         checkState(State.NOT_AUTHENTICATED);
@@ -113,12 +203,24 @@ public abstract class MailConnection {
         sendLogin(user, pass);
         setState(State.AUTHENTICATED);
     }
-    
+
+    /**
+     * Authenticates the user with the specified optional password. The
+     * SASL authentication method to use is obtained by calling
+     * {@link MailConfig#getMechanism()}. Various other configuration
+     * properties are used to support authentication.
+     *
+     * @param pass the authentication password, or <tt>null</tt> if not required
+     * @throws CommandFailedException if the authentication command failed
+     * @throws LoginException if the login failed due to a SASL authenticator error
+     * @throws IOException if an I/O error occurs
+     */
     public synchronized void authenticate(String pass)
         throws LoginException, IOException {
         checkState(State.NOT_AUTHENTICATED);
         String mech = config.getMechanism();
-        if (mech == null || mech.equalsIgnoreCase(LOGIN)) {
+        // TODO Get rid of this
+        if (mech == null || mech.equalsIgnoreCase("LOGIN")) {
             login(pass);
             return;
         }                  
@@ -139,45 +241,54 @@ public abstract class MailConnection {
         }
         return af.newAuthenticator(config, pass);
     }
-    
+
+    /**
+     * Processes an authentication continuation request from the server.
+     * In response, this may write another continuation response to the
+     * server.
+     * 
+     * @param s the continuation request to be processed
+     * @throws IOException if an I/O error occurs
+     */
     protected void processContinuation(String s) throws IOException {
-        byte[] response = authenticator.evaluateChallenge(decodeBase64(s));
-        if (response != null) {
-            mailOut.writeLine(encodeBase64(response));
+        byte[] decoded = Base64.decodeBase64(Ascii.getBytes(s));
+        byte[] request = authenticator.evaluateChallenge(decoded);
+        if (request != null) {
+            mailOut.writeLine(Ascii.toString(Base64.encodeBase64(request)));
             mailOut.flush();
-        }
-    }
-
-    protected static byte[] decodeBase64(String s) throws SaslException {
-        try {
-            return Base64.decodeBase64(s.getBytes("us-ascii"));
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException("US-ASCII encoding unsupported");
-        }
-    }
-
-    protected static String encodeBase64(byte[] b) {
-        try {
-            return new String(Base64.encodeBase64(b), "us-ascii");
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException("US-ASCII encoding unsupported");
         }
     }
 
     private void startTls() throws IOException {
         checkState(State.NOT_AUTHENTICATED);
-        if (sendStartTls()) {
-            SSLSocket sock = newSSLSocket(socket);
-            sock.startHandshake();
-            initStreams(sock.getInputStream(), sock.getOutputStream());
+        try {
+            sendStartTls();
+        } catch (CommandFailedException e) {
+            getLogger().warn("Start TLS failed", e);
+            return;
         }
+        SSLSocket sock = newSSLSocket(socket);
+        sock.startHandshake();
+        initStreams(sock.getInputStream(), sock.getOutputStream());
     }
 
+    /**
+     * If SASL authentication was used, then returns the negotiated quality
+     * of protection for the connection.
+     *
+     * @return the SASL quality of protection, or <tt>null</tt> if not yet
+     *         authenticated or SASL authentication was not used
+     */
     public String getNegotiatedQop() {
         return authenticator != null ?
             authenticator.getNegotiatedProperty(Sasl.QOP) : null;
     }
 
+    /**
+     * Optionally enables protocol tracing for the connection.
+     *
+     * @param enabled tracing enabled if <tt>true</tt>, disabled if <tt>false</tt>
+     */
     public void setTraceEnabled(boolean enabled) {
         if (traceIn != null) {
             traceIn.setEnabled(enabled);
@@ -187,30 +298,64 @@ public abstract class MailConnection {
         }
     }
 
+    /**
+     * Returns the input stream for reading mail data.
+     *
+     * @return the connection input stream
+     */
     public MailInputStream getInputStream() {
         return mailIn;
     }
 
+    /**
+     * Returns the output stream for writing mail data.
+     * 
+     * @return the connection output stream
+     */
     public MailOutputStream getOutputStream() {
         return mailOut;
     }
 
+    /**
+     * Returns the configuration for the connection.
+     *
+     * @return the mail configuration
+     */
     public MailConfig getConfig() {
         return config;
     }
 
+    /**
+     * Returns <tt>true</tt> if the connection is closed.
+     *
+     * @return <tt>true</tt> if connection closed, <tt>false</tt> if not
+     */
     public synchronized boolean isClosed() {
         return state == State.CLOSED;
     }
 
+    /**
+     * Returns <tt>true</tt> if the connection has been authenticated.
+     *
+     * @return <tt>true</tt> if connection authenticated, <tt>false<tt> if not
+     */
     public synchronized boolean isAuthenticated() {
         return state == State.AUTHENTICATED;
     }
 
+    /**
+     * Returns <tt>true</tt> if connection logout is in progress.
+     * @return <tt>true</tt> if logout in progress, <tt>false</tt> if not
+     */
     public synchronized boolean isLogout() {
         return state == State.LOGOUT;
     }
 
+    /**
+     * Sets the new connection state.
+     *
+     * @param state the new connection <tt>State</tt>
+     */
     protected synchronized void setState(State state) {
         if (this.state != state) {
             getLogger().debug("setState: " + this.state + " -> " + state);
@@ -218,13 +363,24 @@ public abstract class MailConnection {
         }
     }
 
+    /**
+     * Compares current connection state with expected state. If the states
+     * are not the same then throws <tt>IllegalStateException</tt>.
+     *
+     * @param expected the <tt>State</tt> that is expected
+     * @throws IllegalStateException if the current and expected states differ
+     */
     protected void checkState(State expected) {
         if (state != expected) {
             throw new IllegalStateException(
                 "Operation not supported in " + state + " state");
         }
     }
-    
+
+    /**
+     * Closes the current connection and cleans up any associated resources.
+     * The connections state is set to <tt>CLOSED</tt>.
+     */
     public synchronized void close() {
         if (isClosed()) return;
         setState(State.CLOSED);

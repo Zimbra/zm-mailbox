@@ -140,7 +140,6 @@ public final class MailboxName {
             index++;
             bits = bits << 16 | c;
             count += 2;
-            System.out.println("Count = " + count);
             if (count == 4) {
                 encodePEM(sb, bits >>> 8, 3);
                 bits &= 0xff;
@@ -159,7 +158,6 @@ public final class MailboxName {
     }
     
     private static void encodePEM(StringBuilder sb, int bits, int count) {
-        System.out.printf("bits = %x\n", bits);
         switch (count) {
         case 3:
             sb.append(encodePEM(bits, 18));
