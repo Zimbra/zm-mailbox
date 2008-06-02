@@ -129,7 +129,7 @@ public class Collection extends MailItemResource {
 		try {
 			Mailbox mbox = getMailbox(ctxt);
 			Folder f = mbox.createFolder(ctxt.getOperationContext(), name, mId, view, 0, (byte)0, null);
-			return new Collection(ctxt, f);
+			return (Collection)UrlNamespace.getResourceFromMailItem(ctxt, f);
 		} catch (ServiceException e) {
 			if (e.getCode().equals(MailServiceException.ALREADY_EXISTS))
 				throw new DavException("item already exists", HttpServletResponse.SC_CONFLICT, e);
