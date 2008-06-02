@@ -43,7 +43,7 @@ import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
-import com.zimbra.cs.service.ZimbraAuthProvider;
+import com.zimbra.cs.service.AuthProvider;
 
 class ImapProxy {
     private static final AuthenticatorFactory sAuthenticatorFactory = new AuthenticatorFactory();
@@ -63,7 +63,7 @@ class ImapProxy {
         Server server = Provisioning.getInstance().getServer(path.getOwnerAccount());
         String host = server.getAttr(Provisioning.A_zimbraServiceHostname);
         if (acct == null)
-            throw ImapServiceException.PROXY_ERROR(new Exception("no such authenticated user"), path.asImapPath());
+            throw ServiceException.PROXY_ERROR(new Exception("no such authenticated user"), path.asImapPath());
 
         ImapConfig config = new ImapConfig();
         config.setAuthenticationId(acct.getName());
@@ -77,7 +77,7 @@ class ImapProxy {
             config.setPort(server.getIntAttr(Provisioning.A_zimbraImapSSLBindPort, ImapConfig.DEFAULT_SSL_PORT));
             config.setSslEnabled(true);
         } else {
-            throw ImapServiceException.PROXY_ERROR(new Exception("no open IMAP port for server " + host), path.asImapPath());
+            throw ServiceException.PROXY_ERROR(new Exception("no open IMAP port for server " + host), path.asImapPath());
         }
 
         ZimbraLog.imap.info("opening proxy connection (user=" + acct.getName() + ", host=" + host + ", path=" + path.getReferent().asImapPath() + ')');
@@ -85,7 +85,7 @@ class ImapProxy {
         ImapConnection conn = mConnection = new ImapConnection(config);
         try {
             conn.connect();
-            conn.authenticate(ZimbraAuthProvider.getAuthToken(acct).getEncoded());
+            conn.authenticate(AuthProvider.getAuthToken(acct).getEncoded());
         } catch (Exception e) {
             dropConnection();
             throw ServiceException.PROXY_ERROR(e, null);
@@ -119,7 +119,7 @@ class ImapProxy {
 
         StringBuilder select = new StringBuilder(100).append(tag).append(' ');
         select.append((params & ImapFolder.SELECT_READONLY) == 0 ? "SELECT" : "EXAMINE").append(' ');
-        select.append(mPath.getReferent().asImapPath());
+        select.append(mPath.getReferent().asUtf7String());
         if ((params & ImapFolder.SELECT_CONDSTORE) != 0) {
             select.append(" (");
             if (qri == null) {
