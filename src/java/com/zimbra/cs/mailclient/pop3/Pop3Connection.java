@@ -21,6 +21,7 @@ import com.zimbra.cs.mailclient.MailException;
 import com.zimbra.cs.mailclient.MailInputStream;
 import com.zimbra.cs.mailclient.MailOutputStream;
 import com.zimbra.cs.mailclient.CommandFailedException;
+import com.zimbra.cs.mailclient.util.Ascii;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.Arrays;
 
 import org.apache.log4j.Logger;
+import org.apache.commons.codec.binary.Base64;
 
 import javax.security.auth.login.LoginException;
 
@@ -113,7 +115,8 @@ public final class Pop3Connection extends MailConnection {
         StringBuffer sb = new StringBuffer(config.getMechanism());
         if (ir) {
             byte[] response = authenticator.getInitialResponse();
-            sb.append(' ').append(encodeBase64(response));
+            sb.append(' ');
+            sb.append(Ascii.toString(Base64.encodeBase64(response)));
         }
         sendCommandCheckStatus(AUTH, sb.toString());
     }
@@ -127,9 +130,8 @@ public final class Pop3Connection extends MailConnection {
     }
 
     @Override
-    protected boolean sendStartTls() throws IOException {
-        Pop3Response res = sendCommand(STLS, null);
-        return res.isOK();
+    protected void sendStartTls() throws IOException {
+        sendCommandCheckStatus(STLS, null);
     }
 
     private Pop3Capabilities capa() throws IOException {

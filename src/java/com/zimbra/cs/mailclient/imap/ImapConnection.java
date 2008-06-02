@@ -22,6 +22,7 @@ import com.zimbra.cs.mailclient.MailInputStream;
 import com.zimbra.cs.mailclient.MailOutputStream;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.util.TraceOutputStream;
+import com.zimbra.cs.mailclient.util.Ascii;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,6 +37,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.zimbra.cs.mailclient.imap.ImapData.asAString;
 import org.apache.log4j.Logger;
+import org.apache.commons.codec.binary.Base64;
 
 public final class ImapConnection extends MailConnection {
     private ImapCapabilities capabilities;
@@ -136,15 +138,14 @@ public final class ImapConnection extends MailConnection {
         ImapRequest req = newRequest(CAtom.AUTHENTICATE, config.getMechanism());
         if (ir) {
             byte[] response = authenticator.getInitialResponse();
-            req.addParam(encodeBase64(response));
+            req.addParam(Ascii.toString(Base64.encodeBase64(response)));
         }
         req.sendCheckStatus();
     }
 
     @Override
-    protected boolean sendStartTls() throws IOException {
+    protected void sendStartTls() throws IOException {
         newRequest(CAtom.STARTTLS).sendCheckStatus();
-        return true;
     }
 
     public ImapCapabilities capability() throws IOException {
