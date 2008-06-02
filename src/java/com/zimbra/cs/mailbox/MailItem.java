@@ -389,8 +389,9 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (mData.children != null && !canHaveChildren())
             mData.children = null;
         decodeMetadata(mData.metadata);
-        // store the item in the mailbox's cache
-        mbox.cache(this);
+        mData.metadata = null;
+        if ((data.flags & Flag.BITMASK_UNCACHED) == 0)
+            mbox.cache(this);           // store the item in the mailbox's cache
     }
 
     /** Returns the item's ID.  IDs are unique within a {@link Mailbox} and
@@ -546,6 +547,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     /** Returns the item's underlying storage data so that it may be persisted
      * somewhere besides the database - usually in encoded form */
     public UnderlyingData getUnderlyingData() {
+        mData.metadata = encodeMetadata();
         return mData;
     }
 
