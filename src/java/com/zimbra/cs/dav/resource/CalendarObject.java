@@ -70,8 +70,7 @@ public interface CalendarObject {
                 path.append("/");
             path.append(uid);
             path.append(CAL_EXTENSION);
-            // XXX iCal doesn't handle unescaped URL in some cases
-            return URLUtil.urlEscape(path.toString());
+            return path.toString();
         }
     }
     public static class LocalCalendarObject extends MailItemResource implements CalendarObject {

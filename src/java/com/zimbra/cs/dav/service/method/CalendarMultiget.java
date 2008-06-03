@@ -18,8 +18,12 @@ package com.zimbra.cs.dav.service.method;
 
 import javax.servlet.http.HttpServletResponse;
 
+import java.io.IOException;
+import java.net.URLDecoder;
+
 import org.dom4j.Element;
 
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -45,12 +49,17 @@ public class CalendarMultiget extends Report {
 		RequestProp reqProp = getRequestProp(ctxt);
 		for (Object obj : query.elements(DavElements.E_HREF)) {
 			if (obj instanceof Element) {
-				Element href = (Element) obj;
-                try {
-                    DavResource rs = UrlNamespace.getResourceAtUrl(ctxt, href.getText());
+				String href = ((Element)obj).getText();
+				try {
+					href = URLDecoder.decode(href, "UTF-8");
+				} catch (IOException e) {
+					ZimbraLog.dav.warn("can't decode href "+href, e);
+				}
+				try {
+                    DavResource rs = UrlNamespace.getResourceAtUrl(ctxt, href);
                     resp.addResource(ctxt, rs, reqProp, false);
                 } catch (Exception e) {
-                    resp.addStatus(ctxt, href.getText(), HttpServletResponse.SC_NOT_FOUND);
+                    resp.addStatus(ctxt, href, HttpServletResponse.SC_NOT_FOUND);
                 }
 			}
 		}
