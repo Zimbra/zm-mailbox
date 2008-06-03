@@ -3284,5 +3284,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>help URL for standard client</desc>
 </attr>
 
+<attr id="678" name="zimbraPrefAdvancedClientEnforceMinDisplay" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>After login, whether the advanced client should enforce minimum display resolution</desc>
+</attr>
+
   
 </attrs>
