@@ -87,11 +87,11 @@ public abstract class MailClient {
 
     private boolean isPasswordRequired() {
         String mech = config.getMechanism();
-        if (mech != null) {
-            AuthenticatorFactory af = config.getAuthenticatorFactory();
-            return af != null && af.isPasswordRequired(mech);
+        if (mech == null) {
+            return true;
         }
-        return false;
+        AuthenticatorFactory af = config.getAuthenticatorFactory();
+        return af != null && af.isPasswordRequired(mech);
     }
     
     private static MailConnection newConnection(MailConfig config) {
