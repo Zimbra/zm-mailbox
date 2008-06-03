@@ -21,17 +21,18 @@ package com.zimbra.cs.mailclient;
  */
 public class CommandFailedException extends MailException {
     private final String cmd;
+    private final String error;
 
     /**
      * Creates a new <tt>CommandFailedException</tt> for the specified
      * command and detail message.
      * 
      * @param cmd the name of the failed command
-     * @param msg the detail message, or <tt>null</tt> if none
+     * @param error the error message, or <tt>null</tt> if none
      */
-    public CommandFailedException(String cmd, String msg) {
-        super(cmd + " failed: " + msg);
+    public CommandFailedException(String cmd, String error) {
         this.cmd = cmd;
+        this.error = error;
     }
 
     /**
@@ -41,5 +42,24 @@ public class CommandFailedException extends MailException {
      */
     public String getCommand() {
         return cmd;
+    }
+
+    /**
+     * Returns the error that caused the failure
+     *
+     * @return the error message, or <tt>null</tt> if unknown
+     */
+    public String getError() {
+        return error;
+    }
+
+    /**
+     * Returns the exception detail message.
+     * 
+     * @return the exception detail message
+     */
+    @Override
+    public String getMessage() {
+        return error != null ? cmd + " failed: " + error : cmd + " failed";
     }
 }
