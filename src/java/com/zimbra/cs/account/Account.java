@@ -21,6 +21,7 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.accesscontrol.Right;
 
 /**
  * @author schemers
@@ -142,7 +143,10 @@ public class Account extends MailTarget {
         if (authAccount != null && targetAccount != null) {
             if (authAccount.getId().equalsIgnoreCase(targetAccount.getId()))
                 return true;
-            if (AccessManager.getInstance().canAccessAccount(authAccount, targetAccount, asAdmin))
+            AccessManager accessMgr = AccessManager.getInstance();
+            if (accessMgr.canAccessAccount(authAccount, targetAccount, asAdmin))
+                return true;
+            if (accessMgr.canPerform(authAccount, targetAccount, Right.RT_private, asAdmin, false))
                 return true;
         }
         return false;
