@@ -3268,14 +3268,5 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>value for postfix non_smtpd_milters</desc>
 </attr>
 
-<attr id="674" name="zimbraPrefAdvancedClientEnforceMinDisplay" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
-  <defaultCOSValue>TRUE</defaultCOSValue>
-  <desc>After login, whether the advanced client should enforce minimum display resolution</desc>
-</attr>
-
-<attr id="675" name="zimbraAdvancedClientEnforceMinDisplay" type="boolean" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo">
-  <globalConfigValue>TRUE</globalConfigValue>
-  <desc>On the login page, whether the advanced client should enforce minimum display resolution</desc>
-</attr>
   
 </attrs>
