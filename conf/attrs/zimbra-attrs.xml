@@ -3268,5 +3268,21 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>value for postfix non_smtpd_milters</desc>
 </attr>
 
+<attr id="674" name="zimbraHelpAdminURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited">
+  <desc>help URL for admin</desc>
+</attr>
+
+<attr id="675" name="zimbraHelpDelegatedURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited">
+  <desc>help URL for delegated admin</desc>
+</attr>
+
+<attr id="676" name="zimbraHelpAdvancedURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited">
+  <desc>help URL for advanced client</desc>
+</attr>
+
+<attr id="677" name="zimbraHelpStandardURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited">
+  <desc>help URL for standard client</desc>
+</attr>
+
   
 </attrs>
