@@ -239,7 +239,7 @@ public class Invite {
             String comment, 
             String location,
             String description,
-            int dtStampOrZero,
+            long dtStampOrZero,
             int sequenceNoOrZero,
             String partStat,
             boolean rsvp,
