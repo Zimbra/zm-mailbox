@@ -21,6 +21,7 @@ import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.ListData;
 import com.zimbra.cs.mailclient.imap.IDInfo;
 import com.zimbra.cs.mailclient.imap.ImapCapabilities;
+import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.util.ZimbraApplication;
@@ -125,8 +126,12 @@ public class ImapSync extends AbstractMailItemImport {
         try {
             connection.connect();
             if (connection.hasCapability(ImapCapabilities.ID)) {
-                IDInfo id = connection.id(ID_INFO);
-                LOG.info("Server ID: " + id);
+                try {
+                    IDInfo id = connection.id(ID_INFO);
+                    LOG.info("Server ID: " + id);
+                } catch (CommandFailedException e) {
+                    LOG.warn(e.getMessage());
+                }
             }
             connection.login(dataSource.getDecryptedPassword());
             delimiter = connection.getDelimiter();
