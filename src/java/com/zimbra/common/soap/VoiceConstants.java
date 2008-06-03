@@ -78,6 +78,7 @@ public class VoiceConstants {
     public static final String A_CITY          = "ci";
     public static final String A_STATE         = "st";
     public static final String A_COUNTRY       = "co";
+    public static final String A_VM            = "vm";
     
     public static final String FLAG_UNFORWARDABLE = "p";  // 'p'rivate
     
