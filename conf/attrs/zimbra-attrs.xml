@@ -349,7 +349,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>LDAP bind dn for ldap auth mech</desc>
 </attr>
 
-<attr id="45" name="zimbraPasswordLocked" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable,accountInfo">
+<attr id="45" name="zimbraPasswordLocked" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>user is unable to change password</desc>
 </attr>
