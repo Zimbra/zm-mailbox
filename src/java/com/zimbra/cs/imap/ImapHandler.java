@@ -666,7 +666,6 @@ abstract class ImapHandler extends ProtocolHandler {
                                 else if (option.equals("MAX"))    options |= RETURN_MAX;
                                 else if (option.equals("ALL"))    options |= RETURN_ALL;
                                 else if (option.equals("COUNT"))  options |= RETURN_COUNT;
-                                else if (option.equals("SAVE") && extensionEnabled("X-DRAFT-I05-SEARCHRES"))  options |= RETURN_SAVE;
                                 else
                                     throw new ImapParseException(tag, "unknown RETURN option \"" + option + '"');
                             }
@@ -916,6 +915,8 @@ abstract class ImapHandler extends ProtocolHandler {
             return extensionEnabled("ACL");
         if (extension.equalsIgnoreCase("QRESYNC"))
             return extensionEnabled("CONDSTORE");
+        if (extension.equalsIgnoreCase("ESORT"))
+            return extensionEnabled("SORT");
         // see if the user's session has disabled the extension
         if (extension.equalsIgnoreCase("IDLE") && mCredentials != null && mCredentials.isHackEnabled(EnabledHack.NO_IDLE))
             return false;
@@ -2895,8 +2896,11 @@ abstract class ImapHandler extends ProtocolHandler {
             result.append(" (MODSEQ ").append(modseq).append(')');
 
         if (saveResults) {
+            // RETURN (SAVE) is not permitted from a SORT command
+            assert(unsorted);
+
             if (size == 0 || options == RETURN_SAVE || (options & (RETURN_COUNT | RETURN_ALL)) != 0) {
-                mSelectedFolder.saveSearchResults(unsorted ? (ImapMessageSet) hits : new ImapMessageSet(hits));
+                mSelectedFolder.saveSearchResults((ImapMessageSet) hits);
             } else {
                 ImapMessageSet saved = new ImapMessageSet();
                 if (first != null && (options & RETURN_MIN) != 0)
