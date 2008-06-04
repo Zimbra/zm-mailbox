@@ -11,7 +11,7 @@ Non-admin versions in the 'zimbraMail' Namespace:
 <DestroyWaitSetResponse>
 
 
-Admin versions in the 'zimbraMail' Namespace:
+Admin versions in the 'zimbraAdmin' Namespace:
 -------------------------------------------------
 <AdminCreateWaitSetRequest>
 <AdminCreateWaitSetResponse>
