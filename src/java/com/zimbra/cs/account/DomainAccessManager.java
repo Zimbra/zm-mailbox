@@ -215,15 +215,15 @@ public class DomainAccessManager extends AccessManager {
      */
     
     public boolean canPerform(AuthToken grantee, NamedEntry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
-        return false;
+        return defaultGrant;
     }
     
     public boolean canPerform(Account grantee, NamedEntry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
-        return false;
+        return defaultGrant;
     }
     
     public boolean canPerform(String grantee, NamedEntry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
-        return false;
+        return defaultGrant;
     }
 
 
