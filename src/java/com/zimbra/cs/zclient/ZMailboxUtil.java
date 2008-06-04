@@ -1427,7 +1427,7 @@ public class ZMailboxUtil implements DebugListener {
     private void doGetPermission(String[] args) throws ServiceException {
         if (verboseOpt()) {
             StringBuilder sb = new StringBuilder();            
-            for (ZAce g : mMbox.getPermissions(args)) {
+            for (ZAce g : mMbox.getPermission(args)) {
                 if (sb.length() > 0) sb.append(",\n");
                 sb.append(g);
             }
@@ -1437,7 +1437,7 @@ public class ZMailboxUtil implements DebugListener {
             System.out.format(format, "Permission",       "Type",     "Display");
             System.out.format(format, "----------------", "--------", "-------");
 
-            List<ZAce> result = mMbox.getPermissions(args);
+            List<ZAce> result = mMbox.getPermission(args);
             Comparator<ZAce> comparator = new Comparator<ZAce>() {
                 public int compare(ZAce a, ZAce b) {
                     // sort by right -> grantee type -> grantee name
@@ -1497,7 +1497,7 @@ public class ZMailboxUtil implements DebugListener {
     
     private void doGrantPermission(String[] args) throws ServiceException {
         ZAce ace = getAceFromArgs(args);
-        List<ZAce> granted = mMbox.grantPermissions(ace);
+        List<ZAce> granted = mMbox.grantPermission(ace);
         if (granted.size() == 0)
             System.out.println("  granted 0 permission");
         else {
@@ -1509,7 +1509,7 @@ public class ZMailboxUtil implements DebugListener {
     
     private void doRevokePermission(String[] args) throws ServiceException {
         ZAce ace = getAceFromArgs(args);
-        List<ZAce> revoked = mMbox.revokePermissions(ace);
+        List<ZAce> revoked = mMbox.revokePermission(ace);
         if (revoked.size() == 0)
             System.out.println("  revoked 0 permission");
         else {
