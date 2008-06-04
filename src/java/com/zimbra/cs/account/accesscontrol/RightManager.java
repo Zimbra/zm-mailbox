@@ -30,7 +30,13 @@ public class RightManager {
         }
         String dir = LC.zimbra_rights_directory.value();
         mInstance = new RightManager(dir);
-        Right.initKnownRights(mInstance);
+        
+        try {
+            Right.initKnownRights(mInstance);
+        } catch (ServiceException e) {
+            ZimbraLog.account.error("failed to initialize known right from: " + dir, e);
+            throw e;
+        }
         return mInstance;
     }
     
