@@ -14,7 +14,7 @@ import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class GetPermissions extends MailDocumentHandler {
+public class GetPermission extends MailDocumentHandler {
     
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
