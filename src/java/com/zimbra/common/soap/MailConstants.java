@@ -194,12 +194,14 @@ public class MailConstants {
     public static final QName DESTROY_WAIT_SET_RESPONSE = QName.get("DestroyWaitSetResponse", NAMESPACE);
     
     // account ACL
-    public static final QName GET_PERMISSIONS_REQUEST = QName.get("GetPermissionsRequest", NAMESPACE);
-    public static final QName GET_PERMISSIONS_RESPONSE = QName.get("GetPermissionsResponse", NAMESPACE);
-    public static final QName GRANT_PERMISSIONS_REQUEST = QName.get("GrantPermissionsRequest", NAMESPACE);
-    public static final QName GRANT_PERMISSIONS_RESPONSE = QName.get("GrantPermissionsResponse", NAMESPACE);
-    public static final QName REVOKE_PERMISSIONS_REQUEST = QName.get("RevokePermissionsRequest", NAMESPACE);
-    public static final QName REVOKE_PERMISSIONS_RESPONSE = QName.get("RevokePermissionsResponse", NAMESPACE);
+    public static final QName GET_PERMISSION_REQUEST = QName.get("GetPermissionRequest", NAMESPACE);
+    public static final QName GET_PERMISSION_RESPONSE = QName.get("GetPermissionResponse", NAMESPACE);
+    public static final QName CHECK_PERMISSION_REQUEST = QName.get("CheckPermissionRequest", NAMESPACE);
+    public static final QName CHECK_PERMISSION_RESPONSE = QName.get("CheckPermissionResponse", NAMESPACE);
+    public static final QName GRANT_PERMISSION_REQUEST = QName.get("GrantPermissionRequest", NAMESPACE);
+    public static final QName GRANT_PERMISSION_RESPONSE = QName.get("GrantPermissionResponse", NAMESPACE);
+    public static final QName REVOKE_PERMISSION_REQUEST = QName.get("RevokePermissionRequest", NAMESPACE);
+    public static final QName REVOKE_PERMISSION_RESPONSE = QName.get("RevokePermissionResponse", NAMESPACE);
     
     
     public static final String E_MAILBOX = "mbx";
@@ -242,8 +244,15 @@ public class MailConstants {
     
     // account ACLs
     public static final String E_ACE = "ace";
+    public static final String E_RIGHT = "right";
+    public static final String E_TARGET = "target";
     public static final String A_DENY = "deny";
     public static final String A_RIGHT = "right";
+    public static final String A_TARGET_BY = "by";
+    public static final String A_TARGET_TYPE = "type";
+    public static final String A_ACCOUNT = "account";
+    public static final String A_CALENDAR_RESOURCE = "calresource";
+    public static final String A_DISTRIBUTION_LIST = "distributionlist";
 
     // email addresses
     public static final String E_EMAIL = "e";
