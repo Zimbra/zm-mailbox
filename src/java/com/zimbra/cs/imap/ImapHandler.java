@@ -626,7 +626,12 @@ abstract class ImapHandler extends ProtocolHandler {
                             if (options == 0)
                                 options = RETURN_ALL;
                         }
-                        ImapSearch i4search = req.readSearch(false);
+                        String charset = null;
+                        if ("CHARSET".equals(req.peekATOM())) {
+                            req.skipAtom("CHARSET");  req.skipSpace();
+                            charset = req.readCharset();  req.skipSpace();
+                        }
+                        ImapSearch i4search = req.readSearch(charset);
                         checkEOF(tag, req);
                         return isProxied ? mProxy.proxy(req) : doSEARCH(tag, i4search, byUID, options);
                     } else if (command.equals("STARTTLS") && extensionEnabled("STARTTLS")) {
@@ -697,8 +702,9 @@ abstract class ImapHandler extends ProtocolHandler {
                                 throw new ImapParseException(tag, "unknown SORT key \"" + key + '"');
                             order.add(sort);  desc = false;
                         } while (desc || req.peekChar() != ')');
-                        req.skipChar(')');  req.skipSpace();
-                        ImapSearch i4search = req.readSearch(true);
+                        req.skipChar(')');
+                        req.skipSpace();  String charset = req.readCharset();
+                        req.skipSpace();  ImapSearch i4search = req.readSearch(charset);
                         checkEOF(tag, req);
                         return isProxied ? mProxy.proxy(req) : doSORT(tag, i4search, byUID, options, order);
                     } else if (command.equals("SUBSCRIBE")) {
