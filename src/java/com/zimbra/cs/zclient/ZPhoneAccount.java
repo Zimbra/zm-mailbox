@@ -26,12 +26,14 @@ public class ZPhoneAccount {
     private ZFolder mFolder;
     private ZPhone mPhone;
     private ZCallFeatures mCallFeatures;
+	private boolean mHasVoiceMail;
 
-    public ZPhoneAccount(Element e, ZMailbox mbox) throws ServiceException {
+	public ZPhoneAccount(Element e, ZMailbox mbox) throws ServiceException {
         mPhone = new ZPhone(e.getAttribute(MailConstants.A_NAME));
         mFolder = new ZVoiceFolder(e.getElement(MailConstants.E_FOLDER), null);
         mCallFeatures = new ZCallFeatures(mbox, mPhone, e.getElement(VoiceConstants.E_CALL_FEATURES));
-    }
+		mHasVoiceMail = e.getAttributeBool(VoiceConstants.E_VOICEMSG);
+	}
 
     public ZFolder getRootFolder() {
         return mFolder;
@@ -45,4 +47,8 @@ public class ZPhoneAccount {
         mCallFeatures.loadCallFeatures();
         return mCallFeatures;
     }
+
+	public boolean getHasVoiceMail() {
+		return mHasVoiceMail;
+	}
 }
