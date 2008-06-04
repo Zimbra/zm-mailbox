@@ -666,6 +666,7 @@ abstract class ImapHandler extends ProtocolHandler {
                                 else if (option.equals("MAX"))    options |= RETURN_MAX;
                                 else if (option.equals("ALL"))    options |= RETURN_ALL;
                                 else if (option.equals("COUNT"))  options |= RETURN_COUNT;
+                                else if (option.equals("SAVE") && extensionEnabled("SEARCHRES"))  options |= RETURN_SAVE;
                                 else
                                     throw new ImapParseException(tag, "unknown RETURN option \"" + option + '"');
                             }
@@ -2783,6 +2784,8 @@ abstract class ImapHandler extends ProtocolHandler {
         if (!checkState(tag, State.SELECTED))
             return CONTINUE_PROCESSING;
 
+        ImapFolder i4folder = mSelectedFolder;
+
         boolean requiresMODSEQ = i4search.requiresMODSEQ();
         if (requiresMODSEQ)
             activateExtension(ActivatedExtension.CONDSTORE);
@@ -2810,22 +2813,22 @@ abstract class ImapHandler extends ProtocolHandler {
         int modseq = 0;
 
         try {
-            Mailbox mbox = mSelectedFolder.getMailbox();
+            Mailbox mbox = i4folder.getMailbox();
             if (unsorted && i4search.canBeRunLocally()) {
                 synchronized (mbox) {
-                    hits = i4search.evaluate(mSelectedFolder);
+                    hits = i4search.evaluate(i4folder);
                     hits.remove(null);
                 }
             } else {
                 String search;
                 synchronized (mbox) {
-                    search = i4search.toZimbraSearch(mSelectedFolder);
-                    if (!mSelectedFolder.isVirtual())
-                        search = "in:" + mSelectedFolder.getQuotedPath() + ' ' + search;
-                    else if (mSelectedFolder.getSize() <= LARGEST_FOLDER_BATCH)
-                        search = ImapSearch.sequenceAsSearchTerm(mSelectedFolder, mSelectedFolder.getAllMessages(), false) + ' ' + search;
+                    search = i4search.toZimbraSearch(i4folder);
+                    if (!i4folder.isVirtual())
+                        search = "in:" + i4folder.getQuotedPath() + ' ' + search;
+                    else if (i4folder.getSize() <= LARGEST_FOLDER_BATCH)
+                        search = ImapSearch.sequenceAsSearchTerm(i4folder, i4folder.getAllMessages(), false) + ' ' + search;
                     else
-                        search = '(' + mSelectedFolder.getQuery() + ") " + search;
+                        search = '(' + i4folder.getQuery() + ") " + search;
                     ZimbraLog.imap.info("[ search is: " + search + " ]");
                 }
 
@@ -2842,12 +2845,12 @@ abstract class ImapHandler extends ProtocolHandler {
                 hits = unsorted ? new ImapMessageSet() : new ArrayList<ImapMessage>();
                 try {
                     for (ZimbraHit hit = zqr.getNext(); hit != null; hit = zqr.getNext()) {
-                        ImapMessage i4msg = mSelectedFolder.getById(hit.getItemId());
+                        ImapMessage i4msg = i4folder.getById(hit.getItemId());
                         if (i4msg == null || i4msg.isExpunged())
                             continue;
                         hits.add(i4msg);
                         if (requiresMODSEQ)
-                            modseq = Math.max(modseq, Math.max(hit.getModifiedSequence(), i4msg.getFlagModseq(mSelectedFolder.getTagset())));
+                            modseq = Math.max(modseq, Math.max(hit.getModifiedSequence(), i4msg.getFlagModseq(i4folder.getTagset())));
                     }
                 } finally {
                     zqr.doneWithSearchResults();
@@ -2858,7 +2861,7 @@ abstract class ImapHandler extends ProtocolHandler {
             //              to return the NO tagged response sets the value of the search result
             //              variable to the empty sequence."
             if (saveResults)
-                mSelectedFolder.saveSearchResults(new ImapMessageSet());
+                i4folder.saveSearchResults(new ImapMessageSet());
             ZimbraLog.imap.warn(command + " failed (bad query)", pe);
             sendNO(tag, command + " failed");
             return CONTINUE_PROCESSING;
@@ -2867,7 +2870,7 @@ abstract class ImapHandler extends ProtocolHandler {
             //              to return the NO tagged response sets the value of the search result
             //              variable to the empty sequence."
             if (saveResults)
-                mSelectedFolder.saveSearchResults(new ImapMessageSet());
+                i4folder.saveSearchResults(new ImapMessageSet());
             ZimbraLog.imap.warn(command + " failed", e);
             sendNO(tag, command + " failed");
             return CONTINUE_PROCESSING;
@@ -2906,18 +2909,15 @@ abstract class ImapHandler extends ProtocolHandler {
             result.append(" (MODSEQ ").append(modseq).append(')');
 
         if (saveResults) {
-            // RETURN (SAVE) is not permitted from a SORT command
-            assert(unsorted);
-
             if (size == 0 || options == RETURN_SAVE || (options & (RETURN_COUNT | RETURN_ALL)) != 0) {
-                mSelectedFolder.saveSearchResults((ImapMessageSet) hits);
+                i4folder.saveSearchResults(unsorted ? (ImapMessageSet) hits : new ImapMessageSet(hits));
             } else {
                 ImapMessageSet saved = new ImapMessageSet();
                 if (first != null && (options & RETURN_MIN) != 0)
                     saved.add(first);
                 if (last != null && (options & RETURN_MAX) != 0)
                     saved.add(last);
-                mSelectedFolder.saveSearchResults(saved);
+                i4folder.saveSearchResults(saved);
             }
         }
 
