@@ -189,7 +189,7 @@ zmmailbox commands:
              e.g. Free/busy for Y can only be seen by users A, B, C and group G.
    
        
-3. Get ACL associated with the target account
+3. Get rights currently granted.
    command: getPermission(gp) [opts] [right1 [right2...]]
               -v/--verbose    verbose output
               
@@ -223,8 +223,10 @@ zmmailbox commands:
          grantee), and public(for public grantee).
          
          
-4. Grant a right for the target account
-   command: grantPermission(grp) {account {name}|group {name}|all|public {[-]permission}}
+4. Grant(allow or deny) a right to a grantee or a group of grantee. 
+   To deny a right, put a '-' in front of the right.
+   
+   command: grantPermission(grp) {account {name}|group {name}|all|public {[-]right}}
    
    scope: after a mailbox is selected
    
@@ -272,8 +274,10 @@ zmmailbox commands:
            command, see 5. below.    
                     
          
-5. Revoke a right for the target account
-   command: revokePermission(rvp) {account {name}|group {name}|all|public {[-]permission}}
+5. Revoke a right previously granted to a grantee or a group of grantees. 
+   To revoke a denied right, put a '-' in front of the right.
+   
+   command: revokePermission(rvp) {account {name}|group {name}|all|public {[-]right}}
    
    scope: after a mailbox is selected
    
