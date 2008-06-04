@@ -295,6 +295,9 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
         }
 
         mLastSize = mSequence.size();
+        // RFC 5182 2.1: "Upon successful completion of a SELECT or an EXAMINE command (after
+        //                the tagged OK response), the current search result variable is reset
+        //                to the empty sequence."
         mSavedSearchResults = null;
     }
 

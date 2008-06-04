@@ -26,11 +26,11 @@ IMAP protocol and extensions supported:
     [QUOTA]            RFC 2087: IMAP4 QUOTA extension
     [RIGHTS=ektx]      RFC 4314: IMAP4 Access Control List (ACL) Extension
     [SASL-IR]          RFC 4959: IMAP Extension for Simple Authentication and Security Layer (SASL) Initial Client Response
+    [SEARCHRES]        RFC 5182: IMAP Extension for Referencing the Last SEARCH Result
     [SORT]             draft-ietf-imapext-sort-20: INTERNET MESSAGE ACCESS PROTOCOL - SORT AND THREAD EXTENSIONS
     [UIDPLUS]          RFC 4315: Internet Message Access Protocol (IMAP) - UIDPLUS extension
     [UNSELECT]         RFC 3691: IMAP UNSELECT command
     [WITHIN]           RFC 5032: WITHIN Search Extension to the IMAP Protocol
-    [X-DRAFT-I05-SEARCHRES]  draft-melnikov-imap-search-res-05: IMAP extension for referencing the last SEARCH result
     [$MDNSent]         RFC 3503: Message Disposition Notification (MDN) profile for Internet Message Access Protocol (IMAP)
 
 POP protocol and extensions supported:

@@ -618,7 +618,7 @@ abstract class ImapHandler extends ProtocolHandler {
                                 else if (option.equals("MAX"))    options |= RETURN_MAX;
                                 else if (option.equals("ALL"))    options |= RETURN_ALL;
                                 else if (option.equals("COUNT"))  options |= RETURN_COUNT;
-                                else if (option.equals("SAVE") && extensionEnabled("X-DRAFT-I05-SEARCHRES"))  options |= RETURN_SAVE;
+                                else if (option.equals("SAVE") && extensionEnabled("SEARCHRES"))  options |= RETURN_SAVE;
                                 else
                                     throw new ImapParseException(tag, "unknown RETURN option \"" + option + '"');
                             }
@@ -845,9 +845,9 @@ abstract class ImapHandler extends ProtocolHandler {
     }
 
     private static final Set<String> SUPPORTED_EXTENSIONS = new LinkedHashSet<String>(Arrays.asList(
-        "ACL", "BINARY", "CATENATE", "CHILDREN", "CONDSTORE", "ENABLE", "ESEARCH", "ESORT", "I18NLEVEL=1", "ID",
-        "IDLE", "LIST-EXTENDED", "LITERAL+", "LOGIN-REFERRALS", "MULTIAPPEND", "NAMESPACE", "QRESYNC",
-        "QUOTA", "RIGHTS=ektx", "SASL-IR", "SORT", "UIDPLUS", "UNSELECT", "WITHIN", "X-DRAFT-I05-SEARCHRES"
+        "ACL", "BINARY", "CATENATE", "CHILDREN", "CONDSTORE", "ENABLE", "ESEARCH", "ESORT", "I18NLEVEL=1",
+        "ID", "IDLE", "LIST-EXTENDED", "LITERAL+", "LOGIN-REFERRALS", "MULTIAPPEND", "NAMESPACE", "QRESYNC",
+        "QUOTA", "RIGHTS=ektx", "SASL-IR", "SEARCHRES", "SORT", "UIDPLUS", "UNSELECT", "WITHIN"
     ));
 
     protected String getCapabilityString() {
@@ -876,11 +876,11 @@ abstract class ImapHandler extends ProtocolHandler {
         // [QUOTA]            RFC 2087: IMAP4 QUOTA extension
         // [RIGHTS=ektx]      RFC 4314: IMAP4 Access Control List (ACL) Extension
         // [SASL-IR]          RFC 4959: IMAP Extension for Simple Authentication and Security Layer (SASL) Initial Client Response
+        // [SEARCHRES]        RFC 5182: IMAP Extension for Referencing the Last SEARCH Result
         // [SORT]             draft-ietf-imapext-sort-20: INTERNET MESSAGE ACCESS PROTOCOL - SORT AND THREAD EXTENSIONS
         // [UIDPLUS]          RFC 4315: Internet Message Access Protocol (IMAP) - UIDPLUS extension
         // [UNSELECT]         RFC 3691: IMAP UNSELECT command
         // [WITHIN]           RFC 5032: WITHIN Search Extension to the IMAP Protocol
-        // [X-DRAFT-I05-SEARCHRES]  draft-melnikov-imap-search-res-05: IMAP extension for referencing the last SEARCH result
 
         boolean authenticated = isAuthenticated();
         String nologin  = mStartedTLS || authenticated || mConfig.allowCleartextLogins() ? "" : " LOGINDISABLED";
@@ -909,7 +909,7 @@ abstract class ImapHandler extends ProtocolHandler {
         if (mConfig.isExtensionDisabled(extension))
             return false;
         // check whether one of the extension's prerequisites is disabled on the server
-        if (extension.equalsIgnoreCase("X-DRAFT-I05-SEARCHRES"))
+        if (extension.equalsIgnoreCase("SEARCHRES"))
             return extensionEnabled("ESEARCH");
         if (extension.equalsIgnoreCase("RIGHTS=ektx"))
             return extensionEnabled("ACL");
@@ -2854,10 +2854,20 @@ abstract class ImapHandler extends ProtocolHandler {
                 }
             }
         } catch (ParseException pe) {
+            // RFC 5182 2: "A SEARCH command with the SAVE result option that caused the server
+            //              to return the NO tagged response sets the value of the search result
+            //              variable to the empty sequence."
+            if (saveResults)
+                mSelectedFolder.saveSearchResults(new ImapMessageSet());
             ZimbraLog.imap.warn(command + " failed (bad query)", pe);
             sendNO(tag, command + " failed");
             return CONTINUE_PROCESSING;
         } catch (ServiceException e) {
+            // RFC 5182 2: "A SEARCH command with the SAVE result option that caused the server
+            //              to return the NO tagged response sets the value of the search result
+            //              variable to the empty sequence."
+            if (saveResults)
+                mSelectedFolder.saveSearchResults(new ImapMessageSet());
             ZimbraLog.imap.warn(command + " failed", e);
             sendNO(tag, command + " failed");
             return CONTINUE_PROCESSING;
