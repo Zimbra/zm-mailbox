@@ -32,7 +32,7 @@ public class GetPermissions extends MailDocumentHandler {
         }
         
         Set<ZimbraACE> aces = PermUtil.getACEs(account, specificRights);
-        Element response = zsc.createElement(MailConstants.GET_PERMISSIONS_RESPONSE);
+        Element response = zsc.createElement(MailConstants.GET_PERMISSION_RESPONSE);
         if (aces != null) {
             for (ZimbraACE ace : aces)
                 ToXML.encodeACE(response, ace);

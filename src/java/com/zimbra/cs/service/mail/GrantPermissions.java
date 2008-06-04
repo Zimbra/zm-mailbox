@@ -35,7 +35,7 @@ public class GrantPermissions extends MailDocumentHandler {
         }
 
         Set<ZimbraACE> granted = PermUtil.grantAccess(account, aces);
-        Element response = zsc.createElement(MailConstants.GRANT_PERMISSIONS_RESPONSE);
+        Element response = zsc.createElement(MailConstants.GRANT_PERMISSION_RESPONSE);
         if (aces != null) {
             for (ZimbraACE ace : granted)
                 ToXML.encodeACE(response, ace);

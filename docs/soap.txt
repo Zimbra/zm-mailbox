@@ -2642,18 +2642,18 @@ WaitSet: scalable mechanism for listening for changes to one or more accounts
 
 Get account level permissions.
 
-<GetPermissionsRequest>
+<GetPermissionRequest>
    <!-- get only the permissions for the specified rights -->
    [<ace right="{right1}"/>
     <ace right="{right2}"/>]
-</GetPermissionsRequest>
+</GetPermissionRequest>
 
 If no <ace> elements are provided, all ACEs are returned in the response.
 If <ace> elements are provided, only those ACEs with specified rights are returned in the response.
 
-<GetPermissionsResponse>
+<GetPermissionResponse>
   <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"] [args="{args}"]/>*
-</GetPermissionsResponse>
+</GetPermissionResponse>
 
     {right}        = viewFreeBusy | invite
     
@@ -2676,27 +2676,46 @@ If <ace> elements are provided, only those ACEs with specified rights are return
 
 Grant account level permissions.
 
-<GrantPermissionsRequest>
+<GrantPermissionRequest>
   <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"] [args="{args}"]/>*
-</GrantPermissionsRequest>
+</GrantPermissionRequest>
 
-GrantPermissionsResponse returns permissions that are successfully granted.
+GrantPermissionResponse returns permissions that are successfully granted.
 
-<GrantPermissionsResponse>
+<GrantPermissionResponse>
   <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"] [args="{args}"]/>*
-</GrantPermissionsRequest>
+</GrantPermissionRequest>
 ---------------------------
 
 Revoke account level permissions.
 
-<RevokePermissionsRequest>
+<RevokePermissionRequest>
   <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"] [args="{args}"]/>*
-</RevokePermissionsRequest>
+</RevokePermissionRequest>
 
-GrantPermissionsResponse returns permissions that are successfully revoked.
+RevokePermissionResponse returns permissions that are successfully revoked.
 
-<RevokePermissionsResponse>
+<RevokePermissionResponse>
   <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"] [args="{args}"]/>*
-</RevokePermissionsResponse>
+</RevokePermissionResponse>
 
 ---------------------------
+
+<CheckPermissionRequest>
+  <target type="{target-type}" by="id|name">...</target>
+  <right>...</right>
+</CheckPermissionRequest>
+
+{target-type} = account|calresource|distributionlist 
+
+    Check if the authed user has the specified right on target.
+ 
+<CheckPermissionResponse/>
+
+    A successful return means the authed user is allowed for the specified right on the 
+    target object.  If ServerException.PERM_DENIED is thrown, it indicates the authed user 
+    dose not have the specified right on the target object.
+    
+---------------------------
+    
+    
