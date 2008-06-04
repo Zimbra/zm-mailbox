@@ -2381,6 +2381,15 @@ public abstract class CalendarItem extends MailItem {
 
     private static final long MILLIS_IN_YEAR = 365L * 24L * 60L * 60L * 1000L;
 
+    private long getNextAlarmRecurrenceExpansionEndTime() {
+        long fromTime = Math.max(getStartTime(), System.currentTimeMillis());        
+        long endTime = fromTime + MILLIS_IN_YEAR;  // 1-year window to search for next alarm
+        long itemEndTime = getEndTime();
+        if (itemEndTime < endTime && itemEndTime >= getStartTime())  // avoid huge negative numbers due to wraparound
+            endTime = itemEndTime;
+        return endTime;
+    }
+
     /**
      * Recompute the next alarm trigger time that is at or later than "nextAlarm".
      * @param nextAlarm next alarm should go off at or after this time
@@ -2402,11 +2411,7 @@ public abstract class CalendarItem extends MailItem {
         Instance alarmInstance = null;
         Alarm theAlarm = null;
 
-        long fromTime = Math.max(getStartTime(), System.currentTimeMillis());        
-        long endTime = fromTime + MILLIS_IN_YEAR;  // 1-year window to search for next alarm
-        long itemEndTime = getEndTime();
-        if (itemEndTime < endTime && itemEndTime >= getStartTime())  // avoid huge negative numbers due to wraparound
-            endTime = itemEndTime;
+        long endTime = getNextAlarmRecurrenceExpansionEndTime();
         Collection<Instance> instances = expandInstances(nextAlarm, endTime, false);
         for (Instance inst : instances) {
             long instStart = inst.getStart();
@@ -2541,7 +2546,8 @@ public abstract class CalendarItem extends MailItem {
             for (long lastAt : lastAlarmsAt.values()) {
                 oldest = Math.min(oldest, lastAt);
             }
-            Collection<Instance> instances = expandInstances(oldest, getEndTime(), false);
+            long endTime = getNextAlarmRecurrenceExpansionEndTime();
+            Collection<Instance> instances = expandInstances(oldest, endTime, false);
 
             List<Alarm> alarms = inv.getAlarms();
             int index = 0;

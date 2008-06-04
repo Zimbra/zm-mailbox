@@ -225,7 +225,11 @@ public class ZRecur {
         default:
             return null;
         }
-        return end.getTime();
+        Date endTime = end.getTime();
+        Date hardEndTime = new Date(MAX_DATE_MILLIS);
+        if (hardEndTime.before(endTime))
+            endTime = hardEndTime;
+        return endTime;
     }
 
     public Date getEstimatedEndTime(ParsedDateTime dtStart) throws ServiceException {
