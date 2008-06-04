@@ -696,7 +696,7 @@ abstract class ImapHandler extends ProtocolHandler {
                             else
                                 throw new ImapParseException(tag, "unknown SORT key \"" + key + '"');
                             order.add(sort);  desc = false;
-                        } while (order.isEmpty() || req.peekChar() != ')');
+                        } while (desc || req.peekChar() != ')');
                         req.skipChar(')');  req.skipSpace();
                         ImapSearch i4search = req.readSearch(true);
                         checkEOF(tag, req);
