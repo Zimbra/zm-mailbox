@@ -18,7 +18,7 @@ import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class GrantPermissions extends MailDocumentHandler {
+public class GrantPermission extends MailDocumentHandler {
     
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {

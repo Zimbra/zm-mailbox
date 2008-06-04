@@ -12,7 +12,7 @@ import com.zimbra.cs.account.accesscontrol.PermUtil;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class RevokePermissions extends GrantPermissions {
+public class RevokePermission extends GrantPermission {
     
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
