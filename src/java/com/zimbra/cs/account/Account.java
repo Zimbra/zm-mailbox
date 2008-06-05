@@ -146,8 +146,6 @@ public class Account extends MailTarget {
             AccessManager accessMgr = AccessManager.getInstance();
             if (accessMgr.canAccessAccount(authAccount, targetAccount, asAdmin))
                 return true;
-            if (accessMgr.canPerform(authAccount, targetAccount, Right.RT_private, asAdmin, false))
-                return true;
         }
         return false;
     }
