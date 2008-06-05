@@ -20,10 +20,6 @@
   </doc>
 </right>
 
-<right name="private">
-  <desc>view, create, delete, modify private content</desc>
-</right>
-
 <right name="viewFreeBusy">
   <desc>view free/busy</desc>
   <doc>e.g. Free/busy for Y can only be seen by users A, B, C and group G.</doc>>
