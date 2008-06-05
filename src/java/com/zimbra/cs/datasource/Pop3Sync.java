@@ -83,7 +83,7 @@ public class Pop3Sync extends AbstractMailItemImport {
         config.setTlsEnabled(LC.javamail_pop3_enable_starttls.booleanValue());
         config.setSslEnabled(ds.isSslEnabled());
         config.setDebug(DEBUG);
-        config.setTrace(DEBUG);
+        config.setTrace(DEBUG || ds.isDebugTraceEnabled());
         // config.setRawMode(true);
         if (LC.data_source_trust_self_signed_certs.booleanValue()) {
             config.setSSLSocketFactory(new DummySSLSocketFactory());
