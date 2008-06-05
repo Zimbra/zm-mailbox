@@ -349,6 +349,10 @@ public class ZimbraServlet extends HttpServlet {
 
     public Account basicAuthRequest(HttpServletRequest req, HttpServletResponse resp, boolean sendChallenge)
     throws IOException, ServiceException {
+        
+        if (!AuthProvider.allowBasicAuth(req))
+            return null;
+        
         String auth = req.getHeader("Authorization");
 
         // TODO: more liberal parsing of Authorization value...

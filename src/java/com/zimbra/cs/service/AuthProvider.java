@@ -223,6 +223,15 @@ public abstract class AuthProvider {
     protected AuthToken authToken(Account acct, long expires, boolean isAdmin, Account adminAcct) throws AuthProviderException {
         throw AuthProviderException.NOT_SUPPORTED();
     }
+    
+    /**
+     * 
+     * @param req
+     * @return whether http basic authentication is allowed
+     */
+    protected boolean allowHttpBasicAuth(HttpServletRequest req) {
+        return true;
+    }
 
     /**
      * The static getAuthToken methods go through all the providers, trying them in order until one returns an AuthToken
@@ -439,6 +448,17 @@ public abstract class AuthProvider {
         }
         
         throw AuthProviderException.FAILURE("cannot get authtoken from account " + acct.getName());
+    }
+    
+    public static boolean allowBasicAuth(HttpServletRequest req) {
+        List<AuthProvider> providers = getProviders();
+        for (AuthProvider ap : providers) {
+            if (ap.allowHttpBasicAuth(req))
+                return true;
+
+        }
+        
+        return false;
     }
     
     
