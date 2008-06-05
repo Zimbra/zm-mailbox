@@ -1349,6 +1349,7 @@ public abstract class Provisioning {
     public static final String A_zimbraDataSourceMinPollingInterval = "zimbraDataSourceMinPollingInterval";
     public static final String A_zimbraDataSourceEmailAddress = "zimbraDataSourceEmailAddress";
     public static final String A_zimbraDataSourceUseAddressForForwardReply = "zimbraDataSourceUseAddressForForwardReply";
+    public static final String A_zimbraDataSourceEnableTrace = "zimbraDataSourceEnableTrace";
     
     // Quota warning
     public static final String A_zimbraQuotaWarnPercent = "zimbraQuotaWarnPercent";
