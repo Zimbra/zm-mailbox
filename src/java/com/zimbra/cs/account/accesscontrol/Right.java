@@ -6,7 +6,6 @@ public class Right {
     
     // known rights
     public static Right RT_invite;
-    public static Right RT_private;
     public static Right RT_viewFreeBusy;
     
     private final String mCode;
@@ -15,7 +14,6 @@ public class Right {
     
     static void initKnownRights(RightManager rm) throws ServiceException {
         RT_invite = rm.getRight("invite");
-        RT_private = rm.getRight("private");;
         RT_viewFreeBusy = rm.getRight("viewFreeBusy");;
     }
 
