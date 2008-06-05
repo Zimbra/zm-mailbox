@@ -211,6 +211,10 @@ public class DataSource extends NamedEntry implements Comparable {
         return getAttr(Provisioning.A_zimbraPrefReplyToDisplay);
     }
     
+    public boolean isDebugTraceEnabled() {
+    	return getBooleanAttr(Provisioning.A_zimbraDataSourceEnableTrace, false);
+    }
+    
     //IMAP datasources can override these
     
     /**
