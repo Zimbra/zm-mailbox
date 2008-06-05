@@ -148,6 +148,8 @@ public class UserServlet extends ZimbraServlet {
 
     public static final String QP_IGNORE_ERROR = "ignore";  // ignore and continue on error during ics import
 
+    public static final String QP_PRESERVE_ALARMS = "preserveAlarms";  // preserve existing alarms during ics import
+
     public static final String QP_OFFSET = "offset"; // offset into results
     
     public static final String QP_LIMIT = "limit"; // offset into results
@@ -835,6 +837,17 @@ public class UserServlet extends ZimbraServlet {
 
         public boolean ignoreAndContinueOnError() {
             String val = params.get(QP_IGNORE_ERROR);
+            if (val != null) {
+                try {
+                    int n = Integer.parseInt(val);
+                    return n != 0;
+                } catch (NumberFormatException e) {}
+            }
+            return false;
+        }
+
+        public boolean preserveAlarms() {
+            String val = params.get(QP_PRESERVE_ALARMS);
             if (val != null) {
                 try {
                     int n = Integer.parseInt(val);

@@ -130,7 +130,7 @@ public class IcsFormatter extends Formatter {
         // TODO: Modify Formatter.save() API to pass in charset of body, then
         // use that charset in String() constructor.
         boolean continueOnError = context.ignoreAndContinueOnError();
-        boolean preserveExistingAlarms = true;
+        boolean preserveExistingAlarms = context.preserveAlarms();
         Reader reader = null;
         try {
             reader = new InputStreamReader(context.req.getInputStream(), Mime.P_CHARSET_UTF8);

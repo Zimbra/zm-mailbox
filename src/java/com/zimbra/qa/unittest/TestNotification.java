@@ -248,7 +248,7 @@ extends TestCase {
     throws Exception {
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
         String relativeUrl = String.format("?id=%s&part=2", interceptMsg.getId());
-        interceptorMbox.getRESTResource(relativeUrl, buf, true, 10);
+        interceptorMbox.getRESTResource(relativeUrl, buf, true, null, null, 10);
         String interceptedMsgContent = new String(buf.toByteArray()).trim();
         String tappedMsgContent = TestUtil.getContent(tappedMbox, tappedMsg.getId()).trim();
         

@@ -302,7 +302,7 @@ public class ZimbraMailAdapter implements MailAdapter
                             msgStream = mParsedMessage.getRawInputStream();
                             zMailbox.postRESTResource(
                                 path, msgStream, true,
-                                mParsedMessage.getRawSize(), Mime.CT_MESSAGE_RFC822, false,
+                                mParsedMessage.getRawSize(), Mime.CT_MESSAGE_RFC822, false, false,
                                 (int) (60 * Constants.MILLIS_PER_MINUTE));
                             filedRemotely = true;
                         } catch (Exception e) {

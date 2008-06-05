@@ -6029,12 +6029,11 @@ public class Mailbox {
         // disable modification conflict checks, as we've already wiped the folder and we may hit an appoinment >1 times
         OperationContext octxtNoConflicts = new OperationContext(octxt).unsetChangeConstraint();
 
-        boolean preserveExistingAlarms = true;
         // add the newly-fetched items to the folder
         for (Object obj : sdata.items) {
             try {
                 if (obj instanceof Invite) {
-                    int calIds[] = addInvite(octxtNoConflicts, (Invite) obj, folderId, preserveExistingAlarms);
+                    int calIds[] = addInvite(octxtNoConflicts, (Invite) obj, folderId, true);
                     if (calIds != null && calIds.length > 0)
                         existingCalItems.remove(calIds[0]);
                 } else if (obj instanceof ParsedMessage) {
