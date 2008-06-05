@@ -24,6 +24,7 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLConnection;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -74,7 +75,6 @@ import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.EasySSLProtocolSocketFactory;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.account.Provisioning.IdentityBy;
@@ -2023,12 +2023,30 @@ public class ZMailbox {
      * @throws ServiceException on error
      */
     @SuppressWarnings({"EmptyCatchBlock"})
-    public void getRESTResource(String relativePath, OutputStream os, boolean closeOs, int msecTimeout) throws ServiceException {
+    public void getRESTResource(
+            String relativePath, OutputStream os, boolean closeOs,
+            String startTimeArg, String endTimeArg, int msecTimeout)
+    throws ServiceException {
         GetMethod get = null;
         InputStream is = null;
 
         int statusCode;
         try {
+            if (startTimeArg != null) {
+                String encodedArg = URLEncoder.encode(startTimeArg, "UTF-8");
+                if (!relativePath.contains("?"))
+                    relativePath = relativePath + "?start=" + encodedArg;
+                else
+                    relativePath = relativePath + "&start=" + encodedArg;
+            }
+            if (endTimeArg != null) {
+                String encodedArg = URLEncoder.encode(endTimeArg, "UTF-8");
+                if (!relativePath.contains("?"))
+                    relativePath = relativePath + "?end=" + encodedArg;
+                else
+                    relativePath = relativePath + "&end=" + encodedArg;
+            }
+
             URI uri = getRestURI(relativePath);
             HttpClient client = getHttpClient(uri);
 
@@ -2063,13 +2081,15 @@ public class ZMailbox {
      * @param closeIs whether to close the input stream when done
      * @param length length of inputstream, or 0/-1 if length is unknown.
      * @param contentType optional content-type header value (defaults to "application/octect-stream")
-     * @param continueOnError if true, set optional continue=1 query string parameter
+     * @param ignoreAndContinueOnError if true, set optional ignore=1 query string parameter
+     * @param preserveAlarms if true, set optional preserveAlarms=1 query string parameter
      * @param msecTimeout connection timeout in milliseconds
      * @throws ServiceException on error
      */
     @SuppressWarnings({"EmptyCatchBlock"})
     public void postRESTResource(String relativePath, InputStream is, boolean closeIs, long length,
-                                 String contentType, boolean ignoreAndContinueOnError, int msecTimeout)
+                                 String contentType, boolean ignoreAndContinueOnError, boolean preserveAlarms,
+                                 int msecTimeout)
     throws ServiceException {
         PostMethod post = null;
 
@@ -2079,6 +2099,12 @@ public class ZMailbox {
                     relativePath = relativePath + "?ignore=1";
                 else
                     relativePath = relativePath + "&ignore=1";
+            }
+            if (preserveAlarms) {
+                if (!relativePath.contains("?"))
+                    relativePath = relativePath + "?preserveAlarms=1";
+                else
+                    relativePath = relativePath + "&preserveAlarms=1";
             }
             URI uri = getRestURI(relativePath);
             HttpClient client = getHttpClient(uri);

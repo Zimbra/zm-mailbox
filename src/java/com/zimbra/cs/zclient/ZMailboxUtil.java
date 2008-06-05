@@ -321,6 +321,10 @@ public class ZMailboxUtil implements DebugListener {
     static Option O_LIMIT = new Option("l", "limit", true, "max number of results to return");
     static Option O_NEXT = new Option("n", "next", false, "next page of search results");
     static Option O_OUTPUT_FILE = new Option("o", "output", true, "output filename");
+    static Option O_PRESERVE_ALARMS = new Option(null, "preserveAlarms", false,
+            "preserve existing calendar alarms during ics import (default is to use alarms in ics file)");
+    static Option O_START_TIME = new Option(null, "startTime", true, "start time for ics export");
+    static Option O_END_TIME = new Option(null, "endTime", true, "end time for ics export");
     static Option O_PREVIOUS = new Option("p", "previous", false,  "previous page of search results");
     static Option O_SORT = new Option("s", "sort", true, "sort order TODO");
     static Option O_REPLACE = new Option("r", "replace", false, "replace contact (default is to merge)");
@@ -373,7 +377,8 @@ public class ZMailboxUtil implements DebugListener {
         GET_MESSAGE("getMessage", "gm", "{msg-id}", "get a message", Category.MESSAGE, 1, 1, O_VERBOSE),
         GET_MAILBOX_SIZE("getMailboxSize", "gms", "", "get mailbox size", Category.MISC, 0, 0, O_VERBOSE),
         GET_PERMISSION("getPermission", "gp", "[right1 [right2...]]", "get rights currently granted", Category.PERMISSION, 0, Integer.MAX_VALUE, O_VERBOSE),
-        GET_REST_URL("getRestURL", "gru", "{relative-path}", "do a GET on a REST URL relative to the mailbox", Category.MISC, 1, 1, O_OUTPUT_FILE),
+        GET_REST_URL("getRestURL", "gru", "{relative-path}", "do a GET on a REST URL relative to the mailbox", Category.MISC, 1, 1,
+                O_OUTPUT_FILE, O_START_TIME, O_END_TIME),
         GET_SIGNATURES("getSignatures", "gsig", "", "get all signatures", Category.ACCOUNT, 0, 0, O_VERBOSE),
         GRANT_PERMISSION("grantPermission", "grp", "{account {name}|group {name}|all|public {[-]right}}", "allow or deny a right to a grantee or a group of grantee. to deny a right, put a '-' in front of the right", Category.PERMISSION, 2, 3),
         HELP("help", "?", "commands", "return help on a group of commands, or all commands. Use -v for detailed help.", Category.MISC, 0, 1, O_VERBOSE),
@@ -403,7 +408,8 @@ public class ZMailboxUtil implements DebugListener {
         MOVE_ITEM("moveItem", "mi", "{item-ids} {dest-folder-path}", "move item(s) to a new folder", Category.ITEM, 2, 2),
         MOVE_MESSAGE("moveMessage", "mm", "{msg-ids} {dest-folder-path}", "move message(s) to a new folder", Category.MESSAGE, 2, 2),
         NOOP("noOp", "no", "", "do a NoOp SOAP call to the server", Category.MISC, 0, 1),
-        POST_REST_URL("postRestURL", "pru", "{relative-path} {file-name}", "do a POST on a REST URL relative to the mailbox", Category.MISC, 2, 2, O_CONTENT_TYPE, O_IGNORE_ERROR),
+        POST_REST_URL("postRestURL", "pru", "{relative-path} {file-name}", "do a POST on a REST URL relative to the mailbox", Category.MISC, 2, 2,
+                O_CONTENT_TYPE, O_IGNORE_ERROR, O_PRESERVE_ALARMS),
         RENAME_FOLDER("renameFolder", "rf", "{folder-path} {new-folder-path}", "rename folder", Category.FOLDER, 2, 2),
         RENAME_SIGNATURE("renameSignature", "rsig", "{signature-name|signature-id} {new-name}", "rename signature", Category.ACCOUNT, 2, 2),
         RENAME_TAG("renameTag", "rt", "{tag-name} {new-tag-name}", "rename tag", Category.TAG, 2, 2),
@@ -468,7 +474,13 @@ public class ZMailboxUtil implements DebugListener {
             for (Object o: opts) {
                 Option opt = (Option) o;
                 String arg = opt.hasArg() ? " <arg>" : "";
-                String optStr = String.format("  -%s/--%s%s", opt.getOpt(), opt.getLongOpt(), arg);
+                String shortOpt = opt.getOpt();
+                String longOpt = opt.getLongOpt();
+                String optStr;
+                if (shortOpt != null)
+                    optStr = String.format("  -%s/--%s%s", shortOpt, longOpt, arg);
+                else
+                    optStr = String.format("  --%s%s", longOpt, arg);
                 sb.append(String.format("  %-30s %s%n", optStr, opt.getDescription()));
             }
             //sb.append(String.format("%n    %s%n%n", getHelp()));
@@ -791,6 +803,18 @@ public class ZMailboxUtil implements DebugListener {
 
     private boolean ignoreAndContinueOnErrorOpt() {
         return mCommandLine.hasOption(O_IGNORE_ERROR.getOpt());
+    }
+
+    private boolean preserveAlarmsOpt() {
+        return mCommandLine.hasOption(O_PRESERVE_ALARMS.getLongOpt());
+    }
+
+    private String startTimeOpt() throws ServiceException {
+        return mCommandLine.getOptionValue(O_START_TIME.getLongOpt());
+    }
+
+    private String endTimeOpt() throws ServiceException {
+        return mCommandLine.getOptionValue(O_END_TIME.getLongOpt());
     }
 
     private String typesOpt() throws ServiceException {
@@ -2459,7 +2483,7 @@ public class ZMailboxUtil implements DebugListener {
         
         try {
             os = hasOutputFile ? new FileOutputStream(outputFile) : System.out;
-            mMbox.getRESTResource(HttpUtil.encodePath(args[0]), os, hasOutputFile, 0);
+            mMbox.getRESTResource(HttpUtil.encodePath(args[0]), os, hasOutputFile, startTimeOpt(), endTimeOpt(), 0);
         } catch (IOException e) {
             throw ZClientException.IO_ERROR(e.getMessage(), e);
         } finally {
@@ -2470,7 +2494,8 @@ public class ZMailboxUtil implements DebugListener {
     private void doPostRestURL(String args[]) throws ServiceException {
         try {
             File file = new File(args[1]);
-            mMbox.postRESTResource(HttpUtil.encodePath(args[0]), new FileInputStream(file), true, file.length(), contentTypeOpt(), ignoreAndContinueOnErrorOpt(), 0);
+            mMbox.postRESTResource(HttpUtil.encodePath(args[0]), new FileInputStream(file), true, file.length(),
+                    contentTypeOpt(), ignoreAndContinueOnErrorOpt(), preserveAlarmsOpt(), 0);
         } catch (FileNotFoundException e) {
             throw ZClientException.CLIENT_ERROR("file not found: "+args[1], e);
         }
