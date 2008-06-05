@@ -2883,10 +2883,35 @@ public class Mailbox {
         return (Note) getItemById(noteId, MailItem.TYPE_NOTE);
     }
 
-    public synchronized List getNoteList(OperationContext octxt, int folderId) throws ServiceException {
-        return getItemList(octxt, MailItem.TYPE_NOTE, folderId);
+    public synchronized List<Note> getNoteList(OperationContext octxt, int folderId) throws ServiceException {
+        return getNoteList(octxt, folderId, DbSearch.SORT_NONE);
     }
 
+    public synchronized List<Note> getNoteList(OperationContext octxt, int folderId, byte sort) throws ServiceException {
+        List<Note> notes = new ArrayList<Note>();
+        for (MailItem item : getItemList(octxt, MailItem.TYPE_NOTE, folderId, sort))
+            notes.add((Note) item);
+        return notes;
+    }
+
+    public synchronized Chat getChatById(OperationContext octxt, int id) throws ServiceException {
+        return (Chat) getItemById(octxt, id, MailItem.TYPE_CHAT);
+    }
+
+    Chat getChatById(int id) throws ServiceException {
+        return (Chat) getItemById(id, MailItem.TYPE_CHAT);
+    }
+
+    public synchronized List<Chat> getChatList(OperationContext octxt, int folderId) throws ServiceException {
+        return getChatList(octxt, folderId, DbSearch.SORT_NONE);
+    }
+
+    public synchronized List<Chat> getChatList(OperationContext octxt, int folderId, byte sort) throws ServiceException {
+        List<Chat> chats = new ArrayList<Chat>();
+        for (MailItem item : getItemList(octxt, MailItem.TYPE_CHAT, folderId, sort))
+            chats.add((Chat) item);
+        return chats;
+    }
 
     public synchronized Contact getContactById(OperationContext octxt, int id) throws ServiceException {
         return (Contact) getItemById(octxt, id, MailItem.TYPE_CONTACT);
