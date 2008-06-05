@@ -1553,22 +1553,30 @@ public final class ZimbraQuery {
             mTokens = new ArrayList<String>(1);
             mWildcardTerm = null;
 
-            TokenStream source = analyzer.tokenStream(QueryTypeString(qType), new StringReader(text));
-            org.apache.lucene.analysis.Token t;
-
-            while(true) {
+            // shameless hack for bug 28666 -- the custom TO/FROM/CC analyzer causing problems with wildcards here, so for now
+            // use the standard content analyzer when handling TO/FROM/CC searches.
+            // This is probably fine for western languages, but it likely creates problems with custom analyzers
+            // used for Asian languages.  TODO investigate this issue.
+            if (text.charAt(text.length()-1) != '*' || (qType != ZimbraQueryParser.TO && qType != ZimbraQueryParser.CC && qType != ZimbraQueryParser.FROM)) {
+                TokenStream source = analyzer.tokenStream(QueryTypeString(qType), new StringReader(text));
+                org.apache.lucene.analysis.Token t;
+                
+                while(true) {
+                    try {
+                        t = source.next();
+                    } catch (IOException e) {
+                        t = null;
+                    }
+                    if (t == null)
+                        break;
+                    mTokens.add(t.termText());
+                } 
                 try {
-                    t = source.next();
-                } catch (IOException e) {
-                    t = null;
-                }
-                if (t == null)
-                    break;
-                mTokens.add(t.termText());
-            } 
-            try {
-                source.close();
-            } catch (IOException e) { /* ignore */ }
+                    source.close();
+                } catch (IOException e) { /* ignore */ }
+            } else {
+                mTokens.add(text);
+            }
             
             
             // okay, quite a bit of hackery here....basically, if they're doing a contact:
