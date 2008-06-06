@@ -124,5 +124,8 @@ public class ZFeatures {
 	// defaults to TRUE
 	public boolean getNewAddrBookEnabled() { return get(Provisioning.A_zimbraFeatureNewAddrBookEnabled) == null ||
 													getBool(Provisioning.A_zimbraFeatureNewAddrBookEnabled); }
+	// defaults to TRUE
+	public boolean getPop3Enabled() { return	get(Provisioning.A_zimbraPop3Enabled) == null ||
+												getBool(Provisioning.A_zimbraPop3Enabled); }
 }
 

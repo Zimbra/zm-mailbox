@@ -208,4 +208,5 @@ public class ZPrefs {
 
     public String getForwardReplyPrefixChar() { return get(Provisioning.A_zimbraPrefForwardReplyPrefixChar); }
 
+	public String getPop3DownloadSince() { return get(Provisioning.A_zimbraPrefPop3DownloadSince); }
 }
