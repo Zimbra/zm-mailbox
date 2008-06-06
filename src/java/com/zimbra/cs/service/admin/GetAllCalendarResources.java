@@ -49,6 +49,6 @@ public class GetAllCalendarResources extends GetAllAccounts {
                 ToXML.encodeCalendarResourceOld(e, (CalendarResource) entry, true);
             }
         };
-        Provisioning.getInstance().getAllCalendarResources(d, visitor);
+        Provisioning.getInstance().getAllCalendarResources(d, s, visitor);
     }
 }

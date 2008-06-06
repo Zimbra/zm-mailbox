@@ -432,6 +432,7 @@ Notes:
 
 <GetAllAccountsRequest>
   [<domain by="id|name">...</domain>]
+  [<server by="id|name">...</server>]
 <GetAllAccountsRequest/>
 
 <GetAllAccountsResponse>
@@ -1536,6 +1537,7 @@ Access: domain admin sufficient
 
 <GetAllCalendarResourcesRequest>
   [<domain by="id|name">...</domain>]
+  [<server by="id|name">...</server>]
 <GetAllCalendarResourcesRequest/>
 
 <GetAllCalendarResourcesResponse>

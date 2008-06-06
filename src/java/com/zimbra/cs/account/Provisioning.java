@@ -2219,6 +2219,8 @@ public abstract class Provisioning {
 
     public abstract void getAllCalendarResources(Domain d, NamedEntry.Visitor visitor) throws ServiceException;
 
+    public abstract void getAllCalendarResources(Domain d, Server s, NamedEntry.Visitor visitor) throws ServiceException;
+
     public abstract List getAllDistributionLists(Domain d) throws ServiceException;
     
     /**
