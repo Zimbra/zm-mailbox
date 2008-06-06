@@ -30,7 +30,6 @@ all mail objects, rights for account based access controls are like
 
 Currently, the following rights are supported:
     - invite
-    - private
     - viewFreeBusy
 
 zmmailbox helpPermissions command describes each rights in more details.
@@ -182,9 +181,6 @@ zmmailbox commands:
                       automatically(tentatively) only if invite is from A, B, C or anyone in group G. 
                   (2) Conf room Y can only be booked by users A, B, C and group G.
 
-         private: view, create, delete, modify private content
-             e.g. view, create, delete, modify private appointments
-        
          viewFreeBusy: view free/busy
              e.g. Free/busy for Y can only be seen by users A, B, C and group G.
    
@@ -246,22 +242,22 @@ zmmailbox commands:
           granted: 
             group group2@example.com invite
             
-       mbox user1@example.com> grp all private
+       mbox user1@example.com> grp all viewFreeBusy
           granted: 
-            all  private
+            all  viewFreeBusy
             
-       mbox user1@example.com> grp public -private
+       mbox user1@example.com> grp public -viewFreeBusy
           granted: 
-            public  -private
+            public  -viewFreeBusy
  
        mbox user1@example.com> gp
              Permission      Type  Display
        ----------------  --------  -------
                  invite   account  user3@example.com
                  invite     group  group2@example.com
-                private       all  
-               -private    public  
           -viewFreeBusy     group  group1@foo.com
+          -viewFreeBusy    public  
+           viewFreeBusy       all  
    
    Note: 
        (1) if domain is not given for account or group grantee, the domain of the selected 
@@ -290,9 +286,9 @@ zmmailbox commands:
        ----------------  --------  -------
                  invite   account  user3@example.com
                  invite     group  group2@example.com
-                private       all  
-               -private    public  
           -viewFreeBusy     group  group1@foo.com
+          -viewFreeBusy    public  
+           viewFreeBusy       all 
 
        mbox user1@example.com> rvp group group1@foo.com viewFreeBusy
          revoked 0 permission
@@ -303,9 +299,9 @@ zmmailbox commands:
          revoked: 
            group group1@foo.com -viewFreeBusy 
            
-       mbox user1@example.com> rvp all private
+       mbox user1@example.com> rvp all viewFreeBusy
          revoked: 
-           all  private 
+           all  viewFreeBusy 
            
        mbox user1@example.com> rvp account  user3@example.com invite
          revoked: 
@@ -315,7 +311,7 @@ zmmailbox commands:
              Permission      Type  Display
        ----------------  --------  -------
                  invite     group  group2@example.com
-               -private    public
+          -viewFreeBusy    public
                
                
    Note: when revoking a negative permission, "-" has to be prepended to the right, 
