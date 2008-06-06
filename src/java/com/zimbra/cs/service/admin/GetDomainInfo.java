@@ -16,18 +16,16 @@
  */
 package com.zimbra.cs.service.admin;
 
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.Map.Entry;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeFlag;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -43,7 +41,8 @@ public class GetDomainInfo extends AdminDocumentHandler {
         String key = d.getAttribute(AdminConstants.A_BY);
         String value = d.getText();
         
-        Domain domain = prov.get(DomainBy.fromString(key), value);
+        DomainBy domainBy = DomainBy.fromString(key);
+        Domain domain = prov.get(domainBy, value);
 
         /* 
         if (domain != null && !canAccessDomain(lc, domain))
@@ -51,18 +50,54 @@ public class GetDomainInfo extends AdminDocumentHandler {
         */
         
         Element response = lc.createElement(AdminConstants.GET_DOMAIN_INFO_RESPONSE);
-        if (domain != null)
-            doDomain(response, domain, applyConfig);
+        
+        if (domain == null && domainBy != DomainBy.name && domainBy != DomainBy.virtualHostname) {
+            // domain not found, and we don't have info for walking up sub domains
+            // can't do much, we probably don't want to return global config values in this case.
+        } else {
+            /*
+             * for all the attrs we can return (like login/logout URL), start stripping off 
+             * subdomains and checking the parent domain's settings. i.e., if a.b.com lookup fails, 
+             * try "b.com" and see if it has any settings defined; ultimately falling back to global.
+             * 
+             * see if we can still find a domain.  We do this by
+             * 
+             * 1. if by virtualHostname, see if we can find a domain by the name.  If we can, use that doamin.
+             * 
+             * 2. if get(DomainBy.name) returns null using the supplied value, we walk up the sub-domains
+             *    and see if we can find a domain by the name.  
+             *    e.g  if x.y.z.com was passed in, we check y.z.com, then z.com.
+             * 
+             * 3. If still no domain found, return attributes on global config 
+             * 
+             */
+            
+            if (domain == null) {
+                if (domainBy == DomainBy.virtualHostname)
+                    domain = prov.get(DomainBy.name, value);
+                
+                if (domain == null)
+                    domain = findDomain(prov, value);
+            }
+            
+            if (domain != null)
+                toXML(response, domain, applyConfig);
+            else
+                toXML(response, prov.getConfig(), applyConfig);
+        }
 
         return response;
     }
     
-    private void doDomain(Element e, Domain d, boolean applyConfig) throws ServiceException {
+    private void toXML(Element e, Entry entry, boolean applyConfig) throws ServiceException {
         Element domain = e.addElement(AdminConstants.E_DOMAIN);
-        domain.addAttribute(AdminConstants.A_NAME,d.getUnicodeName());
-        domain.addAttribute(AdminConstants.A_ID,d.getId());
+        if (entry instanceof Domain) {
+            Domain d = (Domain)entry;
+            domain.addAttribute(AdminConstants.A_NAME, d.getUnicodeName());
+            domain.addAttribute(AdminConstants.A_ID, d.getId());
+        }
         Set<String> attrList = AttributeManager.getInstance().getAttrsWithFlag(AttributeFlag.domainInfo);
-        Map attrsMap = d.getUnicodeAttrs(applyConfig);
+        Map attrsMap = entry.getUnicodeAttrs(applyConfig);
         
         for (String name : attrList) {
             Object value = attrsMap.get(name);
@@ -75,6 +110,29 @@ public class GetDomainInfo extends AdminDocumentHandler {
                 domain.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, name).setText((String) value);
         }
     }
+
+    private static Domain findDomain(Provisioning prov, String value) throws ServiceException {
+        Domain domain = null;
+        
+        int firstDotAt = value.indexOf('.');
+        int secondDotAt = firstDotAt == -1? -1 : value.indexOf('.', firstDotAt+1);
+        
+        // will do the get only if the remaining has at least two segments.
+        // e.g will do z.com
+        //     will not do com
+        while (secondDotAt != -1) {
+            // System.out.println(value.substring(firstDotAt+1));
+            domain = prov.get(DomainBy.name, value.substring(firstDotAt+1));
+            if (domain != null)
+                break;
+            else {
+                firstDotAt = secondDotAt;
+                secondDotAt = value.indexOf('.', firstDotAt+1);
+            }
+        }
+        
+        return domain;
+    }
     
     public boolean needsAuth(Map<String, Object> context) {
         return false;
@@ -82,5 +140,13 @@ public class GetDomainInfo extends AdminDocumentHandler {
 
     public boolean needsAdminAuth(Map<String, Object> context) {
         return false;
+    }
+    
+    public static void main(String args[]) throws ServiceException {
+        // findDomain(Provisioning.getInstance(), "x");  System.out.println();
+        // findDomain(Provisioning.getInstance(), "x.y");  System.out.println();
+        // findDomain(Provisioning.getInstance(), "x.y.z");  System.out.println();
+        findDomain(Provisioning.getInstance(), "x.y.z.a.b.c");  System.out.println();
+
     }
 }
