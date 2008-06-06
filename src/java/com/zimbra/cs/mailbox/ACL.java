@@ -51,6 +51,8 @@ public class ACL {
     public static final short RIGHT_ADMIN   = 0x0100;
     /** The calculated right to create subfolders in a folder. */
     public static final short RIGHT_SUBFOLDER = 0x0200;
+    /** The right to view a private item. */
+    public static final short RIGHT_PRIVATE = 0x0400;
 
     /** The combination of rights that equates to {@link #RIGHT_SUBFOLDER}. */
     private static final short SUBFOLDER_RIGHTS = RIGHT_READ | RIGHT_INSERT;
@@ -58,7 +60,8 @@ public class ACL {
     /** Bitmask of all rights that can be explicitly granted.  <i>Note:
      *  CAN_CREATE_FOLDER is calculated and hence cannot be granted. */
     private static final short GRANTABLE_RIGHTS = RIGHT_READ   | RIGHT_WRITE  | RIGHT_INSERT |
-                                                  RIGHT_DELETE | RIGHT_ACTION | RIGHT_ADMIN;
+                                                  RIGHT_DELETE | RIGHT_ACTION | RIGHT_ADMIN  |
+                                                  RIGHT_PRIVATE;
 
     /** The grantee of these rights is the zimbraId for a user. */
 	public static final byte GRANTEE_USER     = 1;
@@ -355,8 +358,7 @@ public class ACL {
         return mlist;
     }
 
-    @Override
-    public String toString() {
+    @Override public String toString() {
         return encode().toString();
     }
 
@@ -375,22 +377,26 @@ public class ACL {
     public static final char ABBR_DELETE = 'd';
     public static final char ABBR_ACTION = 'x';
     public static final char ABBR_ADMIN = 'a';
+    public static final char ABBR_PRIVATE = 'p';
     public static final char ABBR_CREATE_FOLDER = 'c';
 
     public static short stringToRights(String encoded) throws ServiceException {
         short rights = 0;
-        if (encoded != null && encoded.length() != 0)
-            for (int i = 0; i < encoded.length(); i++)
+        if (encoded != null && encoded.length() != 0) {
+            for (int i = 0; i < encoded.length(); i++) {
                 switch (encoded.charAt(i)) {
-                    case ABBR_READ:    rights |= RIGHT_READ;    break;
-                    case ABBR_WRITE:   rights |= RIGHT_WRITE;   break;
-                    case ABBR_INSERT:  rights |= RIGHT_INSERT;  break;
-                    case ABBR_DELETE:  rights |= RIGHT_DELETE;  break;
-                    case ABBR_ACTION:  rights |= RIGHT_ACTION;  break;
-                    case ABBR_ADMIN:   rights |= RIGHT_ADMIN;   break;
+                    case ABBR_READ:     rights |= RIGHT_READ;     break;
+                    case ABBR_WRITE:    rights |= RIGHT_WRITE;    break;
+                    case ABBR_INSERT:   rights |= RIGHT_INSERT;   break;
+                    case ABBR_DELETE:   rights |= RIGHT_DELETE;   break;
+                    case ABBR_ACTION:   rights |= RIGHT_ACTION;   break;
+                    case ABBR_ADMIN:    rights |= RIGHT_ADMIN;    break;
+                    case ABBR_PRIVATE:  rights |= RIGHT_PRIVATE;  break;
                     case ABBR_CREATE_FOLDER:                    break;
                     default:  throw ServiceException.INVALID_REQUEST("unknown right: " + encoded.charAt(i), null);
                 }
+            }
+        }
         return rights;
     }
 
@@ -398,12 +404,13 @@ public class ACL {
         if (rights == 0)
             return "";
         StringBuffer sb = new StringBuffer();
-        if ((rights & RIGHT_READ) != 0)    sb.append(ABBR_READ);
-        if ((rights & RIGHT_WRITE) != 0)   sb.append(ABBR_WRITE);
-        if ((rights & RIGHT_INSERT) != 0)  sb.append(ABBR_INSERT);
-        if ((rights & RIGHT_DELETE) != 0)  sb.append(ABBR_DELETE);
-        if ((rights & RIGHT_ACTION) != 0)  sb.append(ABBR_ACTION);
-        if ((rights & RIGHT_ADMIN) != 0)   sb.append(ABBR_ADMIN);
+        if ((rights & RIGHT_READ) != 0)     sb.append(ABBR_READ);
+        if ((rights & RIGHT_WRITE) != 0)    sb.append(ABBR_WRITE);
+        if ((rights & RIGHT_INSERT) != 0)   sb.append(ABBR_INSERT);
+        if ((rights & RIGHT_DELETE) != 0)   sb.append(ABBR_DELETE);
+        if ((rights & RIGHT_ACTION) != 0)   sb.append(ABBR_ACTION);
+        if ((rights & RIGHT_ADMIN) != 0)    sb.append(ABBR_ADMIN);
+        if ((rights & RIGHT_PRIVATE) != 0)  sb.append(ABBR_PRIVATE);
         if ((rights & RIGHT_SUBFOLDER) != 0)  sb.append(ABBR_CREATE_FOLDER);
         return sb.toString();
     }
