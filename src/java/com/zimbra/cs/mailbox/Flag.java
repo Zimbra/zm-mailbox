@@ -34,15 +34,14 @@ public class Flag extends Tag {
 
     /** Array mapping each <tt>Flag</tt> to a character that represents it in
      *  a string encoding.  The <tt>Flag</tt>'s position in this array is the
-     *  same as its "index": <code>-1 - FLAG_ID</code>.
-     *   
-     *  Currently used flags: ~#*!?/2abdefhinrsuvwxy
-     */
-    static char[] FLAG_REP = new char[31];
-        static {
-            for (int i = 0; i < 31; i++)  FLAG_REP[i] = 'X';
-        }
-        
+     *  same as its "index": <code>-1 - FLAG_ID</code>.  <i>Note that some
+     *  flags ({@link #ID_FLAG_COPIED} and {@link #ID_FLAG_INDEXING_DEFERRED})
+     *  are meant to be server-internal and hence have no mapping in this
+     *  array.</i><p>
+     *  
+     *  Currently used flags: ~#*!?/2abdefhinrsuvwxy */
+    private static char[] FLAG_REP = new char[31];
+
     public static final int ID_FLAG_FROM_ME = -1;
     public static final int BITMASK_FROM_ME = 1 << getIndex(ID_FLAG_FROM_ME);
         static { FLAG_REP[getIndex(ID_FLAG_FROM_ME)] = 's'; }
@@ -61,7 +60,7 @@ public class Flag extends Tag {
 
     public static final int ID_FLAG_COPIED = -5;
     public static final int BITMASK_COPIED = 1 << getIndex(ID_FLAG_COPIED);  // 16
-        static { FLAG_REP[getIndex(ID_FLAG_COPIED)] = '2'; }
+//        static { FLAG_REP[getIndex(ID_FLAG_COPIED)] = '2'; }
 
     public static final int ID_FLAG_FLAGGED = -6;
     public static final int BITMASK_FLAGGED = 1 << getIndex(ID_FLAG_FLAGGED); // 32
@@ -101,7 +100,7 @@ public class Flag extends Tag {
 
     public static final int ID_FLAG_INDEXING_DEFERRED = -14;
     public static final int BITMASK_INDEXING_DEFERRED = 1 << getIndex(ID_FLAG_INDEXING_DEFERRED); // 8192
-        static { FLAG_REP[getIndex(ID_FLAG_INDEXING_DEFERRED)] = 'e'; }
+//        static { FLAG_REP[getIndex(ID_FLAG_INDEXING_DEFERRED)] = 'e'; }
 
     public static final int ID_FLAG_SUBSCRIBED = -20;
     public static final int BITMASK_SUBSCRIBED = 1 << getIndex(ID_FLAG_SUBSCRIBED); // 524288
@@ -122,7 +121,7 @@ public class Flag extends Tag {
     public static final int ID_FLAG_INVITE = -24;
     public static final int BITMASK_INVITE = 1 << getIndex(ID_FLAG_INVITE); // 8388608
         static { FLAG_REP[getIndex(ID_FLAG_INVITE)] = 'v'; }
-    
+
     public static final int ID_FLAG_SYNCFOLDER = -25;
     public static final int BITMASK_SYNCFOLDER = 1 << getIndex(ID_FLAG_SYNCFOLDER); // 16777216
         static { FLAG_REP[getIndex(ID_FLAG_SYNCFOLDER)] = 'y'; }
@@ -130,10 +129,10 @@ public class Flag extends Tag {
     public static final int ID_FLAG_SYNC = -26;
     public static final int BITMASK_SYNC = 1 << getIndex(ID_FLAG_SYNC); // 33554432
         static { FLAG_REP[getIndex(ID_FLAG_SYNC)] = '~'; }
-        
+
     public static final int ID_FLAG_UNCACHED = -31;
     public static final int BITMASK_UNCACHED = 1 << getIndex(ID_FLAG_UNCACHED); // 4096
-        static { FLAG_REP[getIndex(ID_FLAG_UNCACHED)] = 'h'; }
+//        static { FLAG_REP[getIndex(ID_FLAG_UNCACHED)] = 'h'; }
 
 
     static final String UNREAD_FLAG_ONLY = getAbbreviation(ID_FLAG_UNREAD) + "";
@@ -202,18 +201,21 @@ public class Flag extends Tag {
             throw ServiceException.FAILURE("invalid value for flags: " + flags, null);
     }
 
-    /** @return the "external" flag bitmask for the given flag string, which includes {@link Flag#BITMASK_UNREAD}. */
+    /** @return the "external" flag bitmask for the given flag string,
+     *  which includes {@link Flag#BITMASK_UNREAD}. */
     public static int flagsToBitmask(String flags) {
         int bitmask = 0;
-        if (flags != null)
+        if (flags != null) {
             for (int i = 0; i < flags.length(); i++) {
                 char c = flags.charAt(i);
-                for (int j = 0; j < MailItem.MAX_FLAG_COUNT; j++)
+                for (int j = 0; j < MailItem.MAX_FLAG_COUNT; j++) {
                     if (FLAG_REP[j] == c) {
                         bitmask |= 1 << j;
                         break;
                     }
+                }
             }
+        }
         return bitmask;
     }
 
@@ -221,7 +223,9 @@ public class Flag extends Tag {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; bitmask != 0 && i < MAX_FLAG_COUNT - 1; i++) {
             if ((bitmask & (1 << i)) != 0) {
-                sb.append(FLAG_REP[i]);
+                char c = FLAG_REP[i];
+                if (c != 0)
+                    sb.append(c);
                 bitmask &= ~(1 << i);
             }
         }
