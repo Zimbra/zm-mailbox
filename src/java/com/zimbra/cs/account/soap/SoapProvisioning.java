@@ -1222,6 +1222,27 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
+    public void getAllCalendarResources(Domain d, Server s, Visitor visitor) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.GET_ALL_CALENDAR_RESOURCES_REQUEST);
+
+        Element domainEl = req.addElement(AdminConstants.E_DOMAIN);
+        domainEl.addAttribute(AdminConstants.A_BY, CalendarResourceBy.id.name());
+        domainEl.setText(d.getId());
+        
+        if (s != null) {
+            Element serverEl = req.addElement(AdminConstants.E_SERVER);
+            serverEl.addAttribute(AdminConstants.A_BY, ServerBy.id.name());
+            serverEl.setText(s.getId());
+        }
+
+        Element resp = invoke(req);
+        for (Element a: resp.listElements(AdminConstants.E_CALENDAR_RESOURCE)) {
+            
+            visitor.visit(new SoapCalendarResource(a));
+        }
+    }
+
+    @Override
     public List getAllDistributionLists(Domain d) throws ServiceException {
         ArrayList<DistributionList> result = new ArrayList<DistributionList>();
         XMLElement req = new XMLElement(AdminConstants.GET_ALL_DISTRIBUTION_LISTS_REQUEST);

@@ -3673,7 +3673,7 @@ public class LdapProvisioning extends Provisioning {
                 null, null, true);
         */        
     }
-    
+
     @Override
     public void getAllCalendarResources(Domain d, NamedEntry.Visitor visitor)
     throws ServiceException {
@@ -3682,6 +3682,22 @@ public class LdapProvisioning extends Provisioning {
                       null, mDIT.domainDNToAccountSearchDN(ld.getDN()),
                       Provisioning.SA_CALENDAR_RESOURCE_FLAG,
                       visitor, 0);
+    }
+
+    @Override
+    public void getAllCalendarResources(Domain d, Server s, NamedEntry.Visitor visitor)
+    throws ServiceException {
+        LdapDomain ld = (LdapDomain) d;        
+        String filter = mDIT.filterCalendarResourcesByDomain(d, false);
+        if (s != null) {
+            String serverFilter = "(" + Provisioning.A_zimbraMailHost + "=" + s.getAttr(Provisioning.A_zimbraServiceHostname) + ")";
+            if (StringUtil.isNullOrEmpty(filter))
+                filter = serverFilter;
+            else
+                filter = "(&" + serverFilter + filter + ")";
+        }
+        searchObjects(filter, null, mDIT.domainDNToAccountSearchDN(ld.getDN()),
+                      Provisioning.SA_CALENDAR_RESOURCE_FLAG, visitor, 0);
     }
 
     @Override

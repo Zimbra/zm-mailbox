@@ -223,7 +223,7 @@ public class ProvUtil implements DebugListener {
         GET_ACCOUNT_LOGGERS("getAccountLoggers", "gal", "{name@domain|id}", Category.MISC, 1, 1),
         GET_ALL_ACCOUNT_LOGGERS("getAllAccountLoggers", "gaal", "{server}", Category.MISC, 1, 1),
         GET_ALL_ADMIN_ACCOUNTS("getAllAdminAccounts", "gaaa", "[-v] [-e] [attr1 [attr2...]]", Category.ACCOUNT, 0, Integer.MAX_VALUE),
-        GET_ALL_CALENDAR_RESOURCES("getAllCalendarResources", "gacr", "[-v] [{domain}]", Category.CALENDAR, 0, 2),
+        GET_ALL_CALENDAR_RESOURCES("getAllCalendarResources", "gacr", "[-v] [-e] [-s server] [{domain}]", Category.CALENDAR, 0, 5),
         GET_ALL_CONFIG("getAllConfig", "gacf", "[attr1 [attr2...]]", Category.CONFIG, 0, Integer.MAX_VALUE),
         GET_ALL_COS("getAllCos", "gac", "[-v]", Category.COS, 0, 1),
         GET_ALL_DISTRIBUTION_LISTS("getAllDistributionLists", "gadl", "[{domain}]", Category.LIST, 0, 1),
@@ -696,7 +696,7 @@ public class ProvUtil implements DebugListener {
             mProv.renameCalendarResource(lookupCalendarResource(args[1]).getId(), args[2]);
             break;
         case GET_CALENDAR_RESOURCE:
-            dumpCalendarResource(lookupCalendarResource(args[1]), getArgNameSet(args, 2));
+            dumpCalendarResource(lookupCalendarResource(args[1]), true, getArgNameSet(args, 2));
             break;
         case GET_ALL_CALENDAR_RESOURCES:
             doGetAllCalendarResources(args);
@@ -1423,10 +1423,6 @@ public class ProvUtil implements DebugListener {
         System.out.println();
     }
     
-    void dumpCalendarResource(CalendarResource  resource, Set<String> attrNames) throws ServiceException {
-        dumpCalendarResource(resource, true, attrNames);
-    }
-
     private void dumpCalendarResource(CalendarResource resource, boolean expandCos, Set<String> attrNames) throws ServiceException {
         System.out.println("# name "+resource.getName());
         Map<String, Object> attrs = resource.getAttrs(expandCos);
@@ -1518,51 +1514,81 @@ public class ProvUtil implements DebugListener {
     private void doGetAllCalendarResources(String[] args)
     throws ServiceException {
         boolean verbose = false;
+        boolean applyDefault = true;
         String d = null;
-        if (args.length == 2) {
-            if (args[1].equals("-v")) 
+        String s = null;
+
+        int i = 1;
+        while (i < args.length) {
+            String arg = args[i];
+            if (arg.equals("-v"))
                 verbose = true;
-            else 
-                d = args[1];
-        } else if (args.length == 3) {
-            if (args[1].equals("-v")) 
-                verbose = true;
-            else  {
-                usage();
-                return;
+            else if (arg.equals("-e"))
+                applyDefault = false;
+            else if (arg.equals("-s")) {
+                i++;
+                if (i < args.length) {
+                    if (s == null)
+                        s = args[i];
+                    else {
+                        System.out.println("invalid arg: " + args[i] + ", already specified -s with " + s);
+                        usage();
+                        return;
+                    }
+                } else {
+                    usage();
+                    return;
+                }
+            } else {
+                if (d == null)
+                    d = arg;
+                else {
+                    System.out.println("invalid arg: " + arg + ", already specified domain: " + d);
+                    usage();
+                    return;
+                }
             }
-            d = args[2];            
-        } else if (args.length != 1) {
+            i++;
+        }
+
+        if (!applyDefault && !verbose) {
+            System.out.println(ERR_INVALID_ARG_EV);
             usage();
             return;
         }
 
+        // always use LDAP
+        Provisioning prov = Provisioning.getInstance();
+
+        Server server = null;
+        if (s != null)
+            server = lookupServer(s);
+
         if (d == null) {
-            List domains = mProv.getAllDomains();
-            for (Iterator dit=domains.iterator(); dit.hasNext(); ) {
-                Domain domain = (Domain) dit.next();
-                doGetAllCalendarResources(domain, verbose);
+            List<Domain> domains = prov.getAllDomains();
+            for (Domain domain : domains) {
+                doGetAllCalendarResources(prov, domain, server, verbose, applyDefault);
             }
         } else {
-            Domain domain = lookupDomain(d);
-            doGetAllCalendarResources(domain, verbose);
+            Domain domain = lookupDomain(d, prov);
+            doGetAllCalendarResources(prov, domain, server, verbose, applyDefault);
         }
     }    
 
-    private void doGetAllCalendarResources(Domain domain,
-                                           final boolean verbose)
+    private void doGetAllCalendarResources(Provisioning prov, Domain domain, Server server,
+                                           final boolean verbose, final boolean applyDefault)
     throws ServiceException {
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
             public void visit(com.zimbra.cs.account.NamedEntry entry)
             throws ServiceException {
                 if (verbose) {
-                    dumpCalendarResource((CalendarResource) entry, null);
+                    dumpCalendarResource((CalendarResource) entry, applyDefault, null);
                 } else {
                     System.out.println(entry.getName());                        
                 }
             }
         };
-        mProv.getAllCalendarResources(domain, visitor);
+        prov.getAllCalendarResources(domain, server, visitor);
     }
 
     private void doSearchCalendarResources(String[] args) throws ServiceException {
@@ -1600,7 +1626,7 @@ public class ProvUtil implements DebugListener {
         for (Iterator iter = resources.iterator(); iter.hasNext(); ) {
             CalendarResource resource = (CalendarResource) iter.next();
             if (verbose)
-                dumpCalendarResource(resource, null);
+                dumpCalendarResource(resource, true, null);
             else
                 System.out.println(resource.getName());
         }
