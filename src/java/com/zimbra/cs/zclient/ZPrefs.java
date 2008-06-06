@@ -217,5 +217,5 @@ public class ZPrefs {
     public boolean getCalendarReminderMobile() { return getBool(Provisioning.A_zimbraPrefCalendarReminderMobile); }
     public boolean getCalendarReminderYMessenger() { return getBool(Provisioning.A_zimbraPrefCalendarReminderYMessenger); }
 
-
+	public String getPop3DownloadSince() { return get(Provisioning.A_zimbraPrefPop3DownloadSince); }
 }
