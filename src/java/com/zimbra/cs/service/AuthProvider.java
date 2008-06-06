@@ -34,8 +34,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ZimbraAuthToken;
-import com.zimbra.soap.SoapServlet;
+import com.zimbra.cs.servlet.ZimbraServlet;
 
 public abstract class AuthProvider {
     public static final String ZIMBRA_AUTH_PROVIDER = "zimbra";
@@ -229,7 +228,7 @@ public abstract class AuthProvider {
      * @param req
      * @return whether http basic authentication is allowed
      */
-    protected boolean allowHttpBasicAuth(HttpServletRequest req) {
+    protected boolean allowHttpBasicAuth(HttpServletRequest req, ZimbraServlet servlet) {
         return true;
     }
 
@@ -450,10 +449,10 @@ public abstract class AuthProvider {
         throw AuthProviderException.FAILURE("cannot get authtoken from account " + acct.getName());
     }
     
-    public static boolean allowBasicAuth(HttpServletRequest req) {
+    public static boolean allowBasicAuth(HttpServletRequest req, ZimbraServlet servlet) {
         List<AuthProvider> providers = getProviders();
         for (AuthProvider ap : providers) {
-            if (ap.allowHttpBasicAuth(req))
+            if (ap.allowHttpBasicAuth(req, servlet))
                 return true;
 
         }
