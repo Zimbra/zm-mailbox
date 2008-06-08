@@ -25,6 +25,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -52,6 +53,8 @@ public class FixCalendarTimeZoneUtil extends SoapCLI {
                 "two-letter country code if running country-specific fixup"));
         options.addOption(new Option(null, O_SYNC, false,
                 "run synchronously; default is asynchronous"));
+        options.addOption(SoapCLI.OPT_AUTHTOKEN);
+        options.addOption(SoapCLI.OPT_AUTHTOKENFILE);
     }
 
     protected String getCommandUsage() {
@@ -82,7 +85,8 @@ public class FixCalendarTimeZoneUtil extends SoapCLI {
             String country = null;
             if (cl.hasOption(O_COUNTRY))
                 country = cl.getOptionValue(O_COUNTRY);
-            util.doit(cl.getOptionValues(O_ACCOUNT), after, country, cl.hasOption(O_SYNC));
+            
+            util.doit(getZAuthToken(cl), cl.getOptionValues(O_ACCOUNT), after, country, cl.hasOption(O_SYNC));
             System.exit(0);
         } catch (ParseException e) {
             util.usage(e);
@@ -93,7 +97,7 @@ public class FixCalendarTimeZoneUtil extends SoapCLI {
         System.exit(1);
     }
 
-    private void doit(String[] accts, String after, String country, boolean sync)
+    private void doit(ZAuthToken zat, String[] accts, String after, String country, boolean sync)
     throws SoapFaultException, IOException, ServiceException {
         Element req = new Element.XMLElement(AdminConstants.FIX_CALENDAR_TIME_ZONE_REQUEST);
         if (accts == null || accts.length == 0)
@@ -122,7 +126,7 @@ public class FixCalendarTimeZoneUtil extends SoapCLI {
         if (sync)
             req.addAttribute(AdminConstants.A_TZFIXUP_SYNC, true);
 
-        auth();
+        auth(zat);
         getTransport().invokeWithoutSession(req);
     }
 }

@@ -27,6 +27,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.dom4j.DocumentException;
 
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -58,6 +59,8 @@ public class FixCalendarTZUtil extends SoapCLI {
                 "fixup calendar items after this time; defaults to beginning of 2007"));
         options.addOption(new Option(null, O_SYNC, false,
                 "run synchronously; default is asynchronous"));
+        options.addOption(SoapCLI.OPT_AUTHTOKEN);
+        options.addOption(SoapCLI.OPT_AUTHTOKENFILE);
     }
 
     protected String getCommandUsage() {
@@ -88,7 +91,7 @@ public class FixCalendarTZUtil extends SoapCLI {
             if (cl.hasOption(O_AFTER))
                 after = cl.getOptionValue(O_AFTER);
             
-            util.doit(cl.getOptionValue(O_RULEFILE), cl.getOptionValues(O_ACCOUNT), after, cl.hasOption(O_SYNC));
+            util.doit(getZAuthToken(cl), cl.getOptionValue(O_RULEFILE), cl.getOptionValues(O_ACCOUNT), after, cl.hasOption(O_SYNC));
             System.exit(0);
         } catch (ParseException e) {
             util.usage(e);
@@ -112,7 +115,7 @@ public class FixCalendarTZUtil extends SoapCLI {
         return tzfixupElem;
     }
 
-    private void doit(String ruleFilePath, String[] accts, String after, boolean sync)
+    private void doit(ZAuthToken zat, String ruleFilePath, String[] accts, String after, boolean sync)
     throws SoapFaultException, IOException, DocumentException, ServiceException {
         Element req = new Element.XMLElement(AdminConstants.FIX_CALENDAR_TZ_REQUEST);
 
@@ -145,7 +148,7 @@ public class FixCalendarTZUtil extends SoapCLI {
         if (sync)
             req.addAttribute(AdminConstants.A_TZFIXUP_SYNC, true);
 
-        auth();
+        auth(zat);
         getTransport().invokeWithoutSession(req);
     }
 }
