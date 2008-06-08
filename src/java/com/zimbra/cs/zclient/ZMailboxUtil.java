@@ -2483,7 +2483,7 @@ public class ZMailboxUtil implements DebugListener {
         
         try {
             os = hasOutputFile ? new FileOutputStream(outputFile) : System.out;
-            mMbox.getRESTResource(HttpUtil.encodePath(args[0]), os, hasOutputFile, startTimeOpt(), endTimeOpt(), 0);
+            mMbox.getRESTResource(HttpUtil.encodePathQuery(args[0]), os, hasOutputFile, startTimeOpt(), endTimeOpt(), 0);
         } catch (IOException e) {
             throw ZClientException.IO_ERROR(e.getMessage(), e);
         } finally {
@@ -2494,7 +2494,7 @@ public class ZMailboxUtil implements DebugListener {
     private void doPostRestURL(String args[]) throws ServiceException {
         try {
             File file = new File(args[1]);
-            mMbox.postRESTResource(HttpUtil.encodePath(args[0]), new FileInputStream(file), true, file.length(),
+            mMbox.postRESTResource(HttpUtil.encodePathQuery(args[0]), new FileInputStream(file), true, file.length(),
                     contentTypeOpt(), ignoreAndContinueOnErrorOpt(), preserveAlarmsOpt(), 0);
         } catch (FileNotFoundException e) {
             throw ZClientException.CLIENT_ERROR("file not found: "+args[1], e);
