@@ -23,11 +23,8 @@ package com.zimbra.cs.account;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
-import java.util.List;
-import java.util.ArrayList;
 import java.net.InetAddress;
 import java.net.Inet4Address;
-import java.net.Inet6Address;
 import java.net.UnknownHostException;
 
 import javax.crypto.Mac;
@@ -42,29 +39,23 @@ import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.methods.GetMethod;
 
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.ACL.GuestAccount;
 import com.zimbra.cs.service.ZimbraAuthProvider;
-import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.common.auth.AuthTokenCookie;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.util.BlobMetaData;
 import com.zimbra.common.util.BlobMetaDataEncodingException;
-import com.zimbra.common.util.StringUtil;
 
 /**
  * @author schemers
@@ -401,7 +392,7 @@ public class ZimbraAuthToken extends AuthToken {
     public void encode(HttpServletResponse resp, boolean isAdminReq) throws ServiceException {
         String origAuthData = getOrigAuthData();
         javax.servlet.http.Cookie cookie = new javax.servlet.http.Cookie(ZimbraAuthProvider.cookieName(isAdminReq), origAuthData);
-        cookie.setPath("/");
+        AuthTokenCookie.setCookieDomainPath(cookie, AuthTokenCookie.PATH_ROOT);
         resp.addCookie(cookie);
     }
     
