@@ -3286,8 +3286,6 @@ public class LdapProvisioning extends Provisioning {
         SpecialAttrs specialAttrs = mDIT.handleSpecialAttrs(calResAttrs);
         
         HashMap attrManagerContext = new HashMap();
-        AttributeManager.getInstance().
-            preModify(calResAttrs, null, attrManagerContext, true, true);
         Account acct = createAccount(emailAddress, password, calResAttrs, specialAttrs,
                                      new String[] { C_zimbraCalendarResource });
         LdapCalendarResource resource =
