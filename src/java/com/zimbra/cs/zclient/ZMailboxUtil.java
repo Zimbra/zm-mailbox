@@ -41,6 +41,7 @@ import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.util.SoapCLI;
 import com.zimbra.cs.zclient.ZConversation.ZMessageSummary;
 import com.zimbra.cs.zclient.ZGrant.GranteeType;
 import com.zimbra.cs.zclient.ZMailbox.Fetch;
@@ -209,12 +210,15 @@ public class ZMailboxUtil implements DebugListener {
         System.out.println("  -u/--url      http[s]://{host}[:{port}]  server hostname and optional port. must use admin port with -z/-a");
         System.out.println("  -a/--admin    {name}                     admin account name to auth as");
         System.out.println("  -z/--zadmin                              use zimbra admin name/password from localconfig for admin/password");
+        System.out.println("  -y/--authtoken {authtoken}               " + SoapCLI.OPT_AUTHTOKEN.getDescription());
+        System.out.println("  -Y/--authtokenfile {authtoken file}      " + SoapCLI.OPT_AUTHTOKENFILE.getDescription());
         System.out.println("  -m/--mailbox  {name}                     mailbox to open");
         System.out.println("  -p/--password {pass}                     password for admin account and/or mailbox");
         System.out.println("  -P/--passfile {file}                     read password from file");
         System.out.println("  -r/--protocol {proto|req-proto/response-proto} specify request/response protocol [soap11,soap12,json]");
         System.out.println("  -v/--verbose                             verbose mode (dumps full exception stack trace)");
         System.out.println("  -d/--debug                               debug mode (dumps SOAP messages)");
+        
         System.out.println("");
         doHelp(null);
         System.exit(1);
@@ -2337,8 +2341,6 @@ public class ZMailboxUtil implements DebugListener {
         Options options = new Options();
         options.addOption("a", "admin", true, "admin account name to auth as");
         options.addOption("z", "zadmin", false, "use zimbra admin name/password from localconfig for admin/password");
-        options.addOption("t", "authtoken", true, "use auth token string(has to be in JSON format) from command line");
-        options.addOption("T", "authtokenfile", true, "use auth token string(has to be in JSON format) from the specified file");
         options.addOption("h", "help", false, "display usage");
         options.addOption("f", "file", true, "use file as input stream"); 
         options.addOption("u", "url", true, "http[s]://host[:port] of server to connect to");
@@ -2348,6 +2350,8 @@ public class ZMailboxUtil implements DebugListener {
         options.addOption("P", "passfile", true, "filename with password in it");
         options.addOption("v", "verbose", false, "verbose mode");
         options.addOption("d", "debug", false, "debug mode");
+        options.addOption(SoapCLI.OPT_AUTHTOKEN);
+        options.addOption(SoapCLI.OPT_AUTHTOKENFILE);
         
         
         CommandLine cl = null;
@@ -2377,13 +2381,16 @@ public class ZMailboxUtil implements DebugListener {
             pu.setUrl(DEFAULT_ADMIN_URL, true);
             isAdmin = true;
         }
-        if (cl.hasOption('t')) {
-            pu.setAdminAuthToken(ZAuthToken.fromJSONString(cl.getOptionValue('t')));
+        
+        if (cl.hasOption(SoapCLI.O_AUTHTOKEN) && cl.hasOption(SoapCLI.O_AUTHTOKENFILE))
+            pu.usage();
+        if (cl.hasOption(SoapCLI.O_AUTHTOKEN)) {
+            pu.setAdminAuthToken(ZAuthToken.fromJSONString(cl.getOptionValue(SoapCLI.O_AUTHTOKEN)));
             pu.setUrl(DEFAULT_ADMIN_URL, true);
             isAdmin = true;
         }
-        if (cl.hasOption('T')) {
-            String authToken = StringUtil.readSingleLineFromFile(cl.getOptionValue('T'));
+        if (cl.hasOption(SoapCLI.O_AUTHTOKENFILE)) {
+            String authToken = StringUtil.readSingleLineFromFile(cl.getOptionValue(SoapCLI.O_AUTHTOKENFILE));
             pu.setAdminAuthToken(ZAuthToken.fromJSONString(authToken));
             pu.setUrl(DEFAULT_ADMIN_URL, true);
             isAdmin = true;

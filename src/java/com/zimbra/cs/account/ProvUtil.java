@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.account;
 
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.AccountLogger;
@@ -47,6 +48,7 @@ import com.zimbra.cs.extension.ExtensionDispatcherServlet;
 import com.zimbra.cs.fb.FbCli;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.util.SoapCLI;
 import com.zimbra.cs.wiki.WikiUtil;
 import com.zimbra.cs.zclient.ZClientException;
 import com.zimbra.cs.zclient.ZMailboxUtil;
@@ -90,6 +92,7 @@ public class ProvUtil implements DebugListener {
     private boolean mUseLdap = LC.zimbra_zmprov_default_to_ldap.booleanValue(); 
     private String mAccount = null;
     private String mPassword = null;
+    private ZAuthToken mAuthToken = null;
     private String mServer = LC.zimbra_zmprov_default_soap_server.value();
     private int mPort = LC.zimbra_admin_service_port.intValue();
     private Command mCommand;
@@ -107,6 +110,8 @@ public class ProvUtil implements DebugListener {
     public void setAccount(String account) { mAccount = account; mUseLdap = false;}
 
     public void setPassword(String password) { mPassword = password; mUseLdap = false; }
+    
+    public void setAuthToken(ZAuthToken zat) { mAuthToken = zat; mUseLdap = false; }
     
     public void setServer(String server ) {
         int i = server.indexOf(":");
@@ -141,17 +146,19 @@ public class ProvUtil implements DebugListener {
         System.out.println("");
         System.out.println("zmprov [args] [cmd] [cmd-args ...]");
         System.out.println("");
-        System.out.println("  -h/--help                      display usage");
-        System.out.println("  -f/--file                      use file as input stream");        
-        System.out.println("  -s/--server   {host}[:{port}]  server hostname and optional port");
-        System.out.println("  -l/--ldap                      provision via LDAP instead of SOAP");
-        System.out.println("  -L/--logpropertyfile           log4j property file, valid only with -l");
-        System.out.println("  -a/--account  {name}           account name to auth as");
-        System.out.println("  -p/--password {pass}           password for account");
-        System.out.println("  -P/--passfile {file}           read password from file");
-        System.out.println("  -z/--zadmin                    use zimbra admin name/password from localconfig for admin/password");
-        System.out.println("  -v/--verbose                   verbose mode (dumps full exception stack trace)");
-        System.out.println("  -d/--debug                     debug mode (dumps SOAP messages)");
+        System.out.println("  -h/--help                             display usage");
+        System.out.println("  -f/--file                             use file as input stream");        
+        System.out.println("  -s/--server   {host}[:{port}]         server hostname and optional port");
+        System.out.println("  -l/--ldap                             provision via LDAP instead of SOAP");
+        System.out.println("  -L/--logpropertyfile                  log4j property file, valid only with -l");
+        System.out.println("  -a/--account  {name}                  account name to auth as");
+        System.out.println("  -p/--password {pass}                  password for account");
+        System.out.println("  -P/--passfile {file}                  read password from file");
+        System.out.println("  -z/--zadmin                           use zimbra admin name/password from localconfig for admin/password");
+        System.out.println("  -y/--authtoken {authtoken}            " + SoapCLI.OPT_AUTHTOKEN.getDescription());
+        System.out.println("  -Y/--authtokenfile {authtoken file}   " + SoapCLI.OPT_AUTHTOKENFILE.getDescription());
+        System.out.println("  -v/--verbose                          verbose mode (dumps full exception stack trace)");
+        System.out.println("  -d/--debug                            debug mode (dumps SOAP messages)");
         System.out.println("");
         doHelp(null);
         System.exit(1);
@@ -380,7 +387,9 @@ public class ProvUtil implements DebugListener {
             if (mDebug) sp.soapSetTransportDebugListener(this);
             if (mAccount != null && mPassword != null)
                 sp.soapAdminAuthenticate(mAccount, mPassword);
-            else
+            else if (mAuthToken != null)
+                sp.soapAdminAuthenticate(mAuthToken);
+            else    
                 sp.soapZimbraAdminAuthenticate();
             mProv = sp;            
         }
@@ -1920,7 +1929,7 @@ public class ProvUtil implements DebugListener {
         }
     }
     
-    public static void main(String args[]) throws IOException, ParseException {
+    public static void main(String args[]) throws IOException, ParseException, ServiceException {
         CliUtil.toolSetup();
         
         ProvUtil pu = new ProvUtil();
@@ -1937,6 +1946,9 @@ public class ProvUtil implements DebugListener {
         options.addOption("z", "zadmin", false, "use zimbra admin name/password from localconfig for account/password");        
         options.addOption("v", "verbose", false, "verbose mode");
         options.addOption("d", "debug", false, "debug mode");
+        options.addOption(SoapCLI.OPT_AUTHTOKEN);
+        options.addOption(SoapCLI.OPT_AUTHTOKENFILE);
+        
         
         CommandLine cl = null;
         boolean err = false;
@@ -1973,6 +1985,21 @@ public class ProvUtil implements DebugListener {
             pu.setAccount(LC.zimbra_ldap_user.value());
             pu.setPassword(LC.zimbra_ldap_password.value());
         }
+        
+        if (cl.hasOption(SoapCLI.O_AUTHTOKEN) && cl.hasOption(SoapCLI.O_AUTHTOKENFILE)) {
+            printError("error: cannot specify " + SoapCLI.O_AUTHTOKEN + " when " + SoapCLI.O_AUTHTOKENFILE + " is specified");
+            System.exit(2);
+        }
+        if (cl.hasOption(SoapCLI.O_AUTHTOKEN)) {
+            ZAuthToken zat = ZAuthToken.fromJSONString(cl.getOptionValue(SoapCLI.O_AUTHTOKEN));
+            pu.setAuthToken(zat);
+        }
+        if (cl.hasOption(SoapCLI.O_AUTHTOKENFILE)) {
+            String authToken = StringUtil.readSingleLineFromFile(cl.getOptionValue(SoapCLI.O_AUTHTOKENFILE));
+            ZAuthToken zat = ZAuthToken.fromJSONString(authToken);
+            pu.setAuthToken(zat);
+        }
+        
         if (cl.hasOption('s')) pu.setServer(cl.getOptionValue('s'));
         if (cl.hasOption('a')) pu.setAccount(cl.getOptionValue('a'));
         if (cl.hasOption('p')) pu.setPassword(cl.getOptionValue('p'));

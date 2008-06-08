@@ -41,6 +41,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.common.soap.*;
+import com.zimbra.common.util.StringUtil;
 
 /**
  * For command line interface utilities that are SOAP clients and need to authenticate with
@@ -72,9 +73,17 @@ import com.zimbra.common.soap.*;
  */
 public abstract class SoapCLI {
     
-    protected static final String O_H = "h";
-    protected static final String O_HIDDEN = "hidden";
-    protected static final String O_S = "s";
+    // common options
+    
+    public static final String O_AUTHTOKEN = "y";
+    public static final String O_AUTHTOKENFILE = "Y";
+    public static final String O_H = "h";
+    public static final String O_HIDDEN = "hidden";
+    public static final String O_S = "s";
+    
+    public static final Option OPT_AUTHTOKEN = new Option(O_AUTHTOKEN, "authtoken", true, "use auth token string(has to be in JSON format) from command line");
+    public static final Option OPT_AUTHTOKENFILE = new Option(O_AUTHTOKENFILE, "authtokenfile", true, "use auth token string(has to be in JSON format) from command line");
+
 
     private String mUser;
     private String mPassword;
@@ -181,6 +190,38 @@ public abstract class SoapCLI {
             String authToken = authResp.getAttribute(AdminConstants.E_AUTH_TOKEN);
             ZAuthToken zat = new ZAuthToken(null, authToken, null);
             mTrans.setAuthToken(authToken);
+            mAuth = true;
+            return new LmcSession(zat, null);
+        } catch (UnknownHostException e) {
+            // UnknownHostException's error message is not clear; rethrow with a more descriptive message
+            throw new IOException("Unknown host: " + mHost);
+        }
+    }
+    
+    /**
+     * Authenticates using the provided ZAuthToken
+     * @throws IOException
+     * @throws com.zimbra.common.soap.SoapFaultException
+     * @throws ServiceException
+     */
+    protected LmcSession auth(ZAuthToken zAuthToken) throws SoapFaultException, IOException, ServiceException {
+        if (zAuthToken == null)
+            return auth();
+            
+        URL url = new URL("https", mHost, mPort, ZimbraServlet.ADMIN_SERVICE_URI);
+        mServerUrl = url.toExternalForm();
+        SoapHttpTransport trans = new SoapHttpTransport(mServerUrl);
+        trans.setRetryCount(1);
+        trans.setTimeout(0);
+        mTrans = trans;
+        mAuth = false;
+        
+        Element authReq = new Element.XMLElement(AdminConstants.AUTH_REQUEST);
+        zAuthToken.encodeAuthReq(authReq, true);
+        try {
+            Element authResp = mTrans.invokeWithoutSession(authReq);
+            ZAuthToken zat = new ZAuthToken(authResp.getElement(AdminConstants.E_AUTH_TOKEN), true);
+            mTrans.setAuthToken(zat);
             mAuth = true;
             return new LmcSession(zat, null);
         } catch (UnknownHostException e) {
@@ -352,5 +393,25 @@ public abstract class SoapCLI {
         sb.append(
             "Hour must be specified in 24-hour format, and time is in local time zone.\n");
         return sb.toString();
+    }
+    
+    public static ZAuthToken getZAuthToken(CommandLine cl) throws ServiceException, ParseException, IOException {
+        if (cl.hasOption(SoapCLI.O_AUTHTOKEN) && cl.hasOption(SoapCLI.O_AUTHTOKENFILE)) {
+            String msg = String.format(
+                    "-%s option cannot be used when -%s option is used",
+                    SoapCLI.O_AUTHTOKEN, SoapCLI.O_AUTHTOKENFILE);
+            throw new ParseException(msg);
+        }
+        
+        if (cl.hasOption(SoapCLI.O_AUTHTOKEN)) {
+            return ZAuthToken.fromJSONString(cl.getOptionValue(SoapCLI.O_AUTHTOKEN));
+        }
+        
+        if (cl.hasOption(SoapCLI.O_AUTHTOKENFILE)) {
+            String authToken = StringUtil.readSingleLineFromFile(cl.getOptionValue(SoapCLI.O_AUTHTOKENFILE));
+            return ZAuthToken.fromJSONString(authToken);
+        } 
+        
+        return null;
     }
 }
