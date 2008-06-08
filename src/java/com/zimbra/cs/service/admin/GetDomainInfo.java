@@ -95,7 +95,12 @@ public class GetDomainInfo extends AdminDocumentHandler {
             Domain d = (Domain)entry;
             domain.addAttribute(AdminConstants.A_NAME, d.getUnicodeName());
             domain.addAttribute(AdminConstants.A_ID, d.getId());
+        } else {
+            // weird, need to populate name and id because client expects them to construct a Domain object (but don't really use it)
+            domain.addAttribute(AdminConstants.A_NAME, "globalconfig");
+            domain.addAttribute(AdminConstants.A_ID, "globalconfig-dummy-id");
         }
+        
         Set<String> attrList = AttributeManager.getInstance().getAttrsWithFlag(AttributeFlag.domainInfo);
         Map attrsMap = entry.getUnicodeAttrs(applyConfig);
         
