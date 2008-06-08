@@ -115,6 +115,29 @@ public class HttpUtil {
         return encoded;
     }
     
+    /**
+     * A URI is
+     * [scheme:]scheme-specific-part[#fragment]
+     * 
+     * hierarchical URI
+     * [scheme:][//authority][path][?query][#fragment]
+     * 
+     * @param ssp [path][?query] parts of scheme-specific part, note [#fragment] is not supported
+     *        if a [#fragment] is included in ssp, the "#" will be encoded, which is probably not 
+     *        desired.  i.e #text will be treated as part of [path] or [?query].
+     * @return
+     */
+    public static String encodePathQuery(String ssp) {
+        String encoded = ssp;
+        try {
+            URI uri = new URI(null, ssp, null);
+            encoded = uri.toString();
+        } catch (URISyntaxException e) {
+            // ignore and just return the orig path
+        }
+        return encoded;
+    }
+    
     public static void main(String[] args) {
         System.out.println(getURIParams((String) null));
         System.out.println(getURIParams("foo=bar"));
