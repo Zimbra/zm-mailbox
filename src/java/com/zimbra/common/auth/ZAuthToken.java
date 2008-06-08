@@ -125,7 +125,7 @@ public class ZAuthToken {
                 }
             }
         } catch (JSONException e) {
-            throw ServiceException.PARSE_ERROR("cannnot parse JSON auth token", e);
+            throw ServiceException.PARSE_ERROR("cannot parse JSON auth token: " + jsonString, e);
         }
         
         return new ZAuthToken(type, value, attrs);
