@@ -79,13 +79,18 @@ public class DbSearch {
                 case SORT_BY_NAME_NATURAL_ORDER:
                     result.sortkey = rs.getString(COLUMN_SORTKEY);
                     break;
+                case SORT_NONE:
+                    // note that there's no sort column in the result set for SORT_NONE
+                    break;
                 default:
                     result.sortkey = new Long(rs.getInt(COLUMN_SORTKEY) * 1000L);
                     break;
             }
 
             if (extra == ExtraData.MAIL_ITEM) {
-                result.extraData = DbMailItem.constructItem(rs, COLUMN_SORTKEY);
+                // note that there's no sort column in the result set for SORT_NONE
+                int offset = sortField == SORT_NONE ? COLUMN_SORTKEY - 1 : COLUMN_SORTKEY;
+                result.extraData = DbMailItem.constructItem(rs, offset);
             } else if (extra == ExtraData.IMAP_MSG) {
                 int flags = rs.getBoolean(6) ? Flag.BITMASK_UNREAD | rs.getInt(7) : rs.getInt(7);
                 result.extraData = new ImapMessage(result.id, result.type, rs.getInt(5), flags, rs.getLong(8));
@@ -95,15 +100,15 @@ public class DbSearch {
             return result;
         }
 
-        public String toString() {
+        @Override public String toString() {
             return sortkey + " => (" + id + "," + type + ")";
         }
 
-        public int hashCode() {
+        @Override public int hashCode() {
             return id;
         }
 
-        public boolean equals(Object obj) {
+        @Override public boolean equals(Object obj) {
             SearchResult other = (SearchResult) obj;
             return other.id == id;
         }
@@ -131,7 +136,7 @@ public class DbSearch {
     // which 2 of the 4 sort columns are the "right" ones to use)
     public static final String SORT_COLUMN_ALIAS = "sortcol";
 
-    static String sortField(byte sort, boolean useAlias) {
+    private static String sortField(byte sort, boolean useAlias) {
         String str;
         boolean stringVal = false;
         switch (sort & SORT_FIELD_MASK) {
@@ -140,15 +145,23 @@ public class DbSearch {
             case SORT_BY_NAME_NATURAL_ORDER:
             case SORT_BY_NAME:     str = "mi.name";     stringVal = true;  break;
             case SORT_BY_ID:       str = "mi.id";    break;
-            case SORT_NONE:        str = "NULL";     break;
             case SORT_BY_DATE:
             default:               str = "mi.date";  break; 
+            case SORT_NONE:        return null;
         }
 
         if (stringVal && Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON)) 
             str = "UPPER(" + str + ")";
 
-        return useAlias ? str + " AS " + SORT_COLUMN_ALIAS : str;
+        return str;
+    }
+
+    static String sortKey(byte sort) {
+        String field = sortField(sort, true);
+        // note that there's no sort column in the result set for SORT_NONE
+        if (field == null)
+            return "";
+        return ", " + field + " AS " + SORT_COLUMN_ALIAS;
     }
 
     static String sortQuery(byte sort) {
@@ -156,11 +169,12 @@ public class DbSearch {
     }
 
     static String sortQuery(byte sort, boolean useAlias) {
-        if (sort == SORT_NONE)
+        // note that there's no need for an ORDER BY clause for SORT_NONE
+        if ((sort & SORT_FIELD_MASK) == SORT_NONE)
             return "";
 
         StringBuilder statement = new StringBuilder(" ORDER BY ");
-        statement.append(useAlias ? SORT_COLUMN_ALIAS : sortField(sort, useAlias));
+        statement.append(useAlias ? SORT_COLUMN_ALIAS : sortField(sort, false));
         if ((sort & SORT_DIRECTION_MASK) == SORT_DESCENDING)
             statement.append(" DESC");
         return statement.toString();
@@ -269,7 +283,7 @@ public class DbSearch {
          * 
          *  If you change the first for parameters, you must change the COLUMN_* values above!
          */
-        StringBuilder select = new StringBuilder("SELECT mi.id, mi.index_id, mi.type, " + sortField(sort, true));
+        StringBuilder select = new StringBuilder("SELECT mi.id, mi.index_id, mi.type").append(sortKey(sort));
         if (extra == SearchResult.ExtraData.MAIL_ITEM)
             select.append(", " + DbMailItem.DB_FIELDS);
         else if (extra == SearchResult.ExtraData.IMAP_MSG)
