@@ -136,4 +136,16 @@ public class CalendarItemHit extends ZimbraHit {
     public String getName() throws ServiceException {
         return getCalendarItem().getSubject();
     }
+    
+    public String toString() {
+        String name="";
+        String subject="";
+        try {
+            name = getName();
+        } catch(Exception e) {}
+        try {
+            subject=getSubject();
+        } catch(Exception e) {}
+        return "CalendarItem: "+super.toString()+" "+name+" "+subject;
+    }
 }
