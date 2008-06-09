@@ -17,7 +17,7 @@ IMAP protocol and extensions supported:
     [ID]               RFC 2971: IMAP4 ID Extension
     [IDLE]             RFC 2177: IMAP4 IDLE command
     [IMAPURL]          RFC 2192: IMAP URL Scheme
-    [LIST-EXTENDED]    draft-ietf-imapext-list-extensions-18: IMAP4 LIST Command Extensions
+    [LIST-EXTENDED]    RFC 5258: Internet Message Access Protocol version 4 - LIST Command Extensions
     [LITERAL+]         RFC 2088: IMAP4 non-synchronizing literals
     [LOGIN-REFERRALS]  RFC 2221: IMAP4 Login Referrals
     [MULTIAPPEND]      RFC 3502: Internet Message Access Protocol (IMAP) - MULTIAPPEND Extension

@@ -874,7 +874,7 @@ abstract class ImapHandler extends ProtocolHandler {
         // [I18NLEVEL=1]      draft-ietf-imapext-i18n-15: Internet Message Access Protocol Internationalization
         // [ID]               RFC 2971: IMAP4 ID Extension
         // [IDLE]             RFC 2177: IMAP4 IDLE command
-        // [LIST-EXTENDED]    draft-ietf-imapext-list-extensions-18: IMAP4 LIST Command Extensions
+        // [LIST-EXTENDED]    RFC 5258: Internet Message Access Protocol version 4 - LIST Command Extensions
         // [LITERAL+]         RFC 2088: IMAP4 non-synchronizing literals
         // [LOGIN-REFERRALS]  RFC 2221: IMAP4 Login Referrals
         // [MULTIAPPEND]      RFC 3502: Internet Message Access Protocol (IMAP) - MULTIAPPEND Extension
@@ -1055,11 +1055,10 @@ abstract class ImapHandler extends ProtocolHandler {
             return CONTINUE_PROCESSING;
         }
 
-        // draft-siemborski-imap-sasl-initial-response:
-        //      "This extension adds an optional second argument to the AUTHENTICATE
-        //       command that is defined in Section 6.2.2 of [IMAP4].  If this second
-        //       argument is present, it represents the contents of the "initial
-        //       client response" defined in section 5.1 of [SASL]."
+        // RFC 4959: "This extension adds an optional second argument to the AUTHENTICATE
+        //            command that is defined in Section 6.2.2 of [IMAP4].  If this second
+        //            argument is present, it represents the contents of the "initial
+        //            client response" defined in section 5.1 of [SASL]."
         if (initial != null)
             return continueAuthentication(initial);
 
@@ -1562,13 +1561,13 @@ abstract class ImapHandler extends ProtocolHandler {
             return CONTINUE_PROCESSING;
         }
 
-        // LIST-EXTENDED 4: "The CHILDREN return option is simply an indication that the client
+        // RFC 5258 4: "The CHILDREN return option is simply an indication that the client
         //                   wants this information; a server MAY provide it even if the option is
         //                   not specified."
         if (extensionEnabled("CHILDREN"))
             returnOptions |= RETURN_CHILDREN;
 
-        // LIST-EXTENDED 3.1: "Note that the SUBSCRIBED selection option implies the SUBSCRIBED
+        // RFC 5258 3.1: "Note that the SUBSCRIBED selection option implies the SUBSCRIBED
         //                     return option (see below)."
         boolean selectSubscribed = (selectOptions & SELECT_SUBSCRIBED) != 0;
         if (selectSubscribed)
@@ -1581,7 +1580,7 @@ abstract class ImapHandler extends ProtocolHandler {
         Map<ImapPath, String> matches = new LinkedHashMap<ImapPath, String>();
         try {
             for (String mailboxName : mailboxNames) {
-                // LIST-EXTENDED 3: "In particular, if an extended LIST command has multiple mailbox
+                // RFC 5258 3: "In particular, if an extended LIST command has multiple mailbox
                 //                   names and one (or more) of them is the empty string, the empty
                 //                   string MUST be ignored for the purpose of matching."
                 if (mailboxName.equals(""))
@@ -2973,9 +2972,8 @@ abstract class ImapHandler extends ProtocolHandler {
         String command = (byUID ? "UID FETCH" : "FETCH");
         boolean markRead = i4folder.isWritable() && (attributes & FETCH_MARK_READ) != 0;
 
-        // draft-ietf-lemonade-reconnect-client-06 3.2: "The VANISHED UID FETCH modifier MUST
-        //                                               only be specified together with
-        //                                               the CHANGEDSINCE UID FETCH modifier."
+        // RFC 5162 3.2: "The VANISHED UID FETCH modifier MUST only be specified together with
+        //                the CHANGEDSINCE UID FETCH modifier."
         if ((attributes & FETCH_VANISHED) != 0 && (!byUID || changedSince < 0))
             throw new ImapParseException(tag, "cannot specify VANISHED without CHANGEDSINCE");
 
