@@ -165,7 +165,7 @@ public class ImapSync extends AbstractMailItemImport {
         // (see bug 27924).
         for (ImapFolderSync ifs : syncedFolders.values()) {
             try {
-                ifs.appendNewMessages();
+                ifs.finishSync();
             } catch (Exception e) {
                 String name = ifs.getFolder().getName();
                 LOG.error("Synchronization of folder '%s' failed", name, e);
