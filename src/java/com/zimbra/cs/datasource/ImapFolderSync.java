@@ -77,12 +77,12 @@ class ImapFolderSync {
     private static final int FETCH_SIZE = LC.data_source_fetch_size.intValue();
 
     private static class Statistics {
-        int matched;
-        int updated;
-        int addedLocally;
-        int addedRemotely;
-        int deletedRemotely;
-        int deletedLocally;
+        int flagsUpdatedLocally;
+        int flagsUpdatedRemotely;
+        int msgsAddedLocally;
+        int msgsAddedRemotely;
+        int msgsDeletedLocally;
+        int msgsDeletedRemotely;
     }
 
     public ImapFolderSync(ImapSync imapSync, ImapFolder tracker)
@@ -145,6 +145,19 @@ class ImapFolderSync {
         return folder;
     }
 
+    public void finishSync() throws ServiceException, IOException {
+        appendNewMessages();
+        if (LOG.isDebugEnabled()) {
+            debug("Synchronization completed: " +
+                "flags updated locally = %d, flags updated remotely = %d, " +
+                "messages added locally = %d, messages added remotely = %d, " +
+                "messages deleted locally = %d, messages deleted remotely = %d",
+                stats.flagsUpdatedLocally, stats.flagsUpdatedRemotely,
+                stats.msgsAddedLocally, stats.msgsAddedRemotely,
+                stats.msgsDeletedLocally, stats.msgsDeletedRemotely);
+        }
+    }
+
     private void createImapFolder(String name) throws IOException {
         debug("Creating IMAP folder '%s'", name);
         try {
@@ -205,9 +218,12 @@ class ImapFolderSync {
         for (int id : existingMsgIds) {
             if (trackedMsgs.getByItemId(id) == null) {
                 newMsgIds.add(id);
-                stats.addedRemotely++;
+                stats.msgsAddedRemotely++;
             }
         }
+        // Clear sync data that is no longer needed
+        trackedMsgs = null;
+        existingMsgIds = null;
     }
 
     private boolean checkTrackedFolder(ListData ld)
@@ -291,10 +307,10 @@ class ImapFolderSync {
             debug("Local message with id %d not found", id);
         }
         DbImapMessage.deleteImapMessage(mailbox, tracker.getItemId(), id);
-        stats.deletedLocally++;
+        stats.msgsDeletedLocally++;
     }
 
-    public void appendNewMessages() throws ServiceException, IOException {
+    private void appendNewMessages() throws ServiceException, IOException {
         if (newMsgIds == null || newMsgIds.isEmpty()) {
             return; // No messages to be appended
         }
@@ -565,7 +581,7 @@ class ImapFolderSync {
             ImapMessage msg = trackedMsgs.getByUid(uid);
             DbImapMessage.deleteImapMessage(
                 mailbox, tracker.getItemId(), msg.getItemId());
-            stats.deletedRemotely++;
+            stats.msgsDeletedRemotely++;
         }
     }
 
@@ -588,11 +604,10 @@ class ImapFolderSync {
                 Flag.bitmaskToFlags(newLocalFlags),
                 Flag.bitmaskToFlags(newRemoteFlags));
         }
-        boolean updated = false;
         if (newLocalFlags != localFlags) {
             mailbox.setTags(null, id, MailItem.TYPE_MESSAGE, newLocalFlags,
                             MailItem.TAG_UNCHANGED);
-            updated = true;
+            stats.flagsUpdatedLocally++;
         }
         if (newRemoteFlags != remoteFlags) {
             String uids = String.valueOf(msg.getUid());
@@ -605,16 +620,11 @@ class ImapFolderSync {
             if (!toRemove.isEmpty()) {
                 connection.uidStore(uids, "-FLAGS.SILENT", toRemove);
             }
-            updated = true;
+            stats.flagsUpdatedRemotely++;
         }
         if (newRemoteFlags != trackedFlags) {
             DbImapMessage.setFlags(mailbox, id, newRemoteFlags);
-            updated = true;
-        }
-        if (updated) {
-            stats.updated++;
-        } else {
-            stats.matched++;
+            stats.flagsUpdatedLocally++;
         }
     }
 
@@ -674,7 +684,7 @@ class ImapFolderSync {
         int msgId = imapSync.addMessage(pm, folder.getId(), zflags);
         DbImapMessage.storeImapMessage(
             mailbox, tracker.getItemId(), uid, msgId, zflags);
-        stats.addedLocally++;
+        stats.msgsAddedLocally++;
     }
 
     private ImapData getBody(MessageData md) throws MailException {
