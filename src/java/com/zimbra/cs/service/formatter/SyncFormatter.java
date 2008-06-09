@@ -126,9 +126,9 @@ public class SyncFormatter extends Formatter {
 
     private void handleCalendarItem(Context context, CalendarItem calItem) throws IOException, ServiceException, MessagingException {
         context.resp.setContentType(Mime.CT_TEXT_PLAIN);
-        if (context.itemId.hasSubpart()) {
-            // unfortunately, MimeMessage won't give you the length including headers...
-            Pair<MimeMessage,Integer> calItemMsgData = calItem.getSubpartMessageData(context.itemId.getSubpartId());
+        Pair<MimeMessage,Integer> calItemMsgData;
+        if (context.itemId.hasSubpart() &&
+            (calItemMsgData = calItem.getSubpartMessageData(context.itemId.getSubpartId())) != null) {
             addXZimbraHeaders(context, calItem, calItemMsgData.getSecond());
             calItemMsgData.getFirst().writeTo(context.resp.getOutputStream());
         } else {
