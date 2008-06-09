@@ -1,14 +1,14 @@
 OVERVIEW
 ========
-Currently, we have a "mail object" based access control mechanism in that 
+Currently, we have "mail object" based access control mechanism in that 
 ACLs are generally associated with a single object in a user's Mailbox,
-either a folder or a tag.  The ACLs for mail object based access controls 
-are persisted in the user's database, in the METADATA column on the 
+for example, a folder or a tag.  The ACLs for mail object based access 
+controls are persisted in the user's database, in the METADATA column on the 
 MAIL_ITEM row for the folder or tag.   ZimbraServer/docs/acl.txt describes 
-the design of "mail object" based access controls.
+"mail object" based access controls.
 
-In addition to the above mail item based access controls, it is required 
-to support access control on the account level, where permissions are 
+In addition to the above access control scheme, it is required that we 
+support access control on the account level, where permissions are 
 granted on the account level, instead of on individual folders or tags.
 
 Implementation of account based access controls is not changing any aspect 
