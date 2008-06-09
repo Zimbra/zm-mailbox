@@ -13,7 +13,7 @@ IMAP protocol and extensions supported:
     [ENABLE]           RFC 5161: The IMAP ENABLE Extension
     [ESEARCH]          RFC 4731: IMAP4 Extension to SEARCH Command for Controlling What Kind of Information Is Returned
     [ESORT]            draft-cridland-imap-context-05: Contexts for IMAP4
-    [I18NLEVEL=1]      draft-ietf-imapext-i18n-15: Internet Message Access Protocol Internationalization
+    [I18NLEVEL=1]      RFC 5255: Internet Message Access Protocol Internationalization
     [ID]               RFC 2971: IMAP4 ID Extension
     [IDLE]             RFC 2177: IMAP4 IDLE command
     [IMAPURL]          RFC 2192: IMAP URL Scheme
@@ -27,7 +27,7 @@ IMAP protocol and extensions supported:
     [RIGHTS=ektx]      RFC 4314: IMAP4 Access Control List (ACL) Extension
     [SASL-IR]          RFC 4959: IMAP Extension for Simple Authentication and Security Layer (SASL) Initial Client Response
     [SEARCHRES]        RFC 5182: IMAP Extension for Referencing the Last SEARCH Result
-    [SORT]             draft-ietf-imapext-sort-20: INTERNET MESSAGE ACCESS PROTOCOL - SORT AND THREAD EXTENSIONS
+    [SORT]             RFC 5256: Internet Message Access Protocol - SORT and THREAD Extensions
     [UIDPLUS]          RFC 4315: Internet Message Access Protocol (IMAP) - UIDPLUS extension
     [UNSELECT]         RFC 3691: IMAP UNSELECT command
     [WITHIN]           RFC 5032: WITHIN Search Extension to the IMAP Protocol
