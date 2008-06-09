@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.nio.charset.IllegalCharsetNameException;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -110,7 +109,7 @@ abstract class ImapRequest {
         }
     }
 
-    private String getCurrentLine() throws ImapParseException {
+    String getCurrentLine() throws ImapParseException {
         Object part = mParts.get(mIndex);
         if (!(part instanceof String))
             throw new ImapParseException(mTag, "should not be inside literal");
@@ -369,7 +368,7 @@ abstract class ImapRequest {
     private static final int LAST_PUNCT = 0, LAST_DIGIT = 1, LAST_STAR = 2;
 
     private String validateSequence(String value, boolean specialsOK) throws ImapParseException {
-        // "$" is OK per draft-melnikov-imap-search-res-03
+        // "$" is OK per RFC 5182 [SEARCHRES]
         if (value.equals("$") && specialsOK && extensionEnabled("X-DRAFT-I05-SEARCHRES"))
             return value;
 

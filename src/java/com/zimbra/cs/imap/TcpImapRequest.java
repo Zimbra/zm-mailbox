@@ -133,6 +133,10 @@ public class TcpImapRequest extends ImapRequest {
         }
         skipChar('}');
 
+        // make sure that the literal came at the very end of a line
+        if (getCurrentLine().length() != mOffset)
+            throw new ImapParseException(mTag, "extra characters after literal declaration");
+
         if (mIndex == mParts.size() - 1 || (mIndex == mParts.size() - 2 && mLiteral != -1)) {
             if (mLiteral == -1) {
                 incrementSize(length);
