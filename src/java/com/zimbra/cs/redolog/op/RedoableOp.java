@@ -582,6 +582,10 @@ public abstract class RedoableOp {
         }
 	}
 
+	/**
+	 * Returns the core redoable op data as a <tt>byte[]</tt>.  Does not include
+	 * the result of {@link #getAdditionalDataStream()}.
+	 */
     private byte[] serializeToByteArray() throws IOException {
         byte[] buf;
         ByteArrayOutputStream baos = new ByteArrayOutputStream(512);
@@ -593,6 +597,10 @@ public abstract class RedoableOp {
         return buf;
     }
 
+    /**
+     * Returns the entire redoable op data as an <tt>InputStream</tt>.
+     * Includes the result of {@link #getAdditionalDataStream()}. 
+     */
     public InputStream getInputStream() throws IOException {
         synchronized (mSBAVGuard) {
             if (mSerializedByteArrayVector == null)
