@@ -14,26 +14,23 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
+
 package com.zimbra.cs.service.wiki;
 
-import java.io.IOException;
-import java.util.Collection;
 import java.util.Map;
 
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.wiki.Diff;
-import com.zimbra.cs.wiki.Diff.Chunk;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class DiffDocument extends WikiDocumentHandler {
+public class ListDocumentRevisions extends WikiDocumentHandler {
 
 	@Override
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -41,29 +38,29 @@ public class DiffDocument extends WikiDocumentHandler {
 		checkBriefcaseEnabled(zsc);
 		Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
+        ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
         Element doc = request.getElement(MailConstants.E_DOC);
-        String idStr = doc.getAttribute(MailConstants.A_ID, null);
-        int v1 = (int) doc.getAttributeLong(MailConstants.A_V1, -1);
-        int v2 = (int) doc.getAttributeLong(MailConstants.A_V2, -1);
+        String id = doc.getAttribute(MailConstants.A_ID);
+        int version = (int) doc.getAttributeLong(MailConstants.A_VERSION, -1);
+        int count = (int) doc.getAttributeLong(MailConstants.A_COUNT, 1);
 
-        ItemId id = new ItemId(idStr, zsc);
-    	Document r1 = (Document) mbox.getItemRevision(octxt, id.getId(), MailItem.TYPE_UNKNOWN, v1);
-    	Document r2 = (Document) mbox.getItemRevision(octxt, id.getId(), MailItem.TYPE_UNKNOWN, v2);
-    	
-        Element response = zsc.createElement(MailConstants.DIFF_DOCUMENT_RESPONSE);
+        Element response = zsc.createElement(MailConstants.LIST_DOCUMENT_REVISIONS_RESPONSE);
+
+        Document item;
+
+        ItemId iid = new ItemId(id, zsc);
+        item = mbox.getDocumentById(octxt, iid.getId());
+
+        if (version < 0)
+        	version = item.getVersion();
         
-    	try {
-        	Collection<Chunk> diffResult = Diff.getResult(r1.getContentStream(), r2.getContentStream());
-        	for (Chunk c : diffResult) {
-        		Element chunk = response.addElement(MailConstants.E_CHUNK);
-    			chunk.addAttribute(MailConstants.A_DISP, c.disposition.toString());
-    			chunk.setText(StringUtil.join("\n", c.content));
-        	}
-    	} catch (IOException e) {
-			throw ServiceException.FAILURE("can't diff documents", e);
-    	}
-    	
+        while (version > 0 && count > 0) {
+        	item = (Document) mbox.getItemRevision(octxt, item.getId(), item.getType(), version);
+        	ToXML.encodeDocument(response, ifmt, octxt, item);
+        	version--; count--;
+        }
+
         return response;
 	}
 }

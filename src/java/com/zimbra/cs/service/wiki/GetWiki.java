@@ -42,7 +42,7 @@ public class GetWiki extends WikiDocumentHandler {
 	@Override
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 		ZimbraSoapContext zsc = getZimbraSoapContext(context);
-		checkEnabled(zsc);
+		checkNotebookEnabled(zsc);
 		Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
