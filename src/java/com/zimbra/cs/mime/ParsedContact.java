@@ -373,8 +373,10 @@ public class ParsedContact {
         
         Map<String, String> m = getFields();
         for (Map.Entry<String, String> entry : m.entrySet()) {
-            if (!Contact.isEmailField(entry.getKey()))
-                contentText.append(entry.getValue()).append(' ');
+            if (!Contact.isEmailField(entry.getKey())) { // skip email addrs, they're added to CONTENT below
+                if (!Contact.A_fileAs.equalsIgnoreCase(entry.getKey())) 
+                    contentText.append(entry.getValue()).append(' ');
+            }
 
             String fieldTextToAdd = entry.getKey() + ":" + entry.getValue() + "\n";
             fieldText.append(fieldTextToAdd);

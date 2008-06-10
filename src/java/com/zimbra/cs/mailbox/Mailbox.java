@@ -1049,14 +1049,15 @@ public class Mailbox {
             return;
         }
 
+        // currently we cannot defer index deletion
+        if (deleteFirst)
+            mCurrentChange.addIndexDelete(item.getId());
+        
         // if no data is provided then we ALWAYS batch
         if (data != null && getBatchedIndexingCount() <= 0) {
             if (item.getIndexId() > 0)
                 mCurrentChange.addIndexedItem(item, deleteFirst, data);
         } else {
-            if (deleteFirst)
-                mCurrentChange.addIndexDelete(item.getId());
-            
             if (!item.isFlagSet(Flag.BITMASK_INDEXING_DEFERRED)) {
                 // flag not already set -- must set the bitmask
                 item.alterSystemFlag(mIndexingDeferredFlag, true);
@@ -6653,7 +6654,7 @@ public class Mailbox {
         RedoableOp redoRecorder = mCurrentChange.recorder;
         List<IndexItem> indexRedoList = null;
         Map<MailItem, MailboxChange.IndexItemEntry> itemsToIndex = mCurrentChange.indexItems;
-        boolean indexingNeeded = !itemsToIndex.isEmpty() && !DebugConfig.disableIndexing;
+        boolean indexingNeeded = (!itemsToIndex.isEmpty() || mCurrentChange.indexItemsToDelete.size()>0) && !DebugConfig.disableIndexing;
 
         // 1. Log the change redo record for main transaction.
         //    If indexing is to be followed, log this entry
