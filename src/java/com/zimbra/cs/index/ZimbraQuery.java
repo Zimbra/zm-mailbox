@@ -1725,12 +1725,12 @@ public final class ZimbraQuery {
         protected QueryOperation getQueryOperation(boolean truth) {
             DBQueryOperation op = DBQueryOperation.Create();
             truth = calcTruth(truth);
-
+            
             if (mLt)
-                op.addRelativeSender(null, false, mStr, mEq, truth);
+                    op.addRelativeSender(null, false, mStr, mEq, truth);
             else 
                 op.addRelativeSender(mStr, mEq, null, false, truth);
-
+            
             return op;
         }
 
@@ -1764,8 +1764,9 @@ public final class ZimbraQuery {
                 mStr= mStr.substring(1);
             }
 
-            if (mStr.length() == 0)
-                throw MailServiceException.PARSE_ERROR("Invalid sender string: "+text, null);
+            // bug: 27976 -- we have to allow >"" for cursors to work as expected             
+            //            if (mStr.length() == 0)
+            //                throw MailServiceException.PARSE_ERROR("Invalid sender string: "+text, null);
         }
 
         public static BaseQuery create(Mailbox mbox, Analyzer analyzer, int modifier, int qType, String text) throws ServiceException {
@@ -1885,8 +1886,9 @@ public final class ZimbraQuery {
                 mStr= mStr.substring(1);
             }
 
-            if (mStr.length() == 0)
-                throw MailServiceException.PARSE_ERROR("Invalid subject string: "+text, null);
+            // bug: 27976 -- we have to allow >"" for cursors to work as expected             
+            //if (mStr.length() == 0)
+            //    throw MailServiceException.PARSE_ERROR("Invalid subject string: "+text, null);
         }
 
         public static BaseQuery create(Mailbox mbox, Analyzer analyzer, int modifier, int qType, String text) throws ServiceException {
