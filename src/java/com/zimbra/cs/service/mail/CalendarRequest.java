@@ -419,7 +419,8 @@ public abstract class CalendarRequest extends MailDocumentHandler {
 
         List<Address> rcpts = CalendarMailSender.toListFromAttendees(toCancel);
         try {
-            dat.mInvite = CalendarUtils.buildCancelInviteCalendar(acct, authAcct, zsc.isUsingAdminPrivileges(), onBehalfOf, inv, text, toCancel);
+            dat.mInvite = CalendarUtils.buildCancelInviteCalendar(
+                    acct, authAcct, zsc.isUsingAdminPrivileges(), onBehalfOf, calItem, inv, text, toCancel);
             ZVCalendar cal = dat.mInvite.newToICalendar(true);
             dat.mMm = CalendarMailSender.createCancelMessage(
                     acct, authAcct, zsc.isUsingAdminPrivileges(), onBehalfOf, rcpts, calItem, inv, text, cal);

@@ -302,6 +302,8 @@ public abstract class CalendarItem extends MailItem {
     throws ServiceException {
         if (!folder.canAccess(ACL.RIGHT_INSERT))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
+        if (!firstInvite.isPublic() && !folder.canAccess(ACL.RIGHT_PRIVATE))
+            throw ServiceException.PERM_DENIED("you do not have permission to create private calendar item in this folder");
         Mailbox mbox = folder.getMailbox();
         
         if (pm.hasAttachments()) {
@@ -914,7 +916,12 @@ public abstract class CalendarItem extends MailItem {
      * @throws ServiceException
      */
     public boolean allowPrivateAccess(Account authAccount, boolean asAdmin) throws ServiceException {
-        return getAccount().allowPrivateAccess(authAccount, asAdmin);
+        return canAccess(ACL.RIGHT_PRIVATE, authAccount, asAdmin);
+    }
+
+    public static boolean allowPrivateAccess(Folder folder, Account authAccount, boolean asAdmin)
+    throws ServiceException {
+        return folder.canAccess(ACL.RIGHT_PRIVATE, authAccount, asAdmin);
     }
 
     boolean processNewInvite(ParsedMessage pm, Invite invite,
@@ -991,7 +998,7 @@ public abstract class CalendarItem extends MailItem {
         boolean isCancel = newInvite.isCancel();
 
         if (!canAccess(isCancel ? ACL.RIGHT_DELETE : ACL.RIGHT_WRITE))
-            throw ServiceException.PERM_DENIED("you do not have sufficient permissions on this appointment/task");
+            throw ServiceException.PERM_DENIED("you do not have sufficient permissions on this calendar item");
 
         // Don't allow creating/editing a private appointment on behalf of another user,
         // unless that other user is a calendar resource.
@@ -999,9 +1006,27 @@ public abstract class CalendarItem extends MailItem {
         OperationContext octxt = getMailbox().getOperationContext();
         Account authAccount = octxt != null ? octxt.getAuthenticatedUser() : null;
         boolean asAdmin = octxt != null ? octxt.isUsingAdminPrivileges() : false;
-        boolean denyPrivateAccess = authAccount != null && !allowPrivateAccess(authAccount, asAdmin);
-        if (denyPrivateAccess && !newInvite.isPublic() && !isCalendarResource)
-            throw ServiceException.PERM_DENIED("private appointment/task cannot be created/edited on behalf of another user");
+        boolean denyPrivateAccess = false;
+        if (!newInvite.isPublic() || !isPublic()) {
+            boolean isMoving = folderId != getFolderId();
+            if (!allowPrivateAccess(authAccount, asAdmin)) {
+                denyPrivateAccess = true;
+                if (!isCalendarResource) {
+                    if (!isMoving)
+                        throw ServiceException.PERM_DENIED("you do not have permission to update/cancel private calendar item in this folder");
+                    else
+                        throw ServiceException.PERM_DENIED("you do not have permission to update/cancel private calendar item in source folder");
+                }
+            }
+            if (isMoving) {
+                Folder folder = getMailbox().getFolderById(folderId);
+                if (!allowPrivateAccess(folder, authAccount, asAdmin)) {
+                    denyPrivateAccess = true;
+                    if (!isCalendarResource)
+                        throw ServiceException.PERM_DENIED("you do not have permission to update/cancel private calendar item in destination folder");
+                }
+            }
+        }
 
         boolean organizerChanged = organizerChangeCheck(newInvite, isCancel);
         ZOrganizer newOrganizer = newInvite.getOrganizer();
@@ -1188,7 +1213,7 @@ public abstract class CalendarItem extends MailItem {
             // Don't allow creating/editing a private appointment on behalf of another user,
             // unless that other user is a calendar resource.
             if (denyPrivateAccess && prev != null && !prev.isPublic() && !isCalendarResource)
-                throw ServiceException.PERM_DENIED("you do not have sufficient permissions on this appointment/task");
+                throw ServiceException.PERM_DENIED("you do not have sufficient permissions on this calendar item");
 
             if (prev!=null && !newInvite.isOrganizer() && newInvite.sentByMe()) {
                 // A non-organizer attendee is modifying data on his/her

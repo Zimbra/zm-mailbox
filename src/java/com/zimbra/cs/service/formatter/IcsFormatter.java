@@ -21,12 +21,12 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.HttpUtil.Browser;
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.CalendarItem.Instance;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.IcsImportParseHandler;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.IcsImportParseHandler.ImportInviteVisitor;
@@ -99,12 +99,11 @@ public class IcsFormatter extends Formatter {
 
         Browser browser = HttpUtil.guessBrowser(context.req);
         boolean useOutlookCompatMode = Browser.IE.equals(browser);
-        boolean allowPrivateAccess =
-            Account.allowPrivateAccess(context.authAccount, context.targetAccount, context.isUsingAdminPrivileges());
         boolean forceOlsonTZID = Browser.APPLE_ICAL.equals(browser);  // bug 15549
+        OperationContext octxt = new OperationContext(context.authAccount, context.isUsingAdminPrivileges());
         context.targetMailbox.writeICalendarForCalendarItems(
-                context.resp.getWriter(), calItems,
-                useOutlookCompatMode, true, allowPrivateAccess, forceOlsonTZID, true);
+                context.resp.getWriter(), octxt, calItems,
+                useOutlookCompatMode, true, forceOlsonTZID, true);
     }
 
     // get the whole calendar

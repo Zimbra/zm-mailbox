@@ -28,6 +28,8 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
@@ -52,12 +54,14 @@ public class SetCalendarItem extends CalendarRequest {
         
         private boolean mExceptOk = false;
         private boolean mForCancel = false;
+        private Folder mFolder;
         
         private byte mItemType;
         
-        SetCalendarItemInviteParser(boolean exceptOk, boolean forCancel, byte itemType) {
+        SetCalendarItemInviteParser(boolean exceptOk, boolean forCancel, Folder folder, byte itemType) {
             mExceptOk = exceptOk;
             mForCancel = forCancel;
+            mFolder = folder;
             mItemType = itemType;
         }
 
@@ -70,7 +74,7 @@ public class SetCalendarItem extends CalendarRequest {
             } else {
                 if (mForCancel)
                     return CalendarUtils.parseInviteForCancel(
-                            account, mItemType, inviteElem, null,
+                            account, mFolder, mItemType, inviteElem, null,
                             mExceptOk, CalendarUtils.RECUR_ALLOWED);
                 else
                     return CalendarUtils.parseInviteForCreate(
@@ -93,11 +97,12 @@ public class SetCalendarItem extends CalendarRequest {
         long tags = tagsStr != null ? Tag.tagsToBitmask(tagsStr) : 0;
         
         synchronized (mbox) {
-            SetCalendarItemParseResult parsed = parseSetAppointmentRequest(request, zsc, octxt, getItemType(), false);
-            int defaultFolder = parsed.isTodo ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;
+            int defaultFolder = getItemType() == MailItem.TYPE_TASK ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;
             String defaultFolderStr = Integer.toString(defaultFolder);
             String folderIdStr = request.getAttribute(MailConstants.A_FOLDER, defaultFolderStr);
             ItemId iidFolder = new ItemId(folderIdStr, zsc);
+            Folder folder = mbox.getFolderById(octxt, iidFolder.getId());
+            SetCalendarItemParseResult parsed = parseSetAppointmentRequest(request, zsc, octxt, folder, getItemType(), false);
             int calItemId = mbox.setCalendarItem(
                     octxt, iidFolder.getId(), flags, tags,
                     parsed.defaultInv, parsed.exceptions, parsed.replies, parsed.nextAlarm);
@@ -185,7 +190,9 @@ public class SetCalendarItem extends CalendarRequest {
         public long nextAlarm;
     }
 
-    public static SetCalendarItemParseResult parseSetAppointmentRequest(Element request, ZimbraSoapContext zsc, OperationContext octxt, byte itemType, boolean parseIds)
+    public static SetCalendarItemParseResult parseSetAppointmentRequest(
+            Element request, ZimbraSoapContext zsc, OperationContext octxt,
+            Folder folder, byte itemType, boolean parseIds)
 	throws ServiceException {
         Account acct = getRequestedAccount(zsc);
         Mailbox mbox = getRequestedMailbox(zsc);
@@ -198,7 +205,8 @@ public class SetCalendarItem extends CalendarRequest {
         {
             Element e = request.getOptionalElement(MailConstants.A_DEFAULT);
             if (e != null) {
-                result.defaultInv = getSetCalendarItemData(zsc, octxt, acct, mbox, e, new SetCalendarItemInviteParser(false, false, itemType));
+                result.defaultInv = getSetCalendarItemData(
+                        zsc, octxt, acct, mbox, e, new SetCalendarItemInviteParser(false, false, folder, itemType));
                 if (defInv == null)
                     defInv = result.defaultInv.mInv;
             }
@@ -206,7 +214,8 @@ public class SetCalendarItem extends CalendarRequest {
         
         // for each <except>
         for (Element e : request.listElements(MailConstants.E_CAL_EXCEPT)) {
-            SetCalendarItemData exDat = getSetCalendarItemData(zsc, octxt, acct, mbox, e, new SetCalendarItemInviteParser(true, false, itemType));
+            SetCalendarItemData exDat = getSetCalendarItemData(
+                    zsc, octxt, acct, mbox, e, new SetCalendarItemInviteParser(true, false, folder, itemType));
             exceptions.add(exDat);
             if (defInv == null)
                 defInv = exDat.mInv;
@@ -214,7 +223,8 @@ public class SetCalendarItem extends CalendarRequest {
 
         // for each <cancel>
         for (Element e : request.listElements(MailConstants.E_CAL_CANCEL)) {
-            SetCalendarItemData exDat = getSetCalendarItemData(zsc, octxt, acct, mbox, e, new SetCalendarItemInviteParser(true, true, itemType));
+            SetCalendarItemData exDat = getSetCalendarItemData(
+                    zsc, octxt, acct, mbox, e, new SetCalendarItemInviteParser(true, true, folder, itemType));
             exceptions.add(exDat);
             if (defInv == null)
                 defInv = exDat.mInv;

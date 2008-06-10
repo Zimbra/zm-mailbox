@@ -46,7 +46,6 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.accesscontrol.Right;
@@ -3233,8 +3232,8 @@ public class Mailbox {
     }
 
     public synchronized void writeICalendarForCalendarItems(
-            Writer writer, Collection<CalendarItem> calItems,
-            boolean useOutlookCompatMode, boolean ignoreErrors, boolean allowPrivateAccess, boolean forceOlsonTZID,
+            Writer writer, OperationContext octxt, Collection<CalendarItem> calItems,
+            boolean useOutlookCompatMode, boolean ignoreErrors, boolean forceOlsonTZID,
             boolean trimCalItemsList)
     throws ServiceException {
         try {
@@ -3263,6 +3262,9 @@ public class Mailbox {
             // build all the event components and add them to the Calendar
             for (Iterator<CalendarItem> iter = calItems.iterator(); iter.hasNext(); ) {
                 CalendarItem calItem = iter.next();
+                boolean allowPrivateAccess =
+                    calItem.isPublic() ||
+                    calItem.allowPrivateAccess(octxt.getAuthenticatedUser(), octxt.isUsingAdminPrivileges());
                 if (trimCalItemsList)
                     iter.remove();  // help keep memory consumption low
                 Invite[] invites = calItem.getInvites();
@@ -3293,14 +3295,14 @@ public class Mailbox {
 
     public synchronized void writeICalendarForRange(
             Writer writer, OperationContext octxt, long start, long end, int folderId,
-            boolean useOutlookCompatMode, boolean ignoreErrors, boolean allowPrivateAccess, boolean forceOlsonTZID)
+            boolean useOutlookCompatMode, boolean ignoreErrors, boolean forceOlsonTZID)
     throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("writeICalendarForRange", octxt);
             Collection<CalendarItem> calItems = getCalendarItemsForRange(octxt, start, end, folderId, null);
             writeICalendarForCalendarItems(
-                    writer, calItems, useOutlookCompatMode, ignoreErrors, allowPrivateAccess, forceOlsonTZID, true);
+                    writer, octxt, calItems, useOutlookCompatMode, ignoreErrors, forceOlsonTZID, true);
         } finally {
             endTransaction(success);
         }
@@ -5696,16 +5698,6 @@ public class Mailbox {
     CalendarItem createCalendarItem(int folderId, short volumeId, int flags, long tags, String uid,
                                     ParsedMessage pm, Invite invite, long nextAlarm)
     throws ServiceException {
-        OperationContext octxt = getOperationContext();
-        Account authAccount = octxt != null ? octxt.getAuthenticatedUser() : null;
-        boolean asAdmin = octxt != null ? octxt.isUsingAdminPrivileges() : false;
-        boolean denyPrivateAccess = authAccount != null && !Account.allowPrivateAccess(authAccount, getAccount(), asAdmin);
-        boolean isCalendarResource = getAccount() instanceof CalendarResource;
-        // Don't allow creating a private appointment on behalf of another user,
-        // unless that other user is a calendar resource.
-        if (denyPrivateAccess && !invite.isPublic() && !isCalendarResource)
-            throw ServiceException.PERM_DENIED("private appointment/task cannot be created on behalf of another user");
-
         // FIXME: assuming that we're in the middle of a AddInvite op
         CreateCalendarItemPlayer redoPlayer = (CreateCalendarItemPlayer) mCurrentChange.getRedoPlayer();
         CreateCalendarItemRecorder redoRecorder = (CreateCalendarItemRecorder) mCurrentChange.getRedoRecorder();

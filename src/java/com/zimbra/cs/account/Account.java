@@ -21,7 +21,6 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.accesscontrol.Right;
 
 /**
  * @author schemers
@@ -113,19 +112,6 @@ public class Account extends MailTarget {
      */
     public String getAccountCOSId() {
         return getAttr(Provisioning.A_zimbraCOSId);
-    }
-    
-    /**
-     * Returns true if authAccount should be allowed access to private data in this appointment.
-     * Returns true if authAccount is the same as this account, or authAccount has
-     * admin rights over this account.
-     * @param authAccount
-     * @param asAdmin true if authAccount is authenticated with admin privileges
-     * @return
-     * @throws ServiceException
-     */
-    public boolean allowPrivateAccess(Account authAccount, boolean asAdmin) throws ServiceException {
-        return Account.allowPrivateAccess(authAccount, this, asAdmin);
     }
     
     /**

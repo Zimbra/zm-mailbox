@@ -2564,8 +2564,11 @@ public final class ZimbraQuery {
         //
         // Check to see if we need to filter out private appointment data
         boolean allowPrivateAccess = true;
-        if (octxt != null) 
-            allowPrivateAccess = mbox.getAccount().allowPrivateAccess(octxt.getAuthenticatedUser(), octxt.isUsingAdminPrivileges());
+        if (octxt != null) {
+            Account acct = mbox.getAccount();
+            allowPrivateAccess = Account.allowPrivateAccess(
+                    octxt.getAuthenticatedUser(), acct, octxt.isUsingAdminPrivileges());
+        }
 
         // Since optimize() has already been run, we know that each of our ops
         // only has one target (or none).  Find those operations which have
