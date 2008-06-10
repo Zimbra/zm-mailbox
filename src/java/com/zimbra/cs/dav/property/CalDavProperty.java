@@ -27,6 +27,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
+import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.property.ResourceProperty;
 import com.zimbra.cs.dav.resource.CalendarObject;
 import com.zimbra.cs.dav.service.DavServlet;
@@ -143,6 +144,9 @@ public class CalDavProperty extends ResourceProperty {
 				} catch (IOException e) {
 					setStringValue("");
 					ZimbraLog.dav.warn("can't get appt data", e);
+                } catch (DavException e) {
+                    setStringValue("");
+                    ZimbraLog.dav.warn("can't get appt data", e);
 				}
 			return super.toElement(ctxt, parent, nameOnly);
 		}

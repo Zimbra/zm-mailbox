@@ -33,8 +33,10 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.CalendarItem;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
@@ -406,17 +408,20 @@ public class GetCalendarItemSummaries extends CalendarRequest {
         OperationContext octxt = getOperationContext(zsc, context);
 
         if (LC.calendar_cache_enabled.booleanValue()) {
+            boolean asAdmin = octxt.isUsingAdminPrivileges();
             int folderId = iidFolder.getId();
             if (folderId != Mailbox.ID_AUTO_INCREMENT) {
+                Folder folder = mbox.getFolderById(octxt, folderId);
+                boolean allowPrivateAccess = CalendarItem.allowPrivateAccess(folder, authAcct, asAdmin);
                 CalendarData calData = mbox.getCalendarSummaryForRange(
-                        octxt, iidFolder.getId(), getItemType(), rangeStart, rangeEnd);
+                        octxt, folderId, getItemType(), rangeStart, rangeEnd);
                 if (calData != null) {
     	            for (Iterator<CalendarItemData> itemIter = calData.calendarItemIterator(); itemIter.hasNext(); ) {
     	            	CalendarItemData calItemData = itemIter.next();
                         int numInstances = calItemData.getNumInstances();
                         if (numInstances > 0) {
                             Element calItemElem = CacheToXML.encodeCalendarItemData(
-                                    zsc, acct, authAcct, calItemData, true);
+                                    zsc, calItemData, allowPrivateAccess, true);
                             response.addElement(calItemElem);
                         }
     	            }
@@ -425,12 +430,14 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                 List<CalendarData> calDataList = mbox.getAllCalendarsSummaryForRange(
                         octxt, getItemType(), rangeStart, rangeEnd);
                 for (CalendarData calData : calDataList) {
+                    Folder folder = mbox.getFolderById(octxt, calData.getFolderId());
+                    boolean allowPrivateAccess = CalendarItem.allowPrivateAccess(folder, authAcct, asAdmin);
                     for (Iterator<CalendarItemData> itemIter = calData.calendarItemIterator(); itemIter.hasNext(); ) {
                         CalendarItemData calItemData = itemIter.next();
                         int numInstances = calItemData.getNumInstances();
                         if (numInstances > 0) {
                             Element calItemElem = CacheToXML.encodeCalendarItemData(
-                                    zsc, acct, authAcct, calItemData, true);
+                                    zsc, calItemData, allowPrivateAccess, true);
                             response.addElement(calItemElem);
                         }
                     }

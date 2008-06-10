@@ -171,7 +171,7 @@ public class SendInviteReply extends CalendarRequest {
                 CalSendData csd = new CalSendData();
                 csd.mOrigId = new ItemId(mbox, oldInv.getMailItemId());
                 csd.mReplyType = MailSender.MSGTYPE_REPLY;
-                csd.mInvite = CalendarMailSender.replyToInvite(acct, authAcct, isAdmin, onBehalfOf, oldInv, verb, replySubject, exceptDt);
+                csd.mInvite = CalendarMailSender.replyToInvite(acct, authAcct, isAdmin, onBehalfOf, calItem, oldInv, verb, replySubject, exceptDt);
                 
                 ZVCalendar iCal = csd.mInvite.newToICalendar(true);
                 

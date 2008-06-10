@@ -22,7 +22,6 @@ import java.util.Iterator;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.calendar.Alarm;
@@ -237,8 +236,8 @@ public class CacheToXML {
     }
 
     public static Element encodeCalendarItemData(ZimbraSoapContext zsc,
-                                                 Account acct, Account authAcct, CalendarItemData calItemData,
-                                                 boolean legacyFormat)
+                                                 CalendarItemData calItemData,
+                                                 boolean allowPrivateAccess, boolean legacyFormat)
     throws ServiceException {
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
         boolean isAppointment = calItemData.getType() == MailItem.TYPE_APPOINTMENT;
@@ -250,7 +249,7 @@ public class CacheToXML {
         calItemElem.addAttribute(MailConstants.A_UID, calItemData.getUid());
 
         FullInstanceData defaultData = calItemData.getDefaultData();
-        boolean showAll = acct.allowPrivateAccess(authAcct, zsc.isUsingAdminPrivileges()) || calItemData.isPublic();
+        boolean showAll = allowPrivateAccess || calItemData.isPublic();
         if (showAll) {
             String flags = calItemData.getFlags();
             if (flags != null && !flags.equals(""))
@@ -281,14 +280,13 @@ public class CacheToXML {
         return calItemElem;
     }
 
-    public static void encodeCalendarData(ZimbraSoapContext zsc, Element parent,
-                                          Account acct, Account authAcct, CalendarData calData,
-                                          boolean legacyFormat)
+    public static void encodeCalendarData(ZimbraSoapContext zsc, Element parent, CalendarData calData,
+                                          boolean allowPrivateAccess, boolean legacyFormat)
     throws ServiceException {
         for (Iterator<CalendarItemData> iter = calData.calendarItemIterator(); iter.hasNext(); ) {
             CalendarItemData calItemData = iter.next();
             if (calItemData.getNumInstances() > 0) {
-                Element calItemElem = encodeCalendarItemData(zsc, acct, authAcct, calItemData, legacyFormat);
+                Element calItemElem = encodeCalendarItemData(zsc, calItemData, allowPrivateAccess, legacyFormat);
                 parent.addElement(calItemElem);
             }
         }

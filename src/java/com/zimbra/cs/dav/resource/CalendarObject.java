@@ -33,9 +33,10 @@ import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.caldav.Filter;
 import com.zimbra.cs.dav.property.CalDavProperty;
-import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.CalendarItem;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
@@ -59,7 +60,7 @@ public interface CalendarObject {
     
     public String getUid();
     public boolean match(Filter filter);
-    public String getVcalendar(DavContext ctxt, Filter filter) throws IOException;    
+    public String getVcalendar(DavContext ctxt, Filter filter) throws IOException, DavException;    
 
     public static class CalendarPath {
         public static String generate(String itemPath, String uid) {
@@ -139,7 +140,7 @@ public interface CalendarObject {
         /* Returns iCalendar representation of events that matches
          * the supplied filter.
          */
-        public String getVcalendar(DavContext ctxt, Filter filter) throws IOException {
+        public String getVcalendar(DavContext ctxt, Filter filter) throws IOException, DavException {
             StringBuilder buf = new StringBuilder();
 
             buf.append("BEGIN:VCALENDAR\r\n");
@@ -159,9 +160,11 @@ public interface CalendarObject {
             for (Invite inv : mInvites) {
                 CharArrayWriter wr = new CharArrayWriter();
                 try {
-                    boolean allowPrivateAccess =
-                        Account.allowPrivateAccess(ctxt.getAuthAccount(), mAccount,
-                                                   ctxt.getOperationContext().isUsingAdminPrivileges());
+                    Mailbox mbox = getMailbox(ctxt);
+                    OperationContext octxt = ctxt.getOperationContext();
+                    Folder folder = mbox.getFolderById(octxt, mFolderId);
+                    boolean allowPrivateAccess = CalendarItem.allowPrivateAccess(
+                            folder, ctxt.getAuthAccount(), octxt.isUsingAdminPrivileges());
                     ZCalendar.ZComponent vcomp = inv.newToVComponent(false, allowPrivateAccess);
                     if (filter != null && !filter.match(vcomp))
                         continue;
@@ -179,7 +182,7 @@ public interface CalendarObject {
         }
 
         @Override
-        public InputStream getContent(DavContext ctxt) throws IOException {
+        public InputStream getContent(DavContext ctxt) throws IOException, DavException {
             return new ByteArrayInputStream(getVcalendar(ctxt, null).getBytes());
         }
 

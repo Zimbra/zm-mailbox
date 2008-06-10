@@ -51,7 +51,6 @@ public class GetICal extends MailDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account authAccount = getAuthenticatedAccount(zsc);
         Mailbox mbx = getRequestedMailbox(zsc);
-        boolean allowPrivateAccess = Account.allowPrivateAccess(authAccount, mbx.getAccount(), zsc.isUsingAdminPrivileges());
         OperationContext octxt = getOperationContext(zsc, context);
 
         String iidStr = request.getAttribute(MailConstants.A_ID, null);
@@ -79,11 +78,12 @@ public class GetICal extends MailDocumentHandler {
                     if (inv == null) {
                         throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
                     }
+                    boolean allowPrivateAccess = calItem.allowPrivateAccess(authAccount, zsc.isUsingAdminPrivileges());
                     cal = inv.newToICalendar(useOutlookCompatMode, allowPrivateAccess);
                     cal.toICalendar(wout);
                 } else {
                     mbx.writeICalendarForRange(wout, octxt, rangeStart, rangeEnd, Mailbox.ID_FOLDER_CALENDAR,
-                                               useOutlookCompatMode, false, allowPrivateAccess, false);
+                                               useOutlookCompatMode, false, false);
                 }
                 wout.flush();
 

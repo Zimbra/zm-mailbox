@@ -36,8 +36,6 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.index.*;
@@ -47,6 +45,7 @@ import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
@@ -472,12 +471,14 @@ public class Search extends MailDocumentHandler  {
                     CalendarData calData = mbox.getCalendarSummaryForRange(
                             octxt, folderId, itemType, params.getCalItemExpandStart(), params.getCalItemExpandEnd());
                     if (calData != null) {
+                        Folder folder = mbox.getFolderById(octxt, folderId);
+                        boolean allowPrivateAccess = CalendarItem.allowPrivateAccess(folder, authAcct, octxt.isUsingAdminPrivileges());
                         for (Iterator<CalendarItemData> itemIter = calData.calendarItemIterator(); itemIter.hasNext(); ) {
                             CalendarItemData calItemData = itemIter.next();
                             int numInstances = calItemData.getNumInstances();
                             if (numInstances > 0) {
                                 Element calItemElem = CacheToXML.encodeCalendarItemData(
-                                        zsc, acct, authAcct, calItemData, false);
+                                        zsc, calItemData, allowPrivateAccess, false);
                                 parent.addElement(calItemElem);
                             }
                         }

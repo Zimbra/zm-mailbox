@@ -23,6 +23,8 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.mailbox.CalendarItem;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
 import com.zimbra.cs.mailbox.calendar.Alarm;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -233,7 +235,7 @@ public class CalendarUtils {
     }
 
     static ParseMimeMessage.InviteParserResult parseInviteForCancel(
-            Account account, byte itemType, Element inviteElem, TimeZoneMap tzMap,
+            Account account, Folder folder, byte itemType, Element inviteElem, TimeZoneMap tzMap,
             boolean recurrenceIdAllowed, boolean recurAllowed)
             throws ServiceException {
         if (tzMap == null) {
@@ -249,7 +251,7 @@ public class CalendarUtils {
             throw ServiceException.INVALID_REQUEST("Missing uid in a cancel invite", null);
 
         Invite sanitized =
-            cancelInvite(account, null, false, false, cancel, cancel.getComment(),
+            cancelInvite(account, null, false, false, folder, cancel, cancel.getComment(),
                          cancel.getAttendees(), cancel.getRecurId(),
                          false);
         
@@ -990,23 +992,23 @@ public class CalendarUtils {
 
     public static Invite buildCancelInviteCalendar(
             Account acct, Account senderAcct, boolean asAdmin,
-            boolean onBehalfOf, Invite inv,
+            boolean onBehalfOf, CalendarItem calItem, Invite inv,
             String comment, List<ZAttendee> forAttendees) throws ServiceException {
-        return cancelInvite(acct, senderAcct, asAdmin, onBehalfOf, inv, comment, forAttendees, null);
+        return cancelInvite(acct, senderAcct, asAdmin, onBehalfOf, calItem, inv, comment, forAttendees, null);
     }
 
     public static Invite buildCancelInviteCalendar(
             Account acct, Account senderAcct, boolean asAdmin,
-            boolean onBehalfOf, Invite inv,
+            boolean onBehalfOf, CalendarItem calItem, Invite inv,
             String comment) throws ServiceException {
-        return cancelInvite(acct, senderAcct, asAdmin, onBehalfOf, inv, comment, null, null);
+        return cancelInvite(acct, senderAcct, asAdmin, onBehalfOf, calItem, inv, comment, null, null);
     }
 
     public static Invite buildCancelInstanceCalendar(
             Account acct, Account senderAcct, boolean asAdmin,
-            boolean onBehalfOf, Invite inv,
+            boolean onBehalfOf, CalendarItem calItem, Invite inv,
             String comment, RecurId recurId) throws ServiceException {
-        return cancelInvite(acct, senderAcct, asAdmin, onBehalfOf, inv, comment, null, recurId);
+        return cancelInvite(acct, senderAcct, asAdmin, onBehalfOf, calItem, inv, comment, null, recurId);
     }
 
     /**
@@ -1045,15 +1047,28 @@ public class CalendarUtils {
     static Invite cancelInvite(
             Account acct, Account senderAcct, boolean asAdmin,
             boolean onBehalfOf,
-            Invite inv, String comment,
+            CalendarItem calItem, Invite inv, String comment,
             List<ZAttendee> forAttendees, RecurId recurId)
     throws ServiceException {
-        return cancelInvite(acct, senderAcct, asAdmin, onBehalfOf,
+        boolean allowPrivateAccess = calItem.allowPrivateAccess(senderAcct, asAdmin);
+        return cancelInvite(acct, senderAcct, allowPrivateAccess, onBehalfOf,
                             inv, comment, forAttendees, recurId, true);
     }
 
     private static Invite cancelInvite(
             Account acct, Account senderAcct, boolean asAdmin,
+            boolean onBehalfOf,
+            Folder folder, Invite inv, String comment,
+            List<ZAttendee> forAttendees, RecurId recurId,
+            boolean incrementSeq)
+    throws ServiceException {
+        boolean allowPrivateAccess = CalendarItem.allowPrivateAccess(folder, senderAcct, asAdmin);
+        return cancelInvite(acct, senderAcct, allowPrivateAccess, onBehalfOf,
+                            inv, comment, forAttendees, recurId, incrementSeq);
+    }
+
+    private static Invite cancelInvite(
+            Account acct, Account senderAcct, boolean allowPrivateAccess,
             boolean onBehalfOf,
             Invite inv, String comment,
             List<ZAttendee> forAttendees, RecurId recurId,
@@ -1077,9 +1092,9 @@ public class CalendarUtils {
             cancel.addAttendee(a);
 
         cancel.setClassProp(inv.getClassProp());
-        boolean hidePrivate = !inv.isPublic() && !Account.allowPrivateAccess(senderAcct, acct, asAdmin);
+        boolean showAll = inv.isPublic() || allowPrivateAccess;
         Locale locale = acct.getLocale();
-        if (hidePrivate) {
+        if (showAll) {
             // SUMMARY
             String sbj = L10nUtil.getMessage(MsgKey.calendarSubjectWithheld, locale);
             cancel.setName(CalendarMailSender.getCancelSubject(sbj, locale));

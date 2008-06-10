@@ -473,7 +473,7 @@ public class CalendarMailSender {
      */
     public static Invite replyToInvite(Account acct, Account authAcct, boolean asAdmin,
                                        boolean onBehalfOf,
-                                       Invite oldInv,
+                                       CalendarItem calItem, Invite oldInv,
                                        Verb verb, String replySubject,
                                        ParsedDateTime exceptDt)
     throws ServiceException {
@@ -509,7 +509,7 @@ public class CalendarMailSender {
             reply.addAttendee(meReply);
         }
 
-        boolean hidePrivate = !oldInv.isPublic() && !Account.allowPrivateAccess(authAcct, acct, asAdmin);
+        boolean hidePrivate = !oldInv.isPublic() && !calItem.allowPrivateAccess(authAcct, asAdmin);
         reply.setClassProp(oldInv.getClassProp());
 
         // DTSTART, DTEND, LOCATION (outlook seems to require these,
@@ -603,7 +603,7 @@ public class CalendarMailSender {
 
         String replyType = MailSender.MSGTYPE_REPLY;
         // TODO: Handle Exception ID. (last arg of replyToInvite)
-        Invite replyInv = replyToInvite(acct, authAcct, asAdmin, onBehalfOf, inv, verb, replySubject, null);
+        Invite replyInv = replyToInvite(acct, authAcct, asAdmin, onBehalfOf, calItem, inv, verb, replySubject, null);
 
         ZVCalendar iCal = replyInv.newToICalendar(true);
         MimeMessage mm = createDefaultReply(acct, authAcct, asAdmin, onBehalfOf, calItem, inv, mmInv,
