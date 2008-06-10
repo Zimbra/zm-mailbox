@@ -32,8 +32,11 @@ import javax.naming.ldap.PagedResultsResponseControl;
 import javax.naming.ldap.StartTlsRequest;
 import javax.naming.ldap.StartTlsResponse;
 
+import javax.net.ssl.SSLSocketFactory;
+
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.EasySSLSocketFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccountServiceException;
@@ -55,6 +58,8 @@ public class ZimbraLdapContext {
     
     private static Hashtable<String, String> sEnvMasterAuth;
     private static Hashtable<String, String> sEnvAuth;
+    
+    private static SSLSocketFactory sEasySSLSocketFactory;
     
     private LdapContext mDirContext;
     private StartTlsResponse mTlsResp;
@@ -91,6 +96,8 @@ public class ZimbraLdapContext {
         if (sLdapRequireStartTLS || sLdapMasterRequireStartTLS)
             System.setProperty("javax.net.ssl.trustStore", LC.mailboxd_truststore.value());
         */    
+        
+        sEasySSLSocketFactory = EasySSLSocketFactory.getDefault();
     }
     
     public static String getLdapURL() {
@@ -243,8 +250,13 @@ public class ZimbraLdapContext {
                 // start TLS
                 mTlsResp = (StartTlsResponse) mDirContext.extendedOperation(new StartTlsRequest());
                 
-                ZimbraLog.ldap.debug("START TLS");
-                mTlsResp.negotiate();
+                if (LC.ssl_allow_untrusted_certs.booleanValue()) {
+                    ZimbraLog.ldap.debug("START TLS, allow untruested certs");
+                    mTlsResp.negotiate(sEasySSLSocketFactory);
+                } else { 
+                    ZimbraLog.ldap.debug("START TLS");
+                    mTlsResp.negotiate();
+                }
 
                 mDirContext.addToEnvironment(Context.SECURITY_AUTHENTICATION, "simple");
                 mDirContext.addToEnvironment(Context.SECURITY_PRINCIPAL, LC.zimbra_ldap_userdn.value());
