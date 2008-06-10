@@ -169,6 +169,8 @@ public class MailConstants {
     public static final QName WIKI_ACTION_RESPONSE = QName.get("WikiActionResponse", NAMESPACE);
     public static final QName DIFF_DOCUMENT_REQUEST = QName.get("DiffDocumentRequest", NAMESPACE);
     public static final QName DIFF_DOCUMENT_RESPONSE = QName.get("DiffDocumentResponse", NAMESPACE);
+    public static final QName LIST_DOCUMENT_REVISIONS_REQUEST = QName.get("ListDocumentRevisionsRequest", NAMESPACE);
+    public static final QName LIST_DOCUMENT_REVISIONS_RESPONSE = QName.get("ListDocumentRevisionsResponse", NAMESPACE);
 
     // data sources
     public static final QName CREATE_DATA_SOURCE_REQUEST = QName.get("CreateDataSourceRequest", NAMESPACE);
