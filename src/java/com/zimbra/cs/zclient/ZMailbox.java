@@ -1263,7 +1263,23 @@ public class ZMailbox {
 			searchParams.setTypes(ZSearchParams.TYPE_CONTACT);
 			List<ZSearchHit> hits = this.search(searchParams).getHits();
 			if (hits.size() > 0) {
-				mMyCard = getContact(hits.get(0).getId());
+				ZSearchHit myCardHit = null;
+				int lowestId = 0;
+				for (ZSearchHit hit : hits) {
+					String idStr = hit.getId();
+					try {
+						int id = Integer.parseInt(idStr);
+						if (myCardHit == null || id <= lowestId) {
+							lowestId = id;
+							myCardHit = hit;
+						}
+					} catch (NumberFormatException ignored) {
+						// WTF.
+					}
+				}
+				if (myCardHit != null) {
+					mMyCard = getContact(myCardHit.getId());
+				}
 			}
 			mHasMyCard = true;
 		}
