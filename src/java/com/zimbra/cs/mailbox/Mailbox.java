@@ -2992,6 +2992,18 @@ public class Mailbox {
         return (Conversation) getCachedItem(id, MailItem.TYPE_CONVERSATION);
     }
 
+    public synchronized Conversation getConversationByHash(OperationContext octxt, String hash) throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("getConversationByHash", octxt);
+            Conversation item = checkAccess(getConversationByHash(hash));
+            success = true;
+            return item;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
     Conversation getConversationByHash(String hash) throws ServiceException {
         Conversation conv = null;
 

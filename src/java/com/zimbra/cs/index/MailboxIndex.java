@@ -391,11 +391,13 @@ public final class MailboxIndex
     public static final String GROUP_BY_NONE         = "none";
 
     public static final String SEARCH_FOR_APPOINTMENTS = "appointment";
+    public static final String SEARCH_FOR_CHATS = "chat";
     public static final String SEARCH_FOR_CONTACTS = "contact";
     public static final String SEARCH_FOR_CONVERSATIONS = "conversation";
     public static final String SEARCH_FOR_DOCUMENTS = "document";
     public static final String SEARCH_FOR_MESSAGES = "message";
     public static final String SEARCH_FOR_NOTES = "note";
+    public static final String SEARCH_FOR_TAGS = "tag";
     public static final String SEARCH_FOR_TASKS = "task";
     public static final String SEARCH_FOR_WIKI = "wiki";
 
@@ -469,18 +471,22 @@ public final class MailboxIndex
                 types[i] = MailItem.TYPE_MESSAGE;
             } else if (GROUP_BY_NONE.equals(strs[i])) {
                 types[i] = 0;
+            } else if (SEARCH_FOR_CHATS.equals(strs[i])) {
+                types[i] = MailItem.TYPE_CHAT;
             } else if (SEARCH_FOR_CONTACTS.equals(strs[i])) {
                 types[i] = MailItem.TYPE_CONTACT;
-            } else if (SEARCH_FOR_APPOINTMENTS.equals(strs[i])) {
-                types[i] = MailItem.TYPE_APPOINTMENT;
-            } else if (SEARCH_FOR_TASKS.equals(strs[i])) {
-                types[i] = MailItem.TYPE_TASK;
-            } else if (SEARCH_FOR_NOTES.equals(strs[i])) {
-                types[i] = MailItem.TYPE_NOTE;
-            } else if (SEARCH_FOR_WIKI.equals(strs[i])) {
-                types[i] = MailItem.TYPE_WIKI;
             } else if (SEARCH_FOR_DOCUMENTS.equals(strs[i])) {
                 types[i] = MailItem.TYPE_DOCUMENT;
+            } else if (SEARCH_FOR_APPOINTMENTS.equals(strs[i])) {
+                types[i] = MailItem.TYPE_APPOINTMENT;
+            } else if (SEARCH_FOR_NOTES.equals(strs[i])) {
+                types[i] = MailItem.TYPE_NOTE;
+            } else if (SEARCH_FOR_TAGS.equals(strs[i])) {
+                types[i] = MailItem.TYPE_TAG;
+            } else if (SEARCH_FOR_TASKS.equals(strs[i])) {
+                types[i] = MailItem.TYPE_TASK;
+            } else if (SEARCH_FOR_WIKI.equals(strs[i])) {
+                types[i] = MailItem.TYPE_WIKI;
             } else 
                 throw ServiceException.INVALID_REQUEST("unknown groupBy: "+strs[i], null);
         }
