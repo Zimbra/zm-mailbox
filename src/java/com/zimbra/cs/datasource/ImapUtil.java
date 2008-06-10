@@ -16,66 +16,16 @@
  */
 package com.zimbra.cs.datasource;
 
-import com.zimbra.cs.mailclient.imap.Literal;
-import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
-import com.zimbra.cs.mailclient.imap.Flags;
 import com.zimbra.cs.mailclient.imap.ListData;
-import com.zimbra.cs.mailclient.imap.ResponseHandler;
-import com.zimbra.cs.mailclient.imap.ImapResponse;
-import com.zimbra.cs.mailclient.imap.CAtom;
-import com.zimbra.cs.mailclient.imap.MessageData;
-import com.zimbra.cs.mailclient.MailException;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 import java.util.List;
-import java.util.Date;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.io.IOException;
-import java.io.File;
-import java.io.OutputStream;
-import java.io.FileOutputStream;
 
 public final class ImapUtil {
-    public static long append(ImapConnection ic, String mailbox,
-                              MimeMessage msg, Flags flags, Date date)
-        throws IOException {
-        ImapConfig config = (ImapConfig) ic.getConfig();
-        File tmp = null;
-        OutputStream os = null;
-        try {
-            tmp = File.createTempFile("lit", null, config.getLiteralDataDir());
-            os = new FileOutputStream(tmp);
-            msg.writeTo(os);
-            os.close();
-            return ic.append(mailbox, flags, date, new Literal(tmp));
-        } catch (MessagingException e) {
-            throw new MailException("Error appending message", e);
-        } finally {
-            if (os != null) os.close();
-            if (tmp != null) tmp.delete();
-        }
-    }
-
-    public static List<MessageData> fetch(ImapConnection ic, String seq,
-                                          Object param) throws IOException {
-        final List<MessageData> mds = new ArrayList<MessageData>();
-        ic.uidFetch(seq, param, new ResponseHandler() {
-            public boolean handleResponse(ImapResponse res) {
-                if (res.getCCode() == CAtom.FETCH) {
-                    mds.add((MessageData) res.getData());
-                    return true;
-                }
-                return false;
-
-            }
-        });
-        return mds;
-    }
-
     private static final String INBOX = "INBOX";
     private static final int INBOX_LEN = INBOX.length();
 

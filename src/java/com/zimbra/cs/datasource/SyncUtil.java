@@ -20,7 +20,7 @@ import com.zimbra.cs.mailclient.imap.Flags;
 import com.zimbra.cs.mailclient.imap.CAtom;
 import com.zimbra.cs.mailbox.Flag;
 
-final class FlagsUtil {
+final class SyncUtil {
     private static final Flags EMPTY_FLAGS = new Flags();
 
     // Excludes flags which have no IMAP equivalent
