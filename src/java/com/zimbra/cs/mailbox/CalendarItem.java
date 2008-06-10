@@ -1023,7 +1023,7 @@ public abstract class CalendarItem extends MailItem {
                 if (!allowPrivateAccess(folder, authAccount, asAdmin)) {
                     denyPrivateAccess = true;
                     if (!isCalendarResource)
-                        throw ServiceException.PERM_DENIED("you do not have permission to update/cancel private calendar item in destination folder");
+                        throw ServiceException.PERM_DENIED("you do not have permission to update/cancel private calendar item in target folder");
                 }
             }
         }
@@ -2604,5 +2604,71 @@ public abstract class CalendarItem extends MailItem {
     throws ServiceException {
         String address = calUser.getAddress();
         return AccountUtil.addressMatchesAccount(acct, address);
+    }
+
+    @Override
+    boolean move(Folder target) throws ServiceException {
+        if (!isPublic()) {
+            boolean privateAccessSrc = canAccess(ACL.RIGHT_PRIVATE);
+            boolean privateAccessDest = target.canAccess(ACL.RIGHT_PRIVATE);
+            if (!privateAccessSrc)
+                throw ServiceException.PERM_DENIED(
+                        "you do not have permission to move private calendar item from the current folder");
+            if (!privateAccessDest)
+                throw ServiceException.PERM_DENIED(
+                        "you do not have permission to move private calendar item to the target folder");
+        }
+        return super.move(target);
+    }
+
+    @Override
+    void delete(DeleteScope scope, boolean writeTombstones) throws ServiceException {
+        if (!isPublic() && !canAccess(ACL.RIGHT_PRIVATE))
+            throw ServiceException.PERM_DENIED(
+                    "you do not have permission to delete private calendar item from the current folder");
+        super.delete(scope, writeTombstones);
+    }
+
+    @Override
+    MailItem copy(Folder folder, int id, int parentId, short destVolumeId) throws IOException, ServiceException {
+        if (!isPublic()) {
+            boolean privateAccessSrc = canAccess(ACL.RIGHT_PRIVATE);
+            boolean privateAccessDest = folder.canAccess(ACL.RIGHT_PRIVATE);
+            if (!privateAccessSrc)
+                throw ServiceException.PERM_DENIED(
+                        "you do not have permission to copy private calendar item from the current folder");
+            if (!privateAccessDest)
+                throw ServiceException.PERM_DENIED(
+                        "you do not have permission to copy private calendar item to the target folder");
+        }
+        return super.copy(folder, id, parentId, destVolumeId);
+    }
+
+    @Override
+    void rename(String name, Folder target) throws ServiceException {
+        if (!isPublic()) {
+            boolean privateAccessSrc = canAccess(ACL.RIGHT_PRIVATE);
+            boolean privateAccessDest = target.canAccess(ACL.RIGHT_PRIVATE);
+            if (!privateAccessSrc)
+                throw ServiceException.PERM_DENIED(
+                        "you do not have permission to rename/move private calendar item from the current folder");
+            if (!privateAccessDest)
+                throw ServiceException.PERM_DENIED(
+                        "you do not have permission to move private calendar item to the target folder");
+        }
+        super.rename(name, target);
+    }
+
+    @Override
+    boolean canAccess(short rightsNeeded, Account authuser, boolean asAdmin) throws ServiceException {
+        if (!isPublic()) {
+            // If write/delete was requested on a private item, check private permission first.
+            short writeAccess = ACL.RIGHT_WRITE | ACL.RIGHT_DELETE;
+            if ((rightsNeeded & writeAccess) != 0) {
+                if (!super.canAccess(ACL.RIGHT_PRIVATE, authuser, asAdmin))
+                    return false;
+            }
+        }
+        return super.canAccess(rightsNeeded, authuser, asAdmin);
     }
 }

@@ -528,10 +528,18 @@ public class ItemActionHelper {
 
                 case MailItem.TYPE_APPOINTMENT:
                 case MailItem.TYPE_TASK:
+                    CalendarItem cal = (CalendarItem) item;
+                    // private calendar item may not be moved by non-owner unless permission was granted
+                    if (!cal.isPublic()) {
+                        boolean asAdmin = mOpCtxt != null ? mOpCtxt.isUsingAdminPrivileges() : false;
+                        if (!cal.allowPrivateAccess(mAuthenticatedAccount, asAdmin))
+                            throw ServiceException.PERM_DENIED(
+                                    "you do not have permission to move/copy a private calendar item from the current folder/mailbox");
+                    }
+
                     // Move the item to remote mailbox using SetAppointmentRequest/SetTaskRequest.
                     QName qname = (item.getType() == MailItem.TYPE_TASK ? MailConstants.SET_TASK_REQUEST : MailConstants.SET_APPOINTMENT_REQUEST);
                     Element request = new Element.XMLElement(qname).addAttribute(MailConstants.A_FOLDER, folderStr).addAttribute(MailConstants.A_FLAGS, flags);
-                    CalendarItem cal = (CalendarItem) item;
                     ToXML.encodeAlarmTimes(request, cal);
 
                     boolean isOrganizer = false;
