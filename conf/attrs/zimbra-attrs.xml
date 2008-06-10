@@ -3309,7 +3309,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Flash title when on appointment remimnder notification</desc>
 </attr>
 
-<attr id="683" name="zimbraDataSourceEnableTrace" type="boolean" cardinality="single" requiredIn="dataSource" flags="domainAdminModifiable">
+<attr id="683" name="zimbraDataSourceEnableTrace" type="boolean" cardinality="single" optionalIn="dataSource" flags="domainAdminModifiable">
   <desc>Whether to enable debug trace of this data source</desc>
 </attr>
 
