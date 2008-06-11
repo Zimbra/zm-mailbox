@@ -310,10 +310,12 @@ public class MimeCompoundHeader {
     /** Printable ASCII characters that must be quoted in parameter values and avoided in parameter names. */
     private static final boolean[] TSPECIALS = new boolean[128];
         static {
-            TSPECIALS['('] = TSPECIALS[')'] = TSPECIALS['<'] = TSPECIALS['>']  = true;
-            TSPECIALS[','] = TSPECIALS[';'] = TSPECIALS[':'] = TSPECIALS['\\'] = true;
-            TSPECIALS['/'] = TSPECIALS['['] = TSPECIALS[']'] = TSPECIALS['?']  = true;
-            TSPECIALS['@'] = TSPECIALS['"'] = TSPECIALS['='] = TSPECIALS[' ']  = true;
+            TSPECIALS['('] = TSPECIALS[')']  = TSPECIALS[','] = true;
+            TSPECIALS['<'] = TSPECIALS['>']  = TSPECIALS['?'] = true;
+            TSPECIALS['['] = TSPECIALS[']']  = TSPECIALS['='] = true;
+            TSPECIALS[':'] = TSPECIALS[';']  = TSPECIALS['"'] = true;
+            TSPECIALS['/'] = TSPECIALS['\\'] = TSPECIALS['@'] = true;
+            TSPECIALS[' '] = TSPECIALS['\t'] = true;
         }
 
 
