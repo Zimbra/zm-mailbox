@@ -565,7 +565,7 @@ public class LC {
         ldap_host.setDefault("");
 
         ldap_log_level = new KnownKey("ldap_log_level");
-        ldap_log_level.setDefault("16640");
+        ldap_log_level.setDefault("49152");
 
         ldap_port = new KnownKey("ldap_port");
         ldap_port.setDefault("");
