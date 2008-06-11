@@ -101,7 +101,7 @@ public class SaveDocument extends CreateMessage {
         int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
         try {
-            mbox.createDocument(getOperationContext(), getFolderId(), mFilename, mMimeType, mAuthor, getInputStream(), mItemType);
+            mbox.createDocument(getOperationContext(), getFolderId(), mFilename, mMimeType, mAuthor, getAdditionalDataStream(), mItemType);
         } catch (MailServiceException e) {
             if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                 mLog.info("Document " + getMessageId() + " is already in mailbox " + mboxId);
