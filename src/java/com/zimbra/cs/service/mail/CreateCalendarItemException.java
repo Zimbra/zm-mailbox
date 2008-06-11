@@ -20,6 +20,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import javax.mail.Address;
+import javax.mail.MessagingException;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
@@ -115,6 +118,19 @@ public class CreateCalendarItemException extends CalendarRequest {
             int folderId = calItem.getFolderId();
             if (!isInterMboxMove && iidFolder != null)
                 folderId = iidFolder.getId();
+
+            // If we are sending this to other people, then we MUST be the organizer!
+            if (!inv.isOrganizer()) {
+                try {
+                    Address[] rcpts = dat.mMm.getAllRecipients();
+                    if (rcpts != null && rcpts.length > 0) {
+                        throw MailServiceException.MUST_BE_ORGANIZER("CreateCalendarItemException");
+                    }
+                } catch (MessagingException e) {
+                    throw ServiceException.FAILURE("Checking recipients of outgoing msg ", e);
+                }
+            }
+
             sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, false);
         }
 
