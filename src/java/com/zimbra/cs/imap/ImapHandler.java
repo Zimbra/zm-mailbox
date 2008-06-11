@@ -256,7 +256,7 @@ abstract class ImapHandler extends ProtocolHandler {
             try {
                 clean = req.readATOM().equals("DONE") && req.eof();
             } catch (ImapParseException ipe) { }
-            return isProxied ? mProxy.proxy(req) : doIDLE(null, IDLE_STOP, clean);
+            return doIDLE(null, IDLE_STOP, clean);
         }
 
         String tag = req.readTag();
@@ -445,7 +445,7 @@ abstract class ImapHandler extends ProtocolHandler {
                         return doID(tag, params);
                     } else if (command.equals("IDLE") && extensionEnabled("IDLE")) {
                         checkEOF(tag, req);
-                        return isProxied ? mProxy.proxy(req) : doIDLE(tag, IDLE_START, true);
+                        return doIDLE(tag, IDLE_START, true);
                     }
                     break;
                 case 'L':
@@ -1049,16 +1049,16 @@ abstract class ImapHandler extends ProtocolHandler {
             sendNO(tag, "mechanism not supported");
             return CONTINUE_PROCESSING;
         }
-        
+
         if (!mAuthenticator.initialize()) {
             mAuthenticator = null;
             return CONTINUE_PROCESSING;
         }
 
-        // RFC 4959: "This extension adds an optional second argument to the AUTHENTICATE
-        //            command that is defined in Section 6.2.2 of [IMAP4].  If this second
-        //            argument is present, it represents the contents of the "initial
-        //            client response" defined in section 5.1 of [SASL]."
+        // RFC 4959 3: "This extension adds an optional second argument to the AUTHENTICATE
+        //              command that is defined in Section 6.2.2 of [RFC3501].  If this
+        //              second argument is present, it represents the contents of the
+        //              "initial client response" defined in Section 5.1 of [RFC4422]."
         if (initial != null)
             return continueAuthentication(initial);
 
@@ -1073,7 +1073,7 @@ abstract class ImapHandler extends ProtocolHandler {
     private boolean allowCleartextLogins() {
         return mStartedTLS || mConfig.allowCleartextLogins();
     }
-    
+
     boolean doLOGIN(String tag, String username, String password) throws IOException {
         if (!checkState(tag, State.NOT_AUTHENTICATED))
             return CONTINUE_PROCESSING;
@@ -1093,7 +1093,7 @@ abstract class ImapHandler extends ProtocolHandler {
         }
         return cont;
     }
-    
+
     boolean authenticate(String username, String authenticateId, String password, String tag, String mechanism)
     throws IOException {
         // the Windows Mobile 5 hacks are enabled by appending "/wm" to the username, etc.
@@ -1624,7 +1624,7 @@ abstract class ImapHandler extends ProtocolHandler {
                 Map<ImapPath, ItemId> paths = new LinkedHashMap<ImapPath, ItemId>();
                 accumulatePaths(patternPath.getOwnerMailbox(), owner, null, paths);
 
-                // get the set of folders matching the selection criteria (either all folders or selected folders)
+                // get the set of folders matching the selection criteria (either all folders or subscribed folders)
                 Set<ImapPath> selected = paths.keySet();
                 if (selectSubscribed) {
                     selected = new LinkedHashSet<ImapPath>();
@@ -2154,9 +2154,13 @@ abstract class ImapHandler extends ProtocolHandler {
     //              IDLE command remains active until the client responds to the continuation,
     //              and as long as an IDLE command is active, the server is now free to send
     //              untagged EXISTS, EXPUNGE, and other messages at any time."
-    boolean doIDLE(String tag, boolean begin, boolean success) throws IOException {
+    boolean doIDLE(String tag, boolean begin, boolean success) throws IOException, ImapParseException {
         if (!checkState(tag, State.AUTHENTICATED))
             return CONTINUE_PROCESSING;
+
+        // XXX: not supporting cross-server IDLE at present
+        if (mProxy != null)
+            throw new ImapParseException(tag, "command not implemented");
 
         if (begin == IDLE_START) {
             mIdleTag = tag;

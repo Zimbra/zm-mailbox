@@ -283,7 +283,8 @@ class ImapProxy {
 
         @Override public byte[] evaluateChallenge(byte[] challenge) {
             complete = true;
-            String response = '\0' + username + '\0' + authtoken;
+            // disabling IDLE for now
+            String response = username + "/ni" + '\0' + username + '\0' + authtoken;
             try {
                 return response.getBytes("utf-8");
             } catch (UnsupportedEncodingException uee) {
