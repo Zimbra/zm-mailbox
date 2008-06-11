@@ -2321,6 +2321,7 @@ public class ZMailboxUtil implements DebugListener {
     public void interactive(BufferedReader in) throws IOException {
         while (true) {
             stdout.print(mPrompt);
+            stdout.flush();
             String line = StringUtil.readLine(in);
             if (line == null || line.length() == -1)
                 break;
