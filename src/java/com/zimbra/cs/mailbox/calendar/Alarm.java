@@ -30,6 +30,8 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
+import com.zimbra.cs.service.mail.CalendarUtils;
+import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.common.soap.Element;
 
 /**
@@ -109,6 +111,9 @@ public class Alarm {
     // ATTENDEEs
     private List<ZAttendee> mAttendees;
 
+    // x-props
+    private List<ZProperty> mXProps = new ArrayList<ZProperty>();
+
 
     public String getDescription() { return mDescription; }
     public int getRepeatCount() { return mRepeatCount; }
@@ -183,6 +188,9 @@ public class Alarm {
             }
             sb.append("]");
         }
+        for (ZProperty xprop : mXProps) {
+            sb.append(", ").append(xprop.toString());
+        }
         return sb.toString();
     }
 
@@ -221,6 +229,8 @@ public class Alarm {
                 }
             }
         }
+        // x-prop
+        ToXML.encodeXProps(alarm, xpropsIterator());
         return alarm;
     }
 
@@ -323,6 +333,9 @@ public class Alarm {
         Alarm alarm = new Alarm(
                 action, triggerType, triggerRelated, triggerRelative, triggerAbsolute,
                 repeatDuration, repeatCount, description, summary, attach, attendees);
+        List<ZProperty> xprops = CalendarUtils.parseXProps(alarmElem);
+        for (ZProperty prop : xprops)
+            alarm.addXProp(prop);
         return alarm;
     }
 
@@ -382,6 +395,11 @@ public class Alarm {
             }
         }
 
+        // x-prop
+        for (ZProperty xprop : mXProps) {
+            comp.addProperty(xprop);
+        }
+
         return comp;
     }
 
@@ -404,13 +422,19 @@ public class Alarm {
         Attach attach = null;
         List<ZAttendee> attendees = null;
 
+        List<ZProperty> xprops = new ArrayList<ZProperty>();
         Iterator<ZProperty> propIter = comp.getPropertyIterator();
         while (propIter.hasNext()) {
             ZProperty prop = propIter.next();
             ICalTok tok = prop.getToken();
             String val = prop.getValue();
-            if (tok == null)
+            if (tok == null) {
+                String name = prop.getName();
+                if (name.startsWith("X-") || name.startsWith("x-")) {
+                    xprops.add(prop);
+                }
             	continue;
+            }
             switch (tok) {
             case ACTION:
                 if (val != null) {
@@ -482,9 +506,24 @@ public class Alarm {
         Alarm alarm = new Alarm(
                 action, triggerType, triggerRelated, triggerRelative, triggerAbsolute,
                 repeatDuration, repeatCount, description, summary, attach, attendees);
+        for (ZProperty xprop : xprops) {
+            alarm.addXProp(xprop);
+        }
         return alarm;
     }
-    
+
+    public Iterator<ZProperty> xpropsIterator() { return mXProps.iterator(); }
+    public void addXProp(ZProperty prop) {
+        mXProps.add(prop);
+    }
+    public ZProperty getXProperty(String xpropName) {
+        for (ZProperty prop : mXProps) {
+            if (prop.getName().equalsIgnoreCase(xpropName))
+                return prop;
+        }
+        return null;
+    }
+
     /**
      * Create an alarm object from a simple warning relative time.
      * 
@@ -603,6 +642,9 @@ public class Alarm {
             }
         }
 
+        if (mXProps.size() > 0)
+            Util.encodeXPropsAsMetadata(meta, xpropsIterator());
+
         return meta;
     }
 
@@ -662,6 +704,14 @@ public class Alarm {
         Alarm alarm = new Alarm(
                 action, tt, triggerRelated, triggerRelative, triggerAbsolute,
                 repeatDuration, repeatCount, description, summary, attach, attendees);
+
+        List<ZProperty> xprops = Util.decodeXPropsFromMetadata(meta);
+        if (xprops != null) {
+            for (ZProperty xprop : xprops) {
+                alarm.addXProp(xprop);
+            }
+        }
+
         return alarm;
     }
 

@@ -273,6 +273,9 @@
                // the alarm, and the count is how many times to trigger the
                // alarm IN ADDITION TO the initial alarm.
                [<repeat count="N" .../>]
+               [<xprop name="x-name" [value="text"]>
+                 [<xparam name="x-name" [value="text"]/>]*
+                </xprop>]*
              </alarm>
            ]*
            [
@@ -284,6 +287,9 @@
                  OR
                  <attach>{base64-encoded binary data}</attach>
                ]
+               [<xprop name="x-name" [value="text"]>
+                 [<xparam name="x-name" [value="text"]/>]*
+                </xprop>]*
              </alarm>
            ]*
            [
@@ -294,6 +300,9 @@
                <summary>{email subject}</summary>
                <at .../>+      // attendees (one or more email recipients)
                [<attach ... />]  // sam as in AUDIO alarm
+               [<xprop name="x-name" [value="text"]>
+                 [<xparam name="x-name" [value="text"]/>]*
+                </xprop>]*
              </alarm>
            ]*
            [
@@ -302,6 +311,9 @@
                [<repeat/>]     // same as in DISPLAY alarm
                [<desc>{description test}</desc>]
                <attach ... />  // same as in AUDIO alarm
+               [<xprop name="x-name" [value="text"]>
+                 [<xparam name="x-name" [value="text"]/>]*
+                </xprop>]*
              </alarm>
            ]*
 
