@@ -36,12 +36,12 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailSender;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
-import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
@@ -195,7 +195,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
     throws ServiceException {
         return sendCalendarMessageInternal(zsc, octxt, apptFolderId,
                                            acct, mbox, csd, response,
-                                           ignoreFailedAddresses, true, true);
+                                           ignoreFailedAddresses, true);
     }
 
     /**
@@ -209,7 +209,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
      * @param cancelOwnAppointment if true, sender's appointment is canceled.
      *                             if false, sender's appointment is not
      *                             canceled. (this may be appropriate when
-     *                             sending out cancelleation message to
+     *                             sending out cancellation message to
      *                             removed attendees)
      * @return
      * @throws ServiceException
@@ -224,7 +224,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         boolean cancelOwnAppointment)
     throws ServiceException {
     	return sendCalendarMessageInternal(zsc, octxt, apptFolderId, acct, mbox, csd,
-                                           null, true, cancelOwnAppointment, true);
+                                           null, true, cancelOwnAppointment);
     }
 
     /**
@@ -251,50 +251,9 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         CalSendData csd,
         Element response,
         boolean ignoreFailedAddresses,
-        boolean updateOwnAppointment,
-        boolean mustBeOrganizer)
+        boolean updateOwnAppointment)
     throws ServiceException {
         synchronized (mbox) {
-            if (csd.mInvite.hasOrganizer()) {
-                boolean isOrganizer = csd.mInvite.isOrganizer();
-                ICalTok method = ICalTok.lookup(csd.mInvite.getMethod());
-                switch (method) {
-                case REQUEST:
-                case PUBLISH:
-                case ADD:
-                case DECLINECOUNTER:
-                    // Check if organizer is set to someone other than the mailbox
-                    // owner and reject any such request.  If we didn't, attendees would
-                    // receive an invitation from user A claiming the meeting was
-                    // organized by user B.  (Saw this behavior with Consilient.)
-                    if (!isOrganizer && mustBeOrganizer) {
-                        String orgAddress = csd.mInvite.getOrganizer().getAddress();
-                        throw ServiceException.INVALID_REQUEST(
-                                "Cannot create/modify an appointment/task with organizer set to " +
-                                orgAddress + " when using account " + acct.getName(),
-                                null);
-                    }
-                    break;
-                case CANCEL:
-                    if (!isOrganizer && mustBeOrganizer) {
-                        boolean hasRcpts = false;
-                        try {
-                            hasRcpts = csd.mMm.getAllRecipients() != null;
-                        } catch (MessagingException e) {
-                            throw ServiceException.FAILURE("Error examining recipients in a calendar message", e);
-                        }
-                        if (hasRcpts)
-                            throw ServiceException.INVALID_REQUEST(
-                                    "Must be organizer to send cancellation message to attendees", null);
-                    }
-                    break;
-                case REPLY:
-                case COUNTER:
-                    // nothing to check
-                    break;
-                }
-            }
-
             boolean onBehalfOf = zsc.isDelegatedRequest();
             boolean notifyOwner = onBehalfOf && acct.getBooleanAttr(Provisioning.A_zimbraPrefCalendarNotifyDelegatedChanges, false);
             if (notifyOwner) {
@@ -376,7 +335,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                 csd.mMm = CalendarMailSender.createOrganizerChangeMessage(
                         acct, authAccount, zsc.isUsingAdminPrivileges(), calItem, csd.mInvite, rcpts);
                 sendCalendarMessageInternal(zsc, octxt, calItem.getFolderId(), acct, mbox, csd,
-                                            response, true, true, false);
+                                            response, true, true);
             }
         }
         return response;
@@ -424,6 +383,11 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             ZVCalendar cal = dat.mInvite.newToICalendar(true);
             dat.mMm = CalendarMailSender.createCancelMessage(
                     acct, authAcct, zsc.isUsingAdminPrivileges(), onBehalfOf, rcpts, calItem, inv, text, cal);
+
+            // If we are sending this cancellation to other people, then we MUST be the organizer!
+            if (!dat.mInvite.isOrganizer() && rcpts != null && !rcpts.isEmpty())
+                throw MailServiceException.MUST_BE_ORGANIZER("updateRemovedInvitees");
+
             sendCalendarCancelMessage(zsc, octxt, calItem.getFolderId(), acct, mbox, dat, false);
         } catch (ServiceException ex) {
             String to = getAttendeesAddressList(toCancel);

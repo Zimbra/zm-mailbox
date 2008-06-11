@@ -22,6 +22,9 @@ package com.zimbra.cs.service.mail;
 
 import java.util.Map;
 
+import javax.mail.Address;
+import javax.mail.MessagingException;
+
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
@@ -29,6 +32,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
@@ -74,6 +78,19 @@ public class CreateCalendarItem extends CalendarRequest {
         sLog.info("<CreateCalendarItem folder=" + iidFolder.getId() + "> " + zsc.toString());
         
         Element response = getResponseElement(zsc);
+
+        // If we are sending this update to other people, then we MUST be the organizer!
+        if (!dat.mInvite.isOrganizer()) {
+            try {
+                Address[] rcpts = dat.mMm.getAllRecipients();
+                if (rcpts != null && rcpts.length > 0) {
+                    throw MailServiceException.MUST_BE_ORGANIZER("CreateCalendarItem");
+                }
+            } catch (MessagingException e) {
+                throw ServiceException.FAILURE("Checking recipients of outgoing msg ", e);
+            }
+        }
+
         return sendCalendarMessage(zsc, octxt, iidFolder.getId(), acct, mbox, dat, response, false);
     }
 }
