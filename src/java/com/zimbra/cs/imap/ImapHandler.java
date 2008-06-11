@@ -2598,7 +2598,8 @@ abstract class ImapHandler extends ProtocolHandler {
 
         short rights;
         try {
-            // as a side effect, path.getFolderRights() checks for the existence of the target folder
+            if (!path.isVisible())
+                throw ServiceException.PERM_DENIED("path not visible");
             rights = path.getFolderRights();
         } catch (ServiceException e) {
             if (e.getCode().equals(ServiceException.PERM_DENIED))
