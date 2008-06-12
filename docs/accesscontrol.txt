@@ -96,8 +96,8 @@ example 3:
     => user A will be denied, because negative ACE takes precedence.
     
                 
-If multiple ACEs conflict for a right, this is a wrong setting and should not 
-happen if all modification to ACLs are done via the supported granting/revoking 
+If multiple ACEs conflict for a right for the same grantee, this is a wrong setting, which 
+should not happen if all modification to ACLs are done via the supported granting/revoking 
 interfaces: SOAP and zmmailbox.   If for any reason such ACL does exist (e.g. 
 via ldapmodify, or zmprov ma command(should we make zimberaACE immutable so 
 it cannot be modified by zmprov?)), the result is **unexpected**, depending on 

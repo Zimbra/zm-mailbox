@@ -2664,21 +2664,36 @@ If <ace> elements are provided, only those ACEs with specified rights are return
                      usr - Zimbra user
                      grp - Zimbra group(distribution list)
                      all - all authenticated users
-                     pub - public authenticated and unauthenticated access
                      gst - non-Zimbra email address and password (not yet supported)
+                     pub - public authenticated and unauthenticated access
                      
-    {grantee-name} = the display name (*not* the zimbra id) of the principal being granted rights;
-                     optional if {grantee-type} is "pub"
+    {zimbra-id}    = zimbraId of the grantee                 
+                     
+    {grantee-name} = display name of the grantee.
+                     ot present if {grantee-type} is "all" or "pub"
  
-    {args}         = optional argument.  password when {grantee-type} is "guest"
+    {args}         = optional arguments.  password when {grantee-type} is "gst" (not yet supported)
  
 ---------------------------
 
 Grant account level permissions.
 
 <GrantPermissionRequest>
-  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"] [args="{args}"]/>*
+  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" [zid="{zimbra-id}"] [d="{grantee-name}"] [args="{args}"]/>+
 </GrantPermissionRequest>
+
+  If gt is:
+     usr - either zid or d is required. 
+     grp - either zid or d is required. 
+     all - zid, d, args are ignored
+     gst - zid is ignored, d is required, args is optional (not yet supported)
+     pub - zid, d, args are ignored
+  
+  For usr and grp:
+     - if zid is provided, server will lookup the entry by zid and grantee type, and d is ignored.
+     - if zid is not provided and d is provided, server will lookup the grantee by name and grantee type.
+     if the lookup failed, NO_SUCH_ACCOUNT/NO_SUCH_DISTRIBUTION_LIST will be thrown.
+
 
 GrantPermissionResponse returns permissions that are successfully granted.
 
@@ -2690,8 +2705,10 @@ GrantPermissionResponse returns permissions that are successfully granted.
 Revoke account level permissions.
 
 <RevokePermissionRequest>
-  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"] [args="{args}"]/>*
+  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" [zid="{zimbra-id}"] [d="{grantee-name}"] [args="{args}"]/>*
 </RevokePermissionRequest>
+
+  Same notes as those for GrantPermissionRequest about identifying the grantee.
 
 RevokePermissionResponse returns permissions that are successfully revoked.
 
