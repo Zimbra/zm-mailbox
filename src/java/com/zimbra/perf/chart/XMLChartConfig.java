@@ -47,6 +47,8 @@ public class XMLChartConfig {
     public static final String A_CHART_WIDTH = "width";
     public static final String A_CHART_HEIGHT = "height";
     public final static String A_CHART_DOCUMENT = "outDocument";
+    public final static String A_CHART_TOP_PLOTS = "topPlots";
+    public final static String A_CHART_TOP_PLOTS_TYPE = "topPlotsType";
 
     // <plot> attributes
     public static final String A_PLOT_LEGEND = "legend";
@@ -193,9 +195,18 @@ public class XMLChartConfig {
             int height = getInheritedAttrInt(chartElem, A_CHART_HEIGHT,
                     ChartSettings.DEFAULT_CHART_HEIGHT);
             String outDoc = getAttr(chartElem, A_CHART_DOCUMENT, null);
+            String topPlotStr = getAttr(chartElem, A_CHART_TOP_PLOTS, null);
+            int topPlots = -1;
+            if (topPlotStr != null)
+                topPlots = Integer.parseInt(topPlotStr);
+            topPlotStr = getAttr(chartElem, A_CHART_TOP_PLOTS_TYPE, "max");
+            
+            ChartSettings.TopPlotsType topPlotsType =
+                ChartSettings.TopPlotsType.valueOf(topPlotStr.toUpperCase());
 
             ChartSettings chart = new ChartSettings(chartTitle, category, outfile, xAxis,
-                    yAxis, allowLogScale, plotZero, width, height, outDoc);
+                    yAxis, allowLogScale, plotZero, width, height, outDoc,
+                    topPlots, topPlotsType);
 
             for (Iterator plotIter = chartElem.elementIterator(E_PLOT);
                     plotIter.hasNext();) {

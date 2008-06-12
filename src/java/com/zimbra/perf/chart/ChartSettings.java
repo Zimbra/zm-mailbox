@@ -30,6 +30,7 @@ class ChartSettings {
     public static final int MINIMUM_CHART_HEIGHT = 200;
 
     public static enum ImageType { JPG, PNG };
+    public static enum TopPlotsType { AVG, MAX };
 
     private String mDocument;
     private String mTitle;
@@ -37,6 +38,8 @@ class ChartSettings {
     private String mOutfile;
     private String mXAxis;
     private String mYAxis;
+    private int mTopPlots;
+    private TopPlotsType mTopPlotsType;
     private boolean mAllowLogScale;
     private int mWidth = 1200;
     private int mHeight = 200;
@@ -53,7 +56,7 @@ class ChartSettings {
 
     public ChartSettings(String title, String category, String outfile, String xAxis,
                          String yAxis, boolean allowLogScale, boolean plotZero, int width,
-                         int height, String outDoc) {
+                         int height, String outDoc, int topPlots, TopPlotsType topType) {
         mTitle = title;
         mCategory = category;
         mOutfile = outfile;
@@ -75,6 +78,8 @@ class ChartSettings {
         mPlots = new ArrayList<PlotSettings>();
         mGroupPlots = new ArrayList<GroupPlotSettings>();
         mDocument = outDoc;
+        mTopPlots = topPlots;
+        mTopPlotsType = topType;
     }
 
     public void addPlot(PlotSettings p) {
@@ -95,6 +100,8 @@ class ChartSettings {
     public ImageType getImageType() { return mImageType; }
     public List<PlotSettings> getPlots() { return mPlots; }
     public List<GroupPlotSettings> getGroupPlots() { return mGroupPlots; }
+    public int getTopPlots() { return mTopPlots; }
+    public TopPlotsType getTopPlotsType() { return mTopPlotsType; }
 
     public int getHeight() {
         int h = Math.max(mHeight, MINIMUM_CHART_HEIGHT);

@@ -31,6 +31,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1028,6 +1029,19 @@ public class ChartUtil {
         }
     }
 
+    private static class PlotAggregatePair implements Comparable<PlotAggregatePair> {
+        private PlotSettings ps;
+        private double aggregate;
+        PlotAggregatePair(PlotSettings ps, double aggregate) {
+            this.ps = ps; this.aggregate = aggregate;
+        }
+        public int compareTo(PlotAggregatePair o) {
+            double comparison = o.aggregate - aggregate;
+            if (comparison == 0.0)
+                return 0;
+            return comparison > 0.0 ? -1 : 1;
+        }
+    }
     private List<JFreeChart> createJFReeChart(ChartSettings cs) {
 
         double minValue = Double.MAX_VALUE;
@@ -1086,7 +1100,8 @@ public class ChartUtil {
                             String.format(cs.getOutfile(), groupByValue),
                             cs.getXAxis(),         cs.getYAxis(),
                             cs.getAllowLogScale(), cs.getPlotZero(),
-                            cs.getWidth(),         cs.getHeight(), null);
+                            cs.getWidth(),         cs.getHeight(), null,
+                            cs.getTopPlots(),      cs.getTopPlotsType());
                     s.addPlot(syntheticPlot);
                     syntheticSettings.add(s);
                 }
@@ -1103,6 +1118,27 @@ public class ChartUtil {
         }
 
         List<PlotSettings> plots = cs.getPlots();
+        if (cs.getTopPlots() > 0 && plots.size() > cs.getTopPlots()) {
+            String aggregateFunction = cs.getTopPlotsType().name().toLowerCase();
+            System.out.println(
+                    String.format("Reducing %d to %d plots for chart '%s'",
+                            plots.size(), cs.getTopPlots(), cs.getTitle()));
+            ArrayList<PlotAggregatePair> aggregates = new ArrayList<PlotAggregatePair>();
+            for (PlotSettings ps : plots) {
+                DataColumn dc = new DataColumn(ps.getInfile(), ps.getDataColumn());
+                String key = ps.getInfile() + ":" + ps.getDataColumn() + ":" +
+                        ps.getAggregateFunction();
+                PlotDataIterator pdIter = new PlotDataIterator(ps, mDataSeries.get(dc));
+                double aggregate = mAggregator.compute(pdIter, aggregateFunction,
+                        mAggregateStartAt, mAggregateEndAt, key);
+                aggregates.add(new PlotAggregatePair(ps, aggregate));
+            }
+            Collections.sort(aggregates);
+            while (aggregates.size() > cs.getTopPlots()) {
+                PlotAggregatePair pair = aggregates.remove(0);
+                plots.remove(pair.ps);
+            }
+        }
         for (PlotSettings ps : plots) {
             String columnName = ps.getDataColumn();
             if (columnName == null) {
