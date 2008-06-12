@@ -158,6 +158,8 @@ public class ZPrefs {
 
     public String getTrashLifetime() { return get(Provisioning.A_zimbraPrefTrashLifetime); }
 
+    public boolean getDisplayExternalImages() { return getBool(Provisioning.A_zimbraPrefDisplayExternalImages); }
+
     public long getCalendarDayHourStart() {
         long hour = getLong(Provisioning.A_zimbraPrefCalendarDayHourStart);
         return hour == -1 ? 8 : hour;

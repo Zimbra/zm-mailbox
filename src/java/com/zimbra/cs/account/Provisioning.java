@@ -1164,6 +1164,7 @@ public abstract class Provisioning {
     public static final String A_zimbraAdminAuthTokenLifetime = "zimbraAdminAuthTokenLifetime";
     public static final String A_zimbraMailMinPollingInterval =  "zimbraMailMinPollingInterval";
     public static final String A_zimbraPrefMailPollingInterval = "zimbraPrefMailPollingInterval";
+    public static final String A_zimbraPrefDisplayExternalImages = "zimbraPrefDisplayExternalImages";
 
     public static final String A_zimbraSpamHeader = "zimbraSpamHeader";
     public static final String A_zimbraSpamHeaderValue = "zimbraSpamHeaderValue";
