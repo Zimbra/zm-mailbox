@@ -1,16 +1,16 @@
 ===========
 1. Terms
 ===========
-1.1 Subjects
-    A Zimbra account or a group of accounts that are granted or denied permissions to perform predefined 
-    administrative tasks on a target.
-    A subject can be represented in an ACE(see definition of ACE below) by:
-        - identity of an account
-        - identity of a group, aka, distribution list (all accounts directly or indirectly in this DL)
+1.1 Grantees
+    One or a group of Zimbra admin accounts that are granted or denied rights to execute predefined 
+    administrative rights on a target.
+    Grantees can be:
+        - accounts
+        - distribution lists
 
 
 1.2 Targets:
-    Objects on which administrative tasks can be performed.  
+    Objects on which administrative rights can be executed by grantees.  
     Targets can be:
         - accounts
         - calendar resources 
@@ -22,44 +22,43 @@
         - zimlets
         
 
-1.3 Administrative Tasks
-    Fine-grained tasks or a collection of tasks that can be performed on targets by subjects.
-    See "2. Administrative Tasks" for the full list of tasks for each target type.
+1.3 Rights
+    Fine-grained rights that can be granted to grantees to execute administrative rights on targets.
+    See "2. Rights" for the full list of rights for each target type.
     
-    For simplicity, "Administrative Tasks" and "Tasks" are used interchangeably in this document.
-    
-    
-1.4 Permissions
-1.4.1 Positive Permissions
-      Rights granted to a subject to perform administrative tasks on a target.
+    - positive rights
       For example: allow SetPassword
                    allow CreateAccount
     
-1.4.2 Negative Permissions
-      Rights specifically denied to a subject to perform administrative tasks on a target.
+    - negative rights
+      Rights specifically denied to a grantee.
       For example: deny SetPassword
                    deny CreateAccount
                  
-      Purpose of negative permissions is to partially negate permissions:
-      (1) granted to a wider group of subjects, or 
-      (2) granted on a wider group of targets.
-    
+      Purpose of negative rights is to partially negate rights granted to a wider scope of grantees or 
+      granted on a wider scope of targerts.
+      
       Use cases:
-          - negate a subset of subjects:
-            all members of DL-admins, except for admin-1 and admin-2, can create accounts under domain company.com
+          - negate a subset of grantees:
+              . all members of DL-admins, except for admin-1 and admin-2, can create accounts in domain company.com.
+                (admin-1 and admin-2 are in group DL-admins)
+              . no one in DL-newbies can create accounts in domain company.com, except for admin-3 and admin-4.
+                (admin-3 and admin-4 are in group DL-newbies)
             
           - negate a subset of targets:
-            admin-2 can change password of all accounts under domain company.com, except for ceo@company.com and cfo@company.com.                                  
+              . admin-2 can change password of all accounts in domain company.com, except for ceo@company.com and cfo@company.com.
+                (ceo@company.com and cfo@company.com are in domain company.com)
+              . Password of members in DL-bosses cannot be changed by admin-1, except for foo. 
+                (foo is in group DL-bosses)                           
 
                          
 1.5 ACE (Access Control Entry)
-    - ACEs are defined for/on targets.
+    - An ACE defines a fine-grained right allowed or denied to a grantee on a target.  
     - An ACE is stored in an LDAP attribute on the target entry. 
-    - An ACE defines a fine-grained permission allowed or denied to a subject on a target.  
     - An ACE consists of three parts:
-          (1) ID and type(account or DL) of the subject  (e.g. 6ecd16b8-5ced-4aa0-8f95-bdc331d8c22a account)
-          (2) positive or negative permission            (e.g. allow)
-          (3) a task                                     (e.g. ChangePassword)
+          (1) Zimrba ID of the grantee  (e.g. 6ecd16b8-5ced-4aa0-8f95-bdc331d8c22a)
+          (2) Type of the grantee (e.g. usr)
+          (3) Allowed or denied right  (e.g. -changePassword)
           
     See "3. LDAP" for storage and format of ACE.
 
@@ -70,169 +69,154 @@
                           
             
             
-=========================
-2. Administrative Tasks
-=========================
-2.1 System Defined Tasks
+===========
+2. Rights
+===========
+2.1 System Defined Rights
 
-    - Tasks are "fine-grained" and "atomic".  That is, a positive/negative permission on a task is independent of 
-      positive/negative permissions on other tasks on the *same* target.  
-      For example, if subject S is allowed to SetPassword on target T, we do NOT check if the ModifyAccount task 
-      is also granted to S on T. 
+    - Rights are "fine-grained" and "atomic".  That is, a right is independent of other rights on the *same* target.  
+      For example, if grantee G is allowed to setPassword on target T, we do NOT check if the modifyAccount right  
+      is also granted to G on T. 
     
-    - However, if a task involves accessing multiple targets, the subject needs to have adequate permissions on  
+    - However, if a right involves accessing multiple targets, the grantee needs to have adequate rights on  
       all pertinent targets. 
       For example:
           - to create alias alias-1@domain-2.com for account account-1@domain-1.com, the subject must 
-            have permissions to: 
-                - AddAccountAlias on account-1 (this allows adding an alias for account-1) 
+            have rights to: 
+                - addAccountAlias on account-1 (this allows adding an alias for account-1) 
                 AND 
-                - CreateAlias in domain-2.com (this allows creating an alias entry under domain domain-2.com)
-          - Likewise to remove the alias from the account, the subject must have permissions to: 
-                - RemoveAccountAlias of account-1@domain-1.com
+                - createAlias in domain-2.com (this allows creating an alias entry in domain domain-2.com)
+          - Likewise to remove the alias from the account, the grantee must have rights to: 
+                - removeAccountAlias of account-1@domain-1.com
                 AND 
-                - DeleteAlias in domain-2.com.
-                  
-    System defined tasks are described in 2.1.1 to 2.1.7.
+                - deleteAlias in domain-2.com.
     
-    Tasks can be categorized into "lower level" and "higher level" tasks.
+    Rights can be categorized into "lower level" and "higher level" rights.
     Generally speaking, 
-        - "lower level" tasks are orthogonal to the functionalities of the target type. 
-          There are 4 types low level tasks: Get, Modify, Rename, Delete
+        - "lower level" rights are orthogonal to the functionalities of the target type. 
+          There are 4 types of lower level rights: get, modify, rename, delete
           
-        - "higher level" tasks are for functional operations on a target type.  
-              e.g. For account targets: SetPassword, AddAccountAlias
-                   For domain targets: CreateAccount, DeleteDistributionList
+        - "higher level" rights are for functional operations on a target type.  
+          e.g. For account targets: setPassword, sddAccountAlias
+               For domain targets: createAccount, deleteDistributionList
  
-    The lists in 2.1.1 to 2.1.7 are tentative for initial discussions.
+     System defined rights are described in 2.1.1 to 2.1.6.  They are for now **tentative**, and the list 
+     can change over time.
      
 >>>>> OPEN-ISSUE-1
-- How to model ModifyAccount within/exceeding cos limit?
-      - Need to flag such limit-setting attributes (e.g. zimbraMailQuota, zimbraContactMaxNumEntries, zimbraIdentityMaxNumEntries) 
-        and when admins attempt to modify those attributes, check if they can exceed the cos limit. 
-      Possible solutions:
-      1. Have two flavors of ModifyAccount permissions: ModifyAccount and ModifyAccountWithinCosLimit
-      2. Add an optional qualifier WithinCosLimit for the ModifyAccount task in ACE.  
-         e.g. 6ecd16b8-5ced-4aa0-8f95-bdc331d8c22a A A ModifyAccount                (can modify account in all ways)
-              6ecd16b8-5ced-4aa0-8f95-bdc331d8c22a A A ModifyAccount WithinCosLimit (can only modify account within COS limit)
-
 - How to model ModifyAccount in functional areas?
       e.g.  - enable/disable IMAP/POP and mobile access for all users
             - enable/disable sharing of folders
             - enable/disable zimlets/themes
             - enable/disable email aggregation
             
-      Should we define hard tasks for each (e.g. ManageImap, ManagePop, ...)
+      Should we define hard Rights for each (e.g. ManageImap, ManagePop, ...)
       or 
-      should we provide a mechanism so tasks can be "softly" defined/configured?
-      e.g. admin can define a task called "ManageImap" by specifying all imap related 
-           attributes the task can modify.  System can also have pre-configured 
-           "soft tasks" that are available out of the box.
-           Need to come up with LDAP structure of soft tasks.
-            
+      should we provide a mechanism so rights can be "softly" defined/configured?
+      e.g. admin can define a right called "ManageImap" by specifying all imap related 
+           attributes the Right can modify.  System can also have pre-configured 
+           "soft rights" that are available out of the box.
+           Need to come up with LDAP structure/storage of soft Rights.  TODO.
 <<<<<
          
 2.1.1 account/calendar resource:
-          - (L) GetAccount                   : get attributes of this account/CR
-          - (L) ModifyAccount                : modify attributes of this account/CR
-          - (L) RenameAccount                : rename this account/CR
-          - (L) DeleteAccount                : delete this account/CR
-          - (H) AddAccountAlias              : add aliases to this account/CR
-          - (H) RemoveAccountAlias           : remove aliases from this account/CR
-          - (H) Login                        : login to this account/CR
-          - (H) SetPassword                  : set password of this account/CR
-          - (H) ManageQuota                  : manage quota of this account/CR
-          - (H) ManageFeature                : turn features on/off on this account/CR
-          - (H) ManagePasswordRule           : manage password rules of this account/CR
-          - (H) ManageLoginPolicy            : manage login/lockout policies of this account/CR
-          - (H) ManageZimlet                 : manage zimlets available to this account/CR
-          - (H) ManageTheme                  : manage themes(skins) available to this account/CR
+          - (L) getAccount                   : get attributes of this account/CR
+          - (L) modifyAccount                : modify attributes of this account/CR
+          - (L) modifyAccountWithinCosLimit  : modify attributes of this account/CR within COS limit
+          - (L) renameAccount                : rename this account/CR
+          - (L) deleteAccount                : delete this account/CR
+          - (H) assignCOS                    : assign COS for this account/CR
+          - (H) addAccountAlias              : add aliases to this account/CR
+          - (H) removeAccountAlias           : remove aliases from this account/CR
+          - (H) login                        : login to this account/CR
+          - (H) setPassword                  : set password of this account/CR
+          - (H) manageQuota                  : manage quota of this account/CR
+          - (H) manageFeature                : turn features on/off on this account/CR
+          - (H) managePasswordRule           : manage password rules of this account/CR
+          - (H) manageLoginPolicy            : manage login/lockout policies of this account/CR
+          - (H) manageZimlet                 : manage zimlets available to this account/CR
+          - (H) manageTheme                  : manage themes(skins) available to this account/CR
 
           
 2.1.2 cos
-          - (L) GetCos                       : get attributes of this cos
-          - (L) ModifyCos                    : modify attributes of this cos
-          - (L) RenameCos                    : rename this cos
-          - (L) DeleteCos                    : delete this cos
-          - (H) ManageQuota                  : manage quota of this cos
-          - (H) ManageFeature                : turn features on/off on this cos
-          - (H) ManagePasswordRule           : manage password rules of this cos
-          - (H) ManageLoginPolicy            : manage login/lockout policies of this cos
-          - (H) ManageZimlet                 : manage zimlets available to users in this cos
-          - (H) ManageTheme                  : manage themes(skins) available to users in this cos
-          - (H) ManageServerPool             : manage server pool available for creating users in this cos
+          - (L) getCos                       : get attributes of this cos
+          - (L) modifyCos                    : modify attributes of this cos
+          - (L) renameCos                    : rename this cos
+          - (L) deleteCos                    : delete this cos
+          - (H) manageQuota                  : manage quota of this cos
+          - (H) manageFeature                : turn features on/off on this cos
+          - (H) managePasswordRule           : manage password rules of this cos
+          - (H) manageLoginPolicy            : manage login/lockout policies of this cos
+          - (H) manageZimlet                 : manage zimlets available to users in this cos
+          - (H) manageTheme                  : manage themes(skins) available to users in this cos
+          - (H) manageServerPool             : manage server pool available for creating users in this cos
 
     
 2.1.3 distribution list
-          - All permissions for accounts/CRs
-                When account/CR ACEs are specified on a DL entry, the ACEs are interpreted as 
+          - All rights for accounts/CRs
+                When account/CR rights are specified on a DL entry, the ACEs are interpreted as 
                 "apply to all direct or indirect account/CR members of this DL"
-          - (L) GetDistributionList          : get attributes of this distribution list
-          - (L) ModifyDistributionList       : modify attributes of this distribution list
-          - (L) RenameDistributionList       : rename this distribution list
-          - (L) DeleteDistributionList       : delete this distribution list
-          - (H) AddDistributionListAlias     : add aliases to this distribution list
-          - (H) RemoveDistributionListAlias  : remove aliases from this distribution list
-          - (H) AddDistributionListMember    : add members to this distribution list
-          - (H) RemoveDistributionListMember : remove members from this distribution list
+          - (L) getDistributionList          : get attributes of this distribution list
+          - (L) modifyDistributionList       : modify attributes of this distribution list
+          - (L) renameDistributionList       : rename this distribution list
+          - (L) deleteDistributionList       : delete this distribution list
+          - (H) addDistributionListAlias     : add aliases to this distribution list
+          - (H) removeDistributionListAlias  : remove aliases from this distribution list
+          - (H) addDistributionListMember    : add members to this distribution list
+          - (H) removeDistributionListMember : remove members from this distribution list
     
 
 2.1.4 domain
-          - All permissions for accounts/CRs
-                When account/CR ACEs are specified on a domain entry, the ACEs are interpreted as 
-                "apply to all accounts/CRs under this domain"
-          - All permissions for DLs
-                When DL ACEs are specified on a domain entry, the ACEs are interpreted as 
-                "apply to all DLs under this domain"
-          - (L) GetDomain                    : get attributes of this domain
-          - (L) ModifyDomain                 : modify attributes of this domain
-          - (L) RenameDomain                 : rename this domain
-          - (L) DeleteDomain                 : delete this domain
-          - (H) CreateSubDomain              : create sub domains in this domain
-          - (H) CreateAccount                : create accounts/CRs in this domain
-          - (H) CreateDistributionList       : create distribution lists in this domain
-          - (H) CreateAlias                  : create aliases in this domain
-          - (H) DeleteAlias                  : delete aliases in this domain
+          - All rights for accounts/CRs
+                When account/CR rights are specified on a domain entry, the ACEs are interpreted as 
+                "apply to all accounts/CRs in this domain"
+          - All rights for DLs
+                When DL rights are specified on a domain entry, the ACEs are interpreted as 
+                "apply to all DLs in this domain"
+          - (L) getDomain                    : get attributes of this domain
+          - (L) modifyDomain                 : modify attributes of this domain
+          - (L) renameDomain                 : rename this domain
+          - (L) deleteDomain                 : delete this domain
+          - (H) createSubDomain              : create sub domains in this domain
+          - (H) createAccount                : create accounts/CRs in this domain
+          - (H) createDistributionList       : create distribution lists in this domain
+          - (H) createAlias                  : create aliases in this domain
+          - (H) celeteAlias                  : delete aliases in this domain
     
 >>>>> OPEN-ISSUE-2          
           Should we consider domain hierarchy like we do for DLs? 
-          i.e. if S is allowed to CreateAccount in company.com, does S automatically have 
-               permission to CreateAccount in support.company.com and sales.company.com?
+          i.e. if G is allowed to createAccount in company.com, does G automatically have 
+               right to createAccount in support.company.com and sales.company.com?
 <<<<<
 
 
 2.1.5 global config
-          - (L) GetGlocalConfig              : get attributes of global config
-          - (L) ModifyGlobalConfig           : modify attributes of global config
-          - (H) CreateCos                    : create coses
-          - (H) CreateTopDomain              : create top level domains
-          - (H) CreateServer                 : create servers
-          - (H) CreateZimlet                 : create zimlets
+          - (L) getGlocalConfig              : get attributes of global config
+          - (L) modifyGlobalConfig           : modify attributes of global config
+          - (H) createCos                    : create coses
+          - (H) createTopDomain              : create top level domains
+          - (H) createServer                 : create servers
+          - (H) createZimlet                 : create zimlets
 
     
 2.1.6 server
-          - (L) GetServer                    : get attributes of this server
-          - (L) ModifyServer                 : modify attributes of this server
-          - (L) DeleteServer                 : delete this server
-    
-    
-2.1.7 zimlet
-          - (L) GetZimlet                    : get attributes of this zimlet
-          - (L) ModifyZimlet                 : modify attributes of this zimlet
-          - (L) DeleteZimlet                 : delete this zimlet
+          - (L) getServer                    : get attributes of this server
+          - (L) modifyServer                 : modify attributes of this server
+          - (L) deleteServer                 : delete this server
+
           
         
-2.2 User Defined "Combo" or "Macro" Tasks 
-    To simplify the granting process, admins can define "macro" tasks that contain 
-    a collection of system defined tasks.
+2.2 User Defined "Combo" or "Macro" Rights 
+    To simplify the granting process, admins can define "macro" rights that contain 
+    a collection of system defined rights.
     
     For example: 
-        PASSWORD_ADMIN = SetPassword, ManagePasswordRule
-        FEATURE_ADMIN = ManageFeature, ManageZimlet, ManageTheme
-        SUPER_ADMIN = PASSWORD_ADMIN, FEATURE_ADMIN, ManageQuota
+        PASSWORD_ADMIN = setPassword, managePasswordRule
+        FEATURE_ADMIN = manageFeature, manageZimlet, manageTheme
+        SUPER_ADMIN = PASSWORD_ADMIN, FEATURE_ADMIN, manageQuota
 
 >>>>> OPEN-ISSUE-3 
-    Should we support "Macro" permissions in the server?  If so need to come up with storage.                                         
+    Should we support "Macro" rights in the server?  If so need to come up with storage.  TODO.                                        
 <<<<<
 
 
@@ -248,38 +232,41 @@ LDAP attribute:
         cardinality="multi" (each value is an Access Control Entry, hence making an ACL)
         optionalIn="account,distributionList,cos,domain,globalConfig,server,zimletEntry" 
         
-Format:
--------    
-    {zimbraId-of-subject} {subject-type} {permission-verb} {task} 
+zimbraACE Format:
+-----------------   
+    {grantee-zimbraId} {grantee-type} [-]{right} 
     
-    {subject-type} = A - account
-                     G - DL(i.e. group)
-                     
-    {permission-verb} = A - allow
-                        D - deny                 
+        {grantee-zimbraId} = zimbraId of the grantee
+        
+        {grantee-type} = usr - grantee is an admin account
+                         grp - grantee is a group of admin accounts
+                         
+        {right} = the right.
+                  if a '-' (minus sign) is prepended to the right, it means the right is 
+                  specifically denied.              
     
     examples:
         
         - On a domain target:    
-              75b0677b-6ed1-4f0a-a37e-e5b24e4c2d22 A A CreateAccount
-                  ==> account 75b0677b-6ed1-4f0a-a37e-e5b24e4c2d22 can create accounts on this domain.
+              75b0677b-6ed1-4f0a-a37e-e5b24e4c2d22 usr createAccount
+                  ==> admin account 75b0677b-6ed1-4f0a-a37e-e5b24e4c2d22 can create accounts in this domain.
                   
-              55e1d53f-83cb-4d4c-a6a8-3b3da7841fd1 G A SetPassword
-                  ==> all direct or indirect members of DL 55e1d53f-83cb-4d4c-a6a8-3b3da7841fd1 can 
-                      set password for all accounts under this domain
+              55e1d53f-83cb-4d4c-a6a8-3b3da7841fd1 grp -setPassword
+                  ==> None of any direct or indirect members of DL 55e1d53f-83cb-4d4c-a6a8-3b3da7841fd1 can  
+                      set password for all accounts in this domain
     
         - On an account target:
-              3b00a6bd-12ca-417d-9312-c5664a8c26b3 G D SetPassword
+              3b00a6bd-12ca-417d-9312-c5664a8c26b3 grp -setPassword
                   ==> None of any direct or indirect members of DL 3b00a6bd-12ca-417d-9312-c5664a8c26b3 can 
                       set password for this account.
                       
-              c2e3fd70-97ac-43a4-8caa-4bf681251a49 A A ManageQuota
-                  ==> account c2e3fd70-97ac-43a4-8caa-4bf681251a49 can manage quota of this account.
+              c2e3fd70-97ac-43a4-8caa-4bf681251a49 usr manageQuota
+                  ==> admin account c2e3fd70-97ac-43a4-8caa-4bf681251a49 can manage quota of this account.
                    
     
 Indexing:
 ---------    
-    TODO
+    zimbraACE is indexed.  This is to discover the "all rights granted to a grantee G" information for admin console.
     
 
 Queries:
@@ -290,208 +277,210 @@ Queries:
 ===================
 4. Granting Rules
 ===================
+When more than one ACEs of an ACL on the same right match a grantee and all ACEs 
+don't agree on the same allow/deny for the right, the ACE with the most specific 
+match takes precedence; and if all matching ACEs are equally related to the grantee, 
+the negative ACE takes precedence.
 
-The question to answer:
------------------------    
-Given (1) an authed subject account s, and
-      (2) a task TSK, and
-      (3) a target object t
-==> determine if s has permission to perform TSK on t,
-    the answer is a boolean.
-
-
-The rules:
-----------    
-(Note, these are just high level rules, not the actual algorithm that are going 
- to be translated into code.  There can be optimizations/caching in the implementation.)    
-
-1. Expand the subject
-   Expand subject to all entities that the subject belongs to.
-   The result is a list of:
-       (1) the subject account itself
-               (e.g. admin1@company.com)
-       (2) all DLs the subject account is directly or indirectly a member of
-               (e.g. changepassword-admins@company.com, createaccount-admins@company.com)
-   call this list S.
-   e.g. S is the list of:
-            admin1@company.com
-            changepassword-admins@company.com
-            createaccount-admins@company.com
-
-2. First, Deny Denied
-   ------------------    
-   Denied(i.e. negative) ACEs takes precedence over allowed(i.e. positive) ACEs.  
-   If a subject is allowed by some ACEs but is denied by some other ACEs, 
-   the resulting permission is denied.
-
-2A. Expand the target for a list of subjects that are denied permission for TSK
-    If the target is a:
-    (Note, we use name here so it's more readable, the actually ACE contains 
-     zimbraId, not name of the subjects.)
-        (1) account:
-                Get all ACEs with denied permission for TSK on:
-                    - the target account itself 
-                          (e.g. admin1@company.com A D TSK
-                                basic-admins@company.com G D TSK)
-                    - all DLs the target account is directly or indirectly a member of
-                          (e.g. if the target account is a member of all-california@company.com and all-sunnyvale@company.com,
-                                ACL for DL all-california@company.com :
-                                    admin3@company.com A D TSK
-                                    foo-admins@company.com G D TSK
-                                ACL for DL all-sunnyvale@company.com:
-                                    admin4@company.com A D TSK
-                                    bar-admins@company.com G D TSK
-                          )
-                    - the domain the target account is on 
-                          (e.g. if the account is on domain company.com,
-                                ACL for domain company.com:
-                                    admin5@company.com A D TSK
-                                    foobar-admins@company.com G D TSK
-                          )
-        (2) DL: 
-                Get all ACEs with denied TSK on:
-                    - all DLs the target DL is directly or indirectly a member of
-                    - the domain the target DL is on 
-        (3) Otherwise:
-                Get all ACEs with denied TSK on the target object.
-                   
-    Get union of all subjects of the list of ACEs, call this list TD. 
-    e.g. TD is the list of zimbraIds of:
-            account admin1@company.com
-            DL basic-admins@company.com
-            account admin3@company.com
-            DL foo-admins@company.com
-            account admin4@company.com
-            DL bar-admins@company.com
-            account admin5@company.com
-            DL foobar-admins@company.com
-
-2B. Examine denied    
-    If the intersection of S and TD is not empty ==> DENY - DONE.
-    Otherwise continue to 3.
-    
-3. Then, Allow Allowed
-   -------------------
-
-3A. Expand target for for a list of subjects that are allowed permission for TSK
-    The expanding procedures are the same as those described in 2A, but this time for the allowed.
-    Call this list TA.
-    
-3B. Examine allowed    
-    If the intersection of S and TA is not empty ==> ALLOW - DONE.
-    Otherwise continue to 4.
+example 1:
+    - ACL has:
+          . allow user A for right R
+          . deny group G for right R
+    - user A is in group G
+    => user A will be allowed for right R, because user match is more specific than group match.
      
-        
-4. Otherwise ==> DENY - DONE.
-   ------------------------
-        
-
-============
-5. Caching
-============
-5.1 (we already do this today)
-    For:
-        Expedite expanding all direct and indirect DLs of an account
-    What to cache:
-        For each account, cache zimbraId all of direct and indirect DLs the account is member of.
-    Cached in:
-        The account object.
-            
-5.2
-    For:
-        Expedite expanding all direct or indirect DLs of a DL
-    What to cache:
-        For each DL, cache zimbraId all of direct and indirect DLs the DL is member of.
-    Cached in:
-        The DL object.
-        We currently don't cache DLs, will need to add DL cache for this.
+     
+example 2:
+    - ACL has:
+          . allow group G1 for right R
+          . deny group G2 for right R
+    - group G2 is a member of group G1
+    - user A is a member of group G2
+    => user A will be denied for right R, because G2 is a more specific match than G1.
+     
+     
+example 3:
+    - ACL has:
+          . allow group G1 for right R
+          . deny group G2 for right R
+    - group G1 and G2 are not member of each other
+    - user A is in both group G1 and group G2
+    => user A will be denied, because negative ACE takes precedence.
+    
                 
-5.3
-    For:
-        Expedite previously computed permission results.  Given a subject-task-target tuple,
-        returns boolean if the subject can perform task on the target.
-    What to cache:
-        The tuple(subject-task-target) and the result(allowed/denied)
-    Cached in:
-        Probably the delegated admin Impl class of AccessManager.
+If multiple ACEs conflict for a right for the same grantee, this is a wrong setting, which 
+should not happen if all modification to ACLs are done via the supported granting/revoking 
+interfaces: SOAP and zmmailbox.   If for any reason such ACL does exist (e.g. 
+via ldapmodify, or zmprov ma command(should we make zimberaACE immutable so 
+it cannot be modified by zmprov?)), the result is **unexpected**, depending on 
+which ACE is encountered first when we iterate through the ACL.  We could've 
+spent more cycles detecting such settings and honor the negative ACE if there 
+is one, but currently the implementation choice is not to do so.
+
+e.g. - ACL has:
+           . allow user A for right R
+           . deny user A for right R
+     => user A could be allowed or denied for right R, randomly.   
+        
                           
 
-========================
-6. Admin SOAP Supports 
-========================
-6.1 GetACEs (TODO)
-      Returns the full set of ACEs on all the objects for the authed admin account.
-      (all the coses, domains, servers, explicit accounts/DLs, resources). 
-      The result of which can help the admin console decide on what to display.
+===============
+5. Admin SOAP
+===============
+6.1 GetAllRightsRequest
+      Returns rights that are granted to the authed admin.
+      A right is included in the GetRightsResponse is the admin has the right 
+      for *any* target of the type.   For example, if the auth admin can 
+      changePassword for acct-1 but not acct-2, the right changePassword will 
+      be included under <account>.
       
-      <GetACEsRequest/>
+      A right will be included only under the pertinent target type, regardless 
+      of the target entry on which the right is granted.  For example, the changePassword 
+      is a right on account entries.  If the changePassword right is granted to this 
+      admin on a domain entry (which means this admin can change password for all accounts 
+      in the domain), it will still be returned under <account>.
+
+      The result can help the admin console decide on what target types to display. 
+      For example, if the admin does not have any right on domain, it propably should hide 
+      or gray out "domains" in the tree view.
+      
+<GetAllRightsRequest/>
   
-      <GetACEsResponse>
-          <accounts>
-              <account name="{name} id="{id}">
-                  <ACE subjectid="{subject-id}" subjecttype="A|G" grant="A|D" permission="{permission}"/>+
-              </account>+
-          </accounts>
-          <coses>
-              <cos name="{name} id="{id}">
-                  <ACE subjectid="{subject-id}" subjecttype="{subject-type}" grant="A|D" permission="{permission}"/>+
-              </cos>+              
-          </coses>
-          <dls>
-              <dl name="{name} id="{id}">
-                  <ACE subjectid="{subject-id}" subjecttype="{subject-type}" grant="A|D" permission="{permission}"/>+
-              </dl>+  
-          </dls>
-          <domains>
-              <domain name="{name} id="{id}">
-                  <ACE subjectid="{subject-id}" subjecttype="{subject-type}" grant="A|D" permission="{permission}"/>+
-              </domain>+
-          </domains>
-          <servers>
-              <server name="{name} id="{id}">
-                  <ACE subjectid="{subject-id}" subjecttype="{subject-type}" grant="A|D" permission="{permission}"/>+
-              </server>+
-          </servers>
-          <globalconfig>
-              <ACE subjectid="{subject-id}" subjecttype="{subject-type}" grant="A|D" permission="{permission}"/>+
-          </globalconfig>
-      </GetACEsResponse>
+<GetAllRightsResponse>
+    <account>
+        <right>{right}</right>+
+    </account>
+    <cos>
+        <right>{right}</right>+
+    </cos>
+    <dl>
+        <right>{right}</right>+
+    </dl>
+    <domain>
+        <right>{right}</right>+
+    </domain>
+    <globalconfig>
+        <right>{right}</right>+
+    </globalconfig>
+    <server>
+        <right>{right}</right>+
+    </server>
+</GetAllRightsResponse>
+
+    {right} = a right this admin can do for the target type.
 
 
-6.2 GetTargetPermissions (TODO)
-      For a given object type (domain, account, etc), return me the permission schema.  Since the list can 
-      change over time, we'll want the admin console to dynamically get the list when pulling up the ACE 
-      entry form on a particular type.  (i.e., when creating an ACE on an account, what permissions can I grant)
-      This command returns the task schema for a given type defined in section 2.1.
-     
-      <GetTargetPermissionsRequest type="{target-type}"/>
-     
-      {target-type} = account|resource|alias|distributionlist|cos|domain|server|globalconfig|zimlet
-     
-      <GetTargetPermissionsResponse>
-          <task name="{task}"/>+
-      </GetTargetPermissionsResponse>   
+6.2 GetRightsRequest
+    Get rights the authed admin has on the target entry.
+    
+    The result can help the admin console decide on what tabs to display after a target 
+    is selected.  For example, after user1 is selected, if the admin does not have right 
+    to changePassword, it should probably hide or gray out the changePassword tab.
+    
+<GetRightsRequest>
+    <target ttype="{target-type}" zid="{target-zimbraId}">
+</GetRightsRequest>
+
+    {target-type} = account|cos|dl|domain|globalconfig|server
+    {target-zimbraId} = zimbraId of the target.  ignored if tt is globalconfig.
+    
+<GetRightsResponse>    
+    <right>{right}</right>+
+</GetRightsResponse>   
 
 
-6.3 GrantPermissions (TODO)
-     Grant allowed or denied permissions on a target for a subject.
-     
-     TODO
+6.3 GetAllGrantsRequest
+    Returns the full set of ACEs on all the objects for the authed admin account.
+    (all the coses, domains, servers, explicit accounts/DLs, resources). 
+    
+    Unlike GetAllRightsResponse, GetAllGrantsResponse includes 
+    
+    The result of which can help the admin console decide on what to display on the 
+    granting page/view. 
+    
+<GetAllGrantsRequest/>
 
-  
-     
+<GetAllGrantsResponse>
+    <account>
+        <grant tname="{target-name} tid="{target-id}" [vianame="{via-grantee-name}" viaid="{via-grantee-id}"] right="{right}" [deny="{deny}"]>+
+    </account>
+    <cos>
+        <grant tname="{target-name} tid="{target-id}" [vianame="{via-grantee-name}" viaid="{via-grantee-id}"] right="{right}" [deny="{deny}"]>+
+    </cos>
+    <dl>
+        <grant tname="{target-name} tid="{target-id}" [vianame="{via-grantee-name}" viaid="{via-grantee-id}"] right="{right}" [deny="{deny}"]>+
+    </dl>
+    <domain>
+        <grant tname="{target-name} tid="{target-id}" [vianame="{via-grantee-name}" viaid="{via-grantee-id}"] right="{right}" [deny="{deny}"]>+
+    </domain>
+    <globalconfig>
+        <grant tname="{target-name} tid="{target-id}" [vianame="{via-grantee-name}" viaid="{via-grantee-id}"] right="{right}" [deny="{deny}"]>+
+    </globalconfig>
+    <server>
+        <grant tname="{target-name} tid="{target-id}" [vianame="{via-grantee-name}" viaid="{via-grantee-id}"] right="{right}" [deny="{deny}"]>+
+    </server>
+</GetAllGrantsResponse>
+
+    {target-name} = target entry name
+    
+    {target-id} = target entry id
+    
+    {via-grantee-name} = name of the group(distribution list) if the grant is via the group, not directly to the authed admin.
+                         if the grant is directed granted to the authed admin, then {via-grantee-name} won't be present.
+                         
+                         For example, group admins-x can changePassword for account acct-1 and all users in domain domain-1;
+                         if the authed admin is a member of group admins-x, then the grant will appear under <account> and 
+                         <domain> and {via-grantee-name} will be "admins-x".
+                         
+    
+    {via-grantee-id} = id of the group(distribution list) if the grant is via the group, not directly to the authed admin.
+                       if the grant is directed granted to the authed admin, then {via-grantee-id} won't be present.
+       
+    
+6.4 GrantPermissionRequest
+    Grant permission to another admin.  The authed admin can only grant a subset of rights/targets granted to itself to 
+    another admin.
+    
+<GrantPermissionRequest>
+    <grant tname="{target-name} tid="{target-id}" right="{right}" [deny="{deny}"]>
+<GrantPermissionRequest>    
+    
+<GrantPermissionResponse/>
+
+
+6.4 RevokePermissionRequest
+    Revoke permission previously granted to another admin.  
+
+>>>>> OPEN-ISSUE-4
+    how to decide if an admin can revoke another admins grants?
+    have a revokeGrant right?                            
+<<<<<
+    
+<RevokePermissionRequest>
+    <grant tname="{target-name} tid="{target-id}" right="{right}" [deny="{deny}"]>
+<RevokePermissionRequest>    
+    
+<RevokePermissionResponse/>   
+
+
+
+===========
+5. zmprov
+===========
+TODO
+
+                
 ==========================
 7. Backwards compatibility
 ==========================
 - For current admins (zimbraIsAdminAccount), allow:
-     - All permissions for global config
-     - All permissions for all coses
-     - All permissions for all domains
-     - All permissions for all servers
-     - All permissions for all zimlets
+     - All permissions on global config
+     - All permissions on all coses
+     - All permissions on all domains
+     - All permissions on all servers
 
 - Current domain admins (zimbraIsDomainAdminAccount), allow:
-     - All permissions for the domain
+     - All permissions on the domain
 
 Customers can then turn off those bits and explicitly grant only the permissions they want to.
 
