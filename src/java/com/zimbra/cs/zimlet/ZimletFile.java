@@ -198,7 +198,7 @@ public class ZimletFile implements Comparable {
 			if (entry == null) {
 				throw new FileNotFoundException("zimlet description not found: " + mDescFile);
 			}
-			mDescString = new String(entry.getContents());
+			mDescString = new String(entry.getContents(), "UTF-8");
 			mDesc = new ZimletDescription(mDescString);
 		}
 	}
