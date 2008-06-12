@@ -1,17 +1,17 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- *
+ * 
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007 Zimbra, Inc.
- *
+ * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- *
+ * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- *
+ * 
  * ***** END LICENSE BLOCK *****
  */
 
@@ -67,6 +67,8 @@ public class ZPrefs {
 
     public String getLocale() { return get(Provisioning.A_zimbraPrefLocale); }
 
+    public String getYintl() { return get(Provisioning.A_zimbraPrefLocale); }
+
     public boolean getUseTimeZoneListInCalendar() { return getBool(Provisioning.A_zimbraPrefUseTimeZoneListInCalendar); }
 
     public boolean getReadingPaneEnabled() { return getBool(Provisioning.A_zimbraPrefReadingPaneEnabled); }
@@ -102,7 +104,7 @@ public class ZPrefs {
     public String getClientType() { return get(Provisioning.A_zimbraPrefClientType); }
     public boolean getIsAdvancedClient() { return "advanced".equals(getClientType()); }
     public boolean getIsStandardClient() { return "standard".equals(getClientType()); }
-
+    
     public String getSignatureStyle() { return get(Provisioning.A_zimbraPrefMailSignatureStyle); }
     public boolean getSignatureStyleTop() { return "outlook".equals(getSignatureStyle()); }
     public boolean getSignatureStyleBottom() { return "internet".equals(getSignatureStyle()); }
@@ -121,7 +123,7 @@ public class ZPrefs {
 
 
     public String getSkin() { return get(Provisioning.A_zimbraPrefSkin); }
-
+    
     public String getDedupeMessagesSentToSelf() { return get(Provisioning.A_zimbraPrefDedupeMessagesSentToSelf); }
 
     public String getMailInitialSearch() { return get(Provisioning.A_zimbraPrefMailInitialSearch); }
@@ -155,6 +157,8 @@ public class ZPrefs {
     public String getJunkLifetime() { return get(Provisioning.A_zimbraPrefJunkLifetime); }
 
     public String getTrashLifetime() { return get(Provisioning.A_zimbraPrefTrashLifetime); }
+
+    public boolean getDisplayExternalImages() { return getBool(Provisioning.A_zimbraPrefDisplayExternalImages); }
 
     public long getCalendarDayHourStart() {
         long hour = getLong(Provisioning.A_zimbraPrefCalendarDayHourStart);
@@ -193,12 +197,12 @@ public class ZPrefs {
     public boolean getReplyIncludeBodyWithPrefx() { return "includeBodyWithPrefix".equals(getReplyIncludeOriginalText()); }
     public boolean getReplyIncludeNone() { return "includeNone".equals(getReplyIncludeOriginalText()); }
     public boolean getReplyIncludeSmart() { return "includeSmart".equals(getReplyIncludeOriginalText()); }
-
+    
     public String getForwardIncludeOriginalText() { return get(Provisioning.A_zimbraPrefForwardIncludeOriginalText); }
     public boolean getForwardIncludeAsAttachment() { return "includeAsAttachment".equals(getForwardIncludeOriginalText()); }
     public boolean getForwardIncludeBody() { return "includeBody".equals(getForwardIncludeOriginalText()); }
     public boolean getForwardIncludeBodyWithPrefx() { return "includeBodyWithPrefix".equals(getForwardIncludeOriginalText()); }
-
+    
     public String getForwardReplyFormat() { return get(Provisioning.A_zimbraPrefForwardReplyFormat); }
     public boolean getForwardReplyTextFormat() { return "text".equals(getForwardReplyFormat()); }
     public boolean getForwardReplyHtmlFormat() { return "html".equals(getForwardReplyFormat()); }
@@ -207,6 +211,13 @@ public class ZPrefs {
 
 
     public String getForwardReplyPrefixChar() { return get(Provisioning.A_zimbraPrefForwardReplyPrefixChar); }
+
+    public String getCalendarReminderDuration1() { return get(Provisioning.A_zimbraPrefCalendarReminderDuration1); }
+    public String getCalendarReminderDuration2() { return get(Provisioning.A_zimbraPrefCalendarReminderDuration2); }
+    public String getCalendarReminderEmail() { return get(Provisioning.A_zimbraPrefCalendarReminderEmail); }
+    public boolean getCalendarReminderSendEmail() { return getBool(Provisioning.A_zimbraPrefCalendarReminderSendEmail); }
+    public boolean getCalendarReminderMobile() { return getBool(Provisioning.A_zimbraPrefCalendarReminderMobile); }
+    public boolean getCalendarReminderYMessenger() { return getBool(Provisioning.A_zimbraPrefCalendarReminderYMessenger); }
 
 	public String getPop3DownloadSince() { return get(Provisioning.A_zimbraPrefPop3DownloadSince); }
 }
