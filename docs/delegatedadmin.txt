@@ -327,7 +327,7 @@ e.g. - ACL has:
 ===============
 5. Admin SOAP
 ===============
-6.1 GetAllRightsRequest
+5.1 GetAllRightsRequest
       Returns rights that are granted to the authed admin.
       A right is included in the GetRightsResponse is the admin has the right 
       for *any* target of the type.   For example, if the auth admin can 
@@ -370,7 +370,7 @@ e.g. - ACL has:
     {right} = a right this admin can do for the target type.
 
 
-6.2 GetRightsRequest
+5.2 GetRightsRequest
     Get rights the authed admin has on the target entry.
     
     The result can help the admin console decide on what tabs to display after a target 
@@ -389,7 +389,7 @@ e.g. - ACL has:
 </GetRightsResponse>   
 
 
-6.3 GetAllGrantsRequest
+5.3 GetAllGrantsRequest
     Returns the full set of ACEs on all the objects for the authed admin account.
     (all the coses, domains, servers, explicit accounts/DLs, resources). 
     
@@ -437,7 +437,7 @@ e.g. - ACL has:
                        if the grant is directed granted to the authed admin, then {via-grantee-id} won't be present.
        
     
-6.4 GrantPermissionRequest
+5.4 GrantPermissionRequest
     Grant permission to another admin.  The authed admin can only grant a subset of rights/targets granted to itself to 
     another admin.
     
@@ -448,7 +448,7 @@ e.g. - ACL has:
 <GrantPermissionResponse/>
 
 
-6.4 RevokePermissionRequest
+5.5 RevokePermissionRequest
     Revoke permission previously granted to another admin.  
 
 >>>>> OPEN-ISSUE-4
@@ -465,7 +465,7 @@ e.g. - ACL has:
 
 
 ===========
-5. zmprov
+6. zmprov
 ===========
 TODO
 
