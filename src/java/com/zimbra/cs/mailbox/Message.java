@@ -37,6 +37,9 @@ import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.*;
+import com.zimbra.cs.mailbox.calendar.Alarm.Action;
+import com.zimbra.cs.mailbox.calendar.Alarm.TriggerRelated;
+import com.zimbra.cs.mailbox.calendar.Alarm.TriggerType;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.ParsedAddress;
@@ -417,7 +420,7 @@ public class Message extends MailItem {
         boolean updatedMetadata = false;
 
         // Ignore alarms set by organizer.
-        boolean ignoreOrganizerAlarm = false;
+        boolean allowOrganizerAlarm = DebugConfig.calendarAllowOrganizerSpecifiedAlarms;
 
         for (Invite cur : invites) {
             // Check if the sender is allowed to invite this user.  Only do this for invite-type methods,
@@ -461,8 +464,33 @@ public class Message extends MailItem {
                 }
             }
 
-            if (ignoreOrganizerAlarm)
+            // Discard alarms set by organizer.  Add a new one based on attendee's preferences.
+            if (!allowOrganizerAlarm) {
                 cur.clearAlarms();
+                if (cur.isEvent()) {  // only for VEVENTs
+                    int prefNonAllDayMinutesBefore = (int) getAccount().getLongAttr(
+                            Provisioning.A_zimbraPrefCalendarApptReminderWarningTime, 0);
+                    int hoursBefore = 0;
+                    int minutesBefore = 0;
+                    if (!cur.isAllDayEvent()) {
+                        hoursBefore = 0;
+                        minutesBefore = prefNonAllDayMinutesBefore;
+                    } else if (prefNonAllDayMinutesBefore > 0) {
+                        // If preference says reminder is enabled, use 18-hours for all-day appointments,
+                        // regardless of preference value for non-all-day appointments.
+                        hoursBefore = 18;
+                        minutesBefore = 0;
+                    }
+                    if (minutesBefore > 0 || hoursBefore > 0) {
+                        String summary = cur.getName();
+                        Alarm newAlarm = new Alarm(
+                                Action.DISPLAY, TriggerType.RELATIVE, TriggerRelated.START,
+                                ParsedDuration.parse(true, 0, 0, hoursBefore, minutesBefore, 0),
+                                null, null, 0, null, summary, null, null);
+                        cur.addAlarm(newAlarm);
+                    }
+                }
+            }
 
             boolean calItemIsNew = false;
             boolean modifiedCalItem = false;

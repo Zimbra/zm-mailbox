@@ -1479,6 +1479,7 @@ public abstract class Provisioning {
     /*
      * Calendar reminder preferences
      */
+    public static final String A_zimbraPrefCalendarApptReminderWarningTime = "zimbraPrefCalendarApptReminderWarningTime";
     public static final String A_zimbraPrefCalendarReminderDuration1  = "zimbraPrefCalendarReminderDuration1";
     public static final String A_zimbraPrefCalendarReminderDuration2  = "zimbraPrefCalendarReminderDuration2";
     public static final String A_zimbraPrefCalendarReminderEmail      = "zimbraPrefCalendarReminderEmail";
