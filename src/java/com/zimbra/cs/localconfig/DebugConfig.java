@@ -80,6 +80,10 @@ public class DebugConfig {
     // supported and others are ignored.
     public static boolean calendarAllowNonDisplayAlarms;
 
+    // If true, use alarms specified by organizer in an invite email.  If false (default),
+    // discard organizer alarms and set one based on attendee's preferences.
+    public static boolean calendarAllowOrganizerSpecifiedAlarms;
+
     // If true, fsync is skipped for redolog writes.
     public static boolean disableRedoLogFsync;
 
@@ -97,6 +101,7 @@ public class DebugConfig {
 
     static {
         calendarAllowNonDisplayAlarms = booleanValue("debug_calendar_allow_non_display_alarms", false);
+        calendarAllowOrganizerSpecifiedAlarms = booleanValue("debug_calendar_allow_organizer_specified_alarms", false);
         calendarForceUTC = booleanValue("debug_calendar_force_utc", false);
         validateOutgoingICalendar = booleanValue("debug_validate_outgoing_icalendar", false);        
         disableConversation = booleanValue("debug_disable_conversation", false);
