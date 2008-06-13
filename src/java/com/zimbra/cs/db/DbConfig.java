@@ -52,7 +52,7 @@ public class DbConfig {
     /** database value */
     private String mDbValue;
     
-    /** database decscription */
+    /** database description */
     private String mDbDescription;
     
     /** database modified */
@@ -63,18 +63,21 @@ public class DbConfig {
 
         PreparedStatement stmt = null;
         try {
-        	// HUM... should this be UPDATE and require you can't create any new config files?
-            stmt = conn.prepareStatement("DELETE FROM config WHERE name = ?");
-            stmt.setString(1, name);
-            stmt.executeUpdate();
+            // Try update first
+            stmt = conn.prepareStatement("UPDATE config SET value = ?, modified = ? WHERE name = ?");
+            stmt.setString(1, value);
+            stmt.setTimestamp(2, modified);
+            stmt.setString(3, name);
+            int numRows = stmt.executeUpdate();
             
-            stmt = conn.prepareStatement("INSERT INTO config(name, value, modified) VALUES (?, ?, ?)");
-            stmt.setString(1, name);
-            stmt.setString(2, value);
-            stmt.setTimestamp(3, modified);
-            int num = stmt.executeUpdate();
-            if (num == 0) 
-                throw new SQLException("unable to update config for "+name+" = "+value);
+            // If update didn't affect any rows, do an insert
+            if (numRows == 0) {
+                stmt = conn.prepareStatement("INSERT INTO config(name, value, modified) VALUES (?, ?, ?)");
+                stmt.setString(1, name);
+                stmt.setString(2, value);
+                stmt.setTimestamp(3, modified);
+                stmt.executeUpdate();
+            }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("writing config entry: " + name, e);
         } finally {
