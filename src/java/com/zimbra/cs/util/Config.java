@@ -26,19 +26,22 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.db.DbConfig;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
 
 /**
  * @author schemers
  */
 public class Config {
 
+    public static final String KEY_PURGE_LAST_MAILBOX_ID = "purge.lastMailboxId";
+    
     public static final int D_LMTP_THREADS = 10;
     
     public static final int D_LMTP_BIND_PORT = 7025;
@@ -53,7 +56,7 @@ public class Config {
     // update ever 7 days by default
     public static final long D_ZIMBRA_LAST_LOGON_TIMESTAMP_FREQUENCY = 1000*60*60*24*7;
     
-    private static Map mConfigMap;
+    private static Map<String, DbConfig> mConfigMap;
     private static Timestamp mYoungest;
     
     private static void init(Timestamp ts) throws ServiceException {
@@ -61,14 +64,13 @@ public class Config {
         try {
             conn = DbPool.getConnection();
             mConfigMap = DbConfig.getAll(conn, ts);
-            for (Iterator it = mConfigMap.values().iterator(); it.hasNext();) {
-                DbConfig c = (DbConfig) it.next();
+            for (Iterator<DbConfig> it = mConfigMap.values().iterator(); it.hasNext();) {
+                DbConfig c = it.next();
                 if (mYoungest == null) {
                     mYoungest = c.getModified();
                 } else if (c.getModified().after(mYoungest)) {
                     mYoungest = c.getModified();
                 }
-                //System.out.println("loaded "+c);
             }
         } finally {
             if (conn != null)
@@ -99,12 +101,48 @@ public class Config {
      */
     public static synchronized String getString(String name, String defaultValue) {
         initConfig();
-        DbConfig c =  (DbConfig) mConfigMap.get(name);
+        DbConfig c =  mConfigMap.get(name);
         return c != null ? c.getValue() : defaultValue;
+    }
+    
+    public static synchronized void setString(String name, String value)
+    throws ServiceException {
+        initConfig();
+        Connection conn = null;
+        try {
+            conn = DbPool.getConnection();
+            DbConfig c = DbConfig.set(conn, name, value);
+            mConfigMap.put(name, c);
+            conn.commit();
+        } finally {
+            DbPool.quietClose(conn);
+        }
+    }
+    
+    public static synchronized int getInt(String name, int defaultValue) {
+        initConfig();
+        String value = getString(name, null);
+        if (value == null) {
+            return defaultValue;
+        }
+        int intValue = defaultValue;
+        try {
+            intValue = Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            ZimbraLog.misc.warn("Invalid integer value '%s' for config key '%s'.  Returning default value %d.",
+                value, name, intValue);
+        }
+        return intValue;
+    }
+    
+    public static synchronized void setInt(String name, int value)
+    throws ServiceException {
+        initConfig();
+        setString(name, Integer.toString(value));
     }
 
     /**
-     * true if value in config equals (ignoring case): "yes", "true", or "1".
+     * Returns <tt>true</tt> if value in config equals (ignoring case): "yes", "true", or "1".
      * @param name
      * @return specified config item as a boolean, defaultValue if it doesn't exist.
      */    

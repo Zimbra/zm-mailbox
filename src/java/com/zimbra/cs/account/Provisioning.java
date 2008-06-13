@@ -1155,7 +1155,6 @@ public abstract class Provisioning {
     public static final String A_zimbraPrefJunkLifetime = "zimbraPrefJunkLifetime";
     public static final String A_zimbraPrefTrashLifetime = "zimbraPrefTrashLifetime";
     public static final String A_zimbraMailPurgeSleepInterval = "zimbraMailPurgeSleepInterval";
-    public static final String A_zimbraMailLastPurgedMailboxId = "zimbraMailLastPurgedMailboxId";
     
     public static final String A_zimbraContactMaxNumEntries = "zimbraContactMaxNumEntries";
     public static final String A_zimbraIdentityMaxNumEntries = "zimbraIdentityMaxNumEntries";

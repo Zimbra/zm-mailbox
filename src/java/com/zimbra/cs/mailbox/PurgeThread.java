@@ -18,15 +18,15 @@ package com.zimbra.cs.mailbox;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -67,7 +67,7 @@ extends Thread {
             try {
                 String displayInterval = Provisioning.getInstance().getLocalServer().getAttr(
                     Provisioning.A_zimbraMailPurgeSleepInterval, null);
-                ZimbraLog.purge.info("Starting purge thread with sleep interval %s", displayInterval);
+                ZimbraLog.purge.info("Starting purge thread with sleep interval %s.", displayInterval);
             } catch (ServiceException e) {
                 ZimbraLog.purge.warn("Unable to get %s.  Aborting thread startup.",
                     Provisioning.A_zimbraMailPurgeSleepInterval, e);
@@ -113,6 +113,17 @@ extends Thread {
      * between purges.
      */
     public void run() {
+        // Sleep before doing work, to give the server time to warm up.  Also limits the amount
+        // of random effect when determining the next mailbox id.
+        long sleepTime = LC.purge_initial_sleep_time.longValue();
+        ZimbraLog.purge.info("Purge thread sleeping for %dms before doing work.", sleepTime);
+        try {
+            Thread.sleep(sleepTime);
+        } catch (InterruptedException e) {
+            ZimbraLog.purge.info("Shutting down purge thread.");
+            return;
+        }
+        
         while (true) {
             List<Integer> mailboxIds = getMailboxIds();
             boolean slept = false;
@@ -134,7 +145,7 @@ extends Thread {
                         Account account = mbox.getAccount();
                         ZimbraLog.addAccountNameToContext(account.getName());
                         mbox.purgeMessages(null);
-                        saveLastPurgedId(mailboxId);
+                        Config.setInt(Config.KEY_PURGE_LAST_MAILBOX_ID, mbox.getId());
                     } else {
                         ZimbraLog.purge.debug("Skipping mailbox %d because it is not loaded into memory.", mailboxId);
                     }
@@ -204,16 +215,6 @@ extends Thread {
         return interval;
     }
     
-    private void saveLastPurgedId(int mailboxId)
-    throws ServiceException {
-        // Update last purged id
-        Provisioning prov = Provisioning.getInstance();
-        Server server = prov.getLocalServer();
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraMailLastPurgedMailboxId, Integer.toString(mailboxId));
-        prov.modifyAttrs(server, attrs);
-    }
-
     /**
      * Returns all the mailbox id's in purge order, starting with the one
      * after {@link Provisioning#A_zimbraMailLastPurgedMailboxId}.
@@ -229,8 +230,7 @@ extends Thread {
             Collections.sort(mailboxIds);
             
             // Reorder id's so that we start with the one after the last purged
-            Server server = Provisioning.getInstance().getLocalServer();
-            int lastId = server.getIntAttr(Provisioning.A_zimbraMailLastPurgedMailboxId, 0);
+            int lastId = Config.getInt(Config.KEY_PURGE_LAST_MAILBOX_ID, 0);
             for (int i = 0; i < mailboxIds.size(); i++) {
                 if (mailboxIds.get(i) > lastId) {
                     Collections.rotate(mailboxIds, -i);
