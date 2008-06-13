@@ -20,6 +20,8 @@ package com.zimbra.common.localconfig;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import com.zimbra.common.util.Constants;
+
 /**
  * Provides convenient means to get at local configuration - stuff that
  * we do not want in LDAP.
@@ -358,6 +360,8 @@ public class LC {
     public static final KnownKey javamail_pop3_enable_starttls;
     public static final KnownKey javamail_imap_enable_starttls;
     public static final KnownKey javamail_smtp_enable_starttls;
+    
+    public static final KnownKey purge_initial_sleep_time;
     
     static {
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  " +
@@ -1037,6 +1041,10 @@ public class LC {
 
         javamail_smtp_enable_starttls = new KnownKey("javamail_smtp_enable_starttls");
         javamail_smtp_enable_starttls.setDefault("true");
+        
+        purge_initial_sleep_time = new KnownKey(
+            "purge_initial_sleep_ms", Long.toString(30 * Constants.MILLIS_PER_MINUTE),
+            "Amount of time (in milliseconds) that the purge thread sleeps on startup before doing work.");
 
 		// NOTE: When adding a new KnownKey, you do not need to call
 		//       setDoc. The documentation string will come from the
