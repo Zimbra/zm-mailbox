@@ -161,9 +161,18 @@ public abstract class MimeVisitor {
      *  methods in for each visited node.
      * 
      * @param mp the root MIME part at which to start the traversal */
-    public synchronized final boolean accept(MimePart mp) throws MessagingException {
-        boolean modified = false, multiModified = false;
-        MimeMultipart multi = null;
+    public synchronized final boolean accept(MimeMessage mm) throws MessagingException {
+        return accept(mm, 0);
+    }
+
+    private static final int MAX_VISITOR_DEPTH = LC.zimbra_converter_depth_max.intValue();
+
+    private synchronized final boolean accept(MimePart mp, int depth) throws MessagingException {
+        // do not recurse beyond a fixed depth
+        if (depth >= MAX_VISITOR_DEPTH)
+            return false;
+
+        boolean modified = false;
 
         if (mp instanceof MimeMessage)
             modified |= visitMessage((MimeMessage) mp, VisitPhase.VISIT_BEGIN);
@@ -172,15 +181,17 @@ public abstract class MimeVisitor {
         boolean isMultipart = ctype.startsWith(Mime.CT_MULTIPART_PREFIX);
         boolean isMessage = !isMultipart && ctype.equals(Mime.CT_MESSAGE_RFC822);
 
-        Object content = null;
         if (isMultipart) {
+            Object content = null;
             try {
                 content = Mime.getMultipartContent(mp, ctype);
             } catch (Exception e) {
                 ZimbraLog.extensions.warn("could not fetch multipart content; skipping", e);
             }
             if (content instanceof MimeMultipart) {
-                multi = (MimeMultipart) content;
+                MimeMultipart multi = (MimeMultipart) content;
+                boolean multiModified = false;
+
                 if (visitMultipart(multi, VisitPhase.VISIT_BEGIN))
                     modified = multiModified = true;
 
@@ -188,10 +199,11 @@ public abstract class MimeVisitor {
                     for (int i = 0; i < multi.getCount(); i++) {
                         BodyPart bp = multi.getBodyPart(i);
                         if (bp instanceof MimeBodyPart) {
-                            if (accept((MimeBodyPart) bp))
+                            if (accept((MimeBodyPart) bp, depth + 1))
                                 modified = multiModified = true;
-                        } else
+                        } else {
                             ZimbraLog.extensions.info("unexpected BodyPart subclass: " + bp.getClass().getName());
+                        }
                     }
                 } catch (MessagingException e) {
                     ZimbraLog.extensions.warn("could not fetch body subpart; skipping remainder", e);
@@ -203,13 +215,14 @@ public abstract class MimeVisitor {
                     mp.setContent(multi);
             }
         } else if (isMessage) {
+            MimeMessage content = null;
             try {
                 content = Mime.getMessageContent(mp);
             } catch (Exception e) {
                 ZimbraLog.extensions.warn("could not fetch attached message content; skipping", e);
             }
-            if (content instanceof MimeMessage)
-                modified |= accept((MimeMessage) content);
+            if (content != null)
+                modified |= accept(content, depth + 1);
         } else if (mp instanceof MimeBodyPart) {
             modified |= visitBodyPart((MimeBodyPart) mp);
         } else if (!(mp instanceof MimeMessage)) {

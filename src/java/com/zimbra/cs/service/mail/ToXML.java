@@ -27,6 +27,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -79,6 +80,7 @@ import javax.mail.internet.MimeUtility;
 
 import java.io.*;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -746,7 +748,7 @@ public class ToXML {
             List<MPartInfo> parts = Mime.getParts(mm);
             if (parts != null && !parts.isEmpty()) {
                 Set<MPartInfo> bodies = Mime.getBody(parts, wantHTML);
-                addParts(m, m, parts.get(0), bodies, part, maxSize, neuter, false, getDefaultCharset(msg));
+                addParts(m, parts.get(0), bodies, part, maxSize, neuter, false, getDefaultCharset(msg));
             }
         } catch (IOException ex) {
             throw ServiceException.FAILURE(ex.getMessage(), ex);
@@ -755,7 +757,7 @@ public class ToXML {
         }
         return m;
     }
-    
+
     /**
      * Encodes the basic search / sync fields onto an existing calendar item element 
      * 
@@ -848,7 +850,7 @@ public class ToXML {
                 throw ServiceException.FAILURE(ex.getMessage(), ex);
             }
             if (parts != null && !parts.isEmpty())
-                addParts(ie, ie, parts.get(0), null, "", -1, false, true, getDefaultCharset(cal));
+                addParts(ie, parts.get(0), null, "", -1, false, true, getDefaultCharset(cal));
         }
 
         return ie;
@@ -1040,7 +1042,7 @@ public class ToXML {
                 List<MPartInfo> parts = Mime.getParts(mm);
                 if (parts != null && !parts.isEmpty()) {
                     Set<MPartInfo> bodies = Mime.getBody(parts, wantHTML);
-                    addParts(m, m, parts.get(0), bodies, part, maxSize, neuter, true, getDefaultCharset(calItem));
+                    addParts(m, parts.get(0), bodies, part, maxSize, neuter, true, getDefaultCharset(calItem));
                 }
             }
         } catch (IOException ex) {
@@ -1393,7 +1395,7 @@ public class ToXML {
     }
 
     public static void encodeXParams(Element parent, Iterator<ZParameter> xparamsIterator) {
-        for (; xparamsIterator.hasNext(); ) {
+        while (xparamsIterator.hasNext()) {
             ZParameter xparam = xparamsIterator.next();
             String paramName = xparam.getName();
             if (paramName == null) continue;
@@ -1406,7 +1408,7 @@ public class ToXML {
     }
 
     public static void encodeXProps(Element parent, Iterator<ZProperty> xpropsIterator) {
-        for (; xpropsIterator.hasNext(); ) {
+        while (xpropsIterator.hasNext()) {
             ZProperty xprop = xpropsIterator.next();
             String propName = xprop.getName();
             if (propName == null) continue;
@@ -1470,12 +1472,42 @@ public class ToXML {
         return ie;
     }
 
-    private static void addParts(Element parent, Element root, MPartInfo mpi, Set<MPartInfo> bodies, String prefix,
-                                 int maxSize, boolean neuter, boolean excludeCalendarParts, String defaultCharset) {
+    private enum VisitPhase { PREVISIT, POSTVISIT }
+
+    private static void addParts(Element root, MPartInfo mpi, Set<MPartInfo> bodies, String prefix, int maxSize,
+                                 boolean neuter, boolean excludeCalendarParts, String defaultCharset) {
+        LinkedList<Pair<Element, LinkedList<MPartInfo>>> queue = new LinkedList<Pair<Element, LinkedList<MPartInfo>>>();
+        Pair<Element, LinkedList<MPartInfo>> level = new Pair<Element, LinkedList<MPartInfo>>(root, new LinkedList<MPartInfo>());
+        level.getSecond().add(mpi);
+        queue.add(level);
+
+        VisitPhase phase = VisitPhase.PREVISIT;
+        while (!queue.isEmpty()) {
+            level = queue.getLast();
+            LinkedList<MPartInfo> parts = level.getSecond();
+            if (parts.isEmpty()) {
+                queue.removeLast();  phase = VisitPhase.POSTVISIT;  continue;
+            }
+
+            mpi = parts.getFirst();
+            Element child = addPart(phase, level.getFirst(), root, mpi, bodies, prefix, maxSize, neuter, excludeCalendarParts, defaultCharset);
+            if (phase == VisitPhase.PREVISIT && child != null && mpi.hasChildren()) {
+                queue.addLast(new Pair<Element, LinkedList<MPartInfo>>(child, new LinkedList<MPartInfo>(mpi.getChildren())));
+            } else {
+                parts.removeFirst();  phase = VisitPhase.PREVISIT;
+            }
+        }
+    }
+
+    private static Element addPart(VisitPhase phase, Element parent, Element root, MPartInfo mpi, Set<MPartInfo> bodies, String prefix,
+                                   int maxSize, boolean neuter, boolean excludeCalendarParts, String defaultCharset) {
+        if (phase == VisitPhase.POSTVISIT)
+            return null;
+
         String ctype = StringUtil.stripControlCharacters(mpi.getContentType());
 
         if (excludeCalendarParts && Mime.CT_TEXT_CALENDAR.equalsIgnoreCase(ctype))
-            return;
+            return null;
 
         Element elem = parent.addElement(MailConstants.E_MIMEPART);
         MimePart mp = mpi.getMimePart();
@@ -1569,12 +1601,7 @@ public class ToXML {
             }
         }
 
-        // recurse to child parts, if any
-        if (mpi.hasChildren()) {
-            for (MPartInfo cp : mpi.getChildren()) {
-                addParts(elem, root, cp, bodies, prefix, maxSize, neuter, excludeCalendarParts, defaultCharset);
-            }
-        }
+        return elem;
     }
 
     /** Adds the decoded text content of a message part to the {@link Element}.
