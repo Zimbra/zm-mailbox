@@ -3320,22 +3320,30 @@ public class Mailbox {
 
     public synchronized List<CalendarData> getAllCalendarsSummaryForRange(OperationContext octxt, byte itemType, long start, long end)
     throws ServiceException {
-        List<CalendarData> list = new ArrayList<CalendarData>();
-        for (Folder folder : listAllFolders()) {
-            if (folder.inTrash() || folder.inSpam())
-                continue;
-            // Only look at folders of right view type.  We might have to relax this to allow appointments/tasks
-            // in any folder, but that requires scanning too many folders each time, most of which don't contain
-            // any calendar items.
-            if (folder.getDefaultView() != itemType)
-                continue;
-            if (!folder.canAccess(ACL.RIGHT_READ))
-                continue;
-            CalendarData calData = CalendarCache.getInstance().getCalendarSummary(octxt, this, folder.getId(), itemType, start, end, true);
-            if (calData != null)
-                list.add(calData);
+        boolean success = false;
+        try {
+            // folder cache is populated in beginTransaction...
+            beginTransaction("getAllCalendarsSummaryForRange", octxt);
+            success = true;
+            List<CalendarData> list = new ArrayList<CalendarData>();
+            for (Folder folder : listAllFolders()) {
+                if (folder.inTrash() || folder.inSpam())
+                    continue;
+                // Only look at folders of right view type.  We might have to relax this to allow appointments/tasks
+                // in any folder, but that requires scanning too many folders each time, most of which don't contain
+                // any calendar items.
+                if (folder.getDefaultView() != itemType)
+                    continue;
+                if (!folder.canAccess(ACL.RIGHT_READ))
+                    continue;
+                CalendarData calData = CalendarCache.getInstance().getCalendarSummary(octxt, this, folder.getId(), itemType, start, end, true);
+                if (calData != null)
+                    list.add(calData);
+            }
+            return list;
+        } finally {
+            endTransaction(success);
         }
-        return list;
     }
 
     /**
