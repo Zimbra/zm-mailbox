@@ -150,6 +150,7 @@ public class LC {
 
     public static final KnownKey zimbra_converter_enabled_uuencode;
     public static final KnownKey zimbra_converter_enabled_tnef;
+    public static final KnownKey zimbra_converter_depth_max;
 
     public static final KnownKey zimbra_ssl_enabled;
     
@@ -555,6 +556,9 @@ public class LC {
 
         zimbra_converter_enabled_tnef = new KnownKey("zimbra_converter_enabled_tnef");
         zimbra_converter_enabled_tnef.setDefault("true");
+
+        zimbra_converter_depth_max = new KnownKey("zimbra_converter_depth_max");
+        zimbra_converter_depth_max.setDefault("100");
 
         
         zimbra_ssl_enabled = new KnownKey("zimbra_ssl_enabled", "true");
