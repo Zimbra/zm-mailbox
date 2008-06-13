@@ -1644,8 +1644,12 @@ abstract class ImapHandler extends ProtocolHandler {
 
                 // return only the selected folders (and perhaps their parents) matching the pattern
                 for (ImapPath path : selected) {
-                    if (!matches.containsKey(path) && pathMatches(path, pattern))
+                    if (!matches.containsKey(path) && pathMatches(path, pattern)) {
                         matches.put(path, "LIST (" + getFolderAttrs(path, returnOptions, paths, remoteSubscriptions) + ") \"/\" " + path.asUtf7String());
+                        // RFC 5258 3.5: "Servers SHOULD ONLY return a non-matching mailbox name along with
+                        //                CHILDINFO if at least one matching child is not also being returned."
+                        continue;
+                    }
 
                     if (!selectRecursive)
                         continue;
