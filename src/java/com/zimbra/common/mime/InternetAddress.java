@@ -227,83 +227,75 @@ public class InternetAddress {
         return mDisplay == null ? mEmail : MimeHeader.escape(mDisplay, mCharset, true) + " <" + mEmail + '>';
     }
 
+
+    private static void testParser(String[] test) {
+        String raw = test[0], display = test[1], email = test[2], description = test[3];
+        InternetAddress iaddr = new InternetAddress(raw);
+
+        boolean fail = false;
+        if (display == null ^ iaddr.mDisplay == null || (display != null && !display.equals(iaddr.mDisplay)))
+            fail = true;
+        else if (email == null ^ iaddr.mEmail == null || (email != null && !email.equals(iaddr.mEmail)))
+            fail = true;
+
+        if (fail) {
+            System.out.println("failed test: " + description);
+            System.out.println("  raw:      {" + raw + '}');
+            System.out.println("  expected: |" + display + "|, <" + email + '>');
+            System.out.println("  actual:   |" + iaddr.mDisplay + "|, <" + iaddr.mEmail + '>');
+        }
+    }
+
     public static void main(String[] args) {
-        // test no display name
-        System.out.println(new InternetAddress("bob@example.com"));
-        // test no display name, but addr-spec in brackets
-        System.out.println(new InternetAddress("<bob@example.com>"));
-        // test addr-spec in brackets with leading/trailing whitespace
-        System.out.println(new InternetAddress("  <bob@example.com>  "));
-        // test normalizing/compacting whitespace
-        System.out.println(new InternetAddress("Bob\t the\tBuilder <bob@example.com>"));
-        // test ignoring comments
-        System.out.println(new InternetAddress("Bob the (Big) Builder <bob@example.com>"));
-        // test ignoring in-word comments
-        System.out.println(new InternetAddress("Bob the Buil(Big)der <bob@example.com>"));
-        // test stripping leading/trailing whitespace and useless quotes in address
-        System.out.println(new InternetAddress("  Bob the Builder   <\"bob\"@\"example.com\">"));
-        // test quotes around commas
-        System.out.println(new InternetAddress("\"Bob, the Builder\" <bob@example.com>"));
-        // test display part in comment
-        System.out.println(new InternetAddress("bob@example.com (Bob the Builder)  "));
-        // test display part in nested comment
-        System.out.println(new InternetAddress("bob@example.com (Bob( the )Builder)  "));
-        // test ignoring all but last comment
-        System.out.println(new InternetAddress("(Hambone) bob@example.com (Bob the Builder)  "));
-        // test joining quoted strings with normal text and dropping extra comments
-        System.out.println(new InternetAddress("\"Bob the\" Builder <bob(Bob)@example.com> (Bobbles)"));
-        // test joining quoted strings with normal text
-        System.out.println(new InternetAddress("\"Bob\" the \"Builder\" <bob@example.com>"));
-        // test comments before the address
-        System.out.println(new InternetAddress("(Bob the Builder) <bob@example.com>"));
-        // test trailing spaces in comments and a missing end-bracket
-        System.out.println(new InternetAddress(" ( Bob   the\tBuilder ) <bob@example.com"));
-        // test blank quoted strings
-        System.out.println(new InternetAddress(" \"\"    \"Bob the Builder\" <bob@example.com>"));
-        // test comments and spaces before a non-bracketed address
-        System.out.println(new InternetAddress(" (Bob the Builder)  bob@example.com"));
-        System.out.println(new InternetAddress("_Bob_, the Build\u00ear == <bob@example.com>"));
-        System.out.println(new InternetAddress("\"_Bob_,\tthe\" Build\u00ear == <bob@example.com>").setCharset("iso-8859-1"));
-        System.out.println(new InternetAddress("_Bob_, the Build\u00ear == <bob@example.com>").setCharset("koi8-r"));
-        // FIXME: test not stripping quotes from local-part of addr-spec
-        System.out.println(new InternetAddress("\"bob\"@example.com (Bob the Builder)  "));
-        // test spaces around the address
-        System.out.println(new InternetAddress("Bob the Builder < bob@example.com >"));
-        // test basic 2047 encoding
-        System.out.println(new InternetAddress("=?us-ascii?Q?Bob_the=20Builder?= <bob@example.com>"));
-        // test basic 2047 encoding in comments
-        System.out.println(new InternetAddress("bob@example.com (=?us-ascii?Q?Bob_the=20Builder?=)"));
-        // test joining 2047 encoded-words with straight text
-        System.out.println(new InternetAddress("=?us-ascii?Q?Bob?= the =?us-ascii?Q?Builder?= <bob@example.com>"));
-        // test joining 2047 encoded-words with straight text in comments
-        System.out.println(new InternetAddress("bob@example.com (=?us-ascii?Q?Bob?= the =?us-ascii?Q?Builder?=)"));
-        // test joining two 2047 encoded-words
-        System.out.println(new InternetAddress("=?us-ascii?Q?Bob_th?= =?us-ascii?Q?e_Builder?= <bob@example.com>"));
-        // test joining two 2047 encoded-words in comments
-        System.out.println(new InternetAddress("bob@example.com (=?us-ascii?Q?Bob_th?= =?us-ascii?Q?e_Builder?=)"));
-        // test joining two 2047 encoded-words split by a comment
-        System.out.println(new InternetAddress("=?us-ascii?Q?Bob_th?= (Bob) =?us-ascii?Q?e_Builder?= <bob@example.com>"));
-        // test joining two 2047 encoded-words split by a comment containing an encoded-word
-        System.out.println(new InternetAddress("=?us-ascii?Q?Bob_th?= (=?us-ascii?Q?Bob=) =?us-ascii?Q?e_Builder?= <bob@example.com>"));
-        // test joining two 2047 encoded-words with an encoded trailing space
-        System.out.println(new InternetAddress("=?us-ascii?Q?Bob_?=\t=?us-ascii?Q?the_Builder?= <bob@example.com>"));
-        // test joining two 2047 encoded-words with no space in between
-        System.out.println(new InternetAddress("=?us-ascii?Q?Bob_th?==?us-ascii?Q?e_Builder?= <bob@example.com>"));
-        // test 2047 encoding inside of a word
-        System.out.println(new InternetAddress("Bo=?us-ascii?Q?b_the=20Buil?=der <bob@example.com>"));
-        // test 2047 encoding inside of a word in a comment
-        System.out.println(new InternetAddress("bob@example.com (Bo=?us-ascii?Q?b_the=20Buil?=der)"));
-        // test spaces inside encoded-word
-        System.out.println(new InternetAddress("=?us-ascii?Q?Bob the Builder?= <bob@example.com>"));
-        // test spaces inside encoded-word in comments
-        System.out.println(new InternetAddress("bob@example.com (=?us-ascii?Q?Bob the Builder?=)"));
-        // test encoded double spaces inside encoded-word
-        System.out.println(new InternetAddress("=?us-ascii?Q?Bob_the__Builder?= <bob@example.com>"));
-        // test non-encoded double spaces inside encoded-word
-        System.out.println(new InternetAddress("=?us-ascii?Q?Bob the  Builder?= <bob@example.com>"));
-        // test spaces at end of encoded-word
-        System.out.println(new InternetAddress("=?us-ascii?Q?Bob the ?= Builder <bob@example.com>"));
-        // test open-brace in encoded-word
-        System.out.println(new InternetAddress("=?us-ascii?Q?Bob the <bob@example.com>"));
+        String[][] tests = new String[][] {
+            { "Bob the Builder <bob@example.com>", "Bob the Builder", "bob@example.com", "standard address"},
+            { "bob@example.com", null, "bob@example.com", "no display name" },
+            { "<bob@example.com>", null, "bob@example.com", "no display name, but addr-spec in brackets"},
+            { "  <bob@example.com>  ", null, "bob@example.com", "addr-spec in brackets with leading/trailing whitespace" },
+            { "Bob\t the\tBuilder <bob@example.com>", "Bob the Builder", "bob@example.com", "normalizing/compacting whitespace" },
+            { "Bob the (Big) Builder <bob@example.com>", "Bob the Builder", "bob@example.com", "ignoring comments" },
+            { "Bob the Buil(Big)der <bob@example.com>", "Bob the Builder", "bob@example.com", "ignoring in-word comments" },
+            { "Bob the Builder <bob(Big)@(Bob)example.com>", "Bob the Builder", "bob@example.com", "ignoring comments in address"},
+            { "  Bob the Builder   <\"bob\"@\"example.com\">", "Bob the Builder", "\"bob\"@example.com", "stripping leading/trailing whitespace and useless quotes in address"},
+            { "Bob the Builder <bob@[127.0.0.1]>", "Bob the Builder", "bob@[127.0.0.1]", "domain-literal in address"},
+            { "Bob the Builder <bob@  [ 127.0 .0. 1 ] >", "Bob the Builder", "bob@[127.0.0.1]", "spaces in domain-literal in address"},
+            { "Bob the Builder <bob@  [ 127.0 \\.0. 1 ] >", "Bob the Builder", "bob@[127.0.0.1]", "quoted-pair in domain-literal in address"},
+            { "bob@  [ 127.0 \\.0. 1 ] ", null, "bob@[127.0.0.1]", "spaces and quoted-pair in domain-literal in address with no display-name"},
+            { "\"Bob, the Builder\" <bob@example.com>", "Bob, the Builder", "bob@example.com", "quotes around commas"},
+            { "bob@example.com (Bob the Builder)  ", "Bob the Builder", "bob@example.com", "display part in comment"},
+            { "(Bob the Builder) <bob@example.com>", "Bob the Builder", "bob@example.com", "comments before the address"},
+            { " (Bob the Builder)  bob@example.com", "Bob the Builder", "bob@example.com", "comments and spaces before a non-bracketed address"},
+            { "bob@example.com (Bob( the )Builder)  ", "Bob (the) Builder", "bob@example.com", "display part in nested comment"},
+            { "(Hambone) bob@example.com (Bob the Builder)  ", "Bob the Builder", "bob@example.com", "ignoring all but last comment"},
+            { " ( Bob   the\tBuilder ) <bob@example.com", "Bob the Builder", "bob@example.com", "trailing spaces in comments and a missing end-bracket"},
+            { "\"Bob the\" Builder <bob(Bob)@example.com> (Bobbles)", "Bob the Builder", "bob@example.com", "joining quoted strings with normal text and dropping extra comments"},
+            { "\"Bob\" the \"Builder\" <bob@example.com>", "Bob the Builder", "bob@example.com", "joining quoted strings with normal text"},
+            { " \"\"    \"Bob the Builder\" <bob@example.com>", " Bob the Builder", "bob@example.com", "blank quoted strings"},
+            { "_Bob_, the Build\u00ear == <bob@example.com>", "_Bob_, the Build\u00ear ==", "bob@example.com", "bare non-ASCII character"},
+            { "\"bob\"@example.com (Bob the Builder)  ", "Bob the Builder", "\"bob\"@example.com", "not stripping quotes from local-part of addr-spec"},
+            { "Bob the Builder < bob@example.com >", "Bob the Builder", "bob@example.com", "spaces around the address"},
+            { "=?us-ascii?Q?Bob_the=20Builder?= <bob@example.com>", "Bob the Builder", "bob@example.com", "basic 2047 encoding"},
+            { "bob@example.com (=?us-ascii?Q?Bob_the=20Builder?=)", "Bob the Builder", "bob@example.com", "basic 2047 encoding in comments"},
+            { "=?us-ascii?Q?Bob?= the =?us-ascii?Q?Builder?= <bob@example.com>", "Bob the Builder", "bob@example.com", "joining 2047 encoded-words with straight text"},
+            { "bob@example.com (=?us-ascii?Q?Bob?= the =?us-ascii?Q?Builder?=)", "Bob the Builder", "bob@example.com", "joining 2047 encoded-words with straight text in comments"},
+            { "=?us-ascii?Q?Bob_th?= =?us-ascii?Q?e_Builder?= <bob@example.com>", "Bob the Builder", "bob@example.com", "joining two 2047 encoded-words"},
+            { "bob@example.com (=?us-ascii?Q?Bob_th?= =?us-ascii?Q?e_Builder?=)", "Bob the Builder", "bob@example.com", "joining two 2047 encoded-words in comments"},
+            { "=?us-ascii?Q?Bob_th?= (Bob) =?us-ascii?Q?e_Builder?= <bob@example.com>", "Bob the Builder", "bob@example.com", "joining two 2047 encoded-words split by a comment"},
+            { "=?us-ascii?Q?Bob_th?= (=?us-ascii?Q?Bob=) =?us-ascii?Q?e_Builder?= <bob@example.com>", "Bob the Builder", "bob@example.com", "joining two 2047 encoded-words split by a comment containing an encoded-word"},
+            { "=?us-ascii?Q?Bob_?=\t=?us-ascii?Q?the_Builder?= <bob@example.com>", "Bob the Builder", "bob@example.com", "joining two 2047 encoded-words with an encoded trailing space"},
+            { "=?us-ascii?Q?Bob_th?==?us-ascii?Q?e_Builder?= <bob@example.com>", "Bob the Builder", "bob@example.com", "joining two 2047 encoded-words with no space in between"},
+            { "=?us-ascii?Q?Bob_th?=(Bob)=?us-ascii?Q?e_Builder?= <bob@example.com>", "Bob the Builder", "bob@example.com", "joining two 2047 encoded-words with just a comment in between"},
+            { "Bo=?us-ascii?Q?b_the=20Buil?=der <bob@example.com>", "Bob the Builder", "bob@example.com", "2047 encoding inside of a word"},
+            { "bob@example.com (Bo=?us-ascii?Q?b_the=20Buil?=der)", "Bob the Builder", "bob@example.com", "2047 encoding inside of a word in a comment"},
+            { "=?us-ascii?Q?Bob the Builder?= <bob@example.com>", "Bob the Builder", "bob@example.com", "spaces inside encoded-word"},
+            { "bob@example.com (=?us-ascii?Q?Bob the Builder?=)", "Bob the Builder", "bob@example.com", "spaces inside encoded-word in comments"},
+            { "=?us-ascii?Q?Bob_the__Builder?= <bob@example.com>", "Bob the  Builder", "bob@example.com", "encoded double spaces inside encoded-word"},
+            { "=?us-ascii?Q?Bob the  Builder?= <bob@example.com>", "Bob the Builder", "bob@example.com", "non-encoded double spaces inside encoded-word"},
+            { "=?us-ascii?Q?Bob the ?= Builder <bob@example.com>", "Bob the  Builder", "bob@example.com", "spaces at end of encoded-word"},
+            { "=?us-ascii?Q?Bob the <bob@example.com>", "=?us-ascii?Q?Bob the", "bob@example.com", "open-brace in encoded-word"},
+        };
+
+        for (String[] test : tests)
+            testParser(test);
     }
 }
