@@ -503,10 +503,10 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 		public WikiTemplate findInclusion(Context ctxt) {
 			return null;
 		}
-	    private String createLink(String name) {
+	    private String createLink(String folder, String name) {
 	    	StringBuffer buf = new StringBuffer();
 	    	buf.append("<a href=\"");
-	    	buf.append(name);
+	    	buf.append(folder + name);
 	    	buf.append("\">");
 	    	buf.append(name);
 	    	buf.append("</a>");
@@ -514,9 +514,11 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 	    }
 		public String generateList(Context ctxt, int style) throws ServiceException {
 			Folder folder;
-			if (ctxt.item instanceof Folder)
+			String prefix = "";
+			if (ctxt.item instanceof Folder) {
 				folder = (Folder) ctxt.item;
-			else
+				prefix = folder.getName() + "/";
+			} else
 				folder = ctxt.item.getMailbox().getFolderById(ctxt.wctxt.octxt, ctxt.item.getFolderId());
 	    	StringBuffer buf = new StringBuffer();
 	    	buf.append("<");
@@ -529,7 +531,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
     	    	buf.append("<");
         		buf.append(sTAGS[sINNER][style]);
         		buf.append(" class='zmwiki-pageLink'>");
-        		buf.append(createLink(f.getName() + "/"));
+        		buf.append(createLink(prefix, f.getName() + "/"));
         		buf.append("</");
         		buf.append(sTAGS[sINNER][style]);
         		buf.append(">");
@@ -539,7 +541,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
             	buf.append("<");
         		buf.append(sTAGS[sINNER][style]);
             	buf.append(" class='zmwiki-pageLink'>");
-            	buf.append(createLink(doc.getName()));
+            	buf.append(createLink(prefix, doc.getName()));
         		buf.append("</");
         		buf.append(sTAGS[sINNER][style]);
         		buf.append(">");
