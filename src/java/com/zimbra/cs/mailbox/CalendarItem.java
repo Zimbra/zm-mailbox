@@ -384,7 +384,7 @@ public abstract class CalendarItem extends MailItem {
         item.mEndTime = item.recomputeRecurrenceEndTime(item.mEndTime);
 
         if (firstInvite.hasAlarm()) {
-            item.recomputeNextAlarm(nextAlarm);
+            item.recomputeNextAlarm(nextAlarm, false);
             item.saveMetadata();
             AlarmData alarmData = item.getAlarmData();
             if (alarmData != null) {
@@ -505,7 +505,7 @@ public abstract class CalendarItem extends MailItem {
 
         // Recompute next alarm.  Bring appointment start time forward to the alarm time,
         // if the next alarm is before the first instance.
-        recomputeNextAlarm(nextAlarm);
+        recomputeNextAlarm(nextAlarm, false);
         if (mAlarmData != null) {
             long newNextAlarm = mAlarmData.getNextAt();
             if (newNextAlarm > 0 && newNextAlarm < startTime)
@@ -2389,7 +2389,7 @@ public abstract class CalendarItem extends MailItem {
 
     public void updateNextAlarm(long nextAlarm) throws ServiceException {
         boolean hadAlarm = mAlarmData != null;
-        recomputeNextAlarm(nextAlarm);
+        recomputeNextAlarm(nextAlarm, true);
         if (mAlarmData != null) {
             long newNextAlarm = mAlarmData.getNextAt();
             if (newNextAlarm > 0 && newNextAlarm < mStartTime)
@@ -2419,7 +2419,7 @@ public abstract class CalendarItem extends MailItem {
      * Recompute the next alarm trigger time that is at or later than "nextAlarm".
      * @param nextAlarm next alarm should go off at or after this time
      */
-    private void recomputeNextAlarm(long nextAlarm)
+    private void recomputeNextAlarm(long nextAlarm, boolean skipAlarmDefChangeCheck)
     throws ServiceException {
         if (!hasAlarm()) {
             mAlarmData = null;
@@ -2438,9 +2438,50 @@ public abstract class CalendarItem extends MailItem {
 
         long endTime = getNextAlarmRecurrenceExpansionEndTime();
         Collection<Instance> instances = expandInstances(nextAlarm, endTime, false);
+
+        long savedNextAlarm = nextAlarm;
+        if (nextAlarm > 0 && !skipAlarmDefChangeCheck) {
+            // Let's see if alarm definition has changed.  It changed if there is no alarm to go off at
+            // previously saved nextAlarm time.
+            boolean alarmDefChanged = true;
+            long savedNextInstStart = mAlarmData != null ? mAlarmData.getNextInstanceStart() : 0;
+            for (Instance inst : instances) {
+                long instStart = inst.getStart();
+                if (inst.isTimeless())
+                    continue;
+                if (instStart < nextAlarm)
+                    continue;
+                if (instStart > savedNextInstStart)
+                    break;
+                // instStart == currNextInstStart
+                InviteInfo invId = inst.getInviteInfo();
+                Invite inv = getInvite(invId.getMsgId(), invId.getComponentId());
+                Iterator<Alarm> alarmsIter = inv.alarmsIterator();
+                long instEnd = inst.getEnd();
+                for (; alarmsIter.hasNext(); ) {
+                    Alarm alarm = alarmsIter.next();
+                    long currTrigger = alarm.getTriggerTime(instStart, instEnd);
+                    if (currTrigger == nextAlarm) {
+                        // Detected alarm definition change.  Reset nextAlarm to 0 to force the next loop
+                        // to choose the earliest alarm from an earliest instance at or after old nextAlarm time.
+                        alarmDefChanged = false;
+                        break;
+                    }
+                }
+                break;  // no need to look at later instances
+            }
+            if (alarmDefChanged) {
+                // Reset nextAlarm to 0 to force the next loop to choose the earliest alarm
+                // on the earliest instance at or after old nextAlarm time.  This is needed
+                // for bug 28630.  Without this, we can't change alarm definition to an
+                // earlier trigger time, e.g. from 5 minutes before to 10 minutes before.
+                nextAlarm = 0;
+            }
+        }
+
         for (Instance inst : instances) {
             long instStart = inst.getStart();
-            if (instStart < nextAlarm && !inst.isTimeless())
+            if (instStart < savedNextAlarm && !inst.isTimeless())
                 continue;
             InviteInfo invId = inst.getInviteInfo();
             Invite inv = getInvite(invId.getMsgId(), invId.getComponentId());
@@ -2465,6 +2506,7 @@ public abstract class CalendarItem extends MailItem {
         }
     }
 
+    // Find the earliest alarm whose trigger time is at or after nextAlarm.
     private static Pair<Long, Alarm> getAlarmTriggerTime(
             long nextAlarm, Iterator<Alarm> alarms, long instStart, long instEnd) {
         long triggerAt = Long.MAX_VALUE;
