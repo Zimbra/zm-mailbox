@@ -695,7 +695,7 @@ public abstract class Wiki {
 				if (page != null)
 					return page.getTemplate(ctxt);
 			} catch (ServiceException se) {
-				return new WikiTemplate("<!-- missing template "+name+" -->");
+				return new WikiTemplate("<!-- missing template "+name+" --><wiklet class=\'"+(name.equals("_Index")?"TOC":"CONTENT")+"\'/>");
 			}
 		}
 		
@@ -705,7 +705,7 @@ public abstract class Wiki {
 			return page.getTemplate(ctxt);
 
 		// the page hasn't been found.
-		return new WikiTemplate("<!-- missing template "+name+" -->");
+		return new WikiTemplate("<!-- missing template "+name+" --><wiklet class=\'"+(name.equals("_Index")?"TOC":"CONTENT")+"\'/>");
 	}
 	
 	public static void expireTemplate(Document item) {
