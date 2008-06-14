@@ -260,3 +260,22 @@
 <DiffDocumentResponse>
   <chunk disp="common|first|second"> ... text ... </chunk>+
 </DiffDocumentResponse>
+
+
+//
+// ListDocumentRevisions
+//
+// returns {num} number of revisions starting from {version} of the requested
+// document.  {num} defaults to 1.  {version} defaults to the current version.
+//
+<ListDocumentRevisionsRequest>
+  <doc id="{item-id}" [ver="{version}"] [count="{num}"]/>
+</ListDocumentRevisionsRequest>
+
+<ListDocumentRevisionsResponse>
+  [<doc name="{name}" ver="{version}" cr="{creator}" rest="{rest-url}" id="{message-id}" s="{size}" d="{created-date}" md="{modified-date}" l="{folder}" [f="{flags}"] [t="{tags}"]>
+     <fr>... fragment ...</fr>
+  </doc>]+
+</ListDocumentRevisionsResponse>
+
+
