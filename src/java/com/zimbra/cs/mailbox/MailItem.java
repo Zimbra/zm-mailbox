@@ -1444,6 +1444,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             mMailbox.updateSize(mData.size);
 
             ZimbraLog.mailop.debug("saving revision %d for %s", mVersion, getMailopContext(this));
+
             DbMailItem.snapshotRevision(this, mVersion);
             if (!isTagged(mMailbox.mVersionedFlag))
                 tagChanged(mMailbox.mVersionedFlag, true);
@@ -1589,10 +1590,10 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (tag.trackUnread() && mData.unreadCount > 0)
             tag.updateUnread((newValue ? 1 : -1) * mData.unreadCount);
 
-        // alter our tags in the DB
-        if (ZimbraLog.mailop.isDebugEnabled()) {
+        if (ZimbraLog.mailop.isDebugEnabled())
             ZimbraLog.mailop.debug("Setting %s for %s.", getMailopContext(tag), getMailopContext(this));
-        }
+
+        // alter our tags in the DB
         DbMailItem.alterTag(this, tag, newValue);
     }
 
@@ -1798,8 +1799,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         data.contentChanged(mMailbox);
         
         if (indexId > 0 && indexId != mData.indexId) {
-            // we'll have to reindex the copy.  Just set the deferred flag, we'll
-            // index it later
+            // if the copy needs to be reindexed, just set the deferred flag now and index it later
             mMailbox.incrementIndexDeferredCount(1);
             data.flags |= Flag.BITMASK_INDEXING_DEFERRED;
         }
@@ -1887,6 +1887,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
         boolean shared = data.indexId > 0 && data.indexId == mData.indexId;
         if (data.indexId > 0 && data.indexId != mData.indexId) {
+            // if the copy needs to be reindexed, just set the deferred flag now and index it later
             data.flags |= Flag.BITMASK_INDEXING_DEFERRED;
             mMailbox.incrementIndexDeferredCount(1);
         }
@@ -1910,6 +1911,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (parent != null && parent.getId() > 0) {
             markItemModified(Change.MODIFIED_PARENT);
             parent.markItemModified(Change.MODIFIED_CHILDREN);
+            mData.metadataChanged(mMailbox);
             if (parent.mData.children == null) {
                 (parent.mData.children = new ArrayList<Integer>(1)).add(new Integer(copyId));
             } else {

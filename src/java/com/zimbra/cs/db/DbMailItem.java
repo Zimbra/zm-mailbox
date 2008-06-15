@@ -291,18 +291,22 @@ public class DbMailItem {
                 throw ServiceException.FAILURE("failed to create object", null);
             stmt.close();
 
-            boolean needsTag = !source.isTagged(mbox.mCopiedFlag);
+            boolean needsTag = shared && !source.isTagged(mbox.mCopiedFlag);
 
             if (needsTag)
                 getFlagsetCache(conn, mbox).addTagset(source.getInternalFlagBitmask() | Flag.BITMASK_COPIED);
 
             if (needsTag || source.getParentId() > 0) {
+                boolean altersMODSEQ = source.getParentId() > 0;
+                String updateChangeID = (altersMODSEQ ? ", mod_metadata = ?, change_date = ?" : "");
                 stmt = conn.prepareStatement("UPDATE " + table +
-                            " SET parent_id = NULL, flags = " + flags + ", mod_metadata = ?, change_date = ?" +
+                            " SET parent_id = NULL, flags = " + flags + updateChangeID +
                             " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
                 pos = 1;
-                stmt.setInt(pos++, mbox.getOperationChangeID());
-                stmt.setInt(pos++, mbox.getOperationTimestamp());
+                if (altersMODSEQ) {
+                    stmt.setInt(pos++, mbox.getOperationChangeID());
+                    stmt.setInt(pos++, mbox.getOperationTimestamp());
+                }
                 stmt.setInt(pos++, mbox.getId());
                 stmt.setInt(pos++, source.getId());
                 stmt.executeUpdate();
