@@ -17,10 +17,11 @@
 package com.zimbra.qa.unittest;
 
 import java.util.Date;
-import java.util.concurrent.Callable;
+import java.util.List;
 
 import junit.framework.TestCase;
 
+import com.zimbra.common.util.Constants;
 import com.zimbra.cs.db.DbResults;
 import com.zimbra.cs.db.DbScheduledTask;
 import com.zimbra.cs.db.DbUtil;
@@ -31,30 +32,12 @@ import com.zimbra.cs.mailbox.ScheduledTaskManager;
 public class TestScheduledTaskManager
 extends TestCase {
 
-    private static final String TASK_NAME = "TestTask";
+    static final String TASK_NAME = "TestTask";
     private static final String USER_NAME = "user1";
-    
-    private static int sNumCalls = 0;
-    
-    public class TestTask
-    extends ScheduledTask
-    implements Callable<Void> {
-        
-        public TestTask() {
-        }
-        
-        public String getName() { return TASK_NAME; }
-        
-        public Void call() {
-            sNumCalls++;
-            return null;
-        }
-    }
     
     public void setUp()
     throws Exception {
         cleanUp();
-        sNumCalls = 0;
     }
     
     /**
@@ -77,7 +60,7 @@ extends TestCase {
         checkNumPersistedTasks(1);
         Thread.sleep(1250);
         
-        assertEquals("TestTask was not called", 1, sNumCalls);
+        assertEquals("TestTask was not called", 1, task.getNumCalls());
         checkNumPersistedTasks(0);
     }
     
@@ -104,13 +87,44 @@ extends TestCase {
         // Cancel the task and make sure it's removed from the database
         ScheduledTaskManager.cancel(TestTask.class.getName(), TASK_NAME, mbox.getId(), false);
         Thread.sleep(200);
-        int numCalls = sNumCalls;
+        int numCalls = task.getNumCalls();
         assertTrue("Unexpected number of task runs: " + numCalls, numCalls > 4);
         checkNumPersistedTasks(0);
         
         // Sleep some more and make sure the task doesn't run again
         Thread.sleep(400);
-        assertEquals("Task still ran after being cancelled", sNumCalls, numCalls);
+        assertEquals("Task still ran after being cancelled", numCalls, task.getNumCalls());
+    }
+    
+    public void testTaskProperties()
+    throws Exception {
+        checkNumPersistedTasks(0);
+        
+        // Schedule a single-execution task
+        ScheduledTask task = new TestTask();
+        long now = System.currentTimeMillis();
+        task.setExecTime(new Date(now + Constants.MILLIS_PER_MINUTE));
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        task.setMailboxId(mbox.getId());
+        task.setProperty("prop1", "value1");
+        task.setProperty("prop2", "value2");
+        task.setProperty("prop3", null);
+        ScheduledTaskManager.schedule(task);
+        
+        // Make sure the task is persisted
+        checkNumPersistedTasks(1);
+        
+        // Check properties
+        List<ScheduledTask> tasks = DbScheduledTask.getTasks(TestTask.class.getName(), mbox.getId());
+        assertEquals(1, tasks.size());
+        task = tasks.get(0);
+        assertEquals("value1", task.getProperty("prop1"));
+        assertEquals("value2", task.getProperty("prop2"));
+        assertEquals(null, task.getProperty("prop3"));
+        
+        // Cancel task
+        ScheduledTaskManager.cancel(TestTask.class.getName(), task.getName(), mbox.getId(), true);
+        checkNumPersistedTasks(0);
     }
 
     public void tearDown()

@@ -52,11 +52,6 @@ public class ScheduledTaskManager {
                 // Validate mailbox ID
                 if (task.getMailboxId() > 0) {
                     MailboxManager.getInstance().getMailboxById(task.getMailboxId());
-                    /*
-                    if (task.getItemId() > 0) {
-                        mbox.getItemById(task.getItemId(), MailItem.TYPE_UNKNOWN);
-                    }
-                    */
                 }
                 schedule(null, task);
             } catch (ServiceException e) {
