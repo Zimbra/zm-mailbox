@@ -99,8 +99,7 @@ class RemoteFolder {
     public void deleteMessages(List<Long> uids) throws IOException {
         ensureSelected();
         int size = uids.size();
-        LOG.info("Deleting and expunging %d message(s) in IMAP folder '%s'",
-                 size, name);
+        LOG.info("Deleting %d message(s) in IMAP folder '%s'", size, name);
         for (int i = 0; i < size; i += 16) {
             String seq = ImapData.asSequenceSet(
                 uids.subList(i, Math.min(size - i, 16)));
@@ -110,23 +109,16 @@ class RemoteFolder {
                 connection.uidExpunge(seq);
             }
         }
-        // If UIDPLUS not supported, then all we can do is expunge all messages
-        // which unfortunately may end up removing some messages we ourselves
-        // did not flag for deletion.
-        if (!uidPlus) {
-            connection.expunge();
-        }
     }
 
-    public List<Long> getUids(long startUid, long endUid) throws IOException {
+    public List<Long> getUids(String seq) throws IOException {
         ensureSelected();
-        if (endUid > 0 && startUid > endUid) {
-            return Collections.emptyList();
-        }
-        String end = endUid > 0 ? String.valueOf(endUid) : "*";
-        return connection.getUids(startUid + ":" + end);
+        List<Long> uids = connection.getUids(seq);
+        // Sort UIDs in reverse order so we download latest messages first
+        Collections.sort(uids, Collections.reverseOrder());
+        return uids;
     }
-
+    
     public boolean exists() throws IOException {
         return !connection.list("", name).isEmpty();
     }

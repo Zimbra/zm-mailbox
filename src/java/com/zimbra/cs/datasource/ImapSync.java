@@ -48,7 +48,7 @@ public class ImapSync extends AbstractMailItemImport {
     private Map<Integer, ImapFolderSync> syncedFolders;
     private boolean fullSync;
 
-    private static final boolean DEBUG = LC.javamail_imap_debug.booleanValue();
+    private static final boolean DEBUG = true; // LC.javamail_imap_debug.booleanValue();
     
     private static final Log LOG = ZimbraLog.datasource;
     static {
@@ -167,8 +167,8 @@ public class ImapSync extends AbstractMailItemImport {
             try {
                 ifs.finishSync();
             } catch (Exception e) {
-                String name = ifs.getFolder().getName();
-                LOG.error("Synchronization of folder '%s' failed", name, e);
+                LOG.error("Synchronization of folder '%s' failed",
+                          ifs.getLocalPath(), e);
             }
         }
         // Any remaining folder trackers are for folders which were deleted
@@ -178,7 +178,7 @@ public class ImapSync extends AbstractMailItemImport {
         }
     }
 
-    private void syncRemoteFolder(ListData ld) throws ServiceException, IOException {
+    private void syncRemoteFolder(ListData ld) {
         String path = ld.getMailbox();
         // LOG.debug("Processing remote folder '%s'", path);
         ImapFolder tracker = trackedFolders.getByRemotePath(path);
@@ -196,7 +196,7 @@ public class ImapSync extends AbstractMailItemImport {
         }
     }
     
-    private void syncLocalFolder(Folder folder) throws ServiceException, IOException {
+    private void syncLocalFolder(Folder folder) {
         // LOG.debug("Processing local folder '%s'", folder.getName());
         String name = folder.getName();
         int id = folder.getId();

@@ -41,18 +41,6 @@ public class ImapMessageCollection implements Iterable<ImapMessage> {
         }
     }
 
-    /*
-    public void remove(ImapMessage msg) {
-        mByItemId.remove(msg.getItemId());
-        long uid = msg.getUid();
-        if (uid > 0) {
-            mByUid.remove(msg.getUid());
-        } else {
-            mNoUid.remove(msg.getItemId());
-        }
-    }
-    */
-    
     public ImapMessage getByItemId(int itemId) {
         return mByItemId.get(itemId);
     }
@@ -89,7 +77,7 @@ public class ImapMessageCollection implements Iterable<ImapMessage> {
         return mByItemId.keySet();
     }
 
-    public long getMaxUid() {
+    public long getLastUid() {
         long maxUid = 0;
         for (long uid : mByUid.keySet()) {
             if (uid > maxUid) maxUid = uid;

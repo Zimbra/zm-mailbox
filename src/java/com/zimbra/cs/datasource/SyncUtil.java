@@ -19,6 +19,11 @@ package com.zimbra.cs.datasource;
 import com.zimbra.cs.mailclient.imap.Flags;
 import com.zimbra.cs.mailclient.imap.CAtom;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Message;
+
+import javax.mail.internet.MimeMessage;
+import javax.mail.MessagingException;
+import java.util.Date;
 
 final class SyncUtil {
     private static final Flags EMPTY_FLAGS = new Flags();
@@ -84,5 +89,15 @@ final class SyncUtil {
             toRemove.set(CAtom.F_SEEN.atom());
         }
         return toRemove;
+    }
+    
+    public static Date getInternalDate(Message msg, MimeMessage mm) {
+        Date date = null;
+        try {
+            date = mm.getReceivedDate();
+        } catch (MessagingException e) {
+            // Fall through
+        }
+        return date != null ? date : new Date(msg.getDate());
     }
 }
