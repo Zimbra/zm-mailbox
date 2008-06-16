@@ -709,7 +709,7 @@ public class ImapImport extends AbstractMailItemImport {
         }
 
         // Fetch new IMAP messages from remote folder
-        long lastUid = trackedMsgs.getMaxUid();
+        long lastUid = trackedMsgs.getLastUid();
         int startIndex = 0;
         int endIndex = msgArray.length - 1;
         while (startIndex <= endIndex) {

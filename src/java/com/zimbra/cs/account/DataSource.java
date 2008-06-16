@@ -39,6 +39,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.datasource.ImapFolder;
 import com.zimbra.cs.datasource.ImapFolderCollection;
+import com.zimbra.cs.datasource.SyncState;
 import com.zimbra.cs.db.DbImapFolder;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -267,12 +268,12 @@ public class DataSource extends NamedEntry implements Comparable {
 
     public void deleteImapFolder(ImapFolder folder) throws ServiceException {
         DbImapFolder.deleteImapFolder(getMailbox(), this, folder);
-        clearLastSyncUid(folder.getItemId());
+        clearSyncState(folder.getItemId());
     }
 
     public void updateImapFolder(ImapFolder folder) throws ServiceException {
         DbImapFolder.updateImapFolder(folder);
-        clearLastSyncUid(folder.getItemId());
+        clearSyncState(folder.getItemId());
     }
 
     public ImapFolder createImapFolder(int itemId, String localPath,
@@ -282,20 +283,14 @@ public class DataSource extends NamedEntry implements Comparable {
             getMailbox(), this, itemId, localPath, remotePath, uidValidity);
     }
 
-    // Overridden in OfflineDataSource
-    public long getLastSyncUid(int folderId) {
-        return 0;
-    }
+    // Overridden by OfflineDataSource
+    public SyncState getSyncState(int folderId) { return null; }
 
-    // Overridden in OfflineDataSource
-    public void updateLastSyncUid(int folderId, long uid) {
-        // Do nothing by default
-    }
+    // Overridden by OfflineDataSource
+    public void putSyncState(int folderId, SyncState state) {}
 
-    // Overridden in OfflineDataSource
-    public void clearLastSyncUid(int folderId) {
-        // Do nothing by default
-    }
+    // Overridden by OfflineDataSource
+    public void clearSyncState(int folderId) {}
     
     public Mailbox getMailbox() throws ServiceException {
         if (mailbox == null) {
