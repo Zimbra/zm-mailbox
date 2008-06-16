@@ -1094,7 +1094,7 @@ public class CalendarUtils {
         cancel.setClassProp(inv.getClassProp());
         boolean showAll = inv.isPublic() || allowPrivateAccess;
         Locale locale = acct.getLocale();
-        if (showAll) {
+        if (!showAll) {
             // SUMMARY
             String sbj = L10nUtil.getMessage(MsgKey.calendarSubjectWithheld, locale);
             cancel.setName(CalendarMailSender.getCancelSubject(sbj, locale));
