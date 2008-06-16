@@ -49,6 +49,7 @@ public class DataSourceManager {
         new HashMap<String, Map<String, ImportStatus>>();
 
     private static final boolean NEW_SYNC_ENABLED =
+        Boolean.getBoolean("ZimbraDataSourceNewSyncEnabled") ||
         LC.data_source_new_sync_enabled.booleanValue();
 
     /*

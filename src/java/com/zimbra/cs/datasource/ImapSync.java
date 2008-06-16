@@ -48,7 +48,9 @@ public class ImapSync extends AbstractMailItemImport {
     private Map<Integer, ImapFolderSync> syncedFolders;
     private boolean fullSync;
 
-    private static final boolean DEBUG = true; // LC.javamail_imap_debug.booleanValue();
+    private static final boolean DEBUG =
+        Boolean.getBoolean("ZimbraDataSourceImapDebug") ||
+        LC.javamail_imap_debug.booleanValue();
     
     private static final Log LOG = ZimbraLog.datasource;
     static {
