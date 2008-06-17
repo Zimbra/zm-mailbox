@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.io.ByteArrayInputStream;
 
-public class TestImapSync extends TestCase {
+public class TestImapUtil extends TestCase {
     private static ImapInputStream getImapInputStream(String[] folders) {
         StringBuilder sb = new StringBuilder();
         for (String folder : folders) {
