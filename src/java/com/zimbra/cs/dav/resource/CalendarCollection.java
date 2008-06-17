@@ -234,7 +234,7 @@ public class CalendarCollection extends Collection {
 			if (useEtag) {
 				String itemEtag = MailItemResource.getEtag(calItem);
 				if (!itemEtag.equals(etag))
-					throw new DavException("event has different etag ("+itemEtag+") vs "+etag, HttpServletResponse.SC_CONFLICT, null);
+					throw new DavException("CalDAV client has stale event: event has different etag ("+itemEtag+") vs "+etag, HttpServletResponse.SC_CONFLICT);
 				isNewItem = false;
 			}
 			boolean first = true;
