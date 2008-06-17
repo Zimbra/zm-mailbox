@@ -26,7 +26,6 @@ import java.util.Iterator;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
@@ -96,7 +95,6 @@ public interface CalendarObject {
             setProperty(DavElements.P_GETCONTENTTYPE, Mime.CT_TEXT_CALENDAR);
             setProperty(DavElements.P_GETCONTENTLENGTH, Long.toString(calItem.getSize()));
             addProperty(CalDavProperty.getCalendarData(this));
-            mAccount = calItem.getAccount();
             if (mInvites[0].hasRecurId()) {
             	// put the main series to be the first invite, otherwise iCal won't like it.
             	ArrayList<Invite> newList = new ArrayList<Invite>();
@@ -115,7 +113,6 @@ public interface CalendarObject {
         private String mUid;
         private Invite[] mInvites;
         private TimeZoneMap mTzmap;
-        private Account mAccount;
 
         protected static String getCalendarPath(CalendarItem calItem) throws ServiceException {
             return CalendarPath.generate(calItem.getPath(), calItem.getUid());
@@ -182,7 +179,7 @@ public interface CalendarObject {
         }
 
         @Override
-        public InputStream getContent(DavContext ctxt) throws IOException, DavException {
+        public InputStream getRawContent(DavContext ctxt) throws IOException, DavException {
             return new ByteArrayInputStream(getVcalendar(ctxt, null).getBytes());
         }
 
@@ -232,6 +229,7 @@ public interface CalendarObject {
 	    private int mItemId;
 	    private String mUid;
 	    private String mEtag;
+	    private byte[] mContent;
 	    
 	    @Override
 	    public void delete(DavContext ctxt) throws DavException {
@@ -240,7 +238,7 @@ public interface CalendarObject {
 
 	    @Override
 	    public InputStream getContent(DavContext ctxt) throws IOException, DavException {
-            byte[] result = getRawContent(ctxt);
+            byte[] result = getRemoteContent(ctxt);
             if (result != null)
                 return new ByteArrayInputStream(result);
 	        return null;
@@ -253,7 +251,7 @@ public interface CalendarObject {
 	    
 	    @Override
 	    public boolean hasContent(DavContext ctxt) {
-	        return true;
+	        return getRemoteContent(ctxt) != null;
 	    }
 	    
 	    public String getUid() {
@@ -265,22 +263,24 @@ public interface CalendarObject {
 	    }
 	    
 	    public String getVcalendar(DavContext ctxt, Filter filter) throws IOException {
-            byte[] result = getRawContent(ctxt);
+            byte[] result = getRemoteContent(ctxt);
             if (result != null)
                 return new String(result, "UTF-8");
             return "";
 	    }
 	    
-        public byte[] getRawContent(DavContext ctxt) throws IOException {
+        public byte[] getRemoteContent(DavContext ctxt) {
+        	if (mContent != null)
+        		return mContent;
             try {
                 AuthToken authToken = AuthProvider.getAuthToken(ctxt.getAuthAccount());
                 ItemId iid = new ItemId(mRemoteId, mItemId);
                 HashMap<String,String> params = new HashMap<String,String>();
-                return UserServlet.getRemoteContent(authToken, iid, params);
+                mContent = UserServlet.getRemoteContent(authToken, iid, params);
             } catch (ServiceException e) {
                 ZimbraLog.dav.warn("can't get remote contents for "+mRemoteId+", "+mItemId, e);
             }
-            return null;
+            return mContent;
         }
 	}
 }

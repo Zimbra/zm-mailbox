@@ -55,12 +55,6 @@ public class RemoteCollection extends Collection {
     }
 
     @Override
-    public InputStream getContent(DavContext ctxt) throws IOException,
-            DavException {
-        return null;
-    }
-
-    @Override
     public boolean isCollection() {
         return true;
     }
