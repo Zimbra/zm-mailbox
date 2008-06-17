@@ -155,16 +155,16 @@ public class DavServlet extends ZimbraServlet {
 			else if (e.getStatus() == HttpServletResponse.SC_MOVED_TEMPORARILY ||
 					 e.getStatus() == HttpServletResponse.SC_MOVED_PERMANENTLY) 
 				ZimbraLog.dav.info("sending redirect");
-			else
-				ZimbraLog.dav.error("error handling method "+method.getName(), e);
 			
 			try {
 				if (e.isStatusSet()) {
 					resp.setStatus(e.getStatus());
 					if (e.hasErrorMessage())
 						e.writeErrorMsg(resp.getOutputStream());
-				} else
+				} else {
+					ZimbraLog.dav.error("error handling method "+method.getName(), e);
 					resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+				}
 			} catch (IllegalStateException ise) {
 			}
 		} catch (ServiceException e) {
