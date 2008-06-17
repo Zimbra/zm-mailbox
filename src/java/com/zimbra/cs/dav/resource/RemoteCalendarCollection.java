@@ -17,7 +17,6 @@
 package com.zimbra.cs.dav.resource;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -71,12 +70,6 @@ public class RemoteCalendarCollection extends CalendarCollection {
     @Override
     public void delete(DavContext ctxt) throws DavException {
         throw new DavException("cannot delete this resource", HttpServletResponse.SC_FORBIDDEN, null);
-    }
-
-    @Override
-    public InputStream getContent(DavContext ctxt) throws IOException,
-            DavException {
-        return null;
     }
 
     @Override

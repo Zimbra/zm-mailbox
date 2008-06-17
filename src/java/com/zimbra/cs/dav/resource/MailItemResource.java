@@ -329,11 +329,10 @@ public abstract class MailItemResource extends DavResource {
 		return super.hasContent(ctxt);
 	}
 
-    @SuppressWarnings("unused")
     @Override public InputStream getContent(DavContext ctxt) throws IOException, DavException {
 		if (isWebRequest(ctxt))
 			return getTextContent(ctxt);
-		return null;
+		return getRawContent(ctxt);
 	}
 
     @Override public String getContentType(DavContext ctxt) {
@@ -342,6 +341,10 @@ public abstract class MailItemResource extends DavResource {
         return super.getContentType(ctxt);
     }
 
+    protected InputStream getRawContent(DavContext ctxt) throws IOException, DavException {
+    	return null;
+    }
+    
 	protected InputStream getTextContent(DavContext ctxt) throws IOException {
 		StringBuilder buf = new StringBuilder();
 		buf.append("Request\n\n");
