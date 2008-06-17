@@ -33,7 +33,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
@@ -116,8 +115,16 @@ public class GetCalendarItemSummaries extends CalendarRequest {
             }
 
             ParsedDuration defDuration = defaultInvite.getEffectiveDuration();
+            // Duration is null if no DTEND or DURATION was present.  Assume 1 day for all-day
+            // events and 1 second for non all-day.  (bug 28615)
+            if (defDuration == null) {
+                if (defaultInvite.isAllDayEvent())
+                    defDuration = ParsedDuration.parse(false, 0, 1, 0, 0, 0);
+                else
+                    defDuration = ParsedDuration.parse(false, 0, 0, 0, 0, 1);
+            }
             long defDurationMsecs = 0;
-            if (defDuration != null && defaultInvite.getStartTime() != null) {
+            if (defaultInvite.getStartTime() != null) {
                 ParsedDateTime s = defaultInvite.getStartTime();
                 long et = s.add(defDuration).getUtcTime();
                 defDurationMsecs = et - s.getUtcTime();
@@ -157,10 +164,16 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                         // include it even if its start time is after the range.
                         long startOrAlarm = instStart == alarmInst ? alarmTime : instStart;
 
+                        // Duration is null if no DTEND or DURATION was present.  Assume 1 day for all-day
+                        // events and 1 second for non all-day.  (bug 28615)
+                        if (invDuration == null) {
+                            if (inv.isAllDayEvent())
+                                invDuration = ParsedDuration.parse(false, 0, 1, 0, 0, 0);
+                            else
+                                invDuration = ParsedDuration.parse(false, 0, 0, 0, 0, 1);
+                        }
                         if (inst.isTimeless() ||
-                            (startOrAlarm < rangeEnd &&
-                             invDuration != null &&
-                             (invDuration.addToTime(instStart)) > rangeStart)) {
+                            (startOrAlarm < rangeEnd && invDuration.addToTime(instStart) > rangeStart)) {
                             numInRange++;
                         } else {
                             continue;
