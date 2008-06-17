@@ -270,12 +270,34 @@ public class URLUtil {
             	printPort = false;
         }
 
-        StringBuffer sb = new StringBuffer(128);
+        StringBuilder sb = new StringBuilder(128);
         sb.append(scheme).append(hostname);
         if (printPort)
         	sb.append(":").append(port);
         sb.append(path);
         return sb.toString();
+    }
+    
+    public static String getProxyURL(Server server, String path, boolean useSSL) throws ServiceException {
+    	String modeString = server.getAttr(Provisioning.A_zimbraMailMode, null);
+    	if (modeString == null)
+    		throw ServiceException.INVALID_REQUEST("server " + server.getName() + " does not have " + Provisioning.A_zimbraMailMode + " set, maybe it is not a store server?", null);
+        
+    	StringBuilder buf = new StringBuilder();
+    	int port;
+    	if (modeString != Provisioning.MAIL_MODE.http.toString() && useSSL ||
+    			modeString == Provisioning.MAIL_MODE.https.toString()) {
+            buf.append("https://");
+        	port = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 443);
+    	} else {
+        	buf.append("http://");
+        	port = server.getIntAttr(Provisioning.A_zimbraMailPort, 80);
+    	}
+
+        buf.append(server.getAttr(Provisioning.A_zimbraServiceHostname));
+        buf.append(":").append(port);
+        buf.append(path);
+    	return buf.toString();
     }
     
     public static boolean reverseProxiedMode(Server server) throws ServiceException {

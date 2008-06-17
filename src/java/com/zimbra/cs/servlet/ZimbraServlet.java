@@ -37,7 +37,6 @@ import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpRecoverableException;
 import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
@@ -278,7 +277,7 @@ public class ZimbraServlet extends HttpServlet {
         HttpState state = new HttpState();
         String hostname = method.getURI().getHost();
         if (authToken != null)
-            authToken.encode(state, false, hostname);              
+            authToken.encode(state, false, hostname);
 
         try {
         	proxyServletRequest(req, resp, method, state);
@@ -315,9 +314,7 @@ public class ZimbraServlet extends HttpServlet {
         // dispatch the request and copy over the results
         int statusCode = -1;
         for (int retryCount = 3; statusCode == -1 && retryCount > 0; retryCount--) {
-        	try {
-        		statusCode = client.executeMethod(method);
-        	} catch (HttpRecoverableException e) {}
+        	statusCode = client.executeMethod(method);
         }
         if (statusCode == -1) {
             resp.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, "retry limit reached");
@@ -411,7 +408,15 @@ public class ZimbraServlet extends HttpServlet {
     }
     
 
-
+    public static String getAccountPath(Account acct) throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        Config config = prov.getConfig();
+        String defaultDomain = config.getAttr(Provisioning.A_zimbraDefaultDomainName, null);
+        if (defaultDomain == null || !defaultDomain.equalsIgnoreCase(acct.getDomainName()))
+            return "/" + acct.getName();
+        else
+            return "/" + acct.getUid();
+    }
     
     public static String getServiceUrl(Account acct, String path) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
@@ -421,15 +426,7 @@ public class ZimbraServlet extends HttpServlet {
             throw ServiceException.FAILURE("unable to retrieve server for account" + acct.getName(), null);
         }
         
-        Domain domain = prov.getDomain(acct);
-        String uri;
-        Config config = prov.getConfig();
-        String defaultDomain = config.getAttr(Provisioning.A_zimbraDefaultDomainName, null);
-        if (defaultDomain == null || !defaultDomain.equalsIgnoreCase(acct.getDomainName()))
-            uri = path + "/" + acct.getName();
-        else
-            uri = path + "/" + acct.getUid();
-        return getServiceUrl(server, domain, uri);
+        return getServiceUrl(server, prov.getDomain(acct), path + getAccountPath(acct));
     }
     
 
@@ -438,11 +435,12 @@ public class ZimbraServlet extends HttpServlet {
     }
 
     protected static String getProxyUrl(HttpServletRequest req, Server server, String path) throws ServiceException {
-    	int servicePort = req.getLocalPort();
-    	if (servicePort == server.getIntAttr(Provisioning.A_zimbraAdminPort, 0))
+    	int servicePort = (req == null) ? -1 : req.getLocalPort();
+    	Server localServer = Provisioning.getInstance().getLocalServer();
+    	if (servicePort == localServer.getIntAttr(Provisioning.A_zimbraAdminPort, 0))
     		return URLUtil.getAdminURL(server, path);
     	else
-    		return URLUtil.getServiceUrl(server, null, path, true, true);
+    		return URLUtil.getProxyURL(server, path, servicePort == localServer.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0));
     }
     
     protected void returnError(HttpServletResponse resp, ServiceException e) {

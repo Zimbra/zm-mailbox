@@ -267,14 +267,8 @@ public abstract class WikiPage {
 					auth = null;
 				}
 			}
-			String hostname;
-			try {
-				hostname = new URL(mRestUrl).getHost();
-			} catch (java.net.MalformedURLException mue) {
-	            throw ServiceException.RESOURCE_UNREACHABLE("invalid url", mue);
-			}
 			String url = mRestUrl + "?fmt=native";
-			Pair<Header[], byte[]> resource = UserServlet.getRemoteResource(auth, hostname, url);
+			Pair<Header[], byte[]> resource = UserServlet.getRemoteResource(auth.toZAuthToken(), url);
 			try {
 				return new String(resource.getSecond(), "UTF-8");
 			} catch (IOException ioe) {
