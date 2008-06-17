@@ -17,6 +17,11 @@
 package com.zimbra.cs.mailclient.pop3;
 
 import com.zimbra.cs.mailclient.MailConfig;
+import com.zimbra.cs.mailclient.util.Config;
+
+import java.util.Properties;
+import java.io.File;
+import java.io.IOException;
 
 /**
  * Represents POP3 mail client configuration.
@@ -31,6 +36,20 @@ public class Pop3Config extends MailConfig {
     /** Default port for POP3 SSL connection */
     public static final int DEFAULT_SSL_PORT = 995;
 
+    /**
+     * Loads POP3 configuration properties from the specified file.
+     *
+     * @param file the configuration properties file
+     * @return the <tt>Pop3Config</tt> for the properties
+     * @throws IOException if an I/O error occurred
+     */
+    public static Pop3Config load(File file) throws IOException {
+        Properties props = Config.loadProperties(file);
+        Pop3Config config = new Pop3Config();
+        config.applyProperties(props);
+        return config;
+    }
+    
     /**
      * Creates a new <tt>Pop3Config</tt>.
      */

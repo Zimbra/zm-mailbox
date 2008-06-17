@@ -17,8 +17,12 @@
 package com.zimbra.cs.mailclient.imap;
 
 import com.zimbra.cs.mailclient.MailConfig;
+import com.zimbra.cs.mailclient.util.Config;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Properties;
 
 /**
  * IMAP protocol client configuration.
@@ -43,6 +47,20 @@ public class ImapConfig extends MailConfig {
     /** Maximum literal size to include in trace output if enabled */
     public static final int DEFAULT_MAX_LITERAL_TRACE_SIZE = 80;
 
+    /**
+     * Loads IMAP configuration properties from the specified file.
+     *
+     * @param file the configuration properties file
+     * @return the <tt>ImapConfig</tt> for the properties
+     * @throws IOException if an I/O error occurs
+     */
+    public static ImapConfig load(File file) throws IOException {
+        Properties props = Config.loadProperties(file);
+        ImapConfig config = new ImapConfig();
+        config.applyProperties(props);
+        return config;
+    }
+    
     /**
      * Creates a new <tt>ImapConfig</tt>.
      */

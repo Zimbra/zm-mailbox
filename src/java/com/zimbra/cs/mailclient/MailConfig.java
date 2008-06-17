@@ -17,10 +17,14 @@
 package com.zimbra.cs.mailclient;
 
 import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
+import com.zimbra.cs.mailclient.util.Config;
 
 import javax.net.ssl.SSLSocketFactory;
 import java.util.Map;
+import java.util.Properties;
 import java.io.PrintStream;
+import java.io.File;
+import java.io.IOException;
 
 /**
  * Represents configuration common to all mail client protocols.
@@ -384,5 +388,33 @@ public abstract class MailConfig {
      */
     public boolean isSynchronousMode() {
         return synchronousMode;
+    }
+
+    /**
+     * Returns properties for current mail configuration.
+     *
+     * @return the <tt>Properties</tt> for the configuration
+     */
+    public Properties toProperties() {
+        return Config.toProperties(this);
+    }
+
+    /**
+     * Applies specified properties to current mail configuration.
+     *
+     * @param props the <tt>Properties</tt> for the configuration
+     */
+    public void applyProperties(Properties props) {
+        Config.applyProperties(this, props);
+    }
+
+    /**
+     * Saves configuration properties to specified file.
+     *
+     * @param file the file to which the configuration should be written
+     * @throws IOException if an I/O error occurred
+     */
+    public void save(File file) throws IOException {
+        Config.saveProperties(file, toProperties());
     }
 }
