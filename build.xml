@@ -653,6 +653,8 @@
         </if>
         <antcall target="clean"/>
         <mkdir dir="${build.dir}"/>
+
+	<delete dir="${zimbra.home.dir}/lib"/>
         
         <antcall target="reset-jetty"/>
         <antcall target="reset-the-world"/>
