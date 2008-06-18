@@ -2497,6 +2497,14 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     private static String encodeURL(String unencoded) throws ServiceException {
+        // Look for a query string.  It's supposed to be URL encoded already, so encode only what comes before.
+        String queryString = null;
+        int queryStringStart = unencoded.indexOf('?');
+        if (queryStringStart != -1) {
+            queryString = unencoded.substring(queryStringStart);
+            unencoded = unencoded.substring(0, queryStringStart);
+        }
+        StringBuilder encoded = new StringBuilder();
         String parts[] = unencoded.split("/");
         if (parts != null) {
             for (int i = 0; i < parts.length; i++) {
@@ -2506,10 +2514,13 @@ public class ZMailboxUtil implements DebugListener {
                     throw ServiceException.FAILURE("Unable to encode URL: " + unencoded, e);
                 }
             }
-            return StringUtil.join("/", parts);
+            encoded.append(StringUtil.join("/", parts));
         } else {
-            return unencoded;
+            encoded.append(unencoded);
         }
+        if (queryString != null)
+            encoded.append(queryString);
+        return encoded.toString();
     }
 
     private void doGetRestURL(String args[]) throws ServiceException {
