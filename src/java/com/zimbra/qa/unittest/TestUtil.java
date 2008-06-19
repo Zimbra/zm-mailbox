@@ -697,7 +697,9 @@ extends Assert {
         
         // Get any state changes from the server 
         localMbox.noOp();
-        remoteMbox.noOp();
+        if (remoteMbox != null) {
+            remoteMbox.noOp();
+        }
     }
 
 }
