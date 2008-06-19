@@ -59,12 +59,17 @@ public class InternetAddress {
         if (length <= 8 || word[0] != '=' || word[1] != '?' || word[length-2] != '?' || word[length-1] != '=')
             return null;
 
-        int pos = 2;
-        while (pos < length && word[pos] != '?')
+        byte b;
+        int pos = 2, star = -1;
+        while (pos < length && (b = word[pos]) != '?') {
+            // handle RFC 2231 "*lang" in the charset portion of the encoded-word
+            if (star == -1 && b == '*')
+                star = pos;
             pos++;
+        }
         if (pos >= length - 4 || pos == 2)
             return null;
-        String charset = new String(word, 2, pos - 2);
+        String charset = new String(word, 2, (star == -1 ? pos : star) - 2);
 
         InputStream decoder;
         byte encoding = word[++pos];
@@ -293,6 +298,7 @@ public class InternetAddress {
             { "=?us-ascii?Q?Bob the  Builder?= <bob@example.com>", "Bob the Builder", "bob@example.com", "non-encoded double spaces inside encoded-word"},
             { "=?us-ascii?Q?Bob the ?= Builder <bob@example.com>", "Bob the  Builder", "bob@example.com", "spaces at end of encoded-word"},
             { "=?us-ascii?Q?Bob the <bob@example.com>", "=?us-ascii?Q?Bob the", "bob@example.com", "open-brace in encoded-word"},
+            { "=?us-ascii*en?Q?Bob_the=20Builder?= <bob@example.com>", "Bob the Builder", "bob@example.com", "RFC 2231 language in encoded-word"},
         };
 
         for (String[] test : tests)
