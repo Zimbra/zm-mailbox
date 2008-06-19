@@ -19,9 +19,11 @@ package com.zimbra.common.mime;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.BitSet;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 import javax.mail.internet.MimeUtility;
 
@@ -41,101 +43,123 @@ public class MimeCompoundHeader {
         use2231Encoding = use2231;
         if (header == null)
             return;
-        header = header.trim();
 
         RFC2231Data rfc2231 = new RFC2231Data();
         boolean escaped = false;
 
         for (int i = 0, count = header.length(); i < count; i++) {
             char c = header.charAt(i);
-            if (c == '\r' || c == '\n') {
-                // ignore folding, even where it's not actually permitted
+            // ignore folding, even where it's not actually permitted
+            if ((c == '\r' || c == '\n') && rfc2231.state != RFC2231State.VALUE && rfc2231.state != RFC2231State.SLOP && (rfc2231.state != RFC2231State.EQUALS || rfc2231.key == null)) {
                 escaped = false;
-            } else if (rfc2231.state == RFC2231State.SLOP) {
-                if (c == ';') {
-                    rfc2231.setState(RFC2231State.PARAM);
-                } else if (c == '(') {
-                    escaped = false;  rfc2231.comment++;
-                    rfc2231.setState(RFC2231State.COMMENT);
-                }
-            } else if (rfc2231.state == RFC2231State.QVALUE) {
-                if (!escaped && c == '\\') {
-                    escaped = true;
-                } else if (!escaped && c == '"') {
-                    rfc2231.saveParameter(mParams);
-                    rfc2231.setState(RFC2231State.SLOP);
-                } else {
-                    rfc2231.addValueChar(c);  escaped = false;
-                }
-            } else if (rfc2231.state == RFC2231State.PARAM) {
-                if (c == '=') {
-                    rfc2231.setState(RFC2231State.EQUALS);
-                } else if (c == '*') {
-                    rfc2231.setState(RFC2231State.EXTENDED);
-                } else if (c == '(' && rfc2231.key.length() == 0) {
-                    escaped = false;  rfc2231.comment++;
-                    rfc2231.setState(RFC2231State.COMMENT);
-                } else if (c == ';') {
-                    rfc2231.saveParameter(mParams);
-                    rfc2231.setState(RFC2231State.PARAM);
-                } else if (c > 0x20 && c < 0xFF && !TSPECIALS[c]) {
-                    rfc2231.addKeyChar(c);
-                }
-            } else if (rfc2231.state == RFC2231State.VALUE) {
-                if (c != ';' && c != ' ' && c != '\t') {
-                    rfc2231.addValueChar(c);
-                } else {
-                    rfc2231.saveParameter(mParams);
-                    rfc2231.setState(c == ';' ? RFC2231State.PARAM : RFC2231State.SLOP);
-                }
-            } else if (rfc2231.state == RFC2231State.EQUALS) {
-                if (c == ';') {
-                    rfc2231.saveParameter(mParams);
-                    rfc2231.setState(RFC2231State.PARAM);
-                } else if (c == '"') {
-                    escaped = false;
-                    rfc2231.setState(RFC2231State.QVALUE);
-                } else if (c != ' ' && c != '\t') {
-                    rfc2231.addValueChar(c);
-                    rfc2231.setState(RFC2231State.VALUE);
-                }
-            } else if (rfc2231.state == RFC2231State.EXTENDED) {
-                if (c >= '0' && c <= '9') {
-                    if (c != '0')
-                        rfc2231.setContinued();
-                    rfc2231.setState(RFC2231State.CONTINUED);
-                } else if (c == '=') {
-                    rfc2231.setEncoded();
-                    rfc2231.setState(rfc2231.continued ? RFC2231State.VALUE : RFC2231State.CHARSET);
-                }
-            } else if (rfc2231.state == RFC2231State.CONTINUED) {
-                if (c == '=')
-                    rfc2231.setState(RFC2231State.EQUALS);
-                else if (c == '*')
-                    rfc2231.setState(RFC2231State.EXTENDED);
-                else if (c >= '0' && c <= '9')
-                    rfc2231.setContinued();
-            } else if (rfc2231.state == RFC2231State.CHARSET) {
-                if (c == '\'')
-                    rfc2231.setState(RFC2231State.LANG);
-                else
-                    rfc2231.addCharsetChar(c);
-            } else if (rfc2231.state == RFC2231State.LANG) {
-                if (c == '\'')
-                    rfc2231.setState(RFC2231State.VALUE);
-            } else if (rfc2231.state == RFC2231State.COMMENT) {
-                if (escaped)
-                    escaped = false;
-                else if (c == '\\')
-                    escaped = true;
-                else if (c == '(')
-                    rfc2231.comment++;
-                else if (c == ')' && --rfc2231.comment == 0)
-                    rfc2231.setState(rfc2231.precomment);
+                continue;
+            }
+
+            switch (rfc2231.state) {
+                case QVALUE:
+                    if (!escaped && c == '\\') {
+                        escaped = true;
+                    } else if (!escaped && c == '"') {
+                        rfc2231.saveParameter(mParams);
+                        rfc2231.setState(RFC2231State.SLOP);
+                    } else {
+                        rfc2231.addValueChar(c);  escaped = false;
+                    }
+                    break;
+
+                case PARAM:
+                    if (c == '=') {
+                        rfc2231.setState(RFC2231State.EQUALS);
+                    } else if (c == '*') {
+                        rfc2231.setState(RFC2231State.EXTENDED);
+                    } else if (c == '(' && rfc2231.key.length() == 0) {
+                        escaped = false;  rfc2231.comment++;
+                        rfc2231.setState(RFC2231State.COMMENT);
+                    } else if (c == ';') {
+                        rfc2231.saveParameter(mParams);
+                        rfc2231.setState(RFC2231State.PARAM);
+                    } else if (c > 0x20 && c < 0xFF && !TSPECIALS[c]) {
+                        rfc2231.addKeyChar(c);
+                    }
+                    break;
+
+                case VALUE:
+                    if (c != ';' && c != ' ' && c != '\t' && c != '\r' && c != '\n') {
+                        rfc2231.addValueChar(c);
+                    } else {
+                        rfc2231.saveParameter(mParams);
+                        rfc2231.setState(c == ' ' || c == '\t' ? RFC2231State.SLOP : RFC2231State.PARAM);
+                    }
+                    break;
+
+                case EQUALS:
+                    if (c == ';' || c == '\r' || c == '\n') {
+                        rfc2231.saveParameter(mParams);
+                        rfc2231.setState(RFC2231State.PARAM);
+                    } else if (c == '"') {
+                        escaped = false;
+                        rfc2231.setState(RFC2231State.QVALUE);
+                    } else if (c != ' ' && c != '\t') {
+                        rfc2231.addValueChar(c);
+                        rfc2231.setState(RFC2231State.VALUE);
+                    }
+                    break;
+
+                case EXTENDED:
+                    if (c >= '0' && c <= '9') {
+                        rfc2231.continued = c - '0';
+                        rfc2231.setState(RFC2231State.CONTINUED);
+                    } else if (c == '=') {
+                        rfc2231.setEncoded();
+                        rfc2231.setState(rfc2231.continued > 0 ? RFC2231State.VALUE : RFC2231State.CHARSET);
+                    }
+                    break;
+
+                case CONTINUED:
+                    if (c == '=')
+                        rfc2231.setState(RFC2231State.EQUALS);
+                    else if (c == '*')
+                        rfc2231.setState(RFC2231State.EXTENDED);
+                    else if (c >= '0' && c <= '9')
+                        rfc2231.continued = rfc2231.continued * 10 + c - '0';
+                    break;
+
+                case CHARSET:
+                    if (c == '\'')
+                        rfc2231.setState(RFC2231State.LANG);
+                    else
+                        rfc2231.addCharsetChar(c);
+                    break;
+
+                case LANG:
+                    if (c == '\'')
+                        rfc2231.setState(RFC2231State.VALUE);
+                    break;
+
+                case COMMENT:
+                    if (escaped)
+                        escaped = false;
+                    else if (c == '\\')
+                        escaped = true;
+                    else if (c == '(')
+                        rfc2231.comment++;
+                    else if (c == ')' && --rfc2231.comment == 0)
+                        rfc2231.setState(rfc2231.precomment);
+                    break;
+
+                case SLOP:
+                    if (c == ';' || c == '\r' || c == '\n') {
+                        rfc2231.setState(RFC2231State.PARAM);
+                    } else if (c == '(') {
+                        escaped = false;  rfc2231.comment++;
+                        rfc2231.setState(RFC2231State.COMMENT);
+                    }
+                    break;
             }
         }
 
         rfc2231.saveParameter(mParams);
+        rfc2231.assembleContinuations(mParams);
         mValue = mParams.remove(null);
     }
 
@@ -172,6 +196,18 @@ public class MimeCompoundHeader {
     public Iterator<Map.Entry<String, String>> getParameterIterator() {
         return mParams.entrySet().iterator();
     }
+
+
+    /** Printable ASCII characters that must be quoted in parameter values and avoided in parameter names. */
+    private static final boolean[] TSPECIALS = new boolean[128];
+        static {
+            TSPECIALS['('] = TSPECIALS[')']  = TSPECIALS[','] = true;
+            TSPECIALS['<'] = TSPECIALS['>']  = TSPECIALS['?'] = true;
+            TSPECIALS['['] = TSPECIALS[']']  = TSPECIALS['='] = true;
+            TSPECIALS[':'] = TSPECIALS[';']  = TSPECIALS['"'] = true;
+            TSPECIALS['/'] = TSPECIALS['\\'] = TSPECIALS['@'] = true;
+            TSPECIALS[' '] = TSPECIALS['\t'] = true;
+        }
 
 
     private static final int LINE_WRAP_LENGTH = 76;
@@ -246,30 +282,35 @@ public class MimeCompoundHeader {
         private QEncoder()  { super();  setEncodeBlanks(true); }
     }
 
-    private class RFC2231Data {
+    private static class RFC2231Data {
         RFC2231State state = RFC2231State.EQUALS;
+        RFC2231State precomment;
         StringBuilder key = null;
         StringBuilder value = new StringBuilder();
-        boolean continued = false;
+        int comment = 0;
+        int continued = -1;
         private boolean encoded = false;
         private StringBuilder charset = null;
-        int comment = 0;
-        RFC2231State precomment;
-    
+        private Map<String, Map<Integer, ParameterContinuation>> partials;
+
+        private static class ParameterContinuation {
+            String charset;  boolean encoded;  String value;
+            ParameterContinuation(String c, boolean e, String v) { charset = c;  encoded = e;  value = v; }
+        }
+
         void setState(RFC2231State newstate) {
             if (newstate == RFC2231State.COMMENT && state != RFC2231State.COMMENT)
                 precomment = state;
             state = newstate;
             if (newstate == RFC2231State.PARAM) {
                 key = new StringBuilder();  value = new StringBuilder();
-                continued = false;  encoded = false;
+                continued = -1;  encoded = false;
             }
         }
 
-        void setContinued()  { continued = true; }
         void setEncoded() {
             encoded = true;
-            if (!continued)
+            if (continued <= 0)
                 charset = new StringBuilder();
         }
     
@@ -282,8 +323,22 @@ public class MimeCompoundHeader {
                 return;
             String pname = key == null ? null : key.toString().toLowerCase();
             String pvalue = value.toString();
-            if ("".equals(pname) && "".equals(pvalue))
+            if ("".equals(pname))
                 return;
+
+            // in order to handle out-of-order parts, store all partials in a hash until we're done
+            if (continued >= 0) {
+                if (partials == null)
+                    partials = new HashMap<String, Map<Integer, ParameterContinuation>>(3);
+                Map<Integer, ParameterContinuation> parts = partials.get(pname);
+                if (parts == null)
+                    partials.put(pname, parts = new TreeMap<Integer, ParameterContinuation>());
+                parts.put(continued, new ParameterContinuation(charset == null || charset.length() == 0 ? "us-ascii" : charset.toString(), encoded, value.toString()));
+                attrs.put(pname, null);
+                key = value = null;
+                return;
+            }
+
             if (encoded) {
                 if (charset.length() == 0)
                     charset.append("us-ascii");
@@ -301,56 +356,136 @@ public class MimeCompoundHeader {
                     pvalue = MimeUtility.decodeWord(pvalue);
                 } catch (Exception e) { }
             }
-            String existing = continued ? attrs.get(pname) : null;
-            attrs.put(pname, existing == null ? pvalue : existing + pvalue);
-            key = null;  value = null;
+            attrs.put(pname, pvalue);
+            key = value = null;
+        }
+
+        void assembleContinuations(Map<String, String> attrs) {
+            if (partials == null)
+                return;
+
+            for (Map.Entry<String, Map<Integer, ParameterContinuation>> entry : partials.entrySet()) {
+                String pname = entry.getKey();
+                if (attrs.get(pname) != null)
+                    continue;
+
+                Map<Integer, ParameterContinuation> parts = entry.getValue();
+                ParameterContinuation first = parts.get(0);
+                StringBuilder assembled = new StringBuilder();
+                for (ParameterContinuation partial : parts.values()) {
+                    if (partial.encoded) {
+                        try {
+                            assembled.append(URLDecoder.decode(partial.value, first == null ? "us-ascii" : first.charset));
+                            continue;
+                        } catch (UnsupportedEncodingException uee) { 
+                            System.out.println(uee);
+                        }
+                    }
+                    assembled.append(partial.value);
+                }
+                attrs.put(pname, assembled.toString());
+            }
         }
     }
 
-    /** Printable ASCII characters that must be quoted in parameter values and avoided in parameter names. */
-    private static final boolean[] TSPECIALS = new boolean[128];
-        static {
-            TSPECIALS['('] = TSPECIALS[')']  = TSPECIALS[','] = true;
-            TSPECIALS['<'] = TSPECIALS['>']  = TSPECIALS['?'] = true;
-            TSPECIALS['['] = TSPECIALS[']']  = TSPECIALS['='] = true;
-            TSPECIALS[':'] = TSPECIALS[';']  = TSPECIALS['"'] = true;
-            TSPECIALS['/'] = TSPECIALS['\\'] = TSPECIALS['@'] = true;
-            TSPECIALS[' '] = TSPECIALS['\t'] = true;
-        }
 
+    private static void testParser(boolean isContentType, String[] test) {
+        String description = test[0], raw = test[1], value = test[2];
+        MimeCompoundHeader mch = isContentType ? new ContentType(raw) : new ContentDisposition(raw);
+
+        boolean fail = false;
+        if (!value.equals(mch.getValue()))
+            fail = true;
+        else if (test.length - 3 != mch.mParams.size() * 2)
+            fail = true;
+        else
+            for (int i = 3; i < test.length; i += 2)
+                if (!test[i+1].equals(mch.mParams.get(test[i])))
+                    fail = true;
+
+        if (fail) {
+            System.out.println("failed " + (isContentType ? "Content-Type" : "Content-Disposition") + " test: " + description);
+            System.out.println("  raw:      {" + (raw == null ? "null" : raw.trim()) + '}');
+            System.out.print("  expected: |" + value + '|');
+            for (int i = 3; i < test.length; i += 2)
+                System.out.print(", " + test[i] + "=|" + test[i+1] + '|');
+            System.out.println();
+            System.out.print("  actual:   |" + mch.mValue + '|');
+            for (Map.Entry<String, String> param : mch.mParams.entrySet())
+                System.out.print(", " + param.getKey() + "=|" + param.getValue() + '|');
+            System.out.println();
+        }
+    }
 
     public static void main(String[] args) {
-        MimeCompoundHeader mch;
-        mch = new ContentType("text/plain; charset=US-ASCII;\r\n\tFormat=Flowed   DelSp=Yes\r\n");
-        System.out.println(mch.toString("Content-Type"));
+        String[][] ctypeTests = new String[][] {
+            { "missing semicolon between params, standard line breaks",
+                "text/plain; charset=US-ASCII;\r\n\tFormat=Flowed   DelSp=Yes\r\n",
+                "text/plain", "charset", "US-ASCII", "format", "Flowed" },
+            { "mixed encoded and non-encoded continuations",
+                "application/x-stuff; title*0*=us-ascii'en'This%20is%20even%20more%20; title*1*=%2A%2A%2Afun%2A%2A%2A%20; title*2=\"isn't it!\"\n",
+                "application/x-stuff", "title", "This is even more ***fun*** isn't it!" },
+            { "downcasing value, implicit end-of-value at eol",
+                "multipart/MIXED; charset=us-ascii;\n foo=\n  boundary=\"---\" \n",
+                "multipart/mixed", "charset", "us-ascii", "foo", "", "boundary", "---" },
+            { "non-encoded continuation",
+                "message/external-body; access-type=URL;\n URL*0=\"ftp://\";\n URL*1=\"cs.utk.edu/pub/moore/bulk-mailer/bulk-mailer.tar\"\n",
+                "message/external-body", "access-type", "URL", "url", "ftp://cs.utk.edu/pub/moore/bulk-mailer/bulk-mailer.tar" },
+            { "encoded param value",
+                "application/x-stuff;\n\ttitle*=us-ascii'en-us'This%20is%20%2A%2A%2Afun%2A%2A%2A",
+                "application/x-stuff", "title", "This is ***fun***" },
+            { "missing quotes around param value",
+                "application/pdf;\n    x-unix-mode=0644;\n    name=Zimbra on Mac OS X success story.pdf",
+                "application/pdf", "x-unix-mode", "0644", "name", "Zimbra" },
+            { "invalid value",
+                "c; name=TriplePlay_Converged_Network_v5.pdf;\n x-mac-creator=70727677; x-mac-type=50444620",
+                "application/octet-stream", "name", "TriplePlay_Converged_Network_v5.pdf", "x-mac-creator", "70727677", "x-mac-type", "50444620" },
+            { "'text' as value, backslashes in quoted-string, missing equals, missing param name, blank param, comments before param name, nested comments",
+                "text;\n pflaum;=foo; name=\"spam\\\"bag\\\\wall\" \n\t((plain; text=missing); (pissed=off); where=myrtle);;a=b;c;=d;\n (a)foo=bar",
+                "text/plain", "pflaum", "", "name", "spam\"bag\\wall", "a", "b", "c", "", "foo", "bar" },
+            { "null input",
+                null,
+                "text/plain" },
+        };
 
-        mch = new ContentDisposition("   \n  INline;\n filename=\"=?utf-8?Q?=E3=82=BD=E3=83=AB=E3=83=86=E3=82=A3=E3=83=AC=E3=82=A4.rtf?=\"\n  \n ", false);
-        System.out.println(mch.toString("Content-Disposition"));
-        mch = new ContentDisposition("   \n  gropp;\n filename*=UTF-8''%E3%82%BD%E3%83%AB%E3%83%86%E3%82%A3%E3%83%AC%E3%82%A4.rtf\n  \n ", true);
-        System.out.println(mch.toString("Content-Disposition"));
-        mch = new ContentDisposition(mch.toString());
-        System.out.println(mch.toString("Content-Disposition"));
+        for (String[] test : ctypeTests)
+            testParser(true, test);
 
-        mch = new ContentType("application/x-stuff; title*0*=us-ascii'en'This%20is%20even%20more%20; title*1*=%2A%2A%2Afun%2A%2A%2A%20; title*2=\"isn't it!\"\n");
-        System.out.println(mch.toString("Content-Type"));
-        mch = new ContentType("multipart/MIXED; charset=us-ascii;\n foo=\n  boundary=\"---\" \n");
-        System.out.println(mch.toString("Content-Type"));
-        mch = new ContentType("message/external-body; access-type=URL;\n URL*0=\"ftp://\";\n URL*1=\"cs.utk.edu/pub/moore/bulk-mailer/bulk-mailer.tar\"\n");
-        System.out.println(mch.toString("Content-Type"));
-        mch = new ContentType("application/x-stuff;\n\ttitle*=us-ascii'en-us'This%20is%20%2A%2A%2Afun%2A%2A%2A");
-        System.out.println(mch.toString("Content-Type"));
-        mch = new ContentType("application/pdf;\n    x-unix-mode=0644;\n    name=Zimbra on Mac OS X success story.pdf");
-        System.out.println(mch.toString("Content-Type"));
-        mch = new ContentType("c; name=TriplePlay_Converged_Network_v5.pdf;\n x-mac-creator=70727677; x-mac-type=50444620");
-        System.out.println(mch.toString("Content-Type"));
-        mch = new ContentType("text;\n pflaum;=foo; name=\"spam\\\"bag\\\\wall\" \n\t((plain; text=missing); (pissed=off); where=myrtle);;a=b;c;=d;\n (a)foo=bar");
-        System.out.println(mch.toString("Content-Type"));
-        mch = new ContentType((String) null);
-        System.out.println(mch.toString("Content-Type"));
 
-        mch = new ContentDisposition("attachment; filename*0*=ISO-8859-1''BASE%20INICIAL%20CAMPANHA%20PROVIS%C3O%20ABAIXO; filename*1*=%20DE%20ZERO%2009_10_06%20SUCHY.xls");
-        System.out.println(mch.toString("Content-Disposition"));
-        mch = new ContentDisposition("attachment;\n filename=\"=?iso-8859-1?Q?BASE_INICIAL_CAMPANHA_PROVIS=C3O_ABAIXO_DE_ZERO_09=5F10=5F?=\n =?iso-8859-1?Q?06_SUCHY=2Exls?=\"");
-        System.out.println(mch.toString("Content-Disposition"));
+        String[][] cdispTests = new String[][] {
+            { "content-insensitive value, leading spaces, old-style RFC 2047 param values",
+                "   \n  INline;\n filename=\"=?utf-8?Q?=E3=82=BD=E3=83=AB=E3=83=86=E3=82=A3=E3=83=AC=E3=82=A4.rtf?=\"\n  \n ",
+                "inline", "filename", "\u30bd\u30eb\u30c6\u30a3\u30ec\u30a4.rtf" },
+            { "default value, leading spaces, RFC 2231 encoding",
+                "   \n  gropp;\n filename*=UTF-8''%E3%82%BD%E3%83%AB%E3%83%86%E3%82%A3%E3%83%AC%E3%82%A4.rtf\n  \n ",
+                "attachment", "filename", "\u30bd\u30eb\u30c6\u30a3\u30ec\u30a4.rtf" },
+            { "encoded continuations",
+                "attachment; filename*0*=ISO-8859-1''BASE%20INICIAL%20CAMPANHA%20PROVIS%C3O%20ABAIXO; filename*1*=%20DE%20ZERO%2009_10_06%20SUCHY.xls",
+                "attachment", "filename", "BASE INICIAL CAMPANHA PROVIS\u00c3O ABAIXO DE ZERO 09_10_06 SUCHY.xls" },
+            { "joined 2047 encoded-words",
+                "attachment;\n filename=\"=?iso-8859-1?Q?BASE_INICIAL_CAMPANHA_PROVIS=C3O_ABAIXO_DE_ZERO_09=5F10=5F?=\n =?iso-8859-1?Q?06_SUCHY=2Exls?=\"",
+                "attachment", "filename", "BASE INICIAL CAMPANHA PROVIS\u00c3O ABAIXO DE ZERO 09_10_06 SUCHY.xls" },
+            { "misordered continuations, continuations overriding standard value",
+                "inline;\n filename=\"1565 =?ISO-8859-1?Q?ST=C5ENDE_CAD_Netic_SKI=2Epdf?=\";\n filename*1*=%20%4E%65%74%69%63%20%53%4B%49%2E%70%64%66;\n filename*0*=ISO-8859-1''%31%35%36%35%20%53%54%C5%45%4E%44%45%20%43%41%44",
+                "inline", "filename", "1565 ST\u00c5ENDE CAD Netic SKI.pdf" },
+            { "misordered continuations, continuations overriding standard value",
+                "inline;\n filename*1*=%20%4E%65%74%69%63%20%53%4B%49%2E%70%64%66;\n filename*0*=ISO-8859-1''%31%35%36%35%20%53%54%C5%45%4E%44%45%20%43%41%44\n filename=\"1565 =?ISO-8859-1?Q?H=C5MBURGER=2Epdf?=\"",
+                "inline", "filename", "1565 H\u00c5MBURGER.pdf" },
+            { "leading CFWS, missing semicolon after value, missing semicolon after quoted-string, trailing comment",
+                "  \n inline\n foo=\"bar\"\n baz=whop\n (as)\n",
+                "inline", "foo", "bar", "baz", "whop" },
+            { "missing charset on first continuation",
+                "attachment; foo*0=big; foo*1*=%20dog",
+                "attachment", "foo", "big dog" },
+            { "missing first continuation, out-of-order continuations",
+                "attachment; foo*2*=%20dog; foo*1=big",
+                "attachment", "foo", "big dog" },
+            { "charset on subsequent continuation, out-of-order continuations",
+                "attachment; foo*2*=%20dog; foo*1=iso-8859-1'en'big",
+                "attachment", "foo", "iso-8859-1'en'big dog" },
+        };
+
+        for (String[] test : cdispTests)
+            testParser(false, test);
     }
 }
