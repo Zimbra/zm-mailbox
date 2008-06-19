@@ -47,7 +47,7 @@ public class ProxyConfGen
     private static Options mOptions = new Options();
     private static boolean mDryRun = false;
     private static String mWorkingDir = "/opt/zimbra";
-    private static String mTemplateDir = mWorkingDir + "/conf";
+    private static String mTemplateDir = mWorkingDir + "/conf/nginx";
     private static String mConfDir = mWorkingDir + "/conf";
     private static String mConfPrefix = "nginx.conf";
     private static String mTemplatePrefix = mConfPrefix;
@@ -61,7 +61,7 @@ public class ProxyConfGen
         mOptions.addOption("v", "verbose", false, "be verbose");
 
         mOptions.addOption("w", "workdir", true, "Proxy Working Directory (defaults to /opt/zimbra)");
-        mOptions.addOption("t", "templatedir", true, "Proxy Template Directory (defaults to $workdir/conf)");
+        mOptions.addOption("t", "templatedir", true, "Proxy Template Directory (defaults to $workdir/conf/nginx)");
         mOptions.addOption("n", "dry-run", false, "Do not write any configuration, just show which files would be written");
         mOptions.addOption("d", "defaults", false, "Print default variable map");
         mOptions.addOption("D", "definitions", false, "Print variable map Definitions after loading LDAP configuration (and processing overrides)");
