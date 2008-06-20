@@ -488,17 +488,17 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>number of handler threads</desc>
 </attr>
 
-<attr id="97" name="zimbraSmtpHostname" type="astring" max="256" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="97" name="zimbraSmtpHostname" type="astring" max="256" cardinality="multi" optionalIn="globalConfig,server,domain" flags="serverInherited">
   <globalConfigValue>localhost</globalConfigValue>
   <desc>the SMTP server to connect to when sending mail</desc>
 </attr>
 
-<attr id="98" name="zimbraSmtpPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="98" name="zimbraSmtpPort" type="port" cardinality="single" optionalIn="globalConfig,server,domain" flags="serverInherited">
   <globalConfigValue>25</globalConfigValue>
   <desc>the SMTP server port to connect to when sending mail</desc>
 </attr>
 
-<attr id="99" name="zimbraSmtpTimeout" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="99" name="zimbraSmtpTimeout" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server,domain" flags="serverInherited">
   <globalConfigValue>60</globalConfigValue>
   <desc>timeout value in seconds</desc>
 </attr>
@@ -1188,7 +1188,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>where to deliver parameter for use in postfix transport_maps</desc>
 </attr>
 
-<attr id="249" name="zimbraSmtpSendPartial" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="249" name="zimbraSmtpSendPartial" type="boolean" cardinality="single" optionalIn="globalConfig,server,domain" flags="serverInherited">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Value of the mail.smtp.sendpartial property</desc>
 </attr>

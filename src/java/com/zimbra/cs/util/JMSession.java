@@ -51,9 +51,7 @@ public class JMSession {
             props.setProperty("mail.smtp.localhost", LC.zimbra_server_hostname.value());
             
             props.setProperty("mail.smtp.sendpartial", Boolean.toString(sSmtpConfig.getSendPartial()));
-            mSession = Session.getInstance(props);
-            if (LC.javamail_smtp_debug.booleanValue())
-            	mSession.setDebug(true);
+            mSession = createSession(props); 
             
             // Assume that most malformed base64 errors occur due to incorrect delimiters,
             // as opposed to errors in the data itself.  See bug 11213 for more details.
@@ -64,7 +62,14 @@ public class JMSession {
             mLog.fatal("unable to initialize Java Mail session", e);
             // TODO: System.exit? For now mSession will be null and something else will croak
         }
-
+    }
+    
+    public static Session createSession(Properties props) {
+        Session session = Session.getInstance(props);
+        if (LC.javamail_smtp_debug.booleanValue()) {
+            session.setDebug(true);
+        }
+        return session;
     }
     
     public static SmtpConfig getSmtpConfig() {

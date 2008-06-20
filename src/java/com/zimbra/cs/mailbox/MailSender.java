@@ -33,13 +33,16 @@ import javax.mail.Message.RecipientType;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.IdentityBy;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -248,6 +251,7 @@ public class MailSender {
             }
 
             // actually send the message via SMTP
+            applyDomainSmtpSettings(acct, mm);
             sendMessage(mm, ignoreFailedAddresses, rollback);
 
             // Send intercept if save-to-sent didn't do it already.
@@ -312,6 +316,7 @@ public class MailSender {
                         msg.append(invalidAddrs[i]);
                     }
                 }
+
                 if (JMSession.getSmtpConfig().getSendPartial())
                     throw MailServiceException.SEND_PARTIAL_ADDRESS_FAILURE(msg.toString(), sfe, invalidAddrs, validUnsentAddrs);
                 else
@@ -327,7 +332,74 @@ public class MailSender {
             throw ServiceException.FAILURE("MessagingException", me);
         }
     }
-
+    
+    /**
+     * Applies any domain-level SMTP settings for the given account and updates
+     * the <tt>MimeMessage</tt>'s <tt>Session</tt> if necessary.
+     */
+    private void applyDomainSmtpSettings(Account acct, MimeMessage mm) {
+        if (!(mm instanceof FixedMimeMessage)) {
+            return;
+        }
+        FixedMimeMessage fixed = (FixedMimeMessage) mm;
+        Properties props = fixed.getSession().getProperties();
+        Properties newProps = null;
+        Domain domain = null;
+        
+        try {
+            domain = Provisioning.getInstance().getDomain(acct);
+        } catch (ServiceException e) {
+            ZimbraLog.smtp.warn("Unable to apply domain-level SMTP settings.", e);
+            return;
+        }
+        
+        if (domain != null) {
+            String smtpHost = domain.getAttr(Provisioning.A_zimbraSmtpHostname, null);
+            if (smtpHost != null && !smtpHost.equals(props.getProperty("mail.smtp.host"))) {
+                newProps = new Properties(props);
+                newProps.setProperty("mail.smtp.host", smtpHost);
+                ZimbraLog.smtp.debug("Overriding mail.smtp.host with domain value '%s'.", smtpHost);
+            }
+            
+            String smtpPort = domain.getAttr(Provisioning.A_zimbraSmtpPort, null);
+            if (smtpPort != null && !smtpPort.equals(props.getProperty("mail.smtp.port"))) {
+                if (newProps == null) {
+                    newProps = new Properties(props);
+                }
+                newProps.setProperty("mail.smtp.port", smtpPort);
+                ZimbraLog.smtp.debug("Overriding mail.smtp.port with domain value '%s'.", smtpPort);
+            }
+            
+            String smtpTimeout = domain.getAttr(Provisioning.A_zimbraSmtpTimeout, null);
+            if (smtpTimeout != null && !smtpTimeout.equals(props.getProperty("mail.smtp.timeout"))) {
+                if (newProps == null) {
+                    newProps = new Properties(props);
+                }
+                newProps.setProperty("mail.smtp.timeout", smtpTimeout);
+                newProps.setProperty("mail.smtp.connectiontimeout", smtpTimeout);
+                ZimbraLog.smtp.debug("Overriding mail.smtp.timeout and mail.smtp.connectiontimeout with domain value '%s'.", smtpTimeout);
+            }
+            
+            String sendPartial = domain.getAttr(Provisioning.A_zimbraSmtpSendPartial, null);
+            if (sendPartial != null) {
+                boolean existingValue = Boolean.valueOf(props.getProperty("mail.smtp.sendpartial"));
+                boolean newValue = domain.getBooleanAttr(Provisioning.A_zimbraSmtpSendPartial, false);
+                if (newValue != existingValue) {
+                    if (newProps == null) {
+                        newProps = new Properties(props);
+                    }
+                    newProps.setProperty("mail.smtp.sendpartial", Boolean.toString(newValue));
+                    ZimbraLog.smtp.debug("Overriding mail.smtp.sendpartial with domain value '%b'.", newValue);
+                }
+            }
+        }
+        
+        if (newProps != null) {
+            Session newSession = JMSession.createSession(newProps);
+            fixed.setSession(newSession);
+        }
+    }
+    
     private Object getAuthenticatedMailbox(OperationContext octxt, Account authuser, boolean isAdminRequest) {
         try {
             if (Provisioning.onLocalServer(authuser)) {
