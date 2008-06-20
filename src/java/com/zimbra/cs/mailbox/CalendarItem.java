@@ -503,18 +503,25 @@ public abstract class CalendarItem extends MailItem {
             endTime = dtEnd != null ? dtEnd.getUtcTime() : 0;
         }
 
+        // Adjust start/end times before recomputing alarm because alarm computation depends on those times.
+        boolean timesChanged = false;
+        if (mStartTime != startTime || mEndTime != endTime) {
+            timesChanged = true;
+            mStartTime = startTime;
+            mEndTime = endTime;
+        }
         // Recompute next alarm.  Bring appointment start time forward to the alarm time,
         // if the next alarm is before the first instance.
         recomputeNextAlarm(nextAlarm, false);
         if (mAlarmData != null) {
             long newNextAlarm = mAlarmData.getNextAt();
-            if (newNextAlarm > 0 && newNextAlarm < startTime)
-                startTime = newNextAlarm;
+            if (newNextAlarm > 0 && newNextAlarm < startTime && mStartTime != startTime) {
+                timesChanged = true;
+                mStartTime = newNextAlarm;
+            }
         }
 
-        if (mStartTime != startTime || mEndTime != endTime) {
-            mStartTime = startTime;
-            mEndTime = endTime;
+        if (timesChanged) {
             if (ZimbraLog.mailop.isDebugEnabled()) {
                 ZimbraLog.mailop.debug("Updating recurrence for %s.  nextAlarm=%d.",
                     getMailopContext(this), nextAlarm);
@@ -2436,10 +2443,16 @@ public abstract class CalendarItem extends MailItem {
         Instance alarmInstance = null;
         Alarm theAlarm = null;
 
+        long opTime = getMailbox().getOperationTimestampMillis();
+        long startTime = nextAlarm;
+        if (startTime > opTime) {
+            // Handle the case when appointment is brought back in time such that the new start time
+            // is earlier than previously set alarm trigger time.
+            startTime = opTime;
+        }
         long endTime = getNextAlarmRecurrenceExpansionEndTime();
-        Collection<Instance> instances = expandInstances(nextAlarm, endTime, false);
+        Collection<Instance> instances = expandInstances(startTime, endTime, false);
 
-        long savedNextAlarm = nextAlarm;
         if (nextAlarm > 0 && !skipAlarmDefChangeCheck) {
             // Let's see if alarm definition has changed.  It changed if there is no alarm to go off at
             // previously saved nextAlarm time.
@@ -2449,7 +2462,7 @@ public abstract class CalendarItem extends MailItem {
                 long instStart = inst.getStart();
                 if (inst.isTimeless())
                     continue;
-                if (instStart < nextAlarm)
+                if (instStart < startTime)
                     continue;
                 if (instStart > savedNextInstStart)
                     break;
@@ -2481,7 +2494,7 @@ public abstract class CalendarItem extends MailItem {
 
         for (Instance inst : instances) {
             long instStart = inst.getStart();
-            if (instStart < savedNextAlarm && !inst.isTimeless())
+            if (instStart < startTime && !inst.isTimeless())
                 continue;
             InviteInfo invId = inst.getInviteInfo();
             Invite inv = getInvite(invId.getMsgId(), invId.getComponentId());
