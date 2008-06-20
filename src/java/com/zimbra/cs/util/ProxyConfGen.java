@@ -48,7 +48,9 @@ public class ProxyConfGen
     private static boolean mDryRun = false;
     private static String mWorkingDir = "/opt/zimbra";
     private static String mTemplateDir = mWorkingDir + "/conf/nginx/templates";
-    private static String mConfDir = mWorkingDir + "/conf/nginx";
+    private static String mConfDir = mWorkingDir + "/conf";
+    private static String mIncDir = "nginx/includes";
+    private static String mConfIncludesDir = mConfDir + "/" + mIncDir;
     private static String mConfPrefix = "nginx.conf";
     private static String mTemplatePrefix = mConfPrefix;
     private static String mTemplateSuffix = ".template";
@@ -67,6 +69,7 @@ public class ProxyConfGen
         mOptions.addOption("D", "definitions", false, "Print variable map Definitions after loading LDAP configuration (and processing overrides)");
         mOptions.addOption("p", "prefix", true, "Config File prefix (defaults to nginx.conf)");
         mOptions.addOption("P", "template-prefix", true, "Template File prefix (defaults to $prefix)");
+        mOptions.addOption("i", "include-dir", true, "Directory Path (relative to $workdir/conf), where included configuration files will be written. Defaults to nginx/includes");
 
         Option cOpt = new Option("c","config",true,"Override a config variable. Argument format must be name=value. For list of names, run with -d or -D");
         cOpt.setArgs(Option.UNLIMITED_VALUES);
@@ -261,6 +264,7 @@ public class ProxyConfGen
     public static void buildDefaultVars ()
     {
         mVars.put("core.workdir",                   mWorkingDir);
+        mVars.put("core.includes",                  mIncDir);
         mVars.put("core.cprefix",                   mConfPrefix);
         mVars.put("core.tprefix",                   mTemplatePrefix);
         mVars.put("main.user",                      "zimbra");
@@ -269,7 +273,8 @@ public class ProxyConfGen
         mVars.put("main.pidfile",                   "log/nginx.pid");
         mVars.put("main.logfile",                   "log/nginx.log");
         mVars.put("main.loglevel",                  "info");
-        mVars.put("main.workers",                   "10240");
+        mVars.put("main.workers",                   "4");
+        mVars.put("main.connections",               "10240");
         mVars.put("memcache.:servers",              "");            /* multiline conf */
         mVars.put("memcache.timeout",               "3s");
         mVars.put("memcache.reconnect",             "1m");
@@ -556,12 +561,18 @@ public class ProxyConfGen
             mConfDir = mWorkingDir + "/conf";
         }
 
+        if (cl.hasOption('i')) {
+            mIncDir = cl.getOptionValue('i');
+            mConfIncludesDir = mConfDir + "/" + mIncDir;
+        }
+
         if (cl.hasOption('t')) {
             mTemplateDir = cl.getOptionValue('t');
         }
 
         mLog.debug("Working Directory: " + mWorkingDir);
         mLog.debug("Template Directory: " + mTemplateDir);
+        mLog.debug("Config Includes Directory: " + mConfIncludesDir);
 
         if (cl.hasOption('p')) {
             mConfPrefix = cl.getOptionValue('p');
@@ -610,27 +621,27 @@ public class ProxyConfGen
             if (!confDir.exists()) {
                 throw new ProxyConfException ("Configuration directory " + confDir.getAbsolutePath() + " does not exist");
             }
-            expandTemplate(new File(mTemplateDir,getCoreConfTemplate()), new File(mConfDir,getCoreConf()));
-            expandTemplate(new File(mTemplateDir,getMainConfTemplate()), new File(mConfDir,getMainConf()));
-            expandTemplate(new File(mTemplateDir,getMemcacheConfTemplate()), new File(mConfDir,getMemcacheConf()));
-            expandTemplate(new File(mTemplateDir,getMailConfTemplate()), new File(mConfDir,getMailConf()));
-            expandTemplate(new File(mTemplateDir,getMailImapConfTemplate()), new File(mConfDir,getMailImapConf()));
-            expandTemplate(new File(mTemplateDir,getMailImapSConfTemplate()), new File(mConfDir,getMailImapSConf()));
-            expandTemplate(new File(mTemplateDir,getMailPop3ConfTemplate()), new File(mConfDir,getMailPop3Conf()));
-            expandTemplate(new File(mTemplateDir,getMailPop3SConfTemplate()), new File(mConfDir,getMailPop3SConf()));
-            expandTemplate(new File(mTemplateDir,getWebConfTemplate()), new File(mConfDir,getWebConf()));
-            expandTemplate(new File(mTemplateDir,getWebHttpConfTemplate()), new File(mConfDir,getWebHttpConf()));
-            expandTemplate(new File(mTemplateDir,getWebHttpSConfTemplate()), new File(mConfDir,getWebHttpSConf()));
-            expandTemplate(new File(mTemplateDir,getWebHttpModeConfTemplate("http")), new File(mConfDir,getWebHttpModeConf("http")));
-            expandTemplate(new File(mTemplateDir,getWebHttpModeConfTemplate("https")), new File(mConfDir,getWebHttpModeConf("https")));
-            expandTemplate(new File(mTemplateDir,getWebHttpModeConfTemplate("both")), new File(mConfDir,getWebHttpModeConf("both")));
-            expandTemplate(new File(mTemplateDir,getWebHttpModeConfTemplate("redirect")), new File(mConfDir,getWebHttpModeConf("redirect")));
-            expandTemplate(new File(mTemplateDir,getWebHttpModeConfTemplate("mixed")), new File(mConfDir,getWebHttpModeConf("mixed")));
-            expandTemplate(new File(mTemplateDir,getWebHttpSModeConfTemplate("http")), new File(mConfDir,getWebHttpSModeConf("http")));
-            expandTemplate(new File(mTemplateDir,getWebHttpSModeConfTemplate("https")), new File(mConfDir,getWebHttpSModeConf("https")));
-            expandTemplate(new File(mTemplateDir,getWebHttpSModeConfTemplate("both")), new File(mConfDir,getWebHttpSModeConf("both")));
-            expandTemplate(new File(mTemplateDir,getWebHttpSModeConfTemplate("redirect")), new File(mConfDir,getWebHttpSModeConf("redirect")));
-            expandTemplate(new File(mTemplateDir,getWebHttpSModeConfTemplate("mixed")), new File(mConfDir,getWebHttpSModeConf("mixed")));
+            expandTemplate(new File(mTemplateDir,getCoreConfTemplate()), new File(mConfDir,getCoreConf())); /* Only core nginx conf goes to mConfDir, rest to mConfIncludesDir */
+            expandTemplate(new File(mTemplateDir,getMainConfTemplate()), new File(mConfIncludesDir,getMainConf()));
+            expandTemplate(new File(mTemplateDir,getMemcacheConfTemplate()), new File(mConfIncludesDir,getMemcacheConf()));
+            expandTemplate(new File(mTemplateDir,getMailConfTemplate()), new File(mConfIncludesDir,getMailConf()));
+            expandTemplate(new File(mTemplateDir,getMailImapConfTemplate()), new File(mConfIncludesDir,getMailImapConf()));
+            expandTemplate(new File(mTemplateDir,getMailImapSConfTemplate()), new File(mConfIncludesDir,getMailImapSConf()));
+            expandTemplate(new File(mTemplateDir,getMailPop3ConfTemplate()), new File(mConfIncludesDir,getMailPop3Conf()));
+            expandTemplate(new File(mTemplateDir,getMailPop3SConfTemplate()), new File(mConfIncludesDir,getMailPop3SConf()));
+            expandTemplate(new File(mTemplateDir,getWebConfTemplate()), new File(mConfIncludesDir,getWebConf()));
+            expandTemplate(new File(mTemplateDir,getWebHttpConfTemplate()), new File(mConfIncludesDir,getWebHttpConf()));
+            expandTemplate(new File(mTemplateDir,getWebHttpSConfTemplate()), new File(mConfIncludesDir,getWebHttpSConf()));
+            expandTemplate(new File(mTemplateDir,getWebHttpModeConfTemplate("http")), new File(mConfIncludesDir,getWebHttpModeConf("http")));
+            expandTemplate(new File(mTemplateDir,getWebHttpModeConfTemplate("https")), new File(mConfIncludesDir,getWebHttpModeConf("https")));
+            expandTemplate(new File(mTemplateDir,getWebHttpModeConfTemplate("both")), new File(mConfIncludesDir,getWebHttpModeConf("both")));
+            expandTemplate(new File(mTemplateDir,getWebHttpModeConfTemplate("redirect")), new File(mConfIncludesDir,getWebHttpModeConf("redirect")));
+            expandTemplate(new File(mTemplateDir,getWebHttpModeConfTemplate("mixed")), new File(mConfIncludesDir,getWebHttpModeConf("mixed")));
+            expandTemplate(new File(mTemplateDir,getWebHttpSModeConfTemplate("http")), new File(mConfIncludesDir,getWebHttpSModeConf("http")));
+            expandTemplate(new File(mTemplateDir,getWebHttpSModeConfTemplate("https")), new File(mConfIncludesDir,getWebHttpSModeConf("https")));
+            expandTemplate(new File(mTemplateDir,getWebHttpSModeConfTemplate("both")), new File(mConfIncludesDir,getWebHttpSModeConf("both")));
+            expandTemplate(new File(mTemplateDir,getWebHttpSModeConfTemplate("redirect")), new File(mConfIncludesDir,getWebHttpSModeConf("redirect")));
+            expandTemplate(new File(mTemplateDir,getWebHttpSModeConfTemplate("mixed")), new File(mConfIncludesDir,getWebHttpSModeConf("mixed")));
         } catch (ProxyConfException pe) {
             mLog.error("Error while expanding templates: " + pe.getMessage());
         } catch (SecurityException se) {
