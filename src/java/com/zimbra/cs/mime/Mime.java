@@ -140,6 +140,7 @@ public class Mime {
         public FixedMimeMessage(Session s, InputStream is) throws MessagingException  { super(s, is); }
         public FixedMimeMessage(MimeMessage mm) throws MessagingException  { super(mm); }
 
+        public Session getSession() { return this.session; }
         public FixedMimeMessage setSession(Session s)  { session = s;  return this; }
 
         @Override protected void updateHeaders() throws MessagingException {
