@@ -56,11 +56,35 @@ public abstract class AbstractMailItemImport implements MailItemImport {
         }
     }
 
-    protected int addMessage(ParsedMessage pm, int folderId, int flags)
+    private static final RuleManager RULE_MANAGER = RuleManager.getInstance();
+
+    protected Message addMessage(ParsedMessage pm, int folderId, int flags)
         throws ServiceException, IOException {
         Mailbox mbox = dataSource.getMailbox();
-        Message msg = mbox.addMessage(null, pm, folderId, false, flags, null);
-        return msg.getId();
+        SharedDeliveryContext context = new SharedDeliveryContext();
+        Message msg = null;
+        if (folderId == Mailbox.ID_FOLDER_INBOX) {
+            try {
+                msg = RULE_MANAGER.applyRules(mbox.getAccount(), mbox, pm,
+                    pm.getRawSize(), dataSource.getEmailAddress(), context);
+                if (msg == null) {
+                    return null; // Message was discarded
+                }
+                // Set flags (setting of BITMASK_UNREAD is implicit)
+                if (flags != Flag.BITMASK_UNREAD) {
+                    // Bug 28275: Cannot set DRAFT flag after message has been created
+                    flags &= ~Flag.BITMASK_DRAFT;
+                    mbox.setTags(null, msg.getId(), MailItem.TYPE_MESSAGE,
+                                 flags, MailItem.TAG_UNCHANGED);
+                }
+            } catch (Exception e) {
+                ZimbraLog.datasource.warn("Error applying filter rules", e);
+            }
+        }
+        if (msg == null) {
+            msg = mbox.addMessage(null, pm, folderId, false, flags, null);
+        }
+        return msg;
     }
 
     public boolean isSslEnabled() {

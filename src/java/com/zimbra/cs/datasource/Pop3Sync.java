@@ -202,9 +202,9 @@ public class Pop3Sync extends AbstractMailItemImport {
                 pm.setReceivedDate(date.getTime());
             }
             pm.getMimeMessage().getHeader("Date");
-            int msgId = addMessage(pm, dataSource.getFolderId(), Flag.BITMASK_UNREAD);
-            if (uid != null) {
-                DbPop3Message.storeUid(mbox, dataSource.getId(), uid, msgId);
+            Message msg = addMessage(pm, dataSource.getFolderId(), Flag.BITMASK_UNREAD);
+            if (msg != null && uid != null) {
+                DbPop3Message.storeUid(mbox, dataSource.getId(), uid, msg.getId());
             }
         } finally {
             tmp.delete();

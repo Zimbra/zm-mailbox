@@ -99,7 +99,6 @@ class RemoteFolder {
     public void deleteMessages(List<Long> uids) throws IOException {
         ensureSelected();
         int size = uids.size();
-        LOG.info("Deleting %d message(s) in IMAP folder '%s'", size, name);
         for (int i = 0; i < size; i += 16) {
             String seq = ImapData.asSequenceSet(
                 uids.subList(i, Math.min(size - i, 16)));
@@ -122,7 +121,7 @@ class RemoteFolder {
     public boolean exists() throws IOException {
         return !connection.list("", name).isEmpty();
     }
-    
+
     public void ensureSelected() throws IOException {
         if (!isSelected()) {
             select();
