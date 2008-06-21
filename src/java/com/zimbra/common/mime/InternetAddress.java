@@ -75,10 +75,13 @@ public class InternetAddress {
         byte encoding = word[++pos];
         if (word[++pos] != '?')
             return null;
+        int remaining = length - pos - 3;
+        if (remaining == 0)
+            return "";
         if (encoding == 'Q' || encoding == 'q')
-            decoder = new QP2047Decoder(new ByteArrayInputStream(word, pos + 1, length - pos - 3));
+            decoder = new QP2047Decoder(new ByteArrayInputStream(word, pos + 1, remaining));
         else if (encoding == 'B' || encoding == 'b')
-            decoder = new ContentTransferEncoding.Base64DecoderStream(new ByteArrayInputStream(word, pos + 1, length - pos - 3));
+            decoder = new ContentTransferEncoding.Base64DecoderStream(new ByteArrayInputStream(word, pos + 1, remaining));
         else
             return null;
 
@@ -281,23 +284,29 @@ public class InternetAddress {
             { "Bob the Builder < bob@example.com >", "Bob the Builder", "bob@example.com", "spaces around the address"},
             { "=?us-ascii?Q?Bob_the=20Builder?= <bob@example.com>", "Bob the Builder", "bob@example.com", "basic 2047 encoding"},
             { "bob@example.com (=?us-ascii?Q?Bob_the=20Builder?=)", "Bob the Builder", "bob@example.com", "basic 2047 encoding in comments"},
+            { "=?x-unknown?Q?Bob_the=20Builder?= <bob@example.com>", "=?x-unknown?Q?Bob_the=20Builder?=", "bob@example.com", "unknown encoded-word charset"},
+            { "bob@example.com (=?x-unknown?Q?Bob_the=20Builder?=)", "=?x-unknown?Q?Bob_the=20Builder?=", "bob@example.com", "unknown encoded-word charset in comments"},
+            { "=?us-ascii?x?Bob_the=20Builder?= <bob@example.com>", "=?us-ascii?x?Bob_the=20Builder?=", "bob@example.com", "invalid encoded-word encoding"},
+            { "bob@example.com (=?us-ascii?x?Bob_the=20Builder?=)", "=?us-ascii?x?Bob_the=20Builder?=", "bob@example.com", "invalid encoded-word encoding in comments"},
             { "=?us-ascii?Q?Bob?= the =?us-ascii?Q?Builder?= <bob@example.com>", "Bob the Builder", "bob@example.com", "joining 2047 encoded-words with straight text"},
             { "bob@example.com (=?us-ascii?Q?Bob?= the =?us-ascii?Q?Builder?=)", "Bob the Builder", "bob@example.com", "joining 2047 encoded-words with straight text in comments"},
             { "=?us-ascii?Q?Bob_th?= =?us-ascii?Q?e_Builder?= <bob@example.com>", "Bob the Builder", "bob@example.com", "joining two 2047 encoded-words"},
             { "bob@example.com (=?us-ascii?Q?Bob_th?= =?us-ascii?Q?e_Builder?=)", "Bob the Builder", "bob@example.com", "joining two 2047 encoded-words in comments"},
             { "=?us-ascii?Q?Bob_th?= (Bob) =?us-ascii?Q?e_Builder?= <bob@example.com>", "Bob the Builder", "bob@example.com", "joining two 2047 encoded-words split by a comment"},
             { "=?us-ascii?Q?Bob_th?= (=?us-ascii?Q?Bob=) =?us-ascii?Q?e_Builder?= <bob@example.com>", "Bob the Builder", "bob@example.com", "joining two 2047 encoded-words split by a comment containing an encoded-word"},
-            { "=?us-ascii?Q?Bob_?=\t=?us-ascii?Q?the_Builder?= <bob@example.com>", "Bob the Builder", "bob@example.com", "joining two 2047 encoded-words with an encoded trailing space"},
+            { "=?us-ascii?q?Bob_?=\t=?us-ascii?Q?the_Builder?= <bob@example.com>", "Bob the Builder", "bob@example.com", "joining two 2047 encoded-words with an encoded trailing space"},
             { "=?us-ascii?Q?Bob_th?==?us-ascii?Q?e_Builder?= <bob@example.com>", "Bob the Builder", "bob@example.com", "joining two 2047 encoded-words with no space in between"},
             { "=?us-ascii?Q?Bob_th?=(Bob)=?us-ascii?Q?e_Builder?= <bob@example.com>", "Bob the Builder", "bob@example.com", "joining two 2047 encoded-words with just a comment in between"},
             { "Bo=?us-ascii?Q?b_the=20Buil?=der <bob@example.com>", "Bob the Builder", "bob@example.com", "2047 encoding inside of a word"},
             { "bob@example.com (Bo=?us-ascii?Q?b_the=20Buil?=der)", "Bob the Builder", "bob@example.com", "2047 encoding inside of a word in a comment"},
+            { " =?us-ascii?q??=    \"Bob the Builder\" <bob@example.com>", " Bob the Builder", "bob@example.com", "joining blank encoded-word and quoted-string"},
+            { " =?x-unknown?q??=    \"Bob the Builder\" <bob@example.com>", " Bob the Builder", "bob@example.com", "joining blank encoded-word with unknown charset and quoted-string"},
             { "=?us-ascii?Q?Bob the Builder?= <bob@example.com>", "Bob the Builder", "bob@example.com", "spaces inside encoded-word"},
             { "bob@example.com (=?us-ascii?Q?Bob the Builder?=)", "Bob the Builder", "bob@example.com", "spaces inside encoded-word in comments"},
             { "=?us-ascii?Q?Bob_the__Builder?= <bob@example.com>", "Bob the  Builder", "bob@example.com", "encoded double spaces inside encoded-word"},
             { "=?us-ascii?Q?Bob the  Builder?= <bob@example.com>", "Bob the Builder", "bob@example.com", "non-encoded double spaces inside encoded-word"},
             { "=?us-ascii?Q?Bob the ?= Builder <bob@example.com>", "Bob the  Builder", "bob@example.com", "spaces at end of encoded-word"},
-            { "=?us-ascii?Q?Bob the <bob@example.com>", "=?us-ascii?Q?Bob the", "bob@example.com", "open-brace in encoded-word"},
+            { "=?us-ascii?Q?Bob the <bob@example.com>", "=?us-ascii?Q?Bob the", "bob@example.com", "open-brace in unterminated encoded-word"},
             { "=?us-ascii*en?Q?Bob_the=20Builder?= <bob@example.com>", "Bob the Builder", "bob@example.com", "RFC 2231 language in encoded-word"},
         };
 
