@@ -50,7 +50,7 @@ public class MimeCompoundHeader {
         for (int i = 0, count = header.length(); i < count; i++) {
             char c = header.charAt(i);
             // ignore folding, even where it's not actually permitted
-            if ((c == '\r' || c == '\n') && rfc2231.state != RFC2231State.VALUE && rfc2231.state != RFC2231State.SLOP && (rfc2231.state != RFC2231State.EQUALS || rfc2231.key == null)) {
+            if ((c == '\r' || c == '\n') && rfc2231.state != RFC2231State.VALUE && rfc2231.state != RFC2231State.SLOP) {
                 escaped = false;
                 continue;
             }
@@ -72,7 +72,7 @@ public class MimeCompoundHeader {
                         rfc2231.setState(RFC2231State.EQUALS);
                     } else if (c == '*') {
                         rfc2231.setState(RFC2231State.EXTENDED);
-                    } else if (c == '(' && rfc2231.key.length() == 0) {
+                    } else if (c == '(') {
                         escaped = false;  rfc2231.comment++;
                         rfc2231.setState(RFC2231State.COMMENT);
                     } else if (c == ';') {
@@ -84,21 +84,27 @@ public class MimeCompoundHeader {
                     break;
 
                 case VALUE:
-                    if (c != ';' && c != ' ' && c != '\t' && c != '\r' && c != '\n') {
-                        rfc2231.addValueChar(c);
-                    } else {
+                    if (c == ';' || c == ' ' || c == '\t' || c == '\r' || c == '\n') {
                         rfc2231.saveParameter(mParams);
                         rfc2231.setState(c == ' ' || c == '\t' ? RFC2231State.SLOP : RFC2231State.PARAM);
+                    } else if (c == '(') {
+                        escaped = false;  rfc2231.comment++;
+                        rfc2231.setState(RFC2231State.COMMENT);
+                    } else {
+                        rfc2231.addValueChar(c);
                     }
                     break;
 
                 case EQUALS:
-                    if (c == ';' || c == '\r' || c == '\n') {
+                    if (c == ';') {
                         rfc2231.saveParameter(mParams);
                         rfc2231.setState(RFC2231State.PARAM);
                     } else if (c == '"') {
                         escaped = false;
                         rfc2231.setState(RFC2231State.QVALUE);
+                    } else if (c == '(') {
+                        escaped = false;  rfc2231.comment++;
+                        rfc2231.setState(RFC2231State.COMMENT);
                     } else if (c != ' ' && c != '\t') {
                         rfc2231.addValueChar(c);
                         rfc2231.setState(RFC2231State.VALUE);
@@ -302,10 +308,6 @@ public class MimeCompoundHeader {
             if (newstate == RFC2231State.COMMENT && state != RFC2231State.COMMENT)
                 precomment = state;
             state = newstate;
-            if (newstate == RFC2231State.PARAM) {
-                key = new StringBuilder();  value = new StringBuilder();
-                continued = -1;  encoded = false;
-            }
         }
 
         void setEncoded() {
@@ -317,47 +319,56 @@ public class MimeCompoundHeader {
         void addCharsetChar(char c)  { charset.append(c); }
         void addKeyChar(char c)      { key.append(c); }
         void addValueChar(char c)    { value.append(c); }
+
+        void reset() {
+            key = new StringBuilder();  value = new StringBuilder();
+            continued = -1;  encoded = false;
+        }
     
         void saveParameter(Map<String, String> attrs) {
-            if (value == null)
-                return;
-            String pname = key == null ? null : key.toString().toLowerCase();
-            String pvalue = value.toString();
-            if ("".equals(pname))
-                return;
-
-            // in order to handle out-of-order parts, store all partials in a hash until we're done
-            if (continued >= 0) {
-                if (partials == null)
-                    partials = new HashMap<String, Map<Integer, ParameterContinuation>>(3);
-                Map<Integer, ParameterContinuation> parts = partials.get(pname);
-                if (parts == null)
-                    partials.put(pname, parts = new TreeMap<Integer, ParameterContinuation>());
-                parts.put(continued, new ParameterContinuation(charset == null || charset.length() == 0 ? "us-ascii" : charset.toString(), encoded, value.toString()));
-                attrs.put(pname, null);
-                key = value = null;
-                return;
-            }
-
-            if (encoded) {
-                if (charset.length() == 0)
-                    charset.append("us-ascii");
-                try {
-                    pvalue = URLDecoder.decode(pvalue, charset.toString());
-                } catch (UnsupportedEncodingException uee) { 
-                    System.out.println(uee);
+            try {
+                if (value == null)
+                    return;
+                String pname = key == null ? null : key.toString().toLowerCase();
+                String pvalue = value.toString();
+                if ("".equals(pname))
+                    return;
+    
+                if (continued >= 0) {
+                    // in order to handle out-of-order parts, store all partials in a hash until we're done
+                    if (partials == null)
+                        partials = new HashMap<String, Map<Integer, ParameterContinuation>>(3);
+                    Map<Integer, ParameterContinuation> parts = partials.get(pname);
+                    if (parts == null)
+                        partials.put(pname, parts = new TreeMap<Integer, ParameterContinuation>());
+                    parts.put(continued, new ParameterContinuation(charset == null || charset.length() == 0 ? "us-ascii" : charset.toString(), encoded, value.toString()));
+                    attrs.put(pname, null);
+                } else {
+                    if (encoded) {
+                        if (charset.length() == 0)
+                            charset.append("us-ascii");
+                        try {
+                            pvalue = URLDecoder.decode(pvalue, charset.toString());
+                        } catch (UnsupportedEncodingException uee) { 
+                            System.out.println(uee);
+                        }
+                    } else if (pvalue.length() >= 8) {
+                        int firstEnd;
+                        if (pvalue.lastIndexOf("=?") > 0 || ((firstEnd = pvalue.indexOf("?=", 6)) >= 6 && firstEnd < pvalue.length() - 2)) {
+                            try {
+                                pvalue = MimeUtility.decodeText(pvalue);
+                            } catch (Exception e) { }
+                        } else if (pvalue.startsWith("=?") && pvalue.endsWith("?=")) {
+                            try {
+                                pvalue = MimeUtility.decodeWord(pvalue);
+                            } catch (Exception e) { }
+                        }
+                    }
+                    attrs.put(pname, pvalue);
                 }
-            } else if (pvalue.lastIndexOf("=?") > 0 || pvalue.indexOf("?=") < pvalue.length() - 2) {
-                try {
-                    pvalue = MimeUtility.decodeText(pvalue);
-                } catch (Exception e) { }
-            } else if (pvalue.startsWith("=?") && pvalue.endsWith("?=")) {
-                try {
-                    pvalue = MimeUtility.decodeWord(pvalue);
-                } catch (Exception e) { }
+            } finally {
+                reset();
             }
-            attrs.put(pname, pvalue);
-            key = value = null;
         }
 
         void assembleContinuations(Map<String, String> attrs) {
@@ -427,7 +438,7 @@ public class MimeCompoundHeader {
                 "application/x-stuff", "title", "This is even more ***fun*** isn't it!" },
             { "downcasing value, implicit end-of-value at eol",
                 "multipart/MIXED; charset=us-ascii;\n foo=\n  boundary=\"---\" \n",
-                "multipart/mixed", "charset", "us-ascii", "foo", "", "boundary", "---" },
+                "multipart/mixed", "charset", "us-ascii", "foo", "boundary=\"---\"" },
             { "non-encoded continuation",
                 "message/external-body; access-type=URL;\n URL*0=\"ftp://\";\n URL*1=\"cs.utk.edu/pub/moore/bulk-mailer/bulk-mailer.tar\"\n",
                 "message/external-body", "access-type", "URL", "url", "ftp://cs.utk.edu/pub/moore/bulk-mailer/bulk-mailer.tar" },
@@ -446,6 +457,12 @@ public class MimeCompoundHeader {
             { "null input",
                 null,
                 "text/plain" },
+            { "comments before and after value, param name, equals, and param value",
+                " (morg) text/plain(whoppity)  ;(heep)(hop(hoo)) format(ig)=(nore)\"floo\"  (kell) \n (perm) \n\t(eeble) zoom (ig) = (nore)whop (mm)",
+                "text/plain", "format", "floo", "zoom", "whop" },
+            { "unquoted encoded-words, bad encoded-words in non-2231 values",
+                "text/plain; filename==?us-ascii?q?boo_bah.pdf?=; note=\"   ?==?\"; bloop=\"=?x-unknown?a?text?=\" ",
+                "text/plain", "filename", "boo bah.pdf", "note", "   ?==?", "bloop", "=?x-unknown?a?text?=" },
         };
 
         for (String[] test : ctypeTests)
