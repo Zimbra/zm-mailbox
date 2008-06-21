@@ -67,12 +67,12 @@ class ImapFolderSync {
     private SyncState syncState;
     private ImapMessageCollection trackedMsgs;
     private List<Integer> newMsgIds;
+    private boolean expunge;
     private MailDateFormat mdf; 
 
     private static final Log LOG = ZimbraLog.datasource;
 
     private static final int FETCH_SIZE = LC.data_source_fetch_size.intValue();
-    private static final int FLAGS_FETCH_SIZE = 10;
 
     private static class Statistics {
         int flagsUpdatedLocally;
@@ -172,7 +172,7 @@ class ImapFolderSync {
             mb = remoteFolder.select();
         }
         syncState = getSyncState();
-        debug("SyncState = " + syncState);
+        // debug("SyncState = " + syncState);
         long uidNext = mb.getUidNext();
         if (uidNext > 0 && uidNext <= syncState.getLastUid()) {
             throw new MailException("Invalid UIDNEXT (> last sync uid)");
@@ -203,6 +203,10 @@ class ImapFolderSync {
         // Fetch new messages
         if (fetchMsgs) {
             fetchMessages(lastUid + 1, uidNext - 1);
+        }
+        if (expunge) {
+            // Close IMAP folder to automatically expunge deleted messages
+            connection.mclose();
         }
         // Update sync state for new mailbox status
         syncState.setExists(mb.getExists());
@@ -497,23 +501,27 @@ class ImapFolderSync {
     
     private void fetchFlags(long lastUid, Set<Integer> msgIds)
         throws ServiceException, IOException {
-        List<Long> uids = remoteFolder.getUids(1 + ":" + lastUid);
-        int count = uids.size();
-        info("Fetching flags for %d IMAP message(s)", count);
-        if (count > 0) {
-            for (int i = 0; i < count; i += FLAGS_FETCH_SIZE) {
-                int j = Math.min(i + FLAGS_FETCH_SIZE - 1, count - 1);
-                fetchFlags(uids.get(j) + ":" + uids.get(i), msgIds);
+        String seq = 1 + ":" + lastUid;
+        debug("Fetching flags changes for UID sequence %s", seq);
+        List<Long> deletedUids = fetchFlags(seq, msgIds);
+        if (!deletedUids.isEmpty()) {
+            debug("Deleting %d message(s) from IMAP folder", deletedUids.size());
+            remoteFolder.deleteMessages(deletedUids);
+            // Remove local messages
+            for (long uid : deletedUids) {
+                ImapMessage msg = trackedMsgs.getByUid(uid);
+                DbImapMessage.deleteImapMessage(
+                    mailbox, tracker.getItemId(), msg.getItemId());
+                stats.msgsDeletedRemotely++;
             }
-            // Expunge remote mailbox if UID EXPUNGE not supported
+            // Mark folder to be expunged if no UIDPLUS
             if (!uidPlus) {
-                debug("Expunging deleted messages");
-                connection.expunge();
+                expunge = true;
             }
         }
     }
 
-    private void fetchFlags(String seq, Set<Integer> msgIds)
+    private List<Long> fetchFlags(String seq, Set<Integer> msgIds)
         throws ServiceException, IOException {
         Map<Long, MessageData> mds = connection.uidFetch(seq, "FLAGS");
         List<Long> deletedUids = new ArrayList<Long>();
@@ -522,7 +530,7 @@ class ImapFolderSync {
             ImapMessage trackedMsg = trackedMsgs.getByUid(uid);
             if (trackedMsg == null) {
                 info("Ignoring flags for message with uid %d because it " +
-                     " is not being tracked", uid);
+                     "is not being tracked", uid);
                 continue;
             }
             int msgId = trackedMsg.getItemId();
@@ -537,16 +545,7 @@ class ImapFolderSync {
             }
             deletedUids.add(uid);
         }
-        if (!deletedUids.isEmpty()) {
-            remoteFolder.deleteMessages(deletedUids);
-            // Remove local messages
-            for (long uid : deletedUids) {
-                ImapMessage msg = trackedMsgs.getByUid(uid);
-                DbImapMessage.deleteImapMessage(
-                    mailbox, tracker.getItemId(), msg.getItemId());
-                stats.msgsDeletedRemotely++;
-            }
-        }
+        return deletedUids;
     }
 
     // Updates flags for specified message.
@@ -597,35 +596,50 @@ class ImapFolderSync {
         String end = endUid > 0 ? String.valueOf(endUid) : "*";
         List<Long> uids = remoteFolder.getUids(startUid + ":" + end);
         int count = uids.size();
+        if (count == 0) {
+            debug("No new IMAP messages to fetch");
+            return;
+        }
+        List<Long> deletedUids = new ArrayList<Long>();
         debug("Fetching %d new IMAP message(s)", count);
         for (int i = 0; i < count; i += FETCH_SIZE) {
             int j = Math.min(i + FETCH_SIZE - 1, count - 1);
-            fetchMessages(uids.get(j) + ":" + uids.get(i));
+            fetchMessages(uids.get(j) + ":" + uids.get(i), deletedUids);
+        }
+        if (!deletedUids.isEmpty()) {
+            debug("Deleting %d message(s) from IMAP folder that have been " +
+                  "filtered locally", deletedUids.size());
+            remoteFolder.deleteMessages(deletedUids);
+            if (!uidPlus) {
+                expunge = true;
+            }
         }
     }
     
-    private void fetchMessages(String seq)
+    private void fetchMessages(String seq, final List<Long> deletedUids)
         throws ServiceException, IOException {
-        final Map<Long, MessageData> mds =
+        final Map<Long, MessageData> flagsByUid =
             connection.uidFetch(seq, "(FLAGS INTERNALDATE)");
         connection.uidFetch(seq, "BODY.PEEK[]",
             new FetchResponseHandler() {
                 public void handleFetchResponse(MessageData md) throws Exception {
-                    handleFetch(md, mds);
+                    handleFetch(md, flagsByUid, deletedUids);
                 }
             });
     }
 
-    private void handleFetch(MessageData md, Map<Long, MessageData> mds)
+    private void handleFetch(MessageData md,
+                             Map<Long, MessageData> flagsByUid,
+                             List<Long> deletedUids)
         throws ServiceException, IOException {
         long uid = md.getUid();
         if (uid == -1) {
             throw new MailException("Missing UID in FETCH response");
         }
         ImapData body = getBody(md);
-        MessageData flagsData = mds.get(uid);
+        MessageData flagsData = flagsByUid.get(uid);
         if (flagsData == null) {
-            return; // Message must have been deleted
+            return; // Message must have been deleted remotely
         }
         debug("Found new IMAP message with uid %d", uid);
         ParsedMessage pm = parseMessage(body, flagsData);
@@ -633,9 +647,19 @@ class ImapFolderSync {
             return; // Parse error
         }
         int zflags = SyncUtil.imapToZimbraFlags(flagsData.getFlags());
-        int msgId = imapSync.addMessage(pm, folder.getId(), zflags);
-        storeImapMessage(uid, msgId, zflags);
-        stats.msgsAddedLocally++;
+        Message msg = imapSync.addMessage(pm, folder.getId(), zflags);
+        if (msg != null && msg.getFolderId() == folder.getId()) {
+            storeImapMessage(uid, msg.getId(), zflags);
+            stats.msgsAddedLocally++;
+        } else {
+            // Message was filtered and discarded or moved to another folder.
+            // This can only happen for messages fetched from INBOX which is
+            // always sync'd first. Mark remote message for deletion and do
+            // not create a local tracker. If mesage was moved to another
+            // folder we will append to the remote folder when when we sync
+            // that folder.
+            deletedUids.add(uid);
+        }
     }
 
     private ImapData getBody(MessageData md) throws MailException {

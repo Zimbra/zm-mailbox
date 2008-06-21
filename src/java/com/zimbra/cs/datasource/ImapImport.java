@@ -754,8 +754,10 @@ public class ImapImport extends AbstractMailItemImport {
                         Long time = receivedDate != null ? (Long) receivedDate.getTime() : null;
                         ParsedMessage pm = getParsedMessage(data, time, mbox.attachmentsIndexingEnabled());
                         int flags = getZimbraFlags(msg.getFlags());
-                        int msgId = addMessage(pm, localFolder.getId(), flags);
-                        DbImapMessage.storeImapMessage(mbox, trackedFolder.getItemId(), uid, msgId, flags);
+                        com.zimbra.cs.mailbox.Message m = addMessage(pm, localFolder.getId(), flags);
+                        if (m != null) {
+                            DbImapMessage.storeImapMessage(mbox, trackedFolder.getItemId(), uid, m.getId(), flags);
+                        }
                     }
                     fetchCount.incrementAndGet();
                 }

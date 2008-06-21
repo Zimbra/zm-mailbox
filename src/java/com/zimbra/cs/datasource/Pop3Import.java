@@ -228,10 +228,9 @@ public class Pop3Import extends AbstractMailItemImport {
                     pm = new ParsedMessage(pop3Msg, mbox.attachmentsIndexingEnabled());
                 }
 
-                int msgid = addMessage(pm, ds.getFolderId(), Flag.BITMASK_UNREAD);
-
-                if (ds.leaveOnServer()) {
-                    DbPop3Message.storeUid(mbox, ds.getId(), folder.getUID(pop3Msg), msgid);
+                com.zimbra.cs.mailbox.Message m = addMessage(pm, ds.getFolderId(), Flag.BITMASK_UNREAD);
+                if (m != null && ds.leaveOnServer()) {
+                    DbPop3Message.storeUid(mbox, ds.getId(), folder.getUID(pop3Msg), m.getId());
                 }
             } finally {
                 pop3Msg.dispose();
