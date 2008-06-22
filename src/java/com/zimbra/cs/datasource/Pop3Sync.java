@@ -84,6 +84,7 @@ public class Pop3Sync extends AbstractMailItemImport {
         config.setSslEnabled(ds.isSslEnabled());
         config.setDebug(DEBUG);
         config.setTrace(DEBUG || ds.isDebugTraceEnabled());
+        config.setTimeout(LC.javamail_pop3_timeout.intValue());
         // config.setRawMode(true);
         if (LC.data_source_trust_self_signed_certs.booleanValue()) {
             config.setSSLSocketFactory(new DummySSLSocketFactory());

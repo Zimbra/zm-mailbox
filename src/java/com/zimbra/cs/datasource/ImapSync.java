@@ -84,6 +84,7 @@ public class ImapSync extends AbstractMailItemImport {
         config.setSslEnabled(ds.isSslEnabled());
         config.setDebug(DEBUG);
         config.setTrace(DEBUG || ds.isDebugTraceEnabled());
+        config.setTimeout(LC.javamail_imap_timeout.intValue());
         // config.setRawMode(true);
         if (LC.data_source_trust_self_signed_certs.booleanValue()) {
             config.setSSLSocketFactory(new DummySSLSocketFactory());

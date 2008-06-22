@@ -57,6 +57,7 @@ public abstract class MailClient {
         Logger.getRootLogger().setLevel(Level.INFO);
         config.setTrace(true);
         config.setSynchronousMode(true);
+        config.setTimeout(5);
         parseArguments(args);
         connect();
         authenticate();

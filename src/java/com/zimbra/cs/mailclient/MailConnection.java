@@ -80,6 +80,8 @@ public abstract class MailConnection {
         if (!isClosed()) return;
         try {
             socket = newSocket();
+            int timeout = config.getTimeout() * 1000;
+            socket.setSoTimeout(timeout > 0 ? timeout : 0);
             initStreams(new BufferedInputStream(socket.getInputStream()),
                         new BufferedOutputStream(socket.getOutputStream()));
             processGreeting();
