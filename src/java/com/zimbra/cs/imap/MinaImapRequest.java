@@ -143,6 +143,7 @@ public class MinaImapRequest extends ImapRequest implements MinaRequest {
     }
 
     public byte[] readLiteral() throws ImapParseException {
+        skipChar('{');
         if (mIndex + 1 >= mParts.size()) {
             throw new ImapParseException(mTag, "no next literal");
         }
