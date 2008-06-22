@@ -47,7 +47,7 @@ public abstract class MailConfig {
     private int timeout;
     private boolean synchronousMode;
 
-    /**
+    /**                                                                 
      * Creates a new <tt>MailConfig</tt> instance.
      */
     protected MailConfig() {
@@ -294,19 +294,18 @@ public abstract class MailConfig {
     }
 
     /**
-     * Returns the request timeout value in seconds. A sent request will fail
-     * if no response has been received within the specified time period.
+     * Returns the socket I/O timeout value in seconds. 
      *
-     * @return the request timeout in seconds, or <tt>-1</tt> if none
+     * @return the socket I/O timeout in seconds, or <tt>0</tt> if infinite
      */
     public int getTimeout() {
         return timeout;
     }
 
     /**
-     * Sets the request timeout value in seconds.
+     * Sets the socket I/O timeout value in seconds.
      *
-     * @param secs the new request timeout in seconds
+     * @param secs the new socket I/O timeout in seconds
      */
     public void setTimeout(int secs) {
         timeout = secs;
