@@ -42,9 +42,9 @@ public final class ImapUtil {
             }
         };
 
-    public static List<ListData> listFolders(ImapConnection ic)
+    public static List<ListData> listFolders(ImapConnection ic, String name)
         throws IOException {
-        return sortFolders(ic.list("", "*"));
+        return sortFolders(ic.list("", name));
     }
 
     public static List<ListData> sortFolders(List<ListData> folders) {

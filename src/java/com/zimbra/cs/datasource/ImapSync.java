@@ -114,7 +114,12 @@ public class ImapSync extends AbstractMailItemImport {
         connect();
         this.fullSync = fullSync;
         try {
-            syncFolders();
+            // If full sync not requested, sync INBOX only
+            if (fullSync) {
+                syncFolders();
+            } else {
+                syncInbox();
+            }
             connection.logout();
         } catch (IOException e) {
             throw ServiceException.FAILURE("Folder sync failed", e);
@@ -148,11 +153,12 @@ public class ImapSync extends AbstractMailItemImport {
         trackedFolders = dataSource.getImapFolders();
         syncedFolders = new HashMap<Integer, ImapFolderSync>();
         // Synchronize local and remote folders
-        for (ListData ld : ImapUtil.listFolders(connection)) {
+        for (ListData ld : ImapUtil.listFolders(connection, "*")) {
             syncRemoteFolder(ld);
         }
-        // Reverse order of local folders to ensure that children are processed
-        // before parent folders. This avoids problems when deleting folders.
+        // Reverse order of local folders to ensure that children are
+        // processed before parent folders. This avoids problems when
+        // deleting folders.
         List<Folder> folders = localRootFolder.getSubfolderHierarchy();
         Collections.reverse(folders);
         for (Folder folder : folders) {
@@ -177,6 +183,24 @@ public class ImapSync extends AbstractMailItemImport {
         // both locally and remotely.
         for (ImapFolder tracker : trackedFolders) {
             dataSource.deleteImapFolder(tracker);
+        }
+    }
+
+    private void syncInbox() throws ServiceException, IOException {
+        trackedFolders = dataSource.getImapFolders();
+        syncedFolders = new HashMap<Integer, ImapFolderSync>();
+        List<ListData> lds = ImapUtil.listFolders(connection, "INBOX");
+        if (lds.size() < 1) {
+            throw ServiceException.FAILURE("Remote INBOX folder not found", null);
+        }
+        ListData inbox = lds.get(0);
+        syncRemoteFolder(inbox);
+        for (ImapFolderSync ifs : syncedFolders.values()) {
+            try {
+                ifs.finishSync();
+            } catch (Exception e) {
+                LOG.error("Synchronization of folder 'INBOX' failed", e);
+            }
         }
     }
 
