@@ -94,7 +94,8 @@ import com.zimbra.cs.util.NetUtil;
  *          sync="1"
  *          
  *             {types}   = comma-separated list.  Legal values are:
- *                         conversation|message|contact|appointment|note
+ *                         appointment|chat|contact|conversation|document|
+ *                         message|note|tag|task|wiki
  *                         (default is &quot;conversation&quot;)
  *                          
  *             {auth-types} = comma-separated list. Legal values are:
@@ -188,6 +189,25 @@ public class UserServlet extends ZimbraServlet {
     protected static final String MSGPAGE_BLOCK = "errorpage.attachment.blocked";
     private String mBlockPage = null;
 
+    static {
+        mFormatters = new HashMap<String, Formatter>();
+        mDefaultFormatters = new HashMap<String, Formatter>();
+        addFormatter(new CsvFormatter());
+        addFormatter(new VcfFormatter());
+        addFormatter(new IcsFormatter());
+        addFormatter(new RssFormatter());
+        addFormatter(new AtomFormatter());
+        addFormatter(new NativeFormatter());
+        addFormatter(new ZipFormatter());
+        addFormatter(new FreeBusyFormatter());
+        addFormatter(new IfbFormatter());
+        addFormatter(new SyncFormatter());
+        addFormatter(new WikiFormatter());
+        addFormatter(new XmlFormatter());
+        addFormatter(new JsonFormatter());
+        addFormatter(new HtmlFormatter());
+    }
+
     /** Returns the REST URL for the account. */
     public static String getRestUrl(Account acct) throws ServiceException {
     	return getServiceUrl(acct, UserServlet.SERVLET_PATH);
@@ -197,31 +217,6 @@ public class UserServlet extends ZimbraServlet {
     public static String getRestUrl(MailItem item) throws ServiceException, IOException {
     	Account acct = item.getMailbox().getAccount();
         return getRestUrl(acct) + URLUtil.urlEscape(item.getPath());
-    }
-
-    public UserServlet() {
-        initFormatters();
-    }
-
-    private synchronized static void initFormatters() {
-        if (mFormatters == null) {
-            mFormatters = new HashMap<String, Formatter>();
-            mDefaultFormatters = new HashMap<String, Formatter>();
-            addFormatter(new CsvFormatter());
-            addFormatter(new VcfFormatter());
-            addFormatter(new IcsFormatter());
-            addFormatter(new RssFormatter());
-            addFormatter(new AtomFormatter());
-            addFormatter(new NativeFormatter());
-            addFormatter(new ZipFormatter());
-            addFormatter(new FreeBusyFormatter());
-            addFormatter(new IfbFormatter());
-            addFormatter(new SyncFormatter());
-            addFormatter(new WikiFormatter());
-            addFormatter(new XmlFormatter());
-            addFormatter(new JsonFormatter());
-            addFormatter(new HtmlFormatter());
-        }
     }
 
     public synchronized static void addFormatter(Formatter f) {

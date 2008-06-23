@@ -36,7 +36,7 @@ public class Metadata {
     /** Current Metadata version number.  Note that all MailItems have NOT
      *  been updated to check the version number, so make sure to look at
      *  the code if you depend on this. */
-    static final int CURRENT_METADATA_VERSION = 10;
+    public static final int CURRENT_METADATA_VERSION = 10;
     
     // MetaData attributes used in toplevel metadata for MailItems.
     

@@ -1081,8 +1081,7 @@ public class Mailbox {
     int getBatchedIndexingCount() {
         if (mMailboxIndex != null)
             return mMailboxIndex.getBatchedIndexingCount();
-        else
-            return 0;
+        return 0;
     }
     
 
@@ -1439,18 +1438,18 @@ public class Mailbox {
         mDeletedFlag   = Flag.instantiate(this, "\\Deleted",    Flag.FLAG_GENERIC,         Flag.ID_FLAG_DELETED);
         mNotifiedFlag  = Flag.instantiate(this, "\\Notified",   Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_NOTIFIED);
         mUnreadFlag    = Flag.instantiate(this, "\\Unread",     Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_UNREAD);
-        mInviteFlag     = Flag.instantiate(this, "\\Invite",     Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_INVITE);
-        mUrgentFlag     = Flag.instantiate(this, "\\Urgent",     Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_HIGH_PRIORITY);
+        mInviteFlag    = Flag.instantiate(this, "\\Invite",     Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_INVITE);
+        mUrgentFlag    = Flag.instantiate(this, "\\Urgent",     Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_HIGH_PRIORITY);
         mIndexingDeferredFlag = Flag.instantiate(this, "\\IdxDeferred",     Flag.FLAG_GENERIC, Flag.ID_FLAG_INDEXING_DEFERRED);
-        mBulkFlag       = Flag.instantiate(this, "\\Bulk",       Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_LOW_PRIORITY);
-        mVersionedFlag  = Flag.instantiate(this, "\\Versioned",  Flag.FLAG_GENERIC,         Flag.ID_FLAG_VERSIONED);
+        mBulkFlag      = Flag.instantiate(this, "\\Bulk",       Flag.FLAG_IS_MESSAGE_ONLY, Flag.ID_FLAG_LOW_PRIORITY);
+        mVersionedFlag = Flag.instantiate(this, "\\Versioned",  Flag.FLAG_GENERIC,         Flag.ID_FLAG_VERSIONED);
 
         mSubscribedFlag = Flag.instantiate(this, "\\Subscribed", Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_SUBSCRIBED);
         mExcludeFBFlag = Flag.instantiate(this, "\\ExcludeFB",  Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_EXCLUDE_FREEBUSY);
         mCheckedFlag   = Flag.instantiate(this, "\\Checked",    Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_CHECKED);
-        mNoInheritFlag  = Flag.instantiate(this, "\\NoInherit",  Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_NO_INHERIT);
+        mNoInheritFlag = Flag.instantiate(this, "\\NoInherit",  Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_NO_INHERIT);
         mSyncFolderFlag = Flag.instantiate(this, "\\SyncFolder", Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_SYNCFOLDER);
-        mSyncFlag		= Flag.instantiate(this, "\\Sync",       Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_SYNC);
+        mSyncFlag      = Flag.instantiate(this, "\\Sync",       Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_SYNC);
     }
 
     private void loadFoldersAndTags() throws ServiceException {
@@ -2300,11 +2299,11 @@ public class Mailbox {
     }
 
     public synchronized List<MailItem> getItemList(OperationContext octxt, byte type, int folderId, byte sort) throws ServiceException {
+        List<MailItem> result;
+        boolean success = false;
+        
         if (type == MailItem.TYPE_UNKNOWN)
             return Collections.emptyList();
-        List<MailItem> result = new ArrayList<MailItem>();
-
-        boolean success = false;
         try {
             // tag/folder caches are populated in beginTransaction...
             beginTransaction("getItemList", octxt);
@@ -2318,46 +2317,57 @@ public class Mailbox {
                 if (!folder.canAccess(ACL.RIGHT_READ, getAuthenticatedAccount(), isUsingAdminPrivileges()))
                     throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
             }
-
-            if (type == MailItem.TYPE_TAG) {
+            if (type == MailItem.TYPE_FLAG) {
                 if (folderId != -1 && folderId != ID_FOLDER_TAGS)
                     return Collections.emptyList();
-                for (Map.Entry<Object, Tag> entry : mTagCache.entrySet())
-                    if (entry.getKey() instanceof String)
-                        result.add(entry.getValue());
-                Comparator<MailItem> comp = MailItem.getComparator(sort);
-                if (comp != null)
-                    Collections.sort(result, comp);
+                result = new ArrayList<MailItem>(mFlags.length);
+                for (Flag flag : mFlags)
+                    if (flag != null)
+                        result.add(flag);
                 success = true;
-            } else if (type == MailItem.TYPE_FOLDER || type == MailItem.TYPE_SEARCHFOLDER || type == MailItem.TYPE_MOUNTPOINT) {
-                for (Folder subfolder : mFolderCache.values())
+            } else if (type == MailItem.TYPE_FOLDER ||
+                type == MailItem.TYPE_SEARCHFOLDER ||
+                type == MailItem.TYPE_MOUNTPOINT) {
+                result = new ArrayList<MailItem>(mFolderCache.size());
+                for (Folder subfolder : mFolderCache.values()) {
                     if (subfolder.getType() == type)
                         if (folder == null || subfolder.getParentId() == folderId)
                             result.add(subfolder);
-                Comparator<MailItem> comp = MailItem.getComparator(sort);
-                if (comp != null)
-                    Collections.sort(result, comp);
+                }
+                success = true;
+            } else if (type == MailItem.TYPE_TAG) {
+                if (folderId != -1 && folderId != ID_FOLDER_TAGS)
+                    return Collections.emptyList();
+                result = new ArrayList<MailItem>(mTagCache.size());
+                for (Map.Entry<Object, Tag> entry : mTagCache.entrySet())
+                    if (entry.getKey() instanceof String)
+                        result.add(entry.getValue());
                 success = true;
             } else {
-                List<MailItem.UnderlyingData> dataList = null;
+                List<MailItem.UnderlyingData> dataList;
+                
                 if (folder != null)
                     dataList = DbMailItem.getByFolder(folder, type, sort);
                 else
                     dataList = DbMailItem.getByType(this, type, sort);
                 if (dataList == null)
                     return Collections.emptyList();
+                result = new ArrayList<MailItem>(dataList.size());
                 for (MailItem.UnderlyingData data : dataList)
                     if (data != null)
                         result.add(getItem(data));
-                	// except for sort == SORT_BY_NAME_NAT,
-                // sort was already done by the DbMailItem call...
-            	if ((sort & DbSearch.SORT_BY_NAME_NATURAL_ORDER) > 0)
-                    Collections.sort(result, MailItem.getComparator(sort));
-                success = true;
+                // DbMailItem call handles all sorts except SORT_BY_NAME_NAT
+            	if ((sort & DbSearch.SORT_BY_NAME_NATURAL_ORDER) == 0)
+            	    sort = DbSearch.SORT_NONE;
+            	success = true;
             }
         } finally {
             endTransaction(success);
         }
+        
+        Comparator<MailItem> comp = MailItem.getComparator(sort);
+        if (comp != null)
+            Collections.sort(result, comp);
         return result;
     }
 
@@ -2685,6 +2695,15 @@ public class Mailbox {
         return flag;
     }
 
+    public synchronized List<Flag> getFlagList() throws ServiceException {
+        List<Flag> flags = new ArrayList<Flag>(mFlags.length);
+        
+        for (Flag flag : mFlags)
+            if (flag != null)
+                flags.add(flag);
+        return flags;
+    }
+
     public synchronized Tag getTagById(OperationContext octxt, int id) throws ServiceException {
         return (Tag) getItemById(octxt, id, MailItem.TYPE_TAG);
     }
@@ -2864,10 +2883,35 @@ public class Mailbox {
         return (Note) getItemById(noteId, MailItem.TYPE_NOTE);
     }
 
-    public synchronized List getNoteList(OperationContext octxt, int folderId) throws ServiceException {
-        return getItemList(octxt, MailItem.TYPE_NOTE, folderId);
+    public synchronized List<Note> getNoteList(OperationContext octxt, int folderId) throws ServiceException {
+        return getNoteList(octxt, folderId, DbSearch.SORT_NONE);
     }
 
+    public synchronized List<Note> getNoteList(OperationContext octxt, int folderId, byte sort) throws ServiceException {
+        List<Note> notes = new ArrayList<Note>();
+        for (MailItem item : getItemList(octxt, MailItem.TYPE_NOTE, folderId, sort))
+            notes.add((Note) item);
+        return notes;
+    }
+
+    public synchronized Chat getChatById(OperationContext octxt, int id) throws ServiceException {
+        return (Chat) getItemById(octxt, id, MailItem.TYPE_CHAT);
+    }
+
+    Chat getChatById(int id) throws ServiceException {
+        return (Chat) getItemById(id, MailItem.TYPE_CHAT);
+    }
+
+    public synchronized List<Chat> getChatList(OperationContext octxt, int folderId) throws ServiceException {
+        return getChatList(octxt, folderId, DbSearch.SORT_NONE);
+    }
+
+    public synchronized List<Chat> getChatList(OperationContext octxt, int folderId, byte sort) throws ServiceException {
+        List<Chat> chats = new ArrayList<Chat>();
+        for (MailItem item : getItemList(octxt, MailItem.TYPE_CHAT, folderId, sort))
+            chats.add((Chat) item);
+        return chats;
+    }
 
     public synchronized Contact getContactById(OperationContext octxt, int id) throws ServiceException {
         return (Contact) getItemById(octxt, id, MailItem.TYPE_CONTACT);
@@ -2946,6 +2990,18 @@ public class Mailbox {
 
     Conversation getCachedConversation(Integer id) throws ServiceException {
         return (Conversation) getCachedItem(id, MailItem.TYPE_CONVERSATION);
+    }
+
+    public synchronized Conversation getConversationByHash(OperationContext octxt, String hash) throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("getConversationByHash", octxt);
+            Conversation item = checkAccess(getConversationByHash(hash));
+            success = true;
+            return item;
+        } finally {
+            endTransaction(success);
+        }
     }
 
     Conversation getConversationByHash(String hash) throws ServiceException {
@@ -3901,7 +3957,7 @@ public class Mailbox {
         }
     }
 
-    public synchronized int setCalendarItem(OperationContext octxt, int folderId,
+    public synchronized CalendarItem setCalendarItem(OperationContext octxt, int folderId,
                                             SetCalendarItemData defaultInv,
                                             SetCalendarItemData exceptions[],
                                             List<ReplyInfo> replies)
@@ -3915,7 +3971,7 @@ public class Mailbox {
      * @return calendar item ID 
      * @throws ServiceException
      */
-    public synchronized int setCalendarItem(OperationContext octxt, int folderId, int flags, long tags,
+    public synchronized CalendarItem setCalendarItem(OperationContext octxt, int folderId, int flags, long tags,
                                             SetCalendarItemData defaultInv,
                                             SetCalendarItemData exceptions[],
                                             List<ReplyInfo> replies, long nextAlarm)
@@ -3991,7 +4047,7 @@ public class Mailbox {
                                     folderId, volumeId, flags, tags,
                                     scid.mInv.getUid(), scid.mPm, scid.mInv, 0);
                         } else {
-                            return 0; // for now, just ignore this Invitation
+                            return null; // for now, just ignore this Invitation
                         }
                     } else {
                         // Preserve alarm time before any modification is made to the item.
@@ -4024,7 +4080,7 @@ public class Mailbox {
             queueForIndexing(calItem, !calItemIsNew, null);
             
             success = true;
-            return calItem.getId();
+            return calItem;
         } finally {
             endTransaction(success);
         }
