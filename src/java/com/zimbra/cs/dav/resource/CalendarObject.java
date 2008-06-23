@@ -209,16 +209,23 @@ public interface CalendarObject {
             }
 	        mEtag = getEtag(appt);
 	        setProperty(DavElements.P_GETCONTENTTYPE, Mime.CT_TEXT_CALENDAR);
-	        setProperty(DavElements.P_GETETAG, mEtag);
             addProperty(CalDavProperty.getCalendarData(this));
 	    }
 
-	    public RemoteCalendarObject(String uri, String owner, String etag, RemoteCalendarCollection parent) {
+	    public RemoteCalendarObject(String uri, String owner, String etag, RemoteCalendarCollection parent, boolean newlyCreated) {
 	        super(uri, owner);
 	        mParent = parent;
 	        mEtag = etag;
             setProperty(DavElements.P_GETCONTENTTYPE, Mime.CT_TEXT_CALENDAR);
-            setProperty(DavElements.P_GETETAG, mEtag);
+            mNewlyCreated = newlyCreated;
+	    }
+	    
+	    public boolean hasEtag() {
+	    	return true;
+	    }
+	    
+	    public String getEtag() {
+	    	return mEtag;
 	    }
 	    
         public static String getEtag(ZAppointmentHit item) {
