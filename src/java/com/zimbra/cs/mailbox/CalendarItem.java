@@ -68,6 +68,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.mime.Mime.FixedMimeMessage;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
@@ -2725,5 +2726,39 @@ public abstract class CalendarItem extends MailItem {
             }
         }
         return super.canAccess(rightsNeeded, authuser, asAdmin);
+    }
+
+    /**
+     * Break up a multipart/digest blob into separate MimeMessages keyed by InvId header value.
+     * @param digestStream
+     * @return
+     * @throws MessagingException 
+     */
+    public static Map<Integer, MimeMessage> decomposeBlob(byte[] digestBlob)
+    throws ServiceException {
+        Map<Integer, MimeMessage> map = new HashMap<Integer, MimeMessage>();
+        try {
+            ByteArrayInputStream bais = new ByteArrayInputStream(digestBlob);
+            FixedMimeMessage digestMm = new FixedMimeMessage(JMSession.getSession(), bais);
+            MimeMultipart mmp = (MimeMultipart) digestMm.getContent();
+            int numParts = mmp.getCount();
+            for (int i = 0; i < numParts; i++) {
+                MimeBodyPart mbp = (MimeBodyPart) mmp.getBodyPart(i);
+                int invId = 0;
+                String[] hdrs = mbp.getHeader("invId");
+                if (hdrs != null && hdrs.length > 0) {
+                    invId = Integer.parseInt(hdrs[0]);
+                    MimeMessage mm = (MimeMessage) mbp.getContent();
+                    map.put(invId, mm);
+                }
+            }
+        } catch (MessagingException e) {
+            throw ServiceException.FAILURE("Can't parse calendar item blob", e);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Can't parse calendar item blob", e);
+        } catch (NumberFormatException e) {
+            throw ServiceException.FAILURE("Can't parse calendar item blob", e);
+        }
+        return map;
     }
 }
