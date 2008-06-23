@@ -166,6 +166,7 @@ public class ZMailbox {
         private List<String> mAttrs;
         private List<String> mPrefs;
 		private String mRequestedSkin;
+		private boolean mNoTagCache;
 
 		public Options() {
         }
@@ -278,6 +279,9 @@ public class ZMailbox {
 
 		public String getRequestedSkin() { return mRequestedSkin; }
 		public void setRequestedSkin(String skin) { mRequestedSkin = skin; }
+		
+		public boolean getNoTagCache() { return mNoTagCache; }
+		public void setNoTagCache(boolean noTagCache) { mNoTagCache = noTagCache; }
 	}
 
 	private static class VoiceStorePrincipal {
@@ -312,6 +316,7 @@ public class ZMailbox {
 	private long mSize;
 	private boolean mHasMyCard;
 	private ZContact mMyCard;
+	private boolean mNoTagCache;
 
 	private List<ZEventHandler> mHandlers = new ArrayList<ZEventHandler>();
 
@@ -373,6 +378,7 @@ public class ZMailbox {
         if (options.getTargetAccount() != null) {
             initTargetAccount(options.getTargetAccount(), options.getTargetAccountBy());
         }
+        mNoTagCache = options.getNoTagCache();
     }
 
     public boolean addEventHandler(ZEventHandler handler) {
@@ -2588,13 +2594,15 @@ public class ZMailbox {
             return;
 
         List<ZTag> tagList = new ArrayList<ZTag>();
-        try {
-            Element response = invoke(newRequestElement(MailConstants.GET_TAG_REQUEST));
-            for (Element t : response.listElements(MailConstants.E_TAG))
-                tagList.add(new ZTag(t));
-        } catch (SoapFaultException sfe) {
-            if (!sfe.getCode().equals(ServiceException.PERM_DENIED))
-                throw sfe;
+        if (!mNoTagCache) {
+            try {
+                Element response = invoke(newRequestElement(MailConstants.GET_TAG_REQUEST));
+                for (Element t : response.listElements(MailConstants.E_TAG))
+                    tagList.add(new ZTag(t));
+            } catch (SoapFaultException sfe) {
+                if (!sfe.getCode().equals(ServiceException.PERM_DENIED))
+                    throw sfe;
+            }
         }
 
         Element response = invoke(newRequestElement(MailConstants.GET_FOLDER_REQUEST).addAttribute(MailConstants.A_VISIBLE, true));
