@@ -27,6 +27,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -103,9 +104,9 @@ public class SetCalendarItem extends CalendarRequest {
             ItemId iidFolder = new ItemId(folderIdStr, zsc);
             Folder folder = mbox.getFolderById(octxt, iidFolder.getId());
             SetCalendarItemParseResult parsed = parseSetAppointmentRequest(request, zsc, octxt, folder, getItemType(), false);
-            int calItemId = mbox.setCalendarItem(
-                    octxt, iidFolder.getId(), flags, tags,
-                    parsed.defaultInv, parsed.exceptions, parsed.replies, parsed.nextAlarm);
+            CalendarItem calItem = mbox.setCalendarItem(octxt, iidFolder.getId(),
+                flags, tags, parsed.defaultInv, parsed.exceptions,
+                parsed.replies, parsed.nextAlarm);
 
             Element response = getResponseElement(zsc);
 
@@ -120,7 +121,7 @@ public class SetCalendarItem extends CalendarRequest {
 	                e.addAttribute(MailConstants.A_ID, ifmt.formatItemId(cur.mInv.getMailItemId()));
 	            }
             }
-            String itemId = ifmt.formatItemId(calItemId);
+            String itemId = ifmt.formatItemId(calItem == null ? 0 : calItem.getId());
             response.addAttribute(MailConstants.A_CAL_ID, itemId);
             if (!parsed.isTodo)
                 response.addAttribute(MailConstants.A_APPT_ID_DEPRECATE_ME, itemId);  // for backward compat

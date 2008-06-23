@@ -3964,7 +3964,7 @@ public class Mailbox {
         }
     }
 
-    public synchronized int setCalendarItem(OperationContext octxt, int folderId,
+    public synchronized CalendarItem setCalendarItem(OperationContext octxt, int folderId,
                                             SetCalendarItemData defaultInv,
                                             SetCalendarItemData exceptions[],
                                             List<ReplyInfo> replies)
@@ -3978,7 +3978,7 @@ public class Mailbox {
      * @return calendar item ID 
      * @throws ServiceException
      */
-    public synchronized int setCalendarItem(OperationContext octxt, int folderId, int flags, long tags,
+    public synchronized CalendarItem setCalendarItem(OperationContext octxt, int folderId, int flags, long tags,
                                             SetCalendarItemData defaultInv,
                                             SetCalendarItemData exceptions[],
                                             List<ReplyInfo> replies, long nextAlarm)
@@ -4054,7 +4054,7 @@ public class Mailbox {
                                     folderId, volumeId, flags, tags,
                                     scid.mInv.getUid(), scid.mPm, scid.mInv, 0);
                         } else {
-                            return 0; // for now, just ignore this Invitation
+                            return null; // for now, just ignore this Invitation
                         }
                     } else {
                         // Preserve alarm time before any modification is made to the item.
@@ -4087,7 +4087,7 @@ public class Mailbox {
             queueForIndexing(calItem, !calItemIsNew, null);
             
             success = true;
-            return calItem.getId();
+            return calItem;
         } finally {
             endTransaction(success);
         }
