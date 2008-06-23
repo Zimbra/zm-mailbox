@@ -2353,10 +2353,6 @@ public final class ZimbraQuery {
     }
     
     public ZimbraQuery(Mailbox mbox, SearchParams params) throws ParseException, ServiceException {
-        Account acct = mbox.getAccount();
-        boolean includeTrash = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeTrashInSearch, false);
-        boolean includeSpam = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeSpamInSearch, false);
-        
         mParams = params;
         mMbox = mbox;
         long chunkSize = (long)mParams.getOffset() + (long)mParams.getLimit();
@@ -2433,12 +2429,18 @@ public final class ZimbraQuery {
                 mLog.debug("OP="+mOp.toString());
             }
             
-            // do spam/trash hackery!
-            if (!includeTrash || !includeSpam) {
-                if (!mOp.hasSpamTrashSetting()) {
-                    mOp = mOp.ensureSpamTrashSetting(mMbox, includeTrash, includeSpam);
-                    if (mLog.isDebugEnabled()) {
-                        mLog.debug("AFTERTS="+mOp.toString());
+            if (false) {
+                Account acct = mbox.getAccount();
+                boolean includeTrash = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeTrashInSearch, false);
+                boolean includeSpam = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeSpamInSearch, false);
+                
+                // do spam/trash hackery!
+                if (!includeTrash || !includeSpam) {
+                    if (!mOp.hasSpamTrashSetting()) {
+                        mOp = mOp.ensureSpamTrashSetting(mMbox, includeTrash, includeSpam);
+                        if (mLog.isDebugEnabled()) {
+                            mLog.debug("AFTERTS="+mOp.toString());
+                    }
                     }
                 }
             }
@@ -2650,6 +2652,32 @@ public final class ZimbraQuery {
                     } catch(Exception e) {
                         ZimbraLog.index.info("Ignoring "+e+" during RemoteQuery generation for "+union.toString());
                     }
+                }
+            }
+        }
+
+        if (true) {
+            Account acct = mbox.getAccount();
+            boolean includeTrash = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeTrashInSearch, false);
+            boolean includeSpam = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeSpamInSearch, false);
+            if (!includeTrash || !includeSpam) {
+                ArrayList<QueryOperation> toAdd = new ArrayList<QueryOperation>();
+                for (Iterator<QueryOperation> iter = union.mQueryOperations.iterator(); iter.hasNext();) {
+                    QueryOperation cur = iter.next();
+                    if (! (cur instanceof RemoteQueryOperation)) {
+                        if (!cur.hasSpamTrashSetting()) {
+                            QueryOperation newOp = cur.ensureSpamTrashSetting(mbox, false, false);
+                            if (newOp != cur) {
+                                iter.remove();
+                                toAdd.add(newOp);
+                            }
+                        }
+                        
+                    }
+                }
+                union.mQueryOperations.addAll(toAdd);
+                if (mLog.isDebugEnabled()) {
+                    mLog.debug("AFTERTS="+union.toString());
                 }
             }
         }

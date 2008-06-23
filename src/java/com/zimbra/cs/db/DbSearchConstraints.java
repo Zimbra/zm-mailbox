@@ -412,7 +412,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
                         Mountpoint mpt = (Mountpoint)f;
                         str.append(mpt.getRemoteId());
                     } else {
-                        str.append("IN:").append(f.getName());
+                        str.append("IN:").append(f.getPath());
                     }
                     atFirst = false;
                 }
