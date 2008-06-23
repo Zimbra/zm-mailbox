@@ -147,11 +147,20 @@ public class RemoteCalendarCollection extends CalendarCollection {
             String url = URLUtil.urlEscape(f.getPath() + "/" + ctxt.getItem());
             url = DavServlet.getDavUrl(target.getName()) + url;
             Pair<Header[], HttpInputStream> response = UserServlet.putRemoteResource(authToken, url, target, ctxt.getUpload().getInputStream(), headerList.toArray(new Header[0]));
-            for (Header h : response.getFirst())
-                if (h.getName().equals(DavProtocol.HEADER_ETAG)) {
-                    UrlNamespace.invalidateApptSummariesCache(mRemoteId, mItemId);
-                    return new CalendarObject.RemoteCalendarObject(ctxt.getPath(), ctxt.getUser(), h.getValue(), this);
-                }
+            String status = null, etag = null;
+            for (Header h : response.getFirst()) {
+            	String hname = h.getName();
+                if (hname.equals(DavProtocol.HEADER_ETAG))
+                	etag = h.getValue();
+                else if (hname.equals("X-Zimbra-Http-Status"))
+                	status = h.getValue();
+            }
+
+            if (status == null || etag == null)
+                throw new DavException("can't create resource", HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            
+            UrlNamespace.invalidateApptSummariesCache(mRemoteId, mItemId);
+            return new CalendarObject.RemoteCalendarObject(ctxt.getPath(), ctxt.getUser(), etag, this, status.equals("" + HttpServletResponse.SC_CREATED));
         } catch (AuthTokenException e) {
             ZimbraLog.dav.warn("can't generate authToken for "+ctxt.getAuthAccount().getName(), e);
         } catch (ServiceException e) {

@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1187,11 +1188,14 @@ public class UserServlet extends ZimbraServlet {
             int statusCode = client.executeMethod(method);
             if (statusCode == HttpStatus.SC_NOT_FOUND)
                 throw MailServiceException.NO_SUCH_ITEM(-1);
-            else if (statusCode != HttpStatus.SC_OK && statusCode != HttpStatus.SC_CREATED)
+            else if (statusCode != HttpStatus.SC_OK && 
+            		statusCode != HttpStatus.SC_CREATED &&
+            		statusCode != HttpStatus.SC_NO_CONTENT)
                 throw ServiceException.RESOURCE_UNREACHABLE(method.getStatusText(), null);
 
-            Header[] headers = method.getResponseHeaders();
-            return new Pair<Header[], HttpMethod>(headers, method);
+            List<Header> headers = new ArrayList<Header>(Arrays.asList(method.getResponseHeaders()));
+            headers.add(new Header("X-Zimbra-Http-Status", ""+statusCode));
+            return new Pair<Header[], HttpMethod>(headers.toArray(new Header[0]), method);
         } catch (HttpException e) {
             throw ServiceException.RESOURCE_UNREACHABLE("HttpException while fetching " + url, e);
         } catch (IOException e) {
