@@ -370,16 +370,6 @@ public class LC {
                 "You will have to, with abundant precaution, re-generate my.cnf and " +
                 "restart MySQL server for the change to take effect.";
         final String FS = "/";  // Use Unix-style file separator even on Windows.
-        String hostname = "lookup.failed";
-        try {
-            InetAddress address = InetAddress.getLocalHost();
-            String host = address.getCanonicalHostName();
-            if (Character.isDigit(host.charAt(0)))
-                host = address.getHostName();
-            hostname = host.toLowerCase();
-        } catch (UnknownHostException uhe) {
-            uhe.printStackTrace();
-        }
 
         zimbra_home = new KnownKey("zimbra_home");
         zimbra_home.setDefault(FS + "opt" + FS + "zimbra");
@@ -431,7 +421,7 @@ public class LC {
         zimbra_ldap_password.setForceToEdit(true);
 
         zimbra_server_hostname = new KnownKey("zimbra_server_hostname");
-        zimbra_server_hostname.setDefault(hostname);
+        zimbra_server_hostname.setDefault("localhost");
 
         zimbra_user = new KnownKey("zimbra_user");
         zimbra_user.setDefault("zimbra");
