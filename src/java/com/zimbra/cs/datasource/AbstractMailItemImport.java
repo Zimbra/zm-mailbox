@@ -63,7 +63,8 @@ public abstract class AbstractMailItemImport implements MailItemImport {
         Mailbox mbox = dataSource.getMailbox();
         SharedDeliveryContext context = new SharedDeliveryContext();
         Message msg = null;
-        if (folderId == Mailbox.ID_FOLDER_INBOX) {
+        switch (folderId) {
+        case Mailbox.ID_FOLDER_INBOX:
             try {
                 msg = RULE_MANAGER.applyRules(mbox.getAccount(), mbox, pm,
                     pm.getRawSize(), dataSource.getEmailAddress(), context);
@@ -80,6 +81,11 @@ public abstract class AbstractMailItemImport implements MailItemImport {
             } catch (Exception e) {
                 ZimbraLog.datasource.warn("Error applying filter rules", e);
             }
+            break;
+        case Mailbox.ID_FOLDER_DRAFTS:
+        case Mailbox.ID_FOLDER_SENT:
+            flags |= Flag.BITMASK_FROM_ME;
+            break;
         }
         if (msg == null) {
             msg = mbox.addMessage(null, pm, folderId, false, flags, null);
