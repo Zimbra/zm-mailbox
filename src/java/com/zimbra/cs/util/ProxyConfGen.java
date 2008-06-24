@@ -488,7 +488,7 @@ public class ProxyConfGen
         f.format("%s",webUPort);
         mVars.put("web.http.uport", f.toString());
 
-        String mailMode = msource.getAttr(Provisioning.A_zimbraMailMode,"both");    /* server overridden */
+        String mailMode = mSource.getAttr(Provisioning.A_zimbraMailMode,"both");    /* server overridden */
         mVars.put("web.mailmode", mailMode);
 
         /* if mailmode is http (only), then https needs to be disabled
