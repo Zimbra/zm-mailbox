@@ -28,6 +28,7 @@ import org.dom4j.DocumentException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapParseException;
 import com.zimbra.common.soap.SoapProtocol;
@@ -411,7 +412,7 @@ public class SoapEngine {
                 } finally {
                     handler.postHandle(userObj);
                 }
-                ZimbraPerf.SOAP_TRACKER.addStat(request.getName(), startTime);
+                ZimbraPerf.SOAP_TRACKER.addStat(getStatName(request), startTime);
             }
         } catch (SoapFaultException e) {
             response = e.getFault() != null ? e.getFault().detach() : soapProto.soapFault(ServiceException.FAILURE(e.toString(), e)); 
@@ -437,6 +438,28 @@ public class SoapEngine {
             // XXX: if the session was new, do we want to delete it?
         }
         return response;
+    }
+    
+    /**
+     * Returns the SOAP command name.  In most cases this is just the name of the given
+     * request element.  If this request is an <tt>XXXActionRequest</tt>, appends the
+     * operation to the request name.
+     */
+    private String getStatName(Element request) {
+        if (request == null) {
+            return null;
+        }
+        String statName = request.getName();
+        if (statName.endsWith("ActionRequest")) {
+            Element action = request.getOptionalElement(MailConstants.E_ACTION);
+            if (action != null) {
+                String op = action.getAttribute(MailConstants.A_OPERATION, null);
+                if (op != null) {
+                    statName = String.format("%s.%s", statName, op);
+                }
+            }
+        }
+        return statName;
     }
     
 	public DocumentDispatcher getDocumentDispatcher() {
