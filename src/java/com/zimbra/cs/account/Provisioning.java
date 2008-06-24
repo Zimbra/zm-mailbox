@@ -201,16 +201,16 @@ public abstract class Provisioning {
     public static final String MAIL_FORWARDREPLY_FORMAT_SAME = "same";
     
     /**
-     * Possible values for zimbraMailMode. "mixed" means web server should
-     * authenticate in HTTPS and redirect to HTTP (useful if all clients are on
-     * the intranet and you want only do authentication in the clear - TODO we
-     * should add networks to not redirect to at some point which would be sweet -
-     * that would mean that if you are in mixed mode and coming from a trusted
-     * local network we would redirect you to http after login, but if you came
-     * externally you would stay in https - one day we will do this.) "both"
-     * says to run both https and http, and not do any redirects between the
-     * two.  "redirect" means the web server should listen on both HTTP and HTTPS
-     * but redirect traffic on the HTTP port to HTTPS.
+     * Possible values for zimbraMailMode and ZimbraReverseProxyMailMode. "mixed"
+     * means web server should authenticate in HTTPS and redirect to HTTP (useful
+     * if all clients are on the intranet and you want only do authentication in
+     * the clear - TODO we should add networks to not redirect to at some point
+     * which would be sweet - that would mean that if you are in mixed mode and
+     * coming from a trusted local network we would redirect you to http after
+     * login, but if you came externally you would stay in https - one day we
+     * will do this.) "both" says to run both https and http, and not do any
+     * redirects between the two.  "redirect" means the web server should listen
+     * on both HTTP and HTTPS but redirect traffic on the HTTP port to HTTPS.
      */
     public enum MAIL_MODE { http, https, mixed, both, redirect }
     
@@ -1434,6 +1434,7 @@ public abstract class Provisioning {
     public static final String A_zimbraReverseProxyMailHostQuery        = "zimbraReverseProxyMailHostQuery";
     public static final String A_zimbraReverseProxyMailHostSearchBase   = "zimbraReverseProxyMailHostSearchBase";
     public static final String A_zimbraReverseProxyMailHostAttribute    = "zimbraReverseProxyMailHostAttribute";
+    public static final String A_zimbraReverseProxyMailMode             = "zimbraReverseProxyMailMode";
     public static final String A_zimbraReverseProxyUserNameAttribute    = "zimbraReverseProxyUserNameAttribute";
     public static final String A_zimbraReverseProxyPortQuery            = "zimbraReverseProxyPortQuery";
     public static final String A_zimbraReverseProxyPortSearchBase       = "zimbraReverseProxyPortSearchBase";
