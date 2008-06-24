@@ -309,7 +309,7 @@ public class ImapSync extends AbstractMailItemImport {
             imapPath = imapPath.substring(rootPath.length());
         }
         // Handling for IMAP folder delimiter different from Zimbra's
-        if (delimiter != '/') {
+        if (delimiter != 0 && delimiter != '/') {
             String[] parts = imapPath.split("/");
             for (int i = 0; i < parts.length; i++) {
                 parts[i] = parts[i].replace(delimiter, '/');
