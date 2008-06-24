@@ -18,6 +18,7 @@ package com.zimbra.cs.mailclient.util;
 
 import java.io.OutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 /**
  * Various utility methods for handling ASCII characters and strings.
@@ -59,6 +60,15 @@ public final class Ascii {
         char[] c = new char[b.length];
         for (int i = 0; i < b.length; i++) {
             c[i] = (char) (b[i] & 0xff);
+        }
+        return new String(c);
+    }
+
+    public static String toString(ByteBuffer bb) {
+        bb = bb.slice();
+        char[] c = new char[bb.remaining()];
+        for (int i = 0; bb.hasRemaining(); i++) {
+            c[i] = (char) (bb.get() & 0xff);
         }
         return new String(c);
     }

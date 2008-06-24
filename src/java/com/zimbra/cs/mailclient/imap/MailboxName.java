@@ -52,11 +52,11 @@ public final class MailboxName {
         return decode(ByteBuffer.wrap(encoded.getBytes()));
     }
 
-    public static MailboxName decode(String encoded) throws IOException {
+    public static MailboxName decode(String encoded) throws ParseException {
         return decode(ByteBuffer.wrap(Ascii.getBytes(encoded)));
     }
 
-    public static MailboxName decode(ByteBuffer bb) throws IOException {
+    public static MailboxName decode(ByteBuffer bb) throws ParseException {
         return new MailboxName(decodeBytes(bb));
     }
     
@@ -103,8 +103,9 @@ public final class MailboxName {
                     bits &= (count * 2 - 1);
                 }
             } while ((c = bb.get()) != '-');
-            if (count > 0) {
-                sb.append((char) (bits & 0xffff));
+            // Discard remaining bits
+            if (count > 0 && bits != 0) {
+                throw new ParseException("Invalid Base64 encoding");
             }
         } catch (IndexOutOfBoundsException e) {
             throw new ParseException("Unterminated Base64 encoding");

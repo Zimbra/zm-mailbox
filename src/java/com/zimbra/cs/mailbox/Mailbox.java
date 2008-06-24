@@ -472,6 +472,8 @@ public class Mailbox {
     public Flag mSyncFolderFlag;
     /** flag: whether a folder is to sync with its counterpart on server */
     public Flag mSyncFlag;
+    /** flag: indicates whether sync'd folder disallows children */
+    public Flag mNoInferiorsFlag;
 
     /** the full set of message flags, in order */
     final Flag[] mFlags = new Flag[31];
@@ -1449,7 +1451,8 @@ public class Mailbox {
         mCheckedFlag   = Flag.instantiate(this, "\\Checked",    Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_CHECKED);
         mNoInheritFlag = Flag.instantiate(this, "\\NoInherit",  Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_NO_INHERIT);
         mSyncFolderFlag = Flag.instantiate(this, "\\SyncFolder", Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_SYNCFOLDER);
-        mSyncFlag      = Flag.instantiate(this, "\\Sync",       Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_SYNC);
+        mSyncFlag		= Flag.instantiate(this, "\\Sync",       Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_SYNC);
+        mNoInferiorsFlag = Flag.instantiate(this, "\\Noinferiors", Flag.FLAG_IS_FOLDER_ONLY, Flag.ID_FLAG_NO_INFERIORS);
     }
 
     private void loadFoldersAndTags() throws ServiceException {
