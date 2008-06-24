@@ -29,17 +29,24 @@ import com.zimbra.cs.mailclient.imap.IDInfo;
 import com.zimbra.cs.mailclient.imap.Flags;
 import com.zimbra.cs.mailclient.imap.Literal;
 import com.zimbra.cs.mailclient.imap.Body;
+import com.zimbra.cs.mailclient.imap.MailboxName;
 import com.zimbra.cs.mailclient.util.SSLUtil;
 import com.zimbra.cs.mailclient.util.Ascii;
 import com.zimbra.cs.mailclient.CommandFailedException;
+import com.zimbra.cs.mailclient.ParseException;
+import com.zimbra.cs.mime.charset.ImapUTF7;
 import junit.framework.TestCase;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.List;
 import java.util.Date;
+import java.nio.charset.Charset;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 
 import org.apache.log4j.BasicConfigurator;
+import org.junit.Assert;
 
 public class TestImapClient extends TestCase {
     private ImapConfig config;
@@ -203,6 +210,33 @@ public class TestImapClient extends TestCase {
         char delim = connection.getDelimiter();
         assertEquals(0, delim);
     }
+
+    /*
+    public void testMailboxName() throws ParseException {
+        testMailboxName("/go&h\\+o");
+        testMailboxName("~peter/mail/&U,BTFw-/&ZeVnLIqe-");
+        testMailboxName("Inbox/Foo");
+        testMailboxName("Inbox\u0000Foo");
+        testMailboxName("Foo\u0001\u0020\\Foo");
+    }
+
+    private static final Charset IMAP_UTF7 =
+        new ImapUTF7("imap-utf-7", new String[] {});
+
+    private void testMailboxName(String name) throws ParseException {
+        String encoded1 = new MailboxName(name).encode();
+        String encoded2 = Ascii.toString(IMAP_UTF7.encode(name));
+        assertEquals(encoded2, encoded1);
+        String decoded1 = MailboxName.decode(encoded1).toString();
+        CharBuffer cb = IMAP_UTF7.decode(ByteBuffer.wrap(Ascii.getBytes(encoded1)));
+        char[] cs = new char[cb.remaining()];
+        for (int i = 0; cb.hasRemaining(); i++) {
+            cs[i] = cb.get();
+        }
+        String decoded2 = new String(cs);
+        assertEquals(decoded2, decoded1);
+    }
+    */
     
     /*
     public void testLiteral() throws Exception {

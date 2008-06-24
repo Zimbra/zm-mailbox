@@ -275,8 +275,9 @@ class ImapFolderSync {
             // LOG.info("Remote IMAP folder '%s' is not being synchronized", remotePath);
             return false;
         }
+        Flags flags = ld.getFlags();
         long uidValidity = 0;
-        if (!ld.getFlags().isNoselect()) {
+        if (!flags.isNoselect()) {
             uidValidity = remoteFolder.select().getUidValidity();
         }
         LOG.info("Found new IMAP folder '%s', creating local folder '%s'",
@@ -288,6 +289,13 @@ class ImapFolderSync {
             // Local folder does not exist, so create it
             folder = mailbox.createFolder(
                 null, localPath, (byte) 0, MailItem.TYPE_UNKNOWN);
+        }
+        if (flags.isNoinferiors() || ld.getDelimiter() == 0) {
+            // Folder does not allow children
+            com.zimbra.cs.mailbox.Mailbox.OperationContext context =
+                new com.zimbra.cs.mailbox.Mailbox.OperationContext(mailbox);
+            mailbox.alterTag(context, folder.getId(), MailItem.TYPE_FOLDER,
+                             Flag.ID_FLAG_NO_INFERIORS, true);
         }
         // Handle possible case conversion of INBOX in path
         localPath = folder.getPath();
