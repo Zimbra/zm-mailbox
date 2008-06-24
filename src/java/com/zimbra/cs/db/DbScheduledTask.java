@@ -94,10 +94,14 @@ public class DbScheduledTask {
                 "SELECT class_name, name, mailbox_id, exec_time, interval_millis, metadata " +
                 "FROM " + TABLE_SCHEDULED_TASK;
             if (className != null) {
-                sql += " AND class_name = ?";
+                sql += " WHERE class_name = ?";
             }
             if (mailboxId > 0) {
-                sql += " AND mailbox_id = ?";
+                if (className == null) {
+                    sql += " WHERE mailbox_id = ?";
+                } else {
+                    sql += " AND mailbox_id = ?";
+                }
             }
             stmt = conn.prepareStatement(sql);
             int i = 1;
