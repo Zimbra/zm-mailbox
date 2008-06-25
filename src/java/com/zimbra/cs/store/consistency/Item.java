@@ -80,4 +80,10 @@ public class Item implements Serializable {
     public int hashCode() {
         return id;
     }
+    
+    @Override
+    public String toString() {
+        return String.format("Item: %d, Mailbox: %d, Group: %d, Volume: %d",
+                id, mailboxId, group, volumeId);
+    }
 }
