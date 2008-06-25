@@ -454,15 +454,15 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		return serverInfo;
 	}
 	
-	public static int checkAuth(Account requestor) throws IOException {
+	public static int checkAuth(Account requestor) throws ServiceException, IOException {
 		ExchangeFreeBusyProvider prov = new ExchangeFreeBusyProvider();
 		ServerInfo info = new ServerInfo();
-		info.url = BasicUserResolver.getAttr(Provisioning.A_zimbraFreebusyExchangeURL, null);
-		info.authUsername = BasicUserResolver.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthUsername, null);
-		info.authPassword = BasicUserResolver.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthPassword, null);
-		String scheme = BasicUserResolver.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthScheme, null);
+		info.url = getAttr(Provisioning.A_zimbraFreebusyExchangeURL);
+		info.authUsername = getAttr(Provisioning.A_zimbraFreebusyExchangeAuthUsername);
+		info.authPassword = getAttr(Provisioning.A_zimbraFreebusyExchangeAuthPassword);
+		info.org = getAttr(Provisioning.A_zimbraFreebusyExchangeUserOrg);
+		String scheme = getAttr(Provisioning.A_zimbraFreebusyExchangeAuthScheme);
 		info.scheme = AuthScheme.valueOf(scheme);
-		info.org = BasicUserResolver.getAttr(Provisioning.A_zimbraFreebusyExchangeUserOrg, null);
 		ArrayList<Request> req = new ArrayList<Request>();
 		req.add(new Request(
 				requestor, 
@@ -472,6 +472,13 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		String url = prov.constructGetUrl(info, req);
 		HttpMethod method = new GetMethod(url);
 		return prov.sendRequest(method, info);
+	}
+	
+	private static String getAttr(String name) throws ServiceException {
+		String val = BasicUserResolver.getAttr(name, null);
+		if (val == null)
+			throw ServiceException.INVALID_REQUEST("missing "+name, null);
+		return val;
 	}
 	
 	public static class ExchangeUserFreeBusy extends FreeBusy {
