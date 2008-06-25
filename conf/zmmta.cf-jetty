@@ -177,5 +177,6 @@ SECTION imapproxy
 	VAR zimbraMailSSLProxyPort
 	VAR zimbraReverseProxyHttpEnabled
 	VAR zimbraReverseProxyMailEnabled
+	VAR zimbraReverseProxyMailMode
 	PROXYGEN
 	RESTART imapproxy
