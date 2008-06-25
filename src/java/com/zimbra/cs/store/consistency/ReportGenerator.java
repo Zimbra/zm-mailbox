@@ -268,6 +268,12 @@ public class ReportGenerator implements Runnable {
                 Item item = (Item) o;
 
                 Volume v = volumes.get(item.volumeId);
+                if (v == null) {
+                    faults.add(new ItemFault(item, item, null,
+                            ItemFault.Code.NOT_FOUND,
+                            (byte) 0, 0, null));
+                    continue;
+                }
                 File f = v.getItemFile(item);
                 cacheFilename(e, f);
                 if (!f.exists()) {
@@ -379,14 +385,15 @@ public class ReportGenerator implements Runnable {
     throws SQLException, IOException {
         // lazy, fake pointer
         final int[] countref = new int[1];
+        final Item[] lastItem = new Item[1];
+
         e.query(ITEM_QUERY, new StatementExecutor.ObjectMapper() {
-            private Item lastItem = null;
             private void serialize(Item o) throws SQLException {
                 Collections.sort(o.revisions);
                 try {
                     oos.writeObject(o);
                     // help avoid OOME
-                    if (countref[0] % 10000 == 0)
+                    if (countref[0] % 500 == 0)
                         oos.reset();
                     countref[0]++;
                 }
@@ -401,19 +408,19 @@ public class ReportGenerator implements Runnable {
                 int id = rs.getInt("id");
                 int mailboxId = rs.getInt("i.mailbox_id");
 
-                if (lastItem != null &&
-                        lastItem.id == id && lastItem.mailboxId == mailboxId) {
+                if (lastItem[0] != null &&
+                        lastItem[0].id == id && lastItem[0].mailboxId == mailboxId) {
                     Item.Revision rev = new Item.Revision(
                             rs.getInt("r.version"),
                             rs.getByte("r.volume_id"),
                             rs.getLong("r.size"),
                             rs.getString("r.blob_digest"),
                             rs.getInt("r.mod_content"));
-                    lastItem.revisions.add(rev);
+                    lastItem[0].revisions.add(rev);
                 } else {
                     // new item; serialize previous
-                    if (lastItem != null)
-                        serialize(lastItem);
+                    if (lastItem[0] != null)
+                        serialize(lastItem[0]);
 
                     Item item = new Item(id, group, mailboxId,
                             rs.getByte("type"),
@@ -421,14 +428,18 @@ public class ReportGenerator implements Runnable {
                             rs.getLong("i.size"),
                             rs.getString("i.blob_digest"),
                             rs.getInt("i.mod_content"));
-                    lastItem = item;
+                    lastItem[0] = item;
                 }
 
-                if (rs.isLast())
-                    serialize(lastItem);
 
             }
         });
+        if (lastItem[0] != null) {
+            Collections.sort(lastItem[0].revisions);
+            oos.writeObject(lastItem[0]);
+            oos.reset();
+            countref[0]++;
+        }
         return countref[0];
     }
 

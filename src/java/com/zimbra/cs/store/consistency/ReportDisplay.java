@@ -61,7 +61,7 @@ public class ReportDisplay implements Runnable {
             Map<Byte,Volume> volumes, ItemFault fault) {
         String itemName = null;
         Volume v;
-        File file = null;
+        String file = "UNKNOWN VOLUME";
         long size = -1;
 
         if (fault.faultCode != ItemFault.Code.NO_METADATA) {
@@ -71,11 +71,13 @@ public class ReportDisplay implements Runnable {
             if (fault.faultRevision != null) {
                 itemName += ", version=" + fault.faultRevision.version;
                 v = volumes.get(fault.faultRevision.volumeId);
-                file = v.getItemRevisionFile(fault.item, fault.faultRevision);
+                if (v != null)
+                    file = v.getItemRevisionFile(fault.item, fault.faultRevision).getName();
                 size = fault.faultRevision.size;
             } else {
                 v = volumes.get(fault.item.volumeId);
-                file = v.getItemFile(fault.item);
+                if (v != null)
+                    file = v.getItemFile(fault.item).getName();
                 size = fault.item.size;
             }
         }

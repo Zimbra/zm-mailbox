@@ -47,6 +47,7 @@ public class StatementExecutor {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement(query);
+            stmt.setFetchSize(Integer.MIN_VALUE);
             for (int i = 1; args != null && i <= args.length; i++)
                 stmt.setObject(i, args[i-1]);
             rs = stmt.executeQuery();
@@ -54,7 +55,7 @@ public class StatementExecutor {
                 mapper.mapRow(rs);
         }
         finally {
-            if (rs != null)   rs.close();
+            if (rs   != null) rs.close();
             if (stmt != null) stmt.close();
         }
         return ref[0];
@@ -69,6 +70,7 @@ public class StatementExecutor {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement(query);
+            stmt.setFetchSize(Integer.MIN_VALUE);
             for (int i = 1; args != null && i <= args.length; i++)
                 stmt.setObject(i, args[i-1]);
             rs = stmt.executeQuery();
@@ -76,7 +78,7 @@ public class StatementExecutor {
                 mapper.mapRow(rs);
         }
         finally {
-            if (rs != null)   rs.close();
+            if (rs   != null) rs.close();
             if (stmt != null) stmt.close();
         }
     }
