@@ -26,8 +26,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.jivesoftware.wildfire.XMPPServer;
+
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -38,6 +41,7 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.im.provider.ZimbraRoutingTableImpl;
 import com.zimbra.cs.index.*;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.SearchParams.ExpandResults;
@@ -74,6 +78,15 @@ public class Search extends MailDocumentHandler  {
         Mailbox mbox = getRequestedMailbox(zsc);
         Account acct = getRequestedAccount(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
+        {
+            String query = request.getAttribute(MailConstants.E_QUERY, "");
+            if (query.startsWith("$dump_routes")) {
+                ZimbraLog.im.info("Routing Table: "+((ZimbraRoutingTableImpl)(XMPPServer.getInstance().getRoutingTable())).dumpRoutingTable());
+                // create the XML response Element
+                Element response = zsc.createElement(MailConstants.SEARCH_RESPONSE);
+                return response;
+            }
+        }
         SearchParams params = SearchParams.parse(request, zsc, acct.getAttr(Provisioning.A_zimbraPrefMailInitialSearch));
 
         String query = params.getQueryStr();

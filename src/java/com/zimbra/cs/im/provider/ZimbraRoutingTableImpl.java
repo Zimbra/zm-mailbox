@@ -25,6 +25,7 @@ import org.jivesoftware.wildfire.server.OutgoingSessionPromise;
 import org.xmpp.packet.JID;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.LogFactory;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -34,6 +35,8 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ZimbraRoutingTableImpl extends BasicModule implements RoutingTable {
+    
+    private static com.zimbra.common.util.Log sLog = LogFactory.getLog(ZimbraRoutingTableImpl.class);
 
     /**
      * We need a three level tree built of hashtables: host -> name -> resource
@@ -46,8 +49,21 @@ public class ZimbraRoutingTableImpl extends BasicModule implements RoutingTable 
         super("Routing table");
         componentManager = InternalComponentManager.getInstance();
     }
+    
+    public String dumpRoutingTable() {
+        StringBuilder toRet = new StringBuilder("LocalRoutes:");
+        
+        for (Iterator<Map.Entry> iter = routes.entrySet().iterator(); iter.hasNext();) {
+            Map.Entry entry = iter.next();
+            toRet.append(entry.getKey().toString()).append(": ").append(entry.getValue().toString()).append("\n");
+        }
+        toRet.append("\nCloudRoutes: ").append(CloudRouteManager.dumpRoutingTable());
+        return toRet.toString();
+    }
 
     public void addRoute(JID node, RoutableChannelHandler destination) {
+        
+        sLog.debug("Adding route: "+node+" to handler "+destination.toString());
 
         String nodeJID = node.getNode() == null ? "" : node.getNode();
         String resourceJID = node.getResource() == null ? "" : node.getResource();
@@ -128,12 +144,18 @@ public class ZimbraRoutingTableImpl extends BasicModule implements RoutingTable 
                     componentManager.getComponent(domain) == null) {
             // Return a promise of a remote session. This object will queue packets pending
             // to be sent to remote servers
-            return OutgoingSessionPromise.getInstance();
+            ChannelHandler toRet = OutgoingSessionPromise.getInstance();
+            if (sLog.isDebugEnabled())
+                sLog.debug("Returning OutgoingSessionPromise route for jid:"+jid+" node:"+node+" domain:"+domain+" resource:"+resource+" result="+toRet);
+            return toRet;
         }
 
         RoutableChannelHandler remoteInThisCloud = getCloudRoute(node, domain);
-        if (remoteInThisCloud != null)
+        if (remoteInThisCloud != null) {
+            if (sLog.isDebugEnabled())
+                sLog.debug("Returning CloudRoute for jid:"+jid+" node:"+node+" domain:"+domain+" resource:"+resource+" result="+remoteInThisCloud);
             return remoteInThisCloud;
+        }
         
         try {
             Object nameRoutes = routes.get(domain);
@@ -160,6 +182,8 @@ public class ZimbraRoutingTableImpl extends BasicModule implements RoutingTable 
             }
         }
 
+        if (sLog.isDebugEnabled())
+            sLog.debug("Returning local route for jid:"+jid+" node:"+node+" domain:"+domain+" resource:"+resource+" result="+route);
         return route;
     }
 
@@ -170,7 +194,10 @@ public class ZimbraRoutingTableImpl extends BasicModule implements RoutingTable 
             // Return a promise of a remote session. This object will queue packets pending
             // to be sent to remote servers
             List<ChannelHandler> list = new ArrayList<ChannelHandler>();
-            list.add(OutgoingSessionPromise.getInstance());
+            ChannelHandler toRet = OutgoingSessionPromise.getInstance(); 
+            if (sLog.isDebugEnabled())
+                sLog.debug("Returning OutgoingSessionPromise route for jid:"+node+" result="+toRet);
+            list.add(toRet);
             return list;
         }
 
@@ -178,6 +205,8 @@ public class ZimbraRoutingTableImpl extends BasicModule implements RoutingTable 
         if (remoteInThisCloud != null) {
             List<ChannelHandler> list = new ArrayList<ChannelHandler>();
             list.add(remoteInThisCloud);
+            if (sLog.isDebugEnabled())
+                sLog.debug("Returning CloudRoute for jid:"+node+" result="+remoteInThisCloud);
             return list;
         }
         
@@ -214,9 +243,21 @@ public class ZimbraRoutingTableImpl extends BasicModule implements RoutingTable 
             }
         }
         if (list == null) {
+            if (sLog.isDebugEnabled())
+                sLog.debug("Returning null local route for jid:"+node);
             return Collections.emptyList();
         }
         else {
+            if (sLog.isDebugEnabled()) {
+                StringBuilder routes = new StringBuilder();
+                boolean atFirst = false;
+                for (Object o : list) {
+                    if (!atFirst)
+                        routes.append(", ");
+                    routes.append("route=").append(o);
+                }
+                sLog.debug("Returning local route for "+node+" result="+routes);
+            }
             return list;
         }
     }
@@ -259,6 +300,13 @@ public class ZimbraRoutingTableImpl extends BasicModule implements RoutingTable 
 
     public ChannelHandler removeRoute(JID node) {
 
+        if (sLog.isDebugEnabled()) {
+            Object currentRoute = routes.get(node);
+            if (currentRoute == null)
+                currentRoute = "none";
+            sLog.debug("Removing route: "+node+ "(current route: "+currentRoute.toString()+")");
+        }
+        
         ChannelHandler route = null;
         String nodeJID = node.getNode() == null ? "" : node.getNode();
         String resourceJID = node.getResource() == null ? "" : node.getResource();
