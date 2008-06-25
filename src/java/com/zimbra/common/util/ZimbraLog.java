@@ -169,6 +169,11 @@ public class ZimbraLog {
      * the "zimbra.im" logger. For instant messaging-related events.
      */
     public static final Log im = LogFactory.getLog("zimbra.im");
+
+    /**
+     * the "zimbra.im.intercept" logger. The IM packet interceptor (IM protocol logger)
+     */
+    public static final Log im_intercept= LogFactory.getLog("zimbra.im.intercept");
     
     /**
      * the "zimbra.account" logger. For account-related events.
