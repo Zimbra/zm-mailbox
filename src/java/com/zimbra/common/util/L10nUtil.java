@@ -17,6 +17,7 @@
 
 package com.zimbra.common.util;
 
+import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -155,13 +156,9 @@ public class L10nUtil {
     private static ClassLoader getClassLoader(String directory) {
         ClassLoader classLoader = null;
         try {
-            String msgsDir = directory;
-            // Append "/" at the end to tell URLClassLoader this is a
-            // directory rather than a JAR file.
-            if (!msgsDir.endsWith("/"))
-                msgsDir = msgsDir + "/";
+        	File msgsDir = new File(directory);
             URL urls[] = new URL[1];
-            urls[0] = new URL("file://" + msgsDir);
+            urls[0] = msgsDir.toURL();
             classLoader = new URLClassLoader(urls);
         } catch (MalformedURLException e) {
 			try {
