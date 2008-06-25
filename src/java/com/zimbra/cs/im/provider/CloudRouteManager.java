@@ -16,12 +16,15 @@
  */
 package com.zimbra.cs.im.provider;
 
+import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.jivesoftware.wildfire.ConnectionCloseListener;
 import org.jivesoftware.wildfire.server.OutgoingSessionPromise;
 import org.xmpp.packet.Packet;
 
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -39,6 +42,17 @@ public class CloudRouteManager extends OutgoingSessionPromise {
     
     public static CloudRouteManager getInstance() {
         return sInstance;
+    }
+    
+    public static String dumpRoutingTable() {
+        StringBuilder toRet = new StringBuilder();
+        
+        for (Iterator<Map.Entry<Server,CloudRouteSession>> iter = localServers.entrySet().iterator(); iter.hasNext();) {
+            Map.Entry<Server,CloudRouteSession> entry = iter.next();
+            toRet.append(entry.getKey().getName().toString()).append(": ").append(entry.getValue().toString()).append("\n");
+        }
+        
+        return toRet.toString();
     }
     
     static void remove(Server server, CloudRouteSession route) {
@@ -70,10 +84,12 @@ public class CloudRouteManager extends OutgoingSessionPromise {
                 }
             }
             
-            if (route != null)
+            if (route != null) {
                 route.process(packet);
-            else 
+            } else {
+                ZimbraLog.im.info("Failed to connect to cloud server: "+acctServer.getName() +" for account "+acct.getName());
                 throw new Exception("Failed to connect to cloud server: "+acctServer.getName());
+            }
         }
     }
     
