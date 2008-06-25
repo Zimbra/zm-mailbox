@@ -22,8 +22,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 import javax.mail.MessagingException;
 import javax.mail.Part;
@@ -44,6 +42,9 @@ import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
+import com.zimbra.common.util.zip.ZipEntry;
+import com.zimbra.common.util.zip.ZipOutputStream;
+import com.zimbra.common.util.zip.ZipShort;
 
 public class ZipFormatter extends Formatter {
     
@@ -87,6 +88,7 @@ public class ZipFormatter extends Formatter {
 
             // create the ZIP file
             out = new ZipOutputStream(context.resp.getOutputStream());
+            out.setEncoding(Mime.P_CHARSET_UTF8);
             String zlv = context.params.get(UserServlet.QP_ZLV);
             if (zlv != null && zlv.length() > 0) {
             	try {
@@ -99,13 +101,15 @@ public class ZipFormatter extends Formatter {
             
             Set<String> usedNames = new HashSet<String>();
 
+            boolean sync = context.sync;
             while (iterator.hasNext()) {
                 MailItem item = iterator.next();
                 if (item instanceof Message) {
                     if (!context.hasPart()) {
                         // add ZIP entry to output stream
                     	ZipEntry entry = new ZipEntry(getZipEntryName(item, item.getSubject(), ".eml", context, usedNames));
-                    	entry.setExtra(SyncFormatter.getXZimbraHeadersBytes(item));
+                    	if (sync)
+                    	    entry.setExtra(getXZimbraHeadersBytes(item));
                         out.putNextEntry(entry);
                         try {
                             InputStream is = ((Message) item).getContentStream();
@@ -123,7 +127,8 @@ public class ZipFormatter extends Formatter {
 
                     // add ZIP entry to output stream
                     ZipEntry entry = new ZipEntry(getZipEntryName(item, vcf.fn, ".vcf", context, usedNames));
-                    entry.setExtra(SyncFormatter.getXZimbraHeadersBytes(item));
+                    if (sync)
+                        entry.setExtra(getXZimbraHeadersBytes(item));
                     out.putNextEntry(entry);
                     out.write(vcf.formatted.getBytes(Mime.P_CHARSET_UTF8));
                     out.closeEntry();
@@ -142,7 +147,8 @@ public class ZipFormatter extends Formatter {
                 	if (item.getType() == MailItem.TYPE_WIKI)
                 		ext = ".wiki";
                 	ZipEntry entry = new ZipEntry(getZipEntryName(item, item.getName(), ext, context, usedNames));
-                    entry.setExtra(SyncFormatter.getXZimbraHeadersBytes(item));
+                	if (sync)
+                	    entry.setExtra(getXZimbraHeadersBytes(item));
                     out.putNextEntry(entry);
                     ByteUtil.copy(item.getContentStream(), true, out, false);
                 }
@@ -213,5 +219,46 @@ public class ZipFormatter extends Formatter {
         } catch (MessagingException e) {
             throw MailServiceException.MESSAGE_PARSE_ERROR(e);
         }
+    }
+
+    private static final byte[] ZIP_EXTRA_FIELD_HEADER_ID_X_ZIMBRA_HEADERS = { (byte) 0xFF, (byte) 0xFF };
+
+    private static byte[] getXZimbraHeadersBytes(MailItem item) {
+        byte[] extra = null;
+        byte[] data = SyncFormatter.getXZimbraHeadersBytes(item);
+        if (data != null && data.length > 0) {
+            extra = new byte[4 + data.length];
+
+            // Zip Header ID = 0xFFFF
+            extra[0] = ZIP_EXTRA_FIELD_HEADER_ID_X_ZIMBRA_HEADERS[0];
+            extra[1] = ZIP_EXTRA_FIELD_HEADER_ID_X_ZIMBRA_HEADERS[1];
+
+            // Data Size (in little endian)
+            byte[] dataSize = ZipShort.getBytes(data.length);
+            extra[2] = dataSize[0];
+            extra[3] = dataSize[1];
+
+            System.arraycopy(data, 0, extra, 4, data.length);
+        } else {
+            extra = new byte[0];
+        }
+        return extra;
+    }
+
+    public static byte[] parseXZimbraHeadersBytes(byte[] extra) {
+        // If it starts with 0xFFFF [len] it is the new-style data.  If it doesn't, it must be
+        // old-style data from when we weren't doing zip extra field correctly.
+        byte[] data = extra;
+        if (extra != null && extra.length >= 4) {
+            if (extra[0] == ZIP_EXTRA_FIELD_HEADER_ID_X_ZIMBRA_HEADERS[0] &&
+                extra[1] == ZIP_EXTRA_FIELD_HEADER_ID_X_ZIMBRA_HEADERS[1]) {
+                int len = (int) ZipShort.getValue(extra, 2);
+                if (len == extra.length - 4) {
+                    data = new byte[len];
+                    System.arraycopy(extra, 4, data, 0, len);
+                }
+            }
+        }
+        return data;
     }
 }
