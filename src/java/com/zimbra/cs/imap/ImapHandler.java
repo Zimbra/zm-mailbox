@@ -1127,14 +1127,18 @@ abstract class ImapHandler extends ProtocolHandler {
                 return CONTINUE_PROCESSING;
             }
 
-            ImapCredentials creds = startSession(acct, enabledHack, tag, mechanism);
-            if (creds == null)
-                return CONTINUE_PROCESSING;
+            // instantiate the ImapCredentials object...
+            startSession(acct, enabledHack, tag, mechanism);
+
         } catch (AccountServiceException.AuthFailedServiceException afe) {
+            mCredentials = null;
+
             ZimbraLog.imap.info(afe.getMessage() + " (" + afe.getReason() + ')');
             sendNO(tag, command + " failed");
             return CONTINUE_PROCESSING;
         } catch (ServiceException e) {
+            mCredentials = null;
+
             ZimbraLog.imap.warn(command + " failed", e);
             if (e.getCode().equals(AccountServiceException.CHANGE_PASSWORD))
                 sendNO(tag, "[ALERT] password must be changed before IMAP login permitted");
