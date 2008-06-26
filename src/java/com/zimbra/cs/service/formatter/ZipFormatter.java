@@ -101,15 +101,13 @@ public class ZipFormatter extends Formatter {
             
             Set<String> usedNames = new HashSet<String>();
 
-            boolean sync = context.sync;
             while (iterator.hasNext()) {
                 MailItem item = iterator.next();
                 if (item instanceof Message) {
                     if (!context.hasPart()) {
                         // add ZIP entry to output stream
                     	ZipEntry entry = new ZipEntry(getZipEntryName(item, item.getSubject(), ".eml", context, usedNames));
-                    	if (sync)
-                    	    entry.setExtra(getXZimbraHeadersBytes(item));
+                    	entry.setExtra(getXZimbraHeadersBytes(item));
                         out.putNextEntry(entry);
                         try {
                             InputStream is = ((Message) item).getContentStream();
@@ -127,8 +125,7 @@ public class ZipFormatter extends Formatter {
 
                     // add ZIP entry to output stream
                     ZipEntry entry = new ZipEntry(getZipEntryName(item, vcf.fn, ".vcf", context, usedNames));
-                    if (sync)
-                        entry.setExtra(getXZimbraHeadersBytes(item));
+                    entry.setExtra(getXZimbraHeadersBytes(item));
                     out.putNextEntry(entry);
                     out.write(vcf.formatted.getBytes(Mime.P_CHARSET_UTF8));
                     out.closeEntry();
@@ -147,8 +144,7 @@ public class ZipFormatter extends Formatter {
                 	if (item.getType() == MailItem.TYPE_WIKI)
                 		ext = ".wiki";
                 	ZipEntry entry = new ZipEntry(getZipEntryName(item, item.getName(), ext, context, usedNames));
-                	if (sync)
-                	    entry.setExtra(getXZimbraHeadersBytes(item));
+                	entry.setExtra(getXZimbraHeadersBytes(item));
                     out.putNextEntry(entry);
                     ByteUtil.copy(item.getContentStream(), true, out, false);
                 }
@@ -222,23 +218,29 @@ public class ZipFormatter extends Formatter {
     }
 
     private static final byte[] ZIP_EXTRA_FIELD_HEADER_ID_X_ZIMBRA_HEADERS = { (byte) 0xFF, (byte) 0xFF };
+    private static final byte[] BACKWARD_COMPAT_LINE = "x: y\r\n".getBytes();
 
     private static byte[] getXZimbraHeadersBytes(MailItem item) {
         byte[] extra = null;
         byte[] data = SyncFormatter.getXZimbraHeadersBytes(item);
         if (data != null && data.length > 0) {
-            extra = new byte[4 + data.length];
+            extra = new byte[4 + BACKWARD_COMPAT_LINE.length + data.length];
 
             // Zip Header ID = 0xFFFF
             extra[0] = ZIP_EXTRA_FIELD_HEADER_ID_X_ZIMBRA_HEADERS[0];
             extra[1] = ZIP_EXTRA_FIELD_HEADER_ID_X_ZIMBRA_HEADERS[1];
 
             // Data Size (in little endian)
-            byte[] dataSize = ZipShort.getBytes(data.length);
+            byte[] dataSize = ZipShort.getBytes(BACKWARD_COMPAT_LINE.length + data.length);
             extra[2] = dataSize[0];
             extra[3] = dataSize[1];
 
-            System.arraycopy(data, 0, extra, 4, data.length);
+            // HACK: To keep ZCO happy...
+            // Insert a dummy line so the Header ID and Data Size bytes aren't treated as an X- header name.
+            System.arraycopy(BACKWARD_COMPAT_LINE, 0, extra, 4, BACKWARD_COMPAT_LINE.length);
+
+            // Finally the actual data.
+            System.arraycopy(data, 0, extra, 4 + BACKWARD_COMPAT_LINE.length, data.length);
         } else {
             extra = new byte[0];
         }

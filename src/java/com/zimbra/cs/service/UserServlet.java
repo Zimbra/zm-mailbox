@@ -174,8 +174,6 @@ public class UserServlet extends ZimbraServlet {
 
     public static final String QP_VARIANT = "variant"; // all three
 
-    public static final String QP_SYNC = "sync";
-
     public static final String AUTH_COOKIE = "co"; // auth by cookie
 
     public static final String AUTH_BASIC = "ba"; // basic auth
@@ -794,14 +792,6 @@ public class UserServlet extends ZimbraServlet {
                 this.formatter = srvlt.getFormatter(this.format);
                 if (this.formatter == null)
                     throw new UserServletException(HttpServletResponse.SC_NOT_IMPLEMENTED, L10nUtil.getMessage(MsgKey.errNotImplemented, request));
-            }                
-
-            String syncParam = this.params.get(QP_SYNC);
-            if (syncParam != null) {
-                try {
-                    int n = Integer.parseInt(syncParam);
-                    sync = n != 0;
-                } catch (NumberFormatException e) {}
             }
 
             // see if we can get target account or not
