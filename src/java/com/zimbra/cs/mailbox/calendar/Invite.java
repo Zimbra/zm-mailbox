@@ -1610,7 +1610,7 @@ public class Invite {
                                         newInv.setIsAllDayEvent(true);
                                 }
                                 break;
-                            case X_MICROSOFT_CDO_BUSYSTATUS:
+                            case X_MICROSOFT_CDO_INTENDEDSTATUS:
                                 if (isEvent) {
                                     String fb = IcalXmlStrMap.sOutlookFreeBusyMap.toXml(prop.getValue());
                                     if (fb != null)
@@ -1883,7 +1883,6 @@ public class Invite {
             // Microsoft Outlook compatibility for free-busy status
             {
                 String outlookFreeBusy = IcalXmlStrMap.sOutlookFreeBusyMap.toIcal(getFreeBusy());
-                component.addProperty(new ZProperty(ICalTok.X_MICROSOFT_CDO_BUSYSTATUS, outlookFreeBusy));
                 component.addProperty(new ZProperty(ICalTok.X_MICROSOFT_CDO_INTENDEDSTATUS, outlookFreeBusy));
             }
 
