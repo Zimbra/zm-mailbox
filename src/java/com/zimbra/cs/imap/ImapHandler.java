@@ -3330,10 +3330,10 @@ abstract class ImapHandler extends ProtocolHandler {
                         //         the UID message data item as part of any FETCH response
                         //         caused by a UID command..."
                         if (byUID) {
-                            ntfn.append(empty ? "": " ").append("UID ").append(i4msg.imapUid);  empty = true;
+                            ntfn.append(empty ? "": " ").append("UID ").append(i4msg.imapUid);  empty = false;
                         }
                         if (dirty != null && dirty.modseq > 0 && modseqEnabled) {
-                            ntfn.append(empty ? "": " ").append("MODSEQ (").append(dirty.modseq).append(')');  empty = true;
+                            ntfn.append(empty ? "": " ").append("MODSEQ (").append(dirty.modseq).append(')');  empty = false;
                         }
                         sendUntagged(ntfn.append(')').toString());
                     }
