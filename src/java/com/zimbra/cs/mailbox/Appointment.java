@@ -276,12 +276,16 @@ public class Appointment extends CalendarItem {
             // Organizer always accepts.
             partStat = IcalXmlStrMap.PARTSTAT_ACCEPTED;
         } else if (account instanceof CalendarResource && needResourceAutoReply) {
+            // Reply emails should be sent only during delivery of incoming emails.  We're in
+            // email delivery if octxt == null.  (There needs to be a better way to determine that...)
+            boolean needReplyEmail = octxt == null;
+
             CalendarResource resource = (CalendarResource) account;
             if (resource.autoAcceptDecline()) {
                 partStat = IcalXmlStrMap.PARTSTAT_ACCEPTED;
                 if (isRecurring() && resource.autoDeclineRecurring()) {
                     partStat = IcalXmlStrMap.PARTSTAT_DECLINED;
-                    if (invite.hasOrganizer()) {
+                    if (invite.hasOrganizer() && needReplyEmail) {
                         String reason =
                             L10nUtil.getMessage(MsgKey.calendarResourceDeclineReasonRecurring, lc);
                         CalendarMailSender.sendReply(
@@ -294,7 +298,7 @@ public class Appointment extends CalendarItem {
                     List<Availability> avail = checkAvailability();
                     if (avail != null && !Availability.isAvailable(avail)) {
                         partStat = IcalXmlStrMap.PARTSTAT_DECLINED;
-                        if (invite.hasOrganizer()) {
+                        if (invite.hasOrganizer() && needReplyEmail) {
                             // Figure out the timezone to use for expressing start/end times for
                             // conflicting meetings.  Do our best to use a timezone familiar to the
                             // organizer.
@@ -336,7 +340,7 @@ public class Appointment extends CalendarItem {
                     }
                 }
                 if (IcalXmlStrMap.PARTSTAT_ACCEPTED.equals(partStat)) {
-                    if (invite.hasOrganizer()) {
+                    if (invite.hasOrganizer() && needReplyEmail) {
                         CalendarMailSender.sendReply(
                                 octxt, mbox, false,
                                 CalendarMailSender.VERB_ACCEPT,
