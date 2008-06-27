@@ -1720,6 +1720,35 @@ public class ZMailbox {
         return aid;
     }
 
+    public String uploadContentAsStream(InputStream in, String contentType, int msTimeout) throws ServiceException {
+        String aid = null;
+
+        URI uri = getUploadURI();
+        HttpClient client = getHttpClient(uri);
+
+        // make the post
+        PostMethod post = new PostMethod(uri.toString());
+        client.getHttpConnectionManager().getParams().setConnectionTimeout(msTimeout);
+        int statusCode;
+        try {
+            post.setRequestEntity(new InputStreamRequestEntity(in, -1l, contentType));
+            statusCode = client.executeMethod(post);
+
+            // parse the response
+            if (statusCode == 200) {
+                String response = post.getResponseBodyAsString();
+                aid = getAttachmentId(response);
+            } else {
+                throw ZClientException.UPLOAD_FAILED("Attachment post failed, status=" + statusCode, null);
+            }
+        } catch (IOException e) {
+            throw ZClientException.IO_ERROR(e.getMessage(), e);
+        } finally {
+            post.releaseConnection();
+        }
+        return aid;
+    }
+
     private URI getUploadURI()  throws ServiceException {
         try {
             URI uri = new URI(mTransport.getURI());
