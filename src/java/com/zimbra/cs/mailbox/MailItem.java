@@ -1910,13 +1910,13 @@ public abstract class MailItem implements Comparable<MailItem> {
             addRevision(false);
 
             markItemModified(Change.MODIFIED_NAME);
-            if (ZimbraLog.mailop.isDebugEnabled()) {
-                ZimbraLog.mailop.debug("Renaming %s to %s.", getMailopContext(this), name);
-            }
             mData.name = name;
             mData.date = mMailbox.getOperationTimestamp();
             mData.contentChanged(mMailbox);
             saveName(target.getId());
+
+            if (ZimbraLog.mailop.isDebugEnabled())
+                ZimbraLog.mailop.debug("Renaming %s to %s", getMailopContext(this), name);
 
             if (oldblob != null) {
                 try {
@@ -2476,7 +2476,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     protected void saveData(String sender, String metadata) throws ServiceException {
         mData.metadataChanged(mMailbox);
         ZimbraLog.mailop.debug("Saving data for %s.", getMailopContext(this));
-        DbMailItem.saveData(this, sender, metadata);
+        DbMailItem.saveData(this, mData.subject, sender, metadata);
     }
 
 

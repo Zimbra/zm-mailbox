@@ -728,12 +728,11 @@ public class DbMailItem {
         }
     }
 
-    public static void saveData(MailItem item, String sender, String metadata) throws ServiceException {
+    public static void saveData(MailItem item, String subject, String sender, String metadata) throws ServiceException {
         Mailbox mbox = item.getMailbox();
 
         String name = item.getName().equals("") ? null : item.getName();
 
-        String subject = item.getSubject();
         if (item instanceof Conversation)
             subject = ((Conversation) item).getNormalizedSubject();
         else if (item instanceof Message)
