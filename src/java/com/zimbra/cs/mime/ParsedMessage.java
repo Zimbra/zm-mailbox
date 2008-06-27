@@ -55,6 +55,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
@@ -365,18 +366,10 @@ public class ParsedMessage {
             // extract text from the "body" parts
             StringBuilder bodyContent = new StringBuilder();
             {
-                String reportRoot = null;
                 for (MPartInfo mpi : mMessageParts) {
-                    // text/calendar parts under a multipart/report aren't considered real calendar invites
-                    String partName = mpi.mPartName;
-                    if (reportRoot != null && !mpi.mPartName.startsWith(reportRoot))
-                        reportRoot = null;
-                    if (reportRoot == null && mpi.getContentType().equals(Mime.CT_MULTIPART_REPORT)) {
-                        reportRoot = mpi.mPartName.endsWith("TEXT") ? mpi.mPartName.substring(0, partName.length() - 4) : mpi.mPartName + ".";
-                    }
                     boolean isMainBody = mpiBodies.contains(mpi);
                     if (isMainBody) {
-                        String toplevelText = analyzePart(isMainBody, mpi, reportRoot != null);
+                        String toplevelText = analyzePart(isMainBody, mpi);
                         if (toplevelText.length() > 0)
                             appendToContent(bodyContent, toplevelText);
                     }
@@ -412,18 +405,10 @@ public class ParsedMessage {
             // extract text from the "non-body" parts
             StringBuilder fullContent = new StringBuilder(mBodyContent);
             {
-                String reportRoot = null;
                 for (MPartInfo mpi : mMessageParts) {
-                    // text/calendar parts under a multipart/report aren't considered real calendar invites
-                    String partName = mpi.mPartName;
-                    if (reportRoot != null && !mpi.mPartName.startsWith(reportRoot))
-                        reportRoot = null;
-                    if (reportRoot == null && mpi.getContentType().equals(Mime.CT_MULTIPART_REPORT)) {
-                        reportRoot = mpi.mPartName.endsWith("TEXT") ? mpi.mPartName.substring(0, partName.length() - 4) : mpi.mPartName + ".";
-                    }
                     boolean isMainBody = mpiBodies.contains(mpi);
                     if (!isMainBody) {
-                        String toplevelText = analyzePart(isMainBody, mpi, reportRoot != null);
+                        String toplevelText = analyzePart(isMainBody, mpi);
                         if (toplevelText.length() > 0)
                             appendToContent(fullContent, toplevelText);
                     }
@@ -1097,14 +1082,40 @@ public class ParsedMessage {
         return d;
     }
     
-    
-    
+    // reject ics under multipart/report (bounce message; bug 6667)
+    // reject ics under message/rfc822 (forwarded ones; bug 28348)
+    // reject ics without method parameter in Content-Type (bug 28348)
+    //   - real invites would have set method
+    //   - merely attaching as a file would not have method because email UAs don't know calendaring
+    // It's hard to whitelist acceptable MIME structures because there are too many possibilities.
+    private static boolean isAcceptableCalendarInvite(MPartInfo mpi) {
+        if (Mime.CT_TEXT_CALENDAR.equals(mpi.getContentType())) {
+            if (!LC.calendar_allow_invite_without_method.booleanValue()) {
+                String method = mpi.getContentTypeParameter("method");
+                if (method == null)
+                    return false;
+            }
+            MPartInfo parent = mpi;
+            while ((parent = parent.getParent()) != null) {
+                String ct = parent.getContentType();
+                if (Mime.CT_MULTIPART_REPORT.equals(ct))  // calendar part within a bounce message
+                    return false;
+                if (!LC.calendar_allow_forwarded_invite.booleanValue() && Mime.CT_MESSAGE_RFC822.equals(ct))
+                    return false;
+            }
+            return true;
+        }
+        return false;
+    }
+
     /**
      * @return Extracted toplevel text (any text that should go into the toplevel indexed document)
      */
-    private String analyzePart(boolean isMainBody, MPartInfo mpi, boolean ignoreCalendar)
+    private String analyzePart(boolean isMainBody, MPartInfo mpi)
     throws MessagingException, ServiceException {
-        
+
+        boolean ignoreCalendar = !isAcceptableCalendarInvite(mpi);
+
         String toRet = "";
         try {
             String ctype = mpi.getContentType();
