@@ -72,8 +72,20 @@ public class TestUtilCode extends TestCase
     }
 
     public void testJoin() {
-        String[] lines = { "a", "b", "c" };
-        assertEquals("a\nb\nc", StringUtil.join("\n", lines));
+        List<String> list = new ArrayList<String>();
+        list.add("a");
+        list.add("b");
+        list.add("c");
+        assertEquals("a,b,c", StringUtil.join(",", list));
+        String[] array = new String[list.size()];
+        list.toArray(array);
+        assertEquals("a,b,c", StringUtil.join(",", array));
+        
+        // Make sure things still work if the first element is empty (bug 29513)
+        list.set(0, "");
+        assertEquals(",b,c", StringUtil.join(",", list));
+        list.toArray(array);
+        assertEquals(",b,c", StringUtil.join(",", array));
     }
 
     public void testSimpleClassName() {
