@@ -535,7 +535,7 @@ public class ByteUtil {
      *                 when there is an error.
      * @param maxLength maximum number of bytes to copy
      * @return the number of bytes copied
-     * @throws IOException if the number of bytes read exceeds <tt>maxLength</tt>
+     * @throws IOException
      */
     public static int copy(InputStream in, boolean closeIn, OutputStream out, boolean closeOut, long maxLength) throws IOException {
         try {
@@ -547,7 +547,7 @@ public class ByteUtil {
                 transferred += numRead;
 
                 if (maxLength >= 0 && transferred > maxLength)
-                    throw new IOException("stream exceeded allowable length: " + transferred);
+                	return transferred;
             }
             return transferred;
         } finally {
