@@ -97,6 +97,11 @@ public class DebugConfig {
 
     public static boolean disableCalendarResourcePermissionDeniedReply;
 
+    // If true, every item marked as "modified" in the Mailbox's cache is
+    // checked against the database at the end of the transaction in order
+    // to ensure cache consistency (very expensive)
+    public static boolean checkMailboxCacheConsistency;
+
     public static final int numMailboxGroups;
 
     static {
@@ -112,7 +117,7 @@ public class DebugConfig {
             disableIndexing = true;
             disableObjects = true;
 
-            // When message analysis of disabled, conversation fragment is
+            // When message analysis is disabled, conversation fragment is
             // also disabled.
         } else {
             disableMimePartExtraction = booleanValue("debug_disable_mime_part_extraction", false);
@@ -126,6 +131,8 @@ public class DebugConfig {
         disableMessageStoreFsync = booleanValue("debug_disable_message_store_fsync", false);
 
         disableCalendarResourcePermissionDeniedReply = booleanValue("debug_disable_calendar_resource_permission_denied_reply", false);
+
+        checkMailboxCacheConsistency = booleanValue("debug_check_mailbox_cache_consistency", false);
 
         numMailboxGroups = Math.max(LC.zimbra_mailbox_groups.intValue(), 1);
     }

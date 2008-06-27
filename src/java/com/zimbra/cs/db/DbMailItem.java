@@ -650,8 +650,8 @@ public class DbMailItem {
             stmt.setLong(pos++, item.getSize());
             stmt.setInt(pos++, item.getUnreadCount());
             stmt.setString(pos++, checkMetadataLength(metadata));
-            stmt.setInt(pos++, mbox.getOperationChangeID());
-            stmt.setInt(pos++, mbox.getOperationTimestamp());
+            stmt.setInt(pos++, item.getModifiedSequence());
+            stmt.setInt(pos++, (int) (item.getChangeDate() / 1000));
             stmt.setInt(pos++, item.getSavedSequence());
             stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, item.getId());
@@ -2828,6 +2828,66 @@ public class DbMailItem {
     }
 
 
+    public static void consistencyCheck(MailItem item, UnderlyingData data, String metadata) throws ServiceException {
+        if (item.getId() <= 0)
+            return;
+        Mailbox mbox = item.getMailbox();
+
+        Connection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT mi.sender, " + DB_FIELDS +
+                        " FROM " + getMailItemTableName(mbox, "mi") +
+                        " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
+            int pos = 1;
+            stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, item.getId());
+            rs = stmt.executeQuery();
+
+            if (!rs.next())
+                throw ServiceException.FAILURE("consistency check failed: " + MailItem.getNameForType(item) + " " + item.getId() + " not found in DB", null);
+
+            UnderlyingData dbdata = constructItem(rs, 1);
+            dbdata.sender = rs.getString(1);
+
+            String dataBlobDigest = data.getBlobDigest(), dbdataBlobDigest = dbdata.getBlobDigest();
+            String dataSender = item.getSortSender(), dbdataSender = dbdata.sender == null ? "" : dbdata.sender;
+            String failures = "";
+
+            if (data.id != dbdata.id)                    failures += " ID";
+            if (data.type != dbdata.type)                failures += " TYPE";
+            if (data.folderId != dbdata.folderId)        failures += " FOLDER_ID";
+            if (data.indexId != dbdata.indexId)          failures += " INDEX_ID";
+            if (data.imapId != dbdata.imapId)            failures += " IMAP_ID";
+            if (data.volumeId != dbdata.volumeId)        failures += " VOLUME_ID";
+            if (data.date != dbdata.date)                failures += " DATE";
+            if (data.size != dbdata.size)                failures += " SIZE";
+            if (dbdata.type != MailItem.TYPE_CONVERSATION) {
+                if (data.unreadCount != dbdata.unreadCount)  failures += " UNREAD";
+                if (data.flags != dbdata.flags)              failures += " FLAGS";
+                if (data.tags != dbdata.tags)                failures += " TAGS";
+            }
+            if (data.modMetadata != dbdata.modMetadata)  failures += " MOD_METADATA";
+            if (data.dateChanged != dbdata.dateChanged)  failures += " CHANGE_DATE";
+            if (data.modContent != dbdata.modContent)    failures += " MOD_CONTENT";
+            if (Math.max(data.parentId, -1) != dbdata.parentId)  failures += " PARENT_ID";
+            if (dataBlobDigest != dbdataBlobDigest && (dataBlobDigest == null || !dataBlobDigest.equals(dbdataBlobDigest)))  failures += " BLOB_DIGEST";
+            if (dataSender != dbdataSender && (dataSender == null || !dataSender.equalsIgnoreCase(dbdataSender)))  failures += " SENDER";
+            if (data.subject != dbdata.subject && (data.subject == null || !data.subject.equals(dbdata.subject)))  failures += " SUBJECT";
+            if (data.name != dbdata.name && (data.name == null || !data.name.equals(dbdata.name)))                 failures += " NAME";
+            if (metadata != dbdata.metadata && (metadata == null || !metadata.equals(dbdata.metadata)))            failures += " METADATA";
+
+            if (!failures.equals(""))
+                throw ServiceException.FAILURE("consistency check failed: " + MailItem.getNameForType(item) + " " + item.getId() + " differs from DB at" + failures, null);
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("fetching item " + item.getId(), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+
     /** Makes sure that the argument won't overflow the maximum length of a
      *  MySQL VARCHAR(128) column (128 characters) by truncating the string
      *  if necessary.
@@ -2839,7 +2899,6 @@ public class DbMailItem {
             return sender;
         return sender.substring(0, MAX_SENDER_LENGTH);
     }
-
 
     /** Makes sure that the argument won't overflow the maximum length of a
      *  MySQL VARCHAR(1024) column (1024 characters).

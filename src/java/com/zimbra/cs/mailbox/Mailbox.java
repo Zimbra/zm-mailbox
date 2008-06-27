@@ -6937,6 +6937,21 @@ public class Mailbox {
                 }
             }
         }
+
+        if (DebugConfig.checkMailboxCacheConsistency && mCurrentChange.mDirty != null && mCurrentChange.mDirty.hasNotifications()) {
+            if (mCurrentChange.mDirty.created != null) {
+                for (MailItem item : mCurrentChange.mDirty.created.values())
+                    DbMailItem.consistencyCheck(item, item.mData, item.encodeMetadata());
+            }
+            if (mCurrentChange.mDirty.modified != null) {
+                for (Change change : mCurrentChange.mDirty.modified.values()) {
+                    if (change.what instanceof MailItem) {
+                        MailItem item = (MailItem) change.what;
+                        DbMailItem.consistencyCheck(item, item.mData, item.encodeMetadata());
+                    }
+                }
+            }
+        }
     }
 
     private void commitCache(MailboxChange change) {
