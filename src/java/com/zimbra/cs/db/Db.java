@@ -192,4 +192,13 @@ public abstract class Db {
         else
             return "MOD(" + column + " / " + bitmask + ", 2) = 1";
     }
+
+
+    /** Generates a WHERE-type clause that evaluates to <code>expr1</code> if
+     *  its value is non-<tt>NULL</tt> and <code>expr2</code> otherwise. */
+    static String clauseIFNULL(String expr1, String expr2) {
+        return getInstance().getIFNULL(expr1, expr2);
+    }
+
+    abstract String getIFNULL(String column1, String column2);
 }

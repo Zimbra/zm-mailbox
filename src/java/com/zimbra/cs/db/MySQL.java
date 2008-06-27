@@ -72,6 +72,10 @@ public class MySQL extends Db {
         return " FORCE INDEX (" + index + ')';
     }
 
+    @Override String getIFNULL(String column1, String column2) {
+        return "IFNULL(" + column1 + ", " + column2 + ")";
+    }
+
     @Override
     DbPool.PoolConfig getPoolConfig() {
         return new MySQLConfig();
