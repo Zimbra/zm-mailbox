@@ -438,6 +438,20 @@ public class MailboxManager {
     }
     
     /**
+     * @return the number of hard references to currently-loaded mailboxes, either in
+     * MAINTENANCE mode or not.
+     */
+    public synchronized int getCacheSize() {
+        int count = 0;
+        for (Object o : mMailboxCache.values()) {
+            if (o instanceof Mailbox || o instanceof MailboxLock) {
+                count++;
+            }
+        }
+        return count;
+    }
+    
+    /**
      * @param mailboxId
      * @return TRUE if the specified mailbox is in-memory and not in maintenance mode,
      *         if false, then caller can assume that one of the @link{Listener} APIs 

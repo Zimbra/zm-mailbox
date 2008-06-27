@@ -82,6 +82,22 @@ public class MessageCache {
             throw new RuntimeException(e);
         }
     }
+    
+    /**
+     * Returns the number of messages in the cache.
+     */
+    public static int getSize() {
+        synchronized (mCache) {
+            return mCache.size();
+        }
+    }
+    
+    /**
+     * Returns the total size of all messages in the cache. 
+     */
+    public static int getDataSize() {
+        return mTotalSize;
+    }
 
     /** Uncaches any data associated with the given item.  This must be done
      *  before you change the item's content; otherwise, the cache will return

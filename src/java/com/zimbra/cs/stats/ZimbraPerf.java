@@ -17,11 +17,16 @@
 
 package com.zimbra.cs.stats;
 
+import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.stats.Accumulator;
 import com.zimbra.common.stats.Counter;
 import com.zimbra.common.stats.RealtimeStats;
@@ -29,13 +34,14 @@ import com.zimbra.common.stats.RealtimeStatsCallback;
 import com.zimbra.common.stats.StatsDumper;
 import com.zimbra.common.stats.StatsDumperDataSource;
 import com.zimbra.common.stats.StopWatch;
-import com.zimbra.common.stats.SystemStats;
 import com.zimbra.common.stats.ThreadStats;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.mailbox.MailboxManager;
 
 /**
  * A collection of methods for keeping track of server performance statistics.
@@ -52,6 +58,9 @@ public class ZimbraPerf {
     public static final String RTS_IMAP_CONN = "imap_conn";
     public static final String RTS_IMAP_SSL_CONN = "imap_ssl_conn";
     public static final String RTS_SOAP_SESSIONS = "soap_sessions";
+    public static final String RTS_MBOX_CACHE_SIZE = "mbox_cache_size";
+    public static final String RTS_MSG_CACHE_SIZE = "msg_cache_size";
+    public static final String RTS_MSG_CACHE_BYTES = "msg_cache_bytes";
 
     // Accumulators.  To add a new accumulator, create a static instance here,
     // add it to the CORE_ACCUMULATORS array and if necessary, set options
@@ -86,11 +95,14 @@ public class ZimbraPerf {
     public static final ActivityTracker IMAP_TRACKER = new ActivityTracker("imap.csv");
     public static final ActivityTracker POP_TRACKER = new ActivityTracker("pop3.csv");
     
+    private static int sMailboxCacheSize;
+    private static long sMailboxCacheSizeTimestamp = 0;
+    
     private static RealtimeStats sRealtimeStats = 
         new RealtimeStats(new String[] {
             RTS_DB_POOL_SIZE, RTS_INNODB_BP_HIT_RATE,
-            RTS_POP_CONN, RTS_POP_SSL_CONN, RTS_IMAP_CONN, RTS_IMAP_SSL_CONN, RTS_SOAP_SESSIONS, 
-            }
+            RTS_POP_CONN, RTS_POP_SSL_CONN, RTS_IMAP_CONN, RTS_IMAP_SSL_CONN, RTS_SOAP_SESSIONS,
+            RTS_MBOX_CACHE_SIZE, RTS_MSG_CACHE_SIZE, RTS_MSG_CACHE_BYTES }
         );
 
     private static CopyOnWriteArrayList<Accumulator> sAccumulators = 
@@ -116,7 +128,7 @@ public class ZimbraPerf {
                         sRealtimeStats
                     }
         );
-
+    
     /**
      * This may only be called BEFORE ZimbraPerf.initialize is called, otherwise the column
      * names will not be output correctly into the logs
@@ -159,7 +171,7 @@ public class ZimbraPerf {
         sRealtimeStats.addCallback(callback);
     }
     
-    private static final long CSV_DUMP_FREQUENCY = Constants.MILLIS_PER_MINUTE;
+    private static final long CSV_DUMP_FREQUENCY = Constants.MILLIS_PER_MINUTE / 6; // XXX bburtin
     private static boolean sIsInitialized = false;
 
     private static final String[] THREAD_NAME_PREFIXES = new String[] { 
@@ -183,7 +195,7 @@ public class ZimbraPerf {
             return;
         }
         
-        addStatsCallback(new SystemStats());
+        addStatsCallback(new ServerStatsCallback());
         
         // Only the average is interesting for these counters
         COUNTER_MBOX_CACHE.setShowAverage(true);
@@ -241,7 +253,34 @@ public class ZimbraPerf {
         StatsDumper.schedule(IMAP_TRACKER, CSV_DUMP_FREQUENCY);
         StatsDumper.schedule(POP_TRACKER, CSV_DUMP_FREQUENCY);
 
+        
+        // Initialize JMX
+        MBeanServer jmxServer = ManagementFactory.getPlatformMBeanServer();
+        JmxServerStats jmxServerStats = new JmxServerStats();
+        try {
+            jmxServer.registerMBean(jmxServerStats, new ObjectName("ZimbraCollaborationSuite:type=ServerStats"));
+        } catch (Exception e) {
+            ZimbraLog.perf.warn("Unable to register JMX interface.", e);
+        }
+
         sIsInitialized = true;
+    }
+    
+    /**
+     * Returns the mailbox cache size.  The real value is reread once a minute so that cache
+     * performance is not affected.
+     */
+    static int getMailboxCacheSize() {
+        long now = System.currentTimeMillis();
+        if (now - sMailboxCacheSizeTimestamp > Constants.MILLIS_PER_MINUTE) {
+            try {
+                sMailboxCacheSize = MailboxManager.getInstance().getCacheSize();
+            } catch (ServiceException e) {
+                ZimbraLog.perf.warn("Unable to determine mailbox cache size.", e);
+            }
+            sMailboxCacheSizeTimestamp = now;
+        }
+        return sMailboxCacheSize;
     }
 
     /**

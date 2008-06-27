@@ -119,7 +119,7 @@ public final class SessionCache {
         return getSessionMap(type).remove(session.getAuthenticatedAccountId(), session.getSessionId());
     }
 
-    /** Inintializes the session cache and starts the sweeper timer. */
+    /** Initializes the session cache and starts the sweeper timer. */
     public static void startup() {
         Zimbra.sTimer.schedule(new SweepMapTimerTask(), 30000, SESSION_SWEEP_INTERVAL_MSEC);
         ZimbraPerf.addStatsCallback(new StatsCallback());
