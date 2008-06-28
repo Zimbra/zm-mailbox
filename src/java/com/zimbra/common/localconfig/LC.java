@@ -275,9 +275,6 @@ public class LC {
     public static final KnownKey calendar_ics_import_full_parse_max_size;
     public static final KnownKey calendar_canonical_tzid;
     public static final KnownKey calendar_allow_null_organizer_with_attendees;
-    public static final KnownKey calendar_allow_invite_without_method;
-    public static final KnownKey calendar_allow_invite_with_publish_method;
-    public static final KnownKey calendar_allow_forwarded_invite;
 
     public static final KnownKey calendar_cache_enabled;
     public static final KnownKey calendar_cache_directory;
@@ -881,15 +878,6 @@ public class LC {
         
         calendar_allow_null_organizer_with_attendees = new KnownKey("calendar_allow_null_organizer_with_attendees");
         calendar_allow_null_organizer_with_attendees.setDefault("false");
-
-        calendar_allow_invite_without_method = new KnownKey("calendar_allow_invite_without_method");
-        calendar_allow_invite_without_method.setDefault("false");
-
-        calendar_allow_invite_with_publish_method = new KnownKey("calendar_allow_invite_with_publish_method");
-        calendar_allow_invite_with_publish_method.setDefault("false");
-
-        calendar_allow_forwarded_invite = new KnownKey("calendar_allow_forwarded_invite");
-        calendar_allow_forwarded_invite.setDefault("true");
 
         calendar_cache_enabled = new KnownKey("calendar_cache_enabled");
         calendar_cache_enabled.setDefault("false");
