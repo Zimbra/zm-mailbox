@@ -40,6 +40,7 @@ import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
 import com.zimbra.cs.service.mail.ParseMimeMessage.InviteParserResult;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
@@ -162,7 +163,10 @@ public class SetCalendarItem extends CalendarRequest {
 
         Invite inv = (ipr == null ? null : ipr.mInvite);
         if (inv == null || inv.getDTStamp() == -1) { //zdsync if -1 for 4.5 back compat
-            ZVCalendar cal = pm.getiCalendar();
+            CalendarPartInfo cpi = pm.getCalendarPartInfo();
+            ZVCalendar cal = null;
+            if (cpi != null && CalendarItem.isAcceptableInvite(mbox.getAccount(), cpi))
+                cal = cpi.cal;
             if (cal == null)
                 throw ServiceException.FAILURE("SetCalendarItem could not build an iCalendar object", null);
             boolean sentByMe = false; // not applicable in the SetCalendarItem case

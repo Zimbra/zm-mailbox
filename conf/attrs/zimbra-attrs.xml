@@ -3321,4 +3321,19 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether to run proxy in HTTP, HTTPS, both, mixed, or redirect mode.  See also related attributes zimbraMailProxyPort and zimbraMailSSLProxyPort</desc>
 </attr>
 
+<attr id="686" name="zimbraPrefCalendarAllowForwardedInvite" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether calendar invite part in a forwarded email is auto-added to calendar</desc>
+</attr>
+
+<attr id="687" name="zimbraPrefCalendarAllowMethodlessInvite" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>whether calendar invite part without method parameter in Content-Type header is auto-added to calendar</desc>
+</attr>
+
+<attr id="688" name="zimbraPrefCalendarAllowPublishMethodInvite" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>whether calendar invite part with PUBLISH method is auto-added to calendar</desc>
+</attr>
+
 </attrs>

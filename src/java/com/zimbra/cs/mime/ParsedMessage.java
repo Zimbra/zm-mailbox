@@ -55,7 +55,6 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
@@ -69,6 +68,7 @@ import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.object.ObjectHandlerException;
@@ -115,7 +115,7 @@ public class ParsedMessage {
     private String mNormalizedSubject;
     private boolean mSubjectPrefixed;
     private List<Document> mLuceneDocuments = new ArrayList<Document>();
-    private ZVCalendar mCalendar;
+    private CalendarPartInfo mCalendarPartInfo;
 
     private File mRawFile;
     private byte[] mRawData;
@@ -893,14 +893,13 @@ public class ParsedMessage {
     }
 
     /**
-     * Returns the iCalendar object that is parsed from the
-     * text/calendar mime part if it exists in this message. 
-     * The presence of this mime part indicates that this message 
-     * carries an appointment.
-     * 
-     * @return the iCalendar object or null if this is an ordinary message
+     * Returns CalenarPartInfo object contaiming a ZVCalendar representing an iCalendar
+     * part and some additional information about the calendar part such as whether
+     * the part was found inside a forwarded rfc822 message and if the part had
+     * "method" parameter indicating it was an actual invite email as opposed to
+     * a regular email that happens to carry an ics attachment.
      */
-    public ZVCalendar getiCalendar() {
+    public CalendarPartInfo getCalendarPartInfo() {
         try {
             parse();
             if (mHasTextCalendarPart) {
@@ -910,7 +909,7 @@ public class ParsedMessage {
             // the calendar info should still be parsed 
             sLog.warn("Message analysis failed when getting calendar info");
         }
-        return mCalendar;
+        return mCalendarPartInfo;
     }
     
     /**
@@ -1081,31 +1080,40 @@ public class ParsedMessage {
         
         return d;
     }
-    
-    // reject ics under multipart/report (bounce message; bug 6667)
-    // reject ics under message/rfc822 (forwarded ones; bug 28348)
-    // reject ics without method parameter in Content-Type (bug 28348)
-    //   - real invites would have set method
-    //   - merely attaching as a file would not have method because email UAs don't know calendaring
-    // It's hard to whitelist acceptable MIME structures because there are too many possibilities.
-    private static boolean isAcceptableCalendarInvite(MPartInfo mpi) {
+
+    private static boolean isBouncedCalendar(MPartInfo mpi) {
         if (Mime.CT_TEXT_CALENDAR.equals(mpi.getContentType())) {
-            if (!LC.calendar_allow_invite_without_method.booleanValue()) {
-                String method = mpi.getContentTypeParameter("method");
-                if (method == null)
-                    return false;
-            }
             MPartInfo parent = mpi;
             while ((parent = parent.getParent()) != null) {
                 String ct = parent.getContentType();
-                if (Mime.CT_MULTIPART_REPORT.equals(ct))  // calendar part within a bounce message
-                    return false;
-                if (!LC.calendar_allow_forwarded_invite.booleanValue() && Mime.CT_MESSAGE_RFC822.equals(ct))
-                    return false;
+                if (Mime.CT_MULTIPART_REPORT.equals(ct))  // Assume multipart/report == bounced message.
+                    return true;
             }
-            return true;
         }
         return false;
+    }
+
+    public static class CalendarPartInfo {
+        public ZVCalendar cal;
+        public boolean hasMethodParam;
+        public ICalTok method;
+        public boolean wasForwarded;
+    }
+
+    private void setCalendarPartInfo(MPartInfo mpi, ZVCalendar cal) {
+        mCalendarPartInfo = new CalendarPartInfo();
+        mCalendarPartInfo.cal = cal;
+        String method = mpi.getContentTypeParameter("method");
+        mCalendarPartInfo.hasMethodParam = method != null;
+        mCalendarPartInfo.method = cal.getMethod();
+
+        mCalendarPartInfo.wasForwarded = false;
+        MPartInfo parent = mpi;
+        while ((parent = parent.getParent()) != null) {
+            String ct = parent.getContentType();
+            if (Mime.CT_MESSAGE_RFC822.equals(ct))
+                mCalendarPartInfo.wasForwarded = true;
+        }
     }
 
     /**
@@ -1114,7 +1122,11 @@ public class ParsedMessage {
     private String analyzePart(boolean isMainBody, MPartInfo mpi)
     throws MessagingException, ServiceException {
 
-        boolean ignoreCalendar = !isAcceptableCalendarInvite(mpi);
+        boolean ignoreCalendar;
+        if (mCalendarPartInfo == null)
+            ignoreCalendar = isBouncedCalendar(mpi);
+        else
+            ignoreCalendar = true;
 
         String toRet = "";
         try {
@@ -1139,8 +1151,11 @@ public class ParsedMessage {
                 }
 
                 // remember the first iCalendar attachment
-                if (!ignoreCalendar && mCalendar == null)
-                    mCalendar = handler.getICalendar();
+                if (!ignoreCalendar && mCalendarPartInfo == null) {
+                    ZVCalendar cal = handler.getICalendar();
+                    if (cal != null)
+                        setCalendarPartInfo(mpi, cal);
+                }
 
                 // In some cases we want to add ALL TEXT from EVERY PART to the toplevel 
                 // body content. This is necessary for queries with multiple words -- where
@@ -1174,7 +1189,7 @@ public class ParsedMessage {
             }
 
             // make sure we've got the text/calendar handler installed
-            if (!ignoreCalendar && mCalendar == null && ctype.equals(Mime.CT_TEXT_CALENDAR)) {
+            if (!ignoreCalendar && mCalendarPartInfo == null && ctype.equals(Mime.CT_TEXT_CALENDAR)) {
                 if (handler.isIndexingEnabled())
                     ZimbraLog.index.warn("TextCalendarHandler not correctly installed");
 
@@ -1185,7 +1200,9 @@ public class ParsedMessage {
                         charset = Mime.P_CHARSET_DEFAULT;
 
                     Reader reader = new InputStreamReader(is = mpi.getMimePart().getInputStream(), charset);
-                    mCalendar = ZCalendarBuilder.build(reader);
+                    ZVCalendar cal = ZCalendarBuilder.build(reader);
+                    if (cal != null)
+                        setCalendarPartInfo(mpi, cal);
                 } catch (IOException ioe) {
                     ZimbraLog.index.warn("error reading text/calendar mime part", ioe);
                 } finally {

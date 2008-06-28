@@ -50,7 +50,6 @@ import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -352,7 +351,8 @@ public class Message extends MailItem {
                 methodStr = cal.getPropVal(ICalTok.METHOD, ICalTok.PUBLISH.toString()).toUpperCase();
                 if (components != null) {
                     flags |= Flag.BITMASK_INVITE;
-                    if (!LC.calendar_allow_invite_with_publish_method.booleanValue() && ICalTok.PUBLISH.toString().equals(methodStr)) {
+                    if (ICalTok.PUBLISH.toString().equals(methodStr) &&
+                        !acct.getBooleanAttr(Provisioning.A_zimbraPrefCalendarAllowPublishMethodInvite, false)) {
                         // If method is PUBLISH, we don't process the calendar part.  Mark it as
                         // a regular attachment instead.
                         flags |= Flag.BITMASK_ATTACHED;
@@ -502,9 +502,10 @@ public class Message extends MailItem {
                 if (createCalItem) {
                     if (calItem == null) {
                         // ONLY create a calendar item if this is a REQUEST method...otherwise don't.
-                        // Allow PUBLISH method as well depending on the config key.
+                        // Allow PUBLISH method as well depending on the preference.
                         if (method.equals(ICalTok.REQUEST.toString()) ||
-                            (LC.calendar_allow_invite_with_publish_method.booleanValue() && method.equals(ICalTok.PUBLISH.toString()))) {
+                            (method.equals(ICalTok.PUBLISH.toString()) &&
+                             getAccount().getBooleanAttr(Provisioning.A_zimbraPrefCalendarAllowPublishMethodInvite, false))) {
                             int flags = Flag.BITMASK_INDEXING_DEFERRED;
                             mMailbox.incrementIndexDeferredCount(1);
                             int defaultFolder = cur.isTodo() ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;

@@ -98,6 +98,7 @@ import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
 import com.zimbra.cs.pop3.Pop3Message;
 import com.zimbra.cs.redolog.op.*;
 import com.zimbra.cs.service.FeedManager;
@@ -4608,11 +4609,10 @@ public class Mailbox {
         //
         if (!noICal) {
             try {
-                ZVCalendar cal = pm.getiCalendar();
-                if (cal != null) {
-                    ICalTok method = cal.getMethod();
-                    if (ICalTok.REPLY.equals(method)) {
-                        processICalReplies(octxt, cal);
+                CalendarPartInfo cpi = pm.getCalendarPartInfo();
+                if (cpi != null && CalendarItem.isAcceptableInvite(getAccount(), cpi)) {
+                    if (ICalTok.REPLY.equals(cpi.method)) {
+                        processICalReplies(octxt, cpi.cal);
                         noICal = true;
                     }
                 }
@@ -4650,7 +4650,9 @@ public class Mailbox {
             Integer sentMsgID = (Integer) mSentMessageIDs.get(msgidHeader);
             // if the rules say to drop this duplicated incoming message, return null now
             // don't dedupe messages carrying calendar part
-            if (pm.getiCalendar() == null && dedupe(pm.getMimeMessage(), sentMsgID))
+            CalendarPartInfo cpi = pm.getCalendarPartInfo();
+            if ((cpi == null || !CalendarItem.isAcceptableInvite(getAccount(), cpi)) &&
+                dedupe(pm.getMimeMessage(), sentMsgID))
                 return null;
             // if we're not dropping the new message, see if it goes in the same conversation as the old sent message
             if (conversationId == ID_AUTO_INCREMENT) {
@@ -4754,7 +4756,10 @@ public class Mailbox {
                 ZimbraLog.mailbox.debug("  placing message in existing conversation " + convTarget.getId());
 
             short volumeId = !isRedo ? Volume.getCurrentMessageVolume().getId() : redoPlayer.getVolumeId();
-            ZVCalendar iCal = pm.getiCalendar();
+            CalendarPartInfo cpi = pm.getCalendarPartInfo();
+            ZVCalendar iCal = null;
+            if (cpi != null && CalendarItem.isAcceptableInvite(getAccount(), cpi))
+                iCal = cpi.cal;
             msg = Message.create(messageId, folder, convTarget, pm, msgSize, digest,
                         volumeId, unread, flags, tags, dinfo, noICal, iCal);
 

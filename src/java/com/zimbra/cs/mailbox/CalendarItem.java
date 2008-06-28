@@ -69,6 +69,7 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.Mime.FixedMimeMessage;
+import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
@@ -2760,5 +2761,16 @@ public abstract class CalendarItem extends MailItem {
             throw ServiceException.FAILURE("Can't parse calendar item blob", e);
         }
         return map;
+    }
+
+    public static boolean isAcceptableInvite(Account acct, CalendarPartInfo cpi)
+    throws ServiceException {
+        if (cpi.wasForwarded &&
+            !acct.getBooleanAttr(Provisioning.A_zimbraPrefCalendarAllowForwardedInvite, true))
+            return false;
+        if (!cpi.hasMethodParam &&
+            !acct.getBooleanAttr(Provisioning.A_zimbraPrefCalendarAllowMethodlessInvite, false))
+            return false;
+        return true;
     }
 }
