@@ -92,7 +92,7 @@ public class FileBlobStore extends StoreManager {
             threshold = Provisioning.getInstance().getLocalServer().getIntAttr(
                 Provisioning.A_zimbraMailDiskStreamingThreshold, DEFAULT_DISK_STREAMING_THRESHOLD);
         } catch (ServiceException e) {
-            mLog.warn("Unable to determine disk streaming threshold.  Using default of %d.",
+            ZimbraLog.store.warn("Unable to determine disk streaming threshold.  Using default of %d.",
                 DEFAULT_DISK_STREAMING_THRESHOLD);
         }
         return threshold;
