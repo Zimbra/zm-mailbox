@@ -3346,4 +3346,19 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>set true to turn off handling free/busy lookup for CalDAV</desc>
 </attr>
 
+<attr id="691" name="zimbraLmtpExposeVersionOnBanner" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Whether to expose version on LMTP banner</desc>
+</attr>
+
+<attr id="692" name="zimbraPop3ExposeVersionOnBanner" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Whether to expose version on POP3 banner</desc>
+</attr>
+
+<attr id="693" name="zimbraImapExposeVersionOnBanner" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>Whether to expose version on IMAP banner</desc>
+</attr>
+
 </attrs>
