@@ -39,6 +39,7 @@ import com.zimbra.cs.redolog.RedoException;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.store.Blob;
+import com.zimbra.cs.store.FileBlobStore;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.Volume;
 
@@ -365,15 +366,9 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
         mMsgBodyType = in.readByte();
         if (mMsgBodyType == MSGBODY_INLINE) {
             int dataLength = in.readInt();
-            int threshold = Integer.MAX_VALUE;
-            try {
-                threshold = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, Integer.MAX_VALUE);
-            } catch (ServiceException e) {
-                ZimbraLog.redolog.warn("Unable to determine disk streaming threshold.  Reading message into memory.", e);
-            }
             // mData must be the last thing deserialized.  See comments in
             // serializeData().
-            if (dataLength <= threshold) {
+            if (dataLength <= FileBlobStore.getDiskStreamingThreshold()) {
                 byte[] data = new byte[dataLength];
                 in.readFully(data, 0, dataLength);
                 mData = new RedoableOpData(data);

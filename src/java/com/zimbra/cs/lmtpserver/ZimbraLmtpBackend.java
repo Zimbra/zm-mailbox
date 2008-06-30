@@ -51,6 +51,7 @@ import com.zimbra.cs.mailbox.QuotaWarning;
 import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.store.Blob;
+import com.zimbra.cs.store.FileBlobStore;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.Zimbra;
 
@@ -232,8 +233,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 
         Map<LmtpAddress, RecipientDetail> rcptMap = new HashMap<LmtpAddress, RecipientDetail>(recipients.size());
 
-        int diskThreshold = Provisioning.getInstance().getLocalServer().getIntAttr(
-            Provisioning.A_zimbraMailDiskStreamingThreshold, Integer.MAX_VALUE);
+        int diskThreshold = FileBlobStore.getDiskStreamingThreshold();
         IncomingBlob incoming = IncomingBlob.create(in, sizeHint, diskThreshold);
         Blob blob = incoming.getBlob();
         
