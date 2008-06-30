@@ -3341,5 +3341,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether standard client should operate in accessilbity Mode</desc>
 </attr>
 
+<attr id="690" name="zimbraCalendarCalDavDisableFreebusy" type="boolean" cardinality="single" optionalIn="globalConfig">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>set true to turn off handling free/busy lookup for CalDAV</desc>
+</attr>
 
 </attrs>

@@ -136,7 +136,7 @@ public class ScheduleOutbox extends Collection {
 		ZimbraLog.dav.debug("rcpt: "+rcpt+", start: "+new Date(start)+", end: "+new Date(end));
 		
 		FreeBusy fb = null;
-        if (ctxt.isSchedulingEnabled()) {
+        if (ctxt.isFreebusyEnabled()) {
         	FreeBusyQuery fbQuery = new FreeBusyQuery(ctxt.getRequest(), ctxt.getAuthAccount(), start, end);
         	fbQuery.addEmailAddress(getAddressFromPrincipalURL(rcpt));
         	java.util.Collection<FreeBusy> fbResult = fbQuery.getResults();
