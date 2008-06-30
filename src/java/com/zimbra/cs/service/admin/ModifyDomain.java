@@ -53,7 +53,7 @@ public class ModifyDomain extends AdminDocumentHandler {
         if (domain == null)
             throw AccountServiceException.NO_SUCH_DOMAIN(id);
         
-        if (!canAccessDomain(lc, domain)) 
+        if (isDomainAdminOnly(lc) && !canAccessDomain(lc, domain)) 
             throw ServiceException.PERM_DENIED("can not access domain"); 
         
         if (domain.isShutdown())
