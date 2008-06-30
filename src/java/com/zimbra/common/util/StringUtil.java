@@ -437,14 +437,18 @@ public class StringUtil {
         return buf.toString();
     }
 
-    public static String join(String delimiter, Iterable array) {
+    public static String join(String delimiter, Iterable<? extends Object> array) {
         if (array == null)
             return null;
 
+        boolean firstTime = true;
         StringBuilder buf = new StringBuilder();
         for (Object obj : array) {
-            if (buf.length() != 0)
+            if (firstTime) {
+                firstTime = false;
+            } else {
                 buf.append(delimiter);
+            }
             buf.append(obj);
         }
         return buf.toString();
