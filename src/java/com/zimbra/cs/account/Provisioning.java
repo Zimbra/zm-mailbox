@@ -1098,6 +1098,7 @@ public abstract class Provisioning {
     public static final String A_zimbraLmtpBindAddress = "zimbraLmtpBindAddress";
     public static final String A_zimbraLmtpNumThreads = "zimbraLmtpNumThreads";
     public static final String A_zimbraLmtpPermanentFailureWhenOverQuota = "zimbraLmtpPermanentFailureWhenOverQuota";
+    public static final String A_zimbraLmtpExposeVersionOnBanner = "zimbraLmtpExposeVersionOnBanner";
     
     public static final String A_zimbraMailDiskStreamingThreshold = "zimbraMailDiskStreamingThreshold";
 
@@ -1120,6 +1121,7 @@ public abstract class Provisioning {
     public static final String A_zimbraImapProxyBindPort = "zimbraImapProxyBindPort";
     public static final String A_zimbraImapSSLProxyBindPort = "zimbraImapSSLProxyBindPort";
     public static final String A_zimbraImapSaslGssapiEnabled = "zimbraImapSaslGssapiEnabled";
+    public static final String A_zimbraImapExposeVersionOnBanner = "zimbraImapExposeVersionOnBanner";
 
     public static final String A_zimbraPop3AdvertisedName = "zimbraPop3AdvertisedName";
     public static final String A_zimbraPop3BindPort = "zimbraPop3BindPort";
@@ -1136,6 +1138,7 @@ public abstract class Provisioning {
     public static final String A_zimbraPop3ProxyBindPort = "zimbraPop3ProxyBindPort";
     public static final String A_zimbraPop3SSLProxyBindPort = "zimbraPop3SSLProxyBindPort";
     public static final String A_zimbraPop3SaslGssapiEnabled = "zimbraPop3SaslGssapiEnabled";
+    public static final String A_zimbraPop3ExposeVersionOnBanner = "zimbraPop3ExposeVersionOnBanner";
     public static final String A_zimbraPrefPop3DownloadSince = "zimbraPrefPop3DownloadSince";
     
     public static final String A_zimbraNotifyServerEnabled = "zimbraNotifyServerEnabled";
