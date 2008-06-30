@@ -557,7 +557,7 @@ public class DefangFilter extends DefaultFilter {
         int index = attributes.getIndex(attrName);
         if (index != -1) {
             String value = attributes.getValue(index);
-            if (mBaseHref != null && value.indexOf(":") == -1) {
+            if (mBaseHref != null && value != null && value.indexOf(":") == -1) {
                 if (mBaseHrefURI != null) {
                     try {
                         attributes.setValue(index, mBaseHrefURI.resolve(value).toString());
