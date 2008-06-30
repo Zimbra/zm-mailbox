@@ -55,6 +55,7 @@ import com.zimbra.znative.IO;
 public class FileBlobStore extends StoreManager {
 
     private static final int BUFLEN = Math.max(LC.zimbra_store_copy_buffer_size_kb.intValue(), 1) * 1024;
+    private static int DEFAULT_DISK_STREAMING_THRESHOLD = 32 * 1024 * 1024;
 
     private UniqueFileNameGenerator mUniqueFilenameGenerator;
 
@@ -80,6 +81,22 @@ public class FileBlobStore extends StoreManager {
     }     
     
     private static final boolean sOnWindows = onWindows();
+    
+    /**
+     * Returns either the value of {@link Provisioning#A_zimbraMailDiskStreamingThreshold}
+     * or <tt>32MB</tt>, if the attribute is not set.
+     */
+    public static int getDiskStreamingThreshold() {
+        int threshold = DEFAULT_DISK_STREAMING_THRESHOLD;
+        try {
+            threshold = Provisioning.getInstance().getLocalServer().getIntAttr(
+                Provisioning.A_zimbraMailDiskStreamingThreshold, DEFAULT_DISK_STREAMING_THRESHOLD);
+        } catch (ServiceException e) {
+            mLog.warn("Unable to determine disk streaming threshold.  Using default of %d.",
+                DEFAULT_DISK_STREAMING_THRESHOLD);
+        }
+        return threshold;
+    }
     
     public Blob storeIncoming(byte[] data, String digest,
                               String path, short volumeId)
@@ -119,11 +136,9 @@ public class FileBlobStore extends StoreManager {
         ByteArrayOutputStream baos = null;
         OutputStream out = fos;
 
-        int diskStreamingThreshold =
-            Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, Integer.MAX_VALUE);
         boolean compress = volume.getCompressBlobs() && sizeHint > volume.getCompressionThreshold();
         
-        if (compress || (0 < sizeHint && sizeHint <= diskStreamingThreshold)) {
+        if (compress || (0 < sizeHint && sizeHint <= getDiskStreamingThreshold())) {
             // Keep blob data into memory.  Data for compressed blobs
             // must be in memory for random access.  See bug 25629 for details.
             baos = new ByteArrayOutputStream(sizeHint);
@@ -371,15 +386,7 @@ public class FileBlobStore extends StoreManager {
         if (header == GZIPInputStream.GZIP_MAGIC) {
         	is = new GZIPInputStream(is);
         } else {
-            int diskThreshold = Integer.MAX_VALUE;
-            try {
-                diskThreshold = Provisioning.getInstance().getLocalServer().getIntAttr(
-                    Provisioning.A_zimbraMailDiskStreamingThreshold, Integer.MAX_VALUE);
-            } catch (ServiceException e) {
-                ZimbraLog.misc.warn("Unable to determine value of %s.  Reading message into memory.",
-                    Provisioning.A_zimbraMailDiskStreamingThreshold, e);
-            }
-            if (blob.getFile().length() > diskThreshold) {
+            if (blob.getFile().length() > getDiskStreamingThreshold()) {
                 is.close();
                 is = new BlobInputStream(blob.getFile());
             }
