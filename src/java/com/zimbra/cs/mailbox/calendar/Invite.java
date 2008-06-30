@@ -1888,9 +1888,12 @@ public class Invite {
 
             // TRANSPARENCY
             component.addProperty(new ZProperty(ICalTok.TRANSP, IcalXmlStrMap.sTranspMap.toIcal(getTransparency())));
+
+            // Force Outlook to disable UI elements for attendees to suggest new meeting time.
+            component.addProperty(new ZProperty(ICalTok.X_MICROSOFT_DISALLOW_COUNTER, true));
         }
-        
-        
+
+
         // RECURRENCE-ID
         RecurId recurId = getRecurId();
         if (recurId != null) 
