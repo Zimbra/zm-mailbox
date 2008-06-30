@@ -289,4 +289,12 @@ public class DavContext {
 			return false;
 		}
 	}
+	
+	public boolean isFreebusyEnabled() {
+		try {
+			return !Provisioning.getInstance().getConfig().getBooleanAttr(Provisioning.A_zimbraCalendarCalDavDisableFreebusy, false);
+		} catch (ServiceException se) {
+			return false;
+		}
+	}
 }
