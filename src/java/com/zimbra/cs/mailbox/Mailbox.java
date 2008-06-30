@@ -3997,19 +3997,6 @@ public class Mailbox {
             beginTransaction("setCalendarItem", octxt, redoRecorder);
             SetCalendarItem redoPlayer = (octxt == null ? null : (SetCalendarItem) octxt.getPlayer());
 
-            // allocate IDs for all of the passed-in invites (and the calendar item!) if necessary
-            if (redoPlayer == null || redoPlayer.getCalendarItemId() == 0) {
-                if (defaultInv != null)
-                defaultInv.mInv.setInviteId(getNextItemId(Mailbox.ID_AUTO_INCREMENT));
-                if (exceptions != null) {
-                    for (SetCalendarItemData sad : exceptions)
-                        sad.mInv.setMailItemId(getNextItemId(Mailbox.ID_AUTO_INCREMENT));
-                }
-            }
-            redoRecorder.setData(defaultInv, exceptions, replies, nextAlarm);
-
-            short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId() : redoPlayer.getVolumeId();
-
             // Make a single list containing default and exceptions.
             int scidLen = (defaultInv != null ? 1 : 0) + (exceptions != null ? exceptions.length : 0);
             List<SetCalendarItemData> scidList = new ArrayList<SetCalendarItemData>(scidLen);
@@ -4021,29 +4008,40 @@ public class Mailbox {
                 }
             }
 
+            CalendarItem calItem = null;
+
             // bug 19868: Preserve invId of existing Invites.  We have to do this before making any
             // calls to processNewInvite() because it'll delete all existing Invites and we'll lose
             // old invId information.
             if (!scidList.isEmpty()) {
-                CalendarItem existingCalItem = getCalendarItemByUid(scidList.get(0).mInv.getUid());
-                if (existingCalItem != null) {
-                    for (SetCalendarItemData scid : scidList) {
-                        Invite currInv = existingCalItem.getInvite(scid.mInv.getRecurId());
-                        if (currInv != null)
-                            scid.mInv.setInviteId(currInv.getMailItemId());
+                calItem = getCalendarItemByUid(scidList.get(0).mInv.getUid());
+                for (SetCalendarItemData scid : scidList) {
+                    int idBeingSet = scid.mInv.getMailItemId();
+                    if (idBeingSet <= 0) {
+                        if (calItem != null) {
+                            Invite currInv = calItem.getInvite(scid.mInv.getRecurId());
+                            if (currInv != null)
+                                scid.mInv.setInviteId(currInv.getMailItemId());
+                            else
+                                scid.mInv.setInviteId(getNextItemId(Mailbox.ID_AUTO_INCREMENT));
+                        } else {
+                            scid.mInv.setInviteId(getNextItemId(Mailbox.ID_AUTO_INCREMENT));
+                        }
                     }
                 }
             }
 
+            redoRecorder.setData(defaultInv, exceptions, replies, nextAlarm);
+
+            short volumeId = redoPlayer == null ? Volume.getCurrentMessageVolume().getId() : redoPlayer.getVolumeId();
+
             boolean first = true;
-            CalendarItem calItem = null;
             boolean calItemIsNew = true;
             long oldNextAlarm = 0;
             for (SetCalendarItemData scid : scidList) {
                 if (first) {
                     // usually the default invite
                     first = false;
-                    calItem = getCalendarItemByUid(scid.mInv.getUid());
                     calItemIsNew = calItem == null;
                     if (calItemIsNew) {
                         if (deferIndexing) {
