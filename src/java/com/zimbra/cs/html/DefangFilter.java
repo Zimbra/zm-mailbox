@@ -37,6 +37,8 @@ import org.cyberneko.html.filters.DefaultFilter;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.regex.Pattern;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
  * @author schemers@example.zimbra.com
@@ -117,6 +119,7 @@ public class DefangFilter extends DefaultFilter {
     // state
 
     private String mBaseHref = null;
+    private URI mBaseHrefURI = null;
 
     /** Strip images */
     boolean mNeuterImages;
@@ -500,8 +503,14 @@ public class DefangFilter extends DefaultFilter {
             int index = attributes.getIndex("href");
             if (index != -1) {
                 mBaseHref = attributes.getValue(index);
-                if (mBaseHref != null && !mBaseHref.endsWith("/"))
-                    mBaseHref += "/";
+                if (mBaseHref != null) {
+                    try {
+                        mBaseHrefURI = new URI(mBaseHref);
+                    } catch (URISyntaxException e) {
+                        if (!mBaseHref.endsWith("/"))
+                            mBaseHref += "/";
+                    }
+                }
             }
         }
         if (elementAccepted(element.rawname)) {
@@ -548,7 +557,15 @@ public class DefangFilter extends DefaultFilter {
         int index = attributes.getIndex(attrName);
         if (index != -1) {
             String value = attributes.getValue(index);
-            if (mBaseHref != null && value != null && value.indexOf(":") == -1) {
+            if (mBaseHref != null && value.indexOf(":") == -1) {
+                if (mBaseHrefURI != null) {
+                    try {
+                        attributes.setValue(index, mBaseHrefURI.resolve(value).toString());
+                        return;
+                    } catch (IllegalArgumentException e) {
+                        // ignore and do string-logic
+                    }
+                }
                 attributes.setValue(index, mBaseHref+value);
             }
         }
