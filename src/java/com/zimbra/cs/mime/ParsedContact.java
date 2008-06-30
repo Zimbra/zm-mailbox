@@ -155,8 +155,8 @@ public class ParsedContact {
         MimeMultipart multi = (MimeMultipart) mm.getContent();
 
         List<Attachment> attachments = new ArrayList<Attachment>(multi.getCount());
-        for (int i = 0; i < multi.getCount(); i++) {
-            MimeBodyPart bp = (MimeBodyPart) multi.getBodyPart(i);
+        for (int i = 1; i <= multi.getCount(); i++) {
+            MimeBodyPart bp = (MimeBodyPart) multi.getBodyPart(i - 1);
             byte[] content = ByteUtil.getContent(bp.getInputStream(), bp.getSize());
             ContentDisposition cdisp = new ContentDisposition(bp.getHeader("Content-Disposition", null));
             attachments.add(new Attachment(content, bp.getContentType(), cdisp.getParameter("field"), cdisp.getParameter("filename"), Integer.toString(i)));
