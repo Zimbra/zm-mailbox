@@ -160,7 +160,7 @@ public class ScheduleOutbox extends Collection {
             resp.addElement(DavElements.E_REQUEST_STATUS).setText("5.3;No scheduling for the user");
             return;
         }
-        Address from, to;
+        InternetAddress from, to;
         try {
             from = AccountUtil.getFriendlyEmailAddress(ctxt.getAuthAccount());
             if (rcpt.toLowerCase().startsWith("mailto:"))
@@ -183,7 +183,7 @@ public class ScheduleOutbox extends Collection {
             if (organizerProp != null) {
                 ZOrganizer organizer = new ZOrganizer(organizerProp);
                 String organizerStr = this.getAddressFromPrincipalURL(organizer.getAddress());
-                if (!organizerStr.equals(ctxt.getAuthAccount().getName()))
+                if (!organizerStr.equalsIgnoreCase(from.getAddress()))
                     throw new DavException("the requestor is not the organizer", HttpServletResponse.SC_FORBIDDEN);
             }
             subject = "Meeting Request: ";

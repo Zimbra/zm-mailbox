@@ -33,7 +33,6 @@ import javax.mail.Message.RecipientType;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
@@ -42,7 +41,6 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.IdentityBy;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -65,7 +63,7 @@ public class MailSender {
     public static final String MSGTYPE_REPLY = Flag.getAbbreviation(Flag.ID_FLAG_REPLIED) + "";
     public static final String MSGTYPE_FORWARD = Flag.getAbbreviation(Flag.ID_FLAG_FORWARDED) + "";
 
-    MailSender()  { }
+    protected MailSender()  { }
 
     public static int getSentFolderId(Mailbox mbox, Identity identity) throws ServiceException {
         int folderId = Mailbox.ID_FOLDER_SENT;
@@ -191,8 +189,8 @@ public class MailSender {
 
             // run any pre-send/pre-save MIME mutators
             try {
-                for (Class vclass : MimeVisitor.getMutators())
-                    ((MimeVisitor) vclass.newInstance()).accept(mm);
+                for (Class<? extends MimeVisitor> vclass : MimeVisitor.getMutators())
+                    vclass.newInstance().accept(mm);
             } catch (Exception e) {
                 ZimbraLog.smtp.warn("failure to modify outbound message; aborting send", e);
                 throw ServiceException.FAILURE("mutator error; aborting send", e);
