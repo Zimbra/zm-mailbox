@@ -1070,6 +1070,7 @@ class DBQueryOperation extends QueryOperation
             Mailbox mbox = getMailbox();
             byte sort = getSortOrderForDb();
             Connection conn = DbPool.getConnection();
+            Db.registerDatabaseInterest(conn, mbox);
             mDBHits = new ArrayList<SearchResult>();
             
             try {

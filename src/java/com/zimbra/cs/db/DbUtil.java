@@ -70,21 +70,15 @@ public class DbUtil {
      * If the date is <tt>null</tt>, returns <tt>null</tt>.
      */
     public static Timestamp dateToTimestamp(Date date) {
-        if (date == null) {
-            return null;
-        }
-        return new Timestamp(date.getTime());
+        return date == null ? null : new Timestamp(date.getTime());
     }
-    
+
     /**
      * Converts a  <tt>java.sql.Timestamp</tt> to a <tt>java.util.Date</tt>.
      * If the timestamp is <tt>null</tt>, returns <tt>null</tt>.
      */
     public static Date timestampToDate(Timestamp timestamp) {
-        if (timestamp == null) {
-            return null;
-        }
-        return new Date(timestamp.getTime());
+        return timestamp == null ? null : new Date(timestamp.getTime());
     }
 
     /**
@@ -129,9 +123,8 @@ public class DbUtil {
             stmt = conn.prepareStatement(query);
             
             if (params != null) {
-                for (int i = 0; i < params.length; i++) {
+                for (int i = 0; i < params.length; i++)
                     stmt.setObject(i + 1, params[i]);
-                }
             }
             ResultSet rs = stmt.executeQuery();
             results = new DbResults(rs);
@@ -389,9 +382,9 @@ public class DbUtil {
         }
         br.close();
         String script = buf.toString();
-        return script.split("\\s*;\\s*");
+        return script.split("\\s*" + Db.getInstance().scriptCommandDelimiter() + "\\s*");
     }
-    
+
     /**
      * Removes trailing comments.  Comments begin with <code>--</code> or <code>#</code>.
      * @return <code>sqlLine</code> without trailing comments

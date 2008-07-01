@@ -49,6 +49,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.db.Db;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
@@ -170,7 +171,7 @@ public class Mailbox {
         public Set<String> configKeys;
     }
 
-    private static final class MailboxChange {
+    private final class MailboxChange {
         private static final int NO_CHANGE = -1;
 
         long       timestamp = System.currentTimeMillis();
@@ -235,6 +236,7 @@ public class Mailbox {
                 conn = DbPool.getConnection();
                 if (ZimbraLog.mailbox.isDebugEnabled())
                     ZimbraLog.mailbox.debug("  fetching new DB connection");
+                Db.registerDatabaseInterest(conn, Mailbox.this);
             }
             return conn;
         }
@@ -242,13 +244,13 @@ public class Mailbox {
         RedoableOp getRedoPlayer()   { return (octxt == null ? null : octxt.getPlayer()); }
         RedoableOp getRedoRecorder() { return recorder; }
         
-        private static final class IndexItemEntry {
+        private final class IndexItemEntry {
             IndexItemEntry(boolean deleteFirst, List<org.apache.lucene.document.Document> docList) { 
                 mDeleteFirst = deleteFirst;
-                mData = docList;
+                mDocuments = docList;
             }
             boolean mDeleteFirst;
-            List<org.apache.lucene.document.Document> mData;
+            List<org.apache.lucene.document.Document> mDocuments;
         }
         
         void addIndexedItem(MailItem item, boolean deleteFirst, List<org.apache.lucene.document.Document> docList)  { 
@@ -3318,7 +3320,7 @@ public class Mailbox {
     throws ServiceException {
         Folder folder = getFolderById(folderId);
         if (!folder.canAccess(ACL.RIGHT_READ))
-            throw MailServiceException.PERM_DENIED("you do not have sufficient permissions on folder " + folder.getName());
+            throw ServiceException.PERM_DENIED("you do not have sufficient permissions on folder " + folder.getName());
         return CalendarCache.getInstance().getCalendarSummary(octxt, this, folderId, itemType, start, end, true);
     }
 
@@ -5176,19 +5178,20 @@ public class Mailbox {
 
             MailItem[] items = getItemById(itemIds, type);
             for (MailItem item : items) {
-                if (!(item instanceof Conversation))
+                if (!(item instanceof Conversation)) {
                     if (!checkItemChangeID(item) && item instanceof Tag)
                         throw MailServiceException.MODIFY_CONFLICT();
+                }
             }
 
             for (MailItem item : items) {
                 if (item == null)
                     continue;
-                if (tagId == Flag.ID_FLAG_UNREAD) {
+
+                if (tagId == Flag.ID_FLAG_UNREAD)
                     item.alterUnread(addTag);
-                } else {
+                else
                     item.alterTag(tag, addTag);
-                }
             }
             success = true;
         } finally {
@@ -6706,11 +6709,11 @@ public class Mailbox {
                 
                 for (Map.Entry<MailItem, MailboxChange.IndexItemEntry> entry : itemsToIndex.entrySet()) {
                     MailItem item = entry.getKey();
-                    if (entry.getValue().mData == null) {
+                    if (entry.getValue().mDocuments == null) {
                         ZimbraLog.index.warn("Got NULL index data in endTransaction.  Item "+item.getId()+" will not be indexed.");
                         continue;
                     }
-                    if (entry.getValue().mData.size() == 0 && !entry.getValue().mDeleteFirst &&((item.getFlagBitmask()&Flag.BITMASK_INDEXING_DEFERRED)==0)) 
+                    if (entry.getValue().mDocuments.size() == 0 && !entry.getValue().mDeleteFirst &&((item.getFlagBitmask()&Flag.BITMASK_INDEXING_DEFERRED)==0)) 
                         continue; // nothing to do here.
                     
                     IndexItem indexRedo = null;
@@ -6734,7 +6737,7 @@ public class Mailbox {
                         // an extra DB transaction.  Write the log record for indexing 
                         // only after indexing actually works.
                         if (getMailboxIndex() != null) {
-                            getMailboxIndex().indexMailItem(this, indexRedo, entry.getValue().mDeleteFirst, entry.getValue().mData, item);
+                            getMailboxIndex().indexMailItem(this, indexRedo, entry.getValue().mDeleteFirst, entry.getValue().mDocuments, item);
                         }
                         
                         if ((item.getFlagBitmask() & Flag.BITMASK_INDEXING_DEFERRED) != 0) {

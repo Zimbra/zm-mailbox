@@ -214,6 +214,7 @@ public class DbMailbox {
 
             // Create the new database
             ZimbraLog.mailbox.info("Creating database " + dbName);
+            Db.getInstance().registerDatabaseInterest(conn, dbName);
 
             String template = new String(ByteUtil.getContent(file));
             Map<String, String> vars = new HashMap<String, String>();
@@ -229,12 +230,9 @@ public class DbMailbox {
         }
     }
 
-    private static String[] sTables;
-
-    static {
-        // Tables are listed in order of creation.  dropMailboxFromGroup() drops them
-        // in reverse order.
-        sTables = new String[] {
+    // Tables are listed in order of creation.  dropMailboxFromGroup() drops them
+    // in reverse order.
+    static final String[] sTables = new String[] {
             DbMailItem.TABLE_MAIL_ITEM,
             DbMailItem.TABLE_OPEN_CONVERSATION,
             DbMailItem.TABLE_APPOINTMENT,
@@ -243,8 +241,7 @@ public class DbMailbox {
             DbImapFolder.TABLE_IMAP_FOLDER,
             DbImapMessage.TABLE_IMAP_MESSAGE,
             DbPop3Message.TABLE_POP3_MESSAGE
-        };
-    }
+    };
 
     private static void dropMailboxFromGroup(Connection conn, Mailbox mbox)
     throws ServiceException {
@@ -252,13 +249,19 @@ public class DbMailbox {
         int groupId = mbox.getSchemaGroupId();        
         ZimbraLog.mailbox.info("Clearing contents of mailbox " + mailboxId + ", group " + groupId);
 
+        String dbname = getDatabaseName(groupId);
+
+        if (Db.supports(Db.Capability.FILE_PER_DATABASE)) {
+            Db.getInstance().deleteDatabaseFile(dbname);
+            return;
+        }
+
         if (conn == null)
             conn = mbox.getOperationConnection();
-        if (Db.supports(Db.Capability.DISABLE_CONSTRAINT_CHECK))
-            conn.disableForeignKeyConstraints();
 
         try {
-            String dbname = getDatabaseName(groupId);
+            if (Db.supports(Db.Capability.DISABLE_CONSTRAINT_CHECK))
+                conn.disableForeignKeyConstraints();
 
             // Delete in reverse order.
             for (int i = sTables.length - 1; i >= 0; i--) {
@@ -320,8 +323,7 @@ public class DbMailbox {
         try {
             stmt = conn.prepareStatement("UPDATE mailbox SET contact_count = NULL WHERE id = ?");
             stmt.setInt(1, mbox.getId());
-            int num = stmt.executeUpdate();
-            assert(num == 1);
+            stmt.executeUpdate();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("clearing contact count for mailbox " + mbox.getId(), e);
         } finally {
@@ -336,8 +338,7 @@ public class DbMailbox {
             stmt = conn.prepareStatement("UPDATE mailbox SET last_soap_access = ? WHERE id = ?");
             stmt.setInt(1, (int) (mbox.getLastSoapAccessTime() / 1000));
             stmt.setInt(2, mbox.getId());
-            int num = stmt.executeUpdate();
-            assert(num == 1);
+            stmt.executeUpdate();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("updating last SOAP access time for mailbox " + mbox.getId(), e);
         } finally {
@@ -360,7 +361,7 @@ public class DbMailbox {
             stmt.setInt(pos++, mbox.getRecentMessageCount());
             stmt.setInt(pos++, mbox.getIndexDeferredCount());
             stmt.setInt(pos++, mbox.getId());
-            int num = stmt.executeUpdate();
+            stmt.executeUpdate();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("updating mailbox statistics for mailbox " + mbox.getId(), e);
         } finally {
@@ -375,8 +376,7 @@ public class DbMailbox {
             stmt = conn.prepareStatement("UPDATE mailbox SET tracking_sync = ? WHERE id = ? AND tracking_sync <= 0");
             stmt.setInt(1, mbox.getLastChangeID());
             stmt.setInt(2, mbox.getId());
-            int num = stmt.executeUpdate();
-            assert(num == 1);
+            stmt.executeUpdate();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("turning on sync tracking for mailbox " + mbox.getId(), e);
         } finally {
@@ -390,8 +390,7 @@ public class DbMailbox {
         try {
             stmt = conn.prepareStatement("UPDATE mailbox SET tracking_imap = 1 WHERE id = ?");
             stmt.setInt(1, mbox.getId());
-            int num = stmt.executeUpdate();
-            assert(num == 1);
+            stmt.executeUpdate();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("turning on imap tracking for mailbox " + mbox.getId(), e);
         } finally {
@@ -641,12 +640,15 @@ public class DbMailbox {
         return (mailboxId - 1) % groups + 1;
     }
 
-    /** @return the name of the database that contains tables for the specified <code>mailboxId</code>. */
-    public static String getDatabaseName(int groupId) {
-        return DB_PREFIX_MAILBOX_GROUP + groupId;
-    }
+    /** Returns the name of the database that contains tables for the
+     *  specified <code>mailboxId</code>.  As a side effect, also registers
+     *  interest on that database with the specified {@link Connection} (if
+     *  not <tt>null</tt>). */
     public static String getDatabaseName(Mailbox mbox) {
         return getDatabaseName(mbox.getSchemaGroupId());
+    }
+    public static String getDatabaseName(int groupId) {
+        return DB_PREFIX_MAILBOX_GROUP + groupId;
     }
 
     public static void removeFromDeletedAccount(Connection conn, String email)

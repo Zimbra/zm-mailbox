@@ -30,10 +30,14 @@ import com.zimbra.common.util.ZimbraLog;
 
 class DebugConnection implements Connection {
 
-    private Connection mConn;
+    private final Connection mConn;
     
     DebugConnection(Connection conn) {
         mConn = conn;
+    }
+
+    Connection getConnection() {
+        return mConn;
     }
     
     public Statement createStatement() throws SQLException {
@@ -131,11 +135,11 @@ class DebugConnection implements Connection {
         return mConn.prepareCall(sql, resultSetType, resultSetConcurrency);
     }
 
-    public Map getTypeMap() throws SQLException {
+    public Map<String,Class<?>> getTypeMap() throws SQLException {
         return mConn.getTypeMap();
     }
 
-    public void setTypeMap(Map map) throws SQLException {
+    public void setTypeMap(Map<String,Class<?>> map) throws SQLException {
         mConn.setTypeMap(map);
     }
 

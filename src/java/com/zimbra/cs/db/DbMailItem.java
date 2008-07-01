@@ -796,7 +796,8 @@ public class DbMailItem {
         Connection conn = item.getMailbox().getOperationConnection();
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement("INSERT INTO " + getConversationTableName(item) +
+            stmt = conn.prepareStatement((Db.supports(Db.Capability.REPLACE_INTO) ? "REPLACE" : "INSERT") +
+                        " INTO " + getConversationTableName(item) +
                         "(" + ("mailbox_id, ") + "hash, conv_id)" +
                         " VALUES (" + ("?, ") + "?, ?)" +
                         (Db.supports(Db.Capability.ON_DUPLICATE_KEY) ? " ON DUPLICATE KEY UPDATE conv_id = ?" : ""));
@@ -1198,12 +1199,12 @@ public class DbMailItem {
     public static List<Integer> markDeletionTargets(Mailbox mbox, List<Integer> ids, Set<Integer> candidates) throws ServiceException {
         if (ids == null)
             return null;
-        String table = getMailItemTableName(mbox);
 
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
+            String table = getMailItemTableName(mbox);
             if (Db.supports(Db.Capability.MULTITABLE_UPDATE)) {
                 for (int i = 0; i < ids.size(); i += Db.getINClauseBatchSize()) {
                     int count = Math.min(Db.getINClauseBatchSize(), ids.size() - i);
@@ -1505,8 +1506,6 @@ public class DbMailItem {
                 rs.getInt(CI_UNREAD);
                 reload |= rs.wasNull();
             }
-            rs.close();
-            stmt.close();
 
             if (!reload)
                 return null;
@@ -1525,6 +1524,9 @@ public class DbMailItem {
                 lookup.put(data.id, data);
                 data.size = data.unreadCount = 0;
             }
+
+            rs.close();    rs = null;
+            stmt.close();  stmt = null;
 
             Mailbox.MailboxData mbd = new Mailbox.MailboxData();
             stmt = conn.prepareStatement("SELECT folder_id, type, tags, COUNT(*), SUM(unread), SUM(size)" +

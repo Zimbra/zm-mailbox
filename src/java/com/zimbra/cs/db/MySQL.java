@@ -42,8 +42,7 @@ public class MySQL extends Db {
         mErrorCodes.put(Db.Error.NO_SUCH_TABLE,            1146);
     }
 
-    @Override
-    boolean supportsCapability(Db.Capability capability) {
+    @Override boolean supportsCapability(Db.Capability capability) {
         switch (capability) {
             case BITWISE_OPERATIONS:         return true;
             case BOOLEAN_DATATYPE:           return true;
@@ -52,37 +51,36 @@ public class MySQL extends Db {
             case CAST_AS_BIGINT:             return false;
             case CLOB_COMPARISON:            return true;
             case DISABLE_CONSTRAINT_CHECK:   return true;
+            case FILE_PER_DATABASE:          return false;
             case LIMIT_CLAUSE:               return true;
             case MULTITABLE_UPDATE:          return true;
             case ON_DUPLICATE_KEY:           return true;
             case ON_UPDATE_CASCADE:          return true;
+            case READ_COMMITTED_ISOLATION:   return true;
+            case REPLACE_INTO:               return false;
             case UNIQUE_NAME_INDEX:          return true;
         }
         return false;
     }
 
-    @Override
-    boolean compareError(SQLException e, Db.Error error) {
+    @Override boolean compareError(SQLException e, Db.Error error) {
         Integer code = mErrorCodes.get(error);
         return (code != null && e.getErrorCode() == code);
     }
 
-    @Override
-    String forceIndexClause(String index) {
+    @Override String forceIndexClause(String index) {
         return " FORCE INDEX (" + index + ')';
     }
 
-    @Override String getIFNULL(String column1, String column2) {
-        return "IFNULL(" + column1 + ", " + column2 + ")";
+    @Override String getIFNULLClause(String expr1, String expr2) {
+        return "IFNULL(" + expr1 + ", " + expr2 + ")";
     }
 
-    @Override
-    DbPool.PoolConfig getPoolConfig() {
+    @Override DbPool.PoolConfig getPoolConfig() {
         return new MySQLConfig();
     }
-    
-    @Override
-    public boolean databaseExists(Connection conn, String databaseName)
+
+    @Override public boolean databaseExists(Connection conn, String dbname)
     throws ServiceException {
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -92,7 +90,7 @@ public class MySQL extends Db {
             stmt = conn.prepareStatement(
                 "SELECT COUNT(*) FROM INFORMATION_SCHEMA.SCHEMATA " +
                 "WHERE schema_name = ?");
-            stmt.setString(1, databaseName);
+            stmt.setString(1, dbname);
             rs = stmt.executeQuery();
             rs.next();
             numSchemas = rs.getInt(1);
@@ -164,5 +162,9 @@ public class MySQL extends Db {
 
             return props;
         }
+    }
+
+    @Override public String toString() {
+        return "MySQL";
     }
 }
