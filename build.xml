@@ -106,6 +106,13 @@
     <property name="ical4j.jar" value="ical4j-0.9.16-patched.jar"/>
     <property name="ziputil.jar" value="ant-1.7.0-ziputil-patched.jar"/>
 
+	<condition property="db-sqlite">
+		<isset property="env.ZIMBRA_USE_SQLITE"/>
+	</condition>
+	<condition property="db-mysql">
+		<not><isset property="db-sqlite"/></not>
+	</condition>
+
     <condition property="is-windows">
         <os family="windows"/>
     </condition>
@@ -380,6 +387,20 @@
         </if>
     </target>
 
+	<target name="mysql-versions-init" if="db-mysql">
+        <java classname="com.zimbra.cs.db.Versions" fork="true" classpathref="class.path" failonerror="true">
+            <arg line="-o ${build.dir}"/>
+        </java>
+	</target>
+
+	<target name="sqlite-versions-init" if="db-sqlite">
+        <java classname="com.zimbra.cs.db.SQLite" fork="true" classpathref="class.path" failonerror="true">
+            <arg line="-o ${build.dir}"/>
+        </java>
+	</target>
+
+	<target name="db-versions-init" depends="generate-buildinfo,mysql-versions-init,sqlite-versions-init"/>
+
     <target name="compile" depends="build-init">
         <ant dir="${common.dir}" target="jar" inheritAll="false"/>
         <ant dir="${im.dir}" target="jar" inheritAll="false"/>
@@ -387,10 +408,7 @@
                classpathref="class.path">
             <src refid="all.java.path"/>
         </javac>
-        <antcall target="generate-buildinfo"/>
-        <java classname="com.zimbra.cs.db.Versions" fork="true" classpathref="class.path" failonerror="true">
-            <arg line="-o ${build.dir}"/>
-        </java>
+        <antcall target="db-versions-init"/>
     </target>
 
     <target name="jar" depends="compile">
@@ -588,8 +606,8 @@
                      includes="${ical4j.jar},${ziputil.jar},mail.jar,activation.jar,zimbra-native.jar,bouncycastle.jar,commons-beanutils*.jar,commons-cli*.jar,commons-codec*.jar,commons-collections*.jar,commons-dbcp*.jar,commons-digester*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-logging.jar,commons-pool*.jar,concurrent*.jar,yuicompressor-2.3.4.jar,dom4j*.jar,ganymed-ssh2*.jar,jakarta-oro*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,junit*.jar,jzlib.jar,mina*.jar,mysql-connector-java*.jar,nekohtml.jar,tnef*.jar,xercesImpl.jar,xpp3.jar,libidn*.jar,json.jar"/>
         </copy>
         <copy todir="${dist.dir}/jetty/common/endorsed" overwrite="true">
-	    <fileset dir="${common.jars.dir}" includes="zimbra-charset.jar"/>
-	</copy>
+		    <fileset dir="${common.jars.dir}" includes="zimbra-charset.jar"/>
+		</copy>
         <copy todir="${dist.dir}/jetty/common/lib" file="${common.jarfile}" overwrite="true"/>
         <copy todir="${dist.dir}/jetty/lib" overwrite="true">
             <fileset dir="${common.jars.dir}" includes="log4j*.jar"/>
@@ -687,7 +705,7 @@
         </antcall>
     </target>
 
-    <target name="init" depends="stop-servers,db-init,dir-init,init-opt-zimbra,start-ldap,ldap-load"/>
+    <target name="init" depends="stop-servers,dir-init,init-opt-zimbra,db-init,start-ldap,ldap-load"/>
 
     <target name="inject" depends="compile">
         <echo>Inserting default contacts: ${account-to-inject.email}</echo>
@@ -790,7 +808,7 @@
     <target name="keystore-restore">
         <copy file="${zimbra.home.dir}/conf/keystore-backup/keystore.backup" tofile="${webserver.conf.dir}/keystore" overwrite="true"/>
     </target>
-	
+
     <target name="dir-init">
         <echo message="If the following deletes fail, wait for your web server"/>
         <echo message="to stop (or stop jetty manually)"/>
@@ -834,12 +852,8 @@
     </target>
 
     <target name="choose-db-schema">
-        <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path"
-              outputproperty="LC.mbox.group.disabled" failonerror="true">
-            <arg line="-q -c conf/localconfig.xml -m nokey debug_disable_mailbox_group"/>
-        </java>
-        <condition property="db.schema.dir" value="src/db/old_schema">
-            <equals arg1="${LC.mbox.group.disabled}" arg2="true" casesensitive="false" trim="true"/>
+        <condition property="db.schema.dir" value="src/db/sqlite">
+        	<isset property="db-sqlite"/>
         </condition>
         <condition property="db.schema.dir" value="src/db">
             <not>
@@ -849,7 +863,9 @@
         <echo>Using database schema in ${db.schema.dir}</echo>
     </target>
 
-    <target name="db-init" depends="choose-db-schema">
+    <target name="db-init" depends="choose-db-schema,mysql-init,sqlite-init"/>
+
+	<target name="mysql-init" if="db-mysql">
         <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
              classpathref="class.path" onerror="continue" src="src/db/dropdb.sql"/>
         <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
@@ -857,6 +873,23 @@
         <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
              classpathref="class.path" onerror="abort" src="${build.dir}/versions-init.sql"/>
     </target>
+
+	<target name="sqlite-init" if="db-sqlite">
+        <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
+			<arg line="-e zimbra_class_database=com.zimbra.cs.db.SQLite -f" />
+		</java>
+
+		<delete dir="${zimbra.home.dir}/sqlite"/>
+        <mkdir dir="${zimbra.home.dir}/sqlite"/>
+		<!-- SQLite JDBC driver doesn't support Statement.setEscapeProcessing, whic breaks the <sql/> task. -->
+		<echo>Copying pre-created database to ${zimbra.home.dir}/sqlite/zimbra.db</echo>
+        <copy todir="${zimbra.home.dir}/sqlite" file="${db.schema.dir}/zimbra.db"/>
+        <chmod perm="o+w" file="${db.schema.dir}/zimbra.db"/>
+<!--        <sql driver="org.sqlite.JDBC" url="jdbc:sqlite:${zimbra.home.dir}/sqlite/zimbra.db" userid="root" password="zimbra"
+                 classpathref="class.path" onerror="abort" src="${db.schema.dir}/db.sql"/>
+            <sql driver="org.sqlite.JDBC" url="jdbc:sqlite:${zimbra.home.dir}/sqlite/zimbra.db" userid="root" password="zimbra"
+                 classpathref="class.path" onerror="abort" src="${build.dir}/versions-init.sql"/> -->
+	</target>
 
     <target name="ldap-setup-preauth">
         <echo>Creating preauth key: ${zimbra.server.hostname}</echo>
