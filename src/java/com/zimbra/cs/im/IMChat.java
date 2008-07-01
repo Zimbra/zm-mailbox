@@ -470,7 +470,20 @@ public class IMChat extends ClassLogger {
         IMAddr fromAddr = mPersona.getAddr();
         message.setFrom(fromAddr);
         message.setTo(toAddr);
-        addMessage(true, message);
+        
+        // bug 28937: don't add blank messages (composing/) to the log
+        {
+            boolean blankSubj = false;
+            boolean blankBody = false;
+            TextPart tp = message.getSubject(IMMessage.Lang.DEFAULT);
+            if (tp == null || tp.getPlainText() == null || tp.getPlainText().length() == 0)
+                blankSubj = true;
+            tp = message.getBody();
+            if (tp == null || tp.getPlainText() == null || tp.getPlainText().length() == 0)
+                blankBody = true;
+            if (!blankSubj || !blankBody) 
+                addMessage(true, message);
+        }
         
         org.xmpp.packet.Message xmppMsg = new org.xmpp.packet.Message();
         xmppMsg.setFrom(fromAddr.makeFullJID(sender.getResource()));
