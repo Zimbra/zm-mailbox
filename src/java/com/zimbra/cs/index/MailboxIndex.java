@@ -44,7 +44,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.redolog.op.IndexItem;
-import com.zimbra.cs.service.admin.ReIndex;
+//import com.zimbra.cs.service.admin.ReIndex;
 import com.zimbra.cs.store.Volume;
 
 /**
@@ -59,38 +59,39 @@ public final class MailboxIndex
             ZimbraLog.index.debug("SearchRequest: "+params.getQueryStr());
         }
 
+        String qs = params.getQueryStr();
+        
         //
         // Testing hacks
         // 
-        String qs = params.getQueryStr();
-        if (qs.startsWith("$")) {
-            String[] words = qs.split(" ");
-            if ("$chkblobs".equals(words[0].toLowerCase())) {
-                mbox.getMailboxIndex().mLucene.checkBlobIds();
-            } else if ("$reindex_all".equals(words[0].toLowerCase())) {
-                Thread t = new ReIndex.ReIndexThread(mbox, null, null, null);
-                t.start();
-            } else
-//              if ("$im_reg".equals(words[0])) {
-//              if (words.length < 4)
-//              throw ServiceException.FAILURE("USAGE: \"$im_reg service service_login_name service_login_password\"", null);
-//              ServiceName service = ServiceName.valueOf(words[1]);
-//              mbox.getPersona().gatewayRegister(service, words[2], words[3]);
-//              } else if ("$im_unreg".equals(words[0])) {
-//              if (words.length < 2)
-//              throw ServiceException.FAILURE("USAGE: \"$im_unreg service service_login_name service_login_password\"", null);
-//              ServiceName service = ServiceName.valueOf(words[1]);
-//              mbox.getPersona().gatewayUnRegister(service);
-//              } else
-//              if ("$maint".equals(words[0])) {
-//              MailboxManager.MailboxLock lock = MailboxManager.getInstance().beginMaintenance(mbox.getAccountId(), mbox.getId());
-//              MailboxManager.getInstance().endMaintenance(lock, true, false);
-//              } else {
-//              throw ServiceException.FAILURE("Usage: \"$im_reg service name password\" or \"$im_unreg service\"", null);
-                throw ServiceException.FAILURE("Unknown $ command", null);
-
-//          return new EmptyQueryResults(params.getTypes(), params.getSortBy(), params.getMode());
-        }			
+//        if (qs.startsWith("$")) {
+//            String[] words = qs.split(" ");
+//            if ("$chkblobs".equals(words[0].toLowerCase())) {
+//                mbox.getMailboxIndex().mLucene.checkBlobIds();
+//            } else if ("$reindex_all".equals(words[0].toLowerCase())) {
+//                Thread t = new ReIndex.ReIndexThread(mbox, null, null, null);
+//                t.start();
+//            } else
+////              if ("$im_reg".equals(words[0])) {
+////              if (words.length < 4)
+////              throw ServiceException.FAILURE("USAGE: \"$im_reg service service_login_name service_login_password\"", null);
+////              ServiceName service = ServiceName.valueOf(words[1]);
+////              mbox.getPersona().gatewayRegister(service, words[2], words[3]);
+////              } else if ("$im_unreg".equals(words[0])) {
+////              if (words.length < 2)
+////              throw ServiceException.FAILURE("USAGE: \"$im_unreg service service_login_name service_login_password\"", null);
+////              ServiceName service = ServiceName.valueOf(words[1]);
+////              mbox.getPersona().gatewayUnRegister(service);
+////              } else
+////              if ("$maint".equals(words[0])) {
+////              MailboxManager.MailboxLock lock = MailboxManager.getInstance().beginMaintenance(mbox.getAccountId(), mbox.getId());
+////              MailboxManager.getInstance().endMaintenance(lock, true, false);
+////              } else {
+////              throw ServiceException.FAILURE("Usage: \"$im_reg service name password\" or \"$im_unreg service\"", null);
+//                throw ServiceException.FAILURE("Unknown $ command", null);
+//
+////          return new EmptyQueryResults(params.getTypes(), params.getSortBy(), params.getMode());
+//        }			
 
         //
         // calendar expansions
@@ -531,4 +532,6 @@ public final class MailboxIndex
     final Object getLock() {
         return mMailbox;
     }
+    
+    int getMailboxId() { return mMailboxId; }
 }

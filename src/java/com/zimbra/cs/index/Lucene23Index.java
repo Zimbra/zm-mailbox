@@ -1564,7 +1564,9 @@ class Lucene23Index implements ILuceneIndex, ITextIndex, IndexDeletionPolicy  {
                         }
                         if (toRemove != null) {
                             try {
+                                ZimbraLog.addMboxToContext(toRemove.mMbidx.getMailboxId());
                                 toRemove.closeIndexWriterAfterRemove();
+                                ZimbraLog.removeMboxFromContext();
                             } finally {
                                 toRemove.mIndexWriterMutex.unlock();
                                 assert(!toRemove.mIndexWriterMutex.isHeldByCurrentThread());
