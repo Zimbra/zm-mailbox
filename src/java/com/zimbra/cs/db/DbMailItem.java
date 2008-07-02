@@ -868,6 +868,28 @@ public class DbMailItem {
         }
     }
 
+    public static void saveDate(MailItem item) throws ServiceException {
+        Mailbox mbox = item.getMailbox();
+
+        Connection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
+                        " SET date = ?, mod_metadata = ?, change_date = ? WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
+            int pos = 1;
+            stmt.setInt(pos++, (int) (item.getDate() / 1000));
+            stmt.setInt(pos++, mbox.getOperationChangeID());
+            stmt.setInt(pos++, mbox.getOperationTimestamp());
+            stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, item.getId());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("setting IMAP UID for item " + item.getId(), e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
     public static void saveImapUid(MailItem item) throws ServiceException {
         Mailbox mbox = item.getMailbox();
 

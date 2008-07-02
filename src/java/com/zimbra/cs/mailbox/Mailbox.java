@@ -5158,6 +5158,23 @@ public class Mailbox {
         }
     }
 
+    public synchronized void setDate(OperationContext octxt, int itemId, byte type, long date) throws ServiceException {
+        DateItem redoRecorder = new DateItem(mId, itemId, type, date);
+
+        boolean success = false;
+        try {
+            beginTransaction("setDate", octxt, redoRecorder);
+
+            MailItem item = getItemById(itemId, type);
+            if (!checkItemChangeID(item))
+                throw MailServiceException.MODIFY_CONFLICT();
+            item.setDate(date);
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
+    
     public synchronized void alterTag(OperationContext octxt, int itemId, byte type, int tagId, boolean addTag) throws ServiceException {
         alterTag(octxt, new int[] { itemId }, type, tagId, addTag, null);
     }

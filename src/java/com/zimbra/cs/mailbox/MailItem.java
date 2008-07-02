@@ -1,5 +1,4 @@
 /*
- * ***** BEGIN LICENSE BLOCK *****
  * 
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007 Zimbra, Inc.
@@ -1242,6 +1241,27 @@ public abstract class MailItem implements Comparable<MailItem> {
         markItemModified(Change.MODIFIED_COLOR);
         mColor = color;
         saveMetadata();
+    }
+
+    /** Changes the item's date.
+     * 
+     * @param date  The item's new date.
+     * @perms {@link ACL#RIGHT_WRITE} on the item
+     * @throws ServiceException  The following error codes are possible:<ul>
+     *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
+     *        permissions</ul> */
+    void setDate(long date) throws ServiceException {
+        if (mData.date == date)
+            return;
+        if (!canAccess(ACL.RIGHT_WRITE))
+            throw ServiceException.PERM_DENIED("you do not have the necessary permissions on the item");
+        markItemModified(Change.MODIFIED_DATE);
+        mData.date = (int)(date / 1000L);
+        mData.metadataChanged(mMailbox);
+        if (ZimbraLog.mailop.isDebugEnabled()) {
+            ZimbraLog.mailop.debug("Setting date of %s to %d.", getMailopContext(this), date);
+        }
+        DbMailItem.saveDate(this);
     }
 
     /** Sets the IMAP UID for the item and persists it to the database.  Does
