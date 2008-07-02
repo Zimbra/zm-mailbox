@@ -251,7 +251,7 @@ public class DbMailbox {
 
         String dbname = getDatabaseName(groupId);
 
-        if (Db.supports(Db.Capability.FILE_PER_DATABASE)) {
+        if (DebugConfig.disableMailboxGroups && Db.supports(Db.Capability.FILE_PER_DATABASE)) {
             Db.getInstance().deleteDatabaseFile(dbname);
             return;
         }
@@ -268,7 +268,8 @@ public class DbMailbox {
                 String table = dbname + "." + sTables[i];
                 PreparedStatement stmt = null;
                 try {
-                    stmt = conn.prepareStatement("DELETE FROM " + table + " WHERE mailbox_id = " + mailboxId);
+                    stmt = conn.prepareStatement("DELETE FROM " + table +
+                            (DebugConfig.disableMailboxGroups ? "" : " WHERE mailbox_id = " + mailboxId));
                     stmt.executeUpdate();
                 } finally {
                     DbPool.closeStatement(stmt);
@@ -788,10 +789,10 @@ public class DbMailbox {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement(
-                    "SELECT DISTINCT(tags) FROM " + DbMailItem.getMailItemTableName(mbox) +
-                    " WHERE mailbox_id = ?");
-            stmt.setInt(1, mbox.getId());
+            stmt = conn.prepareStatement("SELECT DISTINCT(tags) FROM " + DbMailItem.getMailItemTableName(mbox) +
+                    (DebugConfig.disableMailboxGroups ? "" : " WHERE mailbox_id = ?"));
+            if (!DebugConfig.disableMailboxGroups)
+                stmt.setInt(1, mbox.getId());
             rs = stmt.executeQuery();
             while (rs.next())
                 tagsets.add(rs.getLong(1));
@@ -811,10 +812,10 @@ public class DbMailbox {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement(
-                    "SELECT DISTINCT(flags) FROM " + DbMailItem.getMailItemTableName(mbox) +
-                    " WHERE mailbox_id = ?");
-            stmt.setInt(1, mbox.getId());
+            stmt = conn.prepareStatement("SELECT DISTINCT(flags) FROM " + DbMailItem.getMailItemTableName(mbox) +
+                    (DebugConfig.disableMailboxGroups ? "" : " WHERE mailbox_id = ?"));
+            if (!DebugConfig.disableMailboxGroups)
+                stmt.setInt(1, mbox.getId());
             rs = stmt.executeQuery();
             while (rs.next())
                 flagsets.add(rs.getLong(1));

@@ -34,6 +34,7 @@ import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.db.DbSearchConstraints.NumericRange;
 import com.zimbra.cs.db.DbSearchConstraints.StringRange;
 import com.zimbra.cs.imap.ImapMessage;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -186,9 +187,8 @@ public class DbSearch {
         // Assemble the search query
         StringBuilder statement = new StringBuilder("SELECT count(*) ");
         statement.append(" FROM " + DbMailItem.getMailItemTableName(mbox, " mi"));
-        statement.append(" WHERE ");
-        statement.append("mailbox_id = ? AND ");
-        int num = 1;
+        statement.append(" WHERE ").append(DbMailItem.IN_THIS_MAILBOX_AND);
+        int num = DebugConfig.disableMailboxGroups ? 0 : 1;
         
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -197,7 +197,8 @@ public class DbSearch {
 
             stmt = conn.prepareStatement(statement.toString());
             int param = 1;
-            stmt.setInt(param++, mailboxId);
+            if (!DebugConfig.disableMailboxGroups)
+                stmt.setInt(param++, mailboxId);
             param = setSearchVars(stmt, node, param, null, false);
 
             // FIXME: include COLLATION for sender/subject sort
@@ -205,7 +206,7 @@ public class DbSearch {
             if (sLog.isDebugEnabled())
                 sLog.debug("SQL: " + statement);
 
-            assert(param == num+1); 
+            assert(param == num + 1); 
             rs = stmt.executeQuery();
             rs.next();
             return rs.getInt(1);
@@ -477,8 +478,9 @@ public class DbSearch {
     }
 
     public static Collection<SearchResult> search(Collection<SearchResult> result, 
-        Connection conn, DbSearchConstraintsNode node, Mailbox mbox, 
-        byte sort, int offset, int limit, SearchResult.ExtraData extra) throws ServiceException {
+            Connection conn, DbSearchConstraintsNode node, Mailbox mbox, 
+            byte sort, int offset, int limit, SearchResult.ExtraData extra)
+    throws ServiceException {
 
         boolean hasValidLIMIT = offset >= 0 && limit >= 0;
         PreparedStatement stmt = null;
@@ -487,13 +489,11 @@ public class DbSearch {
         int numParams = 0;
         boolean hasMailItemOnlyConstraints = true;
         boolean hasAppointmentTableConstraints = hasAppointmentTableConstraints(node);
-        if (hasAppointmentTableConstraints) {
+        if (hasAppointmentTableConstraints)
             hasMailItemOnlyConstraints = hasMailItemOnlyConstraints(node);
-        }
         boolean requiresUnion = hasMailItemOnlyConstraints && hasAppointmentTableConstraints;
         
         try {
-            
             if (hasMailItemOnlyConstraints) {
                 if (requiresUnion) {
                     statement.append("(");

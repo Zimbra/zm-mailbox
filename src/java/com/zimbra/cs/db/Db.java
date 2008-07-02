@@ -125,11 +125,16 @@ public abstract class Db {
     }
 
 
+    /** Callback invoked immediately before a connection is fetched from
+     *  the pool and returned to the user. */
     @SuppressWarnings("unused")
     void postOpen(Connection conn) throws SQLException {
         // default is to do nothing
     }
 
+    /** Indicates that the connection will be accessing the given Mailbox's
+     *  database in the scope of the current transaction.  Must be called
+     *  <em>before</em> any SQL commands are executed in the transaction. */
     public static void registerDatabaseInterest(Connection conn, Mailbox mbox) throws ServiceException {
         try {
             getInstance().registerDatabaseInterest(conn, DbMailbox.getDatabaseName(mbox));
@@ -143,6 +148,9 @@ public abstract class Db {
         // default is to do nothing
     }
 
+    /** Callback invoked immediately before a connection is returned to the
+     *  pool by the user.  Note that <tt>COMMIT</tt>/<tt>ROLLBACK</tt> must
+     *  already have been called before this method is invoked. */
     @SuppressWarnings("unused")
     void preClose(Connection conn) throws SQLException {
         // default is to do nothing

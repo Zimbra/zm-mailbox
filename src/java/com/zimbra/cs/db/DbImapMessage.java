@@ -29,6 +29,7 @@ import com.zimbra.cs.datasource.ImapFolder;
 import com.zimbra.cs.datasource.ImapMessage;
 import com.zimbra.cs.datasource.ImapMessageCollection;
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -42,26 +43,29 @@ public class DbImapMessage {
      * Stores IMAP message tracker data.
      */
     public static void storeImapMessage(Mailbox mbox, int localFolderId, long remoteUid, int localItemId, int flags)
-    throws ServiceException
-    {
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        
+    throws ServiceException {
         ZimbraLog.datasource.debug(
             "Storing IMAP message tracker: mboxId=%d, localFolderId=%d, remoteUid=%d, localItemId=%d flags=%s",
             mbox.getId(), localFolderId, remoteUid, localItemId, Flag.bitmaskToFlags(flags));
 
+        Connection conn = null;
+        PreparedStatement stmt = null;
         try {
             conn = DbPool.getConnection();
+            Db.registerDatabaseInterest(conn, mbox);
+
+            String mailbox_id = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
             stmt = conn.prepareStatement(
                 "INSERT INTO " + getTableName(mbox) +
-                " (mailbox_id, imap_folder_id, uid, item_id, flags) " +
+                " (" + mailbox_id + "imap_folder_id, uid, item_id, flags) " +
                 "VALUES (?, ?, ?, ?, ?)");
-            stmt.setInt(1, mbox.getId());
-            stmt.setInt(2, localFolderId);
-            stmt.setLong(3, remoteUid);
-            stmt.setInt(4, localItemId);
-            stmt.setInt(5, flags);
+            int pos = 1;
+            if (!DebugConfig.disableMailboxGroups)
+                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, localFolderId);
+            stmt.setLong(pos++, remoteUid);
+            stmt.setInt(pos++, localItemId);
+            stmt.setInt(pos++, flags);
             stmt.executeUpdate();
             conn.commit();
         } catch (SQLException e) {
@@ -73,20 +77,25 @@ public class DbImapMessage {
     }
 
     public static void setUid(Mailbox mbox, int itemId, long uid)
-        throws ServiceException {
-        Connection conn = null;
-        PreparedStatement stmt = null;
+    throws ServiceException {
         ZimbraLog.datasource.debug(
             "Updating IMAP message tracker uid: mboxId=%d, localItemId=%d remoteUid=%x",
             mbox.getId(), itemId, uid);
+
+        Connection conn = null;
+        PreparedStatement stmt = null;
         try {
             conn = DbPool.getConnection();
+            Db.registerDatabaseInterest(conn, mbox);
+
             stmt = conn.prepareStatement(
                 "UPDATE " + getTableName(mbox) + " SET uid = ?" +
-                " WHERE mailbox_id = ? AND item_id = ?");
-            stmt.setLong(1, uid);
-            stmt.setInt(2, mbox.getId());
-            stmt.setInt(3, itemId);
+                " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "item_id = ?");
+            int pos = 1;
+            stmt.setLong(pos++, uid);
+            if (!DebugConfig.disableMailboxGroups)
+                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, itemId);
             stmt.executeUpdate();
             conn.commit();
         } catch (SQLException e) {
@@ -98,21 +107,25 @@ public class DbImapMessage {
     }
     
     public static void setFlags(Mailbox mbox, int itemId, int flags)
-        throws ServiceException
-    {
-        Connection conn = null;
-        PreparedStatement stmt = null;
+    throws ServiceException {
         ZimbraLog.datasource.debug(
             "Updating IMAP message tracker flags: mboxId=%d, localItemId=%d flags=%s",
             mbox.getId(), itemId, Flag.bitmaskToFlags(flags));
+
+        Connection conn = null;
+        PreparedStatement stmt = null;
         try {
             conn = DbPool.getConnection();
+            Db.registerDatabaseInterest(conn, mbox);
+
             stmt = conn.prepareStatement(
                 "UPDATE " + getTableName(mbox) + " SET flags = ?" +
-                " WHERE mailbox_id = ? AND item_id = ?");
-            stmt.setInt(1, flags);
-            stmt.setInt(2, mbox.getId());
-            stmt.setInt(3, itemId);
+                " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "item_id = ?");
+            int pos = 1;
+            stmt.setInt(pos++, flags);
+            if (!DebugConfig.disableMailboxGroups)
+                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, itemId);
             stmt.executeUpdate();
             conn.commit();
         } catch (SQLException e) {
@@ -126,23 +139,25 @@ public class DbImapMessage {
      * Deletes IMAP message tracker data.
      */
     public static void deleteImapMessage(Mailbox mbox, int localFolderId, int localItemId)
-    throws ServiceException
-    {
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        
+    throws ServiceException {
         ZimbraLog.datasource.debug(
             "Deleting IMAP message tracker: mboxId=%d, localFolderId=%d, msgId=%d",
             mbox.getId(), localFolderId, localItemId);
 
+        Connection conn = null;
+        PreparedStatement stmt = null;
         try {
             conn = DbPool.getConnection();
+            Db.registerDatabaseInterest(conn, mbox);
+
             stmt = conn.prepareStatement(
                 "DELETE FROM " + getTableName(mbox) +
-                " WHERE mailbox_id = ? AND imap_folder_id = ? AND item_id = ?");
-            stmt.setInt(1, mbox.getId());
-            stmt.setInt(2, localFolderId);
-            stmt.setInt(3, localItemId);
+                " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "imap_folder_id = ? AND item_id = ?");
+            int pos = 1;
+            if (!DebugConfig.disableMailboxGroups)
+                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, localFolderId);
+            stmt.setInt(pos++, localItemId);
             stmt.executeUpdate();
             conn.commit();
         } catch (SQLException e) {
@@ -157,21 +172,23 @@ public class DbImapMessage {
      * Deletes IMAP message tracker data.
      */
     public static void deleteImapMessages(Mailbox mbox, int localFolderId)
-    throws ServiceException
-    {
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        
+    throws ServiceException {
         ZimbraLog.datasource.debug(
             "Deleting all IMAP message trackers: mboxId=%d, localFolderId=%d", mbox.getId(), localFolderId);
 
+        Connection conn = null;
+        PreparedStatement stmt = null;
         try {
             conn = DbPool.getConnection();
+            Db.registerDatabaseInterest(conn, mbox);
+
             stmt = conn.prepareStatement(
                 "DELETE FROM " + getTableName(mbox) +
-                " WHERE mailbox_id = ? AND imap_folder_id = ?");
-            stmt.setInt(1, mbox.getId());
-            stmt.setInt(2, localFolderId);
+                " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "imap_folder_id = ?");
+            int pos = 1;
+            if (!DebugConfig.disableMailboxGroups)
+                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, localFolderId);
             stmt.executeUpdate();
             conn.commit();
         } catch (SQLException e) {
@@ -185,30 +202,34 @@ public class DbImapMessage {
     // Returns local message item id for specified folder id and remote uid
     // if a tracker exists, otherwise returns 0.
     public static int getLocalMessageId(Mailbox mbox, int localFolderId, long remoteUid)
-        throws ServiceException {
+    throws ServiceException {
+        ZimbraLog.datasource.debug(
+                "Getting local message id for tracked message: mboxId=%d, localFolderId=%d, remoteUid=%d",
+                mbox.getId(), localFolderId, remoteUid);
+
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
-
-        ZimbraLog.datasource.debug(
-            "Getting local message id for tracked message: mboxId=%d, localFolderId=%d, remoteUid=%d",
-            mbox.getId(), localFolderId, remoteUid);
         try {
             conn = DbPool.getConnection();
+            Db.registerDatabaseInterest(conn, mbox);
+
             stmt = conn.prepareStatement(
                 "SELECT item_id" +
                 " FROM " + getTableName(mbox) +
-                " WHERE mailbox_id = ? AND imap_folder_id = ? AND uid = ?");
-            stmt.setInt(1, mbox.getId());
-            stmt.setInt(2, localFolderId);
-            stmt.setLong(3, remoteUid);
+                " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "imap_folder_id = ? AND uid = ?");
+            int pos = 1;
+            if (!DebugConfig.disableMailboxGroups)
+                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, localFolderId);
+            stmt.setLong(pos++, remoteUid);
             rs = stmt.executeQuery();
             return rs.next() ? rs.getInt(1) : 0;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("Unable to get IMAP message data", e);
         } finally {
-            if (rs != null) DbPool.closeResults(rs);
-            if (stmt != null) DbPool.closeStatement(stmt);
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
             DbPool.quietClose(conn);
         }
     }
@@ -218,24 +239,27 @@ public class DbImapMessage {
      */
     public static ImapMessageCollection getImapMessages(Mailbox mbox, DataSource ds, ImapFolder imapFolder)
     throws ServiceException {
+        ImapMessageCollection imapMessages = new ImapMessageCollection();
+
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        ImapMessageCollection imapMessages = new ImapMessageCollection();
-
         try {
             conn = DbPool.getConnection();
+            Db.registerDatabaseInterest(conn, mbox);
+
             stmt = conn.prepareStatement(
                 "SELECT imap.uid, imap.item_id, imap.flags as tflags, mi.unread, mi.flags " +
                 "FROM " + getTableName(mbox) + " imap " +
                 "  LEFT OUTER JOIN " + DbMailItem.getMailItemTableName(mbox) + " mi " +
                 "  ON imap.mailbox_id = mi.mailbox_id AND imap.item_id = mi.id " + 
                 "WHERE imap.mailbox_id = ? AND imap.imap_folder_id = ?");
-
-            int i = 1;
-            stmt.setInt(i++, mbox.getId());
-            stmt.setInt(i++, imapFolder.getItemId());
+            int pos = 1;
+            if (!DebugConfig.disableMailboxGroups)
+                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, imapFolder.getItemId());
             rs = stmt.executeQuery();
+
             while (rs.next()) {
                 long uid = rs.getLong("uid");
                 int itemId = rs.getInt("item_id");
@@ -245,8 +269,6 @@ public class DbImapMessage {
                 flags = unread > 0 ? (flags | Flag.BITMASK_UNREAD) : (flags & ~Flag.BITMASK_UNREAD);
                 imapMessages.add(new ImapMessage(uid, itemId, flags, tflags));
             }
-            rs.close();
-            stmt.close();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("Unable to get IMAP message data", e);
         } finally {
@@ -266,29 +288,29 @@ public class DbImapMessage {
      */
     public static List<Integer> getNewLocalMessageIds(Mailbox mbox, DataSource ds, ImapFolder imapFolder)
     throws ServiceException {
+        List<Integer> newIds = new ArrayList<Integer>();
+
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        List<Integer> newIds = new ArrayList<Integer>();
-
         try {
             conn = DbPool.getConnection();
+            Db.registerDatabaseInterest(conn, mbox);
+
             stmt = conn.prepareStatement(
                 "SELECT id FROM " + DbMailItem.getMailItemTableName(mbox) + " mi " +
                 "  LEFT OUTER JOIN " + getTableName(mbox) + " imap " +
                 "  ON imap.mailbox_id = mi.mailbox_id AND imap.item_id = mi.id " + 
                 "WHERE mi.mailbox_id = ? AND mi.folder_id = ? AND imap.item_id IS NULL " +
                 "AND mi.type IN (" + MailItem.TYPE_MESSAGE + ", " + MailItem.TYPE_CHAT + ")");
-
-            int i = 1;
-            stmt.setInt(i++, mbox.getId());
-            stmt.setInt(i++, imapFolder.getItemId());
+            int pos = 1;
+            if (!DebugConfig.disableMailboxGroups)
+                stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(pos++, imapFolder.getItemId());
             rs = stmt.executeQuery();
-            while (rs.next()) {
+
+            while (rs.next())
                 newIds.add(rs.getInt("id"));
-            }
-            rs.close();
-            stmt.close();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("Unable to get new local message ids", e);
         } finally {

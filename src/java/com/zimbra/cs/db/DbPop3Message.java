@@ -30,6 +30,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Mailbox;
 
 
@@ -41,25 +42,27 @@ public class DbPop3Message {
      * Persists <code>uid</code> so we remember not to import the message again.
      */
     public static void storeUid(Mailbox mbox, String dataSourceId, String uid, int itemId)
-    throws ServiceException
-    {
-        if (StringUtil.isNullOrEmpty(uid)) {
+    throws ServiceException {
+        if (StringUtil.isNullOrEmpty(uid))
             return;
-        }
-        
+
         Connection conn = null;
         PreparedStatement stmt = null;
-
         try {
             conn = DbPool.getConnection();
+            Db.registerDatabaseInterest(conn, mbox);
+
+            String mailbox_id = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
             stmt = conn.prepareStatement(
                 "INSERT INTO " + getTableName(mbox) +
-                " (mailbox_id, data_source_id, uid, item_id) " +
+                " (" + mailbox_id + "data_source_id, uid, item_id) " +
                 "VALUES (?, ?, ?, ?)");
-            stmt.setInt(1, mbox.getId());
-            stmt.setString(2, dataSourceId);
-            stmt.setString(3, uid);
-            stmt.setInt(4, itemId);
+            int pos = 1;
+            if (!DebugConfig.disableMailboxGroups)
+                stmt.setInt(pos++, mbox.getId());
+            stmt.setString(pos++, dataSourceId);
+            stmt.setString(pos++, uid);
+            stmt.setInt(pos++, itemId);
             stmt.executeUpdate();
             conn.commit();
         } catch (SQLException e) {
@@ -75,18 +78,21 @@ public class DbPop3Message {
      */
     public static void deleteUids(Mailbox mbox, String dataSourceId)
     throws ServiceException {
+        ZimbraLog.mailbox.debug("Deleting UID's for %s", dataSourceId);
+
         Connection conn = null;
         PreparedStatement stmt = null;
-
-        ZimbraLog.mailbox.debug("Deleting UID's for %s", dataSourceId);
-        
         try {
             conn = DbPool.getConnection();
+            Db.registerDatabaseInterest(conn, mbox);
+
             stmt = conn.prepareStatement(
                 "DELETE FROM " + getTableName(mbox) +
-                " WHERE mailbox_id = ? AND data_source_id = ?");
-            stmt.setInt(1, mbox.getId());
-            stmt.setString(2, dataSourceId);
+                " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "data_source_id = ?");
+            int pos = 1;
+            if (!DebugConfig.disableMailboxGroups)
+                stmt.setInt(pos++, mbox.getId());
+            stmt.setString(pos++, dataSourceId);
             int numRows = stmt.executeUpdate();
             conn.commit();
             ZimbraLog.mailbox.debug("Deleted %d UID's", numRows);
@@ -108,32 +114,30 @@ public class DbPop3Message {
         ZimbraLog.mailbox.debug("%s: looking for uids that match a set of size %d", ds, uids.size());
         
         List<List<String>> splitIds = ListUtil.split(uids, Db.getINClauseBatchSize());
+        Set<String> matchingUids = new HashSet<String>();
+
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        Set<String> matchingUids = new HashSet<String>();
-
         try {
             conn = DbPool.getConnection();
+            Db.registerDatabaseInterest(conn, mbox);
+
             for (List<String> curIds : splitIds) {
                 stmt = conn.prepareStatement(
-                    "SELECT uid " +
-                    "FROM " + getTableName(mbox) +
-                    " WHERE mailbox_id = ? AND data_source_id = ? AND uid IN " +
-                    DbUtil.suitableNumberOfVariables(curIds));
-
-                int i = 1;
-                stmt.setInt(i++, mbox.getId());
-                stmt.setString(i++, ds.getId());
-                for (String uid : curIds) {
-                    stmt.setString(i++, uid);
-                }
+                    "SELECT uid FROM " + getTableName(mbox) +
+                    " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "data_source_id = ?" +
+                    " AND uid IN " + DbUtil.suitableNumberOfVariables(curIds));
+                int pos = 1;
+                if (!DebugConfig.disableMailboxGroups)
+                    stmt.setInt(pos++, mbox.getId());
+                stmt.setString(pos++, ds.getId());
+                for (String uid : curIds)
+                    stmt.setString(pos++, uid);
                 rs = stmt.executeQuery();
-                while (rs.next()) {
+
+                while (rs.next())
                     matchingUids.add(rs.getString(1));
-                }
-                rs.close();
-                stmt.close();
             }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("Unable to get UID's", e);

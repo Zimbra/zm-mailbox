@@ -102,6 +102,12 @@ public class DebugConfig {
     // to ensure cache consistency (very expensive)
     public static boolean checkMailboxCacheConsistency;
 
+    public static boolean disableMailboxGroups;
+
+    // The number of MBOXGROUP<N> databases to distribute the users over.
+    // This is a middle ground between One Huge Database (contention and
+    // the effects of corruption are issues) and database-per-user (which
+    // most DBMSes can't deal with).
     public static final int numMailboxGroups;
 
     static {
@@ -134,7 +140,8 @@ public class DebugConfig {
 
         checkMailboxCacheConsistency = booleanValue("debug_check_mailbox_cache_consistency", false);
 
-        numMailboxGroups = Math.max(LC.zimbra_mailbox_groups.intValue(), 1);
+        disableMailboxGroups = booleanValue("debug_disable_mailbox_group", false);
+        numMailboxGroups = disableMailboxGroups ? Integer.MAX_VALUE : Math.max(LC.zimbra_mailbox_groups.intValue(), 1);
     }
 
     private static boolean booleanValue(String key, boolean defaultValue) {

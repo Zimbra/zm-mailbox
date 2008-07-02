@@ -27,6 +27,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.Properties;
 
 import org.apache.commons.cli.CommandLine;
@@ -84,26 +85,37 @@ public class SQLite extends Db {
     }
 
 
-//    @Override void startup(PoolingDataSource pool, int poolSize) throws SQLException {
-//        int groupCount = DebugConfig.numMailboxGroups;
-//
-//        LinkedList<java.sql.Connection> connections = new LinkedList<java.sql.Connection>();
-//        for (int i = 0; i < poolSize; i++) {
-//            java.sql.Connection conn = pool.getConnection();
-//            conn.setAutoCommit(true);
-//            for (int group = 1; group <= groupCount; group++) {
-//                String dbpath = SQLiteConfig.dbdir + File.separator + "mboxgroup" + group + ".db";
-//                java.sql.PreparedStatement stmt = conn.prepareStatement("ATTACH DATABASE \"" + dbpath + "\" AS mboxgroup" + group);
-//                stmt.execute();
-//            }
-//            conn.setAutoCommit(false);
-//            connections.add(conn);
-//        }
-//        for (java.sql.Connection conn : connections)
-//            conn.close();
-//
-//        super.startup(pool, poolSize);
-//    }
+    @Override void startup(org.apache.commons.dbcp.PoolingDataSource pool, int poolSize) throws SQLException {
+        LinkedList<java.sql.Connection> connections = new LinkedList<java.sql.Connection>();
+        for (int i = 0; i < poolSize; i++) {
+            java.sql.Connection conn = pool.getConnection();
+            try {
+                conn.setAutoCommit(true);
+                pragma(conn, "synchronous", "NORMAL");
+                pragma(conn, "fullfsync", "0");
+                pragma(conn, "journal_mode", "PERSIST");
+//                pragma(conn, "locking_mode", "EXCLUSIVE");
+                pragma(conn, "legacy_file_format", "OFF");
+//                pragma(conn, "read_uncommitted", "1");
+            } finally {
+                connections.add(conn);
+                conn.setAutoCommit(false);
+            }
+        }
+        for (java.sql.Connection conn : connections)
+            conn.close();
+
+        super.startup(pool, poolSize);
+    }
+
+    private void pragma(java.sql.Connection conn, String key, String value) throws SQLException {
+        PreparedStatement stmt = null;
+        try {
+            (stmt = conn.prepareStatement("PRAGMA " + key + " = " + value)).execute();
+        } finally {
+            DbPool.quietCloseStatement(stmt);
+        }
+    }
 
     private static final int CONNECTION_POOL_SIZE = 12;
 
