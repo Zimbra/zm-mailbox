@@ -42,7 +42,7 @@ import java.util.Collections;
 
 public class ImapSync extends AbstractMailItemImport {
     private final ImapConnection connection;
-    private final Folder localRootFolder;
+    private Folder localRootFolder;
     private char delimiter; // Default IMAP hierarchy delimiter (0 if flat)
     private ImapFolderCollection trackedFolders;
     private Map<Integer, ImapFolderSync> syncedFolders;
@@ -69,7 +69,6 @@ public class ImapSync extends AbstractMailItemImport {
     public ImapSync(DataSource ds) throws ServiceException {
         super(ds);
         connection = new ImapConnection(getImapConfig(ds));
-        localRootFolder = ds.getMailbox().getFolderById(null, ds.getFolderId());
     }
 
     public ImapConnection getConnection() { return connection; }
@@ -113,6 +112,8 @@ public class ImapSync extends AbstractMailItemImport {
         throws ServiceException {
         validateDataSource();
         connect();
+        int folderId = dataSource.getFolderId();
+        localRootFolder = dataSource.getMailbox().getFolderById(null, folderId);
         this.fullSync = fullSync;
         try {
             // If full sync not requested, sync INBOX only
