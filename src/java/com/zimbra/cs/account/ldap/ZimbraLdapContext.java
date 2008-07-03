@@ -1,6 +1,7 @@
 package com.zimbra.cs.account.ldap;
 
 import java.io.IOException;
+import java.security.cert.Certificate;
 import java.util.Hashtable;
 
 import javax.naming.CompositeName;
@@ -32,6 +33,9 @@ import javax.naming.ldap.PagedResultsResponseControl;
 import javax.naming.ldap.StartTlsRequest;
 import javax.naming.ldap.StartTlsResponse;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLPeerUnverifiedException;
+import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocketFactory;
 
 import com.zimbra.common.localconfig.LC;
@@ -55,6 +59,7 @@ public class ZimbraLdapContext {
     private static String sLdapMasterURL;    
     private static boolean sLdapRequireStartTLS;
     private static boolean sLdapMasterRequireStartTLS;
+    private static String sStartTLSDebugText;
     
     private static Hashtable<String, String> sEnvMasterAuth;
     private static Hashtable<String, String> sEnvAuth;
@@ -98,6 +103,15 @@ public class ZimbraLdapContext {
         */    
         
         sEasySSLSocketFactory = EasySSLSocketFactory.getDefault();
+        
+        // setup debug text
+        StringBuffer startTLSDebugText = new StringBuffer("START TLS");
+        sStartTLSDebugText = "START TLS";
+        if (LC.ssl_allow_mismatched_certs.booleanValue())
+            startTLSDebugText.append(", allow mismatched certs");
+        if (LC.ssl_allow_untrusted_certs.booleanValue())
+            startTLSDebugText.append(", allow untrusted certs");
+        sStartTLSDebugText = startTLSDebugText.toString();
     }
     
     public static String getLdapURL() {
@@ -218,6 +232,35 @@ public class ZimbraLdapContext {
         return url.toString();
     }
     
+    private static class DummyHostVerifier implements HostnameVerifier {
+        public boolean verify(String hostname, SSLSession session) {
+            // System.out.println("Checking: " + hostname + " in");
+            try {
+                Certificate[] cert = session.getPeerCertificates();
+                for (int i = 0; i < cert.length; i++) {
+                    // System.out.println(cert[i]);
+                }
+            } catch (SSLPeerUnverifiedException e) {
+                return false;
+            }
+    
+            return true;
+        }
+    }
+    
+    private static void tlsNegotiate(StartTlsResponse tlsResp) throws IOException {
+        
+        ZimbraLog.ldap.debug(sStartTLSDebugText);
+        
+        if (LC.ssl_allow_mismatched_certs.booleanValue())
+            tlsResp.setHostnameVerifier(new DummyHostVerifier());
+        
+        if (LC.ssl_allow_untrusted_certs.booleanValue())
+            tlsResp.negotiate(sEasySSLSocketFactory);
+        else
+            tlsResp.negotiate();
+    }
+    
     /*
      * Zimbra LDAP
      */
@@ -249,14 +292,7 @@ public class ZimbraLdapContext {
             if (startTLS) {
                 // start TLS
                 mTlsResp = (StartTlsResponse) mDirContext.extendedOperation(new StartTlsRequest());
-                
-                if (LC.ssl_allow_untrusted_certs.booleanValue()) {
-                    ZimbraLog.ldap.debug("START TLS, allow untruested certs");
-                    mTlsResp.negotiate(sEasySSLSocketFactory);
-                } else { 
-                    ZimbraLog.ldap.debug("START TLS");
-                    mTlsResp.negotiate();
-                }
+                tlsNegotiate(mTlsResp);
 
                 mDirContext.addToEnvironment(Context.SECURITY_AUTHENTICATION, "simple");
                 mDirContext.addToEnvironment(Context.SECURITY_PRINCIPAL, LC.zimbra_ldap_userdn.value());
@@ -339,9 +375,7 @@ public class ZimbraLdapContext {
             if (startTLS) {
                 // start TLS
                 mTlsResp = (StartTlsResponse) mDirContext.extendedOperation(new StartTlsRequest());
-                
-                ZimbraLog.ldap.debug("START TLS");
-                mTlsResp.negotiate();
+                tlsNegotiate(mTlsResp);
     
                 mDirContext.addToEnvironment(Context.SECURITY_AUTHENTICATION, "simple");
                 mDirContext.addToEnvironment(Context.SECURITY_PRINCIPAL, bindDn);
@@ -409,9 +443,7 @@ public class ZimbraLdapContext {
                 // start TLS
                 LdapContext ldapCtxt = (LdapContext)context;
                 tlsResp = (StartTlsResponse) ldapCtxt.extendedOperation(new StartTlsRequest());
-                
-                ZimbraLog.ldap.debug("START TLS");
-                tlsResp.negotiate();
+                tlsNegotiate(tlsResp);
 
                 ldapCtxt.addToEnvironment(Context.SECURITY_AUTHENTICATION, "simple");
                 ldapCtxt.addToEnvironment(Context.SECURITY_PRINCIPAL, principal);
