@@ -63,7 +63,7 @@ public class MailSender {
     public static final String MSGTYPE_REPLY = Flag.getAbbreviation(Flag.ID_FLAG_REPLIED) + "";
     public static final String MSGTYPE_FORWARD = Flag.getAbbreviation(Flag.ID_FLAG_FORWARDED) + "";
 
-    protected MailSender()  { }
+    public MailSender()  { }
 
     public static int getSentFolderId(Mailbox mbox, Identity identity) throws ServiceException {
         int folderId = Mailbox.ID_FOLDER_SENT;
@@ -119,7 +119,7 @@ public class MailSender {
                                ignoreFailedAddresses, replyToSender);
     }
 
-    static class RollbackData {
+    protected static class RollbackData {
         Mailbox mbox;
         ZMailbox zmbox;
         ItemId msgId;
@@ -130,7 +130,7 @@ public class MailSender {
             zmbox = z;  msgId = new ItemId(s, a.getId());
         }
 
-        void rollback() {
+        public void rollback() {
             try {
                 if (mbox != null)
                     mbox.delete(null, msgId.getId(), MailItem.TYPE_MESSAGE);
@@ -152,7 +152,7 @@ public class MailSender {
      * @param origMsgId if replying or forwarding, item ID of original message
      * @param replyType reply/forward type (null if original, which is neither
      *                  reply nor forward)
-     * @param identityId TODO
+     * @param identity identity
      * @param ignoreFailedAddresses If TRUE, then will attempt to send even if
      *                              some addresses fail (no error is returned!)
      * @param replyToSender if true and if setting Sender header, set Reply-To
@@ -340,9 +340,13 @@ public class MailSender {
             return;
         }
         FixedMimeMessage fixed = (FixedMimeMessage) mm;
-        Properties props = fixed.getSession().getProperties();
+        Session session = fixed.getSession();
+        if (session == null) {
+            return;
+        }
+        Properties props = session.getProperties();
         Properties newProps = null;
-        Domain domain = null;
+        Domain domain;
         
         try {
             domain = Provisioning.getInstance().getDomain(acct);
@@ -515,8 +519,8 @@ public class MailSender {
         mm.saveChanges();
     }
 
-    private void sendMessage(final MimeMessage mm, final boolean ignoreFailedAddresses, final RollbackData[] rollback)
-    throws SafeMessagingException {
+    protected void sendMessage(final MimeMessage mm, final boolean ignoreFailedAddresses, final RollbackData[] rollback)
+    throws SafeMessagingException, IOException {
         // send the message via SMTP
         try {
             boolean retry = ignoreFailedAddresses;
