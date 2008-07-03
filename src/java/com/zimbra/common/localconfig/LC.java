@@ -265,6 +265,7 @@ public class LC {
     public static final KnownKey mailboxd_thread_stack_size;
     
     public static final KnownKey ssl_allow_untrusted_certs;
+    public static final KnownKey ssl_allow_mismatched_certs;
 
     public static final KnownKey zimlet_directory;
     public static final KnownKey wiki_enabled;
@@ -855,6 +856,9 @@ public class LC {
 
         ssl_allow_untrusted_certs = new KnownKey("ssl_allow_untrusted_certs");
         ssl_allow_untrusted_certs.setDefault("false");
+        
+        ssl_allow_mismatched_certs = new KnownKey("ssl_allow_mismatched_certs");
+        ssl_allow_mismatched_certs.setDefault("false");
 
         zimlet_directory = new KnownKey("zimlet_directory");
         zimlet_directory.setDefault("${mailboxd_directory}" + FS + "webapps" + FS + "service" + FS + "zimlet");
