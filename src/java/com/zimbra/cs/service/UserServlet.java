@@ -207,6 +207,7 @@ public class UserServlet extends ZimbraServlet {
         addFormatter(new XmlFormatter());
         addFormatter(new JsonFormatter());
         addFormatter(new HtmlFormatter());
+        addFormatter(new TarFormatter());
     }
 
     /** Returns the REST URL for the account. */
