@@ -52,7 +52,7 @@ import com.zimbra.soap.SoapEngine;
 public class TestProvisioning extends TestCase {
     
     // whether to test start TLS for external GAL and auth
-    private static final boolean TEST_STARTTLS = false;
+    private static final boolean TEST_STARTTLS = true;
     
     private Provisioning mProv;
     LdapProvisioning mLdapProv;
