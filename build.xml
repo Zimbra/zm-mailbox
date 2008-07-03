@@ -388,7 +388,7 @@
     </target>
 
 	<target name="mysql-versions-init" if="db-mysql">
-        <java classname="com.zimbra.cs.db.Versions" fork="true" classpathref="class.path" failonerror="true">
+        <java classname="com.zimbra.cs.db.MySQL" fork="true" classpathref="class.path" failonerror="true">
             <arg line="-o ${build.dir}"/>
         </java>
 	</target>
@@ -855,7 +855,7 @@
         <condition property="db.schema.dir" value="src/db/sqlite">
         	<isset property="db-sqlite"/>
         </condition>
-        <condition property="db.schema.dir" value="src/db">
+        <condition property="db.schema.dir" value="src/db/mysql">
             <not>
                 <isset property="db.schema.dir"/>
             </not>
@@ -867,7 +867,7 @@
 
 	<target name="mysql-init" if="db-mysql">
         <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
-             classpathref="class.path" onerror="continue" src="src/db/dropdb.sql"/>
+             classpathref="class.path" onerror="continue" src="${db.schema.dir}/dropdb.sql"/>
         <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
              classpathref="class.path" onerror="abort" src="${db.schema.dir}/db.sql"/>
         <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
@@ -884,7 +884,7 @@
 
 		<delete dir="${zimbra.home.dir}/sqlite"/>
         <mkdir dir="${zimbra.home.dir}/sqlite"/>
-		<!-- SQLite JDBC driver doesn't support Statement.setEscapeProcessing, whic breaks the <sql/> task. -->
+		<!-- SQLite JDBC driver doesn't support Statement.setEscapeProcessing, which breaks the <sql/> task. -->
 		<echo>Copying pre-created database to ${zimbra.home.dir}/sqlite/zimbra.db</echo>
         <copy todir="${zimbra.home.dir}/sqlite" file="${db.schema.dir}/zimbra.db"/>
         <chmod perm="o+w" file="${db.schema.dir}/zimbra.db"/>
