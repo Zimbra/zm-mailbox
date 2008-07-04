@@ -17,6 +17,8 @@
 
 package com.zimbra.common.localconfig;
 
+import java.io.File;
+
 import com.zimbra.common.util.Constants;
 
 /**
@@ -208,6 +210,8 @@ public class LC {
     public static final KnownKey mysql_sort_buffer_size;
     public static final KnownKey mysql_read_buffer_size;
     public static final KnownKey mysql_table_cache;
+
+    public static final KnownKey derby_properties;
 
     public static final KnownKey logger_mysql_directory;
     public static final KnownKey logger_mysql_data_directory;
@@ -696,6 +700,9 @@ public class LC {
 
         mysql_table_cache = new KnownKey("mysql_table_cache");
         mysql_table_cache.setDefault("500");
+        
+        derby_properties = new KnownKey("derby_properties");
+        derby_properties.setDefault("${zimbra_home}" + File.separator + "conf" + File.separator + "derby.properties");
 
         zimbra_logger_mysql_password = new KnownKey("zimbra_logger_mysql_password");
         zimbra_logger_mysql_password.setDefault("zimbra");
