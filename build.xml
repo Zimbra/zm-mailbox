@@ -10,9 +10,7 @@
         <isset property="env.ZIMBRA_USER"/>
     </condition>
     <condition property="zimbra.user" value="zimbra">
-        <not>
-            <isset property="zimbra.user"/>
-        </not>
+        <not><isset property="zimbra.user"/></not>
     </condition>
 
     <!-- This machine's hostname.  Use ZIMBRA_HOSTNAME environment variable
@@ -22,9 +20,7 @@
         <isset property="env.ZIMBRA_HOSTNAME"/>
     </condition>
     <condition property="zimbra.server.hostname" value="${exec.hostname}">
-        <not>
-            <isset property="zimbra.server.hostname"/>
-        </not>
+        <not><isset property="zimbra.server.hostname"/></not>
     </condition>
 
     <!-- SMTP server for outgoing email.  Use ZIMBRA_SMTP_HOST environment
@@ -33,9 +29,7 @@
         <isset property="env.ZIMBRA_SMTP_HOST"/>
     </condition>
     <condition property="zimbra.smtp.host" value="localhost">
-        <not>
-            <isset property="zimbra.smtp.host"/>
-        </not>
+        <not><isset property="zimbra.smtp.host"/></not>
     </condition>
 
     <!-- Default email view, group by conversation or by message -->
@@ -43,17 +37,15 @@
         <isset property="env.ZIMBRA_GROUP_MAIL_BY"/>
     </condition>
     <condition property="zimbra.prefGroupMailBy" value="conversation">
-        <not>
-            <isset property="zimbra.prefGroupMailBy"/>
-        </not>
+        <not><isset property="zimbra.prefGroupMailBy"/></not>
     </condition>
 
     <!-- Optional Kerberos authentication realm -->
     <condition property="zimbra.kerberos.realm" value="${env.ZIMBRA_KERBEROS_REALM}">
-	<isset property="env.ZIMBRA_KERBEROS_REALM"/>
+        <isset property="env.ZIMBRA_KERBEROS_REALM"/>
     </condition>
     <property name="zimbra.kerberos.realm" value="ZIMBRA.COM"/>
- 
+
     <property name="build.dir" location="build"/>
     <property name="build.classes.dir" location="${build.dir}/classes"/>
     <property name="build.zmprov" location="${build.dir}/data/zmprov.txt"/>
@@ -74,18 +66,19 @@
 
     <property name="jars.dir" location="jars"/>
     <property name="lib.dir" location="lib"/>
+    <property name="tools.lib.dir" location="tools/lib"/>
     <property name="src.dir" location="src"/>
     <property name="src.java.dir" location="${src.dir}/java"/>
     <property name="config.dir" location="conf"/>
-	<property name='jetty.xml.file' location='${config.dir}/jetty-6.1/jetty.xml' />
-	<property name="zimlet.dir" location="../Zimlet/build/dist"/>
+    <property name="jetty.xml.file" location='${config.dir}/jetty-6.1/jetty.xml' />
+    <property name="zimlet.dir" location="../Zimlet/build/dist"/>
     <property file="${zimlet.dir}/build.properties"/>
 
     <property name="deploy.war" value="${warfile}"/>
     <property name="deploy.host" value="localhost"/>
     <property name="deploy.port" value="7070"/>
-	<property name="ldap.port" value="389"/>
-	
+    <property name="ldap.port" value="389"/>
+    
     <condition property="remote.deploy.host" value="${env.ZIMBRA_REMOTE_DEPLOY_HOST}">
         <isset property="env.ZIMBRA_REMOTE_DEPLOY_HOST"/>
     </condition>
@@ -106,20 +99,30 @@
     <property name="ical4j.jar" value="ical4j-0.9.16-patched.jar"/>
     <property name="ziputil.jar" value="ant-1.7.0-ziputil-patched.jar"/>
 
-	<condition property="db-sqlite">
-		<isset property="env.ZIMBRA_USE_SQLITE"/>
+    <condition property="db-sqlite">
+        <isset property="env.ZIMBRA_USE_SQLITE"/>
+    </condition>
+    <condition property="db-derby">
+        <and>
+            <isset property="env.ZIMBRA_USE_DERBY"/>
+            <not><isset property="db-sqlite"/></not>
+        </and>
+    </condition>
+    <condition property="db-mysql">
+        <and>
+            <not><isset property="db-sqlite"/></not>
+            <not><isset property="db-derby"/></not>
+        </and>
+    </condition>
+
+	<condition property="db.driver.jar" value="sqlitejdbc*.jar">
+		<isset property="db-sqlite"/>
 	</condition>
-	<condition property="db-derby">
-		<and>
-			<isset property="env.ZIMBRA_USE_DERBY"/>
-			<not><isset property="db-sqlite"/></not>
-		</and>
+	<condition property="db.driver.jar" value="derby*.jar">
+		<isset property="db-derby"/>
 	</condition>
-	<condition property="db-mysql">
-		<and>
-			<not><isset property="db-sqlite"/></not>
-			<not><isset property="db-derby"/></not>
-		</and>
+	<condition property="db.driver.jar" value="mysql-connector-java*.jar">
+		<isset property="db-mysql"/>
 	</condition>
 
     <condition property="is-windows">
@@ -157,18 +160,14 @@
         <os name="Mac OS X"/>
     </condition>
     <condition property="native.so" value="so">
-        <not>
-            <os name="Mac OS X"/>
-        </not>
+        <not><os name="Mac OS X"/></not>
     </condition>
 
     <condition property="production.suffix" value=".production">
         <isset property="is-production"/>
     </condition>
     <condition property="production.suffix" value="">
-        <not>
-            <isset property="is-production"/>
-        </not>
+        <not><isset property="is-production"/></not>
     </condition>
 
     <condition property="slapd.conf.src" value="${config.dir}/ldap/slapd.win.conf">
@@ -226,6 +225,9 @@
             <include name="**/*.jar"/>
         </fileset>
         <fileset dir="${im.jars.dir}">
+            <include name="**/*.jar"/>
+        </fileset>
+        <fileset dir="${tools.lib.dir}">
             <include name="**/*.jar"/>
         </fileset>
     </path>
@@ -308,29 +310,19 @@
     <target name="set-buildinfo-vars">
         <tstamp/>
         <condition property="zimbra.buildinfo.version" value="5.0">
-            <not>
-                <isset property="${zimbra.buildinfo.version}"/>
-            </not>
+            <not><isset property="${zimbra.buildinfo.version}"/></not>
         </condition>
         <condition property="zimbra.buildinfo.type" value="">
-            <not>
-                <isset property="${zimbra.buildinfo.type}"/>
-            </not>
+            <not><isset property="${zimbra.buildinfo.type}"/></not>
         </condition>
         <condition property="zimbra.buildinfo.release" value="${user.name}">
-            <not>
-                <isset property="${zimbra.buildinfo.release}"/>
-            </not>
+            <not><isset property="${zimbra.buildinfo.release}"/></not>
         </condition>
         <condition property="zimbra.buildinfo.date" value="${DSTAMP}-${TSTAMP}">
-            <not>
-                <isset property="${zimbra.buildinfo.date}"/>
-            </not>
+            <not><isset property="${zimbra.buildinfo.date}"/></not>
         </condition>
         <condition property="zimbra.buildinfo.host" value="${zimbra.server.hostname}">
-            <not>
-                <isset property="${zimbra.buildinfo.host}"/>
-            </not>
+            <not><isset property="${zimbra.buildinfo.host}"/></not>
         </condition>
         <property name="zimbra.buildinfo.all"
                   value="Version: ${zimbra.buildinfo.version}; Type: ${zimbra.buildinfo.type}; Release: ${zimbra.buildinfo.release}; Built: ${zimbra.buildinfo.date}; Host: ${zimbra.buildinfo.host}"/>
@@ -361,9 +353,7 @@
         </dependset>
 
         <if>
-            <not>
-                <available file="${build.dir}/ldap-config/zimbra.schema"/>
-            </not>
+            <not><available file="${build.dir}/ldap-config/zimbra.schema"/></not>
             <then>
                 <mkdir dir="${build.dir}/attrs"/>
                 <copy todir="${build.dir}/attrs" overwrite="true">
@@ -392,25 +382,25 @@
         </if>
     </target>
 
-	<target name="mysql-versions-init" if="db-mysql">
+    <target name="mysql-versions-init" if="db-mysql">
         <java classname="com.zimbra.cs.db.MySQL" fork="true" classpathref="class.path" failonerror="true">
             <arg line="-o ${build.dir}"/>
         </java>
-	</target>
+    </target>
 
-	<target name="sqlite-versions-init" if="db-sqlite">
+    <target name="sqlite-versions-init" if="db-sqlite">
         <java classname="com.zimbra.cs.db.SQLite" fork="true" classpathref="class.path" failonerror="true">
             <arg line="-o ${build.dir}"/>
         </java>
-	</target>
+    </target>
 
-	<target name="derby-versions-init" if="db-derby">
+    <target name="derby-versions-init" if="db-derby">
         <java classname="com.zimbra.cs.db.Derby" fork="true" classpathref="class.path" failonerror="true">
             <arg line="-o ${build.dir}"/>
         </java>
-	</target>
+    </target>
 
-	<target name="db-versions-init" depends="generate-buildinfo,mysql-versions-init,sqlite-versions-init,derby-versions-init"/>
+    <target name="db-versions-init" depends="generate-buildinfo,mysql-versions-init,sqlite-versions-init,derby-versions-init"/>
 
     <target name="compile" depends="build-init">
         <ant dir="${common.dir}" target="jar" inheritAll="false"/>
@@ -553,10 +543,8 @@
               overwrite="true"/>
         <copy tofile="${dist.dir}/conf/zimbra-contact-fields.xml"
               file="${config.dir}/contacts/zimbra-contact-fields.xml" overwrite="true"/>
-    	<if>
-            <not>
-                <isset property="is-production"/>
-            </not>
+        <if>
+            <not><isset property="is-production"/></not>
             <then>
                 <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path"
                       failonerror="true">
@@ -614,11 +602,11 @@
               file="${config.dir}/jetty-6.1/log4j.properties${production.suffix}" overwrite="true"/>
         <copy todir="${dist.dir}/jetty/common/lib" overwrite="true">
             <fileset dir="${common.jars.dir}"
-                     includes="${ical4j.jar},${ziputil.jar},mail.jar,activation.jar,zimbra-native.jar,bouncycastle.jar,commons-beanutils*.jar,commons-cli*.jar,commons-codec*.jar,commons-collections*.jar,commons-dbcp*.jar,commons-digester*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-logging.jar,commons-pool*.jar,concurrent*.jar,yuicompressor-2.3.4.jar,dom4j*.jar,ganymed-ssh2*.jar,jakarta-oro*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,junit*.jar,jzlib.jar,mina*.jar,mysql-connector-java*.jar,nekohtml.jar,tnef*.jar,xercesImpl.jar,xpp3.jar,libidn*.jar,json.jar"/>
+                     includes="${ical4j.jar},${ziputil.jar},${db.driver.jar},mail.jar,activation.jar,zimbra-native.jar,bouncycastle.jar,commons-beanutils*.jar,commons-cli*.jar,commons-codec*.jar,commons-collections*.jar,commons-dbcp*.jar,commons-digester*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-logging.jar,commons-pool*.jar,concurrent*.jar,yuicompressor-2.3.4.jar,dom4j*.jar,ganymed-ssh2*.jar,jakarta-oro*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,junit*.jar,jzlib.jar,mina*.jar,nekohtml.jar,tnef*.jar,xercesImpl.jar,xpp3.jar,libidn*.jar,json.jar"/>
         </copy>
         <copy todir="${dist.dir}/jetty/common/endorsed" overwrite="true">
-		    <fileset dir="${common.jars.dir}" includes="zimbra-charset.jar"/>
-		</copy>
+            <fileset dir="${common.jars.dir}" includes="zimbra-charset.jar"/>
+        </copy>
         <copy todir="${dist.dir}/jetty/common/lib" file="${common.jarfile}" overwrite="true"/>
         <copy todir="${dist.dir}/jetty/lib" overwrite="true">
             <fileset dir="${common.jars.dir}" includes="log4j*.jar"/>
@@ -660,9 +648,9 @@
         <delete dir="${jetty.home.dir}"/>
         <gunzip src="${jetty.src.dir}/jetty-${jetty.version}.tar.gz" dest="${build.dir}/jetty-${jetty.version}.tar"/>
         <untar src="${build.dir}/jetty-${jetty.version}.tar" dest="${zimbra.home.dir}" overwrite="true"/>
-		<move toDir="${jetty.home.dir}">
-			<fileset dir="${zimbra.home.dir}/jetty-${jetty.version}" />
-		</move>
+        <move toDir="${jetty.home.dir}">
+            <fileset dir="${zimbra.home.dir}/jetty-${jetty.version}" />
+        </move>
         <delete file="${build.dir}/jetty-${jetty.version}.tar"/>
         <mkdir dir="${jetty.home.dir}/logs"/>
         <mkdir dir="${jetty.home.dir}/webapps"/>
@@ -673,26 +661,26 @@
     </target>
 
 
-	<target name="reset-all" description="Reset the world plus jetty">
-		<if>
-			<isset property="jetty.start.jar.exists"/>
-			<then>
-				<antcall target="stop-webserver"/>
-			</then>
-		</if>
-		<antcall target="clean"/>
-		<mkdir dir="${build.dir}"/>
+    <target name="reset-all" description="Reset the world plus jetty">
+        <if>
+            <isset property="jetty.start.jar.exists"/>
+            <then>
+                <antcall target="stop-webserver"/>
+            </then>
+        </if>
+        <antcall target="clean"/>
+        <mkdir dir="${build.dir}"/>
 
-		<delete dir="${zimbra.home.dir}/lib"/>
-		<antcall target="reset-jetty"/>
-		<antcall target="reset-the-world"/>
-		<ant dir="../Zimlet" target="clean" inheritAll="false"/>
-		<ant dir="../ZimbraWebClient" target="clean" inheritAll="false"/>
-		<ant dir="../ZimbraWebClient" target="admin-deploy" inheritAll="false"/>
-		<ant dir="../ZimbraWebClient" target="clean" inheritAll="false"/>
-		<ant dir="../ZimbraWebClient" target="deploy" inheritAll="false"/>
-		<ant dir="../Zimlet" target="deploy-zimlets" inheritAll="false"/>
-	</target>
+        <delete dir="${zimbra.home.dir}/lib"/>
+        <antcall target="reset-jetty"/>
+        <antcall target="reset-the-world"/>
+        <ant dir="../Zimlet" target="clean" inheritAll="false"/>
+        <ant dir="../ZimbraWebClient" target="clean" inheritAll="false"/>
+        <ant dir="../ZimbraWebClient" target="admin-deploy" inheritAll="false"/>
+        <ant dir="../ZimbraWebClient" target="clean" inheritAll="false"/>
+        <ant dir="../ZimbraWebClient" target="deploy" inheritAll="false"/>
+        <ant dir="../Zimlet" target="deploy-zimlets" inheritAll="false"/>
+    </target>
 
     <!-- There are two ways to reset the world:
            (a) If your webserver is a service, use "reset-the-world".
@@ -814,7 +802,7 @@
         <mkdir dir="${zimbra.home.dir}/conf/keystore-backup"/>
         <copy file="${webserver.conf.dir}/keystore" tofile="${zimbra.home.dir}/conf/keystore-backup/keystore.backup" overwrite="true"/>
     </target>
-	
+    
     <target name="keystore-restore">
         <copy file="${zimbra.home.dir}/conf/keystore-backup/keystore.backup" tofile="${webserver.conf.dir}/keystore" overwrite="true"/>
     </target>
@@ -834,7 +822,7 @@
         <delete dir="${zimbra.home.dir}/backup"/>
         <delete dir="${zimbra.home.dir}/lib/ext"/>
         <delete dir="${zimbra.home.dir}/conf/attrs"/>
-    	<delete dir="${zimbra.home.dir}/conf/rights"/>
+        <delete dir="${zimbra.home.dir}/conf/rights"/>
         <delete dir="${zimbra.home.dir}/conf/msgs"/>
         <delete failonerror="no">
             <fileset dir="${zimbra.home.dir}/log" includes="*.log"/>
@@ -848,7 +836,7 @@
         <delete dir="${zimbra.home.dir}/openldap-data"/>
 
         <mkdir dir="${zimbra.home.dir}/openldap-data"/>
-    	<mkdir dir="${zimbra.home.dir}/openldap/var/run"/>
+        <mkdir dir="${zimbra.home.dir}/openldap/var/run"/>
         <mkdir dir="${zimbra.home.dir}/log"/>
         <mkdir dir="${zimbra.home.dir}/zmstat"/>
         <mkdir dir="${zimbra.home.dir}/store"/>
@@ -863,20 +851,20 @@
 
     <target name="choose-db-schema">
         <condition property="db.schema.dir" value="src/db/sqlite">
-        	<isset property="db-sqlite"/>
+            <isset property="db-sqlite"/>
         </condition>
         <condition property="db.schema.dir" value="src/db/derby">
-        	<isset property="db-derby"/>
+            <isset property="db-derby"/>
         </condition>
         <condition property="db.schema.dir" value="src/db/mysql">
-        	<isset property="db-mysql"/>
+            <isset property="db-mysql"/>
         </condition>
         <echo>Using database schema in ${db.schema.dir}</echo>
     </target>
 
     <target name="db-init" depends="choose-db-schema,mysql-init,sqlite-init,derby-init"/>
 
-	<target name="mysql-init" if="db-mysql">
+    <target name="mysql-init" if="db-mysql">
         <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
              classpathref="class.path" onerror="continue" src="${db.schema.dir}/dropdb.sql"/>
         <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
@@ -885,43 +873,48 @@
              classpathref="class.path" onerror="abort" src="${build.dir}/versions-init.sql"/>
     </target>
 
-	<target name="sqlite-init" if="db-sqlite">
+    <target name="sqlite-init" if="db-sqlite">
         <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-e zimbra_class_database=com.zimbra.cs.db.SQLite -f" />
-		</java>
+            <arg line="-e zimbra_class_database=com.zimbra.cs.db.SQLite -f" />
+        </java>
         <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-e debug_disable_mailbox_group=true -f" />
-		</java>
+            <arg line="-e debug_disable_mailbox_group=true -f" />
+        </java>
 
-		<delete dir="${zimbra.home.dir}/sqlite"/>
+        <delete dir="${zimbra.home.dir}/sqlite"/>
         <mkdir dir="${zimbra.home.dir}/sqlite"/>
-		<!-- SQLite JDBC driver doesn't support Statement.setEscapeProcessing, which breaks the <sql/> task. -->
-		<echo>Copying pre-created database to ${zimbra.home.dir}/sqlite/zimbra.db</echo>
+        <!-- SQLite JDBC driver doesn't support Statement.setEscapeProcessing, which breaks the <sql/> task. -->
+        <echo>Copying pre-created database to ${zimbra.home.dir}/sqlite/zimbra.db</echo>
         <copy todir="${zimbra.home.dir}/sqlite" file="${db.schema.dir}/zimbra.db"/>
         <chmod perm="o+w" file="${db.schema.dir}/zimbra.db"/>
 <!--        <sql driver="org.sqlite.JDBC" url="jdbc:sqlite:${zimbra.home.dir}/sqlite/zimbra.db" userid="root" password="zimbra"
                  classpathref="class.path" onerror="abort" src="${db.schema.dir}/db.sql"/>
             <sql driver="org.sqlite.JDBC" url="jdbc:sqlite:${zimbra.home.dir}/sqlite/zimbra.db" userid="root" password="zimbra"
+                 classpathref="class.path" onerror="abort" src="${db.schema.dir}/wildfire.sql"/>
+            <sql driver="org.sqlite.JDBC" url="jdbc:sqlite:${zimbra.home.dir}/sqlite/zimbra.db" userid="root" password="zimbra"
+                 classpathref="class.path" onerror="abort" src="${src.dir}/db/default-volumes.sql"/>
+            <sql driver="org.sqlite.JDBC" url="jdbc:sqlite:${zimbra.home.dir}/sqlite/zimbra.db" userid="root" password="zimbra"
                  classpathref="class.path" onerror="abort" src="${build.dir}/versions-init.sql"/> -->
-	</target>
+    </target>
 
-	<target name="derby-init" if="db-derby">
+    <target name="derby-init" if="db-derby">
         <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-			<arg line="-e zimbra_class_database=com.zimbra.cs.db.Derby -f" />
-		</java>
+            <arg line="-e zimbra_class_database=com.zimbra.cs.db.Derby -f" />
+        </java>
 
-		<delete dir="${zimbra.home.dir}/derby"/>
-        <mkdir dir="${zimbra.home.dir}/derby"/>
-		<echo file="${build.dir}/derbyij.sql">
-			CONNECT 'jdbc:derby:${zimbra.home.dir}/derby;create=true';
-			RUN '${db.schema.dir}/db.sql';
-			RUN '${build.dir}/versions-init.sql';
-			EXIT;
-		</echo>
-		<java classname="org.apache.derby.tools.ij" fork="true" classpathref="offline.class.path" failonerror="true">
-			<arg file="${build.dir}/derbyij.sql" />
-		</java>
-	</target>
+        <delete dir="${zimbra.home.dir}/derby"/>
+        <echo file="${build.dir}/derbyij.sql">
+            CONNECT 'jdbc:derby:${zimbra.home.dir}/derby;create=true';
+            RUN '${db.schema.dir}/db.sql';
+            RUN '${db.schema.dir}/wildfire.sql';
+        	RUN '${src.dir}/db/default-volumes.sql';
+            RUN '${build.dir}/versions-init.sql';
+            EXIT;
+        </echo>
+        <java classname="org.apache.derby.tools.ij" fork="true" classpathref="class.path" failonerror="true">
+            <arg file="${build.dir}/derbyij.sql" />
+        </java>
+    </target>
 
     <target name="ldap-setup-preauth">
         <echo>Creating preauth key: ${zimbra.server.hostname}</echo>
@@ -958,10 +951,10 @@
         <antcall target="stop-ldap"/>
         <sleep seconds="2"/>
         
-    	<delete dir="${build.dir}/attrs"/>
-    	<delete dir="${build.dir}/ldap-config"/>
-    	<antcall target="generate-ldap-config"/>
-    	
+        <delete dir="${build.dir}/attrs"/>
+        <delete dir="${build.dir}/ldap-config"/>
+        <antcall target="generate-ldap-config"/>
+        
         <!-- dist ldap schem and ldif files -->
         <copy todir="${dist.dir}/conf/attrs" overwrite="true">
             <fileset dir="${build.dir}/attrs"/>
@@ -985,7 +978,7 @@
         <antcall target="start-ldap"/>
         <antcall target="start-webserver"/>
     </target>
-	
+    
     <target name="ldap-add">
         <echo>Loading ${ldif.file}</echo>
         <exec failonerror="true" executable="${ldapmodify}">
@@ -1001,9 +994,9 @@
     </target>
 
     <target name="ldap-load" depends="zmprov-commands">
-	     <waitfor checkevery="5" checkeveryunit="second" maxwait="60" maxwaitunit="second">
-	     	<socket server="${zimbra.server.hostname}" port="${ldap.port}"/>
-	     </waitfor>    
+         <waitfor checkevery="5" checkeveryunit="second" maxwait="60" maxwaitunit="second">
+            <socket server="${zimbra.server.hostname}" port="${ldap.port}"/>
+         </waitfor>    
         <antcall target="ldap-add">
             <param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra.ldif"/>
         </antcall>
@@ -1053,7 +1046,7 @@
             zimbraMailPort 7070 \
             zimbraMailMode http \
             zimbraImapCleartextLoginEnabled TRUE \
-        	zimbraPop3CleartextLoginEnabled TRUE
+            zimbraPop3CleartextLoginEnabled TRUE
             ModifyServer ${zimbra.server.hostname} \
             zimbraServiceInstalled ldap \
             zimbraServiceInstalled mta \
@@ -1062,7 +1055,7 @@
             zimbraServiceEnabled ldap \
             zimbraServiceEnabled mta \
             zimbraServiceEnabled mailbox
-        	ModifyServer ${zimbra.server.hostname} zimbraMailPurgeSleepInterval 0
+            ModifyServer ${zimbra.server.hostname} zimbraMailPurgeSleepInterval 0
             cd ${defaultdomain.name}
             mcf zimbraDefaultDomainName ${defaultdomain.name}
             mc default zimbraFeatureIMEnabled FALSE
@@ -1082,7 +1075,7 @@
             zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy} \
             zimbraPrefMailPollingInterval 12h \
             zimbraPrefWarnOnExit FALSE \
-	    zimbraForeignPrincipal kerberos5:user1@${zimbra.kerberos.realm} \
+        zimbraForeignPrincipal kerberos5:user1@${zimbra.kerberos.realm} \
             telephoneNumber '+1 650 555 1111'
             ca user2@${defaultdomain.name} test123 \
             zimbraMailHost ${zimbra.server.hostname} \
@@ -1438,6 +1431,6 @@
     </target>
 
     <target name="restart-webserver" depends="stop-webserver,start-webserver"/>
-	
+    
     <target name="empty"/>
 </project>
