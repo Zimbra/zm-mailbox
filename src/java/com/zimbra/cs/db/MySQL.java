@@ -35,7 +35,6 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbPool.Connection;
-import com.zimbra.cs.redolog.Version;
 
 public class MySQL extends Db {
 
