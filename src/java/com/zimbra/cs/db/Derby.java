@@ -40,7 +40,6 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbPool.Connection;
-import com.zimbra.cs.offline.OfflineLC;
 
 public class Derby extends Db {
 
@@ -159,7 +158,10 @@ public class Derby extends Db {
         DerbyConfig() {
         	Properties props = new Properties();
         	try {
-        		props.load(new FileInputStream(OfflineLC.zdesktop_derby_properties.value()));
+                String propsfile = LC.get("zdesktop_derby_properties");
+                if (propsfile == null)
+                    propsfile = LC.derby_properties.value();
+        		props.load(new FileInputStream(propsfile));
         	} catch (FileNotFoundException x) {
         	} catch (IOException x) {
         		throw new RuntimeException(x);
