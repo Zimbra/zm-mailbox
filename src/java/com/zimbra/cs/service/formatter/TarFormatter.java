@@ -464,7 +464,7 @@ public class TarFormatter extends Formatter {
                     if (id != null)
                         recoverItem(context, fldr, fmap, idMap, ids,
                             searchTypes, r, id, tis, null, errs);
-                    id = new ItemData(getData(tis, te));
+                    id = new ItemData(readTarEntry(tis, te));
                     continue;
                 }
                 if (id == null) {
@@ -501,7 +501,8 @@ public class TarFormatter extends Formatter {
       ZimbraLog.misc.info(err);
 
     }
-    private byte[] getData(TarInputStream tis, TarEntry te) throws IOException {
+    
+    public static byte[] readTarEntry(TarInputStream tis, TarEntry te) throws IOException {
         if (te == null)
             return null;
         
@@ -596,7 +597,7 @@ public class TarFormatter extends Formatter {
                 }
                 if (oldItem == null) {
                     CalendarItem.AlarmData ad = ci.getAlarmData();
-                    byte[] data = getData(tis, te);
+                    byte[] data = readTarEntry(tis, te);
                     Map<Integer, MimeMessage> blobMimeMsgMap = data == null ?
                         null : CalendarItem.decomposeBlob(data);
                     SetCalendarItemData defScid = new SetCalendarItemData();
@@ -631,7 +632,7 @@ public class TarFormatter extends Formatter {
                 break;
             case MailItem.TYPE_CHAT:
                 Chat chat = (Chat)mi;
-                ParsedMessage pm = new ParsedMessage(getData(tis, te),
+                ParsedMessage pm = new ParsedMessage(readTarEntry(tis, te),
                     mbox.attachmentsIndexingEnabled());
                 
                 fldr = createPath(context, fmap, path, Folder.TYPE_CHAT);
@@ -692,7 +693,7 @@ public class TarFormatter extends Formatter {
                                 if (r == Resolve.Modify)
                                     mbox.modifyContact(oc, oldItem.getId(),
                                         new ParsedContact(ct.getFields(),
-                                        getData(tis, te)));
+                                        readTarEntry(tis, te)));
                             }
                         }
                     } catch (Exception e) {
@@ -700,7 +701,7 @@ public class TarFormatter extends Formatter {
                 }
                 if (oldItem == null)
                     newItem = mbox.createContact(oc, new ParsedContact(
-                        ct.getFields(), getData(tis, te)), fldr.getId(),
+                        ct.getFields(), readTarEntry(tis, te)), fldr.getId(),
                         ct.getTagString());
                 break;
             case MailItem.TYPE_DOCUMENT:
@@ -827,7 +828,7 @@ public class TarFormatter extends Formatter {
                     }
                 }
                 if (oldItem == null)
-                    newItem = mbox.addMessage(oc, new ParsedMessage(getData(tis,
+                    newItem = mbox.addMessage(oc, new ParsedMessage(readTarEntry(tis,
                         te), msg.getDate(), mbox.attachmentsIndexingEnabled()),
                         fldr.getId(), true, msg.getFlagBitmask(),
                         msg.getTagString());
@@ -868,7 +869,7 @@ public class TarFormatter extends Formatter {
                                 oldItem = oldNote;
                                 if (r == Resolve.Modify)
                                     mbox.editNote(oc, oldItem.getId(), new
-                                        String(getData(tis, te), "UTF-8"));
+                                        String(readTarEntry(tis, te), "UTF-8"));
                             }
                             break;
                         }
@@ -876,7 +877,7 @@ public class TarFormatter extends Formatter {
                 } catch (Exception e) {
                 }
                 if (oldItem == null) {
-                    newItem = mbox.createNote(oc, new String(getData(tis, te),
+                    newItem = mbox.createNote(oc, new String(readTarEntry(tis, te),
                         "UTF-8"), note.getBounds(), note.getColor(), fldr.getId());
                     newTags = false;
                 }
