@@ -22,6 +22,8 @@ import com.zimbra.common.soap.VoiceConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 
+import java.util.List;
+
 public class ZCallHit implements ZSearchHit {
 
 	private String mId;
@@ -30,6 +32,7 @@ public class ZCallHit implements ZSearchHit {
     private long mDate;
     private long mDuration;
     private ZPhone mCaller;
+    private ZPhone mRecipient;
 
     public ZCallHit(Element e) throws ServiceException {
     	mId = "ZCallHit";
@@ -37,12 +40,13 @@ public class ZCallHit implements ZSearchHit {
         mScore = (float) e.getAttributeDouble(MailConstants.A_SCORE, 0);
         mDate = e.getAttributeLong(MailConstants.A_DATE);
         mDuration = e.getAttributeLong(VoiceConstants.A_VMSG_DURATION) * 1000;
-        for (Element el : e.listElements(VoiceConstants.E_CALLPARTY)) {
-            String t = el.getAttribute(MailConstants.A_ADDRESS_TYPE, null);
-            if (ZEmailAddress.EMAIL_TYPE_FROM.equals(t)) {
+		for (Element el : e.listElements(VoiceConstants.E_CALLPARTY)) {
+            String addressType = el.getAttribute(MailConstants.A_ADDRESS_TYPE, null);
+            if (ZEmailAddress.EMAIL_TYPE_FROM.equals(addressType)) {
                 mCaller = new ZPhone(el.getAttribute(VoiceConstants.A_PHONENUM));
-                break;
-            }
+            } else {
+				mRecipient = new ZPhone(el.getAttribute(VoiceConstants.A_PHONENUM));
+			}
         }
     }
 
@@ -60,7 +64,11 @@ public class ZCallHit implements ZSearchHit {
 
     public ZPhone getCaller() { return mCaller; }
 
+	public ZPhone getRecipient() { return mRecipient; }
+
     public String getDisplayCaller() { return mCaller.getDisplay(); }
+
+	public String getDisplayRecipient() { return mRecipient.getDisplay(); }
 
     public long getDate() { return mDate; }
 
