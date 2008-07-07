@@ -249,7 +249,7 @@ public class DbMailbox {
         int groupId = mbox.getSchemaGroupId();        
         ZimbraLog.mailbox.info("Clearing contents of mailbox " + mailboxId + ", group " + groupId);
 
-        String dbname = getDatabaseName(groupId);
+        String dbname = getDatabaseName(mbox);
 
         if (DebugConfig.disableMailboxGroups && Db.supports(Db.Capability.FILE_PER_DATABASE)) {
             Db.getInstance().deleteDatabaseFile(dbname);
@@ -648,9 +648,19 @@ public class DbMailbox {
     public static String getDatabaseName(Mailbox mbox) {
         return getDatabaseName(mbox.getSchemaGroupId());
     }
+
     public static String getDatabaseName(int groupId) {
         return DB_PREFIX_MAILBOX_GROUP + groupId;
     }
+
+    public static String qualifyTableName(Mailbox mbox, String tableName) {
+        return qualifyTableName(mbox.getSchemaGroupId(), tableName);
+    }
+
+    public static String qualifyTableName(int groupId, String tableName) {
+        return DB_PREFIX_MAILBOX_GROUP + groupId + '.' + tableName;
+    }
+
 
     public static void removeFromDeletedAccount(Connection conn, String email)
     throws ServiceException {

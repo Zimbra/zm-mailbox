@@ -233,10 +233,9 @@ public class Mailbox {
 
         Connection getConnection() throws ServiceException {
             if (conn == null) {
-                conn = DbPool.getConnection();
+                conn = DbPool.getConnection(Mailbox.this);
                 if (ZimbraLog.mailbox.isDebugEnabled())
                     ZimbraLog.mailbox.debug("  fetching new DB connection");
-                Db.registerDatabaseInterest(conn, Mailbox.this);
             }
             return conn;
         }

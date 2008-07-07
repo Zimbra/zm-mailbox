@@ -46,8 +46,7 @@ public class DbImapFolder {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            conn = DbPool.getConnection();
-            Db.registerDatabaseInterest(conn, mbox);
+            conn = DbPool.getConnection(mbox);
 
             stmt = conn.prepareStatement(
                 "SELECT item_id, local_path, remote_path, uid_validity" +
@@ -88,8 +87,7 @@ public class DbImapFolder {
         Connection conn = null;
         PreparedStatement stmt = null;
         try {
-            conn = DbPool.getConnection();
-            Db.registerDatabaseInterest(conn, mbox);
+            conn = DbPool.getConnection(mbox);
 
             String mailbox_id = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
             stmt = conn.prepareStatement(
@@ -126,8 +124,7 @@ public class DbImapFolder {
         Connection conn = null;
         PreparedStatement stmt = null;
         try {
-            conn = DbPool.getConnection();
-            Db.registerDatabaseInterest(conn, mbox);
+            conn = DbPool.getConnection(mbox);
 
             stmt = conn.prepareStatement(
                 "UPDATE " + getTableName(mbox) +
@@ -171,8 +168,7 @@ public class DbImapFolder {
         try {
             // Note: data in imap_message gets deleted implicitly by the
             // foreign key cascading delete
-            conn = DbPool.getConnection();
-            Db.registerDatabaseInterest(conn, mbox);
+            conn = DbPool.getConnection(mbox);
 
             stmt = conn.prepareStatement(
                 "DELETE FROM " + getTableName(mbox) +
@@ -203,8 +199,7 @@ public class DbImapFolder {
         try {
             // Note: data in imap_message gets deleted implicitly by the
             // foreign key cascading delete
-            conn = DbPool.getConnection();
-            Db.registerDatabaseInterest(conn, mbox);
+            conn = DbPool.getConnection(mbox);
 
             stmt = conn.prepareStatement(
                 "DELETE FROM " + getTableName(mbox) +
@@ -224,11 +219,12 @@ public class DbImapFolder {
         }
     }
 
+
     public static String getTableName(int mailboxId, int groupId) {
-        return String.format("%s.%s", DbMailbox.getDatabaseName(groupId), TABLE_IMAP_FOLDER);
+        return DbMailbox.qualifyTableName(groupId, TABLE_IMAP_FOLDER);
     }
 
     public static String getTableName(Mailbox mbox) {
-        return DbMailbox.getDatabaseName(mbox) + "." + TABLE_IMAP_FOLDER;
+        return DbMailbox.qualifyTableName(mbox, TABLE_IMAP_FOLDER);
     }
 }

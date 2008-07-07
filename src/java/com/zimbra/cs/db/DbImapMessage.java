@@ -51,8 +51,7 @@ public class DbImapMessage {
         Connection conn = null;
         PreparedStatement stmt = null;
         try {
-            conn = DbPool.getConnection();
-            Db.registerDatabaseInterest(conn, mbox);
+            conn = DbPool.getConnection(mbox);
 
             String mailbox_id = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
             stmt = conn.prepareStatement(
@@ -85,8 +84,7 @@ public class DbImapMessage {
         Connection conn = null;
         PreparedStatement stmt = null;
         try {
-            conn = DbPool.getConnection();
-            Db.registerDatabaseInterest(conn, mbox);
+            conn = DbPool.getConnection(mbox);
 
             stmt = conn.prepareStatement(
                 "UPDATE " + getTableName(mbox) + " SET uid = ?" +
@@ -115,8 +113,7 @@ public class DbImapMessage {
         Connection conn = null;
         PreparedStatement stmt = null;
         try {
-            conn = DbPool.getConnection();
-            Db.registerDatabaseInterest(conn, mbox);
+            conn = DbPool.getConnection(mbox);
 
             stmt = conn.prepareStatement(
                 "UPDATE " + getTableName(mbox) + " SET flags = ?" +
@@ -147,8 +144,7 @@ public class DbImapMessage {
         Connection conn = null;
         PreparedStatement stmt = null;
         try {
-            conn = DbPool.getConnection();
-            Db.registerDatabaseInterest(conn, mbox);
+            conn = DbPool.getConnection(mbox);
 
             stmt = conn.prepareStatement(
                 "DELETE FROM " + getTableName(mbox) +
@@ -179,8 +175,7 @@ public class DbImapMessage {
         Connection conn = null;
         PreparedStatement stmt = null;
         try {
-            conn = DbPool.getConnection();
-            Db.registerDatabaseInterest(conn, mbox);
+            conn = DbPool.getConnection(mbox);
 
             stmt = conn.prepareStatement(
                 "DELETE FROM " + getTableName(mbox) +
@@ -211,8 +206,7 @@ public class DbImapMessage {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            conn = DbPool.getConnection();
-            Db.registerDatabaseInterest(conn, mbox);
+            conn = DbPool.getConnection(mbox);
 
             stmt = conn.prepareStatement(
                 "SELECT item_id" +
@@ -245,8 +239,7 @@ public class DbImapMessage {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            conn = DbPool.getConnection();
-            Db.registerDatabaseInterest(conn, mbox);
+            conn = DbPool.getConnection(mbox);
 
             stmt = conn.prepareStatement(
                 "SELECT imap.uid, imap.item_id, imap.flags as tflags, mi.unread, mi.flags " +
@@ -294,8 +287,7 @@ public class DbImapMessage {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            conn = DbPool.getConnection();
-            Db.registerDatabaseInterest(conn, mbox);
+            conn = DbPool.getConnection(mbox);
 
             stmt = conn.prepareStatement(
                 "SELECT id FROM " + DbMailItem.getMailItemTableName(mbox) + " mi " +
@@ -324,11 +316,12 @@ public class DbImapMessage {
         return newIds;
     }
 
+
     public static String getTableName(int mailboxId, int groupId) {
-        return String.format("%s.%s", DbMailbox.getDatabaseName(groupId), TABLE_IMAP_MESSAGE);
+        return DbMailbox.qualifyTableName(groupId, TABLE_IMAP_MESSAGE);
     }
 
     public static String getTableName(Mailbox mbox) {
-        return DbMailbox.getDatabaseName(mbox) + "." + TABLE_IMAP_MESSAGE;
+        return DbMailbox.qualifyTableName(mbox, TABLE_IMAP_MESSAGE);
     }
 }

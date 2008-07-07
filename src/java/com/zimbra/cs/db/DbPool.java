@@ -40,6 +40,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ValueCounter;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.stats.ZimbraPerf;
 
 /**
@@ -206,10 +207,13 @@ public class DbPool {
             System.exit(1);
 	    }
 
-        try{
-            sPoolingDataSource = new PoolingDataSource(sConnectionPool);
-            sPoolingDataSource.setAccessToUnderlyingConnectionAllowed(true);
-            Db.getInstance().startup(sPoolingDataSource, pconfig.mPoolSize);
+        try {
+            PoolingDataSource pds = new PoolingDataSource(sConnectionPool);
+            pds.setAccessToUnderlyingConnectionAllowed(true);
+
+            Db.getInstance().startup(pds, pconfig.mPoolSize);
+
+            sPoolingDataSource = pds;
         } catch (SQLException e) {
             ZimbraLog.system.fatal("can't initialize connection pool", e);
             System.exit(1);
@@ -228,6 +232,10 @@ public class DbPool {
      * @throws ServiceException
      */
     public static Connection getConnection() throws ServiceException {
+        return getConnection(null);
+    }
+
+    public static Connection getConnection(Mailbox mbox) throws ServiceException {
         long start = ZimbraPerf.STOPWATCH_DB_CONN.start();
 
         // If the connection pool is overutilized, warn about potential leaks
@@ -272,6 +280,9 @@ public class DbPool {
                 sConnectionStackCounter.increment(stackTrace);
             }
         }
+
+        if (mbox != null)
+            Db.registerDatabaseInterest(conn, mbox);
 
         ZimbraPerf.STOPWATCH_DB_CONN.stop(start);
         return conn;

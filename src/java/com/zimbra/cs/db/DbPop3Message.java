@@ -49,8 +49,7 @@ public class DbPop3Message {
         Connection conn = null;
         PreparedStatement stmt = null;
         try {
-            conn = DbPool.getConnection();
-            Db.registerDatabaseInterest(conn, mbox);
+            conn = DbPool.getConnection(mbox);
 
             String mailbox_id = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
             stmt = conn.prepareStatement(
@@ -83,8 +82,7 @@ public class DbPop3Message {
         Connection conn = null;
         PreparedStatement stmt = null;
         try {
-            conn = DbPool.getConnection();
-            Db.registerDatabaseInterest(conn, mbox);
+            conn = DbPool.getConnection(mbox);
 
             stmt = conn.prepareStatement(
                 "DELETE FROM " + getTableName(mbox) +
@@ -120,8 +118,7 @@ public class DbPop3Message {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            conn = DbPool.getConnection();
-            Db.registerDatabaseInterest(conn, mbox);
+            conn = DbPool.getConnection(mbox);
 
             for (List<String> curIds : splitIds) {
                 stmt = conn.prepareStatement(
@@ -151,11 +148,12 @@ public class DbPop3Message {
         return matchingUids;
     }
 
+
     public static String getTableName(int mailboxId, int groupId) {
-        return String.format("%s.%s", DbMailbox.getDatabaseName(groupId), TABLE_POP3_MESSAGE);
+        return DbMailbox.qualifyTableName(groupId, TABLE_POP3_MESSAGE);
     }
 
     public static String getTableName(Mailbox mbox) {
-        return DbMailbox.getDatabaseName(mbox) + "." + TABLE_POP3_MESSAGE;
+        return DbMailbox.qualifyTableName(mbox, TABLE_POP3_MESSAGE);
     }
 }
