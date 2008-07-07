@@ -156,14 +156,10 @@ public class DbMailItem {
                 throw ServiceException.FAILURE("failed to create object", null);
 
             // Track the tags and flags for fast lookup later
-            if (areTagsetsLoaded(mbox.getId())) {
-                TagsetCache tagsets = getTagsetCache(conn, mbox);
-                tagsets.addTagset(data.tags);
-            }
-            if (areFlagsetsLoaded(mbox.getId())) {
-                TagsetCache flagsets = getFlagsetCache(conn, mbox);
-                flagsets.addTagset(data.flags);
-            }
+            if (areTagsetsLoaded(mbox))
+                getTagsetCache(conn, mbox).addTagset(data.tags);
+            if (areFlagsetsLoaded(mbox))
+                getFlagsetCache(conn, mbox).addTagset(data.flags);
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
             if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW))
@@ -273,7 +269,13 @@ public class DbMailItem {
         try {
             String table = getMailItemTableName(mbox);
             String mailbox_id = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
-            String flags = shared ? "flags | " + Flag.BITMASK_COPIED : "flags";
+            String flags;
+            if (!shared)
+                flags = "flags";
+            else if (Db.supports(Db.Capability.BITWISE_OPERATIONS))
+                flags = "flags | " + Flag.BITMASK_COPIED;
+            else
+                flags = "CASE WHEN " + Db.bitmaskAND("flags", Flag.BITMASK_COPIED) + " THEN flags ELSE flags + " + Flag.BITMASK_COPIED + " END";
             stmt = conn.prepareStatement("INSERT INTO " + table +
                         "(" + mailbox_id +
                         " id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest," +
@@ -302,7 +304,7 @@ public class DbMailItem {
 
             boolean needsTag = shared && !source.isTagged(mbox.mCopiedFlag);
 
-            if (needsTag)
+            if (needsTag && areFlagsetsLoaded(mbox))
                 getFlagsetCache(conn, mbox).addTagset(source.getInternalFlagBitmask() | Flag.BITMASK_COPIED);
 
             if (needsTag || source.getParentId() > 0) {
@@ -802,10 +804,8 @@ public class DbMailItem {
 
             // Update the flagset cache.  Assume that the item's in-memory
             // data has already been updated.
-            if (areFlagsetsLoaded(mbox.getId())) {
-                TagsetCache flagsets = getFlagsetCache(conn, mbox);
-                flagsets.addTagset(item.getInternalFlagBitmask());
-            }
+            if (areFlagsetsLoaded(mbox))
+                getFlagsetCache(conn, mbox).addTagset(item.getInternalFlagBitmask());
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
             if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW))
@@ -998,13 +998,10 @@ public class DbMailItem {
 
             // Update the flagset or tagset cache.  Assume that the item's in-memory
             // data has already been updated.
-            if (tag instanceof Flag && areFlagsetsLoaded(mbox.getId())) {
-                TagsetCache flagsets = getFlagsetCache(conn, mbox);
-                flagsets.addTagset(item.getInternalFlagBitmask());
-            } else if (areTagsetsLoaded(mbox.getId())) {
-                TagsetCache tagsets = getTagsetCache(conn, mbox);
-                tagsets.addTagset(item.getTagBitmask());
-            }
+            if (tag instanceof Flag && areFlagsetsLoaded(mbox))
+                getFlagsetCache(conn, mbox).addTagset(item.getInternalFlagBitmask());
+            else if (areTagsetsLoaded(mbox))
+                getTagsetCache(conn, mbox).addTagset(item.getTagBitmask());
         } catch (SQLException e) {
             throw ServiceException.FAILURE("updating tag data for item " + item.getId(), e);
         } finally {
@@ -1051,13 +1048,10 @@ public class DbMailItem {
 
             // Update the flagset or tagset cache.  Assume that the item's in-memory
             // data has already been updated.
-            if (tag instanceof Flag && areFlagsetsLoaded(mbox.getId())) {
-                TagsetCache flagsets = getFlagsetCache(conn, mbox);
-                flagsets.applyMask(tag.getBitmask(), add);
-            } else if (areTagsetsLoaded(mbox.getId())) {
-                TagsetCache tagsets = getTagsetCache(conn, mbox);
-                tagsets.applyMask(tag.getBitmask(), add);
-            }
+            if (tag instanceof Flag && areFlagsetsLoaded(mbox))
+                getFlagsetCache(conn, mbox).applyMask(tag.getBitmask(), add);
+            else if (areTagsetsLoaded(mbox))
+                getTagsetCache(conn, mbox).applyMask(tag.getBitmask(), add);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("updating tag data for " + itemIDs.size() + " items: " + getIdListForLogging(itemIDs), e);
         } finally {
@@ -1083,10 +1077,8 @@ public class DbMailItem {
             stmt.setLong(pos++, tag.getBitmask());
             stmt.executeUpdate();
 
-            if (areTagsetsLoaded(mbox.getId())) {
-                TagsetCache tagsets = getTagsetCache(conn, mbox);
-                tagsets.applyMask(tag.getTagBitmask(), false);
-            }
+            if (areTagsetsLoaded(mbox))
+                getTagsetCache(conn, mbox).applyMask(tag.getTagBitmask(), false);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("clearing all references to tag " + tag.getId(), e);
         } finally {
@@ -3123,9 +3115,9 @@ public class DbMailItem {
     }
 
 
-    private static boolean areTagsetsLoaded(int mailboxId) {
+    private static boolean areTagsetsLoaded(Mailbox mbox) {
         synchronized (sTagsetCache) {
-            return sTagsetCache.containsKey(new Integer(mailboxId));
+            return sTagsetCache.containsKey(mbox.getId());
         }
     }
 
@@ -3154,9 +3146,9 @@ public class DbMailItem {
         return tagsets;
     }
 
-    private static boolean areFlagsetsLoaded(int mailboxId) {
+    private static boolean areFlagsetsLoaded(Mailbox mbox) {
         synchronized(sFlagsetCache) {
-            return sFlagsetCache.containsKey(new Integer(mailboxId));
+            return sFlagsetCache.containsKey(mbox.getId());
         }
     }
 

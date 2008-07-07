@@ -159,7 +159,7 @@ public class Derby extends Db {
         	Properties props = new Properties();
         	try {
                 String propsfile = LC.get("zdesktop_derby_properties");
-                if (propsfile == null)
+                if (propsfile == null || propsfile.equals(""))
                     propsfile = LC.derby_properties.value();
         		props.load(new FileInputStream(propsfile));
         	} catch (FileNotFoundException x) {
