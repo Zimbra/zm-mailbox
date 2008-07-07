@@ -28,9 +28,11 @@ import com.zimbra.cs.mailbox.Metadata;
 public class ItemData {
     public String flags, path, tags;
     public MailItem.UnderlyingData ud;
+    
     private static enum Keys {
-        Id, Type, PId, FId, Idx, Imap, Date, Size, Vol, Dgst, UC, Flags,
-        Tags, From, Subj, Name, Meta, MNum, CDate, CNum,
+        id, type, parent_id, folder_id, index_id, imap_id, date, size,
+        volume_id, blob_digest, unread, flags, tags, sender, subject, name,
+        metadata, mod_metadata, change_date, mod_content,
         FlagStr, Path, TagStr, Ver
     }
     
@@ -53,27 +55,27 @@ public class ItemData {
             if (version > Metadata.CURRENT_METADATA_VERSION)
                 throw new IOException("unsupported data version");
             ud = new MailItem.UnderlyingData();
-            ud.id = json.getInt(Keys.Id.toString());
-            ud.type = (byte)json.getInt(Keys.Type.toString());
-            ud.parentId = json.getInt(Keys.PId.toString());
-            ud.folderId = json.getInt(Keys.FId.toString());
-            ud.indexId = json.getInt(Keys.Idx.toString());
-            ud.imapId = json.getInt(Keys.Imap.toString());
-            ud.date = json.getInt(Keys.Date.toString());
-            ud.size = json.getLong(Keys.Size.toString());
-            ud.volumeId = (short)json.getInt(Keys.Vol.toString());
-            ud.setBlobDigest(json.optString(Keys.Dgst.toString()));
-            ud.unreadCount = json.getInt(Keys.UC.toString());
-            ud.flags = json.getInt(Keys.Flags.toString()) |
+            ud.id = json.getInt(Keys.id.toString());
+            ud.type = (byte)json.getInt(Keys.type.toString());
+            ud.parentId = json.getInt(Keys.parent_id.toString());
+            ud.folderId = json.getInt(Keys.folder_id.toString());
+            ud.indexId = json.getInt(Keys.index_id.toString());
+            ud.imapId = json.getInt(Keys.imap_id.toString());
+            ud.date = json.getInt(Keys.date.toString());
+            ud.size = json.getLong(Keys.size.toString());
+            ud.volumeId = (short)json.getInt(Keys.volume_id.toString());
+            ud.setBlobDigest(json.optString(Keys.blob_digest.toString()));
+            ud.unreadCount = json.getInt(Keys.unread.toString());
+            ud.flags = json.getInt(Keys.flags.toString()) |
                 Flag.BITMASK_UNCACHED;
-            ud.tags = json.getLong(Keys.Tags.toString());
-            ud.sender = json.optString(Keys.From.toString());
-            ud.subject = json.optString(Keys.Subj.toString());
-            ud.name = json.optString(Keys.Name.toString());
-            ud.metadata = json.optString(Keys.Meta.toString());
-            ud.modMetadata = json.getInt(Keys.MNum.toString());
-            ud.dateChanged = json.getInt(Keys.CDate.toString());
-            ud.modContent = json.getInt(Keys.CNum.toString());
+            ud.tags = json.getLong(Keys.tags.toString());
+            ud.sender = json.optString(Keys.sender.toString());
+            ud.subject = json.optString(Keys.subject.toString());
+            ud.name = json.optString(Keys.name.toString());
+            ud.metadata = json.optString(Keys.metadata.toString());
+            ud.modMetadata = json.getInt(Keys.mod_metadata.toString());
+            ud.dateChanged = json.getInt(Keys.change_date.toString());
+            ud.modContent = json.getInt(Keys.mod_content.toString());
             flags = json.optString(Keys.FlagStr.toString());
             path = json.optString(Keys.Path.toString());
             tags = json.optString(Keys.TagStr.toString());
@@ -89,26 +91,26 @@ public class ItemData {
     public JSONObject toJSON() throws IOException {
         try {
             return new JSONObject().
-                put(Keys.Id.toString(), ud.id).
-                put(Keys.Type.toString(), ud.type).
-                put(Keys.PId.toString(), ud.parentId).
-                put(Keys.FId.toString(), ud.folderId).
-                put(Keys.Idx.toString(), ud.indexId).
-                put(Keys.Imap.toString(), ud.imapId).
-                put(Keys.Date.toString(), ud.date).
-                put(Keys.Size.toString(), ud.size).
-                put(Keys.Vol.toString(), ud.volumeId).
-                putOpt(Keys.Dgst.toString(), ud.getBlobDigest()).
-                put(Keys.UC.toString(), ud.unreadCount).
-                put(Keys.Flags.toString(), ud.flags).
-                put(Keys.Tags.toString(), ud.tags).
-                putOpt(Keys.From.toString(), ud.sender).
-                putOpt(Keys.Subj.toString(), ud.subject).
-                putOpt(Keys.Name.toString(), ud.name).
-                putOpt(Keys.Meta.toString(), ud.metadata).
-                put(Keys.MNum.toString(), ud.modMetadata).
-                put(Keys.CDate.toString(), ud.dateChanged).
-                put(Keys.CNum.toString(), ud.modContent).
+                put(Keys.id.toString(), ud.id).
+                put(Keys.type.toString(), ud.type).
+                put(Keys.parent_id.toString(), ud.parentId).
+                put(Keys.folder_id.toString(), ud.folderId).
+                put(Keys.index_id.toString(), ud.indexId).
+                put(Keys.imap_id.toString(), ud.imapId).
+                put(Keys.date.toString(), ud.date).
+                put(Keys.size.toString(), ud.size).
+                put(Keys.volume_id.toString(), ud.volumeId).
+                putOpt(Keys.blob_digest.toString(), ud.getBlobDigest()).
+                put(Keys.unread.toString(), ud.unreadCount).
+                put(Keys.flags.toString(), ud.flags).
+                put(Keys.tags.toString(), ud.tags).
+                putOpt(Keys.sender.toString(), ud.sender).
+                putOpt(Keys.subject.toString(), ud.subject).
+                putOpt(Keys.name.toString(), ud.name).
+                putOpt(Keys.metadata.toString(), ud.metadata).
+                put(Keys.mod_metadata.toString(), ud.modMetadata).
+                put(Keys.change_date.toString(), ud.dateChanged).
+                put(Keys.mod_content.toString(), ud.modContent).
                 putOpt(Keys.FlagStr.toString(), flags).
                 put(Keys.Path.toString(), path).
                 putOpt(Keys.TagStr.toString(), tags).
