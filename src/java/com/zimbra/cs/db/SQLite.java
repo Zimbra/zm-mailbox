@@ -89,6 +89,9 @@ public class SQLite extends Db {
         LinkedList<java.sql.Connection> connections = new LinkedList<java.sql.Connection>();
         for (int i = 0; i < poolSize; i++) {
             java.sql.Connection conn = pool.getConnection();
+            if (i == 0)
+                ZimbraLog.dbconn.info("sqlite driver running in " + conn.getMetaData().getDriverVersion() + " mode");
+
             try {
                 conn.setAutoCommit(true);
                 pragma(conn, "synchronous", "NORMAL");
