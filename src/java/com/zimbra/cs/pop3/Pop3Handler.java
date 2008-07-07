@@ -78,6 +78,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
                       
     protected boolean dropConnection;
     protected Authenticator mAuthenticator;
+    private String mClientAddress;
     private String mOrigRemoteAddress;
 
     protected static final int STATE_AUTHORIZATION = 1;
@@ -109,8 +110,11 @@ public abstract class Pop3Handler extends ProtocolHandler {
 
     protected boolean startConnection(InetAddress remoteAddr)
             throws IOException {
+        // Set the logging context for anything logged before the first command. 
         ZimbraLog.clearContext();
-        ZimbraLog.addIpToContext(remoteAddr.getHostAddress());
+        mClientAddress = remoteAddr.getHostAddress();
+        ZimbraLog.addIpToContext(mClientAddress);
+        
         ZimbraLog.pop.info("connected");
         if (!Config.userServicesEnabled()) {
             dropConnection();
@@ -123,6 +127,11 @@ public abstract class Pop3Handler extends ProtocolHandler {
     }
     
     protected boolean processCommand(String line) throws IOException {
+        // XXX bburtin: Do we really need to set/reset the logging context for every command? 
+        ZimbraLog.addAccountNameToContext(mAccountName);
+        ZimbraLog.addIpToContext(mClientAddress);
+        ZimbraLog.addOrigIpToContext(mOrigRemoteAddress);
+        
         // TODO: catch IOException too?
         if (line != null && mAuthenticator != null && !mAuthenticator.isComplete()) {
             return continueAuthentication(line);
@@ -133,12 +142,6 @@ public abstract class Pop3Handler extends ProtocolHandler {
         mCurrentCommandLine = line;
         
         try {
-            if (mAccountName != null) ZimbraLog.addAccountNameToContext(mAccountName);
-            
-            String origRemoteIp = getOrigRemoteIpAddr();
-            if (origRemoteIp != null)
-                ZimbraLog.addOrigIpToContext(origRemoteIp);
-            
             boolean result = processCommandInternal();
 
             // Track stats if the command completed successfully
