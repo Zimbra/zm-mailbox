@@ -249,7 +249,7 @@ public class ZAuthToken {
     private static void clearCookie(HttpServletResponse response, String cookieName) {
         javax.servlet.http.Cookie authTokenCookie = new javax.servlet.http.Cookie(cookieName, "");
         authTokenCookie.setMaxAge(0);
-        authTokenCookie.setPath("/");
+        AuthTokenCookie.setCookieDomainPath(authTokenCookie, AuthTokenCookie.PATH_ROOT);
         response.addCookie(authTokenCookie);
     }
     
