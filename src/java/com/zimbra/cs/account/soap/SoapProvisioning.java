@@ -180,7 +180,14 @@ public class SoapProvisioning extends Provisioning {
         }
     }
     
+    private void checkTransport() throws ServiceException {
+        if (mTransport == null)
+            throw ServiceException.FAILURE("transport has not been initialized", null);
+    }
+    
     public synchronized Element invoke(Element request) throws ServiceException {
+        checkTransport();
+        
         try {
             return mTransport.invoke(request);
         } catch (SoapFaultException e) {
@@ -191,6 +198,8 @@ public class SoapProvisioning extends Provisioning {
     }
 
     protected synchronized Element invokeOnTargetAccount(Element request, String targetId) throws ServiceException {
+        checkTransport();
+        
         String oldTarget = mTransport.getTargetAcctId();
         try {
             mTransport.setTargetAcctId(targetId);
@@ -205,6 +214,8 @@ public class SoapProvisioning extends Provisioning {
     }
     
     synchronized Element invoke(Element request, String serverName) throws ServiceException {
+        checkTransport();
+        
         String oldUri = soapGetURI();
         String newUri = URLUtil.getAdminURL(serverName);
         boolean diff = !oldUri.equals(newUri);        
@@ -1649,4 +1660,12 @@ public class SoapProvisioning extends Provisioning {
         }
         invoke(req);
     }
+    
+    public static void main(String[] args) throws Exception {
+        
+        Provisioning provisioning = new SoapProvisioning();
+        Domain domain = provisioning.get(DomainBy.virtualHostname, "blah");
+
+    }
+    
 }
