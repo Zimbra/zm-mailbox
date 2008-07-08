@@ -602,12 +602,57 @@ public class ProxyConfGen
         }
     }
 
+    /* Indicate whether configuration is valid, taking into consideration "essential" configuration values */
+    public static boolean isWorkableConf ()
+    {
+        String webE, httpE, httpsE, mailE;
+        boolean webEnabled = false, mailEnabled = false;
+        String auth_http, web_upstream;
+        boolean validConf = true;
+
+        webE = mVars.get("web.enabled");
+        httpE = mVars.get("web.http.enabled");
+        httpsE = mVars.get("web.https.enabled");
+        mailE = mVars.get("mail.enabled");
+
+        if ((webE != null && webE.equalsIgnoreCase(""))
+            /* || (httpE != null && httpE.equalsIgnoreCase(""))
+            || (httpsE != null && httpsE.equalsIgnoreCase("")) */
+           ) {
+            webEnabled = true;
+        }
+
+        if (mailE != null && mailE.equalsIgnoreCase("")) {
+            mailEnabled = true;
+        }
+
+        auth_http = mVars.get("mail.:auth_http");
+        if (auth_http == null) { auth_http = ""; }
+
+        web_upstream = mVars.get("web.upstream.:servers");
+        if (web_upstream == null) { web_upstream = ""; }
+
+        if (mailEnabled && auth_http.equalsIgnoreCase("")) {
+            mLog.info("Mail is enabled but there are no route lookup handlers (Config will not be written)");
+            validConf = false;
+        }
+
+        if (webEnabled && web_upstream.equalsIgnoreCase("")) {
+            mLog.info("Web is enabled but there are no upstream servers (Config will not be written)");
+            validConf = false;
+        }
+
+        return validConf;
+    }
+
     public static void main (String[] args) throws ServiceException
     {
+        int exitCode = 0;
         CommandLine cl = parseArgs(args);
 
         if (cl == null) {
-            System.exit(1);
+            exitCode = 1;
+            System.exit(exitCode);
         }
 
         if (cl.hasOption('v')) {
@@ -618,7 +663,8 @@ public class ProxyConfGen
 
         if (cl.hasOption('h')) {
             usage(null);
-            System.exit(0);
+            exitCode = 0;
+            System.exit(exitCode);
         }
 
         if (cl.hasOption('n')) {
@@ -662,7 +708,8 @@ public class ProxyConfGen
 
         if (cl.hasOption('d')) {
             displayVariables();
-            System.exit(0);
+            exitCode = 0;
+            System.exit(exitCode);
         }
 
         /* upgrade the variable map from the config in force */
@@ -676,7 +723,8 @@ public class ProxyConfGen
                 mServer = getServer (mHost);
             } catch (ProxyConfException pe) {
                 mLog.error("Cannot load server object. Make sure the server specified with -s exists");
-                System.exit(1);
+                exitCode = 1;
+                System.exit(exitCode);
             }
         }
 
@@ -688,8 +736,18 @@ public class ProxyConfGen
 
         if (cl.hasOption('D')) {
             displayVariables();
-            System.exit(0);
+            exitCode = 0;
+            System.exit(exitCode);
         }
+
+        if (!isWorkableConf()) {
+            mLog.error("Configuration is not valid because no route lookup handlers exist, or because no HTTP upstream servers were found");
+            mLog.error("Please ensure that the output of 'zmprov garpu' and 'zmprov garpb' returns at least one entry");
+            exitCode = 1;
+            System.exit(exitCode);
+        }
+
+        exitCode = 0;
 
         try {
             File confDir = new File(mConfDir,"");
@@ -726,8 +784,12 @@ public class ProxyConfGen
             expandTemplate(new File(mTemplateDir,getWebHttpSModeConfTemplate("mixed")), new File(mConfIncludesDir,getWebHttpSModeConf("mixed")));
         } catch (ProxyConfException pe) {
             mLog.error("Error while expanding templates: " + pe.getMessage());
+            exitCode = 1;
         } catch (SecurityException se) {
             mLog.error("Error while expanding templates: " + se.getMessage());
+            exitCode = 1;
         }
+
+        System.exit(exitCode);
     }
 }
