@@ -23,8 +23,7 @@
  */
 package com.zimbra.cs.httpclient;
 
-import java.util.Iterator;
-import java.util.List;
+import java.io.IOException;
 import java.util.Map;
 
 import com.zimbra.common.util.Log;
@@ -138,9 +137,7 @@ public class URLUtil {
      * Provisioning with utility methods either.
      */
     public static String getMtaAuthURL(String authHost) throws ServiceException {
-        List servers = Provisioning.getInstance().getAllServers();
-        for (Iterator it = servers.iterator(); it.hasNext();) {
-            Server server = (Server) it.next();
+        for (Server server : Provisioning.getInstance().getAllServers()) {
             String serviceName = server.getAttr(Provisioning.A_zimbraServiceHostname, null);
             if (authHost.equalsIgnoreCase(serviceName)) {
                 return URLUtil.getServiceUrl(server, null, ZimbraServlet.USER_SERVICE_URI, true, false);
@@ -335,14 +332,26 @@ public class URLUtil {
             String escaped = null;
             if (c < 0x7F)
             	escaped = sUrlEscapeMap.get(c);
-            else
-            	escaped = "%" + Integer.toHexString((int)c).toUpperCase();
-            if (escaped != null) {
+            
+            if (escaped != null || c >= 0x7F) {
                 if (buf == null) {
                     buf = new StringBuilder();
                     buf.append(str.substring(0, i));
                 }
-                buf.append(escaped);
+                if (escaped != null)
+                	buf.append(escaped);
+                else {
+                	try {
+                        byte[] raw = Character.valueOf(c).toString().getBytes("UTF-8");
+                    	for (byte b : raw) {
+                    		int unsignedB = b & 0xFF;  // byte is signed
+                    		buf.append("%").append(Integer.toHexString(unsignedB).toUpperCase());
+                    	}
+                	} catch (IOException e) {
+                		mLog.info("can't decode character "+c, e);
+                		buf.append(c);
+                	}
+                }
             } else if (buf != null) {
                 buf.append(c);
             }
