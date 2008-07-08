@@ -22,6 +22,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.Config;
 
 import static com.zimbra.cs.account.Provisioning.*;
@@ -48,11 +49,7 @@ public class ImapConfig extends ServerConfig {
         setMaxIdleSeconds(DEFAULT_MAX_IDLE_SECONDS);
         setUnauthMaxIdleSeconds(DEFAULT_UNAUTH_MAX_IDLE_SECONDS);
         setNumThreads(DEFAULT_NUM_THREADS);
-        if (ssl) {
-            setBindPort(DEFAULT_SSL_BIND_PORT);
-        } else {
-            setBindPort(DEFAULT_BIND_PORT);
-        }
+        setBindPort(ssl ? DEFAULT_SSL_BIND_PORT : DEFAULT_BIND_PORT);
         mDisabledExtensions = new HashSet<String>();
         validate();
     }
@@ -66,23 +63,21 @@ public class ImapConfig extends ServerConfig {
         setSSLExcludeCiphers(config.getMultiAttr(A_zimbraSSLExcludeCipherSuites));
         
         String name = server.getAttr(A_zimbraImapAdvertisedName);
-        if (name != null && name.length() > 0) setName(name);
+        if (name != null && name.length() > 0)
+            setName(name);
         setMaxIdleSeconds(DEFAULT_MAX_IDLE_SECONDS);
         setUnauthMaxIdleSeconds(DEFAULT_UNAUTH_MAX_IDLE_SECONDS);
         setNumThreads(server.getIntAttr(A_zimbraImapNumThreads, DEFAULT_NUM_THREADS));
         if (ssl) {
             setBindAddress(server.getAttr(A_zimbraImapSSLBindAddress));
             setBindPort(server.getIntAttr(A_zimbraImapSSLBindPort, DEFAULT_SSL_BIND_PORT));
-            mDisabledExtensions = getDisabledExtensions(
-                server.getMultiAttr(A_zimbraImapSSLDisabledCapability));
+            mDisabledExtensions = getDisabledExtensions(server.getMultiAttr(A_zimbraImapSSLDisabledCapability));
         } else {
             setBindAddress(server.getAttr(A_zimbraImapBindAddress));
             setBindPort(server.getIntAttr(A_zimbraImapBindPort, DEFAULT_BIND_PORT));
-            mDisabledExtensions = getDisabledExtensions(
-                server.getMultiAttr(A_zimbraImapDisabledCapability));
+            mDisabledExtensions = getDisabledExtensions(server.getMultiAttr(A_zimbraImapDisabledCapability));
         }
-        mSaslGssapiEnabled = server.getBooleanAttr(
-            A_zimbraImapSaslGssapiEnabled, false);
+        mSaslGssapiEnabled = server.getBooleanAttr(A_zimbraImapSaslGssapiEnabled, false);
         // enough space to hold the largest possible message, plus a bit extra to cover IMAP protocol chatter
         mMaxRequestSize = config.getIntAttr(A_zimbraMtaMaxMessageSize, -1);
         if (mMaxRequestSize <= 0) {
@@ -93,31 +88,40 @@ public class ImapConfig extends ServerConfig {
         validate();
     }
 
-    @Override
-    public void validate() throws ServiceException {
+    @Override public void validate() throws ServiceException {
         if (getUnauthMaxIdleSeconds() < 0) {
-            failure("Invalid unauth max idle seconds: " +
-                    getUnauthMaxIdleSeconds());
+            failure("Invalid unauth max idle seconds: " + getUnauthMaxIdleSeconds());
         }
         super.validate();
     }
     
     private Set<String> getDisabledExtensions(String[] names) {
         HashSet<String> disabled = new HashSet<String>(names.length);
-        for (String name : names) disabled.add(name.toUpperCase());
+        for (String name : names)
+            disabled.add(name.toUpperCase());
         return disabled;
     }
     
-    @Override
-    public void setName(String name) {
+    @Override public void setName(String name) {
         super.setName(name);
-        mBanner = "OK " + name + " Zimbra IMAP4rev1 service ready";
+
+        String version = "";
+        try {
+            Server server = Provisioning.getInstance().getLocalServer();
+            if (server.getBooleanAttr(Provisioning.A_zimbraImapExposeVersionOnBanner, false))
+                version = " " + BuildInfo.VERSION;
+        } catch (ServiceException e) { }
+
+        mBanner = "OK " + name + " Zimbra" + version + " IMAP4rev1 service ready";
         mGoodbye = "BYE " + name + " IMAP4rev1 server terminating connection";
     }
 
-    public String getBanner() { return mBanner; }
-    public String getGoodbye() { return mGoodbye; }
-    public int getUnauthMaxIdleSeconds() { return mUnauthMaxIdleSeconds; }
+    public String getBanner()   { return mBanner; }
+    public String getGoodbye()  { return mGoodbye; }
+
+    public int getUnauthMaxIdleSeconds() {
+        return mUnauthMaxIdleSeconds;
+    }
 
     public void setUnauthMaxIdleSeconds(int secs) {
         mUnauthMaxIdleSeconds = secs;
@@ -138,15 +142,14 @@ public class ImapConfig extends ServerConfig {
     public int getMaxRequestSize() {
         return mMaxRequestSize;
     }
-    
+
     // TODO can this value be cached?
     public boolean allowCleartextLogins() {
         try {
             Server server = Provisioning.getInstance().getLocalServer();
             return server.getBooleanAttr(A_zimbraImapCleartextLoginEnabled, false);
         } catch (ServiceException e) {
-            ZimbraLog.imap.warn("Unable to determine state of %s",
-                                A_zimbraImapCleartextLoginEnabled, e);
+            ZimbraLog.imap.warn("Unable to determine state of " + A_zimbraImapCleartextLoginEnabled, e);
             return false;
         }
     }
