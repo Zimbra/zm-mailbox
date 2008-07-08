@@ -508,12 +508,14 @@ public class IMChat extends ClassLogger {
                 org.dom4j.Element html = xmppMsg.addChildElement("html", "http://jabber.org/protocol/xhtml-im");
                 html.add(message.getBody().getXHTML().createCopy());
             } else {
-                // adium apparently doesn't display text messages in current builds, workaround for now, encode plaintext as HTML version
-                org.dom4j.Element html = xmppMsg.addChildElement("html", "http://jabber.org/protocol/xhtml-im");
-                org.dom4j.Element body = html.addElement("body",  "http://www.w3.org/1999/xhtml");
-                org.dom4j.Element span = body.addElement("span");
-                span.addAttribute("style", "");
-                span.setText(message.getBody().getPlainText());
+                // fixed in adium 1.2.7 -- removed hack
+                // if you go to re-enable it, don't forget to HTML-escape the plaintext!
+//                // adium apparently doesn't display text messages in current builds, workaround for now, encode plaintext as HTML version
+//                org.dom4j.Element html = xmppMsg.addChildElement("html", "http://jabber.org/protocol/xhtml-im");
+//                org.dom4j.Element body = html.addElement("body",  "http://www.w3.org/1999/xhtml");
+//                org.dom4j.Element span = body.addElement("span");
+//                span.addAttribute("style", "");
+//                span.setText(message.getBody().getPlainText());
             }
         }
         
