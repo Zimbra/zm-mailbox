@@ -3223,7 +3223,7 @@ abstract class ImapHandler extends ProtocolHandler {
             synchronized (mbox) {
                 for (String name : flagNames) {
                     ImapFlag i4flag = mSelectedFolder.getFlagByName(name);
-                    if (i4flag == null || !i4flag.mListed)
+                    if ((i4flag == null || !i4flag.mListed) && operation != StoreAction.REMOVE)
                         i4flag = mSelectedFolder.getTagset().createTag(getContext(), name, newTags);
                     if (i4flag != null)
                         i4flags.add(i4flag);
