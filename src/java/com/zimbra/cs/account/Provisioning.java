@@ -343,6 +343,7 @@ public abstract class Provisioning {
     public static final String A_telephoneNumber = "telephoneNumber";    
 
     public static final String A_zimbraAuthTokenKey = "zimbraAuthTokenKey";
+    
 
     /**
      * auth mech to use. 
@@ -1532,6 +1533,9 @@ public abstract class Provisioning {
     public static final String A_zimbraCalendarRecurrenceMonthlyMaxMonths = "zimbraCalendarRecurrenceMonthlyMaxMonths";
     public static final String A_zimbraCalendarRecurrenceYearlyMaxYears = "zimbraCalendarRecurrenceYearlyMaxYears";
     public static final String A_zimbraCalendarRecurrenceOtherFrequencyMaxYears = "zimbraCalendarRecurrenceOtherFrequencyMaxYears";
+    
+    public static final String A_zimbraXMPPServerDialbackKey = "zimbraXMPPServerDialbackKey";
+    
 
     public static final int MAX_ZIMBRA_ID_LEN = 127;
     

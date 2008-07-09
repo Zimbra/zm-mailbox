@@ -3365,5 +3365,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>list view columns in web client</desc>
 </attr>
 
+<attr id="695" name="zimbraXMPPServerDialbackKey" type="ostring" max="128" immutable="1" cardinality="multi" optionalIn="globalConfig">
+  <desc>Shared Secret for XMPP Server Dialback Protocol</desc>
+</attr>
+
 
 </attrs>
