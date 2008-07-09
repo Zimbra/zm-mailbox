@@ -1042,6 +1042,7 @@ abstract class ImapHandler extends ProtocolHandler {
             mAuthenticator = new PlainAuthenticator(authUser);
         } else if (GssAuthenticator.MECHANISM.equals(mechanism) && isGssAuthEnabled()) {
             mAuthenticator = new GssAuthenticator(authUser);
+            mAuthenticator.setConnection(mConnection);
         } else if (ZimbraAuthenticator.MECHANISM.equals(mechanism) && mechanismEnabled(mechanism)) {
             mAuthenticator = new ZimbraAuthenticator(authUser);
         } else {

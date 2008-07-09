@@ -19,6 +19,7 @@ package com.zimbra.cs.security.sasl;
 
 import com.zimbra.common.util.Log;
 
+import java.net.Socket;
 import javax.security.sasl.SaslServer;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,6 +31,7 @@ public abstract class Authenticator {
     protected final AuthenticatorUser mAuthUser;
     protected boolean mComplete;
     protected boolean mAuthenticated;
+    protected Socket mConnection;
 
     protected Authenticator(String mechanism, AuthenticatorUser authUser) {
         mProtocol  = authUser.getProtocol();
@@ -50,6 +52,10 @@ public abstract class Authenticator {
     public abstract SaslServer getSaslServer();
 
     public abstract void dispose();
+
+    public void setConnection(Socket conn) {
+        mConnection = conn;
+    }
     
     public boolean isComplete() {
         return mComplete;
