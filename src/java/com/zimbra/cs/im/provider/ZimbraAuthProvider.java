@@ -28,7 +28,11 @@ import com.zimbra.cs.account.Provisioning;
 public class ZimbraAuthProvider implements AuthProvider {
 
     public ZimbraAuthProvider() {
-
+        
+    }
+    
+    public String getServerDialbackHmac(String data) throws Exception {
+        return ServerDialbackKey.getHmac(data);
     }
 
     public void authenticate(String username, String password) throws UnauthorizedException {
