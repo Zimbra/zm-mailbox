@@ -60,7 +60,7 @@ public class AddAccountLogger extends AdminDocumentHandler {
         String sLevel = eLogger.getAttribute(AdminConstants.A_LEVEL);
         Level level = null;
         try {
-            level = Level.valueOf(sLevel);
+            level = Level.valueOf(sLevel.toLowerCase());
         } catch (IllegalArgumentException e) {
             throw ServiceException.INVALID_REQUEST("Invalid value for level: " + sLevel, null);
         }
