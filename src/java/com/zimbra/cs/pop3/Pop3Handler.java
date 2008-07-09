@@ -511,6 +511,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
             mAuthenticator = new PlainAuthenticator(authUser);
         } else if (MECHANISM_GSSAPI.equals(mechanism) && isGssAuthEnabled()) {
             mAuthenticator = new GssAuthenticator(authUser);
+            mAuthenticator.setConnection(mConnection);
         } else {
             sendERR("mechanism not supported");
             return;

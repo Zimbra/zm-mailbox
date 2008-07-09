@@ -39,6 +39,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.PrivilegedExceptionAction;
 import java.security.PrivilegedActionException;
+import java.net.Socket;
+import java.net.InetAddress;
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -88,7 +90,16 @@ public class GssAuthenticator extends Authenticator {
         }
         debug("keytab file = %s", keytab.getFile());
 
-        final String host = LC.zimbra_server_hostname.value();
+        final String host;
+        if (LC.krb5_service_principal_from_interface_address.booleanValue()) {
+            String localSocketHostname = "";
+            localSocketHostname = mConnection.getLocalAddress().getCanonicalHostName().toLowerCase();
+            if (localSocketHostname.length() == 0 || Character.isDigit(localSocketHostname.charAt(0)))
+                localSocketHostname = LC.zimbra_server_hostname.value();
+            host = localSocketHostname;
+        } else
+            host = LC.zimbra_server_hostname.value();
+
         KerberosPrincipal kp = new KerberosPrincipal(getProtocol() + '/' + host);
         debug("kerberos principle = %s", kp);
         Subject subject = getSubject(keytab, kp);
