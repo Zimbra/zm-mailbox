@@ -103,7 +103,7 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
 			if (!isAdminAuth) {
 				// zimlets for this account's COS
 				Account account = prov.get(AccountBy.id, authToken.getAccountId(), authToken);
-				for (String zimletName : prov.getCOS(account).getMultiAttrSet(Provisioning.A_zimbraZimletAvailableZimlets)) {
+				for (String zimletName : account.getMultiAttrSet(Provisioning.A_zimbraZimletAvailableZimlets)) {
 					Zimlet zimlet = prov.getZimlet(zimletName);
 					if (zimlet != null && zimlet.isEnabled()) {
 						allowedZimlets.add(zimlet);
