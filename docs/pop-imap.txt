@@ -33,6 +33,11 @@ IMAP protocol and extensions supported:
     [WITHIN]           RFC 5032: WITHIN Search Extension to the IMAP Protocol
     [$MDNSent]         RFC 3503: Message Disposition Notification (MDN) profile for Internet Message Access Protocol (IMAP)
 
+    Also support AUTH=X-ZIMBRA:
+       Initial (and only) SASL response is identical to that of AUTH PLAIN, except that X-ZIMBRA takes a valid Zimbra auth token
+       as the password (e.g. "authzid^@authcid^@authtoken").  The authtoken must match authcid, and then the normal authorization
+       check is made for authzid with the caveat that admin access is granted only if the supplied authtoken is an admin token.
+
 POP protocol and extensions supported:
 
     RFC 1939: Post Office Protocol - Version 3 
