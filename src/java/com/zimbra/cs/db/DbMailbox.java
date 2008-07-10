@@ -86,10 +86,6 @@ public class DbMailbox {
         CI_LAST_SOAP_ACCESS = pos++;
         CI_NEW_MESSAGES = pos++;
         CI_IDX_DEFERRED_COUNT = pos++;
-        
-        // XXX bburtin: remove after bug 19404 has been verified
-        ZimbraLog.test.info("%s = %s", LC.debug_update_config_use_old_scheme.key(),
-            LC.debug_update_config_use_old_scheme.value());
     }
 
     public static final int CI_METADATA_MAILBOX_ID = 1;
@@ -423,55 +419,36 @@ public class DbMailbox {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
-            // XXX bburtin: remove the old scheme once we're convinced that the new one works and avoids deadlock
-            if (LC.debug_update_config_use_old_scheme.booleanValue()) {
+            if (config == null) {
                 stmt = conn.prepareStatement("DELETE FROM mailbox_metadata" +
                     " WHERE mailbox_id = ? AND " + Db.equalsSTRING("section"));
                 stmt.setInt(1, mbox.getId());
                 stmt.setString(2, section.toUpperCase());
                 stmt.executeUpdate();
                 stmt.close();
-
-                if (config != null) {
-                    stmt = conn.prepareStatement("INSERT INTO mailbox_metadata (mailbox_id, section, metadata)" +
-                        " VALUES (?, ?, ?)");
+            } else {
+                // We try INSERT first even though it's the less common case, to avoid MySQL
+                // deadlock.  See bug 19404 for more info.
+                try {
+                    stmt = conn.prepareStatement("INSERT INTO mailbox_metadata (mailbox_id, section, metadata) " +
+                    "VALUES (?, ?, ?)");
                     stmt.setInt(1, mbox.getId());
                     stmt.setString(2, section);
                     stmt.setString(3, config.toString());
                     stmt.executeUpdate();
-                }
-            } else {
-                if (config == null) {
-                    stmt = conn.prepareStatement("DELETE FROM mailbox_metadata" +
-                        " WHERE mailbox_id = ? AND " + Db.equalsSTRING("section"));
-                    stmt.setInt(1, mbox.getId());
-                    stmt.setString(2, section.toUpperCase());
-                    stmt.executeUpdate();
-                    stmt.close();
-                } else {
-                    // We try INSERT first even though it's the less common case, to avoid MySQL
-                    // deadlock.  See bug 19404 for more info.
-                    try {
-                        stmt = conn.prepareStatement("INSERT INTO mailbox_metadata (mailbox_id, section, metadata) " +
-                            "VALUES (?, ?, ?)");
-                        stmt.setInt(1, mbox.getId());
-                        stmt.setString(2, section);
-                        stmt.setString(3, config.toString());
-                        stmt.executeUpdate();
-                    } catch (SQLException e) {
-                        if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
-                            stmt = conn.prepareStatement("UPDATE mailbox_metadata " +
-                                "SET metadata = ? " +
-                                "WHERE mailbox_id = ? AND section = ?");
-                            stmt.setString(1, config.toString());
-                            stmt.setInt(2, mbox.getId());
-                            stmt.setString(3, section);
-                            int numRows = stmt.executeUpdate();
-                            if (numRows != 1) {
-                                String msg = String.format(
-                                    "Unexpected number of rows (%d) updated for section %s", numRows, section);
-                                throw ServiceException.FAILURE(msg, e);
-                            }
+                } catch (SQLException e) {
+                    if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
+                        stmt = conn.prepareStatement("UPDATE mailbox_metadata " +
+                            "SET metadata = ? " +
+                        "WHERE mailbox_id = ? AND section = ?");
+                        stmt.setString(1, config.toString());
+                        stmt.setInt(2, mbox.getId());
+                        stmt.setString(3, section);
+                        int numRows = stmt.executeUpdate();
+                        if (numRows != 1) {
+                            String msg = String.format(
+                                "Unexpected number of rows (%d) updated for section %s", numRows, section);
+                            throw ServiceException.FAILURE(msg, e);
                         }
                     }
                 }
