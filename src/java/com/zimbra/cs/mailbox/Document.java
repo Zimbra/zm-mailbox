@@ -144,7 +144,7 @@ public class Document extends MailItem {
             data.indexId = id;
         data.imapId      = id;
         data.volumeId    = volumeId;
-        data.date        = mbox.getOperationTimestamp();
+        data.date        = (int)(pd.getCreatedDate() / 1000L);
         data.size        = pd.getSize();
         data.name        = name;
         data.subject     = name;
@@ -190,7 +190,7 @@ public class Document extends MailItem {
         mCreator = pd.getCreator();
         mFragment = pd.getFragment();
         mData.setBlobDigest(pd.getDigest());
-        mData.date     = mMailbox.getOperationTimestamp();
+        mData.date     = (int)(pd.getCreatedDate() / 1000L);
         mData.volumeId = volumeId;
         mData.imapId   = mMailbox.isTrackingImap() ? 0 : mData.id;
         mData.contentChanged(mMailbox);
