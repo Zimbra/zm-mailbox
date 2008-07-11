@@ -162,21 +162,28 @@ SECTION mailbox
 
 SECTION imapproxy
 	LOCAL ldap_url
-	VAR zimbraImapProxyBindPort
-	VAR zimbraPop3ProxyBindPort
-	VAR zimbraImapSSLProxyBindPort
-	VAR zimbraPop3SSLProxyBindPort
-	VAR getAllReverseProxyURLs
-	VAR getAllReverseProxyBackends
 	VAR getAllMemcachedServers
-	VAR zimbraReverseProxyIPLoginLimit
-	VAR zimbraReverseProxyIPLoginLimitTime
-	VAR zimbraReverseProxyUserLoginLimit
-	VAR zimbraReverseProxyUserLoginLimitTime
+	VAR getAllReverseProxyBackends
+	VAR getAllReverseProxyURLs
+	VAR zimbraFileUploadMaxSize
+	VAR zimbraImapProxyBindPort
+	VAR zimbraImapSSLProxyBindPort
 	VAR zimbraMailProxyPort
 	VAR zimbraMailSSLProxyPort
+	VAR zimbraPop3ProxyBindPort
+	VAR zimbraPop3SSLProxyBindPort
 	VAR zimbraReverseProxyHttpEnabled
+	VAR zimbraReverseProxyImapSaslGssapiEnabled
+	VAR zimbraReverseProxyImapStartTlsMode
+	VAR zimbraReverseProxyIPLoginLimit
+	VAR zimbraReverseProxyIPLoginLimitTime
 	VAR zimbraReverseProxyMailEnabled
 	VAR zimbraReverseProxyMailMode
+	VAR zimbraReverseProxyPop3SaslGssapiEnabled
+	VAR zimbraReverseProxyPop3StartTlsMode
+	VAR zimbraReverseProxySendPop3Xoip
+	VAR zimbraReverseProxySSLCiphers
+	VAR zimbraReverseProxyUserLoginLimit
+	VAR zimbraReverseProxyUserLoginLimitTime
 	PROXYGEN
 	RESTART imapproxy
