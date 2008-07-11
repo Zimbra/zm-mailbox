@@ -7044,7 +7044,7 @@ public class Mailbox {
             if (change.idxDeferred != MailboxChange.NO_CHANGE)
                 mData.idxDeferredCount = change.idxDeferred;
 
-            if (change.isMailboxRowDirty(mData)) {
+            if (change.isMailboxRowDirty(mData) && sDeferredUpdates != null) {
                 synchronized (sDeferredUpdates) {
                     sDeferredUpdates.put(mId, mData.clone());
                     sDeferredUpdateCount++;
