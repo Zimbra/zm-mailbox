@@ -521,5 +521,21 @@ public class AdminConstants {
     // mailbox stats
     public static final String A_NUM_MBOXES = "numMboxes";
     public static final String A_TOTAL_SIZE = "totalSize";
+    
+    // mailbox table
+    public static final String A_MT_ID               = "id";
+    public static final String A_MT_GROUPID          = "groupId";
+    public static final String A_MT_ACCOUNTID        = "accountId";
+    public static final String A_MT_INDEXVOLUMEID    = "indexVolumeId";
+    public static final String A_MT_ITEMIDCHECKPOINT = "itemIdCheckPoint";
+    public static final String A_MT_CONTACTCOUNT     = "contactCount";
+    public static final String A_MT_SIZECHECKPOINT   = "sizeCheckPoint";
+    public static final String A_MT_CHANGECHECKPOINT = "changeCheckPoint";
+    public static final String A_MT_TRACKINGSYNC     = "trackingSync";
+    public static final String A_MT_TRACKINGIMAP     = "trackingImap";
+    public static final String A_MT_LASTBACKUPAT     = "lastbackupat";
+    public static final String A_MT_LASTSOAPACCESS   = "lastSoapAccess";
+    public static final String A_MT_NEWNESSAGES      = "newMessages";
+    public static final String A_MT_IDXDEFERREDCOUNT = "idxDeferredCount";
 
 }
