@@ -158,6 +158,7 @@ public class Mailbox {
         public long    size;
         public int     contacts;
         public short   indexVolumeId;
+        public int     lastBackupDate;
         public int     lastItemId;
         public int     lastChangeId;
         public long    lastChangeDate;
