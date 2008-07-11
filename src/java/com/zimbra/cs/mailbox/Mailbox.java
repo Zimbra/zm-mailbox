@@ -49,7 +49,6 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.accesscontrol.Right;
-import com.zimbra.cs.db.Db;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
@@ -153,7 +152,7 @@ public class Mailbox {
     private static final String MD_CONFIG_VERSION = "ver";
 
 
-    public static final class MailboxData {
+    public static final class MailboxData implements Cloneable {
         public int     id;
         public int     schemaGroupId;
         public String  accountId;
@@ -169,6 +168,27 @@ public class Mailbox {
         public boolean trackImap;
         public int     idxDeferredCount;
         public Set<String> configKeys;
+
+        @Override protected MailboxData clone() {
+            MailboxData mbd = new MailboxData();
+            mbd.id             = id;
+            mbd.schemaGroupId  = schemaGroupId;
+            mbd.accountId      = accountId;
+            mbd.size           = size;
+            mbd.contacts       = contacts;
+            mbd.indexVolumeId  = indexVolumeId;
+            mbd.lastItemId     = lastItemId;
+            mbd.lastChangeId   = lastChangeId;
+            mbd.lastChangeDate = lastChangeDate;
+            mbd.lastWriteDate  = lastWriteDate;
+            mbd.recentMessages = recentMessages;
+            mbd.trackSync      = trackSync;
+            mbd.trackImap      = trackImap;
+            mbd.idxDeferredCount = idxDeferredCount;
+            if (configKeys != null)
+                mbd.configKeys = new HashSet<String>(configKeys);
+            return mbd;
+        }
     }
 
     private final class MailboxChange {
@@ -1484,37 +1504,37 @@ public class Mailbox {
                 DbMailbox.updateMailboxStats(this);
             }
 
-                mFolderCache = new HashMap<Integer, Folder>();
-                // create the folder objects and, as a side-effect, populate the new cache
+            mFolderCache = new HashMap<Integer, Folder>();
+            // create the folder objects and, as a side-effect, populate the new cache
             for (Map.Entry<MailItem.UnderlyingData, Long> entry : folderData.entrySet()) {
                 Folder folder = (Folder) MailItem.constructItem(this, entry.getKey());
                 if (entry.getValue() > 0)
                     folder.setSize(folder.getItemCount(), entry.getValue());
             }
-                // establish the folder hierarchy
-                for (Folder folder : mFolderCache.values()) {
-                    Folder parent = mFolderCache.get(folder.getParentId());
-                    // FIXME: side effect of this is that parent is marked as dirty...
-                    if (parent != null)
-                        parent.addChild(folder);
-                    if (persist)
-                        folder.saveFolderCounts(initial);
-                }
+            // establish the folder hierarchy
+            for (Folder folder : mFolderCache.values()) {
+                Folder parent = mFolderCache.get(folder.getParentId());
+                // FIXME: side effect of this is that parent is marked as dirty...
+                if (parent != null)
+                    parent.addChild(folder);
+                if (persist)
+                    folder.saveFolderCounts(initial);
+            }
 
-                mTagCache = new HashMap<Object, Tag>();
-                // create the tag objects and, as a side-effect, populate the new cache
+            mTagCache = new HashMap<Object, Tag>();
+            // create the tag objects and, as a side-effect, populate the new cache
             for (MailItem.UnderlyingData ud : tagData.keySet()) {
-                    Tag tag = new Tag(this, ud);
-                    if (persist)
-                        tag.saveTagCounts();
-                }
-                // flags don't change and thus can be reused in the new cache
-                for (int i = 0; i < mFlags.length; i++) {
-                    if (mFlags[i] == null)
-                        continue;
-                    ZimbraLog.mailbox.debug(i + ": " + mFlags[i]);
-                    cache(mFlags[i]);
-                }
+                Tag tag = new Tag(this, ud);
+                if (persist)
+                    tag.saveTagCounts();
+            }
+            // flags don't change and thus can be reused in the new cache
+            for (int i = 0; i < mFlags.length; i++) {
+                if (mFlags[i] == null)
+                    continue;
+                ZimbraLog.mailbox.debug(i + ": " + mFlags[i]);
+                cache(mFlags[i]);
+            }
         } catch (ServiceException e) {
             mTagCache = null;
             mFolderCache = null;
@@ -7023,6 +7043,31 @@ public class Mailbox {
             if (change.idxDeferred != MailboxChange.NO_CHANGE)
                 mData.idxDeferredCount = change.idxDeferred;
 
+            if (change.isMailboxRowDirty(mData)) {
+                synchronized (sDeferredUpdates) {
+                    sDeferredUpdates.put(mId, mData.clone());
+                    sDeferredUpdateCount++;
+
+                    if (sDeferredUpdateCount >= 10) {
+                        Connection conn = null;
+                        try {
+                            conn = DbPool.getConnection();
+                            for (MailboxData mbd : sDeferredUpdates.values())
+                                DbMailbox.writeActualMailboxStats(conn, mbd);
+                            conn.commit();
+
+                            ZimbraLog.mailbox.info("wrote " + sDeferredUpdateCount + " sets of stat updates to primary mailbox table");
+                            sDeferredUpdates.clear();
+                            sDeferredUpdateCount = 0;
+                        } catch (ServiceException e) {
+                            ZimbraLog.mailbox.warn("could not write stats update to primary mailbox table", e);
+                        } finally {
+                            DbPool.quietClose(conn);
+                        }
+                    }
+                }
+            }
+
             // delete any index entries associated with items deleted from db
             PendingDelete deletes = mCurrentChange.deletes;
             if (deletes != null && deletes.indexIds != null && !deletes.indexIds.isEmpty() && mMailboxIndex != null) {
@@ -7176,6 +7221,12 @@ public class Mailbox {
             ZimbraLog.mailbox.error("ignoring error during item cache trim", e);
         }
     }
+
+    private static int sDeferredUpdateCount;
+    private static final Map<Integer, MailboxData> sDeferredUpdates =
+        DebugConfig.deferMailboxUpdates ? new HashMap<Integer, MailboxData>(12) : null;
+
+    
 
     public boolean attachmentsIndexingEnabled() throws ServiceException {
         return getAccount().getBooleanAttr(Provisioning.A_zimbraAttachmentsIndexingEnabled, true);

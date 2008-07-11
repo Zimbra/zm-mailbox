@@ -878,6 +878,9 @@
             <arg line="-e zimbra_class_database=com.zimbra.cs.db.SQLite -f" />
         </java>
         <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
+            <arg line="-e debug_defer_mailbox_updates=true -f" />
+        </java>
+        <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
             <arg line="-e debug_disable_mailbox_group=true -f" />
         </java>
 

@@ -102,6 +102,15 @@ public class DebugConfig {
     // to ensure cache consistency (very expensive)
     public static boolean checkMailboxCacheConsistency;
 
+    // If true, the database layer will try to avoid cross-database commits
+    // by writing all mailbox statistic checkpoints to a MAILBOX table in the
+    // mailbox group database.  Those changes are also written to memory and
+    // batched to the ZIMBRA.MAILBOX table periodically.
+    public static boolean deferMailboxUpdates;
+
+    // If true, the database layer assumes that every mailbox gets its own
+    // database instance and that all the tables in that database do *not*
+    // have the MAILBOX_ID column.
     public static boolean disableMailboxGroups;
 
     // The number of MBOXGROUP<N> databases to distribute the users over.
@@ -139,6 +148,8 @@ public class DebugConfig {
         disableCalendarResourcePermissionDeniedReply = booleanValue("debug_disable_calendar_resource_permission_denied_reply", false);
 
         checkMailboxCacheConsistency = booleanValue("debug_check_mailbox_cache_consistency", false);
+
+        deferMailboxUpdates = booleanValue("debug_defer_mailbox_updates", false);
 
         disableMailboxGroups = booleanValue("debug_disable_mailbox_group", false);
         numMailboxGroups = disableMailboxGroups ? Integer.MAX_VALUE : Math.max(LC.zimbra_mailbox_groups.intValue(), 1);
