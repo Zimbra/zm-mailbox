@@ -745,7 +745,7 @@ public class UserServlet extends ZimbraServlet {
             	this.locale =  req.getLocale();
             }            
             
-            String pathInfo = request.getPathInfo().toLowerCase();
+            String pathInfo = request.getPathInfo();
             if (pathInfo == null || pathInfo.equals("/") || pathInfo.equals("") || !pathInfo.startsWith("/"))
                 throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, L10nUtil.getMessage(MsgKey.errInvalidPath, request));
             int pos = pathInfo.indexOf('/', 1);
@@ -754,7 +754,7 @@ public class UserServlet extends ZimbraServlet {
             if (pos < 1)
                 throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, L10nUtil.getMessage(MsgKey.errInvalidPath, request));
 
-            this.accountPath = pathInfo.substring(1, pos);
+            this.accountPath = pathInfo.substring(1, pos).toLowerCase();
 
             if (pos < pathInfo.length()) {
                 this.itemPath = pathInfo.substring(pos + 1);
