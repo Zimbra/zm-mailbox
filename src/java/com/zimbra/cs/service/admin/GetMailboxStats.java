@@ -8,8 +8,8 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbMailbox.MailboxRawData;
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.admin.GetAllMailboxes.MailboxesParams;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
@@ -49,20 +49,20 @@ public class GetMailboxStats extends AdminDocumentHandler {
     }
    
     private MailboxStats doStats() throws ServiceException {
-        List<MailboxRawData> mailboxes = doSearch();
+        List<Mailbox.MailboxData> mailboxes = doSearch();
         MailboxStats stats = new MailboxStats();
         
-        for (MailboxRawData m : mailboxes) {
+        for (Mailbox.MailboxData m : mailboxes) {
             stats.mNumMboxes++;
-            stats.mTotalSize += m.size_checkpoint;
+            stats.mTotalSize += m.size;
         }
         
         return stats;
     }
     
-    private List<MailboxRawData> doSearch() throws ServiceException {
+    private List<Mailbox.MailboxData> doSearch() throws ServiceException {
         Connection conn = null;
-        List <MailboxRawData> result = null;
+        List <Mailbox.MailboxData> result = null;
         
         try {
             conn = DbPool.getConnection();

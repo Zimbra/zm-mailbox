@@ -23,9 +23,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.db.DbMailbox;
-import com.zimbra.cs.db.DbMailbox.MailboxRawData;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
 
@@ -54,7 +54,7 @@ public class GetAllMailboxes extends AdminDocumentHandler {
         */
         
         MailboxesParams params = new MailboxesParams();
-        List<MailboxRawData> mailboxes;
+        List<Mailbox.MailboxData> mailboxes;
         
         AdminSession session = (AdminSession) getSession(zsc, Session.Type.ADMIN);
         if (session != null) {
@@ -72,41 +72,41 @@ public class GetAllMailboxes extends AdminDocumentHandler {
         Element response = zsc.createElement(AdminConstants.GET_ALL_MAILBOXES_RESPONSE);
         int i, limitMax = offset+limit;
         for (i=offset; i < limitMax && i < mailboxes.size(); i++) {
-            MailboxRawData mailbox = mailboxes.get(i);
+            Mailbox.MailboxData mailbox = mailboxes.get(i);
             
             Element mbx = response.addElement(AdminConstants.E_MAILBOX);
-            mbx.addAttribute("id", mailbox.id);
-            mbx.addAttribute("groupid", mailbox.group_id);
-            mbx.addAttribute("accountid", mailbox.account_id);
-            mbx.addAttribute("indexvolumeid", mailbox.index_volume_id);
-            mbx.addAttribute("itemidcheckpoint", mailbox.item_id_checkpoint);
-            mbx.addAttribute("contactcount", mailbox.contact_count);
-            mbx.addAttribute("sizecheckpoint", mailbox.size_checkpoint);
-            mbx.addAttribute("changecheckpoint", mailbox.change_checkpoint);
-            mbx.addAttribute("trackingsync", mailbox.tracking_sync);
-            mbx.addAttribute("trackingimap", mailbox.tracking_imap);
-            mbx.addAttribute("lastbackupat", mailbox.last_backup_at);
-            // mbx.addAttribute("comment", mailbox.comment);
-            mbx.addAttribute("lastsoapaccess", mailbox.last_soap_access);
-            mbx.addAttribute("newmessages", mailbox.new_messages);
-            mbx.addAttribute("idxdeferredcount", mailbox.idx_deferred_count);
+            mbx.addAttribute(AdminConstants.A_MT_ID, mailbox.id);
+            mbx.addAttribute(AdminConstants.A_MT_GROUPID, mailbox.schemaGroupId);
+            mbx.addAttribute(AdminConstants.A_MT_ACCOUNTID, mailbox.accountId);
+            mbx.addAttribute(AdminConstants.A_MT_INDEXVOLUMEID, mailbox.indexVolumeId);
+            mbx.addAttribute(AdminConstants.A_MT_ITEMIDCHECKPOINT, mailbox.lastItemId);
+            mbx.addAttribute(AdminConstants.A_MT_CONTACTCOUNT, mailbox.contacts);
+            mbx.addAttribute(AdminConstants.A_MT_SIZECHECKPOINT, mailbox.size);
+            mbx.addAttribute(AdminConstants.A_MT_CHANGECHECKPOINT, mailbox.lastChangeId);
+            mbx.addAttribute(AdminConstants.A_MT_TRACKINGSYNC, mailbox.trackSync);
+            mbx.addAttribute(AdminConstants.A_MT_TRACKINGIMAP, mailbox.trackImap);
+            mbx.addAttribute(AdminConstants.A_MT_LASTBACKUPAT, mailbox.lastBackupDate);
+            // mbx.addAttribute(AdminConstants.A_MT_COMMENT, mailbox.comment);
+            mbx.addAttribute(AdminConstants.A_MT_LASTSOAPACCESS, mailbox.lastWriteDate);
+            mbx.addAttribute(AdminConstants.A_MT_NEWNESSAGES, mailbox.recentMessages);
+            mbx.addAttribute(AdminConstants.A_MT_IDXDEFERREDCOUNT, mailbox.idxDeferredCount);
         }
         response.addAttribute(AdminConstants.A_MORE, i < mailboxes.size());
         response.addAttribute(AdminConstants.A_SEARCH_TOTAL, mailboxes.size());
         return response;
     }
-    
+
     protected class MailboxesParams {    
         String mSortBy;
         boolean mSortAscending;
         
-        List<MailboxRawData> mResult;
+        List<Mailbox.MailboxData> mResult;
         
         // sorting now supported for now
         MailboxesParams() {
         }
         
-        // sorting now supported for now, keep this signature to reinstate sorting if needed
+        // sorting not supported for now, keep this signature to reinstate sorting if needed
         /*
         MailboxesParams(String sortBy, boolean sortAscending) {
             mSortBy = (sortBy == null) ? "" : sortBy;
@@ -127,11 +127,11 @@ public class GetAllMailboxes extends AdminDocumentHandler {
             */
         }
 
-        List<MailboxRawData> doSearch() throws ServiceException {
+        List<Mailbox.MailboxData> doSearch() throws ServiceException {
             if (mResult != null) return mResult; 
             
             Connection conn = null;
-            List <MailboxRawData> result = null;
+            List <Mailbox.MailboxData> result = null;
             
             try {
                 conn = DbPool.getConnection();

@@ -936,27 +936,9 @@ public class DbMailbox {
 
         return accountIds;
     }
-    
-    public static class MailboxRawData {
-        public int id;
-        public int group_id;
-        public String account_id;
-        public int index_volume_id;
-        public int item_id_checkpoint;
-        public int contact_count;
-        public long size_checkpoint;
-        public int change_checkpoint;
-        public int tracking_sync;
-        public boolean tracking_imap;
-        public int last_backup_at;
-        public String comment;
-        public int last_soap_access;
-        public int new_messages;
-        public int idx_deferred_count;
-    }
-    
-    public static List<MailboxRawData> getMailboxRawData(Connection conn) throws ServiceException {
-        List<MailboxRawData> results = new ArrayList<MailboxRawData>();
+  
+    public static List<Mailbox.MailboxData> getMailboxRawData(Connection conn) throws ServiceException {
+        List<Mailbox.MailboxData> results = new ArrayList<Mailbox.MailboxData>();
 
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -968,25 +950,25 @@ public class DbMailbox {
             rs = stmt.executeQuery();
 
             while (rs.next()) {
-                MailboxRawData data = new MailboxRawData();
+                Mailbox.MailboxData data = new Mailbox.MailboxData();
                 int pos = 1;
-                
+               
                 data.id = rs.getInt(pos++);
-                data.group_id = rs.getInt(pos++);
-                data.account_id = rs.getString(pos++);
-                data.index_volume_id = rs.getShort(pos++);
-                data.item_id_checkpoint = rs.getInt(pos++);
-                data.contact_count = rs.getInt(pos++);
-                data.size_checkpoint = rs.getLong(pos++);
-                data.change_checkpoint = rs.getInt(pos++);
-                data.tracking_sync = rs.getInt(pos++);
-                data.tracking_imap = rs.getBoolean(pos++);
-                data.last_backup_at = rs.getInt(pos++);
+                data.schemaGroupId = rs.getInt(pos++);
+                data.accountId = rs.getString(pos++);
+                data.indexVolumeId = rs.getShort(pos++);
+                data.lastItemId = rs.getInt(pos++);
+                data.contacts = rs.getInt(pos++);
+                data.size = rs.getLong(pos++);
+                data.lastChangeId = rs.getInt(pos++);
+                data.trackSync = rs.getInt(pos++);
+                data.trackImap = rs.getBoolean(pos++);
+                data.lastBackupDate = rs.getInt(pos++);
                 // data.comment = rs.getString(pos++);
-                data.last_soap_access = rs.getInt(pos++);
-                data.new_messages = rs.getInt(pos++);
-                data.idx_deferred_count = rs.getInt(pos++);
-                
+                data.lastWriteDate = rs.getInt(pos++);
+                data.recentMessages = rs.getInt(pos++);
+                data.idxDeferredCount = rs.getInt(pos++);
+
                 results.add(data);
             }
         } catch (SQLException e) {
