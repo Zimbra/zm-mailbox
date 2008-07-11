@@ -79,10 +79,12 @@ import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.MessageData;
 import com.zimbra.cs.mailclient.imap.ImapData;
 
-public class ImapImport extends AbstractMailItemImport {
+public class ImapImport
+implements MailItemImport {
     private final UidFetch uidFetch;
     private final byte[] buf = new byte[4096]; // Temp buffer for checksum calculation
     private IMAPStore store;
+    private DataSource dataSource;
 
     private static final int FETCH_SIZE = LC.data_source_fetch_size.intValue();
     private static final int MAX_MESSAGE_MEMORY_SIZE =
@@ -130,15 +132,19 @@ public class ImapImport extends AbstractMailItemImport {
     }
 
     public ImapImport(DataSource ds) throws ServiceException {
-        super(ds);
+        dataSource = ds;
         ImapConfig config = new ImapConfig();
         config.setMaxLiteralMemSize(MAX_MESSAGE_MEMORY_SIZE);
         uidFetch = new UidFetch(config);
         store = getStore(ds);
     }
 
+    private DataSource getDataSource() {
+        return this.dataSource;
+    }
+    
     public synchronized String test() throws ServiceException {
-        validateDataSource();
+        DataSourceUtil.validateDataSource(dataSource);
         try {
             connect();
         } catch (ServiceException e) {
@@ -153,9 +159,9 @@ public class ImapImport extends AbstractMailItemImport {
     }
     
     public synchronized void importData(boolean fullSync) throws ServiceException {
-        validateDataSource();
-        connect();
         DataSource ds = getDataSource();
+        DataSourceUtil.validateDataSource(ds);
+        connect();
         try {
             IMAPFolder remoteRootFolder = (IMAPFolder) store.getDefaultFolder();
             Mailbox mbox = ds.getMailbox();
@@ -754,10 +760,8 @@ public class ImapImport extends AbstractMailItemImport {
                         Long time = receivedDate != null ? (Long) receivedDate.getTime() : null;
                         ParsedMessage pm = getParsedMessage(data, time, mbox.attachmentsIndexingEnabled());
                         int flags = getZimbraFlags(msg.getFlags());
-                        com.zimbra.cs.mailbox.Message m = addMessage(pm, localFolder.getId(), flags);
-                        if (m != null) {
-                            DbImapMessage.storeImapMessage(mbox, trackedFolder.getItemId(), uid, m.getId(), flags);
-                        }
+                        com.zimbra.cs.mailbox.Message localMsg = mbox.addMessage(null, pm, localFolder.getId(), true, flags, null);
+                        DbImapMessage.storeImapMessage(mbox, trackedFolder.getItemId(), uid, localMsg.getId(), flags);
                     }
                     fetchCount.incrementAndGet();
                 }

@@ -16,6 +16,7 @@
  */
 package com.zimbra.qa.unittest;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,9 +38,17 @@ import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.zclient.ZDataSource;
+import com.zimbra.cs.zclient.ZFilterAction;
+import com.zimbra.cs.zclient.ZFilterCondition;
+import com.zimbra.cs.zclient.ZFilterRule;
+import com.zimbra.cs.zclient.ZFilterRules;
+import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMessage;
 import com.zimbra.cs.zclient.ZPop3DataSource;
+import com.zimbra.cs.zclient.ZFilterAction.ZFileIntoAction;
+import com.zimbra.cs.zclient.ZFilterCondition.HeaderOp;
+import com.zimbra.cs.zclient.ZFilterCondition.ZHeaderCondition;
 
 
 public class TestPop3Import extends TestCase {
@@ -47,11 +56,14 @@ public class TestPop3Import extends TestCase {
     private static final String NAME_PREFIX = TestPop3Import.class.getSimpleName();
     private static final String DATA_SOURCE_NAME = NAME_PREFIX;
     private static final String TEMP_USER_NAME = NAME_PREFIX + "Temp";
+    
+    private ZFilterRules mOriginalRules;
 
     @Override
     public void setUp() throws Exception {
         cleanUp();
         createDataSource();
+        mOriginalRules = TestUtil.getZMailbox(USER_NAME).getFilterRules();
     }
 
     /*
@@ -134,10 +146,10 @@ public class TestPop3Import extends TestCase {
      * Tests import of a message with a date in the future (bug 17031).
      */
     public void testBogusDate() throws Exception {
-        // Create source account
+        // Create remote account
         Provisioning.getInstance().createAccount(TestUtil.getAddress(TEMP_USER_NAME), "test123", null);
         
-        // Add message with bogus date to source mailbox
+        // Add message with bogus date to remote mailbox
         MailDateFormat format = new MailDateFormat();
         Date date = format.parse("Thu, 31  Aug 2039 10:29:46 +0800");
         String message = TestUtil.getTestMessage(NAME_PREFIX + " testBogusDate", null, null, date);
@@ -158,6 +170,51 @@ public class TestPop3Import extends TestCase {
         TestUtil.importDataSource(ds, localMbox, remoteMbox);
         messages = TestUtil.search(localMbox, "in:inbox " + NAME_PREFIX);
         assertEquals("Imported message not found", 1, messages.size());
+    }
+    
+    /**
+     * Confirms that messages pulled from a POP3 account are affected by
+     * mail filtering (bug 13821).
+     */
+    public void testFiltering()
+    throws Exception {
+        String folderPath = "/" + NAME_PREFIX + "-testFiltering";
+        String filteredPath = "/" + NAME_PREFIX + "-testFiltering-filtered";
+        
+        // Create remote account
+        Provisioning.getInstance().createAccount(TestUtil.getAddress(TEMP_USER_NAME), "test123", null);
+        
+        // Add message with bogus date to remote mailbox
+        ZMailbox remoteMbox = TestUtil.getZMailbox(TEMP_USER_NAME);
+        TestUtil.addMessage(remoteMbox, NAME_PREFIX + " testFiltering");
+
+        // Create local folders
+        ZMailbox localMbox = TestUtil.getZMailbox(USER_NAME);
+        ZFolder dsFolder = TestUtil.createFolder(localMbox, folderPath);
+        TestUtil.createFolder(localMbox, filteredPath);
+        
+        // Create filter rule that files to the local folder
+        List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
+        List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
+        List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
+        conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "testFiltering"));
+        actions.add(new ZFileIntoAction(filteredPath));
+        rules.add(new ZFilterRule("testFiltering", true, false, conditions, actions));
+        localMbox.saveFilterRules(new ZFilterRules(rules));
+        
+        // Set up data source and run import
+        ZPop3DataSource ds = getZDataSource();
+        ds.setUsername(TEMP_USER_NAME);
+        ds.setFolderId(dsFolder.getId());
+        ds.setEnabled(true);
+        localMbox.modifyDataSource(ds);
+        
+        // Import data and make sure the message was filed to the folder
+        TestUtil.importDataSource(ds, localMbox, remoteMbox);
+        List<ZMessage> messages = TestUtil.search(localMbox, "in:" + folderPath);
+        assertEquals("Found unexpected messages in " + folderPath, 0, messages.size());
+        messages = TestUtil.search(localMbox, "in:" + filteredPath);
+        assertEquals("Message not found in " + filteredPath, 1, messages.size());
     }
     
     /*
@@ -199,6 +256,7 @@ public class TestPop3Import extends TestCase {
     @Override
     public void tearDown() throws Exception {
         cleanUp();
+        TestUtil.getZMailbox(USER_NAME).saveFilterRules(mOriginalRules);
     }
     
     private void createDataSource() throws Exception {
@@ -235,15 +293,5 @@ public class TestPop3Import extends TestCase {
         }
         TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
         TestUtil.deleteAccount(TEMP_USER_NAME);
-    }
-
-    public static void main(String[] args) throws Exception {
-        TestPop3Import test = new TestPop3Import();
-        test.setUp();
-        try {
-            test.testModifyDataSource();
-        } finally {
-            test.cleanUp();
-        }
     }
 }

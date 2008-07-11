@@ -17,10 +17,10 @@
 package com.zimbra.cs.datasource;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
-import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -42,19 +42,22 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.CustomSSLSocketFactory;
 import com.zimbra.common.util.DummySSLSocketFactory;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.SystemUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.db.DbPop3Message;
-import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
+import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.SharedDeliveryContext;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.ParsedMessage;
 
 
-public class Pop3Import extends AbstractMailItemImport {
+public class Pop3Import
+implements MailItemImport {
     private POP3Store store;
+    private DataSource dataSource;
     
     // (item id).(blob digest)
     private static final Pattern PAT_ZIMBRA_UIDL = Pattern.compile("(\\d+)\\.([^\\.]+)");
@@ -69,6 +72,7 @@ public class Pop3Import extends AbstractMailItemImport {
 
     private static final Session SESSION;
     private static final FetchProfile UID_PROFILE;
+    
     
     static {
         Properties props = new Properties();
@@ -102,12 +106,12 @@ public class Pop3Import extends AbstractMailItemImport {
     }
 
     public Pop3Import(DataSource ds) throws ServiceException {
-        super(ds);
+        dataSource = ds;
         store = getStore(ds);
     }
 
     public synchronized String test() throws ServiceException {
-        validateDataSource();
+        DataSourceUtil.validateDataSource(dataSource);
         try {
             connect();
         } catch (ServiceException e) {
@@ -122,7 +126,7 @@ public class Pop3Import extends AbstractMailItemImport {
     }
 
     public synchronized void importData(boolean fullSync) throws ServiceException {
-        validateDataSource();
+        DataSourceUtil.validateDataSource(dataSource);
         connect();
         try {
             fetchMessages();
@@ -170,7 +174,6 @@ public class Pop3Import extends AbstractMailItemImport {
     }
     
     private void fetchMessages() throws MessagingException, IOException, ServiceException {
-        DataSource ds = getDataSource();
         POP3Folder folder = (POP3Folder) store.getFolder("INBOX");
         folder.open(Folder.READ_WRITE);
 
@@ -182,7 +185,7 @@ public class Pop3Import extends AbstractMailItemImport {
             return;
         }
         
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(ds.getAccount());
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(dataSource.getAccount());
         
         // Fetch message UID's for reconciliation (UIDL)
         folder.fetch(msgs, UID_PROFILE);
@@ -199,14 +202,14 @@ public class Pop3Import extends AbstractMailItemImport {
         ZimbraLog.datasource.debug("Found %d messages on remote server", msgs.length);
 
         Set<String> uidsToFetch = null;
-        if (ds.leaveOnServer()) {
-            uidsToFetch = getUidsToFetch(mbox, ds, folder);
+        if (dataSource.leaveOnServer()) {
+            uidsToFetch = getUidsToFetch(mbox, dataSource, folder);
         }
 
         // Fetch message bodies (RETR)
         for (int i = 0; i < msgs.length; i++) {
             POP3Message pop3Msg = (POP3Message) msgs[i];
-            if (ds.leaveOnServer()) {
+            if (dataSource.leaveOnServer()) {
                 // Skip this message if we've already downloaded it
                 uid = folder.getUID(pop3Msg);
                 if (!uidsToFetch.contains(uid)) {
@@ -228,16 +231,18 @@ public class Pop3Import extends AbstractMailItemImport {
                     pm = new ParsedMessage(pop3Msg, mbox.attachmentsIndexingEnabled());
                 }
 
-                com.zimbra.cs.mailbox.Message m = addMessage(pm, ds.getFolderId(), Flag.BITMASK_UNREAD);
-                if (m != null && ds.leaveOnServer()) {
-                    DbPop3Message.storeUid(mbox, ds.getId(), folder.getUID(pop3Msg), m.getId());
+                com.zimbra.cs.mailbox.Message msg = RuleManager.getInstance().applyRules(
+                    mbox.getAccount(), mbox, pm, pm.getRawSize(), dataSource.getEmailAddress(),
+                    new SharedDeliveryContext(), dataSource.getFolderId());
+                if (dataSource.leaveOnServer()) {
+                    DbPop3Message.storeUid(mbox, dataSource.getId(), folder.getUID(pop3Msg), msg.getId());
                 }
             } finally {
                 pop3Msg.dispose();
             }
         }
 
-        if (!ds.leaveOnServer()) {
+        if (!dataSource.leaveOnServer()) {
             // Mark all messages for deletion (DELE)
             for (Message msg : msgs) {
                 msg.setFlag(Flags.Flag.DELETED, true);
@@ -245,7 +250,7 @@ public class Pop3Import extends AbstractMailItemImport {
         }
         
         // Expunge if necessary and disconnect (QUIT)
-        folder.close(!ds.leaveOnServer());
+        folder.close(!dataSource.leaveOnServer());
     }
 
     private Set<String> getUidsToFetch(Mailbox mbox, DataSource ds, POP3Folder folder)
@@ -294,23 +299,21 @@ public class Pop3Import extends AbstractMailItemImport {
 
     protected void connect() throws ServiceException  {
         if (!store.isConnected()) {
-            DataSource ds = getDataSource();
             try {
-                store.connect(ds.getHost(), ds.getPort(), ds.getUsername(),
-                              ds.getDecryptedPassword());
+                store.connect(dataSource.getHost(), dataSource.getPort(), dataSource.getUsername(),
+                              dataSource.getDecryptedPassword());
             } catch (MessagingException e) {
-                throw ServiceException.FAILURE("Unable to connect to mail store: " + ds, e);
+                throw ServiceException.FAILURE("Unable to connect to mail store: " + dataSource, e);
             }
         }
     }
 
-    protected void disconnect() throws ServiceException {
+    protected void disconnect() {
         if (store.isConnected()) {
-            DataSource ds = getDataSource();
             try {
                 store.close();
             } catch (MessagingException e) {
-                ZimbraLog.datasource.warn("Unable to disconnect from mail store: " + ds);
+                ZimbraLog.datasource.warn("Unable to disconnect from mail store: " + dataSource);
             }
         }
     }

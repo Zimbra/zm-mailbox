@@ -172,14 +172,14 @@ public class RuleManager {
     }
     
     public Message applyRules(Account account, Mailbox mailbox, ParsedMessage pm, int size, 
-            String recipient, SharedDeliveryContext sharedDeliveryCtxt)
+            String recipient, SharedDeliveryContext sharedDeliveryCtxt, int incomingFolderId)
     	throws IOException, MessagingException, ServiceException
     {
         Message msg = null;
         try {
             Node node = getRulesNode(account);
             ZimbraMailAdapter mailAdapter = new ZimbraMailAdapter(
-                    mailbox, pm, recipient, sharedDeliveryCtxt);
+                    mailbox, pm, recipient, sharedDeliveryCtxt, incomingFolderId);
             
             // Determine whether to apply rules
             boolean applyRules = true;

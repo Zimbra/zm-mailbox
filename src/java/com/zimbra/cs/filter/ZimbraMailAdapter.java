@@ -56,7 +56,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.filter.jsieve.ActionTag;
 import com.zimbra.cs.mailbox.Flag;
@@ -72,7 +71,6 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMailbox;
 
 /**
@@ -88,6 +86,12 @@ public class ZimbraMailAdapter implements MailAdapter
     private static String sSpamHeader;
     private static Pattern sSpamHeaderValue;
     protected SharedDeliveryContext mSharedDeliveryCtxt;
+
+    /**
+     * The id of the folder that contains messages that don't match any
+     * filter rules.  The default is {@link Mailbox#ID_FOLDER_INBOX}.
+     */
+    private int mDefaultFolderId = Mailbox.ID_FOLDER_INBOX;
     
     /**
      * Set of address headers that need to be processed for IDN.
@@ -152,12 +156,18 @@ public class ZimbraMailAdapter implements MailAdapter
      * @throws MessagingException 
      */
     public ZimbraMailAdapter(Mailbox mailbox, ParsedMessage pm,
-                             String recipient, SharedDeliveryContext sharedDeliveryCtxt) throws MessagingException
+                             String recipient, SharedDeliveryContext sharedDeliveryCtxt, int defaultFolderId)
+    throws MessagingException, ServiceException
     {
         this();
         mMailbox = mailbox;
         mRecipient = recipient;
         mSharedDeliveryCtxt = sharedDeliveryCtxt;
+        if (defaultFolderId != Mailbox.ID_FOLDER_INBOX) {
+            // Validate folder id.
+            mMailbox.getFolderById(null, defaultFolderId);
+        }
+        mDefaultFolderId = defaultFolderId;
         setParsedMessage(pm);
         
         // check spam headers set by system spam detector
@@ -188,11 +198,10 @@ public class ZimbraMailAdapter implements MailAdapter
      * Sets the message.
      * @param pm The message to set
      */
-    protected void setParsedMessage(ParsedMessage pm)
-    {
+    protected void setParsedMessage(ParsedMessage pm) {
         mParsedMessage = pm;
     }
-
+    
     /**
      * Returns the List of actions.
      * @return List
@@ -269,7 +278,7 @@ public class ZimbraMailAdapter implements MailAdapter
                     } else {
                         // if explicit keep is specified, keep in INBOX regardless of spam
                         // save the message to INBOX by explicit user request in the filter
-                        msg = addMessage(Mailbox.ID_FOLDER_INBOX);
+                        msg = addMessage(mDefaultFolderId);
                     }
                     if (msg == null) {
                         dup = true;
@@ -282,8 +291,8 @@ public class ZimbraMailAdapter implements MailAdapter
                     try {
                         folder = mMailbox.getFolderByPath(null, folderName);
                     } catch (MailServiceException.NoSuchItemException nsie) {
-                        ZimbraLog.filter.warn("Folder " + folderName + " not found; message saved to INBOX for " + mRecipient);
-                        folder = mMailbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX);
+                        ZimbraLog.filter.warn("Folder %d not found.  Filing message to %s.", folderName, getDefaultFolderName());
+                        folder = mMailbox.getFolderById(null, mDefaultFolderId);
                     }
                     // save the message to the specified folder;
                     // The message will not be filed into the same folder multiple times because of
@@ -306,9 +315,9 @@ public class ZimbraMailAdapter implements MailAdapter
                                 (int) (60 * Constants.MILLIS_PER_MINUTE));
                             filedRemotely = true;
                         } catch (Exception e) {
-                            ZimbraLog.filter.warn("Unable to file to %s.  Filing to INBOX instead.",
-                                mountpoint.getPath(), e);
-                            folder = mMailbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX);
+                            ZimbraLog.filter.warn("Unable to file to %s.  Filing message to %s.",
+                                mountpoint.getPath(), getDefaultFolderName(), e);
+                            folder = mMailbox.getFolderById(null, mDefaultFolderId);
                         } finally {
                             ByteUtil.closeStream(msgStream);
                         }
@@ -344,8 +353,9 @@ public class ZimbraMailAdapter implements MailAdapter
                     try {
                         Transport.send(mm, new Address[] { new InternetAddress(addr) });
                     } catch (MessagingException e) {
-                        ZimbraLog.filter.warn("Redirect to " + addr + " failed.  Saving message to INBOX.  " + e.toString());
-                        addMessage(Mailbox.ID_FOLDER_INBOX);
+                        ZimbraLog.filter.warn("Redirect to %s failed.  Filing message to %s.  %s",
+                            addr, getDefaultFolderName(), e.toString());
+                        addMessage(mDefaultFolderId);
                     }
                 } else {
                     throw new SieveException("unknown action " + action);
@@ -359,6 +369,16 @@ public class ZimbraMailAdapter implements MailAdapter
         } catch (IOException e) {
             throw new ZimbraSieveException(e);
         }
+    }
+    
+    private String getDefaultFolderName() {
+        String name = null;
+        try {
+            name = mMailbox.getFolderById(null, mDefaultFolderId).getName();
+        } catch (ServiceException e) {
+            ZimbraLog.filter.warn("Could not determine the name of folder %d.", mDefaultFolderId, e);
+        }
+        return name;
     }
 
     private List<Action> getDeliveryActions() {
@@ -385,7 +405,7 @@ public class ZimbraMailAdapter implements MailAdapter
     }
 
     Message doDefaultFiling() throws IOException, ServiceException {
-        int folderId = mIsSpam ? Mailbox.ID_FOLDER_SPAM : Mailbox.ID_FOLDER_INBOX;
+        int folderId = mIsSpam ? Mailbox.ID_FOLDER_SPAM : mDefaultFolderId;
         return addMessage(folderId);
     }
 
