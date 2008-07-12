@@ -248,19 +248,27 @@ public class WikiFormatter extends Formatter {
     	FileUploadServlet.Upload upload = context.getUpload();
         String creator = (context.authAccount == null ? null : context.authAccount.getName());
         ParsedDocument pd = new ParsedDocument(upload.getInputStream(), filename, WikiItem.WIKI_CONTENT_TYPE, System.currentTimeMillis(), creator);
+        MailItem item = null;
         try {
-            MailItem item = mbox.getItemByPath(context.opContext, filename, folder.getId());
+            MailItem orig = mbox.getItemByPath(context.opContext, filename, folder.getId());
             // XXX: should we just overwrite here instead?
-            if (!(item instanceof WikiItem))
+            if (!(orig instanceof WikiItem))
                 throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "cannot overwrite existing object at that path");
 
-            mbox.addDocumentRevision(context.opContext, item.getId(), item.getType(), pd);
+            item = mbox.addDocumentRevision(context.opContext, item.getId(), item.getType(), pd);
         } catch (NoSuchItemException nsie) {
-            mbox.createDocument(context.opContext, folder.getId(), pd, MailItem.TYPE_WIKI);
+            item = mbox.createDocument(context.opContext, folder.getId(), pd, MailItem.TYPE_WIKI);
         } finally {
         	FileUploadServlet.deleteUpload(upload);
         }
 
+        if (item != null) {
+        	context.resp.addHeader("X-Zimbra-ItemId", item.getId() + "");
+        	context.resp.addHeader("X-Zimbra-Version", item.getVersion() + "");
+        	context.resp.addHeader("X-Zimbra-Modified", item.getChangeDate() + "");
+        	context.resp.addHeader("X-Zimbra-Change", item.getModifiedSequence() + "");
+        	context.resp.addHeader("X-Zimbra-Revision", item.getSavedSequence() + "");
+        }
         // clear the wiki cache because we just went straight to the Mailbox
         Wiki.expireNotebook(folder);
 	}
