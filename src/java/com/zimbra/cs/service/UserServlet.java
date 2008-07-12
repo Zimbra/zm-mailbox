@@ -66,6 +66,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -1128,7 +1129,24 @@ public class UserServlet extends ZimbraServlet {
     	return new Pair<Header[], HttpInputStream>(pair.getFirst(), new HttpInputStream(pair.getSecond()));
     }
 
-
+    public static Pair<Header[], HttpInputStream> putMailItem(ZAuthToken authToken, String url, MailItem item, 
+    		String proxyHost, int proxyPort, String proxyUser, String proxyPass) throws ServiceException, IOException {
+    	if (item instanceof Document) {
+        	Document doc = (Document) item;
+            StringBuilder u = new StringBuilder(url);
+            u.append("?").append(QP_AUTH).append('=').append(AUTH_COOKIE);
+            if (doc.getType() == MailItem.TYPE_WIKI)
+            	u.append("&fmt=wiki");
+            PutMethod method = new PutMethod(u.toString());
+            String contentType = doc.getContentType();
+            method.addRequestHeader("Content-Type", contentType);
+            method.setRequestEntity(new InputStreamRequestEntity(doc.getContentStream(), contentType));
+            Pair<Header[], HttpMethod> pair = doHttpOp(authToken, proxyHost, proxyPort, proxyUser, proxyPass, method);
+            return new Pair<Header[], HttpInputStream>(pair.getFirst(), new HttpInputStream(pair.getSecond()));
+    	}
+    	return putRemoteResource(authToken, url, item.getContentStream(), null, proxyHost, proxyPort, proxyUser, proxyPass);
+    }
+    
     public static Pair<Header[], HttpInputStream> putRemoteResource(AuthToken authToken, String url, Account target,
             InputStream req, Header[] headers) throws ServiceException, IOException {
         return putRemoteResource(authToken.toZAuthToken(), url, req, headers, null, 0, null, null);
