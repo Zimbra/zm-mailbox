@@ -61,6 +61,10 @@ public abstract class MailItemImport {
         }
     }
 
+    protected boolean isOffline() {
+        return getDataSource().isOffline();
+    }
+    
     protected Message addMessage(ParsedMessage pm, int folderId, int flags)
         throws ServiceException, IOException {
         Mailbox mbox = dataSource.getMailbox();

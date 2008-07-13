@@ -261,6 +261,10 @@ public class DataSource extends NamedEntry implements Comparable {
     public boolean isSaveToSent() {
         return true;
     }
+
+    public boolean isOffline() {
+        return false;
+    }
     
     public ImapFolderCollection getImapFolders() throws ServiceException {
         return DbImapFolder.getImapFolders(getMailbox(), this);
