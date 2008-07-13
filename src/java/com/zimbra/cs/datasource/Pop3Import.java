@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Date;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -53,7 +54,7 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mime.ParsedMessage;
 
 
-public class Pop3Import extends AbstractMailItemImport {
+public class Pop3Import extends MailItemImport {
     private POP3Store store;
     
     // (item id).(blob digest)
@@ -121,7 +122,8 @@ public class Pop3Import extends AbstractMailItemImport {
         return null;
     }
 
-    public synchronized void importData(boolean fullSync) throws ServiceException {
+    public synchronized void importData(List<Integer> folderIds, boolean fullSync)
+        throws ServiceException {
         validateDataSource();
         connect();
         try {

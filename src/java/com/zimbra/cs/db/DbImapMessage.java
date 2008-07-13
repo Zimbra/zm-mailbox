@@ -261,10 +261,13 @@ public class DbImapMessage {
     }
 
     /**
-     * Returns a collection of tracked IMAP messages for the given data source.
+     * Returns a list of the local message ids in the given folder for which
+     * there is no corresponding IMAP message tracker. This is the list of
+     * new messages which must be appended to the remote mailbox when handling
+     * a folder UIDVALIDITY change.
      * @return the new message ids, or an empty <tt>List</tt> if there are none.
      */
-    public static List<Integer> getNewLocalMessageIds(Mailbox mbox, DataSource ds, ImapFolder imapFolder)
+    public static List<Integer> getNewLocalMessageIds(Mailbox mbox, int folderId)
     throws ServiceException {
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -282,7 +285,7 @@ public class DbImapMessage {
 
             int i = 1;
             stmt.setInt(i++, mbox.getId());
-            stmt.setInt(i++, imapFolder.getItemId());
+            stmt.setInt(i++, folderId);
             rs = stmt.executeQuery();
             while (rs.next()) {
                 newIds.add(rs.getInt("id"));
@@ -297,8 +300,6 @@ public class DbImapMessage {
             DbPool.quietClose(conn);
         }
 
-        ZimbraLog.mailbox.debug("Found %d new local message ids for %s",
-            newIds.size(), imapFolder.getRemotePath());
         return newIds;
     }
 

@@ -79,7 +79,7 @@ import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.MessageData;
 import com.zimbra.cs.mailclient.imap.ImapData;
 
-public class ImapImport extends AbstractMailItemImport {
+public class ImapImport extends MailItemImport {
     private final UidFetch uidFetch;
     private final byte[] buf = new byte[4096]; // Temp buffer for checksum calculation
     private IMAPStore store;
@@ -152,7 +152,8 @@ public class ImapImport extends AbstractMailItemImport {
         return null;
     }
     
-    public synchronized void importData(boolean fullSync) throws ServiceException {
+    public synchronized void importData(List<Integer> folderIds, boolean fullSync)
+        throws ServiceException {
         validateDataSource();
         connect();
         DataSource ds = getDataSource();
@@ -259,7 +260,7 @@ public class ImapImport extends AbstractMailItemImport {
                             // UIDVALIDITY value changed.  Save any new local messages to remote folder.
                             ZimbraLog.datasource.info("UIDVALIDITY of remote folder %s has changed from %d to %d.  Resyncing from scratch.",
                                 remoteFolder.getFullName(), folderTracker.getUidValidity(), remoteUvv);
-                            List<Integer> newLocalIds = DbImapMessage.getNewLocalMessageIds(mbox, ds, folderTracker);
+                            List<Integer> newLocalIds = DbImapMessage.getNewLocalMessageIds(mbox, folderTracker.getItemId());
                             if (newLocalIds.size() > 0) {
                                 ZimbraLog.datasource.info("Copying %d messages from local folder %s to remote folder.",
                                     newLocalIds.size(), localFolder.getPath());

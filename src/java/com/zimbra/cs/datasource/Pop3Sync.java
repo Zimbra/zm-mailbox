@@ -25,6 +25,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.db.DbPop3Message;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.common.util.Log;
@@ -50,7 +51,7 @@ import java.util.List;
 import java.util.Date;
 import java.text.ParseException;
 
-public class Pop3Sync extends AbstractMailItemImport {
+public class Pop3Sync extends MailItemImport {
     private final Pop3Connection connection;
     private final Mailbox mbox;
     private final boolean attachmentsIndexingEnabled;
@@ -109,7 +110,8 @@ public class Pop3Sync extends AbstractMailItemImport {
         return null;
     }
 
-    public synchronized void importData(boolean fullSync) throws ServiceException {
+    public synchronized void importData(List<Integer> folderIds, boolean fullSync)
+        throws ServiceException {
         validateDataSource();
         connect();
         try {
