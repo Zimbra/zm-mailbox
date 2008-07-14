@@ -52,6 +52,8 @@ public class DbPool {
     private static String sRootUrl;
     private static String sLoggerRootUrl;
     private static GenericObjectPool sConnectionPool;
+    
+    private static boolean isShutdown;
 
     static ValueCounter sConnectionStackCounter = new ValueCounter();
     
@@ -189,6 +191,9 @@ public class DbPool {
 
     /** Initializes the connection pool. */
     private static synchronized PoolingDataSource getPool() {
+    	if (isShutdown)
+    		throw new RuntimeException("DbPool permanently shutdown");
+    	
         if (sPoolingDataSource != null)
             return sPoolingDataSource;
 
@@ -200,12 +205,12 @@ public class DbPool {
 	    new PoolableConnectionFactory(cfac, sConnectionPool, null, null, defReadOnly, defAutoCommit);
 
 	    try {
-	        Class.forName(pconfig.mDriverClassName);
+	        Class.forName(pconfig.mDriverClassName).newInstance(); //derby requires the .newInstance() call
 	        Class.forName("org.apache.commons.dbcp.PoolingDriver");
-        } catch (ClassNotFoundException e) {
+        } catch (Exception e) {
             ZimbraLog.system.fatal("can't instantiate DB driver/pool class", e);
             System.exit(1);
-	    }
+	}
 
         try {
             PoolingDataSource pds = new PoolingDataSource(sConnectionPool);
@@ -432,6 +437,8 @@ public class DbPool {
     
     /**
      * This is only to be used by DbOfflineMigration to completely close connection to Derby.
+     * Note that this doesn't permanently shutdown.  A new getPool() call will restart connections.
+     * 
      * @throws Exception
      */
     static synchronized void close() throws Exception {
@@ -439,5 +446,10 @@ public class DbPool {
     	sConnectionPool = null;
     	sPoolingDataSource = null;
     	Db.getInstance().shutdown();
+    }
+    
+    public static synchronized void shutdown() throws Exception {
+    	isShutdown = true;
+    	close();
     }
 }

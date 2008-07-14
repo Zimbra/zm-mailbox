@@ -39,4 +39,14 @@ public class ZimbraApplication {
 	public boolean supports(String className) {
 		return true;
 	}
+	
+	private boolean isShutdown;
+	
+	public void shutdown() {
+		isShutdown = true;
+	}
+	
+	public boolean isShutdown() {
+		return isShutdown;
+	}
 }

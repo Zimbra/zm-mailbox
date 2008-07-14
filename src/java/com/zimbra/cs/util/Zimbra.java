@@ -287,6 +287,8 @@ public class Zimbra {
         MailboxManager.getInstance().shutdown();
 
         sTimer.cancel();
+        
+        app.shutdown();
     }
 
     public static synchronized boolean started() {
