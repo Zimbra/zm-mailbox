@@ -25,8 +25,10 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.db.DbPop3Message;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.DummySSLSocketFactory;
@@ -50,7 +52,7 @@ import java.util.List;
 import java.util.Date;
 import java.text.ParseException;
 
-public class Pop3Sync extends AbstractMailItemImport {
+public class Pop3Sync extends MailItemImport {
     private final Pop3Connection connection;
     private final Mailbox mbox;
     private final boolean attachmentsIndexingEnabled;
@@ -109,7 +111,8 @@ public class Pop3Sync extends AbstractMailItemImport {
         return null;
     }
 
-    public synchronized void importData(boolean fullSync) throws ServiceException {
+    public synchronized void importData(List<Integer> folderIds, boolean fullSync)
+        throws ServiceException {
         validateDataSource();
         connect();
         try {
@@ -202,8 +205,7 @@ public class Pop3Sync extends AbstractMailItemImport {
             if (date != null) {
                 pm.setReceivedDate(date.getTime());
             }
-            pm.getMimeMessage().getHeader("Date");
-            Message msg = addMessage(pm, dataSource.getFolderId(), Flag.BITMASK_UNREAD);
+            Message msg = addMessage(pm);
             if (msg != null && uid != null) {
                 DbPop3Message.storeUid(mbox, dataSource.getId(), uid, msg.getId());
             }
@@ -211,7 +213,16 @@ public class Pop3Sync extends AbstractMailItemImport {
             tmp.delete();
         }
     }
-
+    
+    private com.zimbra.cs.mailbox.Message addMessage(ParsedMessage pm)
+        throws ServiceException, IOException, MessagingException {
+        return isOffline() ?
+            offlineAddMessage(pm, dataSource.getFolderId(), Flag.BITMASK_UNREAD) :
+            RuleManager.getInstance().applyRules(
+                mbox.getAccount(), mbox, pm, pm.getRawSize(), dataSource.getEmailAddress(),
+                new SharedDeliveryContext(), dataSource.getFolderId());
+    }
+    
     private Date getDateHeader(MimeMessage mm, String name) {
         try {
             String value = mm.getHeader(name, null);

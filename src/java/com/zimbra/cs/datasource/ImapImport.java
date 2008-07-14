@@ -79,18 +79,16 @@ import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.MessageData;
 import com.zimbra.cs.mailclient.imap.ImapData;
 
-public class ImapImport
-implements MailItemImport {
+public class ImapImport extends MailItemImport {
     private final UidFetch uidFetch;
     private final byte[] buf = new byte[4096]; // Temp buffer for checksum calculation
     private IMAPStore store;
-    private DataSource dataSource;
 
     private static final int FETCH_SIZE = LC.data_source_fetch_size.intValue();
     private static final int MAX_MESSAGE_MEMORY_SIZE =
         LC.data_source_max_message_memory_size.intValue();
 
-    private static final boolean DEBUG = 
+    private static final boolean DEBUG =
         Boolean.getBoolean("ZimbraJavamailDebug") || LC.javamail_imap_debug.booleanValue();
 
     private static final String ID_EXT = "(\"vendor\" \"Zimbra\" \"os\" \"" +
@@ -132,19 +130,15 @@ implements MailItemImport {
     }
 
     public ImapImport(DataSource ds) throws ServiceException {
-        dataSource = ds;
+        super(ds);
         ImapConfig config = new ImapConfig();
         config.setMaxLiteralMemSize(MAX_MESSAGE_MEMORY_SIZE);
         uidFetch = new UidFetch(config);
         store = getStore(ds);
     }
 
-    private DataSource getDataSource() {
-        return this.dataSource;
-    }
-    
     public synchronized String test() throws ServiceException {
-        DataSourceUtil.validateDataSource(dataSource);
+        validateDataSource();
         try {
             connect();
         } catch (ServiceException e) {
@@ -157,11 +151,12 @@ implements MailItemImport {
         }
         return null;
     }
-    
-    public synchronized void importData(boolean fullSync) throws ServiceException {
-        DataSource ds = getDataSource();
-        DataSourceUtil.validateDataSource(ds);
+
+    public synchronized void importData(List<Integer> folderIds, boolean fullSync)
+        throws ServiceException {
+        validateDataSource();
         connect();
+        DataSource ds = getDataSource();
         try {
             IMAPFolder remoteRootFolder = (IMAPFolder) store.getDefaultFolder();
             Mailbox mbox = ds.getMailbox();
@@ -203,7 +198,7 @@ implements MailItemImport {
                     folderStatus.put(remoteFolder.getFullName(), status);
                     remoteUvv = status.uidvalidity;
                 }
-                
+
                 ZimbraLog.datasource.debug("Processing IMAP folder " + remoteFolder.getFullName());
 
                 // Update associations between remote and local folders
@@ -265,7 +260,7 @@ implements MailItemImport {
                             // UIDVALIDITY value changed.  Save any new local messages to remote folder.
                             ZimbraLog.datasource.info("UIDVALIDITY of remote folder %s has changed from %d to %d.  Resyncing from scratch.",
                                 remoteFolder.getFullName(), folderTracker.getUidValidity(), remoteUvv);
-                            List<Integer> newLocalIds = DbImapMessage.getNewLocalMessageIds(mbox, ds, folderTracker);
+                            List<Integer> newLocalIds = DbImapMessage.getNewLocalMessageIds(mbox, folderTracker.getItemId());
                             if (newLocalIds.size() > 0) {
                                 ZimbraLog.datasource.info("Copying %d messages from local folder %s to remote folder.",
                                     newLocalIds.size(), localFolder.getPath());
@@ -324,7 +319,7 @@ implements MailItemImport {
                     // Root folder is always empty
                     continue;
                 }
-                
+
                 // Re-get the folder, in case it was implicitly deleted when its
                 // parent was deleted
                 try {
@@ -373,7 +368,7 @@ implements MailItemImport {
             for (ImapFolder imapFolder : imapFolders) {
             	if (!ds.isSyncEnabled(imapFolder.getLocalPath()))
             		continue;
-                
+
                 // Don't import folder unless full sync requested or there are
                 // new messages in the folder (uidnext has advanced).
                 Status status = folderStatus.get(imapFolder.getRemotePath());
@@ -384,7 +379,7 @@ implements MailItemImport {
                         continue; // No new messages have been detected
                     }
                 }
-                
+
                 ZimbraLog.datasource.info("Importing from IMAP folder %s to local folder %s",
                     imapFolder.getRemotePath(), imapFolder.getLocalPath());
                 if (imapFolder.getUidValidity() != 0) {
@@ -416,7 +411,7 @@ implements MailItemImport {
             }
         }
     }
-    
+
     /*
      * Returns list of subfolders, removing duplicates (see bug 26483).
      */
@@ -464,7 +459,7 @@ implements MailItemImport {
             }
         });
     }
-    
+
     private void renameJavaMailFolder(Folder remoteFolder, String jmPath)
     throws MessagingException {
         ZimbraLog.datasource.info("Renaming IMAP folder from %s to %s", remoteFolder.getFullName(), jmPath);
@@ -545,7 +540,7 @@ implements MailItemImport {
         	}
         	relativePath = StringUtil.join("/", parts);
         }
-        
+
         String zimbraPath = ds.matchKnownLocalPath(relativePath);
         if (zimbraPath == null) {
 	        // Remove leading slashes and append to root folder path
@@ -609,7 +604,7 @@ implements MailItemImport {
 
         // Update next uid for tracked folder data
         trackedFolder.setUidNext(remoteFolder.getUIDNext());
-        
+
         final DataSource ds = getDataSource();
         final Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(ds.getAccount());
         final com.zimbra.cs.mailbox.Folder localFolder = mbox.getFolderById(null, trackedFolder.getItemId());
@@ -621,7 +616,7 @@ implements MailItemImport {
             // Fetch message UID's for reconciliation (UIDL)
             remoteFolder.fetch(msgArray, FETCH_PROFILE);
         }
-        
+
         // Check for duplicate UID's, in case the server sends bad data.
         final Map<Long, IMAPMessage> remoteMsgs = new LinkedHashMap<Long, IMAPMessage>();
         for (Message msg : msgArray) {
@@ -632,7 +627,7 @@ implements MailItemImport {
             }
             remoteMsgs.put(uid, imapMsg);
         }
-        
+
         // TODO: Check the UID of the first message to make sure the user isn't
         // importing his own mailbox.
         /*
@@ -673,7 +668,7 @@ implements MailItemImport {
             if (trackedMsgs.containsUid(uid)) {
                 // We already know about this message.
                 ImapMessage trackedMsg = trackedMsgs.getByUid(uid);
-                
+
                 if (localIds.contains(trackedMsg.getItemId())) {
                     int localFlags = trackedMsg.getFlags();
                     int trackedFlags = trackedMsg.getTrackedFlags();
@@ -702,7 +697,7 @@ implements MailItemImport {
                     } else {
                         numMatched++;
                     }
-                    
+
                     // Remove id from the set, so we know we've already processed it.
                     localIds.remove(trackedMsg.getItemId());
                 } else {
@@ -760,8 +755,10 @@ implements MailItemImport {
                         Long time = receivedDate != null ? (Long) receivedDate.getTime() : null;
                         ParsedMessage pm = getParsedMessage(data, time, mbox.attachmentsIndexingEnabled());
                         int flags = getZimbraFlags(msg.getFlags());
-                        com.zimbra.cs.mailbox.Message localMsg = mbox.addMessage(null, pm, localFolder.getId(), true, flags, null);
-                        DbImapMessage.storeImapMessage(mbox, trackedFolder.getItemId(), uid, localMsg.getId(), flags);
+                        com.zimbra.cs.mailbox.Message localMsg = addMessage(pm, localFolder.getId(), flags);
+                        if (localMsg != null) {
+                            DbImapMessage.storeImapMessage(mbox, trackedFolder.getItemId(), uid, localMsg.getId(), flags);
+                        }
                     }
                     fetchCount.incrementAndGet();
                 }
@@ -815,6 +812,13 @@ implements MailItemImport {
         return !runAgain;
     }
 
+    private com.zimbra.cs.mailbox.Message addMessage(ParsedMessage pm, int folderId, int flags)
+        throws ServiceException, IOException {
+        return dataSource.isOffline() ?
+            offlineAddMessage(pm, folderId, flags) :
+            dataSource.getMailbox().addMessage(null, pm, folderId, true, flags, null);
+    }
+    
     private static ParsedMessage getParsedMessage(ImapData id,
                                                   Long receivedDate,
                                                   boolean indexAttachments)

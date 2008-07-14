@@ -35,6 +35,7 @@ import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
+import com.zimbra.cs.mailbox.Folder;
 
 
 /**
@@ -92,12 +93,11 @@ public class DataSourceManager {
         for (DataSource ds : dsList) {
             allStatus.add(getImportStatus(account, ds));
         }
-        
         return allStatus;
     }
     
     private static ImportStatus getImportStatus(Account account, DataSource ds) {
-        ImportStatus importStatus = null;
+        ImportStatus importStatus;
         
         synchronized (sImportStatus) {
             Map<String, ImportStatus> isMap = sImportStatus.get(account.getId());
@@ -116,14 +116,20 @@ public class DataSourceManager {
     }
 
     public static void importData(DataSource ds) throws ServiceException {
-        importData(ds, true);
+        importData(ds, null, true);
     }
-    
-    /**
+
+    public static void importData(DataSource fs, boolean fullSync)
+        throws ServiceException {
+        importData(fs, null, fullSync);
+    }
+
+    /*
      * Executes the data source's <code>MailItemImport</code> implementation
      * to import data in the current thread.
      */
-    public static void importData(DataSource ds, boolean fullSync) throws ServiceException {
+    public static void importData(DataSource ds, List<Integer> folderIds,
+                                  boolean fullSync) throws ServiceException {
         ImportStatus importStatus = getImportStatus(ds.getAccount(), ds);
         
         synchronized (importStatus) {
@@ -145,7 +151,7 @@ public class DataSourceManager {
 
         try {
             ZimbraLog.datasource.info("Importing data.");
-            mii.importData(fullSync);
+            mii.importData(folderIds, fullSync);
             ZimbraLog.datasource.info("Import completed.");
             success = true;
         } catch (ServiceException x) {
@@ -169,7 +175,7 @@ public class DataSourceManager {
         DbScheduledTask.deleteTask(DataSourceTask.class.getName(), dsId);
     }
     
-    /**
+    /*
      * Updates scheduling data for this <tt>DataSource</tt> both in memory and in the
      * <tt>data_source_task</tt> database table.
      */

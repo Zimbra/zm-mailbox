@@ -40,21 +40,21 @@ import java.util.Collections;
 
 class RemoteFolder {
     private final ImapConnection connection;
-    private final String name;
+    private final String path;
     private final boolean uidPlus;
 
     private static final Log LOG = ZimbraLog.datasource;
     
-    RemoteFolder(ImapConnection connection, String name) {
+    RemoteFolder(ImapConnection connection, String path) {
         this.connection = connection;
-        this.name = name;
+        this.path = path;
         uidPlus = connection.hasCapability(ImapCapabilities.UIDPLUS);
     }
 
     public void create() throws IOException {
-        LOG.info("Creating IMAP folder '%s'", name);
+        info("creating folder");
         try {
-            connection.create(name);
+            connection.create(path);
         } catch (CommandFailedException e) {
             // OK if CREATE failed because mailbox already exists
             if (!exists()) throw e;
@@ -62,18 +62,19 @@ class RemoteFolder {
     }
 
     public void delete() throws IOException {
-        LOG.info("Deleting IMAP folder '%s'", name);
+        info("deleting folder");
         try {
-            connection.delete(name);
+            connection.delete(path);
         } catch (CommandFailedException e) {
             // OK if DELETE failed because mailbox didn't exist
             if (exists()) throw e;
         }
     }
 
-    public void renameTo(String newName) throws IOException {
-        LOG.info("Renaming IMAP folder from '%s' to '%s'", name, newName);
-        connection.rename(name, newName);
+    public RemoteFolder renameTo(String newName) throws IOException {
+        info("renaming folder to '%s'", newName);
+        connection.rename(path, newName);
+        return new RemoteFolder(connection, newName);
     }
 
     public long appendMessage(MimeMessage msg, Flags flags, Date date)
@@ -87,7 +88,7 @@ class RemoteFolder {
             os = new FileOutputStream(tmp);
             msg.writeTo(os);
             os.close();
-            return connection.append(name, flags, date, new Literal(tmp));
+            return connection.append(path, flags, date, new Literal(tmp));
         } catch (MessagingException e) {
             throw new MailException("Error appending message", e);
         } finally {
@@ -99,6 +100,7 @@ class RemoteFolder {
     public void deleteMessages(List<Long> uids) throws IOException {
         ensureSelected();
         int size = uids.size();
+        debug("deleting %d messages(s) from folder", size);
         for (int i = 0; i < size; i += 16) {
             String seq = ImapData.asSequenceSet(
                 uids.subList(i, Math.min(size - i, 16)));
@@ -119,7 +121,7 @@ class RemoteFolder {
     }
     
     public boolean exists() throws IOException {
-        return !connection.list("", name).isEmpty();
+        return !connection.list("", path).isEmpty();
     }
 
     public void ensureSelected() throws IOException {
@@ -129,11 +131,37 @@ class RemoteFolder {
     }
     
     public Mailbox select() throws IOException {
-        return connection.select(name);
+        return connection.select(path);
     }
     
     public boolean isSelected() {
         Mailbox mb = connection.getMailbox();
-        return mb != null && mb.getName().equals(name);
+        return mb != null && mb.getName().equals(path);
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void debug(String fmt, Object... args) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(errmsg(String.format(fmt, args)));
+        }
+    }
+
+    public void info(String fmt, Object... args) {
+        LOG.info(errmsg(String.format(fmt, args)));
+    }
+
+    public void warn(String msg, Throwable e) {
+        LOG.error(errmsg(msg), e);
+    }
+
+    public void error(String msg, Throwable e) {
+        LOG.error(errmsg(msg), e);
+    }
+
+    private String errmsg(String s) {
+        return String.format("Remote folder '%s': %s", getPath(), s);
     }
 }

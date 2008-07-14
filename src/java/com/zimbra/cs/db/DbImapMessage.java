@@ -38,7 +38,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 public class DbImapMessage {
 
     public static final String TABLE_IMAP_MESSAGE = "imap_message";
-    
+
     /**
      * Stores IMAP message tracker data.
      */
@@ -103,7 +103,7 @@ public class DbImapMessage {
             DbPool.quietClose(conn);
         }
     }
-    
+
     public static void setFlags(Mailbox mbox, int itemId, int flags)
     throws ServiceException {
         ZimbraLog.datasource.debug(
@@ -162,7 +162,7 @@ public class DbImapMessage {
             DbPool.closeStatement(stmt);
             DbPool.quietClose(conn);
         }
-    } 
+    }
 
     /**
      * Deletes IMAP message tracker data.
@@ -227,7 +227,7 @@ public class DbImapMessage {
             DbPool.quietClose(conn);
         }
     }
-    
+
     /**
      * Returns a collection of tracked IMAP messages for the given data source.
      */
@@ -245,7 +245,7 @@ public class DbImapMessage {
                 "SELECT imap.uid, imap.item_id, imap.flags as tflags, mi.unread, mi.flags " +
                 "FROM " + getTableName(mbox) + " imap " +
                 "  LEFT OUTER JOIN " + DbMailItem.getMailItemTableName(mbox) + " mi " +
-                "  ON imap.mailbox_id = mi.mailbox_id AND imap.item_id = mi.id " + 
+                "  ON imap.mailbox_id = mi.mailbox_id AND imap.item_id = mi.id " +
                 "WHERE imap.mailbox_id = ? AND imap.imap_folder_id = ?");
             int pos = 1;
             if (!DebugConfig.disableMailboxGroups)
@@ -276,10 +276,13 @@ public class DbImapMessage {
     }
 
     /**
-     * Returns a collection of tracked IMAP messages for the given data source.
+     * Returns a list of the local message ids in the given folder for which
+     * there is no corresponding IMAP message tracker. This is the list of
+     * new messages which must be appended to the remote mailbox when handling
+     * a folder UIDVALIDITY change.
      * @return the new message ids, or an empty <tt>List</tt> if there are none.
      */
-    public static List<Integer> getNewLocalMessageIds(Mailbox mbox, DataSource ds, ImapFolder imapFolder)
+    public static List<Integer> getNewLocalMessageIds(Mailbox mbox, int folderId)
     throws ServiceException {
         List<Integer> newIds = new ArrayList<Integer>();
 
@@ -292,13 +295,13 @@ public class DbImapMessage {
             stmt = conn.prepareStatement(
                 "SELECT id FROM " + DbMailItem.getMailItemTableName(mbox) + " mi " +
                 "  LEFT OUTER JOIN " + getTableName(mbox) + " imap " +
-                "  ON imap.mailbox_id = mi.mailbox_id AND imap.item_id = mi.id " + 
+                "  ON imap.mailbox_id = mi.mailbox_id AND imap.item_id = mi.id " +
                 "WHERE mi.mailbox_id = ? AND mi.folder_id = ? AND imap.item_id IS NULL " +
                 "AND mi.type IN (" + MailItem.TYPE_MESSAGE + ", " + MailItem.TYPE_CHAT + ")");
             int pos = 1;
             if (!DebugConfig.disableMailboxGroups)
                 stmt.setInt(pos++, mbox.getId());
-            stmt.setInt(pos++, imapFolder.getItemId());
+            stmt.setInt(pos, folderId);
             rs = stmt.executeQuery();
 
             while (rs.next())
@@ -311,8 +314,6 @@ public class DbImapMessage {
             DbPool.quietClose(conn);
         }
 
-        ZimbraLog.mailbox.debug("Found %d new local message ids for %s",
-            newIds.size(), imapFolder.getRemotePath());
         return newIds;
     }
 
