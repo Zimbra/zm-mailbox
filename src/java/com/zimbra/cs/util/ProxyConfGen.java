@@ -135,7 +135,7 @@ public class ProxyConfGen
     }
 
     public static String getCoreConfTemplate () {
-        return getCoreConf() + mTemplateSuffix;
+        return mTemplatePrefix + mTemplateSuffix;
     }
 
     public static String getMainConf () {
@@ -143,7 +143,7 @@ public class ProxyConfGen
     }
 
     public static String getMainConfTemplate () {
-        return getMainConf() + mTemplateSuffix;
+        return mTemplatePrefix + ".main" + mTemplateSuffix;
     }
 
     public static String getMemcacheConf () {
@@ -151,7 +151,7 @@ public class ProxyConfGen
     }
 
     public static String getMemcacheConfTemplate () {
-        return getMemcacheConf() + mTemplateSuffix;
+        return mTemplatePrefix + ".memcache" + mTemplateSuffix;
     }
 
     public static String getMailConf () {
@@ -159,39 +159,39 @@ public class ProxyConfGen
     }
 
     public static String getMailConfTemplate () {
-        return getMailConf() + mTemplateSuffix;
+        return mTemplatePrefix + ".mail" + mTemplateSuffix;
     }
 
     public static String getMailImapConf () {
-        return getMailConf() + ".imap";
+        return mConfPrefix + ".mail.imap";
     }
 
     public static String getMailImapConfTemplate () {
-        return getMailImapConf() + mTemplateSuffix;
+        return mTemplatePrefix + ".mail.imap" + mTemplateSuffix;
     }
 
     public static String getMailImapSConf () {
-        return getMailConf() + ".imaps";
+        return mConfPrefix + ".mail.imaps";
     }
 
     public static String getMailImapSConfTemplate () {
-        return getMailImapSConf() + mTemplateSuffix;
+        return mTemplatePrefix + ".mail.imaps" + mTemplateSuffix;
     }
 
     public static String getMailPop3Conf () {
-        return getMailConf() + ".pop3";
+        return mConfPrefix + ".mail.pop3";
     }
 
     public static String getMailPop3ConfTemplate () {
-        return getMailPop3Conf() + mTemplateSuffix;
+        return mTemplatePrefix + ".mail.pop3" + mTemplateSuffix;
     }
 
     public static String getMailPop3SConf () {
-        return getMailConf() + ".pop3s";
+        return mConfPrefix + ".mail.pop3s";
     }
 
     public static String getMailPop3SConfTemplate () {
-        return getMailPop3SConf() + mTemplateSuffix;
+        return mTemplatePrefix + ".mail.pop3s" + mTemplateSuffix;
     }
 
     public static String getWebConf () {
@@ -199,39 +199,39 @@ public class ProxyConfGen
     }
 
     public static String getWebConfTemplate () {
-        return getWebConf() + mTemplateSuffix;
+        return mTemplatePrefix + ".web" + mTemplateSuffix;
     }
 
     public static String getWebHttpConf () {
-        return getWebConf() + ".http";
+        return mConfPrefix + ".web.http";
     }
 
     public static String getWebHttpConfTemplate () {
-        return getWebHttpConf() + mTemplateSuffix;
+        return mTemplatePrefix + ".web.http" + mTemplateSuffix;
     }
 
     public static String getWebHttpSConf () {
-        return getWebConf() + ".https";
+        return mConfPrefix + ".web.https";
     }
 
     public static String getWebHttpSConfTemplate () {
-        return getWebHttpSConf() + mTemplateSuffix;
+        return mTemplatePrefix + ".web.https" + mTemplateSuffix;
     }
 
     public static String getWebHttpModeConf (String mode) {
-        return getWebHttpConf() + ".mode-" + mode;
+        return mConfPrefix + ".web.http.mode-" + mode;
     }
 
     public static String getWebHttpModeConfTemplate (String mode) {
-        return getWebHttpModeConf(mode) + mTemplateSuffix;
+        return mTemplatePrefix + ".web.http.mode-" + mode + mTemplateSuffix;
     }
 
     public static String getWebHttpSModeConf (String mode) {
-        return getWebHttpSConf() + ".mode-" + mode;
+        return mConfPrefix + ".web.https.mode-" + mode;
     }
 
     public static String getWebHttpSModeConfTemplate (String mode) {
-        return getWebHttpSModeConf(mode) + mTemplateSuffix;
+        return mTemplatePrefix + ".web.https.mode-" + mode + mTemplateSuffix;
     }
 
     public static void expandTemplate (File tFile, File wFile)
@@ -673,8 +673,9 @@ public class ProxyConfGen
 
         if (cl.hasOption('w')) {
             mWorkingDir = cl.getOptionValue('w');
-            mTemplateDir = mWorkingDir + "/conf";
             mConfDir = mWorkingDir + "/conf";
+            mTemplateDir = mWorkingDir + "/conf/nginx/templates";
+            mConfIncludesDir = mConfDir + "/" + mIncDir;
         }
 
         if (cl.hasOption('i')) {
