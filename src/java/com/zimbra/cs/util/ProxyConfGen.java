@@ -304,7 +304,7 @@ public class ProxyConfGen
         mVars.put("main.loglevel",                  "info");
         mVars.put("main.workers",                   "4");
         mVars.put("main.connections",               "10240");
-        mVars.put("main.krb5conf",                  "/opt/zimbra/kerberos/etc/krb5.conf");
+        mVars.put("main.krb5keytab",                "/opt/zimbra/conf/krb5.keytab");
         mVars.put("memcache.:servers",              "");            /* multiline conf */
         mVars.put("memcache.timeout",               "3s");
         mVars.put("memcache.reconnect",             "1m");
