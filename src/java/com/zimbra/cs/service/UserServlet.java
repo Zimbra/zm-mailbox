@@ -407,9 +407,8 @@ public class UserServlet extends ZimbraServlet {
             	resolveItems(context);
             } else {
     	        MailItem item = resolveItem(context, true);
-    	        if (item instanceof Mountpoint) {
+    	        if (isProxyRequest(req, resp, context, item)) {
     	            // if the target is a mountpoint, proxy the request on to the resolved target
-    	            proxyOnMountpoint(req, resp, context, (Mountpoint) item);
     	            return;
     	        }
             }
@@ -496,11 +495,10 @@ public class UserServlet extends ZimbraServlet {
                         throw MailServiceException.NO_SUCH_FOLDER(context.itemPath);
                 }
 
-                if (folder instanceof Mountpoint) {
-                    // if the target is a mountpoint, proxy the request on to the resolved target
-                    proxyOnMountpoint(req, resp, context, (Mountpoint) folder);
-                    return;
-                }
+    	        if (isProxyRequest(req, resp, context, folder)) {
+    	            // if the target is a mountpoint, proxy the request on to the resolved target
+    	            return;
+    	        }
             }
 
             // if they specified a filename, default to the native formatter
@@ -672,8 +670,13 @@ public class UserServlet extends ZimbraServlet {
         return context.target;
     }
 
-    private void proxyOnMountpoint(HttpServletRequest req, HttpServletResponse resp, Context context, Mountpoint mpt)
+    private boolean isProxyRequest(HttpServletRequest req, HttpServletResponse resp, Context context, MailItem item)
     throws IOException, ServiceException, UserServletException {
+    	if (!(item instanceof Mountpoint))
+    		return false;
+    	if (context.format != null && context.format.equals("html"))
+    		return false;
+    	Mountpoint mpt = (Mountpoint) item;
         String uri = SERVLET_PATH + "/~/?" + QP_ID + '=' + mpt.getOwnerId() + "%3A" + mpt.getRemoteId();
         if (context.format != null)
             uri += '&' + QP_FMT + '=' + URLEncoder.encode(context.format, "UTF-8");
@@ -691,6 +694,7 @@ public class UserServlet extends ZimbraServlet {
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, L10nUtil.getMessage(MsgKey.errNoSuchAccount, req));
 
         proxyServletRequest(req, resp, prov.getServer(targetAccount), uri, context.basicAuthHappened ? context.authToken : null);
+        return true;
     }
 
     public static class Context {
