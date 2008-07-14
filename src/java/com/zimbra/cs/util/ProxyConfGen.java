@@ -304,6 +304,7 @@ public class ProxyConfGen
         mVars.put("main.loglevel",                  "info");
         mVars.put("main.workers",                   "4");
         mVars.put("main.connections",               "10240");
+        mVars.put("main.krb5conf",                  "/opt/zimbra/kerberos/etc/krb5.conf");
         mVars.put("memcache.:servers",              "");            /* multiline conf */
         mVars.put("memcache.timeout",               "3s");
         mVars.put("memcache.reconnect",             "1m");
@@ -318,6 +319,7 @@ public class ProxyConfGen
         mVars.put("mail.imapid",                    "\"NAME\" \"nginx\" \"VERSION\" \"0\" \"RELEASE\" \"1\"");
         mVars.put("mail.duser",                     "nginx");
         mVars.put("mail.dpasswd",                   "nginx123");
+        mVars.put("mail.defaultrealm",              "EXAMPLE.COM");
         mVars.put("mail.saslapp",                   "nginx");
         mVars.put("mail.ipmax",                     "0");
         mVars.put("mail.ipttl",                     "3600s");
