@@ -153,7 +153,7 @@ public class ImapSync extends MailItemImport {
         throws ServiceException, IOException {
         trackedFolders = dataSource.getImapFolders();
         syncedFolders = new HashMap<Integer, ImapFolderSync>();
-        syncRemoteFolders(connection.list("", "*"));
+        syncRemoteFolders(ImapUtil.listFolders(connection, "*"));
         syncLocalFolders(getLocalFolders());
         syncMessages(folderIds, fullSync);
         finishSync();

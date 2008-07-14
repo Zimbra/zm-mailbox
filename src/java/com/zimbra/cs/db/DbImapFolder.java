@@ -88,6 +88,9 @@ public class DbImapFolder {
         Connection conn = null;
         PreparedStatement stmt = null;
 
+        ZimbraLog.datasource.debug(
+            "createImapFolder: itemId = %d, localPath = %s, remotePath = %s, uidValidity = %d",
+            itemId, localPath, remotePath, uidValidity);
         try {
             conn = DbPool.getConnection();
             stmt = conn.prepareStatement(
