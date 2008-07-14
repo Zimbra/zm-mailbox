@@ -89,6 +89,9 @@ public class DbImapFolder {
         try {
             conn = DbPool.getConnection(mbox);
 
+        ZimbraLog.datasource.debug(
+            "createImapFolder: itemId = %d, localPath = %s, remotePath = %s, uidValidity = %d",
+            itemId, localPath, remotePath, uidValidity);
             String mailbox_id = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
             stmt = conn.prepareStatement(
                 "INSERT INTO " + getTableName(mbox) +
