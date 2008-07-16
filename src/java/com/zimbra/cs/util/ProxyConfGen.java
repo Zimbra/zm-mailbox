@@ -320,6 +320,7 @@ public class ProxyConfGen
         mVars.put("mail.duser",                     "nginx");
         mVars.put("mail.dpasswd",                   "nginx123");
         mVars.put("mail.defaultrealm",              "EXAMPLE.COM");
+        mVars.put("mail.sasl_host_from_ip",         "off");
         mVars.put("mail.saslapp",                   "nginx");
         mVars.put("mail.ipmax",                     "0");
         mVars.put("mail.ipttl",                     "3600s");
