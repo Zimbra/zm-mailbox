@@ -35,6 +35,7 @@ import com.zimbra.cs.security.sasl.AuthenticatorUser;
 import com.zimbra.cs.security.sasl.AuthenticatorUtil;
 import com.zimbra.cs.security.sasl.GssAuthenticator;
 import com.zimbra.cs.security.sasl.PlainAuthenticator;
+import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.util.Config;
@@ -61,6 +62,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
 
     private static final String MECHANISM_PLAIN = PlainAuthenticator.MECHANISM;
     private static final String MECHANISM_GSSAPI = GssAuthenticator.MECHANISM;
+    private static final String MECHANISM_ZIMBRA = ZimbraAuthenticator.MECHANISM;
     
     // Connection specific data
     protected Pop3Config mConfig;
@@ -499,9 +501,11 @@ public abstract class Pop3Handler extends ProtocolHandler {
             sendERR("mechanism not specified");
             return;
         }
+
         int i = arg.indexOf(' ');
         String mechanism = i > 0 ? arg.substring(0, i) : arg;
         String initialResponse = i > 0 ? arg.substring(i + 1) : null;
+
         AuthenticatorUser authUser = new Pop3AuthenticatorUser(this);
         if (MECHANISM_PLAIN.equals(mechanism)) {
             if (!allowCleartextLogins()) {
@@ -509,6 +513,12 @@ public abstract class Pop3Handler extends ProtocolHandler {
                 return;
             }
             mAuthenticator = new PlainAuthenticator(authUser);
+        } else if (MECHANISM_ZIMBRA.equals(mechanism)) {
+            if (!allowCleartextLogins()) {
+                sendERR("cleartext logins disabled");
+                return;
+            }
+            mAuthenticator = new ZimbraAuthenticator(authUser);
         } else if (MECHANISM_GSSAPI.equals(mechanism) && isGssAuthEnabled()) {
             mAuthenticator = new GssAuthenticator(authUser);
             mAuthenticator.setConnection(mConnection);
@@ -516,6 +526,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
             sendERR("mechanism not supported");
             return;
         }
+
         if (!mAuthenticator.initialize()) {
             mAuthenticator = null;
             return;
