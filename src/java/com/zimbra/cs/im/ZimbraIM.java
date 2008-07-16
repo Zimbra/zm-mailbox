@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.dom4j.Element;
-import org.jivesoftware.util.JiveGlobals;
+import org.jivesoftware.util.LdapConfig;
 import org.jivesoftware.wildfire.Session;
 import org.jivesoftware.wildfire.XMPPServer;
 import org.jivesoftware.wildfire.interceptor.InterceptorManager;
@@ -28,16 +28,13 @@ import org.jivesoftware.wildfire.net.CloudRoutingSocketReader;
 import org.jivesoftware.wildfire.net.SocketConnection;
 import org.jivesoftware.wildfire.net.CloudRoutingSocketReader.CloudRoutingSessionFactory;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-//import com.zimbra.cs.im.interop.Interop;
 import com.zimbra.cs.im.interop.Interop;
-import com.zimbra.cs.im.provider.IMGlobalProperties;
-import com.zimbra.cs.im.provider.IMLocalProperties;
 import com.zimbra.cs.im.provider.CloudRouteSession;
+import com.zimbra.cs.im.provider.IMServerConfig;
 import com.zimbra.cs.im.provider.InteropRegistrationProviderImpl;
 import com.zimbra.cs.im.provider.ZimbraLocationManager;
 
@@ -47,8 +44,7 @@ public class ZimbraIM {
     
     public synchronized static void startup() throws ServiceException {
         try {
-            
-            JiveGlobals.setHomeDirectory(LC.zimbra_home.value());
+            LdapConfig.setProvider(new IMServerConfig());
             
             ArrayList<String> domainStrs = new ArrayList<String>();
             
@@ -74,12 +70,11 @@ public class ZimbraIM {
 
             ZimbraLocationManager locMgr = ZimbraLocationManager.getInstance();
             
-            XMPPServer srv = new XMPPServer(locMgr, domainStrs, new IMLocalProperties(), new IMGlobalProperties());
+            XMPPServer srv = new XMPPServer(locMgr, domainStrs);
             InterceptorManager.getInstance().addInterceptor(new com.zimbra.cs.im.PacketInterceptor());
             
             Interop.getInstance().start(XMPPServer.getInstance(), XMPPServer.getInstance().getInternalComponentManager());
             Interop.setDataProvider(new InteropRegistrationProviderImpl());
-
             
             sRunning = true;
         } catch (Exception e) { 
