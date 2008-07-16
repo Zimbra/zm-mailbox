@@ -151,6 +151,9 @@ public class ImapSync extends MailItemImport {
 
     private void syncFolders(List<Integer> folderIds, boolean fullSync)
         throws ServiceException, IOException {
+        if (dataSource.isOffline()) {
+            dataSource.getMailbox().beginTrackingSync();
+        }
         trackedFolders = dataSource.getImapFolders();
         syncedFolders = new HashMap<Integer, ImapFolderSync>();
         syncRemoteFolders(ImapUtil.listFolders(connection, "*"));

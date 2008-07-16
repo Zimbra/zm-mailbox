@@ -22,12 +22,14 @@ public class SyncState {
     private long lastUid = -1;
     private long exists = -1;
     private long unseen = -1;
+    private int lastModSeq;
 
     public SyncState() {}
 
     public long getLastUid() { return lastUid; }
     public long getExists() { return exists; }
     public long getUnseen() { return unseen; }
+    public int getLastModSeq() { return lastModSeq; }
 
     public void setExists(long exists) {
         this.exists = exists;
@@ -41,6 +43,10 @@ public class SyncState {
         this.lastUid = lastUid;
     }
 
+    public void setLastModSeq(int lastModSeq) {
+        this.lastModSeq = lastModSeq;
+    }
+    
     public boolean hasNewMessages(Mailbox mb) {
         long uidNext = mb.getUidNext();
         return uidNext <= 0 || uidNext - 1 > lastUid;
@@ -51,7 +57,7 @@ public class SyncState {
     }
 
     public String toString() {
-        return String.format("{lastUid=%d,exists=%d,unseen=%d}",
-                             lastUid, exists, unseen);
+        return String.format("{lastUid=%d,exists=%d,unseen=%d,lastModSeq=%d}",
+                             lastUid, exists, unseen, lastModSeq);
     }
 }

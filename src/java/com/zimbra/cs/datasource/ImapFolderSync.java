@@ -39,6 +39,7 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.Log;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.localconfig.LC;
 
 import javax.mail.MessagingException;
@@ -65,9 +66,11 @@ class ImapFolderSync {
     private RemoteFolder remoteFolder;
     private SyncState syncState;
     private ImapMessageCollection trackedMsgs;
+    private Set<Integer> localMsgIds;
     private List<Integer> newMsgIds;
     private boolean expunge;
-    private MailDateFormat mdf; 
+    private boolean completed;
+    private MailDateFormat mdf;
 
     private static final Log LOG = ZimbraLog.datasource;
 
@@ -144,64 +147,181 @@ class ImapFolderSync {
     public void syncMessages(boolean fullSync)
         throws ServiceException, IOException {
         if (tracker == null) return;
-        if (tracker.getUidValidity() == 0 ||
-            !ds.isSyncEnabled(localFolder.getPath())) {
+        if (tracker.getUidValidity() == 0 || !ds.isSyncEnabled(localFolder.getPath())) {
             localFolder.debug("Synchronization disabled for this folder");
             tracker = null;
             return;
         }
-        Mailbox mb = remoteFolder.select();
-        if (!checkUidValidity(mb)) {
-            mb = remoteFolder.select();
-        }
-        syncState = getSyncState();
-        // debug("SyncState = " + syncState);
+        Mailbox mb = checkUidValidity();
+        syncState = getSyncState(fullSync);
+        localFolder.debug("SyncState = " + syncState);
         long uidNext = mb.getUidNext();
         if (uidNext > 0 && uidNext <= syncState.getLastUid()) {
             throw new MailException("Invalid UIDNEXT (> last sync uid)");
         }
-        boolean fetchMsgs = syncState.hasNewMessages(mb);
+        newMsgIds = new ArrayList<Integer>();
         long lastUid = syncState.getLastUid();
-        // If full sync requested, fetch flags changes
+        int lastModSeq = syncState.getLastModSeq();
         if (fullSync) {
-            if (trackedMsgs == null) {
-                trackedMsgs = DbImapMessage.getImapMessages(mailbox, ds, tracker);
-            }
-            Set<Integer> msgIds = localFolder.getMessageIds();
-            // Fetch flag changes and delete message ids that have been seen
-            if (lastUid > 0) {
-                fetchFlags(lastUid, msgIds);
-            }
-            // Check for messages deleted remotely or new local messages
-            newMsgIds = new ArrayList<Integer>();
-            for (int id : msgIds) {
-                if (trackedMsgs.getByItemId(id) != null) {
-                    localFolder.deleteMessage(id);
-                    stats.msgsDeletedLocally++;
-                } else {
-                    newMsgIds.add(id);
-                    stats.msgsAddedRemotely++;
-                }
-            }
+            // Fetch flags if full sync requested
+            syncFlags(lastUid);
+        } else if (lastModSeq > 0) {
+            // Push only changes for partial sync
+            syncState.setLastModSeq(pushChanges(lastModSeq));
         }
         // Fetch new messages
-        if (fetchMsgs) {
+        if (syncState.hasNewMessages(mb)) {
             fetchMessages(lastUid + 1, uidNext - 1);
         }
         if (expunge) {
             // Close IMAP folder to automatically expunge deleted messages
             connection.mclose();
         }
+
         // Update sync state for new mailbox status
         syncState.setExists(mb.getExists());
         syncState.setUnseen(mb.getUnseen());
+
         // Clean up tracked message state no longer in use
         trackedMsgs = null;
+        localMsgIds = null;
+        completed = true;
+    }
+
+    private SyncState getSyncState(boolean fullSync) throws ServiceException {
+        syncState = ds.getSyncState(localFolder.getId());
+        if (syncState == null || fullSync) {
+            int lastModSeq = 0;
+            synchronized (mailbox) {
+                trackedMsgs = DbImapMessage.getImapMessages(mailbox, ds, tracker);
+                if (fullSync) {
+                    localMsgIds = localFolder.getMessageIds();
+                    lastModSeq = mailbox.getLastChangeID();
+                }
+            }
+            if (syncState == null) {
+                syncState = new SyncState();
+                syncState.setLastUid(trackedMsgs.getLastUid());
+                if (!fullSync) {
+                    trackedMsgs = null;
+                }
+            }
+            if (lastModSeq > 0) {
+                syncState.setLastModSeq(lastModSeq);
+            }
+        }
+        return syncState;
+    }
+
+    private void syncFlags(long lastUid) throws ServiceException, IOException {
+        // Fetch flag changes and delete message ids that have been seen
+        if (lastUid > 0) {
+            fetchFlags(lastUid, localMsgIds);
+        }
+        // Check for messages deleted remotely or new local messages
+        for (int id : localMsgIds) {
+            if (trackedMsgs.getByItemId(id) != null) {
+                localFolder.deleteMessage(id);
+                stats.msgsDeletedLocally++;
+            } else {
+                newMsgIds.add(id);
+                stats.msgsAddedRemotely++;
+            }
+        }
+    }
+
+    private int pushChanges(int lastModSeq)
+        throws ServiceException, IOException {
+        localFolder.debug("pushChanges: lastModSeq = %d", lastModSeq);
+        List<Integer> deletedIds;
+        List<Integer> modifiedIds;
+        int newModSeq;
+        synchronized (mailbox) {
+            newModSeq = mailbox.getLastChangeID();
+            if (newModSeq <= lastModSeq) {
+                return lastModSeq; // No changes
+            }
+            deletedIds = mailbox.getTombstones(lastModSeq).getIds(MailItem.TYPE_MESSAGE);
+            modifiedIds = mailbox.getModifiedItems(null, lastModSeq, MailItem.TYPE_MESSAGE).getFirst();
+        }
+        if (deletedIds == null) {
+            deletedIds = new ArrayList<Integer>();
+        }
+        if (modifiedIds != null && !modifiedIds.isEmpty()) {
+            for (int id : modifiedIds) {
+                Message msg = localFolder.getMessage(id);
+                if (msg != null) {
+                    pushModification(msg, deletedIds);
+                }
+            }
+        }
+        if (!deletedIds.isEmpty()) {
+            pushDeletes(deletedIds);
+        }
+        return newModSeq;
+    }
+
+    private void pushDeletes(List<Integer> deletedIds)
+        throws ServiceException, IOException {
+        int folderId = localFolder.getId();
+        List<Long> deletedUids = new ArrayList<Long>();
+        for (int id : deletedIds) {
+            Pair<ImapMessage, Integer> pair = DbImapMessage.getImapMessage(mailbox, id);
+            if (pair != null) {
+                DbImapMessage.deleteImapMessage(mailbox, folderId, id);
+                deletedUids.add(pair.getFirst().getUid());
+            }
+        }
+        deleteMessages(deletedUids);
+    }
+
+    /*
+     * There are four ways in which a message could have been modified:
+     *
+     * 1. Message flags changed
+     * 2. New message added to this folder
+     * 3. Message moved from this folder to another
+     * 4. Message moved to this folder from another
+     *
+     * We can handle cases 1-3 here. Case 4 is the mirror of case 3 so just
+     * let it be handled when the originating folder is processed.
+     */
+    private void pushModification(Message msg, List<Integer> deletedIds)
+        throws ServiceException, IOException {
+        int folderId = localFolder.getId();
+        int msgId = msg.getId();
+        int msgFolderId = msg.getFolderId();
+        Pair<ImapMessage, Integer> pair =
+            DbImapMessage.getImapMessage(mailbox, msgId);
+        if (pair != null) {
+            ImapMessage tracker = pair.getFirst();
+            int trackedFolderId = pair.getSecond();
+            if (msgFolderId == trackedFolderId) {
+                if (trackedFolderId == folderId) {
+                    // Case 1: Message flags changed. Update remote flags.
+                    int flags = tracker.getTrackedFlags();
+                    updateFlags(tracker, SyncUtil.zimbraToImapFlags(flags));
+                } else {
+                    // Case 4: Message moved from another folder. Let this
+                    // case be handled when the originating folder is processed.
+                }
+            } else if (trackedFolderId == folderId) {
+                // Case 3: Message moved to another folder. Delete remote
+                // message and tracker and let the new message be handled
+                // when the destination folder is processed.
+                deletedIds.add(msgId);
+            }
+        } else if (msgFolderId == folderId) {
+            // Case 2: New message has been added to this folder
+            newMsgIds.add(msgId);
+        }
     }
 
     public void finishSync() throws ServiceException, IOException {
-        if (tracker == null) return;
-        appendNewMessages();
+        if (!completed) return;
+        if (newMsgIds != null && !newMsgIds.isEmpty()) {
+            appendNewMessages(newMsgIds);
+        }
         if (syncState != null) {
             ds.putSyncState(localFolder.getId(), syncState);
         }
@@ -230,16 +350,6 @@ class ImapFolderSync {
 
     public LocalFolder getLocalFolder() {
         return localFolder;
-    }
-
-    private SyncState getSyncState() throws ServiceException {
-        SyncState ss = ds.getSyncState(localFolder.getId());
-        if (ss == null) {
-            ss = new SyncState();
-            trackedMsgs = DbImapMessage.getImapMessages(mailbox, ds, tracker);
-            ss.setLastUid(trackedMsgs.getLastUid());
-        }
-        return ss;
     }
 
     private void checkTrackedFolder(ListData ld)
@@ -308,11 +418,9 @@ class ImapFolderSync {
         tracker = ds.createImapFolder(
             localFolder.getId(), localPath, remotePath, uidValidity);
     }
-        
-    private void appendNewMessages() throws ServiceException, IOException {
-        if (newMsgIds == null || newMsgIds.isEmpty()) {
-            return; // No messages to be appended
-        }
+
+    private void appendNewMessages(List<Integer> newMsgIds)
+        throws ServiceException, IOException {
         remoteFolder.info("Appending %d new message(s) to remote IMAP folder",
                           newMsgIds.size());
         try {
@@ -344,7 +452,7 @@ class ImapFolderSync {
             storeImapMessage(uid, id, msg.getFlagBitmask());
         }
     }
-    
+
     private long appendMessage(Message msg)
         throws ServiceException, IOException {
         MimeMessage mm = msg.getMimeMessage(false);
@@ -459,15 +567,16 @@ class ImapFolderSync {
     }
 
     /*
-     * Checks UIDVALIDITY for currently selected folder. If UIDVALIDITY has
+     * Select and check UIDVALIDITY for remote folder. If UIDVALIDITY has
      * changed since the last sync, then append new local messages to the
      * remote folder and empty the local folder so that messages will be
      * fetched again when we synchronize.
      */
-    private boolean checkUidValidity(Mailbox mb)
+    private Mailbox checkUidValidity()
         throws ServiceException, IOException {
+        Mailbox mb = remoteFolder.select();
         if (mb.getUidValidity() == tracker.getUidValidity()) {
-            return true;
+            return mb;
         }
         remoteFolder.info("Resynchronizing folder because UIDVALIDITY has " +
                           "changed from %d to %d", tracker.getUidValidity(),
@@ -490,7 +599,7 @@ class ImapFolderSync {
         tracker.setUidValidity(mb.getUidValidity());
         ds.updateImapFolder(tracker);
         ds.clearSyncState(folderId);
-        return false;
+        return remoteFolder.select();
     }
 
     private void fetchFlags(long lastUid, Set<Integer> msgIds)
@@ -500,18 +609,13 @@ class ImapFolderSync {
         List<Long> deletedUids = fetchFlags(seq, msgIds);
         if (!deletedUids.isEmpty()) {
             // Delete IMAP messages that have been removed locally
-            remoteFolder.deleteMessages(deletedUids);
+            deleteMessages(deletedUids);
             // Remove local message trackers
             for (long uid : deletedUids) {
                 ImapMessage msg = trackedMsgs.getByUid(uid);
                 DbImapMessage.deleteImapMessage(
                     mailbox, tracker.getItemId(), msg.getItemId());
             }
-            // Mark folder to be expunged if no UIDPLUS
-            if (!uidPlus) {
-                expunge = true;
-            }
-            stats.msgsDeletedRemotely += deletedUids.size();
         }
     }
 
@@ -583,7 +687,7 @@ class ImapFolderSync {
             stats.flagsUpdatedLocally++;
         }
     }
-    
+
     private void fetchMessages(long startUid, long endUid)
         throws ServiceException, IOException {
         String end = endUid > 0 ? String.valueOf(endUid) : "*";
@@ -599,14 +703,18 @@ class ImapFolderSync {
             int j = Math.min(i + FETCH_SIZE - 1, count - 1);
             fetchMessages(uids.get(j) + ":" + uids.get(i), deletedUids);
         }
-        if (!deletedUids.isEmpty()) {
-            remoteFolder.deleteMessages(deletedUids);
-            if (!uidPlus) {
-                expunge = true;
-            }
-        }
+        deleteMessages(deletedUids);
     }
-    
+
+    private void deleteMessages(List<Long> uids) throws IOException {
+        if (uids.isEmpty()) return;
+        remoteFolder.deleteMessages(uids);
+        if (!uidPlus) {
+            expunge = true;
+        }
+        stats.msgsDeletedRemotely += uids.size();
+    }
+
     private void fetchMessages(String seq, final List<Long> deletedUids)
         throws ServiceException, IOException {
         final Map<Long, MessageData> flagsByUid =
@@ -643,12 +751,12 @@ class ImapFolderSync {
         if (msg != null && msg.getFolderId() == folderId) {
             storeImapMessage(uid, msg.getId(), zflags);
             stats.msgsAddedLocally++;
-        } else {                                
+        } else {
             // Message was filtered and discarded or moved to another folder.
             // This can only happen for messages fetched from INBOX which is
-            // always sync'd first. Mark remote message for deletion and do
-            // not create a local tracker. If mesage was moved to another
-            // folder we will append to the remote folder when when we sync
+            // always imported first. Mark remote message for deletion and
+            // do not create a local tracker. If message was moved to another
+            // folder we will append it to the remote folder when we sync
             // that folder.
             deletedUids.add(uid);
         }
@@ -660,7 +768,7 @@ class ImapFolderSync {
             imapSync.offlineAddMessage(pm, folderId, flags) :
             mailbox.addMessage(null, pm, folderId, true, flags, null);
     }
-    
+
     private static ImapData getBody(MessageData md) throws MailException {
         Body[] sections = md.getBodySections();
         if (sections == null || sections.length != 1) {
@@ -690,6 +798,10 @@ class ImapFolderSync {
         }
     }
 
+    /*
+     * Merges local flags, tracked flags, and remote flag and returns new
+     * local flags bitmask.
+     */
     private static int mergeFlags(int localFlags, int trackedFlags,
                                   int remoteFlags) {
         return trackedFlags & (localFlags & remoteFlags) |

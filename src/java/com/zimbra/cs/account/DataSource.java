@@ -287,9 +287,8 @@ public class DataSource extends NamedEntry implements Comparable {
             getMailbox(), this, itemId, localPath, remotePath, uidValidity);
     }
 
-    public boolean hasSyncState(int folderId) {
-        return getSyncState(folderId) != null;
-    }
+    // Overridden by OfflineDataSource
+    public boolean hasSyncState(int folderId) { return false; }
     
     // Overridden by OfflineDataSource
     public SyncState getSyncState(int folderId) { return null; }
