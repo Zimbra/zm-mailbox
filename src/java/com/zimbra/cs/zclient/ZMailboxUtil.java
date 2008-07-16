@@ -1374,7 +1374,7 @@ public class ZMailboxUtil implements DebugListener {
             
             for (ZGrant g : f.getGrants()) {
                 GranteeType gt = g.getGranteeType();
-                String dn = (gt == GranteeType.all || gt == GranteeType.pub) ? "" : (gt == GranteeType.guest ? g.getGranteeId() : g.getGranteeName()); 
+                String dn = (gt == GranteeType.all || gt == GranteeType.pub) ? "" : (gt == GranteeType.guest ? g.getGranteeId() : (g.getGranteeName() != null ? g.getGranteeName() : g.getGranteeId())); 
                 stdout.format(format, g.getPermissions(), getGranteeDisplay(g.getGranteeType()), dn);
             }
         }
@@ -1541,6 +1541,25 @@ public class ZMailboxUtil implements DebugListener {
     
     private void doRevokePermission(String[] args) throws ServiceException {
         ZAce ace = getAceFromArgs(args);
+        
+        ZAce.GranteeType granteeType= ace.getGranteeType();
+        if (granteeType == ZAce.GranteeType.usr || granteeType == ZAce.GranteeType.grp) {
+            // convert grantee to grantee id if it is a name
+            String zid = null;
+            String granteeName = ace.getGranteeName();
+            String[] rights = new String[] {ace.getRight()};
+            for (ZAce g : mMbox.getPermission(rights)) {
+                if (granteeName.equalsIgnoreCase(g.getGranteeName()) ||
+                    granteeName.equalsIgnoreCase(g.getGranteeId())) {
+                    zid = g.getGranteeId();
+                    break;
+                }
+            }
+            if (zid == null)
+                throw ZClientException.CLIENT_ERROR("unable to resolve zimbra id for: "+granteeName, null);
+            ace.setGranteeId(zid);
+        }
+        
         List<ZAce> revoked = mMbox.revokePermission(ace);
         if (revoked.size() == 0)
             stdout.println("  revoked 0 permission");
