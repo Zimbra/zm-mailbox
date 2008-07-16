@@ -24,6 +24,7 @@ import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.Pair;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.datasource.ImapFolder;
 import com.zimbra.cs.datasource.ImapMessage;
@@ -122,6 +123,7 @@ public class DbImapMessage {
             DbPool.quietClose(conn);
         }
     }
+
     /**
      * Deletes IMAP message tracker data.
      */
@@ -209,6 +211,42 @@ public class DbImapMessage {
         } finally {
             if (rs != null) DbPool.closeResults(rs);
             if (stmt != null) DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+    }
+
+    public static Pair<ImapMessage, Integer> getImapMessage(Mailbox mbox, int itemId)
+        throws ServiceException {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            conn = DbPool.getConnection();
+            stmt = conn.prepareStatement(
+                "SELECT imap.uid, imap.flags as tflags, imap.imap_folder_id, mi.unread, mi.flags " +
+                "FROM " + getTableName(mbox) + " imap " +
+                " LEFT OUTER JOIN " + DbMailItem.getMailItemTableName(mbox) + " mi " +
+                " ON imap.mailbox_id = mi.mailbox_id AND imap.item_id = mi.id " +
+                "WHERE imap.mailbox_id = ? AND imap.item_id = ?");
+            stmt.setInt(1, mbox.getId());
+            stmt.setInt(2, itemId);
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                long uid = rs.getLong("uid");
+                int flags = rs.getInt("flags");
+                int unread = rs.getInt("unread");
+                int tflags = rs.getInt("tflags");
+                int folderId = rs.getInt("imap_folder_id");
+                flags = unread > 0 ? (flags | Flag.BITMASK_UNREAD) : (flags & ~Flag.BITMASK_UNREAD);
+                return new Pair<ImapMessage, Integer>
+                    (new ImapMessage(uid, itemId, flags, tflags), folderId);
+            }
+            return null;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Unable to get IMAP message data", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
             DbPool.quietClose(conn);
         }
     }

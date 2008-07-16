@@ -98,15 +98,8 @@ final class LocalFolder {
     }
     
     public Set<Integer> getMessageIds() throws ServiceException {
-        Set<Integer> localIds = new HashSet<Integer>();
-        int fid = folder.getId();
-        for (int id : mbox.listItemIds(null, MailItem.TYPE_MESSAGE, fid)) {
-            localIds.add(id);
-        }
-        for (int id : mbox.listItemIds(null, MailItem.TYPE_CHAT, fid)) {
-            localIds.add(id);
-        }
-        return localIds;
+        return new HashSet<Integer>(
+            mbox.listItemIds(null, MailItem.TYPE_MESSAGE, folder.getId()));
     }
 
     public List<Integer> getNewMessageIds() throws ServiceException {
