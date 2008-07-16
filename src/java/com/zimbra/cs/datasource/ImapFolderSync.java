@@ -53,6 +53,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.LinkedList;
 
 class ImapFolderSync {
     private final ImapSync imapSync;
@@ -605,7 +606,7 @@ class ImapFolderSync {
     private void fetchFlags(long lastUid, Set<Integer> msgIds)
         throws ServiceException, IOException {
         String seq = 1 + ":" + lastUid;
-        remoteFolder.debug("Fetching flags changes for UID sequence %s", seq);
+        remoteFolder.debug("Fetching flags for UID sequence %s", seq);
         List<Long> deletedUids = fetchFlags(seq, msgIds);
         if (!deletedUids.isEmpty()) {
             // Delete IMAP messages that have been removed locally
@@ -691,28 +692,40 @@ class ImapFolderSync {
     private void fetchMessages(long startUid, long endUid)
         throws ServiceException, IOException {
         String end = endUid > 0 ? String.valueOf(endUid) : "*";
-        List<Long> uids = remoteFolder.getUids(startUid + ":" + end);
-        int count = uids.size();
-        if (count == 0) {
-            remoteFolder.debug("No new IMAP messages to fetch");
-            return;
+        LinkedList<Long> uids = new LinkedList<Long>(
+            remoteFolder.getUids(startUid + ":" + end));
+        if (uids.size() > 0) {
+            List<Long> deletedUids = new ArrayList<Long>();
+            fetchMessages(uids, deletedUids);
+            deleteMessages(deletedUids);
         }
-        List<Long> deletedUids = new ArrayList<Long>();
-        remoteFolder.debug("Fetching %d new IMAP message(s)", count);
-        for (int i = 0; i < count; i += FETCH_SIZE) {
-            int j = Math.min(i + FETCH_SIZE - 1, count - 1);
-            fetchMessages(uids.get(j) + ":" + uids.get(i), deletedUids);
-        }
-        deleteMessages(deletedUids);
     }
 
-    private void deleteMessages(List<Long> uids) throws IOException {
-        if (uids.isEmpty()) return;
-        remoteFolder.deleteMessages(uids);
-        if (!uidPlus) {
-            expunge = true;
+    private void fetchMessages(LinkedList<Long> uids, List<Long> deletedUids)
+        throws ServiceException, IOException {
+        remoteFolder.debug("Fetching %d new IMAP message(s)", uids.size());
+        long maxUid = uids.getFirst();
+        while (!uids.isEmpty()) {
+            fetchMessages(nextFetchSeq(uids), deletedUids);
+            // Include any new messages that have arrived while fetching...
+            List<Long> newUids = remoteFolder.getUids((maxUid + 1) + ":*");
+            if (!newUids.isEmpty() && newUids.get(0) > maxUid) {
+                // If mailbox is not empty then we will always get the UID
+                // of the last message even if there are no new messages, so
+                // we must be sure to check for that case.
+                uids.addAll(0, newUids);
+                maxUid = newUids.get(0);
+            }
         }
-        stats.msgsDeletedRemotely += uids.size();
+    }
+
+    private String nextFetchSeq(LinkedList<Long> uids) {
+        long end = uids.remove();
+        long start = end;
+        for (int count = FETCH_SIZE; !uids.isEmpty() && --count > 0; ) {
+            start = uids.remove();
+        }
+        return start + ":" + end;
     }
 
     private void fetchMessages(String seq, final List<Long> deletedUids)
@@ -798,6 +811,15 @@ class ImapFolderSync {
         }
     }
 
+    private void deleteMessages(List<Long> uids) throws IOException {
+        if (uids.isEmpty()) return;
+        remoteFolder.deleteMessages(uids);
+        if (!uidPlus) {
+            expunge = true;
+        }
+        stats.msgsDeletedRemotely += uids.size();
+    }
+        
     /*
      * Merges local flags, tracked flags, and remote flag and returns new
      * local flags bitmask.
