@@ -31,7 +31,6 @@ import com.zimbra.cs.mailbox.Mailbox;
  */
 class MsgQueryResults extends ZimbraQueryResultsImpl 
 {
-//    QueryOperation mResults;
     ZimbraQueryResults mResults;
 
     MsgQueryResults(ZimbraQueryResults topLevelQueryOperation, byte[] types, SortBy searchOrder, Mailbox.SearchResultMode mode) {
@@ -41,7 +40,18 @@ class MsgQueryResults extends ZimbraQueryResultsImpl
 
     ZimbraHit mNextHit = null;
     
-    HashMap<Integer, MessageHit> mSeenMsgs = new HashMap<Integer, MessageHit>();
+    
+    /**
+     * Cache of Messages we've seen this iteration -- used so that in situations where 
+     * we have multiple MessagePartHits we still only return a single Message.
+     * 
+     * Size is fairly small b/c the MessagePartHits are returned in sort-order and 
+     * should all show up near the same time.
+     * 
+     * Cannot use the ZimbraQueryResultsImpl.mMessageHits object b/c we need our list
+     * to be reset with the iterator.
+     */
+    HashMap<Integer, MessageHit> mSeenMsgs = new LRUHashMap<Integer, MessageHit>(256);
     
     /**
      * Gets the next hit from the QueryOp.  

@@ -41,6 +41,22 @@ import org.apache.lucene.document.*;
  */
 abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
 {
+    static final class LRUHashMap<T, U> extends LinkedHashMap<T, U> {
+        private final int mMaxSize;
+        LRUHashMap(int maxSize) {
+            super(maxSize);
+            mMaxSize = maxSize;
+        }
+        LRUHashMap(int maxSize, int tableSize) {
+            super(tableSize);
+            mMaxSize = maxSize;
+        }
+        
+        protected boolean removeEldestEntry(Map.Entry eldest) {  
+            return size() > mMaxSize;
+          }          
+    }
+    
     /////////////////////////
     //
     // These come from the ZimbraQueryResults interface:
@@ -56,6 +72,9 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
     public boolean hasNext() throws ServiceException {
         return (peekNext() != null);
     }
+    
+    private static final int MAX_LRU_ENTRIES = 2048;
+    private static final int INITIAL_TABLE_SIZE = 100; 
 
     private HashMap<Integer, ConversationHit> mConversationHits;
     private HashMap<Integer, MessageHit> mMessageHits;
@@ -63,6 +82,10 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
     private HashMap<Integer, ContactHit> mContactHits;
     private HashMap<Integer, NoteHit>  mNoteHits;
     private HashMap<Integer, CalendarItemHit> mCalItemHits;
+    
+    protected MessageHit getCachedMessageHit(int messageId) {
+        return null;
+    }
 
     ZimbraQueryResultsImpl(byte[] types, SortBy searchOrder, Mailbox.SearchResultMode mode) { 
         mTypes = types;
@@ -70,12 +93,12 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
 
         mSearchOrder = searchOrder;
 
-        mConversationHits = new LinkedHashMap<Integer, ConversationHit>();
-        mMessageHits = new LinkedHashMap<Integer, MessageHit>();
-        mPartHits = new LinkedHashMap<String, MessagePartHit>();
-        mContactHits = new LinkedHashMap<Integer, ContactHit>();
-        mNoteHits = new LinkedHashMap<Integer, NoteHit>();
-        mCalItemHits = new LinkedHashMap<Integer, CalendarItemHit>();
+        mConversationHits = new LRUHashMap<Integer, ConversationHit>(MAX_LRU_ENTRIES, INITIAL_TABLE_SIZE);
+        mMessageHits      = new LRUHashMap<Integer, MessageHit>(MAX_LRU_ENTRIES, INITIAL_TABLE_SIZE);
+        mPartHits         = new LRUHashMap<String, MessagePartHit>(MAX_LRU_ENTRIES, INITIAL_TABLE_SIZE);
+        mContactHits      = new LRUHashMap<Integer, ContactHit>(MAX_LRU_ENTRIES, INITIAL_TABLE_SIZE);
+        mNoteHits         = new LRUHashMap<Integer, NoteHit>(MAX_LRU_ENTRIES, INITIAL_TABLE_SIZE);
+        mCalItemHits      = new LRUHashMap<Integer, CalendarItemHit>(MAX_LRU_ENTRIES, INITIAL_TABLE_SIZE);
     };
 
     public ZimbraHit getFirstHit() throws ServiceException {
