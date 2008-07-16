@@ -1541,10 +1541,9 @@ public class DbMailItem {
                     stmt.close();
                     stmt = conn.prepareStatement("UPDATE " + table +
                             " SET parent_id = folder_id" +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
+                            " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
                     int pos = 1;
-                    if (!DebugConfig.disableMailboxGroups)
-                        stmt.setInt(pos++, mbox.getId());
+                    stmt.setInt(pos++, mbox.getId());
                     stmt.setInt(pos++, data.id);
                     stmt.executeUpdate();
 
