@@ -365,6 +365,54 @@ public class LC {
     
     public static final KnownKey purge_initial_sleep_time;
     
+    public static final KnownKey xmpp_server_tls_enabled;
+    public static final KnownKey xmpp_server_dialback_enabled;
+    public static final KnownKey xmpp_server_session_allowmultiple;
+    public static final KnownKey xmpp_server_session_idle;
+    public static final KnownKey xmpp_server_session_idle_check_time;
+    public static final KnownKey xmpp_server_processing_core_threads;
+    public static final KnownKey xmpp_server_processing_max_threads;
+    public static final KnownKey xmpp_server_processing_queue;
+    public static final KnownKey xmpp_server_outgoing_max_threads;
+    public static final KnownKey xmpp_server_outgoing_queue;
+    public static final KnownKey xmpp_server_read_timeout;
+    public static final KnownKey xmpp_server_socket_remoteport;
+    public static final KnownKey xmpp_server_compression_policy;
+    
+    public static final KnownKey xmpp_server_certificate_verify; 
+    public static final KnownKey xmpp_server_certificate_verify_chain; 
+    public static final KnownKey xmpp_server_certificate_verify_root; 
+    public static final KnownKey xmpp_server_certificate_verify_validity; 
+    public static final KnownKey xmpp_server_certificate_accept_selfsigned;
+    
+    public static final KnownKey xmpp_muc_enabled;
+    public static final KnownKey xmpp_muc_service_name;
+    public static final KnownKey xmpp_muc_discover_locked;
+    public static final KnownKey xmpp_muc_restrict_room_creation;
+    public static final KnownKey xmpp_muc_room_create_jid_list;
+    public static final KnownKey xmpp_muc_unload_empty_hours;
+    public static final KnownKey xmpp_muc_sysadmin_jid_list;
+    public static final KnownKey xmpp_muc_idle_user_sweep_ms;
+    public static final KnownKey xmpp_muc_idle_user_timeout_ms;
+    public static final KnownKey xmpp_muc_log_sweep_time_ms;
+    public static final KnownKey xmpp_muc_log_batch_size;
+    public static final KnownKey xmpp_muc_default_history_type;
+    public static final KnownKey xmpp_muc_history_number;
+    
+    public static final KnownKey xmpp_private_storage_enabled;
+    
+    public static final KnownKey xmpp_client_compression_policy;
+    public static final KnownKey xmpp_client_write_timeout;
+    public static final KnownKey xmpp_session_conflict_limit;
+    public static final KnownKey xmpp_client_idle_timeout;
+    
+    
+    public static final KnownKey xmpp_offline_type;
+    public static final KnownKey xmpp_offline_quota;
+    
+    public static final KnownKey xmpp_dns_override;
+
+    
     static {
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  " +
                 "Changing this setting does not immediately reflect in MySQL server.  " +
@@ -622,7 +670,7 @@ public class LC {
         ldap_amavis_password = new KnownKey("ldap_amavis_password");
         ldap_amavis_password.setDefault("zmamavis");
 
-	ldap_starttls_supported = new KnownKey("ldap_starttls_supported"); 
+        ldap_starttls_supported = new KnownKey("ldap_starttls_supported"); 
         ldap_starttls_supported.setDefault("0");
 
         ldap_require_tls = new KnownKey("ldap_require_tls");
@@ -1046,7 +1094,62 @@ public class LC {
         purge_initial_sleep_time = new KnownKey(
             "purge_initial_sleep_ms", Long.toString(30 * Constants.MILLIS_PER_MINUTE),
             "Amount of time (in milliseconds) that the purge thread sleeps on startup before doing work.");
+        
+        xmpp_server_tls_enabled = new KnownKey("xmpp_server_tls_enabled","true", "Allow TLS for S2S connections"); 
+        xmpp_server_dialback_enabled = new KnownKey("xmpp_server_dialback_enabled", "true", "Allow S2S Server Dialback Protocol");
+        xmpp_server_session_allowmultiple = new KnownKey("xmpp_server_session_allowmultiple","true", "Allow multiple simultaneous S2S connections from a given host");
+        xmpp_server_session_idle = new KnownKey("xmpp_server_session_idle",Integer.toString(20*60*1000), "Timeout for idle S2S connections"); 
+        xmpp_server_session_idle_check_time = new KnownKey("xmpp_server_session_idle_check_time",Integer.toString(5*60*1000), "How frequently we check for idle server connections"); 
+        xmpp_server_processing_core_threads = new KnownKey("xmpp_server_processing_core_threads","2", "Core S2S processing threads"); 
+        xmpp_server_processing_max_threads = new KnownKey("xmpp_server_processing_max_threads", "50", "Max S2S processing threads"); 
+        xmpp_server_processing_queue = new KnownKey("xmpp_server_processing_queue","50", "Length of S2S processing queue"); 
+        xmpp_server_outgoing_max_threads = new KnownKey("xmpp_server_outgoing_max_threads", "20", "Max threads in pool for outgoing S2S"); 
+        xmpp_server_outgoing_queue = new KnownKey("xmpp_server_outgoing_queue", "50", "Queue length for outgoing S2S queue"); 
+        xmpp_server_read_timeout = new KnownKey("xmpp_server_read_timeout", Integer.toString(3*60*1000), "Read timeout for S2S (how long will we wait for the remote server to answer?)"); 
+        xmpp_server_socket_remoteport = new KnownKey("xmpp_server_socket_remoteport","5269", "Remote port to connect to for outgoing S2S"); 
+        xmpp_server_compression_policy = new KnownKey("xmpp_server_compression_policy", "disabled", "S2S compression optional|disabled"); 
 
+        xmpp_server_certificate_verify = new KnownKey("xmpp_server_certificate_verify", "false", 
+        "XMPP server-to-server: master enable/disable SSL certificate checking (currently BROKEN, do not enable)");
+        
+        xmpp_server_certificate_verify_chain = new KnownKey("xmpp_server_certificate_verify_chain", "true",
+        "XMPP server-to-server: enable SSL certificate checking for entire chain of certificates (only if certificate_verify is true)");
+        
+        xmpp_server_certificate_verify_root = new KnownKey("xmpp_server_certificate_verify_root", "true",
+        "XMPP server-to-server: enable SSL certificate checking for root certificate (only if certificate_verify is true)");                                                    
+                                                           
+        xmpp_server_certificate_verify_validity = new KnownKey("xmpp_server_certificate_verify_validity", "true",
+        "XMPP server-to-server: check to see if every certificate is valid at the current time (only if certificate_verify is true");                                                      
+                                                               
+        xmpp_server_certificate_accept_selfsigned = new KnownKey("xmpp_server_certificate_accept_selfsigned", "true",
+        "XMPP server-to-server: accept self-signed certificates from remote servers");
+
+        xmpp_muc_enabled = new KnownKey("xmpp_muc_enabled", "true", "Enable the XMPP Multi-User-Chat service?");
+        xmpp_muc_service_name = new KnownKey("xmpp_muc_service_name", "conference", "XMPP name for the Multi-User-Chat service");
+        xmpp_muc_discover_locked = new KnownKey("xmpp_muc_discover_locked", "true", "Should MUC Disco requests return locked rooms?"); 
+        xmpp_muc_restrict_room_creation = new KnownKey("xmpp_muc_restrict_room_creation", "Should MUC room creation be restricted to only those JIDs listed in xmpp_muc_room_create_jid_list?");
+        xmpp_muc_room_create_jid_list = new KnownKey("xmpp_muc_room_create_jid_list", "", "Comma-Separated List of JIDs that are allowed to create MUC rooms");  
+        xmpp_muc_unload_empty_hours = new KnownKey("xmpp_muc_unload_empty_hours", "5", "Number of hours MUC will remain empty before it is unloaded by the system.  Persistent MUCs are not deleted, just unloaded"); 
+        xmpp_muc_sysadmin_jid_list = new KnownKey("xmpp_muc_sysadmin_jid_list", "", " Temporary: List of JIDs that have sysadmin access for IM Multi-User-Chat"); // FIXME tim will remove this soon
+        xmpp_muc_idle_user_sweep_ms = new KnownKey("xmpp_muc_idle_user_sweep_ms", Long.toString(5 * Constants.MILLIS_PER_MINUTE), "XMPP Multi-User-Chat: How frequently to sweep MUC for idle users");
+        xmpp_muc_idle_user_timeout_ms = new KnownKey("xmpp_muc_idle_user_timeout_ms", "0", "XMPP Multi-User-Chat: The number of milliseconds a user must be idle before he/she gets kicked from all the rooms.");
+        xmpp_muc_log_sweep_time_ms = new KnownKey("xmpp_muc_log_sweep_time_ms", Long.toString(5 * Constants.MILLIS_PER_MINUTE), "XMPP Multi-User Chat: How frequently to log messages from active rooms (if the room is configured to log)");
+        xmpp_muc_log_batch_size = new KnownKey("xmpp_muc_log_batch_size", "50", "XMPP Multi-User-Chat: The number of messages to log on each run of the logging process.");
+        xmpp_muc_default_history_type = new KnownKey("xmpp_muc_default_history_type", "number", "XMPP Multi-User-Chat: Default log setting for MUC rooms: none|all|number");
+        xmpp_muc_history_number = new KnownKey("xmpp_muc_history_number", "25", "XMPP Multi-User-Chat: Default number of chat messages to save (if history type is number)");
+
+        xmpp_private_storage_enabled = new KnownKey("xmpp_private_storage_enabled", "true", "XMPP: Support private storage (XEP-0049)");
+        
+        xmpp_client_compression_policy = new KnownKey("xmpp_client_compression_policy", "optional", "XMPP C2S compression optional|disabled");
+        xmpp_client_write_timeout = new KnownKey("xmpp_client_write_timeout", Long.toString(60 * Constants.MILLIS_PER_SECOND), "Timeout for client socket blocked on a write");
+        xmpp_session_conflict_limit = new KnownKey("xmpp_session_conflict_limit", "0", "Conflict Limit for XMPP C2S sessions");
+        xmpp_client_idle_timeout = new KnownKey("xmpp_client_idle_timeout", Integer.toString(10 * 60 * 1000), "XMPP Client idle timeout");
+        
+        xmpp_offline_type = new KnownKey("xmpp_offline_type", "store_and_drop", "What to do with messages received by offline users: drop|bounce|store|store_and_bounce|store_and_drop");
+        xmpp_offline_quota = new KnownKey("xmpp_offline_quota", Integer.toString(100 * 1024), "Maximum number of bytes of offline messages stored (if type is store_and_bounce or store_and_drop)");
+        
+        xmpp_dns_override = new KnownKey("xmpp_dns_override", "", "Override DNS for XMPP server, comma-separated list of entries of the form \"{domain:hostname:port}\"");         
+        
 		// NOTE: When adding a new KnownKey, you do not need to call
 		//       setDoc. The documentation string will come from the
 		//       ZsMsg properties file, using the same key as the
