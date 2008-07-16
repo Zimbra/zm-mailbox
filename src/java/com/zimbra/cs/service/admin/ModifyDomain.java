@@ -23,6 +23,7 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
@@ -43,7 +44,7 @@ public class ModifyDomain extends AdminDocumentHandler {
     
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 
 	    String id = request.getAttribute(AdminConstants.E_ID);
@@ -53,11 +54,21 @@ public class ModifyDomain extends AdminDocumentHandler {
         if (domain == null)
             throw AccountServiceException.NO_SUCH_DOMAIN(id);
         
-        if (isDomainAdminOnly(lc) && !canAccessDomain(lc, domain)) 
+        if (isDomainAdminOnly(zsc) && !canAccessDomain(zsc, domain)) 
             throw ServiceException.PERM_DENIED("can not access domain"); 
         
         if (domain.isShutdown())
             throw ServiceException.PERM_DENIED("can not access domain, domain is in " + domain.getDomainStatus() + " status");
+        
+        if (isDomainAdminOnly(zsc)) {
+            for (String attrName : attrs.keySet()) {
+                if (attrName.charAt(0) == '+' || attrName.charAt(0) == '-')
+                    attrName = attrName.substring(1);
+
+                if (!AttributeManager.getInstance().isDomainAdminModifiable(attrName))
+                    throw ServiceException.PERM_DENIED("can not modify attr: "+attrName);
+            }
+        }
         
         // pass in true to checkImmutable
         prov.modifyAttrs(domain, attrs, true);
@@ -65,7 +76,7 @@ public class ModifyDomain extends AdminDocumentHandler {
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "ModifyDomain","name", domain.getName()}, attrs));	    
 
-        Element response = lc.createElement(AdminConstants.MODIFY_DOMAIN_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.MODIFY_DOMAIN_RESPONSE);
 	    GetDomain.doDomain(response, domain);
 	    return response;
 	}
