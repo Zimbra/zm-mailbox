@@ -126,6 +126,10 @@ public class ZAce {
         return mGranteeId;                                                                          
     }
     
+    public void setGranteeId(String granteeId) {
+        mGranteeId = granteeId;
+    }
+    
     /**
      *  optional argument.  password when {grantee-type} is "guest"
      */
