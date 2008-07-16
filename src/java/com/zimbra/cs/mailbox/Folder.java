@@ -795,11 +795,11 @@ public class Folder extends MailItem {
         markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
         tagChanged(tag, newValue);
 
+        if (ZimbraLog.mailop.isDebugEnabled())
+            ZimbraLog.mailop.debug("Setting %s for %s.", getMailopContext(tag), getMailopContext(this));
+
         List<Integer> ids = new ArrayList<Integer>();
         ids.add(mId);
-        if (ZimbraLog.mailop.isDebugEnabled()) {
-            ZimbraLog.mailop.debug("Setting %s for %s.", getMailopContext(tag), getMailopContext(this));
-        }
         DbMailItem.alterTag(tag, ids, newValue);
 
         // clearing the "no inherit" flag sets inherit ON and thus must clear the folder's ACL
@@ -858,12 +858,13 @@ public class Folder extends MailItem {
         mParent.removeChild(this);
         target.addChild(this);
 
+        ZimbraLog.mailop.info("moving " + getMailopContext(this) + " to " + getMailopContext(target));
+
         // and update the folder's data (in memory and DB)
-        ZimbraLog.mailop.info("Moving %s to new parent %s.", getMailopContext(this), getMailopContext(target));
-        DbMailItem.setFolder(this, target);
         mData.folderId = target.getId();
         mData.parentId = target.getId();
         mData.metadataChanged(mMailbox);
+        DbMailItem.setFolder(this, target);
         
         RuleManager.getInstance().folderRenamed(getAccount(), originalPath, getPath());
 
@@ -1079,11 +1080,11 @@ public class Folder extends MailItem {
      * Returns true if specified folder is a descendant of this folder.
      * @param folder the folder whose ancestry is to be checked
      * @return true if the folder is a descendant, false otherwise
-     * @throws ServiceException if an error ocurred
+     * @throws ServiceException if an error occurred
      */
     public boolean isDescendant(Folder folder) throws ServiceException {
         while (true) {
-            int parentId = folder.getParentId();
+            int parentId = folder.getFolderId();
             if (parentId == getId())
                 return true;
             if (parentId == Mailbox.ID_FOLDER_ROOT)

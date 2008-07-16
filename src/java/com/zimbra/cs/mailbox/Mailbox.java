@@ -1484,7 +1484,7 @@ public class Mailbox {
 
         if (mFolderCache != null && mTagCache != null && !initial)
             return;
-        ZimbraLog.cache.info("Initializing folder and tag caches for mailbox " + getId());
+        ZimbraLog.cache.info("initializing folder and tag caches for mailbox " + getId());
 
         try {
             Map<MailItem.UnderlyingData, Long> folderData = new HashMap<MailItem.UnderlyingData, Long>();
@@ -1514,7 +1514,7 @@ public class Mailbox {
             }
             // establish the folder hierarchy
             for (Folder folder : mFolderCache.values()) {
-                Folder parent = mFolderCache.get(folder.getParentId());
+                Folder parent = mFolderCache.get(folder.getFolderId());
                 // FIXME: side effect of this is that parent is marked as dirty...
                 if (parent != null)
                     parent.addChild(folder);
@@ -2085,11 +2085,11 @@ public class Mailbox {
                 if (ids[i] <= -FIRST_USER_ID) {
                     // special-case virtual conversations
                     MailItem item = getCachedItem(-ids[i]);
-                    if (!(item instanceof Message))
+                    if (!(item instanceof Message)) {
                         throw MailItem.noSuchItem(ids[i], type);
-                    else if (item.getParentId() == ids[i])
+                    } else if (item.getParentId() == ids[i]) {
                         items[i] = new VirtualConversation(this, (Message) item);
-                    else {
+                    } else {
                         items[i] = getCachedItem(item.getParentId());
                         if (items[i] == null)
                             uncached.add(item.getParentId());
@@ -2335,7 +2335,6 @@ public class Mailbox {
             beginTransaction("getItemList", octxt);
 
             Folder folder = folderId == -1 ? null : getFolderById(folderId);
-
             if (folder == null) {
                 if (!hasFullAccess())
                     throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
@@ -2343,6 +2342,7 @@ public class Mailbox {
                 if (!folder.canAccess(ACL.RIGHT_READ, getAuthenticatedAccount(), isUsingAdminPrivileges()))
                     throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
             }
+
             if (type == MailItem.TYPE_FLAG) {
                 if (folderId != -1 && folderId != ID_FOLDER_TAGS)
                     return Collections.emptyList();
@@ -2351,13 +2351,11 @@ public class Mailbox {
                     if (flag != null)
                         result.add(flag);
                 success = true;
-            } else if (type == MailItem.TYPE_FOLDER ||
-                type == MailItem.TYPE_SEARCHFOLDER ||
-                type == MailItem.TYPE_MOUNTPOINT) {
+            } else if (type == MailItem.TYPE_FOLDER || type == MailItem.TYPE_SEARCHFOLDER || type == MailItem.TYPE_MOUNTPOINT) {
                 result = new ArrayList<MailItem>(mFolderCache.size());
                 for (Folder subfolder : mFolderCache.values()) {
                     if (subfolder.getType() == type)
-                        if (folder == null || subfolder.getParentId() == folderId)
+                        if (folder == null || subfolder.getFolderId() == folderId)
                             result.add(subfolder);
                 }
                 success = true;

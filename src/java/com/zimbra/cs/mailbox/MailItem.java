@@ -1860,6 +1860,57 @@ public abstract class MailItem implements Comparable<MailItem> {
         return copy;
     }
 
+    /** The regexp defining printable characters not permitted in item
+     *  names.  These are: ':', '/', '"', '\t', '\r', and '\n'. */
+    private static final String INVALID_NAME_CHARACTERS = "[:/\"\t\r\n]";
+
+    private static final String INVALID_NAME_PATTERN = ".*" + INVALID_NAME_CHARACTERS + ".*";
+
+    /** The maximum length for an item name.  This is not the maximum length
+     *  of a <u>path</u>, just the maximum length of a single item or folder's
+     *  name. */
+    public static final int MAX_NAME_LENGTH = 128;
+
+    /** Validates a proposed item name.  Names must be less than
+     *  {@link #MAX_NAME_LENGTH} characters long, must contain non-whitespace
+     *  characters, and may not contain any characters banned in XML or
+     *  contained in {@link #INVALID_NAME_CHARACTERS} (':', '/', '"', '\t',
+     *  '\r', '\n').
+     * 
+     * @param name  The proposed item name.
+     * @throws ServiceException  The following error codes are possible:<ul>
+     *    <li><tt>mail.INVALID_NAME</tt> - if the name is not acceptable</ul>
+     * @return the passed-in name with trailing whitespace stripped.
+     * @see StringUtil#stripControlCharacters(String) */
+    static String validateItemName(String name) throws ServiceException {
+        // reject invalid characters in the name
+        if (name == null || name != StringUtil.stripControlCharacters(name) || name.matches(INVALID_NAME_PATTERN))
+            throw MailServiceException.INVALID_NAME(name);
+        // strip trailing whitespace and validate length of resulting name
+        String trimmed = StringUtil.trimTrailingSpaces(name);
+        if (trimmed.length() == 0 || trimmed.length() > MAX_NAME_LENGTH)
+            throw MailServiceException.INVALID_NAME(name);
+        return trimmed;
+    }
+
+    public static String normalizeItemName(String name) {
+        try {
+            return validateItemName(name);
+        } catch (ServiceException e) {
+            name = StringUtil.stripControlCharacters(name);
+            if (name == null)
+                name = "";
+            if (name.length() > MailItem.MAX_NAME_LENGTH)
+                name = name.substring(0, MailItem.MAX_NAME_LENGTH);
+            if (name.matches(INVALID_NAME_PATTERN))
+                name = name.replaceAll(INVALID_NAME_CHARACTERS, "");
+            name = StringUtil.trimTrailingSpaces(name);
+            if (name.trim().equals(""))
+                name = "item" + System.currentTimeMillis();
+            return name;
+        }
+    }
+
     /** Renames the item in place.  Altering an item's name's case (e.g.
      *  from <tt>foo</tt> to <tt>FOO</tt>) is allowed.
      * 
@@ -1929,15 +1980,17 @@ public abstract class MailItem implements Comparable<MailItem> {
             MailboxBlob oldblob = getBlob();
             addRevision(false);
 
+            if (ZimbraLog.mailop.isDebugEnabled())
+                ZimbraLog.mailop.debug("renaming " + getMailopContext(this) + " to " + name);
+
+            // XXX: note that we don't update mData.folderId here, as we need the subsequent
+            //   move() to execute (it does several things that this code does not) 
             markItemModified(Change.MODIFIED_NAME);
             mData.name    = name;
             mData.subject = name;
             mData.date    = mMailbox.getOperationTimestamp();
             mData.contentChanged(mMailbox);
             saveName(target.getId());
-
-            if (ZimbraLog.mailop.isDebugEnabled())
-                ZimbraLog.mailop.debug("Renaming %s to %s", getMailopContext(this), name);
 
             if (oldblob != null) {
                 try {
@@ -1950,57 +2003,6 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         if (moved)
             move(target);
-    }
-
-    /** The regexp defining printable characters not permitted in item
-     *  names.  These are: ':', '/', '"', '\t', '\r', and '\n'. */
-    private static final String INVALID_NAME_CHARACTERS = "[:/\"\t\r\n]";
-
-    private static final String INVALID_NAME_PATTERN = ".*" + INVALID_NAME_CHARACTERS + ".*";
-
-    /** The maximum length for an item name.  This is not the maximum length
-     *  of a <u>path</u>, just the maximum length of a single item or folder's
-     *  name. */
-    public static final int MAX_NAME_LENGTH = 128;
-
-    /** Validates a proposed item name.  Names must be less than
-     *  {@link #MAX_NAME_LENGTH} characters long, must contain non-whitespace
-     *  characters, and may not contain any characters banned in XML or
-     *  contained in {@link #INVALID_NAME_CHARACTERS} (':', '/', '"', '\t',
-     *  '\r', '\n').
-     * 
-     * @param name  The proposed item name.
-     * @throws ServiceException  The following error codes are possible:<ul>
-     *    <li><tt>mail.INVALID_NAME</tt> - if the name is not acceptable</ul>
-     * @return the passed-in name with trailing whitespace stripped.
-     * @see StringUtil#stripControlCharacters(String) */
-    static String validateItemName(String name) throws ServiceException {
-        // reject invalid characters in the name
-        if (name == null || name != StringUtil.stripControlCharacters(name) || name.matches(INVALID_NAME_PATTERN))
-            throw MailServiceException.INVALID_NAME(name);
-        // strip trailing whitespace and validate length of resulting name
-        String trimmed = StringUtil.trimTrailingSpaces(name);
-        if (trimmed.length() == 0 || trimmed.length() > MAX_NAME_LENGTH)
-            throw MailServiceException.INVALID_NAME(name);
-        return trimmed;
-    }
-
-    public static String normalizeItemName(String name) {
-        try {
-            return validateItemName(name);
-        } catch (ServiceException e) {
-            name = StringUtil.stripControlCharacters(name);
-            if (name == null)
-                name = "";
-            if (name.length() > MailItem.MAX_NAME_LENGTH)
-                name = name.substring(0, MailItem.MAX_NAME_LENGTH);
-            if (name.matches(INVALID_NAME_PATTERN))
-                name = name.replaceAll(INVALID_NAME_CHARACTERS, "");
-            name = StringUtil.trimTrailingSpaces(name);
-            if (name.trim().equals(""))
-                name = "item" + System.currentTimeMillis();
-            return name;
-        }
     }
     
     /** Moves an item to a different {@link Folder}.  Persists the change
@@ -2056,14 +2058,13 @@ public abstract class MailItem implements Comparable<MailItem> {
             detach();
 
         // item moved out of spam, so update the index id
-        // (will be written to DB in DbMailItem.setFolder());
-        if (inSpam() && !target.inSpam())
-            if (isIndexed() && mData.indexId <= 0) {
-                mData.indexId = mData.id;
-                getMailbox().queueForIndexing(this, false, null);
-            }
+        //   (will be written to DB in DbMailItem.setFolder());
+        if (inSpam() && !target.inSpam() && isIndexed() && mData.indexId <= 0) {
+            mData.indexId = mData.id;
+            getMailbox().queueForIndexing(this, false, null);
+        }
 
-        ZimbraLog.mailop.info("Moving %s to %s.", getMailopContext(this), getMailopContext(target));
+        ZimbraLog.mailop.info("moving " + getMailopContext(this) + " to " + getMailopContext(target));
         DbMailItem.setFolder(this, target);
         folderChanged(target, 0);
         return true;

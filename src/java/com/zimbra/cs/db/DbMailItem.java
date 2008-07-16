@@ -432,18 +432,18 @@ public class DbMailItem {
             if (item instanceof Folder) {
                 stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
                             " SET parent_id = ?, folder_id = ?, mod_metadata = ?, change_date = ?" +
-                            " WHERE " + IN_THIS_MAILBOX_AND + "id = ? AND folder_id != ?");
+                            " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
                 stmt.setInt(pos++, folder.getId());
             } else if (item instanceof Conversation && !(item instanceof VirtualConversation)) {
                 stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
                             " SET folder_id = ?, mod_metadata = ?, change_date = ?" + imapRenumber +
-                            " WHERE " + IN_THIS_MAILBOX_AND + "parent_id = ? AND folder_id != ?");
+                            " WHERE " + IN_THIS_MAILBOX_AND + "parent_id = ?");
             } else {
                 // set the indexId, in case it changed (moving items out of junk can trigger an index ID change)
                 hasIndexId = true;
                 stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
                             " SET folder_id = ?, index_id = ?, mod_metadata = ?, change_date = ? " + imapRenumber +
-                            " WHERE " + IN_THIS_MAILBOX_AND + "id = ? AND folder_id != ?");
+                            " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             }
             stmt.setInt(pos++, folder.getId());
             if (hasIndexId)
@@ -456,7 +456,6 @@ public class DbMailItem {
             if (!DebugConfig.disableMailboxGroups)
                 stmt.setInt(pos++, mbox.getId());
             stmt.setInt(pos++, item instanceof VirtualConversation ? ((VirtualConversation) item).getMessageId() : item.getId());
-            stmt.setInt(pos++, folder.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
@@ -724,9 +723,11 @@ public class DbMailItem {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
+        	boolean isFolder = item instanceof Folder;
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                        " SET date = ?, size = ?, flags = ?, name = ?, subject = ?, folder_id = ?," +
-                        " metadata = ?, mod_metadata = ?, change_date = ?, mod_content = ?" +
+                        " SET date = ?, size = ?, flags = ?, name = ?, subject = ?," +
+                        "  folder_id = ?," + (isFolder ? " parent_id = ?," : "") +
+                        "  metadata = ?, mod_metadata = ?, change_date = ?, mod_content = ?" +
                         " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             stmt.setInt(pos++, (int) (item.getDate() / 1000));
@@ -735,6 +736,8 @@ public class DbMailItem {
             stmt.setString(pos++, name);
             stmt.setString(pos++, name);
             stmt.setInt(pos++, folderId);
+            if (isFolder)
+                stmt.setInt(pos++, folderId);
             stmt.setString(pos++, metadata);
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
@@ -1578,6 +1581,26 @@ public class DbMailItem {
 
                 rs.getInt(CI_UNREAD);
                 reload |= rs.wasNull();
+            }
+            rs.close();
+
+            for (UnderlyingData data : folderData.keySet()) {
+                if (data.parentId != data.folderId) {
+                    // we had a small folder data inconsistency issue, so resolve it here
+                    //   rather than returning it up to the caller
+                    stmt.close();
+                    stmt = conn.prepareStatement("UPDATE " + table +
+                            " SET parent_id = folder_id" +
+                        " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
+                    int pos = 1;
+                    if (!DebugConfig.disableMailboxGroups)
+                        stmt.setInt(pos++, mbox.getId());
+                    stmt.setInt(pos++, data.id);
+                    stmt.executeUpdate();
+
+                    data.parentId = data.folderId;
+                    ZimbraLog.mailbox.info("correcting PARENT_ID column for " + MailItem.getNameForType(data.type) + " " + data.id);
+                }
             }
 
             if (!reload)
@@ -2977,6 +3000,8 @@ public class DbMailItem {
             if (data.subject != dbdata.subject && (data.subject == null || !data.subject.equals(dbdata.subject)))  failures += " SUBJECT";
             if (data.name != dbdata.name && (data.name == null || !data.name.equals(dbdata.name)))                 failures += " NAME";
             if (metadata != dbdata.metadata && (metadata == null || !metadata.equals(dbdata.metadata)))            failures += " METADATA";
+
+            if (item instanceof Folder && dbdata.folderId != dbdata.parentId)  failures += " FOLDER!=PARENT";
 
             if (!failures.equals(""))
                 throw ServiceException.FAILURE("consistency check failed: " + MailItem.getNameForType(item) + " " + item.getId() + " differs from DB at" + failures, null);
