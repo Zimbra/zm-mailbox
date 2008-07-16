@@ -17,13 +17,13 @@
 
 package com.zimbra.cs.service.admin;
 
-import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import junit.framework.TestResult;
+import org.testng.ITestResult;
+import org.testng.TestListenerAdapter;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
@@ -37,30 +37,50 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class RunUnitTests extends AdminDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        
         ZimbraSoapContext lc = getZimbraSoapContext(context);
         Element response = lc.createElement(AdminConstants.RUN_UNIT_TESTS_RESPONSE);
         
         List<String> testNames = null;
-        for (Iterator iter = request.elementIterator(AdminConstants.E_TEST); iter.hasNext();) {
+        for (Iterator<Element> iter = request.elementIterator(AdminConstants.E_TEST); iter.hasNext();) {
             if (testNames == null)
                 testNames = new ArrayList<String>();
-            Element e = (Element)iter.next();
+            Element e = iter.next();
             testNames.add(e.getText());
         }
         
-        TestResult result;         
+        TestListenerAdapter results;          
         if (testNames == null) 
-            result = ZimbraSuite.runTestSuite(response);
+            results = ZimbraSuite.runTestSuite();
         else 
-            result = ZimbraSuite.runUserTests(response, testNames);
+            results = ZimbraSuite.runUserTests(testNames);
             
+        Element resultsElement = response.addElement("results");
         
-        response.addAttribute(AdminConstants.A_NUM_EXECUTED, Integer.toString(result.runCount()));
-        response.addAttribute(AdminConstants.A_NUM_FAILED,
-            Integer.toString(result.failureCount() + result.errorCount()));
-        response.setText(os.toString());
+        int numPassed = 0;
+        for (ITestResult result : results.getPassedTests()) {
+            Element completedElement = resultsElement.addElement("completed");
+            completedElement.addAttribute("name", result.getName());
+            double execSeconds = (double) (result.getEndMillis() - result.getStartMillis()) / 1000;
+            completedElement.addAttribute("execSeconds", String.format("%.2f", execSeconds));
+            completedElement.addAttribute("class", result.getTestClass().getName());
+            numPassed++;
+        }
+        
+        int numFailed = 0;
+        for (ITestResult result : results.getFailedTests()) {
+            Element failureElement = resultsElement.addElement("failure");
+            failureElement.addAttribute("name", result.getName());
+            double execSeconds = (double) (result.getEndMillis() - result.getStartMillis()) / 1000;
+            failureElement.addAttribute("execSeconds", String.format("%.2f", execSeconds));
+            if (result.getThrowable() != null) {
+                failureElement.setText(result.getThrowable().toString());
+            }
+            failureElement.addAttribute("class", result.getTestClass().getName());
+            numFailed++;
+        }
+        
+        response.addAttribute(AdminConstants.A_NUM_EXECUTED, numPassed + numFailed);
+        response.addAttribute(AdminConstants.A_NUM_FAILED, numFailed);
         return response;
     }
 }

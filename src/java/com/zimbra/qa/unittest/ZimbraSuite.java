@@ -18,14 +18,16 @@
 package com.zimbra.qa.unittest;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import junit.framework.TestCase;
-import junit.framework.TestResult;
 import junit.framework.TestSuite;
 
+import org.testng.TestListenerAdapter;
+import org.testng.TestNG;
+
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
 
 /**
@@ -95,47 +97,56 @@ public class ZimbraSuite extends TestSuite
         sClasses.remove(clazz);
     }
 
-    public static TestResult runUserTests(Element response, List<String> tests) throws ServiceException {
-        TestSuite suite = new TestSuite();
+    public static TestListenerAdapter runUserTests(List<String> testNames) throws ServiceException {
+        List<Class<? extends TestCase>> tests = new ArrayList<Class<? extends TestCase>>();
         
-        for (String test : tests) {
+        for (String testName : testNames) {
             try {
-                if (test.indexOf('.') < 0) {
+                if (testName.indexOf('.') < 0) {
                     // short name...check the suite
                     boolean found = false;
-                    for (Class<?> c : ZimbraSuite.sClasses) {
-                        if (test.equals(c.getSimpleName())) {
-                            suite.addTest(new TestSuite(c));
+                    for (Class<? extends TestCase> c : ZimbraSuite.sClasses) {
+                        if (testName.equals(c.getSimpleName())) {
+                            tests.add(c);
                             found = true;
                         }
                     }
                     if (!found) {
                         ZimbraLog.test.warn("Could not find test %s.  Make sure it's registered with %s.",
-                            test, ZimbraSuite.class.getName());
+                            testName, ZimbraSuite.class.getName());
                     }
                 } else {
-                    // look it up by the full name
-                    suite.addTest(new TestSuite(Class.forName(test)));
+                    Class<? extends TestCase> testClass = Class.forName(testName).asSubclass(TestCase.class);
+                    tests.add(testClass);
                 }
             } catch (Exception e) {
-                throw ServiceException.FAILURE("Error instantiating test "+test, e);
+                throw ServiceException.FAILURE("Error instantiating test "+testName, e);
             }
         }
 
-        return TestUtil.runTest(suite, response);
+        return runTestsInternal(tests);
     }
     
     /**
      * Runs the entire test suite and writes the output to the specified
      * <code>OutputStream</code>.
      */
-    public static TestResult runTestSuite(Element response) {
-        TestSuite suite = new TestSuite();
+    public static TestListenerAdapter runTestSuite() {
+        return runTestsInternal(sClasses); 
+    }
+    
+    private static TestListenerAdapter runTestsInternal(Collection<Class<? extends TestCase>> testClasses) {
+        TestNG testng = TestUtil.newTestNG();
+        TestListenerAdapter listener = new TestListenerAdapter();
+        testng.addListener(listener);
+        testng.addListener(new TestLogger());
         
-        for (Class<? extends TestCase> c : ZimbraSuite.sClasses) {
-            suite.addTest(new TestSuite(c));
-        }
+        Class<?>[] classArray = new Class<?>[testClasses.size()];
+        testClasses.toArray(classArray);
         
-        return TestUtil.runTest(suite, response);
+        testng.setTestClasses(classArray);
+        testng.setJUnit(true);
+        testng.run();
+        return listener;
     }
 }

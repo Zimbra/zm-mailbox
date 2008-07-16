@@ -26,6 +26,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.testng.TestNG;
+
 import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestResult;
@@ -453,16 +455,21 @@ extends Assert {
         return runTest(t, (OutputStream)null);
     }
     
+    private static boolean sIsCliInitialized = false;
+    
     /**
      * Sets up the environment for command-line unit tests.
      */
     static void cliSetup()
     throws ServiceException {
-        CliUtil.toolSetup();
-        SoapProvisioning sp = new SoapProvisioning();
-        sp.soapSetURI("https://localhost:7071" + ZimbraServlet.ADMIN_SERVICE_URI);
-        sp.soapZimbraAdminAuthenticate();
-        Provisioning.setInstance(sp);
+        if (!sIsCliInitialized) {
+            CliUtil.toolSetup();
+            SoapProvisioning sp = new SoapProvisioning();
+            sp.soapSetURI("https://localhost:7071" + ZimbraServlet.ADMIN_SERVICE_URI);
+            sp.soapZimbraAdminAuthenticate();
+            Provisioning.setInstance(sp);
+            sIsCliInitialized = true;
+        }
     }
 
     /**
@@ -474,8 +481,10 @@ extends Assert {
 
         long suiteStart = System.currentTimeMillis();
         TestResult result = new TestResult();
+        /*
         ZimbraTestListener listener = new ZimbraTestListener(parent);
         result.addListener(listener);
+        */
         t.run(result);
 
         double seconds = (double) (System.currentTimeMillis() - suiteStart) / 1000;
@@ -496,8 +505,10 @@ extends Assert {
 
         long suiteStart = System.currentTimeMillis();
         TestResult result = new TestResult();
+        /*
         ZimbraTestListener listener = new ZimbraTestListener(null);
         result.addListener(listener);
+        */
         t.run(result);
 
         double seconds = (double) (System.currentTimeMillis() - suiteStart) / 1000;
@@ -719,4 +730,13 @@ extends Assert {
         }
     }
 
+    /**
+     * Returns a new <tt>TestNG</tt> object that writes test results to
+     * <tt>/opt/zimbra/test-output</tt>. 
+     */
+    public static TestNG newTestNG() {
+        TestNG testng = new TestNG();
+        testng.setOutputDirectory("/opt/zimbra/test-output");
+        return testng;
+    }
 }
