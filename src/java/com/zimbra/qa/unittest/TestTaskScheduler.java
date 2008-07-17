@@ -69,9 +69,9 @@ extends TestCase
         TestTask task1 = new TestTask(1);
         TestTask task2 = new TestTask(2);
         scheduler = new TaskScheduler<Integer>("TestTaskScheduler", 1, 2);
-        scheduler.schedule(1, task1, true, 500, 0);
-        scheduler.schedule(2, task2, true, 200, 200);
-        Thread.sleep(1000);
+        scheduler.schedule(1, task1, true, 1000, 0);
+        scheduler.schedule(2, task2, true, 400, 400);
+        Thread.sleep(2000);
         scheduler.cancel(2, false);
         scheduler.cancel(1, false);
         int numResults = TestTask.sResults.size();

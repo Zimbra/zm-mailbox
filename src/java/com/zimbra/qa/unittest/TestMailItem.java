@@ -21,17 +21,15 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbResults;
 import com.zimbra.cs.db.DbUtil;
-import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.common.util.ZimbraLog;
 
 public class TestMailItem extends TestCase {
     
@@ -69,36 +67,6 @@ public class TestMailItem extends TestCase {
             List<Integer> ids = mbox.listItemIds(null, type, folderId);
             assertEquals("Item count does not match", count, ids.size());
         }
-    }
-    
-    /**
-     * Confirms that {@link MailItem#getBlob()} works when the blob digest
-     * contains an empty string.
-     */
-    public void testGetBlob()
-    throws Exception {
-        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
-        List<Integer> ids = TestUtil.search(mbox, "contact:Chin", MailItem.TYPE_CONTACT);
-        assertEquals("Unexpected number of contacts", 1, ids.size());
-        
-        String sql = "INSERT INTO " + DbMailItem.getMailItemTableName(mbox) +
-            "  (mailbox_id, id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, " +
-            "  blob_digest, unread, flags, tags, sender, subject, name, metadata, mod_metadata, " +
-            "  change_date, mod_content) " +
-            "SELECT mailbox_id, " + TEST_CONTACT_ID + ", type, parent_id, folder_id, " +
-              TEST_CONTACT_ID + ", imap_id, date, size, volume_id, " +
-            "  '', unread, flags, tags, 'TestMailItem.testGetBlob', subject, name, metadata, mod_metadata, " +
-            "  change_date, mod_content " +
-            "FROM " + DbMailItem.getMailItemTableName(mbox) +
-            " WHERE id = " + ids.get(0);
-        int numRows = DbUtil.executeUpdate(sql);
-        assertEquals("Unexpected number of rows updated", 1, numRows);
-        
-        Contact testContact = mbox.getContactById(null, TEST_CONTACT_ID);
-        String blobDigest = testContact.getDigest();
-        assertNull("Blob digest should have been null: " + blobDigest, blobDigest);
-        MailboxBlob blob = testContact.getBlob(); 
-        assertNull("Blob should have been null: " + blob, blob);
     }
     
     public void tearDown()
