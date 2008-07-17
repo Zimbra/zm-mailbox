@@ -715,20 +715,10 @@ public class TarFormatter extends Formatter {
                 if (oldId != null) {
                     try {
                         oldItem = mbox.getDocumentById(oc, oldId);
-                        if (!oldItem.getName().equals(doc.getName())) {
-                            try {
-                                mbox.rename(oc, oldId, doc.getType(),
-                                    doc.getName(), fldr.getId());
-                            } catch (Exception e) {
-                                idMap.remove(oldId);
-                                oldItem = null;
-                                mbox.delete(oc, oldId, doc.getType());
-                            }
-                        }
                         if (oldItem != null) {
                             if (doc.getVersion() > oldItem.getVersion()) {
                                 newItem = mbox.addDocumentRevision(oc, oldId,
-                                    doc.getType(), tis, doc.getCreator());
+                                    doc.getType(), tis, doc.getCreator(), doc.getName());
                                 mbox.setDate(oc, newItem.getId(), doc.getType(),
                                     doc.getDate());
                             } else if (doc.getVersion() == oldItem.getVersion()) {
@@ -755,7 +745,7 @@ public class TarFormatter extends Formatter {
                                 if (doc.getVersion() > oldDoc.getVersion())
                                     newItem = mbox.addDocumentRevision(oc,
                                         oldDoc.getId(), doc.getType(), tis,
-                                        doc.getCreator());
+                                        doc.getCreator(), doc.getName());
                             }
                             break;
                         }

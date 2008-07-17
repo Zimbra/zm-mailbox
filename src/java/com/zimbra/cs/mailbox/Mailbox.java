@@ -6371,11 +6371,11 @@ public class Mailbox {
         }
     }
 
-    public Document addDocumentRevision(OperationContext octxt, int docId, byte type, InputStream data, String author) throws ServiceException {
+    public Document addDocumentRevision(OperationContext octxt, int docId, byte type, InputStream data, String author, String name) throws ServiceException {
         maybeIndexDeferredItems();
         Document doc = getDocumentById(octxt, docId);
         try {
-            ParsedDocument pd = new ParsedDocument(data, doc.getName(), doc.getContentType(), System.currentTimeMillis(), author);
+            ParsedDocument pd = new ParsedDocument(data, name, doc.getContentType(), System.currentTimeMillis(), author);
             return addDocumentRevision(octxt, docId, type, pd);
         } catch (IOException e) {
             throw MailServiceException.MESSAGE_PARSE_ERROR(e);

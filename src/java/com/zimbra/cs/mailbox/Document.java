@@ -193,6 +193,8 @@ public class Document extends MailItem {
         mData.date     = (int)(pd.getCreatedDate() / 1000L);
         mData.volumeId = volumeId;
         mData.imapId   = mMailbox.isTrackingImap() ? 0 : mData.id;
+        mData.name = pd.getFilename();
+        mData.subject = pd.getFilename();
         mData.contentChanged(mMailbox);
         mBlob = null;
 
