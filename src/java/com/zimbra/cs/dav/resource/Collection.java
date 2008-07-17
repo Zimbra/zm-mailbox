@@ -157,7 +157,7 @@ public class Collection extends MailItemResource {
 			MailItem item = mbox.getItemByPath(ctxt.getOperationContext(), ctxt.getPath());
 			if (item.getType() != MailItem.TYPE_DOCUMENT && item.getType() != MailItem.TYPE_WIKI)
 				throw new DavException("no DAV resource for " + MailItem.getNameForType(item.getType()), HttpServletResponse.SC_NOT_ACCEPTABLE, null);
-			Document doc = mbox.addDocumentRevision(ctxt.getOperationContext(), item.getId(), item.getType(), upload.getInputStream(), author);
+			Document doc = mbox.addDocumentRevision(ctxt.getOperationContext(), item.getId(), item.getType(), upload.getInputStream(), author, name);
 			return new Notebook(ctxt, doc);
 		} catch (ServiceException e) {
 			if (!(e instanceof NoSuchItemException))
