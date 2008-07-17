@@ -3369,5 +3369,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Shared Secret for XMPP Server Dialback Protocol</desc>
 </attr>
 
+<attr id="696" name="zimbraAdminConsoleLoginURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable">
+  <desc>logout URL for admin console to send the user to upon explicit loggin out</desc>
+</attr>
 
 </attrs>
