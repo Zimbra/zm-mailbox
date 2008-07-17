@@ -21,6 +21,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -201,6 +202,23 @@ public class Folder extends MailItem {
         }
     }
 
+    /**
+     * Returns true if specified folder is a descendant of this folder.
+     * @param folder the folder whose ancestry is to be checked
+     * @return true if the folder is a descendant, false otherwise
+     * @throws ServiceException if an error occurred
+     */
+    public boolean isDescendant(Folder folder) throws ServiceException {
+        while (true) {
+            int parentId = folder.getFolderId();
+            if (parentId == getId())
+                return true;
+            if (parentId == Mailbox.ID_FOLDER_ROOT)
+                return false;
+            folder = folder.getMailbox().getFolderById(null, parentId);
+        }
+    }
+
 
     /** Returns the subset of the requested access rights that the user has
      *  been granted on this folder.  The owner of the {@link Mailbox} has
@@ -323,6 +341,7 @@ public class Folder extends MailItem {
     void setPermissions(ACL acl) throws ServiceException {
         if (!canAccess(ACL.RIGHT_ADMIN))
             throw ServiceException.PERM_DENIED("you do not have admin rights to folder " + getPath());
+
 //        if (acl != null) {
 //            for (ACL.Grant grant : acl.getGrants())
 //                if (grant.getGranteeType() == ACL.GRANTEE_USER && grant.getGranteeId().equalsIgnoreCase(getMailbox().getAccountId()))
@@ -636,7 +655,7 @@ public class Folder extends MailItem {
         data.subject  = name;
         data.metadata = encodeMetadata(color, 1, attributes, view, null, new SyncData(url), id + 1, 0, mbox.getOperationChangeID(), 0);
         data.contentChanged(mbox);
-        ZimbraLog.mailop.info("Adding Folder %s: id=%d, parentId=%d.", name, data.id, data.parentId);
+        ZimbraLog.mailop.info("adding folder %s: id=%d, parentId=%d.", name, data.id, data.parentId);
         DbMailItem.create(mbox, data);
 
         Folder folder = new Folder(mbox, data);
@@ -745,10 +764,8 @@ public class Folder extends MailItem {
 
         // mark all messages in this folder as read in the database
         if (!missed) {
-            if (ZimbraLog.mailop.isDebugEnabled()) {
-                String state = unread ? "unread" : "read";
-                ZimbraLog.mailop.debug("Marking all messages in %s as %s.", getMailopContext(this), state);
-            }
+            if (ZimbraLog.mailop.isDebugEnabled())
+                ZimbraLog.mailop.debug("marking all messages in " + getMailopContext(this) + " as " + (unread ? "unread" : "read"));
             DbMailItem.alterUnread(this, unread);
         } else {
             if (ZimbraLog.mailop.isDebugEnabled() && targets.size() > 0) {
@@ -789,25 +806,25 @@ public class Folder extends MailItem {
         boolean isNoInheritFlag = tag.getId() == Flag.ID_FLAG_NO_INHERIT;
         if (!canAccess(isNoInheritFlag ? ACL.RIGHT_ADMIN : ACL.RIGHT_WRITE))
             throw ServiceException.PERM_DENIED("you do not have the necessary privileges on the folder");
-        ACL effectiveACL = getEffectiveACL();
+        ACL effectiveACL = isNoInheritFlag ? getEffectiveACL() : null;
 
         // change the tag on the Folder itself, not on its contents
         markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
         tagChanged(tag, newValue);
 
         if (ZimbraLog.mailop.isDebugEnabled())
-            ZimbraLog.mailop.debug("Setting %s for %s.", getMailopContext(tag), getMailopContext(this));
+            ZimbraLog.mailop.debug("setting " + getMailopContext(tag) + " for " + getMailopContext(this));
 
-        List<Integer> ids = new ArrayList<Integer>();
-        ids.add(mId);
-        DbMailItem.alterTag(tag, ids, newValue);
+        DbMailItem.alterTag(tag, Arrays.asList(mId), newValue);
 
         // clearing the "no inherit" flag sets inherit ON and thus must clear the folder's ACL
         if (isNoInheritFlag) {
-            if (!newValue && mRights != null && !mRights.isEmpty())
-                setPermissions(null);
-            else if (newValue)
+            if (!newValue && mRights != null && !mRights.isEmpty()) {
+                mRights = null;
+                saveMetadata();
+            } else if (newValue) {
                 setPermissions(effectiveACL);
+            }
         }
     }
 
@@ -944,7 +961,7 @@ public class Folder extends MailItem {
 
     /** Deletes just this folder without affecting its subfolders. */
     void deleteSingleFolder(boolean writeTombstones) throws ServiceException {
-        ZimbraLog.mailbox.info("Deleting folder %s, id=%d", getPath(), getId());
+        ZimbraLog.mailbox.info("deleting folder " + getPath() + ", id=" + getId());
         super.delete(hasSubfolders() ? DeleteScope.CONTENTS_ONLY : DeleteScope.ENTIRE_ITEM, writeTombstones);
     }
 
@@ -1074,23 +1091,6 @@ public class Folder extends MailItem {
                 meta.put(Metadata.FN_SYNC_DATE, fsd.lastDate);
         }
         return MailItem.encodeMetadata(meta, color, version);
-    }
-
-    /**
-     * Returns true if specified folder is a descendant of this folder.
-     * @param folder the folder whose ancestry is to be checked
-     * @return true if the folder is a descendant, false otherwise
-     * @throws ServiceException if an error occurred
-     */
-    public boolean isDescendant(Folder folder) throws ServiceException {
-        while (true) {
-            int parentId = folder.getFolderId();
-            if (parentId == getId())
-                return true;
-            if (parentId == Mailbox.ID_FOLDER_ROOT)
-                return false;
-            folder = folder.getMailbox().getFolderById(null, parentId);
-        }
     }
 
     protected static final String CN_ATTRIBUTES = "attributes";
