@@ -20,23 +20,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.zimbra.common.auth.ZAuthToken;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
+import junit.framework.TestCase;
+
+import org.testng.TestNG;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
 import com.zimbra.common.soap.SoapFaultException;
-import com.zimbra.common.soap.SoapHttpTransport;
-import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.soap.SoapProvisioning;
-import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbResults;
 import com.zimbra.cs.db.DbUtil;
-import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -44,8 +41,6 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.zclient.ZContact;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMailbox.ContactSortBy;
-
-import junit.framework.TestCase;
 
 
 public class TestContacts
@@ -55,6 +50,7 @@ extends TestCase {
     private static final String USER_NAME = "user1";
     String mOriginalMaxContacts;
     
+    @BeforeMethod
     public void setUp()
     throws Exception {
         cleanUp();
@@ -63,6 +59,7 @@ extends TestCase {
     /**
      * Confirms that volumeId is not set for contacts.
      */
+    @Test(groups = {"Server"})
     public void testVolumeId()
     throws Exception {
         Account account = Provisioning.getInstance().get(AccountBy.name, TestUtil.getAddress("user1"));
@@ -77,6 +74,7 @@ extends TestCase {
     /**
      * Confirms that {@link Provisioning#A_zimbraContactMaxNumEntries} is enforced (bug 29627).
      */
+    @Test
     public void testMaxContacts()
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -97,48 +95,24 @@ extends TestCase {
         assertEquals("Unexpected contact number", 3, i);
     }
     
+    @AfterMethod
     public void tearDown()
     throws Exception {
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraContactMaxNumEntries, mOriginalMaxContacts);
         cleanUp();
     }
     
     private void cleanUp()
     throws Exception {
-        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraContactMaxNumEntries, mOriginalMaxContacts);
         TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
     }
     
-    public static void main(String[] args) throws Exception {
-    	String username = "user1";
-    	String id = args[0];
-    	String name = args[1];
-    	String value = args[2];
-    	String rev = args[3];
-		SoapProvisioning prov = new SoapProvisioning();            
-		CliUtil.toolSetup();
-		String server = LC.zimbra_zmprov_default_soap_server.value();
-		prov.soapSetURI(URLUtil.getAdminURL(server));
-		prov.soapAdminAuthenticate(LC.zimbra_ldap_user.value(), LC.zimbra_ldap_password.value());
-		DelegateAuthResponse dar = prov.delegateAuth(AccountBy.name, username, 60*60*24);
-		Account acct = prov.get(AccountBy.name, username);
-		Server remoteServer = prov.getServer(acct);
-		String url = URLUtil.getSoapURL(remoteServer, true);
-		SoapHttpTransport transport = new SoapHttpTransport(url);
-		ZAuthToken zat = dar.getAuthToken();
-		transport.setAuthToken(zat);
-		transport.setTargetAcctName(username);
-		try {
-			Element req = new Element.XMLElement(MailConstants.CONTACT_ACTION_REQUEST);
-			Element action = req.addElement(MailConstants.E_ACTION);
-			action.addAttribute(MailConstants.A_OPERATION, "update");
-			action.addAttribute(MailConstants.A_ID, id);
-			Element a = action.addElement(MailConstants.E_A);
-			a.addAttribute(MailConstants.A_ATTRIBUTE_NAME, name);
-			a.addText(value);
-			transport.invoke(req, false, true, null, rev, null);
-		} finally {
-			if (transport != null)
-				transport.shutdown();
-		}
+    public static void main(String[] args)
+    throws Exception {
+        TestUtil.cliSetup();
+        TestNG testng = TestUtil.newTestNG();
+        testng.setExcludedGroups("Server");
+        testng.setTestClasses(new Class[] { TestContacts.class });
+        testng.run();
     }
 }
