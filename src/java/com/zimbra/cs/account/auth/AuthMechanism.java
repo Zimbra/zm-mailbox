@@ -79,8 +79,8 @@ public abstract class AuthMechanism {
         }
     }
     
-    public static void doDefaultAuth(AuthMechanism authMech, LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException {
-        ZimbraAuth zimbraAuth = new ZimbraAuth(authMech.getMechanism());
+    public static void doZimbraAuth(LdapProvisioning prov, Domain domain, Account acct, String password, Map<String, Object> authCtxt) throws ServiceException {
+        ZimbraAuth zimbraAuth = new ZimbraAuth(Provisioning.AM_ZIMBRA);
         zimbraAuth.doAuth(prov, domain, acct, password, authCtxt);
     }
 
@@ -106,7 +106,7 @@ public abstract class AuthMechanism {
     /*
      * ZimbraAuth 
      */
-    static class ZimbraAuth extends AuthMechanism {
+    public static class ZimbraAuth extends AuthMechanism {
         ZimbraAuth(String authMech) {
             super(authMech);
         }
