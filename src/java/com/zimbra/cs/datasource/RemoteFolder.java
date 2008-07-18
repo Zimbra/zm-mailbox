@@ -103,7 +103,7 @@ class RemoteFolder {
         debug("deleting %d messages(s) from folder", size);
         for (int i = 0; i < size; i += 16) {
             String seq = ImapData.asSequenceSet(
-                uids.subList(i, Math.min(size - i, 16)));
+                uids.subList(i, i + Math.min(size - i, 16)));
             connection.uidStore(seq, "+FLAGS.SILENT", "(\\Deleted)");
             // If UIDPLUS supported, then expunge deleted messages
             if (uidPlus) {
