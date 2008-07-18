@@ -2878,7 +2878,7 @@ public class LdapProvisioning extends Provisioning {
         }
         
         // fall back to zimbra default auth
-        AuthMechanism.doDefaultAuth(authMech, this, domain, acct, password, context);    
+        AuthMechanism.doZimbraAuth(this, domain, acct, password, context);    
     }
  
      /**
@@ -5293,7 +5293,14 @@ public class LdapProvisioning extends Provisioning {
      */
     public static void main(String[] args) throws Exception {
         LdapProvisioning prov = (LdapProvisioning)Provisioning.getInstance();
-        prov.printFilters();
+        // prov.printFilters();
+        
+        
+        Map<String, Object> acctAttrs = new HashMap<String, Object>();
+        acctAttrs.put("zimbraYahooId", null);
+        //  prov.createAccount("u1@phoebe.mac", "test123", acctAttrs);
+        Account acct = prov.get(AccountBy.name, "u1@phoebe.mac");
+        prov.modifyAttrs(acct, acctAttrs);
     }
 
 }

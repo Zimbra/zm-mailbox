@@ -3373,4 +3373,16 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>logout URL for admin console to send the user to upon explicit loggin out</desc>
 </attr>
 
+<attr id="697" name="zimbraReverseProxyAdminIPAddress" type="astring" max="256" cardinality="multi" optionalIn="globalConfig">
+  <desc>Allowed reverse proxy IP addresses.  Lookup servlet will only generate authtokens if request was made from one of these IP addresses</desc>
+</attr>
+
+<attr id="698" name="zimbraReverseProxyAdminAccount" type="email" max="256" cardinality="single" optionalIn="globalConfig">
+  <desc>Reverse proxy admin account.  Lookup servlet will only generate authtokens if request was made with valid credentials of this account.</desc>
+</attr>
+
+<attr id="699" name="zimbraReverseProxyAdminAccountPassword" type="string" max="256" cardinality="single" optionalIn="globalConfig">
+  <desc>Reverse proxy admin account password.  Lookup servlet will only generate authtokens if request was made with valid credentials of this account.</desc>
+</attr>
+
 </attrs>
