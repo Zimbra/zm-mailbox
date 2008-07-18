@@ -49,6 +49,9 @@ public class ImapRequest {
     }
 
     public void addParam(Object data) {
+        if (data == null) {
+            throw new NullPointerException();
+        }
         if (params == null) {
             params = new ArrayList<Object>();
         }
