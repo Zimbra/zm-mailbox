@@ -705,16 +705,25 @@ class ImapFolderSync {
         throws ServiceException, IOException {
         remoteFolder.debug("Fetching %d new IMAP message(s)", uids.size());
         long maxUid = uids.getFirst();
+        long lastCheckTime = System.currentTimeMillis();
         while (!uids.isEmpty()) {
             fetchMessages(nextFetchSeq(uids), deletedUids);
-            // Include any new messages that have arrived while fetching...
-            List<Long> newUids = remoteFolder.getUids((maxUid + 1) + ":*");
-            if (!newUids.isEmpty() && newUids.get(0) > maxUid) {
-                // If mailbox is not empty then we will always get the UID
-                // of the last message even if there are no new messages, so
-                // we must be sure to check for that case.
-                uids.addAll(0, newUids);
-                maxUid = newUids.get(0);
+            // Send pending messages if any...
+            ds.checkPendingMessages();
+            long time = System.currentTimeMillis();
+            long freq = ds.getSyncFrequency();
+            if (freq > 0 && time - lastCheckTime > freq) {
+                // Check for newly arrived messages...
+                lastCheckTime = time;
+                List<Long> newUids = remoteFolder.getUids((maxUid + 1) + ":*");
+                if (!newUids.isEmpty() && newUids.get(0) > maxUid) {
+                    // If mailbox is not empty then we will always get the UID
+                    // of the last message even if there are no new messages,
+                    // so we must be sure to handle that case.
+                    remoteFolder.debug("Added %d newly arrived IMAP message(s) to fetch list", newUids.size());
+                    uids.addAll(0, newUids);
+                    maxUid = newUids.get(0);
+                }
             }
         }
     }

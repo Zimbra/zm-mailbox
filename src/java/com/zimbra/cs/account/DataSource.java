@@ -265,7 +265,16 @@ public class DataSource extends NamedEntry implements Comparable {
     public boolean isOffline() {
         return false;
     }
-    
+
+    public boolean checkPendingMessages() throws ServiceException {
+        // Does nothing for online
+        return false;
+    }
+
+    public long getSyncFrequency() {
+        return 0;
+    }
+
     public ImapFolderCollection getImapFolders() throws ServiceException {
         return DbImapFolder.getImapFolders(getMailbox(), this);
     }
