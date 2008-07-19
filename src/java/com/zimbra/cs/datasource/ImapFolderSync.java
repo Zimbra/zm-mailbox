@@ -53,7 +53,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.Iterator;
 
 class ImapFolderSync {
     private final ImapSync imapSync;
@@ -529,7 +529,7 @@ class ImapFolderSync {
 
     private MessageData findMessage(final AppendInfo ai) throws IOException {
         List<Long> uids = connection.uidSearch(
-            "SENTON", ai.sentDate, "SUBJECT", ai.subject);
+            "SENTON", ai.sentDate, "SUBJECT", ImapData.asString(ai.subject));
         for (long uid : uids) {
             MessageData md = connection.uidFetch(uid, "ENVELOPE");
             if (md != null && ai.messageId.equals(md.getEnvelope().getMessageId())) {
@@ -692,8 +692,7 @@ class ImapFolderSync {
     private void fetchMessages(long startUid, long endUid)
         throws ServiceException, IOException {
         String end = endUid > 0 ? String.valueOf(endUid) : "*";
-        LinkedList<Long> uids = new LinkedList<Long>(
-            remoteFolder.getUids(startUid + ":" + end));
+        List<Long> uids = remoteFolder.getUids(startUid + ":" + end);
         if (uids.size() > 0) {
             List<Long> deletedUids = new ArrayList<Long>();
             fetchMessages(uids, deletedUids);
@@ -701,13 +700,14 @@ class ImapFolderSync {
         }
     }
 
-    private void fetchMessages(LinkedList<Long> uids, List<Long> deletedUids)
+    private void fetchMessages(List<Long> uids, List<Long> deletedUids)
         throws ServiceException, IOException {
         remoteFolder.debug("Fetching %d new IMAP message(s)", uids.size());
-        long maxUid = uids.getFirst();
+        long maxUid = uids.get(0);
         long lastCheckTime = System.currentTimeMillis();
-        while (!uids.isEmpty()) {
-            fetchMessages(nextFetchSeq(uids), deletedUids);
+        Iterator<Long> ui = uids.iterator();
+        while (ui.hasNext()) {
+            fetchMessages(nextFetchSeq(ui), deletedUids);
             // Send pending messages if any...
             ds.checkPendingMessages();
             long time = System.currentTimeMillis();
@@ -717,22 +717,22 @@ class ImapFolderSync {
                 lastCheckTime = time;
                 List<Long> newUids = remoteFolder.getUids((maxUid + 1) + ":*");
                 if (!newUids.isEmpty() && newUids.get(0) > maxUid) {
-                    // If mailbox is not empty then we will always get the UID
-                    // of the last message even if there are no new messages,
-                    // so we must be sure to handle that case.
-                    remoteFolder.debug("Added %d newly arrived IMAP message(s) to fetch list", newUids.size());
-                    uids.addAll(0, newUids);
+                    remoteFolder.debug("Fetching %d newly arrived IMAP message(s)", newUids.size());
+                    Iterator<Long> nui = newUids.iterator();
+                    do {
+                        fetchMessages(nextFetchSeq(nui), deletedUids);
+                    } while (nui.hasNext());
                     maxUid = newUids.get(0);
                 }
             }
         }
     }
 
-    private String nextFetchSeq(LinkedList<Long> uids) {
-        long end = uids.remove();
+    private String nextFetchSeq(Iterator<Long> uids) {
+        long end = uids.next();
         long start = end;
-        for (int count = FETCH_SIZE; !uids.isEmpty() && --count > 0; ) {
-            start = uids.remove();
+        for (int count = FETCH_SIZE; uids.hasNext() && --count > 0; ) {
+            start = uids.next();
         }
         return start + ":" + end;
     }
