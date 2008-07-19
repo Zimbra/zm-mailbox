@@ -100,6 +100,7 @@ public class Envelope {
     }
 
     private static Address readAddress(ImapInputStream is) throws IOException {
+        is.match(' '); // gmail includes an extra space here... ugh
         is.skipChar('(');
         Address addr = new Address();
         addr.name = is.readNString();
