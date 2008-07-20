@@ -209,12 +209,20 @@ public class ReportGenerator implements Runnable {
                 oos = new ObjectOutputStream(
                         new FileOutputStream(reportFile));
                 oos.writeObject(volumes);
-                oos.writeObject(faults);
+                oos.writeInt(faults.size());
+                int count = 0;
+                for (ItemFault fault : faults) {
+                    count++;
+                    oos.writeObject(fault);
+                    if (count % 10000 == 0)
+                        oos.reset();
+                }
             }
             finally {
                 if (oos != null) oos.close();
             }
 
+            faults = null; // allow gc since we're not leaving ReportGenerator prior to running ReportDisplay
             new ReportDisplay(reportFile).run();
             System.out.println("Report saved to: " + reportFile);
         }

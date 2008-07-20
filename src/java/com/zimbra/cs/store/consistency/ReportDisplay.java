@@ -20,7 +20,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.util.List;
 import java.util.Map;
 
 public class ReportDisplay implements Runnable {
@@ -37,13 +36,13 @@ public class ReportDisplay implements Runnable {
             try {
                 in = new ObjectInputStream(new FileInputStream(reportFile));
                 Map<Byte,Volume> volumes = (Map) in.readObject();
-                List<ItemFault> faults = (List) in.readObject();
+                int faultCount = in.readInt();
 
-                for (ItemFault fault : faults) {
-                    printFault(volumes, fault);
+                for (int i = 0; i < faultCount; i++) {
+                    printFault(volumes, (ItemFault) in.readObject());
                 }
-                String f = faults.size() == 1 ? " fault " : " faults ";
-                System.out.println(" *** " + faults.size() + f + "found");
+                String f = faultCount == 1 ? " fault " : " faults ";
+                System.out.println(" *** " + faultCount + f + "found");
             }
             finally {
                 if (in != null) in.close();
