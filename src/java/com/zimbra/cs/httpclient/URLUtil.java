@@ -53,7 +53,7 @@ public class URLUtil {
      * @see getMailURL()
      */
     public static String getSoapURL(Server server, boolean preferSSL) throws ServiceException {
-        return URLUtil.getProxyURL(server, ZimbraServlet.USER_SERVICE_URI, preferSSL);
+        return URLUtil.getServiceURL(server, ZimbraServlet.USER_SERVICE_URI, preferSSL);
     }
     
     public static String getSoapPublicURL(Server server, Domain domain, boolean preferSSL) throws ServiceException {
@@ -155,7 +155,7 @@ public class URLUtil {
             return publicURLForDomain;
         
         // fallback to server setting if domain is not configured with public service hostname
-        return getProxyURL(server, path, preferSSL);
+        return URLUtil.getServiceURL(server, path, preferSSL);
     }
     
     private static String getPublicURLForDomain(Domain domain, String path) {
@@ -182,7 +182,7 @@ public class URLUtil {
         return buf.toString();
     }
     
-    public static String getProxyURL(Server server, String path, boolean useSSL) throws ServiceException {
+    public static String getServiceURL(Server server, String path, boolean useSSL) throws ServiceException {
         
         String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
         if (hostname == null)
