@@ -61,7 +61,7 @@ public class ProxyTarget {
         if (req.getLocalPort() == localAdminPort) {
             url = URLUtil.getAdminURL(mServer, requestStr, true);
         } else {
-            url = URLUtil.getMailURL(mServer, requestStr, false);
+            url = URLUtil.getProxyURL(mServer, requestStr, false);
         }
         
         mURL = url;

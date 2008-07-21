@@ -53,23 +53,11 @@ public class URLUtil {
      * @see getMailURL()
      */
     public static String getSoapURL(Server server, boolean preferSSL) throws ServiceException {
-        return URLUtil.getServiceUrl(server, null, ZimbraServlet.USER_SERVICE_URI, preferSSL, true);
+        return URLUtil.getProxyURL(server, ZimbraServlet.USER_SERVICE_URI, preferSSL);
     }
     
-    public static String getSoapURL(Server server, Domain domain, boolean preferSSL) throws ServiceException {
-        return URLUtil.getServiceUrl(server, domain, ZimbraServlet.USER_SERVICE_URI, preferSSL, true);  
-    }
-    
-    /**
-     * Returns absolute URL with scheme, host, and port for mail app on server.
-     * 
-     * @param server
-     * @param path what follows port number; begins with slash
-     * @param preferSSL if both SSL and and non-SSL are available, whether to prefer SSL 
-     * @return desired URL
-     */
-    public static String getMailURL(Server server, String path, boolean preferSSL) throws ServiceException {
-        return URLUtil.getServiceUrl(server, null, path, preferSSL, true);
+    public static String getSoapPublicURL(Server server, Domain domain, boolean preferSSL) throws ServiceException {
+        return URLUtil.getPublicURLForDomain(server, domain, ZimbraServlet.USER_SERVICE_URI, preferSSL);  
     }
     
     /**
@@ -140,158 +128,83 @@ public class URLUtil {
         for (Server server : Provisioning.getInstance().getAllServers()) {
             String serviceName = server.getAttr(Provisioning.A_zimbraServiceHostname, null);
             if (authHost.equalsIgnoreCase(serviceName)) {
-                return URLUtil.getServiceUrl(server, null, ZimbraServlet.USER_SERVICE_URI, true, false);
+                return URLUtil.getSoapURL(server, true);
             }
         }
         throw ServiceException.INVALID_REQUEST("specified " + Provisioning.A_zimbraMtaAuthHost + " does not correspond to a valid service hostname: " + authHost, null);
     }
     
-    private static final String SCHEME_HTTP  = "http://";
-    private static final String SCHEME_HTTPS = "https://";
+    private static final String PROTO_HTTP  = "http";
+    private static final String PROTO_HTTPS = "https";
     
     private static int DEFAULT_HTTP_PORT = 80;
     private static int DEFAULT_HTTPS_PORT = 443;
     
     /**
-     * Returns absolute URL with scheme, host, and port for mail app on server.
+     * Returns absolute public URL with scheme, host, and port for mail app on server.
      * 
      * @param server
+     * @param domain
      * @param path what follows port number; begins with slash
      * @param preferSSL if both SSL and and non-SSL are available, whether to prefer SSL 
-     * @param checkReverseProxiedMode whether to take into account if the server is running in reverse proxied mode
      * @return desired URL
      */
-    public static String getServiceUrl(Server server, Domain domain, String path, boolean preferSSL, boolean checkReverseProxiedMode) throws ServiceException {
-        String publicServiceHostname = domain == null ? null : domain.getAttr(Provisioning.A_zimbraPublicServiceHostname, null);
+    public static String getPublicURLForDomain(Server server, Domain domain, String path, boolean preferSSL) throws ServiceException {
+        String publicURLForDomain = getPublicURLForDomain(domain, path);
+        if (publicURLForDomain != null)
+            return publicURLForDomain;
         
-        String hostname;
-        if (publicServiceHostname == null)
-            hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
-        else
-            hostname = publicServiceHostname;
+        // fallback to server setting if domain is not configured with public service hostname
+        return getProxyURL(server, path, preferSSL);
+    }
+    
+    private static String getPublicURLForDomain(Domain domain, String path) {
+        if (domain == null)
+            return null;
         
+        String hostname = domain.getAttr(Provisioning.A_zimbraPublicServiceHostname, null);
         if (hostname == null)
-            throw ServiceException.INVALID_REQUEST("server " + server.getName() + " does not have " + Provisioning.A_zimbraServiceHostname, null);
+            return null;
         
-        /*
-         * We now have a hostname.  
-         * if server is running in reverse proxied mode and we need to generate the URL to point to the reverse proxy, 
-         * 1. domain.zimbraPublicServiceHostname is set to the hostname on which the reverse proxy is running, and 
-         *      - a server can be found by zimbraPublicServiceHostname: this is the ideal case, use it
-         *      - a server cannot be found by zimbraPublicServiceHostname: no good, throw ServiceException
-         *         
-         * 2. domain is null(really an error, but we've been handling it so keep the current code behavior) or 
-         *    domain.zimbraPublicServiceHostname is not set.  
-         *    This is OK, assuming the reverse proxy is running on the same server.  
-         *    We do the same check (as we would do for 1) if the reverse proxy is indeed running on the configured server
-         */
-        Server publicServiceServer = null;
-        boolean reverseProxiedMode = false;
-        if (checkReverseProxiedMode && reverseProxiedMode(server)) {
-            reverseProxiedMode = true;
-            if (publicServiceHostname != null) {
-                publicServiceServer = Provisioning.getInstance().get(Provisioning.ServerBy.serviceHostname, publicServiceHostname);
-                if (publicServiceServer == null)
-                    throw ServiceException.INVALID_REQUEST("server " + publicServiceHostname + " not found", null);
-            } else
-                publicServiceServer = server;
-            
-            // check if the reverse proxy is enabled, should we?
-            if (!publicServiceServer.getBooleanAttr(Provisioning.A_zimbraReverseProxyHttpEnabled, false))
-                throw ServiceException.INVALID_REQUEST("server " + server.getName() + " is running in reverse proxied mode " + 
-                                                       "but reverse proxy is not enabled on server " + publicServiceServer.getName() +
-                                                       ", either domain " + Provisioning.A_zimbraPublicServiceHostname + " is not set " + 
-                                                       "or is set to a server on which reverse proxy is not enabled", 
-                                                       null);
-        }
+        String proto = domain.getAttr(Provisioning.A_zimbraPublicServiceProtocol, PROTO_HTTP);
         
-        String modeString = server.getAttr(Provisioning.A_zimbraMailMode, null);
-        if (modeString == null) {
-            throw ServiceException.INVALID_REQUEST("server " + server.getName() + " does not have " + Provisioning.A_zimbraMailMode + " set, maybe it is not a store server?", null);
-        }
+        int defaultPort = PROTO_HTTP.equals(proto) ? DEFAULT_HTTP_PORT : DEFAULT_HTTPS_PORT;
+        int port = domain.getIntAttr(Provisioning.A_zimbraPublicServicePort, defaultPort);
         
-        Provisioning.MAIL_MODE mode;
-        try {
-            mode = Provisioning.MAIL_MODE.valueOf(modeString);
-        } catch (IllegalArgumentException iae) {
-            throw ServiceException.INVALID_REQUEST("server " + server.getName() + " has invalid " + Provisioning.A_zimbraMailMode + ": " + modeString, iae);
-        }
+        boolean printPort = ((PROTO_HTTP.equals(proto) && port != DEFAULT_HTTP_PORT) ||
+                             (PROTO_HTTPS.equals(proto) && port != DEFAULT_HTTPS_PORT));
         
-        boolean ssl;
-        boolean printPort = true;
-        
-        switch (mode) {
-        case both:
-        case mixed:
-        case redirect:
-            ssl = preferSSL;
-            break;
-        case https:
-            ssl = true;
-            break;
-        case http:
-            ssl = false;
-            break;
-        default:
-            throw ServiceException.INVALID_REQUEST("server " + server.getName() + " has unknown " + Provisioning.A_zimbraMailMode + ": " + mode, null);
-        }
-        
-        String scheme;
-        String portAttr;
-        int port = 0;
-        Server targetServer = (publicServiceServer == null) ? server : publicServiceServer;
-
-        if (ssl) {
-            scheme = SCHEME_HTTPS;
-            if (reverseProxiedMode)
-                portAttr = Provisioning.A_zimbraMailSSLProxyPort;
-            else
-                portAttr = Provisioning.A_zimbraMailSSLPort;
-            port = targetServer.getIntAttr(portAttr, 0);
-            if (port < 1) {
-                throw ServiceException.INVALID_REQUEST("server " + targetServer.getName() + " has invalid " + portAttr + ": " + port, null);
-            }
-            if (port == DEFAULT_HTTPS_PORT)
-            	printPort = false;
-        } else {
-            scheme = SCHEME_HTTP;
-            if (reverseProxiedMode)
-                portAttr = Provisioning.A_zimbraMailProxyPort;
-            else
-                portAttr = Provisioning.A_zimbraMailPort;
-            port = targetServer.getIntAttr(portAttr, 0);
-            if (port < 1) {
-                throw ServiceException.INVALID_REQUEST("server " + targetServer.getName() + " has invalid " + portAttr + ": " + port, null);
-            }
-            if (port == DEFAULT_HTTP_PORT)
-            	printPort = false;
-        }
-
-        StringBuilder sb = new StringBuilder(128);
-        sb.append(scheme).append(hostname);
+        StringBuilder buf = new StringBuilder();
+        buf.append(proto).append("://").append(hostname);
         if (printPort)
-        	sb.append(":").append(port);
-        sb.append(path);
-        return sb.toString();
+            buf.append(":").append(port);
+        buf.append(path);
+        return buf.toString();
     }
     
     public static String getProxyURL(Server server, String path, boolean useSSL) throws ServiceException {
+        
+        String hostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
+        if (hostname == null)
+            throw ServiceException.INVALID_REQUEST("server " + server.getName() + " does not have " + Provisioning.A_zimbraServiceHostname, null);
+        
     	String modeString = server.getAttr(Provisioning.A_zimbraMailMode, null);
     	if (modeString == null)
     		throw ServiceException.INVALID_REQUEST("server " + server.getName() + " does not have " + Provisioning.A_zimbraMailMode + " set, maybe it is not a store server?", null);
         
-    	StringBuilder buf = new StringBuilder();
+    	String proto;
     	int port;
     	if (modeString != Provisioning.MAIL_MODE.http.toString() && useSSL ||
     			modeString == Provisioning.MAIL_MODE.https.toString()) {
-            buf.append("https://");
-        	port = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, 443);
+    	    proto = PROTO_HTTPS;
+        	port = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, DEFAULT_HTTPS_PORT);
     	} else {
-        	buf.append("http://");
-        	port = server.getIntAttr(Provisioning.A_zimbraMailPort, 80);
+    	    proto = PROTO_HTTP;
+        	port = server.getIntAttr(Provisioning.A_zimbraMailPort, DEFAULT_HTTP_PORT);
     	}
 
-        buf.append(server.getAttr(Provisioning.A_zimbraServiceHostname));
+    	StringBuilder buf = new StringBuilder();
+    	buf.append(proto).append("://").append(hostname);
         buf.append(":").append(port);
         buf.append(path);
     	return buf.toString();
