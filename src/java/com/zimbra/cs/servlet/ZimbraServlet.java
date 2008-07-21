@@ -440,7 +440,7 @@ public class ZimbraServlet extends HttpServlet {
     	if (servicePort == localServer.getIntAttr(Provisioning.A_zimbraAdminPort, 0))
     		return URLUtil.getAdminURL(server, path);
     	else
-    		return URLUtil.getProxyURL(server, path, servicePort == localServer.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0));
+    		return URLUtil.getServiceURL(server, path, servicePort == localServer.getIntAttr(Provisioning.A_zimbraMailSSLPort, 0));
     }
     
     protected void returnError(HttpServletResponse resp, ServiceException e) {
