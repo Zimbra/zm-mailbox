@@ -21,7 +21,6 @@ import java.util.TimeZone;
 
 import org.dom4j.Element;
 
-import com.zimbra.common.util.Constants;
 import com.zimbra.cs.dav.DavElements;
 
 /**
@@ -46,17 +45,9 @@ public class TimeRange {
 				mEnd = parseDateWithUTCTime(s);
 		}
 		if (mStart == 0)
-			mStart = getMinDate();
+			mStart = -1;
 		if (mEnd == 0)
-			mEnd = getMaxDate();
-	}
-	
-	private static long getMinDate() {
-		return System.currentTimeMillis() - Constants.MILLIS_PER_MONTH;
-	}
-	
-	private static long getMaxDate() {
-		return System.currentTimeMillis() + Constants.MILLIS_PER_MONTH * 12;
+			mEnd = -1;
 	}
 	
     private static long parseDateWithUTCTime(String time) {
