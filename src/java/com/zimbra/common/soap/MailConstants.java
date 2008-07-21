@@ -455,6 +455,11 @@ public class MailConstants {
     public static final String E_CAL_TZ_STANDARD = "standard";
     public static final String E_CAL_TZ_DAYLIGHT = "daylight";
 
+    public static final String E_CAL_CATEGORY = "category";
+    public static final String E_CAL_COMMENT = "comment";
+    public static final String E_CAL_CONTACT = "contact";
+    public static final String E_CAL_GEO = "geo";
+
     public static final String E_CAL_XPROP = "xprop";
     public static final String E_CAL_XPARAM = "xparam";
 
@@ -559,6 +564,9 @@ public class MailConstants {
     public static final String A_CAL_ALARM_COUNT = "count";
     public static final String A_CAL_ATTACH_URI = "uri";
     public static final String A_CAL_ATTACH_CONTENT_TYPE = "ct";
+
+    public static final String A_CAL_GEO_LATITUDE = "lat";
+    public static final String A_CAL_GEO_LONGITUDE = "lon";
 
     public static final String E_CAL_MINICAL_DATE = "date";
 
