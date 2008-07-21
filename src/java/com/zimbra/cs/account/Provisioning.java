@@ -1377,10 +1377,13 @@ public abstract class Provisioning {
     public static final String A_zimbraVersion = "zimbraVersion";
 
     /**
-     * If zimbraPublicServiceHostname is set for a mail domain, the name is used
+     * If zimbraPublicServiceHostname is set for a mail domain, the name is used 
+     * together with zimbraPublicServiceProtocol and zimbraPublicServicePort 
      * when generating public accessible URLs such as REST URL.
      */
     public static final String A_zimbraPublicServiceHostname = "zimbraPublicServiceHostname";
+    public static final String A_zimbraPublicServiceProtocol = "zimbraPublicServiceProtocol";
+    public static final String A_zimbraPublicServicePort = "zimbraPublicServicePort";
     
     public static final String A_zimbraDomainMaxAccounts = "zimbraDomainMaxAccounts";
     

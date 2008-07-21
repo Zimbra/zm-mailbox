@@ -431,7 +431,7 @@ public class ZimbraServlet extends HttpServlet {
     
 
     public static String getServiceUrl(Server server, Domain domain, String path) throws ServiceException {
-        return URLUtil.getServiceUrl(server, domain, path, true, true);
+        return URLUtil.getPublicURLForDomain(server, domain, path, true);
     }
 
     protected static String getProxyUrl(HttpServletRequest req, Server server, String path) throws ServiceException {
