@@ -369,7 +369,8 @@ public class RuleRewriter {
                         mMailbox.createFolder(null, argVal, (byte) 0, MailItem.TYPE_UNKNOWN);
                         ZimbraLog.filter.info("Created folder " + argVal + " referenced in rule \"" + ruleName + "\"");
                     } catch (MailServiceException e1) {
-                        throw ServiceException.FAILURE("unable to create inexistent folder (" + argVal + ") in rule \"" + ruleName + "\"", e1);
+                    	if (!e1.getCode().equals(MailServiceException.ALREADY_EXISTS))
+                            throw ServiceException.FAILURE("unable to create inexistent folder (" + argVal + ") in rule \"" + ruleName + "\"", e1);
                     }
                 }
             } else if ("tag".equals(actionName)) {
