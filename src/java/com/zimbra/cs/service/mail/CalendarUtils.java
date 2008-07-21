@@ -30,6 +30,7 @@ import com.zimbra.cs.mailbox.calendar.Alarm;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
+import com.zimbra.cs.mailbox.calendar.Geo;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
@@ -251,7 +252,7 @@ public class CalendarUtils {
             throw ServiceException.INVALID_REQUEST("Missing uid in a cancel invite", null);
 
         Invite sanitized =
-            cancelInvite(account, null, false, false, folder, cancel, cancel.getComment(),
+            cancelInvite(account, null, false, false, folder, cancel, null,
                          cancel.getAttendees(), cancel.getRecurId(),
                          false);
         
@@ -718,6 +719,31 @@ public class CalendarUtils {
         String name = element.getAttribute(MailConstants.A_NAME, "");
         String location = element.getAttribute(MailConstants.A_CAL_LOCATION, "");
 
+        // CATEGORIES
+        for (Iterator<Element> catIter = element.elementIterator(MailConstants.E_CAL_CATEGORY); catIter.hasNext(); ) {
+            String cat = catIter.next().getTextTrim();
+            newInv.addCategory(cat);
+        }
+
+        // COMMENTs
+        for (Iterator<Element> cmtIter = element.elementIterator(MailConstants.E_CAL_COMMENT); cmtIter.hasNext(); ) {
+            String cmt = cmtIter.next().getTextTrim();
+            newInv.addComment(cmt);
+        }
+
+        // CONTACTs
+        for (Iterator<Element> cnIter = element.elementIterator(MailConstants.E_CAL_CONTACT); cnIter.hasNext(); ) {
+            String contact = cnIter.next().getTextTrim();
+            newInv.addContact(contact);
+        }
+
+        // GEO
+        Element geoElem = element.getOptionalElement(MailConstants.E_CAL_GEO);
+        if (geoElem != null) {
+            Geo geo = Geo.parse(geoElem);
+            newInv.setGeo(geo);
+        }
+
         // SEQUENCE
         int seq = (int) element.getAttributeLong(MailConstants.A_CAL_SEQUENCE, 0);
         newInv.setSeqNo(seq);
@@ -1104,7 +1130,7 @@ public class CalendarUtils {
 
             // COMMENT
             if (comment != null && !comment.equals(""))
-                cancel.setComment(comment);
+                cancel.addComment(comment);
         }
 
         // UID

@@ -18,6 +18,7 @@
 package com.zimbra.cs.mailbox.calendar.cache;
 
 import java.util.Iterator;
+import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -25,6 +26,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.calendar.Alarm;
+import com.zimbra.cs.mailbox.calendar.Geo;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -63,6 +65,8 @@ public class CacheToXML {
     //     dur - DURATION
     //     allDay - is this an all-day appt/task?
     //     recur - is this recurring?
+    //     cat - CATEGORIES
+    //     geo - GEO
     //     <inst>+ (attrs are given only when different from default value at <appt> level)
     //         fba
     //         ptst
@@ -86,6 +90,8 @@ public class CacheToXML {
     //         class
     //         allDay
     //         recur
+    //         cat
+    //         geo
     //         // end exception block
     //         // NOTE: Only invId is a new instance-level attribute.
     //     <alarmData> (next alarm to fire)
@@ -190,6 +196,15 @@ public class CacheToXML {
 
             parent.addAttribute(MailConstants.A_NAME, fullInstance.getSummary());
             parent.addAttribute(MailConstants.A_CAL_LOCATION, fullInstance.getLocation());
+            List<String> categories = fullInstance.getCategories();
+            if (categories != null) {
+                for (String cat : categories) {
+                    parent.addElement(MailConstants.E_CAL_CATEGORY).setText(cat);
+                }
+            }
+            Geo geo = fullInstance.getGeo();
+            if (geo != null)
+                geo.toXml(parent);
 
             // fragment has already been sanitized...
             String fragment = fullInstance.getFragment();

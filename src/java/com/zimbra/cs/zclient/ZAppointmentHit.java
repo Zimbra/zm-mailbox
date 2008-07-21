@@ -19,6 +19,7 @@ package com.zimbra.cs.zclient;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.cs.mailbox.calendar.Geo;
 import com.zimbra.cs.zclient.event.ZModifyAppointmentEvent;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.ZInvite.ZComponent;
@@ -28,6 +29,7 @@ import com.zimbra.cs.zclient.ZMailbox.ZFreeBusyTimeSlot;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -107,6 +109,8 @@ public class ZAppointmentHit implements ZSearchHit {
     private boolean mIsRecurring;
     private String mName;
     private String mLocation;
+    private List<String> mCategories;
+    private Geo mGeo;
     private String mInviteId;
     private String mSeriesInviteId;
     private String mSeriesComponentNumber;
@@ -176,6 +180,21 @@ public class ZAppointmentHit implements ZSearchHit {
         String tags = e.getAttribute(MailConstants.A_TAGS, null);
         String name = e.getAttribute(MailConstants.A_NAME, null);
         String location = e.getAttribute(MailConstants.A_CAL_LOCATION, null);
+
+        List<String> categories = null;
+        Iterator<Element> catIter = e.elementIterator(MailConstants.E_CAL_CATEGORY);
+        if (catIter.hasNext()) {
+            categories = new ArrayList<String>();
+            for (; catIter.hasNext(); ) {
+                String cat = catIter.next().getTextTrim();
+                categories.add(cat);
+            }
+        }
+        Geo geo = null;
+        Element geoElem = e.getOptionalElement(MailConstants.E_CAL_GEO);
+        if (geoElem != null)
+            geo = Geo.parse(geoElem);
+
         String inviteId = e.getAttribute(MailConstants.A_CAL_INV_ID, null);
         String inviteCompNumber = e.getAttribute(MailConstants.A_CAL_COMPONENT_NUM, null);
         boolean isOrganizer = e.getAttributeBool(MailConstants.A_CAL_ISORG, false);
@@ -244,6 +263,24 @@ public class ZAppointmentHit implements ZSearchHit {
             appt.mName = inst.getAttribute(MailConstants.A_NAME, name);
             appt.mLocation = inst.getAttribute(MailConstants.A_CAL_LOCATION, location);
 
+            List<String> instCategories = null;
+            Iterator<Element> instCatIter = inst.elementIterator(MailConstants.E_CAL_CATEGORY);
+            if (instCatIter.hasNext()) {
+                instCategories = new ArrayList<String>();
+                for (; instCatIter.hasNext(); ) {
+                    String cat = instCatIter.next().getTextTrim();
+                    instCategories.add(cat);
+                }
+                appt.mCategories = instCategories;
+            } else {
+                appt.mCategories = categories;
+            }
+            Element instGeoElem = inst.getOptionalElement(MailConstants.E_CAL_GEO);
+            if (instGeoElem != null)
+                appt.mGeo = Geo.parse(instGeoElem);
+            else
+                appt.mGeo = geo;
+
             appt.mInviteId = inst.getAttribute(MailConstants.A_CAL_INV_ID, inviteId);
             appt.mSeriesInviteId = inviteId;
 
@@ -290,7 +327,10 @@ public class ZAppointmentHit implements ZSearchHit {
                     mPriority = getStr(comp.getPriority(), mPriority);
                     mName = getStr(comp.getName(), mName);
                     mLocation = getStr(comp.getLocation(), mLocation);
-
+                    if (comp.getCategories() != null)
+                        mCategories = comp.getCategories();
+                    if (comp.getGeo() != null)
+                        mGeo = comp.getGeo();
                 }
             }
         }
@@ -348,6 +388,9 @@ public class ZAppointmentHit implements ZSearchHit {
         sb.add("flags", mFlags);
         sb.add("name", mName);
         sb.add("location", mLocation);
+        sb.add("categories", mCategories, true, true);
+        if (mGeo != null)
+            sb.add("geo", mGeo.toString());
         sb.add("inviteId", mInviteId);
         sb.add("inviteComponentNumber", mInviteComponentNumber);
         sb.add("freeBusyActual", mFreeBusyActual);
@@ -422,6 +465,10 @@ public class ZAppointmentHit implements ZSearchHit {
     public String getName() { return mName; }
 
     public String getLocation() { return mLocation; }
+
+    public List<String> getCategories() { return mCategories; }
+
+    public Geo getGeo() { return mGeo; }
 
     public String getInviteId() { return mInviteId; }
 

@@ -381,9 +381,42 @@ public class ZCalendar {
         }
         return str;
     }
-    
-    
-    
+
+    public static String toCommaSepText(List<String> vals) {
+        StringBuilder sb = new StringBuilder();
+        boolean first = true;
+        for (String val : vals) {
+            if (first)
+                first = false;
+            else
+                sb.append(",");
+            sb.append(escape(val));
+        }
+        return sb.toString();
+    }
+
+    public static List<String> parseCommaSepText(String encoded) {
+        List<String> list = new ArrayList<String>();
+        int len;
+        if (encoded != null && (len = encoded.length()) > 0) {
+            int start = 0;
+            char prev = encoded.charAt(0);
+            for (int i = 0; i < len; i++) {
+                char curr = encoded.charAt(i);
+                if (curr == ',' && prev != '\\') {
+                    String val = encoded.substring(start, i);
+                    list.add(unescape(val));
+                    start = i + 1;
+                }
+                prev = curr;
+            }
+            String val = encoded.substring(start);
+            list.add(unescape(val));
+        }
+        return list;
+    }
+
+
     /**
      * @author tim
      * 
@@ -494,6 +527,8 @@ public class ZCalendar {
                     case EXRULE:
                     case RDATE:
                     case EXDATE:
+                    case CATEGORIES:
+                    case GEO:
                         noEscape = true;
                         break;
                     }
@@ -1025,6 +1060,12 @@ public class ZCalendar {
      * @param args
      */
     public static void main(String[] args) {
+        String str1 = ",foo,,bar,,b\\,az,,,";
+        List<String> list = parseCommaSepText(str1);
+        String str2 = toCommaSepText(list);
+        if (!str1.equals(str2))
+            System.err.println("Different!");
+
         try {
             /**
              * ,;"\ and \n must all be escaped.  

@@ -51,6 +51,7 @@ import com.zimbra.cs.mailbox.calendar.ICalTimeZone.SimpleOnset;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.Alarm;
+import com.zimbra.cs.mailbox.calendar.Geo;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
@@ -1252,6 +1253,28 @@ public class ToXML {
 
                 e.addAttribute(MailConstants.A_NAME, invite.getName());
                 e.addAttribute(MailConstants.A_CAL_LOCATION, invite.getLocation());
+
+                List<String> categories = invite.getCategories();
+                if (categories != null) {
+                    for (String cat : categories) {
+                        e.addElement(MailConstants.E_CAL_CATEGORY).setText(cat);
+                    }
+                }
+                List<String> comments = invite.getComments();
+                if (comments != null) {
+                    for (String cmt : comments) {
+                        e.addElement(MailConstants.E_CAL_COMMENT).setText(cmt);
+                    }
+                }
+                List<String> contacts = invite.getContacts();
+                if (contacts != null) {
+                    for (String contact : contacts) {
+                        e.addElement(MailConstants.E_CAL_CONTACT).setText(contact);
+                    }
+                }
+                Geo geo = invite.getGeo();
+                if (geo != null)
+                    geo.toXml(e);
 
                 // Percent Complete (VTODO)
                 if (invite.isTodo()) {

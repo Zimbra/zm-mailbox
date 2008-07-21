@@ -20,6 +20,7 @@ package com.zimbra.cs.zclient;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.cs.mailbox.calendar.Geo;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.service.mail.CalendarUtils;
 import com.zimbra.cs.service.mail.ToXML;
@@ -129,6 +130,10 @@ public class ZInvite {
         private boolean mIsAllDay;
         private String mName;
         private String mLocation;
+        private List<String> mCategories;
+        private List<String> mComments;
+        private List<String> mContacts;
+        private Geo mGeo;
         private boolean mIsException;
         private boolean mIsOrganizer;
         private long mSequenceNumber;
@@ -164,6 +169,38 @@ public class ZInvite {
             mIsAllDay = e.getAttributeBool(MailConstants.A_CAL_ALLDAY, false);
             mName = e.getAttribute(MailConstants.A_NAME, null);
             mLocation = e.getAttribute(MailConstants.A_CAL_LOCATION, null);
+
+            Iterator<Element> catIter = e.elementIterator(MailConstants.E_CAL_CATEGORY);
+            if (catIter.hasNext()) {
+                List<String> categories = new ArrayList<String>();
+                for (; catIter.hasNext(); ) {
+                    String cat = catIter.next().getTextTrim();
+                    categories.add(cat);
+                }
+                mCategories = categories;
+            }
+            Iterator<Element> cmtIter = e.elementIterator(MailConstants.E_CAL_COMMENT);
+            if (cmtIter.hasNext()) {
+                List<String> comments = new ArrayList<String>();
+                for (; cmtIter.hasNext(); ) {
+                    String cmt = cmtIter.next().getTextTrim();
+                    comments.add(cmt);
+                }
+                mComments = comments;
+            }
+            Iterator<Element> cnIter = e.elementIterator(MailConstants.E_CAL_CONTACT);
+            if (cnIter.hasNext()) {
+                List<String> contacts = new ArrayList<String>();
+                for (; cnIter.hasNext(); ) {
+                    String cn = cnIter.next().getTextTrim();
+                    contacts.add(cn);
+                }
+                mContacts = contacts;
+            }
+            Element geoElem = e.getOptionalElement(MailConstants.E_CAL_GEO);
+            if (geoElem != null)
+                mGeo = Geo.parse(geoElem);
+
             mIsException = e.getAttributeBool(MailConstants.A_CAL_IS_EXCEPTION, false);
             mIsOrganizer = e.getAttributeBool(MailConstants.A_CAL_ISORG, false);
             mSequenceNumber = e.getAttributeLong(MailConstants.A_CAL_SEQUENCE, 0);
@@ -220,6 +257,24 @@ public class ZInvite {
             if (mIsAllDay) compEl.addAttribute(MailConstants.A_CAL_ALLDAY, mIsAllDay);
             if (mName != null) compEl.addAttribute(MailConstants.A_NAME, mName);
             if (mLocation != null) compEl.addAttribute(MailConstants.A_CAL_LOCATION, mLocation);
+            if (mCategories != null) {
+                for (String cat : mCategories) {
+                    compEl.addElement(MailConstants.E_CAL_CATEGORY).setText(cat);
+                }
+            }
+            if (mComments != null) {
+                for (String cmt : mComments) {
+                    compEl.addElement(MailConstants.E_CAL_COMMENT).setText(cmt);
+                }
+            }
+            if (mContacts != null) {
+                for (String cn : mContacts) {
+                    compEl.addElement(MailConstants.E_CAL_CONTACT).setText(cn);
+                }
+            }
+            if (mGeo != null)
+                mGeo.toXml(compEl);
+
             if (mIsOrganizer) compEl.addAttribute(MailConstants.A_CAL_ISORG, mIsOrganizer);
             if (mSequenceNumber > 0) compEl.addAttribute(MailConstants.A_CAL_SEQUENCE, mSequenceNumber);
             if (mPriority != null) compEl.addAttribute(MailConstants.A_CAL_PRIORITY, mPriority);
@@ -331,6 +386,38 @@ public class ZInvite {
 
         public void setLocation(String location) {
             mLocation = location;
+        }
+
+        public List<String> getCategories() {
+            return mCategories;
+        }
+
+        public void setCategories(List<String> categories) {
+            mCategories = categories;
+        }
+
+        public List<String> getComments() {
+            return mComments;
+        }
+
+        public void setComments(List<String> comments) {
+            mComments = comments;
+        }
+
+        public List<String> getContacts() {
+            return mContacts;
+        }
+
+        public void setContacts(List<String> contacts) {
+            mContacts = contacts;
+        }
+
+        public Geo getGeo() {
+            return mGeo;
+        }
+
+        public void setGeo(Geo geo) {
+            mGeo = geo;
         }
 
         public boolean isException() {
@@ -463,6 +550,11 @@ public class ZInvite {
             sb.add("name", mName);
             sb.add("compNum", mComponentNum);
             sb.add("locaiton", mLocation);
+            sb.add("categories", mCategories, true, true);
+            sb.add("comments", mComments, true, true);
+            sb.add("contacts", mContacts, true, true);
+            if (mGeo != null)
+                sb.add("geo", mGeo.toString());
             sb.add("isOrganizer", mIsOrganizer);
             sb.add("sequenceNumber", mSequenceNumber);
             sb.add("priority", mPriority);
