@@ -169,7 +169,6 @@ public class CompleteTaskInstance extends CalendarRequest {
         for (ZAttendee at : attendees)
             inst.addAttendee(at);
         inst.setName(recur.getName());
-        inst.setComment(recur.getComment());
         inst.setLocation(recur.getLocation());
         inst.setFlags(recur.getFlags());
         inst.setDescription(recur.getDescription());

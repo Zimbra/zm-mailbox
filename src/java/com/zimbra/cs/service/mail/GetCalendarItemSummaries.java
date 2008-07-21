@@ -40,6 +40,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.calendar.Geo;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
@@ -271,6 +272,16 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                                 if (!defaultInvite.getLocation().equals(inv.getLocation()))
                                     instElt.addAttribute(MailConstants.A_CAL_LOCATION, inv.getLocation());
 
+                                List<String> categories = inv.getCategories();
+                                if (categories != null && !categories.equals(defaultInvite.getCategories())) {
+                                    for (String cat : categories) {
+                                        instElt.addElement(MailConstants.E_CAL_CATEGORY).setText(cat);
+                                    }
+                                }
+                                Geo geo = inv.getGeo();
+                                if (geo != null && !geo.equals(defaultInvite.getGeo()))
+                                    geo.toXml(instElt);
+
                                 if (defaultInvite.hasOtherAttendees() != inv.hasOtherAttendees())
                                     instElt.addAttribute(MailConstants.A_CAL_OTHER_ATTENDEES, inv.hasOtherAttendees());
 
@@ -353,6 +364,16 @@ public class GetCalendarItemSummaries extends CalendarRequest {
 
                     calItemElem.addAttribute(MailConstants.A_NAME, defaultInvite.getName());
                     calItemElem.addAttribute(MailConstants.A_CAL_LOCATION, defaultInvite.getLocation());
+
+                    List<String> categories = defaultInvite.getCategories();
+                    if (categories != null) {
+                        for (String cat : categories) {
+                            calItemElem.addElement(MailConstants.E_CAL_CATEGORY).setText(cat);
+                        }
+                    }
+                    Geo geo = defaultInvite.getGeo();
+                    if (geo != null)
+                        geo.toXml(calItemElem);
 
                     // fragment has already been sanitized...
                     String fragment = defaultInvite.getFragment();

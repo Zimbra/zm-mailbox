@@ -104,7 +104,6 @@ public class Invite {
             ZOrganizer org,
             List<ZAttendee> attendees,
             String name, 
-            String comment, 
             String loc,
             int flags,
             String partStat,
@@ -117,7 +116,11 @@ public class Invite {
             int componentNum,
             boolean sentByMe,
             String description,
-            String fragment)
+            String fragment,
+            List<String> comments,
+            List<String> categories,
+            List<String> contacts,
+            Geo geo)
             {
         setItemType(itemType);
         mMethod = lookupMethod(methodStr);
@@ -139,7 +142,6 @@ public class Invite {
         mOrganizer = org;
         mAttendees = attendees;
         mName = name != null ? name : "";
-        mComment = comment != null ? comment : "";
         mLocation = loc != null ? loc : "";
         mFlags = flags;
         mPartStat = partStat;
@@ -153,6 +155,10 @@ public class Invite {
         mSentByMe = sentByMe;
         mDescription = description;
         mFragment = fragment != null ? fragment : "";
+        mComments = comments != null ? comments : new ArrayList<String>();
+        mCategories = categories != null ? categories : new ArrayList<String>();
+        mContacts = contacts != null ? contacts : new ArrayList<String>();
+        mGeo = geo;
 
         setRecurrence(recurrence);
         setRecurId(recurrenceId);
@@ -236,9 +242,12 @@ public class Invite {
             ZOrganizer organizer,
             List<ZAttendee> attendees,
             String name,
-            String comment, 
             String location,
             String description,
+            List<String> comments,
+            List<String> categories,
+            List<String> contacts,
+            Geo geo,
             long dtStampOrZero,
             int sequenceNoOrZero,
             String partStat,
@@ -266,7 +275,6 @@ public class Invite {
                 organizer,
                 attendees,
                 name,
-                comment,
                 location,
                 Invite.APPT_FLAG_EVENT | (allDayEvent ? Invite.APPT_FLAG_ALLDAY : 0),
                 partStat,
@@ -279,7 +287,8 @@ public class Invite {
                 0, // component num
                 sentByMe,
                 description,
-                Fragment.getFragment(description, true)
+                Fragment.getFragment(description, true),
+                comments, categories, contacts, geo
         );
         
     }
@@ -302,21 +311,27 @@ public class Invite {
     private static final String FN_APPT_FLAGS      = "af";
     private static final String FN_ATTENDEE        = "at";
     private static final String FN_SENTBYME        = "byme";
+    private static final String FN_CATEGORY        = "cat";
     private static final String FN_CLASS           = "cl";
     private static final String FN_CLASS_SETBYME   = "clSetByMe";
     private static final String FN_COMPLETED       = "completed";
     private static final String FN_COMPNUM         = "comp";
-    private static final String FN_ICAL_COMMENT    = "cmt";
+    private static final String FN_COMMENT         = "cmt";
+    private static final String FN_CONTACT         = "contact";
     private static final String FN_FRAGMENT        = "frag";
     private static final String FN_DTSTAMP         = "dts";
     private static final String FN_DURATION        = "duration";
     private static final String FN_END             = "et";
     private static final String FN_APPT_FREEBUSY   = "fb";
+    private static final String FN_GEO             = "geo";
     private static final String FN_LOCATION        = "l";
     private static final String FN_INVMSGID        = "mid";
     private static final String FN_METHOD          = "mthd";
     private static final String FN_NAME            = "n";
     private static final String FN_NUM_ATTENDEES   = "numAt";
+    private static final String FN_NUM_CATEGORIES  = "numCat";
+    private static final String FN_NUM_COMMENTS    = "numCmt";
+    private static final String FN_NUM_CONTACTS    = "numContacts";
     private static final String FN_ORGANIZER       = "org";
     private static final String FN_IS_ORGANIZER    = "isOrg";
     private static final String FN_PARTSTAT        = "ptst";
@@ -364,7 +379,6 @@ public class Invite {
         meta.put(FN_METHOD, inv.mMethod.toString());
         meta.put(FN_FRAGMENT, inv.mFragment);
         // Don't put mDescription in metadata because it may be too big.
-        meta.put(FN_ICAL_COMMENT, inv.mComment);
         
         if (inv.mRecurrence != null) {
             meta.put(FN_RECURRENCE, inv.mRecurrence.encodeMetadata());
@@ -400,6 +414,50 @@ public class Invite {
 
         meta.put(FN_PRIORITY, inv.getPriority());
         meta.put(FN_PCT_COMPLETE, inv.getPercentComplete());
+
+        List<String> comments = inv.getComments();
+        if (comments != null) {
+            int numComm = comments.size();
+            if (numComm > 0) {
+                meta.put(FN_NUM_COMMENTS, numComm);
+                int idx = 0;
+                for (String comm : comments) {
+                    meta.put(FN_COMMENT + idx, comm);
+                    idx++;
+                }
+            }
+        }
+
+        List<String> contacts = inv.getContacts();
+        if (contacts != null) {
+            int numContacts = contacts.size();
+            if (numContacts > 0) {
+                meta.put(FN_NUM_CONTACTS, numContacts);
+                int idx = 0;
+                for (String contact : contacts) {
+                    meta.put(FN_CONTACT + idx, contact);
+                    idx++;
+                }
+            }
+        }
+
+        List<String> categories = inv.getCategories();
+        if (categories != null) {
+            int numCat = categories.size();
+            if (numCat > 0) {
+                meta.put(FN_NUM_CATEGORIES, numCat);
+                int idx = 0;
+                for (String cat : categories) {
+                    meta.put(FN_CATEGORY + idx, cat);
+                    idx++;
+                }
+            }
+        }
+
+        Geo geo = inv.getGeo();
+        if (geo != null) {
+            meta.put(FN_GEO, geo.encodeMetadata());
+        }
 
         if (!inv.mAlarms.isEmpty()) {
             meta.put(FN_NUM_ALARMS, inv.mAlarms.size());
@@ -470,7 +528,6 @@ public class Invite {
         boolean sentByMe = meta.getBool(FN_SENTBYME);
         String fragment = meta.get(FN_FRAGMENT, "");
         // Metadata never contains mDescription because it can be too big.
-        String comment = meta.get(FN_ICAL_COMMENT, "");
         long completed = meta.getLong(FN_COMPLETED, 0);
 
         ParsedDateTime dtStart = null;
@@ -571,12 +628,51 @@ public class Invite {
         String priority = meta.get(FN_PRIORITY, null);
         String pctComplete = meta.get(FN_PCT_COMPLETE, null);
 
+        List<String> comments = null;
+        int numComm = (int) meta.getLong(FN_NUM_COMMENTS, 0);
+        if (numComm > 0) {
+            comments = new ArrayList<String>(numComm);
+            for (int i = 0; i < numComm; i++) {
+                String comm = meta.get(FN_COMMENT + i, null);
+                if (comm != null)
+                    comments.add(comm);
+            }
+        }
+
+        List<String> contacts = null;
+        int numContacts = (int) meta.getLong(FN_NUM_CONTACTS, 0);
+        if (numContacts > 0) {
+            contacts = new ArrayList<String>(numContacts);
+            for (int i = 0; i < numContacts; i++) {
+                String contact = meta.get(FN_CONTACT + i, null);
+                if (contact != null)
+                    contacts.add(contact);
+            }
+        }
+
+        List<String> categories = null;
+        int numCat = (int) meta.getLong(FN_NUM_CATEGORIES, 0);
+        if (numCat > 0) {
+            categories = new ArrayList<String>(numCat);
+            for (int i = 0; i < numCat; i++) {
+                String cat = meta.get(FN_CATEGORY + i, null);
+                if (cat != null)
+                    categories.add(cat);
+            }
+        }
+
+        Geo geo = null;
+        Metadata metaGeo = meta.getMap(FN_GEO, true);
+        if (metaGeo != null)
+            geo = Geo.decodeMetadata(metaGeo);
+
         Invite invite = new Invite(itemType, methodStr, tzMap, calItem, uid, status,
                 priority, pctComplete, completed, freebusy, transp, classProp,
                 dtStart, dtEnd, duration, recurrence, isOrganizer, org, attendees,
-                name, comment, loc, flags, partStat, rsvp,
+                name, loc, flags, partStat, rsvp,
                 recurrenceId, dtstamp, seqno,
-                mailboxId, mailItemId, componentNum, sentByMe, null, fragment);
+                mailboxId, mailItemId, componentNum, sentByMe, null, fragment,
+                comments, categories, contacts, geo);
 
         invite.setClassPropSetByMe(classPropSetByMe);
 
@@ -839,8 +935,6 @@ public class Invite {
     public int getMailItemId() { return mMailItemId; }
     public String getName() { return mName; };
     public void setName(String name) { mName = name; }
-    public String getComment() { return mComment; }
-    public void setComment(String comment) { mComment = comment; }
     public String getStatus() { return mStatus; }
     public void setStatus(String status) { mStatus = status; }
     public String getFreeBusy() { return mFreeBusy; }
@@ -866,6 +960,14 @@ public class Invite {
     public void setPriority(String prio) { mPriority = prio; }
     public String getPercentComplete() { return mPercentComplete; }
     public void setPercentComplete(String pct) { mPercentComplete = pct; }
+    public List<String> getCategories() { return mCategories; }
+    public void addCategory(String category) { mCategories.add(category); }
+    public List<String> getContacts() { return mContacts; }
+    public void addContact(String contact) { mContacts.add(contact); }
+    public List<String> getComments() { return mComments; }
+    public void addComment(String comment) { mComments.add(comment); }
+    public Geo getGeo() { return mGeo; }
+    public void setGeo(Geo geo) { mGeo = geo; }
 
     public long getDTStamp() { return mDTStamp; }
     public void setDtStamp(long stamp) {
@@ -1027,7 +1129,6 @@ public class Invite {
         else
             sb.append("(not specified)");
         sb.append(", name: ").append(this.mName);
-        sb.append(", comment: ").append(this.mComment);
         sb.append(", location: ").append(this.mLocation);
         sb.append(", allDay: ").append(isAllDayEvent());
         sb.append(", otherAts: ").append(hasOtherAttendees());
@@ -1077,7 +1178,6 @@ public class Invite {
     protected long mCompleted = 0;  // COMPLETED DATE-TIME of VTODO
     
     protected String mName; /* name of the invite, aka "subject" */
-    protected String mComment;  /* RFC2445 'comment' */ 
     protected String mLocation;
     protected int mFlags = APPT_FLAG_EVENT;
     protected long mDTStamp = 0;
@@ -1102,6 +1202,11 @@ public class Invite {
 
     private String mPriority;         // 0 .. 9
     private String mPercentComplete;  // 0 .. 100
+
+    private List<String> mCategories = new ArrayList<String>();
+    private List<String> mContacts = new ArrayList<String>();
+    private List<String> mComments = new ArrayList<String>();
+    private Geo mGeo;
 
     // MailItem type of calendar item containing this invite
     private byte mItemType = MailItem.TYPE_APPOINTMENT;
@@ -1550,7 +1655,7 @@ public class Invite {
                                 newInv.setFragment(Fragment.getFragment(prop.mValue, true));
                                 break;
                             case COMMENT:
-                                newInv.setComment(prop.getValue());
+                                newInv.addComment(prop.getValue());
                                 break;
                             case UID:
                                 newInv.setUid(prop.getValue());
@@ -1634,6 +1739,19 @@ public class Invite {
                                     ParsedDateTime completed = ParsedDateTime.parseUtcOnly(prop.getValue());
                                     newInv.setCompleted(completed.getUtcTime());
                                 }
+                                break;
+                            case CATEGORIES:
+                                List<String> categories = ZCalendar.parseCommaSepText(prop.getValue());
+                                for (String cat : categories) {
+                                    newInv.addCategory(cat);
+                                }
+                                break;
+                            case CONTACT:
+                                newInv.addContact(prop.getValue());
+                                break;
+                            case GEO:
+                                Geo geo = Geo.parse(prop);
+                                newInv.setGeo(geo);
                                 break;
                             }
                         }
@@ -1797,9 +1915,12 @@ public class Invite {
                 component.addProperty(new ZProperty(ICalTok.DESCRIPTION, desc));
             
             // COMMENT
-            String comment = getComment();
-            if (comment != null && comment.length()>0) 
-                component.addProperty(new ZProperty(ICalTok.COMMENT, comment));
+            List<String> comments = getComments();
+            if (comments != null && !comments.isEmpty()) {
+                for (String comment : comments) {
+                    component.addProperty(new ZProperty(ICalTok.COMMENT, comment));
+                }
+            }
 
             // LOCATION
             String location = getLocation();
@@ -1823,6 +1944,25 @@ public class Invite {
                 ParsedDateTime completed = ParsedDateTime.fromUTCTime(mCompleted);
                 component.addProperty(completed.toProperty(ICalTok.COMPLETED, false));
             }
+
+            // CATEGORIES
+            List<String> categories = getCategories();
+            if (categories != null && !categories.isEmpty()) {
+                String encodedCat = ZCalendar.toCommaSepText(categories);
+                component.addProperty(new ZProperty(ICalTok.CATEGORIES, encodedCat));
+            }
+
+            // CONTACT
+            List<String> contacts = getContacts();
+            if (contacts != null && !contacts.isEmpty()) {
+                for (String contact : contacts) {
+                    component.addProperty(new ZProperty(ICalTok.CONTACT, contact));
+                }
+            }
+
+            // GEO
+            if (mGeo != null)
+                component.addProperty(mGeo.toZProperty());
 
             // VALARMs
             for (Alarm alarm : mAlarms) {
@@ -1969,13 +2109,18 @@ public class Invite {
                 mStart, mEnd, mDuration,
                 mRecurrence,
                 mIsOrganizer, mOrganizer, new ArrayList<ZAttendee>(mAttendees),
-                mName, mComment, mLocation,
+                mName, mLocation,
                 mFlags, mPartStat, mRsvp, mRecurrenceId, mDTStamp, mSeqNo,
                 0, // mMailboxId
                 0, // mMailItemId
                 0, // mComponentNum
                 mSentByMe,
-                mDescription, mFragment);
+                mDescription, mFragment,
+                new ArrayList<String>(mComments),
+                new ArrayList<String>(mCategories),
+                new ArrayList<String>(mContacts),
+                mGeo != null ? new Geo(mGeo.getLatitude(), mGeo.getLongitude()) : null
+                );
         inv.setClassPropSetByMe(classPropSetByMe());
         inv.setDontIndexMimeMessage(getDontIndexMimeMessage());
         return inv;

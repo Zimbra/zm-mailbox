@@ -236,7 +236,24 @@ public abstract class CalendarItem extends MailItem {
                         ZimbraLog.index.debug("Caught exception fetching description while indexing CalendarItem "+this.getId()+" skipping", ex); 
                     }
                 }
-                s.append(inv.getComment()).append(' ');
+                List<String> comments = inv.getComments();
+                if (comments != null && !comments.isEmpty()) {
+                    for (String comm : comments) {
+                        s.append(comm).append(' ');
+                    }
+                }
+                List<String> contacts = inv.getContacts();
+                if (contacts != null && !contacts.isEmpty()) {
+                    for (String contact : contacts) {
+                        s.append(contact).append(' ');
+                    }
+                }
+                List<String> categories = inv.getCategories();
+                if (categories != null && !categories.isEmpty()) {
+                    for (String cat : categories) {
+                        s.append(cat).append(' ');
+                    }
+                }
                 doc.add(new Field(LuceneFields.L_CONTENT, s.toString(), Field.Store.NO, Field.Index.TOKENIZED));
                 toRet.add(doc);
             } else {

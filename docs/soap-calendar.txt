@@ -153,6 +153,15 @@
              // cutype (calendar user type) = INDividual, GROup, RESource, ROOm, UNKnown
              // sentBy, member, delTo and delFrom values are email addresses
 
+           // CATEGORIES
+           [<category>CATEGORY</category>]*
+           // COMMENTs
+           [<comment>COMMENT</comment>]*
+           // CONTACTs
+           [<contact>CONTACT</contact>]*
+           // GEO
+           [<geo lat="LATITUDE (float value)" lon="LONGITUDE (float value)"/]
+
            [
              <recur>  // see below
                 [ <add|exclude>
@@ -541,7 +550,7 @@ OR
 //      [allDay="1"]             // if set, this is an "all day" appointment
 //      [otherAtt="1"]           // if set, this appointment has other attendees
 //      [alarm="1"] [recur="1"]
-//      [name="NAME"] [loc="LOCATION"] 
+//      [name="NAME"] [loc="LOCATION"]
 //      invId="default_invite_mail_item_id" compNum="default_invite_component_number"
 //      isOrg="default_am_i_organizer_flag"
 //      [priority="num"]
@@ -551,7 +560,9 @@ OR
 //      [t="tags"]
 //   >
 //   <fr>FRAGMENT</fr>
-//      
+//   [<category>CATEGORY</category>]*
+//   [<geo lat="LATITUDE (float value)" lon="LONGITUDE (float value)"/]
+//
 //      ( <inst
 //          [s="START_SECS_GMT"]
 //          [tzo="ms"]  // offset from GMT in milliseconds for start time in the
@@ -569,10 +580,12 @@ OR
 //          [<dur DURATION>] // duration this instance if not same as default
 //          [<isOrg>] // isOrg flag if not same as default
 //          [<otherAtt>] // otherAtt flag if not same as default
+//          [<category>CATEGORY</category>]*
+//          [<geo lat="LATITUDE (float value)" lon="LONGITUDE (float value)"/]
 //        </inst>
 //      )+
 //        
-//   </apt> )*
+//   </appt> )*
 //</GetApptSummariesResponse>
 //
 //   -- fba: actual free-busy status: Free, Busy, busy-Tentative, busy-Unavailable (a.k.a. OutOfOffice)
@@ -699,6 +712,14 @@ OR
                 RECURRENCE PART
              </recur>  
            ]
+           // CATEGORIES
+           [<category>CATEGORY</category>]*
+           // COMMENTs
+           [<comment>COMMENT</comment>]*
+           // CONTACTs
+           [<contact>CONTACT</contact>]*
+           // GEO
+           [<geo lat="LATITUDE (float value)" lon="LONGITUDE (float value)"/]
        </comp>
 
 

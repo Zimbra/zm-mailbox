@@ -22,6 +22,7 @@ import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.mailbox.calendar.Geo;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
@@ -58,6 +59,8 @@ public class FullInstanceData extends InstanceData {
     private String mStatus;
     private String mPriority;
     private String mClassProp;
+    private List<String> mCategories;
+    private Geo mGeo;
 
     // appointment-only meta data
     private String mFreeBusyIntended;
@@ -86,6 +89,8 @@ public class FullInstanceData extends InstanceData {
     public String getStatus() { return mStatus; }
     public String getPriority() { return mPriority; }
     public String getClassProp() { return mClassProp; }
+    public List<String> getCategories() { return mCategories; }
+    public Geo getGeo() { return mGeo; }
 
     public String getFreeBusyIntended() { return mFreeBusyIntended; }
     public String getTransparency() { return mTransparency; }
@@ -99,11 +104,11 @@ public class FullInstanceData extends InstanceData {
             String summary, String location, String description, String fragment,
             Boolean isAllDay,
             String status, String priority, String classProp,
-            String freeBusyIntended, String transparency) {
+            String freeBusyIntended, String transparency, List<String> categories, Geo geo) {
         super(dtStart, duration, alarmAt, tzOffset, partStat, freeBusyActual, percentComplete);
         init(invId, compNum, recurrenceId, sequence, dtStamp,
              organizer, isOrganizer, attendees, summary, location, description, fragment,
-             isAllDay, status, priority, classProp, freeBusyIntended, transparency);
+             isAllDay, status, priority, classProp, freeBusyIntended, transparency, categories, geo);
     }
 
     private void init(
@@ -113,7 +118,7 @@ public class FullInstanceData extends InstanceData {
             String summary, String location, String description, String fragment,
             Boolean isAllDay,
             String status, String priority, String classProp,
-            String freeBusyIntended, String transparency) {
+            String freeBusyIntended, String transparency, List<String> categories, Geo geo) {
         mInvId = invId; mCompNum = compNum;
         mRecurrenceId = recurrenceId; mSequence = sequence; mDtStamp = dtStamp;
         mOrganizer = organizer; mIsOrganizer = isOrganizer;
@@ -123,6 +128,8 @@ public class FullInstanceData extends InstanceData {
         mIsAllDay = isAllDay;
         mStatus = status; mPriority = priority; mClassProp = classProp;
         mFreeBusyIntended = freeBusyIntended; mTransparency = transparency;
+        mCategories = categories;
+        mGeo = geo;
     }
 
     // create a full instance, clearing fields that don't override the default instance
@@ -157,6 +164,8 @@ public class FullInstanceData extends InstanceData {
         mClassProp = inv.getClassProp();
         mFreeBusyIntended = inv.getFreeBusy();
         mTransparency = inv.getTransparency();
+        mCategories = inv.getCategories();
+        mGeo = inv.getGeo();
         clearUnchangedFields(defaultInstance);
     }
 
@@ -187,6 +196,10 @@ public class FullInstanceData extends InstanceData {
                 mFreeBusyIntended = null;
             if (Util.sameValues(mTransparency, other.getTransparency()))
                 mTransparency = null;
+            if (Util.sameValues(mCategories, other.getCategories()))
+                mCategories = null;
+            if (Util.sameValues(mGeo, other.getGeo()))
+                mGeo = null;
         }
     }
 
@@ -210,6 +223,9 @@ public class FullInstanceData extends InstanceData {
     private static final String FN_CLASS = "class";
     private static final String FN_FREEBUSY = "fb";
     private static final String FN_TRANSPARENCY = "transp";
+    private static final String FN_NUM_CATEGORIES = "numCat";
+    private static final String FN_CATEGORY = "cat";
+    private static final String FN_GEO = "geo";
 
     FullInstanceData(Metadata meta) throws ServiceException {
         super(meta);
@@ -255,9 +271,24 @@ public class FullInstanceData extends InstanceData {
         String fb = meta.get(FN_FREEBUSY, null);
         String transp = meta.get(FN_TRANSPARENCY, null);
 
+        List<String> categories = null;
+        int numCat = (int) meta.getLong(FN_NUM_CATEGORIES, 0);
+        if (numCat > 0) {
+            categories = new ArrayList<String>();
+            for (int i = 0; i < numCat; i++) {
+                String cat = meta.get(FN_CATEGORY + i, null);
+                if (cat != null)
+                    categories.add(cat);
+            }
+        }
+        Geo geo = null;
+        Metadata metaGeo = meta.getMap(FN_GEO, true);
+        if (metaGeo != null)
+            geo = Geo.decodeMetadata(metaGeo);
+
         init(invId, compNum, recurId, seq, dtStamp, org, isOrg, attendees,
              summary, location, description, fragment, isAllDay,
-             status, priority, classProp, fb, transp);
+             status, priority, classProp, fb, transp, categories, geo);
     }
 
     Metadata encodeMetadata() {
@@ -296,6 +327,21 @@ public class FullInstanceData extends InstanceData {
         meta.put(FN_CLASS, mClassProp);
         meta.put(FN_FREEBUSY, mFreeBusyIntended);
         meta.put(FN_TRANSPARENCY, mTransparency);
+
+        if (mCategories != null) {
+            int numCat = mCategories.size();
+            if (numCat > 0) {
+                meta.put(FN_NUM_CATEGORIES, numCat);
+                int i = 0;
+                for (String cat : mCategories) {
+                    meta.put(FN_CATEGORY + i, cat);
+                    i++;
+                }
+            }
+        }
+        if (mGeo != null) {
+            meta.put(FN_GEO, mGeo.encodeMetadata());
+        }
 
         return meta;
     }
