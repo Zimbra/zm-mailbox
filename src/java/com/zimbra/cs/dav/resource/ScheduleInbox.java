@@ -54,7 +54,7 @@ public class ScheduleInbox extends Collection {
 		ArrayList<DavResource> result = new ArrayList<DavResource>();
         if (!ctxt.isSchedulingEnabled())
         	return result;
-		String query = "after:-1month is:invite inid:" + getId();
+		String query = "is:invite inid:" + getId();
 		Mailbox mbox = getMailbox(ctxt);
 		ZimbraQueryResults zqr = null;
 		try {
