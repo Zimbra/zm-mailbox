@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
@@ -33,7 +34,7 @@ import com.zimbra.cs.dav.property.CalDavProperty;
 public class User extends DavResource {
 
     public User(String mainUrl, Account owner) throws ServiceException {
-        super(mainUrl, owner);
+        super(mainUrl, getOwner(mainUrl, owner));
         String user = getOwner();
         String url = UrlNamespace.getPrincipalUrl(user);
         addResourceType(DavElements.E_PRINCIPAL);
@@ -52,6 +53,16 @@ public class User extends DavResource {
         setProperty(DavElements.E_DISPLAYNAME, cn);
     }
     
+	private static String getOwner(String url, Account acct) throws ServiceException {
+		String owner = acct.getName();
+		Provisioning prov = Provisioning.getInstance();
+        Config config = prov.getConfig();
+        String defaultDomain = config.getAttr(Provisioning.A_zimbraDefaultDomainName, null);
+        if (url.indexOf('@') < 0 && defaultDomain != null && defaultDomain.equalsIgnoreCase(acct.getDomainName()))
+        	owner = owner.substring(0, owner.indexOf('@'));
+        return owner;
+	}
+	
     @Override
     public void delete(DavContext ctxt) throws DavException {
         throw new DavException("cannot delete this resource", HttpServletResponse.SC_FORBIDDEN, null);
