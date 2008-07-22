@@ -45,6 +45,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
+import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.service.util.ItemId;
 
 /**
@@ -333,7 +334,10 @@ public class UrlNamespace {
     	if (msg.isInvite() && msg.hasCalendarItemInfos()) {
     		Message.CalendarItemInfo calItemInfo = msg.getCalendarItemInfo(0);
     		try {
-    			return mbox.getCalendarItemById(ctxt.getOperationContext(), calItemInfo.getCalendarItemId());
+    			CalendarItem item = mbox.getCalendarItemById(ctxt.getOperationContext(), calItemInfo.getCalendarItemId());
+    			Invite invite = item.getInvite(msg.getId(), calItemInfo.getComponentNo());
+    			if (item != null && invite != null)
+    				return item;
             } catch (MailServiceException.NoSuchItemException e) {
             	// the appt must have been cancelled or deleted.
             	// bug 26315
@@ -383,7 +387,7 @@ public class UrlNamespace {
 			case MailItem.TYPE_MESSAGE :
 				CalendarItem calItem = getCalendarItemForMessage(ctxt, (Message)item);
 				if (calItem != null)
-					resource = new CalendarObject.LocalCalendarObject(ctxt, calItem);
+					resource = new CalendarObject.LocalCalendarObject(ctxt, CalendarObject.CalendarPath.generate(item.getPath(), calItem.getUid()), calItem);
 				break;
 			}
 		} catch (ServiceException e) {

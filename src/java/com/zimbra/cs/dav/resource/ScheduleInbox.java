@@ -65,7 +65,7 @@ public class ScheduleInbox extends Collection {
                 	Message msg = ((MessageHit)hit).getMessage();
                 	CalendarItem calItem = UrlNamespace.getCalendarItemForMessage(ctxt, msg);
                 	if (calItem != null)
-                		result.add(new CalendarObject.LocalCalendarObject(ctxt, calItem));
+                		result.add(new CalendarObject.LocalCalendarObject(ctxt, CalendarObject.CalendarPath.generate(msg.getPath(), calItem.getUid()), calItem));
                 }
 			}
 		} catch (Exception e) {
