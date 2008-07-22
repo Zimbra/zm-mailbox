@@ -84,7 +84,7 @@ public interface CalendarObject {
             mNewlyCreated = newItem;
         }
 
-        protected LocalCalendarObject(DavContext ctxt, String path, CalendarItem calItem) throws ServiceException {
+        public LocalCalendarObject(DavContext ctxt, String path, CalendarItem calItem) throws ServiceException {
             super(ctxt, path, calItem);
             mUid = calItem.getUid();
             mInvites = calItem.getInvites();
