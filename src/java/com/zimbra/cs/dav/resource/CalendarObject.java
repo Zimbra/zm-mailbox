@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import javax.servlet.http.HttpServletResponse;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AuthToken;
@@ -36,6 +38,7 @@ import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
@@ -62,13 +65,15 @@ public interface CalendarObject {
     public String getVcalendar(DavContext ctxt, Filter filter) throws IOException, DavException;    
 
     public static class CalendarPath {
-        public static String generate(String itemPath, String uid) {
+        public static String generate(String itemPath, String uid, int extra) {
             // escape uid
             StringBuilder path = new StringBuilder();
             path.append(itemPath);
             if (path.charAt(path.length()-1) != '/')
                 path.append("/");
             path.append(uid);
+            if (extra >= 0)
+            	path.append(",").append(extra);
             path.append(CAL_EXTENSION);
             return path.toString();
         }
@@ -85,9 +90,19 @@ public interface CalendarObject {
         }
 
         public LocalCalendarObject(DavContext ctxt, String path, CalendarItem calItem) throws ServiceException {
+        	this(ctxt, path, calItem, -1, -1);
+        }
+        
+        public LocalCalendarObject(DavContext ctxt, String path, CalendarItem calItem, int compNum, int msgId) throws ServiceException {
             super(ctxt, path, calItem);
             mUid = calItem.getUid();
-            mInvites = calItem.getInvites();
+            if (compNum < 0 || msgId < 0) {
+                mInvites = calItem.getInvites();
+            } else {
+            	mMsgId = msgId;
+            	mInvites = new Invite[1];
+            	mInvites[0] = calItem.getInvite(compNum);
+            }
             mTzmap = calItem.getTimeZoneMap();
             Invite defInv = calItem.getDefaultInviteOrNull();
             if (defInv != null)
@@ -95,7 +110,7 @@ public interface CalendarObject {
             setProperty(DavElements.P_GETCONTENTTYPE, Mime.CT_TEXT_CALENDAR);
             setProperty(DavElements.P_GETCONTENTLENGTH, Long.toString(calItem.getSize()));
             addProperty(CalDavProperty.getCalendarData(this));
-            if (mInvites[0].hasRecurId()) {
+            if (mInvites[0].hasRecurId() && mInvites.length > 1) {
             	// put the main series to be the first invite, otherwise iCal won't like it.
             	ArrayList<Invite> newList = new ArrayList<Invite>();
             	ArrayList<Invite> exceptions = new ArrayList<Invite>();
@@ -113,9 +128,10 @@ public interface CalendarObject {
         private String mUid;
         private Invite[] mInvites;
         private TimeZoneMap mTzmap;
+        private int mMsgId;
 
         protected static String getCalendarPath(CalendarItem calItem) throws ServiceException {
-            return CalendarPath.generate(calItem.getPath(), calItem.getUid());
+            return CalendarPath.generate(calItem.getPath(), calItem.getUid(), -1);
         }
 
         /* Returns true if the supplied Filter matches this calendar object. */
@@ -143,7 +159,7 @@ public interface CalendarObject {
             buf.append("BEGIN:VCALENDAR\r\n");
             buf.append("VERSION:").append(ZCalendar.sIcalVersion).append("\r\n");
             buf.append("PRODID:").append(ZCalendar.sZimbraProdID).append("\r\n");
-			if (mFolderId == Mailbox.ID_FOLDER_INBOX)
+			if (mMsgId > 0)
 	            buf.append("METHOD:REQUEST").append("\r\n");
             Iterator<ICalTimeZone> iter = mTzmap.tzIterator();
             while (iter.hasNext()) {
@@ -191,12 +207,29 @@ public interface CalendarObject {
         public String getUid() {
             return mUid;
         }
+        
+        @Override
+    	public void delete(DavContext ctxt) throws DavException {
+    		if (mMsgId > 0) {
+    			// it means this CalendarObject represents the meeting invite in Inbox.
+    			// on DELETE request we need to delete the invite message, not the
+    			// appointment in the calendar.
+    			try {
+    				Mailbox mbox = getMailbox(ctxt);
+    				mbox.delete(ctxt.getOperationContext(), mMsgId, MailItem.TYPE_MESSAGE);
+    			} catch (ServiceException se) {
+    				throw new DavException("cannot delete item", HttpServletResponse.SC_FORBIDDEN, se);
+    			}
+    		} else {
+    			super.delete(ctxt);
+    		}
+    	}
     }
 	
 	public static class RemoteCalendarObject extends DavResource implements CalendarObject {
 
 	    public RemoteCalendarObject(String uri, String owner, ZAppointmentHit appt, RemoteCalendarCollection parent) {
-	        super(CalendarPath.generate(uri, appt.getUid()), owner);
+	        super(CalendarPath.generate(uri, appt.getUid(), -1), owner);
 	        mParent = parent;
 	        mUid = appt.getUid();
             ItemId iid;
