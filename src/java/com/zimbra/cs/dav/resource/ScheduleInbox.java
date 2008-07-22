@@ -63,9 +63,9 @@ public class ScheduleInbox extends Collection {
                 ZimbraHit hit = zqr.getNext();
                 if (hit instanceof MessageHit) {
                 	Message msg = ((MessageHit)hit).getMessage();
-                	CalendarItem calItem = UrlNamespace.getCalendarItemForMessage(ctxt, msg);
-                	if (calItem != null)
-                		result.add(new CalendarObject.LocalCalendarObject(ctxt, CalendarObject.CalendarPath.generate(msg.getPath(), calItem.getUid()), calItem));
+                	DavResource rs = UrlNamespace.getResourceFromMailItem(ctxt, msg);
+                	if (rs != null)
+                		result.add(rs);
                 }
 			}
 		} catch (Exception e) {

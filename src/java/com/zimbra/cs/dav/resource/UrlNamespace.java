@@ -289,6 +289,7 @@ public class UrlNamespace {
         }
         if (f != null && path.endsWith(CalendarObject.CAL_EXTENSION)) {
             String uid = path.substring(index + 1, path.length() - CalendarObject.CAL_EXTENSION.length());
+            index = uid.indexOf(',');
             if (f.getType() == MailItem.TYPE_MOUNTPOINT) {
                 Mountpoint mp = (Mountpoint)f;
                 // if the folder is a mountpoint instantiate a remote object.
@@ -315,8 +316,13 @@ public class UrlNamespace {
                 if (res == null)
                     throw new DavException("no such appointment "+user+", "+uid, HttpServletResponse.SC_NOT_FOUND, null);
                 return res;
+            } else if (index > 0) {
+            	id = uid.substring(index+1);
+            	item = mbox.getItemById(octxt, Integer.parseInt(id), MailItem.TYPE_UNKNOWN);
+
+            } else {
+                item = mbox.getCalendarItemByUid(octxt, uid);
             }
-            item = mbox.getCalendarItemByUid(octxt, uid);
         }
         
         return getResourceFromMailItem(ctxt, item);
@@ -329,15 +335,18 @@ public class UrlNamespace {
         }
     }
     
-    public static CalendarItem getCalendarItemForMessage(DavContext ctxt, Message msg) throws ServiceException {
+    private static MailItemResource getCalendarItemForMessage(DavContext ctxt, Message msg) throws ServiceException {
     	Mailbox mbox = msg.getMailbox();
     	if (msg.isInvite() && msg.hasCalendarItemInfos()) {
     		Message.CalendarItemInfo calItemInfo = msg.getCalendarItemInfo(0);
     		try {
     			CalendarItem item = mbox.getCalendarItemById(ctxt.getOperationContext(), calItemInfo.getCalendarItemId());
-    			Invite invite = item.getInvite(msg.getId(), calItemInfo.getComponentNo());
-    			if (item != null && invite != null)
-    				return item;
+    			int compNum = calItemInfo.getComponentNo();
+    			Invite invite = item.getInvite(msg.getId(), compNum);
+    			if (item != null && invite != null) {
+    				String path = CalendarObject.CalendarPath.generate(msg.getPath(), item.getUid(), msg.getId());
+    				return new CalendarObject.LocalCalendarObject(ctxt, path, item, compNum, msg.getId());
+    			}
             } catch (MailServiceException.NoSuchItemException e) {
             	// the appt must have been cancelled or deleted.
             	// bug 26315
@@ -385,9 +394,7 @@ public class UrlNamespace {
 				resource = new CalendarObject.LocalCalendarObject(ctxt, (CalendarItem)item);
 				break;
 			case MailItem.TYPE_MESSAGE :
-				CalendarItem calItem = getCalendarItemForMessage(ctxt, (Message)item);
-				if (calItem != null)
-					resource = new CalendarObject.LocalCalendarObject(ctxt, CalendarObject.CalendarPath.generate(item.getPath(), calItem.getUid()), calItem);
+				resource = getCalendarItemForMessage(ctxt, (Message)item);
 				break;
 			}
 		} catch (ServiceException e) {
