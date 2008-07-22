@@ -105,6 +105,37 @@ public class DbImapMessage {
         }
     }
 
+    public static long getMinUid(Mailbox mbox, int folderId) throws ServiceException {
+        return getMinMaxUid(mbox, folderId, "min");
+    }
+
+    public static long getMaxUid(Mailbox mbox, int folderId) throws ServiceException {
+        return getMinMaxUid(mbox, folderId, "max");
+    }
+
+    private static long getMinMaxUid(Mailbox mbox, int folderId, String minmax)
+        throws ServiceException {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        ZimbraLog.datasource.debug(
+            "Getting %s IMAP uid: mboxId=%d, folderId=%d", minmax, mbox.getId(), folderId);
+        try {
+            conn = DbPool.getConnection();
+            stmt = conn.prepareStatement(String.format(
+                "SELECT %s FROM %s WHERE mailbox_id = %d AND imap_folder_id = %d AND uid > 0",
+                minmax, getTableName(mbox), mbox.getId(), folderId));
+            rs = stmt.executeQuery();
+            return rs.next() ? rs.getLong(1) : -1;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Unable to execute query", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+    }
+
     public static void setFlags(Mailbox mbox, int itemId, int flags)
     throws ServiceException {
         ZimbraLog.datasource.debug(
@@ -306,7 +337,7 @@ public class DbImapMessage {
             DbPool.quietClose(conn);
         }
 
-        ZimbraLog.mailbox.debug("Found %d tracked IMAP messages for %s",
+        ZimbraLog.datasource.debug("Found %d tracked IMAP messages for %s",
             imapMessages.size(), imapFolder.getRemotePath());
         return imapMessages;
     }

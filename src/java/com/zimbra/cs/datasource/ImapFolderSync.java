@@ -54,6 +54,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Collections;
 
 class ImapFolderSync {
     private final ImapSync imapSync;
@@ -69,6 +70,8 @@ class ImapFolderSync {
     private ImapMessageCollection trackedMsgs;
     private Set<Integer> localMsgIds;
     private List<Integer> newMsgIds;
+    private List<Long> addedUids;
+    private long maxUid;
     private boolean expunge;
     private boolean completed;
     private MailDateFormat mdf;
@@ -161,6 +164,7 @@ class ImapFolderSync {
             throw new MailException("Invalid UIDNEXT (> last sync uid)");
         }
         newMsgIds = new ArrayList<Integer>();
+        addedUids = new ArrayList<Long>();
         long lastUid = syncState.getLastUid();
         int lastModSeq = syncState.getLastModSeq();
         if (fullSync) {
@@ -171,12 +175,19 @@ class ImapFolderSync {
             syncState.setLastModSeq(pushChanges(lastModSeq));
         }
         // Fetch new messages
-        if (syncState.hasNewMessages(mb)) {
-            fetchMessages(lastUid + 1, uidNext - 1);
+        List<Long> deletedUids = new ArrayList<Long>();
+        maxUid = uidNext > 0 ? uidNext - 1 : 0;
+        if (maxUid <= 0 || lastUid < maxUid) {
+            fetchMessages(lastUid + 1, deletedUids);
         }
+        if (!addedUids.isEmpty()) {
+            Collections.sort(addedUids, Collections.reverseOrder());
+            fetchMessages(addedUids, deletedUids);
+        }
+        // Delete and optionally expunge messages
+        deleteMessages(deletedUids);
         if (expunge) {
-            // Close IMAP folder to automatically expunge deleted messages
-            connection.mclose();
+            connection.mclose(); // Close mailbox to expunge messages
         }
 
         // Update sync state for new mailbox status
@@ -628,8 +639,9 @@ class ImapFolderSync {
             Long uid = md.getUid();
             ImapMessage trackedMsg = trackedMsgs.getByUid(uid);
             if (trackedMsg == null) {
-                remoteFolder.debug("Ignoring flags for message with uid %d " +
-                                   "because it is not being tracked", uid);
+                remoteFolder.debug(
+                    "Adding new message with UID %d detected while syncing flags", uid);
+                addedUids.add(uid);
                 continue;
             }
             int msgId = trackedMsg.getItemId();
@@ -689,21 +701,18 @@ class ImapFolderSync {
         }
     }
 
-    private void fetchMessages(long startUid, long endUid)
+    private void fetchMessages(long startUid, List<Long> deletedUids)
         throws ServiceException, IOException {
-        String end = endUid > 0 ? String.valueOf(endUid) : "*";
+        String end = maxUid > 0 ? String.valueOf(maxUid) : "*";
         List<Long> uids = remoteFolder.getUids(startUid + ":" + end);
         if (uids.size() > 0) {
-            List<Long> deletedUids = new ArrayList<Long>();
             fetchMessages(uids, deletedUids);
-            deleteMessages(deletedUids);
         }
     }
 
     private void fetchMessages(List<Long> uids, List<Long> deletedUids)
         throws ServiceException, IOException {
         remoteFolder.debug("Fetching %d new IMAP message(s)", uids.size());
-        long maxUid = uids.get(0);
         long lastCheckTime = System.currentTimeMillis();
         Iterator<Long> ui = uids.iterator();
         while (ui.hasNext()) {
@@ -712,7 +721,7 @@ class ImapFolderSync {
             ds.checkPendingMessages();
             long time = System.currentTimeMillis();
             long freq = ds.getSyncFrequency();
-            if (freq > 0 && time - lastCheckTime > freq) {
+            if (maxUid > 0 && freq > 0 && time - lastCheckTime > freq) {
                 // Check for newly arrived messages...
                 lastCheckTime = time;
                 List<Long> newUids = remoteFolder.getUids((maxUid + 1) + ":*");
@@ -729,12 +738,12 @@ class ImapFolderSync {
     }
 
     private String nextFetchSeq(Iterator<Long> uids) {
-        long end = uids.next();
-        long start = end;
+        StringBuilder sb = new StringBuilder();
+        sb.append(uids.next());
         for (int count = FETCH_SIZE; uids.hasNext() && --count > 0; ) {
-            start = uids.next();
+            sb.append(',').append(uids.next());
         }
-        return start + ":" + end;
+        return sb.toString();
     }
 
     private void fetchMessages(String seq, final List<Long> deletedUids)
