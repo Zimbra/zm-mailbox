@@ -1977,8 +1977,29 @@ public class Invite {
         }
 
         // ORGANIZER
-        if (hasOrganizer())
-            component.addProperty(getOrganizer().toProperty());
+        if (hasOrganizer()) {
+            ZOrganizer organizer = getOrganizer();
+            ZProperty orgProp = organizer.toProperty();
+            component.addProperty(orgProp);
+            // Hack for Outlook 2007 (bug 25777)
+            if (organizer.hasSentBy()) {
+                String sentByParam = orgProp.paramVal(ICalTok.SENT_BY, null);
+                if (sentByParam != null) {
+                    ZProperty xMsOlkSender = new ZProperty("X-MS-OLK-SENDER");
+                    xMsOlkSender.setValue(sentByParam);
+                    component.addProperty(xMsOlkSender);
+                    String sentByAddr = organizer.getSentBy();
+                    if (sentByAddr != null && sentByAddr.indexOf('@') != -1 && sentByAddr.indexOf(':') == -1) {
+                        Account sentByAcct = Provisioning.getInstance().get(AccountBy.name, sentByAddr);
+                        if (sentByAcct != null) {
+                            String displayName = sentByAcct.getAttr(Provisioning.A_displayName, null);
+                            if (displayName != null)
+                                xMsOlkSender.addParameter(new ZParameter(ICalTok.CN, displayName));
+                        }
+                    }
+                }
+            }
+        }
 
         // DTSTART
         ParsedDateTime dtstart = getStartTime();
