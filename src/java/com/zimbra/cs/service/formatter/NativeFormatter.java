@@ -64,6 +64,7 @@ public class NativeFormatter extends Formatter {
     public static final String ATTR_FILENAME  = "filename";
     public static final String ATTR_CONTENTURL = "contenturl";
     public static final String ATTR_CONTENTTYPE = "contenttype";
+    public static final String ATTR_CONTENTLENGTH = "contentlength";
 
     public static final String FMT_NATIVE = "native";
 
@@ -163,7 +164,7 @@ public class NativeFormatter extends Formatter {
                 String defaultCharset = context.targetAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null);
             	sendbackOriginalDoc(mp, contentType, defaultCharset, context.req, context.resp);
             } else {
-            	handleConversion(context, mp.getInputStream(), Mime.getFilename(mp), mp.getContentType(), item.getDigest());
+            	handleConversion(context, mp.getInputStream(), Mime.getFilename(mp), mp.getContentType(), item.getDigest(), -1 * mp.getSize());
             }
         }
     }
@@ -176,7 +177,7 @@ public class NativeFormatter extends Formatter {
         doc = (version > 0 ? (Document)doc.getMailbox().getItemRevision(context.opContext, doc.getId(), doc.getType(), version) : doc);
         InputStream is = doc.getContentStream();
     	if (HTML_VIEW.equals(context.getView())) {
-    		handleConversion(context, is, doc.getName(), doc.getContentType(), doc.getDigest());
+    		handleConversion(context, is, doc.getName(), doc.getContentType(), doc.getDigest(), doc.getSize());
     	} else {
             String defaultCharset = context.targetAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null);
             boolean neuter = doc.getAccount().getBooleanAttr(Provisioning.A_zimbraNotebookSanitizeHtml, true);
@@ -187,13 +188,14 @@ public class NativeFormatter extends Formatter {
         }
     }
     
-    private void handleConversion(Context ctxt, InputStream is, String filename, String ct, String digest) throws IOException, ServletException {
+    private void handleConversion(Context ctxt, InputStream is, String filename, String ct, String digest, long length) throws IOException, ServletException {
         try {
             ctxt.req.setAttribute(ATTR_INPUTSTREAM, is);
             ctxt.req.setAttribute(ATTR_MSGDIGEST, digest);
             ctxt.req.setAttribute(ATTR_FILENAME, filename);
             ctxt.req.setAttribute(ATTR_CONTENTTYPE, ct);
             ctxt.req.setAttribute(ATTR_CONTENTURL, ctxt.req.getRequestURL().toString());
+            ctxt.req.setAttribute(ATTR_CONTENTLENGTH, length);
             RequestDispatcher dispatcher = ctxt.req.getRequestDispatcher(CONVERSION_PATH);
             dispatcher.forward(ctxt.req, ctxt.resp);
         } finally {

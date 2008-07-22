@@ -40,23 +40,25 @@ public class AttachmentInfo {
     private List<String> mSeqInArchive;
     private String mDigest;
     private String mFilename;
+    private long mLength;
     
-    public AttachmentInfo(InputStream in, String digest, String ct, String p, String filename, List<String> seq) {
+    public AttachmentInfo(InputStream in, String digest, String ct, String p, String filename, long length, List<String> seq) {
         mInstream = in;
         mDigest = digest;
         mContentType = ct;
         mPart = p;
         mFilename = filename;
+        mLength = length;
         mSeqInArchive = new ArrayList<String>(seq.size());
         mSeqInArchive.addAll(seq);
     }
     
-    public AttachmentInfo(InputStream in, String digest, String ct, String p, String filename, String[] seq) {
-        this(in, digest, ct, p, filename, Arrays.asList(seq));
+    public AttachmentInfo(InputStream in, String digest, String ct, String p, String filename, long length, String[] seq) {
+        this(in, digest, ct, p, filename, length, Arrays.asList(seq));
     }
    
-    public AttachmentInfo(InputStream in, String digest, String ct, String p, String filename) {
-        this(in, digest, ct, p, filename, new String[0]);
+    public AttachmentInfo(InputStream in, String digest, String ct, String p, String filename, long length) {
+        this(in, digest, ct, p, filename, length, new String[0]);
     }
 
     /**
@@ -137,5 +139,9 @@ public class AttachmentInfo {
      */
     public String getFilename() {
         return mFilename;
+    }
+    
+    public long getLength() {
+        return mLength;
     }
 }
