@@ -149,6 +149,7 @@ public class ZInvite {
         private ZRecurrence mRecurrence;
         private String mComponentNum;
         private List<ZAlarm> mAlarms;
+        private String mRecurrenceIdZ;
 
         public ZComponent() {
             mStatus = ZStatus.CONF;
@@ -234,6 +235,8 @@ public class ZInvite {
             for (Element attendeeEl : e.listElements(MailConstants.E_CAL_ATTENDEE)) {
                 mAttendees.add(new ZAttendee(attendeeEl));
             }
+
+            mRecurrenceIdZ = e.getAttribute(MailConstants.A_CAL_RECURRENCE_ID_Z, null);
 
             Element recurEl = e.getOptionalElement(MailConstants.E_CAL_RECUR);
             if (recurEl != null)
@@ -539,6 +542,10 @@ public class ZInvite {
             this.mAlarms.add(alarm);
         }
 
+        public String getRecurrenceIdZ() {
+            return mRecurrenceIdZ;
+        }
+
         ZSoapSB toString(ZSoapSB sb) {
             sb.beginStruct();
             sb.add("status", mStatus.name());
@@ -567,6 +574,7 @@ public class ZInvite {
             if (mOrganizer != null) sb.addStruct("organizer", mOrganizer.toString());
             sb.add("attendees", mAttendees, false, false);
             if (mRecurrence != null) sb.addStruct("recurrence", mRecurrence.toString());
+            sb.add("recurrenceId", mRecurrenceIdZ);            
             sb.endStruct();
             return sb;
         }
