@@ -175,6 +175,7 @@ public class CacheToXML {
             parent.addAttribute(MailConstants.A_CAL_IS_EXCEPTION, true);
             // HACK: ZWC insists on receiving recur=false on exceptions.
             parent.addAttribute(MailConstants.A_CAL_RECUR, false);
+            parent.addAttribute(MailConstants.A_CAL_RECURRENCE_ID_Z, fullInstance.getRecurrenceIdZ());
         }
 
         // Organizer

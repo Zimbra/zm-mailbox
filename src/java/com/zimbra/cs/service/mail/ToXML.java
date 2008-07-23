@@ -1359,18 +1359,24 @@ public class ToXML {
             e.addAttribute(MailConstants.A_CAL_STATUS, invite.getStatus());
             e.addAttribute(MailConstants.A_CAL_CLASS, invite.getClassProp());
 
+            boolean allDay = invite.isAllDayEvent();
             boolean isException = invite.hasRecurId();
             if (isException) {
                 e.addAttribute(MailConstants.A_CAL_IS_EXCEPTION, true);
-                Element ridElem = e.addElement(MailConstants.E_CAL_EXCEPTION_ID);
                 RecurId rid = invite.getRecurId();
                 ParsedDateTime ridDt = rid.getDt();
-                ridElem.addAttribute(MailConstants.A_CAL_DATETIME, ridDt.getDateTimePartString());
-                ridElem.addAttribute(MailConstants.A_CAL_TIMEZONE, ridDt.getTZName());
+                Element ridElem = e.addElement(MailConstants.E_CAL_EXCEPTION_ID);
+                ridElem.addAttribute(MailConstants.A_CAL_DATETIME, ridDt.getDateTimePartString(false));
+                if (!allDay)
+                    ridElem.addAttribute(MailConstants.A_CAL_TIMEZONE, ridDt.getTZName());
                 ridElem.addAttribute(MailConstants.A_CAL_RECURRENCE_RANGE_TYPE, rid.getRange());
+
+                ParsedDateTime ridUtc = (ParsedDateTime) ridDt.clone();
+                if (!allDay)
+                    ridUtc.toUTC();
+                e.addAttribute(MailConstants.A_CAL_RECURRENCE_ID_Z, ridUtc.getDateTimePartString(false));
             }
 
-            boolean allDay = invite.isAllDayEvent();
             if (allDay)
                 e.addAttribute(MailConstants.A_CAL_ALLDAY, true);
 

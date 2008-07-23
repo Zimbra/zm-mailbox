@@ -697,14 +697,18 @@ OR
                                                       // 
                                                       
             [isOrg="1"] // 1 if you are the Organizer of this event
-            >
-           <s DATETIME> // Start date-time (required)
+            [ridZ="YYYYMMDD[ThhmmssZ]"]   // RECURRENCE-ID in "Z" (UTC) timezone, if this is an exception
+           >
 
+           <s DATETIME> // Start date-time (required)
            (
               <e DATETIME> // End date-time
               OR
               <dur DURATION>
-           )   
+           )
+
+           [<exceptId .../>]  // RECURRENCE-ID, if this is an exception
+
            <or ...> // organizer
            <at ...>* // attendee
            [
