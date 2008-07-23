@@ -419,17 +419,19 @@ class ImapFolderSync {
         localFolder = new LocalFolder(mailbox, localPath);
         if (!localFolder.exists()) {
             localFolder.create();
-            if (flags.isNoinferiors() || ld.getDelimiter() == 0) {
-                // Folder does not allow children
-                localFolder.alterTag(Flag.ID_FLAG_NO_INFERIORS);
-            }
+        }
+        // Check if inferiors should be disabled for local folder
+        if (flags.isNoinferiors() || ld.getDelimiter() == 0) {
+            // Folder does not allow children
+            localFolder.debug("Setting NO_INFERIORS flag on local folder");
+            localFolder.alterTag(Flag.ID_FLAG_NO_INFERIORS);
         }
         // Handle possible case conversion of INBOX in path
         localPath = localFolder.getPath();
         ds.initializedLocalFolder(localPath, false);
         tracker = ds.createImapFolder(
             localFolder.getId(), localPath, remotePath, uidValidity);
-    }
+    }                                                        
 
     private void appendNewMessages(List<Integer> newMsgIds)
         throws ServiceException, IOException {
