@@ -179,72 +179,11 @@ public class ZRecur {
         return d;
     }
 
-    private Date estimateEndTimeByCount(ParsedDateTime dtStart) {
-        if (mCount <= 0)
-            return null;
-        Calendar end = dtStart.getCalendarCopy();
-        Frequency freq = mFreq;
-        if (freq == null)
-            freq = Frequency.WEEKLY;
-        int interval = Math.max(mInterval, 1) * mCount;
-        switch (freq) {
-        case WEEKLY:
-            end.add(Calendar.WEEK_OF_YEAR, interval);
-            break;
-        case MONTHLY:
-            end.add(Calendar.MONTH, interval);
-            break;
-        case YEARLY:
-            // If rule mentions February 29th, multiply the estimated number of years by 4.
-            // This is a very conservative over-estimate.
-            boolean hasFebruary = false;
-            if (mByMonthList != null) {
-                for (int month : mByMonthList) {
-                    if (month == 2) {
-                        hasFebruary = true;
-                        break;
-                    }
-                }
-            }
-            boolean hasLeapDay = false;
-            if (hasFebruary && mByMonthDayList != null) {
-                for (int day : mByMonthDayList) {
-                    if (day == 29) {
-                        hasLeapDay = true;
-                        break;
-                    }
-                }
-            }
-            if (hasLeapDay)
-                interval *= 4;
-            end.add(Calendar.YEAR, interval);
-            break;
-        case DAILY:
-            end.add(Calendar.DAY_OF_YEAR, interval);
-            break;
-        default:
-            return null;
-        }
-        Date endTime = end.getTime();
-        Date hardEndTime = new Date(MAX_DATE_MILLIS);
-        if (hardEndTime.before(endTime))
-            endTime = hardEndTime;
-        return endTime;
-    }
-
     public Date getEstimatedEndTime(ParsedDateTime dtStart) throws ServiceException {
         if (dtStart == null)
             return null;
-
-        Date byUntil = estimateEndTimeByUntilAndHardLimits(dtStart);
-        Date byCount = estimateEndTimeByCount(dtStart);
-        if (byCount == null)
-            return byUntil;
-        if (byUntil == null)
-            return byCount;
-        if (byCount.before(byUntil))
-            return byCount;
-        return byUntil;
+        return estimateEndTimeByUntilAndHardLimits(dtStart);
+        // We can't estimate by COUNT because BYxxx rule parts yield too many possibilities.
     }
 
     public static String listAsStr(List<? extends Object> l) {
