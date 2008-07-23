@@ -1498,6 +1498,7 @@ public abstract class Provisioning {
     public static final String A_zimbraPrefCalendarReminderSendMobile     = "zimbraPrefCalendarReminderSendMobile";
     public static final String A_zimbraPrefCalendarReminderYMessenger = "zimbraPrefCalendarReminderYMessenger";
 
+    public static final String A_zimbraPrefCalendarAllowCancelEmailToSelf = "zimbraPrefCalendarAllowCancelEmailToSelf";
     public static final String A_zimbraPrefCalendarAllowForwardedInvite = "zimbraPrefCalendarAllowForwardedInvite";
     public static final String A_zimbraPrefCalendarAllowMethodlessInvite = "zimbraPrefCalendarAllowMethodlessInvite";
     public static final String A_zimbraPrefCalendarAllowPublishMethodInvite = "zimbraPrefCalendarAllowPublishMethodInvite";

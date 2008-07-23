@@ -519,15 +519,23 @@ public class Message extends MailItem {
                     } else {
                         // bug 27887: Ignore when calendar request email somehow made a loop back to the
                         // organizer address.  Necessary conditions are:
+                        //
                         // 1) This mailbox is currently organizer.
                         // 2) ORGANIZER in the request is this mailbox.
-                        // If ORGANIZER in the reuqest is a different user this is an organizer change request,
+                        // 3) User/COS preference doesn't explicitly allow it. (bug 29777)
+                        //
+                        // If ORGANIZER in the request is a different user this is an organizer change request,
                         // which should be allowed to happen.
                         boolean ignore = false;
                         Invite defInv = calItem.getDefaultInviteOrNull();
                         if (defInv != null && defInv.isOrganizer())
                             ignore = getAccount().equals(cur.getOrganizerAccount());
-
+                        if (defInv != null && defInv.isOrganizer()) {
+                            Account acct = getAccount();
+                            if (acct.equals(cur.getOrganizerAccount()))
+                                ignore = !acct.getBooleanAttr(
+                                        Provisioning.A_zimbraPrefCalendarAllowCancelEmailToSelf, false);
+                        }
                         if (ignore) {
                             ZimbraLog.calendar.info(
                                     "Ignoring calendar request emailed from organizer to self, " +
