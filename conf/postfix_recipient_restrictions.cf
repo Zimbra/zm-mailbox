@@ -9,11 +9,5 @@ reject_unlisted_recipient
 %%contains VAR:zimbraMtaRestriction reject_unknown_client%%
 %%contains VAR:zimbraMtaRestriction reject_unknown_hostname%%
 %%contains VAR:zimbraMtaRestriction reject_unknown_sender_domain%%
-%%contains VAR:zimbraMtaRestriction reject_rbl_client dnsbl.njabl.org%%
-%%contains VAR:zimbraMtaRestriction reject_rbl_client cbl.abuseat.org%%
-%%contains VAR:zimbraMtaRestriction reject_rbl_client bl.spamcop.net%%
-%%contains VAR:zimbraMtaRestriction reject_rbl_client sbl.spamhaus.org%%
-%%contains VAR:zimbraMtaRestriction reject_rbl_client xbl.spamhaus.org%%
-%%contains VAR:zimbraMtaRestriction reject_rbl_client sbl-xbl.spamhaus.org%%
-%%contains VAR:zimbraMtaRestriction reject_rbl_client relays.mail-abuse.org%%
+%%explode reject_rbl_client VAR:zimbraMtaRestrictionRBLs%%
 permit
