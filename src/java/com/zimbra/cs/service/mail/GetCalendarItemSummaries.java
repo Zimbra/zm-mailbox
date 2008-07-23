@@ -46,6 +46,7 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.ParsedDuration;
+import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.cache.CacheToXML;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarData;
@@ -234,6 +235,12 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                         if (inst.isException()) {
 
                             instElt.addAttribute(MailConstants.A_CAL_IS_EXCEPTION, true);
+                            RecurId rid = inv.getRecurId();
+                            ParsedDateTime ridDt = rid.getDt();
+                            ParsedDateTime ridUtc = (ParsedDateTime) ridDt.clone();
+                            if (!inv.isAllDayEvent())
+                                ridUtc.toUTC();
+                            instElt.addAttribute(MailConstants.A_CAL_RECURRENCE_ID_Z, ridUtc.getDateTimePartString(false));
 
                             if ((defaultInvite.getMailItemId() != invId.getMsgId()) || (defaultInvite.getComponentNum() != invId.getComponentId())) {
                                 instElt.addAttribute(MailConstants.A_CAL_INV_ID, ifmt.formatItemId(calItem, inst.getMailItemId()));

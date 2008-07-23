@@ -133,6 +133,7 @@ public class ZAppointmentHit implements ZSearchHit {
     private long mEndTime;
     private long mTimeZoneOffset;
     private boolean mIsException;
+    private String mRecurrenceIdZ;  // RECURRENCE-ID in "Z" (UTC) timezone
 
     private String mFolderId;
     private String mUid;
@@ -247,6 +248,7 @@ public class ZAppointmentHit implements ZSearchHit {
             }
 
             appt.mIsException = inst.getAttributeBool(MailConstants.A_CAL_IS_EXCEPTION, false);
+            appt.mRecurrenceIdZ = inst.getAttribute(MailConstants.A_CAL_RECURRENCE_ID_Z, null);
 
             appt.mFreeBusyActual = inst.getAttribute(MailConstants.A_APPT_FREEBUSY_ACTUAL, freeBusyActual);
             appt.mTransparency = inst.getAttribute(MailConstants.A_APPT_TRANSPARENCY, transparency);
@@ -409,6 +411,7 @@ public class ZAppointmentHit implements ZSearchHit {
         sb.add("startTime", mStartTime);
         sb.add("timeZoneOffset", mTimeZoneOffset);
         sb.add("exception", mIsException);
+        sb.add("recurrenceId", mRecurrenceIdZ);
         sb.add("fragment", mFragment);
         sb.add("sortField", mSortField);
         sb.add("score", mScore);
@@ -502,6 +505,8 @@ public class ZAppointmentHit implements ZSearchHit {
     public long getTimeZoneOffset() { return mTimeZoneOffset; }
 
     public boolean isException() { return mIsException; }
+
+    public String getRecurrenceIdZ() { return mRecurrenceIdZ; }
 
     public String getFragment() { return mFragment; }
 

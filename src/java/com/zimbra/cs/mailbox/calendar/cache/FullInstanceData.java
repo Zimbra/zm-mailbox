@@ -24,6 +24,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.Geo;
 import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
@@ -37,6 +38,7 @@ public class FullInstanceData extends InstanceData {
 
     // change management info
     private long mRecurrenceId;
+    private String mRecurrenceIdZ;
     private int mSequence;
     private long mDtStamp;
 
@@ -71,6 +73,7 @@ public class FullInstanceData extends InstanceData {
     public int getCompNum()   { return mCompNum; }
 
     public long getRecurrenceId() { return mRecurrenceId; }
+    public String getRecurrenceIdZ() { return mRecurrenceIdZ; }
     public int getSequence()      { return mSequence; }
     public long getDtStamp()      { return mDtStamp; }
 
@@ -99,28 +102,29 @@ public class FullInstanceData extends InstanceData {
             long dtStart, long duration, long alarmAt, long tzOffset,
             String partStat, String freeBusyActual, String percentComplete,
             int invId, int compNum,
-            long recurrenceId, int sequence, long dtStamp,
+            long recurrenceId, String recurrenceIdUtc, int sequence, long dtStamp,
             ZOrganizer organizer, Boolean isOrganizer, List<ZAttendee> attendees,
             String summary, String location, String description, String fragment,
             Boolean isAllDay,
             String status, String priority, String classProp,
             String freeBusyIntended, String transparency, List<String> categories, Geo geo) {
         super(dtStart, duration, alarmAt, tzOffset, partStat, freeBusyActual, percentComplete);
-        init(invId, compNum, recurrenceId, sequence, dtStamp,
+        init(invId, compNum, recurrenceId, recurrenceIdUtc, sequence, dtStamp,
              organizer, isOrganizer, attendees, summary, location, description, fragment,
              isAllDay, status, priority, classProp, freeBusyIntended, transparency, categories, geo);
     }
 
     private void init(
             int invId, int compNum,
-            long recurrenceId, int sequence, long dtStamp,
+            long recurrenceId, String recurrenceIdZ, int sequence, long dtStamp,
             ZOrganizer organizer, Boolean isOrganizer, List<ZAttendee> attendees,
             String summary, String location, String description, String fragment,
             Boolean isAllDay,
             String status, String priority, String classProp,
             String freeBusyIntended, String transparency, List<String> categories, Geo geo) {
         mInvId = invId; mCompNum = compNum;
-        mRecurrenceId = recurrenceId; mSequence = sequence; mDtStamp = dtStamp;
+        mRecurrenceId = recurrenceId; mRecurrenceIdZ = recurrenceIdZ;
+        mSequence = sequence; mDtStamp = dtStamp;
         mOrganizer = organizer; mIsOrganizer = isOrganizer;
         mAttendees = attendees;
         mNumAttendees = attendees != null ? (Integer) attendees.size() : null;
@@ -143,7 +147,11 @@ public class FullInstanceData extends InstanceData {
         mCompNum = inv.getComponentNum();
         if (inv.hasRecurId()) {
             RecurId rid = inv.getRecurId();
-            mRecurrenceId = rid.getDt().getUtcTime();
+            ParsedDateTime ridDt = rid.getDt();
+            mRecurrenceId = ridDt.getUtcTime();
+            ParsedDateTime ridUtc = (ParsedDateTime) ridDt.clone();
+            ridUtc.toUTC();
+            mRecurrenceIdZ = ridUtc.getDateTimePartString(false);
         }
         mSequence = inv.getSeqNo();
         mDtStamp = inv.getDTStamp();
@@ -207,6 +215,7 @@ public class FullInstanceData extends InstanceData {
     private static final String FN_INVID = "invId";
     private static final String FN_COMPNUM = "compNum";
     private static final String FN_RECURRENCE_ID = "rid";
+    private static final String FN_RECURRENCE_ID_Z = "ridZ";
     private static final String FN_SEQUENCE = "seq";
     private static final String FN_DTSTAMP = "dtstamp";
     private static final String FN_ORGANIZER = "org";
@@ -232,6 +241,7 @@ public class FullInstanceData extends InstanceData {
         int invId = (int) meta.getLong(FN_INVID);
         int compNum = (int) meta.getLong(FN_COMPNUM);
         long recurId = meta.getLong(FN_RECURRENCE_ID);
+        String recurIdUtc = meta.get(FN_RECURRENCE_ID_Z, null);
         int seq = (int) meta.getLong(FN_SEQUENCE);
         long dtStamp = meta.getLong(FN_DTSTAMP);
 
@@ -286,7 +296,7 @@ public class FullInstanceData extends InstanceData {
         if (metaGeo != null)
             geo = Geo.decodeMetadata(metaGeo);
 
-        init(invId, compNum, recurId, seq, dtStamp, org, isOrg, attendees,
+        init(invId, compNum, recurId, recurIdUtc, seq, dtStamp, org, isOrg, attendees,
              summary, location, description, fragment, isAllDay,
              status, priority, classProp, fb, transp, categories, geo);
     }
@@ -298,6 +308,7 @@ public class FullInstanceData extends InstanceData {
         meta.put(FN_INVID, mInvId);
         meta.put(FN_COMPNUM, mCompNum);
         meta.put(FN_RECURRENCE_ID, mRecurrenceId);
+        meta.put(FN_RECURRENCE_ID_Z, mRecurrenceIdZ);
         meta.put(FN_SEQUENCE, mSequence);
         meta.put(FN_DTSTAMP, mDtStamp);
 

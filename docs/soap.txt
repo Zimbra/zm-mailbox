@@ -1369,7 +1369,6 @@ Expanded instance data -- only if calExpandInstStart and
     calExpandInstEnd are requested in the SearchRequest:
 
 [    <inst
-          [recurId="recurId"]
           [s="START_SECS_GMT"]
           [tzo="ms"]  // offset from GMT in milliseconds for start time in the
                     // time zone of the instance; this is useful because the
@@ -1380,6 +1379,7 @@ Expanded instance data -- only if calExpandInstStart and
                     // local time zone to determine the correct date to render
                     // the all-day block
           [ex="1"]
+          [ridZ="YYYYMMDD[ThhmmssZ]"]   // RECURRENCE-ID in "Z" (UTC) timezone, if this is an exception
           [ANY CHANGED PARAMETERS]
       >
           [<f>FRAGMENT IF DIFFERENT FROM DEFAULT</f>]
