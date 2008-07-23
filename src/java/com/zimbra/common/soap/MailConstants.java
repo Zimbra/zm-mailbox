@@ -480,6 +480,7 @@ public class MailConstants {
     public static final String A_CAL_RANGE = "range";
     public static final String A_CAL_RECURRENCE_ID = "recurId";
     public static final String A_CAL_RECURRENCE_RANGE_TYPE = "rangeType";
+    public static final String A_CAL_RECURRENCE_ID_Z = "ridZ";  // recurrence id in "Z" (UTC) timezone
     public static final String A_CAL_START_TIME = "s";
     public static final String A_CAL_END_TIME = "e";
     public static final String A_CAL_DURATION = "d";
