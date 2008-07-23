@@ -1497,7 +1497,9 @@ public abstract class Provisioning {
     public static final String A_zimbraPrefCalendarReminderMobile     = "zimbraPrefCalendarReminderMobile";
     public static final String A_zimbraPrefCalendarReminderSendMobile     = "zimbraPrefCalendarReminderSendMobile";
     public static final String A_zimbraPrefCalendarReminderYMessenger = "zimbraPrefCalendarReminderYMessenger";
-    
+
+    public static final String A_zimbraPrefCalendarAllowCancelEmailToSelf = "zimbraPrefCalendarAllowCancelEmailToSelf";
+
     /*
      * junk messages
      */ 
