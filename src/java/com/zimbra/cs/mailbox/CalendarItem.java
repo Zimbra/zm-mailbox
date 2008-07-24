@@ -813,6 +813,29 @@ public abstract class CalendarItem extends MailItem {
                     return 1;
             }
         }
+
+        /**
+         * Returns "YYYYMMDD[ThhmmssZ]" string for this instance.  inv is the Invite
+         * that this instance was expanded from.
+         * @param inv
+         * @return
+         */
+        public String getRecurIdZ(Invite inv) {
+            ParsedDateTime dtStart = inv.getStartTime();
+            if (dtStart == null)
+                return null;
+            ICalTimeZone tz = dtStart.getTimeZone();
+            long startTime = mStart;
+            ParsedDateTime dt;
+            if (inv.isAllDayEvent() && tz != null) {
+                startTime += tz.getOffset(startTime);
+                dt = ParsedDateTime.fromUTCTime(startTime);
+                dt.setHasTime(false);
+            } else {
+                dt = ParsedDateTime.fromUTCTime(startTime);            
+            }
+            return dt.getDateTimePartString(false);
+        }
     }
 
     public String getUid() {
@@ -881,6 +904,13 @@ public abstract class CalendarItem extends MailItem {
         return null;
     }
 
+    /**
+     * Returns the Invite with matching RECURRENCE-ID date/time, expressed as
+     * as millis since epoch.  If no matching one is found, the default/series
+     * Invite is returned.
+     * @param recurIdDtstamp
+     * @return
+     */
     public Invite getInviteForRecurId(long recurIdDtstamp) {
         Invite defInv = null;
         for (Invite inv : mInvites) {
@@ -894,6 +924,34 @@ public abstract class CalendarItem extends MailItem {
                     if (dt.getUtcTime() == recurIdDtstamp)
                         return inv;
                 }
+            }
+        }
+        return defInv;
+    }
+
+    /**
+     * Returns the Invite with matching RECURRENCE-ID date/time, expressed as
+     * "YYYYMMDD[ThhmmssZ]" string.  If time comonent is specified, it must be
+     * in UTC timezone ("Z").
+     * If no matching one is found, the default/series Invite is returned.
+     * @param recurIdZ
+     * @return
+     */
+    public Invite getInviteForRecurIdZ(String recurIdZ) {
+        Invite defInv = null;
+        for (Invite inv : mInvites) {
+            RecurId rid = inv.getRecurId();
+            if (recurIdZ != null) {
+                if (rid == null) {
+                    if (defInv == null)
+                        defInv = inv;
+                } else {
+                    if (recurIdZ.equals(rid.getDtZ()))
+                        return inv;
+                }
+            } else {  // recurIdZ == null
+                if (rid == null)
+                    return inv;
             }
         }
         return defInv;
@@ -2090,17 +2148,50 @@ public abstract class CalendarItem extends MailItem {
             }
             return toRet;
         }
+
+        List<ReplyInfo> getReplyInfo(String recurIdZ) {
+            List<ReplyInfo> toRet = new ArrayList<ReplyInfo>();
+            if (recurIdZ != null) {
+                // Look for an exact match first.
+                for (ReplyInfo reply : mReplies) {
+                    // Ignore reply to series and replies to outdated invites.
+                    if (reply.mRecurId != null) {
+                        if (recurIdZ.equals(reply.mRecurId.getDtZ()))
+                            toRet.add(reply);
+                    }
+                }
+            }
+            if (toRet.isEmpty()) {
+                // No specific match.  Use the series reply, if any.
+                for (ReplyInfo reply : mReplies) {
+                    if (reply.mRecurId == null)
+                        toRet.add(reply);
+                }
+            }
+            return toRet;
+        }
     } // class ReplyList
             
     /**
-     * Get all of the Reply data corresponding to this invite.  Pass null to get all replies.
+     * Get all of the Reply data corresponding to an invite.  Pass null to get all replies.
      * 
      * @param inv
      * @return
-     * @throws ServiceException
      */
     public List<ReplyInfo> getReplyInfo(Invite inv) {
         return mReplyList.getReplyInfo(inv);
+    }
+
+    /**
+     * Get all of the Reply data corresponding to a RECURRENCE-ID string.  Pass null to get replies to
+     * the series.  Recurrence ID string has the format of "YYYYMMDD[ThhmmssZ]".
+     * Note the Z (UTC) timezone must be used when time component is present.
+     * 
+     * @param inv
+     * @return
+     */
+    public List<ReplyInfo> getReplyInfo(String recurIdZ) {
+        return mReplyList.getReplyInfo(recurIdZ);
     }
 
     /**

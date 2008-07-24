@@ -166,6 +166,8 @@ public class CacheToXML {
         else
             parent.addAttribute(MailConstants.A_TASK_PERCENT_COMPLETE, instance.getPercentComplete());
 
+        parent.addAttribute(MailConstants.A_CAL_RECURRENCE_ID_Z, instance.getRecurIdZ());
+
         if (!(instance instanceof FullInstanceData))
             return;
 
@@ -175,7 +177,6 @@ public class CacheToXML {
             parent.addAttribute(MailConstants.A_CAL_IS_EXCEPTION, true);
             // HACK: ZWC insists on receiving recur=false on exceptions.
             parent.addAttribute(MailConstants.A_CAL_RECUR, false);
-            parent.addAttribute(MailConstants.A_CAL_RECURRENCE_ID_Z, fullInstance.getRecurrenceIdZ());
         }
 
         // Organizer

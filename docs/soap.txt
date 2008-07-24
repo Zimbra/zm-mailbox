@@ -1594,7 +1594,9 @@ if <header>s are requested, any matching headers are inlined into the response
 ------------
 
 <GetMsgRequest>
-  <m id="{msg-id}" [read="1"] [raw="1"] [max="{max-inlined-length}"] [html="1"] [neuter="0"] [part="{part}"]>
+  <m id="{msg-id}" [read="1"] [raw="1"] [max="{max-inlined-length}"] [html="1"] [neuter="0"] [part="{part}"]
+     [ridZ="YYYYMMDD[ThhmmssZ]"]
+  >
     *(<header n="{header-name}/>)
   </m>
 </GetMsgRequest>
@@ -1616,6 +1618,9 @@ neuter="1" to "neuter" <IMG> tags returned in HTML content; this involves switch
     (default is 1.)
 supply a "part" and the retrieved data will be on the specified message/rfc822 subpart.
     if the part does not exist or is not a message/rfc822 part, mail.NO_SUCH_PART
+
+ridZ="YYYYMMDD[ThhmmssZ]" is used only when making GetMsg call to open an instance of a recurring appointment.
+    the value specified is the date/time data of the RECURRENCE-ID of the instance being requested
 
 if <header>s are requested, any matching headers are inlined into the response
     (not available when raw="1")

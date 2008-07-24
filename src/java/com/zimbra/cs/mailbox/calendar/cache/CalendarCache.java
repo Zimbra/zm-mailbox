@@ -160,7 +160,7 @@ public class CalendarCache {
             }
             String defaultEffectivePartStat = calItem.getEffectivePartStat(defaultInvite, null);
             FullInstanceData defaultData =
-                new FullInstanceData(defaultInvite, defDtStartLong, defDurationLong,
+                new FullInstanceData(defaultInvite, null, defDtStartLong, defDurationLong,
                                      defaultEffectivePartStat, defaultFba, null, null);
             calItemData = new CalendarItemData(
                     calItem.getModifiedSequence(),
@@ -207,13 +207,17 @@ public class CalendarCache {
                     String effectivePartStat = calItem.getEffectivePartStat(inv, inst);
                     InstanceData instData;
                     if (!inst.isException()) {
+                        String ridZ = inst.getRecurIdZ(inv);
                         Long tzOffset = instStartLong != null ? Util.getTZOffsetForInvite(inv, instStart) : null;
                         instData = new InstanceData(
-                                instStartLong, durationLong, alarmAt, tzOffset,
+                                ridZ, instStartLong, durationLong, alarmAt, tzOffset,
                                 effectivePartStat, fba, inv.getPercentComplete(),
                                 defaultData);
                     } else {
-                        instData = new FullInstanceData(inv, instStartLong, durationLong, effectivePartStat, fba, alarmAt, defaultData);
+                        String ridZ = null;
+                        if (inv.hasRecurId())
+                            ridZ = inv.getRecurId().getDtZ();
+                        instData = new FullInstanceData(inv, ridZ, instStartLong, durationLong, effectivePartStat, fba, alarmAt, defaultData);
                     }
                     calItemData.addInstance(instData);
                 } catch (MailServiceException.NoSuchItemException e) {

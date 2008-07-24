@@ -36,6 +36,8 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
@@ -81,7 +83,18 @@ public class GetMsg extends MailDocumentHandler {
             if (raw) {
                 throw ServiceException.INVALID_REQUEST("Cannot request RAW formatted subpart message", null);
             } else {
-                ToXML.encodeInviteAsMP(response, ifmt, octxt, calItem, iid, part, maxSize, wantHTML, neuter, headers, false);
+                String recurIdZ = eMsg.getAttribute(MailConstants.A_CAL_RECURRENCE_ID_Z, null);
+                if (recurIdZ == null) {
+                    // If not specified, try to get it from the Invite.
+                    int invId = iid.getSubpartId();
+                    Invite[] invs = calItem.getInvites(invId);
+                    if (invs.length > 0) {
+                        RecurId rid = invs[0].getRecurId();
+                        if (rid != null)
+                            recurIdZ = rid.getDtZ();
+                    }
+                }
+                ToXML.encodeInviteAsMP(response, ifmt, octxt, calItem, recurIdZ, iid, part, maxSize, wantHTML, neuter, headers, false);
             }
         } else {
             Message msg = getMsg(octxt, mbox, iid, read);

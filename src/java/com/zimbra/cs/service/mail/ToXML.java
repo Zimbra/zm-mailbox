@@ -800,7 +800,7 @@ public class ToXML {
                     isPublic = false;
             }
             if (isPublic || allowPrivateAccess(octxt, calItem))
-                encodeCalendarReplies(calItemElem, calItem, null);
+                encodeCalendarReplies(calItemElem, calItem, (Invite) null);
 
             encodeAlarmTimes(calItemElem, calItem);
         }
@@ -900,9 +900,18 @@ public class ToXML {
         return encodeCalendarItemSummary(parent, ifmt, octxt, calItem, fields, includeInvites, false);
     }
 
+    public static void encodeCalendarReplies(Element parent, CalendarItem calItem, String recurIdZ) {
+        List<CalendarItem.ReplyInfo> replies = calItem.getReplyInfo(recurIdZ);
+        encodeCalendarReplies(parent, calItem, replies);
+    }
+
     public static void encodeCalendarReplies(Element parent, CalendarItem calItem, Invite inv) {
-        Element repliesElt = parent.addElement(MailConstants.E_CAL_REPLIES);
         List<CalendarItem.ReplyInfo> replies = calItem.getReplyInfo(inv);
+        encodeCalendarReplies(parent, calItem, replies);
+    }
+
+    private static void encodeCalendarReplies(Element parent, CalendarItem calItem, List<CalendarItem.ReplyInfo> replies) {
+        Element repliesElt = parent.addElement(MailConstants.E_CAL_REPLIES);
         for (CalendarItem.ReplyInfo repInfo : replies) {
             Element curElt = repliesElt.addElement(MailConstants.E_CAL_REPLY);
             curElt.addAttribute(MailConstants.A_SEQ, repInfo.getSeq()); //zdsync
@@ -945,26 +954,13 @@ public class ToXML {
      *         been added as a child to the passed-in <tt>parent</tt>.
      * @throws ServiceException */
     public static Element encodeInviteAsMP(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-                                           CalendarItem calItem, ItemId iid, String part,
+                                           CalendarItem calItem, String recurIdZ, ItemId iid, String part,
                                            int maxSize, boolean wantHTML, boolean neuter,
                                            Set<String> headers, boolean serializeType)
     throws ServiceException {
         int invId = iid.getSubpartId();
-
-        // calItem is public is all its invites are public.
         Invite[] invites = calItem.getInvites(invId);
-        boolean isPublic;
-        if (invites.length > 0) {
-            isPublic = true;
-            for (Invite inv : invites) {
-                if (!inv.isPublic()) {
-                    isPublic = false;
-                    break;
-                }
-            }
-        } else
-            isPublic = false;
-
+        boolean isPublic = calItem.isPublic();
         boolean showAll = isPublic || allowPrivateAccess(octxt, calItem);
 
         boolean wholeMessage = (part == null || part.trim().equals(""));
@@ -1022,7 +1018,7 @@ public class ToXML {
             encodeTimeZoneMap(invElt, calItem.getTimeZoneMap());
             if (invites.length > 0) {
                 if (showAll)
-                    encodeCalendarReplies(invElt, calItem, invites[0]);
+                    encodeCalendarReplies(invElt, calItem, recurIdZ);
                 for (Invite inv : invites)
                     encodeInviteComponent(invElt, ifmt, octxt, calItem, inv, NOTIFY_FIELDS);
             }
@@ -1371,10 +1367,7 @@ public class ToXML {
                     ridElem.addAttribute(MailConstants.A_CAL_TIMEZONE, ridDt.getTZName());
                 ridElem.addAttribute(MailConstants.A_CAL_RECURRENCE_RANGE_TYPE, rid.getRange());
 
-                ParsedDateTime ridUtc = (ParsedDateTime) ridDt.clone();
-                if (!allDay)
-                    ridUtc.toUTC();
-                e.addAttribute(MailConstants.A_CAL_RECURRENCE_ID_Z, ridUtc.getDateTimePartString(false));
+                e.addAttribute(MailConstants.A_CAL_RECURRENCE_ID_Z, rid.getDtZ());
             }
 
             if (allDay)
