@@ -228,7 +228,7 @@ public class ProvUtil implements DebugListener {
         GET_ACCOUNT_MEMBERSHIP("getAccountMembership", "gam", "{name@domain|id}", Category.ACCOUNT, 1, 2),
         GET_ALL_ACCOUNTS("getAllAccounts","gaa", "[-v] [-e] [-s server] [{domain}]", Category.ACCOUNT, 0, 5),
         GET_ACCOUNT_LOGGERS("getAccountLoggers", "gal", "{name@domain|id}", Category.MISC, 1, 1),
-        GET_ALL_ACCOUNT_LOGGERS("getAllAccountLoggers", "gaal", "{server}", Category.MISC, 1, 1),
+        GET_ALL_ACCOUNT_LOGGERS("getAllAccountLoggers", "gaal", "[{server}]", Category.MISC, 0, 1),
         GET_ALL_ADMIN_ACCOUNTS("getAllAdminAccounts", "gaaa", "[-v] [-e] [attr1 [attr2...]]", Category.ACCOUNT, 0, Integer.MAX_VALUE),
         GET_ALL_CALENDAR_RESOURCES("getAllCalendarResources", "gacr", "[-v] [-e] [-s server] [{domain}]", Category.CALENDAR, 0, 5),
         GET_ALL_CONFIG("getAllConfig", "gacf", "[attr1 [attr2...]]", Category.CONFIG, 0, Integer.MAX_VALUE),
@@ -265,7 +265,7 @@ public class ProvUtil implements DebugListener {
         MODIFY_SERVER("modifyServer", "ms", "{name|id} [attr1 value1 [attr2 value2...]]", Category.SERVER, 3, Integer.MAX_VALUE),
         PUSH_FREEBUSY("pushFreebusy", "pfb", "{domain|account-id} [account-id ...]", Category.FREEBUSY, 1, Integer.MAX_VALUE),
         REMOVE_ACCOUNT_ALIAS("removeAccountAlias", "raa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2),
-        REMOVE_ACCOUNT_LOGGER("removeAccountLogger", "ral", "{name@domain|id} {logging-category}", Category.MISC, 2, 2),
+        REMOVE_ACCOUNT_LOGGER("removeAccountLogger", "ral", "[{name@domain|id}] [{logging-category}]", Category.MISC, 0, 2),
         REMOVE_DISTRIBUTION_LIST_ALIAS("removeDistributionListAlias", "rdla", "{list@domain|id} {alias@domain}", Category.LIST, 2, 2),
         REMOVE_DISTRIBUTION_LIST_MEMBER("removeDistributionListMember", "rdlm", "{list@domain|id} {member@domain}", Category.LIST, 2, Integer.MAX_VALUE),
         RENAME_ACCOUNT("renameAccount", "ra", "{name@domain|id} {newName@domain}", Category.ACCOUNT, 2, 2),
@@ -885,8 +885,12 @@ public class ProvUtil implements DebugListener {
         if (!(mProv instanceof SoapProvisioning))
             throwSoapOnly();
         SoapProvisioning sp = (SoapProvisioning) mProv;
-        
-        Map<String, List<AccountLogger>> allLoggers = sp.getAllAccountLoggers(args[1]);
+
+        String serverName = null;
+        if (args.length == 2) {
+            serverName = args[1];
+        }
+        Map<String, List<AccountLogger>> allLoggers = sp.getAllAccountLoggers(serverName);
         for (String accountName : allLoggers.keySet()) {
             System.out.printf("# name %s\n", accountName);
             for (AccountLogger logger : allLoggers.get(accountName)) {
@@ -899,8 +903,15 @@ public class ProvUtil implements DebugListener {
         if (!(mProv instanceof SoapProvisioning))
             throwSoapOnly();
         SoapProvisioning sp = (SoapProvisioning) mProv;
-        Account acct = lookupAccount(args[1]);
-        sp.removeAccountLogger(acct, args[2]);
+        Account acct = null;
+        String category = null;
+        if (args.length >= 2) {
+            acct = lookupAccount(args[1]);
+        }
+        if (args.length == 3) {
+            category = args[2];
+        }
+        sp.removeAccountLoggers(acct, category);
     }
     
     private void doCreateAccountsBulk(String[] args) throws ServiceException {

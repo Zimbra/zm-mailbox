@@ -1896,7 +1896,7 @@ in soap-waitset.txt
 # Changes logging settings on a per-account basis.
 
 <AddAccountLoggerRequest>
-  <id>{account-id}</id>
+  <account by="id|name">...</account>
   <logger category="{category-name}" level="debug|info|warn|error"/>
 </AddAccountLoggerRequest>
 
@@ -1909,25 +1909,26 @@ in soap-waitset.txt
 
 
 <RemoveAccountLoggerRequest>
-  <id>{account-id}</id>
-  <logger category="{category-name}"/>
+  [<account by="id|name">...</account>]
+  [<logger category="{category-name}"/>]
 </RemoveAccountLoggerRequest>
 
 <RemoveAccountLoggerResponse/>
 
-  Removes a custom logger from the given account.  If the request is sent
-  to a server other than the one that the account resides on, it is proxied
-  to the correct server.
-  
+  Removes one or more custom loggers.  If both the account and logger are
+  specified, removes the given account logger if it exists.  If only the account
+  is specified, removes all custom loggers from that account.  If only
+  the logger is specified, removes that custom logger from all accounts.  If
+  neither element is specified, removes all custom loggers from all accounts
+  on the server that receives the request.
 
 
 <GetAccountLoggersRequest>
-  <id>{account-id}</id>
+  <account by="id|name">...</account>
 </GetAccountLoggersRequest>
 
 <GetAccountLoggersResponse>
-  [<logger category="{category-name} level="debug|info|warn|error"/>]
-  ...
+  <logger category="{category-name} level="debug|info|warn|error"/>*
 </GetAccountLoggersResponse>
 
   Returns custom loggers created for the given account since the
@@ -1938,13 +1939,9 @@ in soap-waitset.txt
 <GetAllAccountLoggersRequest/>
 
 <GetAllAccountLoggersResponse>
-[
   <accountLogger id="{account-id}" name="{account-name}">
     <logger category="{category-name} level="debug|info|warn|error"/>
-    ...
-  </accountLogger>
-]
-  ...
+  </accountLogger>*
 </GetAllAccountLoggersResponse>
 
   Returns all account loggers that have been created on the given server

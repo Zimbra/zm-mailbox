@@ -22,11 +22,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -44,24 +42,43 @@ public class RemoveAccountLogger extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context)
     throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Provisioning prov = Provisioning.getInstance();
         
-        // Look up account
-        String id = request.getElement(AdminConstants.E_ID).getText();
-        Account account = prov.get(AccountBy.id, id, zsc.getAuthToken());
-        if (account == null) {
-            throw AccountServiceException.NO_SUCH_ACCOUNT(id);
+        // Look up account, if specified.
+        Account account = null;
+        String accountName = null;
+        if (request.getOptionalElement(AdminConstants.E_ID) != null ||
+            request.getOptionalElement(AdminConstants.E_ACCOUNT) != null) {
+            account = AddAccountLogger.getAccountFromLoggerRequest(request);
+            accountName = account.getName();
         }
         
-        // Remove logger
-        Element eLogger = request.getElement(AdminConstants.E_LOGGER);
-        String category = eLogger.getAttribute(AdminConstants.A_CATEGORY);
-        
-        ZimbraLog.misc.info("Deleting custom logger: account=%s, category=%s",
-            account.getName(), category);
-        Log.deleteAccountLogger(category, account.getName());
+        // Look up log category, if specified.
+        Element eLogger = request.getOptionalElement(AdminConstants.E_LOGGER);
+        String category = null;
+        if (eLogger != null) {
+            category = eLogger.getAttribute(AdminConstants.A_CATEGORY);
+        }
 
-        // Send response
+        // Do the work.
+        for (Log log : LogFactory.getAllLoggers()) {
+            if (category == null || log.getCategory().equals(category)) {
+                if (accountName != null) {
+                    boolean removed = log.removeAccountLogger(accountName);
+                    if (removed) {
+                        ZimbraLog.misc.info("Removed logger for account %s from category %s.",
+                            accountName, log.getCategory());
+                    }
+                } else {
+                    int count = log.removeAccountLoggers();
+                    if (count > 0) {
+                        ZimbraLog.misc.info("Removed %d custom loggers from category %s.",
+                            count, log.getCategory());
+                    }
+                }
+            }
+        }
+        
+        // Send response.
         Element response = zsc.createElement(AdminConstants.REMOVE_ACCOUNT_LOGGER_RESPONSE);
         return response;
     }

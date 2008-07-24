@@ -24,9 +24,6 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.AccountLogger;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetAccountLoggers extends AdminDocumentHandler {
@@ -38,14 +35,9 @@ public class GetAccountLoggers extends AdminDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Provisioning prov = Provisioning.getInstance();
         
         // Look up account
-        String id = request.getElement(AdminConstants.E_ID).getText();
-        Account account = prov.get(AccountBy.id, id, zsc.getAuthToken());
-        if (account == null) {
-            throw AccountServiceException.NO_SUCH_ACCOUNT(id);
-        }
+        Account account = AddAccountLogger.getAccountFromLoggerRequest(request);
         
         Element response = zsc.createElement(AdminConstants.GET_ACCOUNT_LOGGERS_RESPONSE);
         for (AccountLogger al : LogFactory.getAllAccountLoggers()) {
