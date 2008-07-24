@@ -139,11 +139,9 @@ public abstract class Formatter {
             try {
                 if (context.target instanceof Folder) {
                     Folder f = (Folder) context.target;
-                    ZimbraLog.misc.info("folderId: " + f.getId());
                     if (f.getId() != Mailbox.ID_FOLDER_USER_ROOT)
                         query = "in:" + f.getPath() + " " + query; 
                 }
-                ZimbraLog.misc.info("query: " + query);
                 String searchTypes = context.getTypesString();
                 if (searchTypes == null)
                     searchTypes = getDefaultSearchTypes();
