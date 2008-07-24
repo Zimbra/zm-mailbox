@@ -233,14 +233,15 @@ public class GetCalendarItemSummaries extends CalendarRequest {
 
 
                         if (inst.isException()) {
+                            RecurId rid = inv.getRecurId();
+                            instElt.addAttribute(MailConstants.A_CAL_RECURRENCE_ID_Z, rid.getDtZ());
+                        } else {
+                            instElt.addAttribute(MailConstants.A_CAL_RECURRENCE_ID_Z, inst.getRecurIdZ(inv));
+                        }
+
+                        if (inst.isException()) {
 
                             instElt.addAttribute(MailConstants.A_CAL_IS_EXCEPTION, true);
-                            RecurId rid = inv.getRecurId();
-                            ParsedDateTime ridDt = rid.getDt();
-                            ParsedDateTime ridUtc = (ParsedDateTime) ridDt.clone();
-                            if (!inv.isAllDayEvent())
-                                ridUtc.toUTC();
-                            instElt.addAttribute(MailConstants.A_CAL_RECURRENCE_ID_Z, ridUtc.getDateTimePartString(false));
 
                             if ((defaultInvite.getMailItemId() != invId.getMsgId()) || (defaultInvite.getComponentNum() != invId.getComponentId())) {
                                 instElt.addAttribute(MailConstants.A_CAL_INV_ID, ifmt.formatItemId(calItem, inst.getMailItemId()));

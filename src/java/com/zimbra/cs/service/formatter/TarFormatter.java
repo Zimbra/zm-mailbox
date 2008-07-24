@@ -625,7 +625,7 @@ public class TarFormatter extends Formatter {
                         }
                         newItem = mbox.setCalendarItem(oc, fldr.getId(),
                             ci.getFlagBitmask(), ci.getTagBitmask(), defScid,
-                            exceptionScids, ci.getReplyInfo(null), ad == null ?
+                            exceptionScids, ci.getReplyInfo((Invite) null), ad == null ?
                                 0 : ad.getNextAt());
                     }
                 }

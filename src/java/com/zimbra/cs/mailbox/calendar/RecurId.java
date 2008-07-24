@@ -138,7 +138,17 @@ public class RecurId
     
     public int getRange() { return mRange; }
     public ParsedDateTime getDt() { return mDateTime; }
-    
+
+    public String getDtZ() {
+        if (mDateTime.isUTC())
+            return mDateTime.getDateTimePartString(false);
+        else {
+            ParsedDateTime dtZ = (ParsedDateTime) mDateTime.clone();
+            dtZ.toUTC();
+            return dtZ.getDateTimePartString(false);
+        }
+    }
+
     public boolean withinRange(RecurId other) {
         if (other == null) {
             return false;

@@ -24,6 +24,7 @@ import com.zimbra.cs.mailbox.Metadata;
 // null value returned by a getter means to inherit from default instance of appointment/task
 public class InstanceData {
     // time
+    private String mRecurIdZ;  // RECURRENCE-ID of this instance in "Z" (UTC) timezone
     private Long mDtStart;
     private Long mDuration;
     private Long mAlarmAt;  // set if next alarm on calendar item is on this instance
@@ -35,6 +36,7 @@ public class InstanceData {
     // task-only meta data
     private String mPercentComplete;
 
+    public String getRecurIdZ() { return mRecurIdZ; }
     public Long getDtStart()  { return mDtStart; }
     public Long getDuration() { return mDuration; }
     public Long getAlarmAt()  { return mAlarmAt; }
@@ -43,13 +45,14 @@ public class InstanceData {
     public String getFreeBusyActual() { return mFreeBusyActual; }
     public String getPercentComplete() { return mPercentComplete; }
 
-    public InstanceData(Long dtStart, Long duration, Long alarmAt, Long tzOffset,
+    public InstanceData(String recurIdZ, Long dtStart, Long duration, Long alarmAt, Long tzOffset,
                         String partStat, String freeBusyActual, String percentComplete) {
-        init(dtStart, duration, alarmAt, tzOffset, partStat, freeBusyActual, percentComplete);
+        init(recurIdZ, dtStart, duration, alarmAt, tzOffset, partStat, freeBusyActual, percentComplete);
     }
 
-    private void init(Long dtStart, Long duration, Long alarmAt, Long tzOffset,
+    private void init(String recurIdZ, Long dtStart, Long duration, Long alarmAt, Long tzOffset,
                       String partStat, String freeBusyActual, String percentComplete) {
+        mRecurIdZ = recurIdZ;
         mDtStart = dtStart != null && dtStart.longValue() != 0 ? dtStart : null;
         mDuration = duration != null && duration.longValue() != 0 ? duration : null;
         mAlarmAt = alarmAt != null && alarmAt.longValue() != 0 ? alarmAt : null;
@@ -59,16 +62,16 @@ public class InstanceData {
         mPercentComplete = percentComplete;
     }
 
-    public InstanceData(Long dtStart, Long duration, Long alarmAt, Long tzOffset,
+    public InstanceData(String recurIdZ, Long dtStart, Long duration, Long alarmAt, Long tzOffset,
                         String partStat, String freeBusyActual, String percentComplete,
                         InstanceData defaultInstance) {
-        this(dtStart, duration, alarmAt, tzOffset, partStat, freeBusyActual, percentComplete);
+        this(recurIdZ, dtStart, duration, alarmAt, tzOffset, partStat, freeBusyActual, percentComplete);
         clearUnchangedFields(defaultInstance);
     }
 
     protected void clearUnchangedFields(InstanceData other) {
         if (other != null) {
-            // Check all fields except mDtStart.
+            // Check all fields except mRecurIdZ and mDtStart.
             if (Util.sameValues(mDuration, other.getDuration()))
                 mDuration = null;
             if (Util.sameValues(mAlarmAt, other.getAlarmAt()))
@@ -84,6 +87,7 @@ public class InstanceData {
         }
     }
 
+    private static final String FN_RECURRENCE_ID_Z = "ridZ";
     private static final String FN_DTSTART = "st";
     private static final String FN_DURATION = "dur";
     private static final String FN_ALARM_AT = "alarm";
@@ -93,6 +97,7 @@ public class InstanceData {
     private static final String FN_PERCENT_COMPLETE = "pctcomp";
 
     InstanceData(Metadata meta) throws ServiceException {
+        String recurIdZ = meta.get(FN_RECURRENCE_ID_Z, null);
         Long dtStart = null, duration = null, alarmAt = null, tzOffset = null;
         if (meta.containsKey(FN_DTSTART))
             dtStart = new Long(meta.getLong(FN_DTSTART));
@@ -105,11 +110,12 @@ public class InstanceData {
         String ptst = meta.get(FN_PARTSTAT, null);
         String fba = meta.get(FN_FREEBUSY_ACTUAL, null);
         String pctComp = meta.get(FN_PERCENT_COMPLETE, null);
-        init(dtStart, duration, alarmAt, tzOffset, ptst, fba, pctComp);
+        init(recurIdZ, dtStart, duration, alarmAt, tzOffset, ptst, fba, pctComp);
     }
 
     Metadata encodeMetadata() {
         Metadata meta = new Metadata();
+        meta.put(FN_RECURRENCE_ID_Z, mRecurIdZ);
         if (mDtStart != null)
             meta.put(FN_DTSTART, mDtStart.longValue());
         if (mDuration != null)

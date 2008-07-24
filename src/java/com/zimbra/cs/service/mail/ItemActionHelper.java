@@ -559,7 +559,7 @@ public class ItemActionHelper {
                         addCalendarPart(request.addElement(elem), cal, inv, zmbx, target);
                     }
 
-                    ToXML.encodeCalendarReplies(request, cal, null);
+                    ToXML.encodeCalendarReplies(request, cal, (Invite) null);
 
                     createdId = zmbx.invoke(request).getAttribute(MailConstants.A_CAL_ID);
                     mCreatedIds.add(createdId);
