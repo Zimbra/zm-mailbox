@@ -41,14 +41,6 @@ public class ZVoiceMailPrefs extends ZCallFeature {
         mMap.put(VoiceConstants.A_vmPrefEmailNotifAddress, address);
     }
 
-    public long getNumberPerPage() {
-        return this.getLong(Provisioning.A_zimbraPrefVoiceItemsPerPage);
-    }
-
-    public void setNumberPerPage(long number) {
-        mMap.put(Provisioning.A_zimbraPrefVoiceItemsPerPage, Long.toString(number));
-    }
-
     public String get(String key) {
         return mMap.get(key);
     }
