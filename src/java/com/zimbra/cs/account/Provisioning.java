@@ -212,7 +212,17 @@ public abstract class Provisioning {
      * redirects between the two.  "redirect" means the web server should listen
      * on both HTTP and HTTPS but redirect traffic on the HTTP port to HTTPS.
      */
-    public enum MAIL_MODE { http, https, mixed, both, redirect }
+    public enum MailMode {
+    	http, https, mixed, both, redirect;
+    	
+    	public static MailMode fromString(String s) throws ServiceException {
+	        try {
+	            return MailMode.valueOf(s);
+	        } catch (IllegalArgumentException e) {
+	            throw ServiceException.INVALID_REQUEST("unknown mail mode: " + s, e);
+	        }
+        }
+    }
     
     /**
      * Possible values for zimbraMailReferMode
