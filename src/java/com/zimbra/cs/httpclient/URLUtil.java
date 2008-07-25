@@ -28,9 +28,11 @@ import java.util.Map;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.MailMode;
 import com.zimbra.cs.account.Server;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -191,11 +193,11 @@ public class URLUtil {
     	String modeString = server.getAttr(Provisioning.A_zimbraMailMode, null);
     	if (modeString == null)
     		throw ServiceException.INVALID_REQUEST("server " + server.getName() + " does not have " + Provisioning.A_zimbraMailMode + " set, maybe it is not a store server?", null);
-        
+        MailMode mailMode = Provisioning.MailMode.fromString(modeString);
+        	
     	String proto;
     	int port;
-    	if (modeString != Provisioning.MAIL_MODE.http.toString() && useSSL ||
-    			modeString == Provisioning.MAIL_MODE.https.toString()) {
+    	if ((mailMode != MailMode.http && useSSL) || mailMode == MailMode.https) {
     	    proto = PROTO_HTTPS;
         	port = server.getIntAttr(Provisioning.A_zimbraMailSSLPort, DEFAULT_HTTPS_PORT);
     	} else {

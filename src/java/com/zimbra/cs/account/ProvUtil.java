@@ -34,6 +34,7 @@ import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.account.Provisioning.MailMode;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.Provisioning.SignatureBy;
@@ -2168,35 +2169,38 @@ public class ProvUtil implements DebugListener {
     }
 
     private void doGetAllReverseProxyBackends(String[] args) throws ServiceException {
-	List<Server> servers = mProv.getAllServers();
-	boolean atLeastOne = false;
+        List<Server> servers = mProv.getAllServers();
+        boolean atLeastOne = false;
         for (Server server : servers) {
             boolean isTarget = server.getBooleanAttr(Provisioning.A_zimbraReverseProxyLookupTarget, false);
-	    if (!isTarget) {
-		continue;
-	    }
-
-	    // (For now) assume HTTP can be load balanced to...
-	    String mode = server.getAttr(Provisioning.A_zimbraMailMode, null);
-            if (mode == null) {
-		continue;
+            if (!isTarget) {
+                continue;
             }
-	    boolean isPlain = mode.equalsIgnoreCase(Provisioning.MAIL_MODE.http.toString()) ||
-		mode.equalsIgnoreCase(Provisioning.MAIL_MODE.mixed.toString()) ||
-		mode.equalsIgnoreCase(Provisioning.MAIL_MODE.both.toString());
-	    if (!isPlain) {
-		continue;
-	    }
 
-	    int backendPort = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
-	    String serviceName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
-	    System.out.println("    server " + serviceName + ":" + backendPort + ";");
-	    atLeastOne = true;
+    	    // (For now) assume HTTP can be load balanced to...
+    	    String mode = server.getAttr(Provisioning.A_zimbraMailMode, null);
+            if (mode == null) {
+                continue;
+            }
+            MailMode mailMode = Provisioning.MailMode.fromString(mode);
+            
+    	    boolean isPlain = (mailMode == Provisioning.MailMode.http ||
+                    	       mailMode == Provisioning.MailMode.mixed ||
+                    	       mailMode == Provisioning.MailMode.both);
+    	    if (!isPlain) {
+    	    	continue;
+    	    }
+    
+    	    int backendPort = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
+    	    String serviceName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
+    	    System.out.println("    server " + serviceName + ":" + backendPort + ";");
+    	    atLeastOne = true;
         }
-	if (!atLeastOne) {
-	    // workaround zmmtaconfig not being able to deal with empty output
-	    System.out.println("    server localhost:8080;");
-	}
+        
+    	if (!atLeastOne) {
+    	    // workaround zmmtaconfig not being able to deal with empty output
+    	    System.out.println("    server localhost:8080;");
+    	}
     }
 
     private void doGetAllMemcachedServers(String[] args) throws ServiceException {

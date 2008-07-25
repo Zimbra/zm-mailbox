@@ -564,8 +564,8 @@ public class ProxyConfGen
                 String mode = u.getAttr(Provisioning.A_zimbraMailMode, "");
                 String sn = u.getAttr(Provisioning.A_zimbraServiceHostname, "");
 
-                if (mode.equalsIgnoreCase(Provisioning.MAIL_MODE.http.toString()) ||
-                    mode.equalsIgnoreCase(Provisioning.MAIL_MODE.both.toString())
+                if (mode.equalsIgnoreCase(Provisioning.MailMode.http.toString()) ||
+                    mode.equalsIgnoreCase(Provisioning.MailMode.both.toString())
                 ) {
                     int sp = u.getIntAttr(Provisioning.A_zimbraMailPort,80);
                     Formatter m = new Formatter();
