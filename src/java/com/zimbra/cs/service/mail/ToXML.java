@@ -800,7 +800,7 @@ public class ToXML {
                     isPublic = false;
             }
             if (isPublic || allowPrivateAccess(octxt, calItem))
-                encodeCalendarReplies(calItemElem, calItem, (Invite) null);
+                encodeCalendarReplies(calItemElem, calItem);
 
             encodeAlarmTimes(calItemElem, calItem);
         }
@@ -900,13 +900,13 @@ public class ToXML {
         return encodeCalendarItemSummary(parent, ifmt, octxt, calItem, fields, includeInvites, false);
     }
 
-    public static void encodeCalendarReplies(Element parent, CalendarItem calItem, String recurIdZ) {
-        List<CalendarItem.ReplyInfo> replies = calItem.getReplyInfo(recurIdZ);
+    public static void encodeCalendarReplies(Element parent, CalendarItem calItem, Invite inv, String recurIdZ) {
+        List<CalendarItem.ReplyInfo> replies = calItem.getReplyInfo(inv, recurIdZ);
         encodeCalendarReplies(parent, calItem, replies);
     }
 
-    public static void encodeCalendarReplies(Element parent, CalendarItem calItem, Invite inv) {
-        List<CalendarItem.ReplyInfo> replies = calItem.getReplyInfo(inv);
+    public static void encodeCalendarReplies(Element parent, CalendarItem calItem) {
+        List<CalendarItem.ReplyInfo> replies = calItem.getAllReplies();
         encodeCalendarReplies(parent, calItem, replies);
     }
 
@@ -1018,7 +1018,7 @@ public class ToXML {
             encodeTimeZoneMap(invElt, calItem.getTimeZoneMap());
             if (invites.length > 0) {
                 if (showAll)
-                    encodeCalendarReplies(invElt, calItem, recurIdZ);
+                    encodeCalendarReplies(invElt, calItem, invites[0], recurIdZ);
                 for (Invite inv : invites)
                     encodeInviteComponent(invElt, ifmt, octxt, calItem, inv, NOTIFY_FIELDS);
             }

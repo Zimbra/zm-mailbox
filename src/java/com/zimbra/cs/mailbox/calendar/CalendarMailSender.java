@@ -484,6 +484,7 @@ public class CalendarMailSender {
                        oldInv.isOrganizer());
 
         reply.getTimeZoneMap().add(oldInv.getTimeZoneMap());
+//        reply.setIsAllDayEvent(oldInv.isAllDayEvent());
 
         // ATTENDEE -- send back this attendee with the proper status
         ZAttendee meReply = null;
