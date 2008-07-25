@@ -807,7 +807,7 @@ public class LC {
         postfix_queue_directory.setDefault("${zimbra_home}" + FS + "data" + FS + "postfix" + FS + "spool");
 
         postfix_sender_canonical_maps  = new KnownKey("postfix_sender_canonical_maps");
-        postfix_sender_canonical_maps.setDefault("ldap:${zimbra_home}" + FS + "conf" + FS + "ldap-scm.cf");
+        postfix_sender_canonical_maps.setDefault("proxy:ldap:${zimbra_home}" + FS + "conf" + FS + "ldap-scm.cf");
 
         postfix_sendmail_path  = new KnownKey("postfix_sendmail_path");
         postfix_sendmail_path.setDefault("${zimbra_home}" + FS + "postfix" + FS + "sbin" + FS + "sendmail");
@@ -852,22 +852,22 @@ public class LC {
         postfix_lmtp_host_lookup.setDefault("dns");
 
         postfix_transport_maps  = new KnownKey("postfix_transport_maps");
-        postfix_transport_maps.setDefault("ldap:${zimbra_home}" + FS + "conf" + FS + "ldap-transport.cf");
+        postfix_transport_maps.setDefault("proxy:ldap:${zimbra_home}" + FS + "conf" + FS + "ldap-transport.cf");
 
         postfix_version  = new KnownKey("postfix_version");
         postfix_version.setDefault("2.4.7.5z");
 
         postfix_virtual_alias_domains  = new KnownKey("postfix_virtual_alias_domains");
-        postfix_virtual_alias_domains.setDefault("ldap:${zimbra_home}" + FS + "conf" + FS + "ldap-vad.cf");
+        postfix_virtual_alias_domains.setDefault("proxy:ldap:${zimbra_home}" + FS + "conf" + FS + "ldap-vad.cf");
 
         postfix_virtual_alias_maps  = new KnownKey("postfix_virtual_alias_maps");
-        postfix_virtual_alias_maps.setDefault("ldap:${zimbra_home}" + FS + "conf" + FS + "ldap-vam.cf");
+        postfix_virtual_alias_maps.setDefault("proxy:ldap:${zimbra_home}" + FS + "conf" + FS + "ldap-vam.cf");
 
         postfix_virtual_mailbox_domains  = new KnownKey("postfix_virtual_mailbox_domains");
-        postfix_virtual_mailbox_domains.setDefault("ldap:${zimbra_home}" + FS + "conf" + FS + "ldap-vmd.cf");
+        postfix_virtual_mailbox_domains.setDefault("proxy:ldap:${zimbra_home}" + FS + "conf" + FS + "ldap-vmd.cf");
 
         postfix_virtual_mailbox_maps  = new KnownKey("postfix_virtual_mailbox_maps");
-        postfix_virtual_mailbox_maps.setDefault("ldap:${zimbra_home}" + FS + "conf" + FS + "ldap-vmm.cf");
+        postfix_virtual_mailbox_maps.setDefault("proxy:ldap:${zimbra_home}" + FS + "conf" + FS + "ldap-vmm.cf");
 
         postfix_virtual_transport  = new KnownKey("postfix_virtual_transport");
         postfix_virtual_transport.setDefault("error");
