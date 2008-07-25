@@ -2114,84 +2114,115 @@ public abstract class CalendarItem extends MailItem {
                 return defaultAt;
         }
         
-        List<ReplyInfo> getReplyInfo(Invite inv) {
+        List<ReplyInfo> getAllReplies() {
             List<ReplyInfo> toRet = new ArrayList<ReplyInfo>();
-
-            if (inv == null) {
-                // all replies requested
-                toRet.addAll(mReplies);
-            } else {
-                long invDtStart = -1;
-                ParsedDateTime dtStart = inv.getStartTime();
-                if (dtStart != null)
-                    invDtStart = dtStart.getUtcTime();
-                // Look for an exact match first.
-                for (ReplyInfo reply : mReplies) {
-                    // Ignore reply to series and replies to outdated invites.
-                    if (reply.mRecurId != null &&
-                        inv.getSeqNo() <= reply.mSeqNo && inv.getDTStamp() <= reply.mDtStamp) {
-                        ParsedDateTime dt = reply.mRecurId.getDt();
-                        if (dt != null) {
-                            if (dt.getUtcTime() == invDtStart)
-                                toRet.add(reply);
-                        }
-                    }
-                }
-                if (toRet.size() < 1) {
-                    // No specific match.  Use the series reply, if any.
-                    for (ReplyInfo reply : mReplies) {
-                        if (inv.getSeqNo() <= reply.mSeqNo && inv.getDTStamp() <= reply.mDtStamp &&
-                            reply.mRecurId == null)
-                            toRet.add(reply);
-                    }
-                }
-            }
+            toRet.addAll(mReplies);
             return toRet;
         }
 
-        List<ReplyInfo> getReplyInfo(String recurIdZ) {
-            List<ReplyInfo> toRet = new ArrayList<ReplyInfo>();
-            if (recurIdZ != null) {
-                // Look for an exact match first.
-                for (ReplyInfo reply : mReplies) {
-                    // Ignore reply to series and replies to outdated invites.
-                    if (reply.mRecurId != null) {
-                        if (recurIdZ.equals(reply.mRecurId.getDtZ()))
-                            toRet.add(reply);
+        List<ReplyInfo> getReplyInfo(Invite inv, String recurIdZ) {
+            assert(inv != null);
+
+            Map<String /* attendee address */, ReplyInfo> repliesByAddr = new HashMap<String, ReplyInfo>();
+
+            if (recurIdZ == null && inv.hasRecurId())
+                recurIdZ = inv.getRecurId().getDtZ();
+
+            for (ReplyInfo reply : mReplies) {
+                ReplyInfo toAdd = null;
+                String replyRidZ = null;
+                if (reply.getRecurId() != null) {
+                    // RECURRENCE-ID in the reply may have the Outlook-hack style value
+                    // (i.e. RECURRENCE-ID;TZID=blah:YYYYMMDDT000000) for an all-day appointment.
+                    // Find the YYYYMMDD-only value so we can compare it against recurIdZ passed in.
+                    ParsedDateTime dt = reply.getRecurId().getDt();
+                    ParsedDateTime dtTmp = (ParsedDateTime) dt.clone();
+                    if (inv.isAllDayEvent()) {
+                        dtTmp.setHasTime(false);
+                    } else {
+                        dtTmp.setHasTime(true);
+                        dtTmp.toUTC();
+                    }
+                    replyRidZ = dtTmp.getDateTimePartString(false);
+                }
+                if (inv.hasRecurId()) {
+                    // Looking for replies for an exception instance.
+                    if (reply.mRecurId != null && recurIdZ.equals(replyRidZ) &&
+                        inv.getSeqNo() <= reply.mSeqNo) {  // Ignore outdated replies.
+                        toAdd = reply;
+                    }
+                } else {
+                    // Looking for replies to series (if recurIdZ == null)
+                    // or a non-exception instance (if recurIdZ != null).
+                    if (recurIdZ == null) {
+                        if (reply.mRecurId == null &&
+                            inv.getSeqNo() <= reply.mSeqNo)  // Ignore outdated replies.
+                            toAdd = reply;
+                    } else {
+                        // Get all replies to series AND the instance with matching recurrence id.
+                        if ((reply.mRecurId == null || recurIdZ.equals(replyRidZ)) &&
+                            inv.getSeqNo() <= reply.mSeqNo)  // Ignore outdated replies.
+                            toAdd = reply;
+                    }
+                }
+
+                // Add to map if this is the first reply from the attendee, or this reply
+                // is more specific than previous reply.  (i.e. prev reply is to series, this one
+                // is to an instance)  If both are for series or both are for same instance,
+                // pick the more recent reply.
+                if (toAdd != null && toAdd.getAttendee() != null) {
+                    String addr = toAdd.getAttendee().getAddress();
+                    if (addr != null) {
+                        ReplyInfo existing = repliesByAddr.get(addr);
+                        if (existing == null) {
+                            repliesByAddr.put(addr, toAdd);
+                        } else {
+                            if (existing.getRecurId() == null) {  // Existing reply is for series.
+                                if (replyRidZ != null) {
+                                    // This reply is for an instance and is therefore more specific.
+                                    repliesByAddr.put(addr, toAdd);
+                                } else if (existing.getDtStamp() <= toAdd.getDtStamp()) {
+                                    // Both are for series and this one is more recent.
+                                    repliesByAddr.put(addr, toAdd);
+                                }
+                            } else {  // Existing reply is for an instance.
+                                if (replyRidZ == null) {
+                                    // This one is for series and is therefore less specific.  Ignore it.
+                                } else if (existing.getDtStamp() <= toAdd.getDtStamp()) {
+                                    // Both are for an instance and this one is more recent.
+                                    repliesByAddr.put(addr, toAdd);
+                                }
+                            }
+                        }
                     }
                 }
             }
-            if (toRet.isEmpty()) {
-                // No specific match.  Use the series reply, if any.
-                for (ReplyInfo reply : mReplies) {
-                    if (reply.mRecurId == null)
-                        toRet.add(reply);
-                }
-            }
-            return toRet;
+
+            return new ArrayList<ReplyInfo>(repliesByAddr.values());
         }
     } // class ReplyList
             
     /**
-     * Get all of the Reply data corresponding to an invite.  Pass null to get all replies.
+     * Get all Reply data.
      * 
      * @param inv
      * @return
      */
-    public List<ReplyInfo> getReplyInfo(Invite inv) {
-        return mReplyList.getReplyInfo(inv);
+    public List<ReplyInfo> getAllReplies() {
+        return mReplyList.getAllReplies();
     }
 
     /**
-     * Get all of the Reply data corresponding to a RECURRENCE-ID string.  Pass null to get replies to
-     * the series.  Recurrence ID string has the format of "YYYYMMDD[ThhmmssZ]".
-     * Note the Z (UTC) timezone must be used when time component is present.
+     * Get all of the Reply data corresponding to an Invite and a RECURRENCE-ID string.
+     * Pass null recurIdZ to get replies to the series.  Recurrence ID string has the
+     * format of "YYYYMMDD[ThhmmssZ]".
      * 
-     * @param inv
+     * @param inv      cannot be null
+     * @param recurIdZ
      * @return
      */
-    public List<ReplyInfo> getReplyInfo(String recurIdZ) {
-        return mReplyList.getReplyInfo(recurIdZ);
+    public List<ReplyInfo> getReplyInfo(Invite inv, String recurIdZ) {
+        return mReplyList.getReplyInfo(inv, recurIdZ);
     }
 
     /**
@@ -2284,7 +2315,7 @@ public abstract class CalendarItem extends MailItem {
                     // this reply is OLD, ignore it
                     return false;
                 }
-                
+
                 // update the ATTENDEE record in the invite
                 cur.updateMatchingAttendees(reply);
                 dirty = true;
