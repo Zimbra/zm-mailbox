@@ -88,7 +88,7 @@ public class ZGetInfoResult {
         mRecent = e.getAttribute(AccountConstants.E_RECENT_MSGS, "0");
         mRestURLBase = e.getAttribute(AccountConstants.E_REST, null);
 		long prevSession = e.getAttributeLong(AccountConstants.E_PREVIOUS_SESSION, 0);
-		mPrevSession = prevSession != 0 ? new Date(prevSession) : null;
+        mPrevSession = prevSession != 0 ? new Date(prevSession) : new Date();
 
         mMailURLs = new ArrayList<String>();
         String mailUrl = e.getAttribute(AccountConstants.E_SOAP_URL, null);
