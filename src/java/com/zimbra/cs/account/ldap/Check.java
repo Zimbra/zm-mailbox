@@ -82,21 +82,20 @@ public class Check {
     public static class Result {
         String code;
         String message;
-        Object detail;
+        String detail;
 
         public String getCode() { return code; }
         public String getMessage() { return message; }
-        public String getComputedDn() {return (String) detail; }
-        public List<GalContact> getContacts() { return (List<GalContact>) detail; }
+        public String getComputedDn() {return detail; }
         public Object getDetail() { return  detail; }        
 
-        public Result(String status, String message, Object detail) {
+        public Result(String status, String message, String detail) {
             this.code = status;
             this.message = message;
             this.detail = detail;
         }
 
-        public Result(String status, Exception e, Object detail) {
+        public Result(String status, Exception e, String detail) {
             this.code = status;
             this.message = ExceptionToString.ToString(e);
             this.detail = detail;
@@ -104,6 +103,18 @@ public class Check {
 
         public String toString() {
             return "Result { code: "+code+" detail: "+detail+" message: "+message+" }";
+        }
+    }
+    
+    public static class GalResult extends Result {
+        private List<GalContact> mResult;
+        public GalResult(String status, String message, List<GalContact> result) {
+            super(status, message, null);
+            mResult = result;
+        }
+        
+        public List<GalContact> getContacts() { 
+            return mResult; 
         }
     }
 
@@ -198,7 +209,7 @@ public class Check {
                 throw ServiceException.INVALID_REQUEST("invalid GAL op: "+galOp.toString(), null);
             
             List contacts = result.matches;
-            return new Result(STATUS_OK, "", contacts);
+            return new GalResult(STATUS_OK, "", contacts);
         } catch (NamingException e) {
             return toResult(e, "");
         } catch (IOException e) {
