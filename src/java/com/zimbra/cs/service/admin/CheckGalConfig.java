@@ -65,10 +65,12 @@ public class CheckGalConfig extends AdminDocumentHandler {
         if (message != null)
             response.addElement(AdminConstants.E_MESSAGE).addText(message);
 
-        List<GalContact> contacts = r.getContacts();
-        if (contacts != null) {
-            for (GalContact contact : contacts) {
-                SearchGal.addContact(response, contact);
+        if (r instanceof Check.GalResult) {
+            List<GalContact> contacts = ((Check.GalResult)r).getContacts();
+            if (contacts != null) {
+                for (GalContact contact : contacts) {
+                    SearchGal.addContact(response, contact);
+                }
             }
         }
 	    return response;
