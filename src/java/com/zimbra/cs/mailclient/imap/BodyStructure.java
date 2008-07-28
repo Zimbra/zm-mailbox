@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Arrays;
+import java.util.Formatter;
 
 /**
  * IMAP message BODYSTRUCTURE response.
@@ -123,15 +125,20 @@ public class BodyStructure {
         is.skipChar(')');
     }
 
+    // ext             = body-fld-dsp [SP body-fld-lang
+    //                   [SP body-fld-loc *(SP body-extension)]]
     // body-fld-dsp    = "(" string SP body-fld-param ")" / nil
     // body-fld-loc    = nstring
     
     private void readExt(ImapInputStream is) throws IOException {
-        is.skipChar('(');
-        disposition = is.readString();
-        is.skipChar(' ');
-        dispositionParams = readParams(is);
-        is.skipChar(')');
+        if (is.match('(')) {
+            disposition = is.readString();
+            is.skipChar(' ');
+            dispositionParams = readParams(is);
+            is.skipChar(')');
+        } else {
+            is.skipNil();
+        }
         if (is.match(' ')) {
             language = readLang(is);
             if (is.match(' ')) {
@@ -227,5 +234,30 @@ public class BodyStructure {
     public String getDisposition() { return disposition; }
     public Map<String, String> getDispositionParameters() {
         return dispositionParams;
+    }
+
+    public String toString() {
+        Formatter fmt = new Formatter();
+        toString(fmt, 0, 0);
+        return fmt.toString();
+    }
+
+    private void toString(Formatter fmt, int depth, int count) {
+        fmt.format("%s%d: type=%s/%s encoding=%s disposition=%s",
+            spaces(depth), count, type, subtype, encoding, disposition);
+        if (parts != null) {
+            fmt.format(" count=%d\n", parts.length);
+            for (int i = 0; i < parts.length; i++) {
+                toString(fmt, depth + 1, i);
+            }
+        } else {
+            fmt.format(" size=%d\n", size);
+        }
+    }
+
+    private String spaces(int depth) {
+        char[] spaces = new char[depth * 4];
+        Arrays.fill(spaces, ' ');
+        return new String(spaces);
     }
 }
