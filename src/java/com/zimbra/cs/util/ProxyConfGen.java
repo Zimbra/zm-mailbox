@@ -37,6 +37,9 @@ import com.zimbra.cs.account.Entry;
 
 import com.zimbra.cs.extension.ExtensionDispatcherServlet;
 
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.localconfig.ConfigException;
+
 public class ProxyConfGen
 {
     private static class ProxyConfException extends Exception {
@@ -372,6 +375,8 @@ public class ProxyConfGen
         Formatter f = null;
         Entry mSource = (mServer == null) ? config : mServer;
 
+        mVars.put("main.krb5keytab", LC.krb5_keytab.value());                           /* kerberos keytab (local config) */
+
         f = new Formatter();
         int ipmax = config.getIntAttr("zimbraReverseProxyIPLoginLimit",0);              /* global config */
         f.format("%d",ipmax);
@@ -419,6 +424,15 @@ public class ProxyConfGen
         } else {
             mVars.put("mail.pop3.authgssapi.enabled", "#");
         }
+
+        /* GSSAPI master credentials */
+        mVars.put("mail.duser",config.getAttr("zimbraReverseProxyAdminAccount","nginx"));               /* global config */
+        mVars.put("mail.dpasswd",config.getAttr("zimbraReverseProxyAdminAccountPassword","nginx123"));  /* global config */
+
+        mVars.put("mail.defaultrealm",mSource.getAttr("zimbraReverseProxyDefaultRealm","EXAMPLE.COM"));
+
+        /* GSSAPI */
+        mVars.put("mail.sasl_host_from_ip",LC.krb5_service_principal_from_interface_address.booleanValue() ? "on" : "off");
 
         String mailSslCiphers = config.getAttr("zimbraReverseProxySSLCiphers","!SSLv2:!MD5:HIGH");      /* global config */
         mVars.put("mail.ssl.ciphers",mailSslCiphers);
