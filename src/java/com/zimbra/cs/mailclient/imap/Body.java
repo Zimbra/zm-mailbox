@@ -32,7 +32,7 @@ import java.util.ArrayList;
  *                    "TEXT"
  * section-text     = section-msgtext / "MIME"
  * section-part     = nz-number *("." nz-number)
- * header-lis t     = "(" header-fld-name *(SP header-fld-name) ")"
+ * header-list      = "(" header-fld-name *(SP header-fld-name) ")"
  * header-fld-name  = astring
  */
 public final class Body {
