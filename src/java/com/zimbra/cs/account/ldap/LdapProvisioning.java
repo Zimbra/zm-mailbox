@@ -869,8 +869,7 @@ public class LdapProvisioning extends Provisioning {
         boolean aliases = (flags & Provisioning.SA_ALIAS_FLAG) != 0;
         boolean lists = (flags & Provisioning.SA_DISTRIBUTION_LIST_FLAG) != 0;
         boolean domains = (flags & Provisioning.SA_DOMAIN_FLAG) != 0;
-        boolean calendarResources =
-            (flags & Provisioning.SA_CALENDAR_RESOURCE_FLAG) != 0;
+        boolean calendarResources = (flags & Provisioning.SA_CALENDAR_RESOURCE_FLAG) != 0;
 
         int num = (accounts ? 1 : 0) +
                   (aliases ? 1 : 0) +
@@ -879,6 +878,10 @@ public class LdapProvisioning extends Provisioning {
                   (calendarResources ? 1 : 0);
         if (num == 0)
             accounts = true;
+        
+        // If we are only searching for domains, no need to & with !(objectclass=zimbraCalendarResource)
+        if (domains && num ==1)
+            return "(objectclass=zimbraDomain)";
 
         // If searching for user accounts/aliases/lists, filter looks like:
         //
@@ -997,7 +1000,7 @@ public class LdapProvisioning extends Provisioning {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Provisioning#searchAccounts(java.lang.String)
      */
-    void searchObjects(String query, String returnAttrs[], String base, int flags, NamedEntry.Visitor visitor, int maxResults, boolean useConnPool)
+    public void searchObjects(String query, String returnAttrs[], String base, int flags, NamedEntry.Visitor visitor, int maxResults, boolean useConnPool)
         throws ServiceException
     {
         ZimbraLdapContext zlc = null;
@@ -3728,7 +3731,7 @@ public class LdapProvisioning extends Provisioning {
             bases.add(base);
     }
 
-    private String[] getSearchBases(int flags) {
+    public String[] getSearchBases(int flags) {
         Set<String> bases = new HashSet<String>();
         
         boolean accounts = (flags & Provisioning.SA_ACCOUNT_FLAG) != 0; 

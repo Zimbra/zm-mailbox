@@ -52,7 +52,7 @@ import com.zimbra.soap.SoapEngine;
 public class TestProvisioning extends TestCase {
     
     // whether to test start TLS for external GAL and auth
-    private static final boolean TEST_STARTTLS = true;
+    private static final boolean TEST_STARTTLS = false;
     
     private Provisioning mProv;
     LdapProvisioning mLdapProv;
@@ -1875,7 +1875,7 @@ public class TestProvisioning extends TestCase {
    
     public static void main(String[] args) throws Exception {
         CliUtil.toolSetup("INFO");
-        ZimbraLog.toolSetupLog4j("DEBUG", "/Users/pshao/p4/main/ZimbraServer/conf/log4j.properties.zmprov-l");
+        // ZimbraLog.toolSetupLog4j("DEBUG", "/Users/pshao/p4/main/ZimbraServer/conf/log4j.properties.zmprov-l");
         // TestUtil.runTest(new TestSuite(TestProvisioning.class));
 
         TestProvisioning t = new TestProvisioning();
