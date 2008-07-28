@@ -516,6 +516,23 @@ public class SoapSession extends Session {
             ZimbraLog.session.warn("ServiceException in notifyIM", e);
         }
     }
+    
+    /**
+     * On the session's first write op, record the timestamp to the database
+     * 
+     * @param mbox
+     */
+    public void updateLastWrite(Mailbox mbox) {
+        boolean firstWrite = mLastWrite == -1;
+        mLastWrite = System.currentTimeMillis();
+        if (firstWrite) {
+            try {
+                mbox.recordLastSoapAccessTime(mLastWrite);
+            } catch (ServiceException e) {
+                ZimbraLog.session.warn("ServiceException in notifyPendingChanges ", e);
+            }
+        }
+    }
 
     /** Handles the set of changes from a single Mailbox transaction.
      *  <p>
@@ -527,22 +544,13 @@ public class SoapSession extends Session {
      *  *All* changes are currently cached, regardless of the client's state/views.
      * @param changeId  The sync-token change id of the change.
      * @param pms       A set of new change notifications from our Mailbox. */
-    @Override public void notifyPendingChanges(PendingModifications pms, int changeId, Session source) {
+    @Override public void notifyPendingChanges(PendingModifications pms, int changeIdxxx, Session source) {
         Mailbox mbox = mMailbox;
         if (pms == null || !pms.hasNotifications() || mbox == null)
             return;
 
         if (source == this) {
-            // on the session's first write op, record the timestamp to the database
-            boolean firstWrite = mLastWrite == -1;
-            mLastWrite = System.currentTimeMillis();
-            if (firstWrite) {
-                try {
-                    mbox.recordLastSoapAccessTime(mLastWrite);
-                } catch (ServiceException e) {
-                    ZimbraLog.session.warn("ServiceException in notifyPendingChanges ", e);
-                }
-            }
+            updateLastWrite(mbox);
         } else {
             // keep track of "recent" message count: all present before the session started, plus all received during the session
             if (pms.created != null) {
