@@ -29,6 +29,11 @@ import java.util.Set;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.testng.TestNG;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
 import junit.framework.TestCase;
 
 import com.zimbra.common.util.ByteUtil;
@@ -79,7 +84,9 @@ extends TestCase {
     private String mOriginalInterceptAddress;
     private String mOriginalInterceptSendHeadersOnly;
     private String mOriginalSaveToSent;
+    private boolean mIsServerTest = false;
 
+    @BeforeMethod
     protected void setUp() throws Exception
     {
         super.setUp();
@@ -87,24 +94,31 @@ extends TestCase {
         
         Account account = TestUtil.getAccount(RECIPIENT_NAME);
         mOriginalReplyEnabled = account.getBooleanAttr(Provisioning.A_zimbraPrefOutOfOfficeReplyEnabled, false);
-        mOriginalReply = account.getAttr(Provisioning.A_zimbraPrefOutOfOfficeReply, null);
+        mOriginalReply = account.getAttr(Provisioning.A_zimbraPrefOutOfOfficeReply, "");
         mOriginalNotificationEnabled = account.getBooleanAttr(Provisioning.A_zimbraPrefNewMailNotificationEnabled, false);
-        mOriginalNotificationAddress = account.getAttr(Provisioning.A_zimbraPrefNewMailNotificationAddress, null);
-        mOriginalNotificationSubject = account.getAttr(Provisioning.A_zimbraNewMailNotificationSubject, null);
-        mOriginalNotificationBody = account.getAttr(Provisioning.A_zimbraNewMailNotificationBody, null);
-        mOriginalInterceptAddress = account.getAttr(Provisioning.A_zimbraInterceptAddress, null);
-        mOriginalInterceptSendHeadersOnly = account.getAttr(Provisioning.A_zimbraInterceptSendHeadersOnly, null);
-        mOriginalSaveToSent = account.getAttr(Provisioning.A_zimbraPrefSaveToSent, null);
+        mOriginalNotificationAddress = account.getAttr(Provisioning.A_zimbraPrefNewMailNotificationAddress, "");
+        mOriginalNotificationSubject = account.getAttr(Provisioning.A_zimbraNewMailNotificationSubject, "");
+        mOriginalNotificationBody = account.getAttr(Provisioning.A_zimbraNewMailNotificationBody, "");
+        mOriginalInterceptAddress = account.getAttr(Provisioning.A_zimbraInterceptAddress, "");
+        mOriginalInterceptSendHeadersOnly = account.getAttr(Provisioning.A_zimbraInterceptSendHeadersOnly, "");
+        mOriginalSaveToSent = account.getAttr(Provisioning.A_zimbraPrefSaveToSent, "");
     }
 
     /**
      * Confirms that the subject and body of the out of office and new mail
      * notification can contain UTF-8 characters.
+     * 
+     * This test causes a change in state to the out_of_office table.  This data
+     * needs to be cleaned up after the test runs, so we categorize this test
+     * as server-only.
      *  
      * @throws Exception
      */
+    @Test(groups = {"Server"})
     public void testUtf8()
     throws Exception {
+        mIsServerTest = true;
+        
         // Turn on auto-reply and notification
         Account account = TestUtil.getAccount(RECIPIENT_NAME);
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -144,6 +158,7 @@ extends TestCase {
         assertEquals("New mail notification body not found", 1, messages.size());
     }
     
+    @Test
     public void testIntercept()
     throws Exception {
         // Turn on lawful intercept for recipient account
@@ -283,13 +298,14 @@ extends TestCase {
     private Set<String> getHeaderLines(MimeMessage msg)
     throws MessagingException {
         Set<String> headerLines = new HashSet<String>();
-        Enumeration e = msg.getAllHeaderLines();
+        Enumeration<?> e = msg.getAllHeaderLines();
         while (e.hasMoreElements()) {
             headerLines.add((String) e.nextElement());
         }
         return headerLines;
     }
 
+    @AfterMethod
     public void tearDown()
     throws Exception {
         cleanUp();
@@ -319,14 +335,25 @@ extends TestCase {
      */
     private void cleanUp()
     throws Exception {
-        Connection conn = DbPool.getConnection();
-        String accountId = TestUtil.getMailbox(RECIPIENT_NAME).getAccountId();
-        DbOutOfOffice.clear(conn, accountId);
-        conn.commit();
-        DbPool.quietClose(conn);
+        if (mIsServerTest) {
+            Connection conn = DbPool.getConnection();
+            String accountId = TestUtil.getMailbox(RECIPIENT_NAME).getAccountId();
+            DbOutOfOffice.clear(conn, accountId);
+            conn.commit();
+            DbPool.quietClose(conn);
+        }
 
         // Clean up temporary data
         TestUtil.deleteTestData(RECIPIENT_NAME, NAME_PREFIX);
         TestUtil.deleteTestData(SENDER_NAME, NAME_PREFIX);
+    }
+
+    public static void main(String[] args)
+    throws Exception {
+        TestUtil.cliSetup();
+        TestNG testng = TestUtil.newTestNG();
+        testng.setExcludedGroups("Server");
+        testng.setTestClasses(new Class[] { TestNotification.class });
+        testng.run();
     }
 }
