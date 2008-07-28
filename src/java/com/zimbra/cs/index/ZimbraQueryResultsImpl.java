@@ -232,11 +232,12 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
     ZimbraHit getZimbraHit(Mailbox mbox, float score, SearchResult sr, Document doc, SearchResult.ExtraData extra) throws ServiceException {
         MailItem.UnderlyingData ud = null;
         ImapMessage i4msg = null;
-        int modseq = -1;
+        int modseq = -1, parentId = 0;
         switch (extra) {
-            case MAIL_ITEM:  ud = (MailItem.UnderlyingData) sr.extraData;                  break;
-            case IMAP_MSG:   i4msg = (ImapMessage) sr.extraData;                           break;
-            case MODSEQ:     modseq = sr.extraData != null ? (Integer) sr.extraData : -1;  break;
+            case MAIL_ITEM:  ud = (MailItem.UnderlyingData) sr.extraData;                   break;
+            case IMAP_MSG:   i4msg = (ImapMessage) sr.extraData;                            break;
+            case MODSEQ:     modseq = sr.extraData != null ? (Integer) sr.extraData : -1;   break;
+            case PARENT:     parentId = sr.extraData != null ? (Integer) sr.extraData : 0;  break;
         }
 
         ZimbraHit toRet = null;
@@ -275,6 +276,8 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults
             toRet.cacheImapMessage(i4msg);
         if (modseq > 0)
             toRet.cacheModifiedSequence(modseq);
+        if (parentId != 0)
+            toRet.cacheParentId(parentId);
 
         return toRet;
     }

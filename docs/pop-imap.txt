@@ -28,6 +28,7 @@ IMAP protocol and extensions supported:
     [SASL-IR]          RFC 4959: IMAP Extension for Simple Authentication and Security Layer (SASL) Initial Client Response
     [SEARCHRES]        RFC 5182: IMAP Extension for Referencing the Last SEARCH Result
     [SORT]             RFC 5256: Internet Message Access Protocol - SORT and THREAD Extensions
+    [THREAD=ORDEREDSUBJECT]  RFC 5256: Internet Message Access Protocol - SORT and THREAD Extensions
     [UIDPLUS]          RFC 4315: Internet Message Access Protocol (IMAP) - UIDPLUS extension
     [UNSELECT]         RFC 3691: IMAP UNSELECT command
     [WITHIN]           RFC 5032: WITHIN Search Extension to the IMAP Protocol

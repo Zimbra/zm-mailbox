@@ -53,7 +53,7 @@ public class DbSearch {
         public Object sortkey;
         public Object extraData;
 
-        public enum ExtraData { NONE, MAIL_ITEM, IMAP_MSG, MODSEQ };
+        public enum ExtraData { NONE, MAIL_ITEM, IMAP_MSG, MODSEQ, PARENT };
 
         public static class SizeEstimate {
             public SizeEstimate() {}
@@ -88,15 +88,16 @@ public class DbSearch {
                     break;
             }
 
+            int offset = sortField == SORT_NONE ? COLUMN_SORTKEY - 1 : COLUMN_SORTKEY;
             if (extra == ExtraData.MAIL_ITEM) {
                 // note that there's no sort column in the result set for SORT_NONE
-                int offset = sortField == SORT_NONE ? COLUMN_SORTKEY - 1 : COLUMN_SORTKEY;
                 result.extraData = DbMailItem.constructItem(rs, offset);
             } else if (extra == ExtraData.IMAP_MSG) {
-                int flags = rs.getBoolean(6) ? Flag.BITMASK_UNREAD | rs.getInt(7) : rs.getInt(7);
-                result.extraData = new ImapMessage(result.id, result.type, rs.getInt(5), flags, rs.getLong(8));
-            } else if (extra == ExtraData.MODSEQ) {
-                result.extraData = rs.getInt(5);
+                int flags = rs.getBoolean(offset + 2) ? Flag.BITMASK_UNREAD | rs.getInt(offset + 3) : rs.getInt(offset + 3);
+                result.extraData = new ImapMessage(result.id, result.type, rs.getInt(offset + 1), flags, rs.getLong(offset + 4));
+            } else if (extra == ExtraData.MODSEQ || extra == ExtraData.PARENT) {
+                int value = rs.getInt(offset + 1);
+                result.extraData = rs.wasNull() ? -1 : value;
             }
             return result;
         }
@@ -291,6 +292,8 @@ public class DbSearch {
             select.append(", mi.imap_id, mi.unread, mi.flags, mi.tags");
         else if (extra == SearchResult.ExtraData.MODSEQ)
             select.append(", mi.mod_metadata");
+        else if (extra == SearchResult.ExtraData.PARENT)
+            select.append(", mi.parent_id");
 
         select.append(" FROM " + DbMailItem.getMailItemTableName(mbox, "mi"));
         if (includeCalTable) 

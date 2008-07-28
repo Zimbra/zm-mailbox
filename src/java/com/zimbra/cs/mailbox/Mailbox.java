@@ -3377,6 +3377,7 @@ public class Mailbox {
         NORMAL,        // everything
         IMAP,          // only IMAP data
         MODSEQ,        // only the metadata modification sequence number
+        PARENT,        // only the ID of the item's parent (-1 if no parent)
         IDS;           // only IDs
         
         public static SearchResultMode get(String value) throws ServiceException {

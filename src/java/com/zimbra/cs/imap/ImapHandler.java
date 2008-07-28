@@ -735,11 +735,21 @@ abstract class ImapHandler extends ProtocolHandler {
                         return doSETQUOTA(tag, qroot, limits);
                     }
                     break;
+                case 'T':
+                    if (command.equals("THREAD") && extensionEnabled("THREAD=ORDEREDSUBJECT")) {
+                        req.skipSpace();  req.skipAtom("ORDEREDSUBJECT");
+                        req.skipSpace();  String charset = req.readCharset();
+                        req.skipSpace();  ImapSearch i4search = req.readSearch(charset);
+                        checkEOF(tag, req);
+                        return isProxied ? mProxy.proxy(req) : doTHREAD(tag, i4search, byUID);
+                    }
+                    break;
                 case 'U':
                     if (command.equals("UID")) {
                         req.skipSpace();  command = req.readATOM();
                         if (command.equals("FETCH") || command.equals("SEARCH") || command.equals("COPY") || command.equals("STORE") ||
-                                (command.equals("EXPUNGE") && extensionEnabled("UIDPLUS")) || (command.equals("SORT") && extensionEnabled("SORT"))) {
+                                (command.equals("EXPUNGE") && extensionEnabled("UIDPLUS")) || (command.equals("SORT") && extensionEnabled("SORT")) ||
+                                (command.equals("THREAD") && extensionEnabled("THREAD=ORDEREDSUBJECT"))) {
                             byUID = true;
                             continue;
                         }
@@ -852,9 +862,9 @@ abstract class ImapHandler extends ProtocolHandler {
     }
 
     private static final Set<String> SUPPORTED_EXTENSIONS = new LinkedHashSet<String>(Arrays.asList(
-        "ACL", "BINARY", "CATENATE", "CHILDREN", "CONDSTORE", "ENABLE", "ESEARCH", "ESORT", "I18NLEVEL=1",
-        "ID", "IDLE", "LIST-EXTENDED", "LITERAL+", "LOGIN-REFERRALS", "MULTIAPPEND", "NAMESPACE", "QRESYNC",
-        "QUOTA", "RIGHTS=ektx", "SASL-IR", "SEARCHRES", "SORT", "UIDPLUS", "UNSELECT", "WITHIN"
+        "ACL", "BINARY", "CATENATE", "CHILDREN", "CONDSTORE", "ENABLE", "ESEARCH", "ESORT", "I18NLEVEL=1", "ID",
+        "IDLE", "LIST-EXTENDED", "LITERAL+", "LOGIN-REFERRALS", "MULTIAPPEND", "NAMESPACE", "QRESYNC", "QUOTA",
+        "RIGHTS=ektx", "SASL-IR", "SEARCHRES", "SORT", "THREAD=ORDEREDSUBJECT", "UIDPLUS", "UNSELECT", "WITHIN"
     ));
 
     protected String getCapabilityString() {
@@ -885,6 +895,7 @@ abstract class ImapHandler extends ProtocolHandler {
         // [SASL-IR]          RFC 4959: IMAP Extension for Simple Authentication and Security Layer (SASL) Initial Client Response
         // [SEARCHRES]        RFC 5182: IMAP Extension for Referencing the Last SEARCH Result
         // [SORT]             RFC 5256: Internet Message Access Protocol - SORT and THREAD Extensions
+        // [THREAD=ORDEREDSUBJECT]  RFC 5256: Internet Message Access Protocol - SORT and THREAD Extensions
         // [UIDPLUS]          RFC 4315: Internet Message Access Protocol (IMAP) - UIDPLUS extension
         // [UNSELECT]         RFC 3691: IMAP UNSELECT command
         // [WITHIN]           RFC 5032: WITHIN Search Extension to the IMAP Protocol
@@ -2839,28 +2850,7 @@ abstract class ImapHandler extends ProtocolHandler {
                     hits.remove(null);
                 }
             } else {
-                String search;
-                synchronized (mbox) {
-                    search = i4search.toZimbraSearch(i4folder);
-                    if (!i4folder.isVirtual())
-                        search = "in:" + i4folder.getQuotedPath() + ' ' + search;
-                    else if (i4folder.getSize() <= LARGEST_FOLDER_BATCH)
-                        search = ImapSearch.sequenceAsSearchTerm(i4folder, i4folder.getAllMessages(), false) + ' ' + search;
-                    else
-                        search = '(' + i4folder.getQuery() + ") " + search;
-                    ZimbraLog.imap.info("[ search is: " + search + " ]");
-                }
-
-                SearchParams params = new SearchParams();
-                params.setIncludeTagDeleted(true);
-                params.setQueryStr(search);
-                params.setTypes(ITEM_TYPES);
-                params.setSortBy(sort);
-                params.setChunkSize(2000);
-                params.setPrefetch(false);
-                params.setMode(requiresMODSEQ ? Mailbox.SearchResultMode.MODSEQ : Mailbox.SearchResultMode.IDS);
-                ZimbraQueryResults zqr = mbox.search(SoapProtocol.Soap12, getContext(), params);
-
+                ZimbraQueryResults zqr = runSearch(i4search, i4folder, sort, requiresMODSEQ ? Mailbox.SearchResultMode.MODSEQ : Mailbox.SearchResultMode.IDS);
                 hits = unsorted ? new ImapMessageSet() : new ArrayList<ImapMessage>();
                 try {
                     for (ZimbraHit hit = zqr.getNext(); hit != null; hit = zqr.getNext()) {
@@ -2909,15 +2899,15 @@ abstract class ImapHandler extends ProtocolHandler {
         if (options == null) {
             result = new StringBuilder(command);
             for (ImapMessage i4msg : hits)
-                result.append(' ').append(byUID ? i4msg.imapUid : i4msg.sequence);
+                result.append(' ').append(getMessageId(i4msg, byUID));
         } else if (options != RETURN_SAVE) {
             result = new StringBuilder("E" + command + " (TAG \"").append(tag).append("\")");
             if (byUID)
                 result.append(" UID");
             if (first != null && (options & RETURN_MIN) != 0)
-                result.append(" MIN ").append(byUID ? first.imapUid : first.sequence);
+                result.append(" MIN ").append(getMessageId(first, byUID));
             if (last != null && (options & RETURN_MAX) != 0)
-                result.append(" MAX ").append(byUID ? last.imapUid : last.sequence);
+                result.append(" MAX ").append(getMessageId(last, byUID));
             if ((options & RETURN_COUNT) != 0)
                 result.append(" COUNT ").append(size);
             if (size != 0 && (options & RETURN_ALL) != 0)
@@ -2944,6 +2934,123 @@ abstract class ImapHandler extends ProtocolHandler {
             sendUntagged(result.toString());
         sendNotifications(false, false);
         sendOK(tag, (byUID ? "UID " : "") + command + " completed");
+        return CONTINUE_PROCESSING;
+    }
+
+    private static int getMessageId(ImapMessage i4msg, boolean byUID) {
+        return byUID ? i4msg.imapUid : i4msg.sequence;
+    }
+
+    private ZimbraQueryResults runSearch(ImapSearch i4search, ImapFolder i4folder, MailboxIndex.SortBy sort, Mailbox.SearchResultMode resultMode)
+    throws ImapParseException, ServiceException, ParseException {
+        Mailbox mbox = i4folder.getMailbox();
+        if (mbox == null)
+            throw ServiceException.FAILURE("unexpected session close during search", null);
+
+        String search;
+        synchronized (mbox) {
+            search = i4search.toZimbraSearch(i4folder);
+            if (!i4folder.isVirtual())
+                search = "in:" + i4folder.getQuotedPath() + ' ' + search;
+            else if (i4folder.getSize() <= LARGEST_FOLDER_BATCH)
+                search = ImapSearch.sequenceAsSearchTerm(i4folder, i4folder.getAllMessages(), false) + ' ' + search;
+            else
+                search = '(' + i4folder.getQuery() + ") " + search;
+            ZimbraLog.imap.info("[ search is: " + search + " ]");
+        }
+
+        SearchParams params = new SearchParams();
+        params.setIncludeTagDeleted(true);
+        params.setQueryStr(search);
+        params.setTypes(ITEM_TYPES);
+        params.setSortBy(sort);
+        params.setChunkSize(2000);
+        params.setPrefetch(false);
+        params.setMode(resultMode);
+
+        try {
+            return mbox.search(SoapProtocol.Soap12, getContext(), params);
+        } catch (IOException ioe) {
+            throw ServiceException.FAILURE("error during proxied query: " + search, ioe);
+        }
+    }
+
+    boolean doTHREAD(String tag, ImapSearch i4search, boolean byUID) throws IOException, ImapParseException {
+        if (!checkState(tag, State.SELECTED))
+            return CONTINUE_PROCESSING;
+
+        ImapFolder i4folder = mSelectedFolder;
+
+        boolean requiresMODSEQ = i4search.requiresMODSEQ();
+        if (requiresMODSEQ)
+            activateExtension(ActivatedExtension.CONDSTORE);
+        // RFC 4551 3.1.2: "A server that returned NOMODSEQ response code for a mailbox,
+        //                  which subsequently receives one of the following commands
+        //                  while the mailbox is selected:
+        //                     -  a FETCH or SEARCH command that includes the MODSEQ
+        //                         message data item
+        //                  MUST reject any such command with the tagged BAD response."
+        if (requiresMODSEQ && !sessionActivated(ActivatedExtension.CONDSTORE))
+            throw new ImapParseException(tag, "NOMODSEQ", "cannot THREAD MODSEQ in this mailbox", true);
+
+        LinkedHashMap<Integer, List<ImapMessage>> threads = new LinkedHashMap<Integer, List<ImapMessage>>();
+        try {
+            ZimbraQueryResults zqr = runSearch(i4search, i4folder, MailboxIndex.SortBy.DATE_ASCENDING, Mailbox.SearchResultMode.PARENT);
+            try {
+                for (ZimbraHit hit = zqr.getNext(); hit != null; hit = zqr.getNext()) {
+                    ImapMessage i4msg = i4folder.getById(hit.getItemId());
+                    if (i4msg == null || i4msg.isExpunged())
+                        continue;
+
+                    int parentId = hit.getParentId();
+                    if (parentId <= 0) {
+                        threads.put(-i4msg.msgId, Arrays.asList(i4msg));
+                        continue;
+                    }
+
+                    List<ImapMessage> contents = threads.get(parentId);
+                    if (contents == null) {
+                        (contents = new LinkedList<ImapMessage>()).add(i4msg);
+                        threads.put(parentId, contents);
+                    } else {
+                        contents.add(i4msg);
+                    }
+                }
+            } finally {
+                zqr.doneWithSearchResults();
+            }
+        } catch (ParseException pe) {
+            ZimbraLog.imap.warn("THREAD failed (bad query)", pe);
+            sendNO(tag, "THREAD failed");
+            return CONTINUE_PROCESSING;
+        } catch (ServiceException e) {
+            ZimbraLog.imap.warn("THREAD failed", e);
+            sendNO(tag, "THREAD failed");
+            return CONTINUE_PROCESSING;
+        }
+
+        StringBuilder result = new StringBuilder("THREAD");
+        if (!threads.isEmpty()) {
+            result.append(' ');
+            for (List<ImapMessage> thread : threads.values()) {
+                // ORDEREDSUBJECT: "(A)" for singletons, "(A B)" for pairs, "(A (B)(C)(D)(E))" for larger threads
+                Iterator<ImapMessage> it = thread.iterator();
+                result.append('(').append(getMessageId(it.next(), byUID));
+                if (it.hasNext()) {
+                    result.append(' ');
+                    if (thread.size() == 2)
+                        result.append(getMessageId(it.next(), byUID));
+                    else
+                        while (it.hasNext())
+                            result.append('(').append(getMessageId(it.next(), byUID)).append(')');
+                }
+                result.append(')');
+            }
+        }
+
+        sendUntagged(result.toString());
+        sendNotifications(false, false);
+        sendOK(tag, (byUID ? "UID " : "") + "THREAD completed");
         return CONTINUE_PROCESSING;
     }
 

@@ -144,7 +144,7 @@ public final class MessagePartHit extends ZimbraHit {
         if (mDoc != null) {
             String sizeStr = mDoc.get(LuceneFields.L_SIZE);
             long sizeLong = ZimbraAnalyzer.SizeTokenFilter.DecodeSize(sizeStr);
-            return (int)sizeLong;
+            return (int) sizeLong;
         } else {
             assert(false);// should never have a parthit without a document
             return 0;
@@ -168,6 +168,7 @@ public final class MessagePartHit extends ZimbraHit {
             mMessage.addPart(this);
             mMessage.cacheImapMessage(mCachedImapMessage);
             mMessage.cacheModifiedSequence(mCachedModseq);
+            mMessage.cacheParentId(mCachedParentId);
         }
         return mMessage;
     }

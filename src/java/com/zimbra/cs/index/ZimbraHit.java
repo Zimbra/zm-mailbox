@@ -119,6 +119,7 @@ public abstract class ZimbraHit
     private float mScore = (float) 1.0;
     protected ImapMessage mCachedImapMessage = null;
     protected int mCachedModseq = -1;
+    protected int mCachedParentId = 0;
 
     final Mailbox getMailbox() { return mMailbox; }
     final ZimbraQueryResultsImpl getResults() { return mResults; }
@@ -306,6 +307,15 @@ public abstract class ZimbraHit
         return item.getModifiedSequence();
     }
 
+    public int getParentId() throws ServiceException {
+        if (mCachedParentId != 0)
+            return mCachedParentId;
+        MailItem item = getMailItem();
+        if (item == null)
+            return -1;
+        return item.getParentId();
+    }
+
     final protected void updateScore(float score) {
         if (score > mScore) {
             mScore = score;
@@ -335,6 +345,10 @@ public abstract class ZimbraHit
 
     final void cacheModifiedSequence(int modseq) {
         mCachedModseq = modseq;
+    }
+
+    final void cacheParentId(int parentId) {
+        mCachedParentId = parentId;
     }
 
     /**

@@ -624,6 +624,8 @@ class DBQueryOperation extends QueryOperation
                         case MODSEQ:
                             mExtra = SearchResult.ExtraData.MODSEQ;
                             break;
+                        case PARENT:
+                            mExtra = SearchResult.ExtraData.PARENT;
                     }
                 }
 
@@ -653,7 +655,7 @@ class DBQueryOperation extends QueryOperation
             // at this point, we've filled mDBHits if possible (and initialized its iterator)
             //
             if (mDBHitsIter != null && mDBHitsIter.hasNext()) {
-                SearchResult sr = (SearchResult) mDBHitsIter.next();
+                SearchResult sr = mDBHitsIter.next();
 
                 // Sometimes, a single search result might yield more than one Lucene
                 // document -- e.g. an RFC822 message with separately-indexed mimeparts.
