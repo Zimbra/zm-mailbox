@@ -3407,4 +3407,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether to allow a cancel email sent to organizer of appointment</desc>
 </attr>
 
+<attr id="705" name="zimbraReverseProxyDefaultRealm" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>EXAMPLE.COM</globalConfigValue>
+  <desc>The default realm that will be used by NGINX mail proxy, when the realm is not specified in GSSAPI Authentication</desc>
+</attr>
+
 </attrs>
