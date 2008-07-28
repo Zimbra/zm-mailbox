@@ -47,15 +47,6 @@ public class SyncState {
         this.lastModSeq = lastModSeq;
     }
     
-    public boolean hasNewMessages(Mailbox mb) {
-        long uidNext = mb.getUidNext();
-        return uidNext <= 0 || uidNext - 1 > lastUid;
-    }
-
-    public boolean hasFlagChanges(Mailbox mb) {
-        return mb.getExists() != exists || mb.getUnseen() != unseen;
-    }
-
     public String toString() {
         return String.format("{lastUid=%d,exists=%d,unseen=%d,lastModSeq=%d}",
                              lastUid, exists, unseen, lastModSeq);
