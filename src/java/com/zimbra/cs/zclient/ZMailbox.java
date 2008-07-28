@@ -2080,6 +2080,7 @@ public class ZMailbox {
     throws ServiceException {
         GetMethod get = null;
         InputStream is = null;
+        URI uri = null;
 
         int statusCode;
         try {
@@ -2098,7 +2099,7 @@ public class ZMailbox {
                     relativePath = relativePath + "&end=" + encodedArg;
             }
 
-            URI uri = getRestURI(relativePath);
+            uri = getRestURI(relativePath);
             HttpClient client = getHttpClient(uri);
 
             if (msecTimeout > 0)
@@ -2115,7 +2116,12 @@ public class ZMailbox {
                 throw ServiceException.FAILURE("GET failed, status=" + statusCode+" "+get.getStatusText(), null);
             }
         } catch (IOException e) {
-            throw ZClientException.IO_ERROR(e.getMessage(), e);
+            String fromUri = "";
+            if (uri != null) {
+                fromUri = " from " + uri.toString(); 
+            }
+            String msg = String.format("Unable to get REST resource%s: %s", fromUri, e.getMessage());
+            throw ZClientException.IO_ERROR(msg, e);
         } finally {
             ByteUtil.closeStream(is);
             if (closeOs)
