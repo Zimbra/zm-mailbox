@@ -112,9 +112,18 @@ class RemoteFolder {
         }
     }
 
-    public List<Long> getUids(String seq) throws IOException {
+    public List<Long> getUids(long startUid, long endUid) throws IOException {
         ensureSelected();
-        List<Long> uids = connection.getUids(seq);
+        String end = endUid > 0 ? String.valueOf(endUid) : "*";
+        List<Long> uids = connection.getUids(startUid + ":" + end);
+        // If sequence is "<startUid>:*" then the result will always include
+        // the UID of the last message in the mailbox (see RFC 3501 6.4.8).
+        // This means that if there are no UIDs >= startUid then a single UID
+        // will be returned that is < startUid, so we want to make sure to
+        // exclude this result.
+        if (endUid <= 0 && uids.size() == 1 && uids.get(0) < startUid) {
+            return Collections.emptyList();
+        }
         // Sort UIDs in reverse order so we download latest messages first
         Collections.sort(uids, Collections.reverseOrder());
         return uids;

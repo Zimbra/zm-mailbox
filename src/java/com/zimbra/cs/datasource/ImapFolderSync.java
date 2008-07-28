@@ -705,8 +705,7 @@ class ImapFolderSync {
 
     private void fetchMessages(long startUid, List<Long> deletedUids)
         throws ServiceException, IOException {
-        String end = maxUid > 0 ? String.valueOf(maxUid) : "*";
-        List<Long> uids = remoteFolder.getUids(startUid + ":" + end);
+        List<Long> uids = remoteFolder.getUids(startUid, maxUid);
         if (uids.size() > 0) {
             fetchMessages(uids, deletedUids);
         }
@@ -726,8 +725,8 @@ class ImapFolderSync {
             if (maxUid > 0 && freq > 0 && time - lastCheckTime > freq) {
                 // Check for newly arrived messages...
                 lastCheckTime = time;
-                List<Long> newUids = remoteFolder.getUids((maxUid + 1) + ":*");
-                if (!newUids.isEmpty() && newUids.get(0) > maxUid) {
+                List<Long> newUids = remoteFolder.getUids(maxUid + 1, 0);
+                if (!newUids.isEmpty()) {
                     remoteFolder.debug("Fetching %d newly arrived IMAP message(s)", newUids.size());
                     Iterator<Long> nui = newUids.iterator();
                     do {
