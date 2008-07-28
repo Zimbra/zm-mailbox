@@ -1875,6 +1875,12 @@ public abstract class Provisioning {
     
     /** return domains from searchAccounts. only valid with Provisioning.searchAccounts. */
     public static final int SA_DOMAIN_FLAG = 0x10;
+    
+    /** do not fixup objectclass in query for searchObject */
+    public static final int SO_NO_FIXUP_OBJECTCLASS = 0x20;
+    
+    /** do not fixup return attrs for searchObject */
+    public static final int SO_NO_FIXUP_RETURNATTRS = 0x40;
 
     public static final String A_amavisBypassSpamChecks = "amavisBypassSpamChecks";
 
