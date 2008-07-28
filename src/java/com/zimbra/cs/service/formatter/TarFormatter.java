@@ -18,6 +18,7 @@ package com.zimbra.cs.service.formatter;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -26,6 +27,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -42,6 +44,10 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.tar.*;
+
+import org.apache.commons.fileupload.DiskFileUpload;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileUploadBase;
 
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.ZimbraQueryResults;
@@ -111,8 +117,7 @@ public class TarFormatter extends Formatter {
         DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT);
         SimpleDateFormat sdf = new SimpleDateFormat(".H-m-s");
         HashMap<Integer, String> fldrs = new HashMap<Integer, String>();
-        String fname = context.targetMailbox.getAccountId() + '.' +
-            df.format(date).replace('/', '-') + sdf.format(date) + ".tgz";
+        String fname = context.params.get("name");
         Set<String> names = new HashSet<String>(4096);
         String query = context.getQueryString();
         byte[] sysTypes = {
@@ -129,10 +134,13 @@ public class TarFormatter extends Formatter {
         TarOutputStream tos = new TarOutputStream(new GZIPOutputStream(
             context.resp.getOutputStream()), charset == null ? "UTF-8" : charset);
 
+        if (fname == null || fname.equals(""))
+            fname = context.targetMailbox.getAccountId();
+        fname += '.' + df.format(date).replace('/', '-') + sdf.format(date) + ".tgz";
         context.resp.addHeader("Content-Disposition", Part.ATTACHMENT +
             "; filename=" + HttpUtil.encodeFilename(context.req, fname));
         context.resp.setContentType("application/x-tar-compressed");
-        if (types != null) {
+        if (types != null && !types.equals("")) {
             Arrays.sort(searchTypes = MailboxIndex.parseTypesString(types));
             sysTypes = new byte[0];
             if (Arrays.binarySearch(searchTypes, MailItem.TYPE_CONVERSATION) >= 0) {
@@ -167,7 +175,7 @@ public class TarFormatter extends Formatter {
                             query = "in:" + f.getPath() + (query == null ? "" :
                                 " " + query); 
                     }
-                    if (query == null) {
+                    if (query == null || query.equals("")) {
                         SortPath sp = new SortPath();
                         
                         lock = MailboxManager.getInstance().beginMaintenance(
@@ -368,138 +376,212 @@ public class TarFormatter extends Formatter {
         return path;
     }
 
+    @SuppressWarnings("unchecked")
     public void saveCallback(Context context, String contentType, Folder fldr,
         String file) throws IOException, ServiceException, UserServletException {
         ItemData id = null;
+        String callback = context.params.get("callback");
         String charset = context.params.get("charset");
         StringBuffer errs = new StringBuffer();
+        FileItem fi = null;
         List<Folder> flist = fldr.getSubfolderHierarchy();
         Map<Object, Folder> fmap = new HashMap<Object, Folder>();
         Map<Integer, Integer> idMap = new HashMap<Integer, Integer>();
         int[] ids = null;
+        InputStream is = null;
         String resolve = context.params.get("resolve");
-        Resolve r = resolve == null ? Resolve.Skip : Resolve.valueOf(
-            resolve.substring(0,1).toUpperCase() +
-            resolve.substring(1).toLowerCase());
+        String subfolder = context.params.get("subfolder");
+        Resolve r;
         TarEntry te;
         TarInputStream tis = null;
         String types = context.getTypesString();
         byte[] searchTypes = null;
 
-        if (context.reqListIds != null) {
-            ids = context.reqListIds.clone();
-            Arrays.sort(ids);
-        }
-        if (types != null) {
-            Arrays.sort(searchTypes = MailboxIndex.parseTypesString(types));
-            for (byte type : searchTypes) {
-                if (type == MailItem.TYPE_CONVERSATION) {
-                    byte[] newTypes = new byte[types.length() - 1];
-
-                    for (byte t : searchTypes)
-                        if (t != MailItem.TYPE_CONVERSATION)
-                            newTypes[newTypes.length] = t;
-                    searchTypes = newTypes;
-                    break;
+        try {
+            if (context.reqListIds != null) {
+                ids = context.reqListIds.clone();
+                Arrays.sort(ids);
+            }
+            r = resolve == null ? Resolve.Skip : Resolve.valueOf(
+                resolve.substring(0,1).toUpperCase() +
+                resolve.substring(1).toLowerCase());
+            if (types != null && !types.equals("")) {
+                Arrays.sort(searchTypes = MailboxIndex.parseTypesString(types));
+                for (byte type : searchTypes) {
+                    if (type == MailItem.TYPE_CONVERSATION) {
+                        byte[] newTypes = new byte[types.length() - 1];
+    
+                        for (byte t : searchTypes)
+                            if (t != MailItem.TYPE_CONVERSATION)
+                                newTypes[newTypes.length] = t;
+                        searchTypes = newTypes;
+                        break;
+                    }
                 }
             }
-        }
-        if (r == Resolve.Reset) {
-            for (Folder f : flist) {
+            if (FileUploadBase.isMultipartContent(context.req)) {
+                DiskFileUpload dku = new DiskFileUpload();
+                List<FileItem> files;
+
+                dku.setSizeThreshold(1024 * 1024);
+                dku.setRepositoryPath(System.getProperty("java.io.tmpdir",
+                    "/tmp"));
                 try {
-                    List<Integer> delIds;
-                    
-                    if (searchTypes == null) {
-                        delIds = context.targetMailbox.listItemIds(
-                            context.opContext, MailItem.TYPE_UNKNOWN, f.getId());
-                    } else if (Arrays.binarySearch(searchTypes,
-                        MailItem.TYPE_CONVERSATION) < 0) {
-                        delIds = context.targetMailbox.getItemIds(
-                            context.opContext, f.getId()).getIds(searchTypes);
-                    } else {
-                        byte[] delTypes = new byte[searchTypes.length - 1];
+                    files = dku.parseRequest(context.req);
+                } catch (Exception e) {
+                    throw new UserServletException(HttpServletResponse.
+                        SC_UNSUPPORTED_MEDIA_TYPE, e.toString());
+                }
+                for (Iterator<FileItem> it = files.iterator(); it.hasNext(); ) {
+                    fi = it.next();
+                    if (fi != null && !fi.isFormField()) {
+                        is = fi.getInputStream();
+                        break;
+                    }
+                }
+                if (is == null)
+                    throw new UserServletException(HttpServletResponse.
+                        SC_NO_CONTENT, "No file content");
+            } else {
+                is = context.req.getInputStream();
+            }
+            tis = new TarInputStream(new GZIPInputStream(is), charset == null ?
+                "UTF-8" : charset);
+            if (subfolder != null && !subfolder.equals("")) {
+                fldr = createPath(context, fmap, fldr.getPath() + subfolder,
+                    Folder.TYPE_UNKNOWN);
+                flist = fldr.getSubfolderHierarchy();
+            }
+            if (r == Resolve.Reset) {
+                for (Folder f : flist) {
+                    try {
+                        List<Integer> delIds;
+                        
+                        if (searchTypes == null) {
+                            delIds = context.targetMailbox.listItemIds(
+                                context.opContext, MailItem.TYPE_UNKNOWN,
+                                f.getId());
+                        } else if (Arrays.binarySearch(searchTypes,
+                            MailItem.TYPE_CONVERSATION) < 0) {
+                            delIds = context.targetMailbox.getItemIds(
+                                context.opContext, f.getId()).getIds(searchTypes);
+                        } else {
+                            byte[] delTypes = new byte[searchTypes.length - 1];
+                            int i = 0;
+                            
+                            for (byte type : searchTypes)
+                                if (type != MailItem.TYPE_CONVERSATION)
+                                    delTypes[i++] = type;
+                            delIds = context.targetMailbox.getItemIds(
+                                context.opContext, f.getId()).getIds(delTypes);
+                        }
+                        if (delIds == null)
+                            continue;
+        
+                        int[] delIdsArray = new int[delIds.size()];
                         int i = 0;
                         
-                        for (byte type : searchTypes)
-                            if (type != MailItem.TYPE_CONVERSATION)
-                                delTypes[i++] = type;
-                        delIds = context.targetMailbox.getItemIds(
-                            context.opContext, f.getId()).getIds(delTypes);
+                        for (Integer del : delIds)
+                            if (del >= Mailbox.FIRST_USER_ID)
+                                delIdsArray[i++] = del;
+                        while (i < delIds.size())
+                            delIdsArray[i++] = Mailbox.ID_AUTO_INCREMENT;
+                        context.targetMailbox.delete(context.opContext,
+                            delIdsArray, MailItem.TYPE_UNKNOWN, null);
+                    } catch (Exception e) {
+                        if (!(e instanceof MailServiceException) ||
+                            ((MailServiceException)e).getCode() !=
+                            MailServiceException.NO_SUCH_FOLDER) {
+                            r = Resolve.Replace;
+                            addError(errs, "Unable to reset " + f.getName() +
+                                ": " + e);
+                        }
                     }
-                    if (delIds == null)
+                }
+                context.targetMailbox.purge(MailItem.TYPE_UNKNOWN);
+                flist = fldr.getSubfolderHierarchy();
+            }
+            for (Folder f : flist) {
+                fmap.put(f.getId(), f);
+                fmap.put(f.getPath(), f);
+            }
+            try {
+                while ((te = tis.getNextEntry()) != null) {
+                    if (te.getName().endsWith(".meta")) {
+                        if (id != null)
+                            recoverItem(context, fldr, fmap, idMap, ids,
+                                searchTypes, r, id, tis, null, errs);
+                        id = new ItemData(readTarEntry(tis, te));
                         continue;
-    
-                    int[] delIdsArray = new int[delIds.size()];
-                    int i = 0;
-                    
-                    for (Integer del : delIds)
-                        if (del >= Mailbox.FIRST_USER_ID)
-                            delIdsArray[i++] = del;
-                    while (i < delIds.size())
-                        delIdsArray[i++] = Mailbox.ID_AUTO_INCREMENT;
-                    context.targetMailbox.delete(context.opContext, delIdsArray,
-                        MailItem.TYPE_UNKNOWN, null);
-                } catch (MailServiceException e) {
-                    if (e.getCode() != MailServiceException.NO_SUCH_FOLDER) {
-                        r = Resolve.Replace;
-                        addError(errs, "unable to reset " + f.getName() + ": " + e);
                     }
-                } catch (Exception e) {
-                    r = Resolve.Replace;
-                    addError(errs, "unable to reset " + f.getName() + ": " + e);
+                    if (id == null) {
+                        addError(errs, "Item content missing meta: " + te.getName());
+                    } else if (id.ud.type != te.getMajorDeviceId() ||
+                        id.ud.id != te.getMinorDeviceId() ||
+                        (id.ud.getBlobDigest() != null && id.ud.size !=
+                        te.getSize())) {
+                        addError(errs, "Mismatched item content and meta: " +
+                            te.getName());
+                    } else {
+                        recoverItem(context, fldr, fmap, idMap, ids, searchTypes, r,
+                            id, tis, te, errs);
+                    }
+                    id = null;
                 }
-            }
-            context.targetMailbox.purge(MailItem.TYPE_UNKNOWN);
-            flist = fldr.getSubfolderHierarchy();
-        }
-        for (Folder f : flist) {
-            fmap.put(f.getId(), f);
-            fmap.put(f.getPath(), f);
-        }
-        try {
-            tis = new TarInputStream(new GZIPInputStream(
-                context.req.getInputStream()), charset == null ? "UTF-8" : charset);
-            while ((te = tis.getNextEntry()) != null) {
-                if (te.getName().endsWith(".meta")) {
-                    if (id != null)
-                        recoverItem(context, fldr, fmap, idMap, ids,
-                            searchTypes, r, id, tis, null, errs);
-                    id = new ItemData(readTarEntry(tis, te));
-                    continue;
-                }
-                if (id == null) {
-                    addError(errs, "item blob missing meta: " + te.getName());
-                } else if (id.ud.type != te.getMajorDeviceId() ||
-                    id.ud.id != te.getMinorDeviceId() ||
-                    (id.ud.getBlobDigest() != null && id.ud.size != te.getSize())) {
-                    addError(errs, "mismatched item blob and meta: " + te.getName());
-                } else {
+                if (id != null)
                     recoverItem(context, fldr, fmap, idMap, ids, searchTypes, r,
-                        id, tis, te, errs);
-                }
+                        id, tis, null, errs);
+            } catch (Exception e) {
+                addError(errs, e.getMessage());
                 id = null;
+            } finally {
+                if (tis != null)
+                    tis.close();
+                if (fi != null)
+                    fi.delete();
             }
-            if (id != null)
-                recoverItem(context, fldr, fmap, idMap, ids, searchTypes, r, id,
-                    tis, null, errs);
         } catch (Exception e) {
-            addError(errs, e.getMessage());
-            id = null;
-        } finally {
-            if (tis != null)
-                tis.close();
+            if (callback != null)
+                addError(errs, e.getLocalizedMessage());
+            else if (e instanceof IOException)
+                throw (IOException)e;
+            else if (e instanceof ServiceException)
+                throw (ServiceException)e;
+            else if (e instanceof UserServletException)
+                throw (UserServletException)e;
+            else
+                throw ServiceException.FAILURE("Tar formatter failure", e);
         }
         if (errs.length() > 0) {
-            ZimbraLog.misc.warn("Recover errors:\n%s", errs);
-            throw new UserServletException(HttpServletResponse.SC_CONFLICT,
-                "Recover Errors:\n" + errs);
+            String errstr;
+            
+            if (errs.indexOf("\n") == -1)
+                errstr = "Import error: " + errs;
+            else
+                errstr = "Import errors:\n" + errs;
+            ZimbraLog.misc.warn(errstr);
+            if (callback == null)
+                throw new UserServletException(HttpServletResponse.SC_CONFLICT,
+                    errstr);
+        }
+        if (callback != null) {
+            String errstr = errs.substring(0, errs.length() > 4096 ? 4096 :
+                errs.length());
+            PrintWriter pw = context.resp.getWriter();
+            
+            errstr = errstr.replace('\'', '\"');
+            errstr = errstr.replace("\n", "\\n");
+            context.resp.setContentType("text/html");
+            pw.print("<html>\n<head>\n</head>\n<body onload=\"window.parent." +
+                callback + "('" + errstr + "');\"></body></html>\n");
         }
     }
 
     private void addError(StringBuffer errs, String err) {
-      errs.append(err).append('\n');
-      ZimbraLog.misc.info(err);
-
+        if (errs.length() != 0)
+            errs.append('\n');
+        errs.append(err);
+        ZimbraLog.misc.info(err);
     }
     
     public static byte[] readTarEntry(TarInputStream tis, TarEntry te) throws IOException {
