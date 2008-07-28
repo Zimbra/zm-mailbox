@@ -879,10 +879,6 @@ public class LdapProvisioning extends Provisioning {
         if (num == 0)
             accounts = true;
         
-        // If we are only searching for domains, no need to & with !(objectclass=zimbraCalendarResource)
-        if (domains && num ==1)
-            return "(objectclass=zimbraDomain)";
-
         // If searching for user accounts/aliases/lists, filter looks like:
         //
         //   (&(objectclass=zimbraAccount)!(objectclass=zimbraCalendarResource))
@@ -1007,19 +1003,22 @@ public class LdapProvisioning extends Provisioning {
         try {
             zlc = new ZimbraLdapContext(false, useConnPool);
             
-            String objectClass = getObjectClassQuery(flags);
-            
-            if (query == null || query.equals("")) {
-                query = objectClass;
-            } else {
-                if (query.startsWith("(") && query.endsWith(")")) {
-                    query = "(&"+query+objectClass+")";                    
+            if ((flags & Provisioning.SO_NO_FIXUP_OBJECTCLASS) == 0) {
+                String objectClass = getObjectClassQuery(flags);
+                
+                if (query == null || query.equals("")) {
+                    query = objectClass;
                 } else {
-                    query = "(&("+query+")"+objectClass+")";
+                    if (query.startsWith("(") && query.endsWith(")")) {
+                        query = "(&"+query+objectClass+")";                    
+                    } else {
+                        query = "(&("+query+")"+objectClass+")";
+                    }
                 }
             }
             
-            returnAttrs = fixReturnAttrs(returnAttrs, flags);
+            if ((flags & Provisioning.SO_NO_FIXUP_RETURNATTRS) == 0)
+                returnAttrs = fixReturnAttrs(returnAttrs, flags);
 
             SearchControls searchControls = 
                 new SearchControls(SearchControls.SUBTREE_SCOPE, maxResults, 0, returnAttrs, false, false);

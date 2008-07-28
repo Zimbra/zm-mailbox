@@ -20,18 +20,27 @@ class DomainPublicServiceProtocolAndPort extends LdapUpgrade {
     }
     
     private static String genQuery(List<Server> servers) {
-        StringBuffer query = new StringBuffer();
+        StringBuffer q = new StringBuffer();
+        
+        int numValues = 0;
         
         for (Server server : servers) {
             String serviceName = server.getAttr(Provisioning.A_zimbraServiceHostname);
-            if (!StringUtil.isNullOrEmpty(serviceName))
-                query.append("(" + Provisioning.A_zimbraPublicServiceHostname + "=" + serviceName + ")");
+            if (!StringUtil.isNullOrEmpty(serviceName)) {
+                q.append("(" + Provisioning.A_zimbraPublicServiceHostname + "=" + serviceName + ")");
+                numValues++;
+            }
         }
         
-        if (servers.size() > 1)
-            return "(|" + query.toString() + ")";
+        String query;
+        
+        if (numValues > 1)
+            query = "(|" + q.toString() + ")";
         else
-            return query.toString();
+            query = q.toString();
+        
+        // zimbraPublicServiceHostname is not indexed, put objectClass=zimbraDomain in the front, objectClass is indexed.
+        return "(&(objectClass=zimbraDomain)" + query + ")";
     }
     
     static class DomainPuclicServiceProtocolAndPortVisitor implements NamedEntry.Visitor {
@@ -135,16 +144,17 @@ class DomainPublicServiceProtocolAndPort extends LdapUpgrade {
                         attrs.put(Provisioning.A_zimbraPublicServicePort, serverInfo.mPort);
                     
                     try {
-                        System.out.println("Updating domain " + domain.getName() + 
-                                               ", proto => " + attrs.get(Provisioning.A_zimbraPublicServiceProtocol) + 
-                                               ", port => " + attrs.get(Provisioning.A_zimbraPublicServicePort));
+                        System.out.format("Updating domain %-30s: proto => %-5s   port => %-5s\n",
+                                          domain.getName(),
+                                          attrs.get(Provisioning.A_zimbraPublicServiceProtocol),
+                                          attrs.get(Provisioning.A_zimbraPublicServicePort));
                         mProv.modifyAttrs(domain, attrs);
                     } catch (ServiceException e) {
                         System.out.println("Caught exception while modifying domain " + domain.getName());
                     }
                 } else {
                     if (mVerbose)
-                        System.out.println("Not updating domain " + domain.getName() + ", no matching server");
+                        System.out.println("Not updating domain " + domain.getName());
                 }
             } else {
                 if (mVerbose)
@@ -175,7 +185,10 @@ class DomainPublicServiceProtocolAndPort extends LdapUpgrade {
         String query = genQuery(servers);
        
         String bases[] = mProv.getSearchBases(Provisioning.SA_DOMAIN_FLAG);
-        String attrs[] = new String[] {Provisioning.A_zimbraPublicServiceHostname};
+        String attrs[] = new String[] {Provisioning.A_objectClass,
+                                       Provisioning.A_zimbraId,
+                                       Provisioning.A_zimbraDomainName,
+                                       Provisioning.A_zimbraPublicServiceHostname};
         
         DomainPuclicServiceProtocolAndPortVisitor visitor = new DomainPuclicServiceProtocolAndPortVisitor(mProv, servers, mVerbose); 
         
@@ -188,7 +201,7 @@ class DomainPublicServiceProtocolAndPort extends LdapUpgrade {
             }
             
             mProv.searchObjects(query, attrs, base,
-                                Provisioning.SA_DOMAIN_FLAG, 
+                                Provisioning.SO_NO_FIXUP_OBJECTCLASS | Provisioning.SO_NO_FIXUP_RETURNATTRS, // turn off fixup for objectclass and return attrs
                                 visitor, 
                                 0,      // return all entries that satisfy filter.
                                 false); // do not use connection pool, for the OpenLdap bug (see bug 24168) might still be there
