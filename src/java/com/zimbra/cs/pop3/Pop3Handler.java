@@ -570,9 +570,13 @@ public abstract class Pop3Handler extends ProtocolHandler {
     throws Pop3CmdException {
         String type = mechanism != null ? "authentication" : "login";
         try {
-            Account acct = MECHANISM_GSSAPI.equals(mechanism) ?
-                AuthenticatorUtil.authenticateKrb5(username, authenticateId) :
-                AuthenticatorUtil.authenticate(username, authenticateId, password, "pop3", getOrigRemoteIpAddr());
+            Account acct;
+            if (MECHANISM_GSSAPI.equals(mechanism))
+                acct = AuthenticatorUtil.authenticateKrb5(username, authenticateId);
+            else if (MECHANISM_ZIMBRA.equals(mechanism))
+                acct = AuthenticatorUtil.authenticateZToken(username, authenticateId, password);
+            else
+                acct = AuthenticatorUtil.authenticate(username, authenticateId, password, "pop3", getOrigRemoteIpAddr());
             if (acct == null)
                 throw new Pop3CmdException(type + " failed");
             if (!acct.getBooleanAttr(Provisioning.A_zimbraPop3Enabled, false))
@@ -781,7 +785,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
 
     private String getSaslCapabilities() {
         StringBuilder sb = new StringBuilder();
-        if (allowCleartextLogins()) sb.append(" PLAIN");
+        if (allowCleartextLogins()) sb.append(" PLAIN X-ZIMBRA");
         if (isGssAuthEnabled()) sb.append(" GSSAPI");
         return sb.toString();
     }
