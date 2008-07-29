@@ -427,12 +427,15 @@ public final class SearchParams implements Cloneable {
         return CalendarUtils.parseTzElement(tzElt);
     }
     
-    private static final String LOCALE_PATTERN = "([a-zA-Z]{2})[-_]([a-zA-Z]{2})([-_](.+))?";
+    private static final String LOCALE_PATTERN = "([a-zA-Z]{2})(?:[-_]([a-zA-Z]{2})([-_](.+))?)?";
     private final static Pattern sLocalePattern = Pattern.compile(LOCALE_PATTERN);
     
     private static Locale parseLocale(Element localeElt) {
         String locStr = localeElt.getText();
-        
+        return lookupLocaleFromString(locStr);
+    }
+
+    private static Locale lookupLocaleFromString(String locStr) {
         if (locStr != null && locStr.length() > 0) {
             Matcher m = sLocalePattern.matcher(locStr);
             if (m.lookingAt()) {
@@ -460,6 +463,25 @@ public final class SearchParams implements Cloneable {
             }
         }
         return null;
+    }
+    
+    public static void main(String args[]){
+        {
+            Locale l = lookupLocaleFromString("da");
+            System.out.println(" got locale: "+l);
+        }
+        {
+            Locale l = lookupLocaleFromString("da_DK");
+            System.out.println(" got locale: "+l);
+        }
+        {
+            Locale l = lookupLocaleFromString("en");
+            System.out.println(" got locale: "+l);
+        }
+        {
+            Locale l = lookupLocaleFromString("en_US-MAC");
+            System.out.println(" got locale: "+l);
+        }
     }
     
     private static final String quote(String s1, String s2) {
