@@ -944,10 +944,10 @@ public class LdapProvisioning extends Provisioning {
         };
         
         if (bases == null || bases.length == 0)
-            searchObjects(query, returnAttrs, "", flags, visitor, maxResults, useConnPool);
+            searchObjects(query, returnAttrs, "", flags, visitor, maxResults, useConnPool, false);
         else {    
             for (String base : bases)
-                searchObjects(query, returnAttrs, base, flags, visitor, maxResults, useConnPool);
+                searchObjects(query, returnAttrs, base, flags, visitor, maxResults, useConnPool, false);
         }
 
         final boolean byName = sortAttr == null || sortAttr.equals("name"); 
@@ -990,18 +990,15 @@ public class LdapProvisioning extends Provisioning {
     
     void searchObjects(String query, String returnAttrs[], String base, int flags, NamedEntry.Visitor visitor, int maxResults)
         throws ServiceException {
-        searchObjects(query, returnAttrs, base, flags, visitor, maxResults, true);
+        searchObjects(query, returnAttrs, base, flags, visitor, maxResults, true, false);
     }
     
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.account.Provisioning#searchAccounts(java.lang.String)
-     */
-    public void searchObjects(String query, String returnAttrs[], String base, int flags, NamedEntry.Visitor visitor, int maxResults, boolean useConnPool)
-        throws ServiceException
-    {
+    public void searchObjects(String query, String returnAttrs[], String base, int flags, NamedEntry.Visitor visitor, int maxResults, 
+                              boolean useConnPool, boolean useMaster) throws ServiceException {
+
         ZimbraLdapContext zlc = null;
         try {
-            zlc = new ZimbraLdapContext(false, useConnPool);
+            zlc = new ZimbraLdapContext(useMaster, useConnPool);
             
             if ((flags & Provisioning.SO_NO_FIXUP_OBJECTCLASS) == 0) {
                 String objectClass = getObjectClassQuery(flags);

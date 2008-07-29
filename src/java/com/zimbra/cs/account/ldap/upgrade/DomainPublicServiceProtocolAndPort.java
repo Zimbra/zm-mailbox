@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.naming.NamingException;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Domain;
@@ -12,6 +14,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.MailMode;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
+import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 
 class DomainPublicServiceProtocolAndPort extends LdapUpgrade {
     
@@ -61,10 +64,13 @@ class DomainPublicServiceProtocolAndPort extends LdapUpgrade {
         LdapProvisioning mProv;
         Map<String, ServerInfo> mServerMap; // map keyed by server.zimbraServiceHostname
         int mDomainsVisited;
+        ZimbraLdapContext mZlcForMod;
         
-        DomainPuclicServiceProtocolAndPortVisitor(LdapProvisioning prov, List<Server> servers, boolean verbose) {
+        DomainPuclicServiceProtocolAndPortVisitor(LdapProvisioning prov, ZimbraLdapContext zlcForMod, List<Server> servers, boolean verbose) {
             mVerbose = verbose;
             mProv = prov;
+            mZlcForMod = zlcForMod;
+            
             mServerMap = new HashMap<String, ServerInfo>();
             for (Server server : servers) {
                 /*
@@ -130,41 +136,67 @@ class DomainPublicServiceProtocolAndPort extends LdapUpgrade {
             
             Domain domain = (Domain)entry;
             
-            String domainPublicName = domain.getAttr(Provisioning.A_zimbraPublicServiceHostname);
+            String domainPublicHostname = domain.getAttr(Provisioning.A_zimbraPublicServiceHostname);
+            String domainPublicProtocol = domain.getAttr(Provisioning.A_zimbraPublicServiceProtocol);
+            String domainPublicPort = domain.getAttr(Provisioning.A_zimbraPublicServicePort);
+            
             // should not be null/empty, otherwise the domain would not have been found, sanity check
-            if (!StringUtil.isNullOrEmpty(domainPublicName)) {
-                ServerInfo serverInfo = mServerMap.get(domainPublicName);
-                // should not be null, otherwise the domain would not have been found, sanity check
-                if (serverInfo != null) {
-                    Map<String, Object> attrs = new HashMap<String, Object>(); 
-                    // proto should not be null, sanity check
-                    if (serverInfo.mProto != null)
-                        attrs.put(Provisioning.A_zimbraPublicServiceProtocol, serverInfo.mProto);
-                    if (serverInfo.mPort != null && !"0".equals(serverInfo.mPort))
-                        attrs.put(Provisioning.A_zimbraPublicServicePort, serverInfo.mPort);
-                    
-                    try {
-                        System.out.format("Updating domain %-30s: proto => %-5s   port => %-5s\n",
-                                          domain.getName(),
-                                          attrs.get(Provisioning.A_zimbraPublicServiceProtocol),
-                                          attrs.get(Provisioning.A_zimbraPublicServicePort));
-                        mProv.modifyAttrs(domain, attrs);
-                    } catch (ServiceException e) {
-                        System.out.println("Caught exception while modifying domain " + domain.getName());
-                    }
-                } else {
-                    if (mVerbose)
-                        System.out.println("Not updating domain " + domain.getName());
-                }
-            } else {
+            if (StringUtil.isNullOrEmpty(domainPublicHostname)) {
                 if (mVerbose)
-                    System.out.println("Not updating domain " + domain.getName() + ", domain does not have " + Provisioning.A_zimbraPublicServiceHostname);
+                    System.out.format("Not updating domain %d: domain does not have %s\n",
+                                       domain.getName(), Provisioning.A_zimbraPublicServiceHostname);
+                return;
+            }
+            
+            // update only if either protocol or port is already set
+            if (domainPublicProtocol != null) {
+                if (mVerbose)
+                    System.out.format("Not updating domain %s: %s already set to %s on domain\n", 
+                                      domain.getName(), Provisioning.A_zimbraPublicServiceProtocol, domainPublicProtocol);
+                return;
+            }
+            
+            if (domainPublicPort != null) {
+                if (mVerbose)
+                    System.out.format("Not updating domain %s: %s already set to %s on domain\n", 
+                                      domain.getName(), Provisioning.A_zimbraPublicServicePort, domainPublicPort);
+                return;
+            }
+                
+            
+            ServerInfo serverInfo = mServerMap.get(domainPublicHostname);
+            // should not be null, otherwise the domain would not have been found, sanity check
+            if (serverInfo == null) {
+                if (mVerbose)
+                    System.out.format("Not updating domain %s\n", domain.getName());
+                return;
+            }
+            
+            Map<String, Object> attrs = new HashMap<String, Object>(); 
+            // proto should not be null, sanity check
+            if (serverInfo.mProto != null)
+                attrs.put(Provisioning.A_zimbraPublicServiceProtocol, serverInfo.mProto);
+            if (serverInfo.mPort != null && !"0".equals(serverInfo.mPort))
+                attrs.put(Provisioning.A_zimbraPublicServicePort, serverInfo.mPort);
+                    
+            try {
+                System.out.format("Updating domain %-30s: proto => %-5s   port => %-5s\n",
+                                  domain.getName(),
+                                  attrs.get(Provisioning.A_zimbraPublicServiceProtocol),
+                                  attrs.get(Provisioning.A_zimbraPublicServicePort));
+                LdapUpgrade.modifyAttrs(domain, mZlcForMod, attrs);
+            } catch (ServiceException e) {
+                // log the exception and continue
+                System.out.println("Caught ServiceException while modifying domain " + domain.getName());
+            } catch (NamingException e) {
+                // log the exception and continue
+                System.out.println("Caught NamingException while modifying domain " + domain.getName());
             }
         }
         
         void reportStat() {
             System.out.println();
-            System.out.println("Domains found = " + mDomainsVisited);
+            System.out.println("Number of domains found = " + mDomainsVisited);
             System.out.println();
         }
     }
@@ -188,28 +220,38 @@ class DomainPublicServiceProtocolAndPort extends LdapUpgrade {
         String attrs[] = new String[] {Provisioning.A_objectClass,
                                        Provisioning.A_zimbraId,
                                        Provisioning.A_zimbraDomainName,
-                                       Provisioning.A_zimbraPublicServiceHostname};
+                                       Provisioning.A_zimbraPublicServiceHostname,
+                                       Provisioning.A_zimbraPublicServiceProtocol,
+                                       Provisioning.A_zimbraPublicServicePort};
         
-        DomainPuclicServiceProtocolAndPortVisitor visitor = new DomainPuclicServiceProtocolAndPortVisitor(mProv, servers, mVerbose); 
-        
-        for (String base : bases) {
-            // should really have one base, but iterate thought the arrya anyway
-            if (mVerbose) {
-                System.out.println("LDAP search base: " + base);
-                System.out.println("LDAP search query: " + query);
-                System.out.println();
-            }
+        ZimbraLdapContext zlc = null; 
+        DomainPuclicServiceProtocolAndPortVisitor visitor = null;
+        try {
+            zlc = new ZimbraLdapContext(true);
             
-            mProv.searchObjects(query, attrs, base,
-                                Provisioning.SO_NO_FIXUP_OBJECTCLASS | Provisioning.SO_NO_FIXUP_RETURNATTRS, // turn off fixup for objectclass and return attrs
-                                visitor, 
-                                0,      // return all entries that satisfy filter.
-                                false); // do not use connection pool, for the OpenLdap bug (see bug 24168) might still be there
-         
+            visitor = new DomainPuclicServiceProtocolAndPortVisitor(mProv, zlc, servers, mVerbose);
+            
+            for (String base : bases) {
+                // should really have one base, but iterate thought the arrya anyway
+                if (mVerbose) {
+                    System.out.println("LDAP search base: " + base);
+                    System.out.println("LDAP search query: " + query);
+                    System.out.println();
+                }
+                
+                mProv.searchObjects(query, attrs, base,
+                                    Provisioning.SO_NO_FIXUP_OBJECTCLASS | Provisioning.SO_NO_FIXUP_RETURNATTRS, // turn off fixup for objectclass and return attrs
+                                    visitor, 
+                                    0,      // return all entries that satisfy filter.
+                                    false,  // do not use connection pool, for the OpenLdap bug (see bug 24168) might still be there
+                                    true);  // use LDAP master
+             
+            }
+        } finally {
+            ZimbraLdapContext.closeContext(zlc);
+            if (visitor != null)
+                visitor.reportStat();
         }
-        
-        visitor.reportStat();
-
     }
     
     
@@ -245,9 +287,44 @@ class DomainPublicServiceProtocolAndPort extends LdapUpgrade {
         return mProv.createDomain(domainName, attrs);
     }
     
+    /**
+     * for testing protocol and/or port is already present scenarios
+     */
+    private Domain createTestDomain(String domainName, 
+                                    String publicServiceHostname, 
+                                    String publicServiceProtocol,
+                                    String publicServicePort) throws ServiceException {
+        
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        
+        if (publicServiceHostname != null)
+            attrs.put(Provisioning.A_zimbraPublicServiceHostname, publicServiceHostname);
+        if (publicServiceProtocol != null)
+            attrs.put(Provisioning.A_zimbraPublicServiceProtocol, publicServiceProtocol);
+        if (publicServicePort != null)
+            attrs.put(Provisioning.A_zimbraPublicServicePort, publicServicePort);
+        
+        System.out.println("Creating domain " + domainName);
+        return mProv.createDomain(domainName, attrs);
+    }
+    
     private static final int NUM_DOMAIN_SETS = 1;
     
     private void populateTestData() throws ServiceException {
+        
+        for (Server s : mProv.getAllServers()) {
+            if (!s.getName().equals("phoebe.mac")) {
+                try {
+                    mProv.deleteServer(s.getId());
+                    System.out.println("Deleted server " + s.getName());
+                } catch (ServiceException e) {
+                    // ignore
+                }
+            }
+        }
+        
+        System.out.println();
+        
         Server http            = createTestServer("http.server",             MailMode.http.toString(),     "1000", "1001"); 
         Server http_portis0    = createTestServer("http_portis0.server",     MailMode.http.toString(),     "0",    "1001"); 
         Server http_noport     = createTestServer("http_noport.server",      MailMode.http.toString(),     null,   "1001"); 
@@ -261,7 +338,6 @@ class DomainPublicServiceProtocolAndPort extends LdapUpgrade {
         Server redirect        = createTestServer("redirect.server",         MailMode.redirect.toString(), "5000", "5001");
         // Server bogus           = createTestServer("bogus.server",            "bogus",                      "6000", "6001");
         Server nomailmode      = createTestServer("nomailmode.server",       null,                         "7000", "7001");
-        
         
         for (int i = 0; i < NUM_DOMAIN_SETS;  i++) {
             createTestDomain("http_" + i + ".test",         http.getAttr(Provisioning.A_zimbraServiceHostname)); 
@@ -283,6 +359,13 @@ class DomainPublicServiceProtocolAndPort extends LdapUpgrade {
             
             // domain without zimbraPublicServiceHostname, domain should NOT be found by the search
             createTestDomain("no_PSH" + i + ".test",         null);
+            
+            // domain matching a server but already has protocol present, it should not be updated
+            createTestDomain("proto_present_" + i + ".test",   http.getAttr(Provisioning.A_zimbraServiceHostname), "https", null);
+
+            // domain matching a server but already has port present, it should not be updated
+            createTestDomain("port_present_" + i + ".test",   http.getAttr(Provisioning.A_zimbraServiceHostname), null, "8888");
+
         }
     }
     

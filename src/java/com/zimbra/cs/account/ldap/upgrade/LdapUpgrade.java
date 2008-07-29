@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.naming.NamingException;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -19,11 +21,13 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.SearchOptions;
 import com.zimbra.cs.account.ldap.LdapDomain;
+import com.zimbra.cs.account.ldap.LdapEntry;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
@@ -45,6 +49,18 @@ abstract class LdapUpgrade {
     };
     
     abstract void doUpgrade() throws ServiceException;
+    
+    static void modifyAttrs(Entry entry, ZimbraLdapContext initZlc, Map attrs) throws NamingException, ServiceException {
+        ZimbraLdapContext zlc = initZlc;
+        try {
+            if (zlc == null)
+                zlc = new ZimbraLdapContext(true);
+            LdapUtil.modifyAttrs(zlc, ((LdapEntry)entry).getDN(), attrs, entry);
+        } finally {
+            if (initZlc == null)
+                ZimbraLdapContext.closeContext(zlc);
+        }
+    }  
     
     private static String O_HELP = "h";
     private static String O_BUG = "b";
