@@ -318,7 +318,7 @@ public class ProxyConfGen
         mVars.put("mail.:auth_http",                 "");            /* multiline conf */
         mVars.put("mail.authwait",                  "10s");
         mVars.put("mail.pop3capa",                  "\"TOP\" \"USER\" \"UIDL\" \"EXPIRE 31 USER\"");
-        mVars.put("mail.imapcapa",                  "\"IMAP4rev1\" \"ID\" \"LITERAL+\" \"SASL-IR\" \"IDLE\" \"AUTH=PLAIN\" \"NAMESPACE\"");
+        mVars.put("mail.imapcapa",                  "\"IMAP4rev1\" \"ID\" \"LITERAL+\" \"SASL-IR\" \"IDLE\" \"NAMESPACE\"");
         mVars.put("mail.imapid",                    "\"NAME\" \"nginx\" \"VERSION\" \"0\" \"RELEASE\" \"1\"");
         mVars.put("mail.duser",                     "nginx");
         mVars.put("mail.dpasswd",                   "nginx123");
