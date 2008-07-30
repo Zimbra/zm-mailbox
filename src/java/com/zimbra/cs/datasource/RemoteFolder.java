@@ -23,6 +23,8 @@ import com.zimbra.cs.mailclient.imap.Flags;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.Literal;
 import com.zimbra.cs.mailclient.imap.ImapData;
+import com.zimbra.cs.mailclient.imap.MessageData;
+import com.zimbra.cs.mailclient.imap.FetchResponseHandler;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.MailException;
 import com.zimbra.common.util.Log;
@@ -37,6 +39,8 @@ import java.io.FileOutputStream;
 import java.util.Date;
 import java.util.List;
 import java.util.Collections;
+import java.util.ArrayList;
+import java.util.LinkedList;
 
 class RemoteFolder {
     private final ImapConnection connection;
@@ -116,11 +120,10 @@ class RemoteFolder {
         ensureSelected();
         String end = endUid > 0 ? String.valueOf(endUid) : "*";
         List<Long> uids = connection.getUids(startUid + ":" + end);
-        // If sequence is "<startUid>:*" then the result will always include
-        // the UID of the last message in the mailbox (see RFC 3501 6.4.8).
-        // This means that if there are no UIDs >= startUid then a single UID
-        // will be returned that is < startUid, so we want to make sure to
-        // exclude this result.
+        // If sequence is "<startUid>:*" and there are no messages with UID
+        // greater than startUid, the the UID of the last message will always
+        // be returned (RFC 3501 6.4.8). We want to make sure to exlude this
+        // result.
         if (endUid <= 0 && uids.size() == 1 && uids.get(0) < startUid) {
             return Collections.emptyList();
         }
@@ -128,7 +131,35 @@ class RemoteFolder {
         Collections.sort(uids, Collections.reverseOrder());
         return uids;
     }
-    
+
+    /*
+     * Fetch message flags for specific UID sequence. Exclude messages which
+     * have been flagged \Deleted.
+     */
+    public List<MessageData> getFlags(long startUid, long endUid)
+        throws IOException {
+        final List<MessageData> mds = new ArrayList<MessageData>();
+        String end = endUid > 0 ? String.valueOf(endUid) : "*";
+        connection.uidFetch(startUid + ":" + end, "FLAGS",
+            new FetchResponseHandler() {
+                public void handleFetchResponse(MessageData md) {
+                    Flags flags = md.getFlags();
+                    if (flags != null && !flags.isDeleted()) {
+                        mds.add(md);
+                    }
+                }
+            }
+        );
+        // If sequence is "<startUid>:*" and there are no messages with UID
+        // greater than startUid, the the UID of the last message will always
+        // be returned (RFC 3501 6.4.8). We want to make sure to exlude this
+        // result.
+        if (endUid <= 0 && mds.size() == 1 && mds.get(0).getUid() < startUid) {
+            return Collections.emptyList();
+        }
+        return mds;
+    }
+
     public boolean exists() throws IOException {
         return !connection.list("", path).isEmpty();
     }

@@ -636,6 +636,8 @@ class ImapFolderSync {
     private List<Long> fetchFlags(String seq, Set<Integer> msgIds)
         throws ServiceException, IOException {
         Map<Long, MessageData> mds = connection.uidFetch(seq, "FLAGS");
+        // Remove messages that have been flagged \Deleted
+        removeDeleted(mds);
         List<Long> deletedUids = new ArrayList<Long>();
         for (MessageData md : mds.values()) {
             Long uid = md.getUid();
@@ -751,14 +753,43 @@ class ImapFolderSync {
         throws ServiceException, IOException {
         final Map<Long, MessageData> flagsByUid =
             connection.uidFetch(seq, "(FLAGS INTERNALDATE)");
-        connection.uidFetch(seq, "BODY.PEEK[]",
-            new FetchResponseHandler() {
-                public void handleFetchResponse(MessageData md) throws Exception {
-                    handleFetch(md, flagsByUid, deletedUids);
-                }
-            });
+        // Do not fetch messages that have been flagged \Deleted
+        removeDeleted(flagsByUid);
+        if (!flagsByUid.isEmpty()) {
+            List<Long> uids = new ArrayList<Long>(flagsByUid.keySet());
+            Collections.sort(uids);
+            connection.uidFetch(getSequence(uids.iterator()), "BODY.PEEK[]",
+                new FetchResponseHandler() {
+                    public void handleFetchResponse(MessageData md) throws Exception {
+                        handleFetch(md, flagsByUid, deletedUids);
+                    }
+                });
+        }
     }
 
+    // Remove messages from map which have been flagged \Deleted
+    private void removeDeleted(Map<Long, MessageData> mds) {
+        Iterator<MessageData> it = mds.values().iterator();
+        while (it.hasNext()) {
+            MessageData md = it.next();
+            Flags flags = md.getFlags();
+            if (flags != null && flags.isDeleted()) {
+                remoteFolder.debug(
+                    "Remote message with uid %d is flagged \\Deleted", md.getUid());
+                it.remove();
+            }
+        }
+    }
+
+    private String getSequence(Iterator<Long> uids) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(uids.next());
+        while (uids.hasNext()) {
+            sb.append(',').append(uids.next());
+        }
+        return sb.toString();
+    }
+    
     private void handleFetch(MessageData md,
                              Map<Long, MessageData> flagsByUid,
                              List<Long> deletedUids)
