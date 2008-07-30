@@ -27,6 +27,8 @@ public class ZimbraACL {
     // public aces
     Set<ZimbraACE> mPublicAces;
 
+    // for the containsRight call
+    Set<Right> mContainsRight;
     
     /**
      * ctor for deserializing from LDAP
@@ -42,7 +44,7 @@ public class ZimbraACL {
         for (String aceStr : aces) {
             ZimbraACE ace = new ZimbraACE(aceStr, rm);
             Set<ZimbraACE> aceSet = aceSetByGranteeType(ace.getGranteeType(), true);
-            aceSet.add(ace);
+            addACE(aceSet, ace);
         }
     }
     
@@ -67,19 +69,19 @@ public class ZimbraACL {
         if (other.mAces != null) {
             mAces = new HashSet<ZimbraACE>();
             for (ZimbraACE ace : other.mAces)
-                mAces.add(ace.clone());
+                addACE(mAces, ace.clone());
         }
         
         if (other.mAuthuserAces != null) {
             mAuthuserAces = new HashSet<ZimbraACE>();
             for (ZimbraACE ace : other.mAuthuserAces)
-                mAuthuserAces.add(ace.clone());
+                addACE(mAuthuserAces, ace.clone());
         }
         
         if (other.mPublicAces != null) {
             mPublicAces = new HashSet<ZimbraACE>();
             for (ZimbraACE ace : other.mPublicAces)
-                mPublicAces.add(ace.clone());
+                addACE(mPublicAces, ace.clone());
         }
     }
     
@@ -106,6 +108,19 @@ public class ZimbraACL {
         }
     }
     
+    private void addACE(Set<ZimbraACE> aceSet, ZimbraACE aceToGrant) {
+        aceSet.add(aceToGrant);
+        if (mContainsRight == null)
+            mContainsRight = new HashSet<Right>();
+        mContainsRight.add(aceToGrant.getRight());
+    }
+    
+    private void removeACE(Set<ZimbraACE> aceSet, ZimbraACE aceToRevoke) {
+        aceSet.remove(aceToRevoke);
+        // mContainsRight must not be nul if we get here
+        mContainsRight.remove(aceToRevoke.getRight());
+    }
+    
     /**
      * @param aceToGrant ace to revoke
      * @return whether aceToGrant was actually added to the ACL. 
@@ -127,7 +142,7 @@ public class ZimbraACL {
         }
         
         // the right had not been granted to the grantee, add it
-        aceSet.add(aceToGrant);
+        addACE(aceSet, aceToGrant);
         return true;
     }
     
@@ -143,11 +158,18 @@ public class ZimbraACL {
             if (ace.isGrantee(aceToRevoke.getGrantee()) &&
                 ace.getRight() == aceToRevoke.getRight() &&
                 ace.deny() == aceToRevoke.deny()) {
-                aceSet.remove(ace);
+                removeACE(aceSet, ace);
                 return true;
             }
         }
         return false;
+    }
+    
+    boolean containsRight(Right right) {
+        if (mContainsRight == null)
+            return false;
+        else    
+            return mContainsRight.contains(right);
     }
     
     public Set<ZimbraACE> grantAccess(Set<ZimbraACE> acesToGrant) {

@@ -190,9 +190,9 @@ public class TestACL extends TestCase {
         // external usr should not be allowed
         verify(guest, target, Right.RT_viewFreeBusy, false);
         
-        // no one should be allowed for a non-granted right
-        verify(zimbra, target, Right.RT_invite, false);
-        verify(guest, target, Right.RT_invite, false);
+        // non granted right should honor callsite default
+        verifyDefault(zimbra, target, Right.RT_invite);
+        verifyDefault(guest, target, Right.RT_invite);
     }
     
     /*
@@ -219,7 +219,7 @@ public class TestACL extends TestCase {
         verify(guest, target, Right.RT_viewFreeBusy, true);
         
         // right not in ACL
-        verify(guest, target, Right.RT_invite, false);
+        verifyDefault(guest, target, Right.RT_invite);
     }
     
     /*
@@ -243,11 +243,11 @@ public class TestACL extends TestCase {
         
         // anon grantee
         verify(anon, target, Right.RT_viewFreeBusy, true);
-        verify(anon, target, Right.RT_invite, false);
+        verifyDefault(anon, target, Right.RT_invite);
         
         // null grantee
         verify(null, target, Right.RT_viewFreeBusy, true);
-        verify(null, target, Right.RT_invite, false);
+        verifyDefault(null, target, Right.RT_invite);
     }
     
     public void testGranteeGroupSimple() throws Exception {
@@ -348,7 +348,7 @@ public class TestACL extends TestCase {
         /*
          * setup grantees
          */
-        Account zimbraUser = prov.createAccount(getEmailAddr("zimbra-user"), PASSWORD, null);
+        Account zimbraUser = prov.createAccount(getEmailAddr("testNoACL-user"), PASSWORD, null);
         Account guest = guestAccount("guest@external.com", "whocares");
         Account anon = anonAccount();
         
@@ -363,6 +363,42 @@ public class TestACL extends TestCase {
             verifyDefault(anon, target, right);
         }
     }
+    
+    /*
+     * test target with no ACL for the requested right but does have ACL for some other rights.
+     * should return caller default for the right that does not have any ACL (bug 30241), 
+     * should allow/disallow for the rights according to the ACE.
+     */
+    public void testDefaultWithNonEmptyACL() throws Exception {
+        Provisioning prov = Provisioning.getInstance();
+        
+        /*
+         * setup grantees
+         */
+        Account zimbraUser = prov.createAccount(getEmailAddr("testDefaultWithNonEmptyACL-user"), PASSWORD, null);
+        Account guest = guestAccount("guest@external.com", "whocares");
+        Account anon = anonAccount();
+        
+        Right rightGranted = Right.RT_viewFreeBusy;
+        Right rightNotGranted = Right.RT_invite;
+        
+        /*
+         * setup targets
+         */
+        Account target = prov.createAccount(getEmailAddr("testDefaultWithNonEmptyACL-target"), PASSWORD, null);
+        Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
+        aces.add(new ZimbraACE(zimbraUser, rightGranted, false));
+        PermUtil.grantAccess(target, aces);
+        
+        // verify callsite default is honored for not granted right
+        verifyDefault(zimbraUser, target, rightNotGranted);
+        verifyDefault(guest, target, rightNotGranted);
+        verifyDefault(anon, target, rightNotGranted);
+        
+        // verify granted right is properly processed
+        verify(zimbraUser, target, rightGranted, true);
+        verify(guest, target, rightGranted, false);
+    }    
     
     public void testGrantConflict() throws Exception {
         Provisioning prov = Provisioning.getInstance();
@@ -463,7 +499,7 @@ public class TestACL extends TestCase {
         /*
          * setup targets
          */
-        Account target = prov.createAccount(getEmailAddr("testLoginAsRightt-target"), PASSWORD, null);
+        Account target = prov.createAccount(getEmailAddr("testLoginAsRight-target"), PASSWORD, null);
         
         // grant some permissions 
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
@@ -473,11 +509,66 @@ public class TestACL extends TestCase {
         // verify the grant was added
         Set<ZimbraACE> acl = PermUtil.getACEs(target, null);
         assertEquals(1, acl.size());
+        verify(user, target, Right.RT_loginAs, true);
         
         // verify user can access target's account
         boolean canAccessAccount = mAM.canAccessAccount(user, target);
         assertTrue(canAccessAccount);
         
+    }
+    
+    public void testRevoke() throws Exception {
+        Provisioning prov = Provisioning.getInstance();
+        
+        /*
+         * setup grantees
+         */
+        Account user = prov.createAccount(getEmailAddr("testRevoke-user"), PASSWORD, null);
+        
+        /*
+         * setup targets
+         */
+        Account target = prov.createAccount(getEmailAddr("testRevoke-target"), PASSWORD, null);
+        
+        // grant some permissions 
+        Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
+        aces.add(new ZimbraACE(user, Right.RT_invite, false));
+        aces.add(new ZimbraACE(user, Right.RT_viewFreeBusy, false));
+        PermUtil.grantAccess(target, aces);
+        
+        // verify the grant was added
+        Set<ZimbraACE> acl = PermUtil.getACEs(target, null);
+        assertEquals(2, acl.size());
+        verify(user, target, Right.RT_invite, true);
+        
+        // revoke one right
+        Set<ZimbraACE> acesToRevoke = new HashSet<ZimbraACE>();
+        acesToRevoke.add(new ZimbraACE(user, Right.RT_invite, false));
+        PermUtil.revokeAccess(target, acesToRevoke);
+        
+        // verify the grant was removed
+        acl = PermUtil.getACEs(target, null);
+        assertEquals(1, acl.size());
+        verifyDefault(user, target, Right.RT_invite); // callsite default should now apply
+        
+        // verify the other right is still there
+        verify(user, target, Right.RT_viewFreeBusy, true);
+        
+        // revoke the other right
+        acesToRevoke = new HashSet<ZimbraACE>();
+        acesToRevoke.add(new ZimbraACE(user, Right.RT_viewFreeBusy, false));
+        PermUtil.revokeAccess(target, acesToRevoke);
+        
+        // verify all right are gone
+        verifyDefault(user, target, Right.RT_invite);
+        verifyDefault(user, target, Right.RT_viewFreeBusy);
+        acl = PermUtil.getACEs(target, null);
+        assertNull(acl);
+
+        // revoke non-existing right, make sure we don't crash
+        acesToRevoke = new HashSet<ZimbraACE>();
+        acesToRevoke.add(new ZimbraACE(user, Right.RT_invite, false));
+        PermUtil.revokeAccess(target, acesToRevoke);
     }
 
 
