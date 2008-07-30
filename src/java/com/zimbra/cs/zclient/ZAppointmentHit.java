@@ -390,7 +390,8 @@ public class ZAppointmentHit implements ZSearchHit {
         sb.add("flags", mFlags);
         sb.add("name", mName);
         sb.add("location", mLocation);
-        sb.add("categories", mCategories, true, true);
+        if (mCategories != null)
+            sb.add("categories", mCategories, true, true);
         if (mGeo != null)
             sb.add("geo", mGeo.toString());
         sb.add("inviteId", mInviteId);
