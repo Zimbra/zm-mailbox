@@ -451,10 +451,39 @@ public class TestACL extends TestCase {
         assertEquals(4, acl.size());
         
     }
+    
+    public void testLoginAsRight() throws Exception {
+        Provisioning prov = Provisioning.getInstance();
+        
+        /*
+         * setup grantees
+         */
+        Account user = prov.createAccount(getEmailAddr("testLoginAsRight-user"), PASSWORD, null);
+        
+        /*
+         * setup targets
+         */
+        Account target = prov.createAccount(getEmailAddr("testLoginAsRightt-target"), PASSWORD, null);
+        
+        // grant some permissions 
+        Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
+        aces.add(new ZimbraACE(user, Right.RT_loginAs, false));
+        PermUtil.grantAccess(target, aces);
+        
+        // verify the grant was added
+        Set<ZimbraACE> acl = PermUtil.getACEs(target, null);
+        assertEquals(1, acl.size());
+        
+        // verify user can access target's account
+        boolean canAccessAccount = mAM.canAccessAccount(user, target);
+        assertTrue(canAccessAccount);
+        
+    }
+
 
     public static void main(String[] args) throws Exception {
         CliUtil.toolSetup("INFO");
-        ZimbraLog.toolSetupLog4j("DEBUG", "/Users/pshao/sandbox/conf/log4j.properties.phoebe");
+        // ZimbraLog.toolSetupLog4j("DEBUG", "/Users/pshao/sandbox/conf/log4j.properties.phoebe");
 
         TestUtil.runTest(new TestSuite(TestACL.class));
     }
