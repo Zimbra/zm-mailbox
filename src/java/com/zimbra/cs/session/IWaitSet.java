@@ -54,8 +54,16 @@ public interface IWaitSet {
      * @throws ServiceException
      */
     public List<WaitSetError> doWait(WaitSetCallback cb, String lastKnownSeqNo, 
-        List<WaitSetAccount> addAccounts, List<WaitSetAccount> updateAccounts, 
-        List<String> removeAccounts) throws ServiceException;
+        List<WaitSetAccount> addAccounts, List<WaitSetAccount> updateAccounts) 
+        throws ServiceException;
+    
+    /**
+     * Handle removes separately from the main doWait API -- this is because removes 
+     * must be run without holding the WS lock (due to deadlock issues)
+     * 
+     * @return
+     */
+    public List<WaitSetError> removeAccounts(List<String> removeAccounts);
     
     public void doneWaiting();
         

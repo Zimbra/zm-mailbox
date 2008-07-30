@@ -113,9 +113,14 @@ public final class AllAccountsWaitSet extends WaitSetBase {
         }
     }
     
+    public List<WaitSetError> removeAccounts(List<String> removeAccounts) {
+        // do nothing
+        return new ArrayList<WaitSetError>();
+    }
+    
     /* @see com.zimbra.cs.session.IWaitSet#doWait(com.zimbra.cs.session.WaitSetCallback, java.lang.String, boolean, java.util.List, java.util.List, java.util.List) */
-    public List<WaitSetError> doWait(WaitSetCallback cb, String lastKnownSeqNo, 
-        List<WaitSetAccount> addAccounts, List<WaitSetAccount> updateAccounts, List<String> removeAccounts)
+    public synchronized List<WaitSetError> doWait(WaitSetCallback cb, String lastKnownSeqNo, 
+        List<WaitSetAccount> addAccounts, List<WaitSetAccount> updateAccounts)
         throws ServiceException {
         
         cancelExistingCB();
