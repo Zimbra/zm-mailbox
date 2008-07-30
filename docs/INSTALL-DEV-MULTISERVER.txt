@@ -1,5 +1,9 @@
-HOWTO set up a multiserver dev environment v0.1 by tim
+HOWTO set up a multiserver dev environment v0.2 by tim
 ========================================================
+
+These instructions have been automated!  Try the script:
+    ZimbraServer/src/perl/dev_multiserver_init.pl
+
 
 These instructions will allow you to get two dev installs running
 against a single LDAP, you will be able to create mailboxes on each
@@ -9,9 +13,11 @@ sharing, etc.
 
 PREREQUISITES:
 ===================
-- two computers (or two virtual machines) each running a dev install.  See ZimbraServer/docs/INSTALL-xxx.txt
-- each computer must be able to see the other by domain name (create an /etc/hosts entry if necessary)
-
+- two computers (or two virtual machines) each running a dev install.
+  See ZimbraServer/docs/INSTALL-xxx.txt
+  
+- each computer must be able to see the other by domain name (create
+  an /etc/hosts entry if necessary)
 
 
 
@@ -20,9 +26,15 @@ INSTRUCTIONS:
 
 1) setup each dev box as normal, run reset-the-world, make sure everything is OK
 
-2) Designate one box as the "primary" and one as the "secondary" -- the primary box is the one that you'll run LDAP on.  When I list commands to run, I'll start the line with [primary]% which means "run this on the primary server" or [secondary]% to run on the secondary.  If it doesn't matter which server you run it on, I'll just have a prompt symbol (%)
+2) Designate one box as the "primary" and one as the "secondary" --
+   the primary box is the one that you'll run LDAP on.  When I list
+   commands to run, I'll start the line with [primary]% which means
+   "run this on the primary server" or [secondary]% to run on the
+   secondary.  If it doesn't matter which server you run it on, I'll
+   just have a prompt symbol (%)
 
-3) Verify that the firewalls on both boxes allow connections from the following ports: 7070,7071,389,25,22,7025
+3) Verify that the firewalls on both boxes allow connections from the
+   following ports: 7070,7071,389,25,22,7025
 
 4) Stop a few services:
    [primary]% jetty stop
@@ -50,7 +62,10 @@ INSTRUCTIONS:
    [primary]% jetty start
    [secondary]% jetty start
 
-9) OPTIONAL: Set up SSH keys so remote admin/management will work.  This is necessary to make some parts of the admin console work, and probably in other places too.
+9) OPTIONAL: Set up SSH keys so remote admin/management will work.
+   This is necessary to make some parts of the admin console work, and
+   probably in other places too.
+
    [primary]% zmlocalconfig -e zimbra_user=$USER
    [primary]% /opt/zimbra/bin/zmsshkeygen
    [primary]% cat /opt/zimbra/.ssh/authorized_keys >> $HOME/.ssh/authorized_keys 
@@ -65,9 +80,19 @@ INSTRUCTIONS:
    % zmprov ms <primarys_hostname> zimbraRemoteManagementUser $USER  
    % zmprov ms <secondarys_hostname> zimbraRemoteManagementUser $USER     
 
-10) Create Mailboxes on the new server: Use the admin client. (or whatever means you want) and create some new users on your second box.  When you create users on the secondary box, their names MUST start with "secondary" -- e.g. "secondary1" and "secondary2".   DO NOT create a new domain for the second box -- use only a single domain (the domain name should be the same as the ZIMBRA_HOSTNAME on the primary box).  This is critical if you want mail delivery to work via the hacks in step (11)
+10) Create Mailboxes on the new server: Use the admin client. (or
+    whatever means you want) and create some new users on your second
+    box.  When you create users on the secondary box, their names MUST
+    start with "secondary" -- e.g. "secondary1" and "secondary2".  DO
+    NOT create a new domain for the second box -- use only a single
+    domain (the domain name should be the same as the ZIMBRA_HOSTNAME
+    on the primary box).  This is critical if you want mail delivery
+    to work via the hacks in step (11)
   
-11) Make mail delivery work between boxes: modify the zMTAHack.pl setup.  You MUST have the most recent version of zMTAHack.pl in order for this to work. 
+11) Make mail delivery work between boxes: modify the zMTAHack.pl
+    setup.  You MUST have the most recent version of zMTAHack.pl in
+    order for this to work.
+    
      Run the following on BOTH servers:
        % kill <pid of running zMTAHack.pl script>
        % sudo sh -c "ZIMBRA_HOSTNAME=<primarys_hostname> ZMTA_REMOTEUSER_PREFIX=secondary ZMTA_REMOTEUSER_SERVER=<secondarys_hostname> zMTAHack.pl"
