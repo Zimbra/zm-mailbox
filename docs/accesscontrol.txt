@@ -28,12 +28,7 @@ of the generic combination of "read', 'write" rights that can be applied to
 all mail objects, rights for account based access controls are like 
 "viewFreeBusy", "invite", ...
 
-Currently, the following rights are supported:
-    - invite
-    - viewFreeBusy
-
-zmmailbox helpPermissions command describes each rights in more details.
-
+zmmailbox listPermission(lp) command list all the supported permissions.
 
 NEGATIVE RIGHTS
 ===============
