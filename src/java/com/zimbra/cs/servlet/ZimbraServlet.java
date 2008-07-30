@@ -327,7 +327,7 @@ public class ZimbraServlet extends HttpServlet {
         Header[] headers = method.getResponseHeaders();
         for (int i = 0; i < headers.length; i++) {
         	String hname = headers[i].getName(), hlc = hname.toLowerCase();
-        	if (hlc.startsWith("x-") || hlc.startsWith("content-") || hlc.startsWith("www-"))
+        	if (hlc.startsWith("x-") || (hlc.startsWith("content-") && !hlc.equals("content-length"))  || hlc.startsWith("www-"))    
         		resp.addHeader(hname, headers[i].getValue());
         }
         ByteUtil.copy(method.getResponseBodyAsStream(), false, resp.getOutputStream(), false);
