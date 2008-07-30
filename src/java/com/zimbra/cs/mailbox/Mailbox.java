@@ -6801,7 +6801,7 @@ public class Mailbox {
                         ZimbraLog.index.debug("Indexing deferred count changed ("+idxDeferredChange+").  Currently "+this.getIndexDeferredCount()+" deferred index items.");
                 }
                 
-                if (numIndexingExceptions >= itemsToIndex.size()) {
+                if (itemsToIndex.size() > 0 && numIndexingExceptions >= itemsToIndex.size()) {
                     ZimbraLog.index.warn("Possibly corrupt index: "+numIndexingExceptions+" indexing operations failed in mailbox transaction.");
                     mLastIndexingFailureTimestamp = System.currentTimeMillis();
                 }
