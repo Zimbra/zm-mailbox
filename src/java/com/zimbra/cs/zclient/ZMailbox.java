@@ -3448,7 +3448,7 @@ public class ZMailbox {
             params.setLimit(2000);
             params.setSortBy(SearchSortBy.none);
             params.setTimeZone(timeZone);
-
+            
             int offset = 0;
             int n = 0;
             // really while(true), but add in a safety net?
@@ -3460,8 +3460,15 @@ public class ZMailbox {
                     if (hit instanceof ZAppointmentHit) {
                         ZAppointmentHit as = (ZAppointmentHit) hit;
                         String fid = folderIdMapper.get(as.getFolderId());
+                        if (fid == null) fid = as.getFolderId();
                         ZApptSummaryResult r = folder2List.get(fid);
-                        if (r != null) r.getAppointments().add(as);
+                        if (r == null) {
+                            List<ZAppointmentHit> appts = new ArrayList<ZAppointmentHit>();
+                            r = new ZApptSummaryResult(startMsec, endMsec, fid, timeZone, appts, query);
+                            summaries.add(r);
+                            folder2List.put(fid, r);
+                        }
+                        r.getAppointments().add(as);
                     }
                 }
                 List<ZSearchHit> hits = result.getHits();
