@@ -355,7 +355,7 @@ public class ZimbraSoapContext {
     }
 
     public ZimbraSoapContext disableNotifications() {
-        mSessionEnabled = false;
+        mSessionSuppressed = true;
         mSessionInfo = null;
         return this;
     }
