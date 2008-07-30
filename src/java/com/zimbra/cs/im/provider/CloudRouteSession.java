@@ -22,12 +22,15 @@ import java.net.Socket;
 import javax.net.ssl.SSLSocketFactory;
 
 import org.dom4j.Element;
+import org.jivesoftware.util.IMConfig;
 import org.jivesoftware.wildfire.ChannelHandler;
 import org.jivesoftware.wildfire.Connection;
+import org.jivesoftware.wildfire.ConnectionCloseListener;
 import org.jivesoftware.wildfire.PacketDeliverer;
 import org.jivesoftware.wildfire.PacketException;
 import org.jivesoftware.wildfire.RoutingTable;
 import org.jivesoftware.wildfire.Session;
+import org.jivesoftware.wildfire.SessionManager;
 import org.jivesoftware.wildfire.StreamID;
 import org.jivesoftware.wildfire.XMPPServer;
 import org.jivesoftware.wildfire.auth.UnauthorizedException;
@@ -63,7 +66,12 @@ public class CloudRouteSession extends Session {
             
             if (token.isAdmin()) {
                 CloudRouteSession toRet = new CloudRouteSession(connection, XMPPServer.getInstance().getSessionManager().nextStreamID());
+                connection.init(toRet);
                 ZimbraLog.im.info("Accepted CloudRouting connection from host "+connection.toString());
+                synchronized(sCloseListener) {
+                    connection.registerCloseListener(sCloseListener, toRet);
+                    SessionManager.getInstance().registerCloudRoutingSession(toRet);
+                }
                 return toRet;
             } else {
                 ZimbraLog.im.warn("Rejecting CloudRouting connection -- Got non-admin auth token on cloud routing connection from "+connection.toString()+" token = "+token);
@@ -80,7 +88,7 @@ public class CloudRouteSession extends Session {
 
     static CloudRouteSession connect(Server targetServer) throws Exception {
         String hostname = targetServer.getAttr(Provisioning.A_zimbraServiceHostname);
-        int port = 7335;
+        int port = IMConfig.XMPP_CLOUDROUTING_PORT.getInt();
         
         AuthToken adminAuthToken = ZimbraAuthToken.getZimbraAdminAuthToken();
         
@@ -90,7 +98,7 @@ public class CloudRouteSession extends Session {
             ZimbraLog.im.info("LocalCloudRoute: Trying to connect (3)  " + hostname + ":" + port);
             
             // Establish a TCP connection to the Receiving Server
-            socket.connect(new InetSocketAddress(hostname, port), 10000);
+            socket.connect(new InetSocketAddress(hostname, port), 30000);
             ZimbraLog.im.debug("LocalCloudRoute: Plain connection to " + hostname + ":" + port + " successful");
             
             SocketConnection connection = new StdSocketConnection(new ErrorPacketDeliverer(), socket, false); 
@@ -105,16 +113,21 @@ public class CloudRouteSession extends Session {
             openingStream.append(" version=\"1.0\">\n");
             ZimbraLog.im.debug("LocalCloudRoute - Sending stream header: "+openingStream.toString()); 
             connection.deliverRawText(openingStream.toString());
-
+            
             CloudRoutingSocketReader ssReader = new CloudRoutingSocketReader(XMPPServer.getInstance().getPacketRouter(), 
                 XMPPServer.getInstance().getRoutingTable(), socket, connection);
             
-            Thread readerThread = new Thread(ssReader, "LocalCloudRouterReader-"+connection.toString());
+            Thread readerThread = new Thread(ssReader, "CloudRoutingReaderThread-"+connection.toString());
             readerThread.setDaemon(true);
             readerThread.start();
              
             CloudRouteSession toRet = new CloudRouteSession(targetServer, connection, XMPPServer.getInstance().getSessionManager().nextStreamID());
+            connection.init(toRet);
             ssReader.setSession(toRet);
+            synchronized(sCloseListener) {
+                connection.registerCloseListener(sCloseListener, toRet);
+                SessionManager.getInstance().registerCloudRoutingSession(toRet);
+            }
             return toRet;
         }
         catch (Exception e) {
@@ -195,7 +208,10 @@ public class CloudRouteSession extends Session {
     
     @Override
     public JID getAddress() {
-        return null;
+        if (mServer != null)
+            return new JID(mServer.getName());
+        else
+            return null;
     }
     
     @Override
@@ -221,6 +237,13 @@ public class CloudRouteSession extends Session {
     private static RoutingTable sRoutingTable = XMPPServer.getInstance().getRoutingTable();
     
     private Server mServer;
+    
+    private static class CloseListener implements ConnectionCloseListener {
+        public synchronized void onConnectionClose(Object handback) {
+            SessionManager.getInstance().unregisterCloudRoutingSession((Session)handback);
+        }
+    }
+    private static CloseListener sCloseListener = new CloseListener(); 
     
     private static class ErrorPacketDeliverer implements PacketDeliverer {
         public void deliver(Packet packet) throws UnauthorizedException, PacketException {
