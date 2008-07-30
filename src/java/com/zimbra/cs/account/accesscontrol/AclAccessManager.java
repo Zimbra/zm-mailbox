@@ -22,6 +22,28 @@ public class AclAccessManager extends DomainAccessManager {
         RightManager.getInstance();
     }
     
+    public boolean canAccessAccount(AuthToken at, Account target, boolean asAdmin) throws ServiceException {
+        if (super.canAccessAccount(at, target, asAdmin))
+            return true;
+        else
+            return canPerform(at, target, Right.RT_loginAs, asAdmin, false);
+    }
+    
+    public boolean canAccessAccount(AuthToken at, Account target) throws ServiceException {
+        return canAccessAccount(at, target, true);
+    }
+    
+    public boolean canAccessAccount(Account credentials, Account target, boolean asAdmin) throws ServiceException {
+        if (super.canAccessAccount(credentials, target, asAdmin))
+            return true;
+        else
+            return canPerform(credentials, target, Right.RT_loginAs, asAdmin, false);
+    }
+    
+    public boolean canAccessAccount(Account credentials, Account target) throws ServiceException {
+        return canAccessAccount(credentials, target, true);
+    }
+    
     public boolean canPerform(Account grantee, NamedEntry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant) {
         return hasRight(grantee, target, rightNeeded, asAdmin, defaultGrant);
     }
@@ -45,10 +67,12 @@ public class AclAccessManager extends DomainAccessManager {
                     return true;
             }
             
-            // 2. check admin access
-            if (target instanceof Account) {
-                if (canAccessAccount(grantee, (Account)target, asAdmin))
-                    return true;
+            // 2. check admin access - if the right being asked for is not loginAs
+            if (rightNeeded != Right.RT_loginAs) {
+                if (target instanceof Account) {
+                    if (canAccessAccount(grantee, (Account)target, asAdmin))
+                        return true;
+                }
             }
             
             // 3. check ACL
