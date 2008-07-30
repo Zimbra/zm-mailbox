@@ -90,10 +90,14 @@ public class Document extends MailItem {
                     throw new MailItem.TemporaryIndexingException();
             }
             
-            List<org.apache.lucene.document.Document> toRet = new ArrayList<org.apache.lucene.document.Document>(1);
-            toRet.add(pd.getDocument());
-            
-            return toRet;
+            org.apache.lucene.document.Document doc = pd.getDocument();
+            if (doc != null) {
+                List<org.apache.lucene.document.Document> toRet = new ArrayList<org.apache.lucene.document.Document>(1);
+                toRet.add(doc);
+                return toRet;
+            } else {
+                return new ArrayList<org.apache.lucene.document.Document>(0);
+            }
         } catch (IOException e) {
             ZimbraLog.index.warn("Error generating index data for Wiki Document "+getId()+". Item will not be indexed", e);
             return new ArrayList<org.apache.lucene.document.Document>(0);
