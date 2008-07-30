@@ -18,6 +18,7 @@ package com.zimbra.cs.datasource;
 
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.ListData;
+import com.zimbra.cs.mailclient.imap.MessageData;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -96,5 +97,4 @@ public final class ImapUtil {
                name.substring(0, INBOX_LEN).equalsIgnoreCase(INBOX) &&
                name.charAt(INBOX_LEN) == ld.getDelimiter();
     }
-
 }

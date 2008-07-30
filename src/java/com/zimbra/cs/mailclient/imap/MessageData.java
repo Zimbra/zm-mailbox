@@ -23,6 +23,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.Comparator;
+import java.util.Collections;
 import java.io.IOException;
 
 /**
@@ -53,6 +55,16 @@ public final class MessageData {
     private List<Body> bodySections;
     private long uid = -1;
 
+    public static final Comparator<MessageData> UID_ORDER = 
+        new Comparator<MessageData>() {
+            public int compare(MessageData md1, MessageData md2) {
+                return (int) (md1.getUid() - md2.getUid());
+            }
+        };
+
+    public static final Comparator<MessageData> REVERSE_UID_ORDER =
+        Collections.reverseOrder(UID_ORDER);
+    
     private static final SimpleDateFormat INTERNALDATE_FORMAT =
         new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss Z", Locale.US);
 
