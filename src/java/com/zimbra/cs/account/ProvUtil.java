@@ -219,7 +219,7 @@ public class ProvUtil implements DebugListener {
         DELETE_SIGNATURE("deleteSignature", "dsig", "{name@domain|id} {signature-name}", Category.ACCOUNT, 2, 2),
         DELETE_SERVER("deleteServer", "ds", "{name|id}", Category.SERVER, 1, 1),
         EXIT("exit", "quit", "", Category.MISC, 0, 0),
-        FLUSH_CACHE("flushCache", "fc", "{skin|locale|account|config|cos|domain|server|zimlet} [name1|id1 [name2|id2...]]", Category.MISC, 1, Integer.MAX_VALUE),
+        FLUSH_CACHE("flushCache", "fc", "{skin|locale|account|config|cos|domain|server|zimlet|<extension-cache-type>} [name1|id1 [name2|id2...]]", Category.MISC, 1, Integer.MAX_VALUE),
         GENERATE_DOMAIN_PRE_AUTH("generateDomainPreAuth", "gdpa", "{domain|id} {name} {name|id|foreignPrincipal} {timestamp|0} {expires|0}", Category.MISC, 5, 6),
         GENERATE_DOMAIN_PRE_AUTH_KEY("generateDomainPreAuthKey", "gdpak", "[-f] {domain|id}", Category.MISC, 1, 2),
         GET_ACCOUNT("getAccount", "ga", "[-e] {name@domain|id} [attr1 [attr2...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
@@ -2061,6 +2061,9 @@ public class ProvUtil implements DebugListener {
     }
     
     private void doFlushCache(String[] args) throws ServiceException {
+        if (!(mProv instanceof SoapProvisioning))
+            throwSoapOnly();
+        
         CacheEntry[] entries = null;
         
         if (args.length > 2) {
@@ -2076,17 +2079,9 @@ public class ProvUtil implements DebugListener {
             }
         }
         
-        if (mProv instanceof SoapProvisioning) {
-            SoapProvisioning sp = (SoapProvisioning)mProv;
-            
-            // use this interface to accommodate skin and locale caches
-            sp.flushCache(args[1], entries);
-        } else {
-            if (args[1].equals("skin") || args[1].equals("locale"))
-                throw ServiceException.INVALID_REQUEST("cache type "+args[1]+" is only supported via SOAP", null);
-            // this interface only allows ldap caches, or should we just disallow this?? 
-            mProv.flushCache(CacheEntryType.fromString(args[1]), entries);
-        }
+        SoapProvisioning sp = (SoapProvisioning)mProv;
+        sp.flushCache(args[1], entries);
+        
     }
 
     private void doGenerateDomainPreAuthKey(String[] args) throws ServiceException {

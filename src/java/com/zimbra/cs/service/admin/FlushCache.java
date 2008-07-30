@@ -43,8 +43,6 @@ public class FlushCache extends AdminDocumentHandler {
         else if (type.equals("locale"))
             L10nUtil.flushLocaleCache();
         else {
-            Provisioning.CacheEntryType cacheType = Provisioning.CacheEntryType.fromString(type);
-                
             List<Element> eEntries = eCache.listElements(AdminConstants.E_ENTRY);
             CacheEntry[] entries = null;
             if (eEntries.size() > 0) {
@@ -55,7 +53,7 @@ public class FlushCache extends AdminDocumentHandler {
                                                   eEntry.getText());
                 }
             }
-            Provisioning.getInstance().flushCache(cacheType, entries);
+            Provisioning.getInstance().flushCache(type, entries);
         }
 
         Element response = lc.createElement(AdminConstants.FLUSH_CACHE_RESPONSE);

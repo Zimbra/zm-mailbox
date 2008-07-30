@@ -2603,6 +2603,23 @@ public abstract class Provisioning {
      */
     public abstract void flushCache(CacheEntryType type, CacheEntry[] entries) throws ServiceException;
 
+    public void flushCache(String type, CacheEntry[] entries) throws ServiceException {
+        CacheEntryType cet = null;
+        try {
+            cet = CacheEntryType.fromString(type);
+        } catch (ServiceException e) {
+            // see if it a registered extension
+            CacheExtension ce = CacheExtension.getHandler(type.toString());
+            if (ce != null) {
+                ce.flushCache();
+                return;
+            } else
+                throw ServiceException.INVALID_REQUEST("invalid cache type "+type, null);
+        }
+        
+        flushCache(cet, entries);    
+    }
+
 
     /**
      * checks to make sure the specified address is a valid email address (addr part only, no personal part)
