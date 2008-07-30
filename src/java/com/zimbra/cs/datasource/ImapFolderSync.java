@@ -23,7 +23,6 @@ import com.zimbra.cs.mailclient.imap.Mailbox;
 import com.zimbra.cs.mailclient.imap.ImapData;
 import com.zimbra.cs.mailclient.imap.Literal;
 import com.zimbra.cs.mailclient.imap.ListData;
-import com.zimbra.cs.mailclient.imap.ImapCapabilities;
 import com.zimbra.cs.mailclient.imap.FetchResponseHandler;
 import com.zimbra.cs.mailclient.imap.Body;
 import com.zimbra.cs.mailclient.imap.Envelope;
@@ -59,7 +58,6 @@ import java.util.Collections;
 class ImapFolderSync {
     private final ImapSync imapSync;
     private final ImapConnection connection;
-    private final boolean uidPlus;
     private final DataSource ds;
     private final com.zimbra.cs.mailbox.Mailbox mailbox;
     private final Statistics stats = new Statistics();
@@ -72,13 +70,15 @@ class ImapFolderSync {
     private List<Integer> newMsgIds;
     private List<Long> addedUids;
     private long maxUid;
-    private boolean expunge;
     private boolean completed;
     private MailDateFormat mdf;
 
     private static final Log LOG = ZimbraLog.datasource;
 
     private static final int FETCH_SIZE = LC.data_source_fetch_size.intValue();
+
+    // This capability is specific to Yahoo's IMAP service
+    private static final String AUTH_XYMCOOKIEB64 = "AUTH=XYMCOOKIEB64";
 
     private static class Statistics {
         int flagsUpdatedLocally;
@@ -92,7 +92,6 @@ class ImapFolderSync {
     public ImapFolderSync(ImapSync imapSync) throws ServiceException {
         this.imapSync = imapSync;
         connection = imapSync.getConnection();
-        uidPlus = connection.hasCapability(ImapCapabilities.UIDPLUS);
         ds = imapSync.getDataSource();
         mailbox = ds.getMailbox();
     }
@@ -184,11 +183,9 @@ class ImapFolderSync {
             Collections.sort(addedUids, Collections.reverseOrder());
             fetchMessages(addedUids, deletedUids);
         }
-        // Delete and optionally expunge messages
+        // Delete and expunge messages
         deleteMessages(deletedUids);
-        if (expunge) {
-            connection.mclose(); // Close mailbox to expunge messages
-        }
+        remoteFolder.close();
 
         // Update sync state for new mailbox status
         syncState.setExists(mb.getExists());
@@ -438,10 +435,10 @@ class ImapFolderSync {
         remoteFolder.info("Appending %d new message(s) to remote IMAP folder",
                           newMsgIds.size());
         try {
-            if (!uidPlus) {
-                appendMessagesNoUidPlus(newMsgIds);
-            } else {
+            if (connection.hasUidPlus() || isYahoo()) {
                 appendMessages(newMsgIds);
+            } else {
+                appendMessagesNoUidPlus(newMsgIds);
             }
         } catch (MessagingException e) {
             throw ServiceException.FAILURE("Unable to append messages", e);
@@ -862,10 +859,8 @@ class ImapFolderSync {
     }
 
     private void deleteMessages(List<Long> uids) throws IOException {
-        if (uids.isEmpty()) return;
-        remoteFolder.deleteMessages(uids);
-        if (!uidPlus) {
-            expunge = true;
+        if (!uids.isEmpty()) {
+            remoteFolder.deleteMessages(uids);
         }
         stats.msgsDeletedRemotely += uids.size();
     }
@@ -878,6 +873,10 @@ class ImapFolderSync {
                                   int remoteFlags) {
         return trackedFlags & (localFlags & remoteFlags) |
               ~trackedFlags & (localFlags | remoteFlags);
+    }
+
+    private boolean isYahoo() {
+        return connection.hasCapability(AUTH_XYMCOOKIEB64);
     }
 }
 

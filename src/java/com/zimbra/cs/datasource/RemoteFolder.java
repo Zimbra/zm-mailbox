@@ -17,7 +17,6 @@
 package com.zimbra.cs.datasource;
 
 import com.zimbra.cs.mailclient.imap.ImapConnection;
-import com.zimbra.cs.mailclient.imap.ImapCapabilities;
 import com.zimbra.cs.mailclient.imap.Mailbox;
 import com.zimbra.cs.mailclient.imap.Flags;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
@@ -40,19 +39,17 @@ import java.util.Date;
 import java.util.List;
 import java.util.Collections;
 import java.util.ArrayList;
-import java.util.LinkedList;
 
 class RemoteFolder {
     private final ImapConnection connection;
     private final String path;
-    private final boolean uidPlus;
+    private int deleted;
 
     private static final Log LOG = ZimbraLog.datasource;
     
     RemoteFolder(ImapConnection connection, String path) {
         this.connection = connection;
         this.path = path;
-        uidPlus = connection.hasCapability(ImapCapabilities.UIDPLUS);
     }
 
     public void create() throws IOException {
@@ -101,6 +98,12 @@ class RemoteFolder {
         }
     }
 
+    /**
+     * Deletes and expunges messages for specified UIDs.
+     * 
+     * @param uids the UIDs to be deleted and expunged
+     * @throws IOException if an I/O error occurred
+     */
     public void deleteMessages(List<Long> uids) throws IOException {
         ensureSelected();
         int size = uids.size();
@@ -110,12 +113,24 @@ class RemoteFolder {
                 uids.subList(i, i + Math.min(size - i, 16)));
             connection.uidStore(seq, "+FLAGS.SILENT", "(\\Deleted)");
             // If UIDPLUS supported, then expunge deleted messages
-            if (uidPlus) {
+            if (connection.hasUidPlus()) {
                 connection.uidExpunge(seq);
             }
         }
+        deleted += size;
     }
 
+    /**
+     * Closes folder and optionally expunges deleted messages.
+     * 
+     * @throws IOException if an I/O error occurred
+     */
+    public void close() throws IOException {
+        if (deleted > 0 && !connection.hasUidPlus()) {
+            connection.mclose();
+        }
+    }
+    
     public List<Long> getUids(long startUid, long endUid) throws IOException {
         ensureSelected();
         String end = endUid > 0 ? String.valueOf(endUid) : "*";

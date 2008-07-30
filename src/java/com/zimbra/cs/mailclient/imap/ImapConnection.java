@@ -424,6 +424,10 @@ public final class ImapConnection extends MailConnection {
         return capabilities != null && capabilities.hasCapability(cap);
     }
 
+    public boolean hasUidPlus() {
+        return hasCapability(ImapCapabilities.UIDPLUS);
+    }
+
     // Called from ImapRequest
     synchronized ImapResponse sendRequest(ImapRequest req)
         throws IOException {
