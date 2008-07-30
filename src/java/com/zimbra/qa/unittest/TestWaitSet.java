@@ -89,7 +89,7 @@ public class TestWaitSet extends TestCase {
                 
                 // wait shouldn't find anything yet
                 IWaitSet ws = WaitSetMgr.lookup(waitSetId);
-                errors = ws.doWait(cb, "0", null, null, null);
+                errors = ws.doWait(cb, "0", null, null);
                 assertEquals(0, errors.size());
                 synchronized(cb) { assertEquals(false, cb.completed); }
                 
@@ -112,7 +112,7 @@ public class TestWaitSet extends TestCase {
                 Account user2Acct = TestUtil.getAccount(USER_2_NAME);
                 List<WaitSetAccount> add2 = new ArrayList<WaitSetAccount>();
                 add2.add(new WaitSetAccount(user2Acct.getId(), null, TypeEnum.m.getMask()));
-                errors = ws.doWait(cb, curSeqNo, add2, null, null);
+                errors = ws.doWait(cb, curSeqNo, add2, null);
                 // wait shouldn't find anything yet
                 assertEquals(0, errors.size());
                 synchronized(cb) { assertEquals(false, cb.completed); }
@@ -147,7 +147,7 @@ public class TestWaitSet extends TestCase {
 
                 // wait shouldn't find anything yet
                 IWaitSet ws = WaitSetMgr.lookup(waitSetId);
-                errors = ws.doWait(cb, "0", null, null, null);
+                errors = ws.doWait(cb, "0", null, null);
                 assertEquals(0, errors.size());
                 synchronized(cb) { assertEquals(false, cb.completed); }
 
@@ -164,7 +164,7 @@ public class TestWaitSet extends TestCase {
             { // waitset should remain signalled until sequence number is increased
                 WaitSetRequest.Callback cb = new WaitSetRequest.Callback();
                 IWaitSet ws = WaitSetMgr.lookup(waitSetId);
-                errors = ws.doWait(cb, "0", null, null, null);
+                errors = ws.doWait(cb, "0", null, null);
                 try { Thread.sleep(500); } catch (Exception e) {}
                 assertEquals(0, errors.size());
                 synchronized(cb) { assertEquals(true, cb.completed); }
@@ -176,7 +176,7 @@ public class TestWaitSet extends TestCase {
 
                 // wait shouldn't find anything yet
                 IWaitSet ws = WaitSetMgr.lookup(waitSetId);
-                errors = ws.doWait(cb, curSeqNo, null, null, null);
+                errors = ws.doWait(cb, curSeqNo, null, null);
                 assertEquals(0, errors.size());
                 synchronized(cb) { assertEquals(false, cb.completed); }
 

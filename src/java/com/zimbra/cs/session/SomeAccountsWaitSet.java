@@ -43,11 +43,31 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
         super(ownerAccountId, id, defaultInterest);
         mCurrentSeqNo = 1;
     }
-
+    
+    public List<WaitSetError> removeAccounts(List<String> accts) {
+        List<WaitSetError> errors = new ArrayList<WaitSetError>();
+        
+        for (String id : accts) {
+            WaitSetSession session = null;
+            synchronized(this) {
+                WaitSetAccount wsa = mSessions.get(id);
+                if (wsa != null) {
+                    session = wsa.getSession();
+                }
+            }
+            if (session != null) {
+                assert(!Thread.holdsLock(this));
+                session.doCleanup();
+            } else {
+                errors.add(new WaitSetError(id, WaitSetError.Type.NOT_IN_SET_DURING_REMOVE));
+            }
+        }
+        return errors;
+    }
+    
     /* @see com.zimbra.cs.session.IWaitSet#doWait(com.zimbra.cs.session.WaitSetCallback, java.lang.String, boolean, java.util.List, java.util.List, java.util.List) */
     public synchronized List<WaitSetError> doWait(WaitSetCallback cb, String lastKnownSeqNo,    
-        List<WaitSetAccount> addAccounts, List<WaitSetAccount> updateAccounts, 
-        List<String> removeAccounts) throws ServiceException {
+        List<WaitSetAccount> addAccounts, List<WaitSetAccount> updateAccounts) throws ServiceException {
         
         cancelExistingCB();
         
@@ -59,10 +79,6 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
         if (updateAccounts != null) {
             errors.addAll(updateAccounts(updateAccounts));
         }
-        if (removeAccounts != null) {
-            errors.addAll(removeAccounts(removeAccounts));
-        }
-        
         // figure out if there is already data here
         mCb = cb;
         mCbSeqNo = Long.parseLong(lastKnownSeqNo);
@@ -219,23 +235,6 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
     @Override
     WaitSetCallback getCb() { 
         return mCb;
-    }
-    
-    synchronized List<WaitSetError> removeAccounts(List<String> accts) {
-        List<WaitSetError> errors = new ArrayList<WaitSetError>();
-        
-        for (String id : accts) {
-            WaitSetAccount wsa = mSessions.get(id);
-            if (wsa != null) {
-                WaitSetSession session = wsa.getSession();
-                if (session != null) {
-                    session.doCleanup();
-                }
-            } else {
-                errors.add(new WaitSetError(id, WaitSetError.Type.NOT_IN_SET_DURING_REMOVE));
-            }
-        }
-        return errors;
     }
     
     /**
