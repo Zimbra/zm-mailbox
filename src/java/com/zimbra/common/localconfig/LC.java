@@ -410,6 +410,7 @@ public class LC {
     public static final KnownKey xmpp_client_write_timeout;
     public static final KnownKey xmpp_session_conflict_limit;
     public static final KnownKey xmpp_client_idle_timeout;
+    public static final KnownKey xmpp_cloudrouting_idle_timeout;
     
     
     public static final KnownKey xmpp_offline_type;
@@ -1158,6 +1159,7 @@ public class LC {
         xmpp_client_write_timeout = new KnownKey("xmpp_client_write_timeout", Long.toString(60 * Constants.MILLIS_PER_SECOND), "Timeout for client socket blocked on a write");
         xmpp_session_conflict_limit = new KnownKey("xmpp_session_conflict_limit", "0", "Conflict Limit for XMPP C2S sessions");
         xmpp_client_idle_timeout = new KnownKey("xmpp_client_idle_timeout", Integer.toString(10 * 60 * 1000), "XMPP Client idle timeout");
+        xmpp_cloudrouting_idle_timeout = new KnownKey("xmpp_cloudrouting_idle_timeout", Long.toString(5 * Constants.MILLIS_PER_MINUTE), "CloudRouting socket idle timeout");
         
         xmpp_offline_type = new KnownKey("xmpp_offline_type", "store_and_drop", "What to do with messages received by offline users: drop|bounce|store|store_and_bounce|store_and_drop");
         xmpp_offline_quota = new KnownKey("xmpp_offline_quota", Integer.toString(100 * 1024), "Maximum number of bytes of offline messages stored (if type is store_and_bounce or store_and_drop)");
