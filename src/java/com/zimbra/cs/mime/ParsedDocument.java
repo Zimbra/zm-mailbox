@@ -49,7 +49,10 @@ public class ParsedDocument {
     private Document mDocument = null;
     private String mFragment;
     private long mCreatedDate;
-    private boolean mIndexFailed;
+
+    /** if TRUE then there was a _temporary_ failure analyzing the message.  We should attempt
+     * to re-index this message at a later time */
+    private boolean mTemporaryAnalysisFailure = false;
 
     private static Blob saveInputAsBlob(InputStream in) throws ServiceException, IOException {
     	return StoreManager.getInstance().storeIncoming(in, 0, null, Volume.getCurrentMessageVolume().getId());
@@ -67,7 +70,6 @@ public class ParsedDocument {
         mFilename = filename;
         mCreatedDate = createdDate;
         mCreator = creator;
-        mIndexFailed = false;
 
         try {
             MimeHandler handler = MimeHandlerManager.getMimeHandler(ctype, filename);
@@ -82,9 +84,13 @@ public class ParsedDocument {
             String textContent = "";
             try {
             	textContent = handler.getContent();
-            } catch (Exception e) {
-            	ZimbraLog.wiki.warn("Can't extract the text from the document.  (is convertd down?)", e);
-            	mIndexFailed = true;
+            } catch (MimeHandlerException e) {
+                if (ConversionException.isTemporaryCauseOf(e)) {
+                    ZimbraLog.wiki.warn("Temporary failure extracting from the document.  (is convertd down?)", e);
+                    mTemporaryAnalysisFailure = true;
+                } else {
+                    ZimbraLog.index.warn("Failure indexing wiki document "+filename+".  Item will be partially indexed", e);
+                }
             }
             mFragment = Fragment.getFragment(textContent, Fragment.Source.NOTEBOOK);
             try {
@@ -96,8 +102,8 @@ public class ParsedDocument {
             	mDocument.add(new Field(LuceneFields.L_FILENAME, filename, Field.Store.YES, Field.Index.TOKENIZED));
             } catch (MimeHandlerException e) {
                 if (ConversionException.isTemporaryCauseOf(e)) {
-                    ZimbraLog.index.info("Temporary failure indexing wiki document "+filename, e);
-                    mIndexFailed = true;
+                    ZimbraLog.wiki.warn("Temporary failure extracting from the document.  (is convertd down?)", e);
+                    mTemporaryAnalysisFailure = true;
                 } else {
                     ZimbraLog.index.warn("Failure indexing wiki document "+filename+".  Item will be partially indexed", e);
                 }
@@ -136,5 +142,5 @@ public class ParsedDocument {
 
     public String getCreator()      { return mCreator; }
     public long getCreatedDate()    { return mCreatedDate; }
-    public boolean hasTemporaryAnalysisFailure() { return mIndexFailed; }
+    public boolean hasTemporaryAnalysisFailure() { return mTemporaryAnalysisFailure; }
 }
