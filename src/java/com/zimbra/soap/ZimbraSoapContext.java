@@ -354,6 +354,12 @@ public class ZimbraSoapContext {
         return mAuthToken != null && (mAuthToken.isAdmin() || mAuthToken.isDomainAdmin());
     }
 
+    public ZimbraSoapContext disableNotifications() {
+        mSessionEnabled = false;
+        mSessionInfo = null;
+        return this;
+    }
+
     public boolean isNotificationEnabled() {
         return mSessionEnabled;
     }

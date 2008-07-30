@@ -40,6 +40,8 @@ import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.Conversation;
@@ -60,6 +62,7 @@ import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.soap.DocumentHandler;
+import com.zimbra.soap.ProxyTarget;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -703,6 +706,8 @@ public class SoapSession extends Session {
         Map<ItemId, Element> mountpoints = new HashMap<ItemId, Element>();
         // for mountpoints pointing to this host, get the serialized folder subhierarchy
         expandLocalMountpoints(octxt, root, eRefresh.getFactory(), mountpoints);
+        // for mountpoints pointing to other hosts, get the folder structure from the remote server
+        expandRemoteMountpoints(zsc, eRefresh.getFactory(), mountpoints);
 
         // graft in subfolder trees from the other user's mailbox, making sure that mountpoints reflect the counts (etc.) of the target folder
         if (!mountpoints.isEmpty())
@@ -723,9 +728,12 @@ public class SoapSession extends Session {
                 Account owner = Provisioning.getInstance().get(Provisioning.AccountBy.id, mpt.getOwnerId(), octxt.getAuthToken());
                 if (owner == null || owner.getId().equals(mAuthenticatedAccountId))
                     return;
-                // FIXME: not handling mountpoints pointing to a different server
-                if (!Provisioning.onLocalServer(owner))
+
+                // handle mountpoints pointing to a different server later
+                if (!Provisioning.onLocalServer(owner)) {
+                    mountpoints.put(iidTarget, null);
                     return;
+                }
 
                 Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(owner);
                 GetFolder.FolderNode remote = GetFolder.getFolderTree(octxt, mbox, new ItemId(mbox, mpt.getRemoteId()), false);
@@ -743,6 +751,77 @@ public class SoapSession extends Session {
             for (GetFolder.FolderNode child : node.mSubfolders)
                 expandLocalMountpoints(octxt, child, factory, mountpoints);
         }
+    }
+
+    private void expandRemoteMountpoints(ZimbraSoapContext zsc, Element.ElementFactory factory, Map<ItemId, Element> mountpoints) {
+        Map<String, Server> remoteServers = null;
+        Provisioning prov = Provisioning.getInstance();
+        for (Map.Entry<ItemId, Element> mptinfo : mountpoints.entrySet()) {
+            try {
+                // local mountpoints already have their targets serialized
+                if (mptinfo.getValue() != null)
+                    continue;
+
+                Account owner = prov.get(Provisioning.AccountBy.id, mptinfo.getKey().getAccountId(), zsc.getAuthToken());
+                if (owner == null)
+                    continue;
+                Server server = prov.getServer(owner);
+                if (server == null)
+                    continue;
+
+                if (remoteServers == null)
+                    remoteServers = new HashMap<String, Server>(3);
+                remoteServers.put(owner.getId(), server);
+            } catch (ServiceException e) { }
+        }
+
+        if (remoteServers != null && !remoteServers.isEmpty()) {
+            Map<String, Element> remoteHierarchies = fetchRemoteHierarchies(zsc, remoteServers);
+            for (Map.Entry<ItemId, Element> mptinfo : mountpoints.entrySet()) {
+                // local mountpoints already have their targets serialized
+                if (mptinfo.getValue() != null)
+                    continue;
+                ItemId iid = mptinfo.getKey();
+                mptinfo.setValue(findRemoteFolder(iid.toString(mAuthenticatedAccountId), remoteHierarchies.get(iid.getAccountId())));
+            }
+        }
+    }
+
+    private Map<String, Element> fetchRemoteHierarchies(ZimbraSoapContext zsc, Map<String, Server> remoteServers) {
+        Map<String, Element> hierarchies = new HashMap<String, Element>();
+        try {
+            Element noop = Element.create(zsc.getRequestProtocol(), MailConstants.GET_FOLDER_REQUEST).addAttribute(MailConstants.A_VISIBLE, true);
+
+            for (Map.Entry<String, Server> remote : remoteServers.entrySet()) {
+                String accountId = remote.getKey();
+                Server server = remote.getValue();
+
+                ZimbraSoapContext zscProxy = new ZimbraSoapContext(zsc, accountId).disableNotifications();
+
+                ProxyTarget proxy = new ProxyTarget(server, zscProxy.getAuthToken(), URLUtil.getSoapURL(server, false));
+                Element response = proxy.dispatch(noop.detach(), zscProxy);
+                hierarchies.put(accountId, response.getOptionalElement(MailConstants.E_FOLDER));
+            }
+        } catch (ServiceException e) { }
+        return hierarchies;
+    }
+
+    private Element findRemoteFolder(String id, Element eFolder) {
+        if (id == null || eFolder == null)
+            return null;
+
+        if (id.equalsIgnoreCase(eFolder.getAttribute(MailConstants.A_ID, null))) {
+            // folder stubs (hierarchy placeholders for non-readable folders) contain only "id" and "name"
+            boolean isStub = eFolder.getAttribute(MailConstants.A_SIZE, null) == null;
+            return isStub ? null : eFolder.clone();
+        }
+
+        for (Element eSubfolder : eFolder.listElements()) {
+            Element match = findRemoteFolder(id, eSubfolder);
+            if (match != null)
+                return match;
+        }
+        return null;
     }
 
     private void transferMountpointContents(Element elem, OperationContext octxt, Map<ItemId, Element> mountpoints) throws ServiceException {
