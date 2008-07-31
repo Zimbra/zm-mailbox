@@ -111,15 +111,15 @@ public class ZRecur {
             val = server.getAttr(Provisioning.A_zimbraCalendarRecurrenceMaxInstances);
             sExpansionLimits.maxInstances = val == null ? 0 : Integer.parseInt(val);
             val = server.getAttr(Provisioning.A_zimbraCalendarRecurrenceDailyMaxDays);
-            sExpansionLimits.maxDays = val == null ? 0 : Integer.parseInt(val);
+            sExpansionLimits.maxDays = val == null ? 730 : Integer.parseInt(val);
             val = server.getAttr(Provisioning.A_zimbraCalendarRecurrenceWeeklyMaxWeeks);
-            sExpansionLimits.maxWeeks = val == null ? 0 : Integer.parseInt(val);
+            sExpansionLimits.maxWeeks = val == null ? 520 : Integer.parseInt(val);
             val = server.getAttr(Provisioning.A_zimbraCalendarRecurrenceMonthlyMaxMonths);
-            sExpansionLimits.maxMonths = val == null ? 0 : Integer.parseInt(val);
+            sExpansionLimits.maxMonths = val == null ? 360 : Integer.parseInt(val);
             val = server.getAttr(Provisioning.A_zimbraCalendarRecurrenceYearlyMaxYears);
-            sExpansionLimits.maxYears = val == null ? 0 : Integer.parseInt(val);
+            sExpansionLimits.maxYears = val == null ? 100 : Integer.parseInt(val);
             val = server.getAttr(Provisioning.A_zimbraCalendarRecurrenceOtherFrequencyMaxYears);
-            sExpansionLimits.maxYearsOtherFreqs = val == null ? 0 : Integer.parseInt(val);
+            sExpansionLimits.maxYearsOtherFreqs = val == null ? 1 : Integer.parseInt(val);
         } catch (NumberFormatException e) {
             Zimbra.halt("Can't initialize recurrence expansion limits", e);
         } catch (ServiceException e) {
