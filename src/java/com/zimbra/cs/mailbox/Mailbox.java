@@ -3225,6 +3225,18 @@ public class Mailbox {
         }
     }
 
+    public synchronized List<Integer> getItemListByDates(OperationContext octxt, byte type, long start, long end, int folderId, boolean descending) throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("getItemListByDates", octxt);
+
+            List<Integer> msgIds = DbMailItem.getItemListByDates(this, type, start, end, folderId, descending);
+            success = true;
+            return msgIds;
+        } finally {
+            endTransaction(success);
+        }
+    }
 
     public synchronized ZVCalendar getZCalendarForCalendarItems(Collection<CalendarItem> calItems,
             boolean useOutlookCompatMode, boolean ignoreErrors, boolean allowPrivateAccess)

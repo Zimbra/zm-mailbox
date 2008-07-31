@@ -2865,6 +2865,40 @@ public class DbMailItem {
         return stmt;
     }
 
+    public static List<Integer> getItemListByDates(Mailbox mbox, byte type, long start, long end, int folderId, boolean descending) throws ServiceException {
+        Connection conn = mbox.getOperationConnection();
+        boolean allTypes = type == MailItem.TYPE_UNKNOWN;
+
+        List<Integer> result = new ArrayList<Integer>();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+                String typeConstraint = allTypes ? "" : "type = ? AND ";
+            stmt = conn.prepareStatement("SELECT id FROM " + getMailItemTableName(mbox) +
+                        " WHERE " + IN_THIS_MAILBOX_AND + typeConstraint + "folder_id = ?" +
+                        " AND date > ? AND date < ?" +
+                        " ORDER BY date" + (descending ? " DESC" : ""));
+            int pos = 1;
+            stmt.setInt(pos++, mbox.getId());
+            if (!allTypes)
+                stmt.setByte(pos++, type);
+            stmt.setInt(pos++, folderId);
+            stmt.setInt(pos++, (int)(start / 1000));
+            stmt.setInt(pos++, (int)(end / 1000));
+
+            rs = stmt.executeQuery();
+
+            while (rs.next())
+                result.add(rs.getInt(1));
+            return result;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("finding items between dates", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+    
     public static void addToCalendarItemTable(CalendarItem calItem) throws ServiceException {
         Mailbox mbox = calItem.getMailbox();
         long end = calItem.getEndTime();
