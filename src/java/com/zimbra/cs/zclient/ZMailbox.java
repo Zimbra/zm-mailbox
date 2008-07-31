@@ -937,6 +937,34 @@ public class ZMailbox {
         }
     }
 
+    public String maskRemoteItemId(String folderId, String id) throws ServiceException {
+        int folderIndex = folderId.indexOf(':');
+        int idIndex = id.indexOf(':');
+        if (folderIndex != -1 && idIndex != -1) {
+            ZFolder f = getFolderById(folderId);
+            if (f != null) {
+                String folderPrefix = folderId.substring(0, folderIndex);
+                String idPrefix = id.substring(0, idIndex);
+                if (folderPrefix.equalsIgnoreCase(idPrefix)) {
+                    return f.getId() + ":" +  id.substring(idIndex+1);
+                }
+            }
+        }
+        return id;
+    }
+
+    public String unmaskRemoteItemId(String id) throws ServiceException {
+        int idIndex = id.indexOf(':');
+        if (idIndex != -1) {
+            String idPrefix = id.substring(0, idIndex);
+            ZMountpoint mp = getMountpointById(idPrefix);
+            if (mp != null) {
+                return mp.getOwnerId() + ":" +  id.substring(idIndex+1);
+            }
+        }
+        return id;
+    }
+    
     //  ------------------------
 
     /**
