@@ -41,9 +41,12 @@ public abstract class MailDocumentHandler extends DocumentHandler {
     @Override
     public Object preHandle(Element request, Map<String, Object> context) throws ServiceException { 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Session session = getSession(zsc, context);
+        boolean isLocal = Provisioning.onLocalServer(getRequestedAccount(zsc));
+
+        Session session = isLocal ? getSession(zsc, context) : null;
+        Mailbox mbox = isLocal ? getRequestedMailbox(zsc) : null;
         Mailbox.OperationContext octxt = getOperationContext(zsc, session);
-        Mailbox mbox = getRequestedMailbox(zsc);
+
         return BlockingOperation.schedule(request.getName(), session, octxt, mbox, Requester.SOAP, getSchedulerPriority(), 1);   
     }
     
@@ -61,6 +64,7 @@ public abstract class MailDocumentHandler extends DocumentHandler {
     protected boolean checkMountpointProxy(Element request)  { return false; }
     protected String[] getResponseItemPath()  { return null; }
 
+    @Override
     protected Element proxyIfNecessary(Element request, Map<String, Object> context) throws ServiceException {
         // find the id of the item we're proxying on...
         String[] xpath = getProxiedIdPath(request);
