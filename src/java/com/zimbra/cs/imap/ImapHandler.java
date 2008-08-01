@@ -2123,31 +2123,29 @@ abstract class ImapHandler extends ProtocolHandler {
     }
 
     int append(Mailbox mbox, Folder folder, Append append) throws ServiceException {
-        synchronized (mbox) {
+        try {
+            boolean idxAttach = mbox.attachmentsIndexingEnabled();
+            ParsedMessage pm = append.mDate != null ? new ParsedMessage(append.mContent, append.mDate.getTime(), idxAttach) :
+                new ParsedMessage(append.mContent, idxAttach);
             try {
-                boolean idxAttach = mbox.attachmentsIndexingEnabled();
-                ParsedMessage pm = append.mDate != null ? new ParsedMessage(append.mContent, append.mDate.getTime(), idxAttach) :
-                                                          new ParsedMessage(append.mContent, idxAttach);
-                try {
-                    if (!pm.getSender().equals("")) {
-                        InternetAddress ia = new InternetAddress(pm.getSender());
-                        if (AccountUtil.addressMatchesAccount(mbox.getAccount(), ia.getAddress()))
-                            append.flags |= Flag.BITMASK_FROM_ME;
-                    }
-                } catch (Exception e) { }
-
-                Message msg = mbox.addMessage(getContext(), pm, folder.getId(), true, append.flags, Tag.bitmaskToTags(append.tags));
-                if (msg != null && append.sflags != 0 && getState() == ImapHandler.State.SELECTED) {
-                    ImapMessage i4msg = getSelectedFolder().getById(msg.getId());
-                    if (i4msg != null)
-                        i4msg.setSessionFlags(append.sflags, getSelectedFolder());
+                if (!pm.getSender().equals("")) {
+                    InternetAddress ia = new InternetAddress(pm.getSender());
+                    if (AccountUtil.addressMatchesAccount(mbox.getAccount(), ia.getAddress()))
+                        append.flags |= Flag.BITMASK_FROM_ME;
                 }
-                return msg == null ? -1 : msg.getId();
-            } catch (IOException e) {
-                throw ServiceException.FAILURE(e.toString(), e);
-            } catch (MessagingException e) {
-                throw ServiceException.FAILURE(e.toString(), e);
+            } catch (Exception e) { }
+            
+            Message msg = mbox.addMessage(getContext(), pm, folder.getId(), true, append.flags, Tag.bitmaskToTags(append.tags));
+            if (msg != null && append.sflags != 0 && getState() == ImapHandler.State.SELECTED) {
+                ImapMessage i4msg = getSelectedFolder().getById(msg.getId());
+                if (i4msg != null)
+                    i4msg.setSessionFlags(append.sflags, getSelectedFolder());
             }
+            return msg == null ? -1 : msg.getId();
+        } catch (IOException e) {
+            throw ServiceException.FAILURE(e.toString(), e);
+        } catch (MessagingException e) {
+            throw ServiceException.FAILURE(e.toString(), e);
         }
     }
 
