@@ -127,6 +127,9 @@ public class Mime {
     public static final String P_CHARSET_UTF8 = "utf-8";
     public static final String P_CHARSET_LATIN1 = "iso-8859-1";
     public static final String P_CHARSET_CP1252 = "windows-1252";
+    public static final String P_CHARSET_EUC_CN = "euc_cn";
+    public static final String P_CHARSET_GB2312 = "gb2312";
+    public static final String P_CHARSET_GBK = "gbk";
     public static final String P_CHARSET_DEFAULT = P_CHARSET_ASCII;
 
     private static final int MAX_DECODE_BUFFER = 2048;
@@ -777,14 +780,11 @@ public class Mime {
         return buffer.toString();
 	}
 
-    private static boolean SUPPORTS_CP1252 = false;
-        static {
-            try {
-                SUPPORTS_CP1252 = Charset.forName(P_CHARSET_CP1252) != null;
-            } catch (java.nio.charset.UnsupportedCharsetException uce) { }
-        }
+    private static boolean SUPPORTS_CP1252 = Charset.isSupported(P_CHARSET_CP1252);
+    private static boolean SUPPORTS_GBK = Charset.isSupported(P_CHARSET_GBK);
 
     private static final boolean DEFAULT_CP1252 = SUPPORTS_CP1252 && Charset.defaultCharset().name().equals(P_CHARSET_LATIN1);
+    private static final boolean DEFAULT_GBK = SUPPORTS_GBK && Charset.defaultCharset().name().equals(P_CHARSET_EUC_CN);
 
     /** Returns a reader that decodes the specified <code>InputStream</code>.
      *  <code>contentType</code> must of type "text/*".  If a valid charset
@@ -794,25 +794,31 @@ public class Mime {
      *  platform default is used.
      * 
      * @param input  The InputStream to decode.
-     * @param contentType  The Content-Type of the stream, which must be "text/*".
-     * @parame defaultCharset  The user's default charset preference */
+     * @param contentType  The stream's Content-Type, which must be "text/*".
+     * @param defaultCharset  The user's default charset preference */
     public static Reader getTextReader(InputStream input, String contentType, String defaultCharset) {
         Reader reader = null;
 
     	String charset = getCharset(contentType);
         if (charset != null) {
+            charset = charset.toLowerCase();
             // windows-1252 is a superset of iso-8859-1 and they're often confused, so use cp1252 in its place
-            if (SUPPORTS_CP1252 && charset.equalsIgnoreCase(P_CHARSET_LATIN1))
+            if (SUPPORTS_CP1252 && charset.equals(P_CHARSET_LATIN1))
                 reader = getReader(input, P_CHARSET_CP1252);
+            else if (SUPPORTS_GBK && (charset.equals(P_CHARSET_GB2312) || charset.equals(P_CHARSET_EUC_CN)))
+                reader = getReader(input, P_CHARSET_GBK);
             if (reader == null)
                 reader = getReader(input, charset);
         }
 
         // if either there was no explicit charset on the part or it was invalid, try the user's personal default charset
         if (reader == null && defaultCharset != null && !defaultCharset.trim().equals("")) {
+            defaultCharset = defaultCharset.toLowerCase();
             // windows-1252 is a superset of iso-8859-1 and they're often confused, so use cp1252 in its place
-            if (SUPPORTS_CP1252 && defaultCharset.equalsIgnoreCase(P_CHARSET_LATIN1))
+            if (SUPPORTS_CP1252 && defaultCharset.equals(P_CHARSET_LATIN1))
                 reader = getReader(input, P_CHARSET_CP1252);
+            else if (SUPPORTS_GBK && (defaultCharset.equals(P_CHARSET_GB2312) || defaultCharset.equals(P_CHARSET_EUC_CN)))
+                reader = getReader(input, P_CHARSET_GBK);
             if (reader == null)
                 reader = getReader(input, defaultCharset);
         }
@@ -820,6 +826,8 @@ public class Mime {
         // if the user's default charset was also either unspecified or unavailable, go with the JVM's default charset
         if (reader == null && DEFAULT_CP1252)
             reader = getReader(input, P_CHARSET_CP1252);
+        else if (reader == null && DEFAULT_GBK)
+            reader = getReader(input, P_CHARSET_GBK);
         if (reader == null)
             reader = new InputStreamReader(input);
 
