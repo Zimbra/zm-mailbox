@@ -205,19 +205,28 @@ public class ImapSync extends MailItemImport {
         }
     }
 
-    private void syncMessages(List<Integer> folderIds, boolean fullSync) {
+    private void syncMessages(List<Integer> folderIds, boolean fullSync)
+        throws ServiceException {
         // If folder ids specified, then only sync messages for specified
         // folders, otherwise sync messages for all folders.
+        int lastModSeq = dataSource.getMailbox().getLastChangeID();
         for (ImapFolderSync ifs : syncedFolders.values()) {
-            LocalFolder lf = ifs.getLocalFolder();
+            LocalFolder folder = ifs.getLocalFolder();
+            int folderId = folder.getId();
             try {
-                if (folderIds == null || folderIds.contains(lf.getId())) {
+                if (folderIds == null || folderIds.contains(folderId) ||
+                    hasLocalChanges(folderId, lastModSeq)) {
                     ifs.syncMessages(fullSync);
                 }
             } catch (Exception e) {
-                logSyncFailed(lf.getPath(), e);
+                logSyncFailed(folder.getPath(), e);
             }
         }
+    }
+
+    private boolean hasLocalChanges(int folderId, int lastModSeq) {
+        SyncState ss = dataSource.getSyncState(folderId);
+        return ss == null || ss.getLastModSeq() < lastModSeq;
     }
 
     private void finishSync() {

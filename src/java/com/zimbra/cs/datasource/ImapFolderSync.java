@@ -198,7 +198,7 @@ class ImapFolderSync {
     }
 
     private SyncState getSyncState(boolean fullSync) throws ServiceException {
-        syncState = ds.getSyncState(localFolder.getId());
+        syncState = ds.removeSyncState(localFolder.getId());
         if (syncState == null || fullSync) {
             int lastModSeq = 0;
             synchronized (mailbox) {
