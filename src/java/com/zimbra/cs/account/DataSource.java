@@ -57,7 +57,7 @@ public class DataSource extends NamedEntry implements Comparable {
     
     private final String mAcctId;
     private Mailbox mailbox;
-    
+
     public enum Type {
         pop3, imap;
         
@@ -298,16 +298,19 @@ public class DataSource extends NamedEntry implements Comparable {
 
     // Overridden by OfflineDataSource
     public boolean hasSyncState(int folderId) { return false; }
-    
+
     // Overridden by OfflineDataSource
     public SyncState getSyncState(int folderId) { return null; }
+    
+    // Overridden by OfflineDataSource
+    public SyncState removeSyncState(int folderId) { return null; }
 
     // Overridden by OfflineDataSource
     public void putSyncState(int folderId, SyncState state) {}
 
     // Overridden by OfflineDataSource
     public void clearSyncState(int folderId) {}
-    
+
     public Mailbox getMailbox() throws ServiceException {
         if (mailbox == null) {
             mailbox = MailboxManager.getInstance().getMailboxByAccount(getAccount());
