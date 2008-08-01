@@ -382,17 +382,32 @@ public class MimeCompoundHeader {
 
                 Map<Integer, ParameterContinuation> parts = entry.getValue();
                 ParameterContinuation first = parts.get(0);
-                StringBuilder assembled = new StringBuilder();
-                for (ParameterContinuation partial : parts.values()) {
+                String paramCharset = first == null ? "us-ascii" : first.charset;
+
+                StringBuilder raw = null, assembled = new StringBuilder();
+                for (Iterator<ParameterContinuation> it = parts.values().iterator(); it.hasNext(); ) {
+                    ParameterContinuation partial = it.next();
                     if (partial.encoded) {
-                        try {
-                            assembled.append(URLDecoder.decode(partial.value, first == null ? "us-ascii" : first.charset));
+                        // we need to concatenate consecutive encoded parts because they don't necessarily break on a character boundary
+                        if (raw == null)
+                            raw = new StringBuilder();
+                        raw.append(partial.value);
+                        // fall through if the *last* partial was encoded
+                        if (it.hasNext())
                             continue;
-                        } catch (UnsupportedEncodingException uee) { 
-                            System.out.println(uee);
-                        }
                     }
-                    assembled.append(partial.value);
+                    if (raw != null) {
+                        // if we're here, we've reached the end of consecutive encoded parts and can decode them
+                        try {
+                            assembled.append(URLDecoder.decode(raw.toString(), paramCharset));
+                        } catch (UnsupportedEncodingException uee) { 
+                            assembled.append(raw.toString());
+                        }
+                        raw = null;
+                    }
+                    // if this wasn't an encoded partial, append it
+                    if (!partial.encoded)
+                        assembled.append(partial.value);
                 }
                 attrs.put(pname, assembled.toString());
             }
@@ -500,6 +515,9 @@ public class MimeCompoundHeader {
             { "charset on subsequent continuation, out-of-order continuations",
                 "attachment; foo*2*=%20dog; foo*1=iso-8859-1'en'big",
                 "attachment", "foo", "iso-8859-1'en'big dog" },
+            { "encoded continuation split across partials",
+                "inline;\n filename*0*=ISO-2022-JP''%1B%24%42%24%33%24%73%24%4B%24%41%24%4F%21%22%40;\n filename*1*=%24%33%26%21%2A%1B%28%42%2E%70%64%66",
+                "inline", "filename", "\u3053\u3093\u306b\u3061\u306f\u3001\u4e16\u754c\uff01.pdf" },
         };
 
         for (String[] test : cdispTests)
