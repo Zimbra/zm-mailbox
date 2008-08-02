@@ -76,15 +76,15 @@ public class MailSender {
         return folderId;
     }
 
-    private static Address[] removeInvalidAddresses(Address[] orig, Address[] invalidAddrs) {
-        if (orig == null || invalidAddrs == null) 
+    private static Address[] removeFailedAddresses(Address[] orig, Address[] failedAddrs) {
+        if (orig == null || failedAddrs == null) 
             return orig;
 
         List<Address> newTo = new ArrayList<Address>();
         for (int i = 0; i < orig.length; i++) {
             boolean invalid = false;
-            for (int j = 0; j < invalidAddrs.length; j++) {
-                if (invalidAddrs[j].equals(orig[i])) {
+            for (int j = 0; j < failedAddrs.length; j++) {
+                if (failedAddrs[j].equals(orig[i])) {
                     invalid = true;
                     break;
                 }
@@ -530,13 +530,37 @@ public class MailSender {
                         Transport.send(mm);
                         retry = false;
                     } catch (SendFailedException sfe) {
-                        Address[] invalidAddrs = sfe.getInvalidAddresses();
                         if (!retry)
                             throw sfe;
 
-                        Address[] to = removeInvalidAddresses(mm.getRecipients(RecipientType.TO), invalidAddrs);
-                        Address[] cc = removeInvalidAddresses(mm.getRecipients(RecipientType.CC), invalidAddrs);
-                        Address[] bcc = removeInvalidAddresses(mm.getRecipients(RecipientType.BCC), invalidAddrs);
+                        // Failed addresses include invalid addresses and valid-but-unsent addresses,
+                        // whatever the reasons were.
+                        Address[] invalidAddrs = sfe.getInvalidAddresses();
+                        Address[] validUnsentAddrs = sfe.getValidUnsentAddresses();
+                        Address[] badAddrs = null;
+                        int numBad = 0;
+                        if (invalidAddrs != null)
+                            numBad += invalidAddrs.length;
+                        if (validUnsentAddrs != null)
+                            numBad += validUnsentAddrs.length;
+                        if (numBad > 0) {
+                            badAddrs = new Address[numBad];
+                            int badAddrsIndex = 0;
+                            if (invalidAddrs != null) {
+                                for (Address a : invalidAddrs) {
+                                    badAddrs[badAddrsIndex++] = a;
+                                }
+                            }
+                            if (validUnsentAddrs != null) {
+                                for (Address a : validUnsentAddrs) {
+                                    badAddrs[badAddrsIndex++] = a;
+                                }
+                            }
+                        }
+
+                        Address[] to = removeFailedAddresses(mm.getRecipients(RecipientType.TO), badAddrs);
+                        Address[] cc = removeFailedAddresses(mm.getRecipients(RecipientType.CC), badAddrs);
+                        Address[] bcc = removeFailedAddresses(mm.getRecipients(RecipientType.BCC), badAddrs);
 
                         // if there are NO valid addrs, then give up!
                         if ((to == null || to.length == 0) &&
