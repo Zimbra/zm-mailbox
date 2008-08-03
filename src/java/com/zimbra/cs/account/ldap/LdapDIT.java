@@ -80,6 +80,7 @@ public class LdapDIT {
     protected final String DEFAULT_MAIL_BASE_DN          = ROOT_DN;
     
     protected final String DEFAULT_BASE_RDN_ADMIN        = "cn=admins";
+    protected final String DEFAULT_BASE_RDN_APPADMIN     = "cn=appaccts";
     protected final String DEFAULT_BASE_RDN_ACCOUNT      = "ou=people";
     protected final String DEFAULT_BASE_RDN_COS          = "cn=cos";
     protected final String DEFAULT_BASE_RDN_MIME         = "cn=mime";
@@ -103,6 +104,7 @@ public class LdapDIT {
     protected String BASE_RDN_ACCOUNT;
     
     protected String BASE_DN_ADMIN;
+    protected String BASE_DN_APPADMIN;
     protected String BASE_DN_ACCOUNT;
     protected String BASE_DN_COS; 
     protected String BASE_DN_MIME;
@@ -143,6 +145,7 @@ public class LdapDIT {
         DN_GLOBALCONFIG      = NAMING_RDN_ATTR_GLOBALCONFIG + "=config" + "," + BASE_DN_CONFIG_BRANCH; 
        
         BASE_DN_ADMIN        = DEFAULT_BASE_RDN_ADMIN       + "," + BASE_DN_CONFIG_BRANCH;
+        BASE_DN_APPADMIN     = DEFAULT_BASE_RDN_APPADMIN    + "," + BASE_DN_CONFIG_BRANCH;
         BASE_DN_COS          = DEFAULT_BASE_RDN_COS         + "," + BASE_DN_CONFIG_BRANCH; 
         BASE_DN_MIME         = DEFAULT_BASE_RDN_MIME        + "," + DN_GLOBALCONFIG;
         BASE_DN_SERVER       = DEFAULT_BASE_RDN_SERVER      + "," + BASE_DN_CONFIG_BRANCH;
@@ -164,6 +167,7 @@ public class LdapDIT {
             NAMING_RDN_ATTR_SERVER == null ||
             NAMING_RDN_ATTR_ZIMLET == null ||
             BASE_DN_ADMIN == null ||
+            BASE_DN_APPADMIN == null ||
             BASE_DN_COS == null ||
             BASE_DN_MIME == null ||
             BASE_DN_SERVER == null ||
@@ -283,10 +287,15 @@ public class LdapDIT {
         return BASE_DN_ADMIN;
     }
     
+    public String appAdminBaseDN() {
+        return BASE_DN_APPADMIN;
+    }
+    
+    /*
     public String adminNameToDN(String name) {
         return NAMING_RDN_ATTR_USER + "=" + LdapUtil.escapeRDNValue(name) + "," + BASE_DN_ADMIN;
     }
-  
+    */
     
     /*
      * ==========
