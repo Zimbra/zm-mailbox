@@ -3377,12 +3377,14 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Allowed reverse proxy IP addresses.  Lookup servlet will only generate authtokens if request was made from one of these IP addresses</desc>
 </attr>
 
-<attr id="698" name="zimbraReverseProxyAdminAccount" type="email" max="256" cardinality="single" optionalIn="globalConfig">
+<attr id="698" name="zimbraReverseProxyAdminAccount" type="email" max="256" cardinality="single" optionalIn="globalConfig" deprecatedSince="5.0.9">
   <desc>Reverse proxy admin account.  Lookup servlet will only generate authtokens if request was made with valid credentials of this account.</desc>
+  <deprecateDesc>introduced in 5.0.9 and immediately deprecated</deprecateDesc>
 </attr>
 
-<attr id="699" name="zimbraReverseProxyAdminAccountPassword" type="string" max="256" cardinality="single" optionalIn="globalConfig">
+<attr id="699" name="zimbraReverseProxyAdminAccountPassword" type="string" max="256" cardinality="single" optionalIn="globalConfig" deprecatedSince="5.0.9">
   <desc>Reverse proxy admin account password.  Lookup servlet will only generate authtokens if request was made with valid credentials of this account.</desc>
+  <deprecateDesc>introduced in 5.0.9 and immediately deprecated</deprecateDesc>
 </attr>
 
 <attr id="700" name="zimbraPublicServiceProtocol" type="string" max="256" cardinality="single" optionalIn="domain,globalConfig" flags="domainInherited">
