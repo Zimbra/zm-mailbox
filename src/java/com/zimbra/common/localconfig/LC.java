@@ -177,6 +177,7 @@ public class LC {
     public static final KnownKey ldap_replication_password;
     public static final KnownKey ldap_postfix_password;
     public static final KnownKey ldap_amavis_password;
+    public static final KnownKey ldap_nginx_password;
     public static final KnownKey ldap_require_tls;
     public static final KnownKey ldap_starttls_supported;
     
@@ -675,6 +676,9 @@ public class LC {
 
         ldap_amavis_password = new KnownKey("ldap_amavis_password");
         ldap_amavis_password.setDefault("zmamavis");
+        
+        ldap_nginx_password = new KnownKey("ldap_nginx_password");
+        ldap_nginx_password.setDefault("zmnginx");
 
         ldap_starttls_supported = new KnownKey("ldap_starttls_supported"); 
         ldap_starttls_supported.setDefault("0");
