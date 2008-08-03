@@ -74,14 +74,15 @@ public class CustomLdapDIT extends LdapDIT {
      * We put them here to suppress WARMs spit out by LC.get if the key is not a KnownKey nor is it set in localconfig.xml.
      */
     static class CustomLdapDITLC {
-        public static final KnownKey ldap_dit_base_dn_admin  = new KnownKey("ldap_dit_base_dn_admin",  "", "LDAP Custom DIT base DN for LDAP admin entries");
-        public static final KnownKey ldap_dit_base_dn_config = new KnownKey("ldap_dit_base_dn_config", "", "LDAP Custom DIT base DN for config branch");
-        public static final KnownKey ldap_dit_base_dn_cos    = new KnownKey("ldap_dit_base_dn_cos",    "", "LDAP Custom DIT base DN for cos entries");
-        public static final KnownKey ldap_dit_base_dn_domain = new KnownKey("ldap_dit_base_dn_domain", "", "LDAP Custom DIT base DN for domain entries");
-        public static final KnownKey ldap_dit_base_dn_mail   = new KnownKey("ldap_dit_base_dn_mail",   "", "LDAP Custom DIT base DN for mail(accounts, aliases, DLs, resources) entries");
-        public static final KnownKey ldap_dit_base_dn_mime   = new KnownKey("ldap_dit_base_dn_mime",   "", "LDAP Custom DIT base DN for mime entries");
-        public static final KnownKey ldap_dit_base_dn_server = new KnownKey("ldap_dit_base_dn_server", "", "LDAP Custom DIT base DN for server entries");
-        public static final KnownKey ldap_dit_base_dn_zimlet = new KnownKey("ldap_dit_base_dn_zimlet", "", "LDAP Custom DIT base DN for zimlet entries");
+        public static final KnownKey ldap_dit_base_dn_admin     = new KnownKey("ldap_dit_base_dn_admin",     "", "LDAP Custom DIT base DN for LDAP admin entries");
+        public static final KnownKey ldap_dit_base_dn_appadmin  = new KnownKey("ldap_dit_base_dn_appadmin",  "", "LDAP Custom DIT base DN for LDAP app admin entries");
+        public static final KnownKey ldap_dit_base_dn_config    = new KnownKey("ldap_dit_base_dn_config",    "", "LDAP Custom DIT base DN for config branch");
+        public static final KnownKey ldap_dit_base_dn_cos       = new KnownKey("ldap_dit_base_dn_cos",       "", "LDAP Custom DIT base DN for cos entries");
+        public static final KnownKey ldap_dit_base_dn_domain    = new KnownKey("ldap_dit_base_dn_domain",    "", "LDAP Custom DIT base DN for domain entries");
+        public static final KnownKey ldap_dit_base_dn_mail      = new KnownKey("ldap_dit_base_dn_mail",      "", "LDAP Custom DIT base DN for mail(accounts, aliases, DLs, resources) entries");
+        public static final KnownKey ldap_dit_base_dn_mime      = new KnownKey("ldap_dit_base_dn_mime",      "", "LDAP Custom DIT base DN for mime entries");
+        public static final KnownKey ldap_dit_base_dn_server    = new KnownKey("ldap_dit_base_dn_server",    "", "LDAP Custom DIT base DN for server entries");
+        public static final KnownKey ldap_dit_base_dn_zimlet    = new KnownKey("ldap_dit_base_dn_zimlet",    "", "LDAP Custom DIT base DN for zimlet entries");
         
         public static final KnownKey ldap_dit_naming_rdn_attr_cos          = new KnownKey("ldap_dit_naming_rdn_attr_cos",          "", "LDAP Custom DIT RDN attr for cos entries");
         public static final KnownKey ldap_dit_naming_rdn_attr_globalconfig = new KnownKey("ldap_dit_naming_rdn_attr_globalconfig", "", "LDAP Custom DIT RDN attr for globalconfig entry");
@@ -127,11 +128,12 @@ public class CustomLdapDIT extends LdapDIT {
        
         DN_GLOBALCONFIG   = NAMING_RDN_ATTR_GLOBALCONFIG + "=config" + "," + BASE_DN_CONFIG_BRANCH; 
 
-        BASE_DN_ADMIN        = getLCAndValidateUnderConfigBranchDN(CustomLdapDITLC.ldap_dit_base_dn_admin,  DEFAULT_BASE_RDN_ADMIN  + "," + BASE_DN_CONFIG_BRANCH);
-        BASE_DN_COS          = getLCAndValidateUnderConfigBranchDN(CustomLdapDITLC.ldap_dit_base_dn_cos,    DEFAULT_BASE_RDN_COS    + "," + BASE_DN_CONFIG_BRANCH); 
-        BASE_DN_MIME         = getLCAndValidateUnderConfigBranchDN(CustomLdapDITLC.ldap_dit_base_dn_mime,   DEFAULT_BASE_RDN_MIME   + "," + DN_GLOBALCONFIG);
-        BASE_DN_SERVER       = getLCAndValidateUnderConfigBranchDN(CustomLdapDITLC.ldap_dit_base_dn_server, DEFAULT_BASE_RDN_SERVER + "," + BASE_DN_CONFIG_BRANCH);
-        BASE_DN_ZIMLET       = getLCAndValidateUnderConfigBranchDN(CustomLdapDITLC.ldap_dit_base_dn_zimlet, DEFAULT_BASE_RDN_ZIMLET + "," + BASE_DN_CONFIG_BRANCH);
+        BASE_DN_ADMIN        = getLCAndValidateUnderConfigBranchDN(CustomLdapDITLC.ldap_dit_base_dn_admin,     DEFAULT_BASE_RDN_ADMIN  + "," + BASE_DN_CONFIG_BRANCH);
+        BASE_DN_APPADMIN     = getLCAndValidateUnderConfigBranchDN(CustomLdapDITLC.ldap_dit_base_dn_appadmin,  DEFAULT_BASE_RDN_APPADMIN  + "," + BASE_DN_CONFIG_BRANCH);
+        BASE_DN_COS          = getLCAndValidateUnderConfigBranchDN(CustomLdapDITLC.ldap_dit_base_dn_cos,       DEFAULT_BASE_RDN_COS    + "," + BASE_DN_CONFIG_BRANCH); 
+        BASE_DN_MIME         = getLCAndValidateUnderConfigBranchDN(CustomLdapDITLC.ldap_dit_base_dn_mime,      DEFAULT_BASE_RDN_MIME   + "," + DN_GLOBALCONFIG);
+        BASE_DN_SERVER       = getLCAndValidateUnderConfigBranchDN(CustomLdapDITLC.ldap_dit_base_dn_server,    DEFAULT_BASE_RDN_SERVER + "," + BASE_DN_CONFIG_BRANCH);
+        BASE_DN_ZIMLET       = getLCAndValidateUnderConfigBranchDN(CustomLdapDITLC.ldap_dit_base_dn_zimlet,    DEFAULT_BASE_RDN_ZIMLET + "," + BASE_DN_CONFIG_BRANCH);
     
         BASE_DN_DOMAIN       = getLCAndValidateUnderConfigBranchDN(CustomLdapDITLC.ldap_dit_base_dn_domain, DEFAULT_BASE_RDN_DOMAIN + "," + BASE_DN_CONFIG_BRANCH);
     

@@ -494,6 +494,8 @@ public class LdapProvisioning extends Provisioning {
         switch(keyType) {
         case adminName: 
             return getAdminAccountByName(key, loadFromMaster);
+        case appAdminName: 
+            return getAppAdminAccountByName(key, loadFromMaster);
         case id: 
             return getAccountById(key, null, loadFromMaster);
         case foreignPrincipal: 
@@ -554,6 +556,19 @@ public class LdapProvisioning extends Provisioning {
             name = LdapUtil.escapeSearchFilterArg(name);
             a = getAccountByQuery(
                     mDIT.adminBaseDN(),
+                    LdapFilter.adminAccountByRDN(mDIT.accountNamingRdnAttr(), name),
+                    null, loadFromMaster);
+            sAccountCache.put(a);
+        }
+        return a;
+    }
+    
+    private Account getAppAdminAccountByName(String name, boolean loadFromMaster) throws ServiceException {
+        Account a = sAccountCache.getByName(name);
+        if (a == null) {
+            name = LdapUtil.escapeSearchFilterArg(name);
+            a = getAccountByQuery(
+                    mDIT.appAdminBaseDN(),
                     LdapFilter.adminAccountByRDN(mDIT.accountNamingRdnAttr(), name),
                     null, loadFromMaster);
             sAccountCache.put(a);
