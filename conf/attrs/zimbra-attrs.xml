@@ -3377,39 +3377,29 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Allowed reverse proxy IP addresses.  Lookup servlet will only generate authtokens if request was made from one of these IP addresses</desc>
 </attr>
 
-<attr id="698" name="zimbraReverseProxyAdminAccount" type="email" max="256" cardinality="single" optionalIn="globalConfig" deprecatedSince="5.0.9">
-  <desc>Reverse proxy admin account.  Lookup servlet will only generate authtokens if request was made with valid credentials of this account.</desc>
-  <deprecateDesc>introduced in 5.0.9 and immediately deprecated</deprecateDesc>
-</attr>
-
-<attr id="699" name="zimbraReverseProxyAdminAccountPassword" type="string" max="256" cardinality="single" optionalIn="globalConfig" deprecatedSince="5.0.9">
-  <desc>Reverse proxy admin account password.  Lookup servlet will only generate authtokens if request was made with valid credentials of this account.</desc>
-  <deprecateDesc>introduced in 5.0.9 and immediately deprecated</deprecateDesc>
-</attr>
-
-<attr id="700" name="zimbraPublicServiceProtocol" type="string" max="256" cardinality="single" optionalIn="domain,globalConfig" flags="domainInherited">
+<attr id="698" name="zimbraPublicServiceProtocol" type="string" max="256" cardinality="single" optionalIn="domain,globalConfig" flags="domainInherited">
   <desc>Protocol to be used in public API such as REST or SOAP proxy.</desc>
 </attr>
 
-<attr id="701" name="zimbraPublicServicePort" type="port" cardinality="single" optionalIn="domain,globalConfig" flags="domainInherited">
+<attr id="699" name="zimbraPublicServicePort" type="port" cardinality="single" optionalIn="domain,globalConfig" flags="domainInherited">
   <desc>Port to be used in public API such as REST or SOAP proxy.</desc>
 </attr>
 
-<attr id="702" name="zimbraReverseProxyAdminPortAttribute" type="string" cardinality="single" optionalIn="globalConfig">
+<attr id="700" name="zimbraReverseProxyAdminPortAttribute" type="string" cardinality="single" optionalIn="globalConfig">
   <globalConfigValue>zimbraAdminPort</globalConfigValue>
   <desc>the attribute that identifies the zimbra admin bind port</desc>
 </attr>
 
-<attr id="703" name="zimbraWebClientAdminReference" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable">
+<attr id="701" name="zimbraWebClientAdminReference" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable">
   <desc>link for admin users in the web client</desc>
 </attr>
 
-<attr id="704" name="zimbraPrefCalendarAllowCancelEmailToSelf" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="702" name="zimbraPrefCalendarAllowCancelEmailToSelf" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether to allow a cancel email sent to organizer of appointment</desc>
 </attr>
 
-<attr id="705" name="zimbraReverseProxyDefaultRealm" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="703" name="zimbraReverseProxyDefaultRealm" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
   <globalConfigValue>EXAMPLE.COM</globalConfigValue>
   <desc>The default realm that will be used by NGINX mail proxy, when the realm is not specified in GSSAPI Authentication</desc>
 </attr>
