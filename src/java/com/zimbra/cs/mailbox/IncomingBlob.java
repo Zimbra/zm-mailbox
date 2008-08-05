@@ -71,19 +71,34 @@ public class IncomingBlob {
     }
     
     /**
+     * Delete the Blob file or relinquish memory buffer
+     */
+    public void delete() throws ServiceException {
+        try {
+            if (mBlobOnDisk != null) {
+                StoreManager.getInstance().delete(mBlobOnDisk);
+                mBlobOnDisk = null;
+            } else {
+                mData = null;
+            }
+        } catch (Exception e) {
+            throw ServiceException.FAILURE("Unable to delete incoming message.", e);
+        }
+    }
+    /**
      * Creates a new <tt>ParsedMessage</tt> that references either
      * the in-memory data or the blob on disk, depending on the state of this
      * <tt>IncomingBlob</tt>.
      */
-    public ParsedMessage createParsedMessage(boolean indexAttachments)
+    public ParsedMessage createParsedMessage(Long receivedDate, boolean indexAttachments)
     throws ServiceException, MessagingException {
         ParsedMessage pm = null;
         
         if (mData != null) {
-            pm = new ParsedMessage(mData, indexAttachments);
+            pm = new ParsedMessage(mData, receivedDate, indexAttachments);
         } else {
             try {
-                pm = new ParsedMessage(mBlobOnDisk.getFile(), null, true);
+                pm = new ParsedMessage(mBlobOnDisk.getFile(), receivedDate, true);
                 pm.setRawDigest(mBlobOnDisk.getDigest());
             } catch (IOException e) {
                 throw ServiceException.FAILURE("Unable to parse message.", e);
@@ -92,6 +107,11 @@ public class IncomingBlob {
         return pm;
     }
 
+    public ParsedMessage createParsedMessage(boolean indexAttachments)
+    throws ServiceException, MessagingException {
+        return createParsedMessage(null, indexAttachments);
+    }
+    
     /**
      * Creates a new <tt>IncomingBlob</tt>.
      * 
