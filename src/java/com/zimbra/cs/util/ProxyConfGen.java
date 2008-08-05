@@ -320,7 +320,7 @@ public class ProxyConfGen
         mVars.put("mail.pop3capa",                  "\"TOP\" \"USER\" \"UIDL\" \"EXPIRE 31 USER\"");
         mVars.put("mail.imapcapa",                  "\"IMAP4rev1\" \"ID\" \"LITERAL+\" \"SASL-IR\" \"IDLE\" \"NAMESPACE\"");
         mVars.put("mail.imapid",                    "\"NAME\" \"nginx\" \"VERSION\" \"0\" \"RELEASE\" \"1\"");
-        mVars.put("mail.duser",                     "nginx");
+        // mVars.put("mail.duser",                     "nginx");
         mVars.put("mail.dpasswd",                   "nginx123");
         mVars.put("mail.defaultrealm",              "EXAMPLE.COM");
         mVars.put("mail.sasl_host_from_ip",         "off");
@@ -426,8 +426,8 @@ public class ProxyConfGen
         }
 
         /* GSSAPI master credentials */
-        mVars.put("mail.duser",config.getAttr("zimbraReverseProxyAdminAccount","nginx"));               /* global config */
-        mVars.put("mail.dpasswd",config.getAttr("zimbraReverseProxyAdminAccountPassword","nginx123"));  /* global config */
+        // mVars.put("mail.duser", "zmnginx");             /* FIXED VALUE */
+        mVars.put("mail.dpasswd",LC.ldap_nginx_password.value());  /* localconfig */
 
         mVars.put("mail.defaultrealm",mSource.getAttr("zimbraReverseProxyDefaultRealm","EXAMPLE.COM"));
 
