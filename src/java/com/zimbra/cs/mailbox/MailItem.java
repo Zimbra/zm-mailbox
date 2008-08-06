@@ -1308,7 +1308,7 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         int size = dataStream == null ? 0 : dataLength;
         if (mData.size != size) {
-            mMailbox.updateSize(size - mData.size, false);
+            mMailbox.updateSize(size - mData.size, true);
             getFolder().updateSize(0, size - mData.size);
             mData.size = size;
         }
@@ -2476,9 +2476,8 @@ public abstract class MailItem implements Comparable<MailItem> {
 
     protected void saveMetadata(String metadata) throws ServiceException {
         mData.metadataChanged(mMailbox);
-        if (ZimbraLog.mailop.isDebugEnabled()) {
-            ZimbraLog.mailop.debug("Saving metadata for %s.", getMailopContext(this));
-        }
+        if (ZimbraLog.mailop.isDebugEnabled())
+            ZimbraLog.mailop.debug("saving metadata for " + getMailopContext(this));
         DbMailItem.saveMetadata(this, metadata);
     }
 
@@ -2497,7 +2496,8 @@ public abstract class MailItem implements Comparable<MailItem> {
 
     protected void saveData(String sender, String metadata) throws ServiceException {
         mData.metadataChanged(mMailbox);
-        ZimbraLog.mailop.debug("Saving data for %s.", getMailopContext(this));
+        if (ZimbraLog.mailop.isDebugEnabled())
+            ZimbraLog.mailop.debug("saving data for " + getMailopContext(this));
         DbMailItem.saveData(this, mData.subject, sender, metadata);
     }
 
