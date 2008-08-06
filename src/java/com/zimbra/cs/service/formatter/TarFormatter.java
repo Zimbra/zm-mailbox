@@ -658,7 +658,7 @@ public class TarFormatter extends Formatter {
         return fldr;
     }
 
-    public byte[] readTarEntry(TarInputStream tis, TarEntry te) throws IOException {
+    public static byte[] readTarEntry(TarInputStream tis, TarEntry te) throws IOException {
         if (te == null)
             return null;
         
