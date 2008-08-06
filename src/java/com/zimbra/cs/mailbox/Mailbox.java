@@ -3717,7 +3717,7 @@ public class Mailbox {
                     itemSize = 0;
                 }
             }
-            if (ZimbraLog.mailbox.isInfoEnabled() && ((itemsAttempted % 2000) == 0)) {
+            if (ZimbraLog.mailbox.isInfoEnabled() && ((itemsAttempted % 2000) == 0) && isReIndexInProgress()) {
                 ZimbraLog.mailbox.info("Batch Indexing: Mailbox "+getId()+" on item "+mReIndexStatus.mNumProcessed+" out of "+items.size());
             }
         }
