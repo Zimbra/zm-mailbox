@@ -273,6 +273,10 @@ public final class ImapConnection extends MailConnection {
         return doList(CAtom.LSUB, ref, mbox);
     }
 
+    public boolean exists(String mbox) throws IOException {
+        return !list("", mbox).isEmpty();
+    }
+
     private List<ListData> doList(CAtom cmd, String ref, String mbox)
         throws IOException {
         ImapRequest req = newRequest(cmd, new MailboxName(ref), new MailboxName(mbox));

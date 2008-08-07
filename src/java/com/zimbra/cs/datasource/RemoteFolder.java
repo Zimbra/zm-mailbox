@@ -40,7 +40,7 @@ import java.util.List;
 import java.util.Collections;
 import java.util.ArrayList;
 
-class RemoteFolder {
+public class RemoteFolder {
     private final ImapConnection connection;
     private final String path;
     private int deleted;
