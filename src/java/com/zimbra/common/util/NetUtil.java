@@ -175,4 +175,14 @@ public class NetUtil {
         //System.err.println("get table=" + mBoundSockets.hashCode() + " key=" + key + " sock=" + serverSocket);
         return serverSocket;
     }
+    
+    public static void main(String[] args) {
+        SSLServerSocketFactory sf = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
+        String[] supportedCipherSuites = sf.getSupportedCipherSuites();
+        System.out.println("\nsupported cipher suites:\n");
+        for (String c : supportedCipherSuites)
+            System.out.println(c);
+    }
+    
+    
 }
