@@ -17,9 +17,11 @@
 package com.zimbra.common.util;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
 
@@ -30,22 +32,13 @@ import org.apache.log4j.Logger;
  */
 public class LogFactory {
 
-    private static Map<Class, Log> sLogsByClass = new HashMap<Class, Log>();
     private static Map<String, Log> sLogsByName = new HashMap<String, Log>();
     
-    public static Log getLog(Class clazz) {
-        Log log = null;
-        
-        synchronized (sLogsByClass) {
-            log = sLogsByClass.get(clazz);
-            if (log == null) {
-                Logger log4jLogger = Logger.getLogger(clazz);
-                log = new Log(log4jLogger);
-                sLogsByClass.put(clazz, log);
-            }
+    public static Log getLog(Class<?> clazz) {
+        if (clazz == null) {
+            return null;
         }
-        
-        return log;
+        return getLog(clazz.getName());
     }
     
     public static Log getLog(String name) {
@@ -58,8 +51,7 @@ public class LogFactory {
                 log = new Log(log4jLogger);
                 sLogsByName.put(name, log);
             }
-        }
-        
+        }        
         return log;
     }
     
@@ -68,15 +60,30 @@ public class LogFactory {
      * an empty <tt>List</tt>.
      */
     public static List<AccountLogger> getAllAccountLoggers() {
-        List<AccountLogger> accountLoggers = new ArrayList<AccountLogger>(); 
+        List<AccountLogger> accountLoggers = new ArrayList<AccountLogger>();
+        List<Log> allLogs = new ArrayList<Log>();
         synchronized (sLogsByName) {
-            for (Log log : sLogsByName.values()) {
-                List<AccountLogger> alForCategory = log.getAccountLoggers();
-                if (alForCategory != null) {
-                    accountLoggers.addAll(alForCategory);
-                }
-            } 
+            allLogs.addAll(sLogsByName.values());
         }
+        
+        for (Log log : allLogs) {
+            List<AccountLogger> alForCategory = log.getAccountLoggers();
+            if (alForCategory != null) {
+                accountLoggers.addAll(alForCategory);
+            }
+        } 
         return accountLoggers;
+    }
+
+    /**
+     * Returns all the loggers that have been created with {@link #getLog}.  The
+     * <tt>Collection</tt> does not include account loggers.
+     */
+    public static Collection<Log> getAllLoggers() {
+        synchronized (sLogsByName) {
+            List<Log> allLogs = new ArrayList<Log>();
+            allLogs.addAll(sLogsByName.values());
+            return allLogs;
+        }
     }
 }
