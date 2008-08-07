@@ -1043,6 +1043,12 @@ public class ZimletUtil {
 		}
 	}
 	
+	public static void deployZimletBySoap(String zimletFile) throws ServiceException, IOException {
+        ZimletSoapUtil soapUtil = new ZimletSoapUtil();
+        File zf = new File(zimletFile);
+        soapUtil.deployZimlet(zf.getName(), ByteUtil.getContent(zf), null);	    
+	}
+	
 	private static void test() {
 		String ZIMLET_URL = "^/service/zimlet/([^/\\?]+)[/\\?]?.*$";
 		String t1 = "/service/zimlet/po";
@@ -1436,9 +1442,7 @@ public class ZimletUtil {
 				if (localInstall) {
 					deployZimlet(new ZimletFile(zimlet));
 				} else {
-					ZimletSoapUtil soapUtil = new ZimletSoapUtil();
-					File zf = new File(zimlet);
-					soapUtil.deployZimlet(zf.getName(), ByteUtil.getContent(zf), null);
+				    deployZimletBySoap(zimlet);				    
 				}
 				break;
 			case INSTALL_ZIMLET:
