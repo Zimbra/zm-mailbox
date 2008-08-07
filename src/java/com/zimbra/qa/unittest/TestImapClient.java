@@ -34,10 +34,15 @@ import com.zimbra.cs.mailclient.util.SSLUtil;
 import com.zimbra.cs.mailclient.util.Ascii;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.ParseException;
+import com.zimbra.cs.mailclient.MailException;
 import com.zimbra.cs.mime.charset.ImapUTF7;
+import com.zimbra.cs.util.JMSession;
 import junit.framework.TestCase;
 
 import java.io.IOException;
+import java.io.File;
+import java.io.OutputStream;
+import java.io.FileOutputStream;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.List;
 import java.util.Date;
@@ -46,12 +51,19 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 
 import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Logger;
+import org.apache.log4j.Level;
 import org.junit.Assert;
+
+import javax.mail.internet.MimeMessage;
+import javax.mail.MessagingException;
 
 public class TestImapClient extends TestCase {
     private ImapConfig config;
     private ImapConnection connection;
 
+    private static final Logger LOG = Logger.getLogger(TestImapClient.class);
+    
     private static final String HOST = "localhost";
     private static final int PORT = 7143;
     private static final int SSL_PORT = 7993;
@@ -70,6 +82,8 @@ public class TestImapClient extends TestCase {
 
     static {
         BasicConfigurator.configure();
+        Logger.getRootLogger().setLevel(Level.INFO);
+        LOG.setLevel(Level.DEBUG);
     }
     
     public void tearDown() throws Exception {
@@ -200,7 +214,7 @@ public class TestImapClient extends TestCase {
         config.setDebug(true);
         config.setTrace(true);
         config.setHost("imap.mail.yahoo.com");
-        config.setAuthenticationId("jjztest");
+        config.setAuthenticationId("dacztest");
         connection = new ImapConnection(config);
         connection.connect();
         IDInfo id = new IDInfo();
@@ -209,6 +223,51 @@ public class TestImapClient extends TestCase {
         connection.login("test1234");
         char delim = connection.getDelimiter();
         assertEquals(0, delim);
+        createTestMailbox("Large", 10000);
+    }
+
+    private void createTestMailbox(String name, int count)
+        throws IOException, MessagingException {
+        if (!connection.exists(name)) {
+            connection.create(name);
+        }
+        Mailbox mb = connection.select(name);
+        for (int i = (int) mb.getExists(); i < count; i++) {
+            MimeMessage mm = newTestMessage(i);
+            long uid = uidAppend(mm, null, null);
+            LOG.debug("Appended test message " + i + ", uid = " + uid);
+        }
+    }
+
+    private static MimeMessage newTestMessage(int num) throws MessagingException {
+        MimeMessage mm = new MimeMessage(JMSession.getSession());
+        mm.setHeader("Message-Id", "<test-" + num + "@foo.com>");
+        mm.setHeader("To", "nobody@foo.com");
+        mm.setHeader("From", "nobody@bar.com");
+        mm.setSubject("Test message " + num);
+        mm.setSentDate(new Date(System.currentTimeMillis()));
+        mm.setContent("This is test message " + num, "text/plain");
+        return mm;
+    }
+    
+    private long uidAppend(MimeMessage msg, Flags flags, Date date)
+        throws IOException {
+        String name = connection.getMailbox().getName();
+        File tmp = null;
+        OutputStream os = null;
+        try {
+            File dir = connection.getImapConfig().getLiteralDataDir();
+            tmp = File.createTempFile("lit", null, dir);
+            os = new FileOutputStream(tmp);
+            msg.writeTo(os);
+            os.close();
+            return connection.append(name, flags, date, new Literal(tmp));
+        } catch (MessagingException e) {
+            throw new MailException("Error appending message", e);
+        } finally {
+            if (os != null) os.close();
+            if (tmp != null) tmp.delete();
+        }
     }
 
     /*
@@ -310,6 +369,6 @@ public class TestImapClient extends TestCase {
     }
 
     public static void main(String[] args) throws Exception {
-        new TestImapClient().testFetch();
+        new TestImapClient().testYahoo();
     }
 }
