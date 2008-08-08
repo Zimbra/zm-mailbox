@@ -148,7 +148,7 @@ public final class Pop3Connection extends MailConnection {
 
     private void stat() throws IOException {
         Pop3Response res = sendCommandCheckStatus(STAT, null);
-        String[] parts = res.getMessage().split(" ");
+        String[] parts = split(res.getMessage());
         if (parts.length > 1) {
             try {
                 messageCount = Integer.parseInt(parts[0]);
@@ -177,7 +177,7 @@ public final class Pop3Connection extends MailConnection {
     public int getMessageSize(int msgno) throws IOException {
         Pop3Response res = sendCommand(LIST, msgno);
         if (res.isOK()) {
-            String[] parts = res.getMessage().split(" ");
+            String[] parts = split(res.getMessage());
             if (parts.length > 1) {
                 try {
                     return Integer.parseInt(parts[1]);
@@ -198,7 +198,7 @@ public final class Pop3Connection extends MailConnection {
             ContentInputStream is = res.getContentInputStream();
             String line;
             while ((line = is.readLine()) != null) {
-                String[] parts = line.split(" ");
+                String[] parts = split(line);
                 if (parts.length < 2) {
                     break;
                 }
@@ -223,7 +223,7 @@ public final class Pop3Connection extends MailConnection {
     public String getMessageUid(int msgno) throws IOException {
         Pop3Response res = sendCommand(UIDL, msgno);
         if (res.isOK()) {
-            String[] parts = res.getMessage().split(" ");
+            String[] parts = split(res.getMessage());
             if (parts.length < 2) {
                 throw new CommandFailedException(
                     UIDL, "Invalid UIDL response: " + res.getMessage());
@@ -240,7 +240,7 @@ public final class Pop3Connection extends MailConnection {
             ContentInputStream is = res.getContentInputStream();
             String line;
             while ((line = is.readLine()) != null) {
-                String[] parts = line.split(" ");
+                String[] parts = split(line);
                 if (parts.length < 2) {
                     break;
                 }
@@ -328,5 +328,9 @@ public final class Pop3Connection extends MailConnection {
             throw new CommandFailedException(cmd, res.getMessage());
         }
         return res;
+    }
+
+    private static String[] split(String s) {
+        return s.trim().split("[ \\t]+");
     }
 }
