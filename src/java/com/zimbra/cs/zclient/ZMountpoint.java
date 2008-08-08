@@ -22,6 +22,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.zclient.event.ZModifyMountpointEvent;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
+import com.zimbra.cs.zclient.event.ZModifyFolderEvent;
 
 public class ZMountpoint extends ZFolder {
 
@@ -45,6 +46,8 @@ public class ZMountpoint extends ZFolder {
                 mOwnerId = mpe.getOwnerId(mOwnerId);
                 super.modifyNotification(e);
             }
+        } else if (e instanceof ZModifyFolderEvent) {
+            super.modifyNotification(e);
         }
     }
 
