@@ -231,20 +231,18 @@ public class ZFolder implements ZItem, Comparable {
     public void modifyNotification(ZModifyEvent event) throws ServiceException {
         if (event instanceof ZModifyFolderEvent) {
             ZModifyFolderEvent fevent = (ZModifyFolderEvent) event;
-            if (fevent.getId().equals(mId)) {
-                mName = fevent.getName(mName);
-                mParentId = fevent.getParentId(mParentId);
-                mFlags = fevent.getFlags(mFlags);
-                mColor = fevent.getColor(mColor);
-                mUnreadCount = fevent.getUnreadCount(mUnreadCount);
-                mMessageCount = fevent.getMessageCount(mMessageCount);
-                mDefaultView = fevent.getDefaultView(mDefaultView);
-                mContentSequence = fevent.getContentSequence(mContentSequence);
-                mRemoteURL = fevent.getRemoteURL(mRemoteURL);
-                mEffectivePerms = fevent.getEffectivePerm(mEffectivePerms);
-                mGrants = fevent.getGrants(mGrants);
-                mSize = fevent.getSize(mSize);
-            }
+            mName = fevent.getName(mName);
+            mParentId = fevent.getParentId(mParentId);
+            mFlags = fevent.getFlags(mFlags);
+            mColor = fevent.getColor(mColor);
+            mUnreadCount = fevent.getUnreadCount(mUnreadCount);
+            mMessageCount = fevent.getMessageCount(mMessageCount);
+            mDefaultView = fevent.getDefaultView(mDefaultView);
+            mContentSequence = fevent.getContentSequence(mContentSequence);
+            mRemoteURL = fevent.getRemoteURL(mRemoteURL);
+            mEffectivePerms = fevent.getEffectivePerm(mEffectivePerms);
+            mGrants = fevent.getGrants(mGrants);
+            mSize = fevent.getSize(mSize);
         }
     }
         
