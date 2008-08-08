@@ -211,7 +211,7 @@ public final class ImapInputStream extends MailInputStream {
         } finally {
             os.close();
         }
-        return new Literal(f);
+        return new Literal(f, true);
     }
 
 
