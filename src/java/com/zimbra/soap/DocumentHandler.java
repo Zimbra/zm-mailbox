@@ -308,7 +308,8 @@ public abstract class DocumentHandler {
         if (s == null) {
             try {
                 if (stype == Session.Type.SOAP) {
-                    s = new SoapSession(authAccountId).register();
+                    if (Provisioning.onLocalServer(getRequestedAccount(zsc)))
+                        s = new SoapSession(authAccountId).register();
                 } else if (stype == Session.Type.ADMIN) {
                     s = new AdminSession(authAccountId).register();
                 }
