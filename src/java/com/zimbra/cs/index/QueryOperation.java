@@ -21,11 +21,9 @@
 package com.zimbra.cs.index;
 
 import java.io.IOException;
-import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 
@@ -249,6 +247,13 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults
     abstract boolean hasAllResults();
 
     
+    /**
+     * Expand "is:local" and "is:remote" queries into in:(folder OR folder OR folder) as appropriate
+     * 
+     * @param mbox
+     * @return
+     * @throws ServiceException
+     */
     abstract QueryOperation expandLocalRemotePart(Mailbox mbox) throws ServiceException ;
     
     /**

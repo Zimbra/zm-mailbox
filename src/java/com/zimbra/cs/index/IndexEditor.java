@@ -167,8 +167,8 @@ public class IndexEditor {
             params.setLimit(100);
             params.setPrefetch(true);
             params.setMode(SearchResultMode.NORMAL);
-            ZimbraQuery zq = new ZimbraQuery(mbox, params);
-            return zq.execute(null, SoapProtocol.Soap12);
+            ZimbraQuery zq = new ZimbraQuery(null, SoapProtocol.Soap12, mbox, params);
+            return zq.execute(/*null, SoapProtocol.Soap12*/);
         }
     }
 
@@ -204,8 +204,8 @@ public class IndexEditor {
                 params.setLimit(100);
                 params.setPrefetch(true);
                 params.setMode(SearchResultMode.NORMAL);
-                ZimbraQuery zq = new ZimbraQuery(mbox, params);
-                res[i] = zq.execute(null, SoapProtocol.Soap12);
+                ZimbraQuery zq = new ZimbraQuery(null, SoapProtocol.Soap12, mbox, params);
+                res[i] = zq.execute(/*null, SoapProtocol.Soap12*/);
             }
             return HitIdGrouper.Create(new MultiQueryResults(res, sortBy), sortBy);
         }

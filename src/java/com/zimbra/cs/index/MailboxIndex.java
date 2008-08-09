@@ -138,7 +138,7 @@ public final class MailboxIndex
                 break;
         }
 
-        ZimbraQuery zq = new ZimbraQuery(mbox, params);
+        ZimbraQuery zq = new ZimbraQuery(octxt, proto, mbox, params);
 
         if (zq.countSearchTextOperations() > 0 && textIndexOutOfSync) {
             throw MailServiceException.TEXT_INDEX_OUT_OF_SYNC();
@@ -150,7 +150,7 @@ public final class MailboxIndex
         }
 
         try {
-            ZimbraQueryResults results = zq.execute(octxt, proto);
+            ZimbraQueryResults results = zq.execute(/*octxt, proto*/);
 
             if (isTaskSort) {
                 results = new TaskSortingQueryResults(results, originalSort);

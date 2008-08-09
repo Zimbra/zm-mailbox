@@ -810,7 +810,7 @@ class IntersectionQueryOperation extends CombiningQueryOperation {
 
         toRet.mQueryOperations = new ArrayList<QueryOperation>(mQueryOperations.size());
         for (QueryOperation q : mQueryOperations)
-            toRet.mQueryOperations.add(q);
+            toRet.mQueryOperations.add((QueryOperation)(q.clone()));
 
         return toRet;
     }
