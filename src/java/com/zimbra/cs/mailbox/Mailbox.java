@@ -3802,7 +3802,7 @@ public class Mailbox {
         
         // okay, lets run the search through the query parser -- this has the side-effect of
         // re-writing the query in a format that is OK to proxy to the other server
-        ZimbraQuery zq = new ZimbraQuery(this, params);
+        ZimbraQuery zq = new ZimbraQuery(octxt, SoapProtocol.Soap12, this, params);
         return zq.toQueryString();
     }
 

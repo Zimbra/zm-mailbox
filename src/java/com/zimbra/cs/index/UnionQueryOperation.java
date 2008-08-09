@@ -426,15 +426,15 @@ class UnionQueryOperation extends CombiningQueryOperation
 
         toRet.mQueryOperations = new ArrayList<QueryOperation>(mQueryOperations.size());
         for (QueryOperation q : mQueryOperations)
-            toRet.mQueryOperations.add(q);
+            toRet.mQueryOperations.add((QueryOperation)(q.clone()));
 
         return toRet;
     }
     
     protected QueryOperation combineOps(QueryOperation other, boolean union) {
-        if (mLog.isDebugEnabled()) {
-            mLog.debug("combineOps("+toString()+","+other.toString()+")");
-        }
+//        if (mLog.isDebugEnabled()) {
+//            mLog.debug("combineOps("+toString()+","+other.toString()+")");
+//        }
         if (union && other instanceof UnionQueryOperation) {
             mQueryOperations.addAll(((UnionQueryOperation)other).mQueryOperations);
             return this;

@@ -492,8 +492,8 @@ public class TestSearch extends TestCase {
         params.setLimit(100);
         params.setPrefetch(true);
         params.setMode(SearchResultMode.NORMAL);
-        ZimbraQuery zq = new ZimbraQuery(mbox, params);
-        ZimbraQueryResults res = zq.execute(null, SoapProtocol.Soap12);
+        ZimbraQuery zq = new ZimbraQuery(null, SoapProtocol.Soap12, mbox, params);
+        ZimbraQueryResults res = zq.execute(/*null, SoapProtocol.Soap12*/);
 
         try {
             if (true) {

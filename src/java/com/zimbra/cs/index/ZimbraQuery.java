@@ -46,6 +46,7 @@ import org.apache.lucene.search.BooleanClause.Occur;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.index.MailboxIndex.SortBy;
 import com.zimbra.cs.index.queryparser.Token;
 import com.zimbra.cs.index.queryparser.ZimbraQueryParser;
@@ -53,6 +54,7 @@ import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.index.queryparser.ZimbraQueryParserConstants;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
@@ -838,7 +840,6 @@ public final class ZimbraQuery {
             boolean includeSubfolders, 
             Analyzer analyzer, int modifier) {
             super(modifier, ZimbraQueryParser.IN);
-            mMailbox = mailbox;
             mFolder = folder;
             mRemoteId = remoteId;
             mSubfolderPath = subfolderPath;
@@ -969,7 +970,6 @@ public final class ZimbraQuery {
         private String mSubfolderPath = null;
         private Integer mSpecialTarget = null;
         private boolean mIncludeSubfolders = false;
-        private Mailbox mMailbox;
     }
 
     public abstract static class LuceneTableQuery extends BaseQuery
@@ -1636,15 +1636,17 @@ public final class ZimbraQuery {
                 }
             }
 
-            MailboxIndex mbidx = mbox.getMailboxIndex();
-            if (mbidx != null) {
-                // don't check spelling for structured-data searches
-                if (qType != ZimbraQueryParser.FIELD) 
-                    for (String token : mTokens) {
-                        List<SpellSuggestQueryInfo.Suggestion> suggestions = mbidx.suggestSpelling(QueryTypeString(qType), token);
-                        if (suggestions != null) 
-                            mQueryInfo.add(new SpellSuggestQueryInfo(token, suggestions));
-                    }
+            if (false) {
+                MailboxIndex mbidx = mbox.getMailboxIndex();
+                if (mbidx != null) {
+                    // don't check spelling for structured-data searches
+                    if (qType != ZimbraQueryParser.FIELD) 
+                        for (String token : mTokens) {
+                            List<SpellSuggestQueryInfo.Suggestion> suggestions = mbidx.suggestSpelling(QueryTypeString(qType), token);
+                            if (suggestions != null) 
+                                mQueryInfo.add(new SpellSuggestQueryInfo(token, suggestions));
+                        }
+                }
             }
         }
 
@@ -2265,6 +2267,17 @@ public final class ZimbraQuery {
     }
     
     /**
+     * @return number of Text parts of this query
+     */
+    private static int countSearchTextOperations(QueryOperation op) {
+        if (op == null)
+            return 0;
+        CountTextOperations count = new CountTextOperations();
+        op.depthFirstRecurse(count);
+        return count.num;
+    }
+    
+    /**
      * @return number of non-trivial (num sub-ops > 1) Combining operations (joins/unions)
      */
     int countNontrivialCombiningOperations() {
@@ -2352,7 +2365,15 @@ public final class ZimbraQuery {
         return parser.Parse();
     }
     
-    public ZimbraQuery(Mailbox mbox, SearchParams params) throws ParseException, ServiceException {
+    /**
+     * Take the specified query string and build an optimized query.  Do not execute the query, however.
+     * 
+     * @param mbox
+     * @param params
+     * @throws ParseException
+     * @throws ServiceException
+     */
+    public ZimbraQuery(OperationContext octxt, SoapProtocol proto, Mailbox mbox, SearchParams params) throws ParseException, ServiceException {
         mParams = params;
         mMbox = mbox;
         long chunkSize = (long)mParams.getOffset() + (long)mParams.getLimit();
@@ -2428,41 +2449,285 @@ public final class ZimbraQuery {
             if (mLog.isDebugEnabled()) {
                 mLog.debug("OP="+mOp.toString());
             }
-            
-            if (false) {
-                Account acct = mbox.getAccount();
-                boolean includeTrash = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeTrashInSearch, false);
-                boolean includeSpam = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeSpamInSearch, false);
-                
-                // do spam/trash hackery!
-                if (!includeTrash || !includeSpam) {
-                    if (!mOp.hasSpamTrashSetting()) {
-                        mOp = mOp.ensureSpamTrashSetting(mMbox, includeTrash, includeSpam);
-                        if (mLog.isDebugEnabled()) {
-                            mLog.debug("AFTERTS="+mOp.toString());
-                    }
-                    }
-                }
-            }
-            
-            {
-                mOp = mOp.expandLocalRemotePart(mbox);
-                if (mLog.isDebugEnabled()) {
-                    mLog.debug("AFTEREXP="+mOp.toString());
-                }
+
+            // expand the is:local and is:remote parts into in:(LIST)'s
+            mOp = mOp.expandLocalRemotePart(mbox);
+            if (mLog.isDebugEnabled()) {
+                mLog.debug("AFTEREXP="+mOp.toString());
             }
 
             // optimize the query down
             mOp = mOp.optimize(mMbox);
             if (mOp == null)
                 mOp = new NullQueryOperation();
-            
-            assert(mOp != null);
             if (mLog.isDebugEnabled()) {
                 mLog.debug("OPTIMIZED="+mOp.toString());
             }
-
         }
+        
+        
+        // 
+        // STEP 4: use the OperationContext to update the set of visible referenced folders, local AND remote
+        //
+        if (mOp!= null) {
+            {
+                QueryTargetSet targets = mOp.getQueryTargets();
+                assert(mOp instanceof UnionQueryOperation || targets.countExplicitTargets() <=1);
+            }
+
+            //
+            // easiest to treat the query two unions: one the LOCAL and one REMOTE parts
+            //
+            UnionQueryOperation remoteOps = new UnionQueryOperation();
+            UnionQueryOperation localOps = new UnionQueryOperation();
+            
+            if (mOp instanceof UnionQueryOperation) {
+                UnionQueryOperation union = (UnionQueryOperation)mOp;
+                // separate out the LOCAL vs REMOTE parts...
+                for (QueryOperation op : union.mQueryOperations) {
+                    QueryTargetSet targets = op.getQueryTargets();
+                    
+                    // this assertion OK because we have already distributed multi-target query ops
+                    // during the optimize() step
+                    assert(targets.countExplicitTargets() <= 1);
+
+                    // the assertion above is critical: the code below all assumes
+                    // that we only have ONE target (ie we've already distributed if necessary)
+                    
+                    if (targets.hasExternalTargets()) {
+                        remoteOps.add(op);
+                    } else {
+                        localOps.add(op);
+                    }
+                }
+            } else {
+                // single target: might be local, might be remote
+                
+                QueryTargetSet targets = mOp.getQueryTargets();
+                // this assertion OK because we have already distributed multi-target query ops
+                // during the optimize() step
+                assert(targets.countExplicitTargets() <= 1);
+                
+                if (targets.hasExternalTargets()) {
+                    remoteOps.add(mOp);
+                } else {
+                    localOps.add(mOp);
+                }
+            }
+            
+            //
+            // Handle the REMOTE side:
+            //
+            if (!remoteOps.mQueryOperations.isEmpty()) {
+                // Since optimize() has already been run, we know that each of our ops
+                // only has one target (or none).  Find those operations which have
+                // an external target and wrap them in RemoteQueryOperations
+                for (int i = remoteOps.mQueryOperations.size()-1; i >= 0; i--) { // iterate backwards so we can remove/add w/o screwing iteration
+                    QueryOperation op = remoteOps.mQueryOperations.get(i);
+
+                    QueryTargetSet targets = op.getQueryTargets();
+                    
+                    // this assertion OK because we have already distributed multi-target query ops
+                    // during the optimize() step
+                    assert(targets.countExplicitTargets() <= 1);
+                    
+                    // the assertion above is critical: the code below all assumes
+                    // that we only have ONE target (ie we've already distributed if necessary)
+                    
+                    if (targets.hasExternalTargets()) {
+                        remoteOps.mQueryOperations.remove(i);   
+                        boolean foundOne = false;
+                        // find a remoteOp to add this one to
+                        for (QueryOperation tryIt : remoteOps.mQueryOperations) {
+                            if (tryIt instanceof RemoteQueryOperation) {
+                                if (((RemoteQueryOperation)tryIt).tryAddOredOperation(op)) {
+                                    foundOne = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!foundOne) {
+                            RemoteQueryOperation remoteOp = new RemoteQueryOperation();
+                            remoteOp.tryAddOredOperation(op);
+                            remoteOps.mQueryOperations.add(i, remoteOp);
+                        }
+                    }
+                }
+
+                // ...we need to call setup on every RemoteQueryOperation we end up with... 
+                for (QueryOperation toSetup : remoteOps.mQueryOperations) {
+                    assert(toSetup instanceof RemoteQueryOperation);
+                    try {
+                        RemoteQueryOperation remote = (RemoteQueryOperation) toSetup;
+                        remote.setup(proto, octxt.getAuthToken(), params);
+                    } catch(Exception e) {
+                        ZimbraLog.index.info("Ignoring "+e+" during RemoteQuery generation for "+remoteOps.toString());
+                    }
+                }
+            }                
+            
+            //
+            // For the LOCAL parts of the query, do permission checks, do trash/spam exclusion
+            //
+            if (!localOps.mQueryOperations.isEmpty()) {
+                if (mLog.isDebugEnabled()) {
+                    mLog.debug("LOCAL_IN="+localOps.toString());
+                }                
+
+                Account authAcct = null;
+                if (octxt != null) 
+                    authAcct = octxt.getAuthenticatedUser();
+                else
+                    authAcct = mbox.getAccount();
+                
+                //
+                // Now, for all the LOCAL PARTS of the query, add the trash/spam exclusion part
+                //
+                boolean includeTrash = authAcct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeTrashInSearch, false);
+                boolean includeSpam = authAcct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeSpamInSearch, false);
+                if (!includeTrash || !includeSpam) {
+                    ArrayList<QueryOperation> toAdd = new ArrayList<QueryOperation>();
+                    for (Iterator<QueryOperation> iter = localOps.mQueryOperations.iterator(); iter.hasNext();) {
+                        QueryOperation cur = iter.next();
+                        if (!cur.hasSpamTrashSetting()) {
+                            QueryOperation newOp = cur.ensureSpamTrashSetting(mbox, false, false);
+                            if (newOp != cur) {
+                                iter.remove();
+                                toAdd.add(newOp);
+                            }
+                        }
+                    }
+                    localOps.mQueryOperations.addAll(toAdd);
+                }
+                
+                if (mLog.isDebugEnabled()) {
+                    mLog.debug("LOCAL_AFTERTS="+localOps.toString());
+                }                
+                
+                //
+                // Check to see if we need to filter out private appointment data
+                boolean allowPrivateAccess = true;
+                if (octxt != null) {
+                    allowPrivateAccess = Account.allowPrivateAccess(octxt.getAuthenticatedUser(), 
+                                                                    mbox.getAccount(), octxt.isUsingAdminPrivileges());
+                }
+
+                //
+                // bug 28892 - ACL.RIGHT_PRIVATE support:
+                //
+                // Basically, if ACL.RIGHT_PRIVATE is set somewhere, and if we're excluding private items from
+                // search, then we need to run the query twice -- once over the whole mailbox with
+                // private items excluded and then UNION it with a second run, this time only in the 
+                // RIGHT_PRIVATE enabled folders, with private items enabled.  
+                //
+                UnionQueryOperation clonedLocal = null;
+                Set<Folder> hasFolderRightPrivateSet = new HashSet<Folder>();
+                
+                // ...don't do any of this if they aren't asking for a calendar type...
+                boolean hasCalendarType = false;
+                if (params.getTypes() != null) {
+                    for (byte b : params.getTypes()) {
+                        if (b == MailItem.TYPE_APPOINTMENT || b == MailItem.TYPE_TASK) {
+                            hasCalendarType = true;
+                            break;
+                        }
+                    }
+                }
+                if (hasCalendarType && !allowPrivateAccess && countSearchTextOperations(localOps)>0) {
+                    // the searcher is NOT allowed to see private items globally....lets check
+                    // to see if there are any individual folders that they DO have rights to...
+                    // if there are any, then we'll need to run special searches in those
+                    // folders
+                    Set<Folder> allVisibleFolders = mbox.getVisibleFolders(octxt);
+                    if (allVisibleFolders == null) {
+                        allVisibleFolders = new HashSet<Folder>();
+                        allVisibleFolders.addAll(mbox.getFolderList(octxt, DbSearch.SORT_NONE));
+                    }
+                    for (Folder f : allVisibleFolders) {
+                        if (CalendarItem.allowPrivateAccess(f, authAcct, false)) {
+                            hasFolderRightPrivateSet.add(f);
+                        }
+                    }
+                    if (!hasFolderRightPrivateSet.isEmpty()) {
+                        clonedLocal = (UnionQueryOperation)localOps.clone();
+                    }
+                }
+
+                Set<Folder> visibleFolders = mbox.getVisibleFolders(octxt);
+                
+                localOps = handleLocalPermissionChecks(localOps, mMbox, octxt, 
+                                                       mMbox.getMailboxIndex(), mParams,
+                                                       visibleFolders,
+                                                       allowPrivateAccess);
+                
+                if (mLog.isDebugEnabled()) {
+                    mLog.debug("LOCAL_AFTER_PERM_CHECKS="+localOps.toString());
+                }
+                
+                if (!hasFolderRightPrivateSet.isEmpty()) {
+                    if (mLog.isDebugEnabled()) {
+                        mLog.debug("CLONED_LOCAL_BEFORE_PERM="+clonedLocal.toString());
+                    }
+                    
+                    // 
+                    // now we're going to setup the clonedLocal tree
+                    // to run with private access ALLOWED, over the set of folders
+                    // that have RIGHT_PRIVATE (note that we build this list from the visible 
+                    // folder list, so we are 
+                    //
+                    clonedLocal = handleLocalPermissionChecks(clonedLocal, mMbox, octxt, 
+                                                              mMbox.getMailboxIndex(), mParams,
+                                                              hasFolderRightPrivateSet,
+                                                              true);
+                    
+                    if (mLog.isDebugEnabled()) {
+                        mLog.debug("CLONED_LOCAL_AFTER_PERM="+clonedLocal.toString());
+                    }
+
+                    // clonedLocal should only have the single INTERSECT in it
+                    assert(clonedLocal.mQueryOperations.size() == 1);
+                    
+                    QueryOperation optimizedClonedLocal = clonedLocal.optimize(mbox);
+                    if (mLog.isDebugEnabled()) {
+                        mLog.debug("CLONED_LOCAL_AFTER_OPTIMIZE="+optimizedClonedLocal.toString());
+                    }
+                    
+                    UnionQueryOperation withPrivateExcluded = localOps;
+                    localOps = new UnionQueryOperation();
+                    localOps.add(withPrivateExcluded);
+                    localOps.add(optimizedClonedLocal);
+                    
+                    if (mLog.isDebugEnabled()) {
+                        mLog.debug("LOCAL_WITH_CLONED="+localOps.toString());
+                    }
+                    
+                    //
+                    // we should end up with:
+                    //
+                    // localOps = 
+                    //    UNION(withPrivateExcluded,
+                    //          UNION(INTERSECT(clonedLocal, 
+                    //                          UNION(hasFolderRightPrivateList)
+                    //                         )
+                    //                )
+                    //          )
+                    //
+                }
+                
+            }
+            
+            UnionQueryOperation union = new UnionQueryOperation();
+            union.add(localOps);
+            union.add(remoteOps);
+            if (mLog.isDebugEnabled()) {
+                mLog.debug("BEFORE_FINAL_OPT="+union.toString());
+            }                
+            mOp = union.optimize(mbox);
+            assert(union.mQueryOperations.size() > 0);
+        }
+        if (mLog.isDebugEnabled()) {
+            mLog.debug("END_ZIMBRAQUERY_CONSTRUCTOR="+mOp.toString());
+        }                
     }
 
     public void doneWithQuery() throws ServiceException {
@@ -2484,30 +2749,8 @@ public final class ZimbraQuery {
      * @throws ServiceException
      * @throws IOException
      */
-    final public ZimbraQueryResults execute(OperationContext octxt, SoapProtocol proto) throws ServiceException, IOException
+    final public ZimbraQueryResults execute() throws ServiceException, IOException
     {
-        // 
-        // STEP 1: use the OperationContext to update the set of visible referenced folders, local AND remote
-        //
-        if (mOp!= null) {
-            QueryTargetSet targets = mOp.getQueryTargets();
-            assert(mOp instanceof UnionQueryOperation || targets.countExplicitTargets() <=1);
-            MailboxIndex mbidx = mMbox.getMailboxIndex();
-
-            UnionQueryOperation union = null;
-            if (mOp instanceof UnionQueryOperation) { 
-                union = (UnionQueryOperation)mOp;
-            } else {
-                union = new UnionQueryOperation();
-                union.add(mOp);
-            }
-            
-            mOp = handlePermissionChecks(union, proto, mMbox, octxt, mbidx, mParams);
-        }
-        
-        //
-        // STEP 2: run the query
-        // 
         MailboxIndex mbidx = mMbox.getMailboxIndex();
 
         if (mOp!= null) {
@@ -2520,7 +2763,6 @@ public final class ZimbraQuery {
 
             assert(mResults == null);
 
-            // if we've only got one target, and it is external, then mOp must be a RemoteQueryOp
             mResults = mOp.run(mMbox, mbidx, mParams, mChunkSize);
             
             mResults = HitIdGrouper.Create(mResults, mParams.getSortBy());
@@ -2551,66 +2793,35 @@ public final class ZimbraQuery {
     }
     
     /**
-     * Go through the top-level query Union, look at the specific QueryTarget 
-     * (local or remote server) for each Op in the union, wrap the remote 
-     * targets in RemoteQueryOperations, and set them up.
-     *
-     * For the local targets, look at all the text-operations and figure 
-     * out if private appointments need to be excluded 
+     * For the local targets:
+     *   - exclude all the not-visible folders from the query 
+     *   - look at all the text-operations and figure out if private appointments need to be excluded 
      */
-    private static QueryOperation handlePermissionChecks(UnionQueryOperation union, SoapProtocol proto, Mailbox mbox, OperationContext octxt, MailboxIndex mbidx, SearchParams params) 
-    throws ServiceException, IOException {
-
-        boolean hasRemoteOps = false;
+    private static UnionQueryOperation handleLocalPermissionChecks(UnionQueryOperation union, 
+                                                              Mailbox mbox, 
+                                                              OperationContext octxt, 
+                                                              MailboxIndex mbidx, 
+                                                              SearchParams params, 
+                                                              Set<Folder> visibleFolders,
+                                                              boolean allowPrivateAccess) 
+    throws ServiceException {
         
-        Set<Folder> visibleFolders = mbox.getVisibleFolders(octxt);
-        
-        //
-        // Check to see if we need to filter out private appointment data
-        boolean allowPrivateAccess = true;
-        if (octxt != null) {
-            Account acct = mbox.getAccount();
-            allowPrivateAccess = Account.allowPrivateAccess(
-                    octxt.getAuthenticatedUser(), acct, octxt.isUsingAdminPrivileges());
-        }
-
         // Since optimize() has already been run, we know that each of our ops
         // only has one target (or none).  Find those operations which have
         // an external target and wrap them in RemoteQueryOperations
         for (int i = union.mQueryOperations.size()-1; i >= 0; i--) { // iterate backwards so we can remove/add w/o screwing iteration
             QueryOperation op = union.mQueryOperations.get(i);
-
             QueryTargetSet targets = op.getQueryTargets();
             
-            // this assertion OK because we have already distributed multi-target query ops
+            // this assertion is OK because we have already distributed multi-target query ops
             // during the optimize() step
             assert(targets.countExplicitTargets() <= 1);
-            
             // the assertion above is critical: the code below all assumes
             // that we only have ONE target (ie we've already distributed if necessary)
-
-            if (targets.hasExternalTargets()) {
-                union.mQueryOperations.remove(i);   
-
-                hasRemoteOps = true;
-                boolean foundOne = false;
-
-                // find a remoteOp to add this one to
-                for (QueryOperation tryIt : union.mQueryOperations) {
-                    if (tryIt instanceof RemoteQueryOperation) {
-                        if (((RemoteQueryOperation)tryIt).tryAddOredOperation(op)) {
-                            foundOne = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (!foundOne) {
-                    RemoteQueryOperation remoteOp = new RemoteQueryOperation();
-                    remoteOp.tryAddOredOperation(op);
-                    union.mQueryOperations.add(i, remoteOp);
-                }
-            } else {
+            
+            assert(!targets.hasExternalTargets());
+            
+            if (!targets.hasExternalTargets()) {
                 // local target
                 if (!allowPrivateAccess) 
                     op.depthFirstRecurse(new excludePrivateCalendarItems());
@@ -2642,55 +2853,7 @@ public final class ZimbraQuery {
             }
         }
         
-        if (hasRemoteOps) {
-            // if we actually have remote operations, then we need to call setup() on each
-            for (QueryOperation toSetup : union.mQueryOperations) {
-                if (toSetup instanceof RemoteQueryOperation) {
-                    try {
-                        RemoteQueryOperation remote = (RemoteQueryOperation) toSetup;
-                        remote.setup(proto, octxt.getAuthToken(), params);
-                    } catch(Exception e) {
-                        ZimbraLog.index.info("Ignoring "+e+" during RemoteQuery generation for "+union.toString());
-                    }
-                }
-            }
-        }
-
-        if (true) {
-            Account acct = mbox.getAccount();
-            boolean includeTrash = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeTrashInSearch, false);
-            boolean includeSpam = acct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeSpamInSearch, false);
-            if (!includeTrash || !includeSpam) {
-                ArrayList<QueryOperation> toAdd = new ArrayList<QueryOperation>();
-                for (Iterator<QueryOperation> iter = union.mQueryOperations.iterator(); iter.hasNext();) {
-                    QueryOperation cur = iter.next();
-                    if (! (cur instanceof RemoteQueryOperation)) {
-                        if (!cur.hasSpamTrashSetting()) {
-                            QueryOperation newOp = cur.ensureSpamTrashSetting(mbox, false, false);
-                            if (newOp != cur) {
-                                iter.remove();
-                                toAdd.add(newOp);
-                            }
-                        }
-                        
-                    }
-                }
-                union.mQueryOperations.addAll(toAdd);
-                if (mLog.isDebugEnabled()) {
-                    mLog.debug("AFTERTS="+union.toString());
-                }
-            }
-        }
-        
-        assert(union.mQueryOperations.size() > 0);
-        
-//        if (union.mQueryOperations.size() == 1) {
-//            // this can happen if we replaced ALL of our operations with a single remote op...
-//            return union.mQueryOperations.get(0).optimize(mbox);
-//        }
-//        
-        
-        return union.optimize(mbox);
+        return union;
     }
     
     
