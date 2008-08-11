@@ -3404,4 +3404,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>The default realm that will be used by NGINX mail proxy, when the realm is not specified in GSSAPI Authentication</desc>
 </attr>
 
+<attr id="704" name="zimbraFeatureMailForwardingInFiltersEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>enable end-user mail forwarding defined in mail filters features</desc>
+</attr>
+
 </attrs>
