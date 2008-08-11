@@ -94,9 +94,10 @@ public final class ImapConnection extends MailConnection {
     protected void processGreeting() throws IOException {
         ImapResponse res = readResponse();
         if (res.isUntagged()) {
+            greeting = res.getResponseText().getText();
             switch (res.getCCode()) {
             case BYE:
-                throw new MailException(res.getResponseText().getText());
+                throw new MailException(greeting);
             case PREAUTH:
             case OK:
                 setState(res.isOK() ?
