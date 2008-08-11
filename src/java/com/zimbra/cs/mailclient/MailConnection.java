@@ -51,6 +51,7 @@ public abstract class MailConnection {
     protected MailInputStream mailIn;
     protected MailOutputStream mailOut;
     protected State state = State.CLOSED;
+    protected String greeting;
 
     /** Connection states */
     protected enum State {
@@ -242,6 +243,15 @@ public abstract class MailConnection {
             af = AuthenticatorFactory.getDefault();
         }
         return af.newAuthenticator(config, pass);
+    }
+
+    /**
+     * Returns the greeting message returned by the server.
+     *
+     * @return the server greeting, or <tt>null</tt> if unknown
+     */
+    public String getGreeting() {
+        return greeting;
     }
 
     /**

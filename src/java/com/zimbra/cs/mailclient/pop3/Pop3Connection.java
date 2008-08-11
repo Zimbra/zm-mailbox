@@ -77,6 +77,7 @@ public final class Pop3Connection extends MailConnection {
     @Override
     protected void processGreeting() throws IOException {
         Pop3Response res = Pop3Response.read(null, mailIn);
+        greeting = res.getMessage();
         if (!res.isOK()) {
             throw new MailException(
                 "Expected greeting, but got: " + res.getMessage());

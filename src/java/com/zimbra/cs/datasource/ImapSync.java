@@ -99,6 +99,7 @@ public class ImapSync extends MailItemImport {
 
     public synchronized String test() throws ServiceException {
         validateDataSource();
+        connection.getConfig().setTrace(true);
         try {
             connect();
         } catch (ServiceException e) {
