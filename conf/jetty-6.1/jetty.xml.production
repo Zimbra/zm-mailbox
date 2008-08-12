@@ -57,7 +57,7 @@
           <Set name="password">@@mailboxd_keystore_password@@</Set>
           <Set name="ExcludeCipherSuites">
             <Array type="java.lang.String">
-              %%zimbraSSLExcludeCipherSuites%%
+              %%zimbraSSLExcludeCipherSuitesXML%%
             </Array>
           </Set>
         </New>
@@ -79,7 +79,7 @@
           <Set name="password">@@mailboxd_keystore_password@@</Set>
           <Set name="ExcludeCipherSuites">
             <Array type="java.lang.String">
-              %%zimbraSSLExcludeCipherSuites%%
+              %%zimbraSSLExcludeCipherSuitesXML%%
             </Array>
           </Set>
         </New>
