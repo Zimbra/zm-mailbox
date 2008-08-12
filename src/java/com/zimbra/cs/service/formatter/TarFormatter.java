@@ -230,7 +230,7 @@ public class TarFormatter extends Formatter {
             if (tos != null)
                 tos.close();
         }
-        if (tos == null)
+        if (tos == null && exception == null)
             exception = new UserServletException(HttpServletResponse.
                 SC_NO_CONTENT, "No data found");
         updateComplete(context, pw, callback, null, exception);
