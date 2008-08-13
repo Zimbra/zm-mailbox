@@ -3400,7 +3400,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="703" name="zimbraReverseProxyDefaultRealm" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
-  <globalConfigValue>EXAMPLE.COM</globalConfigValue>
+  <globalConfigValue></globalConfigValue>
   <desc>The default realm that will be used by NGINX mail proxy, when the realm is not specified in GSSAPI Authentication</desc>
 </attr>
 
