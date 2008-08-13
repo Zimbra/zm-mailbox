@@ -153,7 +153,7 @@ public class FolderAction extends ItemAction {
             short rights = ACL.stringToRights(grant.getAttribute(MailConstants.A_RIGHTS));
             byte gtype   = stringToType(grant.getAttribute(MailConstants.A_GRANT_TYPE));
             String zid   = grant.getAttribute(MailConstants.A_ZIMBRA_ID, null);
-            String password = null;
+            String args = null;
             NamedEntry nentry = null;
             if (gtype == ACL.GRANTEE_AUTHUSER) {
                 zid = ACL.GUID_AUTHUSER;
@@ -170,8 +170,17 @@ public class FolderAction extends ItemAction {
                     gtype = nentry instanceof DistributionList ? ACL.GRANTEE_GROUP : ACL.GRANTEE_USER;
                 } catch (ServiceException e) {
                     // this is the normal path, where lookupGranteeByName throws account.NO_SUCH_USER
-                    password = grant.getAttribute(MailConstants.A_ARGS);
+                    args = grant.getAttribute(MailConstants.A_ARGS);
                 }
+            } else if (gtype == ACL.GRANTEE_KEY) {
+                zid = grant.getAttribute(MailConstants.A_DISPLAY);
+                if (zid == null || zid.indexOf('@') < 0)
+                    throw ServiceException.INVALID_REQUEST("invalid guest id or key", null);
+                // unlike guest, we do not fixup grantee type for key grantees if they specify an internal user
+                
+                // get the optional accesskey
+                args = grant.getAttribute(MailConstants.A_ARGS, null);
+                
             } else if (zid != null) {
             	nentry = lookupGranteeByZimbraId(zid, gtype);
             } else {
@@ -182,12 +191,12 @@ public class FolderAction extends ItemAction {
             		gtype = ACL.GRANTEE_GROUP;
             }
             
-            mbox.grantAccess(octxt, iid.getId(), zid, gtype, rights, password);
+            mbox.grantAccess(octxt, iid.getId(), zid, gtype, rights, args);
             // kinda hacky -- return the zimbra id and name of the grantee in the response
             result.addAttribute(MailConstants.A_ZIMBRA_ID, zid);
             if (nentry != null)
                 result.addAttribute(MailConstants.A_DISPLAY, nentry.getName());
-            else if (gtype == ACL.GRANTEE_GUEST)
+            else if (gtype == ACL.GRANTEE_GUEST || gtype == ACL.GRANTEE_KEY)
                 result.addAttribute(MailConstants.A_DISPLAY, zid);
         } else if (operation.equals(OP_UPDATE)) {
             // duplicating code from ItemAction.java for now...
@@ -244,6 +253,7 @@ public class FolderAction extends ItemAction {
         if (typeStr.equalsIgnoreCase("all"))  return ACL.GRANTEE_AUTHUSER;
         if (typeStr.equalsIgnoreCase("pub"))  return ACL.GRANTEE_PUBLIC;
         if (typeStr.equalsIgnoreCase("guest")) return ACL.GRANTEE_GUEST;
+        if (typeStr.equalsIgnoreCase("key"))  return ACL.GRANTEE_KEY;
         throw ServiceException.INVALID_REQUEST("unknown grantee type: " + typeStr, null);
     }
 
@@ -255,6 +265,7 @@ public class FolderAction extends ItemAction {
         if (type == ACL.GRANTEE_COS)       return "cos";
         if (type == ACL.GRANTEE_DOMAIN)    return "dom";
         if (type == ACL.GRANTEE_GUEST)     return "guest";
+        if (type == ACL.GRANTEE_KEY)       return "key";
         return null;
     }
 
@@ -268,7 +279,7 @@ public class FolderAction extends ItemAction {
     }
     
     static NamedEntry lookupGranteeByName(String name, byte type, ZimbraSoapContext zsc) throws ServiceException {
-        if (type == ACL.GRANTEE_AUTHUSER || type == ACL.GRANTEE_PUBLIC || type == ACL.GRANTEE_GUEST)
+        if (type == ACL.GRANTEE_AUTHUSER || type == ACL.GRANTEE_PUBLIC || type == ACL.GRANTEE_GUEST || type == ACL.GRANTEE_KEY)
             return null;
 
         Provisioning prov = Provisioning.getInstance();
@@ -309,6 +320,7 @@ public class FolderAction extends ItemAction {
                 case ACL.GRANTEE_USER:    return prov.get(AccountBy.id, zid);
                 case ACL.GRANTEE_GROUP:   return prov.get(DistributionListBy.id, zid);
                 case ACL.GRANTEE_GUEST:
+                case ACL.GRANTEE_KEY:
                 case ACL.GRANTEE_AUTHUSER:
                 case ACL.GRANTEE_PUBLIC:
                 default:                  return null;

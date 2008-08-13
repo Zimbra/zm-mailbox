@@ -96,7 +96,11 @@ public class ZGrant {
         /**
          * access is granted to a non-Zimbra email address and a password 
          */
-        guest;
+        guest,
+        /**
+         * access is granted to a non-Zimbra email address and an accesskey
+         */
+        key;
 
         public static GranteeType fromString(String s) throws ServiceException {
             try {

@@ -136,6 +136,9 @@ public class Acl extends ResourceProperty {
 					e = principal.addElement(DavElements.E_HREF);
 					e.setText(UrlNamespace.getAclUrl(g.getGranteeId(), UrlNamespace.ACL_USER));
 					break;
+				case ACL.GRANTEE_KEY:
+					// 30049 TODO
+					break;
 				case ACL.GRANTEE_AUTHUSER:
 					principal.addElement(DavElements.E_AUTHENTICATED);
 					break;

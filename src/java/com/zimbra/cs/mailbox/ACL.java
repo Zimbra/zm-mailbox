@@ -19,12 +19,15 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.codec.binary.Hex;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
@@ -64,19 +67,21 @@ public class ACL {
                                                   RIGHT_PRIVATE;
 
     /** The grantee of these rights is the zimbraId for a user. */
-	public static final byte GRANTEE_USER     = 1;
+    public static final byte GRANTEE_USER     = 1;
     /** The grantee of these rights is the zimbraId for a distribution list. */
-	public static final byte GRANTEE_GROUP    = 2;
+    public static final byte GRANTEE_GROUP    = 2;
     /** The grantee of these rights is all authenticated users. */
-	public static final byte GRANTEE_AUTHUSER = 3;
+    public static final byte GRANTEE_AUTHUSER = 3;
     /** The grantee of these rights is the zimbraId for a domain. */
-	public static final byte GRANTEE_DOMAIN   = 4;
+    public static final byte GRANTEE_DOMAIN   = 4;
     /** The grantee of these rights is the zimbraId for a COS. */
-	public static final byte GRANTEE_COS      = 5;
+    public static final byte GRANTEE_COS      = 5;
     /** The grantee of these rights is all authenticated and unauthenticated users. */
-	public static final byte GRANTEE_PUBLIC   = 6;
-	/** The grantee of these rights is a named non Zimbra user identified by the email address */
-	public static final byte GRANTEE_GUEST    = 7;
+    public static final byte GRANTEE_PUBLIC   = 6;
+    /** The grantee of these rights is a named non Zimbra user identified by the email address */
+    public static final byte GRANTEE_GUEST    = 7;
+    /** The grantee of these rights is a named non Zimbra user identified by the access key */
+    public static final byte GRANTEE_KEY      = 8;
 	
 
     /** The pseudo-GUID signifying "all authenticated users". */
@@ -86,6 +91,8 @@ public class ACL {
 
     public static final Account ANONYMOUS_ACCT = new GuestAccount("public", null);
 
+    private static final int ACCESSKEY_SIZE_BYTES = 16;
+    
     static Map<String, Object> getAnonAttrs() {
         Map<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_uid, "public");
@@ -122,7 +129,7 @@ public class ACL {
         /** A bitmask of the rights being granted.  For instance, 
          *  <tt>{@link ACL#RIGHT_INSERT} | {@link ACL#RIGHT_READ}</tt>. */
         private short mRights;
-        /** The password for guest accounts. */
+        /** The password for guest accounts, or hex ascii string version of the accesskey for "key" grantees. */
         private String mPassword;
 
         /** Creates a new Grant object granting access to a user or class
@@ -140,7 +147,7 @@ public class ACL {
         }
         Grant(String zimbraId, byte type, short rights, String password) {
         	this(zimbraId, type, rights);
-            if (mType == GRANTEE_GUEST)
+            if (mType == GRANTEE_GUEST || mType == GRANTEE_KEY)
                 mPassword = password;
         }
 
@@ -153,7 +160,7 @@ public class ACL {
             mRights  = (short) (meta.getLong(FN_RIGHTS) & GRANTABLE_RIGHTS);
             if (hasGrantee())
                 mGrantee = meta.get(FN_GRANTEE);
-            if (mType == ACL.GRANTEE_GUEST)
+            if (mType == ACL.GRANTEE_GUEST || mType == ACL.GRANTEE_KEY)
             	mPassword = meta.get(FN_PASSWORD);
         }
 
@@ -188,6 +195,7 @@ public class ACL {
                 case ACL.GRANTEE_GROUP:    return prov.inDistributionList(acct, mGrantee);
                 case ACL.GRANTEE_USER:     return mGrantee.equals(acct.getId());
                 case ACL.GRANTEE_GUEST:    return matchesGuestAccount(acct);
+                case ACL.GRANTEE_KEY:      return matchesAccessKey(acct);
                 default:  throw ServiceException.FAILURE("unknown ACL grantee type: " + mType, null);
             }
         }
@@ -196,6 +204,12 @@ public class ACL {
         	if (!(acct instanceof GuestAccount))
         		return false;
         	return ((GuestAccount) acct).matches(mGrantee, mPassword);
+        }
+        
+        private boolean matchesAccessKey(Account acct) {
+            if (!(acct instanceof GuestAccount))
+                return false;
+            return false; // 30049 TODO
         }
         
         /** Utility function: Returns the zimbraId for a null-checked LDAP
@@ -229,10 +243,10 @@ public class ACL {
             mRights = rights;
         }
 
-        /** For grants to external users, sets the password required to
+        /** For grants to external users, sets the password/accesskey required to
          *  access the resource. */
         void setPassword(String password) {
-        	if (mType == GRANTEE_GUEST && password != null)
+        	if ((mType == GRANTEE_GUEST || mType == GRANTEE_KEY) && password != null)
                 mPassword = password;
         }
         
@@ -319,11 +333,15 @@ public class ACL {
         else if (zimbraId == null)
             throw ServiceException.INVALID_REQUEST("missing grantee id", null);
 
+        // always generate a new key (if not provided) for updating or new key grants
+        if (type == GRANTEE_KEY && password == null)
+            password = generateAccessKey();
+            
         if (!mGrants.isEmpty()) {
             for (Grant grant : mGrants)
                 if (grant.isGrantee(zimbraId)) {
                     grant.setRights(rights);
-                    if (type == GRANTEE_GUEST)
+                    if (type == GRANTEE_GUEST || type == GRANTEE_KEY)
                         grant.setPassword(password);
                     return;
                 }
@@ -413,5 +431,14 @@ public class ACL {
         if ((rights & RIGHT_PRIVATE) != 0)  sb.append(ABBR_PRIVATE);
         if ((rights & RIGHT_SUBFOLDER) != 0)  sb.append(ABBR_CREATE_FOLDER);
         return sb.toString();
+    }
+    
+    private String generateAccessKey() {
+        SecureRandom random = new SecureRandom();
+        byte[] key = new byte[ACCESSKEY_SIZE_BYTES];
+        random.nextBytes(key);
+        
+        // in the form of e.g. 8d159aed5fb9431d8ac52db5e20baafb
+        return new String(Hex.encodeHex(key));  
     }
 }
