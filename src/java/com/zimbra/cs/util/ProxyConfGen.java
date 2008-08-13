@@ -322,7 +322,7 @@ public class ProxyConfGen
         mVars.put("mail.imapid",                    "\"NAME\" \"nginx\" \"VERSION\" \"0\" \"RELEASE\" \"1\"");
         // mVars.put("mail.duser",                     "nginx");
         mVars.put("mail.dpasswd",                   "nginx123");
-        mVars.put("mail.defaultrealm",              "EXAMPLE.COM");
+        mVars.put("mail.defaultrealm",              "");
         mVars.put("mail.sasl_host_from_ip",         "off");
         mVars.put("mail.saslapp",                   "nginx");
         mVars.put("mail.ipmax",                     "0");
@@ -429,7 +429,7 @@ public class ProxyConfGen
         // mVars.put("mail.duser", "zmnginx");             /* FIXED VALUE */
         mVars.put("mail.dpasswd",LC.ldap_nginx_password.value());  /* localconfig */
 
-        mVars.put("mail.defaultrealm",mSource.getAttr("zimbraReverseProxyDefaultRealm","EXAMPLE.COM"));
+        mVars.put("mail.defaultrealm",mSource.getAttr("zimbraReverseProxyDefaultRealm",""));
 
         /* GSSAPI */
         mVars.put("mail.sasl_host_from_ip",LC.krb5_service_principal_from_interface_address.booleanValue() ? "on" : "off");
