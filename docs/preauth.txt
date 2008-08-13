@@ -416,5 +416,45 @@ You should never see this page.
 </body>
 </html>
 
+-----------------------------------------------------------------------------------------------
+PHP example for generating mail and admin preauth URLs
+
+<?php
+
+$preauthKey="ee0e096155314d474c8a8ba0c941e9382bb107cc035c7a24838b79271e32d7b0";
+$preauthURL="";
+
+//Get preauth URL
+if(!empty($_GET["admin"])) {
+	$preauthURL =  getUsersAdminPreauthURL($preauthKey, $_GET["user"]);
+} else {
+	$preauthURL =  getUsersMailPreauthURL($preauthKey, $_GET["user"]);
+}
+
+//Redirect to the preauth URL
+header("Location: $preauthURL");
+
+/**
+* create a preauth URL for admin console based on provided preauth key and account email address
+**/
+  function getUsersAdminPreauthURL($preauthKey,$email) {
+      $timestamp=time()*1000;
+      $preauth=hash_hmac("sha1",$email."|1|name|0|".$timestamp,$preauthKey);
+       
+      return "https://myzimbraserver.com:7071/service/preauth?account=".$email."&by=name&timestamp=".$timestamp."&expires=0&admin=1&preauth=".$preauth;
+
+  }
+
+
+/**
+* create a preauth URL for webmail based on provided preauth key and account email address
+**/
+  function getUsersMailPreauthURL($preauthKey,$email) {
+ 
+      $timestamp=time()*1000;
+      $preauth=hash_hmac("sha1",$email."|name|0|".$timestamp,$preauthKey);
+            
+      return "http://myzimbraserver.com/service/preauth?account=".$email."&by=name&timestamp=".$timestamp."&expires=0&preauth=".$preauth;
+  }
     
-    
+?>
