@@ -1728,6 +1728,7 @@ public class ZMailbox {
         // make the post
         PostMethod post = new PostMethod(uri.toString());
         client.getHttpConnectionManager().getParams().setConnectionTimeout(msTimeout);
+        client.getHttpConnectionManager().getParams().setSoTimeout(msTimeout);
         int statusCode;
         try {
             post.setRequestEntity( new MultipartRequestEntity(parts, post.getParams()) );
@@ -1757,6 +1758,7 @@ public class ZMailbox {
         // make the post
         PostMethod post = new PostMethod(uri.toString());
         client.getHttpConnectionManager().getParams().setConnectionTimeout(msTimeout);
+        client.getHttpConnectionManager().getParams().setSoTimeout(msTimeout);
         int statusCode;
         try {
             post.setRequestEntity(new InputStreamRequestEntity(in, -1l, contentType));
