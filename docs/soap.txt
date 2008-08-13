@@ -1106,10 +1106,13 @@ Folders:
     {rights}       = some combination of (r)ead, (w)rite, (i)nsert, (d)elete, (a)dminister, workflow action (x), view (p)rivate
     {grantee-type} = the type of grantee: "usr", "grp", "dom" (domain), "cos", 
                      "all" (all authenticated users), "pub" (public authenticated and unauthenticated access),
-                     "guest" (non-Zimbra email address and password)
+                     "guest" (non-Zimbra email address and password),
+                     "key" (non-Zimbra email address and access key)
     {grantee-name} = the display name (*not* the zimbra id) of the principal being granted rights;
                      optional if {grantee-type} is "all"
-    {args}         = optional argument.  password when {grantee-type} is "guest"
+    {args}         = optional argument.  
+                     password when {grantee-type} is "guest"
+                     access key when {grantee-type} is "key"
 
 Mountpoints:
 
