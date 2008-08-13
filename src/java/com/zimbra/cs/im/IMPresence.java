@@ -31,6 +31,8 @@ public class IMPresence {
     private byte mPriority;
     private String mStatus;
     
+    public static final IMPresence UNAVAILABLE = new IMPresence(Show.OFFLINE, (byte)0, "");
+    
     public String toString() {
         return mShow.toString() + " pri="+mPriority+" st="+mStatus; 
     }
@@ -89,6 +91,9 @@ public class IMPresence {
         }
         if (getStatus() != null && getStatus().length() > 0)
             xmppPresence.setStatus(getStatus());
+        
+        if (this.getPriority() != 0)
+            xmppPresence.setPriority(this.getPriority());
         
         return xmppPresence;
     }

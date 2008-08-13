@@ -42,7 +42,7 @@ public class IMSetPresence extends IMDocumentHandler {
         String statusStr = null;
         statusStr = e.getAttribute(IMConstants.A_STATUS, null);
 
-        IMPresence presence = new IMPresence(IMPresence.Show.valueOf(showStr.toUpperCase()), (byte)1, statusStr);
+        IMPresence presence = new IMPresence(IMPresence.Show.valueOf(showStr.toUpperCase()), (byte)0, statusStr);
 
         IMPersona persona = super.getRequestedPersona(zsc);
         synchronized (persona.getLock()) {

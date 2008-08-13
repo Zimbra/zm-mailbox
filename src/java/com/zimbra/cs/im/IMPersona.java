@@ -152,7 +152,7 @@ public class IMPersona extends ClassLogger {
     private String mDefaultPrivacyListName = null;
     private Map<IMAddr, IMSubscribedNotification> mRoster = new HashMap<IMAddr, IMSubscribedNotification>();
     private Map<IMAddr, IMSubscribeNotification> mPendingSubscribes = new HashMap<IMAddr, IMSubscribeNotification>();
-    private Map<IMAddr, IMPresence> mBufferedPresence = new HashMap<IMAddr, IMPresence>();
+    private Map<IMAddr, PresencePriorityMap> mBufferedPresence = new HashMap<IMAddr, PresencePriorityMap>();
     private IMAddr mAddr;
     private Map<String, IMChat> mChats = new HashMap<String, IMChat>();
     private int mCurChatId = 0;
@@ -173,7 +173,7 @@ public class IMPersona extends ClassLogger {
     // these TWO parameters make up my presence - the first one is the presence
     // I have saved in the DB, and the second is a flag if I am online or
     // offline
-    private IMPresence mMyPresence = new IMPresence(Show.ONLINE, (byte) 1, null);
+    private IMPresence mMyPresence = new IMPresence(Show.ONLINE, (byte)0, null);
     
     private boolean mIsOnline = false;
     private boolean mIsIdle = false;
@@ -624,7 +624,7 @@ public class IMPersona extends ClassLogger {
         synchronized(getLock()) {
             if (mIsOnline) {
                 if (mIsIdle) {
-                    return new IMPresence(Show.AWAY, (byte)1, null);
+                    return new IMPresence(Show.AWAY, (byte)0, null);
                 } else {
                     return mMyPresence;
                 }
@@ -689,8 +689,9 @@ public class IMPersona extends ClassLogger {
                 postIMNotification(rosterNot, s);
                 
                 // presence
-                for (Map.Entry<IMAddr, IMPresence> entry : mBufferedPresence.entrySet()) {
-                    IMPresenceUpdateNotification not= new IMPresenceUpdateNotification(entry.getKey(), entry.getValue());
+                for (Map.Entry<IMAddr, PresencePriorityMap> entry : mBufferedPresence.entrySet()) {
+                    IMPresenceUpdateNotification not =
+                        new IMPresenceUpdateNotification(entry.getKey(), entry.getValue().getEffectivePresence());
                     postIMNotification(not, s);
                 }
                 
@@ -966,9 +967,16 @@ public class IMPersona extends ClassLogger {
             if (ptype == null) {
                 IMAddr fromAddr = IMAddr.fromJID(pres.getFrom());
                 IMPresence newPresence = new IMPresence(pres);
-                mBufferedPresence.put(fromAddr, newPresence);
-                IMPresenceUpdateNotification event = new IMPresenceUpdateNotification(fromAddr, newPresence);
-                postIMNotification(event);
+                PresencePriorityMap map = mBufferedPresence.get(fromAddr);
+                if (map == null) {
+                    map = new PresencePriorityMap();
+                    mBufferedPresence.put(fromAddr, map);
+                }
+                map.addPresenceUpdate(pres.getFrom().getResource(), newPresence);
+                if (!fromAddr.equals(mAddr)) {
+                    IMPresenceUpdateNotification event = new IMPresenceUpdateNotification(fromAddr, map.getEffectivePresence());
+                    postIMNotification(event);
+                }
             } else {
                 IMAddr fromAddr;
                 Presence reply = null;
@@ -976,11 +984,27 @@ public class IMPersona extends ClassLogger {
                     case unavailable:
                         // push presence notification
                         fromAddr = IMAddr.fromJID(pres.getFrom());
-                        int prio = pres.getPriority();
-                        IMPresence newPresence = new IMPresence(Show.OFFLINE, (byte) prio, pres.getStatus());
-                        mBufferedPresence.put(fromAddr, newPresence);
-                        IMPresenceUpdateNotification event = new IMPresenceUpdateNotification(fromAddr, newPresence);
-                        postIMNotification(event);
+//                        int prio = pres.getPriority();
+//                        IMPresence newPresence = new IMPresence(Show.OFFLINE, (byte) prio, pres.getStatus());
+//                        mBufferedPresence.put(fromAddr, newPresence);
+                        PresencePriorityMap map = mBufferedPresence.get(fromAddr);
+                        if (map != null) {
+                            map.removePresence(pres.getFrom().getResource());
+                            if (map.isEmpty()) {
+                                mBufferedPresence.remove(fromAddr);
+                                map = null;
+                            }
+                        }
+                        
+                        if (!fromAddr.equals(mAddr)) {
+                            IMPresenceUpdateNotification event;
+                            if (map != null) {
+                                event = new IMPresenceUpdateNotification(fromAddr, map.getEffectivePresence());
+                            } else {
+                                event = new IMPresenceUpdateNotification(fromAddr, IMPresence.UNAVAILABLE);
+                            }
+                            postIMNotification(event);
+                        }
                     break;
                     case subscribe: {
                         fromAddr = IMAddr.fromJID(pres.getFrom()); 
@@ -1182,7 +1206,7 @@ public class IMPersona extends ClassLogger {
             mHaveInitialRoster = false;
             mRoster = new HashMap<IMAddr, IMSubscribedNotification>();
             mPendingSubscribes = new HashMap<IMAddr, IMSubscribeNotification>();
-            mBufferedPresence = new HashMap<IMAddr, IMPresence>();
+            mBufferedPresence = new HashMap<IMAddr, PresencePriorityMap>();
         }
     }
 
@@ -1435,7 +1459,12 @@ public class IMPersona extends ClassLogger {
             // TODO optimize out change-to-same eventually (leave for now, very
             // convienent as is)
             mMyPresence = presence;
-//            flush(octxt);
+            PresencePriorityMap map = mBufferedPresence.get(mAddr);
+            if (map == null) {
+                map = new PresencePriorityMap();
+                mBufferedPresence.put(mAddr, map);
+            }
+            map.addPresenceUpdate(getResource(), presence);
             pushMyPresence();
         }
     }
