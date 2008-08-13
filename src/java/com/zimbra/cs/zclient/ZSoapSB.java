@@ -90,8 +90,10 @@ public class ZSoapSB {
             return this;
         
         beginArray(name);
-        for (Object o : list) {
-            addArrayElement(o.toString(), encode);
+        if (list != null) {
+            for (Object o : list) {
+                addArrayElement(o.toString(), encode);
+            }
         }
         endArray();
         return this;
@@ -102,8 +104,10 @@ public class ZSoapSB {
             return this;
         
         beginArray(name);
-        for (String s : list) {
-            addArrayElement(s, encode);
+        if (list != null) {
+            for (String s : list) {
+                addArrayElement(s, encode);
+            }
         }
         endArray();
         return this;
@@ -165,8 +169,10 @@ public class ZSoapSB {
 
     public void add(String name, Map<String, List<String>> attrs) {
         beginStruct(name);
-        for (Map.Entry<String, List<String>> entry : attrs.entrySet()) {
-            add(entry.getKey(), entry.getValue(), true, true);
+        if (attrs != null) {
+            for (Map.Entry<String, List<String>> entry : attrs.entrySet()) {
+                add(entry.getKey(), entry.getValue(), true, true);
+            }
         }
         endStruct();
     }
