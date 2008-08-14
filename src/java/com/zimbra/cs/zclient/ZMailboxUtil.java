@@ -294,10 +294,10 @@ public class ZMailboxUtil implements DebugListener {
         TAG("help on tag-related commands");
 
         String mDesc;
-        String mCatagoryHelp;
+        String mCategoryHelp;
 
         public String getDescription() { return mDesc; }
-        public String getCatagoryHelp() { return mCatagoryHelp; }
+        public String getCategoryHelp() { return mCategoryHelp; }
 
         Category(String desc) {
             mDesc = desc;
@@ -305,7 +305,7 @@ public class ZMailboxUtil implements DebugListener {
 
         Category(String desc, String help) {
             mDesc = desc;
-            mCatagoryHelp = help;
+            mCategoryHelp = help;
         }
     }
 
@@ -2508,8 +2508,8 @@ public class ZMailboxUtil implements DebugListener {
                     stdout.println();
                 }
             }
-            if (cat.getCatagoryHelp() != null)
-            stdout.println(cat.getCatagoryHelp());
+            if (cat.getCategoryHelp() != null)
+            stdout.println(cat.getCategoryHelp());
         }
         stdout.println();
     }
