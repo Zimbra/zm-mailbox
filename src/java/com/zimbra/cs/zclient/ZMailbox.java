@@ -824,7 +824,7 @@ public class ZMailbox {
     public static String getParentPath(String path) throws ServiceException {
         if (path.equals(PATH_SEPARATOR)) return PATH_SEPARATOR;
         if (path.charAt(0) != PATH_SEPARATOR_CHAR)
-            throw ServiceException.INVALID_REQUEST("path must be absoliute: "+path, null);
+            throw ServiceException.INVALID_REQUEST("path must be absolute: "+path, null);
         if (path.charAt(path.length()-1) == PATH_SEPARATOR_CHAR)
             path = path.substring(0, path.length()-1);
         int index = path.lastIndexOf(PATH_SEPARATOR_CHAR);
@@ -843,7 +843,7 @@ public class ZMailbox {
     public static String getBasePath(String path) throws ServiceException {
         if (path.equals(PATH_SEPARATOR)) return PATH_SEPARATOR;
         if (path.charAt(0) != PATH_SEPARATOR_CHAR)
-            throw ServiceException.INVALID_REQUEST("path must be absoliute: "+path, null);
+            throw ServiceException.INVALID_REQUEST("path must be absolute: "+path, null);
         if (path.charAt(path.length()-1) == PATH_SEPARATOR_CHAR)
             path = path.substring(0, path.length()-1);
         int index = path.lastIndexOf(PATH_SEPARATOR_CHAR);
