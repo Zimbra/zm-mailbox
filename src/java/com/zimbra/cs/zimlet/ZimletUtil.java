@@ -1043,8 +1043,8 @@ public class ZimletUtil {
 		}
 	}
 	
-	public static void deployZimletBySoap(String zimletFile) throws ServiceException, IOException {
-        ZimletSoapUtil soapUtil = new ZimletSoapUtil();
+	public static void deployZimletBySoap(String zimletFile, String adminURL) throws ServiceException, IOException {
+        ZimletSoapUtil soapUtil = adminURL == null ? new ZimletSoapUtil() : new ZimletSoapUtil(adminURL);
         File zf = new File(zimletFile);
         soapUtil.deployZimlet(zf.getName(), ByteUtil.getContent(zf), null);	    
 	}
@@ -1074,17 +1074,25 @@ public class ZimletUtil {
 		private boolean mRunningInServer;
 		private Provisioning mProv;
 
-		public ZimletSoapUtil() throws ServiceException {
-			mUsername = LC.zimbra_ldap_user.value();
-			mPassword = LC.zimbra_ldap_password.value();
-			mAuth = null;
-			mRunningInServer = false;
-			SoapProvisioning sp = new SoapProvisioning();            
-			String server = LC.zimbra_zmprov_default_soap_server.value();
-			sp.soapSetURI(URLUtil.getAdminURL(server));
-			sp.soapAdminAuthenticate(mUsername, mPassword);
-			mProv = sp;
-		}
+        public ZimletSoapUtil() throws ServiceException {
+            String server = LC.zimbra_zmprov_default_soap_server.value();
+            initZimletSoapUtil(URLUtil.getAdminURL(server));
+        }
+        
+        public ZimletSoapUtil(String adminURL) throws ServiceException {
+            initZimletSoapUtil(adminURL);
+        }
+        
+        private void initZimletSoapUtil(String adminURL) throws ServiceException {
+            mUsername = LC.zimbra_ldap_user.value();
+            mPassword = LC.zimbra_ldap_password.value();
+            mAuth = null;
+            mRunningInServer = false;
+            SoapProvisioning sp = new SoapProvisioning();                        
+            sp.soapSetURI(adminURL);
+            sp.soapAdminAuthenticate(mUsername, mPassword);
+            mProv = sp;             
+        }
 		
 		public ZimletSoapUtil(ZAuthToken auth) {
 			mAuth = auth;
@@ -1442,7 +1450,7 @@ public class ZimletUtil {
 				if (localInstall) {
 					deployZimlet(new ZimletFile(zimlet));
 				} else {
-				    deployZimletBySoap(zimlet);				    
+				    deployZimletBySoap(zimlet, null);				    
 				}
 				break;
 			case INSTALL_ZIMLET:
