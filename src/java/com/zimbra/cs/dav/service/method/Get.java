@@ -25,6 +25,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
+import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.dav.service.DavMethod;
 
@@ -39,6 +40,8 @@ public class Get extends DavMethod {
 		String contentType = resource.getContentType(ctxt);
         if (contentType != null)
             resp.setContentType(contentType);
+		if (resource.hasEtag())
+			ctxt.getResponse().setHeader(DavProtocol.HEADER_ETAG, resource.getEtag());
 		
 		// in some cases getContentLength() returns an estimate, and the exact 
 		// content length is not known until DavResource.getContent() is called.
