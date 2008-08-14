@@ -1420,6 +1420,11 @@ public class ZimletUtil {
 			localInstall = true;
 			argPos++;
 		}
+		String adminURL = null;
+		if (args[argPos].equals("-a")) {
+			adminURL = args[++argPos];
+			argPos++;
+		}
         if (argPos >= args.length)
             usage();
 
@@ -1450,7 +1455,7 @@ public class ZimletUtil {
 				if (localInstall) {
 					deployZimlet(new ZimletFile(zimlet));
 				} else {
-				    deployZimletBySoap(zimlet, null);				    
+				    deployZimletBySoap(zimlet, adminURL);				    
 				}
 				break;
 			case INSTALL_ZIMLET:
