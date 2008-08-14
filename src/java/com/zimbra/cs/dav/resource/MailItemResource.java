@@ -156,7 +156,7 @@ public abstract class MailItemResource extends DavResource {
 			throw new DavException("cannot delete resource", HttpServletResponse.SC_FORBIDDEN, null);
 		try {
 			Mailbox mbox = getMailbox(ctxt);
-			mbox.delete(ctxt.getOperationContext(), mId, mType);
+			mbox.move(ctxt.getOperationContext(), mId, mType, Mailbox.ID_FOLDER_TRASH);
 		} catch (ServiceException se) {
 			throw new DavException("cannot delete item", HttpServletResponse.SC_FORBIDDEN, se);
 		}
