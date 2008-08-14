@@ -255,7 +255,7 @@ public class WikiFormatter extends Formatter {
             if (!(orig instanceof WikiItem))
                 throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "cannot overwrite existing object at that path");
 
-            item = mbox.addDocumentRevision(context.opContext, item.getId(), item.getType(), pd);
+            item = mbox.addDocumentRevision(context.opContext, orig.getId(), orig.getType(), pd);
         } catch (NoSuchItemException nsie) {
             item = mbox.createDocument(context.opContext, folder.getId(), pd, MailItem.TYPE_WIKI);
         } finally {
