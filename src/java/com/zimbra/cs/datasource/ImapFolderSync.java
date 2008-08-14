@@ -851,7 +851,7 @@ class ImapFolderSync {
                 }
             }
             return new ParsedMessage(body.getBytes(), time, indexAttachments);
-        } catch (MessagingException e) {
+        } catch (ServiceException e) {
             localFolder.error("Skipping fetched message with uid " +
                               md.getUid() + " due to parse error", e);
             return null;

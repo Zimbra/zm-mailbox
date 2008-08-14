@@ -28,6 +28,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 
 import javax.mail.internet.MimeMessage;
 
@@ -162,7 +163,6 @@ extends TestCase {
             assertEquals(expected.wasMutated, pm.wasMutated());
             
             pm.analyzeFully();
-            pm.closeFile();
         }
     }
     
@@ -186,13 +186,11 @@ extends TestCase {
         verifyMutatedMessage(pm, substring, true);
         
         // Test ParsedMessage created from File
-        mFile = File.createTempFile("TestParsedMessage", ".msg");
-        FileOutputStream out = new FileOutputStream(mFile);
-        out.write(content.getBytes());
-        out.close();
-        
+        mFile = createTempFile(content);
         pm = new ParsedMessage(mFile, null, false);
         verifyMutatedMessage(pm, substring, true);
+        
+        mFile = createTempFile(content);
         pm = new ParsedMessage(mFile, null, true);
         verifyMutatedMessage(pm, substring, true);
         
@@ -205,6 +203,15 @@ extends TestCase {
         mimeMsg = new MimeMessage(JMSession.getSession(), new ByteArrayInputStream(content.getBytes()));
         pm = new ParsedMessage(mimeMsg, true);
         verifyMutatedMessage(pm, substring, true);
+    }
+    
+    private File createTempFile(String content)
+    throws IOException {
+        File file = File.createTempFile("TestParsedMessage", ".msg");
+        FileOutputStream out = new FileOutputStream(file);
+        out.write(content.getBytes());
+        out.close();
+        return file;
     }
     
     private void verifyMutatedMessage(ParsedMessage pm, String substring, boolean wasMutated)

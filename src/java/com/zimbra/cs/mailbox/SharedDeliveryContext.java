@@ -37,10 +37,8 @@ import com.zimbra.cs.store.Blob;
 public class SharedDeliveryContext {
 
     private boolean mShared;
-    private Blob mBlob;
     private MailboxBlob mMailboxBlob;
     private List<Integer> mMailboxIdList;
-    private Blob mPreexistingBlob;
     private boolean mIsFirst = true;
 
     /**
@@ -48,7 +46,6 @@ public class SharedDeliveryContext {
      */
     public SharedDeliveryContext() {
     	mShared = false;
-        mBlob = null;
         mMailboxBlob = null;
         mMailboxIdList = null;
     }
@@ -60,7 +57,6 @@ public class SharedDeliveryContext {
      */
     public SharedDeliveryContext(boolean shared, List<Integer> mboxIdList) {
     	mShared = shared;
-        mBlob = null;
         mMailboxBlob = null;
         mMailboxIdList = mboxIdList;
     }
@@ -73,14 +69,6 @@ public class SharedDeliveryContext {
     	return mMailboxIdList;
     }
 
-    public Blob getBlob() {
-    	return mBlob;
-    }
-
-    public void setBlob(Blob blob) {
-    	mBlob = blob;
-    }
-    
     public MailboxBlob getMailboxBlob() {
     	return mMailboxBlob;
     }
@@ -89,20 +77,6 @@ public class SharedDeliveryContext {
     	mMailboxBlob = mailboxBlob;
     }
 
-    /**
-     * Sets the blob stored on disk before mailbox delivery
-     * is started.
-     * @param blob the blob or <tt>null</tt> if the blob needs to be stored
-     * in the incoming directory during delivery.
-     */
-    public void setPreexistingBlob(Blob blob) {
-        mPreexistingBlob = blob;
-    }
-    
-    public Blob getPreexistingBlob() {
-        return mPreexistingBlob;
-    }
-    
     /**
      * Tells the caller if this is the first mailbox being delivered to.
      */

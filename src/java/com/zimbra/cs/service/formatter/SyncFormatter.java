@@ -201,7 +201,7 @@ public class SyncFormatter extends Formatter {
             Mailbox mbox = folder.getMailbox();
             ParsedMessage pm = new ParsedMessage(body, mbox.attachmentsIndexingEnabled());
             mbox.addMessage(context.opContext, pm, folder.getId(), true, 0, null);
-        } catch (MessagingException e) {
+        } catch (ServiceException e) {
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "error parsing message");
         }
     }

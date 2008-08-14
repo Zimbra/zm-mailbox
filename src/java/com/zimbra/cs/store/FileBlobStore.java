@@ -22,7 +22,6 @@ package com.zimbra.cs.store;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -106,10 +105,10 @@ public class FileBlobStore extends StoreManager {
             throw ServiceException.FAILURE(
                 "Invalid blob digest \"" + digest + "\"", null);
 
-        return storeIncoming(new ByteArrayInputStream(data), data.length, path, volumeId);
+        return storeIncoming(new ByteArrayInputStream(data), data.length, path, volumeId, null);
     }
     
-    public Blob storeIncoming(InputStream in, int sizeHint, String path, short volumeId)
+    public Blob storeIncoming(InputStream in, int sizeHint, String path, short volumeId, StorageCallback callback)
     throws IOException, ServiceException {
         Volume volume = Volume.getById(volumeId);
 
@@ -133,33 +132,23 @@ public class FileBlobStore extends StoreManager {
         }
         DigestInputStream digestStream = new DigestInputStream(in, digest);
         FileOutputStream fos = new FileOutputStream(file);
-        ByteArrayOutputStream baos = null;
         OutputStream out = fos;
 
         boolean compress = volume.getCompressBlobs() && sizeHint > volume.getCompressionThreshold();
         
-        if (compress || (0 < sizeHint && sizeHint <= getDiskStreamingThreshold())) {
-            // Keep blob data into memory.  Data for compressed blobs
-            // must be in memory for random access.  See bug 25629 for details.
-            baos = new ByteArrayOutputStream(sizeHint);
-        }
-        
         if (compress) {
-            // Compress large blobs when writing to disk.  Keep data in memory, since
-            // MimeMessage can't reference a compressed blob.
             out = new GZIPOutputStream(fos);
             blob.setCompressed(true);
-            baos = new ByteArrayOutputStream(sizeHint);
         }
         
-        // Write to the file and byte array.
+        // Write to the file.
         byte[] buffer = new byte[BUFLEN];
         int numRead = -1;
         int totalRead = 0;
         while ((numRead = digestStream.read(buffer)) >= 0) {
             out.write(buffer, 0, numRead);
-            if (baos != null) {
-                baos.write(buffer, 0, numRead);
+            if (callback != null) {
+                callback.wrote(blob, buffer, numRead);
             }
             totalRead += numRead;
         }
@@ -172,11 +161,8 @@ public class FileBlobStore extends StoreManager {
             fos.close();
         }
         
-        // Set the blob's digest and data.
+        // Set the blob's digest and size.
         blob.setDigest(ByteUtil.encodeFSSafeBase64(digest.digest()));
-        if (baos != null) {
-            blob.setInMemoryData(baos.toByteArray());
-        }
         blob.setRawSize(totalRead);
 
         if (ZimbraLog.store.isDebugEnabled()) {
@@ -380,10 +366,8 @@ public class FileBlobStore extends StoreManager {
         if (blob == null)
             return null;
         InputStream is = new BufferedInputStream(new FileInputStream(blob.getFile()));
-        is.mark(2);
-        int header = is.read() | (is.read() << 8);
-        is.reset();
-        if (header == GZIPInputStream.GZIP_MAGIC) {
+        
+        if (ByteUtil.isGzipped(is)){
         	is = new GZIPInputStream(is);
         } else {
             if (blob.getFile().length() > getDiskStreamingThreshold()) {

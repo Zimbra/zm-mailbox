@@ -260,7 +260,7 @@ public class NativeFormatter extends Formatter {
                 ParsedMessage pm = new ParsedMessage(context.getPostBody(), mbox.attachmentsIndexingEnabled());
                 item = mbox.addMessage(context.opContext, pm, folder.getId(), true, 0, null);
                 return;
-            } catch (MessagingException e) {
+            } catch (ServiceException e) {
                 throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "error parsing message");
             }
         }

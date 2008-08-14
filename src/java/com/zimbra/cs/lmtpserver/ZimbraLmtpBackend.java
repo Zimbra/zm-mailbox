@@ -39,7 +39,6 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.IncomingBlob;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxBlob;
@@ -51,8 +50,7 @@ import com.zimbra.cs.mailbox.QuotaWarning;
 import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.store.Blob;
-import com.zimbra.cs.store.FileBlobStore;
-import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.store.BlobInputStream;
 import com.zimbra.cs.util.Zimbra;
 
 public class ZimbraLmtpBackend implements LmtpBackend {
@@ -233,10 +231,6 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 
         Map<LmtpAddress, RecipientDetail> rcptMap = new HashMap<LmtpAddress, RecipientDetail>(recipients.size());
 
-        int diskThreshold = FileBlobStore.getDiskStreamingThreshold();
-        IncomingBlob incoming = IncomingBlob.create(in, sizeHint, diskThreshold);
-        Blob blob = incoming.getBlob();
-        
         try {
             // Examine attachments indexing option for all recipients and
             // prepare ParsedMessage versions needed.  Parsing is done before
@@ -288,14 +282,24 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                     ParsedMessage pm;
                     if (attachmentsIndexingEnabled) {
                         if (pmAttachIndex == null) {
-                            ZimbraLog.lmtp.debug("Creating ParsedMessage with attachment indexing enabled.");
-                            pmAttachIndex = incoming.createParsedMessage(true);
+                            if (pmNoAttachIndex != null) {
+                                ZimbraLog.lmtp.debug("Creating ParsedMessage from existing ParsedMessage with attachment indexing enabled.");
+                                pmAttachIndex = new ParsedMessage(pmNoAttachIndex, null, true);
+                            } else {
+                                ZimbraLog.lmtp.debug("Creating ParsedMessage from stream with attachment indexing enabled.");
+                                pmAttachIndex = new ParsedMessage(in, sizeHint, null, true);
+                            }
                         }
                         pm = pmAttachIndex;
                     } else {
                         if (pmNoAttachIndex == null) {
-                            ZimbraLog.lmtp.debug("Creating ParsedMessage with attachment indexing disabled.");
-                            pmNoAttachIndex = incoming.createParsedMessage(false);
+                            if (pmAttachIndex != null) {
+                                ZimbraLog.lmtp.debug("Creating ParsedMessage from existing ParsedMessage with attachment indexing disabled.");
+                                pmNoAttachIndex = new ParsedMessage(pmAttachIndex, null, false);
+                            } else {
+                                ZimbraLog.lmtp.debug("Creating ParsedMessage from stream with attachment indexing disabled.");
+                                pmNoAttachIndex = new ParsedMessage(in, sizeHint, null, false);
+                            }
                         }
                         pm = pmNoAttachIndex;
                     }
@@ -325,22 +329,6 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 
             SharedDeliveryContext sharedDeliveryCtxt =
             	new SharedDeliveryContext(shared, targetMailboxIds);
-            if (blob != null) {
-                if ((pmAttachIndex != null && pmAttachIndex.wasMutated()) ||
-                    (pmNoAttachIndex != null && pmNoAttachIndex.wasMutated())) {
-                    ZimbraLog.lmtp.debug("Incoming message was mutated.  Deleting copy on disk.");
-                    // Message was mutated, so the blob on disk is now invalid.
-                    try {
-                        StoreManager.getInstance().delete(blob);
-                        blob = null;
-                    } catch (IOException e) {
-                        throw ServiceException.FAILURE("Unable to delete " + blob, e);
-                    }
-                } else {
-                    // Tell mailbox code that the blob is already in the incoming directory.
-                    sharedDeliveryCtxt.setPreexistingBlob(blob);
-                }
-            }
 
             // We now know which addresses are valid and which ParsedMessage
             // version each recipient needs.  Deliver!
@@ -452,9 +440,11 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                 MailboxBlob mboxBlob = sharedDeliveryCtxt.getMailboxBlob();
                 if (mboxBlob != null && mimeSource != null && mimeSource.isStreamedFromDisk()) {
                     try {
-                        // Update the MimeMessage with the blob that's stored inside the mailbox
-                        // and cache it.
-                        mimeSource.fileMoved(mboxBlob.getBlob().getFile());
+                        // Update the MimeMessage with the blob that's stored inside the mailbox,
+                        // since the incoming blob will be deleted.
+                        BlobInputStream bis = mimeSource.getBlobInputStream();
+                        Blob blob = mboxBlob.getBlob();
+                        bis.fileMoved(blob.getFile());
                         MessageCache.cacheStreamedMessage(blob.getDigest(), mimeSource.getMimeMessage());
                     } catch (IOException e) {
                         ZimbraLog.lmtp.warn("Unable to cache message for %s", mboxBlob.getBlob().getFile().getPath(), e);
@@ -462,28 +452,15 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                 }
             } finally {
                 try {
-                    // Close file descriptors
+                    // Clean up incoming blob.  Only one copy of disk, so we only need
+                    // to call one PM object's delete method. 
                     if (pmAttachIndex != null) {
-                        pmAttachIndex.closeFile();
-                    }
-                    if (pmNoAttachIndex != null) {
-                        pmNoAttachIndex.closeFile();
+                        pmAttachIndex.deleteIncomingBlob();
+                    } else if (pmNoAttachIndex != null) {
+                        pmNoAttachIndex.deleteIncomingBlob();
                     }
                 } catch (IOException e) {
                     ZimbraLog.lmtp.warn("Unable to close file descriptors after delivery.", e);
-                }
-
-                // Clean up blobs in incoming directory after delivery to all recipients.
-                if (shared) {
-                    Blob sharedBlob = sharedDeliveryCtxt.getBlob();
-                    if (sharedBlob != null) {
-                        try {
-                            ZimbraLog.lmtp.debug("Deleting shared blob at %s.", sharedBlob.getPath());
-                            StoreManager.getInstance().delete(sharedBlob);
-                        } catch (IOException e) {
-                            ZimbraLog.lmtp.warn("Unable to delete temporary incoming blob after delivery: " + sharedBlob.toString(), e);
-                        }
-                    }
                 }
             }
         } finally {

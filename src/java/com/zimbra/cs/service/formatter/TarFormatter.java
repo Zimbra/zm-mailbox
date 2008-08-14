@@ -58,7 +58,6 @@ import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.IncomingBlob;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
@@ -982,17 +981,10 @@ public class TarFormatter extends Formatter {
                     }
                 }
                 if (oldItem == null) {
-                    IncomingBlob ib = IncomingBlob.create(tis, (int)te.getSize(),
-                        2 * 1024 * 1024);
-                    
-                    try {
-                        newItem = mbox.addMessage(oc, ib.createParsedMessage(
-                            msg.getDate(), mbox.attachmentsIndexingEnabled()),
-                            fldr.getId(), true, msg.getFlagBitmask(),
-                            msg.getTagString());
-                    } finally {
-                        ib.delete();
-                    }
+                    pm = new ParsedMessage(tis, (int) te.getSize(), msg.getDate(), mbox.attachmentsIndexingEnabled());
+                    newItem = mbox.addMessage(oc, pm,
+                        fldr.getId(), true, msg.getFlagBitmask(),
+                        msg.getTagString());
                 }
                 break;
             case MailItem.TYPE_MOUNTPOINT:

@@ -22,16 +22,12 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
-import com.zimbra.cs.store.Blob;
-import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.store.Volume;
 
 /**
  * @author dkarp
@@ -83,9 +79,7 @@ public class SaveDraft extends CreateMessage {
         if (getData().hasDataInMemory()) {
             pm = new ParsedMessage(getData().getData(), getTimestamp(), mbox.attachmentsIndexingEnabled());
         } else {
-            Volume volume = Volume.getCurrentMessageVolume();
-            Blob blob = StoreManager.getInstance().storeIncoming(getData().getInputStream(), getData().getLength(), getPath(), volume.getId());
-            pm = new ParsedMessage(blob.getFile(), getTimestamp(), mbox.attachmentsIndexingEnabled());
+            pm = new ParsedMessage(getData().getInputStream(), getData().getLength(), getTimestamp(), mbox.attachmentsIndexingEnabled());
         }
 
         try {

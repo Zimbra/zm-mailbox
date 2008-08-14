@@ -26,9 +26,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -38,9 +35,7 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.RedoException;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
-import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.FileBlobStore;
-import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.Volume;
 
 /**
@@ -407,23 +402,19 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
                 throw new RedoException("Missing link source blob " + mPath +
                             " (digest=" + mDigest + ")",
                             this);
-            Blob src = new Blob(file, mLinkSrcVolumeId);
 
             // Manipulate the shared delivery context to make it look like we're calling addMessage
             // for 2nd or later of a shared delivery.  The purpose is to prevent addMessage from
             // saving the blob to incoming directory or write StoreIncomingBlob redo op.
             sharedDeliveryCtxt.setFirst(false);
-            sharedDeliveryCtxt.setBlob(src);
-
+            
             pm = new ParsedMessage(file, mReceivedDate, mbox.attachmentsIndexingEnabled());
         } else { // mMsgBodyType == MSGBODY_INLINE
-            // Just one recipient.  Store the blob, then add the message.
+            // Just one recipient.  Blob data is stored inline.
             if (mData.hasDataInMemory()) {
                 pm = new ParsedMessage(mData.getData(), mReceivedDate, mbox.attachmentsIndexingEnabled());
             } else {
-                Volume volume = Volume.getCurrentMessageVolume();
-                Blob blob = StoreManager.getInstance().storeIncoming(mData.getInputStream(), mData.getLength(), null, volume.getId());
-                pm = new ParsedMessage(blob.getFile(), mReceivedDate, mbox.attachmentsIndexingEnabled());
+                pm = new ParsedMessage(mData.getInputStream(), mData.getLength(), mReceivedDate, mbox.attachmentsIndexingEnabled());
             }
         }
 

@@ -23,13 +23,13 @@ package com.zimbra.cs.mime;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.Reader;
+import java.io.SequenceInputStream;
 import java.io.UnsupportedEncodingException;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
@@ -72,7 +72,11 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.object.ObjectHandlerException;
+import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.BlobInputStream;
+import com.zimbra.cs.store.FileBlobStore;
+import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.store.Volume;
 import com.zimbra.cs.util.JMSession;
 
 /**
@@ -94,7 +98,7 @@ public class ParsedMessage {
     private boolean mAnalyzedBodyParts = false;
     private boolean mAnalyzedNonBodyParts = false;
     private String mBodyContent = "";
-    private final boolean mIndexAttachments;
+    private boolean mIndexAttachments;
     private int mNumParseErrors = 0;
 
     /** if TRUE then there was a _temporary_ failure analyzing the message.  We should attempt
@@ -117,125 +121,255 @@ public class ParsedMessage {
     private List<Document> mLuceneDocuments = new ArrayList<Document>();
     private CalendarPartInfo mCalendarPartInfo;
 
-    private File mRawFile;
+    private Blob mIncomingBlob;
     private byte[] mRawData;
     private String mRawDigest;
-    private BlobInputStream mRawFileInputStream;
+    private BlobInputStream mBlobInputStream;
     private boolean mWasMutated;
     private Integer mRawSize;
 
-    public ParsedMessage(MimeMessage msg, boolean indexAttachments) {
+    public ParsedMessage(MimeMessage msg, boolean indexAttachments)
+    throws ServiceException {
         this(msg, getZimbraDateHeader(msg), indexAttachments);
     }
 
-    public ParsedMessage(MimeMessage msg, long receivedDate, boolean indexAttachments) {
-        mIndexAttachments = indexAttachments;
-        mMimeMessage = mExpandedMessage = msg;
-
-        if (MimeVisitor.anyMutatorsRegistered()) {
-            MimeMessage backup = null;
-            try {
-                backup = new Mime.FixedMimeMessage(msg);
-                runMimeMutators();
-            } catch (MessagingException e) {
-                ZimbraLog.extensions.warn("Error applying message mutator.  Reverting to original MIME message.", e);
-                if (backup != null)
-                    mMimeMessage = mExpandedMessage = backup;
-            }
+    public ParsedMessage(MimeMessage msg, long receivedDate, boolean indexAttachments)
+    throws ServiceException {
+        mMimeMessage = msg;
+        mExpandedMessage = msg;
+        try {
+            init(receivedDate, indexAttachments);
+        } catch (MessagingException e) {
+            throw ServiceException.FAILURE("Unable to initialize ParsedMessage", e);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Unable to initialize ParsedMessage", e);
         }
-        runMimeConverters();
-        // must set received-date before Lucene document is initialized
-        setReceivedDate(receivedDate);
     }
 
-    public ParsedMessage(byte[] rawData, boolean indexAttachments) throws MessagingException {
+    public ParsedMessage(byte[] rawData, boolean indexAttachments)
+    throws ServiceException {
         this(rawData, null, indexAttachments);
     }
 
-    public ParsedMessage(byte[] rawData, Long receivedDate, boolean indexAttachments) throws MessagingException {
-        if (rawData == null || rawData.length == 0)
-            throw new MessagingException("Message data cannot be null or empty.");
-
-        mIndexAttachments = indexAttachments;
-        InputStream is = new SharedByteArrayInputStream(rawData);
-        mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), is);
-
-        try {
-            runMimeMutators();
-            if (!wasMutated()) {
-                // Not mutated, so raw data is valid and storeable.
-                mRawData = rawData;
-            }
-        } catch (MessagingException e) {
-            // mutator threw an exception, so go back to the raw and use it verbatim
-            ZimbraLog.extensions.warn("Error applying message mutator.  Reverting to original MIME message.", e);
-            mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(rawData));
-            mRawData = rawData;
+    public ParsedMessage(byte[] rawData, Long receivedDate, boolean indexAttachments)
+    throws ServiceException {
+        if (rawData == null || rawData.length == 0) {
+            throw ServiceException.FAILURE("Message data cannot be null or empty.", null);
         }
-        runMimeConverters();
-        // must set received-date before Lucene document is initialized
-        if (receivedDate == null)
-            receivedDate = getZimbraDateHeader(mMimeMessage);
-        setReceivedDate(receivedDate);
+        mRawData = rawData;
+        try {
+            init(receivedDate, indexAttachments);
+        } catch (MessagingException e) {
+            throw ServiceException.FAILURE("Unable to initialize ParsedMessage", e);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Unable to initialize ParsedMessage", e);
+        }
     }
     
     /**
      * Creates a <tt>ParsedMessage</tt> from a file already stored on disk.
-     * @param file the file on disk.  Cannot be compressed.
+     * @param file the file on disk.
      */
     public ParsedMessage(File file, Long receivedDate, boolean indexAttachments)
-    throws MessagingException, IOException {
+    throws ServiceException, IOException {
         if (file == null) {
             throw new IOException("File cannot be null.");
         }
         if (file.length() == 0) {
             throw new IOException("File " + file.getPath() + " is empty.");
         }
-        mIndexAttachments = indexAttachments;
-        BlobInputStream in = new BlobInputStream(file);
-        mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), in);
         
+        // Initialize Blob object
+        Volume volume = Volume.getCurrentMessageVolume();
+        mIncomingBlob = new Blob(file, volume.getId());
         try {
-            // Maintain reference to the file only if the content was not mutated.
-            runMimeMutators();
-            if (wasMutated()) {
-                // Load data into memory.  This allows access to the message
-                // data after close() has been called.
-                ByteArrayOutputStream out = new ByteArrayOutputStream();
-                mMimeMessage.writeTo(out);
-                mRawData = out.toByteArray();
-                mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(
-                    JMSession.getSession(), new SharedByteArrayInputStream(mRawData));
-                in.close();
-            } else {
-                mRawFile = file;
-                mRawFileInputStream = in;
+            init(receivedDate, indexAttachments);
+        } catch (MessagingException e) {
+            throw ServiceException.FAILURE("Unable to initialize ParsedMessage", e);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Unable to initialize ParsedMessage", e);
+        }
+    }
+    
+    public ParsedMessage(InputStream in, int sizeHint, Long receivedDate, boolean indexAttachments)
+    throws ServiceException {
+        try {
+            if (in == null) {
+                throw new IOException("InputStream cannot be null");
             }
+            int threshold = FileBlobStore.getDiskStreamingThreshold();
+            if (threshold == Integer.MAX_VALUE) {
+                threshold--;
+            }
+            byte[] data = ByteUtil.readInput(in, sizeHint, threshold + 1);
+            if (data.length <= threshold) {
+                // Data size is under the disk streaming threshold.
+                ZimbraLog.lmtp.debug("Reading message of size %d into memory.", data.length);
+                mRawData = data;
+            } else {
+                // Data size exceeded threshold.  Stream to disk.
+                ZimbraLog.lmtp.debug("Message of size %d exceeded disk streaming threshold (%d).  Streaming from disk.",
+                    sizeHint, threshold);
+                InputStream firstChunk = new ByteArrayInputStream(data);
+                InputStream jointStream = new SequenceInputStream(firstChunk, in);
+                CompressedBlobReader reader = new CompressedBlobReader(sizeHint);
+                Volume volume = Volume.getCurrentMessageVolume();
+                mIncomingBlob = StoreManager.getInstance().storeIncoming(jointStream, sizeHint, null, volume.getId(), reader);
+                mRawData = reader.getData();  // Returns data only for compressed blobs, otherwise null.
+            }
+
+            init(receivedDate, indexAttachments);
+        } catch (MessagingException e) {
+            throw ServiceException.FAILURE("Unable to initialize ParsedMessage", e);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Unable to initialize ParsedMessage", e);
+        }
+    }
+
+    /**
+     * Creates a new <tt>ParsedMessage</tt> that references the same data (byte array
+     * or blob) as an existing <tt>ParsedMessage</tt>.
+     */
+    public ParsedMessage(ParsedMessage original, Long receivedDate, boolean indexAttachments)
+    throws ServiceException {
+        mRawData = original.mRawData;
+        mIncomingBlob = original.mIncomingBlob;
+        try {
+            init(receivedDate, indexAttachments);
+        } catch (MessagingException e) {
+            throw ServiceException.FAILURE("Unable to initialize ParsedMessage", e);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Unable to initialize ParsedMessage", e);
+        }
+    }
+
+    /**
+     * Runs MIME mutators and converters, initializes {@link #mMimeMessage}, {@link #mExpandedMessage},
+     * {@link #mFileInputStream} and {@link #mReceivedDate} based on message content.
+     */
+    private void init(Long receivedDate, boolean indexAttachments)
+    throws MessagingException, IOException {
+        mIndexAttachments = indexAttachments;
+        initMimeMessages();
+        
+        // Run mutators.
+        try {
+            runMimeMutators();
         } catch (Exception e) {
-            ZimbraLog.extensions.warn(
-                "Error applying message mutator.  Reverting to original MIME message.", e);
-            mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), in);
+            if (mRawData != null || mIncomingBlob != null) {
+                ZimbraLog.extensions.warn(
+                    "Error applying message mutator.  Reverting to original MIME message.", e);
+                mMimeMessage = null;
+                mExpandedMessage = null;
+                mWasMutated = false;
+                if (mBlobInputStream != null) {
+                    mBlobInputStream.close();
+                }
+                initMimeMessages();
+            } else {
+                // MimeMessage is now invalid, and we don't have the original data.
+                if (e instanceof MessagingException) {
+                    throw (MessagingException) e;
+                } else {
+                    throw new MessagingException("Cannot recover from MIME mutator failure", e);
+                }
+            }
         }
 
-        runMimeConverters();
+        if (wasMutated()) {
+            // Original data is now invalid.
+            if (mBlobInputStream != null) {
+                // File on disk is no longer valid, so drop the reference and delete it.
+                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                mMimeMessage.writeTo(buffer);
+                mRawData = buffer.toByteArray();
+                mMimeMessage = null;
+                mExpandedMessage = null;
+                deleteIncomingBlob();
+                initMimeMessages();
+            } else {
+                // Not streaming from disk, so just wipe out the byte array and blob.
+                mRawData = null;
+                deleteIncomingBlob();
+            }
+        }
         
+        runMimeConverters();
+
         // must set received-date before Lucene document is initialized
         if (receivedDate == null) {
             receivedDate = getZimbraDateHeader(mMimeMessage); 
         }
         setReceivedDate(receivedDate);
     }
+    
+    /**
+     * Initializes <tt>mMimeMessage</tt> and <tt>mExpandedMessage</tt>
+     * based on <tt>mRawData</tt> and <tt>mIncomingBlob</tt>.
+     */
+    private void initMimeMessages()
+    throws IOException, MessagingException {
+        // Initialize MimeMessage if necessary.
+        if (mMimeMessage == null) {
+            InputStream in = null;
+            if (mRawData != null) {
+                // Data is in memory.
+                in = new SharedByteArrayInputStream(mRawData);
+            } else if (mIncomingBlob != null) {
+                int threshold = FileBlobStore.getDiskStreamingThreshold();
+                if (mIncomingBlob.isCompressed() || mIncomingBlob.getRawSize() <= threshold) {
+                    // Compressed or small file.  Read into memory.
+                    int size = mIncomingBlob.getRawSize();
+                    mRawData = ByteUtil.getContent(StoreManager.getInstance().getContent(mIncomingBlob), size);
+                    in = new SharedByteArrayInputStream(mRawData);
+                } else {
+                    // Large uncompressed file.  Stream from disk.
+                    mBlobInputStream = new BlobInputStream(mIncomingBlob.getFile());
+                    in = mBlobInputStream;
+                }
+            } else {
+                throw new MessagingException("Message content is not available.");
+            }
 
-    public boolean wasMutated() {
-        return mWasMutated;
+            mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), in);
+        }
     }
     
     /**
-     * Returns <tt>true</tt> if this message is being streamed from
-     * disk and does not require MIME expansion.
+     * Stores the data for this <tt>ParsedMessage</tt> as a blob in the
+     * incoming directory.  Does nothing if the blob already exists.
      */
-    public boolean isStreamedFromDisk() {
-        return (mRawFile != null && (mMimeMessage == mExpandedMessage));
+    public Blob storeOrGetIncomingBlob()
+    throws ServiceException, IOException {
+        if (mIncomingBlob == null) {
+            int sizeHint = 0;
+            if (mRawData != null) {
+                sizeHint = mRawData.length;
+            }
+            Volume volume = Volume.getCurrentMessageVolume();
+            mIncomingBlob = StoreManager.getInstance().storeIncoming(getRawInputStream(), sizeHint, null, volume.getId(), null);
+        }
+        
+        return mIncomingBlob;
+    }
+    
+    public Blob getIncomingBlob() {
+        return mIncomingBlob;
+    }
+    
+    public void deleteIncomingBlob()
+    throws IOException {
+        if (mBlobInputStream != null) {
+            mBlobInputStream.close();
+        }
+        if (mIncomingBlob != null) {
+            StoreManager.getInstance().delete(mIncomingBlob);
+            mIncomingBlob = null;
+        }
+    }
+    
+    public boolean wasMutated() {
+        return mWasMutated;
     }
     
     /**
@@ -449,30 +583,6 @@ public class ParsedMessage {
      * Returns the <tt>MimeMessage</tt>.  Affected by both conversion and mutation.  
      */
     public MimeMessage getMimeMessage() {
-        if (mExpandedMessage != null) {
-            return mExpandedMessage;
-        }
-        // Reference to MimeMessage was dropped by close().
-        try {
-            InputStream in;
-            if (mRawData != null) {
-                // Constructed from a byte array, or constructed from a file and then mutated.
-                in = new SharedByteArrayInputStream(mRawData);
-            } else if (mRawFile != null) {
-                // Constructed from a file and not mutated.
-                in = new BlobInputStream(mRawFile);
-            } else {
-                assert(false);
-                ZimbraLog.mailbox.warn("Data not available for MimeMessage.  Returning null.");
-                return null;
-            }
-            mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), in);
-            runMimeConverters();
-        } catch (IOException e) {
-            ZimbraLog.mailbox.warn("Unable to create MimeMessage.", e);
-        } catch (MessagingException e) {
-            ZimbraLog.mailbox.warn("Unable to create MimeMessage.", e);
-        }
         return mExpandedMessage;
     }
 
@@ -482,7 +592,11 @@ public class ParsedMessage {
      */
     public int getRawSize() throws IOException, ServiceException {
         if (mRawSize == null) {
-            initializeDigestAndSize();
+            if (mRawData != null) {
+                mRawSize = mRawData.length;
+            } else {
+                initializeDigestAndSize();
+            }
         }
         return mRawSize;
     }
@@ -495,8 +609,8 @@ public class ParsedMessage {
         if (mRawData != null) {
             return mRawData;
         }
-        if (mRawFile != null) {
-            mRawData = ByteUtil.getContent(mRawFile);
+        if (mIncomingBlob != null) {
+            mRawData = ByteUtil.getContent(mIncomingBlob.getFile());
             return mRawData;
         }
         if (mMimeMessage != null) {
@@ -536,6 +650,9 @@ public class ParsedMessage {
         if (mRawData != null) {
             mRawDigest = ByteUtil.getSHA1Digest(mRawData, true);
             mRawSize = mRawData.length;
+        } else if (mIncomingBlob != null) {
+            mRawDigest = mIncomingBlob.getDigest();
+            mRawSize = mIncomingBlob.getRawSize();
         } else {
             int size = 0;
             InputStream in = null;
@@ -579,19 +696,11 @@ public class ParsedMessage {
             return new ByteArrayInputStream(mRawData);
         }
         try {
-            if (mRawFile != null) {
-                return new FileInputStream(mRawFile);
+            if (mIncomingBlob != null) {
+                return StoreManager.getInstance().getContent(mIncomingBlob);
             }
             if (mMimeMessage != null) {
-                // Nasty hack because JavaMail doesn't provide an InputStream accessor
-                // to the entire RFC 822 content of a MimeMessage.  Start a thread that
-                // serves up the content of the MimeMessage via PipedOutputStream.
-                PipedInputStream in = new PipedInputStream();
-                PipedOutputStream out = new PipedOutputStream(in);
-                Thread thread = new Thread(new MimeMessageOutputThread(mMimeMessage, out));
-                thread.setName("MimeMessageThread");
-                thread.start();
-                return in;
+                return getInputStream(mMimeMessage);
             }
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to get InputStream.", e);
@@ -602,17 +711,19 @@ public class ParsedMessage {
         return null;
     }
     
-    private byte[] getByteArray(MimeMessage mm)
-    throws IOException, MessagingException {
-        // Note: MimeMessage.getContentStream() will throw an exception if
-        // the MimeMessage was constructed programmatically, as opposed to from
-        // a blob.  We must therefore instantiate the blob in order to calculate the
-        // digest.
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        mMimeMessage.writeTo(out);
-        return out.toByteArray();
+    private InputStream getInputStream(MimeMessage msg)
+    throws IOException {
+        // Nasty hack because JavaMail doesn't provide an InputStream accessor
+        // to the entire RFC 822 content of a MimeMessage.  Start a thread that
+        // serves up the content of the MimeMessage via PipedOutputStream.
+        PipedInputStream in = new PipedInputStream();
+        PipedOutputStream out = new PipedOutputStream(in);
+        Thread thread = new Thread(new MimeMessageOutputThread(mMimeMessage, out));
+        thread.setName("MimeMessageThread");
+        thread.start();
+        return in;
     }
-
+    
     public boolean isAttachmentIndexingEnabled() {
         return mIndexAttachments;
     }
@@ -625,6 +736,14 @@ public class ParsedMessage {
     public boolean hasAttachments() {
         parse();
         return mHasAttachments;
+    }
+    
+    public BlobInputStream getBlobInputStream() {
+        return mBlobInputStream;
+    }
+    
+    public boolean isStreamedFromDisk() {
+        return (mBlobInputStream != null);
     }
 
     public int getPriorityBitmask() {
@@ -1357,31 +1476,5 @@ public class ParsedMessage {
             subject = subject.substring(0, DbMailItem.MAX_SUBJECT_LENGTH).trim();
 
         return subject;
-    }
-    
-    /**
-     * If this <tt>ParsedMessage</tt> references a file on disk, closes
-     * the file descriptor.
-     */
-    public void closeFile()
-    throws IOException {
-        if (mRawFileInputStream != null) {
-            mRawFileInputStream.closeFile();
-        }
-    }
-    
-    /**
-     * Tells this <tt>ParsedMessage</tt> to get its data from a new file.
-     * Only applies to <tt>ParsedMessage</tt>s that were instantiated from
-     * a file and not mutated.
-     */
-    public void fileMoved(File newFile)
-    throws IOException {
-        if (mRawFileInputStream != null) {
-            mRawFileInputStream.fileMoved(newFile);
-        }
-        if (mRawFile != null) {
-            mRawFile = newFile;
-        }
     }
 }

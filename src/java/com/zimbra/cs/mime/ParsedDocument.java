@@ -55,7 +55,7 @@ public class ParsedDocument {
     private boolean mTemporaryAnalysisFailure = false;
 
     private static Blob saveInputAsBlob(InputStream in) throws ServiceException, IOException {
-    	return StoreManager.getInstance().storeIncoming(in, 0, null, Volume.getCurrentMessageVolume().getId());
+    	return StoreManager.getInstance().storeIncoming(in, 0, null, Volume.getCurrentMessageVolume().getId(), null);
     }
     public ParsedDocument(InputStream in, String filename, String ctype, long createdDate, String creator)
     	throws ServiceException, IOException {

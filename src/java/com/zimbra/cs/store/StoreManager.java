@@ -61,7 +61,7 @@ public abstract class StoreManager {
      * @throws IOException
      * @throws ServiceException
      */
-    public abstract Blob storeIncoming(InputStream data, int sizeHint, String path, short volumeId)
+    public abstract Blob storeIncoming(InputStream data, int sizeHint, String path, short volumeId, StorageCallback callback)
     throws IOException, ServiceException;
 
     /**

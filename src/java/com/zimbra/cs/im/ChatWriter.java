@@ -39,6 +39,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -138,7 +139,7 @@ class ChatWriter {
     
     private static final String TAB_STR = "&nbsp;&nbsp;&nbsp;&nbsp;";
 
-    static ParsedMessage writeChat(IMChat chat) throws MessagingException {
+    static ParsedMessage writeChat(IMChat chat) throws MessagingException, ServiceException {
         MimeMessage mm = new MimeMessage(JMSession.getSession());
         MimeMultipart mmp = new MimeMultipart("alternative");
         mm.setContent(mmp);

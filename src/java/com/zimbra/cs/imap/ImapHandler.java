@@ -2144,8 +2144,6 @@ abstract class ImapHandler extends ProtocolHandler {
             return msg == null ? -1 : msg.getId();
         } catch (IOException e) {
             throw ServiceException.FAILURE(e.toString(), e);
-        } catch (MessagingException e) {
-            throw ServiceException.FAILURE(e.toString(), e);
         }
     }
 

@@ -31,7 +31,6 @@ import java.util.List;
 
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
-import com.zimbra.cs.store.BlobInputStream;
 import com.zimbra.cs.store.StoreManager;
 
 /**
@@ -87,7 +86,7 @@ public class StoreIncomingBlob extends RedoableOp {
         mVolumeId = volumeId;
     }
     
-    private void setBlobBodyInfo(InputStream dataStream, int dataLength, String path, short volumeId) {
+    public void setBlobBodyInfo(InputStream dataStream, int dataLength, String path, short volumeId) {
         mData = new RedoableOpData(dataStream, dataLength);
         mPath = path;
         mVolumeId = volumeId;
@@ -192,7 +191,7 @@ public class StoreIncomingBlob extends RedoableOp {
 
         boolean success = false;
         try {
-            StoreManager.getInstance().storeIncoming(mData.getInputStream(), mMsgSize, mPath, mVolumeId);
+            StoreManager.getInstance().storeIncoming(mData.getInputStream(), mMsgSize, mPath, mVolumeId, null);
             success = true;
         } finally {
             if (redoRecorder != null) {

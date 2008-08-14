@@ -1327,7 +1327,7 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         // write the content to the store
         StoreManager sm = StoreManager.getInstance();
-        Blob blob = sm.storeIncoming(dataStream, dataLength, null, volumeId);
+        Blob blob = sm.storeIncoming(dataStream, dataLength, null, volumeId, null);
         MailboxBlob mblob = sm.renameTo(blob, mMailbox, mId, getSavedSequence(), volumeId);
         mMailbox.markOtherItemDirty(mblob);
 

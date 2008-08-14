@@ -4719,8 +4719,6 @@ public class Mailbox {
         boolean isDraft = (flags & Flag.BITMASK_DRAFT) != 0;
 
         Message msg = null;
-        Blob blob = null;
-        MailboxBlob mboxBlob = null;
         boolean success = false;
         Folder folder = null;
         boolean deferIndexing = (getBatchedIndexingCount() > 0 || pm.hasTemporaryAnalysisFailure());
@@ -4851,110 +4849,59 @@ public class Mailbox {
             }
             redoRecorder.setConvId(conv != null && !(conv instanceof VirtualConversation) ? conv.getId() : -1);
 
-            // step 5: store the blob
-            // TODO: Add partition support.  Need to store as many times as there
-            //       are unique partitions in the set of recipient mailboxes.
-            StoreManager sm = StoreManager.getInstance();
-            if (sharedDeliveryCtxt.isFirst()) {
-                // This mailbox is the only recipient, or it is the first
-                // of multiple recipients.  Save message to incoming directory if
-                // it's not already there.
-                Blob preexisting = sharedDeliveryCtxt.getPreexistingBlob();
-                if (preexisting == null) {
-                    InputStream in = null;
-                    try {
-                        in = pm.getRawInputStream();
-                        if (!isRedo) {
-                            blob = sm.storeIncoming(in, msgSize, null, msg.getVolumeId());
-                        } else {
-                            // If message was delivered to a single recipient, ignore the path in the
-                            // redo item and store to a new incoming path.  (bug 22873)
-                            String path = sharedDeliveryCtxt.getShared() ? redoPlayer.getPath() : null;
-                            blob = sm.storeIncoming(in, msgSize, path, redoPlayer.getVolumeId());
-                        }
-                    } finally {
-                        ByteUtil.closeStream(in);
-                    }
-                } else {
-                    // Blob was already stored in incoming by the caller.
-                    sharedDeliveryCtxt.setBlob(preexisting);
-                    blob = preexisting;
+            // step 5: write the redolog entries
+            Blob blob = pm.storeOrGetIncomingBlob();
+            
+            if (sharedDeliveryCtxt.getShared()) {
+                if (sharedDeliveryCtxt.isFirst() && needRedo) {
+                    // Log entry in redolog for blob save.  Blob bytes are logged in StoreToIncoming entry.
+                    // Subsequent CreateMessage ops will reference this blob.  
+                    storeRedoRecorder = new StoreIncomingBlob(digest, msgSize, sharedDeliveryCtxt.getMailboxIdList());
+                    storeRedoRecorder.start(getOperationTimestampMillis());
+                    storeRedoRecorder.setBlobBodyInfo(pm.getRawInputStream(), pm.getRawSize(), blob.getPath(), blob.getVolumeId());
+                    storeRedoRecorder.log();
                 }
-                String blobPath = blob.getPath();
-                short blobVolumeId = blob.getVolumeId();
-
-                if (sharedDeliveryCtxt.getShared()) {
-                    markOtherItemDirty(blob);
-
-                    // Log entry in redolog for blob save.  Blob bytes are
-                    // logged in StoreToIncoming entry.
-                    if (needRedo) {
-                        storeRedoRecorder = new StoreIncomingBlob(digest, msgSize, sharedDeliveryCtxt.getMailboxIdList());
-                        storeRedoRecorder.start(getOperationTimestampMillis());
-                        if (blob.isCompressed() || pm.wasMutated()) {
-                            storeRedoRecorder.setBlobBodyInfo(getData(pm), blobPath, blobVolumeId);
-                        } else {
-                            storeRedoRecorder.setBlobBodyInfo(blob.getFile(), blobVolumeId);
-                        }
-                        storeRedoRecorder.log();
-                    }
-
-                    // Create a link in mailbox directory and leave the incoming
-                    // copy alone, so other recipients can link to it later.
-                    redoRecorder.setMessageLinkInfo(blobPath, blobVolumeId, msg.getVolumeId());
-                    mboxBlob = sm.link(blob, this, messageId, msg.getSavedSequence(), msg.getVolumeId());
-                } else {
-                    // If the only recipient, move the incoming copy into
-                    // mailbox directory.  This is more efficient than
-                    // creating a link in mailbox directory and deleting
-                    // incoming copy.
-                    pm.closeFile();
-                    mboxBlob = sm.renameTo(blob, this, messageId, msg.getSavedSequence(), msg.getVolumeId());
-                    pm.fileMoved(mboxBlob.getBlob().getFile());
-
-                    // In single-recipient case the blob bytes are logged in
-                    // CreateMessage entry, to avoid having to write two
-                    // redolog entries for a single delivery.
-                    if (blob.isCompressed() || pm.wasMutated()) {
-                        redoRecorder.setMessageBodyInfo(getData(pm), blobPath, blobVolumeId);
-                    } else {
-                        redoRecorder.setMessageBodyInfo(mboxBlob.getBlob().getFile(), blobVolumeId);
-                    }
-                }
+                // Link to the file created by StoreIncomingBlob.
+                redoRecorder.setMessageLinkInfo(blob.getPath(), blob.getVolumeId(), msg.getVolumeId());
             } else {
-                blob = sharedDeliveryCtxt.getBlob();
-                String srcPath;
-                Blob srcBlob;
-                MailboxBlob srcMboxBlob = sharedDeliveryCtxt.getMailboxBlob();
-                if (srcMboxBlob != null && srcMboxBlob.getMailbox().getId() == mId) {
-                    // With filter rules, a message can be copied to one or
-                    // more folders and optionally kept in Inbox, meaning
-                    // one delivery can result in multiple deliveries.  But
-                    // the first copy delivered will not know there are copies
-                    // coming, and if there was only one recipient for the
-                    // message, we will end up doing the rename case above.
-                    // Second and later copies cannot link to the blob file
-                    // in incoming directory because it was renamed out.
-                    // Instead they have to link to the MailboxBlob file of
-                    // the previous delivery.  (Bug 2283)
-                    srcPath = srcMboxBlob.getPath();
-                    srcBlob = srcMboxBlob.getBlob();
-                } else {
-                    // Second or later recipient in multi-recipient message.
-                    // Link to blob in incoming directory.
-                    srcPath = blob.getPath();
-                    srcBlob = blob;
-                }
-                redoRecorder.setMessageLinkInfo(srcPath, srcBlob.getVolumeId(), msg.getVolumeId());
-                mboxBlob = sm.link(srcBlob, this, messageId, msg.getSavedSequence(), msg.getVolumeId());
+                // Store the blob data inside the CreateMessage op.
+                redoRecorder.setMessageBodyInfo(blob.getFile(), blob.getVolumeId());
             }
+            
+            // Handle the case where a single user files into multiple folders (bug 2283).
+            // Since the blob gets cleaned up in the finally clause of this method, we now
+            // have to link to the mailbox blob.
+            if (blob == null) {
+                MailboxBlob sourceMboxBlob = sharedDeliveryCtxt.getMailboxBlob();
+                if (sourceMboxBlob == null) {
+                    throw ServiceException.FAILURE("Unable to link to mailbox blob.", null);
+                }
+                blob = sourceMboxBlob.getBlob();
+            }
+
+            // step 6: link to existing blob
+            StoreManager sm = StoreManager.getInstance();
+            MailboxBlob mboxBlob = sm.link(blob, this, messageId, msg.getSavedSequence(), msg.getVolumeId());
             markOtherItemDirty(mboxBlob);
+            
+            if (sharedDeliveryCtxt.getMailboxBlob() == null) {
+                // Set mailbox blob for in case we want to add the message to the
+                // message cache after delivery.
+                sharedDeliveryCtxt.setMailboxBlob(mboxBlob);
+            }
 
             // don't call pm.generateLuceneDocuments() if we're deferring indexing -- don't
             // want to force message analysis!
             queueForIndexing(msg, false, deferIndexing ? null : pm.getLuceneDocuments());
             assert(!deferIndexing || msg.isFlagSet(Flag.BITMASK_INDEXING_DEFERRED));
             success = true;
+
+            // step 7: send lawful intercept message
+            try {
+                Notification.getInstance().interceptIfNecessary(this, pm.getMimeMessage(), "add message", folder);
+            } catch (ServiceException e) {
+                ZimbraLog.mailbox.error("Unable to send legal intercept message.", e);
+            }
         } finally {
             if (storeRedoRecorder != null) {
                 if (success)  storeRedoRecorder.commit();
@@ -4967,34 +4914,23 @@ public class Mailbox {
                 // Everything worked.  Update the blob field in ParsedMessage
                 // so the next recipient in the multi-recipient case will link
                 // to this blob as opposed to saving its own copy.
-                sharedDeliveryCtxt.setBlob(blob);
-                sharedDeliveryCtxt.setMailboxBlob(mboxBlob);
                 sharedDeliveryCtxt.setFirst(false);
+                
+                if (!sharedDeliveryCtxt.getShared()) {
+                    // If this is the only recipient, clean up the incoming blob.  Kind of
+                    // a hack, but pretty much all of the Mailbox.addMessage() callsites
+                    // except LMTP don't do shared delivery and assume that this method
+                    // will clean up the incoming blob.
+                    pm.deleteIncomingBlob();
+                }
             }
         }
         
-        // step 6: remember the Message-ID header so that we can avoid receiving duplicates
+        // step 8: remember the Message-ID header so that we can avoid receiving duplicates
         if (isSent && checkDuplicates)
             mSentMessageIDs.put(msgidHeader, new Integer(msg.getId()));
 
-        // step 7: send lawful intercept message
-        try {
-            Notification.getInstance().interceptIfNecessary(this, pm.getMimeMessage(), "add message", folder);
-        } catch (ServiceException e) {
-            ZimbraLog.mailbox.error("Unable to send lawful intercept message.", e);
-        }
-        
         return msg;
-    }
-    
-    private byte[] getData(ParsedMessage pm) throws ServiceException {
-        try {
-            return pm.getRawData();
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("unable to get MIME data", e);
-        } catch (MessagingException e) {
-            throw ServiceException.FAILURE("unable to get MIME data", e);
-        }
     }
     
     public static String getHash(String subject) {

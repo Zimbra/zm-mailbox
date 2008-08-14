@@ -822,7 +822,7 @@ public class ImapImport extends MailItemImport {
     private static ParsedMessage getParsedMessage(ImapData id,
                                                   Long receivedDate,
                                                   boolean indexAttachments)
-            throws IOException, MessagingException {
+            throws IOException, ServiceException {
         if (id.isLiteral()) {
             Literal lit = (Literal) id;
             File f = lit.getFile();
