@@ -317,7 +317,18 @@ public class FileUploadServlet extends ZimbraServlet {
             throw new ServletException(e);
         }
         boolean isAdminRequest = (req.getLocalPort() == adminPort);
-        AuthToken at = isAdminRequest ? getAdminAuthTokenFromCookie(req, resp, true) : getAuthTokenFromCookie(req, resp, true);
+        AuthToken at = null;
+        if (isAdminRequest) {
+        	at = getAdminAuthTokenFromCookie(req, resp, true);
+        	if (at == null) {
+        		//it's possbile we are running in offline server where port=adminPort
+        		at = getAuthTokenFromCookie(req, resp, true);
+        		isAdminRequest = false;
+        	}
+        } else {
+        	at = getAuthTokenFromCookie(req, resp, true);
+        }
+
         if (at == null) {
             drainRequestStream(req);
             sendResponse(resp, HttpServletResponse.SC_UNAUTHORIZED, fmt, null, null, null);
