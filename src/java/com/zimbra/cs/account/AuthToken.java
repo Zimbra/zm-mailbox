@@ -20,7 +20,6 @@
  */
 package com.zimbra.cs.account;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.HttpClient;
@@ -76,6 +75,11 @@ public abstract class AuthToken {
     public boolean isDelegatedAuth() {
         return (getAdminAccountId() != null && !getAdminAccountId().equals(""));
     }
+    
+    public String getAccessKey() {
+        return null;
+    }
+
     
     /**
      * Encode original auth info into an outgoing http request.

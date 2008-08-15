@@ -41,11 +41,11 @@ import com.zimbra.common.util.ZimbraLog;
 public class ACL {
 
     /** The right to read a message, list a folder's contents, etc. */
-	public static final short RIGHT_READ    = 0x0001;
+    public static final short RIGHT_READ    = 0x0001;
     /** The right to edit an item, change its flags, etc.. */
-	public static final short RIGHT_WRITE   = 0x0002;
+    public static final short RIGHT_WRITE   = 0x0002;
     /** The right to add or move an item to a folder */
-	public static final short RIGHT_INSERT  = 0x0004;
+    public static final short RIGHT_INSERT  = 0x0004;
     /** The right to hard-delete an item. */
     public static final short RIGHT_DELETE  = 0x0008;
     /** The right to take a workflow action on an item (e.g. accept a meeting). */
@@ -100,7 +100,8 @@ public class ACL {
     }
     
     public static class GuestAccount extends Account {
-        private String mDigest;
+        private String mDigest;     // for guest grantee
+        private String mAccessKey;  // for key grantee
         public GuestAccount(String emailAddress, String password) {
             super(emailAddress, GUID_PUBLIC, getAnonAttrs(), null);
             mDigest = AuthToken.generateDigest(emailAddress, password);
@@ -108,12 +109,20 @@ public class ACL {
         public GuestAccount(AuthToken auth) {
             super(auth.getExternalUserEmail(), GUID_PUBLIC, getAnonAttrs(), null);
             mDigest = auth.getDigest();
+            mAccessKey = auth.getAccessKey();
         }
         public boolean matches(String emailAddress, String password) {
             if (getName().compareTo(emailAddress) != 0)
                 return false;
             String digest = AuthToken.generateDigest(emailAddress, password);
             return (mDigest.compareTo(digest) == 0);
+        }
+        public boolean matchesAccessKey(String emailAddress, String accesskey) {
+            if (getName().compareTo(emailAddress) != 0)
+                return false;
+            if (mAccessKey == null)
+                return false;
+            return (mAccessKey.compareTo(accesskey) == 0);
         }
         public String getDigest() {
             return mDigest;
@@ -130,7 +139,7 @@ public class ACL {
          *  <tt>{@link ACL#RIGHT_INSERT} | {@link ACL#RIGHT_READ}</tt>. */
         private short mRights;
         /** The password for guest accounts, or hex ascii string version of the accesskey for "key" grantees. */
-        private String mPassword;
+        private String mSecret;
 
         /** Creates a new Grant object granting access to a user or class
          *  of users.  <tt>zimbraId</tt> may be <tt>null</tt>
@@ -145,10 +154,10 @@ public class ACL {
             mType    = type;
             mRights  = (short) (rights & GRANTABLE_RIGHTS);
         }
-        Grant(String zimbraId, byte type, short rights, String password) {
+        Grant(String zimbraId, byte type, short rights, String secret) {
         	this(zimbraId, type, rights);
             if (mType == GRANTEE_GUEST || mType == GRANTEE_KEY)
-                mPassword = password;
+                mSecret = secret;
         }
 
         /** Creates a new Grant object from a decoded {@link Metadata} hash.
@@ -161,7 +170,7 @@ public class ACL {
             if (hasGrantee())
                 mGrantee = meta.get(FN_GRANTEE);
             if (mType == ACL.GRANTEE_GUEST || mType == ACL.GRANTEE_KEY)
-            	mPassword = meta.get(FN_PASSWORD);
+            	mSecret = meta.get(FN_PASSWORD);
         }
 
         /** Returns true if there is an explicit grantee. */
@@ -203,13 +212,13 @@ public class ACL {
         private boolean matchesGuestAccount(Account acct) {
         	if (!(acct instanceof GuestAccount))
         		return false;
-        	return ((GuestAccount) acct).matches(mGrantee, mPassword);
+        	return ((GuestAccount) acct).matches(mGrantee, mSecret);
         }
         
         private boolean matchesAccessKey(Account acct) {
             if (!(acct instanceof GuestAccount))
                 return false;
-            return false; // 30049 TODO
+            return ((GuestAccount) acct).matchesAccessKey(mGrantee, mSecret);
         }
         
         /** Utility function: Returns the zimbraId for a null-checked LDAP
@@ -247,14 +256,14 @@ public class ACL {
          *  access the resource. */
         void setPassword(String password) {
         	if ((mType == GRANTEE_GUEST || mType == GRANTEE_KEY) && password != null)
-                mPassword = password;
+                mSecret = password;
         }
         
         /**
          * Only for grants to external users
          */
         public String getPassword() {
-        	return mPassword;
+        	return mSecret;
         }
 
 
@@ -271,7 +280,7 @@ public class ACL {
             meta.put(FN_TYPE,     mType);
             // FIXME: use "rwidxsca" instead of numeric value
             meta.put(FN_RIGHTS,   mRights);
-            meta.put(FN_PASSWORD, mPassword);
+            meta.put(FN_PASSWORD, mSecret);
             return meta;
         }
     }
@@ -323,8 +332,10 @@ public class ACL {
      * 
      * @param zimbraId  The zimbraId of the entry being granted rights.
      * @param type      The type of object the grantee's ID refers to.
-     * @param rights    A bitmask of the rights being granted. */
-    public void grantAccess(String zimbraId, byte type, short rights, String password)
+     * @param rights    A bitmask of the rights being granted. 
+     * @param secret    password or accesskey
+     */
+    public void grantAccess(String zimbraId, byte type, short rights, String secret)
     throws ServiceException {
         if (type == GRANTEE_AUTHUSER)
             zimbraId = GUID_AUTHUSER;
@@ -334,19 +345,19 @@ public class ACL {
             throw ServiceException.INVALID_REQUEST("missing grantee id", null);
 
         // always generate a new key (if not provided) for updating or new key grants
-        if (type == GRANTEE_KEY && password == null)
-            password = generateAccessKey();
+        if (type == GRANTEE_KEY && secret == null)
+            secret = generateAccessKey();
             
         if (!mGrants.isEmpty()) {
             for (Grant grant : mGrants)
                 if (grant.isGrantee(zimbraId)) {
                     grant.setRights(rights);
                     if (type == GRANTEE_GUEST || type == GRANTEE_KEY)
-                        grant.setPassword(password);
+                        grant.setPassword(secret);
                     return;
                 }
         }
-        mGrants.add(new Grant(zimbraId, type, rights, password));
+        mGrants.add(new Grant(zimbraId, type, rights, secret));
     }
 
     /** Removes the set of rights granted to the specified id.  If no rights
