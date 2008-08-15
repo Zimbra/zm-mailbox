@@ -333,9 +333,17 @@ public class ZimbraServlet extends HttpServlet {
         ByteUtil.copy(method.getResponseBodyAsStream(), false, resp.getOutputStream(), false);
     }
 
-    protected boolean isAdminRequest(HttpServletRequest req) throws ServiceException {
+    protected boolean isAdminRequest(HttpServletRequest req) throws ServiceException, IOException {
         int adminPort = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, -1);
-        return (req.getLocalPort() == adminPort);
+        if (req.getLocalPort() == adminPort) {
+        	//can still be in offline server where port=adminPort
+        	int mailPort = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraMailPort, -1);
+        	if (mailPort == adminPort) //we are in offline, so check cookie
+        		return getAdminAuthTokenFromCookie(req, null, true) != null;
+        	else
+        		return true;
+        }
+        return false;
     }
 
     public Account cookieAuthRequest(HttpServletRequest req, HttpServletResponse resp, boolean doNotSendHttpError) 
