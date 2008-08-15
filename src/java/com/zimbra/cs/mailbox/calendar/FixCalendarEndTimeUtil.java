@@ -22,6 +22,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -43,6 +44,8 @@ public class FixCalendarEndTimeUtil extends SoapCLI {
         options.addOption(accountOpt);
         options.addOption(new Option(null, O_SYNC, false,
                 "run synchronously; default is asynchronous"));
+        options.addOption(SoapCLI.OPT_AUTHTOKEN);
+        options.addOption(SoapCLI.OPT_AUTHTOKENFILE);
     }
 
     protected String getCommandUsage() {
@@ -67,7 +70,7 @@ public class FixCalendarEndTimeUtil extends SoapCLI {
             CommandLine cl = util.getCommandLine(args);
             if (cl == null)
                 return;
-            util.doit(cl.getOptionValues(O_ACCOUNT), cl.hasOption(O_SYNC));
+            util.doit(getZAuthToken(cl), cl.getOptionValues(O_ACCOUNT), cl.hasOption(O_SYNC));
             System.exit(0);
         } catch (ParseException e) {
             util.usage(e);
@@ -78,7 +81,7 @@ public class FixCalendarEndTimeUtil extends SoapCLI {
         System.exit(1);
     }
 
-    private void doit(String[] accts, boolean sync)
+    private void doit(ZAuthToken zat, String[] accts, boolean sync)
     throws SoapFaultException, IOException, ServiceException {
         Element req = new Element.XMLElement(AdminConstants.FIX_CALENDAR_END_TIME_REQUEST);
         if (accts == null || accts.length == 0)
@@ -90,7 +93,7 @@ public class FixCalendarEndTimeUtil extends SoapCLI {
         if (sync)
             req.addAttribute(AdminConstants.A_TZFIXUP_SYNC, true);
 
-        auth();
+        auth(zat);
         getTransport().invokeWithoutSession(req);
     }
 }
