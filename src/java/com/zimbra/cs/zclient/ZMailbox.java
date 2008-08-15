@@ -1751,7 +1751,7 @@ public class ZMailbox {
         return aid;
     }
 
-    public String uploadContentAsStream(InputStream in, String contentType, int msTimeout) throws ServiceException {
+    public String uploadContentAsStream(InputStream in, String contentType, long contentLength, int msTimeout) throws ServiceException {
         String aid = null;
 
         URI uri = getUploadURI();
@@ -1765,7 +1765,7 @@ public class ZMailbox {
 
         int statusCode;
         try {
-            post.setRequestEntity(new InputStreamRequestEntity(in, -1l, contentType));
+            post.setRequestEntity(new InputStreamRequestEntity(in, contentLength, contentType));
             statusCode = client.executeMethod(post);
 
             // parse the response
