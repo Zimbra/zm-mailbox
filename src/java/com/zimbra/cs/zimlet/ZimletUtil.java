@@ -1043,10 +1043,15 @@ public class ZimletUtil {
 		}
 	}
 	
-	public static void deployZimletBySoap(String zimletFile, String adminURL) throws ServiceException, IOException {
-        ZimletSoapUtil soapUtil = adminURL == null ? new ZimletSoapUtil() : new ZimletSoapUtil(adminURL);
+	public static void deployZimletBySoap(String zimletFile, String adminURL, String uploadURL) throws ServiceException, IOException {
         File zf = new File(zimletFile);
-        soapUtil.deployZimlet(zf.getName(), ByteUtil.getContent(zf), null);	    
+        if (adminURL != null && uploadURL != null) {
+            ZimletSoapUtil soapUtil = new ZimletSoapUtil(adminURL, uploadURL);
+            soapUtil.deployZimletOnServer(zf.getName(), ByteUtil.getContent(zf));
+        } else {
+            ZimletSoapUtil soapUtil = new ZimletSoapUtil();
+            soapUtil.deployZimlet(zf.getName(), ByteUtil.getContent(zf), null);
+        }
 	}
 	
 	private static void test() {
@@ -1062,33 +1067,41 @@ public class ZimletUtil {
 		if (matcher.matches()) {
 			System.out.println( matcher.group(1) );
 		}
-
 	}
 	
 	private static class ZimletSoapUtil {
 		private String mUsername;
 		private String mPassword;
 		private String mAttachmentId;
+		private String mAdminURL;
+		private String mUploadURL;
 		private ZAuthToken mAuth;
 		private SoapHttpTransport mTransport;
 		private boolean mRunningInServer;
 		private Provisioning mProv;
 
         public ZimletSoapUtil() throws ServiceException {
-            String server = LC.zimbra_zmprov_default_soap_server.value();
-            initZimletSoapUtil(URLUtil.getAdminURL(server));
+            initZimletSoapUtil();
         }
         
-        public ZimletSoapUtil(String adminURL) throws ServiceException {
-            initZimletSoapUtil(adminURL);
+        public ZimletSoapUtil(String adminURL, String uploadURL) throws ServiceException {
+            mAdminURL = adminURL;
+            mUploadURL = uploadURL;
+            initZimletSoapUtil();
         }
         
-        private void initZimletSoapUtil(String adminURL) throws ServiceException {
+        private void initZimletSoapUtil() throws ServiceException {
             mUsername = LC.zimbra_ldap_user.value();
             mPassword = LC.zimbra_ldap_password.value();
             mAuth = null;
             mRunningInServer = false;
-            SoapProvisioning sp = new SoapProvisioning();                        
+            
+            String adminURL = mAdminURL;
+            if (adminURL == null) {
+                String server = LC.zimbra_zmprov_default_soap_server.value();
+                adminURL = URLUtil.getAdminURL(server);
+            }
+            SoapProvisioning sp = new SoapProvisioning();
             sp.soapSetURI(adminURL);
             sp.soapAdminAuthenticate(mUsername, mPassword);
             mProv = sp;             
@@ -1099,7 +1112,7 @@ public class ZimletUtil {
 			mRunningInServer = true;
 			mProv = Provisioning.getInstance();
 		}
-		
+				
 		public void deployZimlet(String zimlet, byte[] data, DeployListener listener) throws ServiceException {
 			List<Server> allServers = mProv.getAllServers();
 			for (Server server : allServers) {
@@ -1142,6 +1155,29 @@ public class ZimletUtil {
 					configureZimletOnServer(config, server);
 				}
 			}
+        }
+        
+        public void deployZimletOnServer(String zimlet, byte[] data) throws ServiceException {
+            mTransport = null;
+            try {
+                mTransport = new SoapHttpTransport(mAdminURL);
+                auth();
+                mTransport.setAuthToken(mAuth);                
+                URL url = new URL(mUploadURL);
+                mAttachmentId = postAttachment(mUploadURL, zimlet, data, url.getHost());
+                
+                soapDeployZimlet();
+                ZimbraLog.zimlet.info("Deploy initiated.  (check the servers mailbox.log for the status)");
+            } catch (Exception e) {
+                ZimbraLog.zimlet.info("deploy failed on " + mAdminURL, e);
+                if (e instanceof ServiceException)
+                    throw (ServiceException)e;
+                else 
+                    throw ServiceException.FAILURE("Unable to deploy Zimlet " + zimlet + " on " + mAdminURL, e);
+            } finally {
+                if (mTransport != null)
+                    mTransport.shutdown();
+            }                        
         }
         
 		public void deployZimletOnServer(String zimlet, byte[] data, Server server, DeployListener listener) throws ServiceException {
@@ -1389,7 +1425,7 @@ public class ZimletUtil {
 	}
 	
 	private static void usage() {
-		System.out.println("zmzimletctl: [-l] [command] [ zimlet.zip | config.xml | zimlet ]");
+		System.out.println("zmzimletctl: [-l] [-a <admin url> -u <upload url>] [command] [ zimlet.zip | config.xml | zimlet ]");
 		System.out.println("\tdeploy {zimlet.zip} - install, ldapDeploy, grant ACL on default COS, then enable Zimlet");
 		System.out.println("\tundeploy {zimlet} - remove the Zimlet from the system");
 		System.out.println("\tinstall {zimlet.zip} - installs the Zimlet files on this host");
@@ -1421,10 +1457,15 @@ public class ZimletUtil {
 			argPos++;
 		}
 		String adminURL = null;
+		String uploadURL = null;
 		if (args[argPos].equals("-a")) {
 			adminURL = args[++argPos];
 			argPos++;
 		}
+        if (args[argPos].equals("-u")) {
+            uploadURL = args[++argPos];
+            argPos++;
+        }		
         if (argPos >= args.length)
             usage();
 
@@ -1455,7 +1496,7 @@ public class ZimletUtil {
 				if (localInstall) {
 					deployZimlet(new ZimletFile(zimlet));
 				} else {
-				    deployZimletBySoap(zimlet, adminURL);				    
+				    deployZimletBySoap(zimlet, adminURL, uploadURL);				    
 				}
 				break;
 			case INSTALL_ZIMLET:
