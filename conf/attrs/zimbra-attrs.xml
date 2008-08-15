@@ -543,7 +543,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="107" name="zimbraContactMaxNumEntries" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
-  <defaultCOSValue>0</defaultCOSValue>
+  <defaultCOSValue>10000</defaultCOSValue>
   <desc>maximum number of contacts allowed in mailbox</desc>
 </attr>
 

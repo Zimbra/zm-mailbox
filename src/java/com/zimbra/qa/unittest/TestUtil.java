@@ -61,6 +61,7 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.zclient.ZContact;
 import com.zimbra.cs.zclient.ZDataSource;
 import com.zimbra.cs.zclient.ZEmailAddress;
 import com.zimbra.cs.zclient.ZFolder;
@@ -73,6 +74,7 @@ import com.zimbra.cs.zclient.ZSearchHit;
 import com.zimbra.cs.zclient.ZSearchParams;
 import com.zimbra.cs.zclient.ZTag;
 import com.zimbra.cs.zclient.ZGrant.GranteeType;
+import com.zimbra.cs.zclient.ZMailbox.ContactSortBy;
 import com.zimbra.cs.zclient.ZMailbox.OwnerBy;
 import com.zimbra.cs.zclient.ZMailbox.SharedItemBy;
 import com.zimbra.cs.zclient.ZMailbox.ZActionResult;
@@ -419,6 +421,14 @@ extends Assert {
                 mbox.deleteFolder(folder.getId());
             }
         }
+        
+        // Delete contacts
+        for (ZContact contact : mbox.getAllContacts(null, ContactSortBy.nameAsc, false, null)) {
+            String fullName = contact.getAttrs().get("fullName");
+            if (fullName != null && fullName.contains(subjectSubstring)) {
+                mbox.deleteContact(contact.getId());
+            }
+        }
     }
 
     private static void deleteMessages(ZMailbox mbox, String query)
@@ -565,6 +575,13 @@ extends Assert {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(attrName, attrValue);
         prov.modifyAttrs(server, attrs);
+    }
+    
+    public static String getAccountAttr(String userName, String attrName)
+    throws ServiceException {
+        String accountName = getAddress(userName);
+        Account account = Provisioning.getInstance().getAccount(accountName);
+        return account.getAttr(attrName);
     }
     
     public static void setAccountAttr(String userName, String attrName, String attrValue)
