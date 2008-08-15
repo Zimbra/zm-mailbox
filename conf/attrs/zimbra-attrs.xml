@@ -3408,4 +3408,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>enable end-user mail forwarding defined in mail filters features</desc>
 </attr>
 
+<attr id="705" name="zimbraPrefIMBuddyListSort" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <desc>IM buddy list sort order</desc>
+</attr>
+
 </attrs>
