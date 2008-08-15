@@ -309,26 +309,15 @@ public class FileUploadServlet extends ZimbraServlet {
 	    ZimbraLog.addUserAgentToContext(req.getHeader("User-Agent"));
 
         // file upload requires authentication
-        int adminPort = -1;
-        try {
-            adminPort = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, -1);
-        } catch (ServiceException e) {
+	    boolean isAdminRequest = false;
+	    try {
+	    	isAdminRequest = isAdminRequest(req);
+	    } catch (ServiceException e) {
             drainRequestStream(req);
             throw new ServletException(e);
-        }
-        boolean isAdminRequest = (req.getLocalPort() == adminPort);
-        AuthToken at = null;
-        if (isAdminRequest) {
-        	at = getAdminAuthTokenFromCookie(req, resp, true);
-        	if (at == null) {
-        		//it's possbile we are running in offline server where port=adminPort
-        		at = getAuthTokenFromCookie(req, resp, true);
-        		isAdminRequest = false;
-        	}
-        } else {
-        	at = getAuthTokenFromCookie(req, resp, true);
-        }
-
+	    }
+	    
+        AuthToken at = isAdminRequest ? getAdminAuthTokenFromCookie(req, resp, false) : getAuthTokenFromCookie(req, resp, false);
         if (at == null) {
             drainRequestStream(req);
             sendResponse(resp, HttpServletResponse.SC_UNAUTHORIZED, fmt, null, null, null);
