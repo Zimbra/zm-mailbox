@@ -346,10 +346,10 @@ public class ZimbraServlet extends HttpServlet {
         return false;
     }
 
-    public Account cookieAuthRequest(HttpServletRequest req, HttpServletResponse resp, boolean doNotSendHttpError) 
+    public AuthToken cookieAuthRequest(HttpServletRequest req, HttpServletResponse resp) 
     throws IOException, ServiceException {
         AuthToken at = isAdminRequest(req) ? getAdminAuthTokenFromCookie(req, resp, true) : getAuthTokenFromCookie(req, resp, true);
-        return at == null ? null : Provisioning.getInstance().get(AccountBy.id, at.getAccountId(), at); 
+        return at;
     }
 
     public Account basicAuthRequest(HttpServletRequest req, HttpServletResponse resp, boolean sendChallenge)

@@ -248,13 +248,15 @@ public class UserServlet extends ZimbraServlet {
         try {
             boolean isAdminRequest = isAdminRequest(context.req);
             // check cookie first
-            if (context.cookieAuthAllowed()) {
-                context.authAccount = cookieAuthRequest(context.req, context.resp, true);
-                if (context.authAccount != null) {
-                    context.cookieAuthHappened = true;
-                    AuthToken at = isAdminRequest ? getAdminAuthTokenFromCookie(context.req, context.resp, true) : getAuthTokenFromCookie(context.req, context.resp, true);
-                    context.authToken = at;
-                    return;
+            if (context.cookieAuthAllowed() || AuthProvider.allowAccessKeyAuth(context.req, this)) {
+                AuthToken at = cookieAuthRequest(context.req, context.resp);
+                if (at != null) {
+                    context.authAccount = Provisioning.getInstance().get(AccountBy.id, at.getAccountId(), at);
+                    if (context.authAccount != null) {
+                        context.cookieAuthHappened = true;
+                        context.authToken = at;
+                        return;
+                    }
                 }
             }
 
@@ -288,7 +290,6 @@ public class UserServlet extends ZimbraServlet {
                 context.authAccount = basicAuthRequest(context.req, context.resp, false);
                 if (context.authAccount != null) {
                     context.basicAuthHappened = true;
-                    
                     context.authToken = AuthProvider.getAuthToken(context.authAccount, isAdminRequest);  
                     
                     // send cookie back if need be. 
