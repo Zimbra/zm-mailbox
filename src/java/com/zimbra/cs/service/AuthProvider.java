@@ -231,6 +231,15 @@ public abstract class AuthProvider {
     protected boolean allowHttpBasicAuth(HttpServletRequest req, ZimbraServlet servlet) {
         return true;
     }
+    
+    /**
+     * 
+     * @param req
+     * @return whether accesskey authentication is allowed
+     */
+    protected boolean allowURLAccessKeyAuth(HttpServletRequest req, ZimbraServlet servlet) {
+        return false;
+    }
 
     /**
      * The static getAuthToken methods go through all the providers, trying them in order until one returns an AuthToken
@@ -454,9 +463,16 @@ public abstract class AuthProvider {
         for (AuthProvider ap : providers) {
             if (ap.allowHttpBasicAuth(req, servlet))
                 return true;
-
         }
-        
+        return false;
+    }
+    
+    public static boolean allowAccessKeyAuth(HttpServletRequest req, ZimbraServlet servlet) {
+        List<AuthProvider> providers = getProviders();
+        for (AuthProvider ap : providers) {
+            if (ap.allowURLAccessKeyAuth(req, servlet))
+                return true;
+        }
         return false;
     }
     
