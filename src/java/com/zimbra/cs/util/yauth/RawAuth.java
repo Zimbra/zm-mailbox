@@ -57,12 +57,6 @@ public class RawAuth implements Auth {
     // time before cookie is considered expired.
     private static final long EXPIRATION_LIMIT = 60 * 60 * 1000;
     
-    private static String baseUri = BASE_URI;
-
-    public static void setBaseUri(String uri) {
-        baseUri = uri;
-    }
-    
     public static String getToken(String appId, String user, String pass)
             throws AuthenticationException, IOException {
         Response res = doGet(GET_AUTH_TOKEN,
@@ -116,7 +110,7 @@ public class RawAuth implements Auth {
 
     private static Response doGet(String action, NameValuePair... params)
             throws AuthenticationException, IOException {
-        String uri = baseUri + '/' + action;
+        String uri = BASE_URI + '/' + action;
         GetMethod get = new GetMethod(uri);
         get.setQueryString(params);
         // XXX Should we share a single HttpClient() instance?
@@ -188,5 +182,10 @@ public class RawAuth implements Auth {
     private static IOException badResponse(String action, String msg) {
         return new IOException(
             "Unexpected '" + action + "' response: " + msg);
+    }
+
+    public String toString() {
+        return String.format("{appid=%s,cookie=%s,wssId=%s,expiration=%d}",
+                             appId, cookie, wssId, expiration);
     }
 }
