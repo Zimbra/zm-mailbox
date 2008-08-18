@@ -3412,4 +3412,14 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>IM buddy list sort order</desc>
 </attr>
 
+<attr id="706" name="zimbraPrefIMHideOfflineBuddies" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>whether to hide IM offline buddies</desc>
+</attr>
+
+<attr id="707" name="zimbraPrefIMHideBlockedBuddies" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>whether to hide IM blocked buddies</desc>
+</attr>
+
 </attrs>
