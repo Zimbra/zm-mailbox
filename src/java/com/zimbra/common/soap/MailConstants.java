@@ -243,6 +243,7 @@ public class MailConstants {
     public static final String A_RIGHTS = "perm";
     public static final String A_GRANT_TYPE = "gt";
     public static final String A_PASSWORD = "pw";
+    public static final String A_ACCESSKEY = "key";
     
     // account ACLs
     public static final String E_ACE = "ace";
