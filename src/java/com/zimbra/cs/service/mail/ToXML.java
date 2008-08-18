@@ -147,11 +147,19 @@ public class ToXML {
         return elem;
     }
 
+    public static Element encodeFolder(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Folder folder, boolean exposeAclAccessKey) {
+        return encodeFolder(parent, ifmt, octxt, folder, NOTIFY_FIELDS, exposeAclAccessKey);
+    }
+    
     public static Element encodeFolder(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Folder folder) {
         return encodeFolder(parent, ifmt, octxt, folder, NOTIFY_FIELDS);
     }
-
+    
     public static Element encodeFolder(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Folder folder, int fields) {
+        return encodeFolder(parent, ifmt, octxt, folder, fields, false);
+    }
+
+    public static Element encodeFolder(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Folder folder, int fields, boolean exposeAclAccessKey) {
         if (folder instanceof SearchFolder)
             return encodeSearchFolder(parent, ifmt, (SearchFolder) folder, fields);
         else if (folder instanceof Mountpoint)
@@ -184,7 +192,7 @@ public class ToXML {
             // return full ACLs for folders we have admin rights on
             if (needToOutput(fields, Change.MODIFIED_ACL)) {
                 if (fields != NOTIFY_FIELDS || folder.isTagged(mbox.mNoInheritFlag))
-                    encodeACL(elem, folder.getEffectiveACL());
+                    encodeACL(elem, folder.getEffectiveACL(), exposeAclAccessKey);
             }
         }
         return elem;
@@ -214,19 +222,24 @@ public class ToXML {
     }
 
     // encode mailbox ACL
-    public static Element encodeACL(Element parent, ACL acl) {
+    public static Element encodeACL(Element parent, ACL acl, boolean exposeAclAccessKey) {
         Element eACL = parent.addUniqueElement(MailConstants.E_ACL);
         if (acl == null)
             return eACL;
 
         for (ACL.Grant grant : acl.getGrants()) {
             NamedEntry nentry = FolderAction.lookupGranteeByZimbraId(grant.getGranteeId(), grant.getGranteeType());
-            eACL.addElement(MailConstants.E_GRANT)
-                .addAttribute(MailConstants.A_ZIMBRA_ID, grant.getGranteeId())
-                .addAttribute(MailConstants.A_GRANT_TYPE, FolderAction.typeToString(grant.getGranteeType()))
-                .addAttribute(MailConstants.A_RIGHTS, ACL.rightsToString(grant.getGrantedRights()))
-                .addAttribute(MailConstants.A_DISPLAY, nentry == null ? null : nentry.getName())
-                .addAttribute(MailConstants.A_PASSWORD, grant.getPassword());
+            Element eGrant = eACL.addElement(MailConstants.E_GRANT);
+            eGrant.addAttribute(MailConstants.A_ZIMBRA_ID, grant.getGranteeId())
+                  .addAttribute(MailConstants.A_GRANT_TYPE, FolderAction.typeToString(grant.getGranteeType()))
+                  .addAttribute(MailConstants.A_RIGHTS, ACL.rightsToString(grant.getGrantedRights()))
+                  .addAttribute(MailConstants.A_DISPLAY, nentry == null ? null : nentry.getName());
+            
+            if (grant.getGranteeType() == ACL.GRANTEE_KEY) {
+                if (exposeAclAccessKey)
+                    eGrant.addAttribute(MailConstants.A_ACCESSKEY, grant.getPassword());
+            } else
+                eGrant.addAttribute(MailConstants.A_PASSWORD, grant.getPassword());
         }
         return eACL;
     }

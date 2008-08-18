@@ -153,7 +153,7 @@ public class FolderAction extends ItemAction {
             short rights = ACL.stringToRights(grant.getAttribute(MailConstants.A_RIGHTS));
             byte gtype   = stringToType(grant.getAttribute(MailConstants.A_GRANT_TYPE));
             String zid   = grant.getAttribute(MailConstants.A_ZIMBRA_ID, null);
-            String args = null;
+            String secret = null;
             NamedEntry nentry = null;
             if (gtype == ACL.GRANTEE_AUTHUSER) {
                 zid = ACL.GUID_AUTHUSER;
@@ -170,7 +170,7 @@ public class FolderAction extends ItemAction {
                     gtype = nentry instanceof DistributionList ? ACL.GRANTEE_GROUP : ACL.GRANTEE_USER;
                 } catch (ServiceException e) {
                     // this is the normal path, where lookupGranteeByName throws account.NO_SUCH_USER
-                    args = grant.getAttribute(MailConstants.A_ARGS);
+                    secret = grant.getAttribute(MailConstants.A_ARGS);
                 }
             } else if (gtype == ACL.GRANTEE_KEY) {
                 zid = grant.getAttribute(MailConstants.A_DISPLAY);
@@ -179,7 +179,7 @@ public class FolderAction extends ItemAction {
                 // unlike guest, we do not fixup grantee type for key grantees if they specify an internal user
                 
                 // get the optional accesskey
-                args = grant.getAttribute(MailConstants.A_ARGS, null);
+                secret = grant.getAttribute(MailConstants.A_ACCESSKEY, null);
                 
             } else if (zid != null) {
             	nentry = lookupGranteeByZimbraId(zid, gtype);
@@ -191,7 +191,7 @@ public class FolderAction extends ItemAction {
             		gtype = ACL.GRANTEE_GROUP;
             }
             
-            mbox.grantAccess(octxt, iid.getId(), zid, gtype, rights, args);
+            mbox.grantAccess(octxt, iid.getId(), zid, gtype, rights, secret);
             // kinda hacky -- return the zimbra id and name of the grantee in the response
             result.addAttribute(MailConstants.A_ZIMBRA_ID, zid);
             if (nentry != null)

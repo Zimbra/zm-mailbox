@@ -73,23 +73,27 @@ public class GetFolder extends MailDocumentHandler {
 
 		Element response = zsc.createElement(MailConstants.GET_FOLDER_RESPONSE);
         if (rootnode != null) {
-    		Element folderRoot = encodeFolderNode(ifmt, octxt, response, rootnode);
+    		Element folderRoot = encodeFolderNode(ifmt, octxt, response, rootnode, true);
     		if (rootnode.mFolder != null && rootnode.mFolder instanceof Mountpoint)
     			handleMountpoint(request, context, iid, (Mountpoint) rootnode.mFolder, folderRoot);			
         }
 
 		return response;
 	}
-
+	
 	public static Element encodeFolderNode(ItemIdFormatter ifmt, OperationContext octxt, Element parent, FolderNode node) {
+	    return encodeFolderNode(ifmt, octxt, parent, node, false);
+	}
+
+	private static Element encodeFolderNode(ItemIdFormatter ifmt, OperationContext octxt, Element parent, FolderNode node, boolean exposeAclAccessKey) {
 		Element eFolder;
         if (node.mFolder != null)
-            eFolder = ToXML.encodeFolder(parent, ifmt, octxt, node.mFolder);
+            eFolder = ToXML.encodeFolder(parent, ifmt, octxt, node.mFolder, exposeAclAccessKey);
         else
             eFolder = parent.addElement(MailConstants.E_FOLDER).addAttribute(MailConstants.A_ID, ifmt.formatItemId(node.mId)).addAttribute(MailConstants.A_NAME, node.mName);
 
 		for (FolderNode subNode : node.mSubfolders)
-			encodeFolderNode(ifmt, octxt, eFolder, subNode);
+			encodeFolderNode(ifmt, octxt, eFolder, subNode, exposeAclAccessKey);
 
 		return eFolder;
 	}
