@@ -42,12 +42,15 @@ public final class RawAuthManager {
                 try {
                     auth = RawAuth.authenticate(appId, token);
                 } catch (AuthenticationException e) {
-                    // Token possibly revoked...
+                    // Token invalid...
+                    if (pass == null) {
+                        throw e; // Cannot obtain a new token w/o password
+                    }
                     auth = null;
                 }
             }
             if (auth == null) {
-                // Token expired or missing, so get a new one
+                // Token invalid or missing, so get a new one
                 auth = RawAuth.authenticate(appId, newToken(appId, user, pass));
             }
             cookies.put(key(appId, user), auth);
