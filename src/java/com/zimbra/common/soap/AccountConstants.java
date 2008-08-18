@@ -81,7 +81,9 @@ public class AccountConstants {
     public static final QName DELETE_SIGNATURE_REQUEST = QName.get("DeleteSignatureRequest", NAMESPACE);
     public static final QName DELETE_SIGNATURE_RESPONSE = QName.get("DeleteSignatureResponse", NAMESPACE);
      
-    
+    public static final QName GET_VERSION_INFO_REQUEST = QName.get("GetVersionInfoRequest", NAMESPACE);
+    public static final QName GET_VERSION_INFO_RESPONSE = QName.get("GetVersionInfoResponse", NAMESPACE);
+
     
     public static final String E_ACTION = "action";
     public static final String E_AUTH_TOKEN = "authToken";
@@ -158,4 +160,12 @@ public class AccountConstants {
     public static final String A_ENTRY_SEARCH_FILTER_ATTR = "attr";
     public static final String A_ENTRY_SEARCH_FILTER_OP = "op";
     public static final String A_ENTRY_SEARCH_FILTER_VALUE = "value";
+
+    // Version info
+    public static final String E_VERSION_INFO_INFO = "info";
+    public static final String A_VERSION_INFO_VERSION = "version";
+    public static final String A_VERSION_INFO_RELEASE = "release";
+    public static final String A_VERSION_INFO_DATE = "buildDate";
+    public static final String A_VERSION_INFO_HOST = "host";
+
 }
