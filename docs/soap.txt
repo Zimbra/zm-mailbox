@@ -2742,4 +2742,13 @@ RevokePermissionResponse returns permissions that are successfully revoked.
     
 ---------------------------
     
-    
+<GetVersionInfoRequest/>
+
+<GetVersionInfoResponse>
+  <info version="{version-string}" release="{release-string}" buildDate="{YYYYMMDD-hhmm}" buildHost="{host-name}"/>
+</GetVersionInfoResponse>
+
+This request will return a SOAP fault if the zimbraSoapExposeVersion
+server/globalconfig attribute is set to FALSE.
+
+---------------------------

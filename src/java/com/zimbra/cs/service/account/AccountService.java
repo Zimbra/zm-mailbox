@@ -75,6 +75,7 @@ public class AccountService implements DocumentService {
         dispatcher.registerHandler(AccountConstants.DELETE_SIGNATURE_REQUEST, new DeleteSignature());
         dispatcher.registerHandler(AccountConstants.GET_SIGNATURES_REQUEST, new GetSignatures());
 
+        dispatcher.registerHandler(AccountConstants.GET_VERSION_INFO_REQUEST, new GetVersionInfo());
     }
 
     /**

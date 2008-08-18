@@ -16,16 +16,18 @@
  */
 package com.zimbra.qa.unittest;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.zclient.ZMailbox;
 
 public class TestSoap
@@ -34,10 +36,13 @@ extends TestCase {
     private static final String NAME_PREFIX = TestSoap.class.getSimpleName();
     
     private String mOriginalSoapRequestMaxSize;
+    private String mOriginalSoapExposeVersion;
     
     public void setUp()
     throws Exception {
-        mOriginalSoapRequestMaxSize = Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraSoapRequestMaxSize, null);
+        Server server = Provisioning.getInstance().getLocalServer();
+        mOriginalSoapRequestMaxSize = server.getAttr(Provisioning.A_zimbraSoapRequestMaxSize, "");
+        mOriginalSoapExposeVersion = server.getAttr(Provisioning.A_zimbraSoapExposeVersion, "");
         cleanUp();
     }
     
@@ -60,10 +65,57 @@ extends TestCase {
             assertTrue("Unexpected error: " + e.toString(), e.toString().contains("bytes set for zimbraSoapRequestMaxSize"));
         }
     }
+
+    /**
+     * Tests the AccountService version of GetInfoRequest (see bug 30010).
+     */
+    public void testAccountGetInfoRequest()
+    throws Exception {
+        SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
+        Element request = Element.create(transport.getRequestProtocol(), AccountConstants.GET_VERSION_INFO_REQUEST);
+        
+        // Test with version exposed
+        TestUtil.setServerAttr(Provisioning.A_zimbraSoapExposeVersion, LdapUtil.LDAP_TRUE);
+        Element response = transport.invoke(request);
+        validateSoapVersionResponse(response);
+        
+        // Test with version not exposed
+        TestUtil.setServerAttr(Provisioning.A_zimbraSoapExposeVersion, LdapUtil.LDAP_FALSE);
+        request = Element.create(transport.getRequestProtocol(), AccountConstants.GET_VERSION_INFO_REQUEST);
+        try {
+            response = transport.invoke(request);
+            fail("GetInfoRequest should have failed");
+        } catch (SoapFaultException e) {
+            assertEquals(ServiceException.PERM_DENIED, e.getCode());
+        }
+    }
+    
+    /**
+     * Tests the AdminService version of GetInfoRequest.
+     */
+    public void testAdminGetInfoRequest()
+    throws Exception {
+        SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getAdminSoapUrl());
+        Element request = Element.create(transport.getRequestProtocol(), AdminConstants.GET_VERSION_INFO_REQUEST);
+        Element response = transport.invoke(request);
+        validateSoapVersionResponse(response);
+    }
+    
+    private void validateSoapVersionResponse(Element response)
+    throws ServiceException {
+        assertEquals(AccountConstants.GET_VERSION_INFO_RESPONSE.getName(), response.getName());
+        
+        Element info = response.getElement(AccountConstants.E_VERSION_INFO_INFO);
+        assertNotNull(info.getAttribute(AccountConstants.A_VERSION_INFO_DATE));
+        assertNotNull(info.getAttribute(AccountConstants.A_VERSION_INFO_HOST));
+        assertNotNull(info.getAttribute(AccountConstants.A_VERSION_INFO_RELEASE));
+        assertNotNull(info.getAttribute(AccountConstants.A_VERSION_INFO_VERSION));
+    }
     
     public void tearDown()
     throws Exception {
-        setSoapRequestMaxSize(mOriginalSoapRequestMaxSize);
+        TestUtil.setServerAttr(Provisioning.A_zimbraSoapRequestMaxSize, mOriginalSoapRequestMaxSize);
+        TestUtil.setServerAttr(Provisioning.A_zimbraSoapExposeVersion, mOriginalSoapExposeVersion);
         cleanUp();
     }
     
@@ -74,18 +126,9 @@ extends TestCase {
     
     private void setSoapRequestMaxSize(int numBytes)
     throws Exception {
-        setSoapRequestMaxSize(Integer.toString(numBytes));
+        TestUtil.setServerAttr(Provisioning.A_zimbraSoapRequestMaxSize, Integer.toString(numBytes));
     }
     
-    private void setSoapRequestMaxSize(String numBytes)
-    throws Exception {
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraSoapRequestMaxSize, numBytes);
-        Provisioning prov = Provisioning.getInstance();
-        Server server = prov.getLocalServer();
-        prov.modifyAttrs(server, attrs);
-    }
-
     public static void main(String[] args)
     throws Exception {
         TestUtil.cliSetup();

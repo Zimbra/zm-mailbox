@@ -3422,4 +3422,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether to hide IM blocked buddies</desc>
 </attr>
 
+<attr id="708" name="zimbraSoapExposeVersion" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>If TRUE, enables support for GetVersionInfo for account SOAP requests.  If FALSE, GetVersionInfoRequest returns a SOAP fault.</desc>
+</attr>
+
 </attrs>
