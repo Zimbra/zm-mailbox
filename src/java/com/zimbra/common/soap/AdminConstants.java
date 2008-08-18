@@ -538,8 +538,4 @@ public class AdminConstants {
     public static final String A_MT_NEWNESSAGES      = "newMessages";
     public static final String A_MT_IDXDEFERREDCOUNT = "idxDeferredCount";
 
-    
-    //extension targets
-    public static final String T_ADMIN_MAIN = "admin-main";
-    public static final String T_ADMIN_DOMAIN = "admin-domain";     
 }

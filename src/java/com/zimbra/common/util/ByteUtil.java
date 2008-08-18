@@ -367,6 +367,21 @@ public class ByteUtil {
 			((data[0] | (data[1] << 8)) == GZIPInputStream.GZIP_MAGIC);
 	}
 	
+	/**
+	 * Determines if the data in the given stream is gzipped.
+	 * Requires that the <tt>InputStream</tt> supports mark/reset.
+	 */
+	public static boolean isGzipped(InputStream in)
+	throws IOException {
+        in.mark(2);
+        int header = in.read() | (in.read() << 8);
+        in.reset();
+        if (header == GZIPInputStream.GZIP_MAGIC) {
+            return true;
+        }
+        return false;
+	}
+	
     public static String encodeFSSafeBase64(byte[] data) {
         byte[] encoded = Base64.encodeBase64(data);
         // Replace '/' with ',' to make the digest filesystem-safe.
