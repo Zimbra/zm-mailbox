@@ -2484,7 +2484,12 @@ public class ZMailbox {
         grant.addAttribute(MailConstants.A_RIGHTS, perms);
         grant.addAttribute(MailConstants.A_DISPLAY, grantreeId);
         grant.addAttribute(MailConstants.A_GRANT_TYPE, granteeType.name());
-        if (args != null) grant.addAttribute(MailConstants.A_ARGS, args);
+        if (args != null) {
+            if (granteeType == GranteeType.key)
+                grant.addAttribute(MailConstants.A_ACCESSKEY, args);
+            else
+                grant.addAttribute(MailConstants.A_ARGS, args);
+        }
         return doAction(action);
     }
 

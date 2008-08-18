@@ -113,11 +113,15 @@ public class ZGrant {
 
 
     public ZGrant(Element e) throws ServiceException {
-        mArgs = e.getAttribute(MailConstants.A_ARGS, null);
         mPermissions = e.getAttribute(MailConstants.A_RIGHTS);
         mGranteeName = e.getAttribute(MailConstants.A_DISPLAY, null);
         mGranteeId = e.getAttribute(MailConstants.A_ZIMBRA_ID, null);
         mGranteeType = GranteeType.fromString(e.getAttribute(MailConstants.A_GRANT_TYPE));
+        
+        if (mGranteeType == GranteeType.key)
+            mArgs = e.getAttribute(MailConstants.A_ACCESSKEY, null);
+        else
+            mArgs = e.getAttribute(MailConstants.A_ARGS, null);
     }
 
     public void toElement(Element parent) {
@@ -133,8 +137,12 @@ public class ZGrant {
         if (mGranteeName != null)
             grant.addAttribute(MailConstants.A_DISPLAY, mGranteeName);
 
-        if (mArgs != null && mArgs.length() > 0)
-            grant.addAttribute(MailConstants.A_ARGS, mArgs);
+        if (mArgs != null && mArgs.length() > 0) {
+            if (mGranteeType == GranteeType.key)
+                grant.addAttribute(MailConstants.A_ACCESSKEY, mArgs);
+            else
+                grant.addAttribute(MailConstants.A_ARGS, mArgs);
+        }
     }
     
     /**
