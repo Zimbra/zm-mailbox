@@ -169,8 +169,10 @@ public class ACL {
             mRights  = (short) (meta.getLong(FN_RIGHTS) & GRANTABLE_RIGHTS);
             if (hasGrantee())
                 mGrantee = meta.get(FN_GRANTEE);
-            if (mType == ACL.GRANTEE_GUEST || mType == ACL.GRANTEE_KEY)
+            if (mType == ACL.GRANTEE_GUEST)
             	mSecret = meta.get(FN_PASSWORD);
+            else if (mType == ACL.GRANTEE_KEY)
+                mSecret = meta.get(FN_ACCESSKEY);
         }
 
         /** Returns true if there is an explicit grantee. */
@@ -267,10 +269,11 @@ public class ACL {
         }
 
 
-        private static final String FN_GRANTEE  = "g";
-        private static final String FN_TYPE     = "t";
-        private static final String FN_RIGHTS   = "r";
-        private static final String FN_PASSWORD = "a";
+        private static final String FN_GRANTEE   = "g";
+        private static final String FN_TYPE      = "t";
+        private static final String FN_RIGHTS    = "r";
+        private static final String FN_PASSWORD  = "a";
+        private static final String FN_ACCESSKEY = "k";
 
         /** Encapsulates this <tt>Grant</tt> as a {@link Metadata} object
          *  for serialization. */
@@ -280,7 +283,12 @@ public class ACL {
             meta.put(FN_TYPE,     mType);
             // FIXME: use "rwidxsca" instead of numeric value
             meta.put(FN_RIGHTS,   mRights);
-            meta.put(FN_PASSWORD, mSecret);
+            
+            if (mType == GRANTEE_KEY)
+                meta.put(FN_ACCESSKEY, mSecret);
+            else
+                meta.put(FN_PASSWORD, mSecret);
+            
             return meta;
         }
     }
