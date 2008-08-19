@@ -61,7 +61,7 @@ public class ZAce {
         mGranteeName = e.getAttribute(MailConstants.A_DISPLAY, null);
         mGranteeId = e.getAttribute(MailConstants.A_ZIMBRA_ID, null);
         mGranteeType = GranteeType.fromString(e.getAttribute(MailConstants.A_GRANT_TYPE));
-        mArgs = e.getAttribute(MailConstants.A_ARGS, null);
+        mArgs = e.getAttribute(MailConstants.A_PASSWORD, null);
     }
     
     public ZAce(ZAce.GranteeType granteeType, String granteeId, String granteeName, String right, boolean deny, String args) throws ServiceException {
@@ -79,7 +79,7 @@ public class ZAce {
         ace.addAttribute(MailConstants.A_GRANT_TYPE, mGranteeType.name());
         ace.addAttribute(MailConstants.A_ZIMBRA_ID, mGranteeId);
         ace.addAttribute(MailConstants.A_DISPLAY, mGranteeName);
-        ace.addAttribute(MailConstants.A_ARGS, mArgs);
+        ace.addAttribute(MailConstants.A_PASSWORD, mArgs);
         if (mDeny)
             ace.addAttribute(MailConstants.A_DENY, mDeny);
     }

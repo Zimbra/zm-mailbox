@@ -121,7 +121,8 @@ public class ZGrant {
         if (mGranteeType == GranteeType.key)
             mArgs = e.getAttribute(MailConstants.A_ACCESSKEY, null);
         else
-            mArgs = e.getAttribute(MailConstants.A_ARGS, null);
+            mArgs = e.getAttribute(MailConstants.A_PASSWORD, null);
+        
     }
 
     public void toElement(Element parent) {
