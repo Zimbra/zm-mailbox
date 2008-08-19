@@ -43,7 +43,7 @@ public class LC {
             value = "";
         }
         if (value == null) {
-            Logging.warn("LC.get(" + key + ") was null, returning empty string");
+//            Logging.warn("LC.get(" + key + ") was null, returning empty string");
             value = "";
         }
         return value;
