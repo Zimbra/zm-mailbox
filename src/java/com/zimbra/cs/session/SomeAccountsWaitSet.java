@@ -21,13 +21,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.service.mail.WaitSetRequest;
 
 /**
  * SomeAccountsWaitSet: an implementation of IWaitSet that works by listening over one or more Accounts
@@ -259,6 +263,44 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
         if (mSessions.containsKey(session.getAuthenticatedAccountId())) { // ...false if waitset is shutting down...
             if (mCurrentSignalledSessions.add(session.getAuthenticatedAccountId())) {
                 trySendData();
+            }
+        }
+    }
+    
+    public synchronized void handleQuery(Element response) {
+        super.handleQuery(response);
+        
+        response.addAttribute("cbSeqNo", mCbSeqNo);
+        response.addAttribute("currentSeqNo", mCurrentSeqNo);
+
+        for (Map.Entry<String, WaitSetAccount> entry : mSessions.entrySet()) {
+            Element sessionElt = response.addElement("session");
+            WaitSetAccount wsa = entry.getValue();
+            
+            assert(wsa.accountId.equals(entry.getKey()));
+            if (!wsa.accountId.equals(entry.getKey())) {
+                sessionElt.addAttribute("acctIdError", wsa.accountId);
+            }
+            
+            sessionElt.addAttribute(MailConstants.A_ACCOUNT, entry.getKey());
+            sessionElt.addAttribute(MailConstants.A_TYPES, 
+                                    WaitSetRequest.expandInterestStr(wsa.interests));
+            if (wsa.lastKnownSyncToken != null) {
+                sessionElt.addAttribute(MailConstants.A_TOKEN, wsa.lastKnownSyncToken.toString());
+            }
+            
+            WaitSetSession wss = wsa.getSession();
+            if (wss != null) {
+                Element wssElt = sessionElt.addElement("WaitSetSession");
+                wssElt.addAttribute("interestMask", wss.mInterestMask);
+                wssElt.addAttribute("highestChangeId", wss.mHighestChangeId);
+                wssElt.addAttribute("lastAccessTime", wss.getLastAccessTime());
+                wssElt.addAttribute("creationTime", wss.getCreationTime());
+                wssElt.addAttribute("sessionId", wss.getSessionId());
+                
+                if (wss.mSyncToken != null) {
+                    wssElt.addAttribute(MailConstants.A_TOKEN, wss.mSyncToken.toString());
+                }
             }
         }
     }

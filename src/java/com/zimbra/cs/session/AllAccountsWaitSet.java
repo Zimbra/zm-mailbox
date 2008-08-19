@@ -26,6 +26,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -236,6 +238,24 @@ public final class AllAccountsWaitSet extends WaitSetBase {
         }
         return null;
     }
+    
+    public synchronized void handleQuery(Element response) {
+        super.handleQuery(response);
+        
+        response.addAttribute(AdminConstants.A_CB_SEQ_NO, mCbSeqNo);
+        response.addAttribute(AdminConstants.A_CURRENT_SEQ_NO, mCurrentSeqNo);
+        response.addAttribute(AdminConstants.A_NEXT_SEQ_NO, mNextSeqNo);
+        
+        if (mBufferedCommits != null) {
+            Element buffElt = response.addElement("buffered");
+            for (Pair<String, String> p : mBufferedCommits) {
+                Element e = buffElt.addElement("commit");
+                e.addAttribute(AdminConstants.A_AID, p.getFirst());
+                e.addAttribute(AdminConstants.A_CID, p.getSecond());
+            }
+        }
+    }
+    
     
     /** If non-null, then we're buffering the commits during creation */
     private List<Pair<String/*AccountId*/, String/*CommitId*/>> mBufferedCommits;

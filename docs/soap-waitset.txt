@@ -19,6 +19,8 @@ Admin versions in the 'zimbraAdmin' Namespace:
 <AdminWaitSetResponse>
 <AdminDestroyWaitSet>
 <AdminDestroyWaitSetResponse>
+<QueryWaitSetRequest>
+<QueryWaitSetResponse>
 
 note that the admin versions of the APIs are identical in any way,
 except that they can be used to wait on non-owner accounts and can be
@@ -264,3 +266,51 @@ A Detailed Example:
 <!-- Client is up to date, server  blocks until there is new data 
      on a1,a2 or a3 -->
   
+
+
+*************************************
+QueryWaitSet
+   This API dumps the internal state of all active waitsets.  It is
+   intended for debugging use only and should not be used for
+   production uses.  This API is not guaranteed to be stable between
+   releases in any way and might be removed without warning.
+*************************************
+
+<QueryWaitSetRequest waitset="WAITSETID">
+
+<QueryWaitSetResponse>
+
+SomeAccountsWaitSet:
+----------------------
+<QueryWaitSetResponse id="WAITSETID"
+                      defTypes="DEFAULT_TYPES"
+                      owner="WAITSET_OWNER_ACCOUNT_ID"
+                      ld="LAST_ACCESS_DATE"                      
+                      cbSeqNo="SEQNO_OF_CB"
+                      currentSeqNo="CURRENT_SEQUENCE_NUMBER">
+  [<ready accounts="comma-separated list of account IDs"/>]?
+  [<session types="TYPES" account="ACCOUNT_ID">
+     [
+     <WaitSetSession interestMask="BITMASK" highestChangeId="MBOX_CHANGE_ID"
+                     lastAccessTime="LAST_ACCESS_TIME"
+                     creationTime="CREATION_TIME"/>
+     ]?
+   </session>]*
+</QueryWaitSetResponse>
+
+
+AllAccountsWaitSet:
+-------------------
+<QueryWaitSetResponse id="WAITSETID"
+                      defTypes="DEFAULT_TYPES"
+                      owner="WAITSET_OWNER_ACCOUNT_ID"
+                      ld="LAST_ACCESS_DATE"                      
+                      nextSeqNo="NEXT_SEQNO"
+                      cbSeqNo="CB_SEQNO"
+                      currentSeqNo="CURRENT_SEQNO"
+                      >
+  [<buffered>
+     [<commit aid="ACCOUNT_ID" cid="COMMIT_ID"/>]* // only during WS creation before first WaitSetRequest
+  ]?
+  [<ready accounts="comma-separated list of account IDs"/>]?
+</QueryWaitSetResponse>

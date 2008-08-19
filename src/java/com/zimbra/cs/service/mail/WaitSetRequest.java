@@ -349,6 +349,18 @@ public class WaitSetRequest extends MailDocumentHandler {
         private final int mMask;
     }
     
+    public static final String expandInterestStr(int interest) {
+        if (interest == TypeEnum.all.getMask())
+            return TypeEnum.all.name();
+        
+        StringBuilder toRet = new StringBuilder();
+        for (TypeEnum type : TypeEnum.values()) {
+            if ((interest & type.getMask()) != 0) 
+                toRet.append(type.name());
+        }
+        return toRet.toString();
+    }
+    
     public static final void encodeErrors(Element parent, List<WaitSetError> errors) {
         for (WaitSetError error : errors) {
             Element errorElt = parent.addElement(MailConstants.E_ERROR);
