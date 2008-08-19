@@ -71,42 +71,49 @@ public class Log {
      * Adds an account-level logger whose log level may be different than
      * that of the main log category.
      * 
+     * @param category the main log category name
      * @param accountName the account name
      * @param level the log level that applies only to the given account
      */
-    public void addAccountLogger(String accountName, Level level) {
-        if (accountName == null || level == null) {
+    public static void addAccountLogger(String category, String accountName, Level level) {
+        if (category == null || accountName == null) {
             return;
         }
         
-        // Create the account logger if it doesn't already exist.
-        Logger accountLogger = mAccountLoggers.get(accountName);
-        if (accountLogger == null) {
-            String accountCategory = getAccountCategory(getCategory(), accountName);
-            accountLogger = Logger.getLogger(accountCategory);
-            mAccountLoggers.put(accountName, accountLogger);
+        // Look up main Zimbra logger
+        Log mainLog = LogFactory.getLog(category);
+        if (mainLog == null) {
+            return;
         }
         
-        accountLogger.setLevel(ZIMBRA_TO_LOG4J.get(level));
+        // If account logger already exists, set the level
+        Logger logger = mainLog.mAccountLoggers.get(accountName);
+        if (logger != null) {
+            logger.setLevel(ZIMBRA_TO_LOG4J.get(level));
+            return;
+        }
+        
+        // Create new account logger
+        String accountCategory = getAccountCategory(category, accountName);
+        logger = Logger.getLogger(accountCategory);
+        logger.setLevel(ZIMBRA_TO_LOG4J.get(level));
+        mainLog.mAccountLoggers.put(accountName, logger);
     }
     
     /**
-     * Removes all account loggers from this log category.
-     * @return the number of loggers removed
+     *  Deletes an account-level logger.
      */
-    public int removeAccountLoggers() {
-        int count = mAccountLoggers.size();
-        mAccountLoggers.clear();
-        return count;
-    }
-    
-    /**
-     * Removes the specified account logger from this log category.
-     * @return <tt>true</tt> if the logger was removed
-     */
-    public boolean removeAccountLogger(String accountName) {
-        Logger logger = mAccountLoggers.remove(accountName);
-        return (logger != null);
+    public static void deleteAccountLogger(String category, String accountName) {
+        if (category == null || accountName == null) {
+            return;
+        }
+        
+        // Look up main Zimbra logger
+        Log mainLog = LogFactory.getLog(category);
+        if (mainLog == null) {
+            return;
+        }
+        mainLog.mAccountLoggers.remove(accountName);
     }
     
     private static String getAccountCategory(String category, String accountName) {
@@ -363,7 +370,7 @@ public class Log {
         mLogger.setLevel(ZIMBRA_TO_LOG4J.get(level));
     }
     
-    public String getCategory() {
+    String getCategory() {
         return mLogger.getName();
     }
     
