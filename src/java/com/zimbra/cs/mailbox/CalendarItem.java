@@ -382,7 +382,7 @@ public abstract class CalendarItem extends MailItem {
         data.flags    = flags & Flag.FLAGS_GENERIC;
         data.tags     = tags;
         data.sender   = sender;
-        data.subject = subject;
+        data.subject  = subject;
         data.metadata = encodeMetadata(DEFAULT_COLOR, 1, uid, startTime, endTime,
                                        recur, invites, firstInvite.getTimeZoneMap(),
                                        new ReplyList(), null);
@@ -391,14 +391,11 @@ public abstract class CalendarItem extends MailItem {
             data.id, pm != null ? pm.getMessageID() : "none", folder.getId(), folder.getName(), firstInvite.getName());
         DbMailItem.create(mbox, data);
 
-        CalendarItem item =
-            type == TYPE_APPOINTMENT ? new Appointment(mbox, data) : new Task(mbox, data);
-        item.processPartStat(firstInvite,
-                             pm != null ? pm.getMimeMessage() : null,
-                             true,
-                             IcalXmlStrMap.PARTSTAT_NEEDS_ACTION);
-        item.createBlob(pm, firstInvite, volumeId);
+        CalendarItem item = type == TYPE_APPOINTMENT ? new Appointment(mbox, data) : new Task(mbox, data);
+        item.processPartStat(firstInvite, pm != null ? pm.getMimeMessage() : null, true, IcalXmlStrMap.PARTSTAT_NEEDS_ACTION);
         item.finishCreation(null);
+
+        item.createBlob(pm, firstInvite, volumeId);
 
         item.mEndTime = item.recomputeRecurrenceEndTime(item.mEndTime);
 
