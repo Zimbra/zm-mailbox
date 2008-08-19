@@ -690,7 +690,11 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
 
     private int parseId(String id) {
         // valid values will always be positive ints, so force it there...
-        return (int) Math.max(-1, Math.min(Integer.MAX_VALUE, Long.parseLong(id)));
+        try {
+            return (int) Math.max(-1, Math.min(Integer.MAX_VALUE, Long.parseLong(id)));
+        } catch (NumberFormatException nfe) {
+            return Integer.MAX_VALUE;
+        }
     }
 
     private List<Pair<Integer, Integer>> normalizeSubsequence(String subseqStr, boolean byUID) {
@@ -895,8 +899,8 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
         boolean trimmed = false;
         int seq = 1;
         List<Integer> removed = new ArrayList<Integer>();
-        for (ListIterator lit = mSequence.listIterator(); lit.hasNext(); seq++) {
-            ImapMessage i4msg = (ImapMessage) lit.next();
+        for (ListIterator<ImapMessage> lit = mSequence.listIterator(); lit.hasNext(); seq++) {
+            ImapMessage i4msg = lit.next();
             if (i4msg.isExpunged()) {
                 if (debug)  ZimbraLog.imap.debug("  ** removing: " + i4msg.msgId);
                 // uncache() removes pointers to the message from mUIDs;
@@ -918,14 +922,24 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
 
 
     private static class AddedItems {
-        List<ImapMessage> numbered = new ArrayList<ImapMessage>();
-        List<ImapMessage> unnumbered = new ArrayList<ImapMessage>();
+        List<ImapMessage> numbered, unnumbered;
 
-        boolean isEmpty()  { return numbered.isEmpty() && unnumbered.isEmpty(); }
-        void add(MailItem item) {
-            (item.getImapUid() > 0 ? numbered : unnumbered).add(new ImapMessage(item));
+        AddedItems()  { }
+        boolean isEmpty() {
+            return numbered == null && unnumbered == null;
         }
-        void sort()  { Collections.sort(numbered);  Collections.sort(unnumbered); }
+        void add(MailItem item) {
+            if (item.getImapUid() > 0)
+                (numbered == null ? numbered = new ArrayList<ImapMessage>() : numbered).add(new ImapMessage(item));
+            else
+                (unnumbered == null ? unnumbered = new ArrayList<ImapMessage>() : unnumbered).add(new ImapMessage(item));
+        }
+        void sort() {
+            if (numbered != null)
+                Collections.sort(numbered);
+            if (unnumbered != null)
+                Collections.sort(unnumbered);
+        }
     }
 
     @Override public void notifyPendingChanges(PendingModifications pns, int changeId, Session source) {
@@ -941,12 +955,13 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
             handleModifies(changeId, pns.modified.values(), added);
 
         // add new messages to the currently selected mailbox
-        if (mSequence != null && added != null && !added.isEmpty()) {
+        if (mSequence != null && !added.isEmpty()) {
             boolean debug = ZimbraLog.imap.isDebugEnabled();
 
             added.sort();
             boolean recent = true;
             for (Session s : mMailbox.getListeners(Session.Type.IMAP)) {
+                // added messages are only \Recent if we're the first IMAP session notified about them
                 ImapFolder i4folder = (ImapFolder) s;
                 if (i4folder == this) {
                     break;
@@ -955,7 +970,7 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
                 }
             }
 
-            if (!added.numbered.isEmpty()) {
+            if (added.numbered != null) {
                 // if messages have acceptable UIDs, just add 'em
                 StringBuilder addlog = debug ? new StringBuilder("  ** adding messages (ntfn):") : null;
                 for (ImapMessage i4msg : added.numbered) {
@@ -966,7 +981,7 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
                 }
                 if (debug)  ZimbraLog.imap.debug(addlog);
             }
-            if (!added.unnumbered.isEmpty()) {
+            if (added.unnumbered != null) {
                 // 2.3.1.1: "Unique identifiers are assigned in a strictly ascending fashion in
                 //           the mailbox; as each message is added to the mailbox it is assigned
                 //           a higher UID than the message(s) which were added previously."
@@ -986,14 +1001,15 @@ public class ImapFolder extends Session implements Iterable<ImapMessage> {
             }
         }
 
-        if (mHandler != null && mHandler.isIdle()) {
+        ImapHandler handler = mHandler;
+        if (handler != null && handler.isIdle()) {
             try {
-                mHandler.sendNotifications(true, true);
+                handler.sendNotifications(true, true);
             } catch (IOException e) {
                 // ImapHandler.dropConnection clears our mHandler and calls SessionCache.clearSession,
                 //   which calls Session.doCleanup, which calls Mailbox.removeListener
                 ZimbraLog.imap.debug("dropping connection due to IOException during IDLE notification", e);
-                mHandler.dropConnection(false);
+                handler.dropConnection(false);
             }
         }
     }
