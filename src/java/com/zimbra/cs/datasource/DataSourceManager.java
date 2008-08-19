@@ -26,6 +26,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.account.DataSource.DataImport;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
@@ -35,7 +36,6 @@ import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
-import com.zimbra.cs.mailbox.Folder;
 
 
 /**
@@ -62,8 +62,8 @@ public class DataSourceManager {
      */
     public static String test(DataSource ds) throws ServiceException {
         ZimbraLog.datasource.info("Testing %s", ds);
-        MailItemImport mii = newMailItemImport(ds);
-        String error = mii.test();
+        DataImport di = newDataImport(ds);
+        String error = di.test();
         if (error == null) {
             ZimbraLog.datasource.info("Test succeeded");
         } else {
@@ -73,8 +73,11 @@ public class DataSourceManager {
         return error;
     }
 
-    private static MailItemImport newMailItemImport(DataSource ds)
+    private static DataImport newDataImport(DataSource ds)
         throws ServiceException {
+    	DataImport di = ds.getDataImport();
+    	if (di != null)
+    		return di;
         switch (ds.getType()) {
         case imap:
             return NEW_SYNC_ENABLED ? new ImapSync(ds) : new ImapImport(ds);
@@ -145,13 +148,13 @@ public class DataSourceManager {
         }
         
         
-        MailItemImport mii = newMailItemImport(ds);
+        DataImport di = newDataImport(ds);
         boolean success = false;
         String error = null;
 
         try {
             ZimbraLog.datasource.info("Importing data.");
-            mii.importData(folderIds, fullSync);
+            di.importData(folderIds, fullSync);
             ZimbraLog.datasource.info("Import completed.");
             success = true;
         } catch (ServiceException x) {

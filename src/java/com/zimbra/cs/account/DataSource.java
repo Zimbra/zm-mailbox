@@ -47,7 +47,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 /**
  * @author schemers
  */
-public class DataSource extends NamedEntry implements Comparable {
+public class DataSource extends NamedEntry {
 
     private static final int SALT_SIZE_BYTES = 16;
     private static final int AES_PAD_SIZE = 16;
@@ -59,7 +59,7 @@ public class DataSource extends NamedEntry implements Comparable {
     private Mailbox mailbox;
 
     public enum Type {
-        pop3, imap;
+        pop3, imap, caldav;
         
         public static Type fromString(String s) throws ServiceException {
             try {
@@ -81,6 +81,30 @@ public class DataSource extends NamedEntry implements Comparable {
             }
         }
     }
+    
+    public interface DataImport {
+        public abstract String test() throws ServiceException;
+
+        public abstract void importData(List<Integer> folderIds, boolean fullSync)
+            throws ServiceException;
+    }
+    
+    public DataImport getDataImport() {
+    	String val = getAttr(Provisioning.A_zimbraDataSourceImportClassName, false);
+		if (val != null) {
+			try {
+				Object di = (DataImport)Class.forName(val).newInstance();
+				if (di instanceof DataImport)
+					return (DataImport) di;
+				else
+					ZimbraLog.account.error("Class "+val+" configured for DataSource "+getName()+" is not an instance of DataImport");
+			} catch (Exception e) {
+				ZimbraLog.account.error("Cannot instantiate class "+val+" configured for DataSource "+getName(), e);
+			}
+		}
+    	return null;
+    }
+    
     public static final String CT_CLEARTEXT = "cleartext";
     public static final String CT_SSL = "ssl";
     

@@ -25,13 +25,12 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mime.ParsedMessage;
 
 import java.io.IOException;
 import java.util.List;
 
-public abstract class MailItemImport {
+public abstract class MailItemImport implements DataSource.DataImport {
     protected final DataSource dataSource;
 
     private static final RuleManager RULE_MANAGER = RuleManager.getInstance();
