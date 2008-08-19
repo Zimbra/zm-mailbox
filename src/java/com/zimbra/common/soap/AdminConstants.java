@@ -326,7 +326,8 @@ public class AdminConstants {
     public static final QName ADMIN_WAIT_SET_RESPONSE = QName.get("AdminWaitSetResponse", NAMESPACE);
     public static final QName ADMIN_DESTROY_WAIT_SET_REQUEST = QName.get("AdminDestroyWaitSetRequest", NAMESPACE);
     public static final QName ADMIN_DESTROY_WAIT_SET_RESPONSE = QName.get("AdminDestroyWaitSetResponse", NAMESPACE);
-    
+    public static final QName QUERY_WAIT_SET_REQUEST = QName.get("QueryWaitSetRequest", NAMESPACE);
+    public static final QName QUERY_WAIT_SET_RESPONSE = QName.get("QueryWaitSetResponse", NAMESPACE);
     
     // DumpSessions
     public static final String E_SESSION = "session";
@@ -338,6 +339,17 @@ public class AdminConstants {
     public static final String A_ACTIVE_SESSIONS = "activeSessions";
     public static final String A_CREATED_DATE = "cd";
     public static final String A_LAST_ACCESSED_DATE = "ld";
+    
+    // Dump waitsets
+    public static final String A_READY = "ready";
+    public static final String A_OWNER = "owner";
+    public static final String A_DEFTYPES = "defTypes";
+    public static final String A_ACCOUNTS = "accounts";
+    public static final String A_CB_SEQ_NO = "cbSeqNo";
+    public static final String A_CURRENT_SEQ_NO = "currentSeqNo";
+    public static final String A_NEXT_SEQ_NO = "nextSeqNo";
+    public static final String A_AID = "aid";
+    public static final String A_CID = "cid";
 
     public static final String E_ACCOUNT = "account";
     public static final String E_CALENDAR_RESOURCE = "calresource";
