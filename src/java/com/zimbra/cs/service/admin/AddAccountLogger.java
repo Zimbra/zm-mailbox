@@ -22,6 +22,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.Log.Level;
 import com.zimbra.cs.account.Account;
@@ -45,14 +46,9 @@ public class AddAccountLogger extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context)
     throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Provisioning prov = Provisioning.getInstance();
         
         // Look up account
-        String id = request.getElement(AdminConstants.E_ID).getText();
-        Account account = prov.get(AccountBy.id, id, zsc.getAuthToken());
-        if (account == null) {
-            throw AccountServiceException.NO_SUCH_ACCOUNT(id);
-        }
+        Account account = getAccountFromLoggerRequest(request);
         
         // Add logger
         Element eLogger = request.getElement(AdminConstants.E_LOGGER);
@@ -66,11 +62,42 @@ public class AddAccountLogger extends AdminDocumentHandler {
         }
         ZimbraLog.misc.info("Adding custom logger: account=%s, category=%s, level=%s",
             account.getName(), category, level);
-        Log.addAccountLogger(category, account.getName(), level);
+        Log log = LogFactory.getLog(category);
+        log.addAccountLogger(account.getName(), level);
 
         // Send response
         Element response = zsc.createElement(AdminConstants.ADD_ACCOUNT_LOGGER_RESPONSE);
         return response;
     }
     
+    /**
+     * Returns the <tt>Account</tt> object based on the &lt;id&gt; or &lt;account&gt;
+     * element owned by the given request element. 
+     */
+    static Account getAccountFromLoggerRequest(Element request)
+    throws ServiceException {
+        Account account = null;
+        Provisioning prov = Provisioning.getInstance();
+        Element idElement = request.getOptionalElement(AdminConstants.E_ID);
+        
+        if (idElement != null) {
+            // Handle deprecated <id> element.
+            ZimbraLog.soap.info("The <%s> element is deprecated for <%s>.  Use <%s> instead.",
+                AdminConstants.E_ID, request.getName(), AdminConstants.E_ACCOUNT);
+            String id = idElement.getText();
+            account = prov.get(AccountBy.id, id);
+            if (account == null) {
+                throw AccountServiceException.NO_SUCH_ACCOUNT(idElement.getText());
+            }
+        } else {
+            // Handle <account> element.
+            Element accountElement = request.getElement(AdminConstants.E_ACCOUNT);
+            AccountBy by = AccountBy.fromString(accountElement.getAttribute(AdminConstants.A_BY));
+            account = prov.get(by, accountElement.getText());
+            if (account == null) {
+                throw AccountServiceException.NO_SUCH_ACCOUNT(accountElement.getText());
+            }
+        }
+        return account;
+    }
 }

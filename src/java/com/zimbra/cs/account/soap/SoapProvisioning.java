@@ -639,8 +639,13 @@ public class SoapProvisioning extends Provisioning {
      * Returns all account loggers for the given server.  The <tt>Map</tt>'s key is
      * the account name, and values are all the <tt>AccountLogger</tt> objects for
      * that account.
+     * 
+     * @server the server name, or <tt>null</tt> for the local server
      */
     public Map<String, List<AccountLogger>> getAllAccountLoggers(String server) throws ServiceException {
+        if (server == null) {
+            server = getLocalServer().getName();
+        }
         XMLElement req = new XMLElement(AdminConstants.GET_ALL_ACCOUNT_LOGGERS_REQUEST);
         Element resp = invoke(req, server);
         Map<String, List<AccountLogger>> result = new HashMap<String, List<AccountLogger>>();
@@ -659,17 +664,27 @@ public class SoapProvisioning extends Provisioning {
         }
         return result;
     }
-    
-    public void removeAccountLogger(Account account, String category) throws ServiceException {
+
+    /**
+     * Removes one or more account loggers.
+     * @param account the account, or <tt>null</tt> for all accounts on the given server
+     * @param category the log category, or <tt>null</tt> for all log categories
+     */
+    public void removeAccountLoggers(Account account, String category) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.REMOVE_ACCOUNT_LOGGER_REQUEST);
         
-        Element eId = req.addElement(AdminConstants.E_ID);
-        eId.setText(account.getId());
-        
-        Element eLogger = req.addElement(AdminConstants.E_LOGGER);
-        eLogger.addAttribute(AdminConstants.A_CATEGORY, category);
-        
-        invoke(req, getServer(account).getName());
+        if (account != null) {
+            Element eAccount = req.addElement(AdminConstants.E_ACCOUNT);
+            eAccount.addAttribute(AdminConstants.A_BY, AccountBy.id.toString());
+            eAccount.setText(account.getId());
+        }
+        if (category != null) {
+            Element eLogger = req.addElement(AdminConstants.E_LOGGER);
+            eLogger.addAttribute(AdminConstants.A_CATEGORY, category);
+        }
+
+        Server server = (account == null ? getLocalServer() : getServer(account));
+        invoke(req, server.getName());
     }
 
     public static class MailboxInfo {

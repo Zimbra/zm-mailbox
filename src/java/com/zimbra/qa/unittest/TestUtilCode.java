@@ -255,7 +255,7 @@ public class TestUtilCode extends TestCase
     public void testAccountLogger()
     throws Exception {
         ZimbraLog.addAccountNameToContext(null);
-        Log.addAccountLogger("zimbra.test", TestUtil.getAddress("user1"), Log.Level.info);
+        ZimbraLog.test.addAccountLogger(TestUtil.getAddress("user1"), Log.Level.info);
         ZimbraLog.test.debug("Testing addAccountNameToContext(null).");
     }
     
@@ -279,7 +279,7 @@ public class TestUtilCode extends TestCase
     
     private void cleanUp()
     throws Exception {
-        Log.deleteAccountLogger("zimbra.test", TestUtil.getAddress("user1"));
+        ZimbraLog.test.removeAccountLogger(TestUtil.getAddress("user1"));
     }
 
     public static void main(String[] args)
