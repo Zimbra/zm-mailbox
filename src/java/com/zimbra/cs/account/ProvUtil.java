@@ -17,18 +17,42 @@
 
 package com.zimbra.cs.account;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.PosixParser;
+
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.AccountLogger;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.CliUtil;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.SoapTransport.DebugListener;
+import com.zimbra.common.util.AccountLogger;
+import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CacheEntryBy;
-import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
@@ -42,9 +66,9 @@ import com.zimbra.cs.account.ldap.LdapEntrySearchFilter;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.MailboxInfo;
+import com.zimbra.cs.account.soap.SoapProvisioning.QuotaUsage;
 import com.zimbra.cs.account.soap.SoapProvisioning.ReIndexBy;
 import com.zimbra.cs.account.soap.SoapProvisioning.ReIndexInfo;
-import com.zimbra.cs.account.soap.SoapProvisioning.QuotaUsage;
 import com.zimbra.cs.extension.ExtensionDispatcherServlet;
 import com.zimbra.cs.fb.FbCli;
 import com.zimbra.cs.httpclient.URLUtil;
@@ -53,30 +77,6 @@ import com.zimbra.cs.util.SoapCLI;
 import com.zimbra.cs.wiki.WikiUtil;
 import com.zimbra.cs.zclient.ZClientException;
 import com.zimbra.cs.zclient.ZMailboxUtil;
-import com.zimbra.common.soap.SoapTransport.DebugListener;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.PosixParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.HashSet;
 
 /**
  * @author schemers
@@ -192,7 +192,7 @@ public class ProvUtil implements DebugListener {
     public enum Command {
         
         ADD_ACCOUNT_ALIAS("addAccountAlias", "aaa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2),
-        ADD_ACCOUNT_LOGGER("addAccountLogger", "aal", "{name@domain|id} {logging-category} {debug|info|warn|error}", Category.MISC, 3, 3),
+        ADD_ACCOUNT_LOGGER("addAccountLogger", "aal", "[-s/--server hostname] {name@domain|id} {logging-category} {debug|info|warn|error}", Category.MISC, 3, 5),
         ADD_DISTRIBUTION_LIST_ALIAS("addDistributionListAlias", "adla", "{list@domain|id} {alias@domain}", Category.LIST, 2, 2),
         ADD_DISTRIBUTION_LIST_MEMBER("addDistributionListMember", "adlm", "{list@domain|id} {member@domain}+", Category.LIST, 2, Integer.MAX_VALUE),
         AUTO_COMPLETE_GAL("autoCompleteGal", "acg", "{domain} {name}", Category.SEARCH, 2, 2),
@@ -228,8 +228,8 @@ public class ProvUtil implements DebugListener {
         GET_SIGNATURES("getSignatures", "gsig", "{name@domain|id} [arg1 [arg...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
         GET_ACCOUNT_MEMBERSHIP("getAccountMembership", "gam", "{name@domain|id}", Category.ACCOUNT, 1, 2),
         GET_ALL_ACCOUNTS("getAllAccounts","gaa", "[-v] [-e] [-s server] [{domain}]", Category.ACCOUNT, 0, 5),
-        GET_ACCOUNT_LOGGERS("getAccountLoggers", "gal", "{name@domain|id}", Category.MISC, 1, 1),
-        GET_ALL_ACCOUNT_LOGGERS("getAllAccountLoggers", "gaal", "[{server}]", Category.MISC, 0, 1),
+        GET_ACCOUNT_LOGGERS("getAccountLoggers", "gal", "[-s/--server hostname] {name@domain|id}", Category.MISC, 1, 3),
+        GET_ALL_ACCOUNT_LOGGERS("getAllAccountLoggers", "gaal", "[-s/--server hostname]", Category.MISC, 0, 2),
         GET_ALL_ADMIN_ACCOUNTS("getAllAdminAccounts", "gaaa", "[-v] [-e] [attr1 [attr2...]]", Category.ACCOUNT, 0, Integer.MAX_VALUE),
         GET_ALL_CALENDAR_RESOURCES("getAllCalendarResources", "gacr", "[-v] [-e] [-s server] [{domain}]", Category.CALENDAR, 0, 5),
         GET_ALL_CONFIG("getAllConfig", "gacf", "[attr1 [attr2...]]", Category.CONFIG, 0, Integer.MAX_VALUE),
@@ -266,7 +266,7 @@ public class ProvUtil implements DebugListener {
         MODIFY_SERVER("modifyServer", "ms", "{name|id} [attr1 value1 [attr2 value2...]]", Category.SERVER, 3, Integer.MAX_VALUE),
         PUSH_FREEBUSY("pushFreebusy", "pfb", "{domain|account-id} [account-id ...]", Category.FREEBUSY, 1, Integer.MAX_VALUE),
         REMOVE_ACCOUNT_ALIAS("removeAccountAlias", "raa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2),
-        REMOVE_ACCOUNT_LOGGER("removeAccountLogger", "ral", "[{name@domain|id}] [{logging-category}]", Category.MISC, 0, 2),
+        REMOVE_ACCOUNT_LOGGER("removeAccountLogger", "ral", "[-s/--server hostname] [{name@domain|id}] [{logging-category}]", Category.MISC, 0, 4),
         REMOVE_DISTRIBUTION_LIST_ALIAS("removeDistributionListAlias", "rdla", "{list@domain|id} {alias@domain}", Category.LIST, 2, 2),
         REMOVE_DISTRIBUTION_LIST_MEMBER("removeDistributionListMember", "rdlm", "{list@domain|id} {member@domain}", Category.LIST, 2, Integer.MAX_VALUE),
         RENAME_ACCOUNT("renameAccount", "ra", "{name@domain|id} {newName@domain}", Category.ACCOUNT, 2, 2),
@@ -413,6 +413,7 @@ public class ProvUtil implements DebugListener {
     private boolean execute(String args[]) throws ServiceException, ArgException, IOException {
         String [] members;
         Account account;
+        AccountLoggerOptions alo;
         
         mCommand = lookupCommand(args[0]);
         
@@ -435,7 +436,12 @@ public class ProvUtil implements DebugListener {
             mProv.addAlias(lookupAccount(args[1]), args[2]);
             break;
         case ADD_ACCOUNT_LOGGER:
-            doAddAccountLogger(args);
+            alo = parseAccountLoggerOptions(args);
+            if (!mCommand.checkArgsLength(alo.args)) {
+                usage();
+                return true;
+            }
+            doAddAccountLogger(alo);
             break;
         case AUTO_COMPLETE_GAL:
             doAutoCompleteGal(args); 
@@ -492,10 +498,20 @@ public class ProvUtil implements DebugListener {
             doGetAccountDataSources(args);
             break;
         case GET_ACCOUNT_LOGGERS:
-            doGetAccountLoggers(args);
+            alo = parseAccountLoggerOptions(args);
+            if (!mCommand.checkArgsLength(alo.args)) {
+                usage();
+                return true;
+            }
+            doGetAccountLoggers(alo);
             break;
         case GET_ALL_ACCOUNT_LOGGERS:
-            doGetAllAccountLoggers(args);
+            alo = parseAccountLoggerOptions(args);
+            if (!mCommand.checkArgsLength(alo.args)) {
+                usage();
+                return true;
+            }
+            doGetAllAccountLoggers(alo);
             break;
         case GET_ALL_ACCOUNTS:
             doGetAllAccounts(args); 
@@ -623,7 +639,12 @@ public class ProvUtil implements DebugListener {
             mProv.removeAlias(lookupAccount(args[1], false), args[2]);
             break;
         case REMOVE_ACCOUNT_LOGGER:
-            doRemoveAccountLogger(args);
+            alo = parseAccountLoggerOptions(args);
+            if (!mCommand.checkArgsLength(alo.args)) {
+                usage();
+                return true;
+            }
+            doRemoveAccountLogger(alo);
             break;
         case RENAME_ACCOUNT:
             mProv.renameAccount(lookupAccount(args[1]).getId(), args[2]);            
@@ -863,35 +884,61 @@ public class ProvUtil implements DebugListener {
                               progress.getNumSucceeded(), progress.getNumFailed(), progress.getNumRemaining());
     }
     
-    
-    private void doAddAccountLogger(String[] args) throws ServiceException {
-        if (!(mProv instanceof SoapProvisioning))
-            throwSoapOnly();
-        SoapProvisioning sp = (SoapProvisioning) mProv;
-        Account acct = lookupAccount(args[1]);
-        sp.addAccountLogger(acct, args[2], args[3]);
+    private class AccountLoggerOptions {
+        String server;
+        String[] args;
     }
     
-    private void doGetAccountLoggers(String[] args) throws ServiceException {
+    /**
+     * Handles an optional <tt>-s</tt> or <tt>--server</tt> argument that may be passed
+     * to the logging commands.  Returns an <tt>AccountLogggerOptions</tt> object that
+     * contains all arguments except the server option and value.
+     */
+    private AccountLoggerOptions parseAccountLoggerOptions(String[] args)
+    throws ServiceException {
+        AccountLoggerOptions alo = new AccountLoggerOptions();
+        if (args.length > 1 && (args[1].equals("-s") || args[1].equals("--server"))) {
+            if (args.length == 2) {
+                throw ServiceException.FAILURE("Server name not specified.", null);
+            }
+            alo.server = args[2];
+
+            int numArgs = args.length - 2;
+            alo.args = new String[numArgs];
+            alo.args[0] = args[0];
+            for (int i = 1; i < numArgs; i++) {
+                alo.args[i] = args[i + 2];
+            }
+        } else {
+            alo.args = args;
+        }
+        return alo;
+    }
+    
+    private void doAddAccountLogger(AccountLoggerOptions alo) throws ServiceException {
         if (!(mProv instanceof SoapProvisioning))
             throwSoapOnly();
         SoapProvisioning sp = (SoapProvisioning) mProv;
-        Account acct = lookupAccount(args[1]);
-        for (AccountLogger accountLogger : sp.getAccountLoggers(acct)) {
+        Account acct = lookupAccount(alo.args[1]);
+        sp.addAccountLogger(acct, alo.args[2], alo.args[3], alo.server);
+    }
+    
+    private void doGetAccountLoggers(AccountLoggerOptions alo) throws ServiceException {
+        if (!(mProv instanceof SoapProvisioning))
+            throwSoapOnly();
+        SoapProvisioning sp = (SoapProvisioning) mProv;
+        Account acct = lookupAccount(alo.args[1]);
+        for (AccountLogger accountLogger : sp.getAccountLoggers(acct, alo.server)) {
             System.out.printf("%s=%s\n", accountLogger.getCategory(), accountLogger.getLevel());
         }
     }
     
-    private void doGetAllAccountLoggers(String[] args) throws ServiceException {
+    private void doGetAllAccountLoggers(AccountLoggerOptions alo) throws ServiceException {
         if (!(mProv instanceof SoapProvisioning))
             throwSoapOnly();
         SoapProvisioning sp = (SoapProvisioning) mProv;
 
-        String serverName = null;
-        if (args.length == 2) {
-            serverName = args[1];
-        }
-        Map<String, List<AccountLogger>> allLoggers = sp.getAllAccountLoggers(serverName);
+        Map<String, List<AccountLogger>> allLoggers = sp.getAllAccountLoggers(alo.server);
         for (String accountName : allLoggers.keySet()) {
             System.out.printf("# name %s\n", accountName);
             for (AccountLogger logger : allLoggers.get(accountName)) {
@@ -900,19 +947,19 @@ public class ProvUtil implements DebugListener {
         }
     }
     
-    private void doRemoveAccountLogger(String[] args) throws ServiceException {
+    private void doRemoveAccountLogger(AccountLoggerOptions alo) throws ServiceException {
         if (!(mProv instanceof SoapProvisioning))
             throwSoapOnly();
         SoapProvisioning sp = (SoapProvisioning) mProv;
         Account acct = null;
         String category = null;
-        if (args.length >= 2) {
-            acct = lookupAccount(args[1]);
+        if (alo.args.length >= 2) {
+            acct = lookupAccount(alo.args[1]);
         }
-        if (args.length == 3) {
-            category = args[2];
+        if (alo.args.length == 3) {
+            category = alo.args[2];
         }
-        sp.removeAccountLoggers(acct, category);
+        sp.removeAccountLoggers(acct, category, alo.server);
     }
     
     private void doCreateAccountsBulk(String[] args) throws ServiceException {
