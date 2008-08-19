@@ -191,6 +191,7 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
         private OperationContext mCtxt;
         private Folder mFolder;
         private boolean mPreserveExistingAlarms;
+        private Set<String> mUidsSeen = new HashSet<String>();
 
         public ImportInviteVisitor(OperationContext ctxt, Folder folder, boolean preserveExistingAlarms) {
             mCtxt = ctxt;
@@ -200,10 +201,20 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
 
         public void visit(Invite inv) throws ServiceException {
             // handle missing UIDs on remote calendars by generating them as needed
-            if (inv.getUid() == null)
-                inv.setUid(LdapUtil.generateUUID());
+            String uid = inv.getUid();
+            if (uid == null) {
+                uid = LdapUtil.generateUUID();
+                inv.setUid(uid);
+            }
+            boolean addRevision;
+            if (!mUidsSeen.contains(uid)) {
+                addRevision = true;
+                mUidsSeen.add(uid);
+            } else {
+                addRevision = false;
+            }
             // and add the invite to the calendar!
-            mFolder.getMailbox().addInvite(mCtxt, inv, mFolder.getId(), mPreserveExistingAlarms);
+            mFolder.getMailbox().addInvite(mCtxt, inv, mFolder.getId(), mPreserveExistingAlarms, addRevision);
             if (ZimbraLog.calendar.isDebugEnabled()) {
                 if (inv.isEvent())
                     ZimbraLog.calendar.debug("Appointment imported: UID=" + inv.getUid());

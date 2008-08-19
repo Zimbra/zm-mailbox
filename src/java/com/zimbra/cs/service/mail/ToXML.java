@@ -1482,7 +1482,7 @@ public class ToXML {
                     throw e;
             }
 
-            if (calItem != null) {
+            if (calItem != null && calItem.getFolderId() != Mailbox.ID_FOLDER_TRASH) {
                 //encodeAlarmTimes(ie, calItem);
 
                 setCalendarItemType(ie, calItem);

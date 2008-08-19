@@ -37,8 +37,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author schemers
@@ -78,14 +80,25 @@ public class ImportAppointments extends MailDocumentHandler  {
 
             List<Invite> invites = Invite.createFromCalendar(mbox.getAccount(), null, icals, true);
 
+            Set<String> uidsSeen = new HashSet<String>();
             StringBuilder ids = new StringBuilder();
 
             for (Invite inv : invites) {
                 // handle missing UIDs on remote calendars by generating them as needed
-                if (inv.getUid() == null)
-                    inv.setUid(LdapUtil.generateUUID());
+                String uid = inv.getUid();
+                if (uid == null) {
+                    uid = LdapUtil.generateUUID();
+                    inv.setUid(uid);
+                }
+                boolean addRevision;
+                if (!uidsSeen.contains(uid)) {
+                    addRevision = true;
+                    uidsSeen.add(uid);
+                } else {
+                    addRevision = false;
+                }
                 // and add the invite to the calendar!
-                int[] invIds = mbox.addInvite(octxt, inv, iidFolder.getId(), false);
+                int[] invIds = mbox.addInvite(octxt, inv, iidFolder.getId(), false, addRevision);
                 if (ids.length() > 0) ids.append(",");
                 ids.append(invIds[0]).append("-").append(invIds[1]);
             }

@@ -42,17 +42,19 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
     private short mVolumeId = -1;
     private boolean mPreserveExistingAlarms;
     private boolean mDiscardExistingInvites;
+    private boolean mAddRevision;
     
     public CreateInvite() { }
 
     public CreateInvite(int mailboxId, Invite inv, int folderId, byte[] data,
-                        boolean preserveExistingAlarms, boolean discardExistingInvites) {
+                        boolean preserveExistingAlarms, boolean discardExistingInvites, boolean addRevision) {
         setMailboxId(mailboxId);
         mInvite = inv;
         mFolderId = folderId;
         mData = data;
         mPreserveExistingAlarms = preserveExistingAlarms;
         mDiscardExistingInvites = discardExistingInvites;
+        mAddRevision = addRevision;
     }
 
     public int getOpCode() {
@@ -60,7 +62,7 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
     }
 
     protected String getPrintableData() {
-        StringBuffer sb = new StringBuffer("calItemId=").append(mCalendarItemId);
+        StringBuilder sb = new StringBuilder("calItemId=").append(mCalendarItemId);
         sb.append(", calItemPartStat=").append(mCalendarItemPartStat);
         sb.append(", folder=").append(mFolderId);
     	if (getVersion().atLeast(1, 0))
@@ -71,6 +73,7 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
         sb.append(", inv=").append(Invite.encodeMetadata(mInvite).toString());
         sb.append(", preserveExistingAlarms=").append(mPreserveExistingAlarms);
         sb.append(", discardExistingInvites=").append(mDiscardExistingInvites);
+        sb.append(", addRevision=").append(mAddRevision);
         return sb.toString();
     }
 
@@ -98,6 +101,8 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
             out.writeBoolean(mPreserveExistingAlarms);
             out.writeBoolean(mDiscardExistingInvites);
         }
+        if (getVersion().atLeast(1, 23))
+            out.writeBoolean(mAddRevision);
     }
 
     protected void deserializeData(RedoLogInput in) throws IOException {
@@ -133,6 +138,10 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
             mPreserveExistingAlarms = false;
             mDiscardExistingInvites = false;
         }
+        if (getVersion().atLeast(1, 23))
+            mAddRevision = in.readBoolean();
+        else
+            mAddRevision = false;
     }
     
     public void setCalendarItemAttrs(int appointmentId,
@@ -170,6 +179,6 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
 		ParsedMessage pm = new ParsedMessage(mData, getTimestamp(), mbox.attachmentsIndexingEnabled());
 		mbox.addInvite(getOperationContext(), mInvite, mFolderId, pm,
-		               mPreserveExistingAlarms, mDiscardExistingInvites);
+		               mPreserveExistingAlarms, mDiscardExistingInvites, mAddRevision);
     }
 }

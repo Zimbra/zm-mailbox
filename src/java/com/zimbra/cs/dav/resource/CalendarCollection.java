@@ -35,7 +35,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -51,6 +50,8 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
+import com.zimbra.cs.mailbox.Mailbox.SetCalendarItemData;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
@@ -237,11 +238,25 @@ public class CalendarCollection extends Collection {
 					throw new DavException("CalDAV client has stale event: event has different etag ("+itemEtag+") vs "+etag, HttpServletResponse.SC_CONFLICT);
 				isNewItem = false;
 			}
-			boolean first = true;
+
+			// prepare to call Mailbox.setCalendarItem()
+            int flags = 0; long tags = 0; List<ReplyInfo> replies = null;
+            if (calItem != null) {
+                flags = calItem.getFlagBitmask();
+                tags = calItem.getTagBitmask();
+                replies = calItem.getAllReplies();
+            }
+            SetCalendarItemData scidDefault = new SetCalendarItemData();
+            SetCalendarItemData scidExceptions[] = null;
+            if (invites.size() > 1)
+                scidExceptions = new SetCalendarItemData[invites.size() - 1];
+
+            int idxExceptions = 0;
+            boolean first = true;
 			for (Invite i : invites) {
 				// check for valid uid.
 				if (i.getUid() == null)
-					i.setUid(LdapUtil.generateUUID());
+				    i.setUid(uid);
 				// check for valid organizer field.
 				if (i.hasOrganizer() || i.hasOtherAttendees()) {
 					ZOrganizer org = i.getOrganizer();
@@ -274,10 +289,17 @@ public class CalendarCollection extends Collection {
 					}
 					*/
 				}
-				mbox.addInvite(ctxt.getOperationContext(), i, mId, null, false, first);
-			    first = false;
+                if (first) {
+                    scidDefault.mInv = i;
+                    first = false;
+                } else {
+                    SetCalendarItemData scid = new SetCalendarItemData();
+                    scid.mInv = i;
+                    scidExceptions[idxExceptions++] = scid;
+                }
 			}
-			calItem = mbox.getCalendarItemByUid(ctxt.getOperationContext(), uid);
+            calItem = mbox.setCalendarItem(ctxt.getOperationContext(), mId, flags, tags,
+                                           scidDefault, scidExceptions, replies, 0);
 			return new CalendarObject.LocalCalendarObject(ctxt, calItem, isNewItem);
 		} catch (ServiceException e) {
 			throw new DavException("cannot create icalendar item", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
