@@ -20,6 +20,7 @@ package com.zimbra.cs.session;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
 
 /**
  * WaitSet: scalable mechanism for listening for changes to one or many accounts */
@@ -83,4 +84,12 @@ public interface IWaitSet {
      * @return the id of this wait set
      */
     public String getWaitSetId();
+    
+    /**
+     * Handle a QueryWaitSet request by encoding all of our internal data
+     * into the response
+     * 
+     * @param response
+     */
+    public void handleQuery(Element response);
 }

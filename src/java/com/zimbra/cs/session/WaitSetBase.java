@@ -19,6 +19,10 @@ package com.zimbra.cs.session;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.cs.service.mail.WaitSetRequest;
+
 /**
  * The base class defines shared functions, as well as any APIs which should be 
  * package-private
@@ -128,6 +132,25 @@ public abstract class WaitSetBase implements IWaitSet {
             mCb.dataReady(this, toNextSeqNo(), false, toRet);
             mCb = null;
             mLastAccessedTime = System.currentTimeMillis();
+        }
+    }
+    
+    public synchronized void handleQuery(Element response) {
+        response.addAttribute(AdminConstants.A_ID, mWaitSetId);
+        response.addAttribute(AdminConstants.A_OWNER, mOwnerAccountId);
+        response.addAttribute(AdminConstants.A_DEFTYPES, WaitSetRequest.expandInterestStr(mDefaultInterest));
+        response.addAttribute(AdminConstants.A_LAST_ACCESSED_DATE, mLastAccessedTime);
+
+        // signaled accounts
+        if (mCurrentSignalledSessions.size() > 0) {
+            Element signaled = response.addElement(AdminConstants.A_READY);
+            StringBuilder signaledStr = new StringBuilder();
+            for (String accountId : mCurrentSignalledSessions) {
+                if (signaledStr.length() > 0)
+                    signaledStr.append(",");
+                signaledStr.append(accountId);
+            }
+            signaled.addAttribute(AdminConstants.A_ACCOUNTS, signaledStr.toString());
         }
     }
     
