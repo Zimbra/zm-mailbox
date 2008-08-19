@@ -4777,7 +4777,9 @@ public class LdapProvisioning extends Provisioning {
             Attributes attrs = new BasicAttributes(true);
             LdapUtil.mapToAttrs(dataSourceAttrs, attrs);
             Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, "zimbraDataSource");
-            oc.add(LdapDataSource.getObjectClass(dsType));
+            String extraOc = LdapDataSource.getObjectClass(dsType);
+            if (extraOc != null)
+            	oc.add(extraOc);
             
             String dsId = LdapUtil.getAttrString(attrs, A_zimbraDataSourceId);
             if (dsId == null) {

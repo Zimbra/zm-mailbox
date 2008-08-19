@@ -1351,6 +1351,7 @@ public abstract class Provisioning {
      */
     public static final String A_zimbraDataSourceId = "zimbraDataSourceId";
     public static final String A_zimbraDataSourceName = "zimbraDataSourceName";
+    public static final String A_zimbraDataSourceType = "zimbraDataSourceType";
     public static final String A_zimbraDataSourceEnabled = "zimbraDataSourceEnabled";
     public static final String A_zimbraDataSourceHost = "zimbraDataSourceHost";
     public static final String A_zimbraDataSourcePort = "zimbraDataSourcePort";
@@ -1365,6 +1366,7 @@ public abstract class Provisioning {
     public static final String A_zimbraDataSourceEmailAddress = "zimbraDataSourceEmailAddress";
     public static final String A_zimbraDataSourceUseAddressForForwardReply = "zimbraDataSourceUseAddressForForwardReply";
     public static final String A_zimbraDataSourceEnableTrace = "zimbraDataSourceEnableTrace";
+    public static final String A_zimbraDataSourceImportClassName = "zimbraDataSourceImportClassName";
     
     // Quota warning
     public static final String A_zimbraQuotaWarnPercent = "zimbraQuotaWarnPercent";
