@@ -78,7 +78,7 @@ public class GrantPermission extends MailDocumentHandler {
                 gtype = nentry instanceof DistributionList ? GranteeType.GT_GROUP : GranteeType.GT_USER;
             } catch (ServiceException e) {
                 // this is the normal path, where lookupGranteeByName throws account.NO_SUCH_USER
-                password = eACE.getAttribute(MailConstants.A_ARGS);
+                password = eACE.getAttribute(MailConstants.A_PASSWORD);
             }
         } else if (zid != null) {
             nentry = PermUtil.lookupGranteeByZimbraId(zid, gtype);

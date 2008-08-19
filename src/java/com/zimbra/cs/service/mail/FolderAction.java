@@ -171,6 +171,9 @@ public class FolderAction extends ItemAction {
                 } catch (ServiceException e) {
                     // this is the normal path, where lookupGranteeByName throws account.NO_SUCH_USER
                     secret = grant.getAttribute(MailConstants.A_ARGS);
+                    // bug 30891 for 5.0.x
+                    if (secret == null)
+                        secret = grant.getAttribute(MailConstants.A_PASSWORD);
                 }
             } else if (gtype == ACL.GRANTEE_KEY) {
                 zid = grant.getAttribute(MailConstants.A_DISPLAY);
@@ -239,8 +242,17 @@ public class FolderAction extends ItemAction {
             String zid   = grant.getAttribute(MailConstants.A_ZIMBRA_ID);
             byte gtype   = stringToType(grant.getAttribute(MailConstants.A_GRANT_TYPE));
             short rights = ACL.stringToRights(grant.getAttribute(MailConstants.A_RIGHTS));
-            String args   = grant.getAttribute(MailConstants.A_ARGS, null);
-            acl.grantAccess(zid, gtype, rights, args);
+            
+            String secret = null;
+            if (gtype == ACL.GRANTEE_KEY)
+                secret = grant.getAttribute(MailConstants.A_ACCESSKEY, null);
+            else {
+                secret = grant.getAttribute(MailConstants.A_ARGS, null);
+                // bug 30891 for 5.0.x
+                if (secret == null)
+                    secret = grant.getAttribute(MailConstants.A_PASSWORD);
+            }
+            acl.grantAccess(zid, gtype, rights, secret);
         }
         return acl;
     }

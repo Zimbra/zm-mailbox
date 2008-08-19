@@ -1765,7 +1765,7 @@ origid/rt/irt are present only on drafts
   <action id="{list}" op="read|delete|rename|move|trash|empty|color|grant|url|import|sync|fb|[!]check|update|[!]syncon" [l="{target-folder}"]
                       [name="{new-name}"] [color="{new-color}"] [zid="{grantee-zimbra-id}"] [url="{target-url}"]
                       [excludeFreeBusy="{exclude-free-busy-boolean}">
-    [<grant perm="..." gt="..." d="..." [args="..."]/>]
+    [<grant perm="..." gt="..." d="..." [args="..."] [key="..."]/>]
   </action>
 </FolderActionRequest>
 
@@ -1798,7 +1798,7 @@ Actions:
     - change the folder's color to {new-color}
 
   <action op="grant" id="{list}">
-    <grant perm="..." gt="..." d="..." [args="..."]/>
+    <grant perm="..." gt="..." d="..." [args="..."] [key="..."]/>
   </action>
     - add the <grant> object to the folder
 
@@ -2659,7 +2659,7 @@ If no <ace> elements are provided, all ACEs are returned in the response.
 If <ace> elements are provided, only those ACEs with specified rights are returned in the response.
 
 <GetPermissionResponse>
-  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"] [args="{args}"]/>*
+  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"] [pw="{password}"]/>*
 </GetPermissionResponse>
 
     {right}        = viewFreeBusy | invite
@@ -2679,22 +2679,22 @@ If <ace> elements are provided, only those ACEs with specified rights are return
     {grantee-name} = display name of the grantee.
                      ot present if {grantee-type} is "all" or "pub"
  
-    {args}         = optional arguments.  password when {grantee-type} is "gst" (not yet supported)
+    {pw}           = optional arguments.  password when {grantee-type} is "gst" (not yet supported)
  
 ---------------------------
 
 Grant account level permissions.
 
 <GrantPermissionRequest>
-  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" [zid="{zimbra-id}"] [d="{grantee-name}"] [args="{args}"]/>+
+  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" [zid="{zimbra-id}"] [d="{grantee-name}"] [pw="{password}"]/>+
 </GrantPermissionRequest>
 
   If gt is:
      usr - either zid or d is required. 
      grp - either zid or d is required. 
-     all - zid, d, args are ignored
-     gst - zid is ignored, d is required, args is optional (not yet supported)
-     pub - zid, d, args are ignored
+     all - zid, d, pw are ignored
+     gst - zid is ignored, d is required, pw is optional (not yet supported)
+     pub - zid, d, pw are ignored
   
   For usr and grp:
      - if zid is provided, server will lookup the entry by zid and grantee type, and d is ignored.
@@ -2705,14 +2705,14 @@ Grant account level permissions.
 GrantPermissionResponse returns permissions that are successfully granted.
 
 <GrantPermissionResponse>
-  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"] [args="{args}"]/>*
+  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"] [pw="{password}"]/>*
 </GrantPermissionRequest>
 ---------------------------
 
 Revoke account level permissions.
 
 <RevokePermissionRequest>
-  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" [zid="{zimbra-id}"] [d="{grantee-name}"] [args="{args}"]/>*
+  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" [zid="{zimbra-id}"] [d="{grantee-name}"] [pw="{password}"]/>*
 </RevokePermissionRequest>
 
   Same notes as those for GrantPermissionRequest about identifying the grantee.
@@ -2720,7 +2720,7 @@ Revoke account level permissions.
 RevokePermissionResponse returns permissions that are successfully revoked.
 
 <RevokePermissionResponse>
-  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"] [args="{args}"]/>*
+  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"] [pw="{password}"]/>*
 </RevokePermissionResponse>
 
 ---------------------------
