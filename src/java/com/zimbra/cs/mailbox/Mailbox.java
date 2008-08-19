@@ -49,6 +49,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
@@ -3983,6 +3984,7 @@ public class Mailbox {
             CalendarItem calItem = getCalendarItemById(octxt, calItemId);
             if (calItem == null)
                 throw MailServiceException.NO_SUCH_CALITEM(calItemId);
+            calItem.snapshotRevision();
             calItem.updateNextAlarm(dismissedAt + 1);
             success = true;
         } finally {
@@ -4072,6 +4074,12 @@ public class Mailbox {
             boolean calItemIsNew = true;
             long oldNextAlarm = 0;
             for (SetCalendarItemData scid : scidList) {
+                if (scid.mPm == null) {
+                    scid.mInv.setDontIndexMimeMessage(true); // the MimeMessage is fake, so we don't need to index it
+                    MimeMessage mm = CalendarMailSender.createCalendarMessage(scid.mInv);
+                    scid.mPm = new ParsedMessage(mm, octxt == null ? System.currentTimeMillis() : octxt.getTimestamp(), true);
+                }
+
                 if (first) {
                     // usually the default invite
                     first = false;
@@ -4092,6 +4100,8 @@ public class Mailbox {
                             return null; // for now, just ignore this Invitation
                         }
                     } else {
+                        calItem.snapshotRevision();
+
                         // Preserve alarm time before any modification is made to the item.
                         AlarmData alarmData = calItem.getAlarmData();
                         if (alarmData != null)
@@ -4195,6 +4205,7 @@ public class Mailbox {
             if (numFixed > 0) {
                 ZimbraLog.calendar.info("Fixed " + numFixed + " timezone entries in calendar item " + calItem.getId());
                 redoRecorder.setReplacementMap(replaced);
+                calItem.snapshotRevision();
                 calItem.saveMetadata();
                 // Need to uncache and refetch the item because there are fields
                 // in the appointment/task that reference the old, pre-fix version
@@ -4276,6 +4287,7 @@ public class Mailbox {
             int numFixed = TimeZoneFixup.fixCalendarItem(calItem, country);
             if (numFixed > 0) {
                 ZimbraLog.calendar.info("Fixed " + numFixed + " timezone entries in calendar item " + calItem.getId());
+                calItem.snapshotRevision();
                 calItem.saveMetadata();
                 // Need to uncache and refetch the item because there are fields
                 // in the appointment/task that reference the old, pre-fix version
@@ -4329,6 +4341,7 @@ public class Mailbox {
             int numFixed = calItem.fixRecurrenceEndTime();
             if (numFixed > 0) {
                 ZimbraLog.calendar.info("Fixed calendar item " + calItem.getId());
+                calItem.snapshotRevision();
                 markItemModified(calItem, Change.MODIFIED_CONTENT | Change.MODIFIED_INVITE);
                 success = true;
             }
@@ -4341,19 +4354,22 @@ public class Mailbox {
     public int[] addInvite(OperationContext octxt, Invite inv, int folderId)
     throws ServiceException {
         maybeIndexDeferredItems();
-        return addInvite(octxt, inv, folderId, null, false, false);
+        boolean addRevision = true;  // Always rev the calendar item.
+        return addInvite(octxt, inv, folderId, null, false, false, addRevision);
     }
 
     public int[] addInvite(OperationContext octxt, Invite inv, int folderId, ParsedMessage pm)
     throws ServiceException {
         maybeIndexDeferredItems();
-        return addInvite(octxt, inv, folderId, pm, false, false);
+        boolean addRevision = true;  // Always rev the calendar item.
+        return addInvite(octxt, inv, folderId, pm, false, false, addRevision);
     }
 
-    public int[] addInvite(OperationContext octxt, Invite inv, int folderId, boolean preserveExistingAlarms)
+    public int[] addInvite(OperationContext octxt, Invite inv, int folderId, boolean preserveExistingAlarms,
+                           boolean addRevision)
     throws ServiceException {
         maybeIndexDeferredItems();
-        return addInvite(octxt, inv, folderId, null, preserveExistingAlarms, false);
+        return addInvite(octxt, inv, folderId, null, preserveExistingAlarms, false, addRevision);
     }
 
     /**
@@ -4365,12 +4381,14 @@ public class Mailbox {
      * @param pm NULL is OK here
      * @param preserveExistingAlarms
      * @param discardExistingInvites
+     * @param addRevision if true and revisioning is enabled and calendar item exists already, add a revision
+     *                    with current snapshot of the calendar item
      * 
      * @return int[2] = { calendar-item-id, invite-mail-item-id }  Note that even though the invite has a mail-item-id, that mail-item does not really exist, it can ONLY be referenced through the calendar item "calItemId-invMailItemId"
      * @throws ServiceException
      */
     public int[] addInvite(OperationContext octxt, Invite inv, int folderId, ParsedMessage pm,
-                           boolean preserveExistingAlarms, boolean discardExistingInvites)
+                           boolean preserveExistingAlarms, boolean discardExistingInvites, boolean addRevision)
     throws ServiceException {
         if (pm == null) {
             inv.setDontIndexMimeMessage(true); // the MimeMessage is fake, so we don't need to index it
@@ -4388,7 +4406,7 @@ public class Mailbox {
         }
 
         CreateInvite redoRecorder =
-            new CreateInvite(mId, inv, folderId, data, preserveExistingAlarms, discardExistingInvites);
+            new CreateInvite(mId, inv, folderId, data, preserveExistingAlarms, discardExistingInvites, addRevision);
 
         synchronized(this) {
             boolean success = false;
@@ -4423,6 +4441,8 @@ public class Mailbox {
                         if (currInv != null)
                             inv.setInviteId(currInv.getMailItemId());
                     }
+                    if (addRevision)
+                        calItem.snapshotRevision();
                     calItem.processNewInvite(pm, inv, folderId, volumeId, 0,
                                              preserveExistingAlarms, discardExistingInvites);
                 }
@@ -4511,6 +4531,7 @@ public class Mailbox {
                         "Unknown calendar item UID " + uid + " in mailbox " + getId());
                 return;
             }
+            calItem.snapshotRevision();
             boolean added = calItem.processNewInviteReply(inv);
 // Do we _really_ need to reindex the CalendarItem when we receive a reply?  Not sure we do -tim  
 //            if (added) 
@@ -6036,10 +6057,24 @@ public class Mailbox {
         OperationContext octxtNoConflicts = new OperationContext(octxt).unsetChangeConstraint();
 
         // add the newly-fetched items to the folder
+        Set<String> calUidsSeen = new HashSet<String>();
         for (Object obj : sdata.items) {
             try {
                 if (obj instanceof Invite) {
-                    int calIds[] = addInvite(octxtNoConflicts, (Invite) obj, folderId, true);
+                    Invite inv = (Invite) obj;
+                    String uid = inv.getUid();
+                    if (uid == null) {
+                        uid = LdapUtil.generateUUID();
+                        inv.setUid(uid);
+                    }
+                    boolean addRevision;
+                    if (!calUidsSeen.contains(uid)) {
+                        addRevision = true;
+                        calUidsSeen.add(uid);
+                    } else {
+                        addRevision = false;
+                    }
+                    int calIds[] = addInvite(octxtNoConflicts, inv, folderId, true, addRevision);
                     if (calIds != null && calIds.length > 0)
                         existingCalItems.remove(calIds[0]);
                 } else if (obj instanceof ParsedMessage) {

@@ -85,6 +85,7 @@ public class DavContext {
 		mStatus = HttpServletResponse.SC_OK;
 		mAuthAccount = authUser;
 		mOpCtxt = new Mailbox.OperationContext(authUser);
+		mOpCtxt.setUserAgent(req.getHeader("User-Agent"));
 	}
 	
 	/* Returns HttpServletRequest object containing the current DAV request. */

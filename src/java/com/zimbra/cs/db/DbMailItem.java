@@ -2336,8 +2336,11 @@ public class DbMailItem {
             }
 
             int flags = rs.getInt(LEAF_CI_FLAGS);
-            if ((flags & Flag.BITMASK_VERSIONED) != 0)
-                (versioned == null ? new ArrayList<Integer>() : versioned).add(id);
+            if ((flags & Flag.BITMASK_VERSIONED) != 0) {
+                if (versioned == null)
+                    versioned = new ArrayList<Integer>();
+                versioned.add(id);
+            }
 
             Integer indexId = new Integer(rs.getInt(LEAF_CI_INDEX_ID));
             boolean indexed = !rs.wasNull();

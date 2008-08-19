@@ -325,7 +325,7 @@ public abstract class CalendarItem extends MailItem {
             throw ServiceException.PERM_DENIED("you do not have permission to create private calendar item in this folder");
         Mailbox mbox = folder.getMailbox();
         
-        if (pm.hasAttachments()) {
+        if (pm != null && pm.hasAttachments()) {
             firstInvite.setHasAttachment(true);
             flags |= Flag.BITMASK_ATTACHED;
         } else {
@@ -388,7 +388,7 @@ public abstract class CalendarItem extends MailItem {
                                        new ReplyList(), null);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("Adding CalendarItem: id=%d, Message-ID=%s, folderId=%d, folderName=%s, invite=%s.",
-            data.id, pm.getMessageID(), folder.getId(), folder.getName(), firstInvite.getName());
+            data.id, pm != null ? pm.getMessageID() : "none", folder.getId(), folder.getName(), firstInvite.getName());
         DbMailItem.create(mbox, data);
 
         CalendarItem item =
@@ -1028,7 +1028,7 @@ public abstract class CalendarItem extends MailItem {
                              int folderId, short volumeId, long nextAlarm,
                              boolean preserveAlarms, boolean replaceExistingInvites)
     throws ServiceException {
-        invite.setHasAttachment(pm.hasAttachments());
+        invite.setHasAttachment(pm != null ? pm.hasAttachments() : false);
 
         String method = invite.getMethod();
         if (method.equals(ICalTok.REQUEST.toString()) ||
@@ -1084,6 +1084,13 @@ public abstract class CalendarItem extends MailItem {
         if (!canAccess(isCancel ? ACL.RIGHT_DELETE : ACL.RIGHT_WRITE))
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on this calendar item");
 
+        // If updating (but not canceling) an appointment in trash folder, use default calendar folder
+        // and discard all existing invites.
+        if (!isCancel && getFolderId() == Mailbox.ID_FOLDER_TRASH && folderId == Mailbox.ID_FOLDER_TRASH) {
+            folderId = Mailbox.ID_FOLDER_CALENDAR;
+            discardExistingInvites = true;
+        }
+
         // Don't allow creating/editing a private appointment on behalf of another user,
         // unless that other user is a calendar resource.
         boolean isCalendarResource = getMailbox().getAccount() instanceof CalendarResource;
@@ -1114,6 +1121,43 @@ public abstract class CalendarItem extends MailItem {
 
         boolean organizerChanged = organizerChangeCheck(newInvite, isCancel);
         ZOrganizer newOrganizer = newInvite.getOrganizer();
+
+        // If we got a cancel request, check if this cancel will result in canceling the entire appointment.
+        // If so, move the appointment to trash folder.
+        if (isCancel) {
+            boolean cancelAll;
+            if (!newInvite.hasRecurId()) {
+                cancelAll = true;
+                // Canceling series.  Check the sequencing requirement to make sure the invite isn't outdated.
+                Invite series = getInvite((RecurId) null);
+                if (series != null)
+                    cancelAll = isNewerVersion(series, newInvite);
+                // If series invite is not found, it's still a total cancel.
+            } else {
+                // Canceling an instance.  It's a total cancel only if mInvites has one invite and it matches
+                // the recurrence id.  (subject to sequencing requirements)
+                cancelAll = false;
+                Invite curr = getInvite(newInvite.getRecurId());
+                if (curr != null && isNewerVersion(curr, newInvite)) {
+                    cancelAll = true;
+                    // See if there any non-cancel invites besides the one being canceled.
+                    for (Invite inv : mInvites) {
+                        if (!inv.equals(curr) && !inv.isCancel()) {
+                            cancelAll = false;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (cancelAll) {
+                Folder trash = mMailbox.getFolderById(Mailbox.ID_FOLDER_TRASH);
+                move(trash);
+                // If we have revisions enabled we need to force metadata write to db because version field changed.
+                if (getMaxRevisions() != 1)
+                    saveMetadata();
+                return true;
+            }
+        }
 
         // If modifying recurrence series (rather than an instance) and the
         // start time (HH:MM:SS) is changing, we need to update the time
@@ -1371,6 +1415,10 @@ public abstract class CalendarItem extends MailItem {
                 ZimbraLog.calendar.warn(
                         "Invalid state: deleting calendar item " + getId() +
                         " in mailbox " + getMailboxId() + " while processing a non-cancel request");
+            else
+                ZimbraLog.calendar.warn(
+                        "Invalid state: deleting calendar item " + getId() +
+                        " in mailbox " + getMailboxId() + " because it has no invite after applying cancel invite");
             delete();  // delete this appointment/task from the table,
                        // it doesn't have anymore REQUESTs!
             return false;
@@ -1381,6 +1429,9 @@ public abstract class CalendarItem extends MailItem {
             if (modifiedCalItem) {
                 if (!updateRecurrence(nextAlarm)) {
                     // no default invite!  This appointment/task no longer valid
+                    ZimbraLog.calendar.warn(
+                            "Invalid state: deleting calendar item " + getId() +
+                            " in mailbox " + getMailboxId() + " because it has no invite");
                     delete();
                     return false;
                 } else {
@@ -1563,7 +1614,7 @@ public abstract class CalendarItem extends MailItem {
 
         public String getName() {
             // TODO should we just return null?
-            return mPm.getMessageID();
+            return mPm != null ? mPm.getMessageID() : null;
         }
 
         public String getContentType() {
@@ -2814,6 +2865,7 @@ public abstract class CalendarItem extends MailItem {
                 throw ServiceException.PERM_DENIED(
                         "you do not have permission to move private calendar item to the target folder");
         }
+        addRevision(true);
         return super.move(target);
     }
 
@@ -2910,6 +2962,18 @@ public abstract class CalendarItem extends MailItem {
         if (!cpi.hasMethodParam &&
             !acct.getBooleanAttr(Provisioning.A_zimbraPrefCalendarAllowMethodlessInvite, false))
             return false;
+        return true;
+    }
+
+    @Override int getMaxRevisions() throws ServiceException {
+        return getAccount().getIntAttr(Provisioning.A_zimbraCalendarMaxRevisions, 1);
+    }
+
+    public void snapshotRevision() throws ServiceException {
+        addRevision(false);
+    }
+
+    @Override protected boolean trackUserAgentInMetadata() {
         return true;
     }
 }

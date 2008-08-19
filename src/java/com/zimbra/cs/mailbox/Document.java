@@ -21,6 +21,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -176,6 +177,13 @@ public class Document extends MailItem {
         return doc;
     }
 
+    @Override Blob setContent(InputStream dataStream, int dataLength, String digest, short volumeId, Object content)
+    throws ServiceException, IOException {
+        if (getSavedSequence() != mMailbox.getOperationChangeID())
+            addRevision(false);
+        return super.setContent(dataStream, dataLength, digest, volumeId, content);
+    }
+
     Blob setContent(ParsedDocument pd) throws ServiceException,IOException {
     	short volumeId = pd.getBlob().getVolumeId();
         addRevision(false);
@@ -183,6 +191,21 @@ public class Document extends MailItem {
         // update the item's relevant attributes
         markItemModified(Change.MODIFIED_CONTENT  | Change.MODIFIED_DATE |
                          Change.MODIFIED_IMAP_UID | Change.MODIFIED_SIZE);
+
+        if (getSavedSequence() != mMailbox.getOperationChangeID()) {
+            boolean delete = true;
+            // Don't delete blob if last revision uses it.
+            if (isTagged(mMailbox.mVersionedFlag)) {
+                List<MailItem> revisions = loadRevisions();
+                if (!revisions.isEmpty()) {
+                    MailItem lastRev = revisions.get(revisions.size() - 1);
+                    if (lastRev.getSavedSequence() == getSavedSequence())
+                        delete = false;
+                }
+            }
+            if (delete)
+                markBlobForDeletion();
+        }
 
         int size = pd.getSize();
         if (mData.size != size) {
@@ -268,5 +291,9 @@ public class Document extends MailItem {
         appendCommonMembers(sb).append(", ");
         sb.append("}");
         return sb.toString();
+    }
+
+    @Override protected boolean trackUserAgentInMetadata() {
+        return true;
     }
 }

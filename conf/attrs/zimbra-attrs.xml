@@ -3427,4 +3427,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>If TRUE, enables support for GetVersionInfo for account SOAP requests.  If FALSE, GetVersionInfoRequest returns a SOAP fault.</desc>
 </attr>
 
+<attr id="709" name="zimbraCalendarMaxRevisions" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+  <defaultCOSValue>1</defaultCOSValue>
+  <desc>maximum number of revisions to keep for calendar items (appointments and tasks). 0 means unlimited.</desc>
+</attr>
+
 </attrs>

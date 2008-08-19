@@ -2,7 +2,7 @@
  * ***** BEGIN LICENSE BLOCK *****
  * 
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007 Zimbra, Inc.
+ * Copyright (C) 2006, 2007, 2008 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -16,11 +16,28 @@
  */
 package com.zimbra.cs.mailbox.util;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
@@ -28,11 +45,99 @@ import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.store.Volume;
 
 public class MetadataDump {
 
-    private static String getUsage() {
-        return "Usage: MetadataDump <mailbox ID> <mail item ID>";
+    private static final String OPT_MAILBOX_ID = "mailboxId";
+    private static final String OPT_ITEM_ID = "itemId";
+    private static final String OPT_FILE = "file";
+    private static final String OPT_HELP = "h";
+
+    private static Options sOptions = new Options();
+
+    static {
+        sOptions.addOption("m", OPT_MAILBOX_ID, true, "mailbox id");
+        sOptions.addOption("i", OPT_ITEM_ID, true, "item id (required when --" + OPT_MAILBOX_ID + " is used)");
+        sOptions.addOption("f", OPT_FILE, true, "Decode metadata value in a file (other options are ignored)");
+        sOptions.addOption(OPT_HELP, "help", false, "Show help (this output)");
+    }
+
+    private static void usage(String errmsg) {
+        if (errmsg != null) {
+            System.err.println(errmsg);
+        }
+        System.err.println("Usage: zmmetadump -m <mailbox id/email> -i <item id>");
+        System.err.println("   or: zmmetadump -f <file containing encoded metadata>");
+    }
+
+    private static CommandLine parseArgs(String args[]) {
+        CommandLineParser parser = new GnuParser();
+        CommandLine cl = null;
+        try {
+            cl = parser.parse(sOptions, args);
+        } catch (ParseException pe) {
+            usage(pe.getMessage());
+            System.exit(1);
+        }
+        return cl;
+    }
+
+    private static final String METADATA_COLUMN = "metadata";
+
+    private static class Row {
+        private Map<String, String> mMap = new LinkedHashMap<String, String>();
+
+        public void addColumn(String colName, String value) {
+            mMap.put(colName, value);
+        }
+
+        public Iterator<Entry<String, String>> iterator() {
+            return mMap.entrySet().iterator();
+        }
+
+        public String get(String colName) {
+            return mMap.get(colName);
+        }
+
+        public void print(PrintStream ps) throws ServiceException {
+            ps.println("[Database Columns]");
+            for (Iterator<Entry<String, String>> iter = iterator(); iter.hasNext(); ) {
+                Entry<String, String> entry = iter.next();
+                String col = entry.getKey();
+                if (!col.equalsIgnoreCase(METADATA_COLUMN)) {
+                    String val = entry.getValue();
+                    if (col.equalsIgnoreCase("date") || col.equalsIgnoreCase("change_date")) {
+                        if (val != null) {
+                            long t = Long.parseLong(val) * 1000;
+                            val += " (" + getTimestampStr(t) + ")";
+                        }
+                    }
+                    ps.println("  " + col + ": " + (val != null ? val : "<null>"));
+                }
+            }
+            ps.println();
+            if (mMap.get("blob_digest") != null) {
+                short volId = Short.parseShort(mMap.get("volume_id"));
+                Volume vol = Volume.getById(volId);
+                if (vol != null) {
+                    int mboxId = Integer.parseInt(mMap.get("mailbox_id"));
+                    String itemIdStr = mMap.get("id");
+                    if (itemIdStr == null)
+                        itemIdStr = mMap.get("item_id");
+                    int itemId = Integer.parseInt(itemIdStr);
+                    String dir = vol.getBlobDir(mboxId, itemId);
+                    String modContent = mMap.get("mod_content");
+                    String blobPath = dir + File.separator + itemIdStr + "-" + modContent + ".msg";
+                    ps.println("[Blob Path]");
+                    ps.println(blobPath);
+                    ps.println();
+                }
+            }
+            ps.println("[Metadata]");
+            Metadata md = new Metadata(mMap.get(METADATA_COLUMN));
+            ps.println(md.prettyPrint());
+        }
     }
 
     private static int getMailboxGroup(Connection conn, int mboxId)
@@ -56,63 +161,199 @@ public class MetadataDump {
         return gid;
     }
 
-    private static String getSQL(int mboxId, int groupId, int itemId) {
-        StringBuilder sql = new StringBuilder("SELECT metadata FROM ");
-        sql.append(DbMailItem.getMailItemTableName(mboxId, groupId));
-        sql.append(" WHERE mailbox_id = ").append(mboxId).append(" AND ");
-        sql.append("id = ").append(itemId);
-        return sql.toString();
-    }
-
-    private static String getMetadata(int mboxId, int itemId)
+    private static int lookupMailboxIdFromEmail(Connection conn, String email)
     throws SQLException, ServiceException {
-        Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            conn = DbPool.getConnection();
-            int gid = getMailboxGroup(conn, mboxId);
-            stmt = conn.prepareStatement(getSQL(mboxId, gid, itemId));
+            String sql = "SELECT id FROM mailbox WHERE comment=?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setString(1, email.toUpperCase());
             rs = stmt.executeQuery();
+            if (!rs.next())
+                throw ServiceException.FAILURE("Account " + email + " not found on this host", null);
+            return rs.getInt(1);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
 
+    private static Row getItemRow(Connection conn, int groupId, int mboxId, int itemId)
+    throws SQLException, ServiceException {
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            String sql = "SELECT * FROM " + DbMailItem.getMailItemTableName(mboxId, groupId) +
+                         " WHERE mailbox_id = " + mboxId + " AND id = " + itemId;
+            stmt = conn.prepareStatement(sql);
+            rs = stmt.executeQuery();
             if (!rs.next())
                 throw ServiceException.FAILURE(
                         "No such item: mbox=" + mboxId + ", item=" + itemId,
                         null);
-            return rs.getString(1);
+            Row row = new Row();
+            ResultSetMetaData rsMeta = rs.getMetaData();
+            int cols = rsMeta.getColumnCount();
+            for (int i = 1; i <= cols ; i++) {
+                String colName = rsMeta.getColumnName(i);
+                String colValue = rs.getString(i);
+                if (rs.wasNull())
+                    colValue = null;
+                row.addColumn(colName, colValue);
+            }
+            return row;
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
-            DbPool.quietClose(conn);
         }
+    }
+
+    private static List<Row> getRevisionRows(Connection conn, int groupId, int mboxId, int itemId)
+    throws SQLException, ServiceException {
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            String sql = "SELECT * FROM " + DbMailItem.getRevisionTableName(mboxId, groupId) +
+                         " WHERE mailbox_id = " + mboxId + " AND item_id = " + itemId +
+                         " ORDER BY mailbox_id, item_id, version DESC";
+            stmt = conn.prepareStatement(sql);
+            rs = stmt.executeQuery();
+            List<Row> rows = new ArrayList<Row>();
+            while (rs.next()) {
+                Row row = new Row();
+                ResultSetMetaData rsMeta = rs.getMetaData();
+                int cols = rsMeta.getColumnCount();
+                for (int i = 1; i <= cols ; i++) {
+                    String colName = rsMeta.getColumnName(i);
+                    String colValue = rs.getString(i);
+                    if (rs.wasNull())
+                        colValue = null;
+                    row.addColumn(colName, colValue);
+                }
+                rows.add(row);
+            }
+            return rows;
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    private static String loadFromFile(File file) throws ServiceException {
+        try {
+            long length = file.length();
+            char[] buf = new char[(int) length];
+            FileReader fr = null;
+            try {
+                fr = new FileReader(file);
+                int bytesRead = fr.read(buf);
+                if (bytesRead < length)
+                    throw ServiceException.FAILURE(
+                            "Read " + bytesRead + " bytes when expecting " + length +
+                            " bytes, from file " + file.getAbsolutePath(), null);
+                return new String(buf);
+            } finally {
+                if (fr != null)
+                    fr.close();
+            }
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("IOException while reading from " + file.getAbsolutePath(), e);
+        }
+    }
+
+    private static void printBanner(PrintStream ps, String title) {
+        ps.println("********************   " + title + "   ********************");
+    }
+
+    private static String getTimestampStr(long time) {
+        DateFormat fmt = new SimpleDateFormat("EEE yyyy/MM/dd HH:mm:ss z");
+        return fmt.format(time);
     }
 
     public static void main(String[] args) throws Exception {
         CliUtil.toolSetup();
-        int mboxId;
-        int itemId;
-        if (args.length >= 2) {
-            mboxId = Integer.parseInt(args[0]);
-            itemId = Integer.parseInt(args[1]);
-        } else {
-            System.out.println(getUsage());
-            BufferedReader reader =
-                new BufferedReader(new InputStreamReader(System.in));
-            String line;
-            System.out.print("Enter mailbox ID: ");
-            System.out.flush();
-            line = reader.readLine();
-            mboxId = Integer.parseInt(line);
-            System.out.print("Enter item ID: ");
-            System.out.flush();
-            line = reader.readLine();
-            itemId = Integer.parseInt(line);
-            reader.close();
+        int mboxId = 0;
+        int itemId = 0;
+
+        CommandLine cl = parseArgs(args);
+        if (cl.hasOption(OPT_HELP)) {
+            usage(null);
+            System.exit(0);
         }
 
-        String encoded = getMetadata(mboxId, itemId);
-        Metadata md = new Metadata(encoded);
-        String pretty = md.prettyPrint();
-        System.out.println(pretty);
+        // Get data from file.
+        String infileName = cl.getOptionValue(OPT_FILE);
+        if (infileName != null) {
+            File file = new File(infileName);
+            if (file.exists()) {
+                String encoded = loadFromFile(file);
+                Metadata md = new Metadata(encoded);
+                String pretty = md.prettyPrint();
+                System.out.println(pretty);
+                return;
+            } else {
+                System.err.println("File " + infileName + " does not exist");
+                System.exit(1);
+            }
+        }
+
+        // Get data from db.
+        Connection conn = null;
+
+        try {
+            String mboxIdStr = cl.getOptionValue(OPT_MAILBOX_ID);
+            String itemIdStr = cl.getOptionValue(OPT_ITEM_ID);
+            if (mboxIdStr == null || itemIdStr == null) {
+                usage(null);
+                System.exit(1);
+            }
+            if (mboxIdStr.matches("\\d+")) {
+                try {
+                    mboxId = Integer.parseInt(mboxIdStr);
+                } catch (NumberFormatException e) {
+                    System.err.println("Invalid mailbox id " + mboxIdStr);
+                    System.exit(1);
+                }
+            } else {
+                conn = DbPool.getConnection();
+                mboxId = lookupMailboxIdFromEmail(conn, mboxIdStr);
+            }
+            try {
+                itemId = Integer.parseInt(itemIdStr);
+            } catch (NumberFormatException e) {
+                usage(null);
+                System.exit(1);
+            }
+
+            if (conn == null)
+                conn = DbPool.getConnection();
+            int groupId = getMailboxGroup(conn, mboxId);
+
+            boolean first = true;
+
+            Row item = getItemRow(conn, groupId, mboxId, itemId);
+            List<Row> revs = getRevisionRows(conn, groupId, mboxId, itemId);
+
+            // main item
+            if (!revs.isEmpty())
+                printBanner(System.out, "Current Revision");
+            item.print(System.out);
+            first = false;
+
+            // revisions
+            for (Row rev : revs) {
+                String version = rev.get("version");
+                if (!first) {
+                    System.out.println();
+                    System.out.println();
+                }
+                printBanner(System.out, "Revision " + version);
+                rev.print(System.out);
+                first = false;
+            }
+        } finally {
+            DbPool.quietClose(conn);
+        }
     }
 }

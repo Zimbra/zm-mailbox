@@ -1550,7 +1550,9 @@ public abstract class Provisioning {
     public static final String A_zimbraCalendarRecurrenceMonthlyMaxMonths = "zimbraCalendarRecurrenceMonthlyMaxMonths";
     public static final String A_zimbraCalendarRecurrenceYearlyMaxYears = "zimbraCalendarRecurrenceYearlyMaxYears";
     public static final String A_zimbraCalendarRecurrenceOtherFrequencyMaxYears = "zimbraCalendarRecurrenceOtherFrequencyMaxYears";
-    
+
+    public static final String A_zimbraCalendarMaxRevisions    = "zimbraCalendarMaxRevisions";
+
     public static final String A_zimbraXMPPServerDialbackKey = "zimbraXMPPServerDialbackKey";
     
 

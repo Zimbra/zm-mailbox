@@ -23,8 +23,10 @@ package com.zimbra.cs.mailbox;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import javax.mail.internet.MimeMessage;
 
@@ -423,7 +425,17 @@ public class Message extends MailItem {
         // Ignore alarms set by organizer.
         boolean allowOrganizerAlarm = DebugConfig.calendarAllowOrganizerSpecifiedAlarms;
 
+        Set<String> calUidsSeen = new HashSet<String>();
         for (Invite cur : invites) {
+            String uid = cur.getUid();
+            boolean addRevision;
+            if (cur != null && !calUidsSeen.contains(uid)) {
+                addRevision = true;
+                calUidsSeen.add(uid);
+            } else {
+                addRevision = false;
+            }
+
             // Check if the sender is allowed to invite this user.  Only do this for invite-type methods,
             // namely REQUEST/PUBLISH/CANCEL/ADD/DECLINECOUNTER.  REPLY/REFRESH/COUNTER don't undergo
             // the check because they are not organizer-to-attendee methods.
@@ -545,6 +557,8 @@ public class Message extends MailItem {
                             // When updating an existing calendar item, ignore the
                             // passed-in folderId which will usually be Inbox.  Leave
                             // the calendar item in the folder it's currently in.
+                            if (addRevision)
+                                calItem.snapshotRevision();
                             modifiedCalItem = calItem.processNewInvite(pm, cur, calItem.getFolderId(), volumeId);
                         }
                     }

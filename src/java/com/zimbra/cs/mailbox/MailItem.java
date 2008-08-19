@@ -42,6 +42,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbSearch;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.Session;
@@ -1296,8 +1297,20 @@ public abstract class MailItem implements Comparable<MailItem> {
             return null;
 
         // delete the old blob *unless* we've already rewritten it in this transaction
-        if (getSavedSequence() != mMailbox.getOperationChangeID())
-            addRevision(false);
+        if (getSavedSequence() != mMailbox.getOperationChangeID()) {
+            boolean delete = true;
+            // Don't delete blob if last revision uses it.
+            if (isTagged(mMailbox.mVersionedFlag)) {
+                List<MailItem> revisions = loadRevisions();
+                if (!revisions.isEmpty()) {
+                    MailItem lastRev = revisions.get(revisions.size() - 1);
+                    if (lastRev.getSavedSequence() == getSavedSequence())
+                        delete = false;
+                }
+            }
+            if (delete)
+                markBlobForDeletion();
+        }
 
         // remove the content from the cache
         MessageCache.purge(this);
@@ -1354,7 +1367,7 @@ public abstract class MailItem implements Comparable<MailItem> {
 
     void addRevision(boolean persist) throws ServiceException {
         // don't take two revisions for the same data
-        if (mData.modContent == mMailbox.getOperationChangeID())
+        if (mData.modMetadata == mMailbox.getOperationChangeID())
             return;
 
         Folder folder = getFolder();
@@ -1363,6 +1376,13 @@ public abstract class MailItem implements Comparable<MailItem> {
         // record the current version as a revision
         if (maxNumRevisions != 1) {
             loadRevisions();
+
+            // Don't take two revisions for the same data.
+            if (!mRevisions.isEmpty()) {
+                MailItem lastRev = mRevisions.get(mRevisions.size() - 1);
+                if (lastRev.mData.modContent == mData.modContent && lastRev.mData.modMetadata == mData.modMetadata)
+                    return;
+            }
 
             UnderlyingData data = mData.clone();
             data.metadata = encodeMetadata();
@@ -1382,39 +1402,43 @@ public abstract class MailItem implements Comparable<MailItem> {
         // now that we've made a copy of the item, we can increment the version number
         mVersion++;
 
-        // purge old revisions if we're over the threshhold
-        if (maxNumRevisions == 1)
-            markBlobForDeletion();
+        // Purge revisions and their blobs beyond revision count limit.
+        if (maxNumRevisions > 0 && isTagged(mMailbox.mVersionedFlag)) {
+            List<MailItem> revisions = loadRevisions();
+            int numRevsToPurge = revisions.size() - (maxNumRevisions - 1);  // -1 for main item
+            if (numRevsToPurge > 0) {
+                List<MailItem> toPurge = new ArrayList<MailItem>();
+                int numPurged = 0;
+                for (Iterator<MailItem> it = revisions.iterator(); it.hasNext() && numPurged < numRevsToPurge; numPurged++) {
+                    MailItem revision = it.next();
+                    toPurge.add(revision);
+                    it.remove();                    
+                }
 
-        if (maxNumRevisions > 0 && mVersion > maxNumRevisions && isTagged(mMailbox.mVersionedFlag)) {
-            // must load the revision list before doing the DB revision purge
-            int firstPurgedRevision = mVersion - maxNumRevisions;
+                // The following logic depends on version, mod_metadata and mod_content each being
+                // monotonically increasing in the revisions list. (f(n) <= f(n+1))
 
-            boolean purged = false;
-            for (Iterator<MailItem> it = loadRevisions().iterator(); it.hasNext(); ) {
-                MailItem revision = it.next();
-                if (revision.mVersion > firstPurgedRevision)
-                    break;
-
-                mMailbox.updateSize(-revision.getSize());
-                folder.updateSize(0, -revision.getSize());
-
-                revision.markBlobForDeletion();
-
-                it.remove();
-                purged = true;
+                // Filter out blobs that are still in use; mark the rest for deletion.
+                int oldestRemainingSavedSequence =
+                    revisions.isEmpty() ? mData.modContent : revisions.get(0).getSavedSequence();
+                for (MailItem revision : toPurge) {
+                    if (revision.getSavedSequence() < oldestRemainingSavedSequence) {
+                        mMailbox.updateSize(-revision.getSize());
+                        folder.updateSize(0, -revision.getSize());
+                        revision.markBlobForDeletion();
+                    }
+                }
+                // Purge revisions from db.
+                int highestPurgedVer = toPurge.get(toPurge.size() - 1).getVersion();
+                DbMailItem.purgeRevisions(this, highestPurgedVer);
             }
-
-            if (purged)
-                DbMailItem.purgeRevisions(this, firstPurgedRevision);
-            if (mRevisions.isEmpty() && isTagged(mMailbox.mVersionedFlag))
+            if (revisions.isEmpty())
                 tagChanged(mMailbox.mVersionedFlag, false);
         }
 
         mData.metadataChanged(mMailbox);
         if (persist)
             saveData(getSender());
-        mBlob = null;
     }
 
     // do *not* make this public, as it'd skirt Mailbox-level synchronization and caching
@@ -2444,8 +2468,18 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
 
+    protected boolean trackUserAgentInMetadata() {
+        return false;
+    }
+
     String encodeMetadata() {
-        return encodeMetadata(new Metadata()).toString();
+        Metadata meta =  encodeMetadata(new Metadata());
+        if (trackUserAgentInMetadata()) {
+            OperationContext octxt = getMailbox().getOperationContext();
+            if (octxt != null)
+                meta.put(Metadata.FN_USER_AGENT, octxt.getUserAgent());
+        }
+        return meta.toString();
     }
 
     abstract Metadata encodeMetadata(Metadata meta);
