@@ -17,20 +17,32 @@
 
 package com.zimbra.cs.account.soap;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Map.Entry;
+
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.util.AccountLogger;
-import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.Log.Level;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.CalendarResource;
@@ -43,29 +55,14 @@ import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.NamedEntry;
-import com.zimbra.cs.account.NamedEntry.Visitor;
-import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.CacheEntry;
-import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.zclient.ZClientException;
-
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 
 public class SoapProvisioning extends Provisioning {
 
@@ -606,26 +603,34 @@ public class SoapProvisioning extends Provisioning {
         return result;        
     }
     
-    public void addAccountLogger(Account account, String category, String level)
+    public void addAccountLogger(Account account, String category, String level, String server)
     throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.ADD_ACCOUNT_LOGGER_REQUEST);
         
-        Element eId = req.addElement(AdminConstants.E_ID);
-        eId.setText(account.getId());
+        Element eAccount = req.addElement(AdminConstants.E_ACCOUNT);
+        eAccount.addAttribute(AdminConstants.A_BY, AdminConstants.BY_ID);
+        eAccount.setText(account.getId());
         
         Element eLogger = req.addElement(AdminConstants.E_LOGGER);
         eLogger.addAttribute(AdminConstants.A_CATEGORY, category);
         eLogger.addAttribute(AdminConstants.A_LEVEL, level);
         
-        invoke(req, getServer(account).getName());
+        if (server == null) {
+            server = getServer(account).getName();
+        }
+        invoke(req, server);
     }
     
-    public List<AccountLogger> getAccountLoggers(Account account) throws ServiceException {
+    public List<AccountLogger> getAccountLoggers(Account account, String server) throws ServiceException {
         List<AccountLogger> result = new ArrayList<AccountLogger>();
         XMLElement req = new XMLElement(AdminConstants.GET_ACCOUNT_LOGGERS_REQUEST);
-        Element eId = req.addElement(AdminConstants.E_ID);
-        eId.setText(account.getId());
-        Element resp = invoke(req, getServer(account).getName());
+        Element eAccount = req.addElement(AdminConstants.E_ACCOUNT);
+        eAccount.addAttribute(AdminConstants.A_BY, AdminConstants.BY_ID);
+        eAccount.setText(account.getId());
+        if (server == null) {
+            server = getServer(account).getName();
+        }
+        Element resp = invoke(req, server);
         
         for (Element eLogger : resp.listElements(AdminConstants.E_LOGGER)) {
             String category = eLogger.getAttribute(AdminConstants.A_CATEGORY);
@@ -670,12 +675,12 @@ public class SoapProvisioning extends Provisioning {
      * @param account the account, or <tt>null</tt> for all accounts on the given server
      * @param category the log category, or <tt>null</tt> for all log categories
      */
-    public void removeAccountLoggers(Account account, String category) throws ServiceException {
+    public void removeAccountLoggers(Account account, String category, String server) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.REMOVE_ACCOUNT_LOGGER_REQUEST);
         
         if (account != null) {
             Element eAccount = req.addElement(AdminConstants.E_ACCOUNT);
-            eAccount.addAttribute(AdminConstants.A_BY, AccountBy.id.toString());
+            eAccount.addAttribute(AdminConstants.A_BY, AdminConstants.BY_ID);
             eAccount.setText(account.getId());
         }
         if (category != null) {
@@ -683,8 +688,14 @@ public class SoapProvisioning extends Provisioning {
             eLogger.addAttribute(AdminConstants.A_CATEGORY, category);
         }
 
-        Server server = (account == null ? getLocalServer() : getServer(account));
-        invoke(req, server.getName());
+        if (server == null) {
+            if (account == null) {
+                server = getLocalServer().getName();
+            } else {
+                server = getServer(account).getName();
+            }
+        }
+        invoke(req, server);
     }
 
     public static class MailboxInfo {
