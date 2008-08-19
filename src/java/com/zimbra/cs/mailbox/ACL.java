@@ -118,8 +118,10 @@ public class ACL {
             return (mDigest.compareTo(digest) == 0);
         }
         public boolean matchesAccessKey(String emailAddress, String accesskey) {
+            /* do not verify emailAddress for key grantees
             if (getName().compareTo(emailAddress) != 0)
                 return false;
+            */    
             if (mAccessKey == null)
                 return false;
             return (mAccessKey.compareTo(accesskey) == 0);
