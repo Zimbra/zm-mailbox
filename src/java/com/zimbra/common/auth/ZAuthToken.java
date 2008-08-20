@@ -34,6 +34,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.util.ZimbraCookie;
 
 public class ZAuthToken {
     private static final String COOKIE_ZM_AUTH_TOKEN       = "ZM_AUTH_TOKEN";
@@ -249,7 +250,7 @@ public class ZAuthToken {
     private static void clearCookie(HttpServletResponse response, String cookieName) {
         javax.servlet.http.Cookie authTokenCookie = new javax.servlet.http.Cookie(cookieName, "");
         authTokenCookie.setMaxAge(0);
-        AuthTokenCookie.setCookieDomainPath(authTokenCookie, AuthTokenCookie.PATH_ROOT);
+        ZimbraCookie.setAuthTokenCookieDomainPath(authTokenCookie, ZimbraCookie.PATH_ROOT);
         response.addCookie(authTokenCookie);
     }
     

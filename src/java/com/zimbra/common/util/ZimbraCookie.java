@@ -1,10 +1,10 @@
-package com.zimbra.common.auth;
+package com.zimbra.common.util;
 
 import javax.servlet.http.Cookie;
 
 import com.zimbra.common.localconfig.LC;
 
-public class AuthTokenCookie {
+public class ZimbraCookie {
     
     public static String PATH_ROOT = "/";
 
@@ -15,7 +15,7 @@ public class AuthTokenCookie {
      * @param cookie
      * @param path
      */
-    public static void setCookieDomainPath(Cookie cookie, String path) {
+    public static void setAuthTokenCookieDomainPath(Cookie cookie, String path) {
         if (LC.zimbra_authtoken_cookie_domain.value().length() > 0)
             cookie.setDomain(LC.zimbra_authtoken_cookie_domain.value());
         
