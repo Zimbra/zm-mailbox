@@ -48,7 +48,6 @@ import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.ACL.GuestAccount;
 import com.zimbra.cs.service.ZimbraAuthProvider;
 import com.zimbra.common.auth.ZAuthToken;
-import com.zimbra.common.auth.AuthTokenCookie;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
@@ -56,6 +55,7 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.BlobMetaData;
 import com.zimbra.common.util.BlobMetaDataEncodingException;
+import com.zimbra.common.util.ZimbraCookie;
 
 /**
  * @author schemers
@@ -358,7 +358,7 @@ public class ZimbraAuthToken extends AuthToken {
     public void encode(HttpServletResponse resp, boolean isAdminReq) throws ServiceException {
         String origAuthData = getOrigAuthData();
         javax.servlet.http.Cookie cookie = new javax.servlet.http.Cookie(ZimbraAuthProvider.cookieName(isAdminReq), origAuthData);
-        AuthTokenCookie.setCookieDomainPath(cookie, AuthTokenCookie.PATH_ROOT);
+        ZimbraCookie.setAuthTokenCookieDomainPath(cookie, ZimbraCookie.PATH_ROOT);
         resp.addCookie(cookie);
     }
     
