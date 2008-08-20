@@ -52,7 +52,7 @@ public class GetZimletStatus extends AdminDocumentHandler {
 			Cos c = (Cos) cos.next();
 			elem = response.addElement(AdminConstants.E_COS);
 			elem.addAttribute(AdminConstants.E_NAME, c.getName());
-			String[] z = c.getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
+			String[] z = ZimletUtil.getZimlets(c);
 			for (int i = 0; i < z.length; i++) {
 				doZimlet(prov.getZimlet(z[i]), elem, -1);
 			}
