@@ -47,8 +47,10 @@ import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.PartBase;
 import org.dom4j.DocumentException;
 
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Cos;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Server;
@@ -81,6 +83,22 @@ public class ZimletUtil {
 	private static Map<String,ZimletFile> sZimlets = new HashMap<String,ZimletFile>();
 	private static Map<String,Class> sZimletHandlers = new HashMap<String,Class>();
 
+	public static String[] getZimlets(Account acct) throws ServiceException {
+	    String[] zimlets = acct.getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
+	    Domain domain = Provisioning.getInstance().getDomain(acct);
+	    if (domain != null) {
+		Set<String> domainZimlets = domain.getMultiAttrSet(Provisioning.A_zimbraZimletDomainAvailableZimlets);
+		Set<String> availZimlets = new HashSet<String>(Arrays.asList(zimlets));
+	        return SetUtil.union(availZimlets, domainZimlets).toArray(new String[0]);
+	    } else
+		return zimlets;
+	}
+	
+	public static String[] getZimlets(Cos cos) {
+	    String[] zimlets = cos.getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
+	    return zimlets;
+	}
+	
 	public static String[] listZimletNames() {
 		String[] zimlets = sZimlets.keySet().toArray(new String[0]);
 		Arrays.sort(zimlets);

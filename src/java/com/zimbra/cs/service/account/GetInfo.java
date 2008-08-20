@@ -199,17 +199,21 @@ public class GetInfo extends AccountDocumentHandler  {
     }
 
     private static void doZimlets(Element response, Account acct) {
-        String[] attrList = acct.getMultiAttr(Provisioning.A_zimbraZimletAvailableZimlets);
-        List<Zimlet> zimletList = ZimletUtil.orderZimletsByPriority(attrList);
-        int priority = 0;
-        for (Zimlet z : zimletList) {
-            if (z.isEnabled() && !z.isExtension())
-                ZimletUtil.listZimlet(response, z, priority);
-            priority++;
-        }
-
-        // load the zimlets in the dev directory and list them
-        ZimletUtil.listDevZimlets(response);
+    	try {
+            String[] attrList = ZimletUtil.getZimlets(acct);
+            List<Zimlet> zimletList = ZimletUtil.orderZimletsByPriority(attrList);
+            int priority = 0;
+            for (Zimlet z : zimletList) {
+                if (z.isEnabled() && !z.isExtension())
+                    ZimletUtil.listZimlet(response, z, priority);
+                priority++;
+            }
+    
+            // load the zimlets in the dev directory and list them
+            ZimletUtil.listDevZimlets(response);
+    	} catch (ServiceException se) {
+    	    ZimbraLog.account.error("can't get zimlets", se);
+    	}
     }
 
     private static void doProperties(Element response, Account acct) {
