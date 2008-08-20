@@ -210,7 +210,7 @@ public class DbPool {
         } catch (Exception e) {
             ZimbraLog.system.fatal("can't instantiate DB driver/pool class", e);
             System.exit(1);
-	}
+        }
 
         try {
             PoolingDataSource pds = new PoolingDataSource(sConnectionPool);
@@ -434,7 +434,7 @@ public class DbPool {
     public static int getSize() {
         return sConnectionPool.getNumActive();
     }
-    
+
     /**
      * This is only to be used by DbOfflineMigration to completely close connection to Derby.
      * Note that this doesn't permanently shutdown.  A new getPool() call will restart connections.
@@ -447,7 +447,7 @@ public class DbPool {
     	sPoolingDataSource = null;
     	Db.getInstance().shutdown();
     }
-    
+
     public static synchronized void shutdown() throws Exception {
     	isShutdown = true;
     	close();

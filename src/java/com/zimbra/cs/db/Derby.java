@@ -107,7 +107,7 @@ public class Derby extends Db {
     }
 
     @Override String getIFNULLClause(String expr1, String expr2) {
-        return "CASE WHEN " + expr1 + " IS NULL THEN " + expr1 + " ELSE " + expr2 + " END";
+        return "CASE WHEN " + expr1 + " IS NULL THEN " + expr2 + " ELSE " + expr1 + " END";
     }
 
     @Override DbPool.PoolConfig getPoolConfig() {
@@ -166,9 +166,9 @@ public class Derby extends Db {
         	} catch (IOException x) {
         		throw new RuntimeException(x);
         	}
-        	
-        	for (Enumeration<?> e = props.propertyNames(); e.hasMoreElements();) {
-        		String key = (String)e.nextElement();
+
+        	for (Enumeration<?> e = props.propertyNames(); e.hasMoreElements(); ) {
+        		String key = (String) e.nextElement();
         		System.setProperty(key, props.getProperty(key));
         	}
 

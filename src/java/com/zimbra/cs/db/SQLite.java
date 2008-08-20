@@ -18,16 +18,20 @@ package com.zimbra.cs.db;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.cli.CommandLine;
@@ -86,6 +90,8 @@ public class SQLite extends Db {
 
 
     @Override void startup(org.apache.commons.dbcp.PoolingDataSource pool, int poolSize) throws SQLException {
+        Map<String, String> pragmas = getCustomPragmas();
+
         LinkedList<java.sql.Connection> connections = new LinkedList<java.sql.Connection>();
         for (int i = 0; i < poolSize; i++) {
             java.sql.Connection conn = pool.getConnection();
@@ -100,6 +106,9 @@ public class SQLite extends Db {
 //                pragma(conn, "locking_mode", "EXCLUSIVE");
                 pragma(conn, "legacy_file_format", "OFF");
 //                pragma(conn, "read_uncommitted", "1");
+
+                for (Map.Entry<String, String> pragma : pragmas.entrySet())
+                    pragma(conn, pragma.getKey(), pragma.getValue());
             } finally {
                 connections.add(conn);
                 conn.setAutoCommit(false);
@@ -120,14 +129,35 @@ public class SQLite extends Db {
         }
     }
 
-    private static final int CONNECTION_POOL_SIZE = 12;
+    private Map<String, String> getCustomPragmas() {
+        String propsfile = LC.get("sqlite_pragma_file");
+        if (propsfile == null || propsfile.trim().equals(""))
+            return Collections.emptyMap();
+
+        try {
+            Properties props = new Properties();
+            props.load(new FileInputStream(propsfile));
+            ZimbraLog.dbconn.info("reading custom sqlite pragmas from conf file: " + propsfile);
+
+            Map<String, String> pragmas = new HashMap<String, String>(props.size() * 3 / 2);
+            for (Map.Entry<Object, Object> foo : props.entrySet())
+                pragmas.put((String) foo.getKey(), (String) foo.getValue());
+            return pragmas;
+        } catch (FileNotFoundException x) {
+            ZimbraLog.dbconn.info("no sqlite pragma conf file found; will use standard config");
+        } catch (IOException x) {
+            ZimbraLog.dbconn.warn("exception reading from sqlite pragma conf file (" + propsfile + "); will use standard config", x);
+        }
+        return Collections.emptyMap();
+    }
+
+    private static final int DEFAULT_CONNECTION_POOL_SIZE = 12;
 
     private static final int MAX_ATTACHED_DATABASES = 7;
 
     private static final HashMap<java.sql.Connection, LinkedHashMap<String, String>> sAttachedDatabases =
-            new HashMap<java.sql.Connection, LinkedHashMap<String, String>>(CONNECTION_POOL_SIZE);
+            new HashMap<java.sql.Connection, LinkedHashMap<String, String>>(DEFAULT_CONNECTION_POOL_SIZE);
 
-    @SuppressWarnings("unchecked")
     private LinkedHashMap<String, String> getAttachedDatabases(Connection conn) {
         return sAttachedDatabases.get(conn.getConnection());
     }
@@ -245,23 +275,29 @@ public class SQLite extends Db {
     }
 
 
-    private static final String DATABASE_DIRECTORY = System.getProperty("derby.system.home", LC.zimbra_home.value() + File.separator + "sqlite");
-
     static String getDatabaseFilename(String dbname) {
-        return DATABASE_DIRECTORY + File.separator + dbname + ".db";
+        return LC.zimbra_home.value() + File.separator + "sqlite" + File.separator + dbname + ".db";
     }
 
     static final class SQLiteConfig extends DbPool.PoolConfig {
         SQLiteConfig() {
             mDriverClassName = "org.sqlite.JDBC";
-            mPoolSize = CONNECTION_POOL_SIZE;
+            mPoolSize = DEFAULT_CONNECTION_POOL_SIZE;
             mRootUrl = null;
             mConnectionUrl = "jdbc:sqlite:" + getDatabaseFilename("zimbra"); 
             mLoggerUrl = null;
             mSupportsStatsCallback = false;
             mDatabaseProperties = getSQLiteProperties();
 
-            ZimbraLog.misc.debug("Setting connection pool size to " + mPoolSize);
+            // override pool size if specified in prefs
+            try {
+                String poolsize = LC.get("sqlite_pool_size");
+                if (poolsize != null && !poolsize.trim().equals(""))
+                    mPoolSize = Integer.parseInt(poolsize);
+            } catch (NumberFormatException nfe) {
+                ZimbraLog.system.warn("exception parsing 'sqlite_pool_size' config; defaulting pool size to " + mPoolSize, nfe);
+            }
+            ZimbraLog.misc.info("setting connection pool size to " + mPoolSize);
         }
 
         private static Properties getSQLiteProperties() {
