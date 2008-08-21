@@ -612,7 +612,7 @@ public class Message extends MailItem {
         getFolder().updateUnread(delta);
 
         // update the parent's unread count
-        MailItem parent = getCachedParent();
+        MailItem parent = getParent();
         if (parent != null)
             parent.updateUnread(delta);
 

@@ -973,18 +973,6 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
 
-    /** Returns the item's parent from the {@link Mailbox}'s cache.  If
-     *  the item has no parent or the parent is not currently cached,
-     *  returns <tt>null</tt>.
-     * 
-     * @throws ServiceException if there is a problem retrieving the
-     *         Mailbox's item cache. */
-    MailItem getCachedParent() throws ServiceException {
-        if (mData.parentId == -1)
-            return null;
-        return mMailbox.getCachedItem(mData.parentId);
-    }
-
     /** Returns the item's parent.  Returns <tt>null</tt> if the item
      *  does not have a parent.
      * 
@@ -1535,7 +1523,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         tagChanged(tag, newValue);
 
         // tell our parent about the tag change (note: must precede DbMailItem.alterTag)
-        MailItem parent = getCachedParent();
+        MailItem parent = getParent();
         if (parent != null)
             parent.inheritedTagChanged(tag, newValue);
 
@@ -1564,7 +1552,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         tagChanged(flag, newValue);
 
         // tell our parent about the tag change (note: must precede DbMailItem.alterTag)
-        MailItem parent = getCachedParent();
+        MailItem parent = getParent();
         if (parent != null)
             parent.inheritedTagChanged(flag, newValue);
 
