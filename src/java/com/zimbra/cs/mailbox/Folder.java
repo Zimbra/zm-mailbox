@@ -25,7 +25,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -408,6 +410,7 @@ public class Folder extends MailItem {
     }
 
     private static final class SortByName implements Comparator<Folder> {
+        SortByName()  { }
         public int compare(Folder f1, Folder f2) {
             String n1 = f1.getName();
             String n2 = f2.getName();
@@ -746,12 +749,23 @@ public class Folder extends MailItem {
         if (!isUnread())
             return;
 
-        // decrement the in-memory unread count of each message.  each message will
-        // then implicitly decrement the unread count for its conversation, folder
-        // and tags.
+        // first, fault in all the conversations for the folder's unread messages
+        //   so that we don't fetch them one by one during the updateUnread()
+        List<UnderlyingData> unreaddata = DbMailItem.getUnreadMessages(this);
+        if (canAccess(ACL.RIGHT_WRITE)) {
+            Set<Integer> conversations = new HashSet<Integer>(unreaddata.size());
+            for (UnderlyingData data : unreaddata) {
+                if (data.parentId > 0)
+                    conversations.add(data.parentId);
+            }
+            mMailbox.getItemById(conversations, TYPE_CONVERSATION);
+        }
+
+        // mark all messages in this folder as read in memory; this implicitly
+        //   decrements the unread count for its conversation, folder and tags
         List<Integer> targets = new ArrayList<Integer>();
         boolean missed = false;
-        for (UnderlyingData data : DbMailItem.getUnreadMessages(this)) {
+        for (UnderlyingData data : unreaddata) {
             Message msg = mMailbox.getMessage(data);
             if (msg.checkChangeID() || !msg.canAccess(ACL.RIGHT_WRITE)) {
                 msg.updateUnread(-1);
@@ -771,9 +785,8 @@ public class Folder extends MailItem {
             if (ZimbraLog.mailop.isDebugEnabled() && targets.size() > 0) {
                 String state = unread ? "unread" : "read";
                 String context = getMailopContext(this);
-                for (List<Integer> ids : ListUtil.split(targets, 200)) {
-                    ZimbraLog.mailop.debug("Marking messages in %s as %s.  ids: %s", context, state, StringUtil.join(",", ids));  
-                }
+                for (List<Integer> ids : ListUtil.split(targets, 200))
+                    ZimbraLog.mailop.debug("marking messages in %s as %s.  ids: %s", context, state, StringUtil.join(",", ids));
             }
             DbMailItem.alterUnread(mMailbox, targets, unread);
         }

@@ -1519,11 +1519,13 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (tag instanceof Flag && (tag.getBitmask() & Flag.FLAG_SYSTEM) != 0)
             throw MailServiceException.CANNOT_TAG(tag, this);
 
+        // grab the parent *before* we make any other changes
+        MailItem parent = getParent();
+
         // change our cached tags
         tagChanged(tag, newValue);
 
-        // tell our parent about the tag change (note: must precede DbMailItem.alterTag)
-        MailItem parent = getParent();
+        // tell our parent about the tag change (note: must happen before DbMailItem.alterTag)
         if (parent != null)
             parent.inheritedTagChanged(tag, newValue);
 
@@ -1548,11 +1550,13 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (newValue == isTagged(flag))
             return;
 
+        // grab the parent *before* we make any other changes
+        MailItem parent = getParent();
+
         // change our cached tags
         tagChanged(flag, newValue);
 
-        // tell our parent about the tag change (note: must precede DbMailItem.alterTag)
-        MailItem parent = getParent();
+        // tell our parent about the tag change (note: must happen before DbMailItem.alterTag)
         if (parent != null)
             parent.inheritedTagChanged(flag, newValue);
 
@@ -1722,14 +1726,15 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
         boolean shared = indexId > 0 && indexId == mData.indexId;
 
+        // if the copy or original is in Spam, put the copy in its own conversation
+        boolean detach = parentId <= 0 || isTagged(mMailbox.mDraftFlag) || inSpam() != folder.inSpam();
+        MailItem parent = detach ? null : getParent();
+
         if (shared && !isTagged(mMailbox.mCopiedFlag)) {
             alterSystemFlag(mMailbox.mCopiedFlag, true);
             if (ZimbraLog.mailop.isDebugEnabled())
                 ZimbraLog.mailop.debug("setting copied flag for %s", getMailopContext(this));
         }
-        
-        // if the copy or original is in Spam, put the copy in its own conversation
-        boolean detach = parentId <= 0 || isTagged(mMailbox.mDraftFlag) || inSpam() != folder.inSpam();
         
         UnderlyingData data = mData.duplicate(id, folder.getId(), destVolumeId);
         data.parentId = detach ? -1 : parentId;
@@ -1750,7 +1755,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         DbMailItem.copy(this, id, folder, data.indexId, data.parentId, data.volumeId, data.metadata);
         
         MailItem copy = constructItem(mMailbox, data);
-        copy.finishCreation(detach ? null : getParent());
+        copy.finishCreation(parent);
         
         MailboxBlob srcBlob = getBlob();
         if (srcBlob != null) {

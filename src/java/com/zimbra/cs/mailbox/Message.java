@@ -602,6 +602,9 @@ public class Message extends MailItem {
         if (delta == 0 || !trackUnread())
             return;
         markItemModified(Change.MODIFIED_UNREAD);
+        
+        // grab the parent *before* we make any other changes
+        MailItem parent = getParent();
 
         // update our unread count (should we check that we don't have too many unread?)
         mData.unreadCount += delta;
@@ -611,12 +614,11 @@ public class Message extends MailItem {
         // update the folder's unread count
         getFolder().updateUnread(delta);
 
-        // update the parent's unread count
-        MailItem parent = getParent();
+        // update the conversation's unread count
         if (parent != null)
             parent.updateUnread(delta);
 
-        // tell the tags about the new unread item
+        // tell the tags about the new read/unread item
         updateTagUnread(delta);
     }
 
