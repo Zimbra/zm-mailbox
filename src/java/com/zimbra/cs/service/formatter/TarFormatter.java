@@ -664,28 +664,28 @@ public class TarFormatter extends Formatter {
     }
 
     private void updateComplete(Context context, PrintWriter pw, String callback,
-        String err, Exception e) throws IOException, ServiceException,
+        String errs, Exception e) throws IOException, ServiceException,
         UserServletException {
-        String errstr = "";
+        String errstr;
         
-        if (err == null && e != null)
-            err = e.getLocalizedMessage();
-        else if (e != null)
-            err += "\n" + e.getLocalizedMessage();
-        if (err.length() > 0) {
-            if (err.indexOf("\n") == -1)
-                errstr = "Tar formatter error: " + err;
+        if (e != null)
+            errs = (errs == null ? "" : errs + "\n") + e.getLocalizedMessage();
+	else if (errs == null)
+	    errs = "";
+        if (errs.length() > 0) {
+            if (errs.indexOf("\n") == -1)
+                errstr = "Tar formatter error: " + errs;
             else
-                errstr = "Tar formatter errors:\n" + err;
+                errstr = "Tar formatter errors:\n" + errs;
             ZimbraLog.misc.warn(errstr);
         }
         if (callback == null || callback.equals("")) {
             if (pw == null) {
-                if (err.length() == 0 && e == null)
+                if (errs.length() == 0)
                     return;
                 else if (e == null)
-                    throw new UserServletException(HttpServletResponse.SC_CONFLICT,
-                        err);
+                    throw new UserServletException(
+		    	HttpServletResponse.SC_CONFLICT, errs);
                 else if (e instanceof IOException)
                     throw (IOException)e;
                 else if (e instanceof ServiceException)
@@ -694,9 +694,10 @@ public class TarFormatter extends Formatter {
                     throw (UserServletException)e;
                 throw ServiceException.FAILURE("Tar formatter failure", e);
             }
-            pw.print("<body>\n<pre>\n" + err + "\n</pre>\n</body>\n</html>\n");
+            pw.print("<body>\n<pre>\n" + errs + "\n</pre>\n</body>\n</html>\n");
         } else {
-            errstr = err.substring(0, err.length() > 2048 ? 2048 : err.length());
+            errstr = errs.substring(0, errs.length() > 2048 ? 2048 :
+		errs.length());
             errstr = errstr.replace("\\", "\\\\");
             errstr = errstr.replace("'", "\\\'");
             errstr = errstr.replace("\"", "\\\'");
