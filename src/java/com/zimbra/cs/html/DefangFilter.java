@@ -146,7 +146,7 @@ public class DefangFilter extends DefaultFilter {
         //acceptElement("base", "href"); //,target");
         acceptElement("bdo", CORE_LANG);
         acceptElement("blockquote", CORE_LANG+"cite");
-        acceptElement("body", CORE_LANG); //+"alink,background,bgcolor,link,text,vlink");
+        acceptElement("body", CORE_LANG+"background"); //+"alink,background,bgcolor,link,text,vlink");
         acceptElement("br", CORE+"clear");
         acceptElement("center", CORE_LANG);
         acceptElement("del", CORE_LANG+"cite,datetime");
@@ -227,15 +227,15 @@ public class DefangFilter extends DefaultFilter {
 
         if (ENABLE_TABLE_TAGS) {
             acceptElement("caption", CORE_LANG+"align");
-            acceptElement("col",CORE_LANG+"alink,char,charoff,span,valign,width");
-            acceptElement("colgroup", CORE_LANG+"alink,char,charoff,span,valign,width");
-            acceptElement("table", CORE_LANG+"align,valign,bgcolor,border,cellpadding,cellspacing,frame,rules,summary,width");
-            acceptElement("tbody", CORE_LANG+"align,char,charoff,valign");
-            acceptElement("td", CORE_LANG+"abbr,align,axis,bgcolor,char,charoff,colspan,headers,height,nowrap,rowspan,scope,,valign,width");
-            acceptElement("tfoot", CORE_LANG+"align,char,charoff,valign");
-            acceptElement("th", CORE_LANG+"abbr,align,axis,bgcolor,char,charoff,colspan,headers,height,nowrap,rowspan,scope,valign,width");
-            acceptElement("thead", CORE_LANG+"align,char,charoff,valign");
-            acceptElement("tr", CORE_LANG+"align,bgcolor,char,charoff,valign");
+            acceptElement("col",CORE_LANG+"alink,background,char,charoff,span,valign,width");
+            acceptElement("colgroup", CORE_LANG+"alink,background,char,charoff,span,valign,width");
+            acceptElement("table", CORE_LANG+"align,valign,background,bgcolor,border,cellpadding,cellspacing,frame,rules,summary,width");
+            acceptElement("tbody", CORE_LANG+"align,background,char,charoff,valign");
+            acceptElement("td", CORE_LANG+"abbr,align,axis,background,bgcolor,char,charoff,colspan,headers,height,nowrap,rowspan,scope,,valign,width");
+            acceptElement("tfoot", CORE_LANG+"align,background,char,charoff,valign");
+            acceptElement("th", CORE_LANG+"abbr,align,axis,background,bgcolor,char,charoff,colspan,headers,height,nowrap,rowspan,scope,valign,width");
+            acceptElement("thead", CORE_LANG+"align,background,char,charoff,valign");
+            acceptElement("tr", CORE_LANG+"align,background,bgcolor,char,charoff,valign");
         } else {
             // allow the text, just strip the tags
         }
@@ -538,11 +538,15 @@ public class DefangFilter extends DefaultFilter {
             } else if (eName.equals("a")) {
                 fixUrlBase(attributes, "href");                
             }
+            fixUrlBase(attributes, "background");
 
             if (eName.equals("img") && mNeuterImages) {
-                neuterImageTag(attributes);
+                neuterTag(attributes, "src");
             } else if (eName.equals("a")) {
                 fixATag(attributes);
+            }
+            if (mNeuterImages) {
+                neuterTag(attributes, "background");
             }
 
             return true;
@@ -574,22 +578,23 @@ public class DefangFilter extends DefaultFilter {
     /**
      * @param attributes
      */
-    private void neuterImageTag(XMLAttributes attributes) {
-        int dfIndex = attributes.getIndex("dfsrc");
-        int srcIndex = attributes.getIndex("src");
-        if (srcIndex != -1) {
-            String srcValue = attributes.getValue(srcIndex);
+    private void neuterTag(XMLAttributes attributes, String aName) {
+        String df_aName = "df"+aName;
+        int dfIndex = attributes.getIndex(df_aName);
+        int index = attributes.getIndex(aName);
+        if (index != -1) {
+            String aValue = attributes.getValue(index);
             if (dfIndex != -1) {
-                attributes.setValue(dfIndex, srcValue);
+                attributes.setValue(dfIndex, aValue);
             } else {
-                attributes.addAttribute(new QName("", "dfsrcf", "dfsrc", null), "DFSRC", srcValue);
+                attributes.addAttribute(new QName("", df_aName, df_aName, null), "CDATA", aValue);
             }
-            attributes.removeAttributeAt(srcIndex);
+            attributes.removeAttributeAt(index);
             // remove dups if there are multiple src attributes
-            srcIndex = attributes.getIndex("src");
-            while (srcIndex != -1) {
-                attributes.removeAttributeAt(srcIndex);
-                srcIndex = attributes.getIndex("src");
+            index = attributes.getIndex(aName);
+            while (index != -1) {
+                attributes.removeAttributeAt(index);
+                index = attributes.getIndex(aName);
             }
         }
     }
