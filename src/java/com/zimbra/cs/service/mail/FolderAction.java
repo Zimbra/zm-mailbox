@@ -170,7 +170,7 @@ public class FolderAction extends ItemAction {
                     gtype = nentry instanceof DistributionList ? ACL.GRANTEE_GROUP : ACL.GRANTEE_USER;
                 } catch (ServiceException e) {
                     // this is the normal path, where lookupGranteeByName throws account.NO_SUCH_USER
-                    secret = grant.getAttribute(MailConstants.A_ARGS);
+                    secret = grant.getAttribute(MailConstants.A_ARGS, null);
                     // bug 30891 for 5.0.x
                     if (secret == null)
                         secret = grant.getAttribute(MailConstants.A_PASSWORD);
@@ -246,7 +246,7 @@ public class FolderAction extends ItemAction {
             String secret = null;
             if (gtype == ACL.GRANTEE_KEY)
                 secret = grant.getAttribute(MailConstants.A_ACCESSKEY, null);
-            else {
+            else if (gtype == ACL.GRANTEE_GUEST) {
                 secret = grant.getAttribute(MailConstants.A_ARGS, null);
                 // bug 30891 for 5.0.x
                 if (secret == null)
