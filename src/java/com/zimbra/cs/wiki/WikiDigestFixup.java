@@ -214,7 +214,6 @@ public class WikiDigestFixup {
             e.printStackTrace(System.err);
         } finally {
             DbPool.quietClose(conn);
-            sStore.shutdown();
         }
     }
 }

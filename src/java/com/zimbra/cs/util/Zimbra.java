@@ -182,6 +182,9 @@ public class Zimbra {
         else
             redoLog.initRedoLogManager();
 
+        if (sIsMailboxd)
+            StoreManager.getInstance().startup();
+
         System.setProperty("ical4j.unfolding.relaxed", "true");
 
         MailboxManager.getInstance().startup();
@@ -279,7 +282,8 @@ public class Zimbra {
         if (sIsMailboxd)
             redoLog.shutdown();
 
-        StoreManager.getInstance().shutdown();
+        if (sIsMailboxd)
+            StoreManager.getInstance().shutdown();
 
         if (app.supports(ExtensionUtil.class.getName()))
         	ExtensionUtil.destroyAll();
