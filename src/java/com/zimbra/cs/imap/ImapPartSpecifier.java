@@ -263,7 +263,7 @@ class ImapPartSpecifier {
                             throw new BinaryDecodingException();
                         }
                     } else {
-                        is = ((MimeBodyPart) mp).getRawInputStream();  length = mp.getSize();
+                        is = ((MimeBodyPart) mp).getRawInputStream();  length = Math.max(0, mp.getSize());
                     }
                 } else if (mp instanceof MimeMessage) {
                     if (mCommand.startsWith("BINARY")) {
@@ -273,7 +273,7 @@ class ImapPartSpecifier {
                             throw new BinaryDecodingException();
                         }
                     } else {
-                        is = ((MimeMessage) mp).getRawInputStream();  length = mp.getSize();
+                        is = ((MimeMessage) mp).getRawInputStream();  length = Math.max(0, mp.getSize());
                     }
                 } else {
                     ZimbraLog.imap.debug("getting content of part; not MimeBodyPart: " + this);
@@ -281,7 +281,7 @@ class ImapPartSpecifier {
                 }
             } else if (mModifier.startsWith("HEADER")) {
                 MimeMessage mm = (MimeMessage) mp;
-                Enumeration headers;
+                Enumeration<?> headers;
                 if (mModifier.equals("HEADER"))              headers = mm.getAllHeaderLines();
                 else if (mModifier.equals("HEADER.FIELDS"))  headers = mm.getMatchingHeaderLines(getHeaders());
                 else                                         headers = mm.getNonMatchingHeaderLines(getHeaders());
@@ -292,7 +292,7 @@ class ImapPartSpecifier {
                 byte[] content = result.append(ImapHandler.LINE_SEPARATOR).toString().getBytes();
                 is = new ByteArrayInputStream(content);  length = content.length;
             } else if (mModifier.equals("MIME")) {
-                Enumeration mime = mp.getAllHeaderLines();
+                Enumeration<?> mime = mp.getAllHeaderLines();
                 StringBuilder result = new StringBuilder();
                 while (mime.hasMoreElements())
                     result.append(mime.nextElement()).append(ImapHandler.LINE_SEPARATOR);
@@ -300,7 +300,7 @@ class ImapPartSpecifier {
                 byte[] content = result.append(ImapHandler.LINE_SEPARATOR).toString().getBytes();
                 is = new ByteArrayInputStream(content);  length = content.length;
             } else if (mModifier.equals("TEXT")) {
-                is = ((MimeMessage) mp).getRawInputStream();  length = mp.getSize();
+                is = ((MimeMessage) mp).getRawInputStream();  length = Math.max(0, mp.getSize());
             } else {
                 return null;
             }
