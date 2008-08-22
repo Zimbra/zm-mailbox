@@ -239,7 +239,7 @@ public class RedoLogVerify {
             int linesBefore = 10;
             int linesAfter = 10;
             long startPos = Math.max(lastPosition - (lastPosition % bytesPerLine) - linesBefore * bytesPerLine, 0);
-            int count = (int) Math.min((linesBefore + linesAfter + 1) * bytesPerLine, diff);
+            int count = (int) Math.min((linesBefore + linesAfter + 1) * bytesPerLine, lastPosition - startPos + diff);
             RandomAccessFile raf = null;
             try {
                 raf = new RandomAccessFile(logfile, "r");
