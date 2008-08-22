@@ -22,6 +22,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.callback.IDNCallback;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
+import com.zimbra.cs.util.BuildInfo;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -82,6 +83,7 @@ public class AttributeManager {
     private static final String A_OPTIONAL_IN = "optionalIn";
     private static final String A_FLAGS = "flags";
     private static final String A_DEPRECATED_SINCE = "deprecatedSince";
+    private static final String A_SINCE = "since";
 
     private static final String E_DESCRIPTION = "desc";
     private static final String E_DEPRECATE_DESC = "deprecateDesc";
@@ -226,6 +228,7 @@ public class AttributeManager {
             canonicalName = name.toLowerCase();
 
             String deprecatedSince = null;
+            BuildInfo.Version sinceVer = null;
             
             for (Iterator attrIter = eattr.attributeIterator(); attrIter.hasNext();) {
                 Attribute attr = (Attribute) attrIter.next();
@@ -281,6 +284,16 @@ public class AttributeManager {
                 	}
                 } else if (aname.equals(A_DEPRECATED_SINCE)) {  
                     deprecatedSince = attr.getValue();
+                } else if (aname.equals(A_SINCE)) {  
+                    String since = attr.getValue();
+                    if (since != null) {
+                        try {
+                            sinceVer = new BuildInfo.Version(since);
+                        } catch (ServiceException e) {
+                            error(name, file, aname + " is not valid: " + attr.getValue() + " (" + e.getMessage() + ")");
+                        }
+                    }
+                        
                 } else {
                     error(name, file, "unknown <attr> attr: " + aname);
                 }
@@ -360,7 +373,7 @@ public class AttributeManager {
 
             AttributeInfo info = new AttributeInfo(name, id, parentOid, groupId, callback, type, order, value, immutable, min, max, 
                                                    cardinality, requiredIn, optionalIn, flags, globalConfigValues, defaultCOSValues, 
-                                                   description);
+                                                   description, sinceVer);
             if (mAttrs.get(canonicalName) != null) {
                 error(name, file, "duplicate definiton");
             }
@@ -486,6 +499,18 @@ public class AttributeManager {
                     mFlagToAttrsMap.get(AttributeFlag.idn).contains(attr));
         } else
             return false;
+    }
+    
+    public boolean inVersion(String attr, String version) throws ServiceException {
+    	AttributeInfo ai = mAttrs.get(attr.toLowerCase());
+    	if (ai != null) {
+    	    BuildInfo.Version since = ai.getSince();
+    	    if (since == null)
+    	        return true;
+    	    else
+    		    return since.compare(version) <= 0;
+    	} else
+    	    throw ServiceException.INVALID_REQUEST("unknown attribute: " + attr, null);
     }
     
     private boolean hasFlag(AttributeFlag flag, String attr) {

@@ -53,7 +53,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
        requiredIn="{class-names-comma-seperated}"
        optionalIn="{class-names-comma-seperated}"
        [flags="{flag-names-comma-seperated}"]]
-       [deprecatedSince="{version}"]>
+       [deprecatedSince="{version}"]
+       [since="{version}"]>
    <desc>Documentation</desc>
    [<deprecateDesc>Documentation for how the attribute was deprecated</deprecateDesc>]
    [<globalConfigValue>{initial-value-in-global-config}</globalConfigValue>]*
@@ -133,12 +134,19 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   	documentation purpose so when somone (Zimbra employee or customer)
     looks at zimbra-attrs.xml or zimbra.schema they know those attributes
     are no longer used.
+    
+  since:
+    version since which the attribute had been introduced.
+    For attributes that don't have "since" declared, it is assumed the attribute 
+    was introduced since the very beginning.
 
   Element deprecateDesc:
     Documentation for how the attribute was deprecated. e.g. attributes and
     mechenisms that are replacing the deprecated attribute.  Required if
     deprecatedSince is present.  Cannot be present if deprecatedSince is not
     present.
+    
+    
 -->
 
 <attr name="c" type="string" optionalIn="account" flags="domainAdminModifiable"/>
@@ -3432,7 +3440,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>maximum number of revisions to keep for calendar items (appointments and tasks). 0 means unlimited.</desc>
 </attr>
 
-<attr id="710" name="zimbraZimletDomainAvailableZimlets" type="string" max="256" cardinality="multi" optionalIn="domain">
+<attr id="710" name="zimbraZimletDomainAvailableZimlets" type="string" max="256" cardinality="multi" optionalIn="domain" since="5.0.10">
   <desc>List of Zimlets available to this domain.
         Zimlets available to accounts in the domain is the union of account/cos attribute zimbraZimletAvailableZimlets and this attribute. 
   </desc>

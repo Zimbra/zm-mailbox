@@ -29,6 +29,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.util.BuildInfo;
 
 public class AttributeInfo {
     
@@ -90,6 +91,8 @@ public class AttributeInfo {
     
     private String mDescription;
     
+    private BuildInfo.Version mSince;
+    
     private static Integer parseInt(String value) {
         try {
             return Integer.parseInt(value);
@@ -124,7 +127,7 @@ public class AttributeInfo {
                    AttributeOrder order, String value, boolean immutable, String min, String max, 
                    AttributeCardinality cardinality, Set<AttributeClass> requiredIn, 
                    Set<AttributeClass> optionalIn, Set<AttributeFlag> flags,
-                   List<String> globalConfigValues, List<String> defaultCOSValues, String description)
+                   List<String> globalConfigValues, List<String> defaultCOSValues, String description, BuildInfo.Version since)
     {
         mName = attrName;
         mImmutable = immutable;
@@ -142,6 +145,7 @@ public class AttributeInfo {
         mGlobalConfigValues = globalConfigValues;
         mDefaultCOSValues = defaultCOSValues;
         mDescription = description;
+        mSince = since;
         
         mMin = parseLong(attrName, AttributeManager.A_MIN, min, Long.MIN_VALUE);
         mMax = parseLong(attrName, AttributeManager.A_MAX, max, Long.MAX_VALUE);
@@ -440,5 +444,9 @@ public class AttributeInfo {
 
     boolean isImmutable() {
         return mImmutable;
+    }
+    
+    BuildInfo.Version getSince() {
+        return mSince;
     }
 }
