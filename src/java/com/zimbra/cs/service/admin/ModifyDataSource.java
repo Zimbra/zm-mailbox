@@ -78,15 +78,6 @@ public class ModifyDataSource extends AdminDocumentHandler {
             throw ServiceException.INVALID_REQUEST("Cannot find data source with id=" + dsId, null);
         }
         ZimbraLog.addDataSourceNameToContext(ds.getName());
-
-        // remove anything that doesn't start with zimbraDataSource. ldap will also do additional checks
-        List<String> toRemove = new ArrayList<String>();
-        for (String key: attrs.keySet())
-            if (!key.toLowerCase().startsWith("zimbradatasource"))
-                toRemove.add(key);
-        
-        for (String key : toRemove)
-            attrs.remove(key);
         
         prov.modifyDataSource(account, dsId, attrs);
         
