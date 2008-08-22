@@ -17,6 +17,7 @@
 
 package com.zimbra.cs.util;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.Versions;
 
 public class BuildInfo {
@@ -58,6 +59,80 @@ public class BuildInfo {
         	FULL_VERSION = VERSION + " " + RELEASE + " " + DATE;
         }
     }
+    
+    public static class Version {
+        int mMajor;
+        int mMinor;
+        int mPatch;
+        
+        /**
+         * 
+         * @param version String in the format of <major number>.<minor number>.<patch number>
+         */
+        public Version(String version) throws ServiceException {
+            String[] parts = version.split("\\.");
+            
+            if (parts.length == 1)
+                mMajor = Integer.parseInt(parts[0]);
+            else if (parts.length == 2) {
+                mMajor = Integer.parseInt(parts[0]);
+                mMinor = Integer.parseInt(parts[1]);
+            } else if (parts.length == 3) {
+                mMajor = Integer.parseInt(parts[0]);
+                mMinor = Integer.parseInt(parts[1]);
+                mPatch = Integer.parseInt(parts[2]);
+            } else
+                throw ServiceException.FAILURE("invalid version format:" + version, null); 
+        }
+        
+        /**
+         * Compares the two versions
+         * 
+         * e.g. 
+         *     Version.compare("5.0.10", "5.0.9")  returns > 0
+         *     Version.compare("5.0.10", "5.0.10") returns == 0
+         *     Version.compare("5.0", "5.0.9")     returns < 0
+         * 
+         * @param versionX
+         * @param versionY
+         * 
+         * @return a negative integer, zero, or a positive integer as versionX is older than, equal to, or newer than the versionY.
+         */
+        public static int compare(String versionX, String versionY) throws ServiceException {
+            Version x = new Version(versionX);
+            Version y = new Version(versionY);
+            return x.compare(y);
+        }
+        
+        /**
+         * Compares this object with the specified version.
+         * 
+         * @param version
+         * @return a negative integer, zero, or a positive integer as this object is older than, equal to, or newer than the specified version.
+         */
+        public int compare(String version) throws ServiceException  {
+            Version other = new Version(version);
+            return compare(other);
+        }
+        
+        /**
+         * Compares this object with the specified version.
+         * 
+         * @param version
+         * @return a negative integer, zero, or a positive integer as this object is older than, equal to, or newer than the specified version.
+         */
+        public int compare(Version version) throws ServiceException  {
+            int r = mMajor - version.mMajor;
+            if (r != 0)
+                return r;
+            
+            r = mMinor - version.mMinor;
+            if (r != 0)
+                return r;
+            
+            return mPatch - version.mPatch;
+        }
+    }
 
     public static void main(String[] args) {
         System.out.println("Version: " + VERSION);
@@ -67,6 +142,5 @@ public class BuildInfo {
         System.out.println("Full Version: " + FULL_VERSION);
         System.out.println("DB Version: " + Versions.DB_VERSION);
         System.out.println("Index Version: " + Versions.INDEX_VERSION);
-        
     }
 }
