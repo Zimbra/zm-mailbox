@@ -419,7 +419,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                         }
                     } catch (IOException ioe) {
                         status = LmtpStatus.TRYAGAIN;
-                        ZimbraLog.lmtp.info("try again for " + rcptEmail + ": exception occurred", ioe);
+                        ZimbraLog.lmtp.warn("try again for " + rcptEmail + ": exception occurred", ioe);
                     } catch (ServiceException se) {
                         if (se.getCode().equals(MailServiceException.QUOTA_EXCEEDED)) {
                             ZimbraLog.lmtp.info("rejecting message " + rcptEmail + ": overquota");
@@ -433,7 +433,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                         }
                     } catch (Exception e) {
                         status = LmtpStatus.TRYAGAIN;
-                        ZimbraLog.lmtp.info("try again for message " + rcptEmail + ": exception occurred", e);
+                        ZimbraLog.lmtp.warn("try again for message " + rcptEmail + ": exception occurred", e);
                     } finally {
                         ZimbraLog.clearContext();
                         recipient.setDeliveryStatus(status);
