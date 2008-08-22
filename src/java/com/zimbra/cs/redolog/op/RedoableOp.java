@@ -56,7 +56,7 @@ public abstract class RedoableOp {
     private static String sPackageName = RedoableOp.class.getPackage().getName();
 
 	// magic marker for each redo item in redo log
-	private static final String REDO_MAGIC = "ZMREDO";
+	public static final String REDO_MAGIC = "ZMREDO";
 
 	// for initializing various ID member values
 	public static final int UNKNOWN_ID = 0;

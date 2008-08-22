@@ -46,7 +46,12 @@ public abstract class StoreManager {
 		return sInstance;
 	}
 
-    /**
+	/**
+	 * Starts the blob store.
+	 */
+	public abstract void startup();
+
+	/**
      * Shutdown the blob store.
      */
     public abstract void shutdown();

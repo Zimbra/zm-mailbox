@@ -40,6 +40,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.redolog.logger.FileLogReader;
+import com.zimbra.cs.redolog.logger.LogWriter;
 import com.zimbra.cs.redolog.op.AbortTxn;
 import com.zimbra.cs.redolog.op.Checkpoint;
 import com.zimbra.cs.redolog.op.CommitTxn;
@@ -149,7 +150,7 @@ public class RedoPlayer {
                     ".";
                 if (mWritable) {
                     mLog.warn(msg + "  File will be truncated to " +
-                              lastPosition + " bytes");
+                              lastPosition + " bytes.");
                     logReader.truncate(lastPosition);
                 } else
                     mLog.warn(msg);
@@ -352,7 +353,13 @@ public class RedoPlayer {
         if (!redoLog.exists())
         	return 0;
 
+        // scanLog can truncate the current redo.log if it finds junk data at the end
+        // from the previous crash.  Close log writer before scanning and reopen after
+        // so we don't accidentally undo the truncation on the next write to the log.
+        LogWriter logWriter = redoLogMgr.getLogWriter();
+        logWriter.close();
         scanLog(redoLog, false, null, 0);
+        logWriter.open();
 
 		int numOps;
         synchronized (mOpsMapGuard) {

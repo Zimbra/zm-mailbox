@@ -60,18 +60,23 @@ public class FileBlobStore extends StoreManager {
 
 	FileBlobStore() throws Exception {
         mUniqueFilenameGenerator = new UniqueFileNameGenerator();
+	}
+
+	@Override public void startup() {
         long sweepMaxAgeMS =
-        	LC.zimbra_store_sweeper_max_age.intValue() * 60 * 1000;
+            LC.zimbra_store_sweeper_max_age.intValue() * 60 * 1000;
         mSweeper = new IncomingDirectorySweeper(SWEEP_INTERVAL_MS,
-        										sweepMaxAgeMS);
+                                                sweepMaxAgeMS);
         mSweeper.start();
 	}
 
-    public void shutdown() {
-    	mSweeper.signalShutdown();
-    	try {
-			mSweeper.join();
-		} catch (InterruptedException e) {}
+	@Override public void shutdown() {
+	    if (mSweeper != null) {
+        	mSweeper.signalShutdown();
+        	try {
+    			mSweeper.join();
+    		} catch (InterruptedException e) {}
+	    }
     }
     
     private static boolean onWindows() {

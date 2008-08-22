@@ -25,6 +25,7 @@
 package com.zimbra.qa.unittest;
 
 import java.io.File;
+import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,7 +64,7 @@ extends TestCase {
     
     public void testRedoLogVerify()
     throws Exception {
-        RedoLogVerify verify = new RedoLogVerify(false, false, new DevNullOutputStream());
+        RedoLogVerify verify = new RedoLogVerify(null, new PrintStream(new DevNullOutputStream()));
         assertTrue(verify.verifyFile(getRedoLogFile()));
     }
     
