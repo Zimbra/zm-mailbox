@@ -1881,11 +1881,14 @@ public abstract class Provisioning {
     /** return domains from searchAccounts. only valid with Provisioning.searchAccounts. */
     public static final int SA_DOMAIN_FLAG = 0x10;
     
-    /** do not fixup objectclass in query for searchObject */
-    public static final int SO_NO_FIXUP_OBJECTCLASS = 0x20;
+    /** return coses from searchDirectory */
+    public static final int SD_COS_FLAG = 0x20;
     
-    /** do not fixup return attrs for searchObject */
-    public static final int SO_NO_FIXUP_RETURNATTRS = 0x40;
+    /** do not fixup objectclass in query for searchObject, should only be used from LdapUpgrade */
+    public static final int SO_NO_FIXUP_OBJECTCLASS = 0x40;
+    
+    /** do not fixup return attrs for searchObject, should only be used from LdapUpgrade */
+    public static final int SO_NO_FIXUP_RETURNATTRS = 0x80;
 
     public static final String A_amavisBypassSpamChecks = "amavisBypassSpamChecks";
 

@@ -26,6 +26,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.CalendarResource;
+import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
@@ -89,13 +90,22 @@ public class SearchDirectory extends AdminDocumentHandler {
         if (types.indexOf("distributionlists") != -1) flags |= Provisioning.SA_DISTRIBUTION_LIST_FLAG;
         if (types.indexOf("resources") != -1) flags |= Provisioning.SA_CALENDAR_RESOURCE_FLAG;
         if (types.indexOf("domains") != -1) flags |= Provisioning.SA_DOMAIN_FLAG;
+        if (types.indexOf("coses") != -1) flags |= Provisioning.SD_COS_FLAG;
+        
+        // cannot specify a domain with the "coses" flag 
+        if (((flags & Provisioning.SD_COS_FLAG) == Provisioning.SD_COS_FLAG) &&
+            (domain != null))
+            throw ServiceException.INVALID_REQUEST("cannot specify domain with coses flag", null);
 
         String[] attrs = attrsStr == null ? null : attrsStr.split(",");
 
         // if we are a domain admin only, restrict to domain
         if (isDomainAdminOnly(zsc)) {
             if ((flags & Provisioning.SA_DOMAIN_FLAG) == Provisioning.SA_DOMAIN_FLAG)
-                throw ServiceException.PERM_DENIED("can not search for domains");
+                throw ServiceException.PERM_DENIED("cannot search for domains");
+            
+            if ((flags & Provisioning.SD_COS_FLAG) == Provisioning.SD_COS_FLAG)
+                throw ServiceException.PERM_DENIED("cannot search for coses");
 
             if (domain == null) {
                 domain = getAuthTokenAccountDomain(zsc).getName();
@@ -137,13 +147,15 @@ public class SearchDirectory extends AdminDocumentHandler {
         	if (entry instanceof CalendarResource) {
         	    ToXML.encodeCalendarResourceOld(response, (CalendarResource) entry, applyCos, reqAttrs);
         	} else if (entry instanceof Account) {
-                ToXML.encodeAccountOld(response, (Account) entry, applyCos, reqAttrs);
+                ToXML.encodeAccountOld(response, (Account)entry, applyCos, reqAttrs);
             } else if (entry instanceof DistributionList) {
-                doDistributionList(response, (DistributionList) entry);
+                doDistributionList(response, (DistributionList)entry);
             } else if (entry instanceof Alias) {
                 doAlias(response, (Alias) entry);
             } else if (entry instanceof Domain) {
-                GetDomain.doDomain(response, (Domain) entry, applyConfig, reqAttrs);
+                GetDomain.doDomain(response, (Domain)entry, applyConfig, reqAttrs);
+            } else if (entry instanceof Cos) {
+                GetCos.doCos(response, (Cos)entry);
             }
         }          
 
