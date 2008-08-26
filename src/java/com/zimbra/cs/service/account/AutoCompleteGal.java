@@ -44,9 +44,12 @@ public class AutoCompleteGal extends AccountDocumentHandler {
 
         if (!canAccessAccount(zsc, account))
             throw ServiceException.PERM_DENIED("can not access account");
-        if (!(account.getBooleanAttr(Provisioning.A_zimbraFeatureGalAutoCompleteEnabled , false) &&
-              account.getBooleanAttr(Provisioning.A_zimbraFeatureGalEnabled , false)))
-            throw ServiceException.PERM_DENIED("cannot auto complete GAL");
+        
+        if (!zsc.getAuthToken().isAdmin() && !zsc.getAuthToken().isDomainAdmin()) {
+            if (!(account.getBooleanAttr(Provisioning.A_zimbraFeatureGalAutoCompleteEnabled , false) &&
+                  account.getBooleanAttr(Provisioning.A_zimbraFeatureGalEnabled , false)))
+                throw ServiceException.PERM_DENIED("cannot auto complete GAL");
+        }
         
         String n = request.getAttribute(AccountConstants.E_NAME);
         while (n.endsWith("*"))
