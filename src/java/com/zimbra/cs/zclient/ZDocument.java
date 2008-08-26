@@ -34,8 +34,10 @@ public class ZDocument implements ZItem {
 	private long mCreatedDate;
 	private long mModifiedDate;
 	private long mMetaDataChangedDate;
-	
-	
+	private long mSize;
+    private String mContentType;
+	private String mTagIds;
+    
     public ZDocument(Element e) throws ServiceException {
     	mIsWiki = "w".equals(e.getName());
     	mName = e.getAttribute(MailConstants.A_NAME);
@@ -48,6 +50,9 @@ public class ZDocument implements ZItem {
     	mCreatedDate = e.getAttributeLong(MailConstants.A_CREATED_DATE, 0) * 1000;
     	mModifiedDate = e.getAttributeLong(MailConstants.A_MODIFIED_DATE, 0) * 1000;
     	mMetaDataChangedDate = e.getAttributeLong(MailConstants.A_MODIFIED_DATE, 0) * 1000;
+        mSize = e.getAttributeLong(MailConstants.A_SIZE,0);
+        mContentType = e.getAttribute(MailConstants.A_CONTENT_TYPE);
+        mTagIds = e.getAttribute(MailConstants.A_TAGS);
     }
     
 	public String getId() {
@@ -82,9 +87,18 @@ public class ZDocument implements ZItem {
 	}
 	public boolean isWiki() {
 		return mIsWiki;
-	}
-
-	public void modifyNotification(ZModifyEvent event) throws ServiceException {
+    }
+    public String getContentType() {
+        return mContentType;
+    }
+    public long getSize() {
+        return mSize;
+    }
+    public String getTagIds() {
+        return mTagIds;
+    }
+    
+    public void modifyNotification(ZModifyEvent event) throws ServiceException {
 		// TODO Auto-generated method stub
 	}
 }

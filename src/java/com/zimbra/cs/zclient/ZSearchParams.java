@@ -41,6 +41,8 @@ public class ZSearchParams {
     public static final String TYPE_TASK = "task";
 
     public static final String TYPE_DOCUMENT = "document";
+
+    public static final String TYPE_BRIEFCASE = "briefcase";
     
     public static final String TYPE_WIKI = "wiki";
 
@@ -60,10 +62,12 @@ public class ZSearchParams {
                 sb.append(TYPE_APPOINTMENT);
             else if (s.startsWith("d") && TYPE_DOCUMENT.startsWith(s))
                 sb.append(TYPE_DOCUMENT);
+            else if (s.startsWith("b") && TYPE_BRIEFCASE.startsWith(s))
+                sb.append(TYPE_BRIEFCASE);
             else if (s.startsWith("w") && TYPE_WIKI.startsWith(s))
                 sb.append(TYPE_WIKI);
             else if (s.startsWith("t") && TYPE_TASK.startsWith(s))
-                sb.append(TYPE_TASK);            
+                sb.append(TYPE_TASK);
             else
                 throw ZClientException.CLIENT_ERROR("invlaid search type: "+s, null);
         }
