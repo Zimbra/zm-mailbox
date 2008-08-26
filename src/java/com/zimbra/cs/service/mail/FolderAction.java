@@ -177,8 +177,11 @@ public class FolderAction extends ItemAction {
                 }
             } else if (gtype == ACL.GRANTEE_KEY) {
                 zid = grant.getAttribute(MailConstants.A_DISPLAY);
+                // unlike guest, we do not require the display name to be an email address
+                /*
                 if (zid == null || zid.indexOf('@') < 0)
                     throw ServiceException.INVALID_REQUEST("invalid guest id or key", null);
+                */    
                 // unlike guest, we do not fixup grantee type for key grantees if they specify an internal user
                 
                 // get the optional accesskey
