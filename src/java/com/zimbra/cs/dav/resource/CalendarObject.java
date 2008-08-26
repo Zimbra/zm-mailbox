@@ -241,6 +241,7 @@ public interface CalendarObject {
                 ZimbraLog.dav.warn("can't generate itemId from "+appt.getId(), e);
             }
 	        mEtag = getEtag(appt);
+			setProperty(DavElements.E_GETETAG, getEtag(), true);
 	        setProperty(DavElements.P_GETCONTENTTYPE, Mime.CT_TEXT_CALENDAR);
             addProperty(CalDavProperty.getCalendarData(this));
 	    }
