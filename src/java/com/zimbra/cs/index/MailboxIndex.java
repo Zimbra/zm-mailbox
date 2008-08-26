@@ -396,6 +396,7 @@ public final class MailboxIndex
     public static final String SEARCH_FOR_CONTACTS = "contact";
     public static final String SEARCH_FOR_CONVERSATIONS = "conversation";
     public static final String SEARCH_FOR_DOCUMENTS = "document";
+    public static final String SEARCH_FOR_BRIEFCASE = "briefcase";
     public static final String SEARCH_FOR_MESSAGES = "message";
     public static final String SEARCH_FOR_NOTES = "note";
     public static final String SEARCH_FOR_TAGS = "tag";
@@ -403,7 +404,7 @@ public final class MailboxIndex
     public static final String SEARCH_FOR_WIKI = "wiki";
 
     public static final String SEARCH_FOR_EVERYTHING = SEARCH_FOR_APPOINTMENTS + ',' + SEARCH_FOR_CONTACTS + ',' +
-    SEARCH_FOR_DOCUMENTS + ',' + SEARCH_FOR_MESSAGES + ',' +
+    SEARCH_FOR_DOCUMENTS + ',' + SEARCH_FOR_BRIEFCASE + ',' + SEARCH_FOR_MESSAGES + ',' +
     SEARCH_FOR_NOTES + ',' + SEARCH_FOR_TASKS + ',' +
     SEARCH_FOR_WIKI;
 
@@ -477,6 +478,8 @@ public final class MailboxIndex
             } else if (SEARCH_FOR_CONTACTS.equals(strs[i])) {
                 types[i] = MailItem.TYPE_CONTACT;
             } else if (SEARCH_FOR_DOCUMENTS.equals(strs[i])) {
+                types[i] = MailItem.TYPE_DOCUMENT;
+            } else if (SEARCH_FOR_BRIEFCASE.equals(strs[i])) {
                 types[i] = MailItem.TYPE_DOCUMENT;
             } else if (SEARCH_FOR_APPOINTMENTS.equals(strs[i])) {
                 types[i] = MailItem.TYPE_APPOINTMENT;
