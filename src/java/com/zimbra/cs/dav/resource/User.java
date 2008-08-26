@@ -36,7 +36,6 @@ public class User extends DavResource {
     public User(String mainUrl, Account owner) throws ServiceException {
         super(mainUrl, getOwner(mainUrl, owner));
         String user = getOwner();
-        String url = UrlNamespace.getPrincipalUrl(user);
         addResourceType(DavElements.E_PRINCIPAL);
         addProperty(CalDavProperty.getCalendarHomeSet(user));
         addProperty(CalDavProperty.getScheduleInboxURL(user));
@@ -44,13 +43,14 @@ public class User extends DavResource {
         
         ArrayList<String> addrs = new ArrayList<String>();
         addrs.add(owner.getAttr(Provisioning.A_zimbraMailDeliveryAddress));
-        addrs.add(url);
+        addrs.add(mainUrl);
         addProperty(CalDavProperty.getCalendarUserAddressSet(addrs));
-        setProperty(DavElements.E_HREF, url);
+        setProperty(DavElements.E_HREF, mainUrl);
         String cn = owner.getAttr(Provisioning.A_cn);
         if (cn == null)
             cn = owner.getName();
         setProperty(DavElements.E_DISPLAYNAME, cn);
+        mUri = mainUrl;
     }
     
 	private static String getOwner(String url, Account acct) throws ServiceException {
