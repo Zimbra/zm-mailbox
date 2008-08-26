@@ -1161,7 +1161,7 @@ public class Mailbox {
         }
     }
 
-    void beginTransaction(String caller, OperationContext octxt) throws ServiceException {
+    protected void beginTransaction(String caller, OperationContext octxt) throws ServiceException {
         beginTransaction(caller, System.currentTimeMillis(), octxt, null, null);
     }
     private void beginTransaction(String caller, OperationContext octxt, RedoableOp recorder) throws ServiceException {
@@ -6649,7 +6649,7 @@ public class Mailbox {
      * @param success
      * @throws ServiceException
      */
-    synchronized void endTransaction(boolean success) throws ServiceException {
+    protected synchronized void endTransaction(boolean success) throws ServiceException {
         assert(Thread.holdsLock(this));
         if (!mCurrentChange.isActive()) {
             // would like to throw here, but it might cover another exception...
