@@ -341,16 +341,19 @@ Notes: admin verison of mail equiv. Used for testing via zmprov.
 <SearchDirectoryResponse more="{more-flag}" [searchTotal="{search-total}"]>
   <account name="{name}" id="{id}">
     <a n="...">...</a>+
-  </account>
+  </account>*
   <alias name="{name}" id="{id} type="account|distributionlist|resource" targetName={target-name}">
     <a n="...">...</a>+  
-  </alias>
+  </alias>*
   <dl name="{name}" id="{id}>
     <a n="...">...</a>+  
-  </dl>
+  </dl>*
   <domain name="{name}" id="{id}">
     <a n="...">...</a>+  
-  </domain>  
+  </domain>*
+  <cos name="{name}" id="{id}">
+    <a n="...">...</a>+  
+  </cos>*    
 </SearchDirectoryResponse>
 
 Notes:
@@ -370,7 +373,7 @@ SearchDirectoryRequest
     more-flag = true if more accounts left to return
     search-total = total number of accounts that matched search (not affected by limit/offset)
     types = comma-separated list of types to return. legal values are: 
-            accounts|distributionlists|aliases|resources|domains
+            accounts|distributionlists|aliases|resources|domains|coses
             (default is accounts)
 
 Access: domain admin sufficient (though a domain admin can't specify "domains" as a type)

@@ -883,13 +883,15 @@ public class LdapProvisioning extends Provisioning {
         boolean accounts = (flags & Provisioning.SA_ACCOUNT_FLAG) != 0; 
         boolean aliases = (flags & Provisioning.SA_ALIAS_FLAG) != 0;
         boolean lists = (flags & Provisioning.SA_DISTRIBUTION_LIST_FLAG) != 0;
-        boolean domains = (flags & Provisioning.SA_DOMAIN_FLAG) != 0;
         boolean calendarResources = (flags & Provisioning.SA_CALENDAR_RESOURCE_FLAG) != 0;
-
+        boolean domains = (flags & Provisioning.SA_DOMAIN_FLAG) != 0;
+        boolean coses = (flags & Provisioning.SD_COS_FLAG) != 0;
+        
         int num = (accounts ? 1 : 0) +
                   (aliases ? 1 : 0) +
                   (lists ? 1 : 0) +
-                  (domains ? 1 : 0) +                  
+                  (domains ? 1 : 0) +
+                  (coses ? 1 : 0) +
                   (calendarResources ? 1 : 0);
         if (num == 0)
             accounts = true;
@@ -911,7 +913,8 @@ public class LdapProvisioning extends Provisioning {
         if (accounts) oc.append("(objectclass=zimbraAccount)");
         if (aliases) oc.append("(objectclass=zimbraAlias)");
         if (lists) oc.append("(objectclass=zimbraDistributionList)");
-        if (domains) oc.append("(objectclass=zimbraDomain)");        
+        if (domains) oc.append("(objectclass=zimbraDomain)"); 
+        if (coses) oc.append("(objectclass=zimbraCos)");
         if (calendarResources)
             oc.append("(objectclass=zimbraCalendarResource)");
         if (num > 1) oc.append(")");
@@ -1060,14 +1063,15 @@ public class LdapProvisioning extends Provisioning {
                         Attribute objectclass = attrs.get("objectclass");
                         
                         // skip admin accounts
-                        // if we are looking for domains, they can be under config branch in non default DIT impl. 
-                        if (dn.endsWith(configBranchBaseDn) && !objectclass.contains(C_zimbraDomain)) 
+                        // if we are looking for domains or coses, they can be under config branch in non default DIT impl. 
+                        if (dn.endsWith(configBranchBaseDn) && !objectclass.contains(C_zimbraDomain) && !objectclass.contains(C_zimbraCOS)) 
                             continue;    
                         
                         if (objectclass == null || objectclass.contains(C_zimbraAccount)) visitor.visit(makeAccount(dn, attrs, this));
                         else if (objectclass.contains(C_zimbraAlias)) visitor.visit(makeAlias(dn, attrs, this));
                         else if (objectclass.contains(C_zimbraMailList)) visitor.visit(makeDistributionList(dn, attrs, this));
-                        else if (objectclass.contains(C_zimbraDomain)) visitor.visit(new LdapDomain(dn, attrs, getConfig().getDomainDefaults()));                        
+                        else if (objectclass.contains(C_zimbraDomain)) visitor.visit(new LdapDomain(dn, attrs, getConfig().getDomainDefaults()));
+                        else if (objectclass.contains(C_zimbraCOS)) visitor.visit(new LdapCos(dn, attrs));
                     }
                     cookie = zlc.getCookie();
                 } while (cookie != null);
@@ -3748,8 +3752,9 @@ public class LdapProvisioning extends Provisioning {
         boolean accounts = (flags & Provisioning.SA_ACCOUNT_FLAG) != 0; 
         boolean aliases = (flags & Provisioning.SA_ALIAS_FLAG) != 0;
         boolean lists = (flags & Provisioning.SA_DISTRIBUTION_LIST_FLAG) != 0;
-        boolean domains = (flags & Provisioning.SA_DOMAIN_FLAG) != 0;
         boolean calendarResources = (flags & Provisioning.SA_CALENDAR_RESOURCE_FLAG) != 0;
+        boolean domains = (flags & Provisioning.SA_DOMAIN_FLAG) != 0;
+        boolean coses = (flags & Provisioning.SD_COS_FLAG) != 0;
         
         if (accounts || aliases || lists || calendarResources)
             addBase(bases, mDIT.mailBranchBaseDN());
@@ -3759,6 +3764,9 @@ public class LdapProvisioning extends Provisioning {
         
         if (domains)
             addBase(bases, mDIT.domainBaseDN());
+        
+        if (coses)
+            addBase(bases, mDIT.cosBaseDN());
         
         return bases.toArray(new String[bases.size()]);
     }
