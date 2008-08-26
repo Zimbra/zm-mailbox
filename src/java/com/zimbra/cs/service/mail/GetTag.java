@@ -20,7 +20,6 @@
  */
 package com.zimbra.cs.service.mail;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -28,7 +27,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
@@ -40,23 +38,29 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class GetTag extends MailDocumentHandler  {
 
-	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-		ZimbraSoapContext zsc = getZimbraSoapContext(context);
-		Mailbox mbox = getRequestedMailbox(zsc);
-		OperationContext octxt = getOperationContext(zsc, context);
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Mailbox mbox = getRequestedMailbox(zsc);
+        OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
-        
-		List<? extends MailItem> tags = mbox.getItemList(octxt, MailItem.TYPE_TAG);
 
-		Element response = zsc.createElement(MailConstants.GET_TAG_RESPONSE);
-		if (tags != null) {
-			for (Iterator it = tags.iterator(); it.hasNext(); ) {
-				Tag tag = (Tag) it.next();
-				if (tag == null || tag instanceof Flag)
-					continue;
-				ToXML.encodeTag(response, ifmt, tag);
-			}
-		}
-		return response;
-	}
+        List<Tag> tags = null;
+        try {
+            tags = mbox.getTagList(octxt);
+        } catch (ServiceException e) {
+            // just return no tags in the perm denied case (not considered an error here)...
+            if (!e.getCode().equals(ServiceException.PERM_DENIED))
+                throw e;
+        }
+
+        Element response = zsc.createElement(MailConstants.GET_TAG_RESPONSE);
+        if (tags != null) {
+            for (Tag tag : tags) {
+                if (tag == null || tag instanceof Flag)
+                    continue;
+                ToXML.encodeTag(response, ifmt, tag);
+            }
+        }
+        return response;
+    }
 }
