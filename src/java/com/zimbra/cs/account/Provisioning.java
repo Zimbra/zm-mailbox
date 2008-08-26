@@ -808,6 +808,8 @@ public abstract class Provisioning {
     public static final String A_zimbraFeatureFiltersEnabled = "zimbraFeatureFiltersEnabled";
 
     public static final String A_zimbraFeatureGalEnabled = "zimbraFeatureGalEnabled";
+    
+    public static final String A_zimbraFeatureGalSyncEnabled = "zimbraFeatureGalSyncEnabled";
 
     public static final String A_zimbraFeatureHtmlComposeEnabled = "zimbraFeatureHtmlComposeEnabled";
 
