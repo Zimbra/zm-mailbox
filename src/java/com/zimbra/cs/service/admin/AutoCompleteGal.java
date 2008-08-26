@@ -54,10 +54,6 @@ public class AutoCompleteGal extends AdminDocumentHandler {
         Element response = lc.createElement(AdminConstants.AUTO_COMPLETE_GAL_RESPONSE);
         Account acct = getRequestedAccount(getZimbraSoapContext(context));
 
-        if (!(acct.getBooleanAttr(Provisioning.A_zimbraFeatureGalAutoCompleteEnabled , false) &&
-              acct.getBooleanAttr(Provisioning.A_zimbraFeatureGalEnabled , false)))
-            throw ServiceException.PERM_DENIED("cannot auto complete GAL");
-
         while (n.endsWith("*"))
             n = n.substring(0, n.length() - 1);
 

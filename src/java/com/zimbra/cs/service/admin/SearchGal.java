@@ -55,9 +55,6 @@ public class SearchGal extends AdminDocumentHandler {
         Element response = lc.createElement(AdminConstants.SEARCH_GAL_RESPONSE);
         Account acct = getRequestedAccount(getZimbraSoapContext(context));
         
-        if (!acct.getBooleanAttr(Provisioning.A_zimbraFeatureGalEnabled , false))
-            throw ServiceException.PERM_DENIED("cannot search GAL");
-        
         while (n.endsWith("*"))
             n = n.substring(0, n.length() - 1);
 

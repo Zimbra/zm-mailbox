@@ -45,9 +45,12 @@ public class SearchGal extends AccountDocumentHandler {
 
         if (!canAccessAccount(zsc, account))
             throw ServiceException.PERM_DENIED("can not access account");
-        if (!account.getBooleanAttr(Provisioning.A_zimbraFeatureGalEnabled, false))
-            throw ServiceException.PERM_DENIED("cannot search GAL");
-
+        
+        if (!zsc.getAuthToken().isAdmin() && !zsc.getAuthToken().isDomainAdmin()) {
+            if (!account.getBooleanAttr(Provisioning.A_zimbraFeatureGalEnabled, false))
+                throw ServiceException.PERM_DENIED("cannot search GAL");
+        }
+        
         String n = request.getAttribute(AccountConstants.E_NAME);
         while (n.endsWith("*"))
             n = n.substring(0, n.length() - 1);

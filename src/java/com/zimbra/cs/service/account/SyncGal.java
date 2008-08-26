@@ -44,10 +44,13 @@ public class SyncGal extends AccountDocumentHandler {
 
         if (!canAccessAccount(zsc, account))
             throw ServiceException.PERM_DENIED("can not access account");
-        if (!(account.getBooleanAttr(Provisioning.A_zimbraFeatureGalSyncEnabled , false) && 
-              account.getBooleanAttr(Provisioning.A_zimbraFeatureGalEnabled , false)))
-            throw ServiceException.PERM_DENIED("cannot sync GAL");
-
+        
+        if (!zsc.getAuthToken().isAdmin() && !zsc.getAuthToken().isDomainAdmin()) {
+            if (!(account.getBooleanAttr(Provisioning.A_zimbraFeatureGalSyncEnabled , false) && 
+                  account.getBooleanAttr(Provisioning.A_zimbraFeatureGalEnabled , false)))
+                throw ServiceException.PERM_DENIED("cannot sync GAL");
+        }
+        
         Domain d = Provisioning.getInstance().getDomain(account);
         String tokenAttr = request.getAttribute(MailConstants.A_TOKEN, "");
         SearchGalResult result = Provisioning.getInstance().searchGal(d, "", Provisioning.GAL_SEARCH_TYPE.ALL, tokenAttr);
