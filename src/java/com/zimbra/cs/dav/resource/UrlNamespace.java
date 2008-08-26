@@ -115,7 +115,8 @@ public class UrlNamespace {
         ZimbraLog.dav.debug("name: "+name);
         try {
             Account a = Provisioning.getInstance().get(Provisioning.AccountBy.name, name);
-            if (a == null)
+            // allow only the owner can access the principal URL for now.
+            if (a == null || ctxt.getAuthAccount().compareTo(a) != 0)
                 throw new DavException("user not found", HttpServletResponse.SC_NOT_FOUND, null);
             return new User(url, a);
         } catch (ServiceException se) {
