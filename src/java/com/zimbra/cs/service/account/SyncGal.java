@@ -44,7 +44,8 @@ public class SyncGal extends AccountDocumentHandler {
 
         if (!canAccessAccount(zsc, account))
             throw ServiceException.PERM_DENIED("can not access account");
-        if (!account.getBooleanAttr(Provisioning.A_zimbraFeatureGalEnabled , false))
+        if (!(account.getBooleanAttr(Provisioning.A_zimbraFeatureGalSyncEnabled , false) && 
+              account.getBooleanAttr(Provisioning.A_zimbraFeatureGalEnabled , false)))
             throw ServiceException.PERM_DENIED("cannot sync GAL");
 
         Domain d = Provisioning.getInstance().getDomain(account);

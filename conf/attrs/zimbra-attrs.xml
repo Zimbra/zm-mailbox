@@ -709,7 +709,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="149" name="zimbraFeatureGalEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
-  <desc>GAL features</desc>
+  <desc>whether GAL features are enabled</desc>
 </attr>
 
 <attr id="150" name="zimbraNewMailNotificationFrom" type="string" max="1000" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
@@ -3444,6 +3444,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>List of Zimlets available to this domain.
         Zimlets available to accounts in the domain is the union of account/cos attribute zimbraZimletAvailableZimlets and this attribute. 
   </desc>
+</attr>
+
+<attr id="711" name="zimbraFeatureGalSyncEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="5.0.10">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether GAL sync is enabled</desc>
 </attr>
 
 </attrs>
