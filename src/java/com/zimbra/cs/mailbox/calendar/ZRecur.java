@@ -1362,9 +1362,11 @@ public class ZRecur {
                         ZimbraLog.calendar.debug(new Formatter().format("Parse error for recur: \"%s\" at token \"%s\"", str, tok));
                     continue;
                 }
-                    
+
                 String rhs = s[1];
-                
+                // MS Exchange can add invalid spaces in RRULE part values.  Get rid of them.  (see bug 25169)
+                rhs = rhs.replaceAll("\\s+", "");
+
                 try {
                     switch(Tokens.valueOf(s[0])) { 
                     case FREQ:
