@@ -63,10 +63,6 @@ public abstract class Filter {
 		mParams = new HashSet<ParamFilter>();
 		mTextMatches = new HashSet<TextMatch>();
 		mName = elem.attributeValue(DavElements.P_NAME);
-		if (mName.equals("VCALENDAR")) {
-			elem = (Element)elem.elementIterator().next();
-			mName = elem.attributeValue(DavElements.P_NAME);
-		}
 		parse(elem);
 	}
 
@@ -176,7 +172,17 @@ public abstract class Filter {
 		}
 		
 		public boolean match(ZCalendar.ZComponent comp) {
-			boolean matched = super.match(comp);
+			boolean matched = true;
+			if (mName.equals("VCALENDAR")) {
+				if (mComps.size() > 0) {
+					matched = false;
+					for (CompFilter cf : mComps)
+						matched |= cf.match(comp);
+				}
+				return matched;
+			}
+			
+			matched = super.match(comp);
 			
 			if (matched && mComps.size() > 0) {
 				matched = false;

@@ -1,0 +1,113 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * 
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2008 Zimbra, Inc.
+ * 
+ * The contents of this file are subject to the Yahoo! Public License
+ * Version 1.0 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * 
+ * ***** END LICENSE BLOCK *****
+ */
+package com.zimbra.cs.dav.client;
+
+import org.dom4j.Document;
+import org.dom4j.DocumentHelper;
+import org.dom4j.Element;
+import org.dom4j.QName;
+
+import com.zimbra.cs.dav.DavContext.Depth;
+import com.zimbra.cs.dav.DavElements;
+
+public class DavRequest {
+	
+	private DavRequest(String uri, String method) {
+		mUri = uri;
+		mMethod = method;
+		mDepth = Depth.zero;
+	}
+
+	public Document getRequestMessage() {
+		return mDoc;
+	}
+	
+	public void setRequestMessage(Element root) {
+		if (mDoc == null)
+			mDoc = DocumentHelper.createDocument();
+		mDoc.setRootElement(root);
+	}
+	
+	public void addRequestProp(QName p) {
+		if (mDoc == null)
+			return;
+		Element prop = mDoc.getRootElement().element(DavElements.E_PROP);
+		if (prop == null)
+			return;
+		prop.addElement(p);
+	}
+	
+	public void addHref(String href) {
+		if (mDoc == null)
+			return;
+		Element el = mDoc.getRootElement().addElement(DavElements.E_HREF);
+		el.setText(href);
+	}
+	
+	public void addRequestElement(Element e) {
+		if (mDoc == null)
+			return;
+		mDoc.getRootElement().add(e);
+	}
+	public void setDepth(Depth d) {
+		mDepth = d;
+	}
+	
+	public Depth getDepth() {
+		return mDepth;
+	}
+	
+	public String getUri() {
+		return mUri;
+	}
+	public String getMethod() {
+		return mMethod;
+	}
+	
+	private Document mDoc;
+	private String mUri;
+	private String mMethod;
+	private Depth mDepth;
+	
+	private static final String PROPFIND = "PROPFIND";
+	private static final String REPORT = "REPORT";
+	
+	public static DavRequest PROPFIND(String uri) {
+		DavRequest req = new DavRequest(uri, PROPFIND);
+    	Element root = DocumentHelper.createElement(DavElements.E_PROPFIND);
+    	root.addElement(DavElements.E_PROP);
+    	req.setRequestMessage(root);
+		return req;
+	}
+	
+	public static DavRequest CALENDARMULTIGET(String uri) {
+		DavRequest req = new DavRequest(uri, REPORT);
+    	Element root = DocumentHelper.createElement(DavElements.E_CALENDAR_MULTIGET);
+    	root.addElement(DavElements.E_PROP);
+    	req.setRequestMessage(root);
+		return req;
+	}
+	
+	public static DavRequest CALENDARQUERY(String uri) {
+		DavRequest req = new DavRequest(uri, REPORT);
+    	Element root = DocumentHelper.createElement(DavElements.E_CALENDAR_QUERY);
+    	root.addElement(DavElements.E_PROP);
+    	root.addElement(DavElements.E_FILTER).addElement(DavElements.E_COMP_FILTER).addAttribute(DavElements.P_NAME, "VCALENDAR");
+    	req.setRequestMessage(root);
+		return req;
+	}
+}

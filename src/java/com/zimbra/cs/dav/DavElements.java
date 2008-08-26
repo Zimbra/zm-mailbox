@@ -26,11 +26,11 @@ public class DavElements {
 	public static final String XML_NS_STRING = "xml:";
 	public static final String APPLE_NS_STRING = "http://apple.com/ns/ical/";
 	
-	public static final Namespace WEBDAV_NS = Namespace.get(WEBDAV_NS_STRING);
-	public static final Namespace CALDAV_NS = Namespace.get(CALDAV_NS_STRING);
-	public static final Namespace ZIMBRA_NS = Namespace.get(ZIMBRA_NS_STRING);
-	public static final Namespace XML_NS = Namespace.get(XML_NS_STRING);
-	public static final Namespace APPLE_NS = Namespace.get(APPLE_NS_STRING);
+	public static final Namespace WEBDAV_NS = Namespace.get("D", WEBDAV_NS_STRING);
+	public static final Namespace CALDAV_NS = Namespace.get("C", CALDAV_NS_STRING);
+	public static final Namespace ZIMBRA_NS = Namespace.get("Z", ZIMBRA_NS_STRING);
+	public static final Namespace XML_NS = Namespace.get("X", XML_NS_STRING);
+	public static final Namespace APPLE_NS = Namespace.get("A", APPLE_NS_STRING);
 
 	// general
 	public static final String LANG_EN_US = "en-us";
@@ -294,6 +294,7 @@ public class DavElements {
 	public static final QName E_PRINCIPAL_URL = QName.get(P_PRINCIPAL_URL, WEBDAV_NS);
 	public static final QName E_PRIVILEGE = QName.get(P_PRIVILEGE, WEBDAV_NS);
 	public static final QName E_PROP = QName.get(P_PROP, WEBDAV_NS);
+	public static final QName E_PROPFIND = QName.get(P_PROPFIND, WEBDAV_NS);
 	public static final QName E_PROPNAME = QName.get(P_PROPNAME, WEBDAV_NS);
 	public static final QName E_PROP_CALDAV = QName.get(P_PROP, CALDAV_NS);
 	public static final QName E_PROP_FILTER = QName.get(P_PROP_FILTER, CALDAV_NS);
