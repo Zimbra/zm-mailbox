@@ -99,6 +99,8 @@ public class ZFeatures {
 
     public boolean getNotebook() { return getBool(Provisioning.A_zimbraFeatureNotebookEnabled); }
 
+    public boolean getBriefcases() { return getBool(Provisioning.A_zimbraFeatureBriefcasesEnabled); }
+
     public boolean getGalAutoComplete() { return getBool(Provisioning.A_zimbraFeatureGalAutoCompleteEnabled); }
 
     public boolean getOutOfOfficeReply() { return getBool(Provisioning.A_zimbraFeatureOutOfOfficeReplyEnabled); }
