@@ -20,18 +20,16 @@ package com.zimbra.cs.zclient.event;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZSoapSB;
 import com.zimbra.cs.zclient.ZTag;
-import com.zimbra.common.service.ServiceException;
 
 import java.util.List;
-import java.util.ArrayList;
 
 public class ZRefreshEvent {
 
-    private long mSize = 0;
-    private ZFolder mUserRoot = null;
-    private List<ZTag> mTags = new ArrayList<ZTag>();
+    private long mSize;
+    private ZFolder mUserRoot;
+    private List<ZTag> mTags;
 
-    public ZRefreshEvent(long size, ZFolder userRoot, List<ZTag> tags) throws ServiceException {
+    public ZRefreshEvent(long size, ZFolder userRoot, List<ZTag> tags) {
     	mSize = size;
     	mUserRoot = userRoot;
     	mTags = tags;

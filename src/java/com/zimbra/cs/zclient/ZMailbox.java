@@ -165,8 +165,7 @@ public class ZMailbox {
         private ZEventHandler mHandler;
         private List<String> mAttrs;
         private List<String> mPrefs;
-		private String mRequestedSkin;
-		private boolean mNoTagCache;
+        private String mRequestedSkin;
 
 		public Options() {
         }
@@ -279,9 +278,6 @@ public class ZMailbox {
 
 		public String getRequestedSkin() { return mRequestedSkin; }
 		public void setRequestedSkin(String skin) { mRequestedSkin = skin; }
-		
-		public boolean getNoTagCache() { return mNoTagCache; }
-		public void setNoTagCache(boolean noTagCache) { mNoTagCache = noTagCache; }
 	}
 
 	private static class VoiceStorePrincipal {
@@ -300,7 +296,6 @@ public class ZMailbox {
     private Map<String, ZItem> mIdToItem;
     private ZGetInfoResult mGetInfoResult;
     private ZFolder mUserRoot;
-    private boolean mNeedsRefresh = true;
     private ZSearchPagerCache mSearchPagerCache;
     private ZSearchPagerCache mSearchConvPagerCache;
     private ZApptSummaryCache mApptSummaryCache;
@@ -378,7 +373,6 @@ public class ZMailbox {
         if (options.getTargetAccount() != null) {
             initTargetAccount(options.getTargetAccount(), options.getTargetAccountBy());
         }
-        mNoTagCache = options.getNoTagCache();
     }
 
     public boolean addEventHandler(ZEventHandler handler) {
@@ -400,7 +394,6 @@ public class ZMailbox {
     }
 
     private void initPreAuth(Options options) {
-        mNameToTag = new HashMap<String, ZTag>();
         mIdToItem = new HashMap<String, ZItem>();
         setSoapURI(options);
         if (options.getDebugListener() != null) mTransport.setDebugListener(options.getDebugListener());
@@ -711,17 +704,26 @@ public class ZMailbox {
 
     class InternalEventHandler extends ZEventHandler {
         public synchronized void handleRefresh(ZRefreshEvent event, ZMailbox mailbox) {
-            mNameToTag.clear();
+            ZFolder root = event.getUserRoot();
+            List<ZTag> tags = event.getTags();
+
             mIdToItem.clear();
             mMessageCache.clear();
             mContactCache.clear();
             mTransport.setMaxNotifySeq(0);
             mSize = event.getSize();
-            mUserRoot = event.getUserRoot();
-            mNeedsRefresh = false;
-            addIdMappings(mUserRoot);
-            for (ZTag tag: event.getTags())
-            	addTag(tag);
+            if (root != null) {
+                mUserRoot = root;
+                addIdMappings(mUserRoot);
+            }
+            if (tags != null) {
+                if (mNameToTag == null)
+                    mNameToTag = new HashMap<String, ZTag>();
+                else
+                    mNameToTag.clear();
+                for (ZTag tag : tags)
+                	addTag(tag);
+            }
         }
 
         public synchronized void handleCreate(ZCreateEvent event, ZMailbox mailbox) {
@@ -735,7 +737,7 @@ public class ZMailbox {
                 if (tag != null) {
                     String oldName = tag.getName();
                     tag.modifyNotification(tagEvent);
-                    if (!tag.getName().equalsIgnoreCase(oldName)) {
+                    if (mNameToTag != null && !tag.getName().equalsIgnoreCase(oldName)) {
                         mNameToTag.remove(oldName);
                         mNameToTag.put(tag.getName(), tag);
                     }
@@ -767,7 +769,7 @@ public class ZMailbox {
             }
         }
 
-        public synchronized void handleDelete(ZDeleteEvent event, ZMailbox mailbox) throws ServiceException {
+        public synchronized void handleDelete(ZDeleteEvent event, ZMailbox mailbox) {
             for (String id : event.toList()) {
                 mMessageCache.remove(id);
                 mContactCache.remove(id);
@@ -783,15 +785,18 @@ public class ZMailbox {
                         sf.getParent().removeChild(sf);
 
                 } else if (item instanceof ZTag) {
-                    mNameToTag.remove(((ZTag) item).getName());
+                    if (mNameToTag != null)
+                        mNameToTag.remove(((ZTag) item).getName());
                 }
-                if (item != null) mIdToItem.remove(item.getId());
+                if (item != null)
+                    mIdToItem.remove(item.getId());
             }
         }
     }
 
     private void addTag(ZTag tag) {
-        mNameToTag.put(tag.getName(), tag);
+        if (mNameToTag != null)
+            mNameToTag.put(tag.getName(), tag);
         addItemIdMapping(tag);
     }
 
@@ -855,7 +860,7 @@ public class ZMailbox {
      * @throws com.zimbra.common.service.ServiceException on error
      */
     public long getSize() throws ServiceException {
-        populateCaches();
+        populateFolderCache();
         return mSize;
     }
 
@@ -973,7 +978,7 @@ public class ZMailbox {
      */
     @SuppressWarnings("unchecked")
     public List<ZTag> getAllTags() throws ServiceException {
-        populateCaches();
+        populateTagCache();
         List result = new ArrayList<ZTag>(mNameToTag.values());
         Collections.sort(result);
         return result;
@@ -984,7 +989,7 @@ public class ZMailbox {
      * @throws com.zimbra.common.service.ServiceException on error
      */
     public List<String> getAllTagNames() throws ServiceException {
-        populateCaches();
+        populateTagCache();
         ArrayList<String> names = new ArrayList<String>(mNameToTag.keySet());
         Collections.sort(names);
         return names;
@@ -998,7 +1003,7 @@ public class ZMailbox {
      * @throws com.zimbra.common.service.ServiceException on error
      */
     public ZTag getTagByName(String name) throws ServiceException {
-        populateCaches();
+        populateTagCache();
         return mNameToTag.get(name);
     }
 
@@ -1010,10 +1015,12 @@ public class ZMailbox {
      * @throws com.zimbra.common.service.ServiceException on error
      */
     public ZTag getTagById(String id) throws ServiceException {
-        populateCaches();
+        populateTagCache();
         ZItem item = mIdToItem.get(id);
-        if (item instanceof ZTag) return (ZTag) item;
-        else return null;
+        if (item instanceof ZTag)
+            return (ZTag) item;
+        else
+            return null;
     }
 
     private static final Pattern sCOMMA = Pattern.compile(",");
@@ -1031,9 +1038,8 @@ public class ZMailbox {
         if (!StringUtil.isNullOrEmpty(ids)) {
             for (String id : sCOMMA.split(ids)) {
                 ZTag tag = getTagById(id);
-                if (tag != null) {
+                if (tag != null)
                     tags.add(tag);
-                }
             }
         }
         return tags;
@@ -2021,7 +2027,7 @@ public class ZMailbox {
      * @throws com.zimbra.common.service.ServiceException on error
      */
     public ZFolder getUserRoot() throws ServiceException {
-        populateCaches();
+        populateFolderCache();
         return mUserRoot;
     }
 
@@ -2032,7 +2038,7 @@ public class ZMailbox {
      * @throws com.zimbra.common.service.ServiceException on error
      */
     public ZFolder getFolderByPath(String path) throws ServiceException {
-        populateCaches();
+        populateFolderCache();
         if (!path.startsWith(ZMailbox.PATH_SEPARATOR))
             path = ZMailbox.PATH_SEPARATOR + path;
         return getUserRoot().getSubFolderByPath(path.substring(1));
@@ -2045,7 +2051,7 @@ public class ZMailbox {
      * @throws com.zimbra.common.service.ServiceException on error
      */
     public ZFolder getFolderById(String id) throws ServiceException {
-        populateCaches();
+        populateFolderCache();
         ZItem item = mIdToItem.get(id);
         if (!(item instanceof ZFolder)) return null;
         ZFolder folder = (ZFolder) item;
@@ -2058,7 +2064,7 @@ public class ZMailbox {
      * @return all folders and subfolders in this mailbox
      */
     public List<ZFolder> getAllFolders() throws ServiceException {
-        populateCaches();
+        populateFolderCache();
         List<ZFolder> allFolders = new ArrayList<ZFolder>();
         if (getUserRoot() != null)
             addSubFolders(getUserRoot(), allFolders);
@@ -2232,10 +2238,12 @@ public class ZMailbox {
      * @throws com.zimbra.common.service.ServiceException on error
      */
     public ZSearchFolder getSearchFolderById(String id) throws ServiceException {
-        populateCaches();
+        populateFolderCache();
         ZItem item = mIdToItem.get(id);
-        if (item instanceof ZSearchFolder) return (ZSearchFolder) item;
-        else return null;
+        if (item instanceof ZSearchFolder)
+            return (ZSearchFolder) item;
+        else
+            return null;
     }
 
     /**
@@ -2245,10 +2253,12 @@ public class ZMailbox {
      * @throws com.zimbra.common.service.ServiceException on error
      */
     public ZMountpoint getMountpointById(String id) throws ServiceException {
-        populateCaches();
+        populateFolderCache();
         ZItem item = mIdToItem.get(id);
-        if (item instanceof ZMountpoint) return (ZMountpoint) item;
-        else return null;
+        if (item instanceof ZMountpoint)
+            return (ZMountpoint) item;
+        else
+            return null;
     }
 
     /**
@@ -2658,14 +2668,32 @@ public class ZMailbox {
         return mSearchConvPagerCache.search(this, params, page, useCache, useCursor);
     }
 
-    private void populateCaches() throws ServiceException {
-        if (!mNeedsRefresh)
+    private void populateFolderCache() throws ServiceException {
+        if (mUserRoot != null)
             return;
-
-        if (mNotifyPreference == null || mNotifyPreference == NotifyPreference.full)
+        if (mNotifyPreference == null || mNotifyPreference == NotifyPreference.full) {
             noOp();
-        if (!mNeedsRefresh)
+            if (mUserRoot != null)
+                return;
+        }
+
+        Element response = invoke(newRequestElement(MailConstants.GET_FOLDER_REQUEST).addAttribute(MailConstants.A_VISIBLE, true));
+        Element eFolder = response.getOptionalElement(MailConstants.E_FOLDER);
+        ZFolder userRoot = (eFolder != null ? new ZFolder(eFolder, null) : null);
+
+        ZRefreshEvent event = new ZRefreshEvent(mSize, userRoot, null);
+        for (ZEventHandler handler : mHandlers)
+            handler.handleRefresh(event, this);
+    }
+
+    private void populateTagCache() throws ServiceException {
+        if (mNameToTag != null)
             return;
+        if (mNotifyPreference == null || mNotifyPreference == NotifyPreference.full) {
+            noOp();
+            if (mNameToTag != null)
+                return;
+        }
 
         List<ZTag> tagList = new ArrayList<ZTag>();
         if (!mNoTagCache) {
@@ -2679,11 +2707,7 @@ public class ZMailbox {
             }
         }
 
-        Element response = invoke(newRequestElement(MailConstants.GET_FOLDER_REQUEST).addAttribute(MailConstants.A_VISIBLE, true));
-        Element eFolder = response.getOptionalElement(MailConstants.E_FOLDER);
-        ZFolder userRoot = (eFolder != null ? new ZFolder(eFolder, null) : null);
-
-        ZRefreshEvent event = new ZRefreshEvent(mSize, userRoot, tagList);
+        ZRefreshEvent event = new ZRefreshEvent(mSize, null, tagList);
         for (ZEventHandler handler : mHandlers)
             handler.handleRefresh(event, this);
     }
