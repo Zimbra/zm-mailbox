@@ -2059,6 +2059,22 @@ public class ZMailbox {
     }
 
     /**
+     * always issues a GetFolderRequest and bypass caching
+     * 
+     * @param id
+     * @return
+     * @throws ServiceException
+     */
+    public ZFolder getFolderRequest(String id) throws ServiceException {
+        Element req = newRequestElement(MailConstants.GET_FOLDER_REQUEST).addAttribute(MailConstants.A_VISIBLE, true);
+        req.addElement(MailConstants.E_FOLDER).addAttribute(MailConstants.A_FOLDER, id);
+        Element response = invoke(req);
+        Element eFolder = response.getOptionalElement(MailConstants.E_FOLDER);
+        ZFolder folder = (eFolder != null ? new ZFolder(eFolder, null) : null);
+        return folder.isHierarchyPlaceholder() ? null : folder;
+    }
+    
+    /**
      * Returns all folders and subfolders in this mailbox.
      * @throws ServiceException on error
      * @return all folders and subfolders in this mailbox
