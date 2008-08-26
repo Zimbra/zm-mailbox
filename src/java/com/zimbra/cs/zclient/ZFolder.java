@@ -146,6 +146,7 @@ public class ZFolder implements ZItem, Comparable {
         contact,
         conversation,
         document,
+        briefcase,
         message,
         wiki,
         task,
@@ -163,6 +164,7 @@ public class ZFolder implements ZItem, Comparable {
         public boolean isContact() { return equals(contact); }
         public boolean isConversation() { return equals(conversation); }
         public boolean isDocument() { return equals(document); }
+        public boolean isBriefcase() { return equals(briefcase); }
         public boolean isMessage() { return equals(message); }
         public boolean isWiki() { return equals(wiki); }
         public boolean isTask() { return equals(task); }
