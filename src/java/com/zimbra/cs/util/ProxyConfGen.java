@@ -40,6 +40,8 @@ import com.zimbra.cs.extension.ExtensionDispatcherServlet;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.localconfig.ConfigException;
 
+import com.zimbra.cs.util.BuildInfo;
+
 public class ProxyConfGen
 {
     private static class ProxyConfException extends Exception {
@@ -348,6 +350,8 @@ public class ProxyConfGen
         mVars.put("mail.pop3.port",                 "110");
         mVars.put("mail.pop3.tls",                  "only");
         mVars.put("mail.pop3s.port",                "995");
+        mVars.put("mail.imap.greeting",             "");
+        mVars.put("mail.pop3.greeting",             "");
         mVars.put("mail.enabled",                   "");
         mVars.put("web.mailmode",                   "both");
         mVars.put("web.upstream.name",              "zimbra");
@@ -396,6 +400,14 @@ public class ProxyConfGen
         int userttl = config.getIntAttr("zimbraReverseProxyUserLoginLimitTime",3600);   /* global config */
         f.format("%ds",userttl);
         mVars.put("mail.userttl", f.toString());
+
+        if (mSource.getBooleanAttr("zimbraReverseProxyPop3ExposeVersionOnBanner",false)) {
+            mVars.put("mail.pop3.greeting", "+OK " + "Zimbra " + BuildInfo.VERSION + " POP3 ready");
+        }
+
+        if (mSource.getBooleanAttr("zimbraReverseProxyImapExposeVersionOnBanner",false)) {
+            mVars.put("mail.imap.greeting", "* OK " + "Zimbra " + BuildInfo.VERSION + " IMAP4 ready");
+        }
 
         boolean pop3xoip = config.getBooleanAttr("zimbraReverseProxySendPop3Xoip",true);    /* global config */
         if (pop3xoip) {
