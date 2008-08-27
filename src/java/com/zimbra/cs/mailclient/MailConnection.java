@@ -220,14 +220,18 @@ public abstract class MailConnection {
      */
     public synchronized void authenticate(String pass)
         throws LoginException, IOException {
-        checkState(State.NOT_AUTHENTICATED);
         String mech = config.getMechanism();
-        // TODO Get rid of this
         if (mech == null || mech.equalsIgnoreCase("LOGIN")) {
             login(pass);
-            return;
-        }                  
-        authenticator = newAuthenticator(pass);
+        } else {
+            authenticate(newAuthenticator(pass));
+        }
+    }
+
+    public synchronized void authenticate(Authenticator auth)
+        throws LoginException, IOException {
+        authenticator = auth;
+        checkState(State.NOT_AUTHENTICATED);
         sendAuthenticate(false);
         if (authenticator.isEncryptionEnabled()) {
             initStreams(authenticator.unwrap(socket.getInputStream()),

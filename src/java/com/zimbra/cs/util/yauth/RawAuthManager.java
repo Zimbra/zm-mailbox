@@ -32,40 +32,39 @@ public final class RawAuthManager {
         cookies = new HashMap<String, RawAuth>();
     }
 
-    public RawAuth authenticate(String appId, String user, String pass)
-        throws AuthenticationException, IOException {
+    public RawAuth authenticate(String appId, String user) throws IOException {
         RawAuth auth = cookies.get(key(appId, user));
         if (auth == null || auth.isExpired()) {
             // Cookie missing or expired, so get a new one
             String token = store.getToken(appId, user);
-            if (token != null) {
-                try {
-                    auth = RawAuth.authenticate(appId, token);
-                } catch (AuthenticationException e) {
-                    // Token invalid...
-                    if (pass == null) {
-                        throw e; // Cannot obtain a new token w/o password
-                    }
-                    auth = null;
-                }
+            if (token == null) {
+                throw AuthenticationException.invalidToken();
             }
-            if (auth == null) {
-                // Token invalid or missing, so get a new one
-                auth = RawAuth.authenticate(appId, newToken(appId, user, pass));
-            }
+            auth = RawAuth.authenticate(appId, token);
             cookies.put(key(appId, user), auth);
         }
         return auth;
     }
 
-    private String newToken(String appId, String user, String pass)
-        throws AuthenticationException, IOException {
-        LOG.debug("newToken: appId=" + appId + ", user=" + user);
-        String token = RawAuth.getToken(appId, user, pass);
-        store.putToken(appId, user, token);
-        return token;
+    public void invalidate(String appId, String user) {
+        cookies.remove(key(appId, user));
+    }
+    
+    public Authenticator newAuthenticator(final String appId, final String user) {
+        return new Authenticator() {
+            public RawAuth authenticate() throws IOException {
+                return RawAuthManager.this.authenticate(appId, user);
+            }
+            public void invalidate() {
+                RawAuthManager.this.invalidate(appId, user);
+            }
+        };
     }
 
+    public TokenStore getTokenStore() {
+        return store;
+    }
+    
     private String key(String appId, String user) {
         return appId + " " + user;
     }

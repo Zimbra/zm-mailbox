@@ -16,8 +16,26 @@
  */
 package com.zimbra.cs.util.yauth;
 
-public interface TokenStore {
-    String getToken(String appId, String user);
-    void putToken(String appId, String user, String token);
-    int size();
+import org.apache.log4j.Logger;
+
+import java.io.IOException;
+
+public abstract class TokenStore {
+    public static final Logger LOG = Logger.getLogger(TokenStore.class);
+    
+    public String newToken(String appId, String user, String pass)
+        throws IOException {
+        LOG.debug("newToken: appId=" + appId + ", user=" + user);
+        String token = RawAuth.getToken(appId, user, pass);
+        putToken(appId, user, token);
+        return token;
+    }
+
+    public boolean hasToken(String appId, String user) {
+        return getToken(appId, user) != null;
+    }
+
+    protected abstract void putToken(String appId, String user, String token);
+    public abstract String getToken(String appId, String user);
+    public abstract int size();
 }

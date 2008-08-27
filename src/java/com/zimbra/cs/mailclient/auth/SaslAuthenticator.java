@@ -63,6 +63,10 @@ public class SaslAuthenticator extends Authenticator {
         debug("Requested QOP is %s", qop != null ? qop : "auth");
     }
 
+    public String getMechanism() {
+        return config.getMechanism();
+    }
+    
     private static void checkRequired(String name, String value) {
         if (value == null) {
             throw new IllegalArgumentException("Missing required " + name);

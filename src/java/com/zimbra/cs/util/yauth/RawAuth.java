@@ -20,12 +20,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.log4j.Logger;
 
 /**
  * Implementation of Yahoo "Raw Auth" aka "Token Login v2"
@@ -37,6 +38,8 @@ public class RawAuth implements Auth {
     private String wssId;
     private long expiration;
 
+    private static final Logger LOG = Logger.getLogger(RawAuth.class);
+    
     private static final String BASE_URI = "https://login.yahoo.com/WSLogin/V1";
     private static final String GET_AUTH_TOKEN = "get_auth_token";
     private static final String GET_AUTH = "get_auth";
@@ -58,16 +61,16 @@ public class RawAuth implements Auth {
     private static final long EXPIRATION_LIMIT = 60 * 60 * 1000;
     
     public static String getToken(String appId, String user, String pass)
-            throws AuthenticationException, IOException {
+        throws IOException {
         Response res = doGet(GET_AUTH_TOKEN,
             new NameValuePair(APPID, appId),
             new NameValuePair(LOGIN, user),
             new NameValuePair(PASSWD, pass));
-        return res.getRequiredValue(AUTH_TOKEN);
+        return res.getRequiredField(AUTH_TOKEN);
     }
 
     public static RawAuth authenticate(String appId, String token)
-            throws AuthenticationException, IOException {
+        throws IOException {
         RawAuth auth = new RawAuth(appId);
         auth.authenticate(token);
         return auth;
@@ -93,95 +96,75 @@ public class RawAuth implements Auth {
         return System.currentTimeMillis() - expiration < EXPIRATION_LIMIT;
     }
     
-    public void authenticate(String token) throws AuthenticationException,
-                                                  IOException {
+    private void authenticate(String token)
+        throws IOException {
         Response res = doGet(GET_AUTH, new NameValuePair(APPID, appId),
                                        new NameValuePair(TOKEN, token));
-        cookie = res.getRequiredValue(COOKIE);
-        wssId = res.getRequiredValue(WSSID);
-        String s = res.getRequiredValue(EXPIRATION);
+        cookie = res.getRequiredField(COOKIE);
+        wssId = res.getRequiredField(WSSID);
+        String s = res.getRequiredField(EXPIRATION);
         try {
             expiration = System.currentTimeMillis() + Long.parseLong(s);
         } catch (NumberFormatException e) {
-            throw badResponse(GET_AUTH_TOKEN,
-                "Invalid integer value for field '" + EXPIRATION + "'");
+            throw new IOException(
+                "Invalid integer value for field '" + EXPIRATION + "': " + s);
+        }
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Got authenticate response: " + this);
         }
     }
 
     private static Response doGet(String action, NameValuePair... params)
-            throws AuthenticationException, IOException {
+        throws IOException {
         String uri = BASE_URI + '/' + action;
-        GetMethod get = new GetMethod(uri);
-        get.setQueryString(params);
+        GetMethod method = new GetMethod(uri);
+        method.setQueryString(params);
         // XXX Should we share a single HttpClient() instance?
-        int code = new HttpClient().executeMethod(get);
-        Response res = new Response(uri, get);
-        switch (code) {
-        case 200:
-            // Make sure "Error" attribute is not present, since request may
-            // have failed even if response code indicates success. If present,
-            // fall through to be handled as in 403 case.
-            if (res.getValue(ERROR) == null) {
-                return res;
-            }
-        case 403:
-            throw new AuthenticationException(
-                "Request '" + action + "' failed: " + res.getErrorMessage());
-        default:
-            throw badResponse(action, "Unexpected response code: " + code);
+        int rc = new HttpClient().executeMethod(method);
+        Response res = new Response(method);
+        String error = res.getField(ERROR);
+        if (rc == 200 && error == null) {
+            // Request can sometimes fail even with 200 status code, so always
+            // check for "Error" attribute in response.
+            return res;
         }
+        ErrorCode code = error != null ?
+            ErrorCode.get(error) : ErrorCode.GENERIC_ERROR;
+        String description = res.getField(ERROR_DESCRIPTION);
+        throw new AuthenticationException(code,
+            description != null ? description : code.getDescription());
     }
 
     private static class Response {
-        final String action;
-        final List<String> names = new ArrayList<String>(5);
-        final List<String> values = new ArrayList<String>(5);
+        final Map<String, String> attributes;
 
-        Response(String action, GetMethod get) throws IOException {
-            this.action = action;
-            InputStream is = get.getResponseBodyAsStream();
+        Response(GetMethod method) throws IOException {
+            attributes = new HashMap<String, String>();
+            InputStream is = method.getResponseBodyAsStream();
             BufferedReader br = new BufferedReader(
-                new InputStreamReader(is, get.getResponseCharSet()));
+                new InputStreamReader(is, method.getResponseCharSet()));
             String line;
             while ((line = br.readLine()) != null) {
                 int i = line.indexOf('=');
                 if (i != -1) {
-                    names.add(line.substring(0, i));
-                    values.add(line.substring(i + 1));
+                    String name = line.substring(0, i);
+                    String value = line.substring(i + 1);
+                    attributes.put(name.toLowerCase(), value);
                 }
             }
         }
 
-        String getRequiredValue(String name) throws IOException {
-            String value = getValue(name);
+        String getRequiredField(String name) throws IOException {
+            String value = getField(name);
             if (value == null) {
-                throw badResponse(action, "Missing required '" + name + "' field");
+                throw new IOException("Response missing required '" + name + "' field");
             }
             return value;
         }
         
-        String getValue(String name) {
-            for (int i = 0; i < names.size(); i++) {
-                if (names.get(i).equalsIgnoreCase(name)) {
-                    return values.get(i);
-                }
-            }
-            return null;
+        String getField(String name) {
+            return attributes.get(name.toLowerCase());
         }
-
-        String getErrorMessage() {
-            String error = getValue(ERROR);
-            String description = getValue(ERROR_DESCRIPTION);
-            if (error != null) {
-                return description != null ? error + ": " + description : error;
-            }
-            return description != null ? description : "Unknown error";
-        }
-    }
-
-    private static IOException badResponse(String action, String msg) {
-        return new IOException(
-            "Unexpected '" + action + "' response: " + msg);
     }
 
     public String toString() {

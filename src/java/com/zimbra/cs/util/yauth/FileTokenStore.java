@@ -30,7 +30,7 @@ import java.io.BufferedReader;
 import java.util.Map;
 import java.util.HashMap;
 
-public class FileTokenStore implements TokenStore {
+public class FileTokenStore extends TokenStore {
     private final File file;
     private final Map<String, String> tokens;
 
