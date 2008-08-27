@@ -118,7 +118,7 @@ public class TarFormatter extends Formatter {
         DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT);
         Exception exception = null;
         HashMap<Integer, String> fldrs = new HashMap<Integer, String>();
-        String fname = context.params.get("name");
+        String filename = context.params.get("filename");
         String lock = context.params.get("lock");
         MailboxLock ml = null;
         Set<String> names = new HashSet<String>(4096);
@@ -139,11 +139,11 @@ public class TarFormatter extends Formatter {
         String types = context.getTypesString();
 
         try {
-            if (fname == null || fname.equals(""))
-                fname = context.targetMailbox.getAccountId();
-            fname += '.' + df.format(date).replace('/', '-') + sdf.format(date) + ".tgz";
+            if (filename == null || filename.equals(""))
+                filename = context.targetMailbox.getAccountId();
+            filename += '.' + df.format(date).replace('/', '-') + sdf.format(date) + ".tgz";
             context.resp.addHeader("Content-Disposition", Part.ATTACHMENT +
-                "; filename=" + HttpUtil.encodeFilename(context.req, fname));
+                "; filename=" + HttpUtil.encodeFilename(context.req, filename));
             context.resp.setContentType("application/x-tar-compressed");
             if (types != null && !types.equals("")) {
                 Arrays.sort(searchTypes = MailboxIndex.parseTypesString(types));
@@ -169,12 +169,16 @@ public class TarFormatter extends Formatter {
                     for (MailItem mi : context.respListItems)
                         tos = saveItem(context, mi, fldrs, cnts, names, false, tos);
                 } catch (Exception e) {
-                    ZimbraLog.misc.warn(e);
+                    ZimbraLog.misc.warn("%s: %s", e, e.getCause().toString());
                 }
             } else if (context.target != null && !(context.target instanceof
                 Folder)) {
-                tos = saveItem(context, context.target, fldrs, cnts, names,
-                    false, tos);
+                try {
+                    tos = saveItem(context, context.target, fldrs, cnts, names,
+                        false, tos);
+                } catch (Exception e) {
+                    ZimbraLog.misc.warn("%s: %s", e, e.getCause().toString());
+                }
             } else {
                 ZimbraQueryResults results = null;
 
@@ -215,7 +219,7 @@ public class TarFormatter extends Formatter {
                             tos = saveItem(context, item, fldrs, cnts, names,
                                 false, tos);
                 } catch (Exception e) {
-                    ZimbraLog.misc.warn(e);
+                    ZimbraLog.misc.warn("%s: %s", e, e.getCause().toString());
                 } finally {
                     if (results != null)
                         results.doneWithSearchResults();
@@ -226,13 +230,17 @@ public class TarFormatter extends Formatter {
         } finally {
             if (ml != null)
                 MailboxManager.getInstance().endMaintenance(ml, true, true);
-            if (tos != null)
-                tos.close();
+            try {
+                if (tos != null)
+                    tos.close();
+            } catch (Exception e) {
+            }
         }
         if (tos == null && exception == null)
             exception = new UserServletException(HttpServletResponse.
                 SC_NO_CONTENT, "No data found");
-        updateComplete(context, pw, callback, null, exception);
+        if (exception != null)
+            updateComplete(context, pw, callback, null, exception);
     }
     
     private TarOutputStream saveItem(Context context, MailItem mi, 
@@ -405,6 +413,7 @@ public class TarFormatter extends Formatter {
         ItemData id = null;
         String callback = context.params.get("callback");
         String charset = context.params.get("charset");
+        Map<String, Integer> digestMap = new HashMap<String, Integer>();
         StringBuffer errs = new StringBuffer();
         Exception exception = null;
         FileItem fi = null;
@@ -419,7 +428,7 @@ public class TarFormatter extends Formatter {
         Resolve r;
         String resolve = context.params.get("resolve");
         byte[] searchTypes = null;
-       String subfolder = context.params.get("subfolder");
+        String subfolder = context.params.get("subfolder");
         TarEntry te;
         String timeout = context.params.get("timeout");
         TarInputStream tis = null;
@@ -547,8 +556,8 @@ public class TarFormatter extends Formatter {
                     }
                     if (te.getName().endsWith(".meta")) {
                         if (id != null)
-                            recoverItem(context, fldr, fmap, idMap, ids,
-                                searchTypes, r, id, tis, null, errs);
+                            recoverItem(context, fldr, fmap, digestMap, idMap,
+                                ids, searchTypes, r, id, tis, null, errs);
                         id = new ItemData(readTarEntry(tis, te));
                         continue;
                     }
@@ -561,14 +570,14 @@ public class TarFormatter extends Formatter {
                         addError(errs, te.getName(),
                             "mismatched item content and meta");
                     } else {
-                        recoverItem(context, fldr, fmap, idMap, ids,
+                        recoverItem(context, fldr, fmap, digestMap, idMap, ids,
                             searchTypes, r, id, tis, te, errs);
                     }
                     id = null;
                 }
                 if (id != null)
-                    recoverItem(context, fldr, fmap, idMap, ids, searchTypes, r,
-                        id, tis, null, errs);
+                    recoverItem(context, fldr, fmap, digestMap, idMap, ids,
+                        searchTypes, r, id, tis, null, errs);
             } catch (Exception e) {
                 addError(errs, id == null ? null : id.path,
                     e.getLocalizedMessage());
@@ -709,16 +718,15 @@ public class TarFormatter extends Formatter {
     }
     
     private void recoverItem(Context context, Folder fldr,
-        Map<Object, Folder> fmap, Map<Integer, Integer> idMap, int[] ids,
-        byte[] searchTypes, Resolve r, ItemData id, TarInputStream tis,
-        TarEntry te, StringBuffer errs) throws MessagingException, ServiceException {
+        Map<Object, Folder> fmap, Map<String, Integer> digestMap,
+        Map<Integer, Integer> idMap, int[] ids, byte[] searchTypes, Resolve r,
+        ItemData id, TarInputStream tis, TarEntry te, StringBuffer errs) throws
+        MessagingException, ServiceException {
         try {
-            boolean newTags = true;
             Mailbox mbox = fldr.getMailbox();
             MailItem mi = MailItem.constructItem(mbox,id.ud);
             MailItem newItem = null, oldItem = null;
             OperationContext oc = context.opContext;
-            Integer oldId = idMap.get(mi.getId());
             String path;
             boolean root = fldr.getId() == Mailbox.ID_FOLDER_ROOT ||
                 fldr.getId() == Mailbox.ID_FOLDER_USER_ROOT;
@@ -727,7 +735,6 @@ public class TarFormatter extends Formatter {
                 (searchTypes != null && Arrays.binarySearch(searchTypes,
                 id.ud.type) < 0))
                 return;
-            // allow contacts... w/ missing blob
             if (id.ud.getBlobDigest() != null && te == null)
                 addError(errs, id.path, "missing item blob for meta");
             if (root)
@@ -745,16 +752,16 @@ public class TarFormatter extends Formatter {
                     MailItem.TYPE_APPOINTMENT ? Folder.TYPE_APPOINTMENT :
                     Folder.TYPE_TASK);
                 if (!root || r != Resolve.Reset) {
-                    try {
-                        CalendarItem oldCI = mbox.getCalendarItemByUid(oc,
-                            ci.getUid());
+                    CalendarItem oldCI = null;
                     
-                        if (r == Resolve.Replace)
-                            mbox.delete(oc, oldCI.getId(), oldCI.getType());
-                        else
-                            oldItem = oldCI;
+                    try {
+                        oldCI = mbox.getCalendarItemByUid(oc, ci.getUid());
                     } catch (Exception e) {
                     }
+                    if (oldCI != null && r == Resolve.Replace)
+                        mbox.delete(oc, oldCI.getId(), oldCI.getType());
+                    else
+                        oldItem = oldCI;
                 }
                 if (oldItem == null || r != Resolve.Skip) {
                     CalendarItem.AlarmData ad = ci.getAlarmData();
@@ -801,22 +808,26 @@ public class TarFormatter extends Formatter {
                 
                 fldr = createPath(context, fmap, path, Folder.TYPE_CHAT);
                 if (root && r != Resolve.Reset) {
-                    try {
-                        Chat oldChat = mbox.getChatById(oc, chat.getId());
+                    Chat oldChat = null;
                     
-                        if (chat.getSender().equals(oldChat.getSender()) &&
-                            chat.getSubject().equals(oldChat.getSubject())) {
-                            if (r == Resolve.Replace) {
-                                mbox.delete(oc, oldChat.getId(),
-                                    oldChat.getType());
-                            } else {
-                                oldItem = oldChat;
-                                if (r == Resolve.Modify)
-                                    newItem = mbox.updateChat(oc, pm,
-                                        oldItem.getId());
-                            }
-                        }
+                    try {
+                        oldChat = mbox.getChatById(oc, chat.getId());
+                        if (oldChat.getFolderId() != fldr.getFolderId())
+                            oldChat = null;
                     } catch (Exception e) {
+                    }
+                    if (oldChat != null &&
+                        chat.getSender().equals(oldChat.getSender()) &&
+                        chat.getSubject().equals(oldChat.getSubject())) {
+                        if (r == Resolve.Replace) {
+                            mbox.delete(oc, oldChat.getId(),
+                                oldChat.getType());
+                        } else {
+                            oldItem = oldChat;
+                            if (r == Resolve.Modify)
+                                newItem = mbox.updateChat(oc, pm,
+                                    oldItem.getId());
+                        }
                     }
                 }
                 if (oldItem == null)
@@ -839,28 +850,36 @@ public class TarFormatter extends Formatter {
                 
                 fldr = createPath(context, fmap, path, Folder.TYPE_CONTACT);
                 if (root && r != Resolve.Reset) {
+                    Contact oldContact = null;
+                    
                     try {
-                        Contact oldct = mbox.getContactById(oc, ct.getId());
+                        oldContact = mbox.getContactById(oc, ct.getId());
+                        if (oldContact.getFolderId() != fldr.getFolderId())
+                            oldContact = null;
+                    } catch (Exception e) {
+                    }
+                    
+                    if (oldContact != null) {
                         String email = string(ct.get(Contact.A_email));
                         String first = string(ct.get(Contact.A_firstName));
                         String name = string(ct.get(Contact.A_fullName));
-                        String oldemail = string(oldct.get(Contact.A_email));
-                        String oldfirst = string(oldct.get(Contact.A_firstName));
-                        String oldname = string(oldct.get(Contact.A_fullName));
+                        String oldemail = string(oldContact.get(Contact.A_email));
+                        String oldfirst = string(oldContact.get(Contact.A_firstName));
+                        String oldname = string(oldContact.get(Contact.A_fullName));
                         
                         if (email.equals(oldemail) && first.equals(oldfirst) &&
                             name.equals(oldname)) {
                             if (r == Resolve.Replace) {
-                                mbox.delete(oc, oldct.getId(), oldct.getType());
+                                mbox.delete(oc, oldContact.getId(),
+                                    oldContact.getType());
                             } else {
-                                oldItem = oldct;
+                                oldItem = oldContact;
                                 if (r == Resolve.Modify)
                                     mbox.modifyContact(oc, oldItem.getId(),
                                         new ParsedContact(ct.getFields(),
                                         readTarEntry(tis, te)));
                             }
                         }
-                    } catch (Exception e) {
                     }
                 }
                 if (oldItem == null)
@@ -871,50 +890,42 @@ public class TarFormatter extends Formatter {
             case MailItem.TYPE_DOCUMENT:
             case MailItem.TYPE_WIKI:
                 Document doc = (Document)mi;
+                Document oldDoc = null;
+                Integer oldId = idMap.get(mi.getId());
                 
                 fldr = createParent(context, fmap, path, doc.getType() ==
                     MailItem.TYPE_DOCUMENT ? Folder.TYPE_DOCUMENT :
                     Folder.TYPE_WIKI);
-                newTags = false;
-                if (oldId != null) {
+                if (oldId == null) {
                     try {
-                        oldItem = mbox.getDocumentById(oc, oldId);
-                        if (oldItem != null) {
-                            if (doc.getVersion() > oldItem.getVersion()) {
-                                newItem = mbox.addDocumentRevision(oc, oldId,
-                                    doc.getType(), tis, doc.getCreator(), doc.getName());
-                                mbox.setDate(oc, newItem.getId(), doc.getType(),
-                                    doc.getDate());
-                            } else if (doc.getVersion() == oldItem.getVersion()) {
-                                mbox.setDate(oc, oldItem.getId(), doc.getType(),
-                                    doc.getDate());
-                            } else {
-                                return;
+                        for (Document listDoc : mbox.getDocumentList(oc,
+                            fldr.getId())) {
+                            if (doc.getName().equals(listDoc.getName())) {
+                                oldDoc = listDoc;
+                                idMap.put(doc.getId(), oldDoc.getId());
+                                break;
                             }
-                            break;
                         }
                     } catch (Exception e) {
                     }
+                } else {
+                    oldDoc = mbox.getDocumentById(oc, oldId);
                 }
-                try {
-                    for (Document oldDoc : mbox.getDocumentList(oc, fldr.getId())) {
-                        if (doc.getName().equals(oldDoc.getName())) {
-                            if (r == Resolve.Replace && oldId == null) {
-                                mbox.delete(oc, oldDoc.getId(), oldDoc.getType());
-                            } else if (doc.getVersion() < oldDoc.getVersion()) {
-                                return;
-                            } else {
-                                idMap.put(doc.getId(), oldDoc.getId());
-                                oldItem = oldDoc;
-                                if (doc.getVersion() > oldDoc.getVersion())
-                                    newItem = mbox.addDocumentRevision(oc,
-                                        oldDoc.getId(), doc.getType(), tis,
-                                        doc.getCreator(), doc.getName());
-                            }
-                            break;
-                        }
+                if (oldDoc != null) {
+                    if (r == Resolve.Replace && oldId == null) {
+                        mbox.delete(oc, oldDoc.getId(), oldDoc.getType());
+                    } else if (doc.getVersion() < oldDoc.getVersion()) {
+                        return;
+                    } else {
+                        oldItem = oldDoc;
+                        if (doc.getVersion() > oldDoc.getVersion())
+                            newItem = mbox.addDocumentRevision(oc,
+                                oldDoc.getId(), doc.getType(), tis,
+                                doc.getCreator(), doc.getName());
+                        if (r != Resolve.Skip)
+                            mbox.setDate(oc, newItem.getId(), doc.getType(),
+                                doc.getDate());
                     }
-                } catch (Exception e) {
                 }
                 if (oldItem == null) {
                     if (mi.getType() == MailItem.TYPE_DOCUMENT) {
@@ -936,14 +947,17 @@ public class TarFormatter extends Formatter {
                 return;
             case MailItem.TYPE_FOLDER:
                 Folder f = (Folder)mi;
+                Folder oldF = null;
                 byte view = f.getDefaultView();
                 
                 if (view == MailItem.TYPE_CONVERSATION ||
                     view == MailItem.TYPE_FLAG || view == MailItem.TYPE_TAG)
                     break;
                 try {
-                    Folder oldF = mbox.getFolderByPath(oc, path);
-                
+                    oldF = mbox.getFolderByPath(oc, path);
+                } catch (Exception e) {
+                }
+                if (oldF != null) {
                     oldItem = oldF;
                     if (r != Resolve.Skip) {
                         if (!f.getUrl().equals(oldF.getUrl()))
@@ -953,7 +967,6 @@ public class TarFormatter extends Formatter {
                             mbox.setPermissions(oc, oldF.getId(),
                                 f.getEffectiveACL());
                     }
-                } catch (Exception e) {
                 }
                 if (oldItem == null) {
                     fldr = createParent(context, fmap, path, Folder.TYPE_UNKNOWN);
@@ -966,41 +979,68 @@ public class TarFormatter extends Formatter {
                 break;
             case MailItem.TYPE_MESSAGE:
                 Message msg = (Message)mi;
+                Message oldMsg = null;
                 
                 fldr = createPath(context, fmap, path, Folder.TYPE_MESSAGE);
                 if (root && r != Resolve.Reset) {
                     try {
-                        Message oldMsg = mbox.getMessageById(oc, msg.getId());
-                    
-                        if (msg.getDigest().equals(oldMsg.getDigest())) {
-                            if (r == Resolve.Replace)
-                                mbox.delete(oc, oldMsg.getId(), oldMsg.getType());
-                            else
-                                oldItem = oldMsg;
-                        }
+                        oldMsg = mbox.getMessageById(oc, msg.getId());
+                        if (!msg.getDigest().equals(oldMsg.getDigest()) ||
+                             oldMsg.getFolderId() != fldr.getFolderId())
+                            oldMsg = null;
                     } catch (Exception e) {
                     }
                 }
+                if (oldMsg == null) {
+                    Integer digestId = digestMap.get(path);
+                    
+                    if (digestId == null) {
+                        digestMap.clear();
+                        digestMap.put(path, -1);
+                        try {
+                            for (MailItem item : mbox.getItemList(oc,
+                                MailItem.TYPE_MESSAGE, fldr.getId()))
+                                digestMap.put(item.getDigest(), item.getId());
+                        } catch (Exception e) {
+                        }
+                    }
+                    digestId = digestMap.get(mi.getDigest());
+                    if (digestId != null) {
+                        oldMsg = mbox.getMessageById(oc, digestId);
+                        if (!msg.getDigest().equals(oldMsg.getDigest()))
+                            oldMsg = null;
+                    }
+                }
+                if (oldMsg != null) {
+                    if (r == Resolve.Replace)
+                        mbox.delete(oc, oldMsg.getId(), oldMsg.getType());
+                    else
+                        oldItem = oldMsg;
+                }
                 if (oldItem == null) {
+                    /* tfr
                     pm = new ParsedMessage(tis, (int) te.getSize(), msg.getDate(), mbox.attachmentsIndexingEnabled());
                     newItem = mbox.addMessage(oc, pm,
                         fldr.getId(), true, msg.getFlagBitmask(),
                         msg.getTagString());
+                    */
                 }
                 break;
             case MailItem.TYPE_MOUNTPOINT:
                 Mountpoint mp = (Mountpoint)mi;
+                MailItem oldMP = null;
                 
                 try {
-                    oldItem = mbox.getItemByPath(oc, path);
-                    
-                    if (oldItem.getType() == mi.getType()) {
-                        if (r == Resolve.Modify || r == Resolve.Replace)
-                            mbox.delete(oc, oldItem.getId(), oldItem.getType());
-                    } else {
-                        oldItem = null;
-                    }
+                    oldMP = mbox.getItemByPath(oc, path);
+                    if (oldMP.getType() == mi.getType())
+                        oldMP = null;
                 } catch (Exception e) {
+                }
+                if (oldMP != null) {
+                    if (r == Resolve.Modify || r == Resolve.Replace)
+                        mbox.delete(oc, oldMP.getId(), oldMP.getType());
+                    else
+                        oldItem = oldMP;
                 }
                 if (oldItem == null) {
                     fldr = createParent(context, fmap, path, Folder.TYPE_UNKNOWN);
@@ -1012,50 +1052,53 @@ public class TarFormatter extends Formatter {
                 break;
             case MailItem.TYPE_NOTE:
                 Note note = (Note)mi;
+                Note oldNote = null;
     
                 fldr = createPath(context, fmap, path, Folder.TYPE_NOTE);
                 try {
-                    for (Note oldNote : mbox.getNoteList(oc, fldr.getId())) {
-                        if (note.getSubject().equals(oldNote.getSubject())) {
-                            if (r == Resolve.Replace) {
-                                mbox.delete(oc, oldNote.getId(),
-                                    oldNote.getType());
-                            } else {
-                                oldItem = oldNote;
-                                if (r == Resolve.Modify)
-                                    mbox.editNote(oc, oldItem.getId(), new
-                                        String(readTarEntry(tis, te), "UTF-8"));
-                            }
+                    for (Note listNote : mbox.getNoteList(oc, fldr.getId())) {
+                        if (note.getSubject().equals(listNote.getSubject())) {
+                            oldNote = listNote;
                             break;
                         }
                     }
                 } catch (Exception e) {
                 }
+                if (oldNote != null) {
+                    if (r == Resolve.Replace) {
+                        mbox.delete(oc, oldNote.getId(), oldNote.getType());
+                    } else {
+                        oldItem = oldNote;
+                        if (r == Resolve.Modify)
+                            mbox.editNote(oc, oldItem.getId(), new
+                                String(readTarEntry(tis, te), "UTF-8"));
+                    }
+                    break;
+                }
                 if (oldItem == null) {
                     newItem = mbox.createNote(oc, new String(readTarEntry(tis, te),
                         "UTF-8"), note.getBounds(), note.getColor(), fldr.getId());
-                    newTags = false;
                 }
                 break;
             case MailItem.TYPE_SEARCHFOLDER:
                 SearchFolder sf = (SearchFolder)mi;
+                MailItem oldSF = null;
                 
                 try {
-                    oldItem = mbox.getItemByPath(oc, path);
-                    
-                    if (oldItem.getType() == mi.getType()) {
-                        if (r == Resolve.Modify) {
-                            mbox.modifySearchFolder(oc, oldItem.getId(),
-                                sf.getQuery(), sf.getReturnTypes(),
-                                sf.getSortField());
-                        } else if (r == Resolve.Replace) {
-                            mbox.delete(oc, oldItem.getId(), oldItem.getType());
-                            oldItem = null;
-                        }
-                    } else {
-                        oldItem = null;
-                    }
+                    oldSF = mbox.getItemByPath(oc, path);
+                    if (oldSF.getType() == mi.getType())
+                        oldSF = null;
                 } catch (Exception e) {
+                }
+                if (oldSF != null) {
+                    if (r == Resolve.Modify)
+                        mbox.modifySearchFolder(oc, oldSF.getId(),
+                            sf.getQuery(), sf.getReturnTypes(),
+                            sf.getSortField());
+                    else if (r == Resolve.Replace)
+                        mbox.delete(oc, oldSF.getId(), oldSF.getType());
+                    else
+                        oldItem = oldSF;
                 }
                 if (oldItem == null) {
                     fldr = createParent(context, fmap, path, Folder.TYPE_UNKNOWN);
@@ -1083,8 +1126,9 @@ public class TarFormatter extends Formatter {
                 if (mi.getColor() != newItem.getColor())
                     mbox.setColor(oc, newItem.getId(), newItem.getType(),
                         mi.getColor());
-                if (!newTags && (!id.flags.equals(newItem.getFlagString()) ||
-                    !id.tags.equals(newItem.getTagString())))
+                
+                if (!id.flags.equals(newItem.getFlagString()) ||
+                    !id.tags.equals(newItem.getTagString()))
                     mbox.setTags(oc, newItem.getId(), newItem.getType(),
                         id.flags, id.tags, null);
             } else if (oldItem != null && r == Resolve.Modify) {
