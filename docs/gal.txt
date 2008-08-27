@@ -8,8 +8,9 @@ Attribute                                 scope                  For            
 ======================================================================================================================================================================
 zimbraHideInGal                           account,DL,CR          zimbra           all
 
-zimbraFeatureGalEnabled                   account,cos            both             search,sync
+zimbraFeatureGalEnabled                   account,cos            both             autocomplete,search,sync
 zimbraFeatureGalAutoCompleteEnabled       account,cos            both             autocomplete
+zimbraFeatureGalSyncEnabled               account,cos            both             sync
 zimbraPrefGalSearchEnabled                account,cos            both             search
 zimbraPrefGalAutoCompleteEnabled          account,cos            both             autocomplete
 
