@@ -401,6 +401,11 @@ public class ProxyConfGen
         f.format("%ds",userttl);
         mVars.put("mail.userttl", f.toString());
 
+        f = new Formatter();
+        long authwait = config.getTimeInterval("zimbraReverseProxyAuthWaitInterval",10000); /* global config */
+        f.format("%dms",authwait);
+        mVars.put("mail.authwait", f.toString());
+
         if (mSource.getBooleanAttr("zimbraReverseProxyPop3ExposeVersionOnBanner",false)) {
             mVars.put("mail.pop3.greeting", "+OK " + "Zimbra " + BuildInfo.VERSION + " POP3 ready");
         }
