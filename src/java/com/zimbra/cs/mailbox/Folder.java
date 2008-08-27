@@ -178,6 +178,10 @@ public class Folder extends MailItem {
         return mImapMODSEQ;
     }
 
+    @Override public boolean inMailbox() {
+        return !inSpam() && !inTrash();
+    }
+
     /** Returns whether the folder is the Trash folder or any of its
      *  subfolders. */
     @Override public boolean inTrash() {

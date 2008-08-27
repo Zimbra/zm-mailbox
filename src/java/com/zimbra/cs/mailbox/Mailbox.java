@@ -110,6 +110,7 @@ import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.service.util.SpamHandler;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
@@ -119,9 +120,6 @@ import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMailbox.Options;
 
-/**
- * @author schemers
- */
 public class Mailbox {
 
     /* these probably should be ints... */
@@ -221,6 +219,8 @@ public class Mailbox {
         PendingModifications mDirty = new PendingModifications();
         List<Object> mOtherDirtyStuff = new LinkedList<Object>();
         PendingDelete deletes = null;
+
+        MailboxChange()  { }
 
         void setTimestamp(long millis) {
             if (depth == 1)
@@ -2720,7 +2720,7 @@ public class Mailbox {
         return flag;
     }
 
-    public synchronized List<Flag> getFlagList() throws ServiceException {
+    public synchronized List<Flag> getFlagList() {
         List<Flag> flags = new ArrayList<Flag>(mFlags.length);
         
         for (Flag flag : mFlags)
@@ -2988,9 +2988,10 @@ public class Mailbox {
             List<Message> msgs = getConversationById(convId).getMessages(sort);
             if (!hasFullAccess()) {
                 List<Message> visible = new ArrayList<Message>(msgs.size());
-                for (Message msg : msgs)
+                for (Message msg : msgs) {
                     if (msg.canAccess(ACL.RIGHT_READ))
                         visible.add(msg);
+                }
                 msgs = visible;
             }
             success = true;
@@ -5330,9 +5331,10 @@ public class Mailbox {
         // this is an IMAP command, so we'd better be tracking IMAP changes by now...
         beginTrackingImap();
 
-        for (int id : itemIds)
+        for (int id : itemIds) {
             if (id <= 0)
                 throw MailItem.noSuchItem(id, type);
+        }
 
         short volumeId = Volume.getCurrentMessageVolume().getId();
         ImapCopyItem redoRecorder = new ImapCopyItem(mId, type, folderId, volumeId);
@@ -5356,9 +5358,10 @@ public class Mailbox {
                 int newId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getDestId(srcId));
 
                 MailItem copy = item.icopy(target, newId, item.getVolumeId() == -1 ? -1 : volumeId);
-                redoRecorder.setDestId(srcId, newId);
-    
                 result.add(copy);
+                redoRecorder.setDestId(srcId, newId);
+
+                trainSpamFilter(item, target);
             }
 
             success = true;
@@ -5366,6 +5369,25 @@ public class Mailbox {
         } finally {
             endTransaction(success);
         }
+    }
+
+    private MailItem trainSpamFilter(MailItem item, Folder target) {
+        // if it's not a move into or out of Spam, no training is necessary
+        //   (moves from Spam to Trash also do not train the filter)
+        boolean fromSpam = item.inSpam();
+        boolean toSpam = target.inSpam();
+        if (!fromSpam && !toSpam)
+            return item;
+        if (fromSpam && (toSpam || target.inTrash()))
+            return item;
+
+        try {
+            SpamHandler.getInstance().handle(this, item.getId(), item.getType(), toSpam);
+            ZimbraLog.mailop.info(MailItem.getMailopContext(item) + " sent to spam filter for training (marked as " + (toSpam ? "" : "not ") + "spam)");
+        } catch (Throwable t) {
+            ZimbraLog.mailop.info("could not train spam filter: " + MailItem.getMailopContext(item), t);
+        }
+        return item;
     }
 
     /** Moves an item from one folder into another in the same Mailbox.  The
@@ -5431,7 +5453,10 @@ public class Mailbox {
             for (MailItem item : items) {
                 // do the move...
                 boolean moved = item.move(target);
-                
+
+                // ...train the spam filter if necessary...
+                trainSpamFilter(item, target);
+
                 // ...and determine whether the move needs to cause an UIDNEXT change
                 if (moved && !resetUIDNEXT && isTrackingImap() && (item instanceof Conversation || item instanceof Message || item instanceof Contact))
                     resetUIDNEXT = true;
@@ -5471,8 +5496,10 @@ public class Mailbox {
                 folderId = item.getFolderId();
 
             String oldName = item.getName();
-            
-            item.rename(name, getFolderById(folderId));
+            Folder target = getFolderById(folderId);
+            item.rename(name, target);
+
+            trainSpamFilter(item, target);
 
             if (item instanceof Tag) {
                 mTagCache.remove(oldName.toLowerCase());
@@ -5528,6 +5555,8 @@ public class Mailbox {
             String name = parts[parts.length - 1];
 
             item.rename(name, parent);
+
+            trainSpamFilter(item, parent);
 
             success = true;
         } finally {
@@ -7118,7 +7147,7 @@ public class Mailbox {
 
         try {
             // rolling back changes, so purge dirty items from the various caches
-            Map cache = change.itemCache;
+            Map<Integer, MailItem> cache = change.itemCache;
             for (Map map : new Map[] {change.mDirty.created, change.mDirty.deleted, change.mDirty.modified}) {
                 if (map != null) {
                     for (Object obj : map.values()) {
@@ -7175,30 +7204,27 @@ public class Mailbox {
     private void trimItemCache() {
         try {
             int sizeTarget = mListeners.isEmpty() ? MAX_ITEM_CACHE_WITHOUT_LISTENERS : MAX_ITEM_CACHE_WITH_LISTENERS;
-            Map cache = mCurrentChange.itemCache;
+            Map<Integer, MailItem> cache = mCurrentChange.itemCache;
             if (cache == null)
                 return;
             int excess = cache.size() - sizeTarget;
-            if (excess < 0)
+            if (excess <= 0)
                 return;
             // cache the overflow to avoid the Iterator's ConcurrentModificationException
-            Object[] overflow = new Object[excess];
+            MailItem[] overflow = new MailItem[excess];
             int i = 0;
-            for (Iterator it = cache.values().iterator(); i < excess && it.hasNext(); ) {
-                Object obj = it.next();
-                if (obj instanceof MailItem)
-                    overflow[i++] = obj;
-                else
-                    it.remove();
+            for (MailItem item : cache.values()) {
+                overflow[i++] = item;
+                if (i >= excess)
+                    break;
             }
             // trim the excess; note that "uncache" can cascade and take out child items
             while (--i >= 0) {
                 if (cache.size() <= sizeTarget)
                     return;
-                if (overflow[i] instanceof MailItem)
-                    try {
-                        uncache((MailItem) overflow[i]);
-                    } catch (ServiceException e) { }
+                try {
+                    uncache(overflow[i]);
+                } catch (ServiceException e) { }
             }
         } catch (RuntimeException e) {
             ZimbraLog.mailbox.error("ignoring error during item cache trim", e);
