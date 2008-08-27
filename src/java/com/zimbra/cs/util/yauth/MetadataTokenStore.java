@@ -26,7 +26,7 @@ import com.zimbra.common.service.ServiceException;
 import java.util.Map;
 import java.util.HashMap;
 
-public class MetadataTokenStore implements TokenStore {
+public class MetadataTokenStore extends TokenStore {
     private final Mailbox mbox;
     private final Map<String, String> tokens;
 
@@ -52,7 +52,7 @@ public class MetadataTokenStore implements TokenStore {
 
     public void putToken(String appId, String user, String token) {
         synchronized (this) {
-            tokens.put(user, token);
+            tokens.put(key(appId, user), token);
             saveTokens();
         }
     }
@@ -75,18 +75,22 @@ public class MetadataTokenStore implements TokenStore {
     }
 
     private void loadTokens(MetadataList ml) throws ServiceException {
-        LOG.debug("Loading yauth tokens for account '%s'", mbox.getAccountId());
         int size = ml.size();
+        LOG.debug("Loading %d yauth token(s) for account '%s'", size, getAccountName());
         for (int i = 0; i < size; i++) {
             String[] parts = ml.get(i).split(" ");
             if (parts.length == 3) {
-                tokens.put(key(parts[0], parts[1]), parts[2]);
+                String appId = parts[0];
+                String user = parts[1];
+                String token = parts[2];
+                // LOG.debug("Loaded token: appId=%s, user=%s, token=%s", appId, user, token);
+                tokens.put(key(appId, user), token);
             }
         }
     }
 
     private void saveTokens() {
-        LOG.debug("Saving yauth tokens for account '%s'", mbox.getAccountId());
+        LOG.debug("Saving %d yauth token(s) for account '%s'", tokens.size(), getAccountName());
         try {
             Metadata md = new Metadata();
             md.put(VERSION_KEY, VERSION);
@@ -101,11 +105,27 @@ public class MetadataTokenStore implements TokenStore {
         MetadataList ml = new MetadataList();
         for (Map.Entry<String, String> e : tokens.entrySet()) {
             ml.add(e.getKey() + " " + e.getValue());
+            /*
+            if (LOG.isDebugEnabled()) {
+                String[] parts = e.getKey().split(" ");
+                LOG.debug("Saved token: appId=%s, user=%s, token=%s",
+                          parts[0], parts[1], e.getValue());
+            }
+            */
         }
         return ml;
+    }
+
+    private String getAccountName() {
+        try {
+            return mbox.getAccount().getName();
+        } catch (ServiceException e) {
+            return mbox.getAccountId();
+        }
     }
     
     private static String key(String appId, String user) {
         return appId + " " + user;
     }
+
 }

@@ -18,6 +18,8 @@ public abstract class Authenticator {
 
     public abstract byte[] evaluateChallenge(byte[] challenge) throws SaslException;
 
+    public abstract String getMechanism();
+
     public abstract boolean isComplete();
 
     public boolean hasInitialResponse() {

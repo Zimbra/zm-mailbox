@@ -16,8 +16,29 @@
  */
 package com.zimbra.cs.util.yauth;
 
-public class AuthenticationException extends Exception {
-    public AuthenticationException(String msg) {
+import java.io.IOException;
+
+public class AuthenticationException extends IOException {
+    private final ErrorCode code;
+
+    public AuthenticationException(ErrorCode code, String msg) {
         super(msg);
+        this.code = code;
+    }
+    
+    public AuthenticationException(String msg) {
+        this(ErrorCode.GENERIC_ERROR, msg);
+    }
+
+    public AuthenticationException(ErrorCode code) {
+        this(code, code.getDescription());
+    }
+
+    public ErrorCode getErrorCode() {
+        return code;
+    }
+    
+    public static AuthenticationException invalidToken() {
+        return new AuthenticationException(ErrorCode.INVALID_TOKEN);
     }
 }

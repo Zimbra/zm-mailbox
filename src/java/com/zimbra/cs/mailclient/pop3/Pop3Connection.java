@@ -113,7 +113,7 @@ public final class Pop3Connection extends MailConnection {
 
     @Override
     protected void sendAuthenticate(boolean ir) throws IOException {
-        StringBuffer sb = new StringBuffer(config.getMechanism());
+        StringBuffer sb = new StringBuffer(authenticator.getMechanism());
         if (ir) {
             byte[] response = authenticator.getInitialResponse();
             sb.append(' ');

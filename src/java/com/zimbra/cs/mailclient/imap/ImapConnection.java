@@ -136,7 +136,8 @@ public final class ImapConnection extends MailConnection {
 
     @Override
     protected void sendAuthenticate(boolean ir) throws IOException {
-        ImapRequest req = newRequest(CAtom.AUTHENTICATE, config.getMechanism());
+        ImapRequest req = newRequest(
+            CAtom.AUTHENTICATE, authenticator.getMechanism());
         if (ir) {
             byte[] response = authenticator.getInitialResponse();
             req.addParam(Ascii.toString(Base64.encodeBase64(response)));
@@ -429,6 +430,10 @@ public final class ImapConnection extends MailConnection {
         return capabilities != null && capabilities.hasCapability(cap);
     }
 
+    public boolean hasMechanism(String method) {
+        return hasCapability("AUTH=" + method);
+    }
+    
     public boolean hasUidPlus() {
         return hasCapability(ImapCapabilities.UIDPLUS);
     }

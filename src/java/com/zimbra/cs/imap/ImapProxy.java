@@ -276,6 +276,7 @@ class ImapProxy {
             username = config.getAuthenticationId();  authtoken = password;
         }
 
+        @Override public String getMechanism() { return ZimbraAuthenticator.MECHANISM; }
         @Override public boolean isComplete()  { return complete; }
 
         @Override public boolean hasInitialResponse()  { return true; }
