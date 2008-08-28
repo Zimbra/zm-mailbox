@@ -211,6 +211,10 @@ public class ZGrant {
     public String getArgs() {
         return mArgs;
     }
+    
+    void setAccessKey(String accesskey) {
+        mArgs = accesskey;
+    }
 
     /**
      * Is this grant a public grant?

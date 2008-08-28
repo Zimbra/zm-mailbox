@@ -290,7 +290,7 @@ public class Folder extends MailItem {
      *    <li><tt>service.FAILURE</tt> - if there's a database failure
      *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
      *        permissions</ul> */
-    void grantAccess(String zimbraId, byte type, short rights, String args) throws ServiceException {
+    ACL.Grant grantAccess(String zimbraId, byte type, short rights, String args) throws ServiceException {
         if (!canAccess(ACL.RIGHT_ADMIN))
             throw ServiceException.PERM_DENIED("you do not have admin rights to folder " + getPath());
         if (type == ACL.GRANTEE_USER && zimbraId.equalsIgnoreCase(getMailbox().getAccountId()))
@@ -302,8 +302,9 @@ public class Folder extends MailItem {
         markItemModified(Change.MODIFIED_ACL);
         if (mRights == null)
             mRights = new ACL();
-        mRights.grantAccess(zimbraId, type, rights, args);
+        ACL.Grant grant = mRights.grantAccess(zimbraId, type, rights, args);
         saveMetadata();
+        return grant;
     }
 
     /** Removes the set of rights granted to the specified (id, type) pair

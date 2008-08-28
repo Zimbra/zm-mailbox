@@ -6002,20 +6002,22 @@ public class Mailbox {
         }
     }
 
-    public synchronized void grantAccess(OperationContext octxt, int folderId, String grantee, byte granteeType, short rights, String args) throws ServiceException {
+    public synchronized ACL.Grant grantAccess(OperationContext octxt, int folderId, String grantee, byte granteeType, short rights, String args) throws ServiceException {
         GrantAccess redoPlayer = new GrantAccess(mId, folderId, grantee, granteeType, rights, args);
 
         boolean success = false;
+        ACL.Grant grant = null;
         try {
             beginTransaction("grantAccess", octxt, redoPlayer);
 
             Folder folder = getFolderById(folderId);
             checkItemChangeID(folder);
-            folder.grantAccess(grantee, granteeType, rights, args);
+            grant = folder.grantAccess(grantee, granteeType, rights, args);
             success = true;
         } finally {
             endTransaction(success);
         }
+        return grant;
     }
 
     public synchronized void revokeAccess(OperationContext octxt, int folderId, String grantee) throws ServiceException {

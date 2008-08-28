@@ -197,13 +197,18 @@ public class FolderAction extends ItemAction {
             		gtype = ACL.GRANTEE_GROUP;
             }
             
-            mbox.grantAccess(octxt, iid.getId(), zid, gtype, rights, secret);
+            ACL.Grant g =  mbox.grantAccess(octxt, iid.getId(), zid, gtype, rights, secret);
+            
             // kinda hacky -- return the zimbra id and name of the grantee in the response
             result.addAttribute(MailConstants.A_ZIMBRA_ID, zid);
             if (nentry != null)
                 result.addAttribute(MailConstants.A_DISPLAY, nentry.getName());
             else if (gtype == ACL.GRANTEE_GUEST || gtype == ACL.GRANTEE_KEY)
                 result.addAttribute(MailConstants.A_DISPLAY, zid);
+            
+            if (gtype == ACL.GRANTEE_KEY)
+                result.addAttribute(MailConstants.A_ACCESSKEY, g.getPassword());
+            
         } else if (operation.equals(OP_UPDATE)) {
             // duplicating code from ItemAction.java for now...
             String newName = action.getAttribute(MailConstants.A_NAME, null);

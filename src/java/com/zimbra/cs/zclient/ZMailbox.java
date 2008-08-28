@@ -1132,7 +1132,7 @@ public class ZMailbox {
 
     private ZActionResult doAction(Element actionEl) throws ServiceException {
         Element response = invoke(actionEl.getParent());
-        return new ZActionResult(response.getElement(MailConstants.E_ACTION).getAttribute(MailConstants.A_ID));
+        return new ZActionResult(response);
     }
 
     // ------------------------
@@ -2356,10 +2356,13 @@ public class ZMailbox {
 
     public static class ZActionResult {
         private String mIds;
+        private Element mResponse;
 
-        public ZActionResult(String ids) {
+        public ZActionResult(Element response) throws ServiceException {
+            String ids = response.getElement(MailConstants.E_ACTION).getAttribute(MailConstants.A_ID);
             if (ids == null) ids = "";
             mIds = ids;
+            mResponse = response;
         }
 
         public String getIds() {
@@ -2372,6 +2375,10 @@ public class ZMailbox {
 
         public String toString() {
             return String.format("actionResult: { ids: %s }", mIds);
+        }
+        
+        Element getResponse() {
+            return mResponse;
         }
     }
 
@@ -2516,7 +2523,34 @@ public class ZMailbox {
             else
                 grant.addAttribute(MailConstants.A_ARGS, args);
         }
-        return doAction(action);
+        ZActionResult r = doAction(action);
+        
+        /*
+         * for key grantee type, the accesskey is not encoded in the <notify> 
+         * block in FolderAction or the <refresh> block for any calls.  
+         * accesskey is only returned on explicit GetFolderRequest.
+         * 
+         * add a convenient hack here so client does not have to call 
+         * mbox.getFolderRequest after a modifyFolderGrant in order to get 
+         * the (new or modified) accesskey.
+         */
+        if (granteeType == GranteeType.key) {
+            ZFolder folder = getFolderById(folderId);
+            for (ZGrant g : folder.getGrants()) {
+                if (g.getGranteeType() == GranteeType.key && 
+                    g.getGranteeId().equals(grantreeId)) {
+                    String key = null;
+                    Element eAction = r.getResponse().getOptionalElement(MailConstants.E_ACTION);
+                    if (eAction != null)
+                        key = eAction.getAttribute(MailConstants.A_ACCESSKEY, null);
+                    if (key != null)
+                        g.setAccessKey(key);
+                    break;
+                }
+            }
+        }
+        
+        return r;
     }
 
     /**
