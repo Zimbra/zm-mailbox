@@ -344,8 +344,9 @@ public class ACL {
      * @param type      The type of object the grantee's ID refers to.
      * @param rights    A bitmask of the rights being granted. 
      * @param secret    password or accesskey
+     * @return          the grant object
      */
-    public void grantAccess(String zimbraId, byte type, short rights, String secret)
+    public ACL.Grant grantAccess(String zimbraId, byte type, short rights, String secret)
     throws ServiceException {
         if (type == GRANTEE_AUTHUSER)
             zimbraId = GUID_AUTHUSER;
@@ -364,10 +365,13 @@ public class ACL {
                     grant.setRights(rights);
                     if (type == GRANTEE_GUEST || type == GRANTEE_KEY)
                         grant.setPassword(secret);
-                    return;
+                    return grant;
                 }
         }
-        mGrants.add(new Grant(zimbraId, type, rights, secret));
+        
+        Grant grant = new Grant(zimbraId, type, rights, secret);
+        mGrants.add(grant);
+        return grant;
     }
 
     /** Removes the set of rights granted to the specified id.  If no rights
