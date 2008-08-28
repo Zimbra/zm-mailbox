@@ -179,6 +179,10 @@ public class ReportGenerator implements Runnable {
     private void walkAndProcess(File dir,
             List<ItemFault> faults, StatementExecutor e) throws SQLException {
         File[] files = dir.listFiles();
+        if (files == null) {
+            System.err.println(dir + ": unable to list files");
+            return;
+        }
         for (File f : files) {
             if (f.isDirectory()) {
                 walkAndProcess(f, faults, e);
