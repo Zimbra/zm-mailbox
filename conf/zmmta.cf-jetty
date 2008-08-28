@@ -186,5 +186,6 @@ SECTION imapproxy
 	VAR zimbraReverseProxySSLCiphers
 	VAR zimbraReverseProxyUserLoginLimit
 	VAR zimbraReverseProxyUserLoginLimitTime
+	VAR zimbraReverseProxyAuthWaitInterval
 	PROXYGEN
 	RESTART imapproxy
