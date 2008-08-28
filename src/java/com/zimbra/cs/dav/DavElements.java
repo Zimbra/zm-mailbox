@@ -93,6 +93,7 @@ public class DavElements {
 	public static final String P_GETCONTENTLANGUAGE = "getcontentlanguage";
 	public static final String P_GETCONTENTLENGTH = "getcontentlength";
 	public static final String P_GETCONTENTTYPE = "getcontenttype";
+	public static final String P_GETCREATIONDATE = "getcreationdate";
 	public static final String P_GETETAG = "getetag";
 	public static final String P_GETLASTMODIFIED = "getlastmodified";
 	public static final String P_GRANT = "grant";
@@ -258,6 +259,7 @@ public class DavElements {
 	public static final QName E_GETCONTENTLANGUAGE = QName.get(P_GETCONTENTLANGUAGE, WEBDAV_NS);
 	public static final QName E_GETCONTENTLENGTH = QName.get(P_GETCONTENTLENGTH, WEBDAV_NS);
 	public static final QName E_GETCONTENTTYPE = QName.get(P_GETCONTENTTYPE, WEBDAV_NS);
+	public static final QName E_GETCREATIONDATE = QName.get(P_GETCREATIONDATE, WEBDAV_NS);
 	public static final QName E_GETETAG = QName.get(P_GETETAG, WEBDAV_NS);
 	public static final QName E_GETLASTMODIFIED = QName.get(P_GETLASTMODIFIED, WEBDAV_NS);
 	public static final QName E_GRANT = QName.get(P_GRANT, WEBDAV_NS);
