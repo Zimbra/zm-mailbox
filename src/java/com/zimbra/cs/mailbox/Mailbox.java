@@ -5356,12 +5356,12 @@ public class Mailbox {
             for (MailItem item : items) {
                 int srcId = item.getId();
                 int newId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getDestId(srcId));
+                
+                trainSpamFilter(item, target);
 
                 MailItem copy = item.icopy(target, newId, item.getVolumeId() == -1 ? -1 : volumeId);
                 result.add(copy);
                 redoRecorder.setDestId(srcId, newId);
-
-                trainSpamFilter(item, target);
             }
 
             success = true;
@@ -5372,21 +5372,39 @@ public class Mailbox {
     }
 
     private MailItem trainSpamFilter(MailItem item, Folder target) {
-        // if it's not a move into or out of Spam, no training is necessary
-        //   (moves from Spam to Trash also do not train the filter)
-        boolean fromSpam = item.inSpam();
-        boolean toSpam = target.inSpam();
-        if (!fromSpam && !toSpam)
-            return item;
-        if (fromSpam && (toSpam || target.inTrash()))
-            return item;
+        TargetConstraint tcon = getOperationTargetConstraint();
 
         try {
-            SpamHandler.getInstance().handle(this, item.getId(), item.getType(), toSpam);
-            ZimbraLog.mailop.info(MailItem.getMailopContext(item) + " sent to spam filter for training (marked as " + (toSpam ? "" : "not ") + "spam)");
-        } catch (Throwable t) {
-            ZimbraLog.mailop.info("could not train spam filter: " + MailItem.getMailopContext(item), t);
+            List<? extends MailItem> items;
+            if (item instanceof Conversation)
+                items = ((Conversation) item).getMessages(DbSearch.SORT_NONE);
+            else
+                items = Arrays.asList(item);
+
+            for (MailItem candidate : items) {
+                // if it's not a move into or out of Spam, no training is necessary
+                //   (moves from Spam to Trash also do not train the filter)
+                boolean fromSpam = candidate.inSpam();
+                boolean toSpam = target.inSpam();
+                if (!fromSpam && !toSpam)
+                    continue;
+                if (fromSpam && (toSpam || target.inTrash()))
+                    continue;
+
+                if (!TargetConstraint.checkItem(tcon, item) || !item.canAccess(ACL.RIGHT_READ))
+                    continue;
+
+                try {
+                    SpamHandler.getInstance().handle(this, candidate.getId(), candidate.getType(), toSpam);
+                    ZimbraLog.mailop.info(MailItem.getMailopContext(candidate) + " sent to spam filter for training (marked as " + (toSpam ? "" : "not ") + "spam)");
+                } catch (Throwable t) {
+                    ZimbraLog.mailop.info("could not train spam filter: " + MailItem.getMailopContext(candidate), t);
+                }
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.mailop.info("could not train spam filter: " + MailItem.getMailopContext(item), e);
         }
+
         return item;
     }
 
@@ -5451,11 +5469,11 @@ public class Mailbox {
             boolean resetUIDNEXT = false;
 
             for (MailItem item : items) {
-                // do the move...
-                boolean moved = item.move(target);
-
-                // ...train the spam filter if necessary...
+                // train the spam filter if necessary...
                 trainSpamFilter(item, target);
+                
+                // ...do the move...
+                boolean moved = item.move(target);
 
                 // ...and determine whether the move needs to cause an UIDNEXT change
                 if (moved && !resetUIDNEXT && isTrackingImap() && (item instanceof Conversation || item instanceof Message || item instanceof Contact))
@@ -5494,12 +5512,12 @@ public class Mailbox {
             checkItemChangeID(item);
             if (folderId <= 0)
                 folderId = item.getFolderId();
+            
+            Folder target = getFolderById(folderId);
+            trainSpamFilter(item, target);
 
             String oldName = item.getName();
-            Folder target = getFolderById(folderId);
             item.rename(name, target);
-
-            trainSpamFilter(item, target);
 
             if (item instanceof Tag) {
                 mTagCache.remove(oldName.toLowerCase());
@@ -5551,12 +5569,11 @@ public class Mailbox {
                 parent = subfolder;
             }
             redoRecorder.setParentIds(recorderParentIds);
-
-            String name = parts[parts.length - 1];
-
-            item.rename(name, parent);
-
+            
             trainSpamFilter(item, parent);
+            
+            String name = parts[parts.length - 1];
+            item.rename(name, parent);
 
             success = true;
         } finally {
