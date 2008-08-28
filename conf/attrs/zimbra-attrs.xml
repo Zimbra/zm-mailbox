@@ -3461,4 +3461,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Whether to expose version on Proxy IMAP banner</desc>
 </attr>
 
+<attr id="714" name="zimbraDomainCOSMaxAccounts" type="string" max="256" cardinality="multi" optionalIn="domain" since="5.0.10">
+  <desc>maximum number of accounts allowed to be assigned to specified COSes in a domain </desc>
+</attr>
+
+<attr id="715" name="zimbraDomainFeatureMaxAccounts" type="string" max="256" cardinality="multi" optionalIn="domain" since="5.0.10">
+  <desc>maximum number of accounts allowed to have specified features in a domain </desc>
+</attr>
+
 </attrs>
