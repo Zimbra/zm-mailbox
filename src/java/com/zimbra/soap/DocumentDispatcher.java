@@ -20,13 +20,20 @@
  */
 package com.zimbra.soap;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.util.ZimbraLog;
+
 import org.dom4j.QName;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Iterator;
 
 /**
  * @author schemers
@@ -38,13 +45,28 @@ public class DocumentDispatcher {
 
 	Map<QName, DocumentHandler> mHandlers;
     Map<QName, QName> mResponses;
-	
+    ArrayList<String> mExcludeList;
+    
 	public DocumentDispatcher() {
 		mHandlers = new HashMap<QName, DocumentHandler>();
         mResponses = new HashMap<QName, QName>();
+        String excludeString = LC.get("admin_soap_exclude_list");
+        ZimbraLog.soap.info("Loading the exclude list");
+        mExcludeList = new ArrayList<String>(Arrays.asList(excludeString.split(",")));
+        Iterator <String> it = mExcludeList.iterator();
+	}
+	
+	public void clearExcludeList() {
+		ZimbraLog.soap.info("clearing the exclude list");
+		mExcludeList.clear();
 	}
 	
 	public void registerHandler(QName qname, DocumentHandler handler) {
+		ZimbraLog.soap.info(String.format("Registering %s::%s", qname.getNamespaceURI(),qname.getQualifiedName()));
+        if(!mExcludeList.isEmpty() && mExcludeList.contains(String.format("%s::%s", qname.getNamespaceURI(),qname.getQualifiedName()))) {
+        	ZimbraLog.soap.info(String.format("skipping %s::%s", qname.getNamespaceURI(),qname.getQualifiedName()));
+        	return;
+        }
 		mHandlers.put(qname, handler);
         QName respQName = mResponses.get(qname);
         if (respQName == null) {
@@ -60,6 +82,21 @@ public class DocumentDispatcher {
             mResponses.put(qname, respQName);
         }
         handler.setResponseQName(respQName);
+	}
+	
+	
+	public void unRegisterHandler(QName qname, DocumentHandler handler) {
+		
+		DocumentHandler qHandler = mHandlers.get(qname);
+		if(qHandler!=null) {
+			mHandlers.remove(qname);
+		}
+		
+        QName respQName = mResponses.get(qname);
+        if (respQName != null) {
+            mResponses.remove(qname);
+        }
+
 	}
 	
 	public DocumentHandler getHandler(Element doc) {
