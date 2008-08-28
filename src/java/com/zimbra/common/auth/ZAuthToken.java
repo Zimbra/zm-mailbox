@@ -25,6 +25,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.service.ServiceException;
@@ -43,7 +44,10 @@ public class ZAuthToken {
     private static final String YAHOO_AUTHTOKEN_TYPE = "YAHOO_CALENDAR_AUTH_PROVIDER";
     private static final String YAHOO_Y_COOKIE = "Y"; 
     private static final String YAHOO_T_COOKIE = "T";
+    private static final String YAHOO_K_COOKIE = "K";
     private static final String YAHOO_ADMIN_COOKIE = "ADMIN_AUTH_KEY";
+    
+    private static final String YAHOO_QP_ACCESSKEY = "k";
 
     private String mType;
     private String mValue;
@@ -67,7 +71,7 @@ public class ZAuthToken {
     }
     
     /**
-     * Construct a ZAuthToken from HttpServletRequest.
+     * Construct a ZAuthToken from a HttpServletRequest
      * 
      * Note: The returning ZAuthToken could be "empty" if it cannot find the expected auth data,
      *       this method does not throw exception .
@@ -77,11 +81,8 @@ public class ZAuthToken {
      * @param request
      * @param isAdmin
      */
-    public ZAuthToken(Cookie[] cookies, boolean isAdmin) {
-        if (cookies == null) 
-            return;
-        
-        fromCookies(cookies, isAdmin);
+    public ZAuthToken(HttpServletRequest req, boolean isAdmin) {
+        fromHttpReq(req, isAdmin);
     }
     
     // AP-TODO-20: find callsites and retire
@@ -229,11 +230,14 @@ public class ZAuthToken {
         return eAuthToken;
     }
     
-    private void fromCookies(Cookie[] cookies, boolean isAdmin) {
-        if (cookies == null) return;
+    private void fromHttpReq(HttpServletRequest request, boolean isAdmin) {
+        Cookie[] cookies = request.getCookies();
+        
         Map<String, String> cookieMap = new HashMap<String, String>();
-        for (Cookie ck : cookies) {
-            cookieMap.put(ck.getName(), ck.getValue());
+        if (cookies != null) {
+            for (Cookie ck : cookies) {
+                cookieMap.put(ck.getName(), ck.getValue());
+            }
         }
         
         // look for zimbra cookie first
@@ -241,7 +245,7 @@ public class ZAuthToken {
             return;
         
         // no Zimbra cookies, look for Yahoo cookies
-        if (fromYahooCookies(cookieMap, isAdmin))
+        if (fromYahooCookies(request, cookieMap, isAdmin))
             return;
         
         // fall thru, leave the ZAuthToken empty
@@ -310,12 +314,13 @@ public class ZAuthToken {
         return cookieMap;  
     }
     
-    private boolean fromYahooCookies(Map<String, String> cookieMap, boolean isAdmin) {
+    private boolean fromYahooCookies(HttpServletRequest request, Map<String, String> cookieMap, boolean isAdmin) {
+        String accessKey = yahooAccessKey(request);
         String yCookie = cookieMap.get(YAHOO_Y_COOKIE);
         String tCookie = cookieMap.get(YAHOO_T_COOKIE);
         String aCookie = cookieMap.get(YAHOO_ADMIN_COOKIE);
         
-        if (yCookie != null || tCookie != null || aCookie != null) {
+        if (yCookie != null || tCookie != null || aCookie != null || accessKey != null) {
             Map<String, String> attrs = new HashMap<String, String>();
             if (yCookie != null)
                 attrs.put(YahooAuthData.cookieNameToAttrName(YAHOO_Y_COOKIE), yCookie);
@@ -324,11 +329,19 @@ public class ZAuthToken {
             if (aCookie != null)
                 attrs.put(YahooAuthData.cookieNameToAttrName(YAHOO_ADMIN_COOKIE), aCookie);
             
+            if (accessKey != null) 
+                attrs.put(YahooAuthData.cookieNameToAttrName(YAHOO_K_COOKIE), accessKey);
+            
             init(YAHOO_AUTHTOKEN_TYPE, null, attrs);
             return true;
         }
         return false;
     }
+    
+    public static String yahooAccessKey(HttpServletRequest request) {
+        return request.getParameter(YAHOO_QP_ACCESSKEY);
+    }
+    
     
     public static void main(String[] args) throws Exception {
         SoapHttpTransport trans = new SoapHttpTransport("http://localhost:7070/service/soap/");
