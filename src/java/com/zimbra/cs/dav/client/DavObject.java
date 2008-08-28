@@ -75,6 +75,18 @@ public class DavObject {
 		return null;
 	}
 	
+	public long getPropertyLong(QName prop) {
+		String val = getPropertyText(prop);
+		if (val != null) {
+			try {
+				return Long.parseLong(val);
+			} catch (NumberFormatException e) {
+				
+			}
+		}
+		return -1;
+	}
+	
 	public Collection<Element> getProperties(int code) {
 		Element prop = mProps.get(code);
 		if (prop == null)
@@ -90,6 +102,45 @@ public class DavObject {
 			return false;
 		return rtype.element(prop) != null;
 	}
+	
+	public boolean isFolder() {
+		return isResourceType(DavElements.E_COLLECTION);
+	}
+	
+	public boolean isCalendarFolder() {
+		return isResourceType(DavElements.E_CALENDAR);
+	}
+	
+	public String getDisplayName() {
+		return getPropertyText(DavElements.E_DISPLAYNAME);
+	}
+
+	public String getEtag() {
+		return getPropertyText(DavElements.E_GETETAG);
+	}
+	
+	public long getContentLength() {
+		return getPropertyLong(DavElements.E_GETCONTENTLENGTH);
+	}
+	
+	public String getContentLanguage() {
+		return getPropertyText(DavElements.E_GETCONTENTLANGUAGE);
+	}
+	
+	public String getContentType() {
+		return getPropertyText(DavElements.E_GETCONTENTTYPE);
+	}
+	
+	/* iso-8601 date YYYY-MM-DD'T'HH:MM:SS+ZZ */
+	public String getCreationDate() {
+		return getPropertyText(DavElements.E_GETCREATIONDATE);
+	}
+	
+	/* rfc 2608 HTTP-Date */
+	public String getLastModifiedDate() {
+		return getPropertyText(DavElements.E_GETLASTMODIFIED);
+	}
+	
 	private String mHref;
 	private HashMap<Integer,Element> mProps;
 }

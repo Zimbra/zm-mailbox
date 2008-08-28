@@ -32,13 +32,14 @@ import org.apache.commons.httpclient.methods.PostMethod;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
+import org.dom4j.QName;
 import org.dom4j.io.SAXReader;
 
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.dav.DavContext.Depth;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DomUtil;
+import com.zimbra.cs.dav.DavContext.Depth;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.NetUtil;
 
@@ -50,6 +51,29 @@ public class WebDavClient {
 		mBaseUrl = baseUrl;
 		mClient = new HttpClient();
 		NetUtil.configureProxy(mClient);
+		mUserAgent = UA;
+	}
+	
+	public WebDavClient(String baseUrl, String app) {
+		this(baseUrl);
+		mUserAgent = UA + " " + app;
+	}
+	
+	public Collection<DavObject> listObjects(String path, Collection<QName> extraProps) throws IOException, DavException {
+		DavRequest propfind = DavRequest.PROPFIND(path);
+		propfind.setDepth(Depth.one);
+		propfind.addRequestProp(DavElements.E_DISPLAYNAME);
+		propfind.addRequestProp(DavElements.E_RESOURCETYPE);
+		propfind.addRequestProp(DavElements.E_CREATIONDATE);
+		propfind.addRequestProp(DavElements.E_GETCONTENTLENGTH);
+		propfind.addRequestProp(DavElements.E_GETCONTENTLANGUAGE);
+		propfind.addRequestProp(DavElements.E_GETCONTENTTYPE);
+		propfind.addRequestProp(DavElements.E_GETETAG);
+		propfind.addRequestProp(DavElements.E_GETLASTMODIFIED);
+		if (extraProps != null)
+			for (QName p : extraProps)
+				propfind.addRequestProp(p);
+		return sendMultiResponseRequest(propfind);
 	}
 	
 	public Collection<DavObject> sendMultiResponseRequest(DavRequest req) throws IOException, DavException {
@@ -58,6 +82,8 @@ public class WebDavClient {
 		HttpMethod m = null;
 		try {
 			m = execute(req);
+			if (ZimbraLog.dav.isDebugEnabled())
+				ZimbraLog.dav.debug("WebDAV response:\n"+new String(m.getResponseBody(), "UTF-8"));
 			Document doc = new SAXReader().read(m.getResponseBodyAsStream());
 			
 			Element top = doc.getRootElement();
@@ -79,7 +105,10 @@ public class WebDavClient {
 		HttpMethod m = null;
 		try {
 			m = execute(req);
-			return m.getResponseBody();
+			byte[] buf = m.getResponseBody();
+			if (ZimbraLog.dav.isDebugEnabled())
+				ZimbraLog.dav.debug("WebDAV response:\n"+new String(buf, "UTF-8"));
+			return buf;
 		} finally {
 			if (m != null)
 				m.releaseConnection();
@@ -94,12 +123,20 @@ public class WebDavClient {
     		}
     	};
 		m.setDoAuthentication(true);
-		m.setRequestHeader("User-Agent", UA);
-		if (req.getDepth() == Depth.one)
-			m.setRequestHeader("Depth", "1");
+		m.setRequestHeader("User-Agent", mUserAgent);
+		String depth = "0";
+		switch (req.getDepth()) {
+		case one:
+			depth = "1";
+			break;
+		case infinity:
+			depth = "infinity";
+			break;
+		}
+		m.setRequestHeader("Depth", depth);
 		byte[] buf = DomUtil.getBytes(req.getRequestMessage());
 		if (ZimbraLog.dav.isDebugEnabled())
-			ZimbraLog.dav.debug("CalDAV request:\n"+new String(buf, "UTF-8"));
+			ZimbraLog.dav.debug("WebDAV request:\n"+new String(buf, "UTF-8"));
 		ByteArrayRequestEntity re = new ByteArrayRequestEntity(buf, "text/xml");
 		m.setRequestEntity(re);
 		mClient.executeMethod(m);
@@ -127,6 +164,7 @@ public class WebDavClient {
 		return mPassword;
 	}
 	
+	private String mUserAgent;
 	private String mBaseUrl;
 	private String mUsername;
 	private String mPassword;
