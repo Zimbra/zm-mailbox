@@ -35,6 +35,12 @@
   </key>
   -->
 
+<!-- 
+Use the following sintax to disable individual Admin SOAP handlers. This feature is used for securing admin server in hosted deployment (bug# 30510)
+	<key name="admin_soap_exclude_list">
+		<value>{coma-saparated list of SOAP Requests to exclude, e.g.: urn:zimbraAdmin::ModifyServerRequest,urn:zimbraAdmin::ModifyConfigRequest}.</value>
+	</key>
+-->
   <!-- Switches to turn off various features for performance testing -->
   <key name="debug_disable_conversation">
     <value>false</value>
