@@ -1401,7 +1401,9 @@ public abstract class Provisioning {
     public static final String A_zimbraPublicServiceProtocol = "zimbraPublicServiceProtocol";
     public static final String A_zimbraPublicServicePort = "zimbraPublicServicePort";
     
-    public static final String A_zimbraDomainMaxAccounts = "zimbraDomainMaxAccounts";
+    public static final String A_zimbraDomainMaxAccounts        = "zimbraDomainMaxAccounts";
+    public static final String A_zimbraDomainCOSMaxAccounts     = "zimbraDomainCOSMaxAccounts";
+    public static final String A_zimbraDomainFeatureMaxAccounts = "zimbraDomainFeatureMaxAccounts";
     
     public static final String A_zimbraSyncWindowSize = "zimbraSyncWindowSize";
     
