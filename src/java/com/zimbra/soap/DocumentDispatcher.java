@@ -52,7 +52,7 @@ public class DocumentDispatcher {
         mResponses = new HashMap<QName, QName>();
         String excludeString = LC.get("admin_soap_exclude_list");
         ZimbraLog.soap.info("Loading the exclude list");
-        mExcludeList = new ArrayList<String>(Arrays.asList(excludeString.split(",")));
+        mExcludeList = new ArrayList<String>(Arrays.asList(excludeString.split("(,[\n\r]*)")));
         Iterator <String> it = mExcludeList.iterator();
 	}
 	
