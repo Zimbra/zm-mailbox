@@ -18,6 +18,9 @@ package com.zimbra.cs.service.formatter;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -74,15 +77,26 @@ public class ZipFormatter extends Formatter {
     public void formatCallback(Context context) throws IOException, ServiceException {
         Iterator<? extends MailItem> iterator = null;
         ZipOutputStream out = null;
-        try {
-            iterator = getMailItems(context, getDefaultStartTime(), getDefaultEndTime(), 500);
 
-            // TODO: get name from folder/search/query/etc
-            String filename = context.hasPart() ? "attachments.zip" : "items.zip";
+        try {
+            String filename = context.params.get("filename");
+            
+            if (filename == null || filename.equals("")) {
+                filename = context.hasPart() ? "attachments.zip" : "items.zip";
+            } else {
+                Date date = new Date();
+                DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT);
+                SimpleDateFormat sdf = new SimpleDateFormat(".H-m-s");
+
+                filename += '.' + df.format(date).replace('/', '-') +
+                    sdf.format(date) + ".zip";
+            }
+
             String cd = Part.ATTACHMENT + "; filename=" + HttpUtil.encodeFilename(context.req, filename);
             context.resp.addHeader("Content-Disposition", cd.toString());
             context.resp.setContentType("application/x-zip-compressed");
 
+            iterator = getMailItems(context, getDefaultStartTime(), getDefaultEndTime(), 500);
             if (!iterator.hasNext())
             	return;
 
@@ -254,7 +268,7 @@ public class ZipFormatter extends Formatter {
         if (extra != null && extra.length >= 4) {
             if (extra[0] == ZIP_EXTRA_FIELD_HEADER_ID_X_ZIMBRA_HEADERS[0] &&
                 extra[1] == ZIP_EXTRA_FIELD_HEADER_ID_X_ZIMBRA_HEADERS[1]) {
-                int len = (int) ZipShort.getValue(extra, 2);
+                int len = ZipShort.getValue(extra, 2);
                 if (len == extra.length - 4) {
                     data = new byte[len];
                     System.arraycopy(extra, 4, data, 0, len);
