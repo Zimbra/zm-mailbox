@@ -93,6 +93,8 @@ public class ZFeatures {
 
     public boolean getMailForwarding() { return getBool(Provisioning.A_zimbraFeatureMailForwardingEnabled); }
 
+    public boolean getMailForwardingInFilter() { return getBool(Provisioning.A_zimbraFeatureMailForwardingInFiltersEnabled); }
+
     public boolean getMobileSync() { return getBool(Provisioning.A_zimbraFeatureMobileSyncEnabled); }
 
     public boolean getSkinChange() { return getBool(Provisioning.A_zimbraFeatureSkinChangeEnabled); }
