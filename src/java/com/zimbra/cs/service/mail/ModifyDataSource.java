@@ -16,7 +16,9 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
@@ -45,7 +47,7 @@ public class ModifyDataSource extends MailDocumentHandler {
         if (!canModifyOptions(zsc, account))
             throw ServiceException.PERM_DENIED("can not modify options");
         
-        boolean wipeOutOldData = false;
+        //boolean wipeOutOldData = false;
         
         Element eDataSource = CreateDataSource.getDataSourceElement(request);
         DataSource.Type type = DataSource.Type.fromString(eDataSource.getName());
@@ -157,5 +159,14 @@ public class ModifyDataSource extends MailDocumentHandler {
         value = eDataSource.getAttribute(MailConstants.A_DS_POLLING_INTERVAL, null);
         if (value != null)
             dsAttrs.put(Provisioning.A_zimbraDataSourcePollingInterval, value);
+        
+        Iterator<Element> attrs = eDataSource.elementIterator(MailConstants.E_ATTRIBUTE);
+        if (attrs != null) {
+        	ArrayList<String> attrList = new ArrayList<String>();
+        	while (attrs.hasNext()) {
+        		attrList.add(attrs.next().getText());
+        	}
+        	dsAttrs.put(Provisioning.A_zimbraDataSourceAttribute, attrList);
+        }
     }
 }

@@ -1372,6 +1372,7 @@ public abstract class Provisioning {
     public static final String A_zimbraDataSourceUseAddressForForwardReply = "zimbraDataSourceUseAddressForForwardReply";
     public static final String A_zimbraDataSourceEnableTrace = "zimbraDataSourceEnableTrace";
     public static final String A_zimbraDataSourceImportClassName = "zimbraDataSourceImportClassName";
+    public static final String A_zimbraDataSourceAttribute = "zimbraDataSourceAttribute";
     
     // Quota warning
     public static final String A_zimbraQuotaWarnPercent = "zimbraQuotaWarnPercent";
