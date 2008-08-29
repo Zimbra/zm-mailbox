@@ -27,7 +27,6 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,9 +44,9 @@ import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.tar.*;
 
-import org.apache.commons.fileupload.DiskFileUpload;
-import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.FileUploadBase;
+import org.apache.commons.fileupload.FileItemIterator;
+import org.apache.commons.fileupload.FileItemStream;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.ZimbraQueryResults;
@@ -407,7 +406,6 @@ public class TarFormatter extends Formatter {
         return path;
     }
     
-    @SuppressWarnings("unchecked")
     public void saveCallback(Context context, String contentType, Folder fldr,
         String file) throws IOException, ServiceException, UserServletException {
         ItemData id = null;
@@ -416,7 +414,6 @@ public class TarFormatter extends Formatter {
         Map<String, Integer> digestMap = new HashMap<String, Integer>();
         StringBuffer errs = new StringBuffer();
         Exception exception = null;
-        FileItem fi = null;
         List<Folder> flist = fldr.getSubfolderHierarchy();
         Map<Object, Folder> fmap = new HashMap<Object, Folder>();
         Map<Integer, Integer> idMap = new HashMap<Integer, Integer>();
@@ -458,23 +455,15 @@ public class TarFormatter extends Formatter {
                     }
                 }
             }
-            if (FileUploadBase.isMultipartContent(context.req)) {
-                DiskFileUpload dku = new DiskFileUpload();
-                List<FileItem> files;
-
-                dku.setSizeThreshold(1024 * 1024);
-                dku.setRepositoryPath(System.getProperty("java.io.tmpdir",
-                    "/tmp"));
-                try {
-                    files = dku.parseRequest(context.req);
-                } catch (Exception e) {
-                    throw new UserServletException(HttpServletResponse.
-                        SC_UNSUPPORTED_MEDIA_TYPE, e.toString());
-                }
-                for (Iterator<FileItem> it = files.iterator(); it.hasNext(); ) {
-                    fi = it.next();
-                    if (fi != null && !fi.isFormField()) {
-                        is = fi.getInputStream();
+            if (ServletFileUpload.isMultipartContent(context.req)) {
+                ServletFileUpload sfu = new ServletFileUpload();
+                FileItemIterator iter = sfu.getItemIterator(context.req);
+                
+                while (iter.hasNext()) {
+                    FileItemStream fis = iter.next();
+                    
+                    if (!fis.isFormField()) {
+                        is = fis.openStream();
                         break;
                     }
                 }
@@ -583,8 +572,6 @@ public class TarFormatter extends Formatter {
                     e.getLocalizedMessage());
                 id = null;
             } finally {
-                if (fi != null)
-                    fi.delete();
                 if (tis != null)
                     tis.close();
             }
