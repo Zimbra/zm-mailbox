@@ -135,9 +135,11 @@ public abstract class DocumentHandler {
      *  <pre>&lt;context></pre> header element. */
     public static Account getAuthenticatedAccount(ZimbraSoapContext zsc) throws ServiceException {
         String id = zsc.getAuthtokenAccountId();
-
-        if (ACL.GUID_PUBLIC.equals(id))
-            return new ACL.GuestAccount(zsc.getAuthToken());
+        AuthToken at = zsc.getAuthToken();
+        
+        if (ACL.GUID_PUBLIC.equals(id) || (at != null && !at.isZimbraUser()))
+            return new ACL.GuestAccount(at);
+        
         Account acct = Provisioning.getInstance().get(AccountBy.id, id, zsc.getAuthToken());
         if (acct == null)
             throw ServiceException.AUTH_REQUIRED();

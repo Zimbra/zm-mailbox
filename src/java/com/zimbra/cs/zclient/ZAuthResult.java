@@ -36,7 +36,6 @@ public class ZAuthResult {
 	private String mSkin;
 
     public ZAuthResult(Element e) throws ServiceException {
-        // mAuthToken = e.getAttribute(AccountConstants.E_AUTH_TOKEN);
         String authToken = e.getAttribute(AccountConstants.E_AUTH_TOKEN);;
         mAuthToken = new ZAuthToken(null, authToken, null);
         
