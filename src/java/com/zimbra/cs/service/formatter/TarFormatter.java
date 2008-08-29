@@ -715,6 +715,7 @@ public class TarFormatter extends Formatter {
             MailItem newItem = null, oldItem = null;
             OperationContext oc = context.opContext;
             String path;
+            ParsedMessage pm;
             boolean root = fldr.getId() == Mailbox.ID_FOLDER_ROOT ||
                 fldr.getId() == Mailbox.ID_FOLDER_USER_ROOT;
     
@@ -790,9 +791,9 @@ public class TarFormatter extends Formatter {
                 break;
             case MailItem.TYPE_CHAT:
                 Chat chat = (Chat)mi;
-                ParsedMessage pm = new ParsedMessage(readTarEntry(tis, te),
-                    mbox.attachmentsIndexingEnabled());
                 
+                pm = new ParsedMessage(tis, (int)te.getSize(),
+                    mi.getDate(), mbox.attachmentsIndexingEnabled());
                 fldr = createPath(context, fmap, path, Folder.TYPE_CHAT);
                 if (root && r != Resolve.Reset) {
                     Chat oldChat = null;
@@ -1005,12 +1006,10 @@ public class TarFormatter extends Formatter {
                         oldItem = oldMsg;
                 }
                 if (oldItem == null) {
-                    /* tfr
-                    pm = new ParsedMessage(tis, (int) te.getSize(), msg.getDate(), mbox.attachmentsIndexingEnabled());
-                    newItem = mbox.addMessage(oc, pm,
-                        fldr.getId(), true, msg.getFlagBitmask(),
-                        msg.getTagString());
-                    */
+                    pm = new ParsedMessage(tis, (int)te.getSize(),
+                        msg.getDate(), mbox.attachmentsIndexingEnabled());
+                    newItem = mbox.addMessage(oc, pm, fldr.getId(), true,
+                        msg.getFlagBitmask(), msg.getTagString());
                 }
                 break;
             case MailItem.TYPE_MOUNTPOINT:
