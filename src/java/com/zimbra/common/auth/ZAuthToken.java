@@ -42,12 +42,16 @@ public class ZAuthToken {
     private static final String COOKIE_ZM_ADMIN_AUTH_TOKEN = "ZM_ADMIN_AUTH_TOKEN"; 
     
     private static final String YAHOO_AUTHTOKEN_TYPE = "YAHOO_CALENDAR_AUTH_PROVIDER";
+    
     private static final String YAHOO_Y_COOKIE = "Y"; 
     private static final String YAHOO_T_COOKIE = "T";
-    private static final String YAHOO_K_COOKIE = "K";
     private static final String YAHOO_ADMIN_COOKIE = "ADMIN_AUTH_KEY";
+
+    private static final String YAHOO_K_ATTR = "K";
+    private static final String YAHOO_H_ATTR = "H";
     
     private static final String YAHOO_QP_ACCESSKEY = "k";
+    private static final String YAHOO_QP_HOSTACCOUNTID = "h";
 
     private String mType;
     private String mValue;
@@ -74,7 +78,7 @@ public class ZAuthToken {
      * Construct a ZAuthToken from a HttpServletRequest
      * 
      * Note: The returning ZAuthToken could be "empty" if it cannot find the expected auth data,
-     *       this method does not throw exception .
+     *       this method does not throw exception.
      *       Callsites should call the isEmpty method and react(returns null to callers, throw 
      *       exception, etc) if it does not deal with "empty" ZAuthToken.
      * 
@@ -315,13 +319,16 @@ public class ZAuthToken {
     }
     
     private boolean fromYahooCookies(HttpServletRequest request, Map<String, String> cookieMap, boolean isAdmin) {
-        String accessKey = yahooAccessKey(request);
         String yCookie = cookieMap.get(YAHOO_Y_COOKIE);
         String tCookie = cookieMap.get(YAHOO_T_COOKIE);
         String aCookie = cookieMap.get(YAHOO_ADMIN_COOKIE);
         
-        if (yCookie != null || tCookie != null || aCookie != null || accessKey != null) {
+        String accessKey = getYahooAccessKey(request);
+        String hostAccountId = getYahooHostAccountId(request);
+        
+        if (yCookie != null || tCookie != null || aCookie != null || accessKey != null || hostAccountId != null) {
             Map<String, String> attrs = new HashMap<String, String>();
+            
             if (yCookie != null)
                 attrs.put(YahooAuthData.cookieNameToAttrName(YAHOO_Y_COOKIE), yCookie);
             if (tCookie != null)
@@ -330,7 +337,9 @@ public class ZAuthToken {
                 attrs.put(YahooAuthData.cookieNameToAttrName(YAHOO_ADMIN_COOKIE), aCookie);
             
             if (accessKey != null) 
-                attrs.put(YahooAuthData.cookieNameToAttrName(YAHOO_K_COOKIE), accessKey);
+                attrs.put(YAHOO_K_ATTR, accessKey);
+            if (hostAccountId != null) 
+                attrs.put(YAHOO_H_ATTR, hostAccountId);
             
             init(YAHOO_AUTHTOKEN_TYPE, null, attrs);
             return true;
@@ -338,10 +347,13 @@ public class ZAuthToken {
         return false;
     }
     
-    public static String yahooAccessKey(HttpServletRequest request) {
+    public static String getYahooAccessKey(HttpServletRequest request) {
         return request.getParameter(YAHOO_QP_ACCESSKEY);
     }
     
+    public static String getYahooHostAccountId(HttpServletRequest request) {
+        return request.getParameter(YAHOO_QP_HOSTACCOUNTID);
+    }
     
     public static void main(String[] args) throws Exception {
         SoapHttpTransport trans = new SoapHttpTransport("http://localhost:7070/service/soap/");
