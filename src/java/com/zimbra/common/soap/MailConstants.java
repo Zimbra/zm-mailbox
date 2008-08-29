@@ -601,6 +601,7 @@ public class MailConstants {
     public static final String A_DS_FROM_ADDRESS = "fromAddress";
     public static final String A_DS_REPLYTO_ADDRESS = "replyToAddress";
     public static final String A_DS_REPLYTO_DISPLAY = "replyToDisplay";
+    public static final String A_DS_IMPORT_CLASS = "importClass";
     
 
     // TODO: move to a different service.
