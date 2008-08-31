@@ -86,6 +86,8 @@ Access: domain admin sufficient
 
 Access: domain admin sufficient
 
+   note: this request is by default proxied to the account's home server
+
 -----------------------------
 
 <GetAccountInfoRequest>
@@ -160,6 +162,8 @@ Notes:
 
 Access: domain admin sufficient. limited set of attributes that can be updated by a domain admin.
 
+   note: this request is by default proxied to the account's home server
+
 -----------------------------
 
 <RenameAccountRequest>
@@ -175,6 +179,8 @@ Access: domain admin sufficient. limited set of attributes that can be updated b
 
 Access: domain admin sufficient
 
+   note: this request is by default proxied to the account's home server
+
 -----------------------------
 
 <DeleteAccountRequest>
@@ -189,6 +195,8 @@ deleted as well.
 
 Access: domain admin sufficient
 
+   note: this request is by default proxied to the account's home server
+
 -----------------------------
 
 <SetPasswordRequest>
@@ -199,6 +207,8 @@ Access: domain admin sufficient
 <SetPasswordResponse/>
 
 Access: domain admin sufficient
+
+   note: this request is by default proxied to the account's home server
 
 -----------------------------
 
@@ -211,6 +221,8 @@ Access: domain admin sufficient
 
 Access: domain admin sufficient
 
+   note: this request is by default proxied to the account's home server
+
 -----------------------------
 
 <AddAccountAliasRequest>
@@ -222,6 +234,8 @@ Access: domain admin sufficient
 
 Access: domain admin sufficient
 
+   note: this request is by default proxied to the account's home server
+
 -----------------------------
 
 <RemoveAccountAliasRequest>
@@ -232,6 +246,8 @@ Access: domain admin sufficient
 <RemoveAccountAliasResponse/>
 
 Access: domain admin sufficient
+
+   note: this request is by default proxied to the account's home server
 
 -----------------------------
 NOTE: SearchAccountsRequest is deprecated. See SearchDirectoryRequest.
@@ -709,9 +725,9 @@ spell).
   </server>
 </ModifyServerResponse>]
 
-Notes:
+Note: an empty attribute value removes the specified attr
 
-  an empty attribute value removes the specified attr
+   note: this request is by default proxied to the referenced server
 
 -----------------------------
 
@@ -721,9 +737,9 @@ Notes:
 
 <DeleteServerResponse/>
 
-Notes:
+Note: an empty attribute value removes the specified attr
 
-  an empty attribute value removes the specified attr
+   note: this request is by default proxied to the referenced server
 
 -----------------------------
 
@@ -804,6 +820,8 @@ purges aged messages out of trash, spam, and entire mailbox
                
 Access: domain admin sufficient
 
+   note: this request is by default proxied to the account's home server
+
 ---------------------------
 
 <DeleteMailboxRequest>
@@ -820,6 +838,8 @@ the <mbox> element is left out of the response if no mailbox existed for that ac
 
 Access: domain admin sufficient
 
+   note: this request is by default proxied to the account's home server
+
 -----------------------------
 <GetMailboxRequest>
   <mbox id="{account-id}"/>
@@ -830,6 +850,8 @@ Access: domain admin sufficient
 </GetMailboxResponse>
 
 Access: domain admin sufficient
+
+   note: this request is by default proxied to the account's home server
 
 -----------------------------
 
@@ -1482,6 +1504,8 @@ Access: domain admin sufficient
 
 Access: domain admin sufficient
 
+   note: this request is by default proxied to the resource's home server
+
 -----------------------------
 
 <ModifyCalendarResourceRequest>
@@ -1501,6 +1525,8 @@ Notes:
 
 Access: domain admin sufficient. limited set of attributes that can be updated by a domain admin.
 
+   note: this request is by default proxied to the resource's home server
+
 -----------------------------
 
 <RenameCalendarResourceRequest>
@@ -1515,6 +1541,8 @@ Access: domain admin sufficient. limited set of attributes that can be updated b
 </RenameCalendarResourceResponse>
 
 Access: domain admin sufficient
+
+   note: this request is by default proxied to the resource's home server
 
 -----------------------------
 
@@ -1776,6 +1804,8 @@ the only type supported is pop3.
 
 every attribute value is returned except password.
 
+   note: this request is by default proxied to the account's home server
+
 ---------------------------
 
 <GetDataSourcesRequest>
@@ -1793,6 +1823,8 @@ every attribute value is returned except password.
 Returns all data sources defined for the given mailbox.  For each data source,
 every attribute value is returned except password.
 
+   note: this request is by default proxied to the account's home server
+
 ---------------------------
 
 <ModifyDataSourceRequest>
@@ -1807,6 +1839,8 @@ every attribute value is returned except password.
 Changes attributes of the given data source.  Only the attributes specified in the request
 are modified. To change the name, specify "zimbraDataSourceName" as an attribute.
 
+   note: this request is by default proxied to the account's home server
+
 ---------------------------
 
 <DeleteDataSourceRequest>
@@ -1817,6 +1851,8 @@ are modified. To change the name, specify "zimbraDataSourceName" as an attribute
 <DeleteDataSourceResponse/>
 
 Deletes the given data source.
+
+   note: this request is by default proxied to the account's home server
 
 ---------------------------
 
