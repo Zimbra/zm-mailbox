@@ -103,29 +103,71 @@ public class DbMailbox {
         public int id;
         public int groupId;
     }
+    
+    /**
+     * Gets the next mailbox id.  If <tt>mailboxId</tt> is {@link Mailbox#ID_AUTO_INCREMENT} or
+     * greater than the current <tt>next_mailbox_id</tt> value in the <tt>current_volumes</tt>
+     * table, <tt>next_mailbox_id</tt>.
+     */
+    public synchronized static NewMboxId getNextMailboxId(Connection conn, int mailboxId)
+    throws ServiceException {
+        boolean explicitId = (mailboxId != Mailbox.ID_AUTO_INCREMENT);
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        NewMboxId newId = new NewMboxId();
+        
+        ZimbraLog.mailbox.debug("Getting next mailbox id.  mailboxId=%d.", mailboxId);
+        
+        try {
+            if (explicitId) {
+                stmt = conn.prepareStatement(
+                    "UPDATE current_volumes SET next_mailbox_id = ? WHERE next_mailbox_id <= ?");
+                stmt.setInt(1, mailboxId + 1);
+                stmt.setInt(2, mailboxId);
+                stmt.executeUpdate();
+                stmt.close();
+                stmt = null;
+                newId.id = mailboxId;
+            } else {
+                // Update first, then select, so that two threads don't select the same id.
+                // Probably unnecessary due to "synchronized static", but call me old fashioned.
+                stmt = conn.prepareStatement(
+                    "UPDATE current_volumes SET next_mailbox_id = next_mailbox_id + 1");
+                stmt.executeUpdate();
+                stmt.close();
+                stmt = null;
+                
+                stmt = conn.prepareStatement("SELECT next_mailbox_id - 1 FROM current_volumes");
+                rs = stmt.executeQuery();
+                if (rs.next())
+                    newId.id = rs.getInt(1);
+                else
+                    throw ServiceException.FAILURE("Unable to assign next new mailbox id", null);
+                rs.close();
+                rs = null;
+                stmt.close();
+            }
+            newId.groupId = getMailboxGroupId(newId.id);
+            ZimbraLog.mailbox.debug("Returning mailboxId=%d, groupId=%d.", newId.id, newId.groupId);
+            return newId;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("getting next mailbox id, mailboxId=" + mailboxId, e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
 
     public synchronized static NewMboxId createMailbox(Connection conn, int mailboxId, String accountId, String comment, int lastBackupAt)
     throws ServiceException {
         String limitClause = Db.supports(Db.Capability.LIMIT_CLAUSE) ? " ORDER BY index_volume_id LIMIT 1" : "";
         boolean explicitId = (mailboxId != Mailbox.ID_AUTO_INCREMENT);
-        if (!explicitId) {
-            PreparedStatement stmt = null;
-            ResultSet rs = null;
-            try {
-                stmt = conn.prepareStatement("SELECT next_mailbox_id FROM current_volumes" + limitClause);
-                rs = stmt.executeQuery();
-                if (rs.next())
-                    mailboxId = rs.getInt(1);
-                else
-                    throw ServiceException.FAILURE("Unable to assign next new mailbox id", null);
-            } catch (SQLException e) {
-                throw ServiceException.FAILURE("determining next new mailbox id", e);
-            } finally {
-                DbPool.closeResults(rs);
-                DbPool.closeStatement(stmt);
-            }
-        }
-        int groupId = getMailboxGroupId(mailboxId);
+
+        // Get mailbox id.
+        NewMboxId ret = getNextMailboxId(conn, mailboxId);
+        mailboxId = ret.id;
+        int groupId = ret.groupId;
+
         // Make sure the group database exists before we start doing DMLs.
         createMailboxDatabase(conn, mailboxId, groupId);
 
@@ -134,7 +176,6 @@ public class DbMailbox {
         if (comment != null)
             removeFromDeletedAccount(conn, comment);
 
-        NewMboxId ret = new NewMboxId();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -154,21 +195,6 @@ public class DbMailbox {
             stmt.close();
             stmt = null;
 
-            if (explicitId) {
-                stmt = conn.prepareStatement(
-                        "UPDATE current_volumes SET next_mailbox_id = ? + 1 WHERE next_mailbox_id <= ?");
-                stmt.setInt(1, mailboxId);
-                stmt.setInt(2, mailboxId);
-            } else {
-                stmt = conn.prepareStatement(
-                        "UPDATE current_volumes SET next_mailbox_id = next_mailbox_id + 1");
-            }
-            stmt.executeUpdate();
-            stmt.close();
-            stmt = null;
-
-            ret.id = mailboxId;
-            ret.groupId = groupId;
             if (explicitId)
                 return ret;
 
