@@ -308,6 +308,8 @@ public class LC {
     public static final KnownKey zimbra_mtareport_max_recipients;
     public static final KnownKey zimbra_mtareport_max_senders;
 
+    public static final KnownKey zmmtaconfig_enable_config_restarts;
+
     public static final KnownKey zimbra_mailbox_groups;
     
     public static final KnownKey debug_mailboxindex_use_new_locking;
@@ -1008,6 +1010,9 @@ public class LC {
 
         zimbra_mtareport_max_senders = new KnownKey("zimbra_mtareport_max_senders");
         zimbra_mtareport_max_senders.setDefault("50");
+
+	zmmtaconfig_enable_config_restarts = new KnownKey("zmmtaconfig_enable_config_restarts");
+	zmmtaconfig_enable_config_restarts.setDefault("TRUE");
 
         zimbra_auth_always_send_refer = new KnownKey("zimbra_auth_always_send_refer");
         zimbra_auth_always_send_refer.setDefault("false");
