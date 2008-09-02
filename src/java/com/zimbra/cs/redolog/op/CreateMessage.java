@@ -26,9 +26,10 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.mail.MessagingException;
+
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Provisioning;
+import com.zimbra.common.util.FileUtil;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -272,11 +273,13 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
     }
 
     protected String getPrintableData() {
-        StringBuffer sb = new StringBuffer("id=").append(mMsgId);
+        StringBuilder sb = new StringBuilder("id=").append(mMsgId);
         sb.append(", rcpt=").append(mRcptEmail);
         sb.append(", rcvDate=").append(mReceivedDate);
         sb.append(", shared=").append(mShared ? "true" : "false");
         sb.append(", blobDigest=\"").append(mDigest).append("\", size=").append(mMsgSize);
+        if (mData != null)
+            sb.append(", dataLen=").append(mData.getLength());
         sb.append(", folder=").append(mFolderId);
         sb.append(", conv=").append(mConvId);
         sb.append(", convFirstMsgId=").append(mConvFirstMsgId);
@@ -374,13 +377,13 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
                 mData = new RedoableOpData(data);
             } else {
                 long pos = in.getFilePointer();
-                mData = new RedoableOpData(new File(in.getPath()), pos, mMsgSize);
+                mData = new RedoableOpData(new File(in.getPath()), pos, dataLength);
                 
                 // Now that we have a stream to the data, skip to the next op.
-                int numSkipped = in.skipBytes(mMsgSize);
-                if (numSkipped != mMsgSize) {
+                int numSkipped = in.skipBytes(dataLength);
+                if (numSkipped != dataLength) {
                     String msg = String.format("Attempted to skip %d bytes at position %d in %s, but actually skipped %d.",
-                        mMsgSize, pos, in.getPath(), numSkipped);
+                            dataLength, pos, in.getPath(), numSkipped);
                     throw new IOException(msg);
                 }
             }
@@ -391,7 +394,35 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
             mLinkSrcVolumeId = in.readShort();
         }
     }
-    
+
+    protected ParsedMessage getParsedMessageFromData(long date) throws ServiceException, IOException, MessagingException {
+        int mboxId = getMailboxId();
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
+        ParsedMessage pm;
+        boolean compressed = mData.getLength() != mMsgSize;
+        if (mData.hasDataInMemory() && !compressed) {
+            pm = new ParsedMessage(mData.getData(), date, mbox.attachmentsIndexingEnabled());
+        } else {
+            Volume volume = Volume.getCurrentMessageVolume();
+            short volId = volume.getId();
+            StoreManager sm = StoreManager.getInstance();
+            String path = sm.getUniqueIncomingPath(volId);
+            File blobFile = new File(path);
+            FileUtil.copy(mData.getInputStream(), true, blobFile);  // Save data to a temp file.
+            if (compressed) {
+                // Assume size mismatch means blob is compressed.  Use store manager API to uncompress it.
+                File uncompressedFile = new File(sm.getUniqueIncomingPath(volId));
+                Blob compressedBlob = new Blob(blobFile, volId);
+                InputStream uncompressed = sm.getContent(compressedBlob);  // Returned InputStream is uncompressed.
+                FileUtil.copy(uncompressed, true, uncompressedFile);
+                blobFile.delete();
+                blobFile = uncompressedFile;
+            }
+            pm = new ParsedMessage(blobFile, date, mbox.attachmentsIndexingEnabled());
+        }
+        return pm;
+    }
+
     public void redo() throws Exception {
         int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
@@ -415,16 +446,25 @@ implements CreateCalendarItemPlayer,CreateCalendarItemRecorder {
             sharedDeliveryCtxt.setFirst(false);
             sharedDeliveryCtxt.setBlob(src);
 
+            if (file.length() != (long) mMsgSize) {
+                // Possibly compressed file.  We have to pass uncompressed file to ParsedMessage.
+                StoreManager sm = StoreManager.getInstance();
+                Volume volume = Volume.getCurrentMessageVolume();
+                short volId = volume.getId();
+                File uncompressed = new File(file.getParent(), file.getName() + ".unzip");
+                // If .unzip file exists, assume it was unzipped by another mailbox doing redo.
+                if (!uncompressed.exists()) {
+                    File temp = new File(uncompressed.getParent(), uncompressed.getName() + "-" + mboxId);
+                    Blob compressed = new Blob(file, volId);
+                    FileUtil.copy(sm.getContent(compressed), true, temp);  // unzip to temp file
+                    temp.renameTo(uncompressed);
+                }
+                file = uncompressed;
+            }
             pm = new ParsedMessage(file, mReceivedDate, mbox.attachmentsIndexingEnabled());
         } else { // mMsgBodyType == MSGBODY_INLINE
             // Just one recipient.  Store the blob, then add the message.
-            if (mData.hasDataInMemory()) {
-                pm = new ParsedMessage(mData.getData(), mReceivedDate, mbox.attachmentsIndexingEnabled());
-            } else {
-                Volume volume = Volume.getCurrentMessageVolume();
-                Blob blob = StoreManager.getInstance().storeIncoming(mData.getInputStream(), mData.getLength(), null, volume.getId());
-                pm = new ParsedMessage(blob.getFile(), mReceivedDate, mbox.attachmentsIndexingEnabled());
-            }
+            pm = getParsedMessageFromData(mReceivedDate);
         }
 
         try {

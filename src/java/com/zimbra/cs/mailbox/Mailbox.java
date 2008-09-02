@@ -4878,7 +4878,7 @@ public class Mailbox {
                     if (needRedo) {
                         storeRedoRecorder = new StoreIncomingBlob(digest, msgSize, sharedDeliveryCtxt.getMailboxIdList());
                         storeRedoRecorder.start(getOperationTimestampMillis());
-                        if (blob.isCompressed() || pm.wasMutated()) {
+                        if (pm.wasMutated()) {
                             storeRedoRecorder.setBlobBodyInfo(getData(pm), blobPath, blobVolumeId);
                         } else {
                             storeRedoRecorder.setBlobBodyInfo(blob.getFile(), blobVolumeId);
@@ -4902,7 +4902,7 @@ public class Mailbox {
                     // In single-recipient case the blob bytes are logged in
                     // CreateMessage entry, to avoid having to write two
                     // redolog entries for a single delivery.
-                    if (blob.isCompressed() || pm.wasMutated()) {
+                    if (pm.wasMutated()) {
                         redoRecorder.setMessageBodyInfo(getData(pm), blobPath, blobVolumeId);
                     } else {
                         redoRecorder.setMessageBodyInfo(mboxBlob.getBlob().getFile(), blobVolumeId);
