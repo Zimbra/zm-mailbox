@@ -51,20 +51,19 @@ public class DocumentDispatcher {
 		mHandlers = new HashMap<QName, DocumentHandler>();
         mResponses = new HashMap<QName, QName>();
         String excludeString = LC.get("admin_soap_exclude_list");
-        ZimbraLog.soap.info("Loading the exclude list");
+        ZimbraLog.soap.debug("Loading the exclude list");
         mExcludeList = new ArrayList<String>(Arrays.asList(excludeString.split("(,[\n\r]*)")));
-        Iterator <String> it = mExcludeList.iterator();
 	}
 	
 	public void clearExcludeList() {
-		ZimbraLog.soap.info("clearing the exclude list");
+		ZimbraLog.soap.debug("clearing the exclude list");
 		mExcludeList.clear();
 	}
 	
 	public void registerHandler(QName qname, DocumentHandler handler) {
-		ZimbraLog.soap.info(String.format("Registering %s::%s", qname.getNamespaceURI(),qname.getQualifiedName()));
+		ZimbraLog.soap.debug(String.format("Registering %s::%s", qname.getNamespaceURI(),qname.getQualifiedName()));
         if(!mExcludeList.isEmpty() && mExcludeList.contains(String.format("%s::%s", qname.getNamespaceURI(),qname.getQualifiedName()))) {
-        	ZimbraLog.soap.info(String.format("skipping %s::%s", qname.getNamespaceURI(),qname.getQualifiedName()));
+        	ZimbraLog.soap.debug(String.format("skipping %s::%s", qname.getNamespaceURI(),qname.getQualifiedName()));
         	return;
         }
 		mHandlers.put(qname, handler);
