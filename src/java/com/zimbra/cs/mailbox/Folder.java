@@ -642,7 +642,7 @@ public class Folder extends MailItem {
     throws ServiceException {
         if (id != Mailbox.ID_FOLDER_ROOT) {
             if (parent == null || !parent.canContain(TYPE_FOLDER))
-                throw MailServiceException.CANNOT_CONTAIN();
+                throw MailServiceException.CANNOT_CONTAIN(parent, TYPE_FOLDER);
             name = validateItemName(name);
             if (parent.findSubfolder(name) != null)
                 throw MailServiceException.ALREADY_EXISTS(name);

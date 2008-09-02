@@ -18,7 +18,6 @@
 package com.zimbra.cs.filter;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -48,14 +47,14 @@ import org.apache.jsieve.mail.MailUtils;
 import org.apache.jsieve.mail.SieveMailException;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.HttpUtil;
+import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.filter.jsieve.ActionTag;
 import com.zimbra.cs.mailbox.Flag;
@@ -67,10 +66,11 @@ import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.SharedDeliveryContext;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMailbox;
 
 /**
@@ -286,41 +286,64 @@ public class ZimbraMailAdapter implements MailAdapter
                     }
                 } else if (action instanceof ActionFileInto) {
                     ActionFileInto fileinto = (ActionFileInto) action;
-                    String folderName = fileinto.getDestination();
+                    String localPath = fileinto.getDestination();
                     Folder folder = null;
-                    try {
-                        folder = mMailbox.getFolderByPath(null, folderName);
-                    } catch (MailServiceException.NoSuchItemException nsie) {
-                        ZimbraLog.filter.warn("Folder %d not found.  Filing message to %s.", folderName, getDefaultFolderName());
-                        folder = mMailbox.getFolderById(null, mDefaultFolderId);
-                    }
+                    
+                    // Do initial lookup.
+                    Pair<Folder, String> folderAndPath = mMailbox.getFolderByPathLongestMatch(
+                        null, Mailbox.ID_FOLDER_USER_ROOT, localPath);
+                    folder = folderAndPath.getFirst();
+                    String remainingPath = folderAndPath.getSecond();
+                    ZimbraLog.filter.debug("Attempting to file to %s, remainingPath=%s.", folder, remainingPath);
+                    
                     // save the message to the specified folder;
                     // The message will not be filed into the same folder multiple times because of
                     // jsieve FileInto validation ensures it; it is allowed to be filed into
                     // multiple different folders, however
 
                     boolean filedRemotely = false;
+
                     if (folder instanceof Mountpoint) {
                         Mountpoint mountpoint = (Mountpoint) folder;
-                        InputStream msgStream = null;
                         try {
-                            // Do a REST POST to the mountpoint.  UserServlet will then
-                            // redirect to the target mailbox.
-                            ZMailbox zMailbox = getZMailbox();
-                            String path = HttpUtil.encodePath(mountpoint.getPath());
-                            msgStream = mParsedMessage.getRawInputStream();
-                            zMailbox.postRESTResource(
-                                path, msgStream, true,
-                                mParsedMessage.getRawSize(), Mime.CT_MESSAGE_RFC822, false, false,
-                                (int) (60 * Constants.MILLIS_PER_MINUTE));
-                            filedRemotely = true;
+                            ZMailbox remoteMbox = getRemoteZMailbox(mMailbox, mountpoint);
+
+                            // Look up remote folder.
+                            ItemId id = new ItemId(mountpoint.getOwnerId(), mountpoint.getRemoteId());
+                            ZFolder remoteFolder = remoteMbox.getFolderById(id.toString());
+                            if (remoteFolder != null) {
+                                if (remainingPath != null) {
+                                    remoteFolder = remoteFolder.getSubFolderByPath(remainingPath);
+                                    if (remoteFolder == null) {
+                                        ZimbraLog.filter.warn("Subfolder %s of mountpoint %s does not exist.  " +
+                                            "Filing to %s instead.",
+                                            remainingPath, mountpoint.getName(), getDefaultFolderName());
+                                    }
+                                }
+                            } else {
+                                ZimbraLog.filter.warn("Unable to find remote folder %s for mountpoint %s.  " +
+                                    "Filing to %s instead.",
+                                    id.toString(), mountpoint.getName(), getDefaultFolderName());
+                            }
+
+                            // File to remote folder.
+                            if (remoteFolder != null) {
+                                remoteMbox.addMessage(remoteFolder.getId(), Flag.bitmaskToFlags(
+                                    getFlagBitmask()), null, 0, mParsedMessage.getRawData(), false);
+                                filedRemotely = true;
+                            } else {
+                                folder = mMailbox.getFolderById(null, mDefaultFolderId);
+                            }
                         } catch (Exception e) {
-                            ZimbraLog.filter.warn("Unable to file to %s.  Filing message to %s.",
-                                mountpoint.getPath(), getDefaultFolderName(), e);
+                            ZimbraLog.filter.warn("Unable to file to %s.  Filing to %s instead.",
+                                localPath, getDefaultFolderName(), e);
                             folder = mMailbox.getFolderById(null, mDefaultFolderId);
-                        } finally {
-                            ByteUtil.closeStream(msgStream);
                         }
+                    } else if (!StringUtil.isNullOrEmpty(remainingPath)) {
+                        // Only part of the folder path matched.
+                        ZimbraLog.filter.warn("Could not find folder with path %s.  Filing to %s instead.",
+                            localPath, getDefaultFolderName());
+                        folder = mMailbox.getFolderById(null, mDefaultFolderId);
                     }
                     
                     if (!filedRemotely) {
@@ -594,22 +617,28 @@ public class ZimbraMailAdapter implements MailAdapter
         return mMailbox;
     }
     
-    private ZMailbox getZMailbox()
+    /**
+     * Returns a <tt>ZMailbox</tt> for the remote mailbox referenced by the given
+     * <tt>Mountpoint</tt>.
+     */
+    public static ZMailbox getRemoteZMailbox(Mailbox localMbox, Mountpoint mountpoint)
     throws ServiceException {
         // Get auth token
         AuthToken authToken = null;
-        OperationContext opCtxt = mMailbox.getOperationContext();
+        OperationContext opCtxt = localMbox.getOperationContext();
         if (opCtxt != null) {
             authToken = opCtxt.getAuthToken();
         }
         if (authToken == null) {
-            authToken = AuthProvider.getAuthToken(mMailbox.getAccount());
+            authToken = AuthProvider.getAuthToken(localMbox.getAccount());
         }
         
         // Get ZMailbox
-        Account account = mMailbox.getAccount();
+        Account account = Provisioning.getInstance().get(AccountBy.id, mountpoint.getOwnerId());
         ZMailbox.Options zoptions = new ZMailbox.Options(authToken.toZAuthToken(), AccountUtil.getSoapUri(account));
         zoptions.setNoSession(true);
+        zoptions.setTargetAccount(account.getId());
+        zoptions.setTargetAccountBy(AccountBy.id);
         return ZMailbox.getMailbox(zoptions);
     }
     

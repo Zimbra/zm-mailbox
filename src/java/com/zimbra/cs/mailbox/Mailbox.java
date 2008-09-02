@@ -2854,7 +2854,8 @@ public class Mailbox {
      * @param startingFolderId Folder to start from (pass Mailbox.ID_FOLDER_ROOT to start from the root)
      * @param path 
      * @return
-     * @throws ServiceException
+     * @throws ServiceException if the folder with <tt>startingFolderId</tt> does not exist
+     * or <tt>path</tt> is <tt>null</tt> or empty.
      */
     public synchronized Pair<Folder, String> getFolderByPathLongestMatch(OperationContext octxt, int startingFolderId, String path) throws ServiceException {
         if (path == null)

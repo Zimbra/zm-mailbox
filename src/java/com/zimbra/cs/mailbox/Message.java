@@ -329,7 +329,7 @@ public class Message extends MailItem {
                 int flags, long tags, DraftInfo dinfo, boolean noICal, ZVCalendar cal, 
                 MessageCreateFactory fact) throws ServiceException {
         if (folder == null || !folder.canContain(TYPE_MESSAGE))
-            throw MailServiceException.CANNOT_CONTAIN();
+            throw MailServiceException.CANNOT_CONTAIN(folder, TYPE_MESSAGE);
         if (!folder.canAccess(ACL.RIGHT_INSERT))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
 

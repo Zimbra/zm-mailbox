@@ -36,11 +36,25 @@ import org.apache.jsieve.parser.generated.ASTstring_list;
 import org.apache.jsieve.parser.generated.ASTtest;
 import org.apache.jsieve.parser.generated.Node;
 
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mailbox.Mailbox.OperationContext;
+import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.zclient.ZFolder;
+import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
@@ -257,8 +271,8 @@ public class RuleRewriter {
      * @throws ServiceException
      */
     private void traverse(StringBuffer sb, Element element) throws ServiceException {
-        for (Iterator it = element.elementIterator(); it.hasNext(); ) {
-            Element subnode = (Element) it.next();
+        for (Iterator<Element> it = element.elementIterator(); it.hasNext(); ) {
+            Element subnode = it.next();
             String nodeName = subnode.getName();
             if ("r".equals(nodeName)) {
                 String ruleName = subnode.getAttribute("name");
@@ -279,8 +293,8 @@ public class RuleRewriter {
         boolean actionOpenBrace = false;
         boolean firstConditionInGroup = true;
 
-        for (Iterator it = element.elementIterator(); it.hasNext(); ) {
-            Element subnode = (Element) it.next();
+        for (Iterator<Element> it = element.elementIterator(); it.hasNext(); ) {
+            Element subnode = it.next();
             String nodeName = subnode.getName();
             if ("g".equals(nodeName)) {
                 if (!firstConditionInGroup) {
@@ -357,22 +371,11 @@ public class RuleRewriter {
     }
 
     void action(StringBuffer sb, String actionName, Element element, String ruleName) throws ServiceException {
-        for (Iterator it = element.elementIterator("arg"); it.hasNext(); ) {
-            Element subnode = (Element) it.next();
+        for (Iterator<Element> it = element.elementIterator("arg"); it.hasNext(); ) {
+            Element subnode = it.next();
             String argVal = subnode.getText();
             if ("fileinto".equals(actionName)) {
-                try {
-                    mMailbox.getFolderByPath(null, argVal);
-                } catch (MailServiceException.NoSuchItemException e) {
-                    try {
-                        // create folder
-                        mMailbox.createFolder(null, argVal, (byte) 0, MailItem.TYPE_UNKNOWN);
-                        ZimbraLog.filter.info("Created folder " + argVal + " referenced in rule \"" + ruleName + "\"");
-                    } catch (MailServiceException e1) {
-                    	if (!e1.getCode().equals(MailServiceException.ALREADY_EXISTS))
-                            throw ServiceException.FAILURE("unable to create inexistent folder (" + argVal + ") in rule \"" + ruleName + "\"", e1);
-                    }
-                }
+                createFolderIfNecessary(argVal, ruleName);
             } else if ("tag".equals(actionName)) {
                 try {
                     mMailbox.getTagByName(argVal);
@@ -385,5 +388,46 @@ public class RuleRewriter {
             sb.append(" \"").append(argVal).append("\"");
         }
         sb.append(";\n");
+    }
+    
+    private void createFolderIfNecessary(String path, String ruleName)
+    throws ServiceException {
+        Pair<Folder, String> folderAndRemotePath =
+            mMailbox.getFolderByPathLongestMatch(null, Mailbox.ID_FOLDER_USER_ROOT, path);
+        Folder folder = folderAndRemotePath.getFirst();
+        String remotePath = folderAndRemotePath.getSecond();
+        if (StringUtil.isNullOrEmpty(remotePath)) {
+            remotePath = null;
+        }
+
+        if (folder instanceof Mountpoint && remotePath != null) {
+            // Create remote folder path
+            Mountpoint mountpoint = (Mountpoint) folder;
+            ZimbraLog.filter.info("Creating folder %s in remote folder %s for rule %s.",
+                remotePath, folder.getPath(), ruleName);
+            ZMailbox remoteMbox = ZimbraMailAdapter.getRemoteZMailbox(mMailbox, (Mountpoint) folder);
+            ItemId id = new ItemId(mountpoint.getOwnerId(), mountpoint.getRemoteId());
+            ZFolder parent = remoteMbox.getFolderById(id.toString());
+            if (parent == null) {
+                String msg = String.format("Could not find folder with id %d in remote mailbox %s.",
+                    mountpoint.getRemoteId(), mountpoint.getOwnerId());
+                throw ServiceException.FAILURE(msg, null);
+            }
+            String[] pathElements = remotePath.split(ZMailbox.PATH_SEPARATOR);
+            for (String folderName : pathElements) {
+                if (!StringUtil.isNullOrEmpty(folderName)) {
+                    ZFolder currentFolder = parent.getSubFolderByPath(folderName);
+                    if (currentFolder != null) {
+                        parent = currentFolder;
+                    } else {
+                        parent = remoteMbox.createFolder(parent.getId(), folderName, null, null, null, null);
+                    }
+                }
+            }
+        } else if (remotePath != null) {
+            // Create local folder path
+            ZimbraLog.filter.info("Creating folder %s for rule %s.", path, ruleName);
+            mMailbox.createFolder(null, path, (byte) 0, MailItem.TYPE_UNKNOWN);
+        }
     }
 }
