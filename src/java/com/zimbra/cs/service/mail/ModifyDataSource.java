@@ -161,7 +161,7 @@ public class ModifyDataSource extends MailDocumentHandler {
             dsAttrs.put(Provisioning.A_zimbraDataSourcePollingInterval, value);
         
         Iterator<Element> attrs = eDataSource.elementIterator(MailConstants.E_ATTRIBUTE);
-        if (attrs != null) {
+        if (attrs != null && attrs.hasNext()) {
         	ArrayList<String> attrList = new ArrayList<String>();
         	while (attrs.hasNext()) {
         		attrList.add(attrs.next().getText());
