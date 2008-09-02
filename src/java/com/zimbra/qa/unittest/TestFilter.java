@@ -60,6 +60,8 @@ extends TestCase {
     private static String TAG1_NAME = NAME_PREFIX + "-tag1";
     private static String TAG2_NAME = NAME_PREFIX + "-tag2";
     private static String MOUNTPOINT_FOLDER_NAME = NAME_PREFIX + " mountpoint";
+    private static String MOUNTPOINT_SUBFOLDER_NAME = NAME_PREFIX + " mountpoint subfolder";
+    private static String MOUNTPOINT_SUBFOLDER_PATH = "/" + MOUNTPOINT_FOLDER_NAME + "/" + MOUNTPOINT_SUBFOLDER_NAME;
     
     private ZMailbox mMbox;
     private ZFilterRules mOriginalRules;
@@ -73,6 +75,7 @@ extends TestCase {
         // Create mountpoint for testMountpoint()
         ZMailbox remoteMbox = TestUtil.getZMailbox(REMOTE_USER_NAME);
         TestUtil.createMountpoint(remoteMbox, "/" + MOUNTPOINT_FOLDER_NAME, mMbox, MOUNTPOINT_FOLDER_NAME);
+        TestUtil.createFolder(remoteMbox, MOUNTPOINT_SUBFOLDER_PATH);
         
         mOriginalRules = mMbox.getFilterRules();
         mMbox.saveFilterRules(getRules());
@@ -242,7 +245,7 @@ extends TestCase {
         // Send message.
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String address = TestUtil.getAddress(USER_NAME);
-        String subject = NAME_PREFIX + " mountpoint1";
+        String subject = NAME_PREFIX + " mountpointRoot1";
         TestUtil.addMessageLmtp(subject, address, address);
         
         // Confirm that it gets filed into the mountpoint folder and not in inbox.
@@ -255,11 +258,36 @@ extends TestCase {
         remote.deleteFolder(remoteFolder.getId());
         
         // Send another message, confirm that it gets filed into inbox and not in the mountpoint folder.
-        subject = NAME_PREFIX + " mountpoint2";
+        subject = NAME_PREFIX + " mountpointRoot2";
         TestUtil.addMessageLmtp(subject, address, address);
         TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
         assertEquals(0, TestUtil.search(mbox,
             "in:\"/" + MOUNTPOINT_FOLDER_NAME + "\" subject:\"" + subject + "\"").size());
+    }
+    
+    public void testMountpointSubfolder()
+    throws Exception {
+        // Send message.
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        String address = TestUtil.getAddress(USER_NAME);
+        String subject = NAME_PREFIX + " mountpointSub1";
+        TestUtil.addMessageLmtp(subject, address, address);
+        
+        // Confirm that it gets filed into the mountpoint subfolder and not in inbox.
+        TestUtil.waitForMessage(mbox, "in:\"" + MOUNTPOINT_SUBFOLDER_PATH + "\" subject:\"" + subject + "\"");
+        assertEquals(0, TestUtil.search(mbox, "in:inbox subject:\"" + subject + "\"").size());
+        
+        // Delete the remote subfolder.
+        ZMailbox remote = TestUtil.getZMailbox(REMOTE_USER_NAME);
+        ZFolder remoteFolder = remote.getFolderByPath(MOUNTPOINT_SUBFOLDER_PATH);
+        remote.deleteFolder(remoteFolder.getId());
+        
+        // Send another message, confirm that it gets filed into inbox and not in the mountpoint subfolder.
+        subject = NAME_PREFIX + " mountpointSub2";
+        TestUtil.addMessageLmtp(subject, address, address);
+        TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
+        assertEquals(0, TestUtil.search(mbox,
+            "in:\"" + MOUNTPOINT_SUBFOLDER_PATH + "\" subject:\"" + subject + "\"").size());
     }
     
     protected void tearDown() throws Exception {
@@ -324,12 +352,19 @@ extends TestCase {
         actions.add(new ZDiscardAction());
         rules.add(new ZFilterRule("testDiscard", true, false, conditions, actions));
         
-        // if subject contains "mountpoint", file into the mountpoint folder
+        // if subject contains "mountpointRoot", file into the mountpoint root folder
         conditions = new ArrayList<ZFilterCondition>();
         actions = new ArrayList<ZFilterAction>();
-        conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "mountpoint"));
+        conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "mountpointRoot"));
         actions.add(new ZFileIntoAction("/" + MOUNTPOINT_FOLDER_NAME));
         rules.add(new ZFilterRule("testMountpoint", true, false, conditions, actions));
+        
+        // if subject contains "mountpointSub", file into the mountpoint subfolder
+        conditions = new ArrayList<ZFilterCondition>();
+        actions = new ArrayList<ZFilterAction>();
+        conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "mountpointSub"));
+        actions.add(new ZFileIntoAction(MOUNTPOINT_SUBFOLDER_PATH));
+        rules.add(new ZFilterRule("testMountpointSubfolder", true, false, conditions, actions));
         
         return new ZFilterRules(rules);
     }

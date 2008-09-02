@@ -335,6 +335,11 @@ public class MailServiceException extends ServiceException {
     public static MailServiceException CANNOT_CONTAIN() {
         return new MailServiceException("cannot put object in that folder", CANNOT_CONTAIN, SENDERS_FAULT);
     }
+    
+    public static MailServiceException CANNOT_CONTAIN(Folder parent, byte type) {
+        String parentName = (parent == null ? "null parent folder" : "folder " + parent.getPath());
+        return new MailServiceException(parentName + " cannot contain an item of type " + MailItem.getNameForType(type), CANNOT_CONTAIN, SENDERS_FAULT);
+    }
 
     public static MailServiceException CANNOT_COPY(int id) {
         return new MailServiceException("cannot copy object: " + id, CANNOT_COPY, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
