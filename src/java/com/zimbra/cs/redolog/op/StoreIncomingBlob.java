@@ -180,7 +180,7 @@ public class StoreIncomingBlob extends RedoableOp {
         // Use current message volume if old volume is gone.
         Volume vol = null;
         try {
-            Volume.getById(mVolumeId);
+            vol = Volume.getById(mVolumeId);
         } catch (VolumeServiceException e) {
             if (VolumeServiceException.NO_SUCH_VOLUME.equals(e.getCode()))
                 vol = Volume.getCurrentMessageVolume();
