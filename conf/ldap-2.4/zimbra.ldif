@@ -1,3 +1,8 @@
+dn: cn=zimbra,cn=schema,cn=config
+objectClass: olcSchemaConfig
+description: Zimbra schema
+cn: zimbra
+
 dn: cn=zimbra
 objectclass: organizationalRole
 description: Zimbra Systems Application Data
