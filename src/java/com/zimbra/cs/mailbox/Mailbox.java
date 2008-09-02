@@ -969,6 +969,22 @@ public class Mailbox {
         return (mCurrentChange.recent == MailboxChange.NO_CHANGE ? mData.recentMessages : mCurrentChange.recent);
     }
 
+    /** Resets the mailbox's "recent message count" to 0.  A message is
+     *  considered "recent" if (a) it's not a draft or a sent message, and
+     *  (b) it was added since the last write operation associated with any
+     *  SOAP session. */
+    public synchronized void resetRecentMessageCount(OperationContext octxt) throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("resetRecentMessageCount", octxt);
+            if (getRecentMessageCount() != 0)
+                mCurrentChange.recent = 0;
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
     /** Returns the number of contacts currently in the mailbox.
      * 
      * @see #updateContactCount(int) */
