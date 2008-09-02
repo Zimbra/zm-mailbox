@@ -30,6 +30,7 @@ import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.ZimbraHit;
@@ -226,8 +227,7 @@ class Pop3Mailbox {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mId);
         int count = 0;
         int failed = 0;
-        for (int i = 0; i < mMessages.size(); i++) {
-            Pop3Message p3m = mMessages.get(i);
+        for (Pop3Message p3m : mMessages) {
             if (p3m.isDeleted()) {
                 try {
                     if (hard) {
@@ -244,7 +244,15 @@ class Pop3Mailbox {
                 p3m.mDeleted = false;
             }
         }
-        if (failed != 0) {
+
+        if (count > 0) {
+            try {
+                mbox.resetRecentMessageCount(mOpContext);
+            } catch (ServiceException e) {
+                ZimbraLog.pop.info("error resetting mailbox recent message count", e);
+            }
+        }
+        if (failed > 0) {
             throw new Pop3CmdException("deleted "+count+"/"+(count+failed)+" message(s)");
         }
         return count;
