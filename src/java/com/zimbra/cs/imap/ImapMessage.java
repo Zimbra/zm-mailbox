@@ -45,6 +45,7 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
+import javax.mail.internet.ParseException;
 
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.net.BCodec;
@@ -331,29 +332,46 @@ public class ImapMessage implements Comparable<ImapMessage> {
         }
     }
 
+    private static void address(PrintStream ps, InternetAddress addr) {
+        String[] parts = addr.getAddress().split("@", 2);
+        ps.write('(');  nstring2047(ps, addr.getPersonal());
+        ps.write(' ');  ps.write(NIL, 0, 3);
+        ps.write(' ');  nstring(ps, parts[0]);
+        ps.write(' ');  nstring(ps, parts.length > 1 ? parts[1] : null);
+        ps.write(')');
+    }
+
     private static void naddresses(PrintStream ps, InternetAddress[] addrs) {
         int count = 0;
         if (addrs != null && addrs.length > 0) {
-            for (int i = 0; i < addrs.length; i++) {
-                if (addrs[i].isGroup()) {
+            for (InternetAddress addr : addrs) {
+                if (addr.isGroup()) {
                     // 7.4.2: "[RFC-2822] group syntax is indicated by a special form of address
                     //         structure in which the host name field is NIL.  If the mailbox name
                     //         field is also NIL, this is an end of group marker (semi-colon in RFC
                     //         822 syntax).  If the mailbox name field is non-NIL, this is a start of
                     //         group marker, and the mailbox name field holds the group name phrase."
-                    // FIXME: handle groups...
-                } else if (addrs[i].getAddress() == null) {
+                    try {
+                        String serialized = addr.getAddress();
+                        int colon = serialized.indexOf(':');
+                        String name = colon == -1 ? serialized : serialized.substring(0, colon);
+                        InternetAddress[] members = addr.getGroup(false);
+
+                        if (count++ == 0)  ps.write('(');
+                        ps.print("(NIL NIL ");  nstring(ps, name);  ps.print(" NIL)");
+                        if (members != null) {
+                            for (InternetAddress member : members)
+                                address(ps, member);
+                        }
+                        ps.print("(NIL NIL NIL NIL)");
+                    } catch (ParseException e) { }
+                } else if (addr.getAddress() == null) {
                     continue;
                 } else {
                     // 7.4.2: "The fields of an address structure are in the following order: personal
                     //         name, [SMTP] at-domain-list (source route), mailbox name, and host name."
                     if (count++ == 0)  ps.write('(');
-                    String[] parts = addrs[i].getAddress().split("@", 2);
-                    ps.write('(');  nstring2047(ps, addrs[i].getPersonal());
-                    ps.write(' ');  ps.write(NIL, 0, 3);
-                    ps.write(' ');  nstring(ps, parts[0]);
-                    ps.write(' ');  nstring(ps, parts.length > 1 ? parts[1] : null);
-                    ps.write(')');
+                    address(ps, addr);
                 }
             }
         }
