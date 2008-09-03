@@ -149,7 +149,7 @@ public class ZipFormatter extends Formatter {
                     // when/if we included calendar items to the zip later.
 
                     // Don't return private appointments/tasks if the requester is not the mailbox owner.
-                    CalendarItem calItem = (CalendarItem) context.target;
+                    CalendarItem calItem = (CalendarItem) item;
                     if (calItem.isPublic() || calItem.allowPrivateAccess(context.authAccount, context.isUsingAdminPrivileges())) {
                         // do nothing for now
                     }
