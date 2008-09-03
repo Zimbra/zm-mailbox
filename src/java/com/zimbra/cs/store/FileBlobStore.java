@@ -139,8 +139,10 @@ public class FileBlobStore extends StoreManager {
         OutputStream out = fos;
 
         boolean compress = !storeAsIs && volume.getCompressBlobs() && sizeHint > volume.getCompressionThreshold();
-        
-        if (compress || (0 < sizeHint && sizeHint <= getDiskStreamingThreshold())) {
+        int maxInMemorySize = Provisioning.getInstance().getConfig().getIntAttr(Provisioning.A_zimbraMtaMaxMessageSize, -1);
+        boolean inMemoryCopyOK = 0 < sizeHint && sizeHint <= maxInMemorySize;
+
+        if ((compress || (0 < sizeHint && sizeHint <= getDiskStreamingThreshold())) && inMemoryCopyOK) {
             // Keep blob data into memory.  Data for compressed blobs
             // must be in memory for random access.  See bug 25629 for details.
             baos = new ByteArrayOutputStream(sizeHint);
@@ -151,7 +153,8 @@ public class FileBlobStore extends StoreManager {
             // MimeMessage can't reference a compressed blob.
             out = new GZIPOutputStream(fos);
             blob.setCompressed(true);
-            baos = new ByteArrayOutputStream(sizeHint);
+            if (inMemoryCopyOK)
+                baos = new ByteArrayOutputStream(sizeHint);
         }
 
         // Write to the file and byte array.
