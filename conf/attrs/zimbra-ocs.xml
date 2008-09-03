@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<objectclasses group="ZimbraObjectClass" groupid="2">
+
+<objectclass id="1" name="zimbraAccount" type="AUXILIARY">
+  <sup>zimbraMailRecipient</sup>
+  <desc>Account object</desc>
+</objectclass>
+
+<objectclass id="3" name="zimbraCOS" type="STRUCTURAL">
+  <sup>top</sup>
+  <desc>Class of Service data</desc>
+</objectclass>
+
+<objectclass id="4" name="zimbraDomain" type="AUXILIARY">
+  <sup>zimbraMailRecipient</sup>
+  <desc>Domain object</desc>
+</objectclass>
+
+<objectclass id="5" name="zimbraSecurityGroup" type="AUXILIARY">
+  <sup>top</sup>
+  <desc>Security Group</desc>
+</objectclass>
+
+<objectclass id="6" name="zimbraDistributionList" type="STRUCTURAL">
+  <sup>top</sup>
+  <desc>Distribution List object</desc>
+</objectclass>
+    
+<objectclass id="7" name="zimbraMailRecipient" type="AUXILIARY">
+  <sup>top</sup>
+  <desc>Account object</desc>
+</objectclass>
+
+<objectclass id="8" name="zimbraServer" type="STRUCTURAL">
+  <sup>top</sup>
+  <desc>Server in the cluster</desc>
+</objectclass>
+
+<objectclass id="9" name="zimbraGlobalConfig" type="AUXILIARY">
+  <sup>top</sup>
+  <desc>global config</desc>
+</objectclass>
+
+<objectclass id="11" name="zimbraAlias" type="STRUCTURAL">
+  <sup>top</sup>
+  <desc>An alias to another zimbra object</desc>
+</objectclass>
+
+<objectclass id="12" name="zimbraMimeEntry" type="STRUCTURAL">
+  <sup>top</sup>
+  <desc>MIME type info</desc>
+</objectclass>
+
+<objectclass id="13" name="zimbraObjectEntry" type="STRUCTURAL">
+  <sup>top</sup>
+  <desc>Object type info</desc>
+</objectclass>
+    
+<objectclass id="14" name="zimbraTimeZone" type="STRUCTURAL">
+  <sup>top</sup>
+  <desc>Time Zone info</desc>
+</objectclass>
+    
+<objectclass id="15" name="zimbraZimletEntry" type="STRUCTURAL">
+  <sup>top</sup>
+  <desc>Zimlet info</desc>
+</objectclass>
+
+<objectclass id="16" name="zimbraCalendarResource" type="AUXILIARY">
+  <sup>top</sup>
+  <desc>Calendar resource object</desc>
+</objectclass>
+
+<objectclass id="17" name="zimbraIdentity" type="STRUCTURAL">
+  <sup>top</sup>
+  <desc>Account Email Identity information</desc>
+</objectclass>
+
+<objectclass id="18" name="zimbraDataSource" type="STRUCTURAL">
+  <sup>top</sup>
+  <desc>base class for data source objects</desc>
+</objectclass>
+
+<objectclass id="19" name="zimbraPop3DataSource" type="STRUCTURAL">
+  <sup>zimbraDataSource</sup>
+  <desc>POP3 data source object</desc>
+</objectclass>
+
+<objectclass id="20" name="zimbraImapDataSource" type="STRUCTURAL">
+  <sup>zimbraDataSource</sup>
+  <desc>IMAP data source object</desc>
+</objectclass>
+
+<objectclass id="21" name="zimbraSignature" type="STRUCTURAL">
+  <sup>top</sup>
+  <desc>Account Email Signature information</desc>
+</objectclass>
+
+</objectclasses>
+
+

@@ -20,7 +20,6 @@ package com.zimbra.cs.account;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.callback.IDNCallback;
-import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.util.BuildInfo;
 import org.apache.commons.cli.CommandLine;
@@ -64,6 +63,7 @@ import java.util.Set;
 public class AttributeManager {
 
     private static final String E_ATTRS = "attrs";
+    private static final String E_OBJECTCLASSES = "objectclasses";
     private static final String A_GROUP = "group";
     private static final String A_GROUP_ID = "groupid";
 
@@ -84,6 +84,9 @@ public class AttributeManager {
     private static final String A_FLAGS = "flags";
     private static final String A_DEPRECATED_SINCE = "deprecatedSince";
     private static final String A_SINCE = "since";
+    
+    private static final String E_OBJECTCLASS = "objectclass";
+    private static final String E_SUP = "sup";
 
     private static final String E_DESCRIPTION = "desc";
     private static final String E_DEPRECATE_DESC = "deprecateDesc";
@@ -94,10 +97,14 @@ public class AttributeManager {
 
     private Map<String, AttributeInfo> mAttrs = new HashMap<String, AttributeInfo>();
     
+    private Map<String, ObjectClassInfo> mOCs = new HashMap<String, ObjectClassInfo>();
+    
     private AttributeCallback mIDNCallback = new IDNCallback();
 
     private static Map<Integer,String> mGroupMap = new HashMap<Integer,String>();
 
+    private static Map<Integer,String> mOCGroupMap = new HashMap<Integer,String>();
+    
     public static AttributeManager getInstance() throws ServiceException {
         synchronized(AttributeManager.class) {
             if (mInstance != null) {
@@ -126,14 +133,23 @@ public class AttributeManager {
     	File[] files = fdir.listFiles();
     	for (File file : files) { 
     		if (!file.getPath().endsWith(".xml")) {
-    			ZimbraLog.misc.warn("while loading attrs, ignoring not .xml file: " + file);
-    			continue;
+    		    ZimbraLog.misc.warn("while loading attrs, ignoring not .xml file: " + file);
+    		    continue;
     		}
     		if (!file.isFile()) {
-    			ZimbraLog.misc.warn("while loading attrs, ignored non-file: " + file);
+    		    ZimbraLog.misc.warn("while loading attrs, ignored non-file: " + file);
     		}
     		try {
-    			loadAttrs(file);
+    		    SAXReader reader = new SAXReader();
+    		    Document doc = reader.read(file);
+    		    Element root = doc.getRootElement();
+    		    if (root.getName().equals(E_ATTRS)) 
+    		        loadAttrs(file);
+    		    else if (root.getName().equals(E_OBJECTCLASSES)) 
+    		        loadObjectClasses(file);
+    		    else
+    		        ZimbraLog.misc.warn("while loading attrs, ignored unknown file: " + file);
+    			
     		} catch (DocumentException de) {
     			throw ServiceException.FAILURE("error loading attrs file: " + file, de);
     		}
@@ -401,6 +417,187 @@ public class AttributeManager {
             }
         }
     }
+    
+    private enum ObjectClassType {
+        ABSTRACT,
+        AUXILIARY,
+        STRUCTURAL;
+    }
+    
+    private class ObjectClassInfo {
+        private AttributeClass mAttributeClass;
+        private String mName;
+        private int mId;
+        private int mGroupId;
+        private ObjectClassType mType;
+        private List<String> mSuperOCs;
+        private String mDescription;
+        
+        // there must be a one-to-one mapping between enums in AttributeClass and ocs defined in the xml
+        
+        
+        ObjectClassInfo(AttributeClass attrClass, String ocName, int id, int groupId, ObjectClassType type, 
+                        List<String> superOCs, String description) {
+            mAttributeClass = attrClass;
+            mName = ocName;
+            mId = id;
+            mGroupId = groupId;
+            mType = type;
+            mSuperOCs = superOCs;
+            mDescription = description;
+        }
+        
+        AttributeClass getAttributeClass() {
+            return mAttributeClass;
+        }
+        
+        String getName() {
+            return mName;
+        }
+        
+        int getId() {
+            return mId;
+        }
+        
+        int getGroupId() {
+            return mGroupId;
+        }
+        
+        ObjectClassType getType() {
+            return mType;
+        }
+        
+        List<String> getSuperOCs() {
+            return mSuperOCs;
+        }
+        
+        String getDescription() {
+            return mDescription;
+        }
+        
+    }
+    
+    private void loadObjectClasses(File file) throws DocumentException {
+        SAXReader reader = new SAXReader();
+        Document doc = reader.read(file);
+        Element root = doc.getRootElement();
+        if (!root.getName().equals(E_OBJECTCLASSES)) {
+            error(null, file, "root tag is not " + E_OBJECTCLASSES);
+            return;
+        }
+
+        String group = root.attributeValue(A_GROUP);
+        String groupIdStr = root.attributeValue(A_GROUP_ID);
+        if (group == null ^ groupIdStr == null) {
+            error(null, file, A_GROUP + " and " + A_GROUP_ID + " both have to be both specified");
+        }
+        int groupId = -1;
+        if (group != null) {
+            try {
+                groupId = Integer.valueOf(groupIdStr);
+            } catch (NumberFormatException nfe) {
+                error(null, file, A_GROUP_ID + " is not a number: " + groupIdStr);
+            }
+        }
+        if (groupId == 1) {
+            error(null, file, A_GROUP_ID + " is not valid (used by ZimbraAttrType)");
+        } else if (groupId > 0) {
+            if (mOCGroupMap.containsKey(groupId)) {
+                error(null, file, "duplicate group id: " + groupId);
+            } else if (mOCGroupMap.containsValue(group)) {
+                error(null, file, "duplicate group: " + group);
+            } else {
+                mOCGroupMap.put(groupId, group);
+            }
+        }
+        
+        for (Iterator iter = root.elementIterator(); iter.hasNext();) {
+            Element eattr = (Element) iter.next();
+            if (!eattr.getName().equals(E_OBJECTCLASS)) {
+                error(null, file, "unknown element: " + eattr.getName());
+                continue;
+            }
+
+            int id = -1;
+            ObjectClassType type = null;
+            String canonicalName = null;
+            String name = eattr.attributeValue(A_NAME);
+            if (name == null) {
+                error(null, file, "no name specified");
+                continue;
+            }
+            canonicalName = name.toLowerCase();
+
+            for (Iterator attrIter = eattr.attributeIterator(); attrIter.hasNext();) {
+                Attribute attr = (Attribute) attrIter.next();
+                String aname = attr.getName();
+                if (aname.equals(A_NAME)) {
+                    // nothing to do - already processed
+                } else if (aname.equals(A_TYPE)) {
+                    type = ObjectClassType.valueOf(attr.getValue());
+                } else if (aname.equals(A_ID)) {
+                    try {
+                        id = Integer.parseInt(attr.getValue());
+                        if (id < 0)  {
+                            error(name, file, "invalid id " + id + ": must be positive");
+                        }
+                    } catch (NumberFormatException nfe) {
+                        error(name, file, aname + " is not a number: " + attr.getValue());
+                    }
+                } else {
+                    error(name, file, "unknown <attr> attr: " + aname);
+                }
+            }
+
+            List<String> superOCs = new LinkedList<String>();
+            String description = null;
+            for (Iterator elemIter = eattr.elementIterator(); elemIter.hasNext();) {
+                Element elem = (Element)elemIter.next();
+                if (elem.getName().equals(E_SUP)) {
+                    superOCs.add(elem.getText());
+                } else if (elem.getName().equals(E_DESCRIPTION)) {
+                    if (description != null) {
+                        error(name, file, "more than one " + E_DESCRIPTION);
+                    }
+                    description = elem.getText();
+                } else {
+                    error(name, file, "unknown element: " + elem.getName());
+                }
+            }
+
+            // Check that if all bits are specified
+            if (id <= 0) {
+                error(name, file, "id not specified");
+            }
+            
+            if (type == null) {
+                error(name, file, "type not specified");
+            }
+            
+            if (description == null) {
+                error(name, file, "desc not specified");
+            }
+            
+            if (superOCs.isEmpty()) {
+                error(name, file, "sup not specified");
+            }
+            
+            // there must be a one-to-one mapping between enums in AttributeClass and ocs defined in the xml
+            AttributeClass attrClass = AttributeClass.getAttributeClass(name);
+            if (attrClass == null) {
+                error(name, file, "unknown class in AttributeClass: " + name);
+            }
+                
+            
+            ObjectClassInfo info = new ObjectClassInfo(attrClass, name, id, groupId, type, superOCs, description);
+            if (mOCs.get(canonicalName) != null) {
+                error(name, file, "duplicate objectclass definiton");
+            }
+            mOCs.put(canonicalName, info);
+
+        }
+    }
+
 
     private Set<AttributeClass> parseClasses(String attrName, File file, String value) {
         Set<AttributeClass> result = new HashSet<AttributeClass>();
@@ -649,8 +846,9 @@ public class AttributeManager {
     static {
         mOptions.addOption("h", "help", false, "display this  usage info");
         mOptions.addOption("o", "output", true, "output file (default it to generate output to stdout)");
-        mOptions.addOption("a", "action", true, "[generateLdapSchema | generateGlobalConfigLdif | generateDefaultCOSLdif]");
+        mOptions.addOption("a", "action", true, "[generateLdapSchema | generateGlobalConfigLdif | generateDefaultCOSLdif | generateSchemaLdif]");
         mOptions.addOption("t", "template", true, "template for LDAP schema");
+        
         Option iopt = new Option("i", "input", true,"attrs definition xml input file (can repeat)");
         iopt.setArgs(Option.UNLIMITED_VALUES);
         mOptions.addOption(iopt);
@@ -701,6 +899,7 @@ public class AttributeManager {
     }
 
     private enum Action { generateLdapSchema, 
+                          generateSchemaLdif,
                           generateGlobalConfigLdif, 
                           generateDefaultCOSLdif, 
                           dump,
@@ -747,6 +946,9 @@ public class AttributeManager {
                 usage("no schema template specified");
             }
             am.generateLdapSchema(pw, cl.getOptionValue('t'));
+            break;
+        case generateSchemaLdif:
+            am.generateSchemaLdif(pw);
             break;
         case dump:
             dumpSchema(pw);
@@ -817,6 +1019,222 @@ public class AttributeManager {
         }
     }
 
+    private void buildAttrDef(StringBuilder ATTRIBUTE_DEFINITIONS, AttributeInfo ai) {
+        String lengthSuffix;
+        
+        ATTRIBUTE_DEFINITIONS.append("( " + ai.getName() + "\n");
+        ATTRIBUTE_DEFINITIONS.append("\tNAME ( '" + ai.getName() + "' )\n");
+        ATTRIBUTE_DEFINITIONS.append("\tDESC '" + ai.getDescription() + "'\n");
+        String syntax = null, substr = null, equality = null, ordering = null;
+        switch (ai.getType()) {
+        case TYPE_BOOLEAN:
+            syntax = "1.3.6.1.4.1.1466.115.121.1.7";
+            equality = "booleanMatch";
+            break;
+        case TYPE_EMAIL:
+        case TYPE_EMAILP:
+            syntax = "1.3.6.1.4.1.1466.115.121.1.26{256}";
+            equality = "caseIgnoreIA5Match";
+            substr = "caseIgnoreSubstringsMatch";
+            break;
+
+        case TYPE_GENTIME:
+            syntax = "1.3.6.1.4.1.1466.115.121.1.24";
+            equality = "generalizedTimeMatch";
+            ordering = "generalizedTimeOrderingMatch ";
+            break;
+
+        case TYPE_ID:
+            syntax = "1.3.6.1.4.1.1466.115.121.1.15{256}";
+            equality = "caseIgnoreMatch";
+            substr = "caseIgnoreSubstringsMatch";
+            break;
+
+        case TYPE_DURATION:
+            syntax = "1.3.6.1.4.1.1466.115.121.1.26{32}";
+            equality = "caseIgnoreIA5Match";
+            break;
+
+        case TYPE_ENUM:
+            int maxLen = Math.max(32, ai.getEnumValueMaxLength());
+            syntax = "1.3.6.1.4.1.1466.115.121.1.15{" + maxLen + "}";
+            equality = "caseIgnoreMatch";
+            substr = "caseIgnoreSubstringsMatch";
+            break;
+                
+        case TYPE_INTEGER:
+        case TYPE_PORT:
+        case TYPE_LONG:
+            syntax = "1.3.6.1.4.1.1466.115.121.1.27";
+            equality = "integerMatch";
+            break;
+            
+        case TYPE_STRING:
+        case TYPE_REGEX:
+            lengthSuffix = "";
+            if (ai.getMax() != Long.MAX_VALUE) {
+                lengthSuffix = "{" + ai.getMax() + "}";
+            }
+            syntax = "1.3.6.1.4.1.1466.115.121.1.15" + lengthSuffix;
+            equality = "caseIgnoreMatch";
+            substr = "caseIgnoreSubstringsMatch";
+            break;
+            
+        case TYPE_ASTRING:
+            lengthSuffix = "";
+            if (ai.getMax() != Long.MAX_VALUE) {
+                lengthSuffix = "{" + ai.getMax() + "}";
+            }
+            syntax = "1.3.6.1.4.1.1466.115.121.1.26" + lengthSuffix;
+            equality = "caseIgnoreIA5Match";
+            substr = "caseIgnoreSubstringsMatch";
+            break;
+
+        case TYPE_OSTRING:
+            lengthSuffix = "";
+            if (ai.getMax() != Long.MAX_VALUE) {
+                lengthSuffix = "{" + ai.getMax() + "}";
+            }
+            syntax = "1.3.6.1.4.1.1466.115.121.1.40" + lengthSuffix;
+            equality = "octetStringMatch";
+            break;
+
+        case TYPE_CSTRING:
+            lengthSuffix = "";
+            if (ai.getMax() != Long.MAX_VALUE) {
+                lengthSuffix = "{" + ai.getMax() + "}";
+            }
+            syntax = "1.3.6.1.4.1.1466.115.121.1.15" + lengthSuffix;
+            equality = "caseExactMatch";
+            substr = "caseExactSubstringsMatch";
+            break;
+            
+        case TYPE_PHONE:
+            lengthSuffix = "";
+            if (ai.getMax() != Long.MAX_VALUE) {
+                lengthSuffix = "{" + ai.getMax() + "}";
+            }
+            syntax = "1.3.6.1.4.1.1466.115.121.1.50" + lengthSuffix;
+            equality = "telephoneNumberMatch";
+            substr = "telephoneNumberSubstringsMatch";
+            break;
+            
+        default:
+            throw new RuntimeException("unknown type encountered!");
+        }
+
+        ATTRIBUTE_DEFINITIONS.append("\tSYNTAX " + syntax +  "\n");
+        ATTRIBUTE_DEFINITIONS.append("\tEQUALITY " + equality);
+        if (substr != null) {
+            ATTRIBUTE_DEFINITIONS.append("\n\tSUBSTR " + substr);
+        }
+        
+        if (ordering != null) {
+            ATTRIBUTE_DEFINITIONS.append("\n\tORDERING " + ordering);
+        } else if (ai.getOrder() != null) {
+            ATTRIBUTE_DEFINITIONS.append("\n\tORDERING " + ai.getOrder());
+        }
+        
+        if (ai.getCardinality() == AttributeCardinality.single) {
+            ATTRIBUTE_DEFINITIONS.append("\n\tSINGLE-VALUE");
+        }
+        
+        ATTRIBUTE_DEFINITIONS.append(")");
+    }
+    
+    private void buildObjectClassDef(AttributeClass cls, StringBuilder value) {
+        List<String> must = new LinkedList<String>();
+        List<String> may = new LinkedList<String>();
+        for (AttributeInfo ai : mAttrs.values()) {
+            if (ai.requiredInClass(cls)) {
+                must.add(ai.getName());
+            }
+            if (ai.optionalInClass(cls)) {
+                may.add(ai.getName());
+            }
+        }
+        Collections.sort(must);
+        Collections.sort(may);
+        
+        if (!must.isEmpty()) {
+            value.append("\tMUST (\n");
+            Iterator<String> mustIter = must.iterator();
+            while (true) {
+                value.append("\t\t").append(mustIter.next());
+                if (!mustIter.hasNext()) {
+                    break;
+                }
+                value.append(" $\n");
+            }
+            value.append("\n\t)\n");
+        }
+        if (!may.isEmpty()) {
+            value.append("\tMAY (\n");
+            Iterator<String> mayIter = may.iterator();
+            while (true) {
+                value.append("\t\t").append(mayIter.next());
+                if (!mayIter.hasNext()) {
+                    break;
+                }
+                value.append(" $\n");
+            }
+            value.append("\n\t)\n");
+        }
+        value.append('\t');
+    }
+    
+    private List<AttributeInfo> getAttrList(int groupId) {
+        List<AttributeInfo> list = new ArrayList<AttributeInfo>(mAttrs.size());
+        for (AttributeInfo ai : mAttrs.values()) {
+            if (ai.getId() > -1 && ai.getGroupId() == groupId) {
+                list.add(ai);
+            }
+        }
+        return list;
+    }
+    
+    private void sortAttrsByOID(List<AttributeInfo> list) {
+        Collections.sort(list, new Comparator<AttributeInfo>() {
+            public int compare(AttributeInfo a1, AttributeInfo b1) {
+                return a1.getId() - b1.getId();
+            }
+        });
+    }
+    
+    private void sortAttrsByName(List<AttributeInfo> list) {
+        Collections.sort(list, new Comparator<AttributeInfo>() {
+            public int compare(AttributeInfo a1, AttributeInfo b1) {
+                return a1.getName().compareTo(b1.getName());
+            }
+        });
+    }
+    
+    private List<ObjectClassInfo> getOCList(int groupId) {
+        List<ObjectClassInfo> list = new ArrayList<ObjectClassInfo>(mOCs.size());
+        for (ObjectClassInfo oci : mOCs.values()) {
+            if (oci.getId() > -1 && oci.getGroupId() == groupId) {
+                list.add(oci);
+            }
+        }
+        return list;
+    }
+    
+    private void sortOCsByOID(List<ObjectClassInfo> list) {
+        Collections.sort(list, new Comparator<ObjectClassInfo>() {
+            public int compare(ObjectClassInfo oc1, ObjectClassInfo oc2) {
+                return oc1.getId() - oc2.getId();
+            }
+        });
+    }
+    
+    private void sortOCsByName(List<ObjectClassInfo> list) {
+        Collections.sort(list, new Comparator<ObjectClassInfo>() {
+            public int compare(ObjectClassInfo oc1, ObjectClassInfo oc2) {
+                return oc1.getName().compareTo(oc2.getName());
+            }
+        });
+    }
+    
     private void generateLdapSchema(PrintWriter pw, String schemaTemplateFile) throws IOException {
         byte[] templateBytes = ByteUtil.getContent(new File(schemaTemplateFile));
         String templateString = new String(templateBytes, "utf-8");
@@ -832,19 +1250,11 @@ public class AttributeManager {
             GROUP_OIDS.append("objectIdentifier " + mGroupMap.get(i) + " ZimbraLDAP:" + i + "\n");
 
             // List all attrs which we define and which belong in this group
-            List<AttributeInfo> list = new ArrayList<AttributeInfo>(mAttrs.size());
-            for (AttributeInfo ai : mAttrs.values()) {
-                if (ai.getId() > -1 && ai.getGroupId() == i) {
-                    list.add(ai);
-                }
-            }
+            List<AttributeInfo> list = getAttrList(i);
             
             // ATTRIBUTE_OIDS - sorted by OID
-            Collections.sort(list, new Comparator<AttributeInfo>() {
-                public int compare(AttributeInfo a1, AttributeInfo b1) {
-                    return a1.getId() - b1.getId();
-                }
-            });
+            sortAttrsByOID(list);
+            
             for (AttributeInfo ai : list) {
                 String parentOid = ai.getParentOid();
                 if (parentOid == null)
@@ -855,133 +1265,12 @@ public class AttributeManager {
 
             // ATTRIBUTE_DEFINITIONS: DESC EQUALITY NAME ORDERING SINGLE-VALUE SUBSTR SYNTAX
             // - sorted by name
-            Collections.sort(list, new Comparator<AttributeInfo>() {
-                public int compare(AttributeInfo a1, AttributeInfo b1) {
-                    return a1.getName().compareTo(b1.getName());
-                }
-            });
-            
-            String lengthSuffix;
+            sortAttrsByName(list);
             
             for (AttributeInfo ai : list) {
-                ATTRIBUTE_DEFINITIONS.append("attributetype ( " + ai.getName() + "\n");
-                ATTRIBUTE_DEFINITIONS.append("\tNAME ( '" + ai.getName() + "' )\n");
-                ATTRIBUTE_DEFINITIONS.append("\tDESC '" + ai.getDescription() + "'\n");
-                String syntax = null, substr = null, equality = null, ordering = null;
-                switch (ai.getType()) {
-                case TYPE_BOOLEAN:
-                    syntax = "1.3.6.1.4.1.1466.115.121.1.7";
-                    equality = "booleanMatch";
-                    break;
-                case TYPE_EMAIL:
-                case TYPE_EMAILP:
-                    syntax = "1.3.6.1.4.1.1466.115.121.1.26{256}";
-                    equality = "caseIgnoreIA5Match";
-                    substr = "caseIgnoreSubstringsMatch";
-                    break;
-
-                case TYPE_GENTIME:
-                	syntax = "1.3.6.1.4.1.1466.115.121.1.24";
-                    equality = "generalizedTimeMatch";
-                    ordering = "generalizedTimeOrderingMatch ";
-                    break;
-
-                case TYPE_ID:
-                    syntax = "1.3.6.1.4.1.1466.115.121.1.15{256}";
-                    equality = "caseIgnoreMatch";
-                    substr = "caseIgnoreSubstringsMatch";
-                    break;
-
-                case TYPE_DURATION:
-                    syntax = "1.3.6.1.4.1.1466.115.121.1.26{32}";
-                    equality = "caseIgnoreIA5Match";
-                    break;
-
-                case TYPE_ENUM:
-                    int maxLen = Math.max(32, ai.getEnumValueMaxLength());
-                    syntax = "1.3.6.1.4.1.1466.115.121.1.15{" + maxLen + "}";
-                    equality = "caseIgnoreMatch";
-                    substr = "caseIgnoreSubstringsMatch";
-                    break;
-                        
-                case TYPE_INTEGER:
-                case TYPE_PORT:
-                case TYPE_LONG:
-                    syntax = "1.3.6.1.4.1.1466.115.121.1.27";
-                    equality = "integerMatch";
-                    break;
-                    
-                case TYPE_STRING:
-                case TYPE_REGEX:
-                    lengthSuffix = "";
-                    if (ai.getMax() != Long.MAX_VALUE) {
-                        lengthSuffix = "{" + ai.getMax() + "}";
-                    }
-                    syntax = "1.3.6.1.4.1.1466.115.121.1.15" + lengthSuffix;
-                    equality = "caseIgnoreMatch";
-                    substr = "caseIgnoreSubstringsMatch";
-                    break;
-                    
-                case TYPE_ASTRING:
-                    lengthSuffix = "";
-                	if (ai.getMax() != Long.MAX_VALUE) {
-                		lengthSuffix = "{" + ai.getMax() + "}";
-                	}
-                	syntax = "1.3.6.1.4.1.1466.115.121.1.26" + lengthSuffix;
-                	equality = "caseIgnoreIA5Match";
-                	substr = "caseIgnoreSubstringsMatch";
-                	break;
-
-                case TYPE_OSTRING:
-                    lengthSuffix = "";
-                	if (ai.getMax() != Long.MAX_VALUE) {
-                		lengthSuffix = "{" + ai.getMax() + "}";
-                	}
-                	syntax = "1.3.6.1.4.1.1466.115.121.1.40" + lengthSuffix;
-                	equality = "octetStringMatch";
-                	break;
-
-                case TYPE_CSTRING:
-                    lengthSuffix = "";
-                	if (ai.getMax() != Long.MAX_VALUE) {
-                		lengthSuffix = "{" + ai.getMax() + "}";
-                	}
-                	syntax = "1.3.6.1.4.1.1466.115.121.1.15" + lengthSuffix;
-                	equality = "caseExactMatch";
-                	substr = "caseExactSubstringsMatch";
-                	break;
-                	
-                case TYPE_PHONE:
-                    lengthSuffix = "";
-                	if (ai.getMax() != Long.MAX_VALUE) {
-                		lengthSuffix = "{" + ai.getMax() + "}";
-                	}
-                	syntax = "1.3.6.1.4.1.1466.115.121.1.50" + lengthSuffix;
-                	equality = "telephoneNumberMatch";
-                	substr = "telephoneNumberSubstringsMatch";
-                	break;
-                	
-               	default:
-               		throw new RuntimeException("unknown type encountered!");
-                }
-
-                ATTRIBUTE_DEFINITIONS.append("\tSYNTAX " + syntax +  "\n");
-                ATTRIBUTE_DEFINITIONS.append("\tEQUALITY " + equality);
-                if (substr != null) {
-                    ATTRIBUTE_DEFINITIONS.append("\n\tSUBSTR " + substr);
-                }
-                
-                if (ordering != null) {
-                    ATTRIBUTE_DEFINITIONS.append("\n\tORDERING " + ordering);
-                } else if (ai.getOrder() != null) {
-                    ATTRIBUTE_DEFINITIONS.append("\n\tORDERING " + ai.getOrder());
-                }
-                
-                if (ai.getCardinality() == AttributeCardinality.single) {
-                    ATTRIBUTE_DEFINITIONS.append("\n\tSINGLE-VALUE");
-                }
-                
-                ATTRIBUTE_DEFINITIONS.append(")\n\n");
+                ATTRIBUTE_DEFINITIONS.append("attributetype ");
+                buildAttrDef(ATTRIBUTE_DEFINITIONS, ai);
+                ATTRIBUTE_DEFINITIONS.append("\n\n");
             }
         }
         
@@ -993,52 +1282,115 @@ public class AttributeManager {
         
         for (AttributeClass cls : AttributeClass.values()) {
             String key = "CLASS_MEMBERS_" + cls.toString().toUpperCase();
-            
-            List<String> must = new LinkedList<String>();
-            List<String> may = new LinkedList<String>();
-            for (AttributeInfo ai : mAttrs.values()) {
-                if (ai.requiredInClass(cls)) {
-                    must.add(ai.getName());
-                }
-                if (ai.optionalInClass(cls)) {
-                    may.add(ai.getName());
-                }
-            }
-            Collections.sort(must);
-            Collections.sort(may);
-            
             StringBuilder value = new StringBuilder();
-            if (!must.isEmpty()) {
-                value.append("\tMUST (\n");
-                Iterator<String> mustIter = must.iterator();
-                while (true) {
-                    value.append("\t\t").append(mustIter.next());
-                    if (!mustIter.hasNext()) {
-                        break;
-                    }
-                    value.append(" $\n");
-                }
-                value.append("\n\t)\n");
-            }
-            if (!may.isEmpty()) {
-                value.append("\tMAY (\n");
-                Iterator<String> mayIter = may.iterator();
-                while (true) {
-                    value.append("\t\t").append(mayIter.next());
-                    if (!mayIter.hasNext()) {
-                        break;
-                    }
-                    value.append(" $\n");
-                }
-                value.append("\n\t)\n");
-            }
-            value.append('\t');
+            buildObjectClassDef(cls, value);
             templateFillers.put(key, value.toString());
         }
 
         pw.print(StringUtil.fillTemplate(templateString, templateFillers));
     }
     
+    private void generateSchemaLdif(PrintWriter pw) {
+        
+        StringBuilder ATTRIBUTE_GROUP_OIDS = new StringBuilder();
+        StringBuilder ATTRIBUTE_OIDS = new StringBuilder();
+        StringBuilder ATTRIBUTE_DEFINITIONS = new StringBuilder();
+        StringBuilder OC_GROUP_OIDS = new StringBuilder();
+        StringBuilder OC_OIDS = new StringBuilder();
+        StringBuilder OC_DEFINITIONS = new StringBuilder();
+        
+        for (Iterator<Integer> iter = mGroupMap.keySet().iterator(); iter.hasNext();) {
+            int i = iter.next();
+
+            //GROUP_OIDS
+            ATTRIBUTE_GROUP_OIDS.append("olcObjectIdentifier: " + mGroupMap.get(i) + " ZimbraLDAP:" + i + "\n");
+
+            // List all attrs which we define and which belong in this group
+            List<AttributeInfo> list = getAttrList(i);
+            
+            // ATTRIBUTE_OIDS - sorted by OID
+            sortAttrsByOID(list);
+            
+            for (AttributeInfo ai : list) {
+                String parentOid = ai.getParentOid();
+                if (parentOid == null)
+                    ATTRIBUTE_OIDS.append("olcObjectIdentifier: " + ai.getName() + " " + mGroupMap.get(i) + ':' + ai.getId() + "\n");
+                else 
+                    ATTRIBUTE_OIDS.append("olcObjectIdentifier: " + ai.getName() + " " + parentOid + "." + ai.getId() + "\n");                    
+            }
+
+            // ATTRIBUTE_DEFINITIONS: DESC EQUALITY NAME ORDERING SINGLE-VALUE SUBSTR SYNTAX
+            // - sorted by name
+            sortAttrsByName(list);
+            
+            for (AttributeInfo ai : list) {
+                ATTRIBUTE_DEFINITIONS.append("olcAttributeTypes: ");
+                buildAttrDef(ATTRIBUTE_DEFINITIONS, ai);
+                ATTRIBUTE_DEFINITIONS.append("\n");
+            }
+        }
+        
+        // object classes
+        for (Iterator<Integer> iter = mOCGroupMap.keySet().iterator(); iter.hasNext();) {
+            int i = iter.next();
+
+            // OC_GROUP_OIDS
+            OC_GROUP_OIDS.append("olcObjectIdentifier: " + mOCGroupMap.get(i) + " ZimbraLDAP:" + i + "\n");
+            
+            // List all ocs which we define and which belong in this group
+            List<ObjectClassInfo> list = getOCList(i);
+            
+            // OC_OIDS - sorted by OID
+            sortOCsByOID(list);
+            
+            for (ObjectClassInfo oci : list) {
+                OC_OIDS.append("olcObjectIdentifier: " + oci.getName() + " " + mOCGroupMap.get(i) + ':' + oci.getId() + "\n");
+            }
+
+        }
+        
+        for (AttributeClass cls : AttributeClass.values()) {
+            
+            String ocName = cls.getOCName();
+            String ocCanonicalName = ocName.toLowerCase();
+            ObjectClassInfo oci = mOCs.get(ocCanonicalName);
+            if (oci == null)
+                continue;  // oc not defined in xml, skip
+                
+            // OC_DEFINITIONS: 
+            OC_DEFINITIONS.append("olcObjectClasses: ( " + oci.getName() + "\n");
+            OC_DEFINITIONS.append("\tNAME '" + oci.getName() + "'\n");
+            OC_DEFINITIONS.append("\tDESC '" + oci.getDescription() + "'\n");
+            OC_DEFINITIONS.append("\tSUP ");
+            for (String sup : oci.getSuperOCs())
+                OC_DEFINITIONS.append(sup);
+            OC_DEFINITIONS.append(" " + oci.getType() + "\n");
+            
+            StringBuilder value = new StringBuilder();
+            buildObjectClassDef(cls, value);
+            
+            OC_DEFINITIONS.append(value);
+            OC_DEFINITIONS.append(")\n");
+        }
+        
+        pw.println("# DO NOT MODIFY - generated by AttributeManager.");
+        pw.println("# Zimbra LDAP Schema");
+        pw.println("# " + CLOptions.buildVersion()); 
+        pw.println("# ");
+        pw.println("dn: cn=zimbra,cn=schema,cn=config");
+        pw.println("objectClass: olcSchemaConfig");
+        pw.println("cn: zimbra");
+        pw.println("olcObjectIdentifier: ZimbraRoot 1.3.6.1.4.1.19348");
+        pw.println("olcObjectIdentifier: ZimbraLDAP ZimbraRoot:2");
+        pw.println();
+
+        pw.println(ATTRIBUTE_GROUP_OIDS);
+        pw.println(ATTRIBUTE_OIDS);
+        pw.println(OC_GROUP_OIDS);
+        pw.println(OC_OIDS);
+        pw.println(ATTRIBUTE_DEFINITIONS);
+        pw.println(OC_DEFINITIONS);
+    }
   
     private static String sortCSL(String in) {
         String[] ss = in.split("\\s*,\\s*");

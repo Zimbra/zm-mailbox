@@ -19,8 +19,46 @@
  */
 package com.zimbra.cs.account;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public enum AttributeClass {
-    mailRecipient, account, alias, distributionList, cos, globalConfig, domain,
-    securityGroup, server, mimeEntry, objectEntry, timeZone, zimletEntry,
-    calendarResource, identity, signature, dataSource, pop3DataSource, imapDataSource;
+    mailRecipient("zimbraMailRecipient"), 
+    account("zimbraAccount"), 
+    alias("zimbraAlias"), 
+    distributionList("zimbraDistributionList"), 
+    cos("zimbraCOS"), 
+    globalConfig("zimbraGlobalConfig"), 
+    domain("zimbraDomain"),
+    securityGroup("zimbraSecurityGroup"), 
+    server("zimbraServer"), 
+    mimeEntry("zimbraMimeEntry"), 
+    objectEntry("zimbraObjectEntry"), 
+    timeZone("zimbraTimeZone"), 
+    zimletEntry("zimbraZimletEntry"),
+    calendarResource("zimbraCalendarResource"), 
+    identity("zimbraIdentity"), 
+    dataSource("zimbraDataSource"), 
+    pop3DataSource("zimbraPop3DataSource"), 
+    imapDataSource("zimbraImapDataSource"),
+    signature("zimbraSignature");
+    
+    private static class TM {
+        static Map<String, AttributeClass> sOCMap = new HashMap<String, AttributeClass>();
+    }
+    
+    String mOCName;
+    
+    AttributeClass(String ocName) {
+        mOCName = ocName;
+        TM.sOCMap.put(ocName, this);
+    }
+    
+    public static AttributeClass getAttributeClass(String ocName) {
+        return TM.sOCMap.get(ocName);
+    }
+    
+    public String getOCName() {
+        return mOCName;
+    }
 }
