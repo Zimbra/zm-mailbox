@@ -72,7 +72,6 @@ import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.wiki.WikiPage;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.AddressException;
 import javax.mail.internet.ContentDisposition;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
@@ -577,12 +576,8 @@ public class ToXML {
         if (fields == NOTIFY_FIELDS && msgHit != null)
             c.addAttribute(MailConstants.E_FRAG, msgHit.getFragment(), Element.Disposition.CONTENT);
 
-        if (addRecips) {
-            try {
-                InternetAddress[] addrs = InternetAddress.parseHeader(msgHit.getRecipients(), false);
-                addEmails(c, addrs, EmailType.TO);
-            } catch (AddressException e1) { }
-        }
+        if (addRecips)
+            addEmails(c, Mime.parseAddressHeader(msgHit.getRecipients()), EmailType.TO);
 
         if (addSenders) {
             SenderList sl;
@@ -1128,11 +1123,8 @@ public class ToXML {
 
         boolean addRecips  = msg.isFromMe() && (output == OutputParticipants.PUT_RECIPIENTS || output == OutputParticipants.PUT_BOTH);
         boolean addSenders = output == OutputParticipants.PUT_BOTH || !addRecips;
-        if (addRecips) {
-            try {
-                addEmails(e, InternetAddress.parseHeader(msg.getRecipients(), false), EmailType.TO);
-            } catch (AddressException e1) { }
-        }
+        if (addRecips)
+            addEmails(e, Mime.parseAddressHeader(msg.getRecipients()), EmailType.TO);
 
         if (addSenders)
             encodeEmail(e, msg.getSender(), EmailType.FROM);

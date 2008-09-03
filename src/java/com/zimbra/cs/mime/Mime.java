@@ -664,25 +664,68 @@ public class Mime {
 
     private static final InternetAddress[] NO_ADDRESSES = new InternetAddress[0];
 
+    public static InternetAddress[] parseAddressHeader(String header) {
+        return parseAddressHeader(header, true);
+    }
+
     public static InternetAddress[] parseAddressHeader(MimeMessage mm, String headerName) {
-        String header = null;
+        return parseAddressHeader(mm, headerName, true);
+    }
+
+    public static InternetAddress[] parseAddressHeader(MimeMessage mm, String headerName, boolean expandGroups) {
         try {
-            header = mm.getHeader(headerName, ",");
-            if (header == null || header.trim().equals(""))
-                return NO_ADDRESSES;
-            header = header.trim();
-            return InternetAddress.parseHeader(header, false);
+            return parseAddressHeader(mm.getHeader(headerName, ","), expandGroups);
+        } catch (MessagingException e) {
+            return NO_ADDRESSES;
+        }
+    }
+
+    public static InternetAddress[] parseAddressHeader(String header, boolean expandGroups) {
+        if (header == null || header.trim().equals(""))
+            return NO_ADDRESSES;
+        header = header.trim();
+
+        InternetAddress[] addresses;
+        try {
+            addresses = InternetAddress.parseHeader(header, false);
         } catch (AddressException e) {
-            if (header == null)
-                return NO_ADDRESSES;
             try {
                 return new InternetAddress[] { new InternetAddress(null, header, P_CHARSET_UTF8) };
             } catch (UnsupportedEncodingException e1) {
                 return NO_ADDRESSES;
             }
-        } catch (MessagingException e) {
-            return NO_ADDRESSES;
         }
+
+        if (!expandGroups)
+            return addresses;
+        boolean hasGroups = false;
+        for (InternetAddress addr : addresses) {
+            if (addr.isGroup()) {
+                hasGroups = true;  break;
+            }
+        }
+        if (!hasGroups)
+            return addresses;
+
+        // if we're here, we need to expand at least one group...
+        List<InternetAddress> expanded = new ArrayList<InternetAddress>();
+        for (InternetAddress addr : addresses) {
+            if (!addr.isGroup()) {
+                expanded.add(addr);
+            } else {
+                try {
+                    InternetAddress[] members = addr.getGroup(false);
+                    if (members == null)
+                        expanded.add(addr);
+                    else
+                        for (InternetAddress member : members)
+                            expanded.add(member);
+                } catch (AddressException e) {
+                    expanded.add(addr);
+                }
+            }
+        }
+        return expanded.toArray(new InternetAddress[expanded.size()]);
     }
 
     static RecipientType[] sRcptTypes = new RecipientType[] {

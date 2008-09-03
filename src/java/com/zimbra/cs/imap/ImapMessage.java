@@ -419,16 +419,16 @@ public class ImapMessage implements Comparable<ImapMessage> {
         //         from, sender, reply-to, to, cc, bcc, in-reply-to, and message-id.  The date,
         //         subject, in-reply-to, and message-id fields are strings.  The from, sender,
         //         reply-to, to, cc, and bcc fields are parenthesized lists of address structures."
-        InternetAddress[] from = Mime.parseAddressHeader(mm, "From");
-        InternetAddress[] sender = Mime.parseAddressHeader(mm, "Sender"), replyTo = Mime.parseAddressHeader(mm, "Reply-To");
+        InternetAddress[] from = Mime.parseAddressHeader(mm, "From", false);
+        InternetAddress[] sender = Mime.parseAddressHeader(mm, "Sender", false), replyTo = Mime.parseAddressHeader(mm, "Reply-To", false);
         ps.write('(');  nstring(ps, mm.getHeader("Date", ","));
         ps.write(' ');  nstring2047(ps, mm.getSubject());
         ps.write(' ');  naddresses(ps, from);
         ps.write(' ');  naddresses(ps, sender.length == 0 ? from : sender);
         ps.write(' ');  naddresses(ps, replyTo.length == 0 ? from : replyTo);
-        ps.write(' ');  naddresses(ps, Mime.parseAddressHeader(mm, "To"));
-        ps.write(' ');  naddresses(ps, Mime.parseAddressHeader(mm, "CC"));
-        ps.write(' ');  naddresses(ps, Mime.parseAddressHeader(mm, "BCC"));
+        ps.write(' ');  naddresses(ps, Mime.parseAddressHeader(mm, "To", false));
+        ps.write(' ');  naddresses(ps, Mime.parseAddressHeader(mm, "CC", false));
+        ps.write(' ');  naddresses(ps, Mime.parseAddressHeader(mm, "BCC", false));
         ps.write(' ');  nstring(ps, mm.getHeader("In-Reply-To", " "));
         ps.write(' ');  nstring(ps, mm.getMessageID());
         ps.write(')');
