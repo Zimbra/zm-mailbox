@@ -360,11 +360,21 @@
                     <fileset dir="${config.dir}/attrs" includes="*.xml"/>
                 </copy>
                 <mkdir dir="${build.dir}/ldap-config"/>
+            	
+            	<!-- Zimbra schema for pre OpenLDAP 2.4 - uses zimbra.schema-template, should eventually retire zimbra.schema-template and only use zimbra-ocs.xml -->
                 <java classname="com.zimbra.cs.account.AttributeManager" fork="true" classpathref="class.path"
                       failonerror="true">
                     <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
                     <arg line="-a generateLdapSchema -i ${build.dir}/attrs -t ${config.dir}/ldap/zimbra.schema-template -o ${build.dir}/ldap-config/zimbra.schema"/>
                 </java>
+            	
+            	<!-- Zimbra schema for OpenLDAP 2.4 - use zimbra-ocs.xml -->
+                <java classname="com.zimbra.cs.account.AttributeManager" fork="true" classpathref="class.path"
+                      failonerror="true">
+                    <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
+                    <arg line="-a generateSchemaLdif -i ${build.dir}/attrs -o ${build.dir}/ldap-config/zimbra_schema.ldif"/>
+                </java>
+            	
                 <java classname="com.zimbra.cs.account.AttributeManager" fork="true" classpathref="class.path"
                       failonerror="true">
                     <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
