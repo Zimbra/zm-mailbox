@@ -21,7 +21,6 @@
 package com.zimbra.cs.store;
 
 import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -101,31 +100,29 @@ public class FileBlobStore extends StoreManager {
         }
         return threshold;
     }
-    
-    public Blob storeIncoming(byte[] data, String digest,
-                              String path, short volumeId)
-    throws IOException, ServiceException {
-        // Prevent bogus digest values.
-        if (!ByteUtil.isValidDigest(digest))
-            throw ServiceException.FAILURE(
-                "Invalid blob digest \"" + digest + "\"", null);
 
-        return storeIncoming(new ByteArrayInputStream(data), data.length, path, volumeId, null);
+    @Override public String getUniqueIncomingPath(short volumeId) throws IOException, ServiceException {
+        Volume volume = Volume.getById(volumeId);
+        String incomingDir = volume.getIncomingMsgDir();
+        String fname = mUniqueFilenameGenerator.getFilename();
+        StringBuilder sb = new StringBuilder(incomingDir.length() + 1 + fname.length());
+        sb.append(incomingDir).append(File.separator).append(fname);
+        String path = sb.toString();
+        File f = new File(path);
+        ensureParentDirExists(f);
+        return path;
     }
     
-    public Blob storeIncoming(InputStream in, int sizeHint, String path, short volumeId, StorageCallback callback)
+    @Override public Blob storeIncoming(InputStream in, int sizeHint, String path, short volumeId,
+                                        StorageCallback callback, boolean storeAsIs)
     throws IOException, ServiceException {
         Volume volume = Volume.getById(volumeId);
 
-        if (path == null) {
-            String incomingDir = volume.getIncomingMsgDir();
-            String fname = mUniqueFilenameGenerator.getFilename();
-            StringBuffer sb = new StringBuffer(incomingDir.length() + 1 + fname.length());
-            sb.append(incomingDir).append(File.separator).append(fname);
-            path = sb.toString();
-        }
+        if (path == null)
+            path = getUniqueIncomingPath(volumeId);
+        else
+            ensureParentDirExists(new File(path));
         File file = new File(path);
-        ensureParentDirExists(file);
         Blob blob = new Blob(file, volumeId);
         MessageDigest digest;
 
@@ -139,13 +136,15 @@ public class FileBlobStore extends StoreManager {
         FileOutputStream fos = new FileOutputStream(file);
         OutputStream out = fos;
 
-        boolean compress = volume.getCompressBlobs() && sizeHint > volume.getCompressionThreshold();
+        boolean compress =
+            !storeAsIs && volume.getCompressBlobs() &&
+            (sizeHint > volume.getCompressionThreshold() || sizeHint <= 0);
         
         if (compress) {
             out = new GZIPOutputStream(fos);
             blob.setCompressed(true);
         }
-        
+
         // Write to the file.
         byte[] buffer = new byte[BUFLEN];
         int numRead = -1;
@@ -169,6 +168,31 @@ public class FileBlobStore extends StoreManager {
         // Set the blob's digest and size.
         blob.setDigest(ByteUtil.encodeFSSafeBase64(digest.digest()));
         blob.setRawSize(totalRead);
+
+        // If sizeHint wasn't given we may have compressed a blob that was under the compression
+        // threshold.  Let's uncompress it.  This isn't really necessary, but uncompressing results
+        // in behavior consistent with earlier ZCS releases.
+        if (compress && totalRead <= volume.getCompressionThreshold()) {
+            File temp = File.createTempFile(file.getName(), ".unzip.tmp", file.getParentFile());
+            InputStream fin = null;
+            OutputStream fout = null;
+            try {
+                fin = new GZIPInputStream(new FileInputStream(file));
+                fout = new FileOutputStream(temp);
+                ByteUtil.copy(fin, false, fout, false);
+            } finally {
+                ByteUtil.closeStream(fin);
+                ByteUtil.closeStream(fout);
+            }
+            boolean deleted = file.delete();
+            if (!deleted)
+                throw new IOException("Unable to delete temp file " + file.getAbsolutePath());
+            String srcPath = temp.getAbsolutePath();
+            boolean renamed = temp.renameTo(file);
+            if (!renamed)
+                throw new IOException("Unable to rename " + srcPath + " to " + file.getAbsolutePath());
+            blob.setCompressed(false);
+        }
 
         if (ZimbraLog.store.isDebugEnabled()) {
             ZimbraLog.store.debug("Stored %s: data size=%d bytes, file size=%d bytes, volumeId=%d, isCompressed=%b",
@@ -541,7 +565,7 @@ public class FileBlobStore extends StoreManager {
                     			boolean deleted = file.delete();
                     			if (!deleted) {
                     			    // Let's warn only if delete failure wasn't caused by file having been
-                    			    // by someone else already.
+                    			    // deleted by someone else already.
                     			    if (file.exists())
                                         sLog.warn("Sweeper unable to delete " + file.getAbsolutePath());
                                 } else if (sLog.isDebugEnabled()) {

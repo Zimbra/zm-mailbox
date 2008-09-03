@@ -76,11 +76,7 @@ public class SaveDraft extends CreateMessage {
 
         // Assemble ParsedMessage from memory or disk
         ParsedMessage pm = null;
-        if (getData().hasDataInMemory()) {
-            pm = new ParsedMessage(getData().getData(), getTimestamp(), mbox.attachmentsIndexingEnabled());
-        } else {
-            pm = new ParsedMessage(getData().getInputStream(), getData().getLength(), getTimestamp(), mbox.attachmentsIndexingEnabled());
-        }
+        pm = getParsedMessageFromData(getTimestamp());
 
         try {
             mbox.saveDraft(getOperationContext(), pm, getMessageId());

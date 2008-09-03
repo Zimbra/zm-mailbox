@@ -4897,7 +4897,7 @@ public class Mailbox {
                     // Subsequent CreateMessage ops will reference this blob.  
                     storeRedoRecorder = new StoreIncomingBlob(digest, msgSize, sharedDeliveryCtxt.getMailboxIdList());
                     storeRedoRecorder.start(getOperationTimestampMillis());
-                    storeRedoRecorder.setBlobBodyInfo(pm.getRawInputStream(), pm.getRawSize(), blob.getPath(), blob.getVolumeId());
+                    storeRedoRecorder.setBlobBodyInfo(pm.getIncomingBlob().getFile(), blob.getVolumeId());
                     storeRedoRecorder.log();
                 }
                 // Link to the file created by StoreIncomingBlob.

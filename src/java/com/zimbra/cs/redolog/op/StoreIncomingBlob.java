@@ -32,6 +32,8 @@ import java.util.List;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.store.Volume;
+import com.zimbra.cs.store.VolumeServiceException;
 
 /**
  * @author jhahm
@@ -93,8 +95,9 @@ public class StoreIncomingBlob extends RedoableOp {
     }
 
     protected String getPrintableData() {
-        StringBuffer sb = new StringBuffer("blobDigest=\"");
+        StringBuilder sb = new StringBuilder("blobDigest=\"");
         sb.append(mDigest).append("\", size=").append(mMsgSize);
+        sb.append(", dataLen=").append(mData.getLength());
         sb.append(", vol=").append(mVolumeId);
         sb.append(", path=").append(mPath);
         sb.append(", mbox=[");
@@ -130,9 +133,7 @@ public class StoreIncomingBlob extends RedoableOp {
         out.writeUTF(mPath);
         out.writeShort(mVolumeId);
         out.writeInt(mMsgSize);
-        // Eventually we may differentiate between the message size and compressed
-        // size but currently they're the same.
-        out.writeInt(mMsgSize);
+        out.writeInt(mData.getLength());
         
         // During serialize, do not serialize the blob data buffer.
         // Blob buffer is handled by getSerializedByteArrayVector()
@@ -159,23 +160,35 @@ public class StoreIncomingBlob extends RedoableOp {
         mPath = in.readUTF();
         mVolumeId = in.readShort();
         mMsgSize = in.readInt();
-        mMsgSize = in.readInt();  // Serialization code wrote the size twice
+        int dataLen = in.readInt();
 
         // mData must be the last thing deserialized.  See comments in
         // serializeData().
         long pos = in.getFilePointer();
-        mData = new RedoableOpData(new File(in.getPath()), pos, mMsgSize);
+        mData = new RedoableOpData(new File(in.getPath()), pos, dataLen);
         
         // Now that we have a stream to the data, skip to the next op.
-        int numSkipped = in.skipBytes(mMsgSize);
-        if (numSkipped != mMsgSize) {
+        int numSkipped = in.skipBytes(dataLen);
+        if (numSkipped != dataLen) {
             String msg = String.format("Attempted to skip %d bytes at position %d in %s, but actually skipped %d.",
-                mMsgSize, pos, in.getPath(), numSkipped);
+                dataLen, pos, in.getPath(), numSkipped);
             throw new IOException(msg);
         }
     }
 
     public void redo() throws Exception {
+        // Use current message volume if old volume is gone.
+        Volume vol = null;
+        try {
+            vol = Volume.getById(mVolumeId);
+        } catch (VolumeServiceException e) {
+            if (VolumeServiceException.NO_SUCH_VOLUME.equals(e.getCode()))
+                vol = Volume.getCurrentMessageVolume();
+            else
+                throw e;
+        }
+        short volumeId = vol.getId();
+
         // Execution of redo is logged to current redo logger.  For most other
         // ops this is handled by Mailbox class, but StoreIncomingBlob is an
         // exception because of the way it is used in Mailbox.
@@ -185,13 +198,14 @@ public class StoreIncomingBlob extends RedoableOp {
             redoRecorder =
             	new StoreIncomingBlob(mDigest, mMsgSize, mMailboxIdList);
             redoRecorder.start(getTimestamp());
-            redoRecorder.setBlobBodyInfo(mData.getInputStream(), mData.getLength(), mPath, mVolumeId);
+            redoRecorder.setBlobBodyInfo(mData.getInputStream(), mData.getLength(), mPath, volumeId);
             redoRecorder.log();
         }
 
         boolean success = false;
         try {
-            StoreManager.getInstance().storeIncoming(mData.getInputStream(), mMsgSize, mPath, mVolumeId, null);
+            boolean compressed = mData.getLength() != mMsgSize;
+            StoreManager.getInstance().storeIncoming(mData.getInputStream(), mMsgSize, mPath, volumeId, null, compressed);
             success = true;
         } finally {
             if (redoRecorder != null) {

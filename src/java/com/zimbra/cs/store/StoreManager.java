@@ -20,10 +20,12 @@
  */
 package com.zimbra.cs.store;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.mailbox.MailboxBlob;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.util.Zimbra;
@@ -57,7 +59,8 @@ public abstract class StoreManager {
     public abstract void shutdown();
 
     /**
-     * Store a message in incoming directory.
+     * Store a blob in incoming directory.  Blob will be compressed if volume supports compression
+     * and blob size is over the compression threshold.
      * @param data
      * @param sizeHint used for determining whether data should be compressed
      * @param digest
@@ -66,11 +69,30 @@ public abstract class StoreManager {
      * @throws IOException
      * @throws ServiceException
      */
-    public abstract Blob storeIncoming(InputStream data, int sizeHint, String path, short volumeId, StorageCallback callback)
+    public Blob storeIncoming(InputStream data, int sizeHint, String path, short volumeId, StorageCallback callback)
+    throws IOException, ServiceException {
+        return storeIncoming(data, sizeHint, path, volumeId, callback, false);
+    }
+
+    /**
+     * Store a blob in incoming directory.  Blob will be compressed if volume supports compression
+     * and blob size is over the compression threshold and storeAsIs is false.
+     * @param data
+     * @param sizeHint used for determining whether data should be compressed
+     * @param digest
+     * @param path If null, blob store assigns one.
+     * @param storeAsIs if true, store the blob as is even if volume supports compression
+     * @return
+     * @throws IOException
+     * @throws ServiceException
+     */
+    public abstract Blob storeIncoming(InputStream data, int sizeHint, String path, short volumeId,
+                                       StorageCallback callback, boolean storeAsIs)
     throws IOException, ServiceException;
 
     /**
-     * Store a message in incoming directory.
+     * Store a blob in incoming directory.  Blob will be compressed if volume supports compression
+     * and blob size is over the compression threshold.
      * @param data
      * @param digest
      * @param path If null, blob store assigns one.
@@ -78,9 +100,39 @@ public abstract class StoreManager {
      * @throws IOException
      * @throws ServiceException
      */
-    public abstract Blob storeIncoming(byte[] data, String digest,
-                                       String path, short volumeId)
-    throws IOException, ServiceException;
+    public Blob storeIncoming(byte[] data, String digest, String path, short volumeId)
+    throws IOException, ServiceException {
+        return storeIncoming(data, digest, path, volumeId, false);
+    }
+
+    /**
+     * Store a blob in incoming directory.  Blob will be compressed if volume supports compression
+     * and blob size is over the compression threshold and storeAsIs is false.
+     * @param data
+     * @param digest
+     * @param path If null, blob store assigns one.
+     * @param storeAsIs if true, store the blob as is even if volume supports compression
+     * @return
+     * @throws IOException
+     * @throws ServiceException
+     */
+    public Blob storeIncoming(byte[] data, String digest, String path, short volumeId, boolean storeAsIs)
+    throws IOException, ServiceException {
+        // Prevent bogus digest values.
+        if (!ByteUtil.isValidDigest(digest))
+            throw ServiceException.FAILURE(
+                "Invalid blob digest \"" + digest + "\"", null);
+
+        return storeIncoming(new ByteArrayInputStream(data), data.length, path, volumeId, null, storeAsIs);
+    }
+
+    /**
+     * Return a unique path in incoming directory.
+     * @return
+     * @throws IOException
+     * @throws ServiceException
+     */
+    public abstract String getUniqueIncomingPath(short volumeId) throws IOException, ServiceException;
 
     /**
      * Create a copy in destMbox mailbox with message ID of destMsgId that
