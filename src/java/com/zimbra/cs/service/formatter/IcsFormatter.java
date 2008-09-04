@@ -42,10 +42,11 @@ import javax.mail.Part;
 import javax.servlet.ServletException;
 
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -175,7 +176,7 @@ public class IcsFormatter extends Formatter {
         private char[] mMemBuffer;
         private int mMemBufferOffset;
         private File mTempFile;
-        private FileWriter mFileWriter;
+        private OutputStreamWriter mWriter;
         private boolean mFinished;
 
         public FileBufferedIcsWriter(Writer out, int maxMemSize) {
@@ -209,12 +210,12 @@ public class IcsFormatter extends Formatter {
 
             int fileCharsToWrite = len - memCharsToWrite;
             if (fileCharsToWrite > 0) {
-                if (mFileWriter == null) {
+                if (mWriter == null) {
                     // Create the buffer file if necessary.
                     mTempFile = File.createTempFile("IcsFormatter", ".buf");
                     boolean success = false;
                     try {
-                        mFileWriter = new FileWriter(mTempFile);
+                        mWriter = new OutputStreamWriter(new FileOutputStream(mTempFile), Mime.P_CHARSET_UTF8);
                         success = true;
                     } finally {
                         if (!success) {
@@ -223,7 +224,7 @@ public class IcsFormatter extends Formatter {
                         }
                     }
                 }
-                mFileWriter.write(cbuf, off + memCharsToWrite, fileCharsToWrite);
+                mWriter.write(cbuf, off + memCharsToWrite, fileCharsToWrite);
             }
         }
 
@@ -231,18 +232,18 @@ public class IcsFormatter extends Formatter {
             if (!mFinished) {
                 mFinished = true;
                 try {
-                    boolean hasFile = mFileWriter != null;
+                    boolean hasFile = mWriter != null;
                     if (hasFile) {
                         try {
-                            mFileWriter.close();
+                            mWriter.close();
                         } finally {
-                            mFileWriter = null;
+                            mWriter = null;
                         }
                     }
                     if (mMemBufferOffset > 0)
                         mOut.write(mMemBuffer, 0, mMemBufferOffset);
                     if (hasFile) {
-                        FileReader reader = new FileReader(mTempFile);
+                        InputStreamReader reader = new InputStreamReader(new FileInputStream(mTempFile), Mime.P_CHARSET_UTF8);
                         try {
                             int charsRead;
                             while ((charsRead = reader.read(mMemBuffer, 0, mMemBuffer.length)) != -1) {
