@@ -26,7 +26,7 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.ZimbraLog;
-
+import com.zimbra.cs.service.admin.AdminDocumentHandler;
 import org.dom4j.QName;
 
 import java.util.ArrayList;
@@ -45,27 +45,35 @@ public class DocumentDispatcher {
 
 	Map<QName, DocumentHandler> mHandlers;
     Map<QName, QName> mResponses;
-    ArrayList<String> mExcludeList;
+    ArrayList<String> mIncludeList;
     
 	public DocumentDispatcher() {
 		mHandlers = new HashMap<QName, DocumentHandler>();
         mResponses = new HashMap<QName, QName>();
-        String excludeString = LC.get("admin_soap_exclude_list");
-        ZimbraLog.soap.debug("Loading the exclude list");
-        mExcludeList = new ArrayList<String>(Arrays.asList(excludeString.split("(,[\n\r]*)")));
+        String whiteListString = LC.get("admin_soap_white_list");
+        ZimbraLog.soap.debug("Loading admin SOAP white list");
+        if(whiteListString.length()>0) {
+        	mIncludeList = new ArrayList<String>(Arrays.asList(whiteListString.split("(,[\n\r]*)")));
+        } else 
+        	ZimbraLog.soap.debug("No white list found. All available admin SOAP handlers will be loaded.");
 	}
 	
-	public void clearExcludeList() {
-		ZimbraLog.soap.debug("clearing the exclude list");
-		mExcludeList.clear();
+	public void clearSoapWhiteList() {
+		if(mIncludeList!=null) {
+			ZimbraLog.soap.debug("clearing admin SOAP white list");
+			mIncludeList.clear();
+		}
 	}
 	
 	public void registerHandler(QName qname, DocumentHandler handler) {
-		ZimbraLog.soap.debug(String.format("Registering %s::%s", qname.getNamespaceURI(),qname.getQualifiedName()));
-        if(!mExcludeList.isEmpty() && mExcludeList.contains(String.format("%s::%s", qname.getNamespaceURI(),qname.getQualifiedName()))) {
-        	ZimbraLog.soap.debug(String.format("skipping %s::%s", qname.getNamespaceURI(),qname.getQualifiedName()));
-        	return;
-        }
+		if(handler instanceof AdminDocumentHandler) {
+			if(!(mIncludeList==null) && !mIncludeList.isEmpty() && !mIncludeList.contains(String.format("%s::%s", qname.getNamespaceURI(),qname.getQualifiedName()))) {
+				ZimbraLog.soap.debug(String.format("skipping %s::%s", qname.getNamespaceURI(),qname.getQualifiedName()));
+				return;
+			}
+			ZimbraLog.soap.debug(String.format("Registering %s::%s", qname.getNamespaceURI(),qname.getQualifiedName()));
+		}
+        
 		mHandlers.put(qname, handler);
         QName respQName = mResponses.get(qname);
         if (respQName == null) {
