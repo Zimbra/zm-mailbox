@@ -396,6 +396,7 @@ public class AdminConstants {
     public static final String E_PROGRESS = "progress";
     public static final String E_SOAP_URL = "soapURL";
     public static final String E_ADMIN_SOAP_URL = "adminSoapURL";
+    public static final String E_PUBLIC_MAIL_URL = "publicMailURL";
     public static final String E_SEARCH = "search";
     public static final String E_DIRECTORY = "directory";
     public static final String E_PROVIDER = "provider";
