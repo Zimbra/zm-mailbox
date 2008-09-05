@@ -107,7 +107,7 @@ public class SoapServlet extends ZimbraServlet {
             }
         }
         
-        mEngine.getDocumentDispatcher().clearExcludeList();
+        mEngine.getDocumentDispatcher().clearSoapWhiteList();
         
         if (i == 0)
             throw new ServletException("Must specify at least one handler "+PARAM_ENGINE_HANDLER+i);
