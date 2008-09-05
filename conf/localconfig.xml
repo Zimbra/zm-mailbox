@@ -36,9 +36,10 @@
   -->
 
 <!-- 
-Use the following sintax to disable individual Admin SOAP handlers. This feature is used for securing admin server in hosted deployment (bug# 30510)
-	<key name="admin_soap_exclude_list">
-		<value>{coma-saparated list of SOAP Requests to exclude, e.g.: urn:zimbraAdmin::ModifyServerRequest,urn:zimbraAdmin::ModifyConfigRequest}.</value>
+Use the following sintax to disable individual Admin SOAP handlers. 
+This feature is used for securing admin server in hosted deployment (bug# 30510). If this key is present, any Admin SOAP handlers that are not in the white list will not be loaded.
+	<key name="admin_soap_white_list">
+		<value>{coma-saparated list of SOAP Requests to include, e.g.: urn:zimbraAdmin::RenameAccountRequest,urn:zimbraAdmin::ModifyAccountRequest}.</value>
 	</key>
 -->
   <!-- Switches to turn off various features for performance testing -->
