@@ -50,11 +50,15 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.CalendarDataSource;
+import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.RecurId;
+import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
@@ -171,7 +175,8 @@ public class SendMsg extends MailDocumentHandler {
 
     public static ItemId doSendMessage(OperationContext oc, Mailbox mbox, MimeMessage mm, List<InternetAddress> newContacts,
                                        List<Upload> uploads, ItemId origMsgId, String replyType, String identityId,
-                                       boolean noSaveToSent, boolean ignoreFailedAddresses, boolean needCalendarSentByFixup)
+                                       boolean noSaveToSent, boolean ignoreFailedAddresses,
+                                       boolean needCalendarSentByFixup)
     throws ServiceException {
         
         if (needCalendarSentByFixup)
@@ -189,7 +194,8 @@ public class SendMsg extends MailDocumentHandler {
         return parseUploadedMessage(zsc, attachId, mimeData, false);
     }
 
-    static MimeMessage parseUploadedMessage(ZimbraSoapContext zsc, String attachId, MimeMessageData mimeData, boolean calendarSentByFixup)
+    static MimeMessage parseUploadedMessage(ZimbraSoapContext zsc, String attachId, MimeMessageData mimeData,
+                                            boolean needCalendarSentByFixup)
     throws ServiceException {
         boolean anySystemMutators = MimeVisitor.anyMutatorsRegistered();
 
@@ -199,13 +205,13 @@ public class SendMsg extends MailDocumentHandler {
         (mimeData.uploads = new ArrayList<Upload>(1)).add(up);
         try {
             // if we may need to mutate the message, we can't use the "updateHeaders" hack...
-            if (anySystemMutators || calendarSentByFixup) {
+            if (anySystemMutators || needCalendarSentByFixup) {
                 MimeMessage mm = new MimeMessage(JMSession.getSession(), up.getInputStream());
                 if (anySystemMutators)
                     return mm;
 
                 OutlookICalendarFixupMimeVisitor.ICalendarModificationCallback callback = new OutlookICalendarFixupMimeVisitor.ICalendarModificationCallback();
-                MimeVisitor mv = new OutlookICalendarFixupMimeVisitor(getRequestedAccount(zsc)).setCallback(callback);
+                MimeVisitor mv = new OutlookICalendarFixupMimeVisitor(getRequestedAccount(zsc), getRequestedMailbox(zsc)).setCallback(callback);
                 try {
                     mv.accept(mm);
                 } catch (MessagingException e) { }
@@ -272,7 +278,7 @@ public class SendMsg extends MailDocumentHandler {
     
     private static void fixupICalendarFromOutlook(Mailbox ownerMbox, MimeMessage mm)
     throws ServiceException {
-        MimeVisitor mv = new OutlookICalendarFixupMimeVisitor(ownerMbox.getAccount());
+        MimeVisitor mv = new OutlookICalendarFixupMimeVisitor(ownerMbox.getAccount(), ownerMbox);
         try {
             mv.accept(mm);
         } catch (MessagingException e) {
@@ -291,7 +297,8 @@ public class SendMsg extends MailDocumentHandler {
      *
      */
     private static class OutlookICalendarFixupMimeVisitor extends MimeVisitor {
-        private boolean mNeedFixup;
+        private Account mAccount;
+        private Mailbox mMailbox;
         private int mMsgDepth;
         private String[] mFromEmails;
         private String mSentBy;
@@ -300,11 +307,12 @@ public class SendMsg extends MailDocumentHandler {
         static class ICalendarModificationCallback implements MimeVisitor.ModificationCallback {
             private boolean mWouldModify;
             public boolean wouldCauseModification()  { return mWouldModify; }
-            public boolean onModification()          { mWouldModify = true;  return false; }
+            public boolean onModification()          { mWouldModify = true; return false; }
         }
 
-        OutlookICalendarFixupMimeVisitor(Account acct) {
-            mNeedFixup = false;
+        OutlookICalendarFixupMimeVisitor(Account acct, Mailbox mbox) {
+            mAccount = acct;
+            mMailbox = mbox;
             mMsgDepth = 0;
             mDefaultCharset = (acct == null ? null : acct.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null));
         }
@@ -342,11 +350,10 @@ public class SendMsg extends MailDocumentHandler {
                             froms[i] = "MAILTO:" + from;
                         }
 
-                        mNeedFixup = true;
                         mFromEmails = froms;
                         mSentBy = "MAILTO:" + sender;
 
-                        // Set Reply-To header because Outlook doesn't.  (bug 19283)
+                        // Set Reply-To header because Outlook doesn't. (bug 19283)
                         mm.setReplyTo(new Address[] { senderAddr });
                         modified = true;
                     }
@@ -366,7 +373,7 @@ public class SendMsg extends MailDocumentHandler {
         @Override
         protected boolean visitBodyPart(MimeBodyPart bp) throws MessagingException {
             // Ignore any forwarded message parts.
-            if (mMsgDepth != 1 || !mNeedFixup)
+            if (mMsgDepth != 1)
                 return false;
 
             boolean modified = false;
@@ -387,7 +394,36 @@ public class SendMsg extends MailDocumentHandler {
                 ByteUtil.closeStream(is);
             }
 
-            String uid = null;
+            String method = ical.getPropVal(ICalTok.METHOD, ICalTok.REQUEST.toString());
+            boolean isReply = method.equalsIgnoreCase(ICalTok.REPLY.toString());
+
+            if (!isReply)
+                modified = fixupRequest(ical);
+            else {
+                try {
+                    modified = fixupReply(ical);
+                } catch (ServiceException e) {
+                    sLog.warn("Unable perform fixup of calendar reply from Outlook for mailbox " + mMailbox.getId() +
+                              "; ignoring error", e);
+                }
+            }
+
+            if (modified) {
+                // check to make sure that the caller's OK with altering the message
+                if (mCallback != null && !mCallback.onModification())
+                    return false;
+
+                String filename = bp.getFileName();
+                if (filename == null)
+                    filename = "meeting.ics";
+                bp.setDataHandler(new DataHandler(new CalendarDataSource(ical, "fixup", filename)));
+            }
+
+            return modified;
+        }
+
+        private boolean fixupRequest(ZVCalendar ical) {
+            boolean modified = false;
             for (Iterator<ZComponent> compIter = ical.getComponentIterator(); compIter.hasNext(); ) {
                 ZComponent comp = compIter.next();
                 ICalTok compType = comp.getTok();
@@ -400,9 +436,6 @@ public class SendMsg extends MailDocumentHandler {
                     if (token == null)
                         continue;
                     switch (token) {
-                    case UID:
-                        uid = prop.getValue();
-                        break;
                     case ORGANIZER:
                     case ATTENDEE:
                         String addr = prop.getValue();
@@ -420,20 +453,85 @@ public class SendMsg extends MailDocumentHandler {
                     }
                 }
             }
+            return modified;
+        }
 
-            if (modified) {
-                // check to make sure that the caller's OK with altering the message
-                if (mCallback != null && !mCallback.onModification())
-                    return false;
+        private boolean fixupReply(ZVCalendar ical) throws ServiceException {
+            // key = UID, value = ORGANIZER
+            // No need to track VEVENTS/VTODOs with same UID but different RECURRENCE-ID separately.
+            // Almost all replies should contain exactly one VEVENT/VTODO.
+            Map<String, ZProperty> uidToOrganizer = new HashMap<String, ZProperty>();
 
-                String filename = bp.getFileName();
-                if (filename == null)
-                    filename = "meeting.ics";
-                String dsname = uid != null ? uid : "fixup";
-                bp.setDataHandler(new DataHandler(new CalendarDataSource(ical, dsname, filename)));
+            // Turn things into Invite objects.  For each Invite, check if organizer fixup is necessary.
+            // Needed fixups are recorded in the uidToOrganizer map.
+            List<Invite> replyInvs = Invite.createFromCalendar(mAccount, null, ical, false);
+            for (Invite replyInv : replyInvs) {
+                ZOrganizer replyOrg = replyInv.getOrganizer();
+                // If ORGANIZER property already has SENT-BY parameter, assume the client sent
+                // the correct value.  No need to second guess it.
+                if (replyOrg != null && replyOrg.hasSentBy())
+                    continue;
+
+                String uid = replyInv.getUid();
+                synchronized (mMailbox) {
+                    CalendarItem calItem = mMailbox.getCalendarItemByUid(uid);
+                    if (calItem != null) {
+                        RecurId rid = replyInv.getRecurId();
+                        Invite inv = calItem.getInvite(rid);
+                        ZOrganizer org = inv.getOrganizer();
+                        if (org != null) {
+                            ZProperty orgProp = org.toProperty();
+                            if (replyOrg == null) {
+                                // Looks like Outlook 2007.  It has a habit of dropping ORGANIZER entirely.
+                                uidToOrganizer.put(uid, orgProp);
+                            } else {
+                                // Is it Outlook 2003?  Outlook 2003 will either leave out SENT-BY, or show
+                                // the wrong organizer.
+                                String replyOrgAddr = replyOrg.getAddress();
+                                String orgAddr = org.getAddress();
+                                if (org.hasSentBy() ||
+                                    (orgAddr != null && !orgAddr.equalsIgnoreCase(replyOrgAddr))) {
+                                    uidToOrganizer.put(uid, orgProp);
+                                }
+                            }
+                            // Else, original organizer doesn't have SENT-BY and its address matches
+                            // the address in reply's organizer.  We already know reply organizer didn't
+                            // have SENT-BY.  This means the ORGANIZER line in the reply was already correct.
+                        }
+                    }
+                }
             }
 
-            return modified;
+            if (uidToOrganizer.isEmpty())
+                return false;  // We're not making any changes.
+
+            // Now go through the components again, this time as ZComponents.  Fixup as necessary.
+            for (Iterator<ZComponent> compIter = ical.getComponentIterator(); compIter.hasNext(); ) {
+                ZComponent comp = compIter.next();
+                ICalTok compType = comp.getTok();
+                if (!ICalTok.VEVENT.equals(compType) && !ICalTok.VTODO.equals(compType))
+                    continue;
+
+                String uid = comp.getPropVal(ICalTok.UID, null);
+                ZProperty fixedOrganizer = uidToOrganizer.get(uid);
+                if (fixedOrganizer == null)
+                    continue;
+
+                // Remove any existing ORGANIZER property.
+                for (Iterator<ZProperty> propIter = comp.getPropertyIterator(); propIter.hasNext(); ) {
+                    ZProperty prop = propIter.next();
+                    ICalTok token = prop.getToken();
+                    if (ICalTok.ORGANIZER.equals(token)) {
+                        propIter.remove();
+                        break;
+                    }
+                }
+
+                // Put the correct organizer.
+                comp.addProperty(fixedOrganizer);
+                ZimbraLog.calendar.info("Fixed up ORGANIZER in a REPLY from ZCO");
+            }
+            return true;
         }
 
         private boolean addressMatchesFrom(String addr) {
