@@ -423,6 +423,9 @@ public class SendMsg extends MailDocumentHandler {
         }
 
         private boolean fixupRequest(ZVCalendar ical) {
+            if (mFromEmails == null || mSentBy == null)
+                return false;
+
             boolean modified = false;
             for (Iterator<ZComponent> compIter = ical.getComponentIterator(); compIter.hasNext(); ) {
                 ZComponent comp = compIter.next();
