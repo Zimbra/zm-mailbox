@@ -21,6 +21,8 @@
 
 package com.zimbra.common.soap;
 
+import java.io.IOException;
+
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpConnectionManager;
 import org.apache.commons.httpclient.HttpException;
@@ -36,9 +38,6 @@ import org.apache.commons.httpclient.params.HttpClientParams;
 import org.apache.commons.httpclient.params.HttpMethodParams;
 
 import com.zimbra.common.util.ByteUtil;
-
-import java.io.IOException;
-import java.io.InputStream;
 
 /**
  */
@@ -132,12 +131,14 @@ public class SoapHttpTransport extends SoapTransport {
      * Frees any resources such as connection pool held by this transport.
      */
     public void shutdown() {
-    	HttpConnectionManager connMgr = mClient.getHttpConnectionManager();
-    	if (connMgr instanceof MultiThreadedHttpConnectionManager) {
-    		MultiThreadedHttpConnectionManager multiConnMgr = (MultiThreadedHttpConnectionManager) connMgr;
-    		multiConnMgr.shutdown();
-    	}
-    	mClient = null;
+        if (mClient != null) { 
+            HttpConnectionManager connMgr = mClient.getHttpConnectionManager();
+            if (connMgr instanceof MultiThreadedHttpConnectionManager) {
+                MultiThreadedHttpConnectionManager multiConnMgr = (MultiThreadedHttpConnectionManager) connMgr;
+                multiConnMgr.shutdown();
+            }
+            mClient = null;
+        }
     }
 
     private void commonInit(String uri) {

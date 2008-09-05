@@ -316,6 +316,11 @@ public class ZimbraLog {
     public static final Log scheduler = LogFactory.getLog("zimbra.scheduler");
     
     /**
+     * the "zimbra.store" logger.  Logs filesystem storage operations.
+     */
+    public static final Log store = LogFactory.getLog("zimbra.store");
+    
+    /**
      * the "zimbra.fb" logger.  Logs free/busy operations.
      */
     public static final Log fb = LogFactory.getLog("zimbra.fb");
