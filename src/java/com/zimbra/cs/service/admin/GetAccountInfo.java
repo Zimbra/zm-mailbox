@@ -96,6 +96,11 @@ public class GetAccountInfo extends AdminDocumentHandler  {
         String adminUrl = URLUtil.getAdminURL(server);
         if (adminUrl != null)
             response.addElement(AdminConstants.E_ADMIN_SOAP_URL).setText(adminUrl);
+        
+        String webMailUrl = URLUtil.getPublicURLForDomain(server, Provisioning.getInstance().getDomain(account), "", true);
+        if (webMailUrl != null)
+            response.addElement(AdminConstants.E_PUBLIC_MAIL_URL).setText(webMailUrl);
+        
     }
 
     private static void addAttr(Element response, String name, String value) {
