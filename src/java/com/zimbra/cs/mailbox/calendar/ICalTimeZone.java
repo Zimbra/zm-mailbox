@@ -98,7 +98,7 @@ public class ICalTimeZone extends SimpleTimeZone {
         }
 
         public String toString() {
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             sb.append("week=").append(mWeek);
             sb.append(", dayOfWeek=").append(mDayOfWeek);
             sb.append(", month=").append(mMonth);
@@ -142,7 +142,7 @@ public class ICalTimeZone extends SimpleTimeZone {
         }
     }
     
-    private static final String DEFAULT_DTSTART = "16010101T000000";
+    private static final String DEFAULT_DTSTART = "19710101T000000";
 
     private boolean mSameAsUTC = false;  // true if this timezone is equivalent to UTC/GMT
     protected boolean mHasDaylight = false;
@@ -167,7 +167,7 @@ public class ICalTimeZone extends SimpleTimeZone {
     }
 
     public String toString() {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("TZID=").append(getID());
         sb.append("\nSimpleTimeZone: ").append(super.toString());
         sb.append("\nmHasDaylight=").append(mHasDaylight);
@@ -194,10 +194,10 @@ public class ICalTimeZone extends SimpleTimeZone {
 
     private static ICalTimeZone sUTC = new ICalTimeZone("Z",
                                                         0,
-                                                        "16010101T000000",
+                                                        "19710101T000000",
                                                         null,
                                                         0,
-                                                        "16010101T000000",
+                                                        "19710101T000000",
                                                         null);
 
 //    private String mTzId = null;
@@ -481,7 +481,7 @@ public class ICalTimeZone extends SimpleTimeZone {
      *                   period for which stdRRule applies.  The format is
      *                   "YYYYMMDDThhmmss" with 24-hour hour.  In practice,
      *                   the date portion is set to some very early date, like
-     *                   "16010101", and only the time portion varies according
+     *                   "19710101", and only the time portion varies according
      *                   to the rules of the time zone.
      * @param stdRRule   iCal recurrence rule for transition into standard
      *                   time (i.e. transition out of daylight time)
@@ -553,7 +553,7 @@ public class ICalTimeZone extends SimpleTimeZone {
         String hourStr = Integer.toString(onset.getHour() + 100).substring(1);
         String minuteStr = Integer.toString(onset.getMinute() + 100).substring(1);
         String secondStr = Integer.toString(onset.getSecond() + 100).substring(1);
-        StringBuffer sb = new StringBuffer("16010101T");
+        StringBuilder sb = new StringBuilder("19710101T");
         sb.append(hourStr).append(minuteStr).append(secondStr);
         return sb.toString();
     }
@@ -591,8 +591,8 @@ public class ICalTimeZone extends SimpleTimeZone {
 
             ICalTimeZone mytz = new ICalTimeZone(
                     "Custom TZ",
-                    -28800000, "16010101T020000", "FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=10;BYDAY=-3FR",
-                    -25200000, "16010101T020000", "FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=4;BYDAY=2TU");
+                    -28800000, "19710101T020000", "FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=10;BYDAY=-3FR",
+                    -25200000, "19710101T020000", "FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=4;BYDAY=2TU");
             if (!verifyTZRules(mytz, 2005))
                 badCount++;
             System.out.println();
@@ -653,7 +653,7 @@ public class ICalTimeZone extends SimpleTimeZone {
             if (second < 10)
                 secondStr = "0" + secondStr;
 
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             sb.append(year).append("/");
             sb.append(monthStr).append("/");
             sb.append(dayStr).append(" T");
@@ -919,7 +919,7 @@ public class ICalTimeZone extends SimpleTimeZone {
      * @param utcOffset
      * @return
      */
-    private static int tzOffsetToTime(String utcOffset)
+    private static int tzOffsetTime(String utcOffset)
     throws ServiceException {
         try {
             int len = utcOffset != null ? utcOffset.length() : 0;
@@ -1000,7 +1000,7 @@ public class ICalTimeZone extends SimpleTimeZone {
      */
     static String timeToTzOffsetString(int time)
     {
-       StringBuffer toRet = new StringBuffer(time > 0 ? "+" : "-");
+        StringBuilder toRet = new StringBuilder(time > 0 ? "+" : "-");
        
        time = Math.abs(time / 1000); // msecs->secs
        
@@ -1080,7 +1080,7 @@ public class ICalTimeZone extends SimpleTimeZone {
 
         // Find the most recent STANDARD and DAYLIGHT components.  "Most recent"
         // means the component's DTSTART is later in time than that of all other
-        // components.  Thus, if multiple STANDARD components are specifieid in
+        // components.  Thus, if multiple STANDARD components are specified in
         // a VTIMEZONE, we end up using only the most recent definition.  The
         // assumption is that all other STANDARD components are for past dates
         // and they no longer matter.  We're forced to make this assumption
@@ -1154,7 +1154,20 @@ public class ICalTimeZone extends SimpleTimeZone {
         if (standard != null) {
             stddtStart = standard.getPropVal(ICalTok.DTSTART, null);
             String stdtzOffsetTo = standard.getPropVal(ICalTok.TZOFFSETTO, null);
-            stdoffsetTime = tzOffsetToTime(stdtzOffsetTo);
+            stdoffsetTime = tzOffsetTime(stdtzOffsetTo);
+
+            // Check if STANDARD defines a non-DST timezone.  If so, DAYLIGHT should be ignored if its
+            // DTSTART is later than that of STANDARD. (bug 25176)
+            String stdtzOffsetFrom = standard.getPropVal(ICalTok.TZOFFSETFROM, null);
+            if (stdtzOffsetFrom != null) {
+                int tzoffsetFromTime = tzOffsetTime(stdtzOffsetFrom);
+                if (tzoffsetFromTime == stdoffsetTime && daylight != null) {
+                    ZComponent moreRecent = moreRecentTzComp(standard, daylight);
+                    if (moreRecent == standard)
+                        daylight = null;
+                }
+            }
+
             if (daylight != null) {
                 // Rule is interesting only if daylight savings is in use.
                 stdrrule = standard.getPropVal(ICalTok.RRULE, null);
@@ -1168,8 +1181,30 @@ public class ICalTimeZone extends SimpleTimeZone {
         if (daylight != null) {
             daydtStart = daylight.getPropVal(ICalTok.DTSTART, null);
             String daytzOffsetTo = daylight.getPropVal(ICalTok.TZOFFSETTO, null);
-            dayoffsetTime = tzOffsetToTime(daytzOffsetTo);  
+            dayoffsetTime = tzOffsetTime(daytzOffsetTo);  
             dayrrule = daylight.getPropVal(ICalTok.RRULE, null);
+
+            // Check if DAYLIGHT defines a non-DST timezone.  If so and its DTSTART is later than
+            // that of STANDARD, STANDARD should be discarded and DAYLIGHT should be used in its place.
+            // Such a VTIMEZONE is invalid, but it's a possibility and we should do something reasonable.
+            // This is the inverse of the case above with non-DST STANDARD with useless DAYLIGHT. (bug 25176)
+            String daytzOffsetFrom = daylight.getPropVal(ICalTok.TZOFFSETFROM, null);
+            if (daytzOffsetFrom != null) {
+                int tzoffsetFromTime = tzOffsetTime(daytzOffsetFrom);
+                if (tzoffsetFromTime == dayoffsetTime && standard != null) {
+                    ZComponent moreRecent = moreRecentTzComp(standard, daylight);
+                    if (moreRecent == daylight) {
+                        // Make DAYLIGHT the new STANDARD.
+                        standard = daylight;
+                        stdoffsetTime = dayoffsetTime;
+                        stddtStart = daydtStart;
+                        stdrrule = dayrrule;
+                        daylight = null;
+                        daydtStart = null;
+                        dayrrule = null;
+                    }
+                }
+            }
         }
         
         ICalTimeZone tz = new ICalTimeZone(tzname, 
