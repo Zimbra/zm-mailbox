@@ -641,14 +641,10 @@ public abstract class Wiki {
 				{
 					Document docItem = pg.getWikiItem(ctxt);
 					String url = "";
-					try
-					{
-						url=UserServlet.getRestUrl(docItem);						
-					}
-					catch (ServiceException se) {
+					try {
+						url = UserServlet.getRestUrl(docItem);						
+					} catch (ServiceException se) {
 		     			ZimbraLog.wiki.error("cannot generate REST url", se);				 			
-		     		} catch (IOException ioe) {
-		     			ZimbraLog.wiki.error("cannot generate REST url", ioe);				 			
 		     		}
 					throw MailServiceException.ALREADY_EXISTS("wiki word "+wikiWord+" in folder "+fid,
 							new Argument(MailConstants.A_NAME, wikiWord, Argument.Type.STR),

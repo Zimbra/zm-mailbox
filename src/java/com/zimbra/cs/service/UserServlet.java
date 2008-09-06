@@ -217,7 +217,7 @@ public class UserServlet extends ZimbraServlet {
     }
     
     /** Returns the REST URL for the mail item. */
-    public static String getRestUrl(MailItem item) throws ServiceException, IOException {
+    public static String getRestUrl(MailItem item) throws ServiceException {
     	Account acct = item.getMailbox().getAccount();
         return getRestUrl(acct) + URLUtil.urlEscape(item.getPath());
     }

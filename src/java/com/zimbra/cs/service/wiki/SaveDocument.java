@@ -32,7 +32,6 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
-import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.common.service.ServiceException;
@@ -44,13 +43,12 @@ import com.zimbra.cs.wiki.WikiPage;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class SaveDocument extends WikiDocumentHandler {
+
     private static String[] TARGET_DOC_ID_PATH = new String[] { MailConstants.E_DOC, MailConstants.A_ID };
     private static String[] TARGET_DOC_FOLDER_PATH = new String[] { MailConstants.E_DOC, MailConstants.A_FOLDER };
-    protected String[] getProxiedIdPath(Element request)     {
+    @Override protected String[] getProxiedIdPath(Element request) {
     	String id = getXPath(request, TARGET_DOC_ID_PATH);
-    	if (id == null)
-    		return TARGET_DOC_FOLDER_PATH;
-    	return TARGET_DOC_ID_PATH; 
+    	return id == null ? TARGET_DOC_FOLDER_PATH : TARGET_DOC_ID_PATH; 
     }
 
 	private static class Doc {
@@ -58,6 +56,7 @@ public class SaveDocument extends WikiDocumentHandler {
 		public String contentType;
 		public Upload up = null;
 		public MimePart mp = null;
+		Doc()  { }
 		public InputStream getInputStream() throws IOException {
 			try {
 			if (up != null)
@@ -132,7 +131,7 @@ public class SaveDocument extends WikiDocumentHandler {
             	doc = getDocumentDataFromMimePart(octxt, mbox, msgid, part);
             }
 
-            
+
             String name = docElem.getAttribute(MailConstants.A_NAME, doc.name);
             String ctype = docElem.getAttribute(MailConstants.A_CONTENT_TYPE, doc.contentType);
             String id = docElem.getAttribute(MailConstants.A_ID, null);
@@ -141,8 +140,7 @@ public class SaveDocument extends WikiDocumentHandler {
             if (id == null) {
             	itemId = 0;
             } else {
-            	ItemId iid = new ItemId(id, zsc);
-            	itemId = iid.getId();
+            	itemId = new ItemId(id, zsc).getId();
             }
 
             WikiContext ctxt = new WikiContext(octxt, zsc.getAuthToken());
@@ -154,7 +152,6 @@ public class SaveDocument extends WikiDocumentHandler {
             Element m = response.addElement(MailConstants.E_DOC);
             m.addAttribute(MailConstants.A_ID, new ItemIdFormatter(zsc).formatItemId(docItem));
             m.addAttribute(MailConstants.A_VERSION, docItem.getVersion());
-            ToXML.encodeRestUrl(m, docItem);
             success = true;
         } catch (IOException e) {
 			throw ServiceException.FAILURE("can't save document", e);

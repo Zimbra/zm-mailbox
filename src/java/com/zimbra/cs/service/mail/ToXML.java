@@ -341,9 +341,6 @@ public class ToXML {
         } catch (ServiceException se) {
             mLog.error("cannot generate REST url", se);
             return elt;
-        } catch (IOException ioe) {
-            mLog.error("cannot generate REST url", ioe);
-            return elt;
         }
     }
 
@@ -1772,10 +1769,8 @@ public class ToXML {
 
     public static Element encodeDocumentCommon(Element m, ItemIdFormatter ifmt, OperationContext octxt, Document doc, int fields) {
         m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(doc));
-        if (needToOutput(fields, Change.MODIFIED_NAME)) {
+        if (needToOutput(fields, Change.MODIFIED_NAME))
         	m.addAttribute(MailConstants.A_NAME, doc.getName());
-        	encodeRestUrl(m, doc);
-        }
         if (needToOutput(fields, Change.MODIFIED_SIZE))
             m.addAttribute(MailConstants.A_SIZE, doc.getSize());
         if (needToOutput(fields, Change.MODIFIED_DATE))
