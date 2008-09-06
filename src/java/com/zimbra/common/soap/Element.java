@@ -21,6 +21,8 @@
 package com.zimbra.common.soap;
 
 import java.io.InputStream;
+import java.io.IOException;
+import java.io.Writer;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,6 +39,7 @@ import org.dom4j.QName;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.MailConstants;
 
 /**
@@ -92,7 +95,7 @@ public abstract class Element implements Cloneable {
     /** Returns the appropriate {@link ElementFactory} for generating
      *  <tt>Element</tt>s of this <tt>Element</tt>'s type. */
     public abstract ElementFactory getFactory();
-
+    
     /** Creates a new child <tt>Element</tt> with the given name and adds it
      *  to this <tt>Element</tt>. */
     public abstract Element addElement(String name) throws ContainerException;
@@ -267,10 +270,21 @@ public abstract class Element implements Cloneable {
             return null;
         }
     }
+    
+    public void toUTF8(Writer writer) throws IOException {
+        toString(writer);
+    }
+    
     public abstract String prettyPrint();
 
+    /**
+     * serialize this <tt>Element</tt> to a Writer
+     * @param writer
+     */
+    public abstract void toString(Writer writer) throws IOException;
+    
     private static final String FORTY_SPACES = "                                        ";
-    protected void indent(StringBuffer sb, int indent, boolean newline) {
+    protected void indent(Appendable sb, int indent, boolean newline) throws IOException {
         if (indent < 0)      return;
         if (newline)         sb.append('\n');
         while (indent > 40)  { sb.append(FORTY_SPACES);  indent -= 40; }
@@ -928,14 +942,33 @@ public abstract class Element implements Cloneable {
         }
 
         @Override public String toString() {
-            StringBuffer sb = new StringBuffer();  toString(sb, -1);  return sb.toString();
+            StringBuffer sb = new StringBuffer();  
+            try {
+                toString(sb, -1);
+            } catch (IOException e) {
+                // should really not happen with the StringBuffer impl of Appendable, just log it
+                ZimbraLog.soap.error("Caught IOException: ", e);
+            }
+            return sb.toString();
         }
+        
+        @Override public void toString(Writer writer) throws IOException {
+            toString(writer, -1);
+        }
+        
         @Override public String prettyPrint() {
-            StringBuffer sb = new StringBuffer();  toString(sb, 0);  return sb.toString();
+            StringBuffer sb = new StringBuffer();  
+            try {
+                toString(sb, 0);  
+            } catch (IOException e) {
+                // should really not happen with the StringBuffer impl of Appendable, just log it
+                ZimbraLog.soap.error("Caught IOException: ", e);
+            }
+            return sb.toString();
         }
 
         private static final int INDENT_SIZE = 2;
-        private void toString(StringBuffer sb, int indent) {
+        private void toString(Appendable sb, int indent) throws IOException {
             indent = indent < 0 ? -1 : indent + INDENT_SIZE;
             sb.append('{');
             boolean needNamespace = mNamespaces == null ? false : namespaceDeclarationNeeded("", mNamespaces.get("").toString());
@@ -952,7 +985,7 @@ public abstract class Element implements Cloneable {
                     else if (value instanceof JSONKeyValuePair)  sb.append(value.toString());
                     else if (value instanceof JSONElement)       ((JSONElement) value).toString(sb, indent);
                     else if (value instanceof Element)           sb.append('"').append(StringUtil.jsEncode(value)).append('"');
-                    else if (!(value instanceof List))           sb.append(value);
+                    else if (!(value instanceof List))           sb.append(String.valueOf(value));
                     else {
                         sb.append('[');
                         if ((lsize = ((List) value).size()) > 0)
@@ -1234,14 +1267,33 @@ public abstract class Element implements Cloneable {
         }
 
         @Override public String toString() {
-            StringBuffer sb = new StringBuffer();  toString(sb, -1);  return sb.toString();
+            StringBuffer sb = new StringBuffer();  
+            try {
+                toString(sb, -1);  
+            } catch (IOException e) {
+                // should really not happen with the StringBuffer impl of Appendable, just log it
+                ZimbraLog.soap.error("Caught IOException: ", e);
+            }
+            return sb.toString();
         }
+        
+        @Override public void toString(Writer writer) throws IOException {
+            toString(writer, -1);
+        }
+        
         @Override public String prettyPrint() {
-            StringBuffer sb = new StringBuffer();  toString(sb, 0);  return sb.toString();
+            StringBuffer sb = new StringBuffer();  
+            try {
+                toString(sb, 0);  
+            } catch (IOException e) {
+                // should really not happen with the StringBuffer impl of Appendable, just log it
+                ZimbraLog.soap.error("Caught IOException: ", e);
+            }
+            return sb.toString();
         }
 
         private static final int INDENT_SIZE = 2;
-        private void toString(StringBuffer sb, int indent) {
+        private void toString(Appendable sb, int indent) throws IOException {
             indent(sb, indent, indent > 0);
             // element's qualified name
             String qn = getQualifiedName();
