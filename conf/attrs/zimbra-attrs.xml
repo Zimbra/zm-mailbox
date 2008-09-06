@@ -3481,4 +3481,20 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>properties for data source</desc>
 </attr>
 
+<attr id="719" name="zimbraReverseProxyImapEnabledCapability" type="string" max="256" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited">
+  <desc>IMAP capabilities enabled on proxy.  Capabilities are listed on the CAPABILITY line, also known in RFCs as extensions</desc>
+</attr>
+
+<attr id="720" name="zimbraReverseProxyImapSSLEnabledCapability" type="string" max="256" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited">
+  <desc>IMAP SSL capabilities enabled on proxy.  Capabilities are listed on the CAPABILITY line, also known in RFCs as extensions</desc>
+</attr>
+
+<attr id="721" name="zimbraReverseProxyPop3EnabledCapability" type="string" max="256" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited">
+  <desc>POP3 capabilities enabled on proxy.  Capabilities are listed on the CAPABILITY line, also known in RFCs as extensions</desc>
+</attr>
+
+<attr id="722" name="zimbraReverseProxyPop3SSLEnabledCapability" type="string" max="256" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited">
+  <desc>POP3 SSL capabilities enabled on proxy.  Capabilities are listed on the CAPABILITY line, also known in RFCs as extensions</desc>
+</attr>
+
 </attrs>
