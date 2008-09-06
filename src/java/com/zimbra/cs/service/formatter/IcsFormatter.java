@@ -19,6 +19,7 @@ package com.zimbra.cs.service.formatter;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.FileBufferedWriter;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.HttpUtil.Browser;
 import com.zimbra.cs.index.MailboxIndex;
@@ -106,9 +107,9 @@ public class IcsFormatter extends Formatter {
         boolean useOutlookCompatMode = Browser.IE.equals(browser);
         boolean forceOlsonTZID = Browser.APPLE_ICAL.equals(browser);  // bug 15549
         OperationContext octxt = new OperationContext(context.authAccount, context.isUsingAdminPrivileges());
-        FileBufferedIcsWriter fileBufferedWriter = new FileBufferedIcsWriter(
+        FileBufferedWriter fileBufferedWriter = new FileBufferedWriter(
                 context.resp.getWriter(),
-                LC.calendar_ics_export_buffer_size.intValueWithinRange(0, FileBufferedIcsWriter.MAX_BUFFER_SIZE));
+                LC.calendar_ics_export_buffer_size.intValueWithinRange(0, FileBufferedWriter.MAX_BUFFER_SIZE));
         try {
             context.targetMailbox.writeICalendarForCalendarItems(
                     fileBufferedWriter, octxt, calItems,
@@ -166,101 +167,5 @@ public class IcsFormatter extends Formatter {
                 reader.close();
         }
     }
-
-    private static class FileBufferedIcsWriter extends Writer {
-
-        private static final int MAX_BUFFER_SIZE = 10 * 1024 * 1024;
-
-        private Writer mOut;
-        private int mBufSizeBytes;
-        private char[] mMemBuffer;
-        private int mMemBufferOffset;
-        private File mTempFile;
-        private OutputStreamWriter mWriter;
-        private boolean mFinished;
-
-        public FileBufferedIcsWriter(Writer out, int maxMemSize) {
-            mOut = out;
-            mBufSizeBytes = Math.max(Math.min(maxMemSize, MAX_BUFFER_SIZE), 0);
-            mMemBuffer = new char[mBufSizeBytes / 2];
-        }
-
-        @Override
-        public void close() throws IOException {
-            try {
-                finish();
-            } finally {
-                mOut.close();
-            }
-        }
-
-        @Override
-        public void flush() throws IOException {
-            // Flushing not supported.
-        }
-
-        @Override
-        public void write(char[] cbuf, int off, int len) throws IOException {
-            int remainingMemCapacity = mMemBuffer.length - mMemBufferOffset;
-            int memCharsToWrite = Math.min(len, remainingMemCapacity);
-            if (memCharsToWrite > 0) {
-                System.arraycopy(cbuf, off, mMemBuffer, mMemBufferOffset, memCharsToWrite);
-                mMemBufferOffset += memCharsToWrite;
-            }
-
-            int fileCharsToWrite = len - memCharsToWrite;
-            if (fileCharsToWrite > 0) {
-                if (mWriter == null) {
-                    // Create the buffer file if necessary.
-                    mTempFile = File.createTempFile("IcsFormatter", ".buf");
-                    boolean success = false;
-                    try {
-                        mWriter = new OutputStreamWriter(new FileOutputStream(mTempFile), Mime.P_CHARSET_UTF8);
-                        success = true;
-                    } finally {
-                        if (!success) {
-                            mTempFile.delete();
-                            mTempFile = null;
-                        }
-                    }
-                }
-                mWriter.write(cbuf, off + memCharsToWrite, fileCharsToWrite);
-            }
-        }
-
-        public void finish() throws IOException {
-            if (!mFinished) {
-                mFinished = true;
-                try {
-                    boolean hasFile = mWriter != null;
-                    if (hasFile) {
-                        try {
-                            mWriter.close();
-                        } finally {
-                            mWriter = null;
-                        }
-                    }
-                    if (mMemBufferOffset > 0)
-                        mOut.write(mMemBuffer, 0, mMemBufferOffset);
-                    if (hasFile) {
-                        InputStreamReader reader = new InputStreamReader(new FileInputStream(mTempFile), Mime.P_CHARSET_UTF8);
-                        try {
-                            int charsRead;
-                            while ((charsRead = reader.read(mMemBuffer, 0, mMemBuffer.length)) != -1) {
-                                mOut.write(mMemBuffer, 0, charsRead);
-                            }
-                        } finally {
-                            reader.close();
-                        }
-                    }
-                } finally {
-                    if (mTempFile != null) {
-                        mTempFile.delete();
-                        mTempFile = null;
-                    }
-                    mMemBuffer = null;
-                }
-            }
-        }
-    }
+    
 }
