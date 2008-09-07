@@ -84,36 +84,12 @@ public class SearchGal extends AdminDocumentHandler {
             throw AccountServiceException.NO_SUCH_DOMAIN(domain);
 
         SearchGalResult result = prov.searchGal(d, n, type, token);
-
         response.addAttribute(AdminConstants.A_MORE, result.hadMore);
         response.addAttribute(AccountConstants.A_TOKENIZE_KEY, result.tokenizeKey);
         
-        for (GalContact contact : result.matches)
-            addContact(response, contact);
+        com.zimbra.cs.service.account.SearchGal.addContacts(response, result);
 
         return response;
     }
 
-    public static void addContact(Element response, GalContact contact) throws ServiceException {
-        Element cn = response.addElement(MailConstants.E_CONTACT);
-        cn.addAttribute(MailConstants.A_ID, contact.getId());
-        Map<String, Object> attrs = contact.getAttrs();
-        for (Map.Entry entry : attrs.entrySet()) {
-            Object value = entry.getValue();
-            // can't use DISP_ELEMENT because some GAL contact attributes
-            //   (e.g. "objectClass") are multi-valued
-            if (value instanceof String[]) {
-                String sa[] = (String[]) value;
-                for (int i = 0; i < sa.length; i++) {
-                    cn.addElement(MailConstants.E_ATTRIBUTE)
-                      .addAttribute(MailConstants.A_ATTRIBUTE_NAME, (String) entry.getKey())
-                      .setText(sa[i]);
-                }
-            } else {
-                cn.addElement(MailConstants.E_ATTRIBUTE)
-                  .addAttribute(MailConstants.A_ATTRIBUTE_NAME, (String) entry.getKey())
-                  .setText((String) entry.getValue());
-            }
-        }
-    }
 }

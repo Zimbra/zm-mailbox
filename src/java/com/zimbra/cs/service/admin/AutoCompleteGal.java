@@ -87,8 +87,7 @@ public class AutoCompleteGal extends AdminDocumentHandler {
         response.addAttribute(AdminConstants.A_MORE, result.hadMore);
         response.addAttribute(AccountConstants.A_TOKENIZE_KEY, result.tokenizeKey);
         
-        for (GalContact contact : result.matches)
-            SearchGal.addContact(response, contact);
+        com.zimbra.cs.service.account.SearchGal.addContacts(response, result);
 
         return response;
     }
