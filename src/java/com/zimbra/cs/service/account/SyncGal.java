@@ -56,10 +56,12 @@ public class SyncGal extends AccountDocumentHandler {
         SearchGalResult result = Provisioning.getInstance().searchGal(d, "", Provisioning.GAL_SEARCH_TYPE.ALL, tokenAttr);
 
         Element response = zsc.createElement(AccountConstants.SYNC_GAL_RESPONSE);
+        
         if (result.token != null)
             response.addAttribute(MailConstants.A_TOKEN, result.token);
-        for (GalContact contact : result.matches)
-            SearchGal.addContact(response, contact);
+        
+        com.zimbra.cs.service.account.SearchGal.addContacts(response, result);
+        
         return response;
     }
 

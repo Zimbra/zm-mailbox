@@ -74,8 +74,7 @@ public class AutoCompleteGal extends AccountDocumentHandler {
         response.addAttribute(AccountConstants.A_MORE, result.hadMore);
         response.addAttribute(AccountConstants.A_TOKENIZE_KEY, result.tokenizeKey);
         
-        for (GalContact contact : result.matches)
-            addContact(response, contact);
+        com.zimbra.cs.service.account.SearchGal.addContacts(response, result);
 
         return response;
     }
@@ -83,23 +82,5 @@ public class AutoCompleteGal extends AccountDocumentHandler {
     @Override
     public boolean needsAuth(Map<String, Object> context) {
         return true;
-    }
-    
-    public static void addContact(Element response, GalContact contact) {
-        Element cn = response.addElement(MailConstants.E_CONTACT);
-        cn.addAttribute(MailConstants.A_ID, contact.getId());
-        Map<String, Object> attrs = contact.getAttrs();
-        for (Map.Entry<String, Object> entry : attrs.entrySet()) {
-            Object value = entry.getValue();
-            // can't use DISP_ELEMENT because some GAL contact attributes
-            //   (e.g. "objectClass") are multi-valued
-            if (value instanceof String[]) {
-                String sa[] = (String[]) value;
-                for (int i = 0; i < sa.length; i++)
-                    cn.addKeyValuePair(entry.getKey(), sa[i], MailConstants.E_ATTRIBUTE, MailConstants.A_ATTRIBUTE_NAME);
-            } else {
-                cn.addKeyValuePair(entry.getKey(), (String) value, MailConstants.E_ATTRIBUTE, MailConstants.A_ATTRIBUTE_NAME);
-            }
-        }
     }
 }

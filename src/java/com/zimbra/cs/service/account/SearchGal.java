@@ -22,10 +22,12 @@ package com.zimbra.cs.service.account;
 
 import java.util.Map;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.FileBufferedWriter;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GalContact;
@@ -37,7 +39,7 @@ import com.zimbra.soap.ZimbraSoapContext;
  * @author schemers
  */
 public class SearchGal extends AccountDocumentHandler {
-
+    
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Element response = zsc.createElement(AccountConstants.SEARCH_GAL_RESPONSE);
@@ -68,12 +70,12 @@ public class SearchGal extends AccountDocumentHandler {
 
         Provisioning prov = Provisioning.getInstance();
         Domain d = prov.getDomain(account);
+        
         SearchGalResult result = prov.searchGal(d, n, type, null);
         response.addAttribute(AccountConstants.A_MORE, result.hadMore);
         response.addAttribute(AccountConstants.A_TOKENIZE_KEY, result.tokenizeKey);
         
-        for (GalContact contact : result.matches)
-            addContact(response, contact);
+        addContacts(response, result);
         return response;
     }
 
@@ -82,6 +84,13 @@ public class SearchGal extends AccountDocumentHandler {
         return true;
     }
 
+    public static void addContacts(Element response, SearchGalResult result) {
+        if (isLarge(result))
+            response.setIsLarge();            
+        for (GalContact contact : result.matches)
+            addContact(response, contact);
+    }
+    
     public static void addContact(Element response, GalContact contact) {
         Element cn = response.addElement(MailConstants.E_CONTACT);
         cn.addAttribute(MailConstants.A_ID, contact.getId());
@@ -96,5 +105,31 @@ public class SearchGal extends AccountDocumentHandler {
                 cn.addKeyValuePair(entry.getKey(), (String) value, MailConstants.E_ATTRIBUTE, MailConstants.A_ATTRIBUTE_NAME);
             }
         }
+    }
+    
+    /*
+     * we've got a big result
+     */
+    private static boolean isLarge(SearchGalResult result) {
+        /*
+        <cn id="uid=user1,ou=people,dc=phoebe,dc=mac">
+            <a n="workPhone">+1 650 555 1111</a>
+            <a n="objectClass">organizationalPerson</a>
+            <a n="objectClass">zimbraAccount</a>
+            <a n="objectClass">amavisAccount</a>
+            <a n="modifyTimeStamp">20080906173522Z</a>
+            <a n="createTimeStamp">20080906173432Z</a>
+            <a n="zimbraId">acc886ee-2f45-47c1-99f3-6f28703d1f13</a>
+            <a n="fullName">Demo User One</a>
+            <a n="email">user1@phoebe.mac</a>
+            <a n="lastName">user1</a>
+        </cn>
+        */
+        // average gal entry size in SOAP
+        final int GAL_ENTRY_AVG_SIZE = 600;  // bytes
+        int maxInMemSize = LC.soap_max_in_memory_buffer_size.intValueWithinRange(0, FileBufferedWriter.MAX_BUFFER_SIZE);
+        int numEntries = result.matches.size();
+        
+        return numEntries * GAL_ENTRY_AVG_SIZE > maxInMemSize;
     }
 }
