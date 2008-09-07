@@ -51,6 +51,15 @@ public abstract class Element implements Cloneable {
     protected Element mParent;
     protected Map<String, Object> mAttributes;
     protected Map<String, String> mNamespaces;
+    
+    /**
+     * indicating that the serialized data of this Element may be large.
+     * 
+     * can be set by SOAP handlers on the response body Element if it's got a 
+     * large result.  Callsites of the toUTF8 methods can check this flag and 
+     * use the toUTF8(Writer) method instead of uisng toUTF8() to serialize.
+     */
+    private boolean mIsLarge;
 
     /** These values are used to control how the <tt>Element</tt> serializes
      *  an attribute.  In our model, {@link Element#getAttribute(String)} will
@@ -273,6 +282,14 @@ public abstract class Element implements Cloneable {
     
     public void toUTF8(Writer writer) throws IOException {
         toString(writer);
+    }
+    
+    public boolean isLarge() {
+        return mIsLarge;
+    }
+    
+    public void setIsLarge() {
+        mIsLarge = true;
     }
     
     public abstract String prettyPrint();

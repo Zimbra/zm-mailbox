@@ -55,7 +55,7 @@ public class FileBufferedWriter extends Writer {
         if (fileCharsToWrite > 0) {
             if (mWriter == null) {
                 // Create the buffer file if necessary.
-                mTempFile = File.createTempFile("IcsFormatter", ".buf");
+                mTempFile = File.createTempFile("FileBufferedWriter", ".buf");
                 boolean success = false;
                 try {
                     mWriter = new OutputStreamWriter(new FileOutputStream(mTempFile), CHARSET);
@@ -105,4 +105,5 @@ public class FileBufferedWriter extends Writer {
             }
         }
     }
+
 }
