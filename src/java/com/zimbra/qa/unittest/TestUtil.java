@@ -17,25 +17,32 @@
 
 package com.zimbra.qa.unittest;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.dom4j.DocumentHelper;
 import org.testng.TestNG;
-
 import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestResult;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.soap.SoapTransport;
+import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -182,14 +189,12 @@ extends Assert {
         "Date: ${DATE}",
         "Content-Type: text/plain",
         "",
-        "Dude,",
-        "",
-        "All I need are some tasty waves, a cool buzz, and I'm fine.",
-        "",
-        "Jeff"
+        "${MESSAGE_BODY}"
     };
 
     private static String MESSAGE_TEMPLATE = StringUtil.join("\r\n", MESSAGE_TEMPLATE_LINES);
+    private static String DEFAULT_MESSAGE_BODY =
+        "Dude,\r\n\r\nAll I need are some tasty waves, a cool buzz, and I'm fine.\r\n\r\nJeff";
 
     public static Message addMessage(Mailbox mbox, String subject)
     throws Exception {
@@ -214,23 +219,7 @@ extends Assert {
 
     public static String getTestMessage(String subject, String recipient, String sender, Date date)
     throws ServiceException {
-        if (recipient == null) {
-            recipient = "user1";
-        }
-        if (sender == null) {
-            sender = "jspiccoli";
-        }
-        if (date == null) {
-            date = new Date();
-        }
-        
-        Map<String, Object> vars = new HashMap<String, Object>();
-        vars.put("SUBJECT", subject);
-        vars.put("DOMAIN", getDomain());
-        vars.put("SENDER", sender);
-        vars.put("RECIPIENT", recipient);
-        vars.put("DATE", getDateHeaderValue(date));
-        return StringUtil.fillTemplate(MESSAGE_TEMPLATE, vars);
+        return getTestMessage(subject, DEFAULT_MESSAGE_BODY, recipient, sender, date);
     }
 
     public static String getTestMessage(String subject, String body, String recipient, String sender, Date date)
@@ -244,6 +233,9 @@ extends Assert {
         if (date == null) {
             date = new Date();
         }
+        if (body == null) {
+            body = DEFAULT_MESSAGE_BODY;
+        }
         
         Map<String, Object> vars = new HashMap<String, Object>();
         vars.put("SUBJECT", subject);
@@ -251,6 +243,7 @@ extends Assert {
         vars.put("SENDER", sender);
         vars.put("RECIPIENT", recipient);
         vars.put("DATE", getDateHeaderValue(date));
+        vars.put("MESSAGE_BODY", body);
         return StringUtil.fillTemplate(MESSAGE_TEMPLATE, vars);
     }
     
@@ -409,6 +402,9 @@ extends Assert {
         deleteMessages(mbox, "in:trash " + subjectSubstring);
         deleteMessages(mbox, "in:junk " + subjectSubstring);
         deleteMessages(mbox, "in:sent " + subjectSubstring);
+        
+        // Workaround for bug 31370
+        deleteMessages(mbox, "subject: " + subjectSubstring);
         
         // Delete tags
         for (ZTag tag : mbox.getAllTags()) {
@@ -731,6 +727,59 @@ extends Assert {
     }
 
     /**
+     * Returns an authenticated transport for the <tt>admin</tt> account.
+     */
+    public static SoapTransport getAdminSoapTransport()
+    throws SoapFaultException, IOException, ServiceException {
+        SoapHttpTransport transport = new SoapHttpTransport(getAdminSoapUrl());
+        
+        // Create auth element
+        Element auth = new XMLElement(AdminConstants.AUTH_REQUEST);
+        auth.addElement(AdminConstants.E_NAME).setText(getAddress("admin"));
+        auth.addElement(AdminConstants.E_PASSWORD).setText(DEFAULT_PASSWORD);
+        
+        // Authenticate and get auth token
+        Element response = transport.invoke(auth);
+        String authToken = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
+        transport.setAuthToken(authToken);
+        return transport;
+    }
+
+    /**
+     * Assert the message contains the given sub-message, ignoring newlines.  Used
+     * for comparing equality of two messages, when one had <tt>Return-Path</tt> or
+     * other headers prepended.
+     */
+    public static void assertMessageContains(String message, String subMessage)
+    throws IOException {
+        BufferedReader msgReader = new BufferedReader(new StringReader(message));
+        BufferedReader subReader = new BufferedReader(new StringReader(subMessage));
+        String firstLine = subReader.readLine();
+        String line;
+        boolean foundFirstLine = false;
+        
+        while ((line = msgReader.readLine()) != null) {
+            if (line.equals(firstLine)) {
+                foundFirstLine = true;
+                break;
+            }
+        }
+        
+        String context = String.format("Could not find '%s' in message:\n", firstLine, message);
+        assertTrue(context, foundFirstLine);
+        
+        while(true) {
+            line = msgReader.readLine();
+            String subLine = subReader.readLine();
+            if (line == null || subLine == null) {
+                break;
+            }
+            assertEquals(subLine, line);
+        }
+        
+    }
+
+    /**    
      * Returns a new <tt>TestNG</tt> object that writes test results to
      * <tt>/opt/zimbra/test-output</tt>. 
      */

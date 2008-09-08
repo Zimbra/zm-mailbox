@@ -357,40 +357,8 @@ extends TestCase {
             params.setId(msg.getId());
             msg = mbox.getMessage(params);
             // Check contains instead of equality, since we prepend Received and Return-Path during LMTP.
-            assertContains(msg.getContent(), messageString);
+            TestUtil.assertMessageContains(msg.getContent(), messageString);
         }
-    }
-    
-    /**
-     * Assert the message contains the given substring, ignoring newlines.
-     */
-    private void assertContains(String message, String substring)
-    throws IOException {
-        BufferedReader msgReader = new BufferedReader(new StringReader(message));
-        BufferedReader subReader = new BufferedReader(new StringReader(substring));
-        String firstLine = subReader.readLine();
-        String line;
-        boolean foundFirstLine = false;
-        
-        while ((line = msgReader.readLine()) != null) {
-            if (line.equals(firstLine)) {
-                foundFirstLine = true;
-                break;
-            }
-        }
-        
-        String context = String.format("Could not find '%s' in message:\n", firstLine, message);
-        assertTrue(context, foundFirstLine);
-        
-        while(true) {
-            line = msgReader.readLine();
-            String subLine = subReader.readLine();
-            if (line == null || subLine == null) {
-                break;
-            }
-            assertEquals(subLine, line);
-        }
-        
     }
     
     /**

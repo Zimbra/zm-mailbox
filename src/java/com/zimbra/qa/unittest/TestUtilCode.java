@@ -259,6 +259,22 @@ public class TestUtilCode extends TestCase
         ZimbraLog.test.debug("Testing addAccountNameToContext(null).");
     }
     
+    /**
+     * Tests the Gzip methods in {@link ByteUtil}.
+     */
+    public void testGzip()
+    throws Exception {
+        String s = "Put the message in a box";
+        byte[] original = s.getBytes();
+        byte[] compressed = ByteUtil.compress(original);
+        byte[] uncompressed = ByteUtil.uncompress(compressed);
+        
+        assertFalse(ByteUtil.isGzipped(original));
+        assertTrue(ByteUtil.isGzipped(compressed));
+        assertFalse(ByteUtil.isGzipped(uncompressed));
+        assertEquals(s, new String(uncompressed));
+    }
+    
     private static <E> boolean compareLists(List<E> list, List<List<E>> listOfLists) {
         int i = 0;
         for (List<E> curList : listOfLists) {
