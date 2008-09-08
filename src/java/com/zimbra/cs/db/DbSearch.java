@@ -137,6 +137,17 @@ public class DbSearch {
     // result set, and MySQL chokes on the ORDER BY when we do a UNION query (doesn't know
     // which 2 of the 4 sort columns are the "right" ones to use)
     public static final String SORT_COLUMN_ALIAS = "sortcol";
+    
+    /**
+     * @param fieldName
+     * @return TRUE if this field is case-sensitive for search/sort -- ie do we need to
+     *         do an UPPER(fieldName) on it in places? 
+     */
+    private static boolean isCaseSensitiveField(String fieldName) {
+        return (fieldName.equals("sender") || 
+                        fieldName.equals("subject") ||
+                        fieldName.equals("name")); 
+    }
 
     private static String sortField(byte sort, boolean useAlias) {
         String str;
@@ -846,6 +857,10 @@ public class DbSearch {
     private static final int encodeRangeWithMinimum(StringBuilder statement, String column, Collection<? extends DbSearchConstraints.NumericRange> ranges, long lowestValue) {
         if (ListUtil.isEmpty(ranges))
             return 0;
+        
+        if (isCaseSensitiveField(column) && Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON)) {
+            column = "UPPER("+column+")";
+        }
 
         int params = 0;
         for (DbSearchConstraints.NumericRange r : ranges) {
@@ -884,6 +899,11 @@ public class DbSearch {
      */
     private static final int encodeRange(StringBuilder statement, String column, Collection<? extends DbSearchConstraints.StringRange> ranges) {
         int retVal = 0;
+        
+        if (isCaseSensitiveField(column) && Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON)) {
+            column = "UPPER("+column+")";
+        }
+        
         if (!ListUtil.isEmpty(ranges)) {
             for (DbSearchConstraints.StringRange r : ranges) {
                 statement.append(r.negated ? " AND NOT (" : " AND (");
