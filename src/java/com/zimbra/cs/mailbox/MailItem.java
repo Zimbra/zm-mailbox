@@ -1370,6 +1370,17 @@ public abstract class MailItem implements Comparable<MailItem> {
                 MailItem lastRev = mRevisions.get(mRevisions.size() - 1);
                 if (lastRev.mData.modContent == mData.modContent && lastRev.mData.modMetadata == mData.modMetadata)
                     return;
+
+                int maxVer = 0;
+                for (MailItem rev : mRevisions) {
+                    maxVer = Math.max(maxVer, rev.getVersion());
+                }
+                if (mVersion <= maxVer) {
+                    ZimbraLog.mailop.info(
+                            "Item's current version is not greater than highest revision; adjusting to " +
+                            (maxVer + 1) + " (was " + mVersion + ")");
+                    mVersion = maxVer + 1;
+                }
             }
 
             UnderlyingData data = mData.clone();
