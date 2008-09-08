@@ -2590,7 +2590,7 @@ public final class ZimbraQuery {
                     for (Iterator<QueryOperation> iter = localOps.mQueryOperations.iterator(); iter.hasNext();) {
                         QueryOperation cur = iter.next();
                         if (!cur.hasSpamTrashSetting()) {
-                            QueryOperation newOp = cur.ensureSpamTrashSetting(mbox, false, false);
+                            QueryOperation newOp = cur.ensureSpamTrashSetting(mbox, includeTrash, includeSpam);
                             if (newOp != cur) {
                                 iter.remove();
                                 toAdd.add(newOp);
