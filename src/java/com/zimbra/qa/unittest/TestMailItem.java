@@ -58,7 +58,11 @@ public class TestMailItem extends TestCase {
         while (results.next()) {
             int folderId = results.getInt("folder_id");
             byte type = (byte) results.getInt("type");
-            int count = results.getInt("item_count");
+            // XXX bburtin: Work around incompatibility between JDBC driver version
+            // 5.0.3 and MySQL 5.0.67, where the column name returned for an alias
+            // is an empty string.
+            // int count = results.getInt("item_count");
+            int count = results.getInt(3);
             ZimbraLog.test.debug(
                 "Confirming that folder " + folderId + " has " + count + " items of type " + type);
             Folder folder = mbox.getFolderById(null, folderId);
