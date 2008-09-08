@@ -24,10 +24,9 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.GalContact;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -39,7 +38,6 @@ public class AutoCompleteGal extends AccountDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Element response = zsc.createElement(AccountConstants.AUTO_COMPLETE_GAL_RESPONSE);
         Account account = getRequestedAccount(getZimbraSoapContext(context));
 
         if (!canAccessAccount(zsc, account))
@@ -67,14 +65,12 @@ public class AutoCompleteGal extends AccountDocumentHandler {
         else
             throw ServiceException.INVALID_REQUEST("Invalid search type: " + typeStr, null);
 
-
-        Provisioning prov = Provisioning.getInstance();
-        SearchGalResult result = prov.autoCompleteGal(prov.getDomain(account), n, type, max);
-
-        response.addAttribute(AccountConstants.A_MORE, result.hadMore);
-        response.addAttribute(AccountConstants.A_TOKENIZE_KEY, result.tokenizeKey);
+        Element response = zsc.createElement(AccountConstants.AUTO_COMPLETE_GAL_RESPONSE);
         
-        com.zimbra.cs.service.account.SearchGal.addContacts(response, result);
+        Provisioning prov = Provisioning.getInstance();
+        Domain d = prov.getDomain(account);
+        SearchGalResult result = prov.autoCompleteGal(d, n, type, max);
+        com.zimbra.cs.service.account.SearchGal.toXML(response, result);
 
         return response;
     }

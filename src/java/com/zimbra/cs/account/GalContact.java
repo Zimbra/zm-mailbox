@@ -26,6 +26,10 @@ import com.zimbra.cs.mailbox.Contact;
  */
 public class GalContact implements Comparable {
     
+    public interface Visitor  {
+        public void visit(GalContact gc);
+    }
+    
     private Map<String, Object> mAttrs;
     private String mId;
     private String mSortField;

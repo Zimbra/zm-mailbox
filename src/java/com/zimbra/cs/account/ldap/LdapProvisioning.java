@@ -37,6 +37,8 @@ import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.AccountCache;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.account.Provisioning.GAL_SEARCH_TYPE;
+import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
@@ -3819,18 +3821,38 @@ public class LdapProvisioning extends Provisioning {
     }
 
     @Override
-    public SearchGalResult searchGal(Domain d, String n,
+    public SearchGalResult searchGal(Domain d, 
+                                     String n,
                                      Provisioning.GAL_SEARCH_TYPE type,
                                      String token)
     throws ServiceException {
-        return searchGal(d, n, type, null, token);
+        return searchGal(d, n, type, null, token, null);
     }
     
     @Override
-    public SearchGalResult searchGal(Domain d, String n,
+    public SearchGalResult searchGal(Domain d, 
+                                     String n, 
+                                     GAL_SEARCH_TYPE type, 
+                                     String token, 
+                                     GalContact.Visitor visitor) throws ServiceException {
+        return searchGal(d, n, type, null, token, visitor);
+    }
+    
+    @Override
+    public SearchGalResult searchGal(Domain d, 
+                                     String n,
                                      Provisioning.GAL_SEARCH_TYPE type,
-                                     String galMode,
-                                     String token)
+                                     GalMode galMode,
+                                     String token) throws ServiceException {
+        return searchGal(d, n, type, galMode, token, null);
+    }
+    
+    private SearchGalResult searchGal(Domain d, 
+                                      String n,
+                                      Provisioning.GAL_SEARCH_TYPE type,
+                                      GalMode galMode,
+                                      String token,
+                                      GalContact.Visitor visitor)
     throws ServiceException {
         GalOp galOp = token != null ? GalOp.sync : GalOp.search;
         // escape user-supplied string
@@ -3838,39 +3860,38 @@ public class LdapProvisioning extends Provisioning {
 
         int maxResults = token != null ? 0 : d.getIntAttr(Provisioning.A_zimbraGalMaxResults, DEFAULT_GAL_MAX_RESULTS);
         if (type == Provisioning.GAL_SEARCH_TYPE.CALENDAR_RESOURCE)
-            return searchResourcesGal(d, n, maxResults, token, galOp);
+            return searchResourcesGal(d, n, maxResults, token, galOp, visitor);
 
-        String mode = galMode != null ? galMode : d.getAttr(Provisioning.A_zimbraGalMode);
+        GalMode mode = galMode != null ? galMode : GalMode.fromString(d.getAttr(Provisioning.A_zimbraGalMode));
         SearchGalResult results = null;
-        if (mode == null || mode.equals(Provisioning.GM_ZIMBRA)) {
-            results = searchZimbraGal(d, n, maxResults, token, galOp);
-        } else if (mode.equals(Provisioning.GM_LDAP)) {
-            results = searchLdapGal(d, n, maxResults, token, galOp);
-        } else if (mode.equals(Provisioning.GM_BOTH)) {
-            results = searchZimbraGal(d, n, maxResults/2, token, galOp);
-            SearchGalResult ldapResults = searchLdapGal(d, n, maxResults/2, token, galOp);
+        if (mode == null || mode == GalMode.zimbra) {
+            results = searchZimbraGal(d, n, maxResults, token, galOp, visitor);
+        } else if (mode == GalMode.ldap) {
+            results = searchLdapGal(d, n, maxResults, token, galOp, visitor);
+        } else if (mode == GalMode.both) {
+            results = searchZimbraGal(d, n, maxResults/2, token, galOp, visitor);
+            SearchGalResult ldapResults = searchLdapGal(d, n, maxResults/2, token, galOp, visitor);
             if (ldapResults != null) {
-                results.matches.addAll(ldapResults.matches);
-                results.token = LdapUtil.getLaterTimestamp(results.token, ldapResults.token);
+                results.addMatches(ldapResults);
+                results.setToken(LdapUtil.getLaterTimestamp(results.getToken(), ldapResults.getToken()));
             }
         } else {
-            results = searchZimbraGal(d, n, maxResults, token, galOp);
+            results = searchZimbraGal(d, n, maxResults, token, galOp, visitor);
         }
-        if (results == null) results = new SearchGalResult();  // should really not be null by now
-        if (results.matches == null) results.matches = new ArrayList<GalContact>();
+        if (results == null) results = SearchGalResult.newSearchGalResult(visitor);  // should really not be null by now
 
         if (type == Provisioning.GAL_SEARCH_TYPE.ALL) {
             SearchGalResult resourceResults = null;
             if (maxResults == 0)
-                resourceResults = searchResourcesGal(d, n, 0, token, galOp);
+                resourceResults = searchResourcesGal(d, n, 0, token, galOp, visitor);
             else {
-                int room = maxResults - results.matches.size();
+                int room = maxResults - results.getNumMatches();
                 if (room > 0)
-                    resourceResults = searchResourcesGal(d, n, room, token, galOp);
+                    resourceResults = searchResourcesGal(d, n, room, token, galOp, visitor);
             }
             if (resourceResults != null) {
-                results.matches.addAll(resourceResults.matches);
-                results.token = LdapUtil.getLaterTimestamp(results.token, resourceResults.token);
+                results.addMatches(resourceResults);
+                results.setToken(LdapUtil.getLaterTimestamp(results.getToken(), resourceResults.getToken()));
             }
         }
         
@@ -3881,15 +3902,16 @@ public class LdapProvisioning extends Provisioning {
          *  token has changed in this sync.        
          */
         boolean gotNewToken = true;
-        if (results.token == null || (token != null && token.equals(results.token)) || results.token.equals(LdapUtil.EARLIEST_SYNC_TOKEN))
+        String newToken = results.getToken();
+        if (newToken == null || (token != null && token.equals(newToken)) || newToken.equals(LdapUtil.EARLIEST_SYNC_TOKEN))
             gotNewToken = false;
         
         if (gotNewToken) {
-            Date parsedToken = DateUtil.parseGeneralizedTime(results.token, false);
+            Date parsedToken = DateUtil.parseGeneralizedTime(newToken, false);
             if (parsedToken != null) {
                 long ts = parsedToken.getTime();
                 ts += 1000;
-                results.token = DateUtil.toGeneralizedTime(new Date(ts));
+                results.setToken(DateUtil.toGeneralizedTime(new Date(ts)));
             }
             /*
              * in the rare case when an LDAP implementation does not conform to generalized time and 
@@ -3910,44 +3932,43 @@ public class LdapProvisioning extends Provisioning {
 
         int maxResults = Math.min(max, d.getIntAttr(Provisioning.A_zimbraGalMaxResults, DEFAULT_GAL_MAX_RESULTS));
         if (type == Provisioning.GAL_SEARCH_TYPE.CALENDAR_RESOURCE)
-            return searchResourcesGal(d, n, maxResults, null, galOp);
+            return searchResourcesGal(d, n, maxResults, null, galOp, null);
 
-        String mode = d.getAttr(Provisioning.A_zimbraGalMode);
+        GalMode mode = GalMode.fromString(d.getAttr(Provisioning.A_zimbraGalMode));
         SearchGalResult results = null;
-        if (mode == null || mode.equals(Provisioning.GM_ZIMBRA)) {
-            results = searchZimbraGal(d, n, maxResults, null, galOp);
-        } else if (mode.equals(Provisioning.GM_LDAP)) {
-            results = searchLdapGal(d, n, maxResults, null, galOp);
-        } else if (mode.equals(Provisioning.GM_BOTH)) {
-            results = searchZimbraGal(d, n, maxResults/2, null, galOp);
-            SearchGalResult ldapResults = searchLdapGal(d, n, maxResults/2, null, galOp);
+        if (mode == null || mode == GalMode.zimbra) {
+            results = searchZimbraGal(d, n, maxResults, null, galOp, null);
+        } else if (mode == GalMode.ldap) {
+            results = searchLdapGal(d, n, maxResults, null, galOp, null);
+        } else if (mode == GalMode.both) {
+            results = searchZimbraGal(d, n, maxResults/2, null, galOp, null);
+            SearchGalResult ldapResults = searchLdapGal(d, n, maxResults/2, null, galOp, null);
             if (ldapResults != null) {
-                results.matches.addAll(ldapResults.matches);
-                results.token = LdapUtil.getLaterTimestamp(results.token, ldapResults.token);
-                results.hadMore = results.hadMore || ldapResults.hadMore;
+                results.addMatches(ldapResults);
+                results.setToken(LdapUtil.getLaterTimestamp(results.getToken(), ldapResults.getToken()));
+                results.setHadMore(results.getHadMore() || ldapResults.getHadMore());
             }
         } else {
-            results = searchZimbraGal(d, n, maxResults, null, galOp);
+            results = searchZimbraGal(d, n, maxResults, null, galOp, null);
         }
-        if (results == null) results = new SearchGalResult();  // should really not be null by now
-        if (results.matches == null) results.matches = new ArrayList<GalContact>();
+        if (results == null) results = SearchGalResult.newSearchGalResult(null);  // should really not be null by now
 
         if (type == Provisioning.GAL_SEARCH_TYPE.ALL) {
             SearchGalResult resourceResults = null;
             if (maxResults == 0)
-                resourceResults = searchResourcesGal(d, n, 0, null, galOp);
+                resourceResults = searchResourcesGal(d, n, 0, null, galOp, null);
             else {
-                int room = maxResults - results.matches.size();
+                int room = maxResults - results.getNumMatches();
                 if (room > 0)
-                    resourceResults = searchResourcesGal(d, n, room, null, galOp);
+                    resourceResults = searchResourcesGal(d, n, room, null, galOp, null);
             }
             if (resourceResults != null) {
-                results.matches.addAll(resourceResults.matches);
-                results.token = LdapUtil.getLaterTimestamp(results.token, resourceResults.token);
-                results.hadMore = results.hadMore || resourceResults.hadMore;                
+                results.addMatches(resourceResults);
+                results.setToken(LdapUtil.getLaterTimestamp(results.getToken(), resourceResults.getToken()));
+                results.setHadMore(results.getHadMore() || resourceResults.getHadMore());                
             }
         }
-        Collections.sort(results.matches);
+        Collections.sort(results.getMatches());
         return results;
     }
 
@@ -3977,14 +3998,14 @@ public class LdapProvisioning extends Provisioning {
         return rules;
     }
 
-    private SearchGalResult searchResourcesGal(Domain d, String n, int maxResults, String token, GalOp galOp)
+    private SearchGalResult searchResourcesGal(Domain d, String n, int maxResults, String token, GalOp galOp, GalContact.Visitor visitor)
     throws ServiceException {
-        return searchZimbraWithNamedFilter(d, galOp, GalNamedFilter.getZimbraCalendarResourceFilter(galOp), n, maxResults, token);
+        return searchZimbraWithNamedFilter(d, galOp, GalNamedFilter.getZimbraCalendarResourceFilter(galOp), n, maxResults, token, visitor);
     }
 
-    private SearchGalResult searchZimbraGal(Domain d, String n, int maxResults, String token, GalOp galOp)
+    private SearchGalResult searchZimbraGal(Domain d, String n, int maxResults, String token, GalOp galOp, GalContact.Visitor visitor)
     throws ServiceException {
-        return searchZimbraWithNamedFilter(d, galOp, GalNamedFilter.getZimbraAcountFilter(galOp), n, maxResults, token);
+        return searchZimbraWithNamedFilter(d, galOp, GalNamedFilter.getZimbraAcountFilter(galOp), n, maxResults, token, visitor);
     }
 
     private SearchGalResult searchZimbraWithNamedFilter(
@@ -3993,7 +4014,8 @@ public class LdapProvisioning extends Provisioning {
         String filterName,
         String n,
         int maxResults,
-        String token)
+        String token,
+        GalContact.Visitor visitor)
     throws ServiceException {
         GalParams.ZimbraGalParams galParams = new GalParams.ZimbraGalParams(domain, galOp);
         
@@ -4005,16 +4027,21 @@ public class LdapProvisioning extends Provisioning {
     
             query = GalUtil.expandFilter(galParams, galOp, queryExpr, n, token, true);
         }
-        return searchZimbraWithQuery(domain, galParams, galOp, query, maxResults, token);
+        return searchZimbraWithQuery(domain, galParams, galOp, query, maxResults, token, visitor);
     }
 
-    private SearchGalResult searchZimbraWithQuery(Domain domain, GalParams.ZimbraGalParams galParams, GalOp galOp, String query, int maxResults, String token)
+    private SearchGalResult searchZimbraWithQuery(Domain domain, 
+                                                  GalParams.ZimbraGalParams galParams, 
+                                                  GalOp galOp, 
+                                                  String query, 
+                                                  int maxResults, 
+                                                  String token,
+                                                  GalContact.Visitor visitor)
     throws ServiceException 
     {
         LdapDomain ld = (LdapDomain) domain;
-        SearchGalResult result = new SearchGalResult();
-        result.matches = new ArrayList<GalContact>();
-        result.tokenizeKey = GalUtil.tokenizeKey(galParams, galOp);
+        SearchGalResult result = SearchGalResult.newSearchGalResult(visitor);
+        result.setTokenizeKey(GalUtil.tokenizeKey(galParams, galOp));
         if (query == null) {
             ZimbraLog.gal.warn("searchZimbraWithQuery query is null");
             return result;
@@ -4056,7 +4083,8 @@ public class LdapProvisioning extends Provisioning {
                                           String n,
                                           int maxResults,
                                           String token,
-                                          GalOp galOp)
+                                          GalOp galOp,
+                                          GalContact.Visitor visitor)
     throws ServiceException {
 
         GalParams.ExternalGalParams galParams = new GalParams.ExternalGalParams(domain, galOp);
@@ -4069,7 +4097,8 @@ public class LdapProvisioning extends Provisioning {
                                           n, 
                                           maxResults, 
                                           rules, 
-                                          token);
+                                          token,
+                                          visitor);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to search GAL", e);
         } catch (IOException e) {

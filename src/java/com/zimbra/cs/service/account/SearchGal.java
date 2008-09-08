@@ -28,6 +28,7 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.FileBufferedWriter;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GalContact;
@@ -42,7 +43,6 @@ public class SearchGal extends AccountDocumentHandler {
     
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Element response = zsc.createElement(AccountConstants.SEARCH_GAL_RESPONSE);
         Account account = getRequestedAccount(getZimbraSoapContext(context));
 
         if (!canAccessAccount(zsc, account))
@@ -68,14 +68,13 @@ public class SearchGal extends AccountDocumentHandler {
         else
             throw ServiceException.INVALID_REQUEST("Invalid search type: " + typeStr, null);
 
+        Element response = zsc.createElement(AccountConstants.SEARCH_GAL_RESPONSE);
+        
         Provisioning prov = Provisioning.getInstance();
         Domain d = prov.getDomain(account);
-        
         SearchGalResult result = prov.searchGal(d, n, type, null);
-        response.addAttribute(AccountConstants.A_MORE, result.hadMore);
-        response.addAttribute(AccountConstants.A_TOKENIZE_KEY, result.tokenizeKey);
+        toXML(response, result);
         
-        addContacts(response, result);
         return response;
     }
 
@@ -84,11 +83,21 @@ public class SearchGal extends AccountDocumentHandler {
         return true;
     }
 
-    public static void addContacts(Element response, SearchGalResult result) {
+    public static void toXML(Element response, SearchGalResult result) throws ServiceException {
+        response.addAttribute(AccountConstants.A_MORE, result.getHadMore());
+        response.addAttribute(AccountConstants.A_TOKENIZE_KEY, result.getTokenizeKey());
+        
+        addContacts(response, result);
+    }
+    
+    public static void addContacts(Element response, SearchGalResult result) throws ServiceException {
         if (isLarge(result))
-            response.setIsLarge();            
-        for (GalContact contact : result.matches)
-            addContact(response, contact);
+            response.setIsLarge();   
+        
+        if (!(result instanceof Provisioning.VisitorSearchGalResult)) {
+            for (GalContact contact : result.getMatches())
+                addContact(response, contact);
+        }
     }
     
     public static void addContact(Element response, GalContact contact) {
@@ -128,8 +137,21 @@ public class SearchGal extends AccountDocumentHandler {
         // average gal entry size in SOAP
         final int GAL_ENTRY_AVG_SIZE = 600;  // bytes
         int maxInMemSize = LC.soap_max_in_memory_buffer_size.intValueWithinRange(0, FileBufferedWriter.MAX_BUFFER_SIZE);
-        int numEntries = result.matches.size();
+        int numEntries = result.getNumMatches();
         
         return numEntries * GAL_ENTRY_AVG_SIZE > maxInMemSize;
+    }
+    
+    
+    public static class GalContactVisitor implements GalContact.Visitor {
+        Element mResponse;
+        
+        GalContactVisitor(Element response) {
+            mResponse = response;
+        }
+        
+        public void visit(GalContact gc) {
+            addContact(mResponse, gc);
+        }
     }
 }

@@ -1393,8 +1393,8 @@ public class TestProvisioning extends TestCase {
                 ACCT_EMAIL,
                 Provisioning.GAL_SEARCH_TYPE.ALL, 
                 null);
-        List<GalContact> matches = galResult.matches;
-        assertEquals(1, matches.size());
+        List<GalContact> matches = galResult.getMatches();
+        assertEquals(1, galResult.getNumMatches());
         assertEquals(ACCT_FULL_NAME, matches.get(0).getAttrs().get("fullName"));
     }
     
@@ -1410,8 +1410,8 @@ public class TestProvisioning extends TestCase {
                                                                        Provisioning.GAL_SEARCH_TYPE.ALL, 
                                                                        100);
 
-        List<GalContact> matches = galResult.matches;
-        assertEquals(1, matches.size());
+        List<GalContact> matches = galResult.getMatches();
+        assertEquals(1, galResult.getNumMatches());
         assertEquals(ACCT_FULL_NAME, matches.get(0).getAttrs().get("fullName"));
         
         // search gal
@@ -1419,8 +1419,8 @@ public class TestProvisioning extends TestCase {
                                     query,
                                     Provisioning.GAL_SEARCH_TYPE.ALL, 
                                     null);
-        matches = galResult.matches;
-        assertEquals(1, matches.size());
+        matches = galResult.getMatches();
+        assertEquals(1, galResult.getNumMatches());
         assertEquals(ACCT_FULL_NAME, matches.get(0).getAttrs().get("fullName"));
         
         // search external gal

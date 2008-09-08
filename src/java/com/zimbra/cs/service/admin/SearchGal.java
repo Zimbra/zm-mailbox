@@ -52,7 +52,6 @@ public class SearchGal extends AdminDocumentHandler {
         String n = request.getAttribute(AdminConstants.E_NAME);
 
         ZimbraSoapContext lc = getZimbraSoapContext(context);
-        Element response = lc.createElement(AdminConstants.SEARCH_GAL_RESPONSE);
         Account acct = getRequestedAccount(getZimbraSoapContext(context));
         
         while (n.endsWith("*"))
@@ -72,22 +71,19 @@ public class SearchGal extends AdminDocumentHandler {
         else
             throw ServiceException.INVALID_REQUEST("Invalid search type: " + typeStr, null);
 
-        
-        Provisioning prov = Provisioning.getInstance();
-
         // if we are a domain admin only, restrict to domain
         if (isDomainAdminOnly(lc) && !canAccessDomain(lc, domain)) 
             throw ServiceException.PERM_DENIED("can not access domain"); 
 
+        Element response = lc.createElement(AdminConstants.SEARCH_GAL_RESPONSE);
+        
+        Provisioning prov = Provisioning.getInstance();
         Domain d = prov.get(DomainBy.name, domain);
         if (d == null)
             throw AccountServiceException.NO_SUCH_DOMAIN(domain);
 
         SearchGalResult result = prov.searchGal(d, n, type, token);
-        response.addAttribute(AdminConstants.A_MORE, result.hadMore);
-        response.addAttribute(AccountConstants.A_TOKENIZE_KEY, result.tokenizeKey);
-        
-        com.zimbra.cs.service.account.SearchGal.addContacts(response, result);
+        com.zimbra.cs.service.account.SearchGal.toXML(response, result);
 
         return response;
     }
