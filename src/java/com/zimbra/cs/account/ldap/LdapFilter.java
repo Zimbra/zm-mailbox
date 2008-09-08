@@ -80,6 +80,13 @@ public class LdapFilter {
         return "(&(objectclass=zimbraDataSource)(zimbraDataSourceName=" + name + "))";
     }
     
+    /* 
+     * XMPPComponent
+     */
+    public static String imComponentById(String id) {
+        return "(&(objectclass=zimbraXMPPComponent)(zimbraXMPPComponentId=" + id + "))";
+    }
+    
     /*
      * distribution list
      */
@@ -172,5 +179,16 @@ public class LdapFilter {
     public static String allZimlets() {
         return "(objectclass=zimbraZimletEntry)";
     }
+    
+    /*
+     * xmppcomponent
+     */
+    public static String xmppComponentById(String id) {
+        return "(&(zimbraId=" + id + ")(objectclass=zimbraXMPPComponent))";
+    }
+    public static String allXMPPComponents() {
+        return "(objectclass=zimbraXMPPComponent)";
+    }
+    
 
 }

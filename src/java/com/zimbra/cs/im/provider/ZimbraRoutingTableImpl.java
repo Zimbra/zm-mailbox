@@ -30,6 +30,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.ServerBy;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -112,27 +113,39 @@ public class ZimbraRoutingTableImpl extends BasicModule implements RoutingTable 
     
     protected RoutableChannelHandler getCloudRoute(String node, String domain) {
         try {
-            Account acct = Provisioning.getInstance().get(AccountBy.name, node+"@"+domain);
-            if (acct == null)
-                return null;
-            
-            if (!Provisioning.onLocalServer(acct)) {
-                Server acctServer = Provisioning.getInstance().getServer(acct);
-                
-                if (acctServer == null)
+            String componentServerName = XMPPServer.getInstance().getServerForComponent(domain);
+            if (componentServerName != null) {
+                Server componentServer = Provisioning.getInstance().get(ServerBy.name, componentServerName);
+                Server localServer = Provisioning.getInstance().getLocalServer();
+                if (localServer == componentServer)
                     return null;
-                
-                CloudRouteSession route = CloudRouteManager.get(acctServer);
+                CloudRouteSession route = CloudRouteManager.get(componentServer);
                 if (route == null)
                     return CloudRouteManager.getInstance();
                 else
                     return route;
+            } else {
+                Account acct = Provisioning.getInstance().get(AccountBy.name, node+"@"+domain);
+                if (acct == null)
+                    return null;
+
+                if (!Provisioning.onLocalServer(acct)) {
+                    Server acctServer = Provisioning.getInstance().getServer(acct);
+
+                    if (acctServer == null)
+                        return null;
+
+                    CloudRouteSession route = CloudRouteManager.get(acctServer);
+                    if (route == null)
+                        return CloudRouteManager.getInstance();
+                    else
+                        return route;
+                }
+
             }
-            
         } catch (ServiceException ex) {
             return null;
         }
-        
         return null;
     }
 
@@ -140,8 +153,9 @@ public class ZimbraRoutingTableImpl extends BasicModule implements RoutingTable 
         RoutableChannelHandler route = null;
 
         // Check if the address belongs to a remote server
-        if (!XMPPServer.getInstance().isLocalDomain(domain) && routes.get(domain) == null &&
-                    componentManager.getComponent(domain) == null) {
+        if (!XMPPServer.getInstance().isLocalDomain(domain) 
+                        && routes.get(domain) == null
+                        && !XMPPServer.getInstance().isCloudComponent(domain)) {
             // Return a promise of a remote session. This object will queue packets pending
             // to be sent to remote servers
             ChannelHandler toRet = OutgoingSessionPromise.getInstance();
@@ -189,8 +203,10 @@ public class ZimbraRoutingTableImpl extends BasicModule implements RoutingTable 
 
     public List<ChannelHandler> getRoutes(JID node) {
         // Check if the address belongs to a remote server
-        if (!XMPPServer.getInstance().isLocalDomain(node.getDomain()) && routes.get(node.getDomain()) == null &&
-                componentManager.getComponent(node) == null) {
+        if (!XMPPServer.getInstance().isLocalDomain(node.getDomain()) 
+                        && routes.get(node.getDomain()) == null
+                        && !XMPPServer.getInstance().isCloudComponent(node.getDomain())) {
+//                        && componentManager.getComponent(node) == null) {
             // Return a promise of a remote session. This object will queue packets pending
             // to be sent to remote servers
             List<ChannelHandler> list = new ArrayList<ChannelHandler>();

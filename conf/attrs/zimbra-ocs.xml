@@ -200,6 +200,15 @@
   </comment>
 </objectclass>
 
+<objectclass id="22" name="zimbraXMPPComponent" type="STRUCTURAL">
+  <sup>top</sup>
+  <desc>XMPP Component Configuration Record</desc>
+  <comment>
+    zimbraXMPPComponent defines information about routable XMPP services such as conference
+    rooms, file transfer servies, etc
+  </comment>
+</objectclass>
+
 </objectclasses>
 
 

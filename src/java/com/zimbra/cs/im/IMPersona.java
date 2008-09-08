@@ -671,7 +671,7 @@ public class IMPersona extends ClassLogger {
     }
 
     String getMucDomain() throws ServiceException {
-        return "conference." + getMailbox().getAccount().getDomainName();
+        return "conf." + getMailbox().getAccount().getDomainName();
     }
 
     public String getResource() {

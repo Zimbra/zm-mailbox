@@ -67,7 +67,6 @@ class LdapDataSource extends DataSource implements LdapEntry {
 				LdapUtil.getAttrs(attrs));
 		mDn = dn;
 	}
-
 	public String getDN() {
 		return mDn;
 	}

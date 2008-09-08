@@ -41,7 +41,9 @@ public enum AttributeClass {
     dataSource("zimbraDataSource"), 
     pop3DataSource("zimbraPop3DataSource"), 
     imapDataSource("zimbraImapDataSource"),
-    signature("zimbraSignature");
+    signature("zimbraSignature"),
+    xmppComponent("zimbraXMPPComponent")
+    ;
     
     private static class TM {
         static Map<String, AttributeClass> sOCMap = new HashMap<String, AttributeClass>();

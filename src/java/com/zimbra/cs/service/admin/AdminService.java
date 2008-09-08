@@ -206,6 +206,13 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.ADMIN_WAIT_SET_REQUEST, new AdminWaitSetRequest());        
         dispatcher.registerHandler(AdminConstants.ADMIN_DESTROY_WAIT_SET_REQUEST, new AdminDestroyWaitSetRequest());
         dispatcher.registerHandler(AdminConstants.QUERY_WAIT_SET_REQUEST, new QueryWaitSet());
+        
+        // zimbraXMPPComponent object class
+        dispatcher.registerHandler(AdminConstants.CREATE_XMPPCOMPONENT_REQUEST, new CreateXMPPComponent());
+        dispatcher.registerHandler(AdminConstants.GET_XMPPCOMPONENT_REQUEST, new GetXMPPComponent());
+        dispatcher.registerHandler(AdminConstants.GET_ALL_XMPPCOMPONENTS_REQUEST, new GetAllXMPPComponents());
+        dispatcher.registerHandler(AdminConstants.DELETE_XMPPCOMPONENT_REQUEST, new DeleteXMPPComponent());
+
     }
 
     /**
@@ -218,6 +225,15 @@ public class AdminService implements DocumentService {
     }
     
     /**
+     * Given: 
+     *     <request>
+     *        <a n="name">VALUE</a>
+     *        <a n="name2">VALUE</a>
+     *        ...
+     *      <request>
+     *      
+     * Return a map of name,value pairs
+     *        
      * @param request
      * @return
      * @throws ServiceException

@@ -1520,6 +1520,7 @@ public class ZimletUtil {
 				break;
 			}
 		} catch (Exception e) {
+		    e.printStackTrace();
 			if (sQuietMode)
 				ZimbraLog.zimlet.error("Error " + e.getMessage());
 			else

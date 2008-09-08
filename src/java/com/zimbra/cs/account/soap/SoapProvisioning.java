@@ -58,6 +58,7 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
+import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
@@ -1618,7 +1619,60 @@ public class SoapProvisioning extends Provisioning {
             
         }
     }
+    @Override
+    public List<XMPPComponent> getAllXMPPComponents() throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.GET_ALL_XMPPCOMPONENTS_REQUEST);
+        Element response = invoke(req);
+        
+        List<XMPPComponent> toRet = new ArrayList<XMPPComponent>();
+        for (Element e : response.listElements(AdminConstants.E_XMPP_COMPONENT)) {
+            toRet.add(new SoapXMPPComponent(e));
+        }
+        return toRet;
+    }
+    
+    @Override
+    public XMPPComponent createXMPPComponent(String name, Domain domain, Server server, Map<String, Object> attrs) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.CREATE_XMPPCOMPONENT_REQUEST);
+        
+        Element c = req.addElement(AccountConstants.E_XMPP_COMPONENT);
+        c.addAttribute(AdminConstants.A_NAME, name);
+        
+        Element domainElt = c.addElement(AdminConstants.E_DOMAIN);
+        domainElt.addAttribute(AdminConstants.A_BY, "id");
+        domainElt.setText(domain.getId());
+        
+        Element serverElt = c.addElement(AdminConstants.E_SERVER);
+        serverElt.addAttribute(AdminConstants.A_BY, "id");
+        serverElt.setText(server.getId());
+        
+        addAttrElements(c, attrs);
+        Element response = invoke(req);
+        response = response.getElement(AccountConstants.E_XMPP_COMPONENT);
+        return new SoapXMPPComponent(response);
+    }
 
+    public XMPPComponent get(XMPPComponentBy keyType, String key) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.GET_XMPPCOMPONENT_REQUEST);
+        
+        Element c = req.addElement(AccountConstants.E_XMPP_COMPONENT);
+        c.addAttribute(AdminConstants.A_BY, keyType.name());
+        c.setText(key);
+        Element response = invoke(req);
+        response = response.getElement(AccountConstants.E_XMPP_COMPONENT);
+        return new SoapXMPPComponent(response);
+    }
+    
+    @Override
+    public void deleteXMPPComponent(XMPPComponent comp) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.DELETE_XMPPCOMPONENT_REQUEST);
+        
+        Element c = req.addElement(AccountConstants.E_XMPP_COMPONENT);
+        c.addAttribute(AdminConstants.A_BY, "id");
+        c.setText(comp.getId());
+        invoke(req);
+    }
+    
     @Override
     public Identity get(Account account, IdentityBy keyType, String key) throws ServiceException {
         // TOOD: more efficient version and/or caching on account?

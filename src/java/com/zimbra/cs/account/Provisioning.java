@@ -1556,8 +1556,18 @@ public abstract class Provisioning {
     public static final String A_zimbraCalendarMaxRevisions    = "zimbraCalendarMaxRevisions";
 
     public static final String A_zimbraXMPPServerDialbackKey = "zimbraXMPPServerDialbackKey";
-    
 
+    /*
+     * IM Component objectClass
+     */
+    public static final String A_zimbraXMPPComponentCategory = "zimbraXMPPComponentCategory";
+    public static final String A_zimbraXMPPComponentType = "zimbraXMPPComponentType";
+    public static final String A_zimbraXMPPComponentFeatures = "zimbraXMPPComponentFeatures";
+    public static final String A_zimbraXMPPComponentName = "zimbraXMPPComponentName";
+    
+    public static final String A_zimbraDomainId = "zimbraDomainId";
+    public static final String A_zimbraServerId = "zimbraServerId";
+    
     public static final int MAX_ZIMBRA_ID_LEN = 127;
     
     private static Provisioning sProvisioning;
@@ -2056,6 +2066,8 @@ public abstract class Provisioning {
         }
     
     }
+    
+    
     
     public abstract Server get(ServerBy keyName, String key) throws ServiceException;
 
@@ -2682,6 +2694,28 @@ public abstract class Provisioning {
      */
     public abstract DataSource get(Account account, DataSourceBy keyType, String key) throws ServiceException;
     
+    public static enum XMPPComponentBy {
+
+        // case must match protocol
+        id, name, serviceHostname;
+        
+        public static XMPPComponentBy fromString(String s) throws ServiceException {
+            try {
+                return XMPPComponentBy.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
+            }
+        }
+    }
+    
+    // XMPPComponents
+    public abstract XMPPComponent createXMPPComponent(String name, Domain domain, Server server, Map<String, Object> attrs) throws ServiceException;
+    
+    public abstract XMPPComponent get(XMPPComponentBy keyName, String key) throws ServiceException;
+    
+    public abstract List<XMPPComponent> getAllXMPPComponents() throws ServiceException;
+    
+    public abstract void deleteXMPPComponent(XMPPComponent comp) throws ServiceException;
     
     public static enum CacheEntryType {
         account,

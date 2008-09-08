@@ -53,6 +53,7 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Group;
+import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.IDedEntryCache;
 import com.zimbra.cs.account.IDNUtil;
@@ -184,7 +185,13 @@ public class LdapProvisioning extends Provisioning {
     private static IDedEntryCache<Group> sGroupCache =
         new IDedEntryCache<Group>(
                 LC.ldap_cache_group_maxsize.intValue(),
-                LC.ldap_cache_group_maxage.intValue() * Constants.MILLIS_PER_MINUTE); 
+                LC.ldap_cache_group_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
+    
+    private static NamedEntryCache<XMPPComponent> sXMPPComponentCache =
+        new NamedEntryCache<XMPPComponent>(
+                LC.ldap_cache_xmppcomponent_maxsize.intValue(),
+                LC.ldap_cache_xmppcomponent_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
+    
     
     private static final int BY_ID = 1;
 
@@ -4961,6 +4968,171 @@ public class LdapProvisioning extends Provisioning {
                 //return getDataSourceByName(ldapEntry, key, null);
             default:
                 return null;
+        }
+    }
+    
+    private String getXMPPComponentDn(LdapEntry entry, String name) {
+        return A_zimbraXMPPComponentName + "=" + LdapUtil.escapeRDNValue(name) + "," + entry.getDN();    
+    }
+    
+    private XMPPComponent getXMPPComponentByQuery(String query, ZimbraLdapContext initZlc) throws ServiceException {
+        ZimbraLdapContext zlc = initZlc;
+        try {
+            if (zlc == null)
+                zlc = new ZimbraLdapContext();
+            NamingEnumeration ne = zlc.searchDir(mDIT.xmppcomponentBaseDN(), query, sSubtreeSC);
+            if (ne.hasMore()) {
+                SearchResult sr = (SearchResult) ne.next();
+                ne.close();
+                return new LdapXMPPComponent(sr.getNameInNamespace(), sr.getAttributes());
+            }
+        } catch (NameNotFoundException e) {
+            return null;
+        } catch (InvalidNameException e) {
+            return null;                        
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to lookup XMPPComponent via query: "+query+" message: "+e.getMessage(), e);
+        } finally {
+            if (initZlc == null)
+                ZimbraLdapContext.closeContext(zlc);
+        }
+        return null;
+    }
+    
+    private XMPPComponent getXMPPComponentByName(String name, boolean nocache) throws ServiceException {
+        if (!nocache) {
+            XMPPComponent x = sXMPPComponentCache.getByName(name);
+            if (x != null)
+                return x;
+        }
+        ZimbraLdapContext zlc = null;
+        try {
+            zlc = new ZimbraLdapContext();
+            String dn = mDIT.xmppcomponentNameToDN(name);            
+            Attributes attrs = zlc.getAttributes(dn);
+            XMPPComponent x = new LdapXMPPComponent(dn, attrs);
+            sXMPPComponentCache.put(x);            
+            return x;
+        } catch (NameNotFoundException e) {
+            return null;
+        } catch (InvalidNameException e) {
+            return null;            
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to lookup xmpp component by name: "+name+" message: "+e.getMessage(), e);
+        } finally {
+            ZimbraLdapContext.closeContext(zlc);
+        }
+    }
+    
+    private XMPPComponent getXMPPComponentById(String zimbraId, ZimbraLdapContext zlc, boolean nocache) throws ServiceException {
+        if (zimbraId == null)
+            return null;
+        XMPPComponent x = null;
+        if (!nocache)
+            x = sXMPPComponentCache.getById(zimbraId);
+        if (x == null) {
+            zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
+            x = (XMPPComponent)getXMPPComponentByQuery(LdapFilter.xmppComponentById(zimbraId), zlc); 
+            sXMPPComponentCache.put(x);
+        }
+        return x;
+    }
+    
+    @Override
+    public List<XMPPComponent> getAllXMPPComponents() throws ServiceException {
+        List<XMPPComponent> result = new ArrayList<XMPPComponent>();
+        ZimbraLdapContext zlc = null;
+        try {
+            zlc = new ZimbraLdapContext();
+            String filter;
+            filter = LdapFilter.allXMPPComponents();
+            
+            NamingEnumeration ne = zlc.searchDir(mDIT.xmppcomponentBaseDN(), filter, sSubtreeSC);
+            while (ne.hasMore()) {
+                SearchResult sr = (SearchResult) ne.next();
+                LdapXMPPComponent x = new LdapXMPPComponent(sr.getNameInNamespace(), sr.getAttributes());
+                result.add(x);
+            }
+            ne.close();
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to list all servers", e);
+        } finally {
+            ZimbraLdapContext.closeContext(zlc);
+        }
+        if (result.size() > 0)
+            sXMPPComponentCache.put(result, true);
+        Collections.sort(result);
+        return result;
+    }
+    
+    
+    public XMPPComponent createXMPPComponent(String name, Domain domain, Server server, Map<String, Object> inAttrs) throws ServiceException {
+        name = name.toLowerCase().trim();
+        
+        // sanity checking
+        removeAttrIgnoreCase("objectclass", inAttrs);
+        removeAttrIgnoreCase(A_zimbraDomainId, inAttrs);
+        removeAttrIgnoreCase(A_zimbraServerId, inAttrs);
+        
+        HashMap attrManagerContext = new HashMap();
+        AttributeManager.getInstance().preModify(inAttrs, null, attrManagerContext, true, true);
+        
+        ZimbraLdapContext zlc = null;
+        try {
+            zlc = new ZimbraLdapContext(true);
+            
+            Attributes attrs = new BasicAttributes(true);
+            LdapUtil.mapToAttrs(inAttrs, attrs);
+            LdapUtil.addAttr(attrs, A_objectClass, "zimbraXMPPComponent");
+            
+            String compId = LdapUtil.generateUUID();
+            attrs.put(A_zimbraId, compId);
+            attrs.put(A_cn, name);
+            String dn = mDIT.xmppcomponentNameToDN(name);
+            
+            attrs.put(A_zimbraDomainId, domain.getId());
+            attrs.put(A_zimbraServerId, server.getId());
+            
+            zlc.createEntry(dn, attrs, "createXMPPComponent");
+            
+            XMPPComponent comp = getXMPPComponentById(compId, zlc, true);
+            AttributeManager.getInstance().postModify(inAttrs, comp, attrManagerContext, true);
+            return comp;
+        } catch (NameAlreadyBoundException nabe) {
+            throw AccountServiceException.IM_COMPONENT_EXISTS(name);
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to create XMPPComponent", e);
+        } finally {
+            ZimbraLdapContext.closeContext(zlc);
+        }
+    }
+    
+    public XMPPComponent get(XMPPComponentBy keyType, String key) throws ServiceException {
+        switch(keyType) {
+            case name: 
+                return getXMPPComponentByName(key, false);
+            case id: 
+                return getXMPPComponentById(key, null, false);
+            case serviceHostname:
+                throw new UnsupportedOperationException("Writeme!");
+            default:
+        }
+        return null;
+    }
+    
+    @Override
+    public void deleteXMPPComponent(XMPPComponent comp) throws ServiceException {
+        String zimbraId = comp.getId();
+        ZimbraLdapContext zlc = null;
+        LdapXMPPComponent l = (LdapXMPPComponent)get(XMPPComponentBy.id, zimbraId);
+        try {
+            zlc = new ZimbraLdapContext(true);
+            zlc.unbindEntry(l.getDN());
+            sXMPPComponentCache.remove(l);
+        } catch (NamingException e) {
+            throw ServiceException.FAILURE("unable to purge XMPPComponent : "+zimbraId, e);
+        } finally {
+            ZimbraLdapContext.closeContext(zlc);
         }
     }
     

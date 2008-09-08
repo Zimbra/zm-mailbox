@@ -62,6 +62,7 @@ import com.zimbra.cs.account.Provisioning.MailMode;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.Provisioning.SignatureBy;
+import com.zimbra.cs.account.Provisioning.XMPPComponentBy;
 import com.zimbra.cs.account.ldap.LdapEntrySearchFilter;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
@@ -208,7 +209,8 @@ public class ProvUtil implements DebugListener {
         CREATE_DOMAIN("createDomain", "cd", "{domain} [attr1 value1 [attr2 value2...]]", Category.DOMAIN, 1, Integer.MAX_VALUE),
         CREATE_SERVER("createServer", "cs", "{name} [attr1 value1 [attr2 value2...]]", Category.SERVER, 1, Integer.MAX_VALUE),
         CREATE_IDENTITY("createIdentity", "cid", "{name@domain} {identity-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),        
-        CREATE_SIGNATURE("createSignature", "csig", "{name@domain} {signature-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),        
+        CREATE_SIGNATURE("createSignature", "csig", "{name@domain} {signature-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),
+        CREATE_XMPP_COMPONENT("createXMPPComponent", "cxc", "{short-name} {domain}  {server} {category} {type} [attr value1 [attr2 value2...]]", Category.CONFIG, 5, Integer.MAX_VALUE),
         DELETE_ACCOUNT("deleteAccount", "da", "{name@domain|id}", Category.ACCOUNT, 1, 1),
         DELETE_CALENDAR_RESOURCE("deleteCalendarResource",  "dcr", "{name@domain|id}", Category.CALENDAR, 1, 1),
         DELETE_COS("deleteCos", "dc", "{name|id}", Category.COS, 1, 1),
@@ -218,6 +220,7 @@ public class ProvUtil implements DebugListener {
         DELETE_IDENTITY("deleteIdentity", "did", "{name@domain|id} {identity-name}", Category.ACCOUNT, 2, 2),
         DELETE_SIGNATURE("deleteSignature", "dsig", "{name@domain|id} {signature-name}", Category.ACCOUNT, 2, 2),
         DELETE_SERVER("deleteServer", "ds", "{name|id}", Category.SERVER, 1, 1),
+        DELETE_XMPP_COMPONENT("deleteXMPPComponent", "dxc", "{name@domain}", Category.CONFIG, 1, 1),
         EXIT("exit", "quit", "", Category.MISC, 0, 0),
         FLUSH_CACHE("flushCache", "fc", "{skin|locale|account|config|cos|domain|server|zimlet|<extension-cache-type>} [name1|id1 [name2|id2...]]", Category.MISC, 1, Integer.MAX_VALUE),
         GENERATE_DOMAIN_PRE_AUTH("generateDomainPreAuth", "gdpa", "{domain|id} {name} {name|id|foreignPrincipal} {timestamp|0} {expires|0}", Category.MISC, 5, 6),
@@ -238,6 +241,7 @@ public class ProvUtil implements DebugListener {
         GET_ALL_DOMAINS("getAllDomains", "gad", "[-v] [-e] [attr1 [attr2...]]", Category.DOMAIN, 0, Integer.MAX_VALUE),
         GET_ALL_FREEBUSY_PROVIDERS("getAllFbp", "gafbp", "[-v]", Category.FREEBUSY, 0, 1),
         GET_ALL_SERVERS("getAllServers", "gas", "[-v] [-e] [service]", Category.SERVER, 0, 3),
+        GET_ALL_XMPP_COMPONENTS("getAllXMPPComponents", "gaxcs", "", Category.CONFIG, 0, 0),
         GET_CALENDAR_RESOURCE("getCalendarResource",     "gcr", "{name@domain|id} [attr1 [attr2...]]", Category.CALENDAR, 1, Integer.MAX_VALUE), 
         GET_CONFIG("getConfig", "gcf", "{name}", Category.CONFIG, 1, 1),
         GET_COS("getCos", "gc", "{name|id} [attr1 [attr2...]]", Category.COS, 1, Integer.MAX_VALUE),
@@ -248,7 +252,8 @@ public class ProvUtil implements DebugListener {
         GET_FREEBUSY_QUEUE_INFO("getFreebusyQueyeInfo", "gfbqi", "[{provider-name}]", Category.FREEBUSY, 0, 1),
         GET_MAILBOX_INFO("getMailboxInfo", "gmi", "{account}", Category.MAILBOX, 1, 1),
         GET_QUOTA_USAGE("getQuotaUsage", "gqu", "{server}", Category.MAILBOX, 1, 1),        
-        GET_SERVER("getServer", "gs", "[-e] {name|id} [attr1 [attr2...]]", Category.SERVER, 1, Integer.MAX_VALUE), 
+        GET_SERVER("getServer", "gs", "[-e] {name|id} [attr1 [attr2...]]", Category.SERVER, 1, Integer.MAX_VALUE),
+        GET_XMPP_COMPONENT("getXMPPComponent", "gxc", "{name|id} [attr1 [attr2...]]", Category.CONFIG, 1, Integer.MAX_VALUE),
         HELP("help", "?", "commands", Category.MISC, 0, 1),
         IMPORT_NOTEBOOK("importNotebook", "impn", "{name@domain} {directory} {folder}", Category.NOTEBOOK),
         INIT_NOTEBOOK("initNotebook", "in", "[{name@domain}]", Category.NOTEBOOK),
@@ -264,6 +269,7 @@ public class ProvUtil implements DebugListener {
         MODIFY_IDENTITY("modifyIdentity", "mid", "{name@domain|id} {identity-name} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),
         MODIFY_SIGNATURE("modifySignature", "msig", "{name@domain|id} {signature-name|signature-id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 4, Integer.MAX_VALUE),
         MODIFY_SERVER("modifyServer", "ms", "{name|id} [attr1 value1 [attr2 value2...]]", Category.SERVER, 3, Integer.MAX_VALUE),
+        MODIFY_XMPP_COMPONENT("modifyXMPPComponent", "mxc", "{name@domain} [attr1 value1 [attr value2...]]", Category.CONFIG, 3, Integer.MAX_VALUE),
         PUSH_FREEBUSY("pushFreebusy", "pfb", "{domain|account-id} [account-id ...]", Category.FREEBUSY, 1, Integer.MAX_VALUE),
         REMOVE_ACCOUNT_ALIAS("removeAccountAlias", "raa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2),
         REMOVE_ACCOUNT_LOGGER("removeAccountLogger", "ral", "[-s/--server hostname] [{name@domain|id}] [{logging-category}]", Category.MISC, 0, 4),
@@ -469,7 +475,10 @@ public class ProvUtil implements DebugListener {
             break;                                                
         case CREATE_SERVER:
             System.out.println(mProv.createServer(args[1], getMap(args, 2)).getId());
-            break;            
+            break;
+        case CREATE_XMPP_COMPONENT:
+            doCreateXMPPComponent(args);
+            break;
         case EXIT:
             System.exit(0);
             break;
@@ -566,6 +575,9 @@ public class ProvUtil implements DebugListener {
         case GET_SERVER:
             doGetServer(args);
             break;
+        case GET_XMPP_COMPONENT:
+            doGetXMPPComponent(args);
+            break;
         case HELP:
             doHelp(args); 
             break;            
@@ -617,6 +629,9 @@ public class ProvUtil implements DebugListener {
             break;                        
         case DELETE_SERVER:
             mProv.deleteServer(lookupServer(args[1]).getId());
+            break;
+        case DELETE_XMPP_COMPONENT:
+            mProv.deleteXMPPComponent(lookupXMPPComponent(args[1]));
             break;
         case PUSH_FREEBUSY:
         {
@@ -685,6 +700,9 @@ public class ProvUtil implements DebugListener {
             break;
         case GET_DISTRIBUTION_LIST:
             dumpDistributionList(lookupDistributionList(args[1]), getArgNameSet(args, 2));
+            break;
+        case GET_ALL_XMPP_COMPONENTS:
+            doGetAllXMPPComponents();
             break;
         case MODIFY_DISTRIBUTION_LIST:
             mProv.modifyAttrs(lookupDistributionList(args[1]), getMap(args, 2), true);
@@ -1483,6 +1501,20 @@ public class ProvUtil implements DebugListener {
         dumpAttrs(attrs, attrNames);
         System.out.println();
     }
+    
+    private void dumpXMPPComponent(XMPPComponent comp, Set<String> attrNames) {
+        System.out.println("# name "+comp.getName());
+        Map<String, Object> attrs = comp.getAttrs();
+        dumpAttrs(attrs, attrNames);
+        System.out.println();
+    }
+    
+    private void doGetAllXMPPComponents() throws ServiceException {
+        List<XMPPComponent> components = mProv.getAllXMPPComponents();
+        for (XMPPComponent comp : components) {
+            dumpXMPPComponent(comp, null);
+        }
+    }
 
     private void dumpAccount(Account account, boolean expandCos, Set<String> attrNames) throws ServiceException {
         System.out.println("# name "+account.getName());
@@ -1866,6 +1898,14 @@ public class ProvUtil implements DebugListener {
 
     private String getAllFreebusyProviders(String[] args) throws ServiceException {
     	return "";
+    }
+    
+    private XMPPComponent lookupXMPPComponent(String value) throws ServiceException {
+        if (Provisioning.isUUID(value)) {
+            return mProv.get(XMPPComponentBy.id, value);
+        } else {
+            return mProv.get(XMPPComponentBy.name, value);
+        }
     }
     
     public static AccountBy guessAccountBy(String value) {
@@ -2271,6 +2311,21 @@ public class ProvUtil implements DebugListener {
             return;
         }
         dumpServer(lookupServer(args[i], applyDefault), applyDefault, getArgNameSet(args, i+1));
+    }
+    
+    private void doCreateXMPPComponent(String[] args) throws ServiceException, ArgException {
+        //4 = category
+        //5 = type
+        Map<String,Object> map = getMap(args, 6);
+        map.put(Provisioning.A_zimbraXMPPComponentCategory, args[4]);
+        map.put(Provisioning.A_zimbraXMPPComponentType, args[5]);
+        Domain d = lookupDomain(args[2]);
+        String routableName = args[1]+"."+d.getName();
+        System.out.println(mProv.createXMPPComponent(routableName, lookupDomain(args[2]), lookupServer(args[3]), map));
+    }
+    
+    private void doGetXMPPComponent(String[] args) throws ServiceException {
+        dumpXMPPComponent(lookupXMPPComponent(args[1]), getArgNameSet(args, 2));
     }
     
     private void doHelp(String[] args) {

@@ -155,7 +155,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr name="company" type="string" optionalIn="account" flags="domainAdminModifiable"/>
 
-<attr name="cn" type="string" optionalIn="account,alias,distributionList" requiredIn="cos,server,mimeEntry,objectEntry,timeZone,zimletEntry" flags="domainAdminModifiable,accountInfo"/>
+<attr name="cn" type="string" optionalIn="account,alias,distributionList" requiredIn="cos,server,mimeEntry,objectEntry,timeZone,zimletEntry,xmppComponent" flags="domainAdminModifiable,accountInfo"/>
 
 <attr name="displayName" type="string" optionalIn="account,distributionList" requiredIn="calendarResource" flags="accountInfo,domainAdminModifiable" callback="DisplayName"/>
 
@@ -207,7 +207,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Minimum age of mail items whose filesystem data will be moved to secondary storage (nnnnn[hmsd]).</desc>
 </attr>
 
-<attr id="1" name="zimbraId" type="id" immutable="1" cardinality="single" requiredIn="account,alias,distributionList,cos,domain,server,calendarResource" flags="accountInfo">
+<attr id="1" name="zimbraId" type="id" immutable="1" cardinality="single" requiredIn="account,alias,distributionList,cos,domain,server,calendarResource,xmppComponent" flags="accountInfo">
   <desc>Zimbra Systems Unique ID</desc>
 </attr>
 
@@ -3629,4 +3629,28 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether NGINX mail proxy will pass upstream server errors back to the downstream email clients</desc>
 </attr>
 
+<attr id="737" name="zimbraXMPPComponentCategory" type="string" cardinality="single" requiredIn="xmppComponent">
+  <desc>XMPP Category of the component</desc>
+</attr>
+
+<attr id="738" name="zimbraXMPPComponentType" type="string" cardinality="single" requiredIn="xmppComponent">
+  <desc>XMPP Type of the component</desc>
+</attr>
+
+<attr id="739" name="zimbraXMPPComponentFeatures" type="string" cardinality="multi" optionalIn="xmppComponent">
+  <desc>XMPP Type of the component</desc>
+</attr>
+
+<attr id="740" name="zimbraXMPPComponentName" type="string" cardinality="single" optionalIn="xmppComponent">
+  <desc>Name of the XMPP Component</desc>
+</attr>
+
+<attr id="741" name="zimbraDomainId" type="id" cardinality="single" requiredIn="xmppComponent">
+  <desc>ZimbraID of the domain that this component is registered under</desc>
+</attr>
+
+<attr id="742" name="zimbraServerId" type="id" cardinality="single" requiredIn="xmppComponent">
+  <desc>ZimbraID of the server that this component is running on</desc>
+</attr>  
+  
 </attrs>

@@ -50,6 +50,7 @@ public class AccountServiceException extends ServiceException {
     public static final String NO_SUCH_DATA_SOURCE = "account.NO_SUCH_DATA_SOURCE";
     public static final String NO_SUCH_SERVER     = "account.NO_SUCH_SERVER";        
     public static final String NO_SUCH_ZIMLET     = "account.NO_SUCH_ZIMLET";        
+    public static final String NO_SUCH_XMPP_COMPONENT = "account.NO_SUCH_XMPP_COMPONENT";        
     public static final String NO_SUCH_DISTRIBUTION_LIST = "account.NO_SUCH_DISTRIBUTION_LIST";
     public static final String NO_SUCH_CALENDAR_RESOURCE = "account.NO_SUCH_CALENDAR_RESOURCE";
     public static final String MEMBER_EXISTS      = "account.MEMBER_EXISTS";
@@ -67,6 +68,7 @@ public class AccountServiceException extends ServiceException {
     public static final String SIGNATURE_EXISTS = "account.SIGNATURE_EXISTS";    
     public static final String TOO_MANY_SIGNATURES = "account.TOO_MANY_SIGNATURES";
     public static final String DATA_SOURCE_EXISTS = "account.DATA_SOURCE_EXISTS";        
+    public static final String IM_COMPONENT_EXISTS = "account.IM_COMPONENT_EXISTS";        
     public static final String TOO_MANY_DATA_SOURCES = "account.TOO_MANY_DATA_SOURCES";
     public static final String TOO_MANY_ACCOUNTS = "account.TOO_MANY_ACCOUNTS";
     public static final String TOO_MANY_SEARCH_RESULTS = "account.TOO_MANY_SEARCH_RESULTS";
@@ -201,6 +203,10 @@ public class AccountServiceException extends ServiceException {
         return new AccountServiceException("no such zimlet: "+name, NO_SUCH_ZIMLET, SENDERS_FAULT, null);
     }    
 
+    public static AccountServiceException NO_SUCH_XMPP_COMPONENT(String name) {
+        return new AccountServiceException("no such xmpp component: "+name, NO_SUCH_XMPP_COMPONENT, SENDERS_FAULT, null);
+    }    
+    
     public static AccountServiceException NO_SUCH_DISTRIBUTION_LIST(String name) {
         return new AccountServiceException("no such distribution list: " + name, NO_SUCH_DISTRIBUTION_LIST, 
                 SENDERS_FAULT, null);   
@@ -258,6 +264,10 @@ public class AccountServiceException extends ServiceException {
     public static AccountServiceException TOO_MANY_DATA_SOURCES() {
         return new AccountServiceException("too many data sources. can't create any more", TOO_MANY_DATA_SOURCES, SENDERS_FAULT, null);
     }    
+    
+    public static AccountServiceException IM_COMPONENT_EXISTS(String name) {
+        return new AccountServiceException("IM Component already exists: " + name, IM_COMPONENT_EXISTS, SENDERS_FAULT, null);
+    }
     
     public static AccountServiceException MAINTENANCE_MODE() {
         return new AccountServiceException("account is in maintenance mode", MAINTENANCE_MODE, RECEIVERS_FAULT, null);

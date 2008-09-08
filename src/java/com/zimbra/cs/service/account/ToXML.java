@@ -28,6 +28,7 @@ import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.IDNUtil;
+import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.EntrySearchFilter.Multi;
 import com.zimbra.cs.account.EntrySearchFilter.Single;
 import com.zimbra.cs.account.EntrySearchFilter.Visitor;
@@ -264,6 +265,23 @@ public class ToXML {
         return e;
     }
     
+    public static Element encodeXMPPComponent(Element parent, XMPPComponent comp) {
+        Element e = parent.addElement(AccountConstants.E_XMPP_COMPONENT);
+        e.addAttribute(AccountConstants.A_NAME, comp.getName());
+        e.addAttribute(AccountConstants.A_ID, comp.getId());
+        
+        try { // for testing only
+            e.addAttribute("x-domainName", comp.getDomain().getName());
+        } catch (ServiceException ex) {}
+
+        try { // for testing only
+            e.addAttribute("x-serverName", comp.getServer().getName());
+        } catch (ServiceException ex) {}
+        
+        addAccountAttrs(e, comp.getUnicodeAttrs(), AccountConstants.A_N);
+        return e;
+    }
+    
     public static void encodeAttr(Element parent, String key, String value, String eltname, String attrname, boolean isIDN) {
         KeyValuePair kvPair = parent.addKeyValuePair(key, IDNUtil.toUnicode(value), eltname, attrname);
         
@@ -287,4 +305,5 @@ public class ToXML {
         
         return e;
     }
+    
 }
