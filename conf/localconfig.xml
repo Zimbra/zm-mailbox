@@ -41,6 +41,7 @@ This feature is used for securing admin server in hosted deployment (bug# 30510)
 	<key name="admin_soap_white_list">
 		<value>{coma-saparated list of SOAP Requests to include, e.g.: urn:zimbraAdmin::RenameAccountRequest,urn:zimbraAdmin::ModifyAccountRequest}.</value>
 	</key>
+	See admin_soap_white_list.txt for more information about this configuration key.
 -->
   <!-- Switches to turn off various features for performance testing -->
   <key name="debug_disable_conversation">
