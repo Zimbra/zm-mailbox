@@ -363,8 +363,12 @@ public class ByteUtil {
 	 * @return
 	 */
 	public static boolean isGzipped(byte[] data) {
-		return data != null && data.length > 2 &&
-			((data[0] | (data[1] << 8)) == GZIPInputStream.GZIP_MAGIC);
+	    if (data == null || data.length < 2) {
+	        return false;
+	    }
+	    int byte1 = data[0];
+	    int byte2 = data[1] & 0xff; // Remove sign, since bytes are signed in Java.
+	    return (byte1 | (byte2 << 8)) == GZIPInputStream.GZIP_MAGIC;
 	}
 	
 	/**
