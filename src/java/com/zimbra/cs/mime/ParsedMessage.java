@@ -1113,15 +1113,16 @@ public class ParsedMessage {
         document.add(new Field(LuceneFields.L_H_FROM, from, Field.Store.NO, Field.Index.TOKENIZED));
         document.add(new Field(LuceneFields.L_H_SUBJECT, subject, Field.Store.NO, Field.Index.TOKENIZED));
 
+        
         // add subject and from to main content for better searching
-        appendToContent(fullContent, subject);
+        StringBuilder contentPrepend = new StringBuilder(subject);
 
         // Bug 583: add all of the TOKENIZED versions of the email addresses to our CONTENT field...
-        appendToContent(fullContent, ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_FROM, from));
-        appendToContent(fullContent, ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_TO, toValue));
-        appendToContent(fullContent, ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_CC, ccValue));
+        appendToContent(contentPrepend, ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_FROM, from));
+        appendToContent(contentPrepend, ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_TO, toValue));
+        appendToContent(contentPrepend, ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_CC, ccValue));
 
-        String text = fullContent.toString();
+        String text = contentPrepend.toString()+" "+fullContent.toString();
 
         document.add(new Field(LuceneFields.L_CONTENT, text, Field.Store.NO, Field.Index.TOKENIZED));
 
