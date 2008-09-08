@@ -32,6 +32,8 @@ import com.zimbra.cs.extension.ExtensionUtil;
 
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.AddressException;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -64,21 +66,6 @@ public abstract class Provisioning {
      */    
     public static final String CAL_MODE_STANDARD = "standard";
     
-    /**
-     * only use internal
-     */
-    public static final String GM_ZIMBRA = "zimbra";
-    
-    /**
-     * only use exteranl gal
-     */    
-    public static final String GM_LDAP = "ldap";
-    
-    /**
-     * use both gals (combine results)
-     */
-    public static final String GM_BOTH = "both";
-
     /**
      * zimbraAuthMech type of "zimbra" means our own (use userPassword)
      */
@@ -2385,6 +2372,120 @@ public abstract class Provisioning {
     public List<NamedEntry> searchDirectory(SearchOptions options, boolean useConnPool) throws ServiceException {
         return searchDirectory(options);
     }
+    
+    public enum GalMode {
+        zimbra, // only use internal
+        ldap,   // only use exteranl gal
+        both;   // use both gals (combine results)
+         
+        public static GalMode fromString(String s) throws ServiceException {
+            try {
+                if (s == null)
+                    return null;
+                return GalMode.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST("unknown gal mode: " + s, e);
+            }
+        }
+    }
+
+    public static class SearchGalResult {
+        
+         private String mToken;
+         private boolean mHadMore; // for auto-complete only
+         private List<GalContact> mMatches;
+ 
+        /*
+         * for auto-complete and search only
+         * 
+         * The Ajax client backtracks on GAL results assuming the results of a more
+         * specific key is the subset of a more generic key, and it checks cached 
+         * results instead of issuing another SOAP request to the server.    
+         * If search key was tokenized with AND or OR, this cannot be assumed.
+         */
+        private String mTokenizeKey; 
+        
+        public static SearchGalResult newSearchGalResult(GalContact.Visitor visitor) {
+            if (visitor == null)
+                return new SearchGalResult();
+            else
+                return new VisitorSearchGalResult(visitor);
+        }
+        
+        private SearchGalResult() {
+            mMatches = new ArrayList<GalContact>();
+        }
+        
+        public String getToken() {
+            return mToken;
+        }
+        
+        public void setToken(String token) {
+            mToken = token;
+        }
+        
+        public boolean getHadMore() {
+            return mHadMore;
+        }
+        
+        public void setHadMore(boolean hadMore) {
+            mHadMore = hadMore;
+        }
+        
+        public String getTokenizeKey() {
+            return mTokenizeKey;
+        }
+        
+        public void setTokenizeKey(String tokenizeKey) {
+            mTokenizeKey = tokenizeKey;
+        }
+        
+        public List<GalContact> getMatches() throws ServiceException {
+            return mMatches;
+        }
+        
+        public int getNumMatches() {
+            return mMatches.size();
+        }
+        
+        public void addMatch(GalContact gc) {
+            mMatches.add(gc);
+        }
+        
+        public void addMatches(SearchGalResult result) throws ServiceException {
+            mMatches.addAll(result.getMatches());
+        }
+    }
+    
+    public static class VisitorSearchGalResult extends SearchGalResult {
+        private GalContact.Visitor mVisitor;
+        private int mNumMatches; // keep track of num matches 
+        
+        private VisitorSearchGalResult(GalContact.Visitor visitor) {
+            mVisitor = visitor;
+        }
+        
+        public List<GalContact> getMatches() throws ServiceException {
+            throw ServiceException.FAILURE("getMatches not supported for VisitorSearchGalResult", null);
+        }
+        
+        public int getNumMatches() {
+            return mNumMatches;
+        }
+        
+        public void addMatch(GalContact gc) {
+            mVisitor.visit(gc);
+            mNumMatches++;
+        }
+        
+        public void addMatches(SearchGalResult result) throws ServiceException {
+            if (!(result instanceof VisitorSearchGalResult))
+                throw ServiceException.FAILURE("cannot addMatches with non VisitorSearchGalResult", null);
+            
+            mNumMatches += result.getNumMatches();
+        }
+
+    }
 
     /**
      * @param d domain
@@ -2397,6 +2498,22 @@ public abstract class Provisioning {
     public abstract SearchGalResult searchGal(Domain d, String query, GAL_SEARCH_TYPE type, String token) throws ServiceException;
     
     /**
+     * Interface that invokes the visitor object for each match, instead of adding matches to the SearchGalResult.
+     *  
+     * @param d
+     * @param query
+     * @param type
+     * @param token
+     * @param visitor
+     * @return
+     * @throws ServiceException
+     */
+    public SearchGalResult searchGal(Domain d, String query, GAL_SEARCH_TYPE type, String token, GalContact.Visitor visitor) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
+
+    
+    /**
      * Interface for CalDAV.  it needs to always search in Zimbra only, regardless of zimbraGalMode configured on the domain.
      * 
      * @param d domain
@@ -2407,26 +2524,10 @@ public abstract class Provisioning {
      * @return List of GalContact objects
      * @throws ServiceException
      */
-    public SearchGalResult searchGal(Domain d, String query, GAL_SEARCH_TYPE type, String mode, String token) throws ServiceException {
+    public SearchGalResult searchGal(Domain d, String query, GAL_SEARCH_TYPE type, GalMode mode, String token) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
     
-    
-    public static class SearchGalResult {
-        public String token;
-        public List<GalContact> matches;
-        public boolean hadMore; // for auto-complete only
-        
-        /*
-         * for auto-complete and search only
-         * 
-         * The Ajax client backtracks on GAL results assuming the results of a more
-         * specific key is the subset of a more generic key, and it checks cached 
-         * results instead of issuing another SOAP request to the server.    
-         * If search key was tokenized with AND or OR, this cannot be assumed.
-         */
-        public String tokenizeKey; 
-    }
 
     /**
      * 

@@ -60,6 +60,7 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.NamedEntry.Visitor;
+import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.zclient.ZClientException;
@@ -1310,12 +1311,11 @@ public class SoapProvisioning extends Provisioning {
 
         Element resp = invoke(req);
 
-        SearchGalResult result = new SearchGalResult();
-        result.matches = new ArrayList<GalContact>();
-        result.hadMore = resp.getAttributeBool(AdminConstants.A_MORE);
-        result.tokenizeKey = resp.getAttribute(AccountConstants.A_TOKENIZE_KEY, null);
+        SearchGalResult result = SearchGalResult.newSearchGalResult(null);
+        result.setHadMore(resp.getAttributeBool(AdminConstants.A_MORE));
+        result.setTokenizeKey(resp.getAttribute(AccountConstants.A_TOKENIZE_KEY, null));
         for (Element e: resp.listElements(AdminConstants.E_CN)) {
-            result.matches.add(new GalContact(AdminConstants.A_ID, getAttrs(e)));
+            result.addMatch(new GalContact(AdminConstants.A_ID, getAttrs(e)));
         }
         return result;
     }
@@ -1415,12 +1415,11 @@ public class SoapProvisioning extends Provisioning {
 
         Element resp = invoke(req);
 
-        SearchGalResult result = new SearchGalResult();
-        result.matches = new ArrayList<GalContact>();
-        result.hadMore = resp.getAttributeBool(AdminConstants.A_MORE);
-        result.tokenizeKey = resp.getAttribute(AccountConstants.A_TOKENIZE_KEY, null);
+        SearchGalResult result = SearchGalResult.newSearchGalResult(null);
+        result.setHadMore(resp.getAttributeBool(AdminConstants.A_MORE));
+        result.setTokenizeKey(resp.getAttribute(AccountConstants.A_TOKENIZE_KEY, null));
         for (Element e: resp.listElements(AdminConstants.E_CN)) {
-            result.matches.add(new GalContact(AdminConstants.A_ID, getAttrs(e)));
+            result.addMatch(new GalContact(AdminConstants.A_ID, getAttrs(e)));
         }
         return result;
     }

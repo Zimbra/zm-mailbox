@@ -634,7 +634,9 @@ public class LdapUtil {
                                    String token,
                                    SearchGalResult result) throws ServiceException {
 
-        result.token = token != null && !token.equals("")? token : EARLIEST_SYNC_TOKEN;
+        String tk = token != null && !token.equals("")? token : EARLIEST_SYNC_TOKEN;
+        result.setToken(tk);
+        
         if (pageSize > 0)
             pageSize = adjustPageSize(maxResults, pageSize);
         
@@ -674,6 +676,11 @@ public class LdapUtil {
         int total = 0;
         byte[] cookie = null;
         
+        /*
+         * quick way to limit the size of gal sync for testing, otherwise gal sync would retrieve all entries.
+         */
+        // maxResults = Integer.valueOf(LC.get("debug_max_gal_entries"));
+        
         try {
             try {
                 do {
@@ -683,7 +690,7 @@ public class LdapUtil {
                     ne = zlc.searchDir(base, query, sc);
                     while (ne != null && ne.hasMore()) {
                         if (maxResults > 0 && total++ > maxResults) {
-                            result.hadMore = true;
+                            result.setHadMore(true);
                             break;
                         }
                         
@@ -692,11 +699,12 @@ public class LdapUtil {
                         
                         GalContact lgc = new GalContact(dn, rules.apply(sr.getAttributes()));
                         String mts = (String) lgc.getAttrs().get("modifyTimeStamp");
-                        result.token = getLaterTimestamp(result.token, mts);
+                        result.setToken(getLaterTimestamp(result.getToken(), mts));
                         String cts = (String) lgc.getAttrs().get("createTimeStamp");
-                        result.token = getLaterTimestamp(result.token, cts);
-                        result.matches.add(lgc);
+                        result.setToken(getLaterTimestamp(result.getToken(), cts));
+                        result.addMatch(lgc);
                         ZimbraLog.gal.debug("dn=" + dn + ", modifyTimeStamp=" + mts + ", createTimeStamp" + cts);
+                    
                     }
                     if (pageSize > 0)
                         cookie = zlc.getCookie();
@@ -723,7 +731,7 @@ public class LdapUtil {
                     ne.close();
             }    
         } catch (SizeLimitExceededException sle) {
-            result.hadMore = true;
+            result.setHadMore(true);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to search gal", e);
         } catch (IOException e) {
@@ -744,15 +752,15 @@ public class LdapUtil {
             String n,
             int maxResults,
             LdapGalMapRules rules,
-            String token) throws ServiceException, NamingException, IOException {
+            String token,
+            GalContact.Visitor visitor) throws ServiceException, NamingException, IOException {
         
         String url[] = galParams.url();
         String base = galParams.searchBase();
         String filter = galParams.filter();
     
-        SearchGalResult result = new SearchGalResult();
-        result.matches = new ArrayList<GalContact>();
-        result.tokenizeKey = GalUtil.tokenizeKey(galParams, galOp);
+        SearchGalResult result = SearchGalResult.newSearchGalResult(visitor);
+        result.setTokenizeKey(GalUtil.tokenizeKey(galParams, galOp));
     
         if (url == null || url.length == 0 || base == null || filter == null) {
             if (url == null || url.length == 0)

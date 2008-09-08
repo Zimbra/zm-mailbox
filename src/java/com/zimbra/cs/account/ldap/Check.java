@@ -36,6 +36,7 @@ import javax.net.ssl.SSLHandshakeException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.GalMode;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.gal.GalParams;
@@ -188,9 +189,9 @@ public class Check {
 
     
     public static Result checkGalConfig(Map attrs, String query, int limit, GalOp galOp) throws ServiceException {
-        String mode = getRequiredAttr(attrs, Provisioning.A_zimbraGalMode);
-        if (!mode.equals(Provisioning.GM_LDAP))
-            throw ServiceException.INVALID_REQUEST("gal mode must be: "+Provisioning.GM_LDAP, null);
+        GalMode mode = GalMode.fromString(getRequiredAttr(attrs, Provisioning.A_zimbraGalMode));
+        if (mode != GalMode.ldap)
+            throw ServiceException.INVALID_REQUEST("gal mode must be: "+GalMode.ldap.toString(), null);
 
         GalParams.ExternalGalParams galParams = new GalParams.ExternalGalParams(attrs, galOp);
 
@@ -200,16 +201,15 @@ public class Check {
         try {
             SearchGalResult result = null;
             if (galOp == GalOp.autocomplete)
-                result = LdapUtil.searchLdapGal(galParams, GalOp.autocomplete, query, limit, rules, null); 
+                result = LdapUtil.searchLdapGal(galParams, GalOp.autocomplete, query, limit, rules, null, null); 
             else if (galOp == GalOp.search)
-                result = LdapUtil.searchLdapGal(galParams, GalOp.search, query, limit, rules, null); 
+                result = LdapUtil.searchLdapGal(galParams, GalOp.search, query, limit, rules, null, null); 
             else if (galOp == GalOp.sync)
-                result = LdapUtil.searchLdapGal(galParams, GalOp.sync, query, limit, rules, ""); 
+                result = LdapUtil.searchLdapGal(galParams, GalOp.sync, query, limit, rules, "", null); 
             else 
                 throw ServiceException.INVALID_REQUEST("invalid GAL op: "+galOp.toString(), null);
             
-            List contacts = result.matches;
-            return new GalResult(STATUS_OK, "", contacts);
+            return new GalResult(STATUS_OK, "", result.getMatches());
         } catch (NamingException e) {
             return toResult(e, "");
         } catch (IOException e) {
@@ -290,7 +290,7 @@ public class Check {
 
    private static void testCheckGal() {
         HashMap<String, String> attrs = new HashMap<String, String>();
-        attrs.put(Provisioning.A_zimbraGalMode, Provisioning.GM_LDAP);
+        attrs.put(Provisioning.A_zimbraGalMode, GalMode.ldap.toString());
         attrs.put(Provisioning.A_zimbraGalLdapURL, "ldap://exch1.example.zimbra.com/");
         attrs.put(Provisioning.A_zimbraGalLdapBindDn, "zz_gal");
         attrs.put(Provisioning.A_zimbraGalLdapBindPassword, "zz_gal");

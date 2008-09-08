@@ -39,6 +39,7 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.account.Provisioning.GalMode;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.gal.GalConstants;
 import com.zimbra.cs.mailbox.Contact;
@@ -265,12 +266,12 @@ public class TestGal extends TestCase {
         */
     }
   
-    private void setupAutoComplete(String galMode, int pageSize) throws Exception {
+    private void setupAutoComplete(GalMode galMode, int pageSize) throws Exception {
         Domain domain = mProv.get(DomainBy.name, DOMAIN_NAME);
         assertNotNull(domain);
         
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraGalMode, galMode);
+        attrs.put(Provisioning.A_zimbraGalMode, galMode.toString());
         attrs.put(Provisioning.A_zimbraGalLdapPageSize, ""+pageSize);
         
         // set domain limit to be larger than total number of accounts so test parameters 
@@ -279,25 +280,25 @@ public class TestGal extends TestCase {
         mProv.modifyAttrs(domain, attrs);
     }
     
-    private void setupSearch(String galMode, int pageSize, int domainLimit) throws Exception {
+    private void setupSearch(GalMode galMode, int pageSize, int domainLimit) throws Exception {
         // System.out.format("   setupSearch: galMode=%s, pageSize=%d, domainLimit=%d\n", galMode, pageSize, domainLimit);
         Domain domain = mProv.get(DomainBy.name, DOMAIN_NAME);
         assertNotNull(domain);
         
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraGalMode, galMode);
+        attrs.put(Provisioning.A_zimbraGalMode, galMode.toString());
         attrs.put(Provisioning.A_zimbraGalLdapPageSize, ""+pageSize);
         attrs.put(Provisioning.A_zimbraGalMaxResults, ""+domainLimit);
         mProv.modifyAttrs(domain, attrs);
     }
     
-    private void setupSync(String galMode, int pageSize, int domainLimit) throws Exception {
+    private void setupSync(GalMode galMode, int pageSize, int domainLimit) throws Exception {
         // System.out.format("   setupSync: galMode=%s, pageSize=%d, domainLimit=%d\n", galMode, pageSize, domainLimit);
         Domain domain = mProv.get(DomainBy.name, DOMAIN_NAME);
         assertNotNull(domain);
         
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraGalMode, galMode);
+        attrs.put(Provisioning.A_zimbraGalMode, galMode.toString());
         attrs.put(Provisioning.A_zimbraGalSyncLdapPageSize, ""+pageSize);
         attrs.put(Provisioning.A_zimbraGalMaxResults, ""+domainLimit);
         mProv.modifyAttrs(domain, attrs);
@@ -313,8 +314,8 @@ public class TestGal extends TestCase {
         return number*2;
     }
     
-    private void dumpResult(SearchGalResult galResult) {
-        for (GalContact contact : galResult.matches) {
+    private void dumpResult(SearchGalResult galResult) throws Exception {
+        for (GalContact contact : galResult.getMatches()) {
             System.out.println(contact.getId());
         }
     }
@@ -325,12 +326,12 @@ public class TestGal extends TestCase {
                                                           QUERY,
                                                           Provisioning.GAL_SEARCH_TYPE.USER_ACCOUNT, // Provisioning.GAL_SEARCH_TYPE.ALL, 
                                                           maxWanted);
-        if (numResultsExpected != galResult.matches.size())
+        if (numResultsExpected != galResult.getNumMatches())
             dumpResult(galResult);
         
-        assertEquals(numResultsExpected, galResult.matches.size());
+        assertEquals(numResultsExpected, galResult.getNumMatches());
         boolean expectedHasMore = numResultsExpected < NUM_ACCOUNTS;
-        assertEquals(expectedHasMore, galResult.hadMore);
+        assertEquals(expectedHasMore, galResult.getHadMore());
     }
     
     private void searchGal(int numResultsExpected) throws Exception {
@@ -339,25 +340,31 @@ public class TestGal extends TestCase {
                                                     QUERY,
                                                     Provisioning.GAL_SEARCH_TYPE.ALL, 
                                                     null);
-        assertEquals(numResultsExpected, galResult.matches.size());
+        assertEquals(numResultsExpected, galResult.getNumMatches());
         boolean expectedHasMore = numResultsExpected < NUM_ACCOUNTS;
-        assertEquals(expectedHasMore, galResult.hadMore);
+        assertEquals(expectedHasMore, galResult.getHadMore());
     }
     
     private String syncGal(int numResultsExpected, int numTotal, String token) throws Exception {
+        /*
+        if (DEBUG)
+            System.out.format("    syncGal: numResultsExpected=%d, numTotal=%d, token=%s\n", 
+                              numResultsExpected, numTotal, token);
+        */
+        
         Domain domain = mProv.get(DomainBy.name, DOMAIN_NAME);
         SearchGalResult galResult = mProv.searchGal(domain, 
                                                     QUERY,
                                                     Provisioning.GAL_SEARCH_TYPE.ALL, 
                                                     token);
-        assertEquals(numResultsExpected, galResult.matches.size());
+        assertEquals(numResultsExpected, galResult.getNumMatches());
         boolean expectedHasMore = numResultsExpected < numTotal;
         
         // SyncGal SOAP response does not encode the more flag. 
         if (!SOAP_PROV)
-            assertEquals(expectedHasMore, galResult.hadMore);
+            assertEquals(expectedHasMore, galResult.getHadMore());
         
-        return galResult.token;
+        return galResult.getToken();
     }
     
     private void syncGal(int numResultsExpected) throws Exception {
@@ -395,7 +402,7 @@ public class TestGal extends TestCase {
      * when ldap server has a limit:
      *      it is capped by the ldap server limit     
      */
-    private void autoCompleteGal(String galMode, int pageSize) throws Exception {
+    private void autoCompleteGal(GalMode galMode, int pageSize) throws Exception {
         if (DEBUG)
             System.out.format("autoCompleteGal: %s, page size = %d\n", galMode, pageSize);
         
@@ -422,7 +429,7 @@ public class TestGal extends TestCase {
      * when ldap server has a limit:
      *      it is capped by the lower of ldap server limit and domain limit
      */
-    private void searchGal(String galMode, int pageSize) throws Exception {
+    private void searchGal(GalMode galMode, int pageSize) throws Exception {
         if (DEBUG)
             System.out.format("searchGal: %s, page size = %d\n", galMode, pageSize);
         
@@ -447,7 +454,7 @@ public class TestGal extends TestCase {
         }
     }
     
-    private void syncGal(String galMode, int pageSize) throws Exception {
+    private void syncGal(GalMode galMode, int pageSize) throws Exception {
         if (DEBUG)
             System.out.format("syncGal: %s, page size = %d\n", galMode, pageSize);
         
@@ -472,47 +479,47 @@ public class TestGal extends TestCase {
         }
     }
     
-    public void autoCompleteGal(String galMode) throws Exception {
+    public void autoCompleteGal(GalMode galMode) throws Exception {
         PageSizeEnum pse = new PageSizeEnum();
         while (pse.hasNext())
             autoCompleteGal(galMode, pse.next());
     }
     
-    public void searchGal(String galMode) throws Exception {
+    public void searchGal(GalMode galMode) throws Exception {
         PageSizeEnum pse = new PageSizeEnum();
         while (pse.hasNext())
             searchGal(galMode, pse.next());
     }
     
-    public void syncGal(String galMode) throws Exception {
+    public void syncGal(GalMode galMode) throws Exception {
         PageSizeEnum pse = new PageSizeEnum();
         while (pse.hasNext())
             syncGal(galMode, pse.next());
     }
     
     public void testAutoCompleteGal() throws Exception {
-        autoCompleteGal(Provisioning.GM_ZIMBRA);
-        autoCompleteGal(Provisioning.GM_LDAP);
+        autoCompleteGal(GalMode.zimbra);
+        autoCompleteGal(GalMode.ldap);
     }
     
     public void testSearchGal() throws Exception {
-        searchGal(Provisioning.GM_ZIMBRA);
-        searchGal(Provisioning.GM_LDAP);
+        searchGal(GalMode.zimbra);
+        searchGal(GalMode.ldap);
     }
     
     public void testSyncGal() throws Exception {
-        syncGal(Provisioning.GM_ZIMBRA);
-        syncGal(Provisioning.GM_LDAP);
+        syncGal(GalMode.zimbra);
+        syncGal(GalMode.ldap);
     }
     
-    private void setupTokenize(String domainName, String galMode, String andOr) throws Exception {
+    private void setupTokenize(String domainName, GalMode galMode, String andOr) throws Exception {
         Domain domain = mProv.get(DomainBy.name, domainName);
         assertNotNull(domain);
         
         Map<String, Object> attrs = new HashMap<String, Object>();
         
         if (galMode != null)
-            attrs.put(Provisioning.A_zimbraGalMode, galMode);
+            attrs.put(Provisioning.A_zimbraGalMode, galMode.toString());
         
         if (andOr == null) {
             attrs.put(Provisioning.A_zimbraGalTokenizeAutoCompleteKey, "");
@@ -544,10 +551,10 @@ public class TestGal extends TestCase {
         
         System.out.println("tokenizeTest: key=" + key);
         
-        assertEquals(galResult.tokenizeKey, tokenizeKey);
+        assertEquals(galResult.getTokenizeKey(), tokenizeKey);
         
         Set<String> results = new HashSet<String>();
-        for (GalContact gc : galResult.matches) {
+        for (GalContact gc : galResult.getMatches()) {
             String r = (String)gc.getAttrs().get(Contact.A_email);
             System.out.println("    " + r);
             results.add(r);
@@ -560,7 +567,7 @@ public class TestGal extends TestCase {
         for (String mail : results)
             assertTrue(expectedUsersList.contains((mail.split("@"))[0]));
         
-        assertEquals(expectedUsers.length, galResult.matches.size());
+        assertEquals(expectedUsers.length, galResult.getNumMatches());
 
     }
     
@@ -571,7 +578,7 @@ public class TestGal extends TestCase {
           createAccount("user2", "phoebe shao",  null);
           createAccount("user3", null,           "phoebe shao");
     */
-    public void autoCompleteWithTokenizeAND(String galMode) throws Exception {
+    public void autoCompleteWithTokenizeAND(GalMode galMode) throws Exception {
         setupTokenize(TOKENIZE_TEST_DOMAIN_NAME, galMode, GalConstants.TOKENIZE_KEY_AND);
         
         tokenizeTest(GalOp.GOP_AUTOCOMPLETE, GalConstants.TOKENIZE_KEY_AND, "phoebe", new String[]{"user1", "user2", "user3"});
@@ -581,7 +588,7 @@ public class TestGal extends TestCase {
         tokenizeTest(GalOp.GOP_AUTOCOMPLETE, GalConstants.TOKENIZE_KEY_AND, "blah shao", new String[0]);
     }
     
-    public void autoCompleteWithTokenizeOR(String galMode) throws Exception {
+    public void autoCompleteWithTokenizeOR(GalMode galMode) throws Exception {
         setupTokenize(TOKENIZE_TEST_DOMAIN_NAME, galMode, GalConstants.TOKENIZE_KEY_OR);
         
         tokenizeTest(GalOp.GOP_AUTOCOMPLETE, GalConstants.TOKENIZE_KEY_OR, "phoebe", new String[]{"user1", "user2", "user3"});
@@ -591,7 +598,7 @@ public class TestGal extends TestCase {
         tokenizeTest(GalOp.GOP_AUTOCOMPLETE, GalConstants.TOKENIZE_KEY_OR, "blah shao", new String[]{"user1"});
     }
     
-    public void searchWithTokenizeAND(String galMode) throws Exception {
+    public void searchWithTokenizeAND(GalMode galMode) throws Exception {
         setupTokenize(TOKENIZE_TEST_DOMAIN_NAME, galMode, GalConstants.TOKENIZE_KEY_AND);
         
         tokenizeTest(GalOp.GOP_SEARCH, GalConstants.TOKENIZE_KEY_AND, "phoebe", new String[]{"user1", "user2", "user3"});
@@ -601,7 +608,7 @@ public class TestGal extends TestCase {
         tokenizeTest(GalOp.GOP_SEARCH, GalConstants.TOKENIZE_KEY_AND, "blah shao", new String[0]);
     }
     
-    public void searchWithTokenizeOR(String galMode) throws Exception {
+    public void searchWithTokenizeOR(GalMode galMode) throws Exception {
         setupTokenize(TOKENIZE_TEST_DOMAIN_NAME, galMode, GalConstants.TOKENIZE_KEY_OR);
         
         tokenizeTest(GalOp.GOP_SEARCH, GalConstants.TOKENIZE_KEY_OR, "phoebe", new String[]{"user1", "user2", "user3"});
@@ -612,15 +619,15 @@ public class TestGal extends TestCase {
     }
     
     public void testTokenizeKey() throws Exception {
-        autoCompleteWithTokenizeAND("zimbra");
-        autoCompleteWithTokenizeAND("ldap");
-        autoCompleteWithTokenizeOR("zimbra");
-        autoCompleteWithTokenizeOR("ldap");
+        autoCompleteWithTokenizeAND(GalMode.zimbra);
+        autoCompleteWithTokenizeAND(GalMode.ldap);
+        autoCompleteWithTokenizeOR(GalMode.zimbra);
+        autoCompleteWithTokenizeOR(GalMode.ldap);
         
-        searchWithTokenizeAND("zimbra");
-        searchWithTokenizeAND("ldap");
-        searchWithTokenizeOR("zimbra");
-        searchWithTokenizeOR("ldap");
+        searchWithTokenizeAND(GalMode.zimbra);
+        searchWithTokenizeAND(GalMode.ldap);
+        searchWithTokenizeOR(GalMode.zimbra);
+        searchWithTokenizeOR(GalMode.ldap);
     }
     
     public void disable_testPageSizeEnum() throws Exception {

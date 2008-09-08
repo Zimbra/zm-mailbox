@@ -91,8 +91,8 @@ public class AclReports extends Report {
 		Provisioning prov = Provisioning.getInstance();
 		ArrayList<DavResource> ret = new ArrayList<DavResource>();
 		if (prop.equals(DavElements.E_DISPLAYNAME)) {
-	        SearchGalResult result = prov.searchGal(prov.getDomain(authAccount), match, Provisioning.GAL_SEARCH_TYPE.USER_ACCOUNT, Provisioning.GM_ZIMBRA, null);
-	        for (GalContact ct : result.matches) {
+	        SearchGalResult result = prov.searchGal(prov.getDomain(authAccount), match, Provisioning.GAL_SEARCH_TYPE.USER_ACCOUNT, Provisioning.GalMode.zimbra, null);
+	        for (GalContact ct : result.getMatches()) {
 	            String email = (String)ct.getAttrs().get(Contact.A_email);
 	            if (email != null) {
 	            	Account acct = prov.get(Provisioning.AccountBy.name, email);

@@ -27,9 +27,9 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
-import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -51,14 +51,21 @@ public class SyncGal extends AccountDocumentHandler {
                 throw ServiceException.PERM_DENIED("cannot sync GAL");
         }
         
-        Domain d = Provisioning.getInstance().getDomain(account);
         String tokenAttr = request.getAttribute(MailConstants.A_TOKEN, "");
-        SearchGalResult result = Provisioning.getInstance().searchGal(d, "", Provisioning.GAL_SEARCH_TYPE.ALL, tokenAttr);
-
-        Element response = zsc.createElement(AccountConstants.SYNC_GAL_RESPONSE);
         
-        if (result.token != null)
-            response.addAttribute(MailConstants.A_TOKEN, result.token);
+        Element response = zsc.createElement(AccountConstants.SYNC_GAL_RESPONSE);
+
+        Provisioning prov = Provisioning.getInstance();
+        Domain d = prov.getDomain(account);
+        
+        SearchGal.GalContactVisitor visitor = null;
+        if (!DebugConfig.disableGalSyncVisitor)
+            visitor = new SearchGal.GalContactVisitor(response);
+
+        SearchGalResult result = prov.searchGal(d, "", Provisioning.GAL_SEARCH_TYPE.ALL, tokenAttr, visitor);
+        
+        if (result.getToken() != null)
+            response.addAttribute(MailConstants.A_TOKEN, result.getToken());
         
         com.zimbra.cs.service.account.SearchGal.addContacts(response, result);
         
@@ -69,4 +76,5 @@ public class SyncGal extends AccountDocumentHandler {
     public boolean needsAuth(Map<String, Object> context) {
         return true;
     }
+
 }

@@ -1274,7 +1274,7 @@ public class ProvUtil implements DebugListener {
         Domain d = lookupDomain(domain);
 
         SearchGalResult result = mProv.searchGal(d, query, Provisioning.GAL_SEARCH_TYPE.ALL, null);
-        for (GalContact contact : result.matches)
+        for (GalContact contact : result.getMatches())
             dumpContact(contact);
     }    
 
@@ -1286,7 +1286,7 @@ public class ProvUtil implements DebugListener {
         Domain d = lookupDomain(domain);
 
         SearchGalResult result = mProv.autoCompleteGal(d, query, Provisioning.GAL_SEARCH_TYPE.ALL, 100);
-        for (GalContact contact : result.matches)
+        for (GalContact contact : result.getMatches())
             dumpContact(contact);
     }    
     
@@ -1297,9 +1297,9 @@ public class ProvUtil implements DebugListener {
         Domain d = lookupDomain(domain);
 
         SearchGalResult result = mProv.searchGal(d, "", Provisioning.GAL_SEARCH_TYPE.ALL, token);
-        if (result.token != null)
-            System.out.println("# token = "+result.token);
-        for (GalContact contact : result.matches)
+        if (result.getToken() != null)
+            System.out.println("# token = "+result.getToken());
+        for (GalContact contact : result.getMatches())
             dumpContact(contact);
     }    
 

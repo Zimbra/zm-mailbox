@@ -118,6 +118,12 @@ public class DebugConfig {
     // the effects of corruption are issues) and database-per-user (which
     // most DBMSes can't deal with).
     public static final int numMailboxGroups;
+    
+    // If true, the GAL sync visitor mechanism is disabled.  SyncGal will use 
+    // the traditional way of adding matches to a SearchGalResult, then add 
+    // each match in the SOAP response.   The GAL sync visitor mechanism reduces  
+    // chance of OOME when there is a huge result.
+    public static boolean disableGalSyncVisitor;
 
     static {
         calendarAllowNonDisplayAlarms = booleanValue("debug_calendar_allow_non_display_alarms", false);
@@ -153,6 +159,8 @@ public class DebugConfig {
 
         disableMailboxGroups = booleanValue("debug_disable_mailbox_group", false);
         numMailboxGroups = disableMailboxGroups ? Integer.MAX_VALUE : Math.max(LC.zimbra_mailbox_groups.intValue(), 1);
+        
+        disableGalSyncVisitor = booleanValue("debug_disable_gal_sync_visitor", false);
     }
 
     private static boolean booleanValue(String key, boolean defaultValue) {
