@@ -3559,4 +3559,74 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>POP3 SSL capabilities enabled on proxy.  Capabilities are listed on the CAPABILITY line, also known in RFCs as extensions</desc>
 </attr>
 
+<attr id="723" name="zimbraReverseProxyLogLevel" type="enum" value="debug,info,notice,warn,error,crit" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>info</globalConfigValue>
+  <desc>Log level for NGINX Proxy error log</desc>
+</attr>
+
+<attr id="724" name="zimbraReverseProxyWorkerProcesses" type="integer" min="1" max="16" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>4</globalConfigValue>
+  <desc>Number of worker processes of NGINX Proxy</desc>
+</attr>
+
+<attr id="725" name="zimbraReverseProxyWorkerConnections" type="integer" min="1" max="40960" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>10240</globalConfigValue>
+  <desc>Maximum number of connections that an NGINX Proxy worker process is allowed to handle</desc>
+</attr>
+
+<attr id="726" name="zimbraReverseProxyUserThrottleMsg" type="string" cardinality="single" optionalIn="globalConfig">
+  <globalConfigValue>Login rejected for this user</globalConfigValue>
+  <desc>The error message with which a login attempt by a user will be throttled, if the attempt count exceeds the configured limit</desc>
+</attr>
+
+<attr id="727" name="zimbraReverseProxyIpThrottleMsg" type="string" cardinality="single" optionalIn="globalConfig">
+  <globalConfigValue>Login rejected from this IP</globalConfigValue>
+  <desc>The error message with which a connection attempt from an IP address will be throttled, if the connection count exceeds the configured limit</desc>
+</attr>
+
+<attr id="728" name="zimbraReverseProxyImapSaslPlainEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>whether IMAP SASL PLAIN is enabled for reverse proxy</desc>
+</attr>
+
+<attr id="729" name="zimbraReverseProxyPop3SaslPlainEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>whether POP3 SASL PLAIN is enabled for reverse proxy</desc>
+</attr>
+
+<attr id="730" name="zimbraReverseProxyCacheReconnectInterval" type="duration" cardinality="single" optionalIn="globalConfig">
+  <globalConfigValue>1m</globalConfigValue>
+  <desc>time interval that NGINX proxy will wait before attempting to re-establish a connection to a memcache server that disconnected</desc>
+</attr>
+
+<attr id="731" name="zimbraReverseProxyCacheFetchTimeout" type="duration" cardinality="single" optionalIn="globalConfig">
+  <globalConfigValue>3s</globalConfigValue>
+  <desc>time interval that NGINX proxy will wait for a cache result, before considering the result as a cache miss</desc>
+</attr>
+
+<attr id="732" name="zimbraReverseProxyCacheEntryTTL" type="duration" cardinality="single" optionalIn="globalConfig">
+  <globalConfigValue>1h</globalConfigValue>
+  <desc>time interval that an entry cached by NGINX will remain in the cache</desc>
+</attr>
+
+<attr id="733" name="zimbraReverseProxyImapCapabilities" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>"IMAP4rev1" "ID" "LITERAL+" "SASL-IR" "IDLE" "NAMESPACE"</globalConfigValue>
+  <desc>NGINX reverse proxy IMAP capabilities</desc>
+</attr>
+
+<attr id="734" name="zimbraReverseProxyPop3Capabilities" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>"TOP" "USER" "UIDL" "EXPIRE 31 USER"</globalConfigValue>
+  <desc>NGINX reverse proxy POP3 capabilities</desc>
+</attr>
+
+<attr id="735" name="zimbraReverseProxyInactivityTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>1h</globalConfigValue>
+  <desc>Time interval after which NGINX mail proxy will disconnect an inactive IMAP/POP connection</desc>
+</attr>
+
+<attr id="736" name="zimbraReverseProxyPassErrors" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>whether NGINX mail proxy will pass upstream server errors back to the downstream email clients</desc>
+</attr>
+
 </attrs>
