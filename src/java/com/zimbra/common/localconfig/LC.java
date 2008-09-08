@@ -156,6 +156,8 @@ public class LC {
     public static final KnownKey zimbra_ssl_enabled;
     
     public static final KnownKey stats_img_folder;
+    
+    public static final KnownKey soap_max_in_memory_buffer_size;
 
     public static final KnownKey ldap_host;
     public static final KnownKey ldap_log_level;
@@ -618,6 +620,9 @@ public class LC {
         stats_img_folder = new KnownKey("stats_img_folder");
         stats_img_folder.setDefault("${zimbra_home}" + FS + "logger" + FS + "db" + FS + "work");
 
+        soap_max_in_memory_buffer_size = new KnownKey("soap_max_in_memory_buffer_size");
+        soap_max_in_memory_buffer_size.setDefault("131072");  // 128KB
+        
         ldap_host = new KnownKey("ldap_host");
         ldap_host.setDefault("");
 
