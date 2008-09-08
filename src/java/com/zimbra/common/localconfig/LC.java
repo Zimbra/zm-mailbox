@@ -195,6 +195,8 @@ public class LC {
     public static final KnownKey ldap_cache_server_maxsize;
     public static final KnownKey ldap_cache_server_maxage;
     public static final KnownKey ldap_cache_timezone_maxsize;
+    public static final KnownKey ldap_cache_xmppcomponent_maxsize;
+    public static final KnownKey ldap_cache_xmppcomponent_maxage;
     public static final KnownKey ldap_cache_zimlet_maxsize;
     public static final KnownKey ldap_cache_zimlet_maxage;
     
@@ -714,6 +716,10 @@ public class LC {
         ldap_cache_server_maxage = new KnownKey("ldap_cache_server_maxage", "15");
 
         ldap_cache_timezone_maxsize = new KnownKey("ldap_cache_timezone_maxsize", "100");
+        
+        ldap_cache_xmppcomponent_maxsize = new KnownKey("ldap_cache_xmppcomponent_maxsize", "100");
+        
+        ldap_cache_xmppcomponent_maxage = new KnownKey("ldap_cache_xmppcomponent_maxage", "15");
 
         ldap_cache_zimlet_maxsize = new KnownKey("ldap_cache_zimlet_maxsize", "100");
 

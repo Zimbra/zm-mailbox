@@ -329,6 +329,16 @@ public class AdminConstants {
     public static final QName QUERY_WAIT_SET_REQUEST = QName.get("QueryWaitSetRequest", NAMESPACE);
     public static final QName QUERY_WAIT_SET_RESPONSE = QName.get("QueryWaitSetResponse", NAMESPACE);
     
+    // XMPPComponent
+    public static final QName CREATE_XMPPCOMPONENT_REQUEST = QName.get("CreateXMPPComponentRequest", NAMESPACE);
+    public static final QName CREATE_XMPPCOMPONENT_RESPONSE = QName.get("CreateXMPPComponentResponse", NAMESPACE);
+    public static final QName GET_XMPPCOMPONENT_REQUEST = QName.get("GetXMPPComponentRequest", NAMESPACE);
+    public static final QName GET_XMPPCOMPONENT_RESPONSE = QName.get("GetXMPPComponentResponse", NAMESPACE);
+    public static final QName GET_ALL_XMPPCOMPONENTS_REQUEST = QName.get("GetAllXMPPComponentsRequest", NAMESPACE);
+    public static final QName GET_ALL_XMPPCOMPONENTS_RESPONSE = QName.get("GetAllXMPPComponentsResponse", NAMESPACE);
+    public static final QName DELETE_XMPPCOMPONENT_REQUEST = QName.get("DeleteXMPPComponentRequest", NAMESPACE);
+    public static final QName DELETE_XMPPCOMPONENT_RESPONSE = QName.get("DeleteXMPPComponentResponse", NAMESPACE);
+    
     // DumpSessions
     public static final String E_SESSION = "session";
     public static final String A_ZIMBRA_ID = "zid";
@@ -374,6 +384,7 @@ public class AdminConstants {
     public static final String E_QUEUE = "queue";
     public static final String E_ACTION = "action";
     public static final String E_SERVER = "server";
+    public static final String E_XMPP_COMPONENT = "xmppcomponent";
     public static final String E_STATUS = "status";
     public static final String E_END_TIME = "endTime";
     public static final String E_START_TIME = "startTime";
@@ -550,5 +561,6 @@ public class AdminConstants {
     public static final String A_MT_LASTSOAPACCESS   = "lastSoapAccess";
     public static final String A_MT_NEWNESSAGES      = "newMessages";
     public static final String A_MT_IDXDEFERREDCOUNT = "idxDeferredCount";
+    
 
 }
