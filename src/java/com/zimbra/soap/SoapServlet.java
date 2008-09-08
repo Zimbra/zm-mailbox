@@ -39,6 +39,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.util.FileBufferedWriter;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
@@ -300,12 +301,50 @@ public class SoapServlet extends ZimbraServlet {
         SoapProtocol soapProto = SoapProtocol.determineProtocol(envelope);
         int statusCode = soapProto.hasFault(envelope) ?
             HttpServletResponse.SC_INTERNAL_SERVER_ERROR : HttpServletResponse.SC_OK;
-        byte[] soapBytes = envelope.toUTF8();
-        resp.setContentType(soapProto.getContentType());
-        resp.setBufferSize(soapBytes.length + 2048);
-        resp.setContentLength(soapBytes.length);
-        resp.setStatus(statusCode);
-        resp.getOutputStream().write(soapBytes);
+        
+        // file buffered mechanism can be disabled by setting soap_max_in_memory_buffer_size to 0
+        boolean fileBufferingDisabled = (LC.soap_max_in_memory_buffer_size.intValue() == 0);
+        
+        if (!fileBufferingDisabled && soapProto.getBodyElement(envelope).isLarge()) {
+            ZimbraLog.soap.debug("file buffering response");
+            /*
+             * ====================
+             * NOTE:
+             *     This is currently only done for GAL SOAP commands. (only GAL handlers would set needsBuffering
+             *     for its response to true if it's got a large result) 
+             * ====================
+             *
+             * The handler told us that this response could be large.
+             * The actual serialize body may or may not, but is likely to, exceed soap_max_in_memory_buffer_size.
+             * Use a FileBufferedWriter to hold the serialized envelope and then write it to the response writer. 
+             * 
+             * FileBufferedWriter keeps data in memory if it is smaller than soap_max_in_memory_buffer_size, 
+             * If data exceeds this size, it is buffered to a temporary file. 
+             * 
+             * The fileBufferedWriter.finish() call triggers writing to the http response.
+             */
+            FileBufferedWriter fileBufferedWriter = new FileBufferedWriter(resp.getWriter(), 
+                    LC.soap_max_in_memory_buffer_size.intValueWithinRange(0, FileBufferedWriter.MAX_BUFFER_SIZE));
+            resp.setContentType(soapProto.getContentType());
+            resp.setStatus(statusCode);
+            try {
+                // serialize envelope to a FileBufferedWriter
+                envelope.toUTF8(fileBufferedWriter);
+            } finally {
+                // write response
+                fileBufferedWriter.finish();
+            }
+        } else {
+            /*
+             * serialize the envelope to a byte array and send the response with Content-Length header.
+             */
+            byte[] soapBytes = envelope.toUTF8();
+            resp.setContentType(soapProto.getContentType());
+            resp.setBufferSize(soapBytes.length + 2048);
+            resp.setContentLength(soapBytes.length);
+            resp.setStatus(statusCode);
+            resp.getOutputStream().write(soapBytes);
+        }    
     }
 
     /**
