@@ -952,8 +952,8 @@ public class UserServlet extends ZimbraServlet {
 
         // don't use this for a large upload.  use getUpload() instead.
         public byte[] getPostBody() throws ServiceException, IOException {
-            long sizeLimit = Provisioning.getInstance().getConfig().getLongAttr(
-                    Provisioning.A_zimbraMtaMaxMessageSize, DEFAULT_MAX_POST_SIZE);
+            long sizeLimit = Provisioning.getInstance().getLocalServer().getLongAttr(
+                    Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_POST_SIZE);
             return ByteUtil.getContent(req.getInputStream(), req.getContentLength(), sizeLimit);
         }
         
@@ -1145,7 +1145,7 @@ public class UserServlet extends ZimbraServlet {
             PutMethod method = new PutMethod(u.toString());
             String contentType = doc.getContentType();
             method.addRequestHeader("Content-Type", contentType);
-            method.setRequestEntity(new InputStreamRequestEntity(doc.getContentStream(), contentType));
+            method.setRequestEntity(new InputStreamRequestEntity(doc.getContentStream(), doc.getSize(), contentType));
             Pair<Header[], HttpMethod> pair = doHttpOp(authToken, proxyHost, proxyPort, proxyUser, proxyPass, method);
             return new Pair<Header[], HttpInputStream>(pair.getFirst(), new HttpInputStream(pair.getSecond()));
     	}
@@ -1208,6 +1208,15 @@ public class UserServlet extends ZimbraServlet {
     	    NetUtil.configureProxy(client);
     	}
         
+    	if (method instanceof PutMethod) {
+    		long contentLength = ((PutMethod)method).getRequestEntity().getContentLength();
+    		if (contentLength > 0) {
+    			int timeEstimate = Math.max(10000, (int)(contentLength / 100));  // 100kbps in millis
+    			client.getHttpConnectionManager().getParams().setConnectionTimeout(timeEstimate);
+    			client.getHttpConnectionManager().getParams().setSoTimeout(timeEstimate);
+    		}
+    	}
+    	
         try {
             int statusCode = client.executeMethod(method);
             if (statusCode == HttpStatus.SC_NOT_FOUND)
