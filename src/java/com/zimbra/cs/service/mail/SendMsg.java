@@ -481,25 +481,29 @@ public class SendMsg extends MailDocumentHandler {
                     if (calItem != null) {
                         RecurId rid = replyInv.getRecurId();
                         Invite inv = calItem.getInvite(rid);
-                        ZOrganizer org = inv.getOrganizer();
-                        if (org != null) {
-                            ZProperty orgProp = org.toProperty();
-                            if (replyOrg == null) {
-                                // Looks like Outlook 2007.  It has a habit of dropping ORGANIZER entirely.
-                                uidToOrganizer.put(uid, orgProp);
-                            } else {
-                                // Is it Outlook 2003?  Outlook 2003 will either leave out SENT-BY, or show
-                                // the wrong organizer.
-                                String replyOrgAddr = replyOrg.getAddress();
-                                String orgAddr = org.getAddress();
-                                if (org.hasSentBy() ||
-                                    (orgAddr != null && !orgAddr.equalsIgnoreCase(replyOrgAddr))) {
+                        if (inv == null && rid != null)  // replying to a non-exception instance
+                            inv = calItem.getInvite((RecurId) null);
+                        if (inv != null) {
+                            ZOrganizer org = inv.getOrganizer();
+                            if (org != null) {
+                                ZProperty orgProp = org.toProperty();
+                                if (replyOrg == null) {
+                                    // Looks like Outlook 2007.  It has a habit of dropping ORGANIZER entirely.
                                     uidToOrganizer.put(uid, orgProp);
+                                } else {
+                                    // Is it Outlook 2003?  Outlook 2003 will either leave out SENT-BY, or show
+                                    // the wrong organizer.
+                                    String replyOrgAddr = replyOrg.getAddress();
+                                    String orgAddr = org.getAddress();
+                                    if (org.hasSentBy() ||
+                                        (orgAddr != null && !orgAddr.equalsIgnoreCase(replyOrgAddr))) {
+                                        uidToOrganizer.put(uid, orgProp);
+                                    }
                                 }
+                                // Else, original organizer doesn't have SENT-BY and its address matches
+                                // the address in reply's organizer.  We already know reply organizer didn't
+                                // have SENT-BY.  This means the ORGANIZER line in the reply was already correct.
                             }
-                            // Else, original organizer doesn't have SENT-BY and its address matches
-                            // the address in reply's organizer.  We already know reply organizer didn't
-                            // have SENT-BY.  This means the ORGANIZER line in the reply was already correct.
                         }
                     }
                 }
