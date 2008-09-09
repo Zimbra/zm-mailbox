@@ -81,10 +81,10 @@ extends TestCase {
     private boolean mOriginalReplyEnabled;
     private String mOriginalReply;
     private boolean mOriginalNotificationEnabled;
-    private String[] mOriginalNotificationAddresses;
+    private String mOriginalNotificationAddress;
     private String mOriginalNotificationSubject;
     private String mOriginalNotificationBody;
-    private String mOriginalInterceptAddress;
+    private String[] mOriginalInterceptAddresses;
     private String mOriginalInterceptSendHeadersOnly;
     private String mOriginalSaveToSent;
     private boolean mIsServerTest = false;
@@ -99,10 +99,10 @@ extends TestCase {
         mOriginalReplyEnabled = account.getBooleanAttr(Provisioning.A_zimbraPrefOutOfOfficeReplyEnabled, false);
         mOriginalReply = account.getAttr(Provisioning.A_zimbraPrefOutOfOfficeReply, "");
         mOriginalNotificationEnabled = account.getBooleanAttr(Provisioning.A_zimbraPrefNewMailNotificationEnabled, false);
-        mOriginalNotificationAddresses = account.getMultiAttr(Provisioning.A_zimbraPrefNewMailNotificationAddress);
+        mOriginalNotificationAddress = account.getAttr(Provisioning.A_zimbraPrefNewMailNotificationAddress, "");
         mOriginalNotificationSubject = account.getAttr(Provisioning.A_zimbraNewMailNotificationSubject, "");
         mOriginalNotificationBody = account.getAttr(Provisioning.A_zimbraNewMailNotificationBody, "");
-        mOriginalInterceptAddress = account.getAttr(Provisioning.A_zimbraInterceptAddress, "");
+        mOriginalInterceptAddresses = account.getMultiAttr(Provisioning.A_zimbraInterceptAddress);
         mOriginalInterceptSendHeadersOnly = account.getAttr(Provisioning.A_zimbraInterceptSendHeadersOnly, "");
         mOriginalSaveToSent = account.getAttr(Provisioning.A_zimbraPrefSaveToSent, "");
     }
@@ -353,10 +353,10 @@ extends TestCase {
         attrs.put(Provisioning.A_zimbraPrefOutOfOfficeReply, mOriginalReply);
         attrs.put(Provisioning.A_zimbraPrefNewMailNotificationEnabled,
             LdapUtil.getBooleanString(mOriginalNotificationEnabled));
-        attrs.put(Provisioning.A_zimbraPrefNewMailNotificationAddress, mOriginalNotificationAddresses);
+        attrs.put(Provisioning.A_zimbraPrefNewMailNotificationAddress, mOriginalNotificationAddress);
         attrs.put(Provisioning.A_zimbraNewMailNotificationSubject, mOriginalNotificationSubject);
         attrs.put(Provisioning.A_zimbraNewMailNotificationBody, mOriginalNotificationBody);
-        attrs.put(Provisioning.A_zimbraInterceptAddress, mOriginalInterceptAddress);
+        attrs.put(Provisioning.A_zimbraInterceptAddress, mOriginalInterceptAddresses);
         attrs.put(Provisioning.A_zimbraInterceptSendHeadersOnly, mOriginalInterceptSendHeadersOnly);
         attrs.put(Provisioning.A_zimbraPrefSaveToSent, mOriginalSaveToSent);
         Provisioning.getInstance().modifyAttrs(account, attrs);
