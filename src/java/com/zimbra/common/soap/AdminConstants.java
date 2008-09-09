@@ -360,6 +360,7 @@ public class AdminConstants {
     public static final String A_NEXT_SEQ_NO = "nextSeqNo";
     public static final String A_AID = "aid";
     public static final String A_CID = "cid";
+    public static final String E_ERRORS = "errors";
 
     public static final String E_ACCOUNT = "account";
     public static final String E_CALENDAR_RESOURCE = "calresource";
