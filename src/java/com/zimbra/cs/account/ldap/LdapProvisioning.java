@@ -37,8 +37,6 @@ import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.AccountCache;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
-import com.zimbra.cs.account.Provisioning.GAL_SEARCH_TYPE;
-import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
@@ -97,6 +95,7 @@ import javax.naming.directory.InvalidSearchFilterException;
 import javax.naming.directory.SchemaViolationException;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1552,11 +1551,16 @@ public class LdapProvisioning extends Provisioning {
     private Domain getDomainById(String zimbraId, ZimbraLdapContext zlc) throws ServiceException {
         if (zimbraId == null)
             return null;
-        LdapDomain domain = (LdapDomain) sDomainCache.getById(zimbraId);
+        
+        Domain d = sDomainCache.getById(zimbraId);
+        if (d instanceof DomainCache.NonExistingDomain)
+            return null;
+        
+        LdapDomain domain = (LdapDomain)d;
         if (domain == null) {
             zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
             domain = getDomainByQuery(LdapFilter.domainById(zimbraId), zlc);
-            sDomainCache.put(domain);
+            sDomainCache.put(DomainBy.id, zimbraId, domain);
         }
         return domain;
     }
@@ -1577,31 +1581,43 @@ public class LdapProvisioning extends Provisioning {
     }        
         
     private Domain getDomainByAsciiName(String name, ZimbraLdapContext zlc) throws ServiceException {
-        LdapDomain domain = (LdapDomain) sDomainCache.getByName(name);
+        Domain d = sDomainCache.getByName(name);
+        if (d instanceof DomainCache.NonExistingDomain)
+            return null;
+        
+        LdapDomain domain = (LdapDomain)d;
         if (domain == null) {
             name = LdapUtil.escapeSearchFilterArg(name);
             domain = getDomainByQuery(LdapFilter.domainByName(name), zlc);
-            sDomainCache.put(domain);
+            sDomainCache.put(DomainBy.name, name, domain);
         }
         return domain;        
     }
    
     private Domain getDomainByVirtualHostname(String virtualHostname) throws ServiceException {
-        LdapDomain domain = (LdapDomain) sDomainCache.getByVirtualHostname(virtualHostname);
+        Domain d = sDomainCache.getByVirtualHostname(virtualHostname);
+        if (d instanceof DomainCache.NonExistingDomain)
+            return null;
+        
+        LdapDomain domain = (LdapDomain)d;
         if (domain == null) {
             virtualHostname = LdapUtil.escapeSearchFilterArg(virtualHostname);
             domain = getDomainByQuery(LdapFilter.domainByVirtualHostame(virtualHostname), null);
-            sDomainCache.put(domain);
+            sDomainCache.put(DomainBy.virtualHostname, virtualHostname, domain);
         }
         return domain;        
     }
     
     private Domain getDomainByKrb5Realm(String krb5Realm) throws ServiceException {
-        LdapDomain domain = (LdapDomain) sDomainCache.getByKrb5Realm(krb5Realm);
+        Domain d = sDomainCache.getByKrb5Realm(krb5Realm);
+        if (d instanceof DomainCache.NonExistingDomain)
+            return null;
+        
+        LdapDomain domain = (LdapDomain)d;
         if (domain == null) {
             krb5Realm = LdapUtil.escapeSearchFilterArg(krb5Realm);
             domain = getDomainByQuery(LdapFilter.domainByKrb5Realm(krb5Realm), null);
-            sDomainCache.put(domain);
+            sDomainCache.put(DomainBy.krb5Realm, krb5Realm, domain);
         }
         return domain;        
     }
@@ -5276,8 +5292,12 @@ public class LdapProvisioning extends Provisioning {
                 for (CacheEntry entry : entries) {
                     DomainBy domainBy = (entry.mEntryBy==CacheEntryBy.id)? DomainBy.id : DomainBy.name;
                     Domain domain = getFromCache(domainBy, entry.mEntryIdentity);
-                    if (domain != null)
-                        reload(domain);
+                    if (domain != null) {
+                        if (domain instanceof DomainCache.NonExistingDomain)
+                            sDomainCache.removeNonExisting(domainBy, entry.mEntryIdentity);
+                        else
+                            reload(domain);
+                    }
                 }
             } else
                 sDomainCache.clear();
