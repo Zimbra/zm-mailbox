@@ -62,7 +62,6 @@ import com.zimbra.common.util.ZimbraLog;
  */
 public class IMPersona extends ClassLogger {
     private static final String FN_ADDRESS = "a";
-    private static final String FN_PRESENCE = "p";
     private static final String FN_INTEROP_SERVICE_PREFIX  = "isvc-";
 
     //
@@ -73,21 +72,21 @@ public class IMPersona extends ClassLogger {
             if (Provisioning.getInstance().getLocalServer().getBooleanAttr(Provisioning.A_zimbraXMPPEnabled, false)) {
                 IMAddr addr = new IMAddr(acctName);
                 JID jid = addr.makeJID();
-                User user = XMPPServer.getInstance().getUserManager().getUser(jid.toBareJID());
-//                try {
-//                    XMPPServer.getInstance().getUserManager().deleteUser(user);
-//                } catch (Exception e) {
-//                    ZimbraLog.im.warn("Exception deleting IM User data for: "+acctName, e);
-//                }
+                User user = XMPPServer.getInstance().getUserManager().getUser(jid.toBareJID(), true);
                 try {
                     XMPPServer.getInstance().getRosterManager().deleteRoster(jid);
                 } catch (Exception e) {
                     ZimbraLog.im.warn("Exception deleting IM Roster data for: "+acctName, e);
                 }
                 try {
-                    GroupManager.getInstance().deleteUser(user);
+                    GroupManager.getInstance().deleteUser(jid.toBareJID());
                 } catch (Exception e) {
                     ZimbraLog.im.warn("Exception deleting IM Group data for: "+acctName, e);
+                }
+                try {
+                    XMPPServer.getInstance().getUserManager().deleteUser(user);
+                } catch (Exception e) {
+                    ZimbraLog.im.warn("Exception deleting IM User data for: "+acctName, e);
                 }
             }
         } catch (Exception e) {

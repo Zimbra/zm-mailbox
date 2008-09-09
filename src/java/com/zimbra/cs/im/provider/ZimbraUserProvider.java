@@ -43,7 +43,7 @@ public class ZimbraUserProvider implements UserProvider {
         sInstance = this;
     }
     
-    public User loadUser(String username) throws UserNotFoundException {
+    public User loadUser(String username, boolean ignoreServerCheck) throws UserNotFoundException {
         // Un-escape username.
         username = JID.unescapeNode(username);
         
@@ -53,7 +53,7 @@ public class ZimbraUserProvider implements UserProvider {
             if (acct == null) 
                 throw new UserNotFoundException("Unknown user: "+username);
             
-            if (!Provisioning.onLocalServer(acct)) 
+            if (!ignoreServerCheck && !Provisioning.onLocalServer(acct)) 
                 throw new UserNotFoundException("User "+username+" is not local to this server");
             
             String un = acct.getName();
