@@ -268,10 +268,18 @@ public abstract class Entry {
         }
     }
 
+    /**
+     * Returns the set of values for the given attribute, or an empty
+     * array if no values are defined.
+     */
     public String[] getMultiAttr(String name) {
         return getMultiAttr(name, true);
     }
     
+    /**
+     * Returns the set of values for the given attribute, or an empty
+     * array if no values are defined.
+     */
     public String[] getUnicodeMultiAttr(String name) {
         String[] values = getMultiAttr(name, true);
         
@@ -286,6 +294,10 @@ public abstract class Entry {
             return values;
     }
 
+    /**
+     * Returns the set of values for the given attribute, or an empty
+     * array if no values are defined.
+     */
     public String[] getMultiAttr(String name, boolean applyDefaults) {
         Object v = getObject(name, applyDefaults);
         if (v instanceof String) return new String[]{(String) v};
@@ -296,6 +308,10 @@ public abstract class Entry {
         }
     }
 
+    /**
+     * Returns the set of values for the given attribute, or an empty
+     * array if no values are defined.
+     */
     public Set<String> getMultiAttrSet(String name) {
         if (mMultiAttrSetCache == null)        
             mMultiAttrSetCache = new HashMap<String, Set<String>>();        

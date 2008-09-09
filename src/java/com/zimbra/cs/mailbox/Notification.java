@@ -468,81 +468,83 @@ implements LmtpCallback {
      */
     void interceptIfNecessary(Mailbox mbox, MimeMessage msg, String operation, Folder folder)
     throws ServiceException {
-        try {
             // Don't do anything if intercept is turned off.
             Account account = mbox.getAccount();
-            String interceptAddress = account.getAttr(Provisioning.A_zimbraInterceptAddress, null);
-            if (StringUtil.isNullOrEmpty(interceptAddress)) {
+            String[] interceptAddresses = account.getMultiAttr(Provisioning.A_zimbraInterceptAddress); 
+            if (interceptAddresses.length == 0) {
                 return;
             }
-            ZimbraLog.mailbox.info("Sending intercept of message %s to %s.", msg.getMessageID(), interceptAddress);
             
-            // Fill templates
-            String folderName = "none";
-            String folderId = "none";
-            if (folder != null) {
-                folderName = folder.getName();
-                folderId = Integer.toString(folder.getId());
-            }
-            Map<String, String> vars = new HashMap<String, String>();
-            vars.put("ACCOUNT_DOMAIN", getDomain(account.getName()));
-            vars.put("ACCOUNT_ADDRESS", account.getName());
-            vars.put("MESSAGE_SUBJECT", msg.getSubject());
-            vars.put("OPERATION", operation);
-            vars.put("FOLDER_NAME", folderName);
-            vars.put("FOLDER_ID", folderId);
-            vars.put("NEWLINE", "\r\n");
-            
-            String from = StringUtil.fillTemplate(account.getAttr(Provisioning.A_zimbraInterceptFrom), vars);
-            String subject = StringUtil.fillTemplate(account.getAttr(Provisioning.A_zimbraInterceptSubject), vars);
-            String bodyText = StringUtil.fillTemplate(account.getAttr(Provisioning.A_zimbraInterceptBody), vars);
+            for (String interceptAddress : interceptAddresses) {
+                try {
+                    ZimbraLog.mailbox.info("Sending intercept of message %s to %s.", msg.getMessageID(), interceptAddress);
 
-            // Assemble outgoing message
-            MimeMessage attached = msg;
-            boolean headersOnly = account.getBooleanAttr(Provisioning.A_zimbraInterceptSendHeadersOnly, false);
-            if (headersOnly) {
-                attached = new MimeMessageWithId(msg.getMessageID());
-                Enumeration e = msg.getAllHeaderLines();
-                while (e.hasMoreElements()) {
-                    attached.addHeaderLine((String) e.nextElement());
+                    // Fill templates
+                    String folderName = "none";
+                    String folderId = "none";
+                    if (folder != null) {
+                        folderName = folder.getName();
+                        folderId = Integer.toString(folder.getId());
+                    }
+                    Map<String, String> vars = new HashMap<String, String>();
+                    vars.put("ACCOUNT_DOMAIN", getDomain(account.getName()));
+                    vars.put("ACCOUNT_ADDRESS", account.getName());
+                    vars.put("MESSAGE_SUBJECT", msg.getSubject());
+                    vars.put("OPERATION", operation);
+                    vars.put("FOLDER_NAME", folderName);
+                    vars.put("FOLDER_ID", folderId);
+                    vars.put("NEWLINE", "\r\n");
+
+                    String from = StringUtil.fillTemplate(account.getAttr(Provisioning.A_zimbraInterceptFrom), vars);
+                    String subject = StringUtil.fillTemplate(account.getAttr(Provisioning.A_zimbraInterceptSubject), vars);
+                    String bodyText = StringUtil.fillTemplate(account.getAttr(Provisioning.A_zimbraInterceptBody), vars);
+
+                    // Assemble outgoing message
+                    MimeMessage attached = msg;
+                    boolean headersOnly = account.getBooleanAttr(Provisioning.A_zimbraInterceptSendHeadersOnly, false);
+                    if (headersOnly) {
+                        attached = new MimeMessageWithId(msg.getMessageID());
+                        Enumeration e = msg.getAllHeaderLines();
+                        while (e.hasMoreElements()) {
+                            attached.addHeaderLine((String) e.nextElement());
+                        }
+                        attached.setContent("", msg.getContentType());
+                    }
+
+                    SMTPMessage out = new SMTPMessage(JMSession.getSession());
+                    out.setHeader("Auto-Submitted", "auto-replied (zimbra; intercept)");
+                    InternetAddress address = new InternetAddress(from);
+                    out.setFrom(address);
+
+                    address = new InternetAddress(interceptAddress);
+                    out.setRecipient(javax.mail.Message.RecipientType.TO, address);
+
+                    String charset = getCharset(account, subject);
+                    out.setSubject(subject, charset);
+                    charset = getCharset(account, bodyText);
+
+                    MimeMultipart multi = new MimeMultipart();
+
+                    // Add message body
+                    MimeBodyPart part = new MimeBodyPart(); 
+                    part.setText(bodyText, charset);
+                    multi.addBodyPart(part);
+
+                    // Add original message
+                    part = new MimeBodyPart();
+                    part.setContent(attached, Mime.CT_MESSAGE_RFC822);
+                    multi.addBodyPart(part);
+
+                    out.setContent(multi);
+                    String envFrom = "<>";
+                    out.setEnvelopeFrom(envFrom);
+
+                    out.saveChanges();
+                    Transport.send(out);
+                } catch (MessagingException e) {
+                    ZimbraLog.lmtp.warn("Unable to send intercept message to %s.", interceptAddress, e);
                 }
-                attached.setContent("", msg.getContentType());
-            }
-
-            SMTPMessage out = new SMTPMessage(JMSession.getSession());
-            out.setHeader("Auto-Submitted", "auto-replied (zimbra; intercept)");
-            InternetAddress address = new InternetAddress(from);
-            out.setFrom(address);
-            
-            address = new InternetAddress(interceptAddress);
-            out.setRecipient(javax.mail.Message.RecipientType.TO, address);
-            
-            String charset = getCharset(account, subject);
-            out.setSubject(subject, charset);
-            charset = getCharset(account, bodyText);
-            
-            MimeMultipart multi = new MimeMultipart();
-            
-            // Add message body
-            MimeBodyPart part = new MimeBodyPart(); 
-            part.setText(bodyText, charset);
-            multi.addBodyPart(part);
-            
-            // Add original message
-            part = new MimeBodyPart();
-            part.setContent(attached, Mime.CT_MESSAGE_RFC822);
-            multi.addBodyPart(part);
-
-            out.setContent(multi);
-            String envFrom = "<>";
-            out.setEnvelopeFrom(envFrom);
-            
-            out.saveChanges();
-            Transport.send(out);
-        } catch (MessagingException e) {
-            throw ServiceException.FAILURE("Unable to send intercept message.", e);
-        }
-        
+            }        
     }
 
     /**
