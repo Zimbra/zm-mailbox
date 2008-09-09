@@ -32,6 +32,8 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -220,7 +222,7 @@ public class WaitSetRequest extends MailDocumentHandler {
             // the server in a very fast loop (they should be using the 'block' mode)
             try { Thread.sleep(INITIAL_SLEEP_TIME); } catch (InterruptedException ex) {}
 
-            cb.errors = cb.ws.removeAccounts(remove);
+            cb.errors.addAll(cb.ws.removeAccounts(remove));
             synchronized(cb.ws) { // bug 28190: always grab the WS lock before the CB lock.
                 synchronized(cb) {
                     cb.errors.addAll(cb.ws.doWait(cb, lastKnownSeqNo, add, update));
@@ -284,7 +286,13 @@ public class WaitSetRequest extends MailDocumentHandler {
         if (elt != null) {
             for (Iterator<Element> iter = elt.elementIterator(MailConstants.E_A); iter.hasNext();) {
                 Element a = iter.next();
-                String id = a.getAttribute(MailConstants.A_ID);
+                String id;
+                String name = a.getAttribute(MailConstants.A_NAME, null);
+                if (name != null) {
+                    id = Provisioning.getInstance().get(AccountBy.name, name).getId();
+                } else {
+                    id = a.getAttribute(MailConstants.A_ID);
+                }
                 if (allowedAccountIds != null && !allowedAccountIds.contains(id)) {
                     throw ServiceException.PERM_DENIED("Only admins may listen to other account IDs");
                 }
@@ -313,9 +321,11 @@ public class WaitSetRequest extends MailDocumentHandler {
     }
     
     public static class Callback implements WaitSetCallback {
-        public void dataReady(IWaitSet ws, String seqNo, boolean canceled, String[] signalledAccounts) {
+        public void dataReady(IWaitSet ws, String seqNo, boolean canceled, List<WaitSetError> inErrors, String[] signalledAccounts) {
             synchronized(this) {
                 ZimbraLog.session.debug("WaitSet: Called WaitSetCallback.dataReady()!");
+                if (inErrors != null && inErrors.size() > 0)  
+                    errors.addAll(inErrors);
                 this.waitSet = ws;
                 this.canceled = canceled;
                 this.signalledAccounts = signalledAccounts;
@@ -332,7 +342,7 @@ public class WaitSetRequest extends MailDocumentHandler {
         public IWaitSet waitSet;
         public String seqNo;
         public IWaitSet ws;
-        public List<WaitSetError> errors;
+        public List<WaitSetError> errors = new ArrayList<WaitSetError>();
         public Continuation continuation;
     }
     

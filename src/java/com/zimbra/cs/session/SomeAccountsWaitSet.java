@@ -113,6 +113,15 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
         } 
     }
     
+    /* @see com.zimbra.cs.mailbox.MailboxManager.Listener#mailboxDeleted(java.lang.String) */
+    public synchronized void mailboxDeleted(String accountId) {
+        WaitSetAccount wsa = mSessions.get(accountId);
+        if (wsa != null) {
+            mSessions.remove(accountId);
+            signalError(new WaitSetError(accountId, WaitSetError.Type.MAILBOX_DELETED));
+        }
+    }
+    
     private synchronized WaitSetError initializeWaitSetSession(WaitSetAccount wsa) {
         WaitSetSession wsSession = new WaitSetSession(this, wsa.accountId, wsa.interests, wsa.lastKnownSyncToken);
         try {
