@@ -28,6 +28,7 @@ public class WaitSetError {
         WRONG_HOST_FOR_ACCOUNT,
         NOT_IN_SET_DURING_REMOVE,
         NOT_IN_SET_DURING_UPDATE,
+        MAILBOX_DELETED,
         ;
     }
 

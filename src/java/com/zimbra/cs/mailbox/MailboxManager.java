@@ -58,13 +58,17 @@ public class MailboxManager {
      */
     public static interface Listener {
         /** Called whenever a mailbox has left Maintenance mode */
-        public void mailboxAvailable(Mailbox mbox) throws ServiceException;
+        public void mailboxAvailable(Mailbox mbox);
         
         /** Called whenever a mailbox is loaded */
-        public void mailboxLoaded(Mailbox mbox) throws ServiceException;
+        public void mailboxLoaded(Mailbox mbox);
         
         /** Called whenever a mailbox is created */
-        public void mailboxCreated(Mailbox mbox) throws ServiceException;
+        public void mailboxCreated(Mailbox mbox);
+        
+        /** Called whenever a mailbox is deleted from this server.  
+         *  Could mean the mailbox was moved to another server, or could mean really deleted */ 
+        public void mailboxDeleted(String accountId);
     }
 
     public static final class MailboxLock {
@@ -120,21 +124,25 @@ public class MailboxManager {
         mListeners.remove(listener); 
     }
 
-    private void notifyMailboxAvailable(Mailbox mbox) throws ServiceException {
+    private void notifyMailboxAvailable(Mailbox mbox) {
         for (Listener listener : mListeners) 
             listener.mailboxAvailable(mbox);
     }
     
-    private void notifyMailboxLoaded(Mailbox mbox) throws ServiceException {
+    private void notifyMailboxLoaded(Mailbox mbox) {
         for (Listener listener : mListeners) 
             listener.mailboxLoaded(mbox);
     }
     
-    private void notifyMailboxCreated(Mailbox mbox) throws ServiceException {
+    private void notifyMailboxCreated(Mailbox mbox) {
         for (Listener listener : mListeners) 
             listener.mailboxCreated(mbox);
     }
     
+    private void notifyMailboxDeleted(String accountId) {
+        for (Listener listener : mListeners) 
+            listener.mailboxDeleted(accountId);
+    }
 
     private static MailboxManager sInstance;
 
@@ -743,12 +751,13 @@ public class MailboxManager {
     }
 
     void markMailboxDeleted(Mailbox mailbox) {
+        String accountId = mailbox.getAccountId().toLowerCase(); 
         synchronized (this) {
-            mMailboxIds.remove(mailbox.getAccountId().toLowerCase());
+            mMailboxIds.remove(accountId);
             mMailboxCache.remove(mailbox.getId());
         }
+        notifyMailboxDeleted(accountId);
     }
-
 
     public void dumpMailboxCache() {
         StringBuilder sb = new StringBuilder();

@@ -67,8 +67,25 @@ ability to do this is limited by the RedoLogs that are available)
 </[Admin]CreateWaitSetRequest>
 
 <[Admin]CreateWaitSetResponse waitSet="setId" defTypes="types" seq="0">
-  [ <error ...something.../>]*
+  [ <error id="AccountId" t="ERROR_CODE"/>]*
 </[Admin]CreateWaitSetResponse>
+
+
+ERROR_CODEs:
+        // RUNTIME errors:
+        MAILBOX_DELETED: the mailbox has been deleted, it is no longer in the waitset
+
+        // ADD errors:
+        ALREADY_IN_SET_DURING_ADD: the account was not added, it was already there
+        ERROR_LOADING_MAILBOX: exception while trying to fetch the mailbox, not added
+        MAINTENANCE_MODE: mailbox currently in Maintenance Mode.  Try to add it again later.
+        NO_SUCH_ACCOUNT: unknown account, not added
+        WRONG_HOST_FOR_ACCOUNT: that account's mailbox is on another host.  Add it there.
+
+        // REMOVE/UPDATE errors
+        NOT_IN_SET_DURING_REMOVE
+        NOT_IN_SET_DURING_UPDATE
+        
 
 ***IMPORTANT: Note that the seq number is **NOT** guaranteed to be an
 integer.  Clients MUST treat this value as an opaque string.***
@@ -122,7 +139,7 @@ zimbra_admin_waitset_max_request_timeout
 
 <[Admin]WaitSetResponse waitSet="setId" [seq="seqNo" OR canceled="1"]>
   [ <n id="ACCTID"/>]*
-  [ <error ...something.../>]*
+  [ <error id="AccountId" t="ERROR_CODE"/>]*
 </[Admin]WaitSetResponse>
 
 If the specified wait set does not exist, the server will throw an
@@ -137,6 +154,20 @@ If a second WaitMultiple request arrives at the server while one is
 already waiting, the first request will be immediately completed and
 will return with the "canceled" flag set.
 
+ERROR_CODEs:
+        // RUNTIME errors:
+        MAILBOX_DELETED: the mailbox has been deleted, it is no longer in the waitset
+
+        // ADD errors:
+        ALREADY_IN_SET_DURING_ADD: the account was not added, it was already there
+        ERROR_LOADING_MAILBOX: exception while trying to fetch the mailbox, not added
+        MAINTENANCE_MODE: mailbox currently in Maintenance Mode.  Try to add it again later.
+        NO_SUCH_ACCOUNT: unknown account, not added
+        WRONG_HOST_FOR_ACCOUNT: that account's mailbox is on another host.  Add it there.
+
+        // REMOVE/UPDATE errors
+        NOT_IN_SET_DURING_REMOVE
+        NOT_IN_SET_DURING_UPDATE
 
 
 

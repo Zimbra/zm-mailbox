@@ -16,8 +16,10 @@
  */
 package com.zimbra.cs.session;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -65,7 +67,7 @@ public abstract class WaitSetBase implements IWaitSet {
     protected synchronized void cancelExistingCB() {
         if (mCb != null) {
             // cancel the existing waiter
-            mCb.dataReady(this, "", true, null);
+            mCb.dataReady(this, "", true, null, null);
             mCb = null;
             mLastAccessedTime = System.currentTimeMillis();
         }
@@ -92,24 +94,26 @@ public abstract class WaitSetBase implements IWaitSet {
         
         if (cbIsCurrent) {
             mSentSignalledSessions.clear();
+            mSentErrors.clear();
         }
         
         /////////////////////
         // Cases:
         //
         // CB up to date 
-        //   AND CurrentSignalled empty --> WAIT
-        //   AND CurrentSignalled NOT empty --> SEND
+        //   AND Current empty --> WAIT
+        //   AND Current NOT empty --> SEND
         //
         // CB not up to date
-        //   AND CurrentSignalled empty AND SendSignalled empty --> WAIT
-        //   AND CurrentSignalled NOT empty OR SentSignalled NOT empty --> SEND BOTH
+        //   AND Current empty AND Sent empty --> WAIT
+        //   AND (Current NOT empty OR Sent NOT empty) --> SEND BOTH
         //
         // ...simplifies to:
-        //        send if CurrentSignalled NOT empty OR
-        //                (CB not up to date AND SentSignalled not empty)
+        //        send if Current NOT empty OR
+        //                (CB not up to date AND Sent not empty)
         //
-        if (mCurrentSignalledSessions.size() > 0 || (!cbIsCurrent && mSentSignalledSessions.size() > 0)) {
+        if ((mCurrentSignalledSessions.size() > 0 || mCurrentErrors.size() > 0) || 
+                        (!cbIsCurrent && (mSentSignalledSessions.size() > 0 || mSentErrors.size() > 0))) {
             // if sent empty, then just swap sent,current instead of copying
             if (mSentSignalledSessions.size() == 0) {
                 // SWAP mSent,mCurrent!
@@ -121,15 +125,21 @@ public abstract class WaitSetBase implements IWaitSet {
                 mSentSignalledSessions.addAll(mCurrentSignalledSessions);
                 mCurrentSignalledSessions.clear();
             }
+
+            // error list 
+            mSentErrors.addAll(mCurrentErrors);
+            mCurrentErrors.clear();
+            
             // at this point, mSentSignalled is everything we're supposed to send...lets
             // make an array of the account IDs and signal them up!
-            assert(mSentSignalledSessions.size() > 0);
+            assert(mSentSignalledSessions.size() > 0  || mSentErrors.size() > 0);
             String[] toRet = new String[mSentSignalledSessions.size()];
             int i = 0;
             for (String accountId : mSentSignalledSessions) {
                 toRet[i++] = accountId;
             }
-            mCb.dataReady(this, toNextSeqNo(), false, toRet);
+            
+            mCb.dataReady(this, toNextSeqNo(), false, mSentErrors, toRet);
             mCb = null;
             mLastAccessedTime = System.currentTimeMillis();
         }
@@ -141,6 +151,15 @@ public abstract class WaitSetBase implements IWaitSet {
         response.addAttribute(AdminConstants.A_DEFTYPES, WaitSetRequest.expandInterestStr(mDefaultInterest));
         response.addAttribute(AdminConstants.A_LAST_ACCESSED_DATE, mLastAccessedTime);
 
+        if (mCurrentErrors.size() > 0) {
+            Element errors = response.addElement(AdminConstants.E_ERRORS);
+            for (WaitSetError error : mCurrentErrors) {
+                Element errorElt = errors.addElement("error");
+                errorElt.addAttribute(AdminConstants.A_ID, error.accountId); 
+                errorElt.addAttribute(AdminConstants.A_TYPE, error.error.name()); 
+            }
+        }
+        
         // signaled accounts
         if (mCurrentSignalledSessions.size() > 0) {
             Element signaled = response.addElement(AdminConstants.A_READY);
@@ -154,6 +173,11 @@ public abstract class WaitSetBase implements IWaitSet {
         }
     }
     
+    protected synchronized void signalError(WaitSetError err) {
+        mCurrentErrors.add(err);
+        trySendData();
+    }
+    
     
     protected final String mWaitSetId;
     protected final String mOwnerAccountId;
@@ -161,6 +185,13 @@ public abstract class WaitSetBase implements IWaitSet {
     
     protected long mLastAccessedTime = -1;
     protected WaitSetCallback mCb = null;
+    
+    /**
+     * List of errors (right now, only mailbox deletion notifications) to be sent
+     */
+    protected List<WaitSetError> mCurrentErrors = new ArrayList<WaitSetError>();
+    protected List<WaitSetError> mSentErrors = new ArrayList<WaitSetError>();
+    
     
     /** this is the signalled set data that is new (has never been sent) */
     protected HashSet<String /*accountId*/> mCurrentSignalledSessions = new HashSet<String>();
