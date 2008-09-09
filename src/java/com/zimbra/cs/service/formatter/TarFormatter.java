@@ -254,7 +254,7 @@ public class TarFormatter extends Formatter {
             for (MailItem rev : context.targetMailbox.getAllRevisions(
                 context.opContext, mi.getId(), mi.getType())) {
                 if (mi.getVersion() != rev.getVersion())
-                    saveItem(context, rev, fldrs, cnts, names, true, tos);
+                    tos = saveItem(context, rev, fldrs, cnts, names, true, tos);
             }
         }
         switch (mi.getType()) {
