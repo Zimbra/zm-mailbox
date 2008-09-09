@@ -63,6 +63,9 @@ extends TestCase {
     private static String SENDER_NAME = "user2";
     private static String TAPPED_NAME = "user1";
     private static String INTERCEPTOR_NAME = "user2";
+    private static String INTERCEPTOR2_NAME = "user3";
+    
+    private static String[] ALL_TEST_USERS = { "user1", "user2", "user3" };
     
     private static String NAME_PREFIX = TestNotification.class.getSimpleName();
     
@@ -78,7 +81,7 @@ extends TestCase {
     private boolean mOriginalReplyEnabled;
     private String mOriginalReply;
     private boolean mOriginalNotificationEnabled;
-    private String mOriginalNotificationAddress;
+    private String[] mOriginalNotificationAddresses;
     private String mOriginalNotificationSubject;
     private String mOriginalNotificationBody;
     private String mOriginalInterceptAddress;
@@ -96,7 +99,7 @@ extends TestCase {
         mOriginalReplyEnabled = account.getBooleanAttr(Provisioning.A_zimbraPrefOutOfOfficeReplyEnabled, false);
         mOriginalReply = account.getAttr(Provisioning.A_zimbraPrefOutOfOfficeReply, "");
         mOriginalNotificationEnabled = account.getBooleanAttr(Provisioning.A_zimbraPrefNewMailNotificationEnabled, false);
-        mOriginalNotificationAddress = account.getAttr(Provisioning.A_zimbraPrefNewMailNotificationAddress, "");
+        mOriginalNotificationAddresses = account.getMultiAttr(Provisioning.A_zimbraPrefNewMailNotificationAddress);
         mOriginalNotificationSubject = account.getAttr(Provisioning.A_zimbraNewMailNotificationSubject, "");
         mOriginalNotificationBody = account.getAttr(Provisioning.A_zimbraNewMailNotificationBody, "");
         mOriginalInterceptAddress = account.getAttr(Provisioning.A_zimbraInterceptAddress, "");
@@ -161,7 +164,7 @@ extends TestCase {
     @Test
     public void testIntercept()
     throws Exception {
-        // Turn on lawful intercept for recipient account
+        // Turn on legal intercept for recipient account
         String interceptorAddress = TestUtil.getAddress(INTERCEPTOR_NAME);
         TestUtil.setAccountAttr(TAPPED_NAME, Provisioning.A_zimbraInterceptAddress, interceptorAddress);
         TestUtil.setAccountAttr(TAPPED_NAME, Provisioning.A_zimbraInterceptSendHeadersOnly, LdapUtil.LDAP_FALSE);
@@ -228,6 +231,37 @@ extends TestCase {
         interceptMsg = TestUtil.waitForMessage(interceptorMbox, "subject:intercepted subject:\"" + subject + "\"");
         verifyInterceptMessage(interceptMsg, "add message", "Inbox", Integer.toString(Mailbox.ID_FOLDER_INBOX));
         compareContent(tappedMbox, tappedMsg, interceptorMbox, interceptMsg);
+    }
+    
+    /**
+     * Confirms that legal intercept works with multiple interceptor addresses (bug 30961).
+     */
+    public void testInterceptMultiValue()
+    throws Exception {
+        // Turn on legal intercept for recipient account.
+        String interceptor1Address = TestUtil.getAddress(INTERCEPTOR_NAME);
+        String interceptor2Address = TestUtil.getAddress(INTERCEPTOR2_NAME);
+        String[] interceptorAddresses = new String[] { interceptor1Address, interceptor2Address };
+        
+        TestUtil.setAccountAttr(TAPPED_NAME, Provisioning.A_zimbraInterceptAddress, interceptorAddresses);
+        TestUtil.setAccountAttr(TAPPED_NAME, Provisioning.A_zimbraInterceptSendHeadersOnly, LdapUtil.LDAP_FALSE);
+        
+        // Send message to recipient account.
+        ZMailbox tappedMbox = TestUtil.getZMailbox(TAPPED_NAME);
+        String tappedAddress = TestUtil.getAddress(TAPPED_NAME);
+        String subject = NAME_PREFIX + " testIntercept-receive";
+        TestUtil.addMessageLmtp(subject, tappedAddress, interceptor1Address);
+        
+        // Make sure both interceptor accounts intercepted it.
+        ZMailbox interceptor1Mbox = TestUtil.getZMailbox(INTERCEPTOR_NAME);
+        ZMailbox interceptor2Mbox = TestUtil.getZMailbox(INTERCEPTOR2_NAME);
+        ZMessage tappedMsg = TestUtil.getMessage(tappedMbox, "subject:\"" + subject + "\"");
+        ZMessage interceptMsg1 = TestUtil.getMessage(interceptor1Mbox, "subject:\"" + subject + "\"");
+        ZMessage interceptMsg2 = TestUtil.getMessage(interceptor2Mbox, "subject:\"" + subject + "\"");
+        verifyInterceptMessage(interceptMsg1, "add message", "Inbox", Integer.toString(Mailbox.ID_FOLDER_INBOX));
+        verifyInterceptMessage(interceptMsg2, "add message", "Inbox", Integer.toString(Mailbox.ID_FOLDER_INBOX));
+        compareContent(tappedMbox, tappedMsg, interceptor1Mbox, interceptMsg1);
+        compareContent(tappedMbox, tappedMsg, interceptor2Mbox, interceptMsg2);
     }
     
     /**
@@ -319,7 +353,7 @@ extends TestCase {
         attrs.put(Provisioning.A_zimbraPrefOutOfOfficeReply, mOriginalReply);
         attrs.put(Provisioning.A_zimbraPrefNewMailNotificationEnabled,
             LdapUtil.getBooleanString(mOriginalNotificationEnabled));
-        attrs.put(Provisioning.A_zimbraPrefNewMailNotificationAddress, mOriginalNotificationAddress);
+        attrs.put(Provisioning.A_zimbraPrefNewMailNotificationAddress, mOriginalNotificationAddresses);
         attrs.put(Provisioning.A_zimbraNewMailNotificationSubject, mOriginalNotificationSubject);
         attrs.put(Provisioning.A_zimbraNewMailNotificationBody, mOriginalNotificationBody);
         attrs.put(Provisioning.A_zimbraInterceptAddress, mOriginalInterceptAddress);
@@ -331,7 +365,8 @@ extends TestCase {
     }
 
     /**
-     * Deletes all rows from the <tt>out_of_office</tt> table.
+     * Deletes rows from the <tt>out_of_office</tt> table and cleans up data
+     * created by the test.
      */
     private void cleanUp()
     throws Exception {
@@ -344,8 +379,9 @@ extends TestCase {
         }
 
         // Clean up temporary data
-        TestUtil.deleteTestData(RECIPIENT_NAME, NAME_PREFIX);
-        TestUtil.deleteTestData(SENDER_NAME, NAME_PREFIX);
+        for (String userName : ALL_TEST_USERS) {
+            TestUtil.deleteTestData(userName, NAME_PREFIX);
+        }
     }
 
     public static void main(String[] args)

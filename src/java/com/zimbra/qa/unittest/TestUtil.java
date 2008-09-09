@@ -591,6 +591,13 @@ extends Assert {
         return account.getAttr(attrName);
     }
     
+    public static String[] getAccountMultiAttr(String userName, String attrName)
+    throws ServiceException {
+        String accountName = getAddress(userName);
+        Account account = Provisioning.getInstance().getAccount(accountName);
+        return account.getMultiAttr(attrName);
+    }
+    
     public static void setAccountAttr(String userName, String attrName, String attrValue)
     throws ServiceException {
     	Provisioning prov = Provisioning.getInstance();
@@ -598,6 +605,15 @@ extends Assert {
     	Map<String, Object> attrs = new HashMap<String, Object>();
     	attrs.put(attrName, attrValue);
     	prov.modifyAttrs(account, attrs);
+    }
+    
+    public static void setAccountAttr(String userName, String attrName, String[] attrValues)
+    throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        Account account = prov.get(AccountBy.name, getAddress(userName));
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(attrName, attrValues);
+        prov.modifyAttrs(account, attrs);
     }
     
     public static String getConfigAttr(String attrName)
