@@ -565,5 +565,5 @@ public class AdminConstants {
     public static final String A_MT_NEWNESSAGES      = "newMessages";
     public static final String A_MT_IDXDEFERREDCOUNT = "idxDeferredCount";
     
-
+    public static final String E_WAITSET = "waitSet";
 }
