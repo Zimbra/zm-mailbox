@@ -53,6 +53,7 @@ public final class PendingModifications {
         public static final int MODIFIED_VIEW      = 0x00100000;
         public static final int MODIFIED_ACL       = 0x00200000;
         public static final int MODIFIED_CONFLICT  = 0x00400000;
+        public static final int MODIFIED_ARCHIVED  = 0x00800000;
         public static final int INTERNAL_ONLY      = 0x10000000;
         public static final int ALL_FIELDS         = ~0;
 
