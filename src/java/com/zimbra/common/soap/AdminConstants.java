@@ -553,7 +553,9 @@ public class AdminConstants {
     public static final String A_MT_LASTSOAPACCESS   = "lastSoapAccess";
     public static final String A_MT_NEWNESSAGES      = "newMessages";
     public static final String A_MT_IDXDEFERREDCOUNT = "idxDeferredCount";
+    
 
+    public static final String E_WAITSET = "waitSet";
     
     //extension targets
     public static final String T_ADMIN_MAIN = "admin-main";
