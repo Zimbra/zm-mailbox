@@ -498,6 +498,8 @@ public class Mailbox {
     public Flag mSyncFlag;
     /** flag: indicates whether sync'd folder disallows children */
     public Flag mNoInferiorsFlag;
+    /** flag: whether an item is in archive */
+    public Flag mArchivedFlag;
 
     /** the full set of message flags, in order */
     final Flag[] mFlags = new Flag[31];
@@ -1493,6 +1495,7 @@ public class Mailbox {
         mSyncFolderFlag = Flag.instantiate(this, "\\SyncFolder", Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_SYNCFOLDER);
         mSyncFlag		= Flag.instantiate(this, "\\Sync",       Flag.FLAG_IS_FOLDER_ONLY,  Flag.ID_FLAG_SYNC);
         mNoInferiorsFlag = Flag.instantiate(this, "\\Noinferiors", Flag.FLAG_IS_FOLDER_ONLY, Flag.ID_FLAG_NO_INFERIORS);
+        mArchivedFlag = Flag.instantiate(this, "\\Archived", Flag.FLAG_GENERIC, Flag.ID_FLAG_ARCHIVED);
     }
 
     private void loadFoldersAndTags() throws ServiceException {

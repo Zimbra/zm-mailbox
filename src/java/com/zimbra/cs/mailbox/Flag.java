@@ -133,6 +133,10 @@ public class Flag extends Tag {
     public static final int ID_FLAG_NO_INFERIORS = -27;
     public static final int BITMASK_NO_INFERIORS = 1 << getIndex(ID_FLAG_NO_INFERIORS); // 67108864
         static { FLAG_REP[getIndex(ID_FLAG_NO_INFERIORS)] = 'o'; }
+        
+    public static final int ID_FLAG_ARCHIVED = -28;
+    public static final int BITMASK_ARCHIVED = 1 << getIndex(ID_FLAG_ARCHIVED); //134217728
+    	static { FLAG_REP[getIndex(ID_FLAG_ARCHIVED)] = '@'; }
 
     public static final int ID_FLAG_UNCACHED = -31;
     public static final int BITMASK_UNCACHED = 1 << getIndex(ID_FLAG_UNCACHED); // 4096
@@ -143,17 +147,17 @@ public class Flag extends Tag {
 
     public static final int FLAG_SYSTEM = BITMASK_FROM_ME | BITMASK_ATTACHED  | BITMASK_COPIED |
                                           BITMASK_DRAFT   | BITMASK_UNCACHED  | BITMASK_LOW_PRIORITY |
-                                          BITMASK_INVITE  | BITMASK_VERSIONED | BITMASK_HIGH_PRIORITY | BITMASK_INDEXING_DEFERRED ;
+                                          BITMASK_INVITE  | BITMASK_VERSIONED | BITMASK_HIGH_PRIORITY | BITMASK_INDEXING_DEFERRED | BITMASK_ARCHIVED;
 
     public static final int FLAGS_FOLDER  = BITMASK_CHECKED | BITMASK_SUBSCRIBED | BITMASK_EXCLUDE_FREEBUSY |
-                                            BITMASK_NO_INHERIT | BITMASK_SYNCFOLDER | BITMASK_SYNC | BITMASK_NO_INFERIORS;
+                                            BITMASK_NO_INHERIT | BITMASK_SYNCFOLDER | BITMASK_SYNC | BITMASK_NO_INFERIORS | BITMASK_ARCHIVED;
 
     public static final int FLAGS_MESSAGE = BITMASK_FROM_ME | BITMASK_REPLIED      | BITMASK_FORWARDED |
                                             BITMASK_DRAFT   | BITMASK_NOTIFIED     | BITMASK_UNREAD |
-                                            BITMASK_INVITE  | BITMASK_LOW_PRIORITY | BITMASK_HIGH_PRIORITY;
+                                            BITMASK_INVITE  | BITMASK_LOW_PRIORITY | BITMASK_HIGH_PRIORITY | BITMASK_ARCHIVED;
 
     public static final int FLAGS_GENERIC = BITMASK_ATTACHED | BITMASK_COPIED    | BITMASK_FLAGGED |
-                                            BITMASK_DELETED  | BITMASK_VERSIONED | BITMASK_UNCACHED | BITMASK_INDEXING_DEFERRED ;
+                                            BITMASK_DELETED  | BITMASK_VERSIONED | BITMASK_UNCACHED | BITMASK_INDEXING_DEFERRED | BITMASK_ARCHIVED;
 
     /** Bitmask of all valid flags <b>except</b> {@link #BITMASK_UNREAD}. */
     public static final int FLAGS_ALL = (FLAGS_FOLDER | FLAGS_MESSAGE | FLAGS_GENERIC) & ~BITMASK_UNREAD;
