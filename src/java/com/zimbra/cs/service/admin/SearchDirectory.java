@@ -98,12 +98,28 @@ public class SearchDirectory extends AdminDocumentHandler {
             throw ServiceException.INVALID_REQUEST("cannot specify domain with coses flag", null);
 
         String[] attrs = attrsStr == null ? null : attrsStr.split(",");
-
+        Set<String> reqAttrs = attrs == null ? null : new HashSet(Arrays.asList(attrs));
+        Element response = zsc.createElement(AdminConstants.SEARCH_DIRECTORY_RESPONSE);
         // if we are a domain admin only, restrict to domain
         if (isDomainAdminOnly(zsc)) {
-            if ((flags & Provisioning.SA_DOMAIN_FLAG) == Provisioning.SA_DOMAIN_FLAG)
-                throw ServiceException.PERM_DENIED("cannot search for domains");
-            
+            if ((flags & Provisioning.SA_DOMAIN_FLAG) == Provisioning.SA_DOMAIN_FLAG) {
+            	if(query != null && query.length()>0) {
+            		throw ServiceException.PERM_DENIED("cannot search for domains");
+            	} else {
+            		domain = getAuthTokenAccountDomain(zsc).getName();
+            		Domain d = null;
+                    if (domain != null) {
+                        d = prov.get(DomainBy.name, domain);
+                        if (d == null)
+                            throw AccountServiceException.NO_SUCH_DOMAIN(domain);
+                    }
+            		GetDomain.doDomain(response, d, applyConfig, reqAttrs);
+                    response.addAttribute(AdminConstants.A_MORE, false);
+                    response.addAttribute(AdminConstants.A_SEARCH_TOTAL, 1);
+                    return response;
+            	}
+            	
+            }
             if ((flags & Provisioning.SD_COS_FLAG) == Provisioning.SD_COS_FLAG)
                 throw ServiceException.PERM_DENIED("cannot search for coses");
 
@@ -139,8 +155,7 @@ public class SearchDirectory extends AdminDocumentHandler {
             accounts = prov.searchDirectory(options, false);
         }
 
-        Set<String> reqAttrs = attrs == null ? null : new HashSet(Arrays.asList(attrs));
-        Element response = zsc.createElement(AdminConstants.SEARCH_DIRECTORY_RESPONSE);
+
         int i, limitMax = offset+limit;
         for (i=offset; i < limitMax && i < accounts.size(); i++) {
             NamedEntry entry = (NamedEntry) accounts.get(i);
