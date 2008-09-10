@@ -17,10 +17,12 @@
 
 package com.zimbra.qa.unittest;
 
+import java.io.ByteArrayInputStream;
 import java.util.List;
 
 import junit.framework.TestCase;
 
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
@@ -30,6 +32,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.service.formatter.HeadersOnlyInputStream;
 
 public class TestMailItem extends TestCase {
     
@@ -71,6 +74,44 @@ public class TestMailItem extends TestCase {
             List<Integer> ids = mbox.listItemIds(null, type, folderId);
             assertEquals("Item count does not match", count, ids.size());
         }
+    }
+    
+    public void testHeadersOnlyInputStream()
+    throws Exception {
+        // Test no CRLFCRLF.
+        String s = "test";
+        ByteArrayInputStream in = new ByteArrayInputStream(s.getBytes());
+        HeadersOnlyInputStream headerStream = new HeadersOnlyInputStream(in);
+        String read = new String(ByteUtil.getContent(headerStream, s.length()));
+        assertEquals(s, read);
+        
+        // Test CRLFCRLF in the beginning.
+        s = "\r\n\r\ntest";
+        in = new ByteArrayInputStream(s.getBytes());
+        headerStream = new HeadersOnlyInputStream(in);
+        read = new String(ByteUtil.getContent(headerStream, s.length()));
+        assertEquals(0, read.length());
+        
+        // Test CRLFCRLF in the middle.
+        s = "te\r\n\r\nst";
+        in = new ByteArrayInputStream(s.getBytes());
+        headerStream = new HeadersOnlyInputStream(in);
+        read = new String(ByteUtil.getContent(headerStream, s.length()));
+        assertEquals("te", read);
+        
+        // Test CRLFCRLF in the end.
+        s = "test\r\n\r\n";
+        in = new ByteArrayInputStream(s.getBytes());
+        headerStream = new HeadersOnlyInputStream(in);
+        read = new String(ByteUtil.getContent(headerStream, s.length()));
+        assertEquals("test", read);
+        
+        // Test CRLFCR without the last LF.
+        s = "te\r\n\rst";
+        in = new ByteArrayInputStream(s.getBytes());
+        headerStream = new HeadersOnlyInputStream(in);
+        read = new String(ByteUtil.getContent(headerStream, s.length()));
+        assertEquals(s, read);
     }
     
     public void tearDown()
