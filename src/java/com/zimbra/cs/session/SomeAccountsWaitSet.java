@@ -107,6 +107,10 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
         WaitSetAccount wsa = mSessions.get(mbox.getAccountId());
         if (wsa != null) {
             WaitSetSession session = wsa.getSession();
+            if (session != null && session.getMailbox() != mbox) {
+                ZimbraLog.session.warn("SESSION BEING LEAKED? WaitSetSession points to old version of mailbox...possibly leaking this session:", session);
+                session = null; // re-initialize it below
+            }
             if (session == null) {
                 // create a new session... 
                 WaitSetError error = initializeWaitSetSession(wsa);
@@ -136,8 +140,8 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
             wsSession.update(wsa.interests, wsa.lastKnownSyncToken);
         } catch (MailServiceException e) {
             if (e.getCode().equals(MailServiceException.MAINTENANCE)) {
-                ZimbraLog.session.warn("Error initializing WaitSetSession for accountId "+wsa.accountId+" -- MAINTENANCE", e); 
-                return new WaitSetError(wsa.accountId, WaitSetError.Type.MAINTENANCE_MODE);
+                wsa.ref = null; // will get re-set when mailboxAvailable() is called 
+                ZimbraLog.session.debug("Maintenance mode trying to initialize WaitSetSession for accountId "+wsa.accountId); 
             } else {
                 ZimbraLog.session.warn("Error initializing WaitSetSession for accountId "+wsa.accountId+" -- MailServiceException", e); 
                 return new WaitSetError(wsa.accountId, WaitSetError.Type.ERROR_LOADING_MAILBOX);

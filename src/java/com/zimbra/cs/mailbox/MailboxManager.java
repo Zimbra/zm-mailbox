@@ -125,21 +125,29 @@ public class MailboxManager {
     }
 
     private void notifyMailboxAvailable(Mailbox mbox) {
+        if (ZimbraLog.mbxmgr.isInfoEnabled()) 
+            ZimbraLog.mbxmgr.info("Mailbox "+mbox.getId()+ " account "+mbox.getAccountId()+" AVAILABLE");
         for (Listener listener : mListeners) 
             listener.mailboxAvailable(mbox);
     }
     
     private void notifyMailboxLoaded(Mailbox mbox) {
+        if (ZimbraLog.mbxmgr.isInfoEnabled()) 
+            ZimbraLog.mbxmgr.info("Mailbox "+mbox.getId()+ " account "+mbox.getAccountId()+" LOADED");
         for (Listener listener : mListeners) 
             listener.mailboxLoaded(mbox);
     }
     
     private void notifyMailboxCreated(Mailbox mbox) {
+        if (ZimbraLog.mbxmgr.isInfoEnabled()) 
+            ZimbraLog.mbxmgr.info("Mailbox "+mbox.getId()+ " account "+mbox.getAccountId()+" CREATED");
         for (Listener listener : mListeners) 
             listener.mailboxCreated(mbox);
     }
     
     private void notifyMailboxDeleted(String accountId) {
+        if (ZimbraLog.mbxmgr.isInfoEnabled()) 
+            ZimbraLog.mbxmgr.info("Mailbox for account "+accountId+" DELETED");
         for (Listener listener : mListeners) 
             listener.mailboxDeleted(accountId);
     }
