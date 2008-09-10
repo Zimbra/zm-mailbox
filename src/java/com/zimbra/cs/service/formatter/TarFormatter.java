@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.service.formatter;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -39,27 +40,29 @@ import javax.mail.Part;
 import javax.mail.internet.MimeMessage;
 import javax.servlet.http.HttpServletResponse;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.HttpUtil;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.util.tar.*;
-
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.HttpUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.tar.TarEntry;
+import com.zimbra.common.util.tar.TarInputStream;
+import com.zimbra.common.util.tar.TarOutputStream;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Chat;
-import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
@@ -339,8 +342,9 @@ public class TarFormatter extends Formatter {
             if (cnt > 0)
                 fldr = fldr + '!' + cnt + '/'; 
         }
+
+        InputStream is = null;
         try {
-            InputStream is = mi.getContentStream();
             String path = getEntryName(mi, fldr, name, ext, names);
             TarEntry entry = new TarEntry(path + ".meta");
             byte[] meta = new ItemData(mi).encode();
@@ -358,27 +362,46 @@ public class TarFormatter extends Formatter {
                     charset);
             }
             tos.setLongFileMode(TarOutputStream.LONGFILE_GNU);
-            tos.putNextEntry(entry);
-            tos.write(meta);
-            tos.closeEntry();
-            if (is != null) {
-                byte buf[] = new byte[tos.getRecordSize() * 20];
-                int in;
-
-                entry.setName(path);
-                entry.setSize(mi.getSize());
+            
+            if (!context.params.containsKey("nometa")) {
                 tos.putNextEntry(entry);
-                while ((in = is.read(buf)) >= 0)
-                    tos.write(buf, 0, in);
-                is.close();
+                tos.write(meta);
+                tos.closeEntry();
+            }
+
+            is = mi.getContentStream();
+            if (is != null) {
+                entry.setName(path);
+
+                if (context.params.containsKey("headersonly")) {
+                    // Read headers into memory, since we need to write the size first.
+                    InputStream headerStream = new HeadersOnlyInputStream(is);
+                    ByteArrayOutputStream buf = new ByteArrayOutputStream(1024);
+                    ByteUtil.copy(headerStream, true, buf, false);
+                    byte[] headerData = buf.toByteArray();
+                    entry.setSize(headerData.length);
+                    tos.putNextEntry(entry);
+                    tos.write(headerData);
+                } else {
+                    byte buf[] = new byte[tos.getRecordSize() * 20];
+                    int in;
+
+                    entry.setSize(mi.getSize());
+                    tos.putNextEntry(entry);
+                    while ((in = is.read(buf)) >= 0)
+                        tos.write(buf, 0, in);
+                }
+
                 tos.closeEntry();
             }
         } catch (Exception e) {
             throw ServiceException.FAILURE("archive error", e);
+        } finally {
+            ByteUtil.closeStream(is);
         }
         return tos;
     }
-
+    
     private String getEntryName(MailItem mi, String fldr, String name,
         String ext, Set<String> names) {
         int counter = 0;
