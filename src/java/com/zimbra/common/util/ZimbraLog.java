@@ -336,6 +336,11 @@ public class ZimbraLog {
     public static final Log mailop = LogFactory.getLog("zimbra.mailop");
     
     /**
+     * the "zimbra.mbxmgr" logger is used to track mailbox loading/maintenance mode
+     */
+    public static final Log mbxmgr = LogFactory.getLog("zimbra.mbxmgr");
+    
+    /**
      * Keeps track of the account associated with the current thread, for
      * per-user logging settings. 
      */
