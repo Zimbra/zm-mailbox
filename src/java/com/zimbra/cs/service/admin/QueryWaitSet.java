@@ -16,6 +16,8 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
@@ -39,13 +41,25 @@ public class QueryWaitSet extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Element response = zsc.createElement(AdminConstants.QUERY_WAIT_SET_RESPONSE);
         
-        String waitSetId = request.getAttribute(MailConstants.A_WAITSET_ID);
+        String waitSetId = request.getAttribute(MailConstants.A_WAITSET_ID, null);
         
-        IWaitSet ws = WaitSetMgr.lookup(waitSetId);
-        if (ws == null) {
-            throw AdminServiceException.NO_SUCH_WAITSET(waitSetId);
+        List<IWaitSet> sets;
+        
+        if (waitSetId != null) {
+            sets = new ArrayList<IWaitSet>(1);
+            IWaitSet ws = WaitSetMgr.lookup(waitSetId);
+            if (ws == null) {
+                throw AdminServiceException.NO_SUCH_WAITSET(waitSetId);
+            }
+            sets.add(ws);
+        } else {
+            sets = WaitSetMgr.getAll();
         }
-        ws.handleQuery(response);
+
+        for (IWaitSet set : sets) {
+            Element waitSetElt = response.addElement(AdminConstants.E_WAITSET);
+            set.handleQuery(waitSetElt);
+        }
         return response;
     }
 }

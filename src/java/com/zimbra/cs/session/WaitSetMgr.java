@@ -240,6 +240,14 @@ public class WaitSetMgr {
     public static void startup() {
         Zimbra.sTimer.schedule(sSweeper, WAITSET_SWEEP_DELAY, WAITSET_SWEEP_DELAY);
     }
+    
+    public static List<IWaitSet> getAll() {
+        synchronized(sWaitSets) {
+            List<IWaitSet> toRet = new ArrayList<IWaitSet>(sWaitSets.size());
+            toRet.addAll(sWaitSets.values());
+            return toRet;
+        }
+    }
 
 
     private static WaitSetBase lookupInternal(String id) {
