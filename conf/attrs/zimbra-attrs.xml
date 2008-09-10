@@ -3544,4 +3544,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>POP3 SSL capabilities enabled on proxy.  Capabilities are listed on the CAPABILITY line, also known in RFCs as extensions</desc>
 </attr>
 
+<attr id="723" name="zimbraFeatureAdminConsoleDNSCheck" type="boolean" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>enable MX check feature for domain</desc>
+</attr>
+
+<attr id="724" name="zimbraDNSCheckHostname"  type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited">
+   <desc>This attribute is used for DNS check by customers that configure their MX to point at spam relays or other non-zimbra inbox smtp servers</desc>
+</attr>
 </attrs>

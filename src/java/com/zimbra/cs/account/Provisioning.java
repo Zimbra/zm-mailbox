@@ -1554,7 +1554,12 @@ public abstract class Provisioning {
 
     public static final String A_zimbraXMPPServerDialbackKey = "zimbraXMPPServerDialbackKey";
     
-
+    /**
+     * DNS/MX Records checks
+     */
+    public static final String A_zimbraDNSCheckHostname = "zimbraDNSCheckHostname";
+    public static final String A_zimbraFeatureAdminConsoleDNSCheck = "zimbraFeatureAdminConsoleDNSCheck";
+    
     public static final int MAX_ZIMBRA_ID_LEN = 127;
     
     private static Provisioning sProvisioning;
