@@ -58,13 +58,14 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
                 WaitSetAccount wsa = mSessions.get(id);
                 if (wsa != null) {
                     session = wsa.getSession();
+                    mSessions.remove(id);
+                } else {
+                    errors.add(new WaitSetError(id, WaitSetError.Type.NOT_IN_SET_DURING_REMOVE));
                 }
             }
             if (session != null) {
                 assert(!Thread.holdsLock(this));
                 session.doCleanup();
-            } else {
-                errors.add(new WaitSetError(id, WaitSetError.Type.NOT_IN_SET_DURING_REMOVE));
             }
         }
         return errors;
