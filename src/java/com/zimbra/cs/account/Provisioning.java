@@ -1565,6 +1565,12 @@ public abstract class Provisioning {
     public static final String A_zimbraXMPPComponentFeatures = "zimbraXMPPComponentFeatures";
     public static final String A_zimbraXMPPComponentName = "zimbraXMPPComponentName";
     
+
+    /**
+     * DNS/MX Records checks
+     */
+    public static final String A_zimbraDNSCheckHostname = "zimbraDNSCheckHostname";
+    public static final String A_zimbraFeatureAdminConsoleDNSCheck = "zimbraFeatureAdminConsoleDNSCheck";
     public static final String A_zimbraDomainId = "zimbraDomainId";
     public static final String A_zimbraServerId = "zimbraServerId";
     
