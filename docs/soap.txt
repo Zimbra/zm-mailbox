@@ -1103,7 +1103,7 @@ Folders:
     user has (a)dminister rights on the folder), an <acl> element will be returned containing
     1 or more <grant> elements, with the following attributes:
 
-    {rights}       = some combination of (r)ead, (w)rite, (i)nsert, (d)elete, (a)dminister, workflow action (x), view (p)rivate
+    {rights}       = some combination of (r)ead, (w)rite, (i)nsert, (d)elete, (a)dminister, workflow action (x), view (p)rivate, view (f)reebusy
     {grantee-type} = the type of grantee: "usr", "grp", "dom" (domain), "cos", 
                      "all" (all authenticated users), "pub" (public authenticated and unauthenticated access),
                      "guest" (non-Zimbra email address and password),

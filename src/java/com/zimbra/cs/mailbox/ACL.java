@@ -56,15 +56,17 @@ public class ACL {
     public static final short RIGHT_SUBFOLDER = 0x0200;
     /** The right to view a private item. */
     public static final short RIGHT_PRIVATE = 0x0400;
+    /** The right to view free/busy on a calendar folder. */
+    public static final short RIGHT_FREEBUSY = 0x0800;
 
     /** The combination of rights that equates to {@link #RIGHT_SUBFOLDER}. */
     private static final short SUBFOLDER_RIGHTS = RIGHT_READ | RIGHT_INSERT;
 
     /** Bitmask of all rights that can be explicitly granted.  <i>Note:
      *  CAN_CREATE_FOLDER is calculated and hence cannot be granted. */
-    private static final short GRANTABLE_RIGHTS = RIGHT_READ   | RIGHT_WRITE  | RIGHT_INSERT |
-                                                  RIGHT_DELETE | RIGHT_ACTION | RIGHT_ADMIN  |
-                                                  RIGHT_PRIVATE;
+    private static final short GRANTABLE_RIGHTS = RIGHT_READ    | RIGHT_WRITE    | RIGHT_INSERT |
+                                                  RIGHT_DELETE  | RIGHT_ACTION   | RIGHT_ADMIN  |
+                                                  RIGHT_PRIVATE | RIGHT_FREEBUSY ;
 
     /** The grantee of these rights is the zimbraId for a user. */
     public static final byte GRANTEE_USER     = 1;
@@ -421,6 +423,7 @@ public class ACL {
     public static final char ABBR_ACTION = 'x';
     public static final char ABBR_ADMIN = 'a';
     public static final char ABBR_PRIVATE = 'p';
+    public static final char ABBR_FREEBUSY = 'f';
     public static final char ABBR_CREATE_FOLDER = 'c';
 
     public static short stringToRights(String encoded) throws ServiceException {
@@ -435,7 +438,8 @@ public class ACL {
                     case ABBR_ACTION:   rights |= RIGHT_ACTION;   break;
                     case ABBR_ADMIN:    rights |= RIGHT_ADMIN;    break;
                     case ABBR_PRIVATE:  rights |= RIGHT_PRIVATE;  break;
-                    case ABBR_CREATE_FOLDER:                    break;
+                    case ABBR_FREEBUSY: rights |= RIGHT_FREEBUSY; break;
+                    case ABBR_CREATE_FOLDER:                      break;
                     default:  throw ServiceException.INVALID_REQUEST("unknown right: " + encoded.charAt(i), null);
                 }
             }
@@ -454,6 +458,7 @@ public class ACL {
         if ((rights & RIGHT_ACTION) != 0)   sb.append(ABBR_ACTION);
         if ((rights & RIGHT_ADMIN) != 0)    sb.append(ABBR_ADMIN);
         if ((rights & RIGHT_PRIVATE) != 0)  sb.append(ABBR_PRIVATE);
+        if ((rights & RIGHT_FREEBUSY) != 0) sb.append(ABBR_FREEBUSY);
         if ((rights & RIGHT_SUBFOLDER) != 0)  sb.append(ABBR_CREATE_FOLDER);
         return sb.toString();
     }
