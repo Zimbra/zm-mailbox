@@ -18,7 +18,11 @@ import  java.util.Hashtable;
 
 public class CheckDomainMXRecord extends AdminDocumentHandler {
 
-	@Override
+    public boolean domainAuthSufficient(Map context) {
+        return true;
+    }
+
+    @Override
 	public Element handle(Element request, Map<String, Object> context)
 			throws ServiceException {
 
@@ -29,23 +33,30 @@ public class CheckDomainMXRecord extends AdminDocumentHandler {
         String value = d.getText();
 	    
 	    Domain domain = prov.get(DomainBy.fromString(key), value);	
+	    if (isDomainAdminOnly(zsc) && !canAccessDomain(zsc, domain))
+	    	throw ServiceException.PERM_DENIED("can not access domain");   
+	       
 	    String SMTPHost = domain.getAttr(Provisioning.A_zimbraDNSCheckHostname, true);
+	    String domainName = domain.getName();
 	    if(SMTPHost == null || SMTPHost.length()<1)
 	    	SMTPHost = domain.getAttr(Provisioning.A_zimbraSmtpHostname, true);
 
 		if(SMTPHost == null || SMTPHost.length()<1)
 			SMTPHost = domain.getName();
 
-		String SMTPHostMatch = String.format("^[0-9]{2}\\s%s$", SMTPHost);
+		String SMTPHostMatch = String.format("^[0-9]{2}\\s%s\\.$", SMTPHost);
 		ZimbraLog.soap.info("checking domain mx record");
 		Hashtable env = new Hashtable();
 		env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.dns.DnsContextFactory");
-		String message = String.format("Found the following MX records for domain %s:", SMTPHost);
+		String message = String.format("Domain is configured to use SMTP host: %s. None of the MX records match this name.", SMTPHost);
 		Element response = zsc.createElement(AdminConstants.CHECK_DOMAIN_MX_RECORD_RESPONSE);
 		boolean found = false;
 		try {
 			DirContext ictx = new InitialDirContext(env);
-			Attributes attrs = ictx.getAttributes(SMTPHost, new String[] {"MX"});
+			Attributes attrs = ictx.getAttributes(domainName, new String[] {"MX"});
+			if(attrs.size()<1) {
+				throw ServiceException.FAILURE(String.format("Failed to retreive MX record for %s from DNS", domainName), null);
+			}
 	        for (NamingEnumeration ne = attrs.getAll(); ne.hasMore(); ) {
 	            Attribute attr = (Attribute) ne.next();
 	            if (attr.size() == 1) {
@@ -58,7 +69,7 @@ public class CheckDomainMXRecord extends AdminDocumentHandler {
 	                		found = true;
 	                		break;
 	                	}
-	                	message = String.format("%s\n%s", message, o.toString());
+	                	response.addElement(AdminConstants.E_ENTRY).addText(rec);
 	                } else { 
 	                	String rec = new String((byte[])o);
 	                	ZimbraLog.soap.info("found MX attribute " + attr.getID() + " = "+ rec);
@@ -66,7 +77,7 @@ public class CheckDomainMXRecord extends AdminDocumentHandler {
 	                		found = true;
 	                		break;
 	                	}
-	                	message = String.format("%s\n%s", message,rec);
+	                	response.addElement(AdminConstants.E_ENTRY).addText(rec);
 	                }
 
 	            } else {
@@ -80,7 +91,7 @@ public class CheckDomainMXRecord extends AdminDocumentHandler {
 		                		found = true;
 		                		break;
 		                	}
-	                    	message = String.format("%s\n%s", message, rec);
+	                    	response.addElement(AdminConstants.E_ENTRY).addText(rec);
 	                    } else { 
 	                    	String rec = new String((byte[])o);
 	                    	ZimbraLog.soap.info("found MX attribute " + attr.getID() + "-" + Integer.toString(i) + " = "+ rec);
@@ -88,7 +99,8 @@ public class CheckDomainMXRecord extends AdminDocumentHandler {
 		                		found = true;
 		                		break;
 		                	}
-		                	message = String.format("%s\n%s", message,rec);
+	                    	response.addElement(AdminConstants.E_ENTRY).addText(rec);
+		                	//message = String.format("%s %s", message,rec);
 	                    }
 	                }
 	                
