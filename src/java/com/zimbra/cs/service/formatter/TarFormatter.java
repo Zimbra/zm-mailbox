@@ -79,6 +79,7 @@ import com.zimbra.cs.mailbox.MailboxManager.MailboxLock;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.service.util.ItemData;
@@ -365,7 +366,7 @@ public class TarFormatter extends Formatter {
             }
             tos.setLongFileMode(TarOutputStream.LONGFILE_GNU);
             
-            if (!context.params.containsKey("nometa")) {
+            if (shouldReturnMeta(context)) {
                 tos.putNextEntry(entry);
                 tos.write(meta);
                 tos.closeEntry();
@@ -375,7 +376,15 @@ public class TarFormatter extends Formatter {
             if (is != null) {
                 entry.setName(path);
 
-                if (context.params.containsKey("headersonly")) {
+                if (shouldReturnBody(context)) {
+                    byte buf[] = new byte[tos.getRecordSize() * 20];
+                    int in;
+
+                    entry.setSize(mi.getSize());
+                    tos.putNextEntry(entry);
+                    while ((in = is.read(buf)) >= 0)
+                        tos.write(buf, 0, in);
+                } else {
                     // Read headers into memory, since we need to write the size first.
                     InputStream headerStream = new HeadersOnlyInputStream(is);
                     ByteArrayOutputStream buf = new ByteArrayOutputStream(1024);
@@ -384,14 +393,6 @@ public class TarFormatter extends Formatter {
                     entry.setSize(headerData.length);
                     tos.putNextEntry(entry);
                     tos.write(headerData);
-                } else {
-                    byte buf[] = new byte[tos.getRecordSize() * 20];
-                    int in;
-
-                    entry.setSize(mi.getSize());
-                    tos.putNextEntry(entry);
-                    while ((in = is.read(buf)) >= 0)
-                        tos.write(buf, 0, in);
                 }
 
                 tos.closeEntry();
@@ -402,6 +403,30 @@ public class TarFormatter extends Formatter {
             ByteUtil.closeStream(is);
         }
         return tos;
+    }
+    
+    /**
+     * Returns <tt>true</tt> if {@link UserServlet#QP_BODY} is not
+     * specified or set to a non-zero value.
+     */
+    static boolean shouldReturnBody(Context context) {
+        String bodyVal = context.params.get(UserServlet.QP_BODY);
+        if (bodyVal != null && bodyVal.equals("0")) {
+            return false;
+        }
+        return true;
+    }
+    
+    /**
+     * Returns <tt>true</tt> if {@link UserServlet#QP_META} is not
+     * specified or set to a non-zero value.
+     */
+    static boolean shouldReturnMeta(Context context) {
+        String bodyVal = context.params.get(UserServlet.QP_META);
+        if (bodyVal != null && bodyVal.equals("0")) {
+            return false;
+        }
+        return true;
     }
     
     private String getEntryName(MailItem mi, String fldr, String name,

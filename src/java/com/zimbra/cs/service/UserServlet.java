@@ -133,6 +133,11 @@ public class UserServlet extends ZimbraServlet {
 
     public static final String QP_PART = "part"; // part query param
     
+    /**
+     * Body query param.  Also used by {@link #ZipFormatter} and {@link #TarFormatter} to specify whether
+     * the entire message should be returned (<tt>body=1</tt>), or just the headers (<tt>body=0</tt>).
+     * The default is <tt>1</tt>.
+     */
     public static final String QP_BODY = "body"; // body query param
     
     public static final String BODY_TEXT = "text"; // return text body
@@ -174,6 +179,13 @@ public class UserServlet extends ZimbraServlet {
     public static final String QP_COUNTRY = "country"; // all three
 
     public static final String QP_VARIANT = "variant"; // all three
+
+    /**
+     * Used by {@link #TarFormatter} to specify whether the <tt>.meta</tt>
+     * files should be added to the tarball (<tt>meta=1</tt>) or not (<tt>meta=0</tt>).
+     * The default is <tt>1</tt>.
+     */
+    public static final String QP_META = "meta";
 
     public static final String AUTH_COOKIE = "co"; // auth by cookie
 

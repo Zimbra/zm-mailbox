@@ -125,7 +125,7 @@ public class ZipFormatter extends Formatter {
                         out.putNextEntry(entry);
                         try {
                             InputStream is = ((Message) item).getContentStream();
-                            if (context.params.containsKey("headersonly")) {
+                            if (!TarFormatter.shouldReturnBody(context)) {
                                 is = new HeadersOnlyInputStream(is);
                             }
                             ByteUtil.copy(is, true, out, false);
