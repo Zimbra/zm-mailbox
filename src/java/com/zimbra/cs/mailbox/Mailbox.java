@@ -1755,7 +1755,7 @@ public class Mailbox {
             
         boolean needRedo = octxt == null || octxt.needRedo();
 
-        Collection<SearchResult> msgs = null;
+        List<SearchResult> msgs = null;
         boolean redoInitted = false;
         boolean indexDeleted = false;
         boolean completedOperation = false;
@@ -1784,15 +1784,13 @@ public class Mailbox {
                     }
                     
                     DbSearchConstraints c = new DbSearchConstraints();
-                    c.mailbox = this;
-                    c.sort = DbSearch.SORT_NONE;
                     if (itemIdsOrNull != null)
                         c.itemIds = itemIdsOrNull; 
                     else if (typesOrNull != null)
                         c.types = typesOrNull;
                     
                     msgs = new ArrayList<SearchResult>();
-                    DbSearch.search(msgs, getOperationConnection(), c, SearchResult.ExtraData.NONE);
+                    DbSearch.search(msgs, getOperationConnection(), c, this, DbSearch.SORT_NONE, SearchResult.ExtraData.NONE);
                     
                     if (!skipDelete) {
                         if (itemIdsOrNull != null || typesOrNull != null) {
@@ -3532,7 +3530,7 @@ public class Mailbox {
         
         ///////////////////////////////
         // Get the list of deferred items to index 
-        Collection<SearchResult>items = new ArrayList<SearchResult>();
+        List<SearchResult>items = new ArrayList<SearchResult>();
         synchronized(this) {
             if (getIndexDeferredCount() <= 0) // check again, now that we have the mbox lock
                 return;
@@ -3542,11 +3540,9 @@ public class Mailbox {
                 try {
                     beginTransaction("IndexDeferredItems_Select", null);
                     DbSearchConstraints c = new DbSearchConstraints();
-                    c.mailbox = this;
                     c.tags = new HashSet<Tag>();
                     c.tags.add(this.mIndexingDeferredFlag);
-                    c.sort = DbSearch.SORT_NONE;
-                    DbSearch.search(items, getOperationConnection(), c, SearchResult.ExtraData.NONE);
+                    DbSearch.search(items, getOperationConnection(), c, this, DbSearch.SORT_NONE, SearchResult.ExtraData.NONE);
                     
                     int deferredCount = getIndexDeferredCount();
                     if (items.size() != deferredCount) {

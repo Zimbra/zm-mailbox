@@ -56,7 +56,9 @@ public abstract class Db {
         MULTITABLE_UPDATE,
         ON_DUPLICATE_KEY,
         ON_UPDATE_CASCADE,
-        UNIQUE_NAME_INDEX;
+        UNIQUE_NAME_INDEX,
+        AVOID_OR_IN_WHERE_CLAUSE, // if set, then try to avoid ORs in WHERE clauses, run them as separate queries and mergesort in memory
+        ;
     }
 
 
