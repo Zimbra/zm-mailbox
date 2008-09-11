@@ -44,7 +44,8 @@ public class ZGrant {
         insert('i'),        
         delete('d'),
         administer('a'),        
-        workflow('x');                
+        workflow('x'),
+        freebusy('f');                
 
         private char mPermChar;
         
@@ -181,10 +182,15 @@ public class ZGrant {
         return hasPerm(Permission.write);
     }
     
+    public boolean canViewFreeBusy() {
+        return hasPerm(Permission.freebusy);
+    }
+    
     /**
      * the type of grantee: "usr", "grp", "dom" (domain),
      * "all" (all authenticated users), "pub" (public authenticated and unauthenticated access), 
      * "guest" (non-Zimbra email address and password)
+     * "key" (access key)
      */
     public GranteeType getGranteeType() {
         return mGranteeType;

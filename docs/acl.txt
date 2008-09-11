@@ -34,6 +34,7 @@ along these lines:
         insert     - copy/add to directory, create subfolders
         delete     - delete items and subfolders, set \Deleted flag?
         administer - delegate admin and change permissions
+        freebusy   - view free/busy on a calendar folder
 
 (We might want to break "set flags" out from "write", or combine "action"
 and "write", but that's the general gist of things.)
