@@ -85,7 +85,7 @@ class DBQueryOperation extends QueryOperation
     
     
 
-    protected Collection <SearchResult> mDBHits;
+    protected List<SearchResult> mDBHits;
     protected List<ZimbraHit>mNextHits = new ArrayList<ZimbraHit>();
     protected Iterator<SearchResult> mDBHitsIter;
     protected boolean atStart = true; // don't re-fill buffer twice if they call hasNext() then reset() w/o actually getting next
@@ -854,7 +854,7 @@ class DBQueryOperation extends QueryOperation
             //
             // (1) Get the next chunk of results from the DB
             //
-            Collection<SearchResult> dbRes = new ArrayList<SearchResult>();
+            List<SearchResult> dbRes = new ArrayList<SearchResult>();
             
             // FIXME TODO could do a better job here
             if (mParams.getEstimateSize() && mSizeEstimate == -1) {

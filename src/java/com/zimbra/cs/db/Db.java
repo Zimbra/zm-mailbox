@@ -62,7 +62,9 @@ public abstract class Db {
         ON_UPDATE_CASCADE,
         READ_COMMITTED_ISOLATION,
         REPLACE_INTO,
-        UNIQUE_NAME_INDEX;
+        UNIQUE_NAME_INDEX,
+        AVOID_OR_IN_WHERE_CLAUSE, // if set, then try to avoid ORs in WHERE clauses, run them as separate queries and mergesort in memory
+        ;
     }
 
 

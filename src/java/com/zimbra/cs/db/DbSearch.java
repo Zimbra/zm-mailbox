@@ -22,7 +22,10 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import com.zimbra.common.localconfig.LC;
@@ -33,6 +36,7 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.db.DbSearchConstraints.NumericRange;
 import com.zimbra.cs.db.DbSearchConstraints.StringRange;
+import com.zimbra.cs.db.DbSearchConstraintsNode.NodeType;
 import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Flag;
@@ -114,8 +118,54 @@ public class DbSearch {
             SearchResult other = (SearchResult) obj;
             return other.id == id;
         }
+        
+        private static class SearchResultComparator implements Comparator<SearchResult> {
+            public int compare(SearchResult o1, SearchResult o2) {
+                switch (mSort&SORT_FIELD_MASK) {
+                    case SORT_BY_DATE:
+                    {
+                        long date1 = (Long)o1.sortkey;
+                        long date2 = (Long)o2.sortkey;
+                        if (date1 != date2) {
+                            long diff;
+                            if ((mSort & SORT_ASCENDING)==0) {
+                                // descending!
+                                diff = date2-date1;
+                            } else {
+                                diff = date1-date2;    
+                            }
+                            if (diff > 0)
+                                return 1;
+                            else
+                                return -1;
+                        }
+                        // fall through to ID-based comparison below!
+                    }
+                    break;
+                    case SORT_NONE:
+                        break;
+                    default:
+                        throw new UnsupportedOperationException("SearchResultComparator not implemented " +
+                                                                " for anything except for DATE right now. " +
+                                                                " Feel free to fix it!"); 
+                }
+                if ((mSort & SORT_ASCENDING)==0) {
+                    // descending!
+                    return o2.id - o1.id;
+                } else {
+                    return o1.id - o2.id;
+                }
+            }
+            SearchResultComparator(byte sort) {
+                mSort = sort;
+            }
+            private byte mSort;
+        }
+        
+        public static Comparator<SearchResult> getComparator(byte sort) {
+            return new SearchResultComparator(sort);
+        }
     }
-
 
     public static final byte SORT_DESCENDING = 0x00;
     public static final byte SORT_ASCENDING  = 0x01;
@@ -475,27 +525,60 @@ public class DbSearch {
     
     static final byte[] APPOINTMENT_TABLE_TYPES = new byte[] { MailItem.TYPE_APPOINTMENT, MailItem.TYPE_TASK };
 
-    public static Collection<SearchResult> search(Connection conn, DbSearchConstraints c) throws ServiceException {
-        return search(new ArrayList<SearchResult>(), conn, c, SearchResult.ExtraData.NONE);
+    public static List<SearchResult> search(List<SearchResult> result, Connection conn, DbSearchConstraints c, Mailbox mbox, byte sort, SearchResult.ExtraData extra) throws ServiceException {
+        return search(result, conn, c, mbox, sort, -1, -1, extra);
     }
-
-    public static Collection<SearchResult> search(Connection conn, DbSearchConstraints c, SearchResult.ExtraData extra) throws ServiceException {
-        return search(new ArrayList<SearchResult>(), conn, c, extra);
+    
+    private static <T> List<T> mergeSortedLists(List<T> toRet, List<List<T>> lists, Comparator<? super T> comparator) {
+        
+        // TODO find or code a proper merge-sort here
+        
+        int totalNumValues = 0;
+        for (List<T> l : lists) {
+            totalNumValues += l.size();
+        }
+        
+        for (List<T> l : lists) {
+            toRet.addAll(l);
+        }
+        
+        Collections.sort(toRet, comparator);
+        
+        return toRet;
     }
-
-    public static Collection<SearchResult> search(Collection<SearchResult> result, Connection conn, DbSearchConstraints c) throws ServiceException {
-        return search(result, conn, c, SearchResult.ExtraData.NONE);
-    }
-
-    public static Collection<SearchResult> search(Collection<SearchResult> result, Connection conn, DbSearchConstraints c, SearchResult.ExtraData extra) throws ServiceException {
-        return search(result, conn, c, c.mailbox, c.sort, c.offset, c.limit, extra);
-    }
-
-    public static Collection<SearchResult> search(Collection<SearchResult> result, 
+    
+    public static List<SearchResult> search(List<SearchResult> result, 
             Connection conn, DbSearchConstraintsNode node, Mailbox mbox, 
             byte sort, int offset, int limit, SearchResult.ExtraData extra)
     throws ServiceException {
 
+        // this monstrosity for bug 31343
+        if (!Db.supports(Db.Capability.AVOID_OR_IN_WHERE_CLAUSE) ||
+                        ((sort&SORT_FIELD_MASK) != DbSearch.SORT_BY_DATE) || 
+                        NodeType.OR != node.getNodeType()) {
+            // do it the old way
+            return searchInternal(result, conn, node, mbox, sort, offset, limit, extra);
+        } else {
+            // run each toplevel ORed part as a separate SQL query, then merge
+            // the results in memory
+            List<List<SearchResult>> resultLists = new ArrayList<List<SearchResult>>();
+            
+            for (DbSearchConstraintsNode subNode : node.getSubNodes()) {
+                List<SearchResult> subNodeResults = new ArrayList<SearchResult>();
+                search(subNodeResults, conn, subNode, mbox, sort, offset, limit, extra);
+                resultLists.add(subNodeResults);
+            }
+
+            Comparator<SearchResult> comp = SearchResult.getComparator(sort);
+            result = mergeSortedLists((List<SearchResult>)result, resultLists, comp);
+            return result;
+        }
+    }
+        
+    public static List<SearchResult> searchInternal(List<SearchResult> result, 
+                                                          Connection conn, DbSearchConstraintsNode node, Mailbox mbox, 
+                                                          byte sort, int offset, int limit, SearchResult.ExtraData extra)
+                                                          throws ServiceException {
         boolean hasValidLIMIT = offset >= 0 && limit >= 0;
         PreparedStatement stmt = null;
         ResultSet rs = null;
