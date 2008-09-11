@@ -19,6 +19,7 @@ package com.zimbra.qa.unittest;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringReader;
@@ -289,7 +290,7 @@ extends Assert {
         String body = getTestMessage(subject);
         sendMessage(senderMbox, recipientName, subject, body);
     }
-
+    
     public static void sendMessage(ZMailbox senderMbox, String recipientName, String subject, String body)
     throws Exception {
         sendMessage(senderMbox, recipientName, subject, body, null);
@@ -803,5 +804,10 @@ extends Assert {
         TestNG testng = new TestNG();
         testng.setOutputDirectory("/opt/zimbra/test-output");
         return testng;
+    public static byte[] getRESTResource(ZMailbox mbox, String relativePath)
+    throws Exception {
+        ByteArrayOutputStream buf = new ByteArrayOutputStream();
+        mbox.getRESTResource(relativePath, buf, false, null, null, 10);
+        return buf.toByteArray();
     }
 }
