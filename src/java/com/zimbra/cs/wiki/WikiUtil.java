@@ -202,10 +202,10 @@ public abstract class WikiUtil {
                     ACL.stringToRights("r"),
                     null);
         }
-
-        public void setVerbose() {
+        
+        public void updateTemplates(File templateDir) throws ServiceException {
+        	throw WikiServiceException.ERROR("use soap based utility.");
         }
-
     }
 
     private static class WikiSoapUtil extends WikiUtil {
@@ -213,10 +213,6 @@ public abstract class WikiUtil {
 
         public WikiSoapUtil(Provisioning soapProv) throws ServiceException {
             mProv = soapProv;
-        }
-
-        public void setVerbose() {
-            //LmcSoapRequest.setDumpXML(true);
         }
 
         private void auth() throws ServiceException {
@@ -348,52 +344,63 @@ public abstract class WikiUtil {
             }
         }
 
-        protected void emptyNotebooks(String where) throws ServiceException {
-            try {
-                ZFolder root = getRootFolder();
-                ZFolder f = findFolder(root, where);
-                deleteAllItemsInFolder(f);
-                return;
-            } catch (Exception e) {
-                throw WikiServiceException.ERROR("emptyNotebooks", e);
-            }
+        protected void emptyNotebooks(String where) throws IOException, ServiceException {
+        	ZFolder root = getRootFolder();
+        	ZFolder f = findFolder(root, where);
+        	deleteAllItemsInFolder(f);
         }
 
-        public void startImport(String username, String where, File what) throws ServiceException {
+        public void startImport(String username, String where, File what) throws IOException, ServiceException {
             mUsername = username;
-            try {
-                System.out.println("Initializing...");
-                auth();
 
-                if (where.startsWith("/") && where.length() > 1)
-                	where = where.substring(1);
-                if (where == null)
-                    where = sDEFAULTFOLDER;
+            System.out.println("Initializing...");
+            auth();
 
-                emptyNotebooks(where);
-                ZFolder root = getRootFolder();
-                ZFolder f;
-                if (where.equals("/"))
-                    f = root;
-                else {
-                    f = findFolder(root, where);
-                    if (f == null)
-                        f = createFolder(root, where);
+            if (where.startsWith("/") && where.length() > 1)
+            	where = where.substring(1);
+            if (where == null)
+            	where = sDEFAULTFOLDER;
+
+            emptyNotebooks(where);
+            ZFolder root = getRootFolder();
+            ZFolder f;
+            if (where.equals("/"))
+            	f = root;
+            else {
+            	f = findFolder(root, where);
+            	if (f == null)
+            		f = createFolder(root, where);
+            }
+
+            // start populating directories and files.
+            populateFolders(f, what);
+
+        }
+        
+        public void updateTemplates(File templateDir) throws IOException, ServiceException {
+        	if (!templateDir.exists())
+                throw WikiServiceException.ERROR("template dir "+templateDir.getCanonicalPath()+" doesn't exist");
+
+            Config globalConfig = mProv.getConfig();
+            String wikiAccount = globalConfig.getAttr(Provisioning.A_zimbraNotebookAccount, null);
+            if (wikiAccount != null) {
+            	System.out.println("updating global wiki account "+wikiAccount);
+            	startImport(wikiAccount, WikiUtil.sDEFAULTTEMPLATEFOLDER, templateDir);
+            }
+            for (Domain d : mProv.getAllDomains()) {
+            	wikiAccount = d.getAttr(Provisioning.A_zimbraNotebookAccount, null);
+                if (wikiAccount != null) {
+                	System.out.println("updating wiki account "+wikiAccount+" for domain "+d.getName());
+                	startImport(wikiAccount, WikiUtil.sDEFAULTTEMPLATEFOLDER, templateDir);
                 }
-
-                // start populating directories and files.
-                populateFolders(f, what);
-                return;
-            } catch (Exception e) {
-                throw WikiServiceException.ERROR("import", e);
             }
         }
     }
 
     public abstract void startImport(String username, String folder, File dir) throws ServiceException, IOException;
+    public abstract void updateTemplates(File templateDir) throws ServiceException, IOException;
     protected abstract void emptyNotebooks(String folder) throws ServiceException, IOException;
     protected abstract void setFolderPermission(Account account, String grantee, String name, String id) throws ServiceException, IOException;
-    public abstract void setVerbose();
 
     private void initFolders(Account account, Entry entry) throws ServiceException, IOException {
         String grantee, name, id;

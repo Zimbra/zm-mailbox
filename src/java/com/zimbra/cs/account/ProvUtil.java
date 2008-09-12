@@ -292,7 +292,8 @@ public class ProvUtil implements DebugListener {
         GET_ALL_REVERSE_PROXY_BACKENDS("getAllReverseProxyBackends", "garpb", "", Category.SERVER, 0, 0),
         GET_ALL_MEMCACHED_SERVERS("getAllMemcachedServers", "gamcs", "", Category.SERVER, 0, 0),
         SOAP(".soap", ".s"),
-        SYNC_GAL("syncGal", "syg","{domain} [{token}]", Category.MISC, 1, 2);
+        SYNC_GAL("syncGal", "syg","{domain} [{token}]", Category.MISC, 1, 2),
+        UPDATE_TEMPLATES("updateTemplates", "ut", "{template-directory}", Category.NOTEBOOK, 1, 1);
 
         private String mName;
         private String mAlias;
@@ -761,6 +762,9 @@ public class ProvUtil implements DebugListener {
             break;
         case IMPORT_NOTEBOOK:
             importNotebook(args);
+            break;
+        case UPDATE_TEMPLATES:
+            updateTemplates(args);
             break;
         case GET_QUOTA_USAGE:
             doGetQuotaUsage(args);
@@ -1758,19 +1762,17 @@ public class ProvUtil implements DebugListener {
     	WikiUtil wu = WikiUtil.getInstance(mProv);
     	wu.initDomainWiki(domain, username);
     }
-    private void importNotebook(String[] args) throws ServiceException {
+    private void importNotebook(String[] args) throws ServiceException, IOException {
     	if (args.length != 4) {usage(); return; }
     	
     	WikiUtil wu = WikiUtil.getInstance(mProv);
-    	doImport(args[1], args[2], args[3], wu);
+    	wu.startImport(args[1], args[3], new java.io.File(args[2]));
     }
-    
-    private void doImport(String username, String fromDir, String toFolder, WikiUtil wu) throws ServiceException {
-    	try {
-    		wu.startImport(username, toFolder, new java.io.File(fromDir));
-    	} catch (IOException e) {
-    		throw ServiceException.FAILURE("Cannot import Wiki documents from "+fromDir, e);
-    	}
+    private void updateTemplates(String[] args) throws ServiceException, IOException {
+    	if (args.length != 2) {usage(); return; }
+    	
+    	WikiUtil wu = WikiUtil.getInstance(mProv);
+    	wu.updateTemplates(new java.io.File(args[1]));
     }
     
     private Account lookupAccount(String key, boolean mustFind, boolean applyDefault) throws ServiceException {
