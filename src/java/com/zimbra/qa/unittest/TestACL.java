@@ -10,7 +10,6 @@ import junit.framework.TestSuite;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
-import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;

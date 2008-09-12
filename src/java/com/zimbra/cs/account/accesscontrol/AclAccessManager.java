@@ -80,7 +80,12 @@ public class AclAccessManager extends DomainAccessManager {
             if (acl != null && acl.containsRight(rightNeeded))
                 return acl.hasRight(grantee, rightNeeded);
             else {
-                // no ACL, return default requested by the callsite
+                // no ACL, see if there is a configured default 
+                Boolean defaultValue = rightNeeded.getDefault();
+                if (defaultValue != null)
+                    return defaultValue.booleanValue();
+                
+                // no configured default, return default requested by the callsite
                 return defaultGrant;
             }
                 
