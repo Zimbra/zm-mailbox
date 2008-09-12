@@ -804,6 +804,8 @@ extends Assert {
         TestNG testng = new TestNG();
         testng.setOutputDirectory("/opt/zimbra/test-output");
         return testng;
+    }
+    
     public static byte[] getRESTResource(ZMailbox mbox, String relativePath)
     throws Exception {
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
