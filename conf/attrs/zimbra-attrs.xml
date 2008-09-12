@@ -3614,7 +3614,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether NGINX mail proxy will pass upstream server errors back to the downstream email clients</desc>
 </attr>
 
-<attr id="743" name="zimbraFeatureAdminConsoleDNSCheck" type="boolean" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited">
+<attr id="743" name="zimbraAdminConsoleDNSCheckEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>enable MX check feature for domain</desc>
 </attr>
