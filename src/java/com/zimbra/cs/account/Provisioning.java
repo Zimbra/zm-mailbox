@@ -1570,7 +1570,7 @@ public abstract class Provisioning {
      * DNS/MX Records checks
      */
     public static final String A_zimbraDNSCheckHostname = "zimbraDNSCheckHostname";
-    public static final String A_zimbraFeatureAdminConsoleDNSCheck = "zimbraFeatureAdminConsoleDNSCheck";
+    public static final String A_zimbraAdminConsoleDNSCheckEnabled = "zimbraAdminConsoleDNSCheckEnabled";
     public static final String A_zimbraDomainId = "zimbraDomainId";
     public static final String A_zimbraServerId = "zimbraServerId";
     

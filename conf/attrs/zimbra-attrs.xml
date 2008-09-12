@@ -3653,7 +3653,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>ZimbraID of the server that this component is running on</desc>
 </attr>  
 
-<attr id="743" name="zimbraFeatureAdminConsoleDNSCheck" type="boolean" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited">
+<attr id="743" name="zimbraAdminConsoleDNSCheckEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>enable MX check feature for domain</desc>
 </attr>
