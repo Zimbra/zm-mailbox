@@ -1093,6 +1093,7 @@ public abstract class Provisioning {
     public static final String A_zimbraSmtpSendPartial = "zimbraSmtpSendPartial";
     public static final String A_zimbraSmtpSendAddOriginatingIP = "zimbraSmtpSendAddOriginatingIP";
     public static final String A_zimbraSmtpSendAddMailer = "zimbraSmtpSendAddMailer";
+    public static final String A_zimbraSmtpSendAddAuthenticatedUser = "zimbraSmtpSendAddAuthenticatedUser";
 
     public static final String A_zimbraLmtpAdvertisedName = "zimbraLmtpAdvertisedName";
     public static final String A_zimbraLmtpBindPort = "zimbraLmtpBindPort";

@@ -27,6 +27,9 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.zclient.ZGetMessageParams;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMessage;
@@ -39,9 +42,12 @@ public class TestSendAndReceive extends TestCase {
     private static final Pattern PAT_RECEIVED = Pattern.compile("Received: .*from.*LHLO.*");
     private static final Pattern PAT_RETURN_PATH = Pattern.compile("Return-Path: (.*)");
     
+    private String mOriginalSmtpSendAddAuthenticatedUser;
+    
     public void setUp()
     throws Exception {
         cleanUp();
+        mOriginalSmtpSendAddAuthenticatedUser = TestUtil.getConfigAttr(Provisioning.A_zimbraSmtpSendAddAuthenticatedUser);
     }
     
     /**
@@ -110,9 +116,29 @@ public class TestSendAndReceive extends TestCase {
         assertEquals(27, cal.get(Calendar.DAY_OF_MONTH));
     }
     
+    public void testAuthenticatedUserHeader()
+    throws Exception {
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        
+        // X-Authenticated-User not sent.
+        TestUtil.setConfigAttr(Provisioning.A_zimbraSmtpSendAddAuthenticatedUser, LdapUtil.LDAP_FALSE);
+        String subject = NAME_PREFIX + " testAuthenticatedUserHeader false";
+        TestUtil.sendMessage(mbox, USER_NAME, subject);
+        ZMessage msg = TestUtil.waitForMessage(mbox, "subject:\"" + subject + "\"");
+        assertNull(TestUtil.getHeaderValue(mbox, msg, MailSender.X_AUTHENTICATED_USER));
+        
+        // X-Authenticated-User sent.
+        TestUtil.setConfigAttr(Provisioning.A_zimbraSmtpSendAddAuthenticatedUser, LdapUtil.LDAP_TRUE);
+        subject = NAME_PREFIX + " testAuthenticatedUserHeader true";
+        TestUtil.sendMessage(mbox, USER_NAME, subject);
+        msg = TestUtil.waitForMessage(mbox, "subject:\"" + subject + "\"");
+        assertEquals(mbox.getName(), TestUtil.getHeaderValue(mbox, msg, MailSender.X_AUTHENTICATED_USER));
+    }
+    
     public void tearDown()
     throws Exception {
         cleanUp();
+        TestUtil.setConfigAttr(Provisioning.A_zimbraSmtpSendAddAuthenticatedUser, mOriginalSmtpSendAddAuthenticatedUser);
     }
     
     private void cleanUp()
