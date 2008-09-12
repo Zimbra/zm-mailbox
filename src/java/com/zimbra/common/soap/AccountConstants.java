@@ -167,5 +167,9 @@ public class AccountConstants {
     public static final String A_VERSION_INFO_RELEASE = "release";
     public static final String A_VERSION_INFO_DATE = "buildDate";
     public static final String A_VERSION_INFO_HOST = "host";
+    
+    // XMPPComponent APIs
+    public static final String E_XMPP_COMPONENT = "xmppcomponent";
+    
 
 }
