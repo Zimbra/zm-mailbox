@@ -3672,4 +3672,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether to show catchall addresses in admin console</desc>
 </attr>
 
+<attr id="747" name="zimbraSmtpSendAddAuthenticatedUser" type="boolean" cardinality="single" optionalIn="globalConfig">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>If true, an X-Authenticated-User header will be added to messages sent via SendMsgRequest.</desc>
+</attr>
+
 </attrs>
