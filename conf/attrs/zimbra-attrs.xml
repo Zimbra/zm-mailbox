@@ -3658,7 +3658,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>enable MX check feature for domain</desc>
 </attr>
 
-<attr id="744" name="zimbraDNSCheckHostname"  type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited">
+<attr id="744" name="zimbraDNSCheckHostname"  type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable">
    <desc>This attribute is used for DNS check by customers that configure their MX to point at spam relays or other non-zimbra inbox smtp servers</desc>
 </attr>
 
