@@ -4,9 +4,12 @@
 
 <right name="{name}"
        <desc>a brief description, this is to be displayed by the zmmailbox listPermission command</desc>
+       
        [<doc>a more detailed description, may include use cases, examples, etc. 
              This is to be displayed by the zmmailbox listPermission command in verbose mode.
        </doc>]
+       
+       [<default>TRUE/FALSE</default>]
 </right>
 
 -->
@@ -22,12 +25,12 @@
 
 <right name="viewFreeBusy">
   <desc>view free/busy</desc>
-  <doc>e.g. Free/busy for Y can only be seen by users A, B, C and group G.</doc>>
+  <doc>e.g. Free/busy for Y can only be seen by users A, B, C and group G.</doc>
 </right>
 
 <right name="loginAs">
   <desc>login as</desc>
-  <doc>login as another user.  Currently this is only honored for imap/pop3 login</doc>>
+  <doc>login as another user.  Currently this is only honored for imap/pop3 login</doc>
 </right>
 
 </rights>
