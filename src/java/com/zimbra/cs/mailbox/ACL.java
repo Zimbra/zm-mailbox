@@ -109,7 +109,8 @@ public class ACL {
             mDigest = AuthToken.generateDigest(emailAddress, password);
         }
         public GuestAccount(AuthToken auth) {
-            super(auth.getExternalUserEmail(), GUID_PUBLIC, getAnonAttrs(), null);
+            // for key grantee type, sometimes there could be no email address
+            super(auth.getExternalUserEmail()==null?"":auth.getExternalUserEmail(), GUID_PUBLIC, getAnonAttrs(), null);
             mDigest = auth.getDigest();
             mAccessKey = auth.getAccessKey();
         }
