@@ -25,8 +25,11 @@ import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.Element.XMLElement;
 import org.dom4j.DocumentException;
+import org.dom4j.ElementHandler;
+import org.dom4j.io.SAXReader;
 
 import java.io.IOException;
+import java.io.Reader;
 
 /**
  * Abstract class for sending a soap message.
@@ -221,6 +224,21 @@ public abstract class SoapTransport {
         return raw ? env : extractBodyElement(env);
     }
 
+    /* use SAXReader to parse large soap response. caller must provide list of handlers, which are <path, handler> pairs. 
+     * to reduce memory usage, a handler may call Element.detach() in ElementHandler.onEnd() to prune off processed elements
+     * */
+    void parseLargeSoapResponse(Reader inputReader, Map<String, ElementHandler> handlers) throws SoapFaultException {
+        SAXReader saxReader = new SAXReader();        
+        for(Map.Entry<String, ElementHandler> entry : handlers.entrySet()) {
+            saxReader.addHandler(entry.getKey(), entry.getValue());
+        }
+        
+        try {
+            saxReader.read(inputReader);
+        } catch (DocumentException e) {
+            throw new SoapFaultException(e.getMessage(), SoapFaultException.SAX_PARSE_ERROR, false, e.getCause());
+        }
+    }
     
     public Element extractBodyElement(Element env) throws SoapParseException, SoapFaultException {
         SoapProtocol proto = SoapProtocol.determineProtocol(env);

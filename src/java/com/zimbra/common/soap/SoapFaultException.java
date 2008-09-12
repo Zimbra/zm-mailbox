@@ -28,6 +28,7 @@ public class SoapFaultException extends ServiceException {
 
 	/** used for default value and when we get a fault without a detail code */
     public static final String UNKNOWN = "soap.UNKNOWN";
+    public static final String SAX_PARSE_ERROR = "soap.SAX_PARSE_ERROR";
 
     private boolean mIsReceiversFault;
     private Element mDetail;

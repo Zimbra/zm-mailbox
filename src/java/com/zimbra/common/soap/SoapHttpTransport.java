@@ -37,8 +37,11 @@ import org.apache.commons.httpclient.params.HttpMethodParams;
 
 import com.zimbra.common.util.ByteUtil;
 
+import org.dom4j.ElementHandler;
+
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.Map;
 
 /**
  */
@@ -209,7 +212,12 @@ public class SoapHttpTransport extends SoapTransport {
     }
 
     public Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId, String changeToken, String tokenType) 
-	throws SoapFaultException, IOException, HttpException {
+    throws SoapFaultException, IOException, HttpException {
+        return invoke(document, raw, noSession, requestedAccountId, changeToken, tokenType, null);
+    }
+    
+    public Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId, String changeToken, String tokenType,
+        Map<String, ElementHandler> saxHandlers) throws SoapFaultException, IOException, HttpException {
     	int statusCode = -1;
 
         PostMethod method = null;
@@ -219,7 +227,7 @@ public class SoapHttpTransport extends SoapTransport {
             method = new PostMethod(mUri);
             method.setRequestHeader("Content-Type", getRequestProtocol().getContentType());
             if (getClientIp() != null)
-            method.setRequestHeader(X_ORIGINATING_IP, getClientIp());
+                method.setRequestHeader(X_ORIGINATING_IP, getClientIp());
 
             String soapMessage = generateSoapMessage(document, raw, noSession, requestedAccountId, changeToken, tokenType);
             method.setRequestBody(soapMessage);
@@ -240,19 +248,22 @@ public class SoapHttpTransport extends SoapTransport {
             }
 
             // Read the response body.  Use the stream API instead of the byte[] one
-            // to avoid HTTPClient whining about a large response.
-            byte[] responseBody = ByteUtil.getContent(method.getResponseBodyAsStream(), (int) method.getResponseContentLength());
-
-            // Deal with the response.
-            // Use caution: ensure correct character encoding and is not binary data
-            String responseStr = SoapProtocol.toString(responseBody);
-
+            // to avoid HTTPClient whining about a large response.        
+            InputStreamReader reader = new InputStreamReader(method.getResponseBodyAsStream(), SoapProtocol.getCharset());
+            
+            String responseStr = "";
             try {
-            	return parseSoapResponse(responseStr, raw);
+                if (saxHandlers != null) {
+                    parseLargeSoapResponse(reader, saxHandlers);
+                    return null;
+                } else {
+                    responseStr = ByteUtil.getContent(reader, (int)method.getResponseContentLength(), false);
+                    return parseSoapResponse(responseStr, raw);
+                }
             } catch (SoapFaultException x) {
             	//attach request/response to the exception and rethrow for downstream consumption
             	x.setFaultRequest(soapMessage);
-            	x.setFaultResponse(responseStr);
+            	x.setFaultResponse(responseStr.substring(0, Math.min(10240, responseStr.length())));
             	throw x;
             }
         } finally {
