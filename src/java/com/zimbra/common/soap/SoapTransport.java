@@ -30,6 +30,7 @@ import org.dom4j.io.SAXReader;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.Map;
 
 /**
  * Abstract class for sending a soap message.
@@ -53,7 +54,7 @@ public abstract class SoapTransport {
     
     public interface DebugListener {
         public void sendSoapMessage(Element envelope);
-        public void receiveSoapMessage(Element envelope);        
+        public void receiveSoapMessage(Element envelope);
     }
 
     protected SoapTransport() {
