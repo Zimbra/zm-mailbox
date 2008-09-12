@@ -12,6 +12,7 @@ public class Right {
     private final String mCode;
     private String mDesc;  // a brief description
     private String mDoc;   // a more detailed description, use cases, examples
+    private Boolean mDefault;
     
     static void initKnownRights(RightManager rm) throws ServiceException {
         RT_invite = rm.getRight("invite");
@@ -42,6 +43,10 @@ public class Right {
         return mDoc;
     }
     
+    public Boolean getDefault() {
+        return mDefault;
+    }
+    
     void setDesc(String desc) {
         mDesc = desc;
     }
@@ -50,5 +55,8 @@ public class Right {
         mDoc = doc;
     }
 
+    void setDefault(Boolean defaultValue) {
+        mDefault = defaultValue;
+    }
 
 }

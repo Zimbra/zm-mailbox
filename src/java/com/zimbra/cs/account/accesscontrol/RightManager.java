@@ -15,6 +15,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 public class RightManager {
+    private static final String E_DEFAULT = "default";
     private static final String E_DESC   = "desc";
     private static final String E_DOC    = "doc";
     private static final String E_RIGHTS = "rights";
@@ -93,6 +94,16 @@ public class RightManager {
                     right.setDesc(elem.getText());
                 else if (elem.getName().equals(E_DOC))
                     right.setDoc(elem.getText());
+                else if (elem.getName().equals(E_DEFAULT)) {
+                    String defaultValue = elem.getText();
+                    if ("true".equalsIgnoreCase(defaultValue))
+                        right.setDefault(Boolean.TRUE);
+                    else if ("false".equalsIgnoreCase(defaultValue))
+                        right.setDefault(Boolean.FALSE);
+                    else
+                        throw ServiceException.FAILURE("invalid default value: " + defaultValue, null);
+                } else
+                    throw ServiceException.FAILURE("invalid element: " + elem.getName(), null);
             }
             if (right.getDesc() == null)
                 throw ServiceException.FAILURE("no desc specified for " + right.getCode() + ", file=" + file , null);
