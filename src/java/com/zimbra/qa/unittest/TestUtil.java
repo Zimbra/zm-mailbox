@@ -29,7 +29,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.dom4j.DocumentHelper;
+import javax.mail.internet.MimeMessage;
+import javax.mail.util.SharedByteArrayInputStream;
 import org.testng.TestNG;
 import junit.framework.Assert;
 import junit.framework.Test;
@@ -71,6 +72,7 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.zclient.ZContact;
 import com.zimbra.cs.zclient.ZDataSource;
 import com.zimbra.cs.zclient.ZEmailAddress;
@@ -87,7 +89,6 @@ import com.zimbra.cs.zclient.ZGrant.GranteeType;
 import com.zimbra.cs.zclient.ZMailbox.ContactSortBy;
 import com.zimbra.cs.zclient.ZMailbox.OwnerBy;
 import com.zimbra.cs.zclient.ZMailbox.SharedItemBy;
-import com.zimbra.cs.zclient.ZMailbox.ZActionResult;
 import com.zimbra.cs.zclient.ZMailbox.ZImportStatus;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.MessagePart;
@@ -619,7 +620,7 @@ extends Assert {
     
     public static String getConfigAttr(String attrName)
     throws ServiceException {
-        return Provisioning.getInstance().getConfig().getAttr(attrName, null);
+        return Provisioning.getInstance().getConfig().getAttr(attrName, "");
     }
     
     public static void setConfigAttr(String attrName, String attrValue)
@@ -811,5 +812,16 @@ extends Assert {
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
         mbox.getRESTResource(relativePath, buf, false, null, null, 10);
         return buf.toByteArray();
+    }
+    
+    public static String getHeaderValue(ZMailbox mbox, ZMessage msg, String headerName)
+    throws Exception {
+        String content = msg.getContent();
+        if (content == null) {
+            content = getContent(mbox, msg.getId());
+        }
+        assertNotNull("Content was not fetched from the server", content);
+        MimeMessage mimeMsg = new MimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(content.getBytes()));
+        return mimeMsg.getHeader(headerName, null);
     }
 }

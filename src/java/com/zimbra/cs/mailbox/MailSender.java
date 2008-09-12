@@ -448,6 +448,7 @@ public class MailSender {
 
     private static final String X_ORIGINATING_IP = "X-Originating-IP";
     private static final String X_MAILER = "X-Mailer";
+    public static final String X_AUTHENTICATED_USER = "X-Authenticated-User"; 
 
     void updateHeaders(MimeMessage mm, Account acct, Account authuser, OperationContext octxt, String originIP, boolean replyToSender)
     throws MessagingException, ServiceException {
@@ -464,6 +465,10 @@ public class MailSender {
             String ua = octxt != null ? octxt.getUserAgent() : null;
             String mailer = "Zimbra " + BuildInfo.VERSION + ((ua==null)?"":" (" + ua + ")");
             mm.addHeader(X_MAILER, mailer);
+        }
+        
+        if (prov.getConfig().getBooleanAttr(Provisioning.A_zimbraSmtpSendAddAuthenticatedUser, false)) {
+            mm.addHeader(X_AUTHENTICATED_USER, authuser.getName());
         }
 
         boolean overrideFromHeader = true;
