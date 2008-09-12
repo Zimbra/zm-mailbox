@@ -269,7 +269,11 @@ class ProxyConfVar
                 {
                     capabilities.add(c);
                 }
-                mValue = capabilities;
+                if (capabilities.size() > 0) {
+                    mValue = capabilities;
+                } else {
+                    mValue = mDefault;
+                }
             }
             else if ("mail.pop3capa".equalsIgnoreCase(mKeyword))
             {
@@ -279,7 +283,11 @@ class ProxyConfVar
                 {
                     capabilities.add(c);
                 }
-                mValue = capabilities;
+                if (capabilities.size() > 0) {
+                    mValue = capabilities;
+                } else {
+                    mValue = mDefault;
+                }
             }
         }
     }
@@ -697,6 +705,28 @@ public class ProxyConfGen
         }
     }
 
+    public static ArrayList<String> getDefaultImapCapabilities ()
+    {
+        ArrayList<String> imapCapabilities = new ArrayList<String> ();
+        imapCapabilities.add("IMAP4rev1");
+        imapCapabilities.add("ID");
+        imapCapabilities.add("LITERAL+");
+        imapCapabilities.add("SASL-IR");
+        imapCapabilities.add("IDLE");
+        imapCapabilities.add("NAMESPACE");
+        return imapCapabilities;
+    }
+
+    public static ArrayList<String> getDefaultPop3Capabilities ()
+    {
+        ArrayList<String> pop3Capabilities = new ArrayList<String> ();
+        pop3Capabilities.add("TOP");
+        pop3Capabilities.add("USER");
+        pop3Capabilities.add("UIDL");
+        pop3Capabilities.add("EXPIRE 31 USER");
+        return pop3Capabilities;
+    }
+
     public static void buildDefaultVars ()
     {
         mConfVars.put("core.workdir", new ProxyConfVar("core.workdir", null, mWorkingDir, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "Working Directory for NGINX worker processes"));
@@ -721,8 +751,8 @@ public class ProxyConfGen
         mConfVars.put("mail.:auth_http", new ProxyConfVar("mail.:auth_http", "zimbraReverseProxyLookupTarget", new ArrayList<String>(), ProxyConfValueType.CUSTOM, ProxyConfOverride.CUSTOM, "List of mail route lookup handlers (i.e. servers for which zimbraReverseProxyLookupTarget is true)"));
         mConfVars.put("mail.auth_http_timeout", new ProxyConfVar("mail.auth_http_timeout", "zimbraReverseProxyRouteLookupTimeout", new Long(15000), ProxyConfValueType.TIME, ProxyConfOverride.SERVER,"Time interval (ms) given to mail route lookup handler to respond to route lookup request (after this time elapses, Proxy fails over to next handler, or fails the request if there are no more lookup handlers)"));
         mConfVars.put("mail.authwait", new ProxyConfVar("mail.authwait", "zimbraReverseProxyAuthWaitInterval", new Long(10000), ProxyConfValueType.TIME, ProxyConfOverride.CONFIG, "Time delay (ms) after which an incorrect POP/IMAP login attempt will be rejected"));
-        mConfVars.put("mail.pop3capa", new ProxyConfVar("mail.pop3capa", "zimbraReverseProxyPop3EnabledCapability", new ArrayList<String>(), ProxyConfValueType.CUSTOM, ProxyConfOverride.CUSTOM, "POP3 Capability List"));
-        mConfVars.put("mail.imapcapa", new ProxyConfVar("mail.imapcapa", "zimbraReverseProxyImapEnabledCapability", new ArrayList<String>(), ProxyConfValueType.CUSTOM, ProxyConfOverride.CUSTOM, "IMAP Capability List"));
+        mConfVars.put("mail.pop3capa", new ProxyConfVar("mail.pop3capa", "zimbraReverseProxyPop3EnabledCapability", getDefaultPop3Capabilities(), ProxyConfValueType.CUSTOM, ProxyConfOverride.CUSTOM, "POP3 Capability List"));
+        mConfVars.put("mail.imapcapa", new ProxyConfVar("mail.imapcapa", "zimbraReverseProxyImapEnabledCapability", getDefaultImapCapabilities(), ProxyConfValueType.CUSTOM, ProxyConfOverride.CUSTOM, "IMAP Capability List"));
         mConfVars.put("mail.imapid", new ProxyConfVar("mail.imapid", null, "\"NAME\" \"Zimbra\" \"VERSION\" \"" + BuildInfo.VERSION + "\" \"RELEASE\" \"" + BuildInfo.RELEASE + "\"", ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "NGINX response to IMAP ID command"));
         mConfVars.put("mail.dpasswd", new ProxyConfVar("mail.dpasswd", "ldap_nginx_password", "zmnginx", ProxyConfValueType.STRING, ProxyConfOverride.LOCALCONFIG, "Password for master credentials used by NGINX to log in to upstream for GSSAPI authentication"));
         mConfVars.put("mail.defaultrealm", new ProxyConfVar("mail.defaultrealm", "zimbraReverseProxyDefaultRealm", "", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Default SASL realm used in case Kerberos principal does not contain realm information"));
