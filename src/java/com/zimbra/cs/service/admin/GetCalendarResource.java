@@ -34,6 +34,9 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class GetCalendarResource extends AdminDocumentHandler {
 
+    private static final String[] TARGET_RESOURCE_PATH = new String[] { AdminConstants.E_CALENDAR_RESOURCE };
+    protected String[] getProxiedResourceElementPath()  { return TARGET_RESOURCE_PATH; }
+
     /**
      * must be careful and only return calendar resources
      * a domain admin can see
