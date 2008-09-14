@@ -83,10 +83,11 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
         return true;
     }
 
-    protected String[] getProxiedAccountPath()         { return null; }
-    protected String[] getProxiedAccountElementPath()  { return null; }
-    protected String[] getProxiedResourcePath()        { return null; }
-    protected String[] getProxiedServerPath()          { return null; }
+    protected String[] getProxiedAccountPath()          { return null; }
+    protected String[] getProxiedAccountElementPath()   { return null; }
+    protected String[] getProxiedResourcePath()         { return null; }
+    protected String[] getProxiedResourceElementPath()  { return null; }
+    protected String[] getProxiedServerPath()           { return null; }
 
     @Override
     protected Element proxyIfNecessary(Element request, Map<String, Object> context) throws ServiceException {
@@ -108,9 +109,9 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             }
 
             xpath = getProxiedAccountElementPath();
-            Element elt = (xpath != null ? getXPathElement(request, xpath) : null);
-            if (elt != null) {
-                Account acct = prov.get(AccountBy.fromString(elt.getAttribute(AdminConstants.A_BY)), elt.getText(), true);
+            Element acctElt = (xpath != null ? getXPathElement(request, xpath) : null);
+            if (acctElt != null) {
+                Account acct = prov.get(AccountBy.fromString(acctElt.getAttribute(AdminConstants.A_BY)), acctElt.getText(), true);
                 if (acct != null && !Provisioning.onLocalServer(acct))
                     return proxyRequest(request, context, acct.getId());
             }
@@ -126,7 +127,18 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
                         return proxyRequest(request, context, server, zsc);
                 }
             }
-
+            
+            xpath = getProxiedResourceElementPath();
+            Element resourceElt = (xpath != null ? getXPathElement(request, xpath) : null);
+            if (resourceElt != null) {
+                CalendarResource rsrc = prov.get(CalendarResourceBy.fromString(resourceElt.getAttribute(AdminConstants.A_BY)), resourceElt.getText(), true);
+                if (rsrc != null) {
+                    Server server = prov.get(ServerBy.name, rsrc.getAttr(Provisioning.A_zimbraMailHost));
+                    if (server != null && !LOCAL_HOST_ID.equalsIgnoreCase(server.getId()))
+                        return proxyRequest(request, context, server, zsc);
+                }
+            }
+ 
             // check whether we need to proxy to a target server
             xpath = getProxiedServerPath();
             String serverId = (xpath != null ? getXPath(request, xpath) : null);
@@ -145,6 +157,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             throw e;
         }
     }
+
 
     @Override
     public Session.Type getDefaultSessionType() {
