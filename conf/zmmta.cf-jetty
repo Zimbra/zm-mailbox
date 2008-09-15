@@ -179,9 +179,11 @@ SECTION imapproxy
 	VAR zimbraReverseProxyDefaultRealm
 	VAR zimbraReverseProxyHttpEnabled
 	VAR zimbraReverseProxyImapCapabilities
+	VAR zimbraReverseProxyImapEnabledCapability
 	VAR zimbraReverseProxyImapExposeVersionOnBanner
 	VAR zimbraReverseProxyImapSaslGssapiEnabled
 	VAR zimbraReverseProxyImapSaslPlainEnabled
+	VAR zimbraReverseProxyImapSSLEnabledCapability
 	VAR zimbraReverseProxyImapStartTlsMode
 	VAR zimbraReverseProxyInactivityTimeout
 	VAR zimbraReverseProxyIPLoginLimit
@@ -192,9 +194,11 @@ SECTION imapproxy
 	VAR zimbraReverseProxyMailMode
 	VAR zimbraReverseProxyPassErrors
 	VAR zimbraReverseProxyPop3Capabilities
+	VAR zimbraReverseProxyPop3EnabledCapability
 	VAR zimbraReverseProxyPop3ExposeVersionOnBanner
 	VAR zimbraReverseProxyPop3SaslGssapiEnabled
 	VAR zimbraReverseProxyPop3SaslPlainEnabled
+	VAR zimbraReverseProxyPop3SSLEnabledCapability
 	VAR zimbraReverseProxyPop3StartTlsMode
 	VAR zimbraReverseProxyRouteLookupTimeout 
 	VAR zimbraReverseProxySendPop3Xoip
