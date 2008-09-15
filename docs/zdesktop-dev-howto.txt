@@ -1,0 +1,21 @@
+A Short Guide on Zimbra Desktop Development
+
+The project folder for desktop specific stuff is under ZimbraOffline.  The naming is historic as Zimbra Desktop was initially called Zimbra Offline.  To build and run dev version of desktop, you'll need at least the following projects:
+
+Ajax
+ThirdParty
+ZimbraCommon
+ZimbraIM
+ZimbraOffline
+ZimbraServer
+ZimbraTag
+ZimbraWebClient
+Zimlet
+
+To build, cd into ZimbraOffline and run "ant offline-reset-the-world".  At the end of the build, the dev version of desktop will be deployed to /opt/zimbra/zdesktop dev.  Note there's a space in the path, which is intentional.
+
+The dev build can be started or stopped using a shell script called offline.  This script is copied to /opt/zimbra/zdesktop dev/bin.
+
+The dev build listens on port 7733, as opposed to 7633 used by the produciton build.  Therefore it's OK to run both installed production build and dev build on the same box.  The dev build doesn't come with prism, so use a browser to point to http://localhost:7733 to access the UI.
+
+The best way to debug is to use jetty ant plugin.  There's a jetty-ant.xml file under ZimbraOffline that is specific to running offline using jetty ant plugin.  See details on how to use jetty ant plugin in jetty.txt. 
