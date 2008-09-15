@@ -68,8 +68,7 @@ set of possible grantees right off the bat:
         all    - the caller needs to present a valid Zimbra credential
         guest  - the caller needs to present a non-Zimbra email address
                  and password
-        key    - the caller needs to present an access key embedded in 
-                 the access URL
+        key    - the caller needs to present an access key
         pub    - always succeeds
 
 (Domain grantees may require another LDAP query, but it's likely that

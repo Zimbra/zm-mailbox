@@ -387,7 +387,7 @@ public class ZMailboxUtil implements DebugListener {
         GET_REST_URL("getRestURL", "gru", "{relative-path}", "do a GET on a REST URL relative to the mailbox", Category.MISC, 1, 1,
                 O_OUTPUT_FILE, O_START_TIME, O_END_TIME),
         GET_SIGNATURES("getSignatures", "gsig", "", "get all signatures", Category.ACCOUNT, 0, 0, O_VERBOSE),
-        GRANT_PERMISSION("grantPermission", "grp", "{account {name}|group {name}|all|public {[-]right}}", "allow or deny a right to a grantee or a group of grantee. to deny a right, put a '-' in front of the right", Category.PERMISSION, 2, 3),
+        GRANT_PERMISSION("grantPermission", "grp", "{account {name}|group {name}|key {name} [{access key}]|all|public {[-]right}}", "allow or deny a right to a grantee or a group of grantee. to deny a right, put a '-' in front of the right", Category.PERMISSION, 2, 4),
         HELP("help", "?", "commands", "return help on a group of commands, or all commands. Use -v for detailed help.", Category.MISC, 0, 1, O_VERBOSE),
         IMPORT_URL_INTO_FOLDER("importURLIntoFolder", "iuif", "{folder-path} {url}", "add the contents to the remote feed at {target-url} to the folder", Category.FOLDER, 2, 2),
         LIST_PERMISSION("listPermission", "lp", "", "list and describe all rights that can be granted", Category.PERMISSION, 0, 0, O_VERBOSE),
@@ -420,7 +420,7 @@ public class ZMailboxUtil implements DebugListener {
         RENAME_FOLDER("renameFolder", "rf", "{folder-path} {new-folder-path}", "rename folder", Category.FOLDER, 2, 2),
         RENAME_SIGNATURE("renameSignature", "rsig", "{signature-name|signature-id} {new-name}", "rename signature", Category.ACCOUNT, 2, 2),
         RENAME_TAG("renameTag", "rt", "{tag-name} {new-tag-name}", "rename tag", Category.TAG, 2, 2),
-        REVOKE_PERMISSION("revokePermission", "rvp", "{account {name}|group {name}|all|public {[-]right}}", "revoke a right previously granted to a grantee or a group of grantees. to revoke a denied right, put a '-' in front of the right", Category.PERMISSION, 2, 3),
+        REVOKE_PERMISSION("revokePermission", "rvp", "{account {name}|group {name}|key {name}|all|public {[-]right}}", "revoke a right previously granted to a grantee or a group of grantees. to revoke a denied right, put a '-' in front of the right", Category.PERMISSION, 2, 3),
         SEARCH("search", "s", "{query}", "perform search", Category.SEARCH, 0, 1, O_LIMIT, O_SORT, O_TYPES, O_VERBOSE, O_CURRENT, O_NEXT, O_PREVIOUS),
         SEARCH_CONVERSATION("searchConv", "sc", "{conv-id} {query}", "perform search on conversation", Category.SEARCH, 0, 2, O_LIMIT, O_SORT, O_TYPES, O_VERBOSE, O_CURRENT, O_NEXT, O_PREVIOUS),
         SELECT_MAILBOX("selectMailbox", "sm", "{account-name}", "select a different mailbox. can only be used by an admin", Category.ADMIN, 1, 1),
@@ -1512,26 +1512,36 @@ public class ZMailboxUtil implements DebugListener {
         String granteeId = null;
         String right = null;
         boolean deny = false;
-        String password = null;
+        String secret = null;
         
         switch (type) {
         case usr:
         case grp:
-            if (args.length != 3) throw ZClientException.CLIENT_ERROR("not enough args", null);
+            if (args.length != 3) throw ZClientException.CLIENT_ERROR("wrong number of args", null);
             granteeName = args[1];
             right = args[2];
             break;
         case all:    
         case pub:
-            if (args.length != 2) throw ZClientException.CLIENT_ERROR("not enough args", null);
+            if (args.length != 2) throw ZClientException.CLIENT_ERROR("wrong number of args", null);
             granteeId = ACL.GUID_PUBLIC;
             right = args[1];
             break;
         case gst:   
-            if (args.length != 4) throw ZClientException.CLIENT_ERROR("not enough args", null);
+            if (args.length != 4) throw ZClientException.CLIENT_ERROR("wrong number of args", null);
             granteeName = args[1];
-            password = args[2];
+            secret = args[2];
             right = args[3];
+            break;
+        case key:
+            if (args.length != 3 && args.length != 4) throw ZClientException.CLIENT_ERROR("wrong number of args", null);
+            granteeName = args[1];
+            if (args.length == 3) {
+                right = args[2];
+            } else {
+                secret = args[2];
+                right = args[3];
+            }
             break;
         }
         
@@ -1540,7 +1550,7 @@ public class ZMailboxUtil implements DebugListener {
             right = right.substring(1);
         }
         
-        return new ZAce(type, granteeId, granteeName, right, deny, password);
+        return new ZAce(type, granteeId, granteeName, right, deny, secret);
     }
     
     private void doGrantPermission(String[] args) throws ServiceException {

@@ -13,7 +13,7 @@ public class ZAce {
     private ZAce.GranteeType mGranteeType;
     private String mRight;
     private boolean mDeny;
-    private String mArgs; // for password
+    private String mSecret; // password for guest grantee, accesskey for key grantee
 
     /** Stolen shamelessly from ACL.java. */
     /** The pseudo-GUID signifying "all authenticated users". */
@@ -41,7 +41,11 @@ public class ZAce {
         /**
          * access is granted to a non-Zimbra email address and a password 
          */
-        gst;
+        gst,
+        /**
+         * access is granted to a non-Zimbra name and an access key
+         */
+        key;
 
         public static GranteeType fromString(String s) throws ServiceException {
             try {
@@ -61,16 +65,16 @@ public class ZAce {
         mGranteeName = e.getAttribute(MailConstants.A_DISPLAY, null);
         mGranteeId = e.getAttribute(MailConstants.A_ZIMBRA_ID, null);
         mGranteeType = GranteeType.fromString(e.getAttribute(MailConstants.A_GRANT_TYPE));
-        mArgs = e.getAttribute(MailConstants.A_PASSWORD, null);
+        mSecret = e.getAttribute(MailConstants.A_PASSWORD, null);
     }
     
-    public ZAce(ZAce.GranteeType granteeType, String granteeId, String granteeName, String right, boolean deny, String args) throws ServiceException {
+    public ZAce(ZAce.GranteeType granteeType, String granteeId, String granteeName, String right, boolean deny, String secret) throws ServiceException {
         mRight = right;
         mDeny = deny;
         mGranteeName = granteeName;
         mGranteeId = granteeId;
         mGranteeType = granteeType;
-        mArgs = args;
+        mSecret = secret;
     }
 
     public void toElement(Element parent) {
@@ -79,7 +83,11 @@ public class ZAce {
         ace.addAttribute(MailConstants.A_GRANT_TYPE, mGranteeType.name());
         ace.addAttribute(MailConstants.A_ZIMBRA_ID, mGranteeId);
         ace.addAttribute(MailConstants.A_DISPLAY, mGranteeName);
-        ace.addAttribute(MailConstants.A_PASSWORD, mArgs);
+        if (mGranteeType == GranteeType.gst)
+            ace.addAttribute(MailConstants.A_PASSWORD, mSecret);
+        else if (mGranteeType == GranteeType.key)
+            ace.addAttribute(MailConstants.A_ACCESSKEY, mSecret);
+        
         if (mDeny)
             ace.addAttribute(MailConstants.A_DENY, mDeny);
     }
@@ -130,11 +138,12 @@ public class ZAce {
         mGranteeId = granteeId;
     }
     
-    /**
-     *  optional argument.  password when {grantee-type} is "guest"
-     */
-    public String getArgs() {
-        return mArgs;
+    public String getPassword() {
+        return mSecret;
+    }
+    
+    public String getAccessKey() {
+        return mSecret;
     }
 
     /**
@@ -166,6 +175,7 @@ public class ZAce {
         case pub: return "public";
         case all: return "all";
         case gst: return "guest";
+        case key: return "key";
         default: return "unknown";
         }
     }
@@ -173,11 +183,12 @@ public class ZAce {
     public int  getGranteeTypeSortOrder() {
         switch (mGranteeType) {
         case usr: return 0;
-        case grp: return 1;
-        case pub: return 4;
-        case all: return 3;
-        case gst: return 2;
-        default: return 5; // ??
+        case grp: return 3;
+        case pub: return 5;
+        case all: return 4;
+        case gst: return 1;
+        case key: return 2;
+        default: return 6; // ??
         }
     }
     
@@ -186,7 +197,8 @@ public class ZAce {
         else if (name.equalsIgnoreCase("group")) return GranteeType.grp; 
         else if (name.equalsIgnoreCase("public")) return GranteeType.pub;
         else if (name.equalsIgnoreCase("all")) return GranteeType.all;
-        // else if (name.equalsIgnoreCase("guest")) return GranteeType.gst;  // GUEST-TODO master control for turning off guest grantee for now  
+        // else if (name.equalsIgnoreCase("guest")) return GranteeType.gst;  // GUEST-TODO master control for turning off guest grantee for now 
+        else if (name.equalsIgnoreCase("key")) return GranteeType.key;
         else throw ZClientException.CLIENT_ERROR("unknown grantee type: "+name, null);
     }
 }

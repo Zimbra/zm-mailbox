@@ -132,6 +132,9 @@ public class ACL {
         public String getDigest() {
             return mDigest;
         }
+        public String getAccessKey() {
+            return mAccessKey;
+        }
     }
 
     public static class Grant {
@@ -464,7 +467,7 @@ public class ACL {
         return sb.toString();
     }
     
-    private String generateAccessKey() {
+    public static String generateAccessKey() {
         SecureRandom random = new SecureRandom();
         byte[] key = new byte[ACCESSKEY_SIZE_BYTES];
         random.nextBytes(key);

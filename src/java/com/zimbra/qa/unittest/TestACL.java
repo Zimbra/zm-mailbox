@@ -5,17 +5,27 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.HttpState;
+
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.CliUtil;
 
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.PermUtil;
@@ -43,6 +53,127 @@ public class TestACL extends TestCase {
         }
     }
     
+    public class KeyAuthToken extends AuthToken {
+
+        private String mName;
+        private String mAccessKey;
+        
+        KeyAuthToken(String name, String accessKey) {
+            mName = name;
+            mAccessKey = accessKey;
+        }
+        
+        @Override
+        public void encode(HttpClient client, HttpMethod method,
+                boolean isAdminReq, String cookieDomain) throws ServiceException {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void encode(HttpState state, boolean isAdminReq, String cookieDomain)
+                throws ServiceException {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void encode(HttpServletResponse resp, boolean isAdminReq)
+                throws ServiceException {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void encodeAuthResp(Element parent, boolean isAdmin)
+                throws ServiceException {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public String getAccountId() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public String getAdminAccountId() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public String getCrumb() throws AuthTokenException {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public String getDigest() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public String getEncoded() throws AuthTokenException {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public long getExpires() {
+            // TODO Auto-generated method stub
+            return 0;
+        }
+
+        @Override
+        public String getExternalUserEmail() {
+            // TODO Auto-generated method stub
+            return mName;
+        }
+
+        @Override
+        public boolean isAdmin() {
+            // TODO Auto-generated method stub
+            return false;
+        }
+
+        @Override
+        public boolean isDomainAdmin() {
+            // TODO Auto-generated method stub
+            return false;
+        }
+
+        @Override
+        public boolean isExpired() {
+            // TODO Auto-generated method stub
+            return false;
+        }
+
+        @Override
+        public boolean isZimbraUser() {
+            // TODO Auto-generated method stub
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public ZAuthToken toZAuthToken() throws ServiceException {
+            // TODO Auto-generated method stub
+            return null;
+        }
+        
+        public String getAccessKey() {
+            return mAccessKey;
+        }
+    }
+    
     private static String getEmailAddr(String localPart) {
         return localPart + "@" + DOMAIN_NAME;
     }
@@ -51,8 +182,38 @@ public class TestACL extends TestCase {
         return new ACL.GuestAccount(email, password);
     }
     
+    private Account keyAccount(String name, String accesKey) {
+        AuthToken authToken = new KeyAuthToken(name, accesKey);
+        return new ACL.GuestAccount(authToken);
+    }
+    
     private Account anonAccount() {
         return ACL.ANONYMOUS_ACCT;
+    }
+    
+    // construct a ACE with "pub" grantee type
+    private ZimbraACE newPubACE(Right right, boolean deny) throws ServiceException {
+        return new ZimbraACE(ACL.GUID_PUBLIC, GranteeType.GT_PUBLIC, right, deny, null);
+    }
+    
+    // construct a ACE with "all" grantee type
+    private ZimbraACE newAllACE(Right right, boolean deny) throws ServiceException {
+        return new ZimbraACE(ACL.GUID_AUTHUSER, GranteeType.GT_AUTHUSER, right, deny, null);
+    }
+    
+    // construct a ACE with "usr" grantee type
+    private ZimbraACE newUsrACE(Account acct, Right right, boolean deny) throws ServiceException {
+        return new ZimbraACE(acct.getId(), GranteeType.GT_USER, right, deny, null);
+    }
+    
+    // construct a ACE with "grp" grantee type
+    private ZimbraACE newGrpACE(DistributionList dl, Right right, boolean deny) throws ServiceException {
+        return new ZimbraACE(dl.getId(), GranteeType.GT_GROUP, right, deny, null);
+    }
+    
+    // construct a ACE with "key" grantee type
+    private ZimbraACE newKeyACE(String nameOrEmail, String accessKey, Right right, boolean deny) throws ServiceException {
+        return new ZimbraACE(nameOrEmail, GranteeType.GT_KEY, right, deny, accessKey);
     }
     
     /*
@@ -109,6 +270,13 @@ public class TestACL extends TestCase {
         
         // String interface
         result = mAM.canPerform(grantee==null?null:grantee.getName(), target, right, asAdmin, defaultValue);
+        if (grantee instanceof ACL.GuestAccount && ((ACL.GuestAccount)grantee).getAccessKey() != null) {
+            // string interface always return denied for key grantee unless there is a pub grant
+            // skip the test for now, unless we want to pass yet another parameter to this method
+            // i.e. - if no pub grant: should always expect false
+            //      - if there is a pub grant: should expect the expected
+            return;
+        }
         assertEquals(expected, result);
     }
     
@@ -134,10 +302,10 @@ public class TestACL extends TestCase {
          */
         Account target = prov.createAccount(getEmailAddr("testGranteeUser-target"), PASSWORD, null);
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
-        aces.add(new ZimbraACE(goodguy, Right.RT_viewFreeBusy, false));
-        aces.add(new ZimbraACE(goodguy, Right.RT_invite, false));
-        aces.add(new ZimbraACE(badguy, Right.RT_viewFreeBusy, true));
-        aces.add(new ZimbraACE(ACL.ANONYMOUS_ACCT, Right.RT_viewFreeBusy, false));
+        aces.add(newUsrACE(goodguy, Right.RT_viewFreeBusy, false));
+        aces.add(newUsrACE(goodguy, Right.RT_invite, false));
+        aces.add(newUsrACE(badguy, Right.RT_viewFreeBusy, true));
+        aces.add(newPubACE(Right.RT_viewFreeBusy, false));
         PermUtil.grantAccess(target, aces);
         
         // self should always be allowed
@@ -180,7 +348,7 @@ public class TestACL extends TestCase {
          */
         Account target = prov.createAccount(getEmailAddr("testGranteeAllAuthUser-target"), PASSWORD, null);
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
-        aces.add(new ZimbraACE(ACL.GUID_AUTHUSER, GranteeType.GT_AUTHUSER, Right.RT_viewFreeBusy, false));
+        aces.add(newAllACE(Right.RT_viewFreeBusy, false));
         PermUtil.grantAccess(target, aces);
         
         // zimbra user should be allowed
@@ -211,7 +379,7 @@ public class TestACL extends TestCase {
          */
         Account target = prov.createAccount(getEmailAddr("testGranteeGuest-target"), PASSWORD, null);
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
-        aces.add(new ZimbraACE(ACL.ANONYMOUS_ACCT, Right.RT_viewFreeBusy, false));
+        aces.add(newPubACE(Right.RT_viewFreeBusy, false));
         PermUtil.grantAccess(target, aces);
         
         // right allowed for PUB
@@ -219,6 +387,120 @@ public class TestACL extends TestCase {
         
         // right not in ACL
         verifyDefault(guest, target, Right.RT_invite);
+    }
+    
+    /*
+     * test key(with an accesskey) grantee
+     * Note: GST grantee is not yet implemented for now, the result will be the same as PUB grantee, which is supported)
+     */
+    public void testGranteeKey() throws Exception {
+        Provisioning prov = Provisioning.getInstance();
+        
+        final String GRANTEE_NAME_ALLOWED_KEY_KEY_PROVIDED          = "allowedKeyProvided with space";
+        final String KEY_FOR_GRANTEE_NAME_ALLOWED_KEY_KEY_PROVIDED  = "allowed my access key";
+        final String GRANTEE_NAME_ALLOWED_KEY_KEY_GENERATED         = "allowedKeyGenerated@external.com";
+              String KEY_FOR_GRANTEE_NAME_ALLOWED_KEY_KEY_GENERATED = null;  // will know after the grant
+        
+        final String GRANTEE_NAME_DENIED_KEY_KEY_PROVIDED           = "deniedKeyProvided with space";
+        final String KEY_FOR_GRANTEE_NAME_DENIED_KEY_KEY_PROVIDED   = "denied my access key";
+        final String GRANTEE_NAME_DENIED_KEY_KEY_GENERATED          = "deniedKeyGenerated@external.com";
+              String KEY_FOR_GRANTEE_NAME_DENIED_KEY_KEY_GENERATED  = null;  // will know after the grant
+        
+        /*
+         * setup targets
+         */
+        Account target = prov.createAccount(getEmailAddr("testGranteeKey-target"), PASSWORD, null);
+        Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
+        aces.add(newKeyACE(GRANTEE_NAME_ALLOWED_KEY_KEY_PROVIDED, KEY_FOR_GRANTEE_NAME_ALLOWED_KEY_KEY_PROVIDED, Right.RT_viewFreeBusy, false));
+        aces.add(newKeyACE(GRANTEE_NAME_ALLOWED_KEY_KEY_GENERATED, null, Right.RT_viewFreeBusy, false));
+        aces.add(newKeyACE(GRANTEE_NAME_DENIED_KEY_KEY_PROVIDED, KEY_FOR_GRANTEE_NAME_DENIED_KEY_KEY_PROVIDED, Right.RT_viewFreeBusy, true));
+        aces.add(newKeyACE(GRANTEE_NAME_DENIED_KEY_KEY_GENERATED, null, Right.RT_viewFreeBusy, true));
+        Set<ZimbraACE> grantedAces = PermUtil.grantAccess(target, aces);
+        
+        /*
+         * get generated accesskey to build our test accounts
+         */
+        for (ZimbraACE ace : grantedAces) {
+            if (ace.getGrantee().equals(GRANTEE_NAME_ALLOWED_KEY_KEY_GENERATED))
+                KEY_FOR_GRANTEE_NAME_ALLOWED_KEY_KEY_GENERATED = ace.getSecret();
+            if (ace.getGrantee().equals(GRANTEE_NAME_DENIED_KEY_KEY_GENERATED))
+                KEY_FOR_GRANTEE_NAME_DENIED_KEY_KEY_GENERATED = ace.getSecret();
+        }
+        
+        /*
+         * setup grantees
+         */
+        Account allowedKeyProvided = keyAccount(GRANTEE_NAME_ALLOWED_KEY_KEY_PROVIDED, KEY_FOR_GRANTEE_NAME_ALLOWED_KEY_KEY_PROVIDED);
+        Account allowedKeyGenerated = keyAccount(GRANTEE_NAME_ALLOWED_KEY_KEY_GENERATED, KEY_FOR_GRANTEE_NAME_ALLOWED_KEY_KEY_GENERATED);
+        Account allowedKeyGeneratedWrongAccessKey = keyAccount(GRANTEE_NAME_ALLOWED_KEY_KEY_GENERATED, KEY_FOR_GRANTEE_NAME_ALLOWED_KEY_KEY_GENERATED+"bogus");
+        Account deniedKeyProvided = keyAccount(GRANTEE_NAME_DENIED_KEY_KEY_PROVIDED, KEY_FOR_GRANTEE_NAME_DENIED_KEY_KEY_PROVIDED);
+        Account deniedKeyGenerated = keyAccount(GRANTEE_NAME_ALLOWED_KEY_KEY_GENERATED, KEY_FOR_GRANTEE_NAME_DENIED_KEY_KEY_GENERATED);
+        
+        /*
+         * test allowed
+         */
+        verify(allowedKeyProvided, target, Right.RT_viewFreeBusy, true);
+        verify(allowedKeyGenerated, target, Right.RT_viewFreeBusy, true);
+        verify(allowedKeyGeneratedWrongAccessKey, target, Right.RT_viewFreeBusy, false);
+        verify(deniedKeyProvided, target, Right.RT_viewFreeBusy, false);
+        verify(deniedKeyGenerated, target, Right.RT_viewFreeBusy, false);
+        
+        /*
+         * add a pub grant
+         */
+        aces.add(newPubACE(Right.RT_viewFreeBusy, false));
+        PermUtil.grantAccess(target, aces);
+        
+        /*
+         * verify the effect
+         */
+        verify(allowedKeyProvided, target, Right.RT_viewFreeBusy, true);  // still allowed
+        verify(allowedKeyGenerated, target, Right.RT_viewFreeBusy, true); // still allowed
+        verify(allowedKeyGeneratedWrongAccessKey, target, Right.RT_viewFreeBusy, true); // wrong key doesn't matternow, because it will be allowed via the puv grant
+        verify(deniedKeyProvided, target, Right.RT_viewFreeBusy, false);  // specifically denied should still be denied
+        verify(deniedKeyGenerated, target, Right.RT_viewFreeBusy, false); // specifically denied should still be denied
+        
+        /*
+         * revoke the denied grants
+         */
+        aces.clear();
+        aces.add(newKeyACE(GRANTEE_NAME_DENIED_KEY_KEY_PROVIDED, "doesn't matter", Right.RT_viewFreeBusy, true));
+        aces.add(newKeyACE(GRANTEE_NAME_DENIED_KEY_KEY_GENERATED, null, Right.RT_viewFreeBusy, true));
+        PermUtil.revokeAccess(target, aces);
+        
+        /*
+         * now everybody should be allowed
+         */
+        verify(allowedKeyProvided, target, Right.RT_viewFreeBusy, true);
+        verify(allowedKeyGenerated, target, Right.RT_viewFreeBusy, true);
+        verify(allowedKeyGeneratedWrongAccessKey, target, Right.RT_viewFreeBusy, true);
+        verify(deniedKeyProvided, target, Right.RT_viewFreeBusy, true);
+        verify(deniedKeyGenerated, target, Right.RT_viewFreeBusy, true);
+
+        // right not in ACL
+        verifyDefault(allowedKeyGenerated, target, Right.RT_invite);
+    }
+    
+    public void testGranteeKeyInvalidParams() throws Exception {
+        Provisioning prov = Provisioning.getInstance();
+        Account user1 = prov.createAccount(getEmailAddr("testGranteeKeyInvalidParams-user1"), PASSWORD, null);
+        
+        Account target = prov.createAccount(getEmailAddr("testGranteeKeyInvalidParams-target"), PASSWORD, null);
+        Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
+        aces.add(newKeyACE("good", "abc", Right.RT_viewFreeBusy, false));
+        aces.add(newKeyACE("bad:aaa:bbb", "xxx:yyy", Right.RT_viewFreeBusy, false));  // bad name/accesskey, containing ":"
+        aces.add(newUsrACE(user1, Right.RT_viewFreeBusy, false));
+        
+        try {
+            Set<ZimbraACE> grantedAces = PermUtil.grantAccess(target, aces);
+        } catch (ServiceException e) {
+            if (e.getCode().equals(ServiceException.INVALID_REQUEST)) {
+                // make sure nothing is granted, including the good ones
+                if (PermUtil.getACEs(target, null) == null)
+                    return; // good!
+            }
+        }
+        fail();  
     }
     
     /*
@@ -237,7 +519,7 @@ public class TestACL extends TestCase {
          */
         Account target = prov.createAccount(getEmailAddr("testGranteeAnon-target"), PASSWORD, null);
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
-        aces.add(new ZimbraACE(ACL.ANONYMOUS_ACCT, Right.RT_viewFreeBusy, false));
+        aces.add(newPubACE(Right.RT_viewFreeBusy, false));
         PermUtil.grantAccess(target, aces);
         
         // anon grantee
@@ -270,8 +552,8 @@ public class TestACL extends TestCase {
          */
         Account target = prov.createAccount(getEmailAddr("testGroup-target"), PASSWORD, null);
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
-        aces.add(new ZimbraACE(user1, Right.RT_viewFreeBusy, true));
-        aces.add(new ZimbraACE(groupA, Right.RT_viewFreeBusy, false));
+        aces.add(newUsrACE(user1, Right.RT_viewFreeBusy, true));
+        aces.add(newGrpACE(groupA, Right.RT_viewFreeBusy, false));
         PermUtil.grantAccess(target, aces);
         
         // group member, but account is specifically denied
@@ -327,12 +609,12 @@ public class TestACL extends TestCase {
          */
         Account target = prov.createAccount(getEmailAddr("testGranteeGroup-target"), PASSWORD, null);
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
-        aces.add(new ZimbraACE(G1, Right.RT_viewFreeBusy, false));
-        aces.add(new ZimbraACE(G2, Right.RT_viewFreeBusy, true));
-        aces.add(new ZimbraACE(G3, Right.RT_viewFreeBusy, false));
-        aces.add(new ZimbraACE(G4, Right.RT_viewFreeBusy, true));
-        aces.add(new ZimbraACE(G5, Right.RT_viewFreeBusy, false));
-        aces.add(new ZimbraACE(G6, Right.RT_viewFreeBusy, true));
+        aces.add(newGrpACE(G1, Right.RT_viewFreeBusy, false));
+        aces.add(newGrpACE(G2, Right.RT_viewFreeBusy, true));
+        aces.add(newGrpACE(G3, Right.RT_viewFreeBusy, false));
+        aces.add(newGrpACE(G4, Right.RT_viewFreeBusy, true));
+        aces.add(newGrpACE(G5, Right.RT_viewFreeBusy, false));
+        aces.add(newGrpACE(G6, Right.RT_viewFreeBusy, true));
         PermUtil.grantAccess(target, aces);
         
         verify(user1, target, Right.RT_viewFreeBusy, false);
@@ -386,7 +668,7 @@ public class TestACL extends TestCase {
          */
         Account target = prov.createAccount(getEmailAddr("testDefaultWithNonEmptyACL-target"), PASSWORD, null);
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
-        aces.add(new ZimbraACE(zimbraUser, rightGranted, false));
+        aces.add(newUsrACE(zimbraUser, rightGranted, false));
         PermUtil.grantAccess(target, aces);
         
         // verify callsite default is honored for not granted right
@@ -412,8 +694,8 @@ public class TestACL extends TestCase {
          */
         Account target = prov.createAccount(getEmailAddr("testGrantConflict-target"), PASSWORD, null);
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
-        aces.add(new ZimbraACE(conflict, Right.RT_viewFreeBusy, true));
-        aces.add(new ZimbraACE(conflict, Right.RT_viewFreeBusy, false));
+        aces.add(newUsrACE(conflict, Right.RT_viewFreeBusy, true));
+        aces.add(newUsrACE(conflict, Right.RT_viewFreeBusy, false));
         PermUtil.grantAccess(target, aces);
         
         // verify that only one is added 
@@ -434,8 +716,8 @@ public class TestACL extends TestCase {
          */
         Account target = prov.createAccount(getEmailAddr("testGrantDuplicate-target"), PASSWORD, null);
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
-        aces.add(new ZimbraACE(duplicate, Right.RT_viewFreeBusy, true));
-        aces.add(new ZimbraACE(duplicate, Right.RT_viewFreeBusy, true));
+        aces.add(newUsrACE(duplicate, Right.RT_viewFreeBusy, true));
+        aces.add(newUsrACE(duplicate, Right.RT_viewFreeBusy, true));
         PermUtil.grantAccess(target, aces);
         
         // verify that only one is added 
@@ -459,8 +741,8 @@ public class TestACL extends TestCase {
         
         // grant some permissions 
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
-        aces.add(new ZimbraACE(user, Right.RT_viewFreeBusy, true));
-        aces.add(new ZimbraACE(group, Right.RT_viewFreeBusy, true));
+        aces.add(newUsrACE(user, Right.RT_viewFreeBusy, true));
+        aces.add(newGrpACE(group, Right.RT_viewFreeBusy, true));
         PermUtil.grantAccess(target, aces);
         
         // verify the grants were added
@@ -469,7 +751,7 @@ public class TestACL extends TestCase {
         
         // grant some more
         aces.clear();
-        aces.add(new ZimbraACE(ACL.ANONYMOUS_ACCT, Right.RT_viewFreeBusy, false));
+        aces.add(newPubACE(Right.RT_viewFreeBusy, false));
         PermUtil.grantAccess(target, aces);
         
         // verify the grants were added
@@ -478,7 +760,7 @@ public class TestACL extends TestCase {
         
         // grant some more
         aces.clear();
-        aces.add(new ZimbraACE(ACL.GUID_AUTHUSER, GranteeType.GT_AUTHUSER, Right.RT_viewFreeBusy, false));
+        aces.add(newAllACE(Right.RT_viewFreeBusy, false));
         PermUtil.grantAccess(target, aces);
         
         // verify the grants were added
@@ -502,7 +784,7 @@ public class TestACL extends TestCase {
         
         // grant some permissions 
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
-        aces.add(new ZimbraACE(user, Right.RT_loginAs, false));
+        aces.add(newUsrACE(user, Right.RT_loginAs, false));
         PermUtil.grantAccess(target, aces);
         
         // verify the grant was added
@@ -531,8 +813,8 @@ public class TestACL extends TestCase {
         
         // grant some permissions 
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
-        aces.add(new ZimbraACE(user, Right.RT_invite, false));
-        aces.add(new ZimbraACE(user, Right.RT_viewFreeBusy, false));
+        aces.add(newUsrACE(user, Right.RT_invite, false));
+        aces.add(newUsrACE(user, Right.RT_viewFreeBusy, false));
         PermUtil.grantAccess(target, aces);
         
         // verify the grant was added
@@ -542,7 +824,7 @@ public class TestACL extends TestCase {
         
         // revoke one right
         Set<ZimbraACE> acesToRevoke = new HashSet<ZimbraACE>();
-        acesToRevoke.add(new ZimbraACE(user, Right.RT_invite, false));
+        acesToRevoke.add(newUsrACE(user, Right.RT_invite, false));
         PermUtil.revokeAccess(target, acesToRevoke);
         
         // verify the grant was removed
@@ -555,7 +837,7 @@ public class TestACL extends TestCase {
         
         // revoke the other right
         acesToRevoke = new HashSet<ZimbraACE>();
-        acesToRevoke.add(new ZimbraACE(user, Right.RT_viewFreeBusy, false));
+        acesToRevoke.add(newUsrACE(user, Right.RT_viewFreeBusy, false));
         PermUtil.revokeAccess(target, acesToRevoke);
         
         // verify all right are gone
@@ -566,7 +848,7 @@ public class TestACL extends TestCase {
 
         // revoke non-existing right, make sure we don't crash
         acesToRevoke = new HashSet<ZimbraACE>();
-        acesToRevoke.add(new ZimbraACE(user, Right.RT_invite, false));
+        acesToRevoke.add(newUsrACE(user, Right.RT_invite, false));
         PermUtil.revokeAccess(target, acesToRevoke);
     }
 

@@ -35,6 +35,7 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.html.HtmlDefang;
@@ -249,8 +250,12 @@ public class ToXML {
                 .addAttribute(MailConstants.A_ZIMBRA_ID, ace.getGrantee())
                 .addAttribute(MailConstants.A_GRANT_TYPE, ace.getGranteeType().getCode())
                 .addAttribute(MailConstants.A_RIGHT, ace.getRight().getCode())
-                .addAttribute(MailConstants.A_DISPLAY, ace.getGranteeDisplayName())
-                .addAttribute(MailConstants.A_PASSWORD, ace.getPassword());
+                .addAttribute(MailConstants.A_DISPLAY, ace.getGranteeDisplayName());
+        
+        if (ace.getGranteeType() == GranteeType.GT_KEY)
+            eACE.addAttribute(MailConstants.A_ACCESSKEY, ace.getSecret());
+        else if (ace.getGranteeType() == GranteeType.GT_GUEST)
+            eACE.addAttribute(MailConstants.A_PASSWORD, ace.getSecret());
         
         if (ace.deny())
             eACE.addAttribute(MailConstants.A_DENY, ace.deny());

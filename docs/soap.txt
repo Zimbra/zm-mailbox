@@ -2659,7 +2659,7 @@ If no <ace> elements are provided, all ACEs are returned in the response.
 If <ace> elements are provided, only those ACEs with specified rights are returned in the response.
 
 <GetPermissionResponse>
-  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"] [pw="{password}"]/>*
+  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"] [pw="{password}"] [key="{accesskey}"]/>*
 </GetPermissionResponse>
 
     {right}        = viewFreeBusy | invite
@@ -2672,6 +2672,7 @@ If <ace> elements are provided, only those ACEs with specified rights are return
                      grp - Zimbra group(distribution list)
                      all - all authenticated users
                      gst - non-Zimbra email address and password (not yet supported)
+                     key - external user with an accesskey
                      pub - public authenticated and unauthenticated access
                      
     {zimbra-id}    = zimbraId of the grantee                 
@@ -2680,13 +2681,15 @@ If <ace> elements are provided, only those ACEs with specified rights are return
                      ot present if {grantee-type} is "all" or "pub"
  
     {pw}           = optional arguments.  password when {grantee-type} is "gst" (not yet supported)
+    
+    {key}          = optional arguments.  access key when {grantee-type} is "key"
  
 ---------------------------
 
 Grant account level permissions.
 
 <GrantPermissionRequest>
-  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" [zid="{zimbra-id}"] [d="{grantee-name}"] [pw="{password}"]/>+
+  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" [zid="{zimbra-id}"] [d="{grantee-name}"] [pw="{password}"] [key="{accesskey}"]/>+
 </GrantPermissionRequest>
 
   If gt is:
@@ -2694,25 +2697,30 @@ Grant account level permissions.
      grp - either zid or d is required. 
      all - zid, d, pw are ignored
      gst - zid is ignored, d is required, pw is optional (not yet supported)
+     key - zid is ignored, d is required
      pub - zid, d, pw are ignored
   
   For usr and grp:
      - if zid is provided, server will lookup the entry by zid and grantee type, and d is ignored.
      - if zid is not provided and d is provided, server will lookup the grantee by name and grantee type.
      if the lookup failed, NO_SUCH_ACCOUNT/NO_SUCH_DISTRIBUTION_LIST will be thrown.
+     
+  If gt == key:
+     - if key is given, server will use that as the access key for this grant
+     - if key is not given, server will generate an access key
 
 
 GrantPermissionResponse returns permissions that are successfully granted.
 
 <GrantPermissionResponse>
-  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"] [pw="{password}"]/>*
+  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"] [pw="{password}"] [key="{accesskey}"]/>*
 </GrantPermissionRequest>
 ---------------------------
 
 Revoke account level permissions.
 
 <RevokePermissionRequest>
-  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" [zid="{zimbra-id}"] [d="{grantee-name}"] [pw="{password}"]/>*
+  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" [zid="{zimbra-id}"] [d="{grantee-name}"]/>*
 </RevokePermissionRequest>
 
   Same notes as those for GrantPermissionRequest about identifying the grantee.
@@ -2720,7 +2728,7 @@ Revoke account level permissions.
 RevokePermissionResponse returns permissions that are successfully revoked.
 
 <RevokePermissionResponse>
-  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"] [pw="{password}"]/>*
+  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"] [pw="{password}"] [key="{accesskey}"]/>*
 </RevokePermissionResponse>
 
 ---------------------------

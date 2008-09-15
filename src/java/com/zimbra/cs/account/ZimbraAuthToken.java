@@ -91,7 +91,7 @@ public class ZimbraAuthToken extends AuthToken {
     private String mType;
     private String mExternalUserEmail;
     private String mDigest;
-    
+    private String mAccessKey; // just a dummy placeholder for now until accesskey auth is implemented in ZimbraAuthToken
     
     public String toString() {
         return "AuthToken(acct="+mAccountId+" admin="+mAdminAccountId+" exp="
@@ -217,6 +217,7 @@ public class ZimbraAuthToken extends AuthToken {
             mType = C_TYPE_EXTERNAL_USER;
             GuestAccount g = (ACL.GuestAccount) acct;
             mDigest = g.getDigest();
+            mAccessKey = g.getAccessKey();
             mExternalUserEmail = g.getName();
         } else
             mType = C_TYPE_ZIMBRA_USER;
@@ -269,6 +270,10 @@ public class ZimbraAuthToken extends AuthToken {
     
     public String getDigest() {
         return mDigest;
+    }
+    
+    public String getAccessKey() {
+        return mAccessKey;
     }
     
     public String getEncoded() throws AuthTokenException {
