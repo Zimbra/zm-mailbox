@@ -55,6 +55,7 @@ The type of supported grantees are:
         user        - a Zimbra user
         group       - a Zimbra group(distribution list)
         all-authed  - all authed Zimbra usres
+        key         - an external user with an access key
         public      - the public
 
 
@@ -114,12 +115,22 @@ an ACL(access control list).
 
 ACEs are serialized in LDAP in the following format:
 
-    <grantee> <grantee-type> [-]<right>
+    {grantee} {grantee-type} [-]{right}
 
-        grantee: For user and group grantees, zimbraId of the account/distribution list
-                 For all-authed and public grantees, pseudo UUID recognized by the code.
+        grantee: 
+                grantee type    stored 
+                -----------------------------------------------------
+                usr             zimbraId of the account
+                grp             zimbraId of the distribution list
+                gst             {grantee email}:{password}
+                key             {grantee email (or just a name)}:{access key}
+                all             pseudo id 00000000-0000-0000-0000-000000000000
+                pub             pseudo id 99999999-9999-9999-9999-999999999999
+                
+                grantee name for key grantees, password, and access key(if provided by user) can have 
+                spaces, they are enclosed in {}.  {} are not allowed for them.
                  
-        grantee-type: usr | grp | all | pub
+        grantee-type: usr | grp | gst | key | all | pub
         
         right: one of the supported right.
                if a '-' (minus sign) is prepended to the right, it means the right is 
@@ -127,8 +138,12 @@ ACEs are serialized in LDAP in the following format:
                         
     e.g. fe0e1a88-e6e3-4fe1-b608-3ab6ce50351f grp -viewFreeBusy
          fd6227f2-87e6-4453-9ccc-16853a6f8d27 usr viewFreeBusy
+         foo@bar.com:apple tree key viewFreeBusy
+         foo bar:8d159aed5fb9431d8ac52db5e20baafb key viewFreeBusy
+         foo bar:ocean blue key viewFreeBusy
          00000000-0000-0000-0000-000000000000 all viewFreeBusy
-         99999999-9999-9999-9999-999999999999 pub invite
+         99999999-9999-9999-9999-999999999999 pub invite    
+         
          
 Note: zimbraACE should NOT be directly modified via zmprov or any LDAP tools.  
       They should only be modified via zmmailbox commands.  See GRANTING TOOLS below.

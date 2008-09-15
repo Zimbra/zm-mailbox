@@ -33,6 +33,9 @@ public class PermUtil {
     }
     
     public static Set<ZimbraACE> grantAccess(Entry target, Set<ZimbraACE> aces) throws ServiceException {
+        for (ZimbraACE ace : aces)
+            ZimbraACE.validate(ace);
+        
         ZimbraACL acl = getACL(target); 
         Set<ZimbraACE> granted = null;
         
@@ -109,7 +112,7 @@ public class PermUtil {
     
     // orig: FolderAction.lookupGranteeByName
     public static NamedEntry lookupGranteeByName(String name, GranteeType type, ZimbraSoapContext zsc) throws ServiceException {
-        if (type == GranteeType.GT_AUTHUSER || type == GranteeType.GT_PUBLIC || type == GranteeType.GT_GUEST)
+        if (type == GranteeType.GT_AUTHUSER || type == GranteeType.GT_PUBLIC || type == GranteeType.GT_GUEST || type == GranteeType.GT_KEY)
             return null;
 
         Provisioning prov = Provisioning.getInstance();
@@ -145,9 +148,10 @@ public class PermUtil {
                 case GT_USER:    return prov.get(AccountBy.id, zid);
                 case GT_GROUP:   return prov.get(DistributionListBy.id, zid);
                 case GT_GUEST:
+                case GT_KEY:    
                 case GT_AUTHUSER:
                 case GT_PUBLIC:
-                default:                  return null;
+                default:         return null;
             }
         } catch (ServiceException e) {
             return null;

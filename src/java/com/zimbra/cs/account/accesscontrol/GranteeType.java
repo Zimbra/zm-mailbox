@@ -11,6 +11,7 @@ public enum GranteeType {
     GT_GROUP("grp"),    // compare grantee ID with Account's zimbraMemberOf values
     GT_AUTHUSER("all"), // the caller needs to present a valid Zimbra credential
     GT_GUEST("gst"),    // the caller needs to present a non-Zimbra email address and password
+    GT_KEY("key"),      // the caller needs to present an access key
     GT_PUBLIC("pub");   // always succeeds
 
     private static class GT {

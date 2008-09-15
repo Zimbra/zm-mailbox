@@ -13,12 +13,13 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.ACL;
 
 public class ZimbraACL {
     private static final Log sLog = LogFactory.getLog(ZimbraACL.class);
 
     
-    // non-public, non-authuser aces
+    // usr, grp, gst, key aces
     Set<ZimbraACE> mAces;
         
     // authuer aces
@@ -117,7 +118,7 @@ public class ZimbraACL {
     
     private void removeACE(Set<ZimbraACE> aceSet, ZimbraACE aceToRevoke) {
         aceSet.remove(aceToRevoke);
-        // mContainsRight must not be nul if we get here
+        // mContainsRight must not be null if we get here
         mContainsRight.remove(aceToRevoke.getRight());
     }
     
@@ -129,19 +130,33 @@ public class ZimbraACL {
         for (ZimbraACE ace : aceSet) {
             if (ace.isGrantee(aceToGrant.getGrantee()) &&
                 ace.getRight() == aceToGrant.getRight()) {
-                if (ace.deny() == aceToGrant.deny()) {
-                    // already has this ACE, return "not added"
-                    return false;
-                } else {
+                
+                boolean changed = false;
+                
+                // check if it's got a different allow/deny
+                if (ace.deny() != aceToGrant.deny()) {
                     // the grantee had been granted the right, but was for a different allow/deny,
                     // set it to the new allow/deny and return "added"
                     ace.setDeny(aceToGrant.deny());
-                    return true;
+                    changed = true;
                 }
+                
+                // check if it's got a different password/accesskey
+                if (aceToGrant.getGranteeType() == GranteeType.GT_GUEST || aceToGrant.getGranteeType() == GranteeType.GT_KEY) {
+                    String newSecret = aceToGrant.getSecret();
+                    if (newSecret != null && !newSecret.equals(ace.getSecret())) {
+                        ace.setSecret(newSecret);
+                        changed = true;
+                    }
+                }
+                
+                return changed;
             }
         }
         
         // the right had not been granted to the grantee, add it
+        if (aceToGrant.getGranteeType() == GranteeType.GT_KEY && aceToGrant.getSecret() == null)
+            aceToGrant.setSecret(ACL.generateAccessKey());
         addACE(aceSet, aceToGrant);
         return true;
     }
@@ -171,6 +186,7 @@ public class ZimbraACL {
         else    
             return mContainsRight.contains(right);
     }
+    
     
     public Set<ZimbraACE> grantAccess(Set<ZimbraACE> acesToGrant) {
         Set<ZimbraACE> granted = new HashSet<ZimbraACE>();
@@ -217,13 +233,15 @@ public class ZimbraACL {
      * @return
      * @throws ServiceException
      */
-    private Boolean hasRightAsUser(Account grantee, Right rightNeeded) throws ServiceException {
+    private Boolean hasRightAsIndividual(Account grantee, Right rightNeeded) throws ServiceException {
         if (mAces == null)
             return null;
         
         Boolean result = null;
         for (ZimbraACE ace : mAces) {
-            if (ace.getGranteeType() != GranteeType.GT_USER)
+            if (ace.getGranteeType() != GranteeType.GT_USER &&
+                ace.getGranteeType() != GranteeType.GT_GUEST &&
+                ace.getGranteeType() != GranteeType.GT_KEY)
                 continue;
             
             if (ace.matches(grantee, rightNeeded)) {
@@ -316,11 +334,6 @@ public class ZimbraACL {
         return result;
     }
     
-    
-    private Boolean hasRightAsGuest(Account grantee, Right rightNeeded) throws ServiceException {
-        return null;  //TODO
-    }
-    
     private Boolean hasRightAsPublic(Account grantee, Right rightNeeded) throws ServiceException {
         if (mPublicAces == null)
             return null;
@@ -402,7 +415,7 @@ public class ZimbraACL {
     boolean hasRight(Account grantee, Right rightNeeded) throws ServiceException {
         Boolean result = null;
         
-        result = hasRightAsUser(grantee, rightNeeded);
+        result = hasRightAsIndividual(grantee, rightNeeded);
         if (result != null)
             return result;
         
@@ -411,10 +424,6 @@ public class ZimbraACL {
             return result;
         
         result = hasRightAsAuthuser(grantee, rightNeeded);
-        if (result != null)
-            return result;
-        
-        result = hasRightAsGuest(grantee, rightNeeded);
         if (result != null)
             return result;
         

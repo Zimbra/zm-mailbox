@@ -60,7 +60,7 @@ public class GrantPermission extends MailDocumentHandler {
         GranteeType gtype = GranteeType.fromCode(eACE.getAttribute(MailConstants.A_GRANT_TYPE));
         String zid = eACE.getAttribute(MailConstants.A_ZIMBRA_ID, null);
         boolean deny = eACE.getAttributeBool(MailConstants.A_DENY, false);
-        String password = null;
+        String secret = null;
         NamedEntry nentry = null;
         
         if (gtype == GranteeType.GT_AUTHUSER) {
@@ -78,8 +78,20 @@ public class GrantPermission extends MailDocumentHandler {
                 gtype = nentry instanceof DistributionList ? GranteeType.GT_GROUP : GranteeType.GT_USER;
             } catch (ServiceException e) {
                 // this is the normal path, where lookupGranteeByName throws account.NO_SUCH_USER
-                password = eACE.getAttribute(MailConstants.A_PASSWORD);
+                secret = eACE.getAttribute(MailConstants.A_PASSWORD);
             }
+        } else if (gtype == GranteeType.GT_KEY) {
+            zid = eACE.getAttribute(MailConstants.A_DISPLAY);
+            // unlike guest, we do not require the display name to be an email address
+            /*
+            if (zid == null || zid.indexOf('@') < 0)
+                throw ServiceException.INVALID_REQUEST("invalid guest id or key", null);
+            */    
+            // unlike guest, we do not fixup grantee type for key grantees if they specify an internal user
+            
+            // get the optional accesskey
+            secret = eACE.getAttribute(MailConstants.A_ACCESSKEY, null);
+         
         } else if (zid != null) {
             nentry = PermUtil.lookupGranteeByZimbraId(zid, gtype);
         } else {
@@ -90,7 +102,7 @@ public class GrantPermission extends MailDocumentHandler {
                 gtype = GranteeType.GT_GROUP;
         }
         
-        return new ZimbraACE(zid, gtype, right, deny);
+        return new ZimbraACE(zid, gtype, right, deny, secret);
 
     }
 
