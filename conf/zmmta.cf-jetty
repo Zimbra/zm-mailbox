@@ -172,22 +172,38 @@ SECTION imapproxy
 	VAR zimbraMailSSLProxyPort
 	VAR zimbraPop3ProxyBindPort
 	VAR zimbraPop3SSLProxyBindPort
+	VAR zimbraReverseProxyAuthWaitInterval
+	VAR zimbraReverseProxyCacheEntryTTL
+	VAR zimbraReverseProxyCacheFetchTimeout
+	VAR zimbraReverseProxyCacheReconnectInterval
 	VAR zimbraReverseProxyDefaultRealm
 	VAR zimbraReverseProxyHttpEnabled
+	VAR zimbraReverseProxyImapCapabilities
+	VAR zimbraReverseProxyImapExposeVersionOnBanner
 	VAR zimbraReverseProxyImapSaslGssapiEnabled
+	VAR zimbraReverseProxyImapSaslPlainEnabled
 	VAR zimbraReverseProxyImapStartTlsMode
+	VAR zimbraReverseProxyInactivityTimeout
 	VAR zimbraReverseProxyIPLoginLimit
 	VAR zimbraReverseProxyIPLoginLimitTime
+	VAR zimbraReverseProxyIpThrottleMsg
+	VAR zimbraReverseProxyLogLevel
 	VAR zimbraReverseProxyMailEnabled
 	VAR zimbraReverseProxyMailMode
+	VAR zimbraReverseProxyPassErrors
+	VAR zimbraReverseProxyPop3Capabilities
+	VAR zimbraReverseProxyPop3ExposeVersionOnBanner
 	VAR zimbraReverseProxyPop3SaslGssapiEnabled
+	VAR zimbraReverseProxyPop3SaslPlainEnabled
 	VAR zimbraReverseProxyPop3StartTlsMode
+	VAR zimbraReverseProxyRouteLookupTimeout 
 	VAR zimbraReverseProxySendPop3Xoip
 	VAR zimbraReverseProxySSLCiphers
 	VAR zimbraReverseProxyUserLoginLimit
 	VAR zimbraReverseProxyUserLoginLimitTime
-	VAR zimbraReverseProxyAuthWaitInterval
-	VAR zimbraReverseProxyImapExposeVersionOnBanner
-	VAR zimbraReverseProxyPop3ExposeVersionOnBanner
+	VAR zimbraReverseProxyUserThrottleMsg
+	VAR zimbraReverseProxyWorkerConnections
+	VAR zimbraReverseProxyWorkerProcesses
 	PROXYGEN
 	RESTART imapproxy
+
