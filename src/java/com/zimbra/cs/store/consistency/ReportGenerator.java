@@ -382,8 +382,7 @@ public class ReportGenerator implements Runnable {
                                     ItemFault.Code.NOT_FOUND,
                                     (byte) 0, 0, null));
                         }
-                    } else if (f.length() != item.size
-                            && !v.compressed) {
+                    } else if (f.length() != item.size) {
                         
                         FileInputStream fin = null;
                         BufferedInputStream bin = null;
