@@ -114,6 +114,18 @@ public class TestACL extends TestCase {
             // TODO Auto-generated method stub
             return null;
         }
+        
+        // to be compatible with FRANKLIN
+        public int getCCTier() {
+            // TODO Auto-generated method stub
+            return 0;
+        }
+        
+        // to be compatible with FRANKLIN
+        public boolean isCCAdmin() {
+            // TODO Auto-generated method stub
+            return false;
+        }
 
         @Override
         public String getEncoded() throws AuthTokenException {
