@@ -54,7 +54,7 @@ final class LocalFolder {
 
     public void create() throws ServiceException {
         debug("creating folder");
-        folder = mbox.createFolder(null, path, (byte) 0, MailItem.TYPE_UNKNOWN);
+        folder = mbox.createFolder(null, path, (byte) 0, MailItem.TYPE_MESSAGE);
     }
 
     public void alterTag(int flagId) throws ServiceException {

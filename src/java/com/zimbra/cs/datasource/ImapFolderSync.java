@@ -123,15 +123,20 @@ class ImapFolderSync {
         throws ServiceException, IOException {
         localFolder = new LocalFolder(mailbox, folder);
         tracker = imapSync.getTrackedFolders().getByItemId(folder.getId());
-        if (tracker != null) {
+        if (tracker != null) { //was in sync
             remoteFolder = new RemoteFolder(connection, tracker.getRemotePath());
             if (!remoteFolder.exists()) {
                 remoteFolder.info("folder was deleted");
-                localFolder.delete();
+                if (ds.isSyncCapable(folder)) //don't delete folder moved into archive
+                	localFolder.delete();
                 ds.deleteImapFolder(tracker);
                 tracker = null;
+            } else if (!ds.isSyncCapable(folder)) {
+            	//we moved local into archive, so delete remote
+            	remoteFolder.delete();
+            	ds.deleteImapFolder(tracker);
             }
-        } else if (ds.isSyncEnabled(folder.getPath())) {
+        } else if (ds.isSyncEnabled(folder)) {
             String remotePath = imapSync.getRemotePath(folder);
             if (remotePath == null) {
                 return null; // not eligible for synchronization
@@ -150,7 +155,7 @@ class ImapFolderSync {
     public void syncMessages(boolean fullSync)
         throws ServiceException, IOException {
         if (tracker == null) return;
-        if (tracker.getUidValidity() == 0 || !ds.isSyncEnabled(localFolder.getPath())) {
+        if (tracker.getUidValidity() == 0 || !ds.isSyncEnabled(localFolder.getFolder())) {
             localFolder.debug("Synchronization disabled for this folder");
             tracker = null;
             return;
@@ -365,7 +370,7 @@ class ImapFolderSync {
         throws ServiceException, IOException {
         // Check if local folder was deleted
         localFolder = LocalFolder.fromId(mailbox, tracker.getItemId());
-        if (localFolder == null) {
+        if (localFolder == null || !ds.isSyncCapable(localFolder.getFolder())) {
             LOG.debug("Local folder '%s' was deleted", tracker.getLocalPath());
             remoteFolder.delete();
             imapSync.getDataSource().deleteImapFolder(tracker);
@@ -425,7 +430,6 @@ class ImapFolderSync {
         }
         // Handle possible case conversion of INBOX in path
         localPath = localFolder.getPath();
-        ds.initializedLocalFolder(localPath, false);
         tracker = ds.createImapFolder(
             localFolder.getId(), localPath, remotePath, uidValidity);
     }                                                        

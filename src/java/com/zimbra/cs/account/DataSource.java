@@ -41,6 +41,7 @@ import com.zimbra.cs.datasource.ImapFolder;
 import com.zimbra.cs.datasource.ImapFolderCollection;
 import com.zimbra.cs.datasource.SyncState;
 import com.zimbra.cs.db.DbImapFolder;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mailbox;
 
@@ -262,13 +263,12 @@ public class DataSource extends NamedEntry {
     	return null;
     }
     
-    /**
-     * Initialize a local folder for sync with remote folder
-     * 
-     * @param localPath
-     */
-    public void initializedLocalFolder(String localPath, boolean isLocallyCreated) {
-    	//do nothing
+    public boolean isSyncCapable(Folder folder) {
+    	return true;
+    }
+    
+    public boolean isSyncEnabled(Folder folder) {
+    	return true;
     }
     
     /**
