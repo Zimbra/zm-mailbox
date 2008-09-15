@@ -6315,17 +6315,20 @@ public class Mailbox {
             Folder inbox = getFolderById(ID_FOLDER_INBOX);
 
             if (globalTimeout > 0)
-                Folder.purgeMessages(this, null, getOperationTimestamp() - globalTimeout, null);
-            if (trashTimeout > 0)
-                Folder.purgeMessages(this, trash, getOperationTimestamp() - trashTimeout, null);
+                Folder.purgeMessages(this, null, getOperationTimestamp() - globalTimeout, null, false);
+            if (trashTimeout > 0) {
+                boolean useChangeDate =
+                    acct.getBooleanAttr(Provisioning.A_zimbraMailPurgeUseChangeDateForTrash, false);
+                Folder.purgeMessages(this, trash, getOperationTimestamp() - trashTimeout, null, useChangeDate);
+            }
             if (junkTimeout > 0)
-                Folder.purgeMessages(this, junk, getOperationTimestamp() - junkTimeout, null);
+                Folder.purgeMessages(this, junk, getOperationTimestamp() - junkTimeout, null, false);
             if (userInboxReadTimeout > 0)
-                Folder.purgeMessages(this, inbox, getOperationTimestamp() - userInboxReadTimeout, false);
+                Folder.purgeMessages(this, inbox, getOperationTimestamp() - userInboxReadTimeout, false, false);
             if (userInboxUnreadTimeout > 0)
-                Folder.purgeMessages(this, inbox, getOperationTimestamp() - userInboxUnreadTimeout, true);
+                Folder.purgeMessages(this, inbox, getOperationTimestamp() - userInboxUnreadTimeout, true, false);
             if (userSentTimeout > 0)
-                Folder.purgeMessages(this, sent, getOperationTimestamp() - userSentTimeout, null);
+                Folder.purgeMessages(this, sent, getOperationTimestamp() - userSentTimeout, null, false);
 
             // deletes have already been collected, so fetch the tombstones and write once
             TypedIdList tombstones = collectPendingTombstones();

@@ -1032,14 +1032,14 @@ public class Folder extends MailItem {
     }
 
 
-    static void purgeMessages(Mailbox mbox, Folder folder, int beforeDate, Boolean unread) throws ServiceException {
+    static void purgeMessages(Mailbox mbox, Folder folder, int beforeDate, Boolean unread, boolean useChangeDate) throws ServiceException {
         if (beforeDate <= 0 || beforeDate >= mbox.getOperationTimestamp())
             return;
 
         // get the full list of things that are being removed
         boolean allFolders = (folder == null);
         List<Folder> folders = (allFolders ? null : folder.getSubfolderHierarchy());
-        PendingDelete info = DbMailItem.getLeafNodes(mbox, folders, beforeDate, allFolders, unread);
+        PendingDelete info = DbMailItem.getLeafNodes(mbox, folders, beforeDate, allFolders, unread, useChangeDate);
         delete(mbox, info, null, MailItem.DeleteScope.ENTIRE_ITEM, false);
     }
 

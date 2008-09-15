@@ -2179,7 +2179,8 @@ public class DbMailItem {
         }
     }
 
-    public static PendingDelete getLeafNodes(Mailbox mbox, List<Folder> folders, int before, boolean globalMessages, Boolean unread)
+    public static PendingDelete getLeafNodes(Mailbox mbox, List<Folder> folders, int before, boolean globalMessages,
+                                             Boolean unread, boolean useChangeDate)
     throws ServiceException {
         PendingDelete info = new PendingDelete();
 
@@ -2188,10 +2189,11 @@ public class DbMailItem {
         ResultSet rs = null;
         try {
             String constraint;
+            String dateColumn = (useChangeDate ? "change_date" : "date");
             if (globalMessages)
-                constraint = "date < ? AND type IN " + typeConstraint(MailItem.TYPE_MESSAGE);
+                constraint = dateColumn + " < ? AND type IN " + typeConstraint(MailItem.TYPE_MESSAGE);
             else
-                constraint = "date < ? AND type NOT IN " + NON_SEARCHABLE_TYPES +
+                constraint = dateColumn + " < ? AND type NOT IN " + NON_SEARCHABLE_TYPES +
                              " AND folder_id IN" + DbUtil.suitableNumberOfVariables(folders);
             if (unread != null)
                 constraint += " AND unread = ?";
