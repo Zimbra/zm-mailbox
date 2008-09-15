@@ -108,6 +108,16 @@ public class ReportDisplay implements Runnable {
         case NO_METADATA:
             msg = String.format(" * %s: no associated metadata (delete blob)",
                     fault.faultFile);
+            break;
+        case GZIP_CORRUPT:
+            msg = String.format(" * %s: compressed blob is corrupted " +
+            		"(no action, unrecoverable)",
+                    fault.faultFile);
+            break;
+        case IO_EXCEPTION:
+            msg = String.format(" * %s: IO error reading file (no action, unrecoverable)",
+                    fault.faultFile);
+            break;
         }
         return itemName != null ? itemName + msg : msg;
     }

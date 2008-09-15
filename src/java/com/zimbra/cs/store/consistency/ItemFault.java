@@ -41,5 +41,6 @@ public class ItemFault implements java.io.Serializable {
         this.size = size;
     }
 
-    public static enum Code { NOT_FOUND, WRONG_VOLUME, WRONG_SIZE, NO_METADATA }
+    public static enum Code { NOT_FOUND, WRONG_VOLUME, WRONG_SIZE, NO_METADATA,
+        GZIP_CORRUPT, IO_EXCEPTION }
 }

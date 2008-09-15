@@ -16,26 +16,31 @@
  */
 package com.zimbra.cs.store.consistency;
 
+import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.ObjectOutputStream;
-import java.io.ObjectInputStream;
-import java.io.FileOutputStream;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
-import java.util.Collections;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
+import java.util.zip.GZIPInputStream;
 
 
 public class ReportGenerator implements Runnable {
 
+    // the cast will wrap to the correct signedness
+    private final static byte[] GZIP_MAGIC = { 0x1f, (byte) 0x8b };
+    private final boolean checkCompressed;
     private final String mysqlPasswd;
     private final File reportFile;
     private final static String JDBC_URL = "jdbc:mysql://localhost:7306/";
@@ -73,9 +78,10 @@ public class ReportGenerator implements Runnable {
             " ON i.id = r.item_id AND i.mailbox_id = r.mailbox_id" +
             " WHERE i.blob_digest is not null or r.blob_digest is not null";
 
-    public ReportGenerator(String mysqlPasswd, File reportFile) {
+    public ReportGenerator(String mysqlPasswd, File reportFile, boolean checkCompressed) {
         this.mysqlPasswd = mysqlPasswd;
         this.reportFile = reportFile;
+        this.checkCompressed = checkCompressed;
     }
 
     public void run() {
@@ -307,10 +313,50 @@ public class ReportGenerator implements Runnable {
                                 ItemFault.Code.NOT_FOUND,
                                 (byte) 0, 0, null));
                     }
-                } else if (f.length() != item.size && !v.compressed) {
-                    faults.add(new ItemFault(item, item, null,
-                            ItemFault.Code.WRONG_SIZE,
-                            (byte) 0, f.length(), null));
+                } else if (f.length() != item.size) {
+                    FileInputStream fin = null;
+                    BufferedInputStream bin = null;
+                    try {
+                        fin = new FileInputStream(f);
+                        bin = new BufferedInputStream(fin);
+                        bin.mark(2);
+                        byte[] magic = new byte[2];
+                        bin.read(magic);
+                        if (checkCompressed && Arrays.equals(GZIP_MAGIC, magic)) {
+                            bin.reset();
+                            GZIPInputStream gzin = null;
+                            try {
+                                gzin = new GZIPInputStream(bin);
+                                int read = 0;
+                                int len = 0;
+                                byte[] buf = new byte[16384];
+                                while ((read = gzin.read(buf)) != -1)
+                                    len += read;
+                                if (item.size != len) {
+                                    faults.add(new ItemFault(item, item, null,
+                                            ItemFault.Code.WRONG_SIZE,
+                                            (byte) 0, f.length(), null));
+                                }
+                            }
+                            catch (IOException ioe) {
+                                faults.add(new ItemFault(item, item, null,
+                                        ItemFault.Code.GZIP_CORRUPT,
+                                        (byte) 0, f.length(), null));
+                            }
+                            finally {
+                                if (gzin != null) gzin.close();
+                            }
+                        }
+                        if (!Arrays.equals(GZIP_MAGIC, magic)) {
+                            faults.add(new ItemFault(item, item, null,
+                                    ItemFault.Code.WRONG_SIZE,
+                                    (byte) 0, f.length(), null));
+                        }
+                    }
+                    finally {
+                        if (bin != null) bin.close();
+                        if (fin != null) fin.close();
+                    }
                 }
 
                 for (Item.Revision rev : item.revisions) {
@@ -338,9 +384,55 @@ public class ReportGenerator implements Runnable {
                         }
                     } else if (f.length() != item.size
                             && !v.compressed) {
-                        faults.add(new ItemFault(item, null, rev,
-                                ItemFault.Code.WRONG_SIZE,
-                                (byte) 0, f.length(), null));
+                        
+                        FileInputStream fin = null;
+                        BufferedInputStream bin = null;
+                        try {
+                            fin = new FileInputStream(f);
+                            bin = new BufferedInputStream(fin);
+                            bin.mark(2);
+                            byte[] magic = new byte[2];
+                            bin.read(magic);
+                            if (checkCompressed && Arrays.equals(GZIP_MAGIC, magic)) {
+                                bin.reset();
+                                GZIPInputStream gzin = null;
+                                try {
+                                    gzin = new GZIPInputStream(bin);
+                                    int read = 0;
+                                    int len = 0;
+                                    byte[] buf = new byte[16384];
+                                    while ((read = gzin.read(buf)) != -1)
+                                        len += read;
+                                    if (item.size != len) {
+                                        faults.add(new ItemFault(item, null, rev,
+                                                ItemFault.Code.WRONG_SIZE,
+                                                (byte) 0, f.length(), null));
+                                    }
+                                }
+                                catch (IOException ioe) {
+                                    faults.add(new ItemFault(item, null, rev,
+                                            ItemFault.Code.GZIP_CORRUPT,
+                                            (byte) 0, f.length(), null));
+                                }
+                                finally {
+                                    if (gzin != null) gzin.close();
+                                }
+                            }
+                            if (!Arrays.equals(GZIP_MAGIC, magic)) {
+                                faults.add(new ItemFault(item, null, rev,
+                                        ItemFault.Code.WRONG_SIZE,
+                                        (byte) 0, f.length(), null));
+                            }
+                        }
+                        catch (IOException ex) {
+                            faults.add(new ItemFault(item, null, rev,
+                                    ItemFault.Code.IO_EXCEPTION,
+                                    (byte) 0, f.length(), null));
+                        }
+                        finally {
+                            if (bin != null) bin.close();
+                            if (fin != null) fin.close();
+                        }
                     }
                 }
             }
