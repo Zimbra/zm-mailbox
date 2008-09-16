@@ -293,7 +293,7 @@ public class ProvUtil implements DebugListener {
         GET_ALL_MEMCACHED_SERVERS("getAllMemcachedServers", "gamcs", "", Category.SERVER, 0, 0),
         SOAP(".soap", ".s"),
         SYNC_GAL("syncGal", "syg","{domain} [{token}]", Category.MISC, 1, 2),
-        UPDATE_TEMPLATES("updateTemplates", "ut", "{template-directory}", Category.NOTEBOOK, 1, 1);
+        UPDATE_TEMPLATES("updateTemplates", "ut", "[-h host] {template-directory}", Category.NOTEBOOK, 1, 3);
 
         private String mName;
         private String mAlias;
@@ -1769,10 +1769,19 @@ public class ProvUtil implements DebugListener {
     	wu.startImport(args[1], args[3], new java.io.File(args[2]));
     }
     private void updateTemplates(String[] args) throws ServiceException, IOException {
-    	if (args.length != 2) {usage(); return; }
+    	if (args.length != 2 && args.length != 4) {usage(); return; }
     	
+    	String dir = args[1];
+    	Server server = null;
+        
+        if (args.length == 4 && args[1].equals("-h")) {
+        	server = mProv.get(ServerBy.name, args[2]);
+        	if (server == null)
+        		throw AccountServiceException.NO_SUCH_SERVER(args[2]);
+        	dir = args[3];
+        }
     	WikiUtil wu = WikiUtil.getInstance(mProv);
-    	wu.updateTemplates(new java.io.File(args[1]));
+    	wu.updateTemplates(server, new java.io.File(dir));
     }
     
     private Account lookupAccount(String key, boolean mustFind, boolean applyDefault) throws ServiceException {
