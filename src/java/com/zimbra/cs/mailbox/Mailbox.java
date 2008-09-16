@@ -6259,11 +6259,10 @@ public class Mailbox {
      * @throws ServiceException
      */
     public synchronized void purgeMessages(OperationContext octxt) throws ServiceException {
-        ZimbraLog.purge.info("Purging messages.");
-
         Account acct = getAccount();
         
         if (ZimbraLog.purge.isDebugEnabled()) {
+            ZimbraLog.purge.debug("Purging messages.");
             ZimbraLog.purge.debug("System retention policy: Trash=%s, Junk=%s, All messages=%s",
                 acct.getAttr(Provisioning.A_zimbraMailTrashLifetime),
                 acct.getAttr(Provisioning.A_zimbraMailSpamLifetime),
