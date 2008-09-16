@@ -20,6 +20,7 @@
  */
 package com.zimbra.cs.servlet;
 
+import java.io.InputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -330,6 +331,9 @@ public class ZimbraServlet extends HttpServlet {
         	if (hlc.startsWith("x-") || (hlc.startsWith("content-") && !hlc.equals("content-length"))  || hlc.startsWith("www-"))    
         		resp.addHeader(hname, headers[i].getValue());
         }
+        InputStream responseStream = method.getResponseBodyAsStream();
+        if (responseStream == null || resp.getOutputStream() == null)
+        	return;
         ByteUtil.copy(method.getResponseBodyAsStream(), false, resp.getOutputStream(), false);
     }
 
