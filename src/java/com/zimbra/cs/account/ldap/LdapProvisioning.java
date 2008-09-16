@@ -2732,6 +2732,9 @@ public class LdapProvisioning extends Provisioning {
         try {
             if (password == null || password.equals(""))
                 throw AuthFailedServiceException.AUTH_FAILED(acct.getName(), AuthMechanism.namePassedIn(authCtxt), "empty password");
+            
+            if (authCtxt == null)
+                authCtxt = new HashMap<String, Object>();
             authAccount(acct, password, true, authCtxt);
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                     new String[] {"cmd", "Auth","account", acct.getName(), "protocol", proto}));
@@ -2907,10 +2910,6 @@ public class LdapProvisioning extends Provisioning {
                 acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false); 
         
         try {
-            // always pass in a non-null context, even if it is empty, so null doesn't have to be checked 
-            // by all auth mech implementations.
-            if (context == null)
-                context = new HashMap<String, Object>();
             authMech.doAuth(this, domain, acct, password, context);
             return;
         } catch (ServiceException e) {
