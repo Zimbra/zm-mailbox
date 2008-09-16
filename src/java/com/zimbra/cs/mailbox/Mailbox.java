@@ -6318,7 +6318,7 @@ public class Mailbox {
                 Folder.purgeMessages(this, null, getOperationTimestamp() - globalTimeout, null, false);
             if (trashTimeout > 0) {
                 boolean useChangeDate =
-                    acct.getBooleanAttr(Provisioning.A_zimbraMailPurgeUseChangeDateForTrash, false);
+                    acct.getBooleanAttr(Provisioning.A_zimbraMailPurgeUseChangeDateForTrash, true);
                 Folder.purgeMessages(this, trash, getOperationTimestamp() - trashTimeout, null, useChangeDate);
             }
             if (junkTimeout > 0)
