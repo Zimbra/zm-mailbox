@@ -483,7 +483,7 @@ public class ParseMimeMessage {
 
         // if the user has specified an alternative charset, make sure it exists and can encode the content
         String charset = StringUtil.checkCharset(data, ctxt.defaultCharset);
-        ctype.setParameter(Mime.P_CHARSET, charset);
+        ctype.setCharset(charset).setParameter(Mime.P_CHARSET, charset);
 
         if (mmp != null) {
             MimeBodyPart mbp = new MimeBodyPart();
@@ -584,8 +584,8 @@ public class ParseMimeMessage {
             ctype = new ContentType(up.getContentType() == null ? Mime.CT_APPLICATION_OCTET_STREAM : up.getContentType()).setParameter("name", filename);
             cdisp.setParameter("filename", filename);
         }
-        mbp.setHeader("Content-Type", ctype.toString());
-        mbp.setHeader("Content-Disposition", cdisp.toString());
+        mbp.setHeader("Content-Type", ctype.setCharset(ctxt.defaultCharset).toString());
+        mbp.setHeader("Content-Disposition", cdisp.setCharset(ctxt.defaultCharset).toString());
         mbp.setContentID(contentID);
 
         // add to the parent part
@@ -645,8 +645,8 @@ public class ParseMimeMessage {
 
         MimeBodyPart mbp = new MimeBodyPart();
         mbp.setText(vcf.formatted, charset);
-        mbp.setHeader("Content-Type", new ContentType("text/x-vcard", ctxt.use2231).setParameter("name", filename).setParameter("charset", charset).toString());
-        mbp.setHeader("Content-Disposition", new ContentDisposition(Part.ATTACHMENT, ctxt.use2231).setParameter("filename", filename).toString());
+        mbp.setHeader("Content-Type", new ContentType("text/x-vcard", ctxt.use2231).setCharset(ctxt.defaultCharset).setParameter("name", filename).setParameter("charset", charset).toString());
+        mbp.setHeader("Content-Disposition", new ContentDisposition(Part.ATTACHMENT, ctxt.use2231).setCharset(ctxt.defaultCharset).setParameter("filename", filename).toString());
         mbp.setContentID(contentID);
         mmp.addBodyPart(mbp);
     }
@@ -711,9 +711,9 @@ public class ParseMimeMessage {
 
         String ctype = mp.getContentType();
         if (ctype != null)
-            mbp.setHeader("Content-Type", new ContentType(ctype, ctxt.use2231).setParameter("name", filename).toString());
+            mbp.setHeader("Content-Type", new ContentType(ctype, ctxt.use2231).setCharset(ctxt.defaultCharset).setParameter("name", filename).toString());
 
-        mbp.setHeader("Content-Disposition", new ContentDisposition(Part.ATTACHMENT, ctxt.use2231).setParameter("filename", filename).toString());
+        mbp.setHeader("Content-Disposition", new ContentDisposition(Part.ATTACHMENT, ctxt.use2231).setCharset(ctxt.defaultCharset).setParameter("filename", filename).toString());
 
         String desc = mp.getDescription();
         if (desc != null)
