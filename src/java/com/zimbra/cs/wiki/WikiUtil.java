@@ -40,6 +40,7 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
 import com.zimbra.common.localconfig.LC;
@@ -203,7 +204,7 @@ public abstract class WikiUtil {
                     null);
         }
         
-        public void updateTemplates(File templateDir) throws ServiceException {
+        public void updateTemplates(Server server, File templateDir) throws ServiceException {
         	throw WikiServiceException.ERROR("use soap based utility.");
         }
     }
@@ -377,28 +378,41 @@ public abstract class WikiUtil {
 
         }
         
-        public void updateTemplates(File templateDir) throws IOException, ServiceException {
+        public void updateTemplates(Server server, File templateDir) throws IOException, ServiceException {
         	if (!templateDir.exists())
                 throw WikiServiceException.ERROR("template dir "+templateDir.getCanonicalPath()+" doesn't exist");
 
             Config globalConfig = mProv.getConfig();
             String wikiAccount = globalConfig.getAttr(Provisioning.A_zimbraNotebookAccount, null);
-            if (wikiAccount != null) {
+            if (isAccountOnServer(wikiAccount, server)) {
             	System.out.println("updating global wiki account "+wikiAccount);
             	startImport(wikiAccount, WikiUtil.sDEFAULTTEMPLATEFOLDER, templateDir);
             }
             for (Domain d : mProv.getAllDomains()) {
             	wikiAccount = d.getAttr(Provisioning.A_zimbraNotebookAccount, null);
-                if (wikiAccount != null) {
+                if (isAccountOnServer(wikiAccount, server)) {
                 	System.out.println("updating wiki account "+wikiAccount+" for domain "+d.getName());
                 	startImport(wikiAccount, WikiUtil.sDEFAULTTEMPLATEFOLDER, templateDir);
                 }
             }
         }
+        
+        private boolean isAccountOnServer(String acct, Server server) throws ServiceException {
+        	if (acct == null)
+        		return false;
+        	Account a = mProv.get(AccountBy.name, acct);
+        	if (a == null)
+        		return false;
+        	if (server == null)
+        		return true;
+            String target = a.getAttr(Provisioning.A_zimbraMailHost);
+            String host = server.getAttr(Provisioning.A_zimbraServiceHostname);
+            return (target != null && target.equalsIgnoreCase(host));
+        }
     }
 
     public abstract void startImport(String username, String folder, File dir) throws ServiceException, IOException;
-    public abstract void updateTemplates(File templateDir) throws ServiceException, IOException;
+    public abstract void updateTemplates(Server server, File templateDir) throws ServiceException, IOException;
     protected abstract void emptyNotebooks(String folder) throws ServiceException, IOException;
     protected abstract void setFolderPermission(Account account, String grantee, String name, String id) throws ServiceException, IOException;
 
