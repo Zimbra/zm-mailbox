@@ -2895,7 +2895,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>If TRUE, spam messages will be affected by user mail filters instead of
         being automatically filed into the Junk folder.  This attribute is deprecated
-        and will be removed in a future release.  See bug 23386 for details.</desc>
+        and will be removed in a future release.  See bug 23886 for details.</desc>
 </attr>
 
 <attr id="605" name="zimbraCustomerCareTier" type="integer" max="3" cardinality="single" optionalIn="account" flags="accountInfo" order="integerOrderingMatch">
