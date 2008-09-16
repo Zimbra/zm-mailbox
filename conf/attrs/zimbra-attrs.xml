@@ -3508,37 +3508,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <globalConfigValue>UIDPLUS</globalConfigValue>
   <globalConfigValue>UNSELECT</globalConfigValue>
   <globalConfigValue>WITHIN</globalConfigValue>
-  <desc>IMAP capabilities enabled on proxy.  Capabilities are listed on the CAPABILITY line, also known in RFCs as extensions</desc>
-</attr>
-
-<attr id="720" name="zimbraReverseProxyImapSSLEnabledCapability" type="string" max="256" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited">
-  <globalConfigValue>IMAP4rev1</globalConfigValue>
-  <globalConfigValue>ACL</globalConfigValue>
-  <globalConfigValue>BINARY</globalConfigValue>
-  <globalConfigValue>CATENATE</globalConfigValue>
-  <globalConfigValue>CHILDREN</globalConfigValue>
-  <globalConfigValue>CONDSTORE</globalConfigValue>
-  <globalConfigValue>ENABLE</globalConfigValue>
-  <globalConfigValue>ESEARCH</globalConfigValue>
-  <globalConfigValue>ESORT</globalConfigValue>
-  <globalConfigValue>I18NLEVEL=1</globalConfigValue>
-  <globalConfigValue>ID</globalConfigValue>
-  <globalConfigValue>IDLE</globalConfigValue>
-  <globalConfigValue>LIST-EXTENDED</globalConfigValue>
-  <globalConfigValue>LITERAL+</globalConfigValue>
-  <globalConfigValue>MULTIAPPEND</globalConfigValue>
-  <globalConfigValue>NAMESPACE</globalConfigValue>
-  <globalConfigValue>QRESYNC</globalConfigValue>
-  <globalConfigValue>QUOTA</globalConfigValue>
-  <globalConfigValue>RIGHTS=ektx</globalConfigValue>
-  <globalConfigValue>SASL-IR</globalConfigValue>
-  <globalConfigValue>SEARCHRES</globalConfigValue>
-  <globalConfigValue>SORT</globalConfigValue>
-  <globalConfigValue>THREAD=ORDEREDSUBJECT</globalConfigValue>
-  <globalConfigValue>UIDPLUS</globalConfigValue>
-  <globalConfigValue>UNSELECT</globalConfigValue>
-  <globalConfigValue>WITHIN</globalConfigValue>
-  <desc>IMAP SSL capabilities enabled on proxy.  Capabilities are listed on the CAPABILITY line, also known in RFCs as extensions</desc>
+  <desc>NGINX reverse proxy imap capabilities</desc>
 </attr>
 
 <attr id="721" name="zimbraReverseProxyPop3EnabledCapability" type="string" max="256" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited">
@@ -3547,16 +3517,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <globalConfigValue>UIDL</globalConfigValue>
   <globalConfigValue>EXPIRE 31 USER</globalConfigValue>
   <globalConfigValue>XOIP</globalConfigValue>
-  <desc>POP3 capabilities enabled on proxy.  Capabilities are listed on the CAPABILITY line, also known in RFCs as extensions</desc>
-</attr>
-
-<attr id="722" name="zimbraReverseProxyPop3SSLEnabledCapability" type="string" max="256" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited">
-  <globalConfigValue>TOP</globalConfigValue>
-  <globalConfigValue>USER</globalConfigValue>
-  <globalConfigValue>UIDL</globalConfigValue>
-  <globalConfigValue>EXPIRE 31 USER</globalConfigValue>
-  <globalConfigValue>XOIP</globalConfigValue>
-  <desc>POP3 SSL capabilities enabled on proxy.  Capabilities are listed on the CAPABILITY line, also known in RFCs as extensions</desc>
+  <desc>NGINX reverse proxy pop3 capabilities</desc>
 </attr>
 
 <attr id="723" name="zimbraReverseProxyLogLevel" type="enum" value="debug,info,notice,warn,error,crit" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
@@ -3607,16 +3568,6 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="732" name="zimbraReverseProxyCacheEntryTTL" type="duration" cardinality="single" optionalIn="globalConfig">
   <globalConfigValue>1h</globalConfigValue>
   <desc>time interval that an entry cached by NGINX will remain in the cache</desc>
-</attr>
-
-<attr id="733" name="zimbraReverseProxyImapCapabilities" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
-  <globalConfigValue>"IMAP4rev1" "ID" "LITERAL+" "SASL-IR" "IDLE" "NAMESPACE"</globalConfigValue>
-  <desc>NGINX reverse proxy IMAP capabilities</desc>
-</attr>
-
-<attr id="734" name="zimbraReverseProxyPop3Capabilities" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
-  <globalConfigValue>"TOP" "USER" "UIDL" "EXPIRE 31 USER"</globalConfigValue>
-  <desc>NGINX reverse proxy POP3 capabilities</desc>
 </attr>
 
 <attr id="735" name="zimbraReverseProxyInactivityTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
