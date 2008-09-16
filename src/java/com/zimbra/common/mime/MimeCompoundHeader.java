@@ -31,16 +31,22 @@ import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.net.QCodec;
 import org.apache.commons.codec.net.URLCodec;
 
+import com.zimbra.common.util.StringUtil;
+
 public class MimeCompoundHeader {
     private enum RFC2231State { PARAM, CONTINUED, EXTENDED, EQUALS, CHARSET, LANG, VALUE, QVALUE, SLOP, COMMENT };
 
     private String mValue;
     private Map<String, String> mParams = new LinkedHashMap<String, String>();
-    private boolean use2231Encoding;
+    private boolean mUse2231Encoding;
+    private String mCharset;
 
-    public MimeCompoundHeader(String header)  { this(header, false); }
-    public MimeCompoundHeader(String header, boolean use2231) {
-        use2231Encoding = use2231;
+    public MimeCompoundHeader(String header)                   { this(header, null, false); }
+    public MimeCompoundHeader(String header, boolean use2231)  { this(header, null, use2231); }
+    public MimeCompoundHeader(String header, String charset)   { this(header, charset, false); }
+    public MimeCompoundHeader(String header, String charset, boolean use2231) {
+        mUse2231Encoding = use2231;
+        setCharset(charset);
         if (header == null)
             return;
 
@@ -172,7 +178,7 @@ public class MimeCompoundHeader {
     public MimeCompoundHeader(MimeCompoundHeader mch) {
         mValue = mch.mValue;
         mParams.putAll(mch.mParams);
-        use2231Encoding = mch.use2231Encoding;
+        mUse2231Encoding = mch.mUse2231Encoding;
     }
 
 
@@ -203,6 +209,16 @@ public class MimeCompoundHeader {
         return mParams.entrySet().iterator();
     }
 
+
+    public MimeCompoundHeader setCharset(String charset) {
+        mCharset = charset == null || charset.trim().equals("") ? null : charset;
+        return this;
+    }
+
+    public MimeCompoundHeader setUse2231Encoding(boolean use2231) {
+        mUse2231Encoding = use2231;
+        return this;
+    }
 
     /** Printable ASCII characters that must be quoted in parameter values and avoided in parameter names. */
     private static final boolean[] TSPECIALS = new boolean[128];
@@ -245,6 +261,8 @@ public class MimeCompoundHeader {
                 }
             }
 
+            String charset = nonascii ? StringUtil.checkCharset(value, mCharset) : "us-ascii";
+
             StringBuilder sb = new StringBuilder();
             if (!nonascii) {
                 if (quoted || value.length() == 0) {
@@ -258,13 +276,13 @@ public class MimeCompoundHeader {
                 } else {
                     sb.append(param.getKey()).append('=').append(value);
                 }
-            } else if (use2231Encoding) {
+            } else if (mUse2231Encoding) {
                 try {
-                    sb.append(param.getKey()).append("*=utf-8''").append(new URLEncoder().encode(value));
-                } catch (EncoderException e) { }
+                    sb.append(param.getKey()).append("*=").append(charset).append("''").append(new URLEncoder().encode(value, charset));
+                } catch (UnsupportedEncodingException e) { }
             } else {
                 try {
-                    sb.append(param.getKey()).append("=\"").append(new QEncoder().encode(value, "utf-8")).append('"');
+                    sb.append(param.getKey()).append("=\"").append(new QEncoder().encode(value, charset)).append('"');
                 } catch (EncoderException e) { }
             }
 
@@ -280,12 +298,13 @@ public class MimeCompoundHeader {
 
     // special subclass of URLCodec that replaces ' ' with "%20" rather than with "+"
     private static class URLEncoder extends URLCodec {
+        URLEncoder()  { }
         private static final BitSet WWW_URL = (BitSet) WWW_FORM_URL.clone();
             static { WWW_URL.clear(' '); }
-        public byte[] encode(byte[] bytes)  { return encodeUrl(WWW_URL, bytes); }
+        @Override public byte[] encode(byte[] bytes)  { return encodeUrl(WWW_URL, bytes); }
     }
     private static class QEncoder extends QCodec {
-        private QEncoder()  { super();  setEncodeBlanks(true); }
+        QEncoder()  { super();  setEncodeBlanks(true); }
     }
 
     private static class RFC2231Data {
@@ -303,6 +322,8 @@ public class MimeCompoundHeader {
             String charset;  boolean encoded;  String value;
             ParameterContinuation(String c, boolean e, String v) { charset = c;  encoded = e;  value = v; }
         }
+
+        RFC2231Data()  { }
 
         void setState(RFC2231State newstate) {
             if (newstate == RFC2231State.COMMENT && state != RFC2231State.COMMENT)
@@ -522,5 +543,7 @@ public class MimeCompoundHeader {
 
         for (String[] test : cdispTests)
             testParser(false, test);
+
+        // FIXME: add tests for serialization (2231 or not, various charsets, quoting, folding, etc.)
     }
 }
