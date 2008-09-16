@@ -178,7 +178,6 @@ SECTION imapproxy
 	VAR zimbraReverseProxyCacheReconnectInterval
 	VAR zimbraReverseProxyDefaultRealm
 	VAR zimbraReverseProxyHttpEnabled
-	VAR zimbraReverseProxyImapCapabilities
 	VAR zimbraReverseProxyImapEnabledCapability
 	VAR zimbraReverseProxyImapExposeVersionOnBanner
 	VAR zimbraReverseProxyImapSaslGssapiEnabled
@@ -192,7 +191,6 @@ SECTION imapproxy
 	VAR zimbraReverseProxyMailEnabled
 	VAR zimbraReverseProxyMailMode
 	VAR zimbraReverseProxyPassErrors
-	VAR zimbraReverseProxyPop3Capabilities
 	VAR zimbraReverseProxyPop3EnabledCapability
 	VAR zimbraReverseProxyPop3ExposeVersionOnBanner
 	VAR zimbraReverseProxyPop3SaslGssapiEnabled
