@@ -56,7 +56,15 @@ import com.zimbra.cs.store.StoreManager;
 public class Zimbra {
     private static boolean sInited = false;
     private static boolean sIsMailboxd = false;
-    
+
+    /** Sets system properties before the server fully starts up.  Note that
+     *  there's a potential race condition if {@link FirstServlet} or another
+     *  servlet faults in classes or references properties before they're set
+     *  here. */
+    private static void setSystemProperties() {
+        System.setProperty("mail.mime.decodetext.strict", "false");
+    }
+
     private static void checkForClass(String clzName, String jarName) {
         try {
             String s = Class.forName(clzName).getName();
@@ -143,9 +151,10 @@ public class Zimbra {
             return;
 
         sIsMailboxd = forMailboxd;
-
         if (sIsMailboxd)
             FirstServlet.waitForInitialization();
+
+        setSystemProperties();
 
         logVersionAndSysInfo();
 
