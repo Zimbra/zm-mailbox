@@ -107,18 +107,11 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
     public synchronized void mailboxLoaded(Mailbox mbox) {
         WaitSetAccount wsa = mSessions.get(mbox.getAccountId());
         if (wsa != null) {
-            WaitSetSession session = wsa.getSession();
-            if (session != null && session.getMailbox() != mbox) {
-                ZimbraLog.session.warn("SESSION BEING LEAKED? WaitSetSession points to old version of mailbox...possibly leaking this session:", session);
-                session = null; // re-initialize it below
-            }
-            if (session == null) {
-                // create a new session... 
-                WaitSetError error = initializeWaitSetSession(wsa);
-                if (error != null) {
-                    mSessions.remove(wsa.accountId);
-                    signalError(error);
-                }
+            // create a new session... 
+            WaitSetError error = initializeWaitSetSession(wsa, mbox);
+            if (error != null) {
+                mSessions.remove(wsa.accountId);
+                signalError(error);
             }
         } 
     }
@@ -132,24 +125,42 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
         }
     }
     
-    private synchronized WaitSetError initializeWaitSetSession(WaitSetAccount wsa) {
-        WaitSetSession wsSession = new WaitSetSession(this, wsa.accountId, wsa.interests, wsa.lastKnownSyncToken);
-        try {
-            wsSession.register();
-            wsa.ref = new SoftReference<WaitSetSession>(wsSession);
-            // must force update here so that initial sync token is checked against current mbox state
-            wsSession.update(wsa.interests, wsa.lastKnownSyncToken);
-        } catch (MailServiceException e) {
-            if (e.getCode().equals(MailServiceException.MAINTENANCE)) {
-                wsa.ref = null; // will get re-set when mailboxAvailable() is called 
-                ZimbraLog.session.debug("Maintenance mode trying to initialize WaitSetSession for accountId "+wsa.accountId); 
-            } else {
-                ZimbraLog.session.warn("Error initializing WaitSetSession for accountId "+wsa.accountId+" -- MailServiceException", e); 
+    private synchronized WaitSetError initializeWaitSetSession(WaitSetAccount wsa, Mailbox mbox) {
+        // 
+        // check to see if the session is already initialized and valid, if not, re-initialize it.
+        //
+        WaitSetSession session = wsa.getSession();
+        if (session != null && session.getMailbox() != mbox) {
+            ZimbraLog.session.warn("SESSION BEING LEAKED? WaitSetSession points to old version of mailbox...possibly leaking this session:", session);
+            session = null; // re-initialize it below
+        }
+        if (session == null) {
+            // The session is not already initialized....therefore it's OK to lock in the reverse order 
+            // (waitset then mailbox) because we know the session isn't added as a listener and therefore 
+            // we won't get an upcall from the Mailbox
+            //
+            // See bug 31666 for more info
+            //
+            WaitSetSession wsSession = new WaitSetSession(this, wsa.accountId, wsa.interests, wsa.lastKnownSyncToken);
+            try {
+                synchronized(mbox) { // this is OK, see above comment
+                    wsSession.register();
+                    wsa.ref = new SoftReference<WaitSetSession>(wsSession);
+                    // must force update here so that initial sync token is checked against current mbox state
+                    wsSession.update(wsa.interests, wsa.lastKnownSyncToken);
+                }
+            } catch (MailServiceException e) {
+                if (e.getCode().equals(MailServiceException.MAINTENANCE)) {
+                    wsa.ref = null; // will get re-set when mailboxAvailable() is called 
+                    ZimbraLog.session.debug("Maintenance mode trying to initialize WaitSetSession for accountId "+wsa.accountId); 
+                } else {
+                    ZimbraLog.session.warn("Error initializing WaitSetSession for accountId "+wsa.accountId+" -- MailServiceException", e); 
+                    return new WaitSetError(wsa.accountId, WaitSetError.Type.ERROR_LOADING_MAILBOX);
+                }
+            } catch (ServiceException e) {
+                ZimbraLog.session.warn("Error initializing WaitSetSession for accountId "+wsa.accountId+" -- ServiceException", e); 
                 return new WaitSetError(wsa.accountId, WaitSetError.Type.ERROR_LOADING_MAILBOX);
             }
-        } catch (ServiceException e) {
-            ZimbraLog.session.warn("Error initializing WaitSetSession for accountId "+wsa.accountId+" -- ServiceException", e); 
-            return new WaitSetError(wsa.accountId, WaitSetError.Type.ERROR_LOADING_MAILBOX);
         }
         return null;
     }
@@ -188,7 +199,7 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
 
         for (WaitSetAccount wsa : wsas) {
             if (!mSessions.containsKey(wsa.accountId)) {
-                // add the account to our session list  
+                // add the account to our session list
                 mSessions.put(wsa.accountId, wsa);
                 
                 // create the Session, if necessary, to listen to the requested mailbox
@@ -199,9 +210,13 @@ public final class SomeAccountsWaitSet extends WaitSetBase implements MailboxMan
                     MailboxManager.FetchMode fetchMode = MailboxManager.FetchMode.AUTOCREATE;
                     if (wsa.lastKnownSyncToken == null)
                         fetchMode = MailboxManager.FetchMode.ONLY_IF_CACHED;
+                    
+                    //
+                    // THIS CALL MIGHT REGISTER THE SESSION (via the MailboxManager notification --> mailboxLoaded() callback!
+                    //
                     Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(wsa.accountId, fetchMode);
                     if (mbox != null) {
-                        WaitSetError error = initializeWaitSetSession(wsa);
+                        WaitSetError error = initializeWaitSetSession(wsa, mbox);
                         if (error != null) { 
                             errors.add(error);
                         }
