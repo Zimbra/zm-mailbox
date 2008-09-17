@@ -3475,8 +3475,6 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <globalConfigValue>CONDSTORE</globalConfigValue>
   <globalConfigValue>ENABLE</globalConfigValue>
   <globalConfigValue>ESEARCH</globalConfigValue>
-  <globalConfigValue>ESORT</globalConfigValue>
-  <globalConfigValue>I18NLEVEL=1</globalConfigValue>
   <globalConfigValue>ID</globalConfigValue>
   <globalConfigValue>IDLE</globalConfigValue>
   <globalConfigValue>LIST-EXTENDED</globalConfigValue>
@@ -3488,8 +3486,6 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <globalConfigValue>RIGHTS=ektx</globalConfigValue>
   <globalConfigValue>SASL-IR</globalConfigValue>
   <globalConfigValue>SEARCHRES</globalConfigValue>
-  <globalConfigValue>SORT</globalConfigValue>
-  <globalConfigValue>THREAD=ORDEREDSUBJECT</globalConfigValue>
   <globalConfigValue>UIDPLUS</globalConfigValue>
   <globalConfigValue>UNSELECT</globalConfigValue>
   <globalConfigValue>WITHIN</globalConfigValue>
