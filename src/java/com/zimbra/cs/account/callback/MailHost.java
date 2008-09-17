@@ -78,8 +78,13 @@ public class MailHost extends AttributeCallback {
                 if (oldMailHost != null) {
                     Server oldServer = prov.get(ServerBy.serviceHostname, oldMailHost);
                     if (oldServer != null) {
-                        if (!mailTransport(oldServer).equals(entry.getAttr(Provisioning.A_zimbraMailTransport)))
-                            throw ServiceException.INVALID_REQUEST("current value of " + Provisioning.A_zimbraMailHost + " does not match " + Provisioning.A_zimbraMailTransport, null);
+                	String computedCurMailTransport = mailTransport(oldServer);
+                	String curMailTransport = entry.getAttr(Provisioning.A_zimbraMailTransport);
+                        if (!computedCurMailTransport.equals(curMailTransport))
+                            throw ServiceException.INVALID_REQUEST("current value of zimbraMailHost does not match zimbraMailTransport" +
+                        	                                   ", computed mail transport from current zimbraMailHost=" + computedCurMailTransport +
+                        	                                   ", current zimbraMailTransport=" + curMailTransport, 
+                        	                                   null);
                     }
                 }
             } else {
