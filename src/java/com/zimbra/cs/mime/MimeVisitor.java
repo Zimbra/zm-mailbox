@@ -65,12 +65,18 @@ public abstract class MimeVisitor {
      *  Note that changes made by these MimeVisitors are not persisted to disk
      *  but instead are executed every time the message is accessed. */
     public static void registerConverter(Class<? extends MimeVisitor> vclass) {
-        sMimeConverters.add(vclass);
+        if (vclass != null) {
+            ZimbraLog.lmtp.info("Registering MIME converter: %s", vclass.getName());
+            sMimeConverters.add(vclass);
+        }
     }
     
     /** Removes a <tt>MimeVisitor</tt> from the list of converters. */
     public static void unregisterConverter(Class<? extends MimeVisitor> vclass) {
-        sMimeConverters.remove(vclass);
+        if (vclass != null) {
+            ZimbraLog.lmtp.info("Unregistering MIME converter: %s", vclass.getName());
+            sMimeConverters.remove(vclass);
+        }
     }
 
     /** Retrieves the list of all registered MimeVisitor converter classes.
@@ -88,12 +94,18 @@ public abstract class MimeVisitor {
     /** Adds a MimeVisitor class to the list of mutators invoked before a
      *  message is saved to disk or sent via SMTP. */
     public static void registerMutator(Class<? extends MimeVisitor> vclass) {
-        sMimeMutators.add(vclass);
+        if (vclass != null) {
+            ZimbraLog.lmtp.info("Registering MIME mutator: %s", vclass.getName());
+            sMimeMutators.add(vclass);
+        }
     }
     
     /** Removes a <tt>MimeVisitor</tt> from the list of mutators. */
     public static void unregisterMutator(Class<? extends MimeVisitor> vclass) {
-        sMimeMutators.remove(vclass);
+        if (vclass != null) {
+            ZimbraLog.lmtp.info("Unregistering MIME mutator: %s", vclass.getName());
+            sMimeMutators.remove(vclass);
+        }
     }
 
     /** Retrieves the list of all registered MimeVisitor mutator classes.
