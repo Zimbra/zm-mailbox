@@ -427,6 +427,7 @@ public class Message extends MailItem {
 
         Set<String> calUidsSeen = new HashSet<String>();
         for (Invite cur : invites) {
+            cur.setLocalOnly(false);
             String uid = cur.getUid();
             boolean addRevision;
             if (cur != null && !calUidsSeen.contains(uid)) {

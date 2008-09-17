@@ -4072,10 +4072,15 @@ public class Mailbox {
                     if (idBeingSet <= 0) {
                         if (calItem != null) {
                             Invite currInv = calItem.getInvite(scid.mInv.getRecurId());
-                            if (currInv != null)
+                            if (currInv != null) {
                                 scid.mInv.setInviteId(currInv.getMailItemId());
-                            else
+                                // Carry over local-only setting.
+                                boolean currLO = currInv.isLocalOnly();
+                                boolean newLO = scid.mInv.isLocalOnly();
+                                scid.mInv.setLocalOnly(currLO && newLO);
+                            } else {
                                 scid.mInv.setInviteId(getNextItemId(Mailbox.ID_AUTO_INCREMENT));
+                            }
                         } else {
                             scid.mInv.setInviteId(getNextItemId(Mailbox.ID_AUTO_INCREMENT));
                         }

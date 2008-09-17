@@ -277,7 +277,7 @@ public class Recurrence
             return parent;
         }
 
-        public List<Instance> expandInstances(CalendarItem calItem, long start, long end)
+        List<Instance> expandInstances(CalendarItem calItem, long start, long end)
         throws ServiceException {
             List lists[] = new ArrayList[mRules.size()];
             int num = 0;
@@ -289,6 +289,7 @@ public class Recurrence
             
             List<Instance> toRet = new LinkedList<Instance>();
             ListUtil.mergeSortedLists(toRet, lists, true);
+
             return toRet;
         }
         
@@ -396,7 +397,7 @@ public class Recurrence
                 ParsedDateTime valEnd = val.getEndTime();
                 list.add(new Instance(calItem, mInvId, false,
                                       valStart.getUtcTime(), valEnd.getUtcTime(),
-                                      true));
+                                      true, true));
             }
             Collections.sort(list);
             return list;
@@ -663,7 +664,7 @@ public class Recurrence
                         instEnd = instStart;
                     }
                     if (instStart < end && instEnd > start) {
-                        toRet.add(num++, new Instance(calItem, mInvId, false, instStart, instEnd, false));
+                        toRet.add(num++, new Instance(calItem, mInvId, false, instStart, instEnd, false, false));
                     }
                 }
             } catch (ServiceException se) {
@@ -839,7 +840,7 @@ public class Recurrence
                 }
 
                 CalendarItem.Instance dtstartInst = new CalendarItem.Instance(
-                        calItem, mInvId, false, firstStart, firstEnd, false);
+                        calItem, mInvId, false, firstStart, firstEnd, false, true);
                 if (first == null || first.compareTo(dtstartInst) != 0) {
                     assert(first == null || first.compareTo(dtstartInst) > 0); // first MUST be after dtstart!
                     toAdd.add(0,dtstartInst);
@@ -1411,5 +1412,35 @@ public class Recurrence
         
         protected List<IException> mExceptions;
     }
-    
+
+    public static List<Instance> expandInstances(IRecurrence recur, CalendarItem calItem, long start, long end)
+    throws ServiceException {
+        List<Instance> list = recur.expandInstances(calItem, start, end);
+
+        // Eliminate duplicate instances.  For example, an instance may be mentioned both as
+        // a RDATE and an exception VEVENT.  Outlook seems to generate this type of data upon
+        // update of series.  Always prefer exception VEVENT over RDATE.
+        List<Instance> toRet = new ArrayList<Instance>(list.size());
+        Instance prev = null;
+        for (Instance inst : list) {
+            if (prev == null) {
+                prev = inst;
+            } else if (inst != null) {
+                if (inst.sameTime(prev)) {
+                    // If previous and this instance have same time (are essentially the same thing),
+                    // take the one that wasn't generated from RDATE.
+                    if (!inst.fromRdate())
+                        prev = inst;
+                    // Else ignore current instance.
+                } else {
+                    // If prev and this have different time, prev was a good instance.  Add it.
+                    toRet.add(prev);
+                    prev = inst;
+                }
+            }
+        }
+        if (prev != null)
+            toRet.add(prev);
+        return toRet;
+    }
 }

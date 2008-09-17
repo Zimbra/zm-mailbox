@@ -94,7 +94,14 @@ public class ZCalendar {
 
         // ZCO Custom values
         X_ZIMBRA_STATUS, X_ZIMBRA_STATUS_WAITING, X_ZIMBRA_STATUS_DEFERRED,
-        X_ZIMBRA_PARTSTAT_WAITING, X_ZIMBRA_PARTSTAT_DEFERRED;        
+        X_ZIMBRA_PARTSTAT_WAITING, X_ZIMBRA_PARTSTAT_DEFERRED,
+
+        // whether VEVENT/VTODO for an exception is a local-only change not shared with other attendees
+        X_ZIMBRA_LOCAL_ONLY,
+
+        // set to TRUE in series update to tell attendee to discard all exceptions while applying new series
+        // This is a ZCO special.
+        X_ZIMBRA_DISCARD_EXCEPTIONS;
 
         public static ICalTok lookup(String str) 
         {
@@ -561,9 +568,9 @@ public class ZCalendar {
         public ICalTok getToken() { return mTok; }  // may be null
         public String getName() { return mName; }
         public String getValue() { return mValue; }
-        long getLongValue() { return Long.parseLong(mValue); };
-        int getIntValue() { return Integer.parseInt(mValue); };
-        boolean getBoolValue() { return mValue.equalsIgnoreCase("TRUE"); }
+        public long getLongValue() { return Long.parseLong(mValue); };
+        public int getIntValue() { return Integer.parseInt(mValue); };
+        public boolean getBoolValue() { return mValue.equalsIgnoreCase("TRUE"); }
         
         ICalTok mTok;
         String mName;

@@ -325,6 +325,7 @@ public class Invite {
     private static final String FN_APPT_FREEBUSY   = "fb";
     private static final String FN_GEO             = "geo";
     private static final String FN_LOCATION        = "l";
+    private static final String FN_LOCAL_ONLY      = "lo";
     private static final String FN_INVMSGID        = "mid";
     private static final String FN_METHOD          = "mthd";
     private static final String FN_NAME            = "n";
@@ -359,6 +360,11 @@ public class Invite {
      */
     public static Metadata encodeMetadata(Invite inv) {
         Metadata meta = new Metadata();
+
+        // Add local-only to metadata only when it's true.  This is consistent with the way metadata
+        // looked before local-only flag was introduced.
+        if (inv.isLocalOnly())
+            meta.put(FN_LOCAL_ONLY, true);
 
         meta.put(FN_ITEMTYPE, inv.getItemType());
         meta.put(FN_UID, inv.getUid());
@@ -700,6 +706,9 @@ public class Invite {
         }
         
         invite.setDontIndexMimeMessage(meta.getBool(FN_DONT_INDEX_MM, false));
+
+        boolean localOnly = meta.getBool(FN_LOCAL_ONLY, false);
+        invite.setLocalOnly(localOnly);
 
         return invite;
     }
@@ -1200,6 +1209,40 @@ public class Invite {
     private ZOrganizer mOrganizer;
     private boolean mIsOrganizer;
 
+    // (bug 27645)
+    // An exception is marked as local-only if it exists only in an attendee's appointment/task.
+    // An exception that was created by the organizer and sent to attendees are not marked
+    // local-only in the attendees' appointments.
+    //
+    // The difference between a local-only exception and one that isn't local-only is what happens
+    // to it when the recurrence series is updated.  A local-only exception is effectively removed,
+    // by replacing its content with the series content except the reminders.  Thus the exception
+    // "snaps" back to the series.  If the exception was a cancellation, the canceled instance will
+    // reappear.  In contrast, a non-local-only exception remains unmodified when the series is
+    // updated.  The end result is consistent overall appointment state for organizer and attendees,
+    // while preserving the exceptions published by the organizer and also preserving any local
+    // reminders the attendees set for themselves.
+    //
+    // By default local-only is set to true because most call sites of Invite deal with local
+    // changes within a mailbox.  It should be changed to false by calling setLocalOnly(false) where
+    // appropriate, such as during delivery of invite email.
+    //
+    // For the organizer mailbox local-only is never true.  (See isLocalOnly method.)
+    //
+    // When appointment exported to ics format a local-only invite sets X-ZIMBRA-LOCAL-ONLY:TRUE
+    // property.  During ics parse/import only VEVENTs/VTODOs with X-ZIMBRA-LOCAL-ONLY:TRUE are
+    // initialized as local-only invite.  This is the opposite behavior from the default value of
+    // mLocalOnly.  This is done for backward compatibility.
+    //
+    // Local-only flag is set in metadata as "lo" field.  Only local-only invites will write this flag.
+    // During metadata decoding, missing "lo" field means not local-only.  Again this is the opposite
+    // behavior of mLocalOnly default, and it's done this way for backward compatibility.
+    //
+    // An exception instance that was both modified by the attendee and organizer is not considered
+    // local-only.  As soon as organizer publishes an exception that instance is forever non-local-only,
+    // regardless of how many times the attendee makes local changes before or after the organizer's.
+    private boolean mLocalOnly = true;
+
     private String mPriority;         // 0 .. 9
     private String mPercentComplete;  // 0 .. 100
 
@@ -1430,6 +1473,15 @@ public class Invite {
         mIsOrganizer = thisAcctIsOrganizer(acct);
     }
 
+    public boolean isLocalOnly() {
+        // Local-only is never true for the organizer user.
+        return mLocalOnly && !mIsOrganizer;
+    }
+
+    public void setLocalOnly(boolean localOnly) {
+        mLocalOnly = localOnly;
+    }
+
     public boolean isEvent()  { return mItemType == MailItem.TYPE_APPOINTMENT; }
     public boolean isTodo()   { return mItemType == MailItem.TYPE_TASK; }
     public byte getItemType() { return mItemType; }
@@ -1561,6 +1613,7 @@ public class Invite {
                     boolean isTodo = ICalTok.VTODO.equals(compTypeTok);
                     try {
                         newInv = new Invite(type, method, tzmap, false);
+                        newInv.setLocalOnly(false);  // set to true later if X-ZIMBRA-LOCAL-ONLY is present
                         if (toAdd != null)
                             toAdd.add(newInv);
 
@@ -1590,9 +1643,8 @@ public class Invite {
                         for (ZProperty prop : comp.mProperties) {
                             if (prop.mTok == null) {
                                 String name = prop.getName();
-                                if (name.startsWith("X-") || name.startsWith("x-")) {
+                                if (name.startsWith("X-") || name.startsWith("x-"))
                                     newInv.addXProp(prop);
-                                }
                                 continue;
                             }
     
@@ -1752,6 +1804,13 @@ public class Invite {
                             case GEO:
                                 Geo geo = Geo.parse(prop);
                                 newInv.setGeo(geo);
+                                break;
+                            case X_ZIMBRA_LOCAL_ONLY:
+                                if (prop.getBoolValue())
+                                    newInv.setLocalOnly(true);
+                                break;
+                            case X_ZIMBRA_DISCARD_EXCEPTIONS:
+                                newInv.addXProp(prop);
                                 break;
                             }
                         }
@@ -2067,6 +2126,9 @@ public class Invite {
         // SEQUENCE
         component.addProperty(new ZProperty(ICalTok.SEQUENCE, getSeqNo()));
 
+        if (isLocalOnly())
+            component.addProperty(new ZProperty(ICalTok.X_ZIMBRA_LOCAL_ONLY, true));
+
         return component;
     }
 
@@ -2144,6 +2206,7 @@ public class Invite {
                 );
         inv.setClassPropSetByMe(classPropSetByMe());
         inv.setDontIndexMimeMessage(getDontIndexMimeMessage());
+        inv.mLocalOnly = mLocalOnly;
         return inv;
     }
 }
