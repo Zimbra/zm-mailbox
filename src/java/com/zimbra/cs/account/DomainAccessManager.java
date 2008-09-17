@@ -105,6 +105,26 @@ public class DomainAccessManager extends AccessManager {
         accessDomain(domain);
         return canAccessDomainInternal(at, domain.getName());
     }
+    
+    public boolean canAccessCos(AuthToken at, String cosId) throws ServiceException {
+        if (!at.isZimbraUser())
+            return false;
+        
+        if (at.isAdmin()) return true;
+        if (!at.isDomainAdmin()) return false;
+        
+        Domain domain = getDomain(at);
+        Set<String> allowedCoses = domain.getMultiAttrSet(Provisioning.A_zimbraDomainCOSMaxAccounts);
+        for (String cos : allowedCoses) {
+            String[] parts = cos.split(":");
+            if (parts.length != 2)
+                continue;  // bad value skip
+            String id = parts[0];
+            if (id.equals(cosId))
+                return true;
+        }
+        return false;
+    }
 
     public boolean canAccessEmail(AuthToken at, String email) throws ServiceException {
         String parts[] = EmailUtil.getLocalPartAndDomain(email);

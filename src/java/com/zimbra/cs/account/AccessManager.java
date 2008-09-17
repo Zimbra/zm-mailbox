@@ -76,12 +76,14 @@ public abstract class AccessManager {
     public abstract boolean canAccessAccount(Account credentials, Account target) throws ServiceException;
 
     public abstract boolean canAccessDomain(AuthToken at, String domainName) throws ServiceException;
-
     public abstract boolean canAccessDomain(AuthToken at, Domain domain) throws ServiceException;
+    
+    public abstract boolean canAccessCos(AuthToken at, String cosId) throws ServiceException;
 
     public abstract boolean canAccessEmail(AuthToken at, String email) throws ServiceException;
 
     public abstract boolean canModifyMailQuota(AuthToken at, Account targetAccount, long mailQuota) throws ServiceException;
+    
     
     // ACL based methods
     public abstract boolean canPerform(AuthToken grantee, NamedEntry target, Right rightNeeded, boolean asAdmin, boolean defaultGrant);
