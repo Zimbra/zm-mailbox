@@ -190,4 +190,8 @@ public abstract class AdminDocumentHandler extends DocumentHandler {
             throw ServiceException.INVALID_REQUEST("must be valid email address: "+email, null);
         return canAccessDomain(zsc, parts[1]);
     }
+    
+    public boolean canAccessCos(ZimbraSoapContext zsc, String cosId) throws ServiceException {
+        return AccessManager.getInstance().canAccessCos(zsc.getAuthToken(), cosId);
+    }
 }

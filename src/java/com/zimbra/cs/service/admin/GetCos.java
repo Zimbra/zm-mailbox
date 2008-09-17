@@ -40,9 +40,13 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class GetCos extends AdminDocumentHandler {
 
+    public boolean domainAuthSufficient(Map context) {
+        return true;
+    }
+    
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 	    
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
         Element d = request.getElement(AdminConstants.E_COS);
@@ -51,10 +55,17 @@ public class GetCos extends AdminDocumentHandler {
 
 	    Cos cos = prov.get(CosBy.fromString(key), value);
 	    
+	    // if we are a domain admin only, restrict to the COSs viewable by the domain admin
+        if (isDomainAdminOnly(zsc)) {
+            // for domain admin, if the requested COS does not exist, throw PERM_DENIED instead of NO_SUCH_COS
+            if (cos == null || !canAccessCos(zsc, cos.getId()))
+                throw ServiceException.PERM_DENIED("can not access cos"); 
+        }
+	    
         if (cos == null)
             throw AccountServiceException.NO_SUCH_COS(value);
 
-	    Element response = lc.createElement(AdminConstants.GET_COS_RESPONSE);
+	    Element response = zsc.createElement(AdminConstants.GET_COS_RESPONSE);
         doCos(response, cos);
 
 	    return response;

@@ -39,15 +39,23 @@ public class GetAllCos extends AdminDocumentHandler {
     public static final String BY_NAME = "name";
     public static final String BY_ID = "id";
     
+    public boolean domainAuthSufficient(Map context) {
+        return true;
+    }
+    
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
-        List cos = prov.getAllCos();
+        List<Cos> coses = prov.getAllCos();
         
         Element response = lc.createElement(AdminConstants.GET_ALL_COS_RESPONSE);
-        for (Iterator it = cos.iterator(); it.hasNext(); )
-            GetCos.doCos(response, (Cos) it.next());
+        for (Cos cos : coses) {
+            if (isDomainAdminOnly(lc) && !canAccessCos(lc, cos.getId()))
+                continue;
+            
+            GetCos.doCos(response, cos);
+        }
 	    return response;
 	}
 }
