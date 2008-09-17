@@ -324,7 +324,7 @@ public final class ParsedDateTime {
             otherCal = other.mCal;
         } else {
             otherCal = new GregorianCalendar(thisTZ);
-            otherCal.setTimeInMillis(mCal.getTimeInMillis());
+            otherCal.setTimeInMillis(other.getUtcTime());
         }
         return
             mCal.get(java.util.Calendar.HOUR_OF_DAY)
@@ -548,6 +548,21 @@ public final class ParsedDateTime {
 
     public long getUtcTime() {
         return mCal.getTimeInMillis();
+    }
+
+    /**
+     * Returns a String representing the date/time in UTC timezone.
+     * "YYYYMMDDThhmmssZ" if time component is present, or just "YYYYMMDD" if date-only.
+     * @return
+     */
+    public String getUtcString() {
+        if (isUTC())
+            return getDateTimePartString(false);
+        else {
+            ParsedDateTime dtZ = (ParsedDateTime) clone();
+            dtZ.toUTC();
+            return dtZ.getDateTimePartString(false);
+        }
     }
 
     public boolean hasTime() {

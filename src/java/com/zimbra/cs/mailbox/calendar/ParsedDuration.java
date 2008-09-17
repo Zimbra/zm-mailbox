@@ -49,6 +49,7 @@ public final class ParsedDuration
     
     public static final ParsedDuration ONE_DAY = new ParsedDuration(false, 0, 1, 0, 0, 0);
     public static final ParsedDuration NEGATIVE_ONE_DAY = new ParsedDuration(false, 0, -1, 0, 0, 0);
+    public static final ParsedDuration ONE_WEEK = new ParsedDuration(false, 1, 0, 0, 0, 0);
     
     private ParsedDuration(boolean negative, int weeks, int days, int hours, int mins, int secs) {
         mNegative = negative;
@@ -69,7 +70,33 @@ public final class ParsedDuration
         toRet.mNegative = mNegative;
         return toRet;
     }
+
+    private static final int SECONDS_IN_MINUTE = 60;
+    private static final int SECONDS_IN_HOUR = SECONDS_IN_MINUTE * 60;
+    private static final int SECONDS_IN_DAY = SECONDS_IN_HOUR * 24;
+    private static final int SECONDS_IN_WEEK = SECONDS_IN_DAY * 7;
+
+    // Don't make this a public method because adding this seconds value to ParsedDateTime is not DST-safe.
+    private int asSeconds() {
+        return
+            (mWeeks * SECONDS_IN_WEEK +
+             mDays * SECONDS_IN_DAY +
+             mHours * SECONDS_IN_HOUR +
+             mMins * SECONDS_IN_MINUTE +
+             mSecs) *
+            (mNegative ? -1 : 1);
+    }
+
+    public int compareTo(ParsedDuration other) {
+        return asSeconds() - other.asSeconds();
+    }
     
+    public boolean equals(Object other) {
+        if (!(other instanceof ParsedDuration))
+            return false;
+        return (compareTo((ParsedDuration) other) == 0);
+    }
+   
     public ParsedDuration add(int field, int amount) throws ServiceException {
         ParsedDuration dur = (ParsedDuration)clone();
         
@@ -94,7 +121,15 @@ public final class ParsedDuration
         }
         return dur;
     }
-    
+
+    /**
+     * Returns a new ParsedDuration object that is an absolute value of this duration.
+     * @return
+     */
+    public ParsedDuration abs() {
+        return ParsedDuration.parse(false, mWeeks, mDays, mHours, mMins, mSecs);
+    }
+
     public String toString() {
         String start = "P";
         if (mNegative) {
@@ -278,6 +313,7 @@ public final class ParsedDuration
         
         return retVal;
     }
+
     public int getWeeks() {
         return mWeeks * (mNegative ? -1 : 1);
     }

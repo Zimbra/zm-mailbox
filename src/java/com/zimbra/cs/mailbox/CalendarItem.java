@@ -64,6 +64,7 @@ import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeVisitor;
@@ -658,7 +659,7 @@ public abstract class CalendarItem extends MailItem {
         List<Instance> instances = new ArrayList<Instance>();
         if (mRecurrence != null) {
             long startTime = System.currentTimeMillis();
-            instances = mRecurrence.expandInstances(this, start, endAdjusted);
+            instances = Recurrence.expandInstances(mRecurrence, this, start, endAdjusted);
             long elapsed = System.currentTimeMillis() - startTime;
             ZimbraLog.calendar.debug(
                     "RECURRENCE EXPANSION for appt/task " + getId() +
@@ -675,7 +676,7 @@ public abstract class CalendarItem extends MailItem {
                         Instance inst = new Instance(this, new InviteInfo(inv),
                                                      dtStart == null,
                                                      invStart, invEnd,
-                                                     inv.hasRecurId());
+                                                     inv.hasRecurId(), false);
                         instances.add(inst);
                     }
                 }
@@ -702,6 +703,8 @@ public abstract class CalendarItem extends MailItem {
 
         private boolean mIsException; // TRUE if this instance is an exception
                                       // to a recurrence
+        private boolean mFromRdate;  // true if this instance was generated from RDATE
+                                     // rather than RRULE or a stand-alone exception VEVENT/VTODO
 
         private InviteInfo mInvId;
         
@@ -718,13 +721,13 @@ public abstract class CalendarItem extends MailItem {
             long start = dtStart != null ? dtStart.getUtcTime() : 0;
             ParsedDateTime dtEnd = inv.getEffectiveEndTime();
             long end = dtEnd != null ? dtEnd.getUtcTime() : 0;
-            return new Instance(calItem, new InviteInfo(inv), dtStart == null, start, end, inv.hasRecurId());
+            return new Instance(calItem, new InviteInfo(inv), dtStart == null, start, end, inv.hasRecurId(), false);
         }
 
         public Instance(CalendarItem calItem, InviteInfo invInfo,
                 boolean timeless,
                 long _start, long _end,
-                boolean _exception) 
+                boolean _exception, boolean fromRdate) 
         {
             mInvId = invInfo;
             mCalItem = calItem;
@@ -736,6 +739,7 @@ public abstract class CalendarItem extends MailItem {
                 mEnd = _end;
             }
             mIsException = _exception;
+            mFromRdate = fromRdate;
         }
 
         public int compareTo(Instance other) {
@@ -774,6 +778,16 @@ public abstract class CalendarItem extends MailItem {
                     && (mInvId.equals(other.mInvId));
         }
 
+        public boolean sameTime(Instance other) {
+            if (!mTimeless && !other.mTimeless) {
+                // Same if they have identical start and end times.
+                return mStart == other.mStart && mEnd == other.mEnd;
+            } else {
+                // Even if both are timeless they are considered different.
+                return false;
+            }
+        }
+
         public String toString() {
             StringBuilder toRet = new StringBuilder("INST(");
             Date dstart = new Date(mStart);
@@ -795,6 +809,7 @@ public abstract class CalendarItem extends MailItem {
         public boolean isTimeless() { return mTimeless; }
         public boolean isException() { return mIsException; }
         public void setIsException(boolean isException) { mIsException = isException; } 
+        public boolean fromRdate() { return mFromRdate; }
         public InviteInfo getInviteInfo() { return mInvId; } 
 
         public static class StartTimeComparator implements Comparator<Instance> {
@@ -858,10 +873,22 @@ public abstract class CalendarItem extends MailItem {
     }
     
     public Invite[] getInvites() {
-        ArrayList<Invite> toRet = new ArrayList<Invite>();
-        for (Invite inv : mInvites)
-            toRet.add(inv);
-        return toRet.toArray(new Invite[0]);
+        int num = mInvites.size();
+        if (num == 1) {
+            Invite[] ret = new Invite[1];
+            ret[0] = mInvites.get(0);
+            return ret;
+        } else {
+            ArrayList<Invite> toRet = new ArrayList<Invite>(mInvites.size());
+            // First get the series invite(s), then exceptions.  This will generate a friendlier ics file.
+            for (Invite inv : mInvites)
+                if (!inv.hasRecurId())
+                    toRet.add(inv);
+            for (Invite inv : mInvites)
+                if (inv.hasRecurId())
+                    toRet.add(inv);
+            return toRet.toArray(new Invite[0]);
+        }
     }
     
     public Invite[] getInvites(int invId) {
@@ -1167,9 +1194,16 @@ public abstract class CalendarItem extends MailItem {
             if (defInv != null) {
                 oldDtStart = defInv.getStartTime();
                 ParsedDateTime newDtStart = newInvite.getStartTime();
-                if (newDtStart != null && oldDtStart != null && !newDtStart.sameTime(oldDtStart)) {
-                    needRecurrenceIdUpdate = true;
-                    dtStartMovedBy = newDtStart.difference(oldDtStart);
+                //if (newDtStart != null && oldDtStart != null && !newDtStart.sameTime(oldDtStart)) {
+                if (newDtStart != null && oldDtStart != null && !newDtStart.equals(oldDtStart)) {
+                    // Do the RECURRENCE-ID adjustment only when DTSTART moved by 7 days or less.
+                    // If it moved by more, it gets too complicated to figure out what the old RECURRENCE-ID
+                    // is in the new series.  Just blow away all exceptions.
+                    ParsedDuration delta = newDtStart.difference(oldDtStart);
+                    if (delta.abs().compareTo(ParsedDuration.ONE_WEEK) < 0) {
+                        needRecurrenceIdUpdate = true;
+                        dtStartMovedBy = delta;
+                    }
                 }
             }
         }
@@ -1197,6 +1231,13 @@ public abstract class CalendarItem extends MailItem {
             }
         }
 
+        // Is this a series update invite from ZCO?  If so, we have to treat all exceptions as local-only
+        // and make them snap to series.
+        boolean zcoSeriesUpdate = false;
+        ZProperty xzDiscardExcepts = newInvite.getXProperty(ICalTok.X_ZIMBRA_DISCARD_EXCEPTIONS.toString());
+        if (xzDiscardExcepts != null)
+            zcoSeriesUpdate = xzDiscardExcepts.getBoolValue();
+
         boolean addNewOne = true;
         boolean replaceExceptionBodyWithSeriesBody = false;
         boolean modifiedCalItem = false;
@@ -1219,6 +1260,9 @@ public abstract class CalendarItem extends MailItem {
             boolean matchingRecurId = recurrenceIdsMatch(cur, newInvite);
             if (discardExistingInvites || matchingRecurId) {
                 if (discardExistingInvites || isNewerVersion(cur, newInvite)) {
+                    // Invite is local-only only if both old and new are local-only.
+                    newInvite.setLocalOnly(cur.isLocalOnly() && newInvite.isLocalOnly());
+
                     toRemove.add(cur);
                     // add to FRONT of list, so when we iterate for the removals we go from HIGHER TO LOWER
                     // that way the numbers all match up as the list contracts!
@@ -1262,18 +1306,27 @@ public abstract class CalendarItem extends MailItem {
                             RecurId newRid = new RecurId(dt, rid.getRange());
                             cur.setRecurId(newRid);
                             // For CANCELLED instances, set DTSTART to the same time
-                            // used in RECURRENCE-ID.
-                            if (cur.isCancel())
+                            // used in RECURRENCE-ID and adjust DTEND accordingly.
+                            if (cur.isCancel()) {
                                 cur.setDtStart(dt);
+                                ParsedDateTime dtEnd = cur.getEndTime();
+                                if (dtEnd != null) {
+                                    ParsedDateTime dtEndMoved = dtEnd.add(dtStartMovedBy);
+                                    cur.setDtEnd(dtEndMoved);
+                                }
+                            }
                             addToUpdateList = true;
                         }
                     }
                 }
 
                 // If updating series, copy the series data to the exception, preserving only the alarm info.
-                if (!newInvite.hasRecurId() && cur.hasRecurId()) {
+                // If exception is local-only, snap it to the series start/end times.  Canceled local-only
+                // exceptions are un-canceled.  Non-local-only exceptions (those that were published by
+                // organizer) are left alone.
+                if (!newInvite.hasRecurId() && cur.hasRecurId() && (zcoSeriesUpdate || cur.isLocalOnly())) {
                     if (cur.isCancel()) {
-                        // Cancellations are undone by update to the series.
+                        // Local-only cancellations are undone by update to the series.
                         toRemove.add(cur);
                         // add to FRONT of list, so when we iterate for the removals we go from HIGHER TO LOWER
                         // that way the numbers all match up as the list contracts!
@@ -1288,6 +1341,7 @@ public abstract class CalendarItem extends MailItem {
                         replaceExceptionBodyWithSeriesBody = true;
                         // Recreate invite with data from newInvite, but preserve alarm info.
                         Invite copy = newInvite.newCopy();
+                        copy.setLocalOnly(true);  // It's still local-only.
                         copy.setMailItemId(cur.getMailItemId());
                         copy.setComponentNum(cur.getComponentNum());
                         copy.setSeqNo(cur.getSeqNo());
@@ -1297,7 +1351,7 @@ public abstract class CalendarItem extends MailItem {
                         copy.setPartStat(cur.getPartStat());  // carry over PARTSTAT
                         ParsedDateTime start = cur.getRecurId().getDt();
                         if (start != null) {
-                            copy.setDtStart(start);
+                            copy.setDtStart(start);  // snap back to series start time
                             ParsedDuration dur = cur.getDuration();
                             if (dur != null) {
                                 copy.setDtEnd(null);
@@ -2399,7 +2453,8 @@ public abstract class CalendarItem extends MailItem {
                                boolean ignoreErrors,
                                boolean allowPrivateAccess)
     throws ServiceException {
-        for (Invite inv : mInvites) {
+        Invite[] invs = getInvites();
+        for (Invite inv : invs) {
             try {
                 cal.addComponent(inv.newToVComponent(useOutlookCompatMode, allowPrivateAccess));
             } catch (ServiceException e) {

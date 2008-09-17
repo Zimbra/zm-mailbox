@@ -140,13 +140,7 @@ public class RecurId
     public ParsedDateTime getDt() { return mDateTime; }
 
     public String getDtZ() {
-        if (mDateTime.isUTC())
-            return mDateTime.getDateTimePartString(false);
-        else {
-            ParsedDateTime dtZ = (ParsedDateTime) mDateTime.clone();
-            dtZ.toUTC();
-            return dtZ.getDateTimePartString(false);
-        }
+        return mDateTime.getUtcString();
     }
 
     public boolean withinRange(RecurId other) {

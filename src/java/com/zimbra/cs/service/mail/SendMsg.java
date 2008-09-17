@@ -423,9 +423,6 @@ public class SendMsg extends MailDocumentHandler {
         }
 
         private boolean fixupRequest(ZVCalendar ical) {
-            if (mFromEmails == null || mSentBy == null)
-                return false;
-
             boolean modified = false;
             for (Iterator<ZComponent> compIter = ical.getComponentIterator(); compIter.hasNext(); ) {
                 ZComponent comp = compIter.next();
@@ -433,6 +430,7 @@ public class SendMsg extends MailDocumentHandler {
                 if (!ICalTok.VEVENT.equals(compType) && !ICalTok.VTODO.equals(compType))
                     continue;
 
+                boolean isSeries = false;
                 for (Iterator<ZProperty> propIter = comp.getPropertyIterator(); propIter.hasNext(); ) {
                     ZProperty prop = propIter.next();
                     ICalTok token = prop.getToken();
@@ -441,19 +439,28 @@ public class SendMsg extends MailDocumentHandler {
                     switch (token) {
                     case ORGANIZER:
                     case ATTENDEE:
-                        String addr = prop.getValue();
-                        if (addressMatchesFrom(addr)) {
-                            ZParameter sentBy = prop.getParameter(ICalTok.SENT_BY);
-                            if (sentBy == null) {
-                                prop.addParameter(new ZParameter(ICalTok.SENT_BY, mSentBy));
-                                modified = true;
-                                ZimbraLog.calendar.info(
-                                        "Fixed up " + token + " (" + addr +
-                                        ") by adding SENT-BY=" + mSentBy);
+                        if (mFromEmails != null && mSentBy != null) {
+                            String addr = prop.getValue();
+                            if (addressMatchesFrom(addr)) {
+                                ZParameter sentBy = prop.getParameter(ICalTok.SENT_BY);
+                                if (sentBy == null) {
+                                    prop.addParameter(new ZParameter(ICalTok.SENT_BY, mSentBy));
+                                    modified = true;
+                                    ZimbraLog.calendar.info(
+                                            "Fixed up " + token + " (" + addr +
+                                            ") by adding SENT-BY=" + mSentBy);
+                                }
                             }
                         }
                         break;
+                    case RRULE:
+                        isSeries = true;
+                        break;
                     }
+                }
+                if (isSeries) {
+                    comp.addProperty(new ZProperty(ICalTok.X_ZIMBRA_DISCARD_EXCEPTIONS, true));
+                    modified = true;
                 }
             }
             return modified;
