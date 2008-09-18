@@ -1454,7 +1454,14 @@ public class Invite {
         if (hasOrganizer()) {
             String address = getOrganizer().getAddress();
             if (address != null) {
-                account = Provisioning.getInstance().get(AccountBy.name, address);
+                try {
+                    account = Provisioning.getInstance().get(AccountBy.name, address);
+                } catch (ServiceException e) {
+                    if (ServiceException.INVALID_REQUEST.equals(e.getCode()))
+                        ZimbraLog.calendar.warn("Ignoring invalid organizer address: " + address);
+                    else
+                        throw e;
+                }
             }
         } else if (mCalItem != null) {
             account = mCalItem.getAccount();
