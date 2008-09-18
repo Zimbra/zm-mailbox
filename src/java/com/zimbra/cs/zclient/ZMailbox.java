@@ -2070,7 +2070,9 @@ public class ZMailbox {
         req.addElement(MailConstants.E_FOLDER).addAttribute(MailConstants.A_FOLDER, id);
         Element response = invoke(req);
         Element eFolder = response.getOptionalElement(MailConstants.E_FOLDER);
-        ZFolder folder = (eFolder != null ? new ZFolder(eFolder, null) : null);
+        if (eFolder == null)
+            return null;
+        ZFolder folder = new ZFolder(eFolder, null);
         return folder.isHierarchyPlaceholder() ? null : folder;
     }
     
