@@ -1,0 +1,260 @@
+package com.zimbra.qa.unittest;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.HttpState;
+
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+
+import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.CliUtil;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.service.AuthProviderException;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.zclient.ZFolder;
+import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.cs.zclient.ZSearchParams;
+
+/*
+set in localconfig.xml:
+ 
+<key name="zimbra_auth_provider">
+    <value>DUMMY_AUTH_PROVIDER</value>
+</key>
+
+*/
+
+public class TestAccessKeyGrant extends TestCase {
+
+    private static final String DUMMY_AUTH_PROVIDER = "DUMMY_AUTH_PROVIDER";
+    private static final String OWNER_NAME = "user1";
+    private static final String ACCESS_KEY = "b931d99fc5dc7e8061a97d90e05e3256";
+    
+    private static final String AUTH_K_ATTR = "K";
+    private static final String AUTH_H_ATTR = "H";
+    
+    public static class DummyAuthProvider extends AuthProvider {
+
+        public DummyAuthProvider() {
+            super(DUMMY_AUTH_PROVIDER);
+        }
+        
+        @Override
+        protected AuthToken authToken(HttpServletRequest req, boolean isAdminReq)
+                throws AuthProviderException, AuthTokenException {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        protected AuthToken authToken(Element soapCtxt, Map engineCtxt)
+                throws AuthProviderException, AuthTokenException {
+            
+            if (soapCtxt == null)
+                throw AuthProviderException.NO_AUTH_DATA();
+
+            try {
+                Element eAuthToken = soapCtxt.getElement("authToken");
+                String type = eAuthToken.getAttribute("type");
+                if (type == null || !type.equals(DUMMY_AUTH_PROVIDER))
+                    throw AuthProviderException.NOT_SUPPORTED();
+
+                String ownerId = null;
+                String accessKey = null;
+                
+                for (Element authAttr : eAuthToken.listElements(AccountConstants.E_A)) {
+                    String name = authAttr.getAttribute(AccountConstants.A_N);
+
+                    if (name != null && name.equals(AUTH_K_ATTR))
+                        accessKey = authAttr.getText();
+                    else if (name != null && name.equals(AUTH_H_ATTR))
+                        ownerId = authAttr.getText();
+                }
+
+                if (accessKey != null && ownerId != null)
+                    return new DummyAuthToken(accessKey, ownerId);
+                
+            } catch (ServiceException x) {
+                throw AuthProviderException.NO_AUTH_DATA();
+            }
+
+            throw AuthProviderException.NO_AUTH_DATA();
+        }
+
+    }
+    
+    private static class DummyAuthToken extends AuthToken {
+        
+        private String mAccessKey;
+        private String mOwnerId;
+        
+        DummyAuthToken(String accessKey, String ownerId) {
+            mAccessKey = accessKey;
+            mOwnerId = ownerId;
+        }
+
+        @Override
+        public void encode(HttpClient client, HttpMethod method,
+                boolean isAdminReq, String cookieDomain) throws ServiceException {
+            // TODO Auto-generated method stub
+            throw ServiceException.FAILURE("Not implemented", null);
+        }
+
+        @Override
+        public void encode(HttpState state, boolean isAdminReq, String cookieDomain)
+                throws ServiceException {
+            // TODO Auto-generated method stub
+            throw ServiceException.FAILURE("Not implemented", null);
+        }
+
+        @Override
+        public void encode(HttpServletResponse resp, boolean isAdminReq)
+                throws ServiceException {
+            // TODO Auto-generated method stub
+            throw ServiceException.FAILURE("Not implemented", null);
+        }
+
+        @Override
+        public void encodeAuthResp(Element parent, boolean isAdmin)
+                throws ServiceException {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public String getAccountId() {
+            // TODO Auto-generated method stub
+            return mOwnerId;
+        }
+
+        @Override
+        public String getAdminAccountId() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public String getCrumb() throws AuthTokenException {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public String getDigest() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+        
+        public String getAccessKey() {
+            return mAccessKey;
+        }
+
+        @Override
+        public String getEncoded() throws AuthTokenException {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public long getExpires() {
+            // TODO Auto-generated method stub
+            return 0;
+        }
+
+        @Override
+        public String getExternalUserEmail() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public boolean isAdmin() {
+            // TODO Auto-generated method stub
+            return false;
+        }
+
+        @Override
+        public boolean isDomainAdmin() {
+            // TODO Auto-generated method stub
+            return false;
+        }
+
+        @Override
+        public boolean isExpired() {
+            // TODO Auto-generated method stub
+            return false;
+        }
+
+        @Override
+        public boolean isZimbraUser() {
+            // TODO Auto-generated method stub
+            return mAccessKey == null;
+        }
+
+        @Override
+        public String toString() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public ZAuthToken toZAuthToken() throws ServiceException {
+            Map<String,String> attrs = new HashMap<String, String>();
+            attrs.put(AUTH_K_ATTR, mAccessKey);
+            attrs.put(AUTH_H_ATTR, mOwnerId);
+            return new ZAuthToken(DUMMY_AUTH_PROVIDER, null, attrs);
+        }
+
+    }
+    
+    private String getAccountId(String acctName) throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        Account acct = prov.get(AccountBy.name, acctName);
+        assertNotNull(acct);
+        return acct.getId();
+    }
+    
+    private ZMailbox getZMailbox() throws Exception {
+        Map<String,String> authAttrs = new HashMap<String, String>();
+        authAttrs.put(AUTH_K_ATTR, ACCESS_KEY);
+        authAttrs.put(AUTH_H_ATTR, getAccountId(OWNER_NAME));
+        
+        ZAuthToken zat = new ZAuthToken(DUMMY_AUTH_PROVIDER, null, authAttrs);
+        ZMailbox.Options options = new ZMailbox.Options(zat, TestUtil.getSoapUrl());
+        return ZMailbox.getMailbox(options);
+    }
+    
+    public void testKeyGrant() throws Exception {
+        ZMailbox mbox = getZMailbox();
+        // ZFolder folder = mbox.getFolderByPath("Calendar");
+        
+        StringBuffer query = new StringBuffer();
+        query.append("(inid:");
+        // query.append(folder.getId());
+        query.append("10");
+        query.append(")");
+        ZSearchParams sp = new ZSearchParams(query.toString());
+        sp.setTypes(ZSearchParams.TYPE_APPOINTMENT);
+        mbox.search(sp);
+    }
+    
+    public static void main(String[] args) throws Exception {
+        // TestUtil.cliSetup();
+        CliUtil.toolSetup();
+        TestUtil.runTest(new TestSuite(TestAccessKeyGrant.class));
+    }
+}

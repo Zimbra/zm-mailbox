@@ -348,7 +348,7 @@ public class Mailbox {
             String accountId = auth.getAccountId();
             isAdmin = auth.isAdmin() || auth.isDomainAdmin();
             authuser = Provisioning.getInstance().get(AccountBy.id, accountId, authToken);
-            if (authuser == null && !auth.isZimbraUser()) {
+            if (authuser == null || !auth.isZimbraUser()) {
                 if (auth.getDigest() != null || auth.getAccessKey() != null)
                     authuser = new ACL.GuestAccount(auth);
                 else
