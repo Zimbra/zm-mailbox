@@ -287,6 +287,11 @@ public class LdapProvisioning extends Provisioning {
         try {
             if (zlc == null)
                 zlc = new ZimbraLdapContext(true);
+            if (entry instanceof Account) {
+                Account acct = (Account) entry;
+                validate("modifyAccountCheckDomainCosAndFeature", new Object[] {
+                        acct.getAttr(A_zimbraMailDeliveryAddress), attrs, acct });
+            }
             LdapUtil.modifyAttrs(zlc, ((LdapEntry)entry).getDN(), attrs, entry);
             refreshEntry(entry, zlc, this);
         } catch (InvalidAttributeIdentifierException e) {
@@ -652,6 +657,8 @@ public class LdapProvisioning extends Provisioning {
         String parts[] = emailAddress.split("@");
         if (parts.length != 2)
             throw ServiceException.INVALID_REQUEST("must be valid email address: "+emailAddress, null);
+ 
+    	validate("createAccountCheckDomainCosAndFeature", new Object[] { emailAddress, acctAttrs });
             
         String localPart = parts[0];
         String domain = parts[1];
