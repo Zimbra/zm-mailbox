@@ -60,7 +60,7 @@ public class DataSource extends NamedEntry {
     private Mailbox mailbox;
 
     public enum Type {
-        pop3, imap, caldav;
+        pop3, imap, caldav, live;
         
         public static Type fromString(String s) throws ServiceException {
             try {
@@ -94,7 +94,7 @@ public class DataSource extends NamedEntry {
     	String val = getAttr(Provisioning.A_zimbraDataSourceImportClassName, false);
 		if (val != null) {
 			try {
-				Object di = (DataImport)Class.forName(val).newInstance();
+				Object di = Class.forName(val).newInstance();
 				if (di instanceof DataImport)
 					return (DataImport) di;
 				else
