@@ -66,7 +66,7 @@ public class DeleteDataSource extends MailDocumentHandler {
             prov.deleteDataSource(account, dataSourceId);
             if (dstype == DataSource.Type.pop3)
                 DbPop3Message.deleteUids(mbox, dataSourceId);
-            else if (dstype == DataSource.Type.imap)
+            else if (dstype == DataSource.Type.imap || dstype == DataSource.Type.live)
                 DbImapFolder.deleteImapData(mbox, dataSourceId);
 
             DataSourceManager.updateSchedule(account.getId(), dataSourceId);

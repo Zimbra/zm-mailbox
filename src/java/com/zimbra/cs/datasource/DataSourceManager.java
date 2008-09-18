@@ -81,6 +81,8 @@ public class DataSourceManager {
         switch (ds.getType()) {
         case imap:
             return NEW_SYNC_ENABLED ? new ImapSync(ds) : new ImapImport(ds);
+        case live:
+            return new LiveImport(ds);
         case pop3:
             return NEW_SYNC_ENABLED ? new Pop3Sync(ds) : new Pop3Import(ds);
         default:
