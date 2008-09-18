@@ -474,9 +474,13 @@ for (Folder folder : remoteFolders) {
             ZimbraLog.datasource.debug("Found new remote message %d.  Creating local copy.", uid);
             if (date == null)
                 date = remoteMsg.getSentDate();
-            com.zimbra.cs.mailbox.Message m = addMessage(new ParsedMessage(
-                remoteMsg, date == null ? -1 : date.getTime(),
-                mbox.attachmentsIndexingEnabled()), folderId, flags);
+            
+            ParsedMessage pm = new ParsedMessage(remoteMsg, date == null ? -1 :
+                date.getTime(), mbox.attachmentsIndexingEnabled());
+            com.zimbra.cs.mailbox.Message m = ds.isOffline() ?
+                offlineAddMessage(pm, folderId, flags) :
+                mbox.addMessage(null, pm, folderId, true, flags, null);
+            
             if (m != null) {
                 try {
                     DbImapMessage.storeImapMessage(mbox, folderId, uid,
