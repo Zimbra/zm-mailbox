@@ -47,6 +47,7 @@ public class SQLite extends Db {
 
     @Override boolean supportsCapability(Db.Capability capability) {
         switch (capability) {
+            case AVOID_OR_IN_WHERE_CLAUSE:   return false;
             case BITWISE_OPERATIONS:         return true;
             case BOOLEAN_DATATYPE:           return true;
             case BROKEN_IN_CLAUSE:           return false;
@@ -140,8 +141,11 @@ public class SQLite extends Db {
             ZimbraLog.dbconn.info("reading custom sqlite pragmas from conf file: " + propsfile);
 
             Map<String, String> pragmas = new HashMap<String, String>(props.size() * 3 / 2);
-            for (Map.Entry<Object, Object> foo : props.entrySet())
-                pragmas.put((String) foo.getKey(), (String) foo.getValue());
+            for (Map.Entry<Object, Object> foo : props.entrySet()) {
+                String key = (String) foo.getKey(), value = (String) foo.getValue();
+                pragmas.put(key, value);
+                ZimbraLog.dbconn.info("  found custom pragma: '" + key + "' => '" + value + "'");
+            }
             return pragmas;
         } catch (FileNotFoundException x) {
             ZimbraLog.dbconn.info("no sqlite pragma conf file found; will use standard config");
