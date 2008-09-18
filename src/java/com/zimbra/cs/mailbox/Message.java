@@ -642,7 +642,7 @@ public class Message extends MailItem {
             ParsedMessage pm = null;
             synchronized (getMailbox()) {
                 // force the pm's received-date to be the correct one
-                pm = new ParsedMessage(getMimeMessage(), getDate(), getMailbox().attachmentsIndexingEnabled());
+                pm = new ParsedMessage(getMimeMessage(false), getDate(), getMailbox().attachmentsIndexingEnabled());
             }
             
             if (doConsistencyCheck) {
@@ -668,7 +668,7 @@ public class Message extends MailItem {
 
 
     public void reanalyze() throws ServiceException {
-        ParsedMessage pm = new ParsedMessage(getMimeMessage(), getDate(), getMailbox().attachmentsIndexingEnabled());
+        ParsedMessage pm = new ParsedMessage(getMimeMessage(false), getDate(), getMailbox().attachmentsIndexingEnabled());
         reanalyze(pm);
     }
 
