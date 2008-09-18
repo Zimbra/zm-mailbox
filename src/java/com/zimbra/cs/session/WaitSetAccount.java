@@ -18,6 +18,7 @@ package com.zimbra.cs.session;
 
 import java.lang.ref.SoftReference;
 
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.service.util.SyncToken;
 
 /**
@@ -33,12 +34,17 @@ public class WaitSetAccount {
     public WaitSetSession getSession() {
         if (ref != null) {
             WaitSetSession toRet = ref.get();
+            ZimbraLog.session.debug(toString()+" SoftReference has gone away, nulling it out");
             if (toRet == null)
                 ref = null;
             return toRet;
         } else
             return null;
     }
+    public String toString() {
+        return "WaitSetAccount("+accountId+")";
+    }
+    
     public String accountId;
     public int interests;
     
