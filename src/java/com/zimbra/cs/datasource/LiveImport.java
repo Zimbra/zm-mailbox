@@ -105,9 +105,6 @@ public class LiveImport extends MailItemImport {
                 null, ds.getFolderId());
             Folder[] remoteFolders = remoteRootFolder.list("*");
 
-for (Folder folder : remoteFolders) {
-    System.out.println("xxxxxxxxxxxxxx: "+folder.getFullName());
-}
             // Handle new remote folders and moved/renamed/deleted local folders
             for (Folder folder : remoteFolders) {
                 JDAVMailFolder remoteFolder = (JDAVMailFolder)folder;
