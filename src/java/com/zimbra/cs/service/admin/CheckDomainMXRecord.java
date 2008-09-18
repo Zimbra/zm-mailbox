@@ -39,8 +39,14 @@ public class CheckDomainMXRecord extends AdminDocumentHandler {
 	    String SMTPHost = domain.getAttr(Provisioning.A_zimbraDNSCheckHostname, true);
 	    String domainName = domain.getName();
 	    if(SMTPHost == null || SMTPHost.length()<1)
-	    	SMTPHost = domain.getAttr(Provisioning.A_zimbraSmtpHostname, true);
+	    	SMTPHost = domain.getAttr(Provisioning.A_zimbraSmtpHostname, false);
 
+	    if(SMTPHost == null || SMTPHost.length()<1)
+	    	SMTPHost = prov.getLocalServer().getAttr(Provisioning.A_zimbraSmtpHostname);
+	
+	    if(SMTPHost == null || SMTPHost.length()<1)
+	    	SMTPHost = prov.getConfig().getAttr(Provisioning.A_zimbraSmtpHostname);
+	    
 		if(SMTPHost == null || SMTPHost.length()<1)
 			SMTPHost = domain.getName();
 
@@ -113,7 +119,10 @@ public class CheckDomainMXRecord extends AdminDocumentHandler {
 	        	
 	        	response.addElement(AdminConstants.E_MESSAGE).addText(message);
 	        }
-		} catch (NamingException e) {
+		} catch (NameNotFoundException e) {
+			throw ServiceException.FAILURE("NameNotFoundException", e);
+		}
+		catch (NamingException e) {
 			// TODO Auto-generated catch block
 			throw ServiceException.FAILURE("Failed to verify domain's MX record", e);
 		}
