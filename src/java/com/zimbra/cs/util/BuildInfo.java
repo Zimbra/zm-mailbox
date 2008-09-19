@@ -61,15 +61,25 @@ public class BuildInfo {
     }
     
     public static class Version {
-        int mMajor;
-        int mMinor;
-        int mPatch;
+        
+        public static final String FUTURE = "future";
+        
+        private boolean mFuture;
+        private int mMajor;
+        private int mMinor;
+        private int mPatch;
         
         /**
          * 
          * @param version String in the format of <major number>.<minor number>.<patch number>
          */
         public Version(String version) throws ServiceException {
+            if (FUTURE.equalsIgnoreCase(version)) {
+                mFuture = true;
+                return;
+            }
+                
+            
             String[] parts = version.split("\\.");
             
             if (parts.length == 1)
@@ -122,6 +132,14 @@ public class BuildInfo {
          * @return a negative integer, zero, or a positive integer as this object is older than, equal to, or newer than the specified version.
          */
         public int compare(Version version) throws ServiceException  {
+            if (mFuture) {
+                if (version.mFuture)
+                    return 0;
+                else
+                    return 1;
+            } else if (version.mFuture)
+                return -1;
+            
             int r = mMajor - version.mMajor;
             if (r != 0)
                 return r;
