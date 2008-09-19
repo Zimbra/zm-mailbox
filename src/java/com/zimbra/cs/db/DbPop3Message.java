@@ -30,7 +30,6 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.db.DbPool.Connection;
-import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Mailbox;
 
 
@@ -51,14 +50,12 @@ public class DbPop3Message {
         try {
             conn = DbPool.getConnection(mbox);
 
-            String mailbox_id = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
             stmt = conn.prepareStatement(
                 "INSERT INTO " + getTableName(mbox) +
-                " (" + mailbox_id + "data_source_id, uid, item_id) " +
-                "VALUES (?, ?, ?, ?)");
+                " (" + DbMailItem.MAILBOX_ID + "data_source_id, uid, item_id) " +
+                "VALUES (" + DbMailItem.MAILBOX_ID_VALUE + "?, ?, ?)");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
             stmt.setString(pos++, dataSourceId);
             stmt.setString(pos++, uid);
             stmt.setInt(pos++, itemId);
@@ -88,8 +85,7 @@ public class DbPop3Message {
                 "DELETE FROM " + getTableName(mbox) +
                 " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "data_source_id = ?");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
             stmt.setString(pos++, dataSourceId);
             int numRows = stmt.executeUpdate();
             conn.commit();
@@ -126,8 +122,7 @@ public class DbPop3Message {
                     " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "data_source_id = ?" +
                     " AND uid IN " + DbUtil.suitableNumberOfVariables(curIds));
                 int pos = 1;
-                if (!DebugConfig.disableMailboxGroups)
-                    stmt.setInt(pos++, mbox.getId());
+                pos = DbMailItem.setMailboxId(stmt, mbox, pos);
                 stmt.setString(pos++, ds.getId());
                 for (String uid : curIds)
                     stmt.setString(pos++, uid);

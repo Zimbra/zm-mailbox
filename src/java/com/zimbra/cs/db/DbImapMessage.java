@@ -54,14 +54,12 @@ public class DbImapMessage {
         try {
             conn = DbPool.getConnection(mbox);
 
-            String mailbox_id = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
             stmt = conn.prepareStatement(
                 "INSERT INTO " + getTableName(mbox) +
-                " (" + mailbox_id + "imap_folder_id, uid, item_id, flags) " +
-                "VALUES (?, ?, ?, ?, ?)");
+                " (" + DbMailItem.MAILBOX_ID + "imap_folder_id, uid, item_id, flags) " +
+                "VALUES ("+DbMailItem.MAILBOX_ID_VALUE+"?, ?, ?, ?)");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, localFolderId);
             stmt.setLong(pos++, remoteUid);
             stmt.setInt(pos++, localItemId);
@@ -92,8 +90,7 @@ public class DbImapMessage {
                 " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "item_id = ?");
             int pos = 1;
             stmt.setLong(pos++, uid);
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, itemId);
             stmt.executeUpdate();
             conn.commit();
@@ -152,8 +149,7 @@ public class DbImapMessage {
                 " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "item_id = ?");
             int pos = 1;
             stmt.setInt(pos++, flags);
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, itemId);
             stmt.executeUpdate();
             conn.commit();
@@ -183,8 +179,7 @@ public class DbImapMessage {
                 "DELETE FROM " + getTableName(mbox) +
                 " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "imap_folder_id = ? AND item_id = ?");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, localFolderId);
             stmt.setInt(pos++, localItemId);
             stmt.executeUpdate();
@@ -214,8 +209,7 @@ public class DbImapMessage {
                 "DELETE FROM " + getTableName(mbox) +
                 " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "imap_folder_id = ?");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, localFolderId);
             stmt.executeUpdate();
             conn.commit();
@@ -246,8 +240,7 @@ public class DbImapMessage {
                 " FROM " + getTableName(mbox) +
                 " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "imap_folder_id = ? AND uid = ?");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, localFolderId);
             stmt.setLong(pos++, remoteUid);
             rs = stmt.executeQuery();
@@ -265,15 +258,18 @@ public class DbImapMessage {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
+        	String MBOX_JOIN = DebugConfig.disableMailboxGroups ? "" : "imap.mailbox_id = mi.mailbox_id AND";
+        	String IN_IMAP_MAILBOX_AND = DebugConfig.disableMailboxGroups ? "" : "imap.mailbox_id = ? AND";
             conn = DbPool.getConnection();
             stmt = conn.prepareStatement(
                 "SELECT imap.uid, imap.flags as tflags, imap.imap_folder_id, mi.unread, mi.flags " +
                 "FROM " + getTableName(mbox) + " imap " +
                 " LEFT OUTER JOIN " + DbMailItem.getMailItemTableName(mbox) + " mi " +
-                " ON imap.mailbox_id = mi.mailbox_id AND imap.item_id = mi.id " +
-                "WHERE imap.mailbox_id = ? AND imap.item_id = ?");
-            stmt.setInt(1, mbox.getId());
-            stmt.setInt(2, itemId);
+                " ON " +MBOX_JOIN+ " imap.item_id = mi.id " +
+                "WHERE " +IN_IMAP_MAILBOX_AND+ " imap.item_id = ?");
+            int pos = 1;
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
+            stmt.setInt(pos++, itemId);
             rs = stmt.executeQuery();
             if (rs.next()) {
                 long uid = rs.getLong("uid");
@@ -306,17 +302,18 @@ public class DbImapMessage {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
+        	String MBOX_JOIN = DebugConfig.disableMailboxGroups ? "" : "imap.mailbox_id = mi.mailbox_id AND";
+        	String IN_IMAP_MAILBOX_AND = DebugConfig.disableMailboxGroups ? "" : "imap.mailbox_id = ? AND";
             conn = DbPool.getConnection(mbox);
 
             stmt = conn.prepareStatement(
                 "SELECT imap.uid, imap.item_id, imap.flags as tflags, mi.unread, mi.flags " +
                 "FROM " + getTableName(mbox) + " imap " +
                 "  LEFT OUTER JOIN " + DbMailItem.getMailItemTableName(mbox) + " mi " +
-                "  ON imap.mailbox_id = mi.mailbox_id AND imap.item_id = mi.id " +
-                "WHERE imap.mailbox_id = ? AND imap.imap_folder_id = ?");
+                "  ON " +MBOX_JOIN+ " imap.item_id = mi.id " +
+                "WHERE " +IN_IMAP_MAILBOX_AND+ " imap.imap_folder_id = ?");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, imapFolder.getItemId());
             rs = stmt.executeQuery();
 
@@ -357,17 +354,18 @@ public class DbImapMessage {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
+        	String MBOX_JOIN = DebugConfig.disableMailboxGroups ? "" : "imap.mailbox_id = mi.mailbox_id AND";
+        	String IN_MI_MAILBOX_AND = DebugConfig.disableMailboxGroups ? "" : "mi.mailbox_id = ? AND";
             conn = DbPool.getConnection(mbox);
 
             stmt = conn.prepareStatement(
                 "SELECT id FROM " + DbMailItem.getMailItemTableName(mbox) + " mi " +
                 "  LEFT OUTER JOIN " + getTableName(mbox) + " imap " +
-                "  ON imap.mailbox_id = mi.mailbox_id AND imap.item_id = mi.id " +
-                "WHERE mi.mailbox_id = ? AND mi.folder_id = ? AND imap.item_id IS NULL " +
+                "  ON " +MBOX_JOIN+ " imap.item_id = mi.id " +
+                "WHERE " +IN_MI_MAILBOX_AND+ " mi.folder_id = ? AND imap.item_id IS NULL " +
                 "AND mi.type IN (" + MailItem.TYPE_MESSAGE + ", " + MailItem.TYPE_CHAT + ")");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos, folderId);
             rs = stmt.executeQuery();
 

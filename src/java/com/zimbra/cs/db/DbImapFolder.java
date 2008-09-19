@@ -27,7 +27,6 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.datasource.ImapFolder;
 import com.zimbra.cs.datasource.ImapFolderCollection;
 import com.zimbra.cs.db.DbPool.Connection;
-import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 
@@ -53,8 +52,7 @@ public class DbImapFolder {
                 " FROM " + getTableName(mbox) +
                 " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "data_source_id = ?");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
             stmt.setString(pos++, ds.getId());
             rs = stmt.executeQuery();
 
@@ -92,14 +90,12 @@ public class DbImapFolder {
         ZimbraLog.datasource.debug(
             "createImapFolder: itemId = %d, localPath = %s, remotePath = %s, uidValidity = %d",
             itemId, localPath, remotePath, uidValidity);
-            String mailbox_id = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
             stmt = conn.prepareStatement(
                 "INSERT INTO " + getTableName(mbox) +
-                " (" + mailbox_id + "item_id, data_source_id, local_path, remote_path, uid_validity) " +
-                "VALUES (?, ?, ?, ?, ?, ?)");
+                " (" + DbMailItem.MAILBOX_ID + "item_id, data_source_id, local_path, remote_path, uid_validity) " +
+                "VALUES ("+DbMailItem.MAILBOX_ID_VALUE+"?, ?, ?, ?, ?)");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, itemId);
             stmt.setString(pos++, ds.getId());
             stmt.setString(pos++, localPath);
@@ -137,8 +133,7 @@ public class DbImapFolder {
             stmt.setString(pos++, imapFolder.getLocalPath());
             stmt.setString(pos++, imapFolder.getRemotePath());
             stmt.setLong(pos++, imapFolder.getUidValidity());
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
             stmt.setString(pos++, imapFolder.getDataSourceId());
             stmt.setInt(pos++, imapFolder.getItemId());
             int numRows = stmt.executeUpdate();
@@ -177,8 +172,7 @@ public class DbImapFolder {
                 "DELETE FROM " + getTableName(mbox) +
                 " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "data_source_id = ?");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
             stmt.setString(pos++, dataSourceId);
             stmt.executeUpdate();
             conn.commit();
@@ -208,8 +202,7 @@ public class DbImapFolder {
                 "DELETE FROM " + getTableName(mbox) +
                 " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "data_source_id = ? and item_id = ?");
             int pos = 1;
-            if (!DebugConfig.disableMailboxGroups)
-                stmt.setInt(pos++, mbox.getId());
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
             stmt.setString(pos++, ds.getId());
             stmt.setInt(pos++, folder.getItemId());
             stmt.executeUpdate();
