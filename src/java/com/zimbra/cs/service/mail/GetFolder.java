@@ -101,20 +101,19 @@ public class GetFolder extends MailDocumentHandler {
 
     private void handleMountpoint(Element request, Map<String, Object> context, ItemId iidLocal, Mountpoint mpt, Element eRoot)
 	throws ServiceException, SoapFaultException {
-		ItemId iidRemote = new ItemId(mpt.getOwnerId(), mpt.getRemoteId());
-		Element proxied = proxyRequest(request, context, iidLocal, iidRemote);
+        ItemId iidRemote = new ItemId(mpt.getOwnerId(), mpt.getRemoteId());
+        Element proxied = proxyRequest(request, context, iidLocal, iidRemote);
         // return the children of the remote folder as children of the mountpoint
-		proxied = proxied.getOptionalElement(MailConstants.E_FOLDER);
-		if (proxied != null) {
-			eRoot.addAttribute(MailConstants.A_REST_URL, proxied.getAttribute(MailConstants.A_REST_URL, null));
-			eRoot.addAttribute(MailConstants.A_RIGHTS, proxied.getAttribute(MailConstants.A_RIGHTS, null));
+        proxied = proxied.getOptionalElement(MailConstants.E_FOLDER);
+        if (proxied != null) {
+            eRoot.addAttribute(MailConstants.A_REST_URL, proxied.getAttribute(MailConstants.A_REST_URL, null));
+            eRoot.addAttribute(MailConstants.A_RIGHTS, proxied.getAttribute(MailConstants.A_RIGHTS, null));
+
             for (Element eRemote : proxied.listElements()) {
-				// skip the <acl> element, if any
-				if (!eRemote.getName().equals(MailConstants.E_ACL))
-					eRoot.addElement(eRemote.detach());
-			}
-		}
-	}
+                eRoot.addElement(eRemote.detach());
+            }
+        }
+    }
     
     public static class FolderNode {
         public int mId;
