@@ -220,7 +220,7 @@ public class ProvUtil implements DebugListener {
         DELETE_IDENTITY("deleteIdentity", "did", "{name@domain|id} {identity-name}", Category.ACCOUNT, 2, 2),
         DELETE_SIGNATURE("deleteSignature", "dsig", "{name@domain|id} {signature-name}", Category.ACCOUNT, 2, 2),
         DELETE_SERVER("deleteServer", "ds", "{name|id}", Category.SERVER, 1, 1),
-        DELETE_XMPP_COMPONENT("deleteXMPPComponent", "dxc", "{name@domain}", Category.CONFIG, 1, 1),
+        DELETE_XMPP_COMPONENT("deleteXMPPComponent", "dxc", "{domain}", Category.CONFIG, 1, 1),
         EXIT("exit", "quit", "", Category.MISC, 0, 0),
         FLUSH_CACHE("flushCache", "fc", "{skin|locale|account|config|cos|domain|server|zimlet|<extension-cache-type>} [name1|id1 [name2|id2...]]", Category.MISC, 1, Integer.MAX_VALUE),
         GENERATE_DOMAIN_PRE_AUTH("generateDomainPreAuth", "gdpa", "{domain|id} {name} {name|id|foreignPrincipal} {timestamp|0} {expires|0}", Category.MISC, 5, 6),
