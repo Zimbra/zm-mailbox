@@ -3481,7 +3481,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>properties for data source</desc>
 </attr>
 
-<attr id="719" name="zimbraReverseProxyImapEnabledCapability" type="string" max="256" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="719" name="zimbraReverseProxyImapEnabledCapability" type="string" max="256" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.10">
   <globalConfigValue>IMAP4rev1</globalConfigValue>
   <globalConfigValue>ACL</globalConfigValue>
   <globalConfigValue>BINARY</globalConfigValue>
@@ -3511,7 +3511,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>NGINX reverse proxy imap capabilities</desc>
 </attr>
 
-<attr id="721" name="zimbraReverseProxyPop3EnabledCapability" type="string" max="256" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="721" name="zimbraReverseProxyPop3EnabledCapability" type="string" max="256" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.10">
   <globalConfigValue>TOP</globalConfigValue>
   <globalConfigValue>USER</globalConfigValue>
   <globalConfigValue>UIDL</globalConfigValue>
@@ -3520,115 +3520,115 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>NGINX reverse proxy pop3 capabilities</desc>
 </attr>
 
-<attr id="723" name="zimbraReverseProxyLogLevel" type="enum" value="debug,info,notice,warn,error,crit" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="723" name="zimbraReverseProxyLogLevel" type="enum" value="debug,info,notice,warn,error,crit" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.10">
   <globalConfigValue>info</globalConfigValue>
   <desc>Log level for NGINX Proxy error log</desc>
 </attr>
 
-<attr id="724" name="zimbraReverseProxyWorkerProcesses" type="integer" min="1" max="16" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="724" name="zimbraReverseProxyWorkerProcesses" type="integer" min="1" max="16" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.10">
   <globalConfigValue>4</globalConfigValue>
   <desc>Number of worker processes of NGINX Proxy</desc>
 </attr>
 
-<attr id="725" name="zimbraReverseProxyWorkerConnections" type="integer" min="1" max="40960" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="725" name="zimbraReverseProxyWorkerConnections" type="integer" min="1" max="40960" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.10">
   <globalConfigValue>10240</globalConfigValue>
   <desc>Maximum number of connections that an NGINX Proxy worker process is allowed to handle</desc>
 </attr>
 
-<attr id="726" name="zimbraReverseProxyUserThrottleMsg" type="string" cardinality="single" optionalIn="globalConfig">
+<attr id="726" name="zimbraReverseProxyUserThrottleMsg" type="string" cardinality="single" optionalIn="globalConfig" since="5.0.10">
   <globalConfigValue>Login rejected for this user</globalConfigValue>
   <desc>The error message with which a login attempt by a user will be throttled, if the attempt count exceeds the configured limit</desc>
 </attr>
 
-<attr id="727" name="zimbraReverseProxyIpThrottleMsg" type="string" cardinality="single" optionalIn="globalConfig">
+<attr id="727" name="zimbraReverseProxyIpThrottleMsg" type="string" cardinality="single" optionalIn="globalConfig" since="5.0.10">
   <globalConfigValue>Login rejected from this IP</globalConfigValue>
   <desc>The error message with which a connection attempt from an IP address will be throttled, if the connection count exceeds the configured limit</desc>
 </attr>
 
-<attr id="728" name="zimbraReverseProxyImapSaslPlainEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="728" name="zimbraReverseProxyImapSaslPlainEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.10">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>whether IMAP SASL PLAIN is enabled for reverse proxy</desc>
 </attr>
 
-<attr id="729" name="zimbraReverseProxyPop3SaslPlainEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="729" name="zimbraReverseProxyPop3SaslPlainEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.10">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>whether POP3 SASL PLAIN is enabled for reverse proxy</desc>
 </attr>
 
-<attr id="730" name="zimbraReverseProxyCacheReconnectInterval" type="duration" cardinality="single" optionalIn="globalConfig">
+<attr id="730" name="zimbraReverseProxyCacheReconnectInterval" type="duration" cardinality="single" optionalIn="globalConfig" since="5.0.10">
   <globalConfigValue>1m</globalConfigValue>
   <desc>time interval that NGINX proxy will wait before attempting to re-establish a connection to a memcache server that disconnected</desc>
 </attr>
 
-<attr id="731" name="zimbraReverseProxyCacheFetchTimeout" type="duration" cardinality="single" optionalIn="globalConfig">
+<attr id="731" name="zimbraReverseProxyCacheFetchTimeout" type="duration" cardinality="single" optionalIn="globalConfig" since="5.0.10">
   <globalConfigValue>3s</globalConfigValue>
   <desc>time interval that NGINX proxy will wait for a cache result, before considering the result as a cache miss</desc>
 </attr>
 
-<attr id="732" name="zimbraReverseProxyCacheEntryTTL" type="duration" cardinality="single" optionalIn="globalConfig">
+<attr id="732" name="zimbraReverseProxyCacheEntryTTL" type="duration" cardinality="single" optionalIn="globalConfig" since="5.0.10">
   <globalConfigValue>1h</globalConfigValue>
   <desc>time interval that an entry cached by NGINX will remain in the cache</desc>
 </attr>
 
-<attr id="735" name="zimbraReverseProxyInactivityTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="735" name="zimbraReverseProxyInactivityTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.10">
   <globalConfigValue>1h</globalConfigValue>
   <desc>Time interval after which NGINX mail proxy will disconnect an inactive IMAP/POP connection</desc>
 </attr>
 
-<attr id="736" name="zimbraReverseProxyPassErrors" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="736" name="zimbraReverseProxyPassErrors" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.10">
   <globalConfigValue>TRUE</globalConfigValue>
   <desc>whether NGINX mail proxy will pass upstream server errors back to the downstream email clients</desc>
 </attr>
 
-<attr id="737" name="zimbraXMPPComponentCategory" type="string" cardinality="single" requiredIn="xmppComponent">
+<attr id="737" name="zimbraXMPPComponentCategory" type="string" cardinality="single" requiredIn="xmppComponent" since="future">
   <desc>XMPP Category of the component</desc>
 </attr>
 
-<attr id="738" name="zimbraXMPPComponentType" type="string" cardinality="single" requiredIn="xmppComponent">
+<attr id="738" name="zimbraXMPPComponentType" type="string" cardinality="single" requiredIn="xmppComponent" since="future">
   <desc>XMPP Type of the component</desc>
 </attr>
 
-<attr id="739" name="zimbraXMPPComponentFeatures" type="string" cardinality="multi" optionalIn="xmppComponent">
+<attr id="739" name="zimbraXMPPComponentFeatures" type="string" cardinality="multi" optionalIn="xmppComponent" since="future">
   <desc>XMPP Type of the component</desc>
 </attr>
 
-<attr id="740" name="zimbraXMPPComponentName" type="string" cardinality="single" optionalIn="xmppComponent">
+<attr id="740" name="zimbraXMPPComponentName" type="string" cardinality="single" optionalIn="xmppComponent" since="future">
   <desc>Name of the XMPP Component</desc>
 </attr>
 
-<attr id="741" name="zimbraDomainId" type="id" cardinality="single" requiredIn="xmppComponent">
+<attr id="741" name="zimbraDomainId" type="id" cardinality="single" requiredIn="xmppComponent" since="future">
   <desc>ZimbraID of the domain that this component is registered under</desc>
 </attr>
 
-<attr id="742" name="zimbraServerId" type="id" cardinality="single" requiredIn="xmppComponent">
+<attr id="742" name="zimbraServerId" type="id" cardinality="single" requiredIn="xmppComponent" since="future">
   <desc>ZimbraID of the server that this component is running on</desc>
 </attr>  
 
-<attr id="743" name="zimbraAdminConsoleDNSCheckEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited">
+<attr id="743" name="zimbraAdminConsoleDNSCheckEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="5.0.10">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>enable MX check feature for domain</desc>
 </attr>
 
-<attr id="744" name="zimbraDNSCheckHostname"  type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable">
+<attr id="744" name="zimbraDNSCheckHostname"  type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="5.0.10">
    <desc>This attribute is used for DNS check by customers that configure their MX to point at spam relays or other non-zimbra inbox smtp servers</desc>
 </attr>
 
-<attr id="745" name="zimbraReverseProxyRouteLookupTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
+<attr id="745" name="zimbraReverseProxyRouteLookupTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="5.0.10">
   <globalConfigValue>15s</globalConfigValue>
   <desc>Time interval after which NGINX will fail over to the next route lookup handler, if a handler does not respond to the route lookup request within this time</desc>
 </attr>
 
-<attr id="746" name="zimbraAdminConsoleCatchAllAddressEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited">
+<attr id="746" name="zimbraAdminConsoleCatchAllAddressEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="5.0.10">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>whether to show catchall addresses in admin console</desc>
 </attr>
 
-<attr id="747" name="zimbraSmtpSendAddAuthenticatedUser" type="boolean" cardinality="single" optionalIn="globalConfig">
+<attr id="747" name="zimbraSmtpSendAddAuthenticatedUser" type="boolean" cardinality="single" optionalIn="globalConfig" since="5.0.10">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>If true, an X-Authenticated-User header will be added to messages sent via SendMsgRequest.</desc>
 </attr>
 
-<attr id="748" name="zimbraMailPurgeUseChangeDateForTrash" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="6.0">
+<attr id="748" name="zimbraMailPurgeUseChangeDateForTrash" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="future">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>
     If TRUE, a message is purged from trash based on the date that it was moved

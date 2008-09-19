@@ -14,11 +14,16 @@ public class TestBuildInfo extends TestCase {
         Version v2 = new Version("5.0.9");
         Version v3 = new Version("5.0.10");
         Version v4 = new Version("5.0");
+        Version future = new Version(Version.FUTURE);
         
         assertTrue(v1.compare(v2) > 0);
         assertTrue(v1.compare(v3) == 0);
         assertTrue(v2.compare(v1) < 0);
         assertTrue(v1.compare(v4) > 0);
+        
+        assertTrue(v1.compare(future) < 0);
+        assertTrue(future.compare(v1) > 0);
+        assertTrue(future.compare(future) == 0);
         
         assertTrue(Version.compare("5.0.10", "5.0.9") > 0);
         assertTrue(Version.compare("5.0.9", "5.0.10") < 0);
