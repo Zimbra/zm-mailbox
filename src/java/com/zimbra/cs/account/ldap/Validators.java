@@ -96,10 +96,7 @@ public class Validators {
     @SuppressWarnings("unchecked")
     private static class DomainMaxAccountsValidator implements ProvisioningValidator {
         
-        private LdapDIT mDIT = null;
         public void validate(LdapProvisioning prov, String action, Object arg) throws ServiceException {
-            if (mDIT == null)
-                mDIT = new LdapDIT(prov);
             
             if (!(arg instanceof Object[]))
                 return;
@@ -117,6 +114,9 @@ public class Validators {
             HashMap<String,Integer> featureLimitMap = new HashMap<String,Integer>();
 
             String emailAddress = (String) args[0];
+            if (emailAddress == null)
+                return;
+
             Map<String, Object> attrs = (Map) args[1];
             Account account = null;
             if (args.length == 3)
@@ -154,8 +154,8 @@ public class Validators {
             Set<String> desiredFeatures = new HashSet<String>();
             for (Map.Entry<String,Object> entry : attrs.entrySet()) {
                 String k = entry.getKey();
-                if (k.startsWith("zimbraFeature") && k.endsWith("Enabled")) {
-                    if ("true".equalsIgnoreCase(entry.getValue().toString()))
+                if (featureLimitMap.containsKey(k)
+                        && "true".equalsIgnoreCase(entry.getValue().toString())) {
                         desiredFeatures.add(k);
                 }
             }
@@ -164,19 +164,18 @@ public class Validators {
                 originalCosId = account.getAttr(Provisioning.A_zimbraCOSId);
             if (desiredFeatures.size() > 0) {
                 if (account != null) {
-                    Map<String, Object> acctAttrs = account.getAttrs();
+                    Map<String, Object> acctAttrs = account.getAttrs(false);
                     for (Iterator<String> i = desiredFeatures.iterator() ; i.hasNext(); ) {
                         String feature = i.next();
-                        if (acctAttrs.containsKey(feature)) // should we check for "TRUE" also?
-                            i.remove();
-                        else if (!featureLimitMap.containsKey(feature))
+                        if (acctAttrs.containsKey(feature)
+                                && "true".equalsIgnoreCase(acctAttrs.get(feature).toString()))
                             i.remove();
                     }
                 }
             }
             if ((desiredCosId != null && !desiredCosId.equals(originalCosId)
                     && cosLimitMap.containsKey(desiredCosId)) || desiredFeatures.size() > 0) {
-                buildDomainCounts(domainName, defaultCosId, cosCountMap, featureCountMap);
+                buildDomainCounts(prov, domainName, defaultCosId, cosCountMap, featureCountMap);
                 if (desiredCosId != null && !desiredCosId.equals(originalCosId)
                         && cosLimitMap.containsKey(desiredCosId)) {
                     if (cosCountMap.containsKey(desiredCosId)
@@ -215,7 +214,7 @@ public class Validators {
         }
         
         // mostly pawned off from LdapProvisioning.countAccounts(domain)
-        private void buildDomainCounts(String domain, String defaultCos,
+        private void buildDomainCounts(LdapProvisioning prov, String domain, String defaultCos,
                 Map<String,Integer> cosCount, Map<String,Integer> featureCount)
         throws ServiceException {
             String query = LdapFilter.allNonSystemAccounts();
@@ -230,7 +229,7 @@ public class Validators {
 
                 NamingEnumeration<SearchResult> ne = null;
 
-                String dn = mDIT.domainToAccountSearchDN(domain);
+                String dn = prov.getDIT().domainToAccountSearchDN(domain);
                 int pageSize = 1000;
                 byte[] cookie = null;
                 do {

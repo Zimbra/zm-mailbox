@@ -207,6 +207,10 @@ public class LdapProvisioning extends Provisioning {
         mDIT = new LdapDIT(this);
     }
     
+    LdapDIT getDIT() { // package access until it needs to be promoted.
+        return mDIT;
+    }
+    
     /*
      * Contains parallel arrays of old addrs and new addrs as a result of domain change
      */
@@ -287,7 +291,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             if (zlc == null)
                 zlc = new ZimbraLdapContext(true);
-            if (entry instanceof Account) {
+            if (entry instanceof Account && !(entry instanceof CalendarResource)) {
                 Account acct = (Account) entry;
                 validate("modifyAccountCheckDomainCosAndFeature", new Object[] {
                         acct.getAttr(A_zimbraMailDeliveryAddress), attrs, acct });
