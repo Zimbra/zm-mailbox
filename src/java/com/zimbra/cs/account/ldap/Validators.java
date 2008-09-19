@@ -16,6 +16,7 @@
  */
 package com.zimbra.cs.account.ldap;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -229,37 +230,46 @@ public class Validators {
 
                 NamingEnumeration<SearchResult> ne = null;
 
-                try {
-                    String dn = mDIT.domainToAccountSearchDN(domain);
-                    ne = zlc.searchDir(dn, query, searchControls);
-                    while (ne != null && ne.hasMore()) {
-                        SearchResult sr = ne.nextElement();
-                        dn = sr.getNameInNamespace();
-                        // skip admin accounts
-                        if (dn.endsWith("cn=zimbra")) continue;
-                        Attributes attrs = sr.getAttributes();
-                        Attribute objectclass = attrs.get("objectclass");
-                        if (objectclass.contains("zimbraAccount")) {
-                            String cosId = defaultCos;
-                            Attribute cosIdAttr = attrs.get("zimbraCOSId");
-                            if (cosIdAttr != null)
-                                cosId = (String) cosIdAttr.get();
-                            incrementCount(cosCount, cosId);
-                            
-                            NamingEnumeration<? extends Attribute> e = attrs.getAll();
-                            while (e.hasMore()) {
-                                Attribute at = e.next();
-                                String name = at.getID();
-                                if (name.startsWith("zimbraFeature") && name.endsWith("Enabled"))
-                                    incrementCount(featureCount, name);
+                String dn = mDIT.domainToAccountSearchDN(domain);
+                int pageSize = 1000;
+                byte[] cookie = null;
+                do {
+                    try {
+                        zlc.setPagedControl(pageSize, cookie, true);
+                        ne = zlc.searchDir(dn, query, searchControls);
+                        while (ne != null && ne.hasMore()) {
+                            SearchResult sr = ne.nextElement();
+                            dn = sr.getNameInNamespace();
+                            // skip admin accounts
+                            if (dn.endsWith("cn=zimbra")) continue;
+                            Attributes attrs = sr.getAttributes();
+                            Attribute objectclass = attrs.get("objectclass");
+                            if (objectclass.contains("zimbraAccount")) {
+                                String cosId = defaultCos;
+                                Attribute cosIdAttr = attrs.get("zimbracosid");
+                                if (cosIdAttr != null)
+                                    cosId = (String) cosIdAttr.get();
+                                incrementCount(cosCount, cosId);
+
+                                NamingEnumeration<? extends Attribute> e = attrs.getAll();
+                                while (e.hasMore()) {
+                                    Attribute at = e.next();
+                                    String name = at.getID();
+                                    if (name.toLowerCase().startsWith("zimbrafeature")
+                                            && name.toLowerCase().endsWith("enabled"))
+                                        incrementCount(featureCount, name);
+                                }
                             }
                         }
+                    } finally {
+                        if (ne != null) ne.close();
                     }
-                } finally {
-                    if (ne != null) ne.close();
-                }
+                    cookie = zlc.getCookie();
+                } while (cookie != null);
             } catch (NamingException e) {
                 throw ServiceException.FAILURE("unable to count the users", e);
+            } catch (IOException e) {
+                throw ServiceException.FAILURE("unable to count all the users", e);
             } finally {
                 ZimbraLdapContext.closeContext(zlc);
             }
