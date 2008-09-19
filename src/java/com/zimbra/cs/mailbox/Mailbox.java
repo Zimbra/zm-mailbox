@@ -6182,6 +6182,19 @@ public class Mailbox {
         }
     }
 
+    public synchronized void setSyncDate(OperationContext octxt, int folderId, long date) throws ServiceException {
+        SetSubscriptionData redoRecorder = new SetSubscriptionData(mId, folderId, date, null);
+
+        boolean success = false;
+        try {
+            beginTransaction("setSyncDate", octxt, redoRecorder);
+            getFolderById(folderId).setSyncDate(date);
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
     public synchronized void emptyFolder(OperationContext octxt, int folderId, boolean removeSubfolders)
     throws ServiceException {
         EmptyFolder redoRecorder = new EmptyFolder(mId, folderId, removeSubfolders);

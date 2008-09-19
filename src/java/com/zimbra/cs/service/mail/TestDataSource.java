@@ -97,14 +97,27 @@ public class TestDataSource extends MailDocumentHandler {
         // the DataSource is saved.
         testAttrs.put(Provisioning.A_zimbraDataSourcePassword, DataSource.encryptData(testId, password));
         
+        // import class
+        value = eDataSource.getAttribute(MailConstants.A_DS_IMPORT_CLASS, DataSource.getDefaultImportClass(type));
+        if (value != null) {
+        	testAttrs.put(Provisioning.A_zimbraDataSourceImportClassName, value);
+        }
+        
+        // Common optional attributes
+        ModifyDataSource.processCommonOptionalAttrs(testAttrs, eDataSource);
+        
         // Perform test and assemble response
         DataSource ds = new DataSource(account, type, "Test", testId, testAttrs);
         Element response = zsc.createElement(MailConstants.TEST_DATA_SOURCE_RESPONSE);
+        
+        /*
         if (type == DataSource.Type.imap) {
             eDataSource = response.addElement(MailConstants.E_DS_IMAP);
         } else {
             eDataSource = response.addElement(MailConstants.E_DS_POP3);
         }
+        */
+        eDataSource = response.addElement(type.toString());
         
         String error = DataSourceManager.test(ds);
         if (error == null) {

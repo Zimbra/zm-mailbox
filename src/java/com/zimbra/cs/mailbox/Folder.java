@@ -150,6 +150,14 @@ public class Folder extends MailItem {
         return mSyncData == null ? null : new SyncData(mSyncData);
     }
 
+    /**
+     * Returns the date the folder was last sync'ed from external
+     * data source.
+     */
+    public long getLastSyncDate() {
+        return mSyncData == null ? 0 : mSyncData.lastDate;
+    }
+    
     /** Returns the last assigned item ID in the enclosing Mailbox the last
      *  time the folder was accessed via a read/write IMAP session.  If there
      *  is such a session already active, returns the last item ID in the
@@ -731,6 +739,20 @@ public class Folder extends MailItem {
         saveMetadata();
     }
 
+    void setSyncDate(long date) throws ServiceException {
+        if (!isMutable())
+            throw MailServiceException.IMMUTABLE_OBJECT(mId);
+        if (!canAccess(ACL.RIGHT_WRITE))
+            throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
+
+        markItemModified(Change.MODIFIED_URL);
+        if (mSyncData == null)
+        	mSyncData = new SyncData(null, null, date);
+        else
+        	mSyncData.lastDate = date;
+        saveMetadata();
+    }
+    
     private void recursiveAlterUnread(boolean unread) throws ServiceException {
         alterUnread(unread);
         if (mSubfolders != null)
@@ -1067,8 +1089,8 @@ public class Folder extends MailItem {
         mImapMODSEQ  = (int) meta.getLong(Metadata.FN_MODSEQ, 0);
         mImapRECENT  = (int) meta.getLong(Metadata.FN_RECENT, 0);
 
-        if (meta.containsKey(Metadata.FN_URL))
-            mSyncData = new SyncData(meta.get(Metadata.FN_URL), meta.get(Metadata.FN_SYNC_GUID, null), meta.getLong(Metadata.FN_SYNC_DATE, 0));
+        if (meta.containsKey(Metadata.FN_URL) || meta.containsKey(Metadata.FN_SYNC_DATE))
+            mSyncData = new SyncData(meta.get(Metadata.FN_URL, null), meta.get(Metadata.FN_SYNC_GUID, null), meta.getLong(Metadata.FN_SYNC_DATE, 0));
 
         MetadataList mlistACL = meta.getList(Metadata.FN_RIGHTS, true);
         if (mlistACL != null) {
@@ -1105,9 +1127,9 @@ public class Folder extends MailItem {
         if (fsd != null && fsd.url != null && !fsd.url.equals("")) {
             meta.put(Metadata.FN_URL, fsd.url);
             meta.put(Metadata.FN_SYNC_GUID, fsd.lastGuid);
-            if (fsd.lastDate > 0)
-                meta.put(Metadata.FN_SYNC_DATE, fsd.lastDate);
         }
+        if (fsd != null && fsd.lastDate > 0)
+            meta.put(Metadata.FN_SYNC_DATE, fsd.lastDate);
         return MailItem.encodeMetadata(meta, color, version);
     }
 

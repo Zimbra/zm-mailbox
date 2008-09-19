@@ -28,6 +28,7 @@ import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthPolicy;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
+import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -115,17 +116,39 @@ public class WebDavClient {
 		}
 	}
 	
-	protected HttpMethod execute(DavRequest req) throws IOException, DavException {
+	public byte[] sendGet(String href) throws IOException {
+		GetMethod get = new GetMethod(mBaseUrl + href);
+		try {
+			executeMethod(get, Depth.one);
+			byte[] buf = get.getResponseBody();
+			if (ZimbraLog.dav.isDebugEnabled())
+				ZimbraLog.dav.debug("WebDAV response:\n"+new String(buf, "UTF-8"));
+			return buf;
+		} finally {
+			if (get != null)
+				get.releaseConnection();
+		}
+	}
+	
+	protected HttpMethod execute(DavRequest req) throws IOException {
 		final String methodString = req.getMethod();
     	PostMethod m = new PostMethod(mBaseUrl + req.getUri()) {
     		public String getName() {
     			return methodString;
     		}
     	};
+		byte[] buf = DomUtil.getBytes(req.getRequestMessage());
+		if (ZimbraLog.dav.isDebugEnabled())
+			ZimbraLog.dav.debug("WebDAV request:\n"+new String(buf, "UTF-8"));
+		ByteArrayRequestEntity re = new ByteArrayRequestEntity(buf, "text/xml");
+		m.setRequestEntity(re);
+		return executeMethod(m, req.getDepth());
+	}
+	protected HttpMethod executeMethod(HttpMethod m, Depth d) throws IOException {
 		m.setDoAuthentication(true);
 		m.setRequestHeader("User-Agent", mUserAgent);
 		String depth = "0";
-		switch (req.getDepth()) {
+		switch (d) {
 		case one:
 			depth = "1";
 			break;
@@ -134,11 +157,6 @@ public class WebDavClient {
 			break;
 		}
 		m.setRequestHeader("Depth", depth);
-		byte[] buf = DomUtil.getBytes(req.getRequestMessage());
-		if (ZimbraLog.dav.isDebugEnabled())
-			ZimbraLog.dav.debug("WebDAV request:\n"+new String(buf, "UTF-8"));
-		ByteArrayRequestEntity re = new ByteArrayRequestEntity(buf, "text/xml");
-		m.setRequestEntity(re);
 		mClient.executeMethod(m);
 
         return m;

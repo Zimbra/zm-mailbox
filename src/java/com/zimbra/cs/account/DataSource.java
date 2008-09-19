@@ -37,6 +37,7 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.datasource.CalDavDataImport;
 import com.zimbra.cs.datasource.ImapFolder;
 import com.zimbra.cs.datasource.ImapFolderCollection;
 import com.zimbra.cs.datasource.SyncState;
@@ -90,11 +91,20 @@ public class DataSource extends NamedEntry {
             throws ServiceException;
     }
     
+
+    public static String getDefaultImportClass(Type ds) {
+    	switch (ds) {
+    	case caldav:
+    		return CalDavDataImport.class.getName();
+    	}
+    	return null;
+    }
+    
     public DataImport getDataImport() {
     	String val = getAttr(Provisioning.A_zimbraDataSourceImportClassName, false);
 		if (val != null) {
 			try {
-				Object di = Class.forName(val).newInstance();
+				Object di = (DataImport)Class.forName(val).getConstructor(DataSource.class).newInstance(this);
 				if (di instanceof DataImport)
 					return (DataImport) di;
 				else

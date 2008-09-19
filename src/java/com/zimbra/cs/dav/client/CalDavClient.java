@@ -97,6 +97,12 @@ public class CalDavClient extends WebDavClient {
 		return etags;
 	}
 	
+	public Appointment getCalendarData(Appointment appt) throws IOException, DavException {
+		byte[] res = sendGet(appt.href);
+		appt.data = new String(res, "UTF-8");
+		return appt;
+	}
+	
 	public Collection<Appointment> getCalendarData(String url, Collection<Appointment> hrefs) throws IOException, DavException {
 		ArrayList<Appointment> appts = new ArrayList<Appointment>();
 		
