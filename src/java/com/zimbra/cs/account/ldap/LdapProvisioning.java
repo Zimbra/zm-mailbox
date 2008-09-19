@@ -200,6 +200,10 @@ public class LdapProvisioning extends Provisioning {
         mDIT = new LdapDIT(this);
     }
     
+    LdapDIT getDIT() { // package access until it needs to be promoted.
+        return mDIT;
+    }
+    
     /*
      * Contains parallel arrays of old addrs and new addrs as a result of domain change
      */
@@ -278,6 +282,11 @@ public class LdapProvisioning extends Provisioning {
             throws ServiceException {
         ZimbraLdapContext zlc = initZlc;
         try {
+            if (entry instanceof Account && !(entry instanceof CalendarResource)) {
+                Account acct = (Account) entry;
+                validate("modifyAccountCheckDomainCosAndFeature", new Object[] {
+                        acct.getAttr(A_zimbraMailDeliveryAddress), attrs, acct });
+            }
             if (zlc == null)
                 zlc = new ZimbraLdapContext(true);
             LdapUtil.modifyAttrs(zlc, ((LdapEntry)entry).getDN(), attrs, entry);
@@ -645,6 +654,8 @@ public class LdapProvisioning extends Provisioning {
         String parts[] = emailAddress.split("@");
         if (parts.length != 2)
             throw ServiceException.INVALID_REQUEST("must be valid email address: "+emailAddress, null);
+ 
+    	validate("createAccountCheckDomainCosAndFeature", new Object[] { emailAddress, acctAttrs });
             
         String localPart = parts[0];
         String domain = parts[1];
