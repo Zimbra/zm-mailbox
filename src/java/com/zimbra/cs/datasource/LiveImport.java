@@ -292,8 +292,7 @@ for (Folder folder : remoteFolders) {
                     imapFolder.getRemotePath(), imapFolder.getLocalPath());
                 if (imapFolder.getUidValidity() != 0) {
                     try {
-                        for (int i = 0; i < 3; ++i) //at most run 3 times on a single folder import to prevent a dead loop
-                            if (importFolder(imapFolder)) break;
+                        importFolder(imapFolder);
                     } catch (MessagingException e) {
                         ZimbraLog.datasource.warn("An error occurred while importing folder %s", imapFolder.getRemotePath(), e);
                     } catch (ServiceException e) {
@@ -381,7 +380,7 @@ for (Folder folder : remoteFolders) {
         }
     }
 
-    private boolean importFolder(final ImapFolder trackedFolder)
+    private void importFolder(final ImapFolder trackedFolder)
         throws MessagingException, IOException, ServiceException {
         JDAVMailFolder remoteFolder = (JDAVMailFolder)store.getFolder(
             trackedFolder.getRemotePath());
@@ -390,7 +389,7 @@ for (Folder folder : remoteFolders) {
         } catch (ReadOnlyFolderException e) {
             ZimbraLog.datasource.info("Unable to open folder %s for write.  Skipping this folder.",
                 remoteFolder.getFullName());
-            return true;
+            return;
         }
 
         DataSource ds = getDataSource();
@@ -495,7 +494,6 @@ for (Folder folder : remoteFolders) {
             }
         }
         // Remaining local ID's are messages that were not found on the remote server
-        boolean runAgain = false;
         for (int localId : localIds) {
             if (trackedMsgs.containsItemId(localId)) {
                 ZimbraLog.datasource.debug("Message %d was deleted remotely.  Deleting local copy.", localId);
@@ -509,29 +507,19 @@ for (Folder folder : remoteFolders) {
                 MimeMessage mimeMsg = localMsg.getMimeMessage(false);
                 int flags = localMsg.getFlagBitmask();
                 setFlags(mimeMsg, flags);
-/*
-                AppendUID[] newUids = remoteFolder.appendUIDMessages(new MimeMessage[] { mimeMsg });
-                assert newUids != null && newUids.length == 1;
-                long uid = newUids[0] != null ? newUids[0].uid : -localId;
+                String[] newUids = remoteFolder.appendUIDMessages(new MimeMessage[] { mimeMsg });
+                assert newUids != null && newUids.length == 1 && newUids[0] != null;
                 numAddedRemotely++;
-                // If no UID returned by APPEND, then store the message locally with a negative UID.
-                // When we sync again we will calculate the checksum of remote message and use that
-                // to find the corresponding local entry and update the UID with the correct value.
-                DbImapMessage.storeImapMessage(mbox, folderId, uid, localId, flags);
-                if (uid < 0) {
-                    runAgain = true; // Sync this folder again since APPEND did not give back a UID
-                }
-*/
+                DbImapMessage.storeImapMessage(mbox, folderId,
+                    newUids[0].hashCode(), localId, flags);
             }
         }
         remoteFolder.close(true);
         ZimbraLog.datasource.debug(
             "Import of %s completed.  Matched: %d, updated: %d, added locally: %d, " +
-            "deleted locally: %d, added remotely: %d, deleted remotely: %d.%s",
+            "deleted locally: %d, added remotely: %d, deleted remotely: %d",
             remoteFolder.getFullName(), numMatched, numUpdated, numAddedLocally,
-            numDeletedLocally, numAddedRemotely, numDeletedRemotely, runAgain ? " Rerun import." : "");
-        
-        return !runAgain;
+            numDeletedLocally, numAddedRemotely, numDeletedRemotely);
     }
 
     private void setFlags(Message msg, int newFlags) throws MessagingException {
