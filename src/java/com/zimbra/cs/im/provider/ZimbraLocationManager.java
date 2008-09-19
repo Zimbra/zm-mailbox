@@ -91,10 +91,12 @@ public class ZimbraLocationManager implements LocationManager {
         String serverId = Provisioning.getInstance().getLocalServer().getId();
         for (XMPPComponent component : getCloudComponents()) {
             if (serverId.equals(component.getServerId())) {
-                try {
-                    toRet.add(fromXMPPComponent(component));
-                } catch (ServiceException ex) {
-                    ZimbraLog.im.warn("Exception in XMPP Component configuration data for: "+component, ex);
+                if (componentType==null || componentType.equals(component.getComponentType())) {
+                    try {
+                        toRet.add(fromXMPPComponent(component));
+                    } catch (ServiceException ex) {
+                        ZimbraLog.im.warn("Exception in XMPP Component configuration data for: "+component, ex);
+                    }
                 }
             }
         }
@@ -139,22 +141,7 @@ public class ZimbraLocationManager implements LocationManager {
     
     public static ZimbraLocationManager getInstance() { return sInstance; }
     
-    private ZimbraLocationManager() {
-//        CloudComponentIdentifier id = new CloudComponentIdentifier();
-//        id.serviceName = "Conference";
-//        id.serviceDomain = "conf.timsmac2.liquidsys.com";
-//        id.serverName = "timsmac2.liquidsys.com";
-//        id.category = "conference";
-//        id.type = "text";
-//        
-//        List<String> features = new ArrayList<String>();
-//        features.add("http://jabber.org/protocol/muc");
-//        features.add("http://jabber.org/protocol/disco#info");
-//        features.add("http://jabber.org/protocol/disco#items");
-//        id.features = features;
-//        
-//        mGlobalComponentList.add(id);
-    }
+    private ZimbraLocationManager() { }
     
     public boolean isLocal(String username) throws UserNotFoundException {
         return isLocal(new JID(username));

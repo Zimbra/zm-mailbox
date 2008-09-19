@@ -40,7 +40,7 @@ public class XMPPComponent extends NamedEntry implements Comparable {
                                            name+"\" must be a subdomain of domain \""+domainName+
                                            "\"", null);
         }
-        String toRet = name.substring(0, name.length() - domainName.length());
+        String toRet = name.substring(0, (name.length() - domainName.length())-1);
         return toRet;
     }
     
