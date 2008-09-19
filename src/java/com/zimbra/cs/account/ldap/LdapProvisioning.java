@@ -289,13 +289,13 @@ public class LdapProvisioning extends Provisioning {
             throws ServiceException {
         ZimbraLdapContext zlc = initZlc;
         try {
-            if (zlc == null)
-                zlc = new ZimbraLdapContext(true);
             if (entry instanceof Account && !(entry instanceof CalendarResource)) {
                 Account acct = (Account) entry;
                 validate("modifyAccountCheckDomainCosAndFeature", new Object[] {
                         acct.getAttr(A_zimbraMailDeliveryAddress), attrs, acct });
             }
+            if (zlc == null)
+                zlc = new ZimbraLdapContext(true);
             LdapUtil.modifyAttrs(zlc, ((LdapEntry)entry).getDN(), attrs, entry);
             refreshEntry(entry, zlc, this);
         } catch (InvalidAttributeIdentifierException e) {
