@@ -1,14 +1,21 @@
 package com.zimbra.qa.unittest;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.httpclient.Credentials;
+import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpState;
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.commons.httpclient.methods.GetMethod;
 
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -23,29 +30,40 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.AuthProviderException;
+import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.zclient.ZFolder;
+import com.zimbra.cs.zclient.ZGrant;
 import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.cs.zclient.ZMountpoint;
 import com.zimbra.cs.zclient.ZSearchParams;
 
 /*
-set in localconfig.xml:
- 
+ * To test key grant:
+ * 
+ * 1. In com.zimbra.cs.service.AuthProvider, uncomment 
+ *    // register(new com.zimbra.qa.unittest.TestAccessKeyGrant.DummyAuthProvider());
+ *    
+ * 2. In /opt/zimbra/conf/localconfig.xml, set: 
 <key name="zimbra_auth_provider">
     <value>DUMMY_AUTH_PROVIDER</value>
 </key>
 
+ *
 */
 
 public class TestAccessKeyGrant extends TestCase {
 
     private static final String DUMMY_AUTH_PROVIDER = "DUMMY_AUTH_PROVIDER";
     private static final String OWNER_NAME = "user1";
+    private static final String USER_GRANTEE_NAME = "user3";
     private static final String ACCESS_KEY = "b931d99fc5dc7e8061a97d90e05e3256";
     
     private static final String AUTH_K_ATTR = "K";
     private static final String AUTH_H_ATTR = "H";
+    
+    private static final String FOLDER_PATH = "Calendar";
     
     public static class DummyAuthProvider extends AuthProvider {
 
@@ -221,14 +239,28 @@ public class TestAccessKeyGrant extends TestCase {
 
     }
     
-    private String getAccountId(String acctName) throws ServiceException {
+    /*
+     * ====================
+     *     util methods
+     * ====================
+     */
+    private Account getAccount(String acctName) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Account acct = prov.get(AccountBy.name, acctName);
         assertNotNull(acct);
-        return acct.getId();
+        return acct;
     }
     
-    private ZMailbox getZMailbox() throws Exception {
+    private String getAccountId(String acctName) throws ServiceException {
+        return getAccount(acctName).getId();
+    }
+    
+    private String getRestUrl(String acctName) throws ServiceException {
+        return UserServlet.getRestUrl(getAccount(acctName));
+    }
+    
+    
+    private ZMailbox getZMailboxByKey() throws Exception {
         Map<String,String> authAttrs = new HashMap<String, String>();
         authAttrs.put(AUTH_K_ATTR, ACCESS_KEY);
         authAttrs.put(AUTH_H_ATTR, getAccountId(OWNER_NAME));
@@ -238,9 +270,32 @@ public class TestAccessKeyGrant extends TestCase {
         return ZMailbox.getMailbox(options);
     }
     
-    public void testKeyGrant() throws Exception {
-        ZMailbox mbox = getZMailbox();
-        // ZFolder folder = mbox.getFolderByPath("Calendar");
+    private void dumpGrants(ZMailbox mbox, String folderId) throws Exception {
+        ZFolder folder = mbox.getFolderRequestById(folderId);
+        
+        System.out.println("--------------------");
+        System.out.println(mbox.getName() + ", folder=" + folderId);
+        List<ZGrant> grants = folder.getGrants();
+        for (ZGrant grant : grants) {
+            System.out.println("    type: " + grant.getGranteeType().toString());
+            System.out.println("    id: " + grant.getGranteeId());
+            System.out.println("    name: " + grant.getGranteeName());
+            System.out.println("    rights: " + grant.getPermissions());
+            
+            if (grant.getGranteeType() == ZGrant.GranteeType.key)
+                System.out.println("    accesskey: " + grant.getArgs());
+            else if (grant.getGranteeType() == ZGrant.GranteeType.guest)
+                System.out.println("    password: " + grant.getArgs());
+            else
+                assertNull(grant.getArgs());
+            
+            System.out.println();
+        }
+    }
+    
+    public void disable_testKeyGrant() throws Exception {
+        ZMailbox mbox = getZMailboxByKey();
+        // ZFolder folder = mbox.getFolderByPath(FOLDER_PATH);
         
         StringBuffer query = new StringBuffer();
         query.append("(inid:");
@@ -251,6 +306,89 @@ public class TestAccessKeyGrant extends TestCase {
         sp.setTypes(ZSearchParams.TYPE_APPOINTMENT);
         mbox.search(sp);
     }
+    
+    /*
+     * ensure the accesskey is return in getFolderRequest
+     */
+    public void testGetFolderRequest() throws Exception {
+        ZMailbox ownerMbox = TestUtil.getZMailbox(OWNER_NAME);
+        ZMailbox granteeMbox = TestUtil.getZMailbox(USER_GRANTEE_NAME);
+        
+        // grant USER_GRANTEE_NAME full access to a folder
+        String mointpointPath = OWNER_NAME + "'s "  + FOLDER_PATH;
+        
+        /*
+        ZMountpoint mt = TestUtil.createMountpoint(ownerMbox, FOLDER_PATH,
+                                                   granteeMbox, mointpointPath);
+        */
+        
+        // grant key access to the mountpoint
+        /*
+        ZFolder mtFolder = granteeMbox.getFolderByPath(mointpointPath);
+        granteeMbox.modifyFolderGrant(mtFolder.getId(), ZGrant.GranteeType.key, "a key grantee", "r", null);
+        */
+        
+        // TO BE CLEANED UP...
+        
+        // dumpGrants(ownerMbox, FOLDER_PATH);
+        // dumpGrants(granteeMbox, mointpointPath);
+        // dumpGrants(granteeMbox, "Demo User One's Calendar (admin)");
+        // dumpGrants(granteeMbox, "/");
+        dumpGrants(TestUtil.getZMailbox("user2"), "259");
+        dumpGrants(TestUtil.getZMailbox("user4"), "258");
+    }
+    
+    public void disable_testCalendarGet() throws Exception {
+        
+        HttpState initialState = new HttpState();
+        
+        /*
+        Cookie authCookie = new Cookie(restURL.getURL().getHost(), "ZM_AUTH_TOKEN", mAuthToken, "/", null, false);
+        Cookie sessionCookie = new Cookie(restURL.getURL().getHost(), "JSESSIONID", mSessionId, "/zimbra", null, false);
+        initialState.addCookie(authCookie);
+        initialState.addCookie(sessionCookie);
+        */
+        
+        // If <guest> or <password> are used, then we must guest authenticate
+        //
+        String guestName = "g1@guest.com";
+        String guestPassword = "zzzxx";
+        Credentials loginCredentials = new UsernamePasswordCredentials(guestName, guestPassword);
+        initialState.setCredentials(AuthScope.ANY, loginCredentials);
+        
+        HttpClient client = new HttpClient();
+        client.setState(initialState);
+        
+        HttpMethod method = new GetMethod(getRestUrl(OWNER_NAME));
+        
+        try {
+           
+           int respCode = client.executeMethod(method);
+
+           if (respCode != HttpStatus.SC_OK ) {
+                System.out.println("failed, respCode=" + respCode);
+           } else {
+                
+                boolean chunked = false;
+                boolean textContent = false;
+                
+                System.out.println("Headers");
+                for (Header header : method.getRequestHeaders()) {
+                    System.out.print("    " + header.toString());
+                }
+                System.out.println();
+                
+                System.out.println("Body");
+                String respBody = method.getResponseBodyAsString();
+                System.out.println(respBody);
+            }
+        } finally {
+            // Release the connection.
+            method.releaseConnection();
+        }
+        
+    }
+    
     
     public static void main(String[] args) throws Exception {
         // TestUtil.cliSetup();

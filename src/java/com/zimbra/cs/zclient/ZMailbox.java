@@ -2057,23 +2057,41 @@ public class ZMailbox {
         ZFolder folder = (ZFolder) item;
         return folder.isHierarchyPlaceholder() ? null : folder;
     }
-
+    
     /**
-     * always issues a GetFolderRequest and bypass caching
+     * always bypass caching and issues a GetFolderRequest
+     * 
+     * @param id
+     * @return
+     * @throws ServiceException
+     */
+    public ZFolder getFolderRequestById(String id) throws ServiceException {
+        Element req = newRequestElement(MailConstants.GET_FOLDER_REQUEST).addAttribute(MailConstants.A_VISIBLE, true);
+        req.addElement(MailConstants.E_FOLDER).addAttribute(MailConstants.A_FOLDER, id);
+        
+        Element response = invoke(req);
+        Element eFolder = response.getOptionalElement(MailConstants.E_FOLDER);
+        if (eFolder == null)
+            eFolder = response.getOptionalElement(MailConstants.E_MOUNT);
+        if (eFolder == null)
+            return null;
+        
+        ZFolder folder = new ZFolder(eFolder, null);
+        return folder.isHierarchyPlaceholder() ? null : folder;
+    }
+    
+    /**
+     * to be backward compatible with YCal which currently calls this method.
+     * should switch to getFolderRequestById
+     * 
+     * delete this methods when it's time
      * 
      * @param id
      * @return
      * @throws ServiceException
      */
     public ZFolder getFolderRequest(String id) throws ServiceException {
-        Element req = newRequestElement(MailConstants.GET_FOLDER_REQUEST).addAttribute(MailConstants.A_VISIBLE, true);
-        req.addElement(MailConstants.E_FOLDER).addAttribute(MailConstants.A_FOLDER, id);
-        Element response = invoke(req);
-        Element eFolder = response.getOptionalElement(MailConstants.E_FOLDER);
-        if (eFolder == null)
-            return null;
-        ZFolder folder = new ZFolder(eFolder, null);
-        return folder.isHierarchyPlaceholder() ? null : folder;
+        return getFolderRequestById(id);
     }
     
     /**
