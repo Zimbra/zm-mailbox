@@ -62,17 +62,24 @@ public class RawAuth implements Auth {
     
     public static String getToken(String appId, String user, String pass)
         throws IOException {
+        LOG.debug(String.format(
+            "Sending getToken request: appId = %s, user = %s", appId, user));
         Response res = doGet(GET_AUTH_TOKEN,
             new NameValuePair(APPID, appId),
             new NameValuePair(LOGIN, user),
             new NameValuePair(PASSWD, pass));
-        return res.getRequiredField(AUTH_TOKEN);
+        String token = res.getRequiredField(AUTH_TOKEN);
+        LOG.debug("Got getToken response: token = " + token);
+        return token;
     }
 
     public static RawAuth authenticate(String appId, String token)
         throws IOException {
+        LOG.debug(String.format(
+            "Sending authenticate request: appId = %s, token = %s", appId, token));
         RawAuth auth = new RawAuth(appId);
         auth.authenticate(token);
+        LOG.debug("Got authenticate response: " + auth);
         return auth;
     }
 
@@ -109,9 +116,6 @@ public class RawAuth implements Auth {
             throw new IOException(
                 "Invalid integer value for field '" + EXPIRATION + "': " + s);
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Got authenticate response: " + this);
-        }
     }
 
     private static Response doGet(String action, NameValuePair... params)
@@ -119,7 +123,6 @@ public class RawAuth implements Auth {
         String uri = BASE_URI + '/' + action;
         GetMethod method = new GetMethod(uri);
         method.setQueryString(params);
-        // XXX Should we share a single HttpClient() instance?
         int rc = new HttpClient().executeMethod(method);
         Response res = new Response(method);
         String error = res.getField(ERROR);
@@ -145,6 +148,7 @@ public class RawAuth implements Auth {
                 new InputStreamReader(is, method.getResponseCharSet()));
             String line;
             while ((line = br.readLine()) != null) {
+                LOG.debug("Response line: " + line);
                 int i = line.indexOf('=');
                 if (i != -1) {
                     String name = line.substring(0, i);
