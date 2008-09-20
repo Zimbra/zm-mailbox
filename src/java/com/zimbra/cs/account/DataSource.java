@@ -61,7 +61,7 @@ public class DataSource extends NamedEntry {
     private Mailbox mailbox;
 
     public enum Type {
-        pop3, imap, caldav, live;
+        pop3, imap, caldav, live, yab;
         
         public static Type fromString(String s) throws ServiceException {
             try {
@@ -90,7 +90,6 @@ public class DataSource extends NamedEntry {
         public abstract void importData(List<Integer> folderIds, boolean fullSync)
             throws ServiceException;
     }
-    
 
     public static String getDefaultImportClass(Type ds) {
     	switch (ds) {
@@ -100,20 +99,20 @@ public class DataSource extends NamedEntry {
     	return null;
     }
     
-    public DataImport getDataImport() {
-    	String val = getAttr(Provisioning.A_zimbraDataSourceImportClassName, false);
-		if (val != null) {
-			try {
-				Object di = (DataImport)Class.forName(val).getConstructor(DataSource.class).newInstance(this);
-				if (di instanceof DataImport)
-					return (DataImport) di;
-				else
-					ZimbraLog.account.error("Class "+val+" configured for DataSource "+getName()+" is not an instance of DataImport");
-			} catch (Exception e) {
-				ZimbraLog.account.error("Cannot instantiate class "+val+" configured for DataSource "+getName(), e);
-			}
-		}
-    	return null;
+    public DataImport getDataImport() throws ServiceException {
+        String val = getAttr(Provisioning.A_zimbraDataSourceImportClassName, false);
+        if (val != null) {
+            try {
+                Object di = (DataImport)Class.forName(val).getConstructor(DataSource.class).newInstance(this);
+                if (di instanceof DataImport)
+                    return (DataImport) di;
+                else
+                    ZimbraLog.account.error("Class "+val+" configured for DataSource "+getName()+" is not an instance of DataImport");
+            } catch (Exception e) {
+                ZimbraLog.account.error("Cannot instantiate class "+val+" configured for DataSource "+getName(), e);
+            }
+        }
+        return null;
     }
     
     public static final String CT_CLEARTEXT = "cleartext";

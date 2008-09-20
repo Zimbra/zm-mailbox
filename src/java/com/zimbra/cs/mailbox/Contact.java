@@ -125,10 +125,11 @@ public class Contact extends MailItem {
     public static final String A_workStreet = "workStreet";
     public static final String A_workURL = "workURL";
     public static final String A_type = "type";
-    // Comcast specific fields
-    public static final String A_homeAddress = "homeAddress";
     public static final String A_imAddress1 = "imAddress1";
     public static final String A_imAddress2 = "imAddress2";
+    public static final String A_imAddress3 = "imAddress3";
+    // Comcast specific fields
+    public static final String A_homeAddress = "homeAddress";
     public static final String A_workAddress = "workAddress";
     public static final String A_workEmail1 = "workEmail1";
     public static final String A_workEmail2 = "workEmail2";
@@ -212,6 +213,7 @@ public class Contact extends MailItem {
         homeAddress,
         imAddress1,
         imAddress2,
+        imAddress3,
         workAddress,
         workEmail1,
         workEmail2,
