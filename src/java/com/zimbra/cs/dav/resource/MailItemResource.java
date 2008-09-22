@@ -50,6 +50,7 @@ import com.zimbra.cs.dav.property.Acl.Ace;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Metadata;
@@ -156,9 +157,11 @@ public abstract class MailItemResource extends DavResource {
 			throw new DavException("cannot delete resource", HttpServletResponse.SC_FORBIDDEN, null);
 		try {
 			Mailbox mbox = getMailbox(ctxt);
-			mbox.move(ctxt.getOperationContext(), mId, mType, Mailbox.ID_FOLDER_TRASH);
+			mbox.move(ctxt.getOperationContext(), mId, MailItem.TYPE_UNKNOWN, Mailbox.ID_FOLDER_TRASH);
 		} catch (ServiceException se) {
-			throw new DavException("cannot delete item", HttpServletResponse.SC_FORBIDDEN, se);
+			int resCode = se instanceof MailServiceException.NoSuchItemException ?
+					HttpServletResponse.SC_NOT_FOUND : HttpServletResponse.SC_FORBIDDEN;
+			throw new DavException("cannot delete item", resCode, se);
 		}
 	}
 
@@ -168,9 +171,11 @@ public abstract class MailItemResource extends DavResource {
 			return;
 		try {
 			Mailbox mbox = getMailbox(ctxt);
-			mbox.move(ctxt.getOperationContext(), mId, mType, dest.getId());
+			mbox.move(ctxt.getOperationContext(), mId, MailItem.TYPE_UNKNOWN, dest.getId());
 		} catch (ServiceException se) {
-			throw new DavException("cannot move item", HttpServletResponse.SC_FORBIDDEN, se);
+			int resCode = se instanceof MailServiceException.NoSuchItemException ?
+					HttpServletResponse.SC_NOT_FOUND : HttpServletResponse.SC_FORBIDDEN;
+			throw new DavException("cannot move item", resCode, se);
 		}
 	}
 
@@ -178,10 +183,12 @@ public abstract class MailItemResource extends DavResource {
 	public MailItemResource copy(DavContext ctxt, Collection dest) throws DavException {
 		try {
 			Mailbox mbox = getMailbox(ctxt);
-			MailItem item = mbox.copy(ctxt.getOperationContext(), mId, mType, dest.getId());
+			MailItem item = mbox.copy(ctxt.getOperationContext(), mId, MailItem.TYPE_UNKNOWN, dest.getId());
 			return UrlNamespace.getResourceFromMailItem(ctxt, item);
 		} catch (ServiceException se) {
-			throw new DavException("cannot copy item", HttpServletResponse.SC_FORBIDDEN, se);
+			int resCode = se instanceof MailServiceException.NoSuchItemException ?
+					HttpServletResponse.SC_NOT_FOUND : HttpServletResponse.SC_FORBIDDEN;
+			throw new DavException("cannot copy item", resCode, se);
 		}
 	}
 
@@ -195,7 +202,9 @@ public abstract class MailItemResource extends DavResource {
                 mbox.rename(ctxt.getOperationContext(), mId, mType, newName, destCollection.mId);
 			}
 		} catch (ServiceException se) {
-			throw new DavException("cannot rename item", HttpServletResponse.SC_FORBIDDEN, se);
+			int resCode = se instanceof MailServiceException.NoSuchItemException ?
+					HttpServletResponse.SC_NOT_FOUND : HttpServletResponse.SC_FORBIDDEN;
+			throw new DavException("cannot rename item", resCode, se);
 		}
 	}
 	
