@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -49,6 +48,7 @@ public abstract class AuthProvider {
     
     static {
         register(new ZimbraAuthProvider());
+        // register(new com.zimbra.qa.unittest.TestAccessKeyGrant.DummyAuthProvider());
         refresh();
     }
     

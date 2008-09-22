@@ -53,7 +53,10 @@ public class TestACL extends TestCase {
         }
     }
     
-    public class KeyAuthToken extends AuthToken {
+    /*
+     * for unit testing only
+     */
+    private class KeyAuthToken extends AuthToken {
 
         private String mName;
         private String mAccessKey;
