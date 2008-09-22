@@ -69,7 +69,7 @@ public class CreateDataSource extends MailDocumentHandler {
         dsAttrs.put(Provisioning.A_zimbraDataSourceType, type.toString());
         
         // import class
-        String importClass = eDataSource.getAttribute(MailConstants.A_DS_IMPORT_CLASS, getDefaultImportClass(type));
+        String importClass = eDataSource.getAttribute(MailConstants.A_DS_IMPORT_CLASS, DataSource.getDefaultImportClass(type));
         if (importClass != null) {
         	dsAttrs.put(Provisioning.A_zimbraDataSourceImportClassName, importClass);
         }
@@ -92,14 +92,6 @@ public class CreateDataSource extends MailDocumentHandler {
         eDataSource.addAttribute(MailConstants.A_ID, ds.getId());
         
         return response;
-    }
-    
-    private String getDefaultImportClass(DataSource.Type ds) {
-    	switch (ds) {
-    	case caldav:
-    		return com.zimbra.cs.datasource.CalDavDataImport.class.getName();
-    	}
-    	return null;
     }
     
     /**

@@ -115,6 +115,12 @@ public class ModifyDataSource extends MailDocumentHandler {
             dsAttrs.put(Provisioning.A_zimbraDataSourcePollingInterval, value);
         }
         
+        // import class
+        String importClass = eDataSource.getAttribute(MailConstants.A_DS_IMPORT_CLASS, DataSource.getDefaultImportClass(type));
+        if (importClass != null) {
+        	dsAttrs.put(Provisioning.A_zimbraDataSourceImportClassName, importClass);
+        }
+        
         processCommonOptionalAttrs(dsAttrs, eDataSource);
         
         prov.modifyDataSource(account, id, dsAttrs);
@@ -123,7 +129,6 @@ public class ModifyDataSource extends MailDocumentHandler {
 
         return response;
     }
-    
     
     public static void processCommonOptionalAttrs(Map<String, Object> dsAttrs, Element eDataSource) throws ServiceException {
         String value;
@@ -166,7 +171,7 @@ public class ModifyDataSource extends MailDocumentHandler {
         	while (attrs.hasNext()) {
         		attrList.add(attrs.next().getText());
         	}
-        	dsAttrs.put(Provisioning.A_zimbraDataSourceAttribute, attrList);
+        	dsAttrs.put(Provisioning.A_zimbraDataSourceAttribute, attrList.toArray(new String[0]));
         }
     }
 }

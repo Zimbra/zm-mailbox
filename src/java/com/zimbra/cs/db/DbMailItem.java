@@ -83,6 +83,8 @@ public class DbMailItem {
     public static final int MAX_MEDIUMTEXT_LENGTH = 16777216;
 
     public static final String IN_THIS_MAILBOX_AND = "mailbox_id = ? AND ";
+    public static final String MAILBOX_ID = "mailbox_id, ";
+    public static final String MAILBOX_ID_VALUE = "?, ";
     
     public static final String getInThisMailboxAnd(int mboxId, String miAlias, String apAlias) {
         StringBuilder sb = new StringBuilder(miAlias).append(".mailbox_id = ").append(mboxId).append(" AND ");
