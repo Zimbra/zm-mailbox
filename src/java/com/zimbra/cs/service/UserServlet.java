@@ -259,8 +259,22 @@ public class UserServlet extends ZimbraServlet {
     private void getAccount(Context context) throws IOException, ServletException {
         try {
             boolean isAdminRequest = isAdminRequest(context.req);
-            // check cookie first
-            if (context.cookieAuthAllowed() || AuthProvider.allowAccessKeyAuth(context.req, this)) {
+            
+            // check access key first
+            if (AuthProvider.allowAccessKeyAuth(context.req, this)) {
+                AuthToken at = getAuthTokenFromHttpReq(context.req, context.resp, isAdminRequest, true);
+                if (at != null) {
+                    context.authAccount = new ACL.GuestAccount(at);
+                    if (context.authAccount != null) {
+                        context.basicAuthHappened = true; // pretend that we basic authed
+                        context.authToken = at;
+                        return;
+                    }
+                }
+            }
+            
+            // check cookie
+            if (context.cookieAuthAllowed()) {
                 AuthToken at = cookieAuthRequest(context.req, context.resp);
                 if (at != null) {
                     context.authAccount = Provisioning.getInstance().get(AccountBy.id, at.getAccountId(), at);
