@@ -623,7 +623,7 @@ public class LC {
         stats_img_folder.setDefault("${zimbra_home}" + FS + "logger" + FS + "db" + FS + "work");
 
         soap_max_in_memory_buffer_size = new KnownKey("soap_max_in_memory_buffer_size");
-        soap_max_in_memory_buffer_size.setDefault("131072");  // 128KB
+        soap_max_in_memory_buffer_size.setDefault("0");  // disabled by default
         
         ldap_host = new KnownKey("ldap_host");
         ldap_host.setDefault("");
