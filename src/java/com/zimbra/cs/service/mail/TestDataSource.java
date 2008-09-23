@@ -87,6 +87,10 @@ public class TestDataSource extends MailDocumentHandler {
         if (value != null) {
             password = value;
         }
+        value = eDataSource.getAttribute(MailConstants.A_FOLDER, null);
+        if (value != null) {
+            testAttrs.put(Provisioning.A_zimbraDataSourceFolderId, value);
+        }
         
         if (password == null) {
             throw ServiceException.INVALID_REQUEST("Password not specified", null);

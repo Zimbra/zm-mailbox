@@ -70,7 +70,7 @@ public class DbDataSource {
             stmt.executeUpdate();
             conn.commit();
         } catch (SQLException e) {
-            if (!Db.supports(Db.Capability.ON_DUPLICATE_KEY) && Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
+            if (Db.supports(Db.Capability.ON_DUPLICATE_KEY) && Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
             	updateMapping(mbox, ds, item);
             } else {
                 throw ServiceException.FAILURE("Unable to add mapping for dataSource "+ds.getName(), e);
@@ -120,7 +120,7 @@ public class DbDataSource {
             sb.append(getTableName(mbox));
             sb.append(" WHERE ");
             sb.append(DbMailItem.IN_THIS_MAILBOX_AND);
-            sb.append(" data_source_id = ? AND uid IN ");
+            sb.append(" data_source_id = ? AND item_id IN ");
             sb.append(DbUtil.suitableNumberOfVariables(itemIds));
             stmt = conn.prepareStatement(sb.toString());
             
@@ -189,7 +189,7 @@ public class DbDataSource {
             sb.append(getTableName(mbox));
             sb.append(" WHERE ");
             sb.append(DbMailItem.IN_THIS_MAILBOX_AND);
-            sb.append("  data_source_id = ? AND uid = ?");
+            sb.append("  data_source_id = ? AND item_id = ?");
             stmt = conn.prepareStatement(sb.toString());
             int i = 1;
             i = DbMailItem.setMailboxId(stmt, mbox, i);
@@ -227,7 +227,7 @@ public class DbDataSource {
         try {
             conn = DbPool.getConnection();
             StringBuilder sb = new StringBuilder();
-            sb.append("SELECT uid, metadata FROM ");
+            sb.append("SELECT item_id, metadata FROM ");
             sb.append(getTableName(mbox));
             sb.append(" WHERE ");
             sb.append(DbMailItem.IN_THIS_MAILBOX_AND);

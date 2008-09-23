@@ -84,7 +84,7 @@ public class DbMailItem {
     public static final int MAX_MEDIUMTEXT_LENGTH = 16777216;
 
     public static final String IN_THIS_MAILBOX_AND = DebugConfig.disableMailboxGroups ? "" : "mailbox_id = ? AND ";
-    public static final String MAILBOX_ID = DebugConfig.disableMailboxGroups ? "" : "mailbox_id";
+    public static final String MAILBOX_ID = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
     public static final String MAILBOX_ID_VALUE = DebugConfig.disableMailboxGroups ? "" : "?, ";
     
     static final int setMailboxId(PreparedStatement stmt, Mailbox mbox, int pos) throws SQLException {

@@ -139,7 +139,7 @@ public class WebDavClient {
     	};
 		byte[] buf = DomUtil.getBytes(req.getRequestMessage());
 		if (ZimbraLog.dav.isDebugEnabled())
-			ZimbraLog.dav.debug("WebDAV request:\n"+new String(buf, "UTF-8"));
+			ZimbraLog.dav.debug("WebDAV request: "+req.getUri()+"\n"+new String(buf, "UTF-8"));
 		ByteArrayRequestEntity re = new ByteArrayRequestEntity(buf, "text/xml");
 		m.setRequestEntity(re);
 		return executeMethod(m, req.getDepth());
