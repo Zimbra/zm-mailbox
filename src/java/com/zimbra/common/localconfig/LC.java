@@ -939,7 +939,7 @@ public class LC {
         ssl_allow_untrusted_certs.setDefault("false");
         
         ssl_allow_mismatched_certs = new KnownKey("ssl_allow_mismatched_certs");
-        ssl_allow_mismatched_certs.setDefault("false");
+        ssl_allow_mismatched_certs.setDefault("true");
 
         zimlet_directory = new KnownKey("zimlet_directory");
         zimlet_directory.setDefault("${mailboxd_directory}" + FS + "webapps" + FS + "service" + FS + "zimlet");
