@@ -513,11 +513,19 @@ public abstract class CalendarItem extends MailItem {
             endTime = recomputeRecurrenceEndTime(mEndTime);
         } else {
             mRecurrence = null;
-            ParsedDateTime dtStart = firstInv.getStartTime();
-            ParsedDateTime dtEnd = firstInv.getEffectiveEndTime();
-            
-            startTime = dtStart != null ? dtStart.getUtcTime() : 0;
-            endTime = dtEnd != null ? dtEnd.getUtcTime() : 0;
+            startTime = 0; endTime = 0;
+            for (Invite inv : mInvites) {
+                if (!inv.isCancel()) {
+                    ParsedDateTime dtStart = inv.getStartTime();
+                    long st = dtStart != null ? dtStart.getUtcTime() : 0;
+                    if (st != 0 && (st < startTime || startTime == 0))
+                        startTime = st;
+                    ParsedDateTime dtEnd = inv.getEffectiveEndTime();
+                    long et = dtEnd != null ? dtEnd.getUtcTime() : 0;
+                    if (et != 0 && et > endTime)
+                        endTime = et;
+                }
+            }
         }
 
         // Adjust start/end times before recomputing alarm because alarm computation depends on those times.
