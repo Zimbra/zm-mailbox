@@ -17,8 +17,7 @@
 
 package com.zimbra.common.localconfig;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.io.File;
 
 import com.zimbra.common.util.Constants;
 
@@ -153,7 +152,6 @@ public class LC {
     public static final KnownKey zimbra_converter_enabled_uuencode;
     public static final KnownKey zimbra_converter_enabled_tnef;
     public static final KnownKey zimbra_converter_depth_max;
-    public static final KnownKey convertd_version;
 
     public static final KnownKey zimbra_ssl_enabled;
     
@@ -197,6 +195,8 @@ public class LC {
     public static final KnownKey ldap_cache_server_maxsize;
     public static final KnownKey ldap_cache_server_maxage;
     public static final KnownKey ldap_cache_timezone_maxsize;
+    public static final KnownKey ldap_cache_xmppcomponent_maxsize;
+    public static final KnownKey ldap_cache_xmppcomponent_maxage;
     public static final KnownKey ldap_cache_zimlet_maxsize;
     public static final KnownKey ldap_cache_zimlet_maxage;
     
@@ -220,6 +220,8 @@ public class LC {
     public static final KnownKey mysql_sort_buffer_size;
     public static final KnownKey mysql_read_buffer_size;
     public static final KnownKey mysql_table_cache;
+
+    public static final KnownKey derby_properties;
 
     public static final KnownKey logger_mysql_directory;
     public static final KnownKey logger_mysql_data_directory;
@@ -356,8 +358,6 @@ public class LC {
     
     public static final KnownKey zimbra_auth_provider;
     public static final KnownKey zimbra_authtoken_cookie_domain;
-    
-    public static final KnownKey debug_update_config_use_old_scheme;
     
     public static final KnownKey debug_xmpp_disable_client_tls;
     
@@ -617,8 +617,6 @@ public class LC {
         zimbra_converter_depth_max = new KnownKey("zimbra_converter_depth_max");
         zimbra_converter_depth_max.setDefault("100");
 
-        convertd_version = new KnownKey("convertd_version");
-        convertd_version.setDefault("1");
         
         zimbra_ssl_enabled = new KnownKey("zimbra_ssl_enabled", "true");
         stats_img_folder = new KnownKey("stats_img_folder");
@@ -718,6 +716,10 @@ public class LC {
         ldap_cache_server_maxage = new KnownKey("ldap_cache_server_maxage", "15");
 
         ldap_cache_timezone_maxsize = new KnownKey("ldap_cache_timezone_maxsize", "100");
+        
+        ldap_cache_xmppcomponent_maxsize = new KnownKey("ldap_cache_xmppcomponent_maxsize", "100");
+        
+        ldap_cache_xmppcomponent_maxage = new KnownKey("ldap_cache_xmppcomponent_maxage", "15");
 
         ldap_cache_zimlet_maxsize = new KnownKey("ldap_cache_zimlet_maxsize", "100");
 
@@ -777,6 +779,9 @@ public class LC {
 
         mysql_table_cache = new KnownKey("mysql_table_cache");
         mysql_table_cache.setDefault("500");
+        
+        derby_properties = new KnownKey("derby_properties");
+        derby_properties.setDefault("${zimbra_home}" + File.separator + "conf" + File.separator + "derby.properties");
 
         zimbra_logger_mysql_password = new KnownKey("zimbra_logger_mysql_password");
         zimbra_logger_mysql_password.setDefault("zimbra");
@@ -1090,9 +1095,6 @@ public class LC {
         zimbra_authtoken_cookie_domain = new KnownKey("zimbra_authtoken_cookie_domain");
         zimbra_authtoken_cookie_domain.setDefault("");
         
-        debug_update_config_use_old_scheme = new KnownKey("debug_update_config_use_old_scheme");
-        debug_update_config_use_old_scheme.setDefault("false");
-
         debug_xmpp_disable_client_tls = new KnownKey("debug_xmpp_disable_client_tls", "0");
         
         im_dnsutil_dnsoverride = new KnownKey("im_dnsutil_dnsoverride", "");

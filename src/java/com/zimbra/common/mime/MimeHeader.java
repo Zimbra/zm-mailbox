@@ -35,8 +35,9 @@ public class MimeHeader {
 
     /** Constructor for pre-analyzed header line read from message source.
      * @param name    Header field name.
-     * @param content Complete raw header line, with folding and trailing CRLF
-     *                and 2047-encoding intact.
+     * @param content Complete raw header line, <b>including</b> the field name
+     *                and colon and with folding and trailing CRLF and 2047-
+     *                encoding intact.
      * @param start   The position within <code>content</code> where the header
      *                field value begins (after the ":"/": "). */
     MimeHeader(String name, byte[] content, int start) {
@@ -49,7 +50,7 @@ public class MimeHeader {
     MimeHeader(String name, String value) {
         this(name, value, null);
     }
-    
+
     MimeHeader(String name, String value, String charset) {
         mName = name;
         if (charset != null && !charset.equals(""))
@@ -84,7 +85,7 @@ public class MimeHeader {
         mValueStart = mName.length() + 2;
     }
 
-    String getName() {
+    public String getName() {
         return mName;
     }
 
@@ -93,22 +94,97 @@ public class MimeHeader {
         return mContent;
     }
 
-    String getValue() {
+    String getValue(String charset) {
+        reserialize();
+        return decode(mContent, mValueStart, mContent.length - mValueStart, charset);
+    }
+
+    String getEncoded() {
         reserialize();
         return unfold(new String(mContent, mValueStart, mContent.length - mValueStart));
     }
 
-    String getValue(String charset) {
+    String getEncoded(String charset) {
         if (charset == null || charset.equals(""))
-            return getValue();
+            return getEncoded();
 
         reserialize();
         try {
             return unfold(new String(mContent, mValueStart, mContent.length - mValueStart, charset));
         } catch (UnsupportedEncodingException e) {
-            return getValue();
+            return getEncoded();
         }
     }
+
+
+    static String decode(final byte[] content, final String charset) {
+        return decode(content, 0, content.length, charset);
+    }
+    static String decode(final byte[] content, final int start, final int length, final String charset) {
+        // short-circuit if there are only ASCII characters and no "=?"
+        final int end = start + length;
+        boolean complicated = false;
+        for (int pos = start; pos < end && !complicated; pos++) {
+            byte c = content[pos];
+            if (c < 0 || c > 0xFF || (c == '=' && pos < end - 1 && content[pos + 1] == '?'))
+                complicated = true;
+        }
+        if (!complicated) {
+            try {
+                if (charset != null && !charset.trim().equals(""))
+                    return new String(content, start, length, charset);
+            } catch (Throwable t) {
+                return new String(content, start, length);
+            }
+        }
+
+        HeaderUtils.ByteBuilder builder = new HeaderUtils.ByteBuilder(length, charset);
+        String value = null;
+        boolean encoded = false;
+        Boolean encwspenc = Boolean.FALSE;
+        int questions = 0, wsplength = 0;
+
+        for (int pos = start; pos < end; pos++) {
+            byte c = content[pos];
+            if (c == '\r' || c == '\n') {
+                // ignore folding
+            } else if (c == '=' && pos != end - 1 && content[pos + 1] == '?') {
+                // "=?" marks the beginning of an encoded-word
+                if (!builder.isEmpty())
+                    value = builder.appendTo(value);
+                builder.reset();  builder.write('=');
+                encoded = true;  questions = 0;
+            } else if (c == '?' && encoded && ++questions > 3 && pos != end - 1 && content[pos + 1] == '=') {
+                // "?=" may mean the end of an encoded-word, so see if it decodes correctly
+                builder.write('?');  builder.write('=');
+                String decoded = HeaderUtils.decodeWord(builder.toByteArray());
+                boolean valid = decoded != null;
+                if (valid)
+                    pos++;
+                else
+                    decoded = builder.pop().toString();
+                // drop all whitespace between encoded-words
+                if (valid && encwspenc == Boolean.TRUE)
+                    value = value.substring(0, value.length() - wsplength);
+                value = value == null ? decoded : value + decoded;
+                encwspenc = valid ? null : Boolean.FALSE;  wsplength = 0;
+                encoded = false;  builder.reset();
+            } else {
+                builder.write(c);
+                // track whitespace after encoded-words (enc wsp enc => remove wsp)
+                boolean isWhitespace = c == ' ' || c == '\t';
+                if (!encoded && encwspenc != Boolean.FALSE) {
+                    encwspenc = isWhitespace;
+                    wsplength = isWhitespace ? wsplength + 1 : 0;
+                }
+            }
+        }
+
+        if (!builder.isEmpty())
+            value = builder.appendTo(value);
+        return value == null ? "" : value;
+    }
+
 
     private static String unfold(final String folded) {
         int length = folded.length();
@@ -145,41 +221,55 @@ public class MimeHeader {
         }
     }
 
-    private static final boolean[] ATEXT_VALID = new boolean[128];
+    /** Characters that can form part of an RFC 2822 atom. */
+    static final boolean[] ATEXT_VALID = new boolean[128];
         static {
             for (int c : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&'*+-/=?^_`{|}~".getBytes())
                 ATEXT_VALID[c] = true;
         }
 
-    static String escape(String value, String charset, boolean quotable) {
+    static String escape(String value, String charset, boolean phrase) {
         boolean needsQuote = false, wsp = true;
-        int needs2047 = 0, needsEscape = 0;
+        int needs2047 = 0, needsEscape = 0, cleanTo = 0, cleanFrom = value.length();
         for (int i = 0, len = value.length(); i < len; i++) {
             char c = value.charAt(i);
             if (c > 0x7F || c == '\0' || c == '\r' || c == '\n') {
-                needs2047++;
+                needs2047++;  cleanFrom = len;
+            } else if (!phrase) {
+                // if we're not in an RFC 2822 phrase, there is no such thing as "quoting" 
             } else if (c == '"' || c == '\\') {
-                needsQuote = true;  needsEscape++;
+                needsQuote = true;  needsEscape++;  cleanFrom = len;
             } else if ((c != ' ' && !ATEXT_VALID[c]) || (c == ' ' && wsp)) {
-                needsQuote = true;
+                needsQuote = true;  cleanFrom = len;
             }
             wsp = c == ' ';
+            if (wsp) {
+                if (!needsQuote && needs2047 == 0 && i != len - 1)
+                    cleanTo = i + 1;
+                else if (cleanFrom == len && i > cleanTo + 1)
+                    cleanFrom = i;
+            }
         }
-        needsQuote |= wsp;
+        if (phrase)
+            needsQuote |= wsp;
+        if (wsp)
+            cleanFrom = value.length();
 
-        if (needs2047 > 0 || (!quotable && needsQuote)) {
+        if (needs2047 > 0) {
+            String prefix = value.substring(0, cleanTo), suffix = value.substring(cleanFrom);
+            StringBuilder sb = new StringBuilder(prefix);
+            value = value.substring(cleanTo, cleanFrom);
+
             // FIXME: need to limit encoded-words to 75 bytes
-            StringBuilder sb = new StringBuilder(75).append("=?");
-
             charset = StringUtil.checkCharset(value, charset);
             byte[] content = null;
             try {
                 content = value.getBytes(charset);
-                sb.append(charset);
             } catch (Throwable t) {
                 content = value.getBytes();
-                sb.append(Charset.defaultCharset().displayName());
+                charset = Charset.defaultCharset().displayName();
             }
+            sb.append("=?").append(charset);
 
             InputStream encoder;
             if (needs2047 > value.length() / 3) {
@@ -187,25 +277,35 @@ public class MimeHeader {
             } else {
                 sb.append("?Q?");  encoder = new Q2047Encoder(content);
             }
+
             try {
                 sb.append(new String(ByteUtil.readInput(encoder, 0, Integer.MAX_VALUE)));
             } catch (IOException ioe) {}
+            sb.append("?=");
 
-            return sb.append("?=").toString();
+            return sb.append(suffix).toString();
         } else if (needsQuote && needsEscape > 0) {
-            StringBuilder sb = new StringBuilder(value.length() + needsEscape + 2).append('"');
-            for (int i = 0, len = value.length(); i < len; i++) {
-                char c = value.charAt(i);
-                if (c == '"' || c == '\\')
-                    sb.append('\\');
-                sb.append(c);
-            }
-            return sb.append('"').toString();
+            return quote(value, needsEscape);
         } else if (needsQuote) {
             return new StringBuilder(value.length() + 2).append('"').append(value).append('"').toString();
         } else {
             return value;
         }
+    }
+
+    static String quote(String value) {
+        return quote(value, 0);
+    }
+
+    private static String quote(String value, int escapeHint) {
+        StringBuilder sb = new StringBuilder(value.length() + escapeHint + 2).append('"');
+        for (int i = 0, len = value.length(); i < len; i++) {
+            char c = value.charAt(i);
+            if (c == '"' || c == '\\')
+                sb.append('\\');
+            sb.append(c);
+        }
+        return sb.append('"').toString();
     }
 
     protected void reserialize() { }
@@ -217,7 +317,7 @@ public class MimeHeader {
 
 
     public static class MimeAddressHeader extends MimeHeader {
-        private ArrayList<InternetAddress> mAddresses = new ArrayList<InternetAddress>(3);
+        private List<InternetAddress> mAddresses = new ArrayList<InternetAddress>(3);
 
         public MimeAddressHeader(final String name, final List<InternetAddress> iaddrs) {
             super(name, null, -1);
@@ -225,12 +325,19 @@ public class MimeHeader {
         }
 
         public MimeAddressHeader(final String name, final String value) {
-            super(name, value == null ? null : value.getBytes());
+            super(name, value);
+            if (mValueStart > 0)
+                parse(mContent, mValueStart, mContent.length - mValueStart);
+        }
+
+        public MimeAddressHeader(final String name, final byte[] bvalue) {
+            super(name, bvalue);
             if (mValueStart > 0)
                 parse(mContent, mValueStart, mContent.length - mValueStart);
         }
 
         private void parse(final byte[] content, final int start, final int length) {
+            // FIXME: will split the header incorrectly if there's a ',' in the middle of a domain literal ("@[...]")
             boolean quoted = false, escaped = false, group = false, empty = true;
             int pos = start, astart = pos, end = start + length, clevel = 0;
 
@@ -254,7 +361,7 @@ public class MimeHeader {
                 } else if (c == ',' || (c == ';' && group)) {
                     // this concludes the address portion of our program
                     if (!empty)
-                        mAddresses.add(new InternetAddress(content, astart, pos - astart));
+                        mAddresses.add(new InternetAddress(content, astart, pos - astart, mCharset));
                     group = c == ';';
                     empty = true;
                     astart = pos;
@@ -268,7 +375,7 @@ public class MimeHeader {
             }
             // don't forget the last address in the list
             if (!empty)
-                mAddresses.add(new InternetAddress(content, astart, pos - astart));
+                mAddresses.add(new InternetAddress(content, astart, pos - astart, mCharset));
         }
 
         public List<InternetAddress> getAddresses() {
@@ -296,20 +403,46 @@ public class MimeHeader {
             System.out.println("  addr: " + iaddr);
     }
 
-    private static void dumpContent(MimeHeader header) {
-        System.out.println(header + "\t=> " + header.getValue());
+    private static void dumpContent(String name, String value) {
+        dumpContent(name, value, null);
+    }
+    private static void dumpContent(String name, String value, String charset) {
+        System.out.println('"' + value + "\"\t=> " + escape(value, charset, false));
+        System.out.println('"' + value + "\"\t=> " + escape(value, charset, true));
     }
 
     public static void main(String[] args) {
-        dumpAddresses(new MimeAddressHeader("To", "mine:=?us-ascii?Q?Bob_?=\t=?us-ascii?Q?the_Builder?= <bob@example.com>;,=?us-ascii?Q?Bob the Builder?= <bob@example.com>"));
+        dumpAddresses(new MimeAddressHeader("To", "mine:=?us-ascii?Q?Bob_?=\t=?us-ascii?Q?the_Builder_1?= <bob@example.com>;,=?us-ascii?Q?Bob the Builder 2?= <bob@example.com>"));
 
-        dumpContent(new MimeHeader("Subject", "Pru\u00ee"));
-        dumpContent(new MimeHeader("Subject", "Pru\u00ee", "iso-8859-1"));
-        dumpContent(new MimeHeader("Subject", "Pru\u00ee", "iso-8859-7"));
+        dumpContent("Subject", "Re: Pru\u00ee Loo");
+        dumpContent("Subject", "Re: Pru\u00ee Loo ");
+        dumpContent("Subject", "Fwd:   Pru\u00ee Loo");
+        dumpContent("Subject", "Prue Loo  ");
+        dumpContent("Subject", "Fwd:  Pru\u00ee Loo ");
+        dumpContent("Subject", "Prue  Loo");
+        dumpContent("Subject", "Prue   Loo");
+        dumpContent("Subject", " Prue  Loo ");
 
-        dumpContent(new MimeHeader("Subject", "Pru\u00ee uey liufhlasuifh lskdhf lkshfl aksjhlfi ahslkfu haskjhf lkajshf lkajshflkajhslkfj halskjhf laskjhdflaksjh ksjfh ka"));
+        dumpContent("Subject", "Pru\u00ee");
+        dumpContent("Subject", "Pru\u00ee", "iso-8859-1");
+        dumpContent("Subject", "Pru\u00ee", "iso-8859-7");
 
-        dumpContent(new MimeHeader("Subject", "\u00eb\u00ec\u00ed\u00ee"));
-        dumpContent(new MimeHeader("Subject", "\u00eb\u00ec\u00ed\u00ee", "iso-8859-1"));
+        dumpContent("Subject", "lskdhf lkshfl aksjhlfi ahslkfu Pru\u00ee uey liufhlasuifh haskjhf lkajshf lkajshflkajhslkfj hals\u00e4kjhf laskjhdflaksjh ksjfh ka");
+
+        dumpContent("Subject", "\u00eb\u00ec\u00ed\u00ee");
+        dumpContent("Subject", "\u00eb\u00ec\u00ed\u00ee", "iso-8859-1");
+
+        String encoded = "RE: [Bug 30944]=?UTF-8?Q?=20Meeting=20invitation=20that=E2=80=99s=20created=20within=20exchange=20containing=20=C3=A5=C3=A4=C3=B6=20will=20show=20within=20the=20calendar=20and=20acceptance=20notification=20as=20?=?????";
+        System.out.println(decode(encoded.getBytes(), null));
+        try {
+            System.setProperty("mail.mime.decodetext.strict", "false");
+            System.out.println(javax.mail.internet.MimeUtility.decodeText(encoded));
+        } catch (UnsupportedEncodingException uee) { }
+
+        System.out.println(decode("=?utf-8??Broken?=".getBytes(), null));
+        System.out.println(decode("=?utf-8?Q?Ha?==?utf-8?Q?mbone?= x".getBytes(), null));
+        System.out.println(decode("=?utf-8?Q?Ha?=    =?utf-8?Q?mbone?=".getBytes(), null));
+        System.out.println(decode("=?utf-8?Q?Ha?=  m =?utf-8?Q?bone?=".getBytes(), null));
+        System.out.println(decode("=?utf-8?Q?Ha?=    =?utf-8??mbone?=".getBytes(), null));
     }
 }
