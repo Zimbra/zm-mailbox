@@ -210,11 +210,16 @@ public class ZimbraServlet extends HttpServlet {
     }
 
     private static AuthToken getAuthTokenFromCookieImpl(HttpServletRequest req,
-                                                        HttpServletResponse resp,
-                                                        boolean isAdminReq,
-                                                        boolean doNotSendHttpError)
-    throws IOException {
-        
+            HttpServletResponse resp,
+            boolean isAdminReq,
+            boolean doNotSendHttpError) throws IOException {
+        return getAuthTokenFromHttpReq(req, resp, isAdminReq,  doNotSendHttpError);
+    }
+    
+    public static AuthToken getAuthTokenFromHttpReq(HttpServletRequest req,
+                                                    HttpServletResponse resp,
+                                                    boolean isAdminReq,
+                                                    boolean doNotSendHttpError) throws IOException {
         AuthToken authToken = null;
         try {
             authToken = AuthProvider.getAuthToken(req, isAdminReq);

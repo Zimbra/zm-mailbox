@@ -31,6 +31,7 @@ import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.AuthProviderException;
 import com.zimbra.cs.service.UserServlet;
+import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.zclient.ZFolder;
@@ -73,10 +74,21 @@ public class TestAccessKeyGrant extends TestCase {
         
         @Override
         protected AuthToken authToken(HttpServletRequest req, boolean isAdminReq)
-                throws AuthProviderException, AuthTokenException {
-            // TODO Auto-generated method stub
-            return null;
+               throws AuthProviderException, AuthTokenException {
+
+            if (isAdminReq)
+                return null;
+
+            String accessKey = (String)req.getParameter("k");
+            String hostYid   = (String)req.getParameter("h");
+            
+            if (accessKey != null && hostYid != null) {
+                return new DummyAuthToken(accessKey, hostYid);
+            } else {
+                throw AuthProviderException.NO_AUTH_DATA();
+            }
         }
+
 
         @Override
         protected AuthToken authToken(Element soapCtxt, Map engineCtxt)
@@ -111,6 +123,10 @@ public class TestAccessKeyGrant extends TestCase {
             }
 
             throw AuthProviderException.NO_AUTH_DATA();
+        }
+        
+        protected boolean allowURLAccessKeyAuth(HttpServletRequest req, ZimbraServlet servlet) {
+            return true;
         }
 
     }
@@ -259,6 +275,10 @@ public class TestAccessKeyGrant extends TestCase {
         return UserServlet.getRestUrl(getAccount(acctName));
     }
     
+    private String getRestCalendarUrl(String acctName) throws ServiceException {
+        return UserServlet.getRestUrl(getAccount(acctName)) + "/Calendar";
+    }
+    
     
     private ZMailbox getZMailboxByKey() throws Exception {
         Map<String,String> authAttrs = new HashMap<String, String>();
@@ -310,7 +330,7 @@ public class TestAccessKeyGrant extends TestCase {
     /*
      * ensure the accesskey is return in getFolderRequest
      */
-    public void testGetFolderRequest() throws Exception {
+    public void disable_testGetFolderRequest() throws Exception {
         ZMailbox ownerMbox = TestUtil.getZMailbox(OWNER_NAME);
         ZMailbox granteeMbox = TestUtil.getZMailbox(USER_GRANTEE_NAME);
         
@@ -338,7 +358,91 @@ public class TestAccessKeyGrant extends TestCase {
         dumpGrants(TestUtil.getZMailbox("user4"), "258");
     }
     
-    public void disable_testCalendarGet() throws Exception {
+    private void executeHttpMethod(HttpClient client, HttpMethod method) throws Exception {
+        try {
+            
+            int respCode = client.executeMethod(method);
+
+            if (respCode != HttpStatus.SC_OK ) {
+                 System.out.println("failed, respCode=" + respCode);
+            } else {
+                 
+                 boolean chunked = false;
+                 boolean textContent = false;
+                 
+                 System.out.println("Headers:");
+                 System.out.println("--------");
+                 for (Header header : method.getRequestHeaders()) {
+                     System.out.print("    " + header.toString());
+                 }
+                 System.out.println();
+                 
+                 System.out.println("Body:");
+                 System.out.println("-----");
+                 String respBody = method.getResponseBodyAsString();
+                 System.out.println(respBody);
+             }
+         } finally {
+             // Release the connection.
+             method.releaseConnection();
+         }
+    }
+    
+    /*
+     * setup:
+     * 
+     * 1. use zmmailbox to grant key access: zmmailbox -z -d -r soap12
+     *        -d: debug, so it shows soap trace
+     *        -z: default admin auth
+     *        -r soap12: use soap12 protocol, it's easier to read than json
+     *    
+     *    mbox> sm user1
+     *    mbox user1@phoebe.mac> mfg Calendar key k1@key.com r
+     *    
+     *    grab the access key from the FolderActionResponse:
+     *        <FolderActionResponse xmlns="urn:zimbraMail">
+     *            <action d="k1@key.com" key="3c4877ed3948511cee39379debbf968d" op="grant" zid="k1@key.com" id="10"/>
+     *        </FolderActionResponse>
+     *        
+     * 2. paste the access key to the test (TODO, automate it)        
+     *    
+     * 3. In com.zimbra.cs.service.AuthProvider, uncomment // register(new com.zimbra.qa.unittest.TestAccessKeyGrant.DummyAuthProvider());
+     * 
+     * 4. ant deploy-war
+     * 
+     * 5. modify localconfig.xml, add:
+     *    <key name="zimbra_auth_provider">
+     *        <value>DUMMY_AUTH_PROVIDER</value>
+     *    </key>
+     *
+     * 6. retstart server
+     * 
+     * ready to run the test
+     */
+    public void testCalendarGet_Yahoo_accesskey() throws Exception {
+        
+        HttpClient client = new HttpClient();
+        
+        String accessKey = "3c4877ed3948511cee39379debbf968d-bogus";
+        String url = getRestCalendarUrl(OWNER_NAME);
+        
+        /* 
+         * the Yahoo accesskey URL is:
+         * /home/yid/Calendar/Folder.ics?k=accesskey&h=yid
+         */
+        url = url + "?k=" + accessKey + "&h=" + getAccountId(OWNER_NAME);
+        
+        System.out.println("REST URL: " + url);
+        HttpMethod method = new GetMethod(url);
+        
+        executeHttpMethod(client, method);
+    }
+    
+    /*
+     * use zmmailbox to grant guest access:
+     * mbox user1@phoebe.mac> mfg Calendar quest g1@guest.com zzz r
+     */
+    public void disable_testCalendarGet_guest() throws Exception {
         
         HttpState initialState = new HttpState();
         
@@ -349,44 +453,19 @@ public class TestAccessKeyGrant extends TestCase {
         initialState.addCookie(sessionCookie);
         */
         
-        // If <guest> or <password> are used, then we must guest authenticate
-        //
         String guestName = "g1@guest.com";
-        String guestPassword = "zzzxx";
+        String guestPassword = "zzz";
         Credentials loginCredentials = new UsernamePasswordCredentials(guestName, guestPassword);
         initialState.setCredentials(AuthScope.ANY, loginCredentials);
         
         HttpClient client = new HttpClient();
         client.setState(initialState);
         
-        HttpMethod method = new GetMethod(getRestUrl(OWNER_NAME));
+        String url = getRestCalendarUrl(OWNER_NAME);
+        System.out.println("REST URL: " + url);
+        HttpMethod method = new GetMethod(url);
         
-        try {
-           
-           int respCode = client.executeMethod(method);
-
-           if (respCode != HttpStatus.SC_OK ) {
-                System.out.println("failed, respCode=" + respCode);
-           } else {
-                
-                boolean chunked = false;
-                boolean textContent = false;
-                
-                System.out.println("Headers");
-                for (Header header : method.getRequestHeaders()) {
-                    System.out.print("    " + header.toString());
-                }
-                System.out.println();
-                
-                System.out.println("Body");
-                String respBody = method.getResponseBodyAsString();
-                System.out.println(respBody);
-            }
-        } finally {
-            // Release the connection.
-            method.releaseConnection();
-        }
-        
+        executeHttpMethod(client, method);
     }
     
     
