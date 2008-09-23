@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.dom4j.Element;
 
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.dav.DavContext.Depth;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
@@ -98,7 +99,7 @@ public class CalDavClient extends WebDavClient {
 	}
 	
 	public Appointment getCalendarData(Appointment appt) throws IOException, DavException {
-		byte[] res = sendGet(appt.href);
+		byte[] res = ByteUtil.readInput(sendGet(appt.href), 0, 1024);
 		appt.data = new String(res, "UTF-8");
 		return appt;
 	}

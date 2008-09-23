@@ -16,7 +16,10 @@
  */
 package com.zimbra.cs.dav.client;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -29,18 +32,21 @@ import org.apache.commons.httpclient.auth.AuthPolicy;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.PutMethod;
+import org.apache.commons.httpclient.methods.RequestEntity;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.QName;
+import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
+import org.dom4j.io.XMLWriter;
 
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
-import com.zimbra.cs.dav.DomUtil;
 import com.zimbra.cs.dav.DavContext.Depth;
+import com.zimbra.cs.service.UserServlet.HttpInputStream;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.NetUtil;
 
@@ -83,8 +89,6 @@ public class WebDavClient {
 		HttpMethod m = null;
 		try {
 			m = execute(req);
-			if (ZimbraLog.dav.isDebugEnabled())
-				ZimbraLog.dav.debug("WebDAV response:\n"+new String(m.getResponseBody(), "UTF-8"));
 			Document doc = new SAXReader().read(m.getResponseBodyAsStream());
 			
 			Element top = doc.getRootElement();
@@ -102,49 +106,80 @@ public class WebDavClient {
 		return ret;
 	}
 	
-	public byte[] sendRequest(DavRequest req) throws IOException, DavException {
-		HttpMethod m = null;
-		try {
-			m = execute(req);
-			byte[] buf = m.getResponseBody();
-			if (ZimbraLog.dav.isDebugEnabled())
-				ZimbraLog.dav.debug("WebDAV response:\n"+new String(buf, "UTF-8"));
-			return buf;
-		} finally {
-			if (m != null)
-				m.releaseConnection();
-		}
+	public InputStream sendRequest(DavRequest req) throws IOException, DavException {
+		HttpMethod m = execute(req);
+		return new HttpInputStream(m);
 	}
 	
-	public byte[] sendGet(String href) throws IOException {
+	public InputStream sendGet(String href) throws IOException {
 		GetMethod get = new GetMethod(mBaseUrl + href);
-		try {
-			executeMethod(get, Depth.one);
-			byte[] buf = get.getResponseBody();
-			if (ZimbraLog.dav.isDebugEnabled())
-				ZimbraLog.dav.debug("WebDAV response:\n"+new String(buf, "UTF-8"));
-			return buf;
-		} finally {
-			if (get != null)
-				get.releaseConnection();
-		}
+		executeMethod(get, Depth.zero);
+		return new HttpInputStream(get);
 	}
 	
+	public InputStream sendPut(String href, byte[] buf, String contentType) throws IOException {
+		PutMethod put = new PutMethod(mBaseUrl + href);
+		put.setRequestEntity(new ByteArrayRequestEntity(buf, contentType));
+		if (ZimbraLog.dav.isDebugEnabled() && contentType.startsWith("text"))
+			ZimbraLog.dav.debug("PUT payload: \n"+new String(buf, "UTF-8"));
+		executeMethod(put, Depth.zero);
+		return new HttpInputStream(put);
+	}
+	
+	private static class DocumentRequestEntity implements RequestEntity {
+		private Document doc;
+		public DocumentRequestEntity(Document d) { doc = d; }
+		public boolean isRepeatable() { return true; }
+	    public long getContentLength() { return -1; }
+	    public String getContentType() { return "text/xml"; }
+	    public void writeRequest(OutputStream out) throws IOException {
+			OutputFormat format = OutputFormat.createCompactFormat();
+			format.setTrimText(false);
+			format.setOmitEncoding(false);
+			XMLWriter writer = new XMLWriter(out, format);
+			writer.write(doc);
+	    }
+	    public void writeDebug(OutputStream out) throws IOException {
+			OutputFormat format = OutputFormat.createPrettyPrint();
+			format.setTrimText(false);
+			format.setOmitEncoding(false);
+			XMLWriter writer = new XMLWriter(out, format);
+			writer.write(doc);
+	    }
+	}
 	protected HttpMethod execute(DavRequest req) throws IOException {
 		final String methodString = req.getMethod();
-    	PostMethod m = new PostMethod(mBaseUrl + req.getUri()) {
+    	PutMethod m = new PutMethod(mBaseUrl + req.getUri()) {
+    		RequestEntity re;
     		public String getName() {
     			return methodString;
     		}
+    	    protected RequestEntity generateRequestEntity() {
+    	    	return re;
+    	    }
+    	    public void setRequestEntity(RequestEntity requestEntity) {
+    	    	re = requestEntity;
+    	    	super.setRequestEntity(requestEntity);
+    	    }
     	};
-		byte[] buf = DomUtil.getBytes(req.getRequestMessage());
-		if (ZimbraLog.dav.isDebugEnabled())
-			ZimbraLog.dav.debug("WebDAV request: "+req.getUri()+"\n"+new String(buf, "UTF-8"));
-		ByteArrayRequestEntity re = new ByteArrayRequestEntity(buf, "text/xml");
+		DocumentRequestEntity re = new DocumentRequestEntity(req.getRequestMessage());
 		m.setRequestEntity(re);
 		return executeMethod(m, req.getDepth());
 	}
 	protected HttpMethod executeMethod(HttpMethod m, Depth d) throws IOException {
+		if (ZimbraLog.dav.isDebugEnabled()) {
+			String buf = "";
+			if (m instanceof PutMethod) {
+				PutMethod put = (PutMethod) m;
+				RequestEntity re = put.getRequestEntity();
+				if (re instanceof DocumentRequestEntity) {
+					ByteArrayOutputStream out = new ByteArrayOutputStream();
+					((DocumentRequestEntity)re).writeDebug(out);
+					buf = "\n" + new String(out.toByteArray(), "UTF-8");
+				}
+			}
+			ZimbraLog.dav.debug("WebDAV request (depth="+d+"): "+m.getPath()+buf);
+		}
 		m.setDoAuthentication(true);
 		m.setRequestHeader("User-Agent", mUserAgent);
 		String depth = "0";
@@ -158,6 +193,8 @@ public class WebDavClient {
 		}
 		m.setRequestHeader("Depth", depth);
 		mClient.executeMethod(m);
+		if (ZimbraLog.dav.isDebugEnabled())
+			ZimbraLog.dav.debug("WebDAV response:\n"+new String(m.getResponseBody(), "UTF-8"));
 
         return m;
 	}
