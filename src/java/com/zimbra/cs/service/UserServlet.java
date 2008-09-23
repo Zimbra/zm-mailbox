@@ -1130,7 +1130,7 @@ public class UserServlet extends ZimbraServlet {
     public static class HttpInputStream extends FilterInputStream {
 		private HttpMethod method;
 
-    	HttpInputStream(HttpMethod m) throws IOException {
+    	public HttpInputStream(HttpMethod m) throws IOException {
     		super(m.getResponseBodyAsStream());
     		this.method = m;
     	}

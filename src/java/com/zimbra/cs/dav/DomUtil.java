@@ -26,16 +26,16 @@ import org.dom4j.io.XMLWriter;
 
 public class DomUtil {
 	public static byte[] getBytes(Document doc) throws IOException {
-		OutputFormat format = OutputFormat.createPrettyPrint();
-		format.setTrimText(false);
-		format.setOmitEncoding(false);
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		XMLWriter writer = new XMLWriter(baos, format);
-		writer.write(doc);
+		writeDocumentToStream(doc, baos);
 		byte[] msg = baos.toByteArray();
 		return msg;
 	}
 	public static void writeDocumentToStream(Document doc, OutputStream out) throws IOException {
-		out.write(getBytes(doc));
+		OutputFormat format = OutputFormat.createPrettyPrint();
+		format.setTrimText(false);
+		format.setOmitEncoding(false);
+		XMLWriter writer = new XMLWriter(out, format);
+		writer.write(doc);
 	}
 }
