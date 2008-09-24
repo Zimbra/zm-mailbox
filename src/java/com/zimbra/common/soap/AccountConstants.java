@@ -112,6 +112,7 @@ public class AccountConstants {
     public static final String E_PROPERTY = "prop";
     public static final String E_PROPERTIES = "props";
     public static final String E_SOAP_URL = "soapURL";
+    public static final String E_PUBLIC_URL = "publicURL";
     public static final String E_PREAUTH = "preauth";
     public static final String E_A = "a";
     public static final String E_ENTRY_SEARCH_FILTER = "searchFilter";
