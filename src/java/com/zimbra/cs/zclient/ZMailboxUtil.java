@@ -1630,7 +1630,7 @@ public class ZMailboxUtil implements DebugListener {
         System.setProperty("mail.mime.base64.ignoreerrors", "true");
     }
 
-    private void addMessage(String folderId, String tags, long date, File file) throws ServiceException, IOException {
+    private void addMessage(String folderId, String flags, String tags, long date, File file) throws ServiceException, IOException {
         //String aid = mMbox.uploadAttachments(new File[] {file}, 5000);
 
         byte[] data = ByteUtil.getContent(file);
@@ -1644,13 +1644,14 @@ public class ZMailboxUtil implements DebugListener {
         } catch (MessagingException e) {
             date = 0;
         }
-        String id = mMbox.addMessage(folderId, null, tags, date, data, false);
+        String id = mMbox.addMessage(folderId, flags, tags, date, data, false);
         stdout.format("%s (%s)%n", id, file.getPath());
     }
 
     private void doAddMessage(String[] args) throws ServiceException, IOException {
         String folderId = lookupFolderId(args[0], false);
         String tags = tagsOpt();
+        String flags = flagsOpt();
         long date = dateOpt(-1);
 
         for (int i=1; i < args.length; i++) {
@@ -1659,10 +1660,10 @@ public class ZMailboxUtil implements DebugListener {
                 // TODO: should we recurse?
                 for (File child : file.listFiles()) {
                     if (child.isFile())
-                        addMessage(folderId, tags, date, child);
+                        addMessage(folderId, flags, tags, date, child);
                 }
             } else {
-                addMessage(folderId, tags, date, file);
+                addMessage(folderId, flags, tags, date, file);
             }
         }
     }
