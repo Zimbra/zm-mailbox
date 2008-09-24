@@ -504,6 +504,7 @@ effect if called in a <nosession> context.
      ...
    </zimlets>
    <mailURL>{mail-url}</mailURL>+
+   <publicURL>{account-base-public-url}</publicURL>
    <identities>
      <identity name={identity-name} id="...">
        <a name="{name}">{value}</a>
@@ -554,7 +555,9 @@ effect if called in a <nosession> context.
        http://server:7070/service/soap/
 
        Multiple URLs can be returned if both http and https (SSL) are enabled. If only one of the two is enabled,
-       the only one URL will be returned.       
+       the only one URL will be returned.  
+       
+  {account-base-public-url} = base public URL for the requested account
 
   license attribute is pertinent to the Network edition only.  this attribute is 
   present only when the installed license is NOT ok.
@@ -572,6 +575,7 @@ effect if called in a <nosession> context.
    <name>{account-name}</name>
    <attr name="{name}">{value}</a>+
    <soapURL>{mail-url}</soapURL>+
+   <publicURL>{account-base-public-url}</publicURL>
 </GetInfoResponse>
  
   {account-name} = email address (user@domain)
@@ -586,7 +590,9 @@ effect if called in a <nosession> context.
        http://server:7070/service/soap/
 
        Multiple URLs can be returned if both http and https (SSL) are enabled. If only one of the two is enabled,
-       the only one URL will be returned.       
+       the only one URL will be returned.      
+       
+  {account-base-public-url} = base public URL for the requested account
 
 ----------------------------
 
