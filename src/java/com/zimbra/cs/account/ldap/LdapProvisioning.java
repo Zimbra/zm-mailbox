@@ -796,10 +796,7 @@ public class LdapProvisioning extends Provisioning {
         	validate("createAccountSucceeded", emailAddress);
             return acct;
         } catch (NameAlreadyBoundException nabe) {
-            String info = "";
-            if (baseDn != null)
-                info = "(entry["+dn+"] already bound)";
-            throw AccountServiceException.ACCOUNT_EXISTS(emailAddress+info);
+            throw AccountServiceException.ACCOUNT_EXISTS(emailAddress, dn, nabe);
         } catch (NamingException e) {
            throw ServiceException.FAILURE("unable to create account: "+emailAddress, e);
         } finally {
@@ -1229,6 +1226,7 @@ public class LdapProvisioning extends Provisioning {
         String aliasDomain = parts[1];
                 
         ZimbraLdapContext zlc = null;
+        String aliasDn = null;
         try {
             zlc = new ZimbraLdapContext(true);
 
@@ -1236,7 +1234,7 @@ public class LdapProvisioning extends Provisioning {
             if (domain == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(aliasDomain);
             
-            String aliasDn = mDIT.aliasDN(((LdapEntry)entry).getDN(), targetDomainName, aliasName, aliasDomain);
+            aliasDn = mDIT.aliasDN(((LdapEntry)entry).getDN(), targetDomainName, aliasName, aliasDomain);
             // the create and addAttr ideally would be in the same transaction
             
             String aliasUuid = LdapUtil.generateUUID();
@@ -1258,7 +1256,7 @@ public class LdapProvisioning extends Provisioning {
                     // remove the dangling alias 
                     removeAliasInternal(null, alias, null);
                     
-                    // try creating teh alias again
+                    // try creating the alias again
                     zlc.simpleCreate(aliasDn, "zimbraAlias",
                             new String[] { Provisioning.A_uid, aliasName, 
                                            Provisioning.A_zimbraId, aliasUuid,
@@ -1288,7 +1286,7 @@ public class LdapProvisioning extends Provisioning {
             // UGH
             modifyAttrsInternal(((NamedEntry) entry), zlc, attrs);
         } catch (NameAlreadyBoundException nabe) {
-            throw AccountServiceException.ACCOUNT_EXISTS(alias);
+            throw AccountServiceException.ACCOUNT_EXISTS(alias, aliasDn, nabe);
         } catch (InvalidNameException e) {
             throw ServiceException.INVALID_REQUEST("invalid alias name: "+e.getMessage(), e);
         } catch (NamingException e) {
