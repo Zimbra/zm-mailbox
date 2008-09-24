@@ -38,6 +38,7 @@ public class ZGetInfoResult {
     private String mId;
     private String mName;
     private String mRestURLBase;
+    private String mPublicURLBase;
     private String mCrumb;
     private long mLifetime;
     private long mExpiration;
@@ -87,6 +88,7 @@ public class ZGetInfoResult {
         mFeatures = new ZFeatures(mAttrs);
         mRecent = e.getAttribute(AccountConstants.E_RECENT_MSGS, "0");
         mRestURLBase = e.getAttribute(AccountConstants.E_REST, null);
+        mPublicURLBase = e.getAttribute(AccountConstants.E_PUBLIC_URL, null);
 		long prevSession = e.getAttributeLong(AccountConstants.E_PREVIOUS_SESSION, 0);
         mPrevSession = prevSession != 0 ? new Date(prevSession) : new Date();
 
@@ -208,6 +210,10 @@ public class ZGetInfoResult {
     public String getRestURLBase() {
         return mRestURLBase;
     }
+    
+    public String getPublicURLBase() {
+        return mPublicURLBase;
+    }
 
     public String toString() {
         ZSoapSB sb = new ZSoapSB();
@@ -222,6 +228,7 @@ public class ZGetInfoResult {
         sb.add("attrs", mAttrs);
         sb.add("prefs", mPrefAttrs);
         sb.add("mailURLs", mMailURLs, true, true);
+        sb.add("publicURL", mPublicURLBase);
         sb.endStruct();
         return sb.toString();
     }
