@@ -17,7 +17,6 @@
 package com.zimbra.cs.dav.client;
 
 import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -106,18 +105,18 @@ public class WebDavClient {
 		return ret;
 	}
 	
-	public InputStream sendRequest(DavRequest req) throws IOException, DavException {
+	public HttpInputStream sendRequest(DavRequest req) throws IOException, DavException {
 		HttpMethod m = execute(req);
 		return new HttpInputStream(m);
 	}
 	
-	public InputStream sendGet(String href) throws IOException {
+	public HttpInputStream sendGet(String href) throws IOException {
 		GetMethod get = new GetMethod(mBaseUrl + href);
 		executeMethod(get, Depth.zero);
 		return new HttpInputStream(get);
 	}
 	
-	public InputStream sendPut(String href, byte[] buf, String contentType) throws IOException {
+	public HttpInputStream sendPut(String href, byte[] buf, String contentType) throws IOException {
 		PutMethod put = new PutMethod(mBaseUrl + href);
 		put.setRequestEntity(new ByteArrayRequestEntity(buf, contentType));
 		if (ZimbraLog.dav.isDebugEnabled() && contentType.startsWith("text"))
