@@ -224,6 +224,10 @@ public class AccountServiceException extends ServiceException {
     public static AccountServiceException ACCOUNT_EXISTS(String name) {
         return new AccountServiceException("email address already exists: "+name, ACCOUNT_EXISTS, SENDERS_FAULT, null);
     }
+    
+    public static AccountServiceException ACCOUNT_EXISTS(String name, String atDn, Throwable t) {
+        return new AccountServiceException("email address already exists: "+name + ", at DN: " + atDn, ACCOUNT_EXISTS, SENDERS_FAULT, t);
+    }
 
     public static AccountServiceException DOMAIN_EXISTS(String name) {
         return new AccountServiceException("domain already exists: " + name, DOMAIN_EXISTS, SENDERS_FAULT, null);
