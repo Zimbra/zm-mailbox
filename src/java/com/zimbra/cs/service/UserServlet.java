@@ -1148,7 +1148,12 @@ public class UserServlet extends ZimbraServlet {
     		super(m.getResponseBodyAsStream());
     		this.method = m;
     	}
-
+    	public int getContentLength() {
+    		Header cl = method.getResponseHeader("Content-Length");
+    		if (cl != null)
+    			return Integer.parseInt(cl.getValue());
+    		return -1;
+    	}
     	@Override public void close() {
     		method.releaseConnection();
     	}

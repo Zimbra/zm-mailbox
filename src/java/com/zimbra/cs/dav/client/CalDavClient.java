@@ -29,6 +29,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.dav.DavContext.Depth;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
+import com.zimbra.cs.service.UserServlet.HttpInputStream;
 
 public class CalDavClient extends WebDavClient {
 
@@ -99,7 +100,8 @@ public class CalDavClient extends WebDavClient {
 	}
 	
 	public Appointment getCalendarData(Appointment appt) throws IOException, DavException {
-		byte[] res = ByteUtil.readInput(sendGet(appt.href), 0, 1024);
+		HttpInputStream resp = sendGet(appt.href);
+		byte[] res = ByteUtil.getContent(resp, resp.getContentLength());
 		appt.data = new String(res, "UTF-8");
 		return appt;
 	}

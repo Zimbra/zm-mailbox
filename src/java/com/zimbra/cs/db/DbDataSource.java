@@ -19,12 +19,14 @@ package com.zimbra.cs.db;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 
@@ -71,6 +73,8 @@ public class DbDataSource {
             conn.commit();
         } catch (SQLException e) {
             if (Db.supports(Db.Capability.ON_DUPLICATE_KEY) && Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
+                DbPool.closeStatement(stmt);
+                DbPool.quietClose(conn);
             	updateMapping(mbox, ds, item);
             } else {
                 throw ServiceException.FAILURE("Unable to add mapping for dataSource "+ds.getName(), e);
@@ -171,6 +175,93 @@ public class DbDataSource {
     public static boolean hasMapping(Mailbox mbox, DataSource ds, int itemId) throws ServiceException {
     	DataSourceItem item = getMapping(mbox, ds, itemId);
     	return item.remoteId != null;
+    }
+    
+    public static Collection<DataSourceItem> getAllMappings(Mailbox mbox, DataSource ds) throws ServiceException {
+    	ArrayList<DataSourceItem> items = new ArrayList<DataSourceItem>();
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        ZimbraLog.datasource.debug("Get all mappings for %s", ds.getName());
+        try {
+            conn = DbPool.getConnection();
+            StringBuilder sb = new StringBuilder();
+            sb.append("SELECT item_id, remote_id, metadata FROM ");
+            sb.append(getTableName(mbox));
+            sb.append(" WHERE ");
+            sb.append(DbMailItem.IN_THIS_MAILBOX_AND);
+            sb.append("  data_source_id = ?");
+            stmt = conn.prepareStatement(sb.toString());
+            int i = 1;
+            i = DbMailItem.setMailboxId(stmt, mbox, i);
+            stmt.setString(i++, ds.getId());
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+            	Metadata md = null;
+            	String buf = rs.getString(3);
+            	if (buf != null)
+            		md = new Metadata(buf);
+            	items.add(new DataSourceItem(rs.getInt(1), rs.getString(2), md));
+            }
+            rs.close();
+            stmt.close();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Unable to get mapping for dataSource "+ds.getName(), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+    	
+    	return items;
+    }
+    
+    public static Collection<DataSourceItem> getAllMappingsInFolder(Mailbox mbox, DataSource ds, int folderId) throws ServiceException {
+    	ArrayList<DataSourceItem> items = new ArrayList<DataSourceItem>();
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        ZimbraLog.datasource.debug("Get all mappings for %s in folder %d", ds.getName(), folderId);
+        try {
+        	String thisTable = getTableName(mbox);
+        	String mailItemTable = DbMailbox.qualifyTableName(mbox, "mail_item");
+        	String IN_THIS_MAILBOX_AND = DebugConfig.disableMailboxGroups ? "" : thisTable+".mailbox_id = ? AND ";
+            conn = DbPool.getConnection();
+            StringBuilder sb = new StringBuilder();
+            sb.append("SELECT item_id, remote_id, ").append(thisTable).append(".metadata FROM ");
+            sb.append(thisTable);
+            sb.append(" INNER JOIN ");
+            sb.append(mailItemTable);
+            sb.append(" ON  ").append(thisTable).append(".item_id = ").append(mailItemTable).append(".id");
+            sb.append(" WHERE ");
+            sb.append(IN_THIS_MAILBOX_AND);
+            sb.append("  data_source_id = ? AND folder_id = ?");
+            stmt = conn.prepareStatement(sb.toString());
+            int i = 1;
+            i = DbMailItem.setMailboxId(stmt, mbox, i);
+            stmt.setString(i++, ds.getId());
+            stmt.setInt(i++, folderId);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+            	Metadata md = null;
+            	String buf = rs.getString(3);
+            	if (buf != null)
+            		md = new Metadata(buf);
+            	items.add(new DataSourceItem(rs.getInt(1), rs.getString(2), md));
+            }
+            rs.close();
+            stmt.close();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Unable to get mapping for dataSource "+ds.getName(), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+            DbPool.quietClose(conn);
+        }
+    	
+    	return items;
     }
     
     public static DataSourceItem getMapping(Mailbox mbox, DataSource ds, int itemId) throws ServiceException {

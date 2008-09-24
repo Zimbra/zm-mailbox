@@ -68,6 +68,7 @@ public class CalDavDataImport extends MailItemImport {
             	Folder syncFolder = mbox.getFolderById(octxt, fid);
         		sync(mbox, octxt, syncFolder);
         	}
+    		//DbDataSource.deleteAllMappings(mbox, getDataSource());
     	} catch (DavException e) {
     		throw ServiceException.FAILURE("error importing CalDAV data", e);
     	} catch (IOException e) {
@@ -77,6 +78,7 @@ public class CalDavDataImport extends MailItemImport {
 
     public String test() throws ServiceException {
     	try {
+    		//importData(null, true);
     		DataSource ds = getDataSource();
         	mClient = new CalDavClient(getTargetUrl());
     		mClient.setCredential(ds.getUsername(), ds.getDecryptedPassword());
@@ -214,15 +216,31 @@ public class CalDavDataImport extends MailItemImport {
     	DataSourceItem item = DbDataSource.getMapping(mbox, ds, folder.getId());
     	if (item.md == null)
             throw ServiceException.FAILURE("Mapping for folder "+folder.getPath()+" not found", null);
+
+    	// CalDAV doesn't provide delete tombstone.  in order to check for deleted appointments
+    	// we need to cross reference the current result with what we have from last sync
+    	// and check for any appointment that has disappeared since last sync.
+    	HashMap<String,DataSourceItem> allItems = new HashMap<String,DataSourceItem>();
+    	for (DataSourceItem localItem : DbDataSource.getAllMappingsInFolder(mbox, getDataSource(), folder.getId()))
+    		allItems.put(localItem.remoteId, localItem);
+    	
     	ArrayList<RemoteItem> ret = new ArrayList<RemoteItem>();
     	try {
         	CalDavClient client = getClient();
         	Collection<Appointment> appts = client.getEtags(item.remoteId);
         	for (Appointment a : appts) {
         		ret.add(new RemoteCalendarItem(a.href, a.etag));
+        		allItems.remove(a.href);
         	}
     	} catch (DavException e) {
     		throw ServiceException.FAILURE("error getting items for folder "+folder.getName(), e);
+    	}
+    	for (DataSourceItem deletedItem : allItems.values()) {
+    		// what's left in the collection are previous mapping that has disappeared.
+    		// we need to delete the appointments that are mapped locally.
+			RemoteCalendarItem rci = new RemoteCalendarItem(deletedItem.remoteId, null);
+			rci.status = Status.deleted;
+    		ret.add(rci);
     	}
     	return ret;
     }
@@ -232,7 +250,6 @@ public class CalDavDataImport extends MailItemImport {
     		return null;
     	}
     	RemoteCalendarItem item = (RemoteCalendarItem) remoteItem;
-    	ZimbraLog.datasource.debug("Check item %s", item.href);
     	DataSource ds = getDataSource();
     	Mailbox mbox = ds.getMailbox();
     	DataSourceItem dsItem = DbDataSource.getReverseMapping(mbox, ds, item.href);
@@ -257,7 +274,12 @@ public class CalDavDataImport extends MailItemImport {
     	}
     	OperationContext octxt = new Mailbox.OperationContext(mbox);
     	MailItem mi = null;
-    	if (isStale) {
+    	if (isStale && item.status == Status.deleted) {
+        	ZimbraLog.datasource.debug("Deleting appointment %s", item.href);
+        	mi = mbox.getItemById(octxt, dsItem.itemId, MailItem.TYPE_UNKNOWN);
+        	mbox.delete(octxt, dsItem.itemId, MailItem.TYPE_UNKNOWN);
+    	} else if (isStale) {
+        	ZimbraLog.datasource.debug("Updating stale appointment %s", item.href);
     		ZCalendar.ZVCalendar vcalendar;
     		try {
     			CalDavClient client = getClient();
@@ -290,6 +312,7 @@ public class CalDavDataImport extends MailItemImport {
     		dsItem.itemId = mi.getId();
     		DbDataSource.addMapping(mbox, ds, dsItem);
     	} else {
+        	ZimbraLog.datasource.debug("Appointment up to date %s", item.href);
     		mi = mbox.getItemById(octxt, dsItem.itemId, MailItem.TYPE_UNKNOWN);
     	}
     	return mi;
@@ -343,16 +366,5 @@ public class CalDavDataImport extends MailItemImport {
     		lastSync = currentSync;
     	}
     	mbox.setSyncDate(octxt, syncFolder.getId(), currentSync);
-    }
-    public static void main(String[] args) throws Exception {
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraDataSourceHost, "www.google.com");
-        attrs.put(Provisioning.A_zimbraDataSourcePort, "443");
-        attrs.put(Provisioning.A_zimbraDataSourceConnectionType, "ssl");
-        attrs.put(Provisioning.A_zimbraDataSourceUsername, "ttttest123@gmail.com");
-        attrs.put(Provisioning.A_zimbraDataSourcePassword, "test1234");
-        attrs.put(Provisioning.A_zimbraDataSourceAttribute, "p:/calendar/dav/_USERNAME_/user");
-    	attrs.put(Provisioning.A_zimbraDataSourceImportClassName, CalDavDataImport.class.getName());
-        attrs.put(Provisioning.A_zimbraDataSourceFolderId, "test1234");
     }
 }
