@@ -17,14 +17,13 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.event.ZModifyTagEvent;
-import com.zimbra.common.soap.Element;
+import org.json.JSONException;
 
-import java.util.Arrays;
-
-public class ZTag implements Comparable, ZItem {
+public class ZTag implements Comparable, ZItem, ToZJSONObject {
 
     private Color mColor;
     private String mId;
@@ -107,15 +106,17 @@ public class ZTag implements Comparable, ZItem {
         return mColor;
     }
 
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject zjo = new ZJSONObject();
+        zjo.put("id", mId);
+        zjo.put("name", mName);
+        zjo.put("color", mColor.name());
+        zjo.put("unreadCount", mUnreadCount);
+        return zjo;
+    }
+
     public String toString() {
-        ZSoapSB sb = new ZSoapSB();
-        sb.beginStruct();
-        sb.add("id", mId);
-        sb.add("name", mName);
-        sb.add("color", mColor.name());
-        sb.add("unreadCount", mUnreadCount);
-        sb.endStruct();
-        return sb.toString();
+        return ZJSONObject.toString(this);
     }
 
     public int compareTo(Object o) {

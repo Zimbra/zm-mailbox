@@ -24,6 +24,7 @@ import com.zimbra.cs.mailbox.calendar.Geo;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.service.mail.CalendarUtils;
 import com.zimbra.cs.service.mail.ToXML;
+import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,7 +33,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-public class ZInvite {
+public class ZInvite implements ToZJSONObject {
 
     private List<ZTimeZone> mTimeZones;
     private List<ZComponent> mComponents;
@@ -92,17 +93,16 @@ public class ZInvite {
         return invEl;
     }
 
-    ZSoapSB toString(ZSoapSB sb) {
-        sb.beginStruct();
-        sb.add("type", mType.name());
-        sb.add("timezones", mTimeZones, false, false);
-        sb.add("components", mComponents, false, false);
-        sb.endStruct();
-        return sb;
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject zjo = new ZJSONObject();
+        zjo.put("type", mType.name());
+        zjo.put("timezones", mTimeZones);
+        zjo.put("components", mComponents);
+        return zjo;
     }
 
     public String toString() {
-        return toString(new ZSoapSB()).toString();
+        return ZJSONObject.toString(this);
     }
 
     public enum ZInviteType {
@@ -120,7 +120,7 @@ public class ZInvite {
         public boolean isAppointment() { return equals(appt); }
     }
 
-    public static class ZComponent {
+    public static class ZComponent implements ToZJSONObject {
 
         private ZStatus mStatus;
         private ZClass mClass;
@@ -546,44 +546,42 @@ public class ZInvite {
             return mRecurrenceIdZ;
         }
 
-        ZSoapSB toString(ZSoapSB sb) {
-            sb.beginStruct();
-            sb.add("status", mStatus.name());
-            sb.add("class", mClass.name());
-            sb.add("freeBusyStatus", mFreeBusyStatus.name());
-            sb.add("actualFreeBusyStatus", mActualFreeBusyStatus.name());
-            sb.add("transparency", mTransparency.name());
-            sb.add("isAllDay", mIsAllDay);
-            sb.add("name", mName);
-            sb.add("compNum", mComponentNum);
-            sb.add("locaiton", mLocation);
-            sb.add("categories", mCategories, true, true);
-            sb.add("comments", mComments, true, true);
-            sb.add("contacts", mContacts, true, true);
-            if (mGeo != null)
-                sb.add("geo", mGeo.toString());
-            sb.add("isOrganizer", mIsOrganizer);
-            sb.add("sequenceNumber", mSequenceNumber);
-            sb.add("priority", mPriority);
-            sb.add("percentCompleted", mPercentCompleted);
-            sb.add("completed", mCompleted);
-            sb.add("replies", mReplies, false, false);
-            if (mStart != null) sb.addStruct("start", mStart.toString());
-            if (mEnd != null) sb.addStruct("end", mEnd.toString());
-            if (mDuration != null) sb.addStruct("duration", mDuration.toString());
-            if (mOrganizer != null) sb.addStruct("organizer", mOrganizer.toString());
-            sb.add("attendees", mAttendees, false, false);
-            if (mRecurrence != null) sb.addStruct("recurrence", mRecurrence.toString());
-            sb.add("recurrenceId", mRecurrenceIdZ);            
-            sb.endStruct();
-            return sb;
+        public ZJSONObject toZJSONObject() throws JSONException {
+            ZJSONObject zjo = new ZJSONObject();
+            zjo.put("status", mStatus.name());
+            zjo.put("class", mClass.name());
+            zjo.put("freeBusyStatus", mFreeBusyStatus.name());
+            zjo.put("actualFreeBusyStatus", mActualFreeBusyStatus.name());
+            zjo.put("transparency", mTransparency.name());
+            zjo.put("isAllDay", mIsAllDay);
+            zjo.put("name", mName);
+            zjo.put("compNum", mComponentNum);
+            zjo.put("locaiton", mLocation);
+            zjo.putList("categories", mCategories);
+            zjo.putList("comments", mComments);
+            zjo.putList("contacts", mContacts);
+            if (mGeo != null) zjo.put("geo", mGeo.toString());
+            zjo.put("isOrganizer", mIsOrganizer);
+            zjo.put("sequenceNumber", mSequenceNumber);
+            zjo.put("priority", mPriority);
+            zjo.put("percentCompleted", mPercentCompleted);
+            zjo.put("completed", mCompleted);
+            zjo.put("replies", mReplies);
+            zjo.put("start", mStart);
+            zjo.put("end", mEnd);
+            zjo.put("duration", mDuration);
+            zjo.put("organizer", mOrganizer);
+            zjo.put("attendees", mAttendees);
+            zjo.put("recurrence", mRecurrence);
+            zjo.put("recurrenceId", mRecurrenceIdZ);
+            return zjo;
         }
 
         public String toString() {
-            return toString(new ZSoapSB()).toString();
+            return ZJSONObject.toString(this);
         }
 
-        public static class ZReply {
+        public static class ZReply implements ToZJSONObject {
 
             private long mDate;
             private String mAttendee;
@@ -594,6 +592,18 @@ public class ZInvite {
 
             public ZReply() {
 
+            }
+
+            public ZJSONObject toZJSONObject() throws JSONException {
+                ZJSONObject zjo = new ZJSONObject();
+                zjo.put("date", mDate);
+                zjo.put("attendee", mAttendee);
+                zjo.put("participantStatus", mParticipantStatus.name());
+                return zjo;
+            }
+            
+            public String toString() {
+                return ZJSONObject.toString(this);
             }
             
             public ZReply(Element e) throws ServiceException {
@@ -668,7 +678,7 @@ public class ZInvite {
 
     }
 
-    public static class ZTimeZone {
+    public static class ZTimeZone implements ToZJSONObject {
 
         private String mId;
         private long mStandardOffset;
@@ -760,24 +770,21 @@ public class ZInvite {
             mDaylight = daylight;
         }
 
-        ZSoapSB toString(ZSoapSB sb) {
-            sb.beginStruct();
-            sb.add("id", mId);
-            sb.add("standardOffset", mStandardOffset);
-            sb.add("daylightOffset", mDaylightSavingsOffset);
-            if (mStandard != null)
-                sb.addStruct("standardRule", mStandard.toString());
-            if (mDaylight != null)
-                sb.addStruct("daylightRule", mDaylight.toString());
-            sb.endStruct();
-            return sb;
+        public ZJSONObject toZJSONObject() throws JSONException {
+            ZJSONObject zjo = new ZJSONObject();
+            zjo.put("id", mId);
+            zjo.put("standardOffset", mStandardOffset);
+            zjo.put("daylightOffset", mDaylightSavingsOffset);
+            zjo.put("standardRule", mStandard);
+            zjo.put("daylightRule", mDaylight);
+            return zjo;
         }
 
         public String toString() {
-            return toString(new ZSoapSB()).toString();
+            return ZJSONObject.toString(this);
         }
 
-        public static class ZTransitionRule {
+        public static class ZTransitionRule implements ToZJSONObject {
             private int mWeek;
             private int mDayOfWeek;
             private int mMonth;
@@ -868,26 +875,25 @@ public class ZInvite {
                 mSecond = second;
             }
 
-            ZSoapSB toString(ZSoapSB sb) {
-                sb.beginStruct();
-                sb.add("week", mWeek);
-                sb.add("dayOfWeek", mDayOfWeek);
-                sb.add("dayOfMonth", mDayOfMonth);
-                sb.add("month", mMonth);
-                sb.add("hour", mHour);
-                sb.add("minute", mMinute);
-                sb.add("second", mSecond);
-                sb.endStruct();
-                return sb;
+            public ZJSONObject toZJSONObject() throws JSONException {
+                ZJSONObject zjo = new ZJSONObject();
+                zjo.put("week", mWeek);
+                zjo.put("dayOfWeek", mDayOfWeek);
+                zjo.put("dayOfMonth", mDayOfMonth);
+                zjo.put("month", mMonth);
+                zjo.put("hour", mHour);
+                zjo.put("minute", mMinute);
+                zjo.put("second", mSecond);
+                return zjo;
             }
 
             public String toString() {
-                return toString(new ZSoapSB()).toString();
+                return ZJSONObject.toString(this);
             }
         }
     }
 
-    public static class ZDuration {
+    public static class ZDuration implements ToZJSONObject {
 
         private boolean mNegative;
         private int mWeeks;
@@ -987,20 +993,19 @@ public class ZInvite {
             mSeconds = seconds;
         }
 
-        ZSoapSB toString(ZSoapSB sb) {
-            sb.beginStruct();
-            sb.add("negative", mNegative);
-            sb.add("weeks", mWeeks);
-            sb.add("days", mDays);
-            sb.add("hours", mHours);
-            sb.add("minutes", mMinutes);
-            sb.add("seconds", mSeconds);
-            sb.endStruct();
-            return sb;
+        public ZJSONObject toZJSONObject() throws JSONException {
+            ZJSONObject zjo = new ZJSONObject();
+            zjo.put("negative", mNegative);
+            zjo.put("weeks", mWeeks);
+            zjo.put("days", mDays);
+            zjo.put("hours", mHours);
+            zjo.put("minutes", mMinutes);
+            zjo.put("seconds", mSeconds);
+            return zjo;
         }
 
         public String toString() {
-            return toString(new ZSoapSB()).toString();
+            return ZJSONObject.toString(this);
         }
 
     }
@@ -1127,7 +1132,7 @@ public class ZInvite {
         public boolean isUnknown() { return equals(UNK); }
     }
 
-    public static class ZCalendarUser {
+    public static class ZCalendarUser implements ToZJSONObject {
         private String mAddress;
         private String mUrl;
         private String mPersonalName;
@@ -1210,21 +1215,19 @@ public class ZInvite {
             return mXParams.iterator();
         }
 
-        void toString(ZSoapSB sb) {
-            sb.add("address", mAddress);
-            sb.add("url", mUrl);
-            sb.add("personalName", mPersonalName);
-            sb.add("sentBy", mSentBy);
-            sb.add("dir", mDirectoryUrl);
-            sb.add("language", mLanguage);
+        public ZJSONObject toZJSONObject() throws JSONException {
+            ZJSONObject zjo = new ZJSONObject();
+            zjo.put("address", mAddress);
+            zjo.put("url", mUrl);
+            zjo.put("personalName", mPersonalName);
+            zjo.put("sentBy", mSentBy);
+            zjo.put("dir", mDirectoryUrl);
+            zjo.put("language", mLanguage);
+            return zjo;
         }
 
         public String toString() {
-            ZSoapSB sb = new ZSoapSB();
-            sb.beginStruct();
-            toString(sb);
-            sb.endStruct();
-            return sb.toString();
+            return ZJSONObject.toString(this);
         }
     }
 
@@ -1258,7 +1261,7 @@ public class ZInvite {
 
     }
 
-    public static class ZAttendee extends ZCalendarUser {
+    public static class ZAttendee extends ZCalendarUser implements ToZJSONObject {
         private ZRole mRole;
         private ZParticipantStatus mParticipantStatus;
         private boolean mRSVP;
@@ -1358,28 +1361,24 @@ public class ZInvite {
             mDelegatedFrom = delegatedFrom;
         }
 
-        void toString(ZSoapSB sb) {
-            super.toString(sb);
-            
+        public ZJSONObject toZJSONObject() throws JSONException {
+            ZJSONObject zjo = super.toZJSONObject();
+            zjo.put("role", mRole.name());
+            zjo.put("participantStatus", mParticipantStatus.name());
+            zjo.put("rsvp", mRSVP);
+            zjo.put("calendarUserType", mCalendarUserType.name());
+            zjo.put("member", mMember);
+            zjo.put("delegatedFrom", mDelegatedFrom);
+            zjo.put("delegatedTo", mDelegatedTo);
+            return zjo;
         }
 
         public String toString() {
-            ZSoapSB sb = new ZSoapSB();
-            sb.beginStruct();
-            toString(sb);
-            sb.add("role", mRole.name());
-            sb.add("participantStatus", mParticipantStatus.name());
-            sb.add("rsvp", mRSVP);
-            sb.add("calendarUserType", mCalendarUserType.name());
-            sb.add("member", mMember);
-            sb.add("delegatedFrom", mDelegatedFrom);
-            sb.add("delegatedTo", mDelegatedTo);
-            sb.endStruct();
-            return sb.toString();
+            return ZJSONObject.toString(this);
         }
     }
 
-    public static class ZRecurrenceDate {
+    public static class ZRecurrenceDate implements ToZJSONObject {
         private ZDateTime mStart;
         private ZDateTime mEnd;
         private ZDuration mDuration;
@@ -1432,18 +1431,20 @@ public class ZInvite {
             mDuration = duration;
         }
 
+        public ZJSONObject toZJSONObject() throws JSONException {
+            ZJSONObject zjo = new ZJSONObject();
+            zjo.put("start", mStart);
+            zjo.put("end", mEnd);
+            zjo.put("duration", mDuration);
+            return zjo;
+        }
+
         public String toString() {
-            ZSoapSB sb = new ZSoapSB();
-            sb.beginStruct();
-            sb.addStruct("start", mStart.toString());
-            if (mEnd != null) sb.addStruct("end", mEnd.toString());
-            if (mDuration != null) sb.addStruct("duration", mDuration.toString());
-            sb.endStruct();
-            return sb.toString();
+            return ZJSONObject.toString(this);
         }
     }
 
-    public static class ZRecurrenceDates {
+    public static class ZRecurrenceDates implements ToZJSONObject {
         private String mTimeZoneId;
         private List<ZRecurrenceDate> mDates;
 
@@ -1485,13 +1486,15 @@ public class ZInvite {
             mDates = dates;
         }
 
+        public ZJSONObject toZJSONObject() throws JSONException {
+            ZJSONObject zjo = new ZJSONObject();
+            zjo.put("timeZoneId", mTimeZoneId);
+            zjo.put("dates", mDates);
+            return zjo;
+        }
+
         public String toString() {
-            ZSoapSB sb = new ZSoapSB();
-            sb.beginStruct();
-            if (mTimeZoneId != null) sb.add("timeZoneId", mTimeZoneId);
-            sb.add("dates", mDates, false, false);
-            sb.endStruct();
-            return sb.toString();
+            return ZJSONObject.toString(this);
         }
     }
 
@@ -1566,7 +1569,7 @@ public class ZInvite {
         public boolean isBySetPos() { return equals(BY_SETPOS); }
     }
 
-    public static class ZByDayWeekDay {
+    public static class ZByDayWeekDay implements ToZJSONObject {
 
         private int mWeekOrd;
         private ZWeekDay mDay;
@@ -1625,17 +1628,19 @@ public class ZInvite {
         }
 
 
+        public ZJSONObject toZJSONObject() throws JSONException {
+            ZJSONObject zjo = new ZJSONObject();
+            zjo.put("weekOrd", mWeekOrd);
+            zjo.put("day", mDay.name());
+            return zjo;
+        }
+
         public String toString() {
-            ZSoapSB sb = new ZSoapSB();
-            sb.beginStruct();
-            sb.add("weekOrd", mWeekOrd);
-            sb.add("day", mDay.name());
-            sb.endStruct();
-            return sb.toString();
+            return ZJSONObject.toString(this);
         }
     }
     
-    public static class ZByRule {
+    public static class ZByRule implements ToZJSONObject {
         private ZByType mType;
         private String mList;
         private List<ZByDayWeekDay> mWeekDays;
@@ -1777,18 +1782,20 @@ public class ZInvite {
             return mWeekDays;
         }
 
+        public ZJSONObject toZJSONObject() throws JSONException {
+            ZJSONObject zjo = new ZJSONObject();
+            zjo.put("type", mType.name());
+            zjo.put("list", mList);
+            zjo.put("weekdays", mWeekDays);
+            return zjo;
+        }
+
         public String toString() {
-            ZSoapSB sb = new ZSoapSB();
-            sb.beginStruct();
-            sb.add("type", mType.name());
-            if (mList != null) sb.add("list", mList);
-            if (mWeekDays != null) sb.add("weekdays", mWeekDays, false, false);
-            sb.endStruct();
-            return sb.toString();
+            return ZJSONObject.toString(this);
         }
     }
 
-    public static class ZRecurrenceRule {
+    public static class ZRecurrenceRule implements ToZJSONObject {
         private ZFrequency mFrequency;
         private ZDateTime mUntilDate;
         private int mCount;
@@ -1819,17 +1826,19 @@ public class ZInvite {
             }
         }
 
+        public ZJSONObject toZJSONObject() throws JSONException {
+            ZJSONObject zjo = new ZJSONObject();
+            zjo.put("frequency", mFrequency.name());
+            zjo.put("until", mUntilDate);
+            zjo.put("count", mCount);
+            zjo.put("interval", mInterval);
+            zjo.put("byRules", mByRules);
+            if (mWeekStart != null) zjo.put("weekStart", mWeekStart.name());
+            return zjo;
+        }
+
         public String toString() {
-            ZSoapSB sb = new ZSoapSB();
-            sb.beginStruct();
-            sb.add("frequency", mFrequency.name());
-            if (mUntilDate != null) sb.addStruct("until", mUntilDate.toString());
-            if (mCount > 0) sb.add("count", mCount);
-            if (mInterval > 0) sb.add("interval", mInterval);
-            sb.add("byRules", mByRules, false, false);
-            if (mWeekStart != null) sb.add("weekStart", mWeekStart.name());
-            sb.endStruct();
-            return sb.toString();
+            return ZJSONObject.toString(this);
         }
 
         public Element toElement(Element parent) {
@@ -1905,7 +1914,7 @@ public class ZInvite {
     }
 
 
-    public static class ZRecurrence {
+    public static class ZRecurrence implements ToZJSONObject {
 
         private List<ZRecurrenceRule> mRules;
         private List<ZRecurrenceDates> mDates;
@@ -2012,15 +2021,17 @@ public class ZInvite {
             mExDates = exDates;
         }
 
+        public ZJSONObject toZJSONObject() throws JSONException {
+            ZJSONObject jso = new ZJSONObject();
+            jso.put("rules", mRules);
+            jso.put("dates", mDates);
+            jso.put("exRules", mExRules);
+            jso.put("exDates", mExDates);
+            return jso;
+        }
+
         public String toString() {
-            ZSoapSB sb = new ZSoapSB();
-            sb.beginStruct();
-            sb.add("rules", mRules, false, false);
-            sb.add("dates", mDates, false, false);
-            sb.add("exRules", mExRules, false, false);
-            sb.add("exDates", mExDates, false, false);
-            sb.endStruct();
-            return sb.toString();
+            return ZJSONObject.toString(this);
         }
     }
 

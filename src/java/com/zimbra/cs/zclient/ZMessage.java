@@ -18,15 +18,16 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.event.ZModifyMessageEvent;
+import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ZMessage implements ZItem {
+public class ZMessage implements ZItem, ToZJSONObject {
 
     public enum Flag {
         unread('u'),
@@ -201,30 +202,31 @@ public class ZMessage implements ZItem {
         return mTags != null && mTags.length() > 0;
     }
 
-    ZSoapSB toString(ZSoapSB sb) {
-        sb.beginStruct();
-        sb.add("id", mId);
-        sb.add("flags", mFlags);
-        sb.add("tags", mTags);
-        sb.add("subject", mSubject);
-        sb.add("fragment", mFragment);
-        sb.add("partName", mPartName);
-        sb.add("messageIdHeader", mMessageIdHeader);
-        sb.addDate("receivedDate", mReceivedDate);
-        sb.addDate("sentDate", mSentDate);
-        sb.add("folderId", mFolderId);
-        sb.add("conversationId", mConversationId);
-        sb.add("size", mSize);
-        sb.add("content", mContent);
-        sb.add("contentURL", mContentURL);
-        sb.add("addresses", mAddresses, false, true);
-        sb.addStruct("mimeStructure", mMimeStructure.toString());
-        if (mInvite != null)
-                sb.addStruct("invite", mInvite.toString());
-        if (mShare != null)
-            sb.addStruct("share", mShare.toString());
-        sb.endStruct();
-        return sb;
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject zjo = new ZJSONObject();
+        zjo.put("id", mId);
+        zjo.put("flags", mFlags);
+        zjo.put("tags", mTags);
+        zjo.put("subject", mSubject);
+        zjo.put("fragment", mFragment);
+        zjo.put("partName", mPartName);
+        zjo.put("messageIdHeader", mMessageIdHeader);
+        zjo.put("receivedDate", mReceivedDate);
+        zjo.put("sentDate", mSentDate);
+        zjo.put("folderId", mFolderId);
+        zjo.put("conversationId", mConversationId);
+        zjo.put("size", mSize);
+        zjo.put("content", mContent);
+        zjo.put("contentURL", mContentURL);
+        zjo.put("addresses", mAddresses);
+        zjo.put("mimeStructure", mMimeStructure);
+        zjo.put("invite", mInvite);
+        zjo.put("share", mShare);
+        return zjo;
+    }
+
+    public String toString() {
+        return ZJSONObject.toString(this);
     }
 
     /**
@@ -234,11 +236,7 @@ public class ZMessage implements ZItem {
     public String getPartName() {
         return mPartName;
     }
-    
-    public String toString() {
-        return toString(new ZSoapSB()).toString();
-    }
-    
+       
     public String getFlags() {
         return mFlags;
     }
@@ -293,7 +291,7 @@ public class ZMessage implements ZItem {
         return mContentURL;
     }
     
-    public static class ZMimePart {
+    public static class ZMimePart implements ToZJSONObject {
         private String mPartName;
         private String mName;
         private String mContentType;
@@ -327,22 +325,25 @@ public class ZMessage implements ZItem {
             }
         }
 
-        ZSoapSB toString(ZSoapSB sb) {
-            sb.beginStruct();
-            sb.add("partName", mPartName);
-            sb.add("content", mContent);
-            sb.add("contentType", mContentType);
-            sb.add("contentDisposition", mContentDisposition);
-            sb.add("contentId", mContentId);
-            sb.add("contentLocation", mContentLocation);
-            sb.add("contentDescription", mContentDescription);
-            sb.add("isBody", mIsBody);
-            sb.add("size", mSize);
-            sb.add("name", mName);
-            sb.add("fileName", mFileName);
-            sb.add("children", mChildren, false, false);
-            sb.endStruct();
-            return sb;
+        public ZJSONObject toZJSONObject() throws JSONException {
+            ZJSONObject zjo = new ZJSONObject();
+            zjo.put("partName", mPartName);
+            zjo.put("content", mContent);
+            zjo.put("contentType", mContentType);
+            zjo.put("contentDisposition", mContentDisposition);
+            zjo.put("contentId", mContentId);
+            zjo.put("contentLocation", mContentLocation);
+            zjo.put("contentDescription", mContentDescription);
+            zjo.put("isBody", mIsBody);
+            zjo.put("size", mSize);
+            zjo.put("name", mName);
+            zjo.put("fileName", mFileName);
+            zjo.put("children", mChildren);
+            return zjo;
+        }
+
+        public String toString() {
+            return ZJSONObject.toString(this);
         }
 
         public ZMimePart getParent() {
@@ -407,11 +408,6 @@ public class ZMessage implements ZItem {
         public long getSize() {
             return mSize;
         }
-        
-        public String toString() {
-            return toString(new ZSoapSB()).toString();
-        }
-
     }
 
     public boolean hasAttachment() {

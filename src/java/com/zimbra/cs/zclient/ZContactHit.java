@@ -18,11 +18,12 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.zclient.event.ZModifyContactEvent;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
+import org.json.JSONException;
 
 import java.util.Map;
 
@@ -63,28 +64,30 @@ public class ZContactHit implements ZSearchHit {
         mFullName = e.getAttribute(Contact.A_fullName,null);
     }
 
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject jo = new ZJSONObject();
+        jo.put("id", mId);
+        jo.put("tags", mTagIds);
+        jo.put("flags", mFlags);
+        jo.put("sortField", mSortField);
+        jo.put("type", mType);
+        jo.put("score", mScore);
+        jo.put("fileAsStr", mFileAsStr);
+        jo.put("revision", mRevision);
+        jo.put("folderId", mFolderId);
+        jo.put(Contact.A_dlist, mDlist);
+        jo.put(Contact.A_email, mEmail);
+        jo.put(Contact.A_email2, mEmail2);
+        jo.put(Contact.A_email3, mEmail3);
+        jo.put(Contact.A_workEmail1, mWorkEmail1);
+        jo.put(Contact.A_workEmail2, mWorkEmail2);
+        jo.put(Contact.A_workEmail3, mWorkEmail3);
+        jo.put(Contact.A_fullName, mFullName);
+        return jo;
+    }
+    
     public String toString() {
-        ZSoapSB sb = new ZSoapSB();
-        sb.beginStruct();
-        sb.add("id", mId);
-        sb.add("tags", mTagIds);
-        sb.add("flags", mFlags);
-        sb.add("sortField", mSortField);
-        sb.add("type", mType);
-        sb.add("score", mScore);
-        sb.add("fileAsStr", mFileAsStr);
-        sb.add("revision", mRevision);
-        sb.add("folderId", mFolderId);
-        sb.add(Contact.A_dlist, mDlist);
-        sb.add(Contact.A_email, mEmail);
-        sb.add(Contact.A_email2, mEmail2);
-        sb.add(Contact.A_email3, mEmail3);
-        sb.add(Contact.A_workEmail1, mWorkEmail1);
-        sb.add(Contact.A_workEmail2, mWorkEmail2);
-        sb.add(Contact.A_workEmail3, mWorkEmail3);
-        sb.add(Contact.A_fullName, mFullName);
-        sb.endStruct();
-        return sb.toString();
+        return ZJSONObject.toString(this);
     }
 
     public boolean isGroup() {

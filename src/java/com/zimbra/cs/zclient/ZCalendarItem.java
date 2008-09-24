@@ -22,11 +22,12 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.event.ZModifyMessageEvent;
+import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ZCalendarItem implements ZItem {
+public class ZCalendarItem implements ZItem, ToZJSONObject {
 
     public enum Flag {
         flagged('f'),
@@ -121,22 +122,21 @@ public class ZCalendarItem implements ZItem {
         return mTags != null && mTags.length() > 0;
     }
 
-    ZSoapSB toString(ZSoapSB sb) {
-        sb.beginStruct();
-        sb.add("id", mId);
-        sb.add("flags", mFlags);
-        sb.add("tags", mTags);
-        sb.addDate("date", mDate);
-        sb.add("folderId", mFolderId);
-        sb.add("size", mSize);
-        sb.add("uid", mUID);
-        sb.add("invites", mInvites, false, false);
-        sb.endStruct();
-        return sb;
+   public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject zjo = new ZJSONObject();
+        zjo.put("id", mId);
+        zjo.put("flags", mFlags);
+        zjo.put("tags", mTags);
+        zjo.put("date", mDate);
+        zjo.put("folderId", mFolderId);
+        zjo.put("size", mSize);
+        zjo.put("uid", mUID);
+        zjo.put("invites", mInvites);
+        return zjo;
     }
 
     public String toString() {
-        return toString(new ZSoapSB()).toString();
+        return ZJSONObject.toString(this);
     }
 
     public String getFlags() {

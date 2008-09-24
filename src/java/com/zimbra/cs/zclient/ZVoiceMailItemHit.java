@@ -22,6 +22,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.VoiceConstants;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemEvent;
+import org.json.JSONException;
 
 public class ZVoiceMailItemHit implements ZSearchHit {
 
@@ -139,4 +140,21 @@ public class ZVoiceMailItemHit implements ZSearchHit {
 		}
 	}
 
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject zjo = new ZJSONObject ();
+
+        zjo.put("id", mId);
+        zjo.put("sortField", mSortField);
+        zjo.put("score", mScore);
+        zjo.put("flags", mFlags);
+        zjo.put("soundUrl", mSoundUrl);
+        zjo.put("date", mDate);
+        zjo.put("duration", mDuration);
+        zjo.put("caller", mCaller);
+        return zjo;
+    }
+
+    public String toString() {
+        return ZJSONObject.toString(this);
+    }
 }

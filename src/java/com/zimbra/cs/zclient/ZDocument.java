@@ -20,8 +20,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.common.soap.Element;
+import org.json.JSONException;
 
-public class ZDocument implements ZItem {
+public class ZDocument implements ZItem, ToZJSONObject {
 
 	private boolean mIsWiki;
 	private String mName;
@@ -54,8 +55,30 @@ public class ZDocument implements ZItem {
         mContentType = e.getAttribute(MailConstants.A_CONTENT_TYPE);
         mTagIds = e.getAttribute(MailConstants.A_TAGS);
     }
+
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject zjo = new ZJSONObject();
+        zjo.put("name", mName);
+        zjo.put("id", mId);
+        zjo.put("folderId", mFolderId);
+        zjo.put("version", mVersion);
+        zjo.put("editor", mEditor);
+        zjo.put("createor", mCreator);
+        zjo.put("restUrl", mRestUrl);
+        zjo.put("createdDate", mCreatedDate);
+        zjo.put("modifiedDate", mModifiedDate);
+        zjo.put("metaDataChangedDate", mMetaDataChangedDate);
+        zjo.put("size", mSize);
+        zjo.put("contentType", mContentType);
+        zjo.put("tags", mTagIds);
+        return zjo;
+    }
+
+    public String toString() {
+        return ZJSONObject.toString(this);
+    }
     
-	public String getId() {
+    public String getId() {
 		return mId;
 	}
 	public String getName() {

@@ -23,12 +23,13 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.VoiceConstants;
 import com.zimbra.cs.zclient.event.ZModifyConversationEvent;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
+import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
 
-public class ZSearchResult {
+public class ZSearchResult implements ToZJSONObject {
 
     private List<ZSearchHit> mHits;
     private ZConversationSummary mConvSummary;
@@ -122,15 +123,17 @@ public class ZSearchResult {
         return mOffset;
     }
 
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject zjo = new ZJSONObject();
+        zjo.put("more", mHasMore);
+        zjo.put("sortBy", mSortBy);
+        zjo.put("offset", mOffset);
+        zjo.put("hits", mHits);
+        return zjo;
+    }
+
     public String toString() {
-        ZSoapSB sb = new ZSoapSB();
-        sb.beginStruct();
-        sb.add("more", mHasMore);
-        sb.add("sortBy", mSortBy);
-        sb.add("offset", mOffset);
-        sb.add("hits", mHits, false, true);
-        sb.endStruct();
-        return sb.toString();
+       return ZJSONObject.toString(this);
     }
 
     /*
@@ -171,15 +174,17 @@ public class ZSearchResult {
             return 0;
         }
 
+        public ZJSONObject toZJSONObject() throws JSONException {
+            ZJSONObject zjo = new ZJSONObject();
+            zjo.put("id", mId);
+            zjo.put("flags", mFlags);
+            zjo.put("tags", mTags);
+            zjo.put("messageCount", mMessageCount);
+            return zjo;
+        }
+
         public String toString() {
-            ZSoapSB sb = new ZSoapSB();
-            sb.beginStruct();
-            sb.add("id", mId);
-            sb.add("flags", mFlags);
-            sb.add("tags", mTags);
-            sb.add("messageCount", mMessageCount);
-            sb.endStruct();
-            return sb.toString();
+            return ZJSONObject.toString(this);
         }
 
         public String getFlags() {

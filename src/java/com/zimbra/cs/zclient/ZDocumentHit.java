@@ -20,6 +20,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
+import org.json.JSONException;
 
 public class ZDocumentHit implements ZSearchHit {
 
@@ -55,4 +56,16 @@ public class ZDocumentHit implements ZSearchHit {
 		// TODO Auto-generated method stub
 	}
 
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject zjo = new ZJSONObject();
+        zjo.put("id", mId);
+        zjo.put("sortField", mSortField);
+        zjo.put("score", mScore);
+        zjo.put("document", mDoc);
+        return zjo;
+    }
+
+    public String toString() {
+        return ZJSONObject.toString(this);
+    }
 }

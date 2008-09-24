@@ -22,14 +22,15 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.event.ZModifyFolderEvent;
+import org.json.JSONException;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.net.URLEncoder;
-import java.io.UnsupportedEncodingException;
 
-public class ZFolder implements ZItem, Comparable {
+public class ZFolder implements ZItem, Comparable, ToZJSONObject {
     
     public static final String ID_USER_ROOT = "1";
     public static final String ID_INBOX = "2";
@@ -491,28 +492,26 @@ public class ZFolder implements ZItem, Comparable {
         }
     }
     
-    protected void toStringCommon(ZSoapSB sb) {
-        sb.add("id", mId);
-        sb.add("name", mName);
-        sb.add("path", getPath());
-        sb.add("parentId", mParentId);
-        sb.add("flags", mFlags);
-        sb.add("color", mColor.name());
-        sb.add("unreadCount", mUnreadCount);
-        sb.add("messageCount", mMessageCount);
-        sb.add("view", mDefaultView.name());
-        sb.add("url", mRemoteURL);
-        sb.add("effectivePermissions", mEffectivePerms);
-        sb.add("grants", mGrants, false, false);
-        sb.add("children", mSubFolders, false, false);
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject jo = new ZJSONObject();
+        jo.put("id", mId);
+        jo.put("name", mName);
+        jo.put("path", getPath());
+        jo.put("parentId", mParentId);
+        jo.put("flags", mFlags);
+        jo.put("color", mColor.name());
+        jo.put("unreadCount", mUnreadCount);
+        jo.put("messageCount", mMessageCount);
+        jo.put("view", mDefaultView.name());
+        jo.put("url", mRemoteURL);
+        jo.put("effectivePermissions", mEffectivePerms);
+        jo.put("grants", mGrants);
+        jo.put("children", mSubFolders);
+        return jo;
     }
     
     public String toString() {
-        ZSoapSB sb = new ZSoapSB();
-        sb.beginStruct();
-        toStringCommon(sb);
-        sb.endStruct();
-        return sb.toString();
+        return ZJSONObject.toString(this);
     }
 
 }

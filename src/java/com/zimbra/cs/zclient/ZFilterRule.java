@@ -17,33 +17,34 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.cs.zclient.ZFilterCondition.ZAttachmentExistsCondition;
-import com.zimbra.cs.zclient.ZFilterCondition.ZHeaderExistsCondition;
-import com.zimbra.cs.zclient.ZFilterCondition.HeaderOp;
-import com.zimbra.cs.zclient.ZFilterCondition.ZAddressBookCondition;
-import com.zimbra.cs.zclient.ZFilterCondition.ZHeaderCondition;
-import com.zimbra.cs.zclient.ZFilterCondition.ZBodyCondition;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.cs.zclient.ZFilterAction.MarkOp;
+import com.zimbra.cs.zclient.ZFilterAction.ZDiscardAction;
+import com.zimbra.cs.zclient.ZFilterAction.ZFileIntoAction;
+import com.zimbra.cs.zclient.ZFilterAction.ZKeepAction;
+import com.zimbra.cs.zclient.ZFilterAction.ZMarkAction;
+import com.zimbra.cs.zclient.ZFilterAction.ZRedirectAction;
+import com.zimbra.cs.zclient.ZFilterAction.ZStopAction;
+import com.zimbra.cs.zclient.ZFilterAction.ZTagAction;
 import com.zimbra.cs.zclient.ZFilterCondition.AddressBookOp;
 import com.zimbra.cs.zclient.ZFilterCondition.BodyOp;
-import com.zimbra.cs.zclient.ZFilterCondition.SizeOp;
-import com.zimbra.cs.zclient.ZFilterCondition.ZSizeCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.DateOp;
+import com.zimbra.cs.zclient.ZFilterCondition.HeaderOp;
+import com.zimbra.cs.zclient.ZFilterCondition.SizeOp;
+import com.zimbra.cs.zclient.ZFilterCondition.ZAddressBookCondition;
+import com.zimbra.cs.zclient.ZFilterCondition.ZAttachmentExistsCondition;
+import com.zimbra.cs.zclient.ZFilterCondition.ZBodyCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZDateCondition;
-import com.zimbra.cs.zclient.ZFilterAction.MarkOp;
-import com.zimbra.cs.zclient.ZFilterAction.ZFileIntoAction;
-import com.zimbra.cs.zclient.ZFilterAction.ZMarkAction;
-import com.zimbra.cs.zclient.ZFilterAction.ZKeepAction;
-import com.zimbra.cs.zclient.ZFilterAction.ZRedirectAction;
-import com.zimbra.cs.zclient.ZFilterAction.ZDiscardAction;
-import com.zimbra.cs.zclient.ZFilterAction.ZTagAction;
-import com.zimbra.cs.zclient.ZFilterAction.ZStopAction;
+import com.zimbra.cs.zclient.ZFilterCondition.ZHeaderCondition;
+import com.zimbra.cs.zclient.ZFilterCondition.ZHeaderExistsCondition;
+import com.zimbra.cs.zclient.ZFilterCondition.ZSizeCondition;
+import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ZFilterRule {
+public class ZFilterRule implements ToZJSONObject {
 
     private String mName;
     private boolean mActive;
@@ -111,18 +112,19 @@ public class ZFilterRule {
         return r;
     }
 
-    public String toString() {
-        ZSoapSB sb = new ZSoapSB();
-        sb.beginStruct();
-        sb.add("name", mName);
-        sb.add("active", mActive);
-        sb.add("allConditions", mAllConditions);
-        sb.add("conditions", mConditions, false, true);
-        sb.add("actions", mActions, false, true);
-        sb.endStruct();
-        return sb.toString();
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject jo = new ZJSONObject();
+        jo.put("name", mName);
+        jo.put("active", mActive);
+        jo.put("allConditions", mAllConditions);
+        jo.put("conditions", mConditions);
+        jo.put("actions", mActions);
+        return jo;
     }
 
+    public String toString() {
+        return ZJSONObject.toString(this);
+    }
     static String quotedString(String s) {
         return "\"" + s.replaceAll("\"", "\\\"") + "\"";
     }

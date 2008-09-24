@@ -16,13 +16,12 @@
  */
 package com.zimbra.cs.zclient;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.VoiceConstants;
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
-
-import java.util.List;
+import org.json.JSONException;
 
 public class ZCallHit implements ZSearchHit {
 
@@ -78,4 +77,19 @@ public class ZCallHit implements ZSearchHit {
         // No-op.
     }
 
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject zjo = new ZJSONObject();
+        zjo.put("id", mId);
+        zjo.put("sortField", mSortField);
+        zjo.put("score", mScore);
+        zjo.put("date", mDate);
+        zjo.put("duration", mDuration);
+        zjo.put("caller", mCaller);
+        zjo.put("recipient", mRecipient);
+        return zjo;
+    }
+
+    public String toString() {
+        return ZJSONObject.toString(this);
+    }
 }

@@ -17,13 +17,14 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ZFilterRules {
+public class ZFilterRules implements ToZJSONObject {
 
     private List<ZFilterRule> mRules;
 
@@ -55,11 +56,13 @@ public class ZFilterRules {
         return r;
     }
 
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject jo = new ZJSONObject();
+        jo.put("rules", mRules);
+        return jo;
+    }
+
     public String toString() {
-        ZSoapSB sb = new ZSoapSB();
-        sb.beginStruct();
-        sb.add("rules", mRules, false, true);
-        sb.endStruct();
-        return sb.toString();
+        return ZJSONObject.toString(this);
     }
 }

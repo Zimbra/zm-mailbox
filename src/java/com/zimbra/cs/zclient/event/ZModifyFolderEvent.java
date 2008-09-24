@@ -18,18 +18,20 @@
 package com.zimbra.cs.zclient.event;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.cs.zclient.ToZJSONObject;
+import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZFolder.Color;
 import com.zimbra.cs.zclient.ZFolder.View;
-import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZGrant;
-import com.zimbra.cs.zclient.ZSoapSB;
+import com.zimbra.cs.zclient.ZJSONObject;
+import org.json.JSONException;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
-public class ZModifyFolderEvent implements ZModifyItemEvent {
+public class ZModifyFolderEvent implements ZModifyItemEvent, ToZJSONObject {
 
     protected Element mFolderEl;
 
@@ -102,7 +104,7 @@ public class ZModifyFolderEvent implements ZModifyItemEvent {
     public long getSize(long defaultValue) throws ServiceException {
         return mFolderEl.getAttributeLong(MailConstants.A_SIZE, defaultValue);
     }
-    
+
     /**
      * @param defaultValue value to return if unchanged
      * @return new message count, or defaultValue if unchanged
@@ -119,13 +121,13 @@ public class ZModifyFolderEvent implements ZModifyItemEvent {
      */
     public View getDefaultView(View defaultValue) throws ServiceException {
         String newView = mFolderEl.getAttribute(MailConstants.A_DEFAULT_VIEW, null);
-        return (newView != null) ? View.fromString(newView) : defaultValue;        
+        return (newView != null) ? View.fromString(newView) : defaultValue;
     }
 
     /**
      * @param defaultValue value to return if unchanged
      * @return new content sequence or defaultValue if unchanged
-     * @throws ServiceException 
+     * @throws ServiceException
      */
     public int getContentSequence(int defaultValue) throws ServiceException {
         return (int) mFolderEl.getAttributeLong(MailConstants.A_REVISION, defaultValue);
@@ -172,32 +174,30 @@ public class ZModifyFolderEvent implements ZModifyItemEvent {
         return defaultValue;
     }
 
-    protected void toStringCommon(ZSoapSB sb) throws ServiceException {
-        sb.add("id", getId());
-        if (getName(null) != null) sb.add("name", getName(null));
-        if (getParentId(null) != null) sb.add("parentId", getParentId(null));
-        if (getFlags(null) != null) sb.add("flags", getFlags(null));
-        if (getColor(null) != null) sb.add("color", getColor(null).name());
-        if (getUnreadCount(-1) != -1) sb.add("unreadCount", getUnreadCount(-1));
-        if (getMessageCount(-1) != -1) sb.add("messageCount", getMessageCount(-1));
-        if (getDefaultView(null) != null) sb.add("view", getDefaultView(null).name());
-        if (getRestURL(null) != null) sb.add("restURL", getRestURL(null));
-        if (getRemoteURL(null) != null) sb.add("url", getRemoteURL(null));
-        if (getEffectivePerm(null) != null) sb.add("effectivePermissions", getEffectivePerm(null));
-        List<ZGrant> grants = getGrants(null);
-        if (grants != null) sb.add("grants", grants, false, false);
+    public ZJSONObject toZJSONObject() throws JSONException {
+        try {
+            ZJSONObject zjo = new ZJSONObject ();
+            zjo.put("id", getId());
+            if (getName(null) != null) zjo.put("name", getName(null));
+            if (getParentId(null) != null) zjo.put("parentId", getParentId(null));
+            if (getFlags(null) != null) zjo.put("flags", getFlags(null));
+            if (getColor(null) != null) zjo.put("color", getColor(null).name());
+            if (getUnreadCount(-1) != -1) zjo.put("unreadCount", getUnreadCount(-1));
+            if (getMessageCount(-1) != -1) zjo.put("messageCount", getMessageCount(-1));
+            if (getDefaultView(null) != null) zjo.put("view", getDefaultView(null).name());
+            if (getRestURL(null) != null) zjo.put("restURL", getRestURL(null));
+            if (getRemoteURL(null) != null) zjo.put("url", getRemoteURL(null));
+            if (getEffectivePerm(null) != null) zjo.put("effectivePermissions", getEffectivePerm(null));
+            List<ZGrant> grants = getGrants(null);
+            if (grants != null) zjo.put("grants", grants);
+            return zjo;
+        } catch(ServiceException se) {
+            throw new JSONException(se);
+        }
     }
     
     public String toString() {
-        try {
-            ZSoapSB sb = new ZSoapSB();
-            sb.beginStruct();
-            toStringCommon(sb);
-            sb.endStruct();
-            return sb.toString();
-        } catch (ServiceException se) {
-            return "";
-        }
+        return ZJSONObject.toString(this);
     }
 }
 

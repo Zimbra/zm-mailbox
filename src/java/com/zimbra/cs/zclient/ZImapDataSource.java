@@ -16,16 +16,17 @@
  */
 package com.zimbra.cs.zclient;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
+import org.json.JSONException;
 
-public class ZImapDataSource implements ZDataSource {
+import java.util.HashMap;
+import java.util.Map;
+
+public class ZImapDataSource implements ZDataSource, ToZJSONObject {
 
     private String mId;
     private String mName;
@@ -136,18 +137,20 @@ public class ZImapDataSource implements ZDataSource {
         return attrs;
     }
 
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject zjo = new ZJSONObject();
+        zjo.put("id", mId);
+        zjo.put("name", mName);
+        zjo.put("enabled", mEnabled);
+        zjo.put("host", mHost);
+        zjo.put("port", mPort);
+        zjo.put("username", mUsername);
+        zjo.put("folderId", mFolderId);
+        zjo.put("connectionType", mConnectionType.name());
+        return zjo;
+    }
+
     public String toString() {
-        ZSoapSB sb = new ZSoapSB();
-        sb.beginStruct();
-        sb.add("id", mId);
-        sb.add("name", mName);
-        sb.add("enabled", mEnabled);
-        sb.add("host", mHost);
-        sb.add("port", mPort);
-        sb.add("username", mUsername);
-        sb.add("folderId", mFolderId);
-        sb.add("connectionType", mConnectionType.name());
-        sb.endStruct();
-        return sb.toString();
+        return ZJSONObject.toString(this);
     }
 }

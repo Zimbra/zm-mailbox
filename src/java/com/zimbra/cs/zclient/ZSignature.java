@@ -16,15 +16,16 @@
  */
 package com.zimbra.cs.zclient;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
+import org.json.JSONException;
 
-public class ZSignature implements Comparable {
+import java.util.HashMap;
+import java.util.Map;
+
+public class ZSignature implements Comparable, ToZJSONObject {
 
     private String mName;
     private String mId;
@@ -83,14 +84,16 @@ public class ZSignature implements Comparable {
         return sig;
     }
 
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject zjo = new ZJSONObject();
+        zjo.put("name", mName);
+        zjo.put("id", mId);
+        zjo.put("value", mValue);
+        return zjo;
+    }
+
     public String toString() {
-        ZSoapSB sb = new ZSoapSB();
-        sb.beginStruct();
-        sb.add("name", mName);
-        sb.add("id", mId);
-        sb.add("value", mValue);
-        sb.endStruct();
-        return sb.toString();
+        return ZJSONObject.toString(this);
     }
 
     public int compareTo(Object obj) {

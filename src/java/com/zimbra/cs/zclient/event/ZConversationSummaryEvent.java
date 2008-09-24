@@ -17,16 +17,18 @@
 
 package com.zimbra.cs.zclient.event;
 
-import com.zimbra.common.soap.Element;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.cs.zclient.ToZJSONObject;
 import com.zimbra.cs.zclient.ZEmailAddress;
-import com.zimbra.cs.zclient.ZSoapSB;
+import com.zimbra.cs.zclient.ZJSONObject;
+import org.json.JSONException;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
-public class ZConversationSummaryEvent {
+public class ZConversationSummaryEvent implements ToZJSONObject {
 
     protected Element mConvEl;
 
@@ -108,23 +110,25 @@ public class ZConversationSummaryEvent {
         return result == null ? defaultValue : result;
     }
 
-    public String toString() {
+    public ZJSONObject toZJSONObject() throws JSONException {
         try {
-            ZSoapSB sb = new ZSoapSB();
-            sb.beginStruct();
-            sb.add("id", getId());
-            if (getFlags(null) != null) sb.add("flags", getFlags(null));
-            if (getTagIds(null) != null) sb.add("tags", getTagIds(null));
-            if (getSubject(null) != null) sb.add("subject", getSubject(null));
-            if (getFragment(null) != null) sb.add("fragment", getFragment(null));
-            if (getMessageCount(-1) != -1) sb.add("messageCount", getMessageCount(-1));
-            if (getDate(-1) != -1) sb.add("date", getDate(-1));
+            ZJSONObject zjo = new ZJSONObject();
+            zjo.put("id", getId());
+            if (getFlags(null) != null) zjo.put("flags", getFlags(null));
+            if (getTagIds(null) != null) zjo.put("tags", getTagIds(null));
+            if (getSubject(null) != null) zjo.put("subject", getSubject(null));
+            if (getFragment(null) != null) zjo.put("fragment", getFragment(null));
+            if (getMessageCount(-1) != -1) zjo.put("messageCount", getMessageCount(-1));
+            if (getDate(-1) != -1) zjo.put("date", getDate(-1));
             List<ZEmailAddress> addrs = getRecipients(null);
-            if (addrs != null) sb.add("recipients", addrs, false, false);
-            sb.endStruct();
-            return sb.toString();
+            if (addrs != null) zjo.put("recipients", addrs);
+            return zjo;
         } catch (ServiceException se) {
-            return "";
+            throw new JSONException(se);
         }
+    }
+
+    public String toString() {
+        return ZJSONObject.toString(this);
     }
 }

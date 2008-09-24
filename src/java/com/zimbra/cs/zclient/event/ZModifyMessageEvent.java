@@ -18,11 +18,13 @@
 package com.zimbra.cs.zclient.event;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.cs.zclient.ZSoapSB;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.cs.zclient.ToZJSONObject;
+import com.zimbra.cs.zclient.ZJSONObject;
+import org.json.JSONException;
 
-public class ZModifyMessageEvent implements ZModifyItemEvent, ZModifyItemFolderEvent {
+public class ZModifyMessageEvent implements ZModifyItemEvent, ZModifyItemFolderEvent, ToZJSONObject {
 
     protected Element mMessageEl;
 
@@ -66,19 +68,21 @@ public class ZModifyMessageEvent implements ZModifyItemEvent, ZModifyItemFolderE
         return mMessageEl.getAttribute(MailConstants.A_CONV_ID, defaultValue);
     }
 
-    public String toString() {
+    public ZJSONObject toZJSONObject() throws JSONException {
         try {
-            ZSoapSB sb = new ZSoapSB();
-            sb.beginStruct();
-            sb.add("id", getId());
-            if (getConversationId(null) != null) sb.add("conversationId", getConversationId(null));
-            if (getFlags(null) != null) sb.add("flags", getFlags(null));
-            if (getTagIds(null) != null) sb.add("tags", getTagIds(null));
-            if (getFolderId(null) != null) sb.add("folderId", getFolderId(null));            
-            sb.endStruct();
-            return sb.toString();
+            ZJSONObject zjo = new ZJSONObject();
+            zjo.put("id", getId());
+            if (getConversationId(null) != null) zjo.put("conversationId", getConversationId(null));
+            if (getFlags(null) != null) zjo.put("flags", getFlags(null));
+            if (getTagIds(null) != null) zjo.put("tags", getTagIds(null));
+            if (getFolderId(null) != null) zjo.put("folderId", getFolderId(null));            
+            return zjo;
         } catch (ServiceException se) {
-            return "";
+            throw new JSONException(se);
         }
+    }
+
+    public String toString() {
+        return ZJSONObject.toString(this);
     }
 }

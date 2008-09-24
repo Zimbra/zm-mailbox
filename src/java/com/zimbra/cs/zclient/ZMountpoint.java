@@ -18,11 +18,12 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.cs.zclient.event.ZModifyMountpointEvent;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.event.ZModifyFolderEvent;
+import com.zimbra.cs.zclient.event.ZModifyMountpointEvent;
+import org.json.JSONException;
 
 public class ZMountpoint extends ZFolder {
 
@@ -51,17 +52,14 @@ public class ZMountpoint extends ZFolder {
         }
     }
 
-    public String toString() {
-        ZSoapSB sb = new ZSoapSB();
-        sb.beginStruct();
-        sb.add("ownerId", mOwnerId);
-        sb.add("ownerDisplayName", mOwnerDisplayName);
-        sb.add("remoteId", mRemoteId);
-        toStringCommon(sb);
-        sb.endStruct();
-        return sb.toString();
-    }
 
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject jo = super.toZJSONObject();
+        jo.put("ownerId", mOwnerId);
+        jo.put("ownerDisplayName", mOwnerDisplayName);
+        jo.put("remoteId", mRemoteId);
+        return jo;
+    }
 
     /**
      * @return primary email address of the owner of the mounted resource

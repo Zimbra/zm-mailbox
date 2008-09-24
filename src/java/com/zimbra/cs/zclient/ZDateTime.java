@@ -21,6 +21,7 @@ import com.zimbra.common.calendar.TZIDMapper;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import org.json.JSONException;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -29,7 +30,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
-public class ZDateTime {
+public class ZDateTime implements ToZJSONObject {
 
     private static final String FMT_DATE = "yyyyMMdd";
     private static final String FMT_DATE_TIME = "yyyyMMdd'T'HHmmss";
@@ -142,16 +143,15 @@ public class ZDateTime {
         mTimeZoneId = timeZoneId;
     }
 
-    ZSoapSB toString(ZSoapSB sb) {
-        sb.beginStruct();
-        sb.add("dateTime", mDateTime);
-        sb.add("timeZoneId", mTimeZoneId);
-        sb.endStruct();
-        return sb;
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject zjo = new ZJSONObject();
+        zjo.put("dateTime", mDateTime);
+        zjo.put("timeZoneId", mTimeZoneId);
+        return zjo;
     }
 
     public String toString() {
-        return toString(new ZSoapSB()).toString();
+        return ZJSONObject.toString(this);
     }
 
 }

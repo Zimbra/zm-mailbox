@@ -20,10 +20,11 @@ package com.zimbra.cs.zclient;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import org.json.JSONException;
 
 import java.util.Arrays;
 
-public class ZGrant {
+public class ZGrant implements ToZJSONObject {
 
     private String mArgs;
     private String mGranteeName;
@@ -230,16 +231,17 @@ public class ZGrant {
         return this.getGranteeType().equals(GranteeType.pub);
     }
     
-    public String toString() {
-        ZSoapSB sb = new ZSoapSB();
-        sb.beginStruct();
-        sb.add("type", mGranteeType.name());
-        sb.add("name", mGranteeName);
-        sb.add("id", mGranteeId);
-        sb.add("permissions", mPermissions);
-        sb.add("args", mArgs);
-        sb.endStruct();
-        return sb.toString();
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject jo = new ZJSONObject();
+        jo.put("type", mGranteeType.name());
+        jo.put("name", mGranteeName);
+        jo.put("id", mGranteeId);
+        jo.put("permissions", mPermissions);
+        jo.put("args", mArgs);
+        return jo;
     }
 
+    public String toString() {
+        return ZJSONObject.toString(this);
+    }
 }

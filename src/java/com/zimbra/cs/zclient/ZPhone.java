@@ -18,8 +18,9 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
+import org.json.JSONException;
 
-public class ZPhone {
+public class ZPhone implements ToZJSONObject {
 
 	private String mName;
 
@@ -34,8 +35,18 @@ public class ZPhone {
 	public String getDisplay() {
 		return ZPhone.getDisplay(mName);
 	}
-	
-	public static String getDisplay(String name) {
+
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject zjo = new ZJSONObject();
+        zjo.put("name", mName);
+        return zjo;
+    }
+
+    public String toString() {
+        return ZJSONObject.toString(this);
+    }
+
+    public static String getDisplay(String name) {
         // Handles familiar usa-style numbers only for now...
         int offset = 0;
         boolean doIt = false;

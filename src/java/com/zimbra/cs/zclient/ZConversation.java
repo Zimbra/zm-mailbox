@@ -18,16 +18,17 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.event.ZModifyConversationEvent;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.event.ZModifyMessageEvent;
+import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ZConversation implements ZItem {
+public class ZConversation implements ZItem, ToZJSONObject {
 
     public enum Flag {
         unread('u'),
@@ -105,17 +106,19 @@ public class ZConversation implements ZItem {
         return mId;
     }
 
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject jo = new ZJSONObject();
+        jo.put("id", mId);
+        jo.put("tags", mTags);
+        jo.put("flags", mFlags);
+        jo.put("subject", mSubject);
+        jo.put("messageCount", mMessageCount);
+        jo.put("messages", mMessageSummaries);
+        return jo;
+    }
+
     public String toString() {
-        ZSoapSB sb = new ZSoapSB();
-        sb.beginStruct();
-        sb.add("id", mId);
-        sb.add("tags", mTags);
-        sb.add("flags", mFlags);
-        sb.add("subject", mSubject);
-        sb.add("messageCount", mMessageCount);
-        sb.add("messages", mMessageSummaries, false, true);
-        sb.endStruct();
-        return sb.toString();
+        return ZJSONObject.toString(this);
     }
 
     public String getFlags() {
@@ -138,7 +141,7 @@ public class ZConversation implements ZItem {
         return mMessageSummaries;
     }
     
-    public class ZMessageSummary implements ZItem {
+    public class ZMessageSummary implements ZItem, ToZJSONObject {
 
         private long mDate;
         private String mFlags;
@@ -176,21 +179,22 @@ public class ZConversation implements ZItem {
             }
         }
 
-        public String toString() {
-            ZSoapSB sb = new ZSoapSB();
-            sb.beginStruct();
-            sb.add("id", mId);
-            sb.add("folderId", mFolderId);
-            sb.add("flags", mFlags);
-            sb.add("fragment", mFragment);
-            sb.add("tags", mTags);
-            sb.add("size", mSize);
-            sb.addStruct("sender", mSender.toString());
-            sb.addDate("date", mDate);
-            sb.endStruct();
-            return sb.toString();
+        public ZJSONObject toZJSONObject() throws JSONException {
+            ZJSONObject jo = new ZJSONObject();
+            jo.put("id", mId);
+            jo.put("folderId", mFolderId);
+            jo.put("flags", mFlags);
+            jo.put("fragment", mFragment);
+            jo.put("tags", mTags);
+            jo.put("size", mSize);
+            jo.put("sender", mSender);
+            jo.put("date", mDate);
+            return jo;
         }
 
+        public String toString() {
+            return ZJSONObject.toString(this);
+        }
         public long getDate() {
             return mDate;
         }

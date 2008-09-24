@@ -17,19 +17,19 @@
 
 package com.zimbra.cs.zclient.event;
 
-import com.zimbra.common.soap.Element;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.KeyValuePair;
-import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.mailbox.Contact;
-import com.zimbra.cs.zclient.ZSoapSB;
+import com.zimbra.cs.zclient.ToZJSONObject;
+import com.zimbra.cs.zclient.ZJSONObject;
+import org.json.JSONException;
 
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
-public class ZContactEvent {
+public class ZContactEvent implements ToZJSONObject {
 
     protected Element mContactEl;
 
@@ -99,31 +99,28 @@ public class ZContactEvent {
         return attrs != null ? attrs : defaultValue;
     }
 
-    public String toString() {
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject zjo = new ZJSONObject();
         try {
-            ZSoapSB sb = new ZSoapSB();
-            sb.beginStruct();
-            sb.add("id", getId());
-            if (getFlags(null) != null) sb.add("flags", getFlags(null));
-            if (getTagIds(null) != null) sb.add("tags", getTagIds(null));
-            if (getFolderId(null) != null) sb.add("folderId", getFolderId(null));
-            if (getRevision(null) != null) sb.add("revision", getRevision(null));
-            if (getFileAsStr(null) != null) sb.add("fileAsStr", getFileAsStr(null));
-            if (getEmail(null) != null) sb.add("email", getEmail(null));
-            if (getEmail2(null) != null) sb.add("email2", getEmail2(null));
-            if (getEmail3(null) != null) sb.add("email3", getEmail3(null));
+            zjo.put("id", getId());
+            if (getFlags(null) != null) zjo.put("flags", getFlags(null));
+            if (getTagIds(null) != null) zjo.put("tags", getTagIds(null));
+            if (getFolderId(null) != null) zjo.put("folderId", getFolderId(null));
+            if (getRevision(null) != null) zjo.put("revision", getRevision(null));
+            if (getFileAsStr(null) != null) zjo.put("fileAsStr", getFileAsStr(null));
+            if (getEmail(null) != null) zjo.put("email", getEmail(null));
+            if (getEmail2(null) != null) zjo.put("email2", getEmail2(null));
+            if (getEmail3(null) != null) zjo.put("email3", getEmail3(null));
             Map<String, String> attrs = getAttrs(null);
-            if (attrs != null) {
-                sb.beginStruct("attrs");
-                for (Map.Entry<String, String> entry : attrs.entrySet()) {
-                    sb.add(entry.getKey(), entry.getValue());
-                }
-                sb.endStruct();
-            }
-            sb.endStruct();
-            return sb.toString();
-        } catch (ServiceException se) {
-            return "";
+            if (attrs != null)
+                zjo.putMap("attrs", attrs);
+        } catch (ServiceException e) {
+            throw new RuntimeException(e);
         }
+        return zjo;
+    }
+
+    public String toString() {
+        return ZJSONObject.toString(this);
     }
 }

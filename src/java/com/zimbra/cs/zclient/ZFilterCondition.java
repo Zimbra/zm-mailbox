@@ -20,6 +20,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.StringUtil;
+import org.json.JSONException;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -27,7 +28,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-public abstract class ZFilterCondition {
+public abstract class ZFilterCondition implements ToZJSONObject {
 
     public static final String C_ADDRESSBOOK = "addressbook";
     public static final String C_ATTACHMENT = "attachment";
@@ -250,15 +251,17 @@ public abstract class ZFilterCondition {
     public final String getK1() { return mK1; }
     public final String getOp() { return mOp; }
 
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject jo = new ZJSONObject();
+        jo.put("name", mName);
+        jo.put("op", mOp);
+        jo.put("k0", mK0);
+        jo.put("k1", mK1);
+        return jo;
+    }
+
     public String toString() {
-        ZSoapSB sb = new ZSoapSB();
-        sb.beginStruct();
-        sb.add("name", mName);
-        sb.add("op", mOp);
-        sb.add("k0", mK0);
-        sb.add("k1", mK1);
-        sb.endStruct();
-        return sb.toString();
+        return ZJSONObject.toString(this);
     }
 
     public abstract String toConditionString();

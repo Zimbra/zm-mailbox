@@ -21,8 +21,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.zclient.ZFolder.View;
 import org.dom4j.DocumentException;
+import org.json.JSONException;
 
-public class ZShare {
+public class ZShare implements ToZJSONObject {
 
     /*
     <share xmlns="urn:zimbraShare" version="0.1" action="new" >
@@ -92,16 +93,18 @@ public class ZShare {
         return e;
     }
 
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject zjo = new ZJSONObject();
+        zjo.put(A_VERSION, mVersion);
+        zjo.put(A_ACTION, mAction.name());
+        zjo.put(E_GRANTEE, mGrantee);
+        zjo.put(E_GRANTOR, mGrantor);
+        zjo.put(E_LINK, mLink.toString());
+        return zjo;
+    }
+
     public String toString() {
-        ZSoapSB sb = new ZSoapSB();
-        sb.beginStruct();
-        sb.add(A_VERSION, mVersion);
-        sb.add(A_ACTION, mAction.toString());
-        sb.addStruct(E_GRANTEE, mGrantee.toString());
-        sb.addStruct(E_GRANTOR, mGrantor.toString());
-        sb.addStruct(E_LINK, mLink.toString());
-        sb.endStruct();
-        return sb.toString();
+        return ZJSONObject.toString(this);
     }
 
     public ZGrantee getGrantee() {
@@ -160,7 +163,7 @@ public class ZShare {
         }
     }
 
-    public static class ZGrantInfo {
+    public static class ZGrantInfo implements ToZJSONObject {
 
         private String mId;
         private String mEmail;
@@ -208,17 +211,16 @@ public class ZShare {
             mName = name;
         }
 
-        ZSoapSB toString(ZSoapSB sb) {
-            sb.beginStruct();
-            sb.add(A_ID, mId);
-            sb.add(A_EMAIL, mEmail);
-            sb.add(A_NAME, mName);
-            sb.endStruct();
-            return sb;
+        public ZJSONObject toZJSONObject() throws JSONException {
+            ZJSONObject zjo = new ZJSONObject();
+            zjo.put(A_ID, mId);
+            zjo.put(A_EMAIL, mEmail);
+            zjo.put(A_NAME, mName);
+            return zjo;
         }
 
         public String toString() {
-            return toString(new ZSoapSB()).toString();
+            return ZJSONObject.toString(this);
         }
     }
 
@@ -251,7 +253,7 @@ public class ZShare {
     }
 
 
-    public static class ZLink {
+    public static class ZLink implements ToZJSONObject {
 
         private String mId;
         private ZFolder.View mView;
@@ -310,18 +312,17 @@ public class ZShare {
             mName = name;
         }
 
-        ZSoapSB toString(ZSoapSB sb) {
-            sb.beginStruct();
-            sb.add(A_ID, mId);
-            sb.add(A_PERM, mPermission);
-            sb.add(A_VIEW, mView.name());
-            sb.add(A_NAME, mName);
-            sb.endStruct();
-            return sb;
+        public ZJSONObject toZJSONObject() throws JSONException {
+            ZJSONObject zjo = new ZJSONObject();
+            zjo.put(A_ID, mId);
+            zjo.put(A_PERM, mPermission);
+            zjo.put(A_VIEW, mView.name());
+            zjo.put(A_NAME, mName);
+            return zjo;
         }
 
         public String toString() {
-            return toString(new ZSoapSB()).toString();
+            return ZJSONObject.toString(this);
         }
     }
 }

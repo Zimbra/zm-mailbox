@@ -18,9 +18,10 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.common.soap.Element;
+import org.json.JSONException;
 
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
@@ -28,7 +29,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ZEmailAddress {
+public class ZEmailAddress implements ToZJSONObject {
     
     public static final String EMAIL_TYPE_BCC = "b";
     public static final String EMAIL_TYPE_CC = "c";
@@ -126,16 +127,19 @@ public class ZEmailAddress {
         }
     }
     
-    ZSoapSB toString(ZSoapSB sb) {
-        sb.beginStruct();
-        sb.add("address", mAddress);
-        sb.add("display", mDisplay);
-        sb.add("personal", mPersonal);
-        sb.add("type", mType);
-        sb.endStruct();
-        return sb;
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject jo = new ZJSONObject();
+        jo.put("address", mAddress);
+        jo.put("display", mDisplay);
+        jo.put("personal", mPersonal);
+        jo.put("type", mType);
+        return jo;
     }
-    
+
+    public String toString() {
+        return ZJSONObject.toString(this);
+    }
+
     /**
     *
     * @param type type of addresses to create in the returned list.
@@ -157,7 +161,4 @@ public class ZEmailAddress {
         }
     }
     
-    public String toString() {
-        return toString(new ZSoapSB()).toString();
-    }
 }
