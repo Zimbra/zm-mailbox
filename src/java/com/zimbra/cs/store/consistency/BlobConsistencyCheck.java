@@ -51,11 +51,13 @@ public class BlobConsistencyCheck {
      * "short option", "long option", "description", "has-arg", "required".
      */
     final static Object[][] OPTION_LIST = {
+        { "z", "gzip",     "test compressed blobs",         false, false },
         { "p", "password", "zimbra user mysql password",    true,  false },
         { "h", "help",     "this help message",             false, false },
-        //{ "r", "repair",   "repair/delete missing blobs",   false, false },
         { "f", "file",     "save/load report to/from file", true,  false },
+        { "k", "skip-fs",  "skip blob store reverse check", false, false },
         { "l", "load",     "display report from file",      true,  false },
+        //{ "r", "repair",   "repair/delete missing blobs",   false, false },
         //{ "c", "force",    "required when repairing",       false, false },
     };
 
@@ -109,7 +111,7 @@ public class BlobConsistencyCheck {
             new ReportDisplay(reportFile).run();
         } else {
             // generate report
-            new ReportGenerator(mysqlPasswd, reportFile).run();
+            new ReportGenerator(mysqlPasswd, reportFile, cmdLine.hasOption("z"), cmdLine.hasOption("k")).run();
         }
     }
 
