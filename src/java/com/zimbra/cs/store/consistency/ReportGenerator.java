@@ -199,11 +199,12 @@ public class ReportGenerator implements Runnable {
                     String mboxIdStr = file[file.length - 4];
                     int mboxId = Integer.parseInt(mboxIdStr);
                     int mboxGroup = mboxId % 100;
+                    if (mboxGroup == 0) mboxGroup = 100;
                     itemIdAndModContent.substring(0, itemIdAndModContent.indexOf("."));
                     String itemIdStr = itemIdAndModContent.substring(
                             0, itemIdAndModContent.indexOf("-"));
                     String modContentStr = itemIdAndModContent.substring(
-                            itemIdAndModContent.indexOf("-") + 1);
+                            itemIdAndModContent.indexOf("-") + 1, itemIdAndModContent.indexOf("."));
                     int itemId = Integer.parseInt(itemIdStr);
                     int modContent = Integer.parseInt(modContentStr);
                     String mboxGroupName = "mboxgroup" + mboxGroup;
