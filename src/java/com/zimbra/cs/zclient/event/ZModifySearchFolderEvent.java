@@ -17,13 +17,15 @@
 
 package com.zimbra.cs.zclient.event;
 
-import com.zimbra.common.soap.Element;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.cs.zclient.ZSoapSB;
+import com.zimbra.cs.zclient.ToZJSONObject;
+import com.zimbra.cs.zclient.ZJSONObject;
 import com.zimbra.cs.zclient.ZMailbox.SearchSortBy;
+import org.json.JSONException;
 
-public class ZModifySearchFolderEvent extends ZModifyFolderEvent {
+public class ZModifySearchFolderEvent extends ZModifyFolderEvent implements ToZJSONObject {
 
 
     public ZModifySearchFolderEvent(Element e) throws ServiceException {
@@ -59,19 +61,12 @@ public class ZModifySearchFolderEvent extends ZModifyFolderEvent {
         }
     }
     
-    public String toString() {
-        try {
-            ZSoapSB sb = new ZSoapSB();
-            sb.beginStruct();
-            toStringCommon(sb);
-            if (getQuery(null) != null) sb.add("query", getQuery(null));
-            if (getTypes(null) != null) sb.add("types", getTypes(null));
-            if (getSortBy(null) != null) sb.add("sortBy", getSortBy(null).name());
-            sb.endStruct();
-            return sb.toString();
-        } catch (ServiceException se) {
-            return "";
-        }
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject zjo = super.toZJSONObject();
+        if (getQuery(null) != null) zjo.put("query", getQuery(null));
+        if (getTypes(null) != null) zjo.put("types", getTypes(null));
+        if (getSortBy(null) != null) zjo.put("sortBy", getSortBy(null).name());
+        return zjo;
     }
 }
 

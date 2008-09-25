@@ -18,12 +18,14 @@
 package com.zimbra.cs.zclient.event;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.cs.zclient.ZTag.Color;
-import com.zimbra.cs.zclient.ZSoapSB;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.cs.zclient.ToZJSONObject;
+import com.zimbra.cs.zclient.ZJSONObject;
+import com.zimbra.cs.zclient.ZTag.Color;
+import org.json.JSONException;
 
-public class ZModifyTagEvent implements ZModifyItemEvent {
+public class ZModifyTagEvent implements ZModifyItemEvent, ToZJSONObject {
 
     protected Element mTagEl;
 
@@ -72,19 +74,21 @@ public class ZModifyTagEvent implements ZModifyItemEvent {
         return (int) mTagEl.getAttributeLong(MailConstants.A_UNREAD, defaultValue);
     }
 
-    public String toString() {
+    public ZJSONObject toZJSONObject() throws JSONException {
         try {
-            ZSoapSB sb = new ZSoapSB();
-            sb.beginStruct();
-            sb.add("id", getId());
+            ZJSONObject zjo = new ZJSONObject();
+            zjo.put("id", getId());
             String name = getName(null);
-            if (name != null) sb.add("name", name);
-            if (getColor(null) != null) sb.add("color", getColor(null).name());
-            if (getUnreadCount(-1) != -1) sb.add("unreadCount", getUnreadCount(-1));
-            sb.endStruct();
-            return sb.toString();
+            if (name != null) zjo.put("name", name);
+            if (getColor(null) != null) zjo.put("color", getColor(null).name());
+            if (getUnreadCount(-1) != -1) zjo.put("unreadCount", getUnreadCount(-1));
+            return zjo;
         } catch (ServiceException se) {
-            return "";
+            throw new JSONException(se);
         }
+    }
+
+    public String toString() {
+        return ZJSONObject.toString(this);
     }
 }

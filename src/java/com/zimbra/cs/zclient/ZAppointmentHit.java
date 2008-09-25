@@ -20,11 +20,12 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.mailbox.calendar.Geo;
-import com.zimbra.cs.zclient.event.ZModifyAppointmentEvent;
-import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.ZInvite.ZComponent;
 import com.zimbra.cs.zclient.ZInvite.ZStatus;
 import com.zimbra.cs.zclient.ZMailbox.ZFreeBusyTimeSlot;
+import com.zimbra.cs.zclient.event.ZModifyAppointmentEvent;
+import com.zimbra.cs.zclient.event.ZModifyEvent;
+import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -381,49 +382,50 @@ public class ZAppointmentHit implements ZSearchHit {
         return mInstanceExpanded;
     }
 
-    public String toString() {
-        ZSoapSB sb = new ZSoapSB();
-        sb.beginStruct();
-        sb.add("id", mId);
-        sb.add("folderId", mFolderId);
-        sb.add("tags", mTags);
-        sb.add("flags", mFlags);
-        sb.add("name", mName);
-        sb.add("location", mLocation);
-        if (mCategories != null)
-            sb.add("categories", mCategories, true, true);
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject jo = new ZJSONObject();
+        jo.put("id", mId);
+        jo.put("folderId", mFolderId);
+        jo.put("tags", mTags);
+        jo.put("flags", mFlags);
+        jo.put("name", mName);
+        jo.put("location", mLocation);
+        jo.putList("categories", mCategories);
         if (mGeo != null)
-            sb.add("geo", mGeo.toString());
-        sb.add("inviteId", mInviteId);
-        sb.add("inviteComponentNumber", mInviteComponentNumber);
-        sb.add("freeBusyActual", mFreeBusyActual);
-        sb.add("transparency", mTransparency);
-        sb.add("status", mStatus);
-        sb.add("class", mClass);
-        sb.add("participantStatus", mPartStatus);
-        sb.add("allDay", mIsAllDay);
-        sb.add("otherAttendees", mIsOtherAttendees);
-        sb.add("alarm", mIsAlarm);
-        sb.add("recurring", mIsRecurring);
-        sb.add("isOrganizer", mIsOrganizer);
-        sb.add("priority", mPriority);
-        sb.add("percentComplete", mPercentComplete);
-        sb.add("duration", mDuration);
-        sb.add("startTime", mStartTime);
-        sb.add("timeZoneOffset", mTimeZoneOffset);
-        sb.add("exception", mIsException);
-        sb.add("recurrenceId", mRecurrenceIdZ);
-        sb.add("fragment", mFragment);
-        sb.add("sortField", mSortField);
-        sb.add("score", mScore);
-        sb.add("conversationId", mConvId);
-        sb.add("size", mSize);
-        sb.add("isTask", mIsTask);
-        sb.addDate("hitDate", mHitDate);
-        sb.endStruct();
-        return sb.toString();
+            jo.put("geo", mGeo.toString());
+        jo.put("inviteId", mInviteId);
+        jo.put("inviteComponentNumber", mInviteComponentNumber);
+        jo.put("freeBusyActual", mFreeBusyActual);
+        jo.put("transparency", mTransparency);
+        jo.put("status", mStatus);
+        jo.put("class", mClass);
+        jo.put("participantStatus", mPartStatus);
+        jo.put("allDay", mIsAllDay);
+        jo.put("otherAttendees", mIsOtherAttendees);
+        jo.put("alarm", mIsAlarm);
+        jo.put("recurring", mIsRecurring);
+        jo.put("isOrganizer", mIsOrganizer);
+        jo.put("priority", mPriority);
+        jo.put("percentComplete", mPercentComplete);
+        jo.put("duration", mDuration);
+        jo.put("startTime", mStartTime);
+        jo.put("timeZoneOffset", mTimeZoneOffset);
+        jo.put("exception", mIsException);
+        jo.put("recurrenceId", mRecurrenceIdZ);
+        jo.put("fragment", mFragment);
+        jo.put("sortField", mSortField);
+        jo.put("score", mScore);
+        jo.put("conversationId", mConvId);
+        jo.put("size", mSize);
+        jo.put("isTask", mIsTask);
+        jo.put("hitDate", mHitDate);
+        return jo;
     }
 
+    public String toString() {
+        return ZJSONObject.toString(this);
+    }
+    
     // fba
     public String getFreeBusyActual() { return mFreeBusyActual; }
     public boolean isFreeBusyActualFree() { return FBA_FREE.equals(mFreeBusyActual); }

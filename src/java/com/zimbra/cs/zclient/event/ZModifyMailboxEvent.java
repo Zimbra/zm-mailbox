@@ -18,12 +18,14 @@
 package com.zimbra.cs.zclient.event;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.cs.zclient.ZSoapSB;
-import com.zimbra.common.soap.Element;
+import com.zimbra.cs.zclient.ToZJSONObject;
+import com.zimbra.cs.zclient.ZJSONObject;
+import org.json.JSONException;
 
-public class ZModifyMailboxEvent implements ZModifyEvent {
+public class ZModifyMailboxEvent implements ZModifyEvent, ToZJSONObject {
 
     protected Element mMailboxEl;
 
@@ -44,16 +46,18 @@ public class ZModifyMailboxEvent implements ZModifyEvent {
         return mMailboxEl.getAttribute(HeaderConstants.A_ACCOUNT_ID, defaultId);
     }
 
-    public String toString() {
+    public ZJSONObject toZJSONObject() throws JSONException {
         try {
-            ZSoapSB sb = new ZSoapSB();
-            sb.beginStruct();
-            if (getSize(-1) != -1) sb.add("size", getSize(-1));
-            if (getOwner(null) != null) sb.add("owner", getOwner(null));
-            sb.endStruct();
-            return sb.toString();
+            ZJSONObject zjo = new ZJSONObject();
+            if (getSize(-1) != -1) zjo.put("size", getSize(-1));
+            if (getOwner(null) != null) zjo.put("owner", getOwner(null));
+            return zjo;
         } catch (ServiceException se) {
-            return "";
+            throw new JSONException(se);
         }
+    }
+
+    public String toString() {
+        return ZJSONObject.toString(this);
     }
 }

@@ -23,12 +23,13 @@ import com.zimbra.common.soap.Element.KeyValuePair;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.event.ZModifyContactEvent;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
+import org.json.JSONException;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ZContact implements ZItem {
+public class ZContact implements ZItem, ToZJSONObject {
 
     /** "File as" setting: &nbsp;<code>Last, First</code> */
     public static final String FA_LAST_C_FIRST = "1";
@@ -123,22 +124,20 @@ public class ZContact implements ZItem {
         return ZEmailAddress.parseAddresses(getAttrs().get("dlist"), ZEmailAddress.EMAIL_TYPE_TO);
     }
 
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject jo = new ZJSONObject();
+        jo.put("id", mId);
+        jo.put("folderId", mFolderId);
+        jo.put("flags", mFlags);
+        jo.put("tags", mTagIds);
+        jo.put("metaDataChangedDate", mMetaDataChangedDate);
+        jo.put("revision", mRevision);
+        jo.putMap("attrs", mAttrs);
+        return jo;
+    }
+
     public String toString() {
-        ZSoapSB sb = new ZSoapSB();
-        sb.beginStruct();
-        sb.add("id", mId);
-        sb.add("folder", mFolderId);
-        sb.add("flags", mFlags);
-        sb.add("tags", mTagIds);
-        sb.addDate("metaDataChangedDate", mMetaDataChangedDate);
-        sb.add("revision", mRevision);
-        sb.beginStruct("attrs");
-        for (Map.Entry<String, String> entry : mAttrs.entrySet()) {
-            sb.add(entry.getKey(), entry.getValue());
-        }
-        sb.endStruct();
-        sb.endStruct();
-        return sb.toString();
+        return ZJSONObject.toString(this);
     }
 
     public String getFlags() {

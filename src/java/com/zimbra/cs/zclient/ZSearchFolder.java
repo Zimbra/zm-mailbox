@@ -18,11 +18,12 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.ZMailbox.SearchSortBy;
-import com.zimbra.cs.zclient.event.ZModifySearchFolderEvent;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
-import com.zimbra.common.soap.Element;
+import com.zimbra.cs.zclient.event.ZModifySearchFolderEvent;
+import org.json.JSONException;
 
 public class ZSearchFolder extends ZFolder {
 
@@ -54,15 +55,12 @@ public class ZSearchFolder extends ZFolder {
         }
     }
 
-    public String toString() {
-        ZSoapSB sb = new ZSoapSB();
-        sb.beginStruct();
-        sb.add("query", mQuery);
-        sb.add("types", mTypes);
-        sb.add("sortBy", mSortBy.name());
-        toStringCommon(sb);
-        sb.endStruct();
-        return sb.toString();
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject jo = super.toZJSONObject();
+        jo.put("query", mQuery);
+        jo.put("types", mTypes);
+        jo.put("sortBy", mSortBy.name());
+        return jo;
     }
 
     public String getQuery() {

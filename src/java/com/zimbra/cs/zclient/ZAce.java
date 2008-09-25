@@ -1,12 +1,29 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ *
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2006, 2007 Zimbra, Inc.
+ *
+ * The contents of this file are subject to the Yahoo! Public License
+ * Version 1.0 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ *
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.cs.zclient;
-
-import java.util.Arrays;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import org.json.JSONException;
 
-public class ZAce {
+import java.util.Arrays;
+
+public class ZAce implements ToZJSONObject {
 
     private String mGranteeName;
     private String mGranteeId;
@@ -153,20 +170,20 @@ public class ZAce {
     public boolean isPublic() {
         return this.getGranteeType().equals(ZAce.GranteeType.pub);
     }
-    
-    public String toString() {
-        ZSoapSB sb = new ZSoapSB();
-        sb.beginStruct();
-        sb.add("type", mGranteeType.name());
-        sb.add("name", mGranteeName);
-        sb.add("id", mGranteeId);
-        sb.add("right", mRight);
-        if (mDeny)
-            sb.add("deny", mDeny);
-        sb.endStruct();
-        return sb.toString();
+
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject jo = new ZJSONObject();
+        jo.put("type", mGranteeType.name());
+        jo.put("name", mGranteeName);
+        jo.put("id", mGranteeId);
+        jo.put("right", mRight);
+        jo.put("deny", mDeny);
+        return jo;
     }
-    
+
+    public String toString() {
+        return ZJSONObject.toString(this);
+    }
 
     public String getGranteeTypeDisplay() {
         switch (mGranteeType) {

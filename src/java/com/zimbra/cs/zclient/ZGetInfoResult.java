@@ -20,19 +20,20 @@ package com.zimbra.cs.zclient;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element.KeyValuePair;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Provisioning;
+import org.json.JSONException;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Date;
 
-public class ZGetInfoResult {
+public class ZGetInfoResult implements ToZJSONObject {
 
     private String mVersion;
     private String mId;
@@ -73,7 +74,7 @@ public class ZGetInfoResult {
         }
         return result;
     }
-    
+
     public ZGetInfoResult(Element e) throws ServiceException {
     	mVersion = e.getAttribute(AccountConstants.E_VERSION, "unknown");
         mId = e.getAttribute(AccountConstants.E_ID, null); // TODO: ID was just added to GetInfo, remove ,null shortly...
@@ -126,7 +127,7 @@ public class ZGetInfoResult {
     void setSignatures(List<ZSignature> sigs) {
         mSignatures = sigs;
     }
-    
+
     public List<ZSignature> getSignatures() {
         return mSignatures;
     }
@@ -138,7 +139,7 @@ public class ZGetInfoResult {
         }
         return null;
     }
-    
+
     public List<ZIdentity> getIdentities() {
         return mIdentities;
     }
@@ -152,8 +153,8 @@ public class ZGetInfoResult {
     }
 
     /***
-     * 
-     * @return Set of all lowercased email addresses for this account, including primary name and any aliases. 
+     *
+     * @return Set of all lowercased email addresses for this account, including primary name and any aliases.
      */
     public synchronized Set<String> getEmailAddresses() {
         if (mEmailAddresses == null) {
@@ -202,35 +203,37 @@ public class ZGetInfoResult {
     public ZPrefs getPrefs() {
         return mPrefs;
     }
-    
+
     public ZFeatures getFeatures() {
-        return mFeatures; 
+        return mFeatures;
     }
 
     public String getRestURLBase() {
         return mRestURLBase;
     }
-    
+
     public String getPublicURLBase() {
         return mPublicURLBase;
     }
 
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject jo = new ZJSONObject();
+        jo.put("id", mId);
+        jo.put("name", mName);
+        jo.put("rest", mRestURLBase);
+        jo.put("expiration", mExpiration);
+        jo.put("lifetime", mLifetime);
+        jo.put("mailboxQuotaUsed", mMailboxQuotaUsed);
+        jo.put("recent", mRecent);
+        jo.putMapList("attrs", mAttrs);
+        jo.putMapList("prefs", mPrefAttrs);
+        jo.putList("mailURLs", mMailURLs);
+        jo.put("publicURL", mPublicURLBase);
+        return jo;
+    }
+
     public String toString() {
-        ZSoapSB sb = new ZSoapSB();
-        sb.beginStruct();
-        sb.add("id", mId);        
-        sb.add("name", mName);
-        sb.add("rest", mRestURLBase);
-        sb.addDate("expiration", mExpiration);
-        sb.add("lifetime", mLifetime);
-        sb.add("mailboxQuotaUsed", mMailboxQuotaUsed);
-        sb.add("recent", mRecent);
-        sb.add("attrs", mAttrs);
-        sb.add("prefs", mPrefAttrs);
-        sb.add("mailURLs", mMailURLs, true, true);
-        sb.add("publicURL", mPublicURLBase);
-        sb.endStruct();
-        return sb.toString();
+        return ZJSONObject.toString(this);
     }
 
     public long getMailboxQuotaUsed() {

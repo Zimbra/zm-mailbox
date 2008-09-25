@@ -20,13 +20,14 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.StringUtil;
+import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public abstract class ZFilterAction {
+public abstract class ZFilterAction implements ToZJSONObject {
 
     public static final String A_DISCARD = "discard";
     public static final String A_FILEINTO = "fileinto";
@@ -167,12 +168,14 @@ public abstract class ZFilterAction {
         public String toActionString() { return "redirect " + ZFilterRule.quotedString(getAddress()); }
     }
 
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject jo = new ZJSONObject();
+        jo.put("name", mName);
+        jo.putList("args", mArgs);
+        return jo;
+    }
+
     public String toString() {
-        ZSoapSB sb = new ZSoapSB();
-        sb.beginStruct();
-        sb.add("name", mName);
-        sb.add("args", mArgs, false, false);
-        sb.endStruct();
-        return sb.toString();
+        return ZJSONObject.toString(this);
     }
 }

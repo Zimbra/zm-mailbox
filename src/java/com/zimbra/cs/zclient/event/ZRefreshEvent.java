@@ -17,13 +17,15 @@
 
 package com.zimbra.cs.zclient.event;
 
+import com.zimbra.cs.zclient.ToZJSONObject;
 import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZSoapSB;
+import com.zimbra.cs.zclient.ZJSONObject;
 import com.zimbra.cs.zclient.ZTag;
+import org.json.JSONException;
 
 import java.util.List;
 
-public class ZRefreshEvent {
+public class ZRefreshEvent implements ToZJSONObject {
 
     private long mSize;
     private ZFolder mUserRoot;
@@ -54,13 +56,15 @@ public class ZRefreshEvent {
         return mTags;
     }
     
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject zjo = new ZJSONObject();
+        zjo.put("size", getSize());
+    	zjo.put("userRoot", mUserRoot);
+    	zjo.put("tags", mTags);
+    	return zjo;
+    }
+
     public String toString() {
-    	ZSoapSB sb = new ZSoapSB();
-    	sb.beginStruct();
-    	sb.add("size", getSize());
-    	sb.add("userRoot", mUserRoot.toString());
-    	sb.add("tags", mTags, false, false);
-    	sb.endStruct();
-    	return sb.toString();
+        return ZJSONObject.toString(this);
     }
 }

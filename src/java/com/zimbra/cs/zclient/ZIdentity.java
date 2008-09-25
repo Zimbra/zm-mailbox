@@ -18,17 +18,20 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.KeyValuePair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Provisioning;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ZIdentity  {
+public class ZIdentity  implements ToZJSONObject {
 
     private String mName;
     private String mId;
@@ -150,23 +153,29 @@ public class ZIdentity  {
         return identity;
     }
     
-    public String toString() {
-        ZSoapSB sb = new ZSoapSB();
-        sb.beginStruct();
-        sb.add("name", mName);
-        sb.add("id", mId);        
-        sb.beginStruct("attrs");
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject zjo = new ZJSONObject();
+        zjo.put("name", mName);
+        zjo.put("id", mId);
+        JSONObject jo = new JSONObject();
+        zjo.put("attrs",jo);
         for (Map.Entry<String, Object> entry : mAttrs.entrySet()) {
             if (entry.getValue() instanceof String[]) {
                 String[] values = (String[]) entry.getValue();
-                sb.add(entry.getKey(), values, false, true);
+                JSONArray ja = new JSONArray();
+                jo.put(entry.getKey(), ja);
+                for (String v: values) {
+                    ja.put(v);
+                }
             } else {
-                sb.add(entry.getKey(), entry.getValue().toString());
+                jo.put(entry.getKey(), entry.getValue().toString());
             }
         }
-        sb.endStruct();
-        sb.endStruct();
-        return sb.toString();
+        return zjo;
+    }
+
+    public String toString() {
+        return ZJSONObject.toString(this);
     }
 
 }

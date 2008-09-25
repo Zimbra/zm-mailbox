@@ -17,12 +17,14 @@
 
 package com.zimbra.cs.zclient.event;
 
-import com.zimbra.cs.zclient.ZSoapSB;
+import com.zimbra.cs.zclient.ToZJSONObject;
+import com.zimbra.cs.zclient.ZJSONObject;
+import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ZDeleteEvent {
+public class ZDeleteEvent implements ToZJSONObject {
 
     private String mIds;
     private List<String> mList;
@@ -46,10 +48,12 @@ public class ZDeleteEvent {
     }
     
     public String toString() {
-    	ZSoapSB sb = new ZSoapSB();
-    	sb.beginStruct();
-    	sb.add("ids", getIds());
-    	sb.endStruct();
-    	return sb.toString();
+        return ZJSONObject.toString(this);
+    }
+
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject zjo = new ZJSONObject();
+        zjo.putList("ids", mList);
+        return zjo;
     }
 }

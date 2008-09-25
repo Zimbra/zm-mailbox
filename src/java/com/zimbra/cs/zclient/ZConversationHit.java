@@ -18,10 +18,11 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.event.ZModifyConversationEvent;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
+import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -82,23 +83,24 @@ public class ZConversationHit implements ZSearchHit {
         return mScore;
     }
 
-    public String toString() {
-        ZSoapSB sb = new ZSoapSB();
-        sb.beginStruct();
-        sb.add("id", mId);
-        sb.add("flags", mFlags);
-        sb.add("tags", mTags);
-        sb.add("fragment", mFragment);
-        sb.add("subject", mSubject);
-        sb.addDate("date", mDate);
-        sb.add("sortField", mSortField);
-        sb.add("messageCount", mMessageCount);
-        sb.add("messageIds", mMessageIds, true, true);
-        sb.add("recipients", mRecipients, false, true);
-        sb.endStruct();
-        return sb.toString();
+    public ZJSONObject toZJSONObject() throws JSONException {
+        ZJSONObject jo = new ZJSONObject();
+        jo.put("id", mId);
+        jo.put("flags", mFlags);
+        jo.put("tags", mTags);
+        jo.put("fragment", mFragment);
+        jo.put("subject", mSubject);
+        jo.put("date", mDate);
+        jo.put("sortField", mSortField);
+        jo.put("messageCount", mMessageCount);
+        jo.putList("messageIds", mMessageIds);
+        jo.put("recipients", mRecipients);
+        return jo;
     }
 
+    public String toString() {
+        return ZJSONObject.toString(this);
+    }
     public String getFlags() {
         return mFlags;
     }
