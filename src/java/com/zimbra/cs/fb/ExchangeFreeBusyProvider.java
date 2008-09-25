@@ -403,7 +403,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		}
 		ArrayList<FreeBusy> ret = new ArrayList<FreeBusy>();
 		for (Request re : req) {
-			String fb = getFbString(response, re.email.toLowerCase());
+			String fb = getFbString(response, re.email);
 			ret.add(new ExchangeUserFreeBusy(fb, re.email, FB_INTERVAL, re.start, re.end));
 		}
 		return ret;
@@ -432,7 +432,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
     	if (node != null) {
     		for (Element e : node.listElements("item")) {
     			Element email = e.getOptionalElement("email");
-    			if (email != null && email.getText().equals(emailAddr)) {
+    			if (email != null && email.getText().trim().equalsIgnoreCase(emailAddr)) {
     				Element fb = e.getOptionalElement("fbdata");
     				if (fb != null) {
     					ret = fb.getText();
