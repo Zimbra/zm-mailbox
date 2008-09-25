@@ -260,26 +260,20 @@ public class UserServlet extends ZimbraServlet {
         try {
             boolean isAdminRequest = isAdminRequest(context.req);
             
-            // check access key first
-            if (AuthProvider.allowAccessKeyAuth(context.req, this)) {
-                AuthToken at = getAuthTokenFromHttpReq(context.req, context.resp, isAdminRequest, true);
-                if (at != null) {
-                    context.authAccount = new ACL.GuestAccount(at);
-                    if (context.authAccount != null) {
-                        context.basicAuthHappened = true; // pretend that we basic authed
-                        context.authToken = at;
-                        return;
-                    }
-                }
-            }
-            
-            // check cookie
-            if (context.cookieAuthAllowed()) {
+            // check cookie or access key
+            if (context.cookieAuthAllowed() || AuthProvider.allowAccessKeyAuth(context.req, this)) {
                 AuthToken at = cookieAuthRequest(context.req, context.resp);
                 if (at != null) {
-                    context.authAccount = Provisioning.getInstance().get(AccountBy.id, at.getAccountId(), at);
-                    if (context.authAccount != null) {
-                        context.cookieAuthHappened = true;
+                    if (at.isZimbraUser()) {
+                        context.authAccount = Provisioning.getInstance().get(AccountBy.id, at.getAccountId(), at);
+                        if (context.authAccount != null) {
+                            context.cookieAuthHappened = true;
+                            context.authToken = at;
+                            return;
+                        }
+                    } else {
+                        context.authAccount = new ACL.GuestAccount(at);
+                        context.basicAuthHappened = true; // pretend that we basic authed
                         context.authToken = at;
                         return;
                     }
