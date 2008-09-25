@@ -87,7 +87,7 @@ public class ReportDisplay implements Runnable {
             if (fault.faultItem != null && fault.item.revisions.size() > 0) {
                 msg = String.format(": file not found: %s" +
                 		" (revert to previous revision %d)",
-                        file, fault.item.revisions.get(0));
+                        file, fault.item.revisions.get(0).version);
             } else {
                 msg = ": file not found: " + file +
                         " (delete associated metadata)";
@@ -121,7 +121,7 @@ public class ReportDisplay implements Runnable {
         }
         return itemName != null ? itemName + msg : msg;
     }
-    private static void printFault(Map<Byte,Volume> volumes, ItemFault fault) {
+    static void printFault(Map<Byte,Volume> volumes, ItemFault fault) {
         System.out.println(getFaultMessage(volumes, fault));
     }
 }

@@ -41,25 +41,12 @@ public class ReportGenerator implements Runnable {
     // the cast will wrap to the correct signedness
     private final static byte[] GZIP_MAGIC = { 0x1f, (byte) 0x8b };
     private final boolean checkCompressed;
+    private final boolean skipBlobStore;
     private final String mysqlPasswd;
     private final File reportFile;
     private final static String JDBC_URL = "jdbc:mysql://localhost:7306/";
     private final static char[] SPINNER = { '|', '/', '-', '\\' };
     
-    /**
-     * temporary table for storing file names, presumably a low-memory HashSet
-     */
-    private final static String TEMP_TABLE =
-        "CREATE TEMPORARY TABLE blob_filenames_tmp" +
-        " (filename VARCHAR(256) primary key)";
-    private final static String INSERT_FILE =
-        "INSERT INTO blob_filenames_tmp values ";
-    private final static String QUERY_FOR_FILE =
-        "SELECT filename FROM blob_filenames_tmp WHERE filename = ?";
-    /**
-     * lazy testing seems to indicate that this performs "OK" vs 5000 and 10000
-     */
-    private final static int INSERT_BATCH_SIZE = 1000;
     /**
      * type IN (store, secondary-store).
      */
@@ -67,6 +54,11 @@ public class ReportGenerator implements Runnable {
             "SELECT id, path, file_bits, file_group_bits," +
             " mailbox_bits, mailbox_group_bits, compress_blobs" +
             " FROM volume WHERE type IN (1,2)";
+    private final static String QUERY_FOR_FILE = "SELECT i.id" +
+    		" FROM mail_item i LEFT OUTER JOIN revision r" +
+    		" ON i.id = r.item_id AND i.mailbox_id = r.mailbox_id" +
+    		" WHERE i.mailbox_id = ? AND i.id = ?" +
+    		" AND (i.mod_content = ? OR r.mod_content = ?)";
     /**
      * has blob (blob_digest is not null)
      */
@@ -76,17 +68,20 @@ public class ReportGenerator implements Runnable {
             " r.version, r.size, r.volume_id, r.blob_digest, r.mod_content" +
             " FROM mail_item i LEFT OUTER JOIN revision r" +
             " ON i.id = r.item_id AND i.mailbox_id = r.mailbox_id" +
-            " WHERE i.blob_digest is not null or r.blob_digest is not null";
+            " WHERE (i.blob_digest is not null or r.blob_digest is not null)" +
+            " AND (i.volume_id is not null or r.volume_id is not null)";
 
-    public ReportGenerator(String mysqlPasswd, File reportFile, boolean checkCompressed) {
+    public ReportGenerator(String mysqlPasswd, File reportFile,
+            boolean checkCompressed, boolean skipBlobStore) {
         this.mysqlPasswd = mysqlPasswd;
         this.reportFile = reportFile;
         this.checkCompressed = checkCompressed;
+        this.skipBlobStore = skipBlobStore;
     }
+    private Map<Byte,Volume> volumes;
 
     public void run() {
         List<ItemFault> faults = null;
-        Map<Byte,Volume> volumes = null;
         try {
             Connection c = null;
             ObjectOutputStream out = null;
@@ -122,10 +117,7 @@ public class ReportGenerator implements Runnable {
 
                 c = DriverManager.getConnection(JDBC_URL + "zimbra",
                         BlobConsistencyCheck.ZIMBRA_USER, mysqlPasswd);
-                c.setAutoCommit(false);
                 e = new StatementExecutor(c);
-                e.update(TEMP_TABLE);
-                c.commit();
                 
                 try {
                     System.err.print(" "); // skip blank space for spinner in cacheFileName
@@ -133,18 +125,18 @@ public class ReportGenerator implements Runnable {
                     System.err.println();
                 }
                 catch (SQLException ex) {
-                    c.rollback();
                     ex.printStackTrace();
                     IOException ioe = new IOException();
                     ioe.initCause(ex);
                     throw ioe;
                 }
                 
-                System.err.print("Processing BLOB store\n ");
-                walkStore(volumes, faults, e);
-                System.err.println();
+                if (!skipBlobStore) {
+                    System.err.print("Processing BLOB store\n ");
+                    walkStore(volumes, faults, e);
+                    System.err.println();
+                }
                 
-                c.commit();
                 c.close();
 
                 System.out.println(tmpFile + ": size " + tmpFile.length());
@@ -182,6 +174,9 @@ public class ReportGenerator implements Runnable {
             }
         }
     }
+    private Connection walkConnection = null;
+    private StatementExecutor walkExecutor = null;
+    private String walkMboxGroup = null;
     private void walkAndProcess(File dir,
             List<ItemFault> faults, StatementExecutor e) throws SQLException {
         File[] files = dir.listFiles();
@@ -195,14 +190,49 @@ public class ReportGenerator implements Runnable {
             } else {
                 System.err.print("\b" +
                         SPINNER[Math.abs(++spinnerCounter % SPINNER.length)]);
-                Object r = e.query(
-                        QUERY_FOR_FILE, new Object[] { f.toString() });
+                String[] file = f.toString().split("/");
+                
+                Object r = null;
+                if (file.length >= 5 && f.toString().endsWith(".msg")) {
+                    // groupMask/mboxId/msg/itemMask/itemId-content.msg
+                    String itemIdAndModContent = file[file.length - 1];
+                    String mboxIdStr = file[file.length - 4];
+                    int mboxId = Integer.parseInt(mboxIdStr);
+                    int mboxGroup = mboxId % 100;
+                    itemIdAndModContent.substring(0, itemIdAndModContent.indexOf("."));
+                    String itemIdStr = itemIdAndModContent.substring(
+                            0, itemIdAndModContent.indexOf("-"));
+                    String modContentStr = itemIdAndModContent.substring(
+                            itemIdAndModContent.indexOf("-") + 1);
+                    int itemId = Integer.parseInt(itemIdStr);
+                    int modContent = Integer.parseInt(modContentStr);
+                    String mboxGroupName = "mboxgroup" + mboxGroup;
+                    if (!mboxGroupName.equals(walkMboxGroup)) {
+                        if (walkConnection != null)
+                            walkConnection.close();
+                        
+                        walkConnection = DriverManager.getConnection(
+                                JDBC_URL + mboxGroupName,
+                                BlobConsistencyCheck.ZIMBRA_USER, mysqlPasswd);
+                        walkMboxGroup = mboxGroupName;
+                        walkExecutor = new StatementExecutor(walkConnection);
+                    }
+                    r = walkExecutor.query(QUERY_FOR_FILE, new Object[] {
+                                    mboxId, itemId, modContent, modContent });
+
+                }
                 if (r == null) {
-                    faults.add(new ItemFault(null, null, null,
+                    addAndPrintFault(faults, new ItemFault(null, null, null,
                             ItemFault.Code.NO_METADATA, (byte) 0, 0, f));
                 }
             }
         }
+    }
+    private void addAndPrintFault(List<ItemFault> faults, ItemFault fault) {
+        faults.add(fault);
+        System.err.println();
+        ReportDisplay.printFault(volumes, fault);
+        System.err.print(" ");
     }
     
     private void saveAndDisplayReport(List<ItemFault> faults,
@@ -233,67 +263,32 @@ public class ReportGenerator implements Runnable {
             }
 
             faults = null; // allow gc since we're not leaving ReportGenerator prior to running ReportDisplay
-            new ReportDisplay(reportFile).run();
+            //new ReportDisplay(reportFile).run();
             System.out.println("Report saved to: " + reportFile);
         }
         
     }
     
     private int spinnerCounter = 0;
-    private ArrayList<String> cacheFilesList =
-        new ArrayList<String>(INSERT_BATCH_SIZE);
-    /**
-     * attempt to batch inserts to the database.
-     * specify null for 'file' to force flush to db
-     */
-    private void cacheFilename(StatementExecutor e, File file)
-    throws SQLException {
-        if (file != null) {
-            cacheFilesList.add(file.toString());
-            int size = cacheFilesList.size();
-            if (size > 0 && size % INSERT_BATCH_SIZE == 0) {
-                e.update(generateBatchInsert(size), cacheFilesList.toArray());
-                System.err.print("\b" +
-                        SPINNER[Math.abs(++spinnerCounter % SPINNER.length)]);
-                cacheFilesList.clear();
-            }
-        } else {
-            int size = cacheFilesList.size();
-            if (size > 0) {
-                e.update(generateBatchInsert(size), cacheFilesList.toArray());
-                System.err.print("\b" +
-                        SPINNER[Math.abs(++spinnerCounter % SPINNER.length)]);
-            }
-            cacheFilesList.clear();
-        }
-    }
-    private String generateBatchInsert(int count) {
-        StringBuilder s = new StringBuilder();
-        s.append(INSERT_FILE);
-        for (int i = 0; i < count; i++) {
-            s.append("(?),");
-        }
-        s.deleteCharAt(s.length() - 1);
-        return s.toString();
-    }
     private List<ItemFault> determineFaults(Map<Byte,Volume> volumes,
             ObjectInputStream in, int items, StatementExecutor e)
             throws IOException, SQLException {
         ArrayList<ItemFault> faults = new ArrayList<ItemFault>();
         try {
             for (int i = 0; i < items; i++) {
+                System.err.print("\b" +
+                        SPINNER[Math.abs(++spinnerCounter % SPINNER.length)]);
                 Object o = in.readObject();
                 Item item = (Item) o;
 
                 Volume v = volumes.get(item.volumeId);
                 if (v == null) {
-                    faults.add(new ItemFault(item, item, null,
+                    addAndPrintFault(faults, new ItemFault(item, item, null,
                             ItemFault.Code.NOT_FOUND,
                             (byte) 0, 0, null));
                     continue;
                 }
                 File f = v.getItemFile(item);
-                cacheFilename(e, f);
                 if (!f.exists()) {
                     boolean found = false;
                     byte foundId = 0;
@@ -305,11 +300,11 @@ public class ReportGenerator implements Runnable {
                         }
                     }
                     if (found) {
-                        faults.add(new ItemFault(item, item, null,
+                        addAndPrintFault(faults, new ItemFault(item, item, null,
                                 ItemFault.Code.WRONG_VOLUME,
                                 foundId, 0, null));
                     } else {
-                        faults.add(new ItemFault(item, item, null,
+                        addAndPrintFault(faults, new ItemFault(item, item, null,
                                 ItemFault.Code.NOT_FOUND,
                                 (byte) 0, 0, null));
                     }
@@ -333,13 +328,13 @@ public class ReportGenerator implements Runnable {
                                 while ((read = gzin.read(buf)) != -1)
                                     len += read;
                                 if (item.size != len) {
-                                    faults.add(new ItemFault(item, item, null,
+                                    addAndPrintFault(faults, new ItemFault(item, item, null,
                                             ItemFault.Code.WRONG_SIZE,
                                             (byte) 0, f.length(), null));
                                 }
                             }
                             catch (IOException ioe) {
-                                faults.add(new ItemFault(item, item, null,
+                                addAndPrintFault(faults, new ItemFault(item, item, null,
                                         ItemFault.Code.GZIP_CORRUPT,
                                         (byte) 0, f.length(), null));
                             }
@@ -348,7 +343,7 @@ public class ReportGenerator implements Runnable {
                             }
                         }
                         if (!Arrays.equals(GZIP_MAGIC, magic)) {
-                            faults.add(new ItemFault(item, item, null,
+                            addAndPrintFault(faults, new ItemFault(item, item, null,
                                     ItemFault.Code.WRONG_SIZE,
                                     (byte) 0, f.length(), null));
                         }
@@ -362,7 +357,6 @@ public class ReportGenerator implements Runnable {
                 for (Item.Revision rev : item.revisions) {
                     v = volumes.get(rev.volumeId);
                     f = v.getItemRevisionFile(item, rev);
-                    cacheFilename(e, f);
                     if (!f.exists()) {
                         boolean found = false;
                         byte foundId = 0;
@@ -374,16 +368,17 @@ public class ReportGenerator implements Runnable {
                             }
                         }
                         if (found) {
-                            faults.add(new ItemFault(item, null, rev,
+                            addAndPrintFault(faults, new ItemFault(item, null, rev,
                                     ItemFault.Code.WRONG_VOLUME,
                                     foundId, 0, null));
                         } else {
-                            faults.add(new ItemFault(item, null, rev,
+                            addAndPrintFault(faults, new ItemFault(item, null, rev,
                                     ItemFault.Code.NOT_FOUND,
                                     (byte) 0, 0, null));
                         }
-                    } else if (f.length() != item.size) {
+                    } else if (f.length() != rev.size) {
                         
+                        // TODO refactor copy/paste code
                         FileInputStream fin = null;
                         BufferedInputStream bin = null;
                         try {
@@ -403,13 +398,13 @@ public class ReportGenerator implements Runnable {
                                     while ((read = gzin.read(buf)) != -1)
                                         len += read;
                                     if (item.size != len) {
-                                        faults.add(new ItemFault(item, null, rev,
+                                        addAndPrintFault(faults, new ItemFault(item, null, rev,
                                                 ItemFault.Code.WRONG_SIZE,
                                                 (byte) 0, f.length(), null));
                                     }
                                 }
                                 catch (IOException ioe) {
-                                    faults.add(new ItemFault(item, null, rev,
+                                    addAndPrintFault(faults, new ItemFault(item, null, rev,
                                             ItemFault.Code.GZIP_CORRUPT,
                                             (byte) 0, f.length(), null));
                                 }
@@ -418,13 +413,13 @@ public class ReportGenerator implements Runnable {
                                 }
                             }
                             if (!Arrays.equals(GZIP_MAGIC, magic)) {
-                                faults.add(new ItemFault(item, null, rev,
+                                addAndPrintFault(faults, new ItemFault(item, null, rev,
                                         ItemFault.Code.WRONG_SIZE,
                                         (byte) 0, f.length(), null));
                             }
                         }
                         catch (IOException ex) {
-                            faults.add(new ItemFault(item, null, rev,
+                            addAndPrintFault(faults, new ItemFault(item, null, rev,
                                     ItemFault.Code.IO_EXCEPTION,
                                     (byte) 0, f.length(), null));
                         }
@@ -441,7 +436,6 @@ public class ReportGenerator implements Runnable {
             ioe.initCause(ex);
             throw ioe;
         }
-        cacheFilename(e, null); // handle the remainder
         return faults;
         
     }
