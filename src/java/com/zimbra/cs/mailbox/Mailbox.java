@@ -6453,13 +6453,16 @@ public class Mailbox {
     public synchronized Document addDocumentRevision(OperationContext octxt, int docId, byte type, ParsedDocument pd) throws ServiceException {
         AddDocumentRevision redoRecorder = new AddDocumentRevision(mId, pd.getDigest(), pd.getSize(), 0);
         
-        boolean deferIndexing = this.getBatchedIndexingCount() > 0 || pd.hasTemporaryAnalysisFailure();
+        boolean deferIndexing = getBatchedIndexingCount() > 0 || pd.hasTemporaryAnalysisFailure();
         
         boolean success = false;
         try {
             beginTransaction("addDocumentRevision", octxt, redoRecorder);
 
             Document doc = getDocumentById(docId);
+            if (!doc.canAccess(ACL.RIGHT_WRITE))
+                throw ServiceException.PERM_DENIED("you do not have the required rights on the " + MailItem.getNameForType(doc));
+
             Blob blob = doc.setContent(pd);
 
             redoRecorder.setDocument(pd);
