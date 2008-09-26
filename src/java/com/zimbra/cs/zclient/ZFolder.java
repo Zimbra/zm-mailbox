@@ -502,10 +502,11 @@ public class ZFolder implements ZItem, Comparable, ToZJSONObject {
         jo.put("color", mColor.name());
         jo.put("unreadCount", mUnreadCount);
         jo.put("messageCount", mMessageCount);
-        jo.put("view", mDefaultView.name());
-        jo.put("url", mRemoteURL);
+        jo.put("defaultView", mDefaultView.name());
+        jo.put("remoteUrl", mRemoteURL);
         jo.put("effectivePermissions", mEffectivePerms);
         jo.put("grants", mGrants);
+        jo.put("size", mSize);
         jo.put("children", mSubFolders);
         return jo;
     }
