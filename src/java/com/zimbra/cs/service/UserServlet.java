@@ -1143,10 +1143,19 @@ public class UserServlet extends ZimbraServlet {
     		this.method = m;
     	}
     	public int getContentLength() {
-    		Header cl = method.getResponseHeader("Content-Length");
+    		String cl = getHeader("Content-Length");
     		if (cl != null)
-    			return Integer.parseInt(cl.getValue());
+    			return Integer.parseInt(cl);
     		return -1;
+    	}
+    	public String getHeader(String headerName) {
+    		Header cl = method.getResponseHeader(headerName);
+    		if (cl != null)
+    			return cl.getValue();
+    		return null;
+    	}
+    	public int getStatusCode() {
+    		return method.getStatusCode();
     	}
     	@Override public void close() {
     		method.releaseConnection();
