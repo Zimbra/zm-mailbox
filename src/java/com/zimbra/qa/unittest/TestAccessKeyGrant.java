@@ -472,6 +472,6 @@ public class TestAccessKeyGrant extends TestCase {
     public static void main(String[] args) throws Exception {
         // TestUtil.cliSetup();
         CliUtil.toolSetup();
-        TestUtil.runTest(new TestSuite(TestAccessKeyGrant.class));
+        TestUtil.runTest(TestAccessKeyGrant.class);
     }
 }

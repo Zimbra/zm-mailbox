@@ -332,7 +332,7 @@ zmprov mcf zimbraSSLExcludeCipherSuites ""
     
     public static void main(String[] args) throws Exception {
         TestUtil.cliSetup();
-        TestUtil.runTest(new TestSuite(TestCiphers.class));        
+        TestUtil.runTest(TestCiphers.class);        
     }
 }
 

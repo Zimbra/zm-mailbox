@@ -266,6 +266,6 @@ public class TestBlobInputStream extends TestCase {
     public static void main(String[] args)
     throws Exception {
         TestUtil.cliSetup();
-        TestUtil.runTest(new TestSuite(TestBlobInputStream.class));
+        TestUtil.runTest(TestBlobInputStream.class);
     }
 }

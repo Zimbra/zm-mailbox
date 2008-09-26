@@ -22,27 +22,15 @@ package com.zimbra.cs.filter.jsieve;
 
 import org.apache.jsieve.mail.Action;
 
-
-/**
- * @author kchen
- */
 public class ActionFlag implements Action {
     private boolean set;
     private int flagId;
     private String name;
     
-    /**
-     * Constructs a flag action.
-     * 
-     * @param flag the flag
-     */
     public ActionFlag(int flagId, boolean set, String name) {
         setFlag(flagId, set, name);
     }
     
-    /**
-     * @return Returns the flag.
-     */
     public int getFlagId() {
         return flagId;
     }
@@ -55,9 +43,6 @@ public class ActionFlag implements Action {
         return name;
     }
     
-    /**
-     * @param flag The flag to set.
-     */
     public void setFlag(int flagId, boolean set, String name) {
         this.flagId = flagId;
         this.set = set;

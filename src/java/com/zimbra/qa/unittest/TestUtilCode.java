@@ -301,6 +301,6 @@ public class TestUtilCode extends TestCase
     public static void main(String[] args)
     throws Exception {
         TestUtil.cliSetup();
-        TestUtil.runTest(new TestSuite(TestUtilCode.class));
+        TestUtil.runTest(TestUtilCode.class);
     }
 }

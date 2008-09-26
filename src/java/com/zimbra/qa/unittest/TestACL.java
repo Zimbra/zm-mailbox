@@ -860,6 +860,6 @@ public class TestACL extends TestCase {
         CliUtil.toolSetup("INFO");
         // ZimbraLog.toolSetupLog4j("DEBUG", "/Users/pshao/sandbox/conf/log4j.properties.phoebe");
 
-        TestUtil.runTest(new TestSuite(TestACL.class));
+        TestUtil.runTest(TestACL.class);
     }
 }

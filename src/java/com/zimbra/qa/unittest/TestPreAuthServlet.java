@@ -107,7 +107,7 @@ public class TestPreAuthServlet extends TestCase {
     public static void main(String[] args) throws Exception{
         TestUtil.cliSetup();
         try {
-            TestUtil.runTest(new TestSuite(TestPreAuthServlet.class));
+            TestUtil.runTest(TestPreAuthServlet.class);
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }

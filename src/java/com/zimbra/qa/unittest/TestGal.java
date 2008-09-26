@@ -650,7 +650,7 @@ public class TestGal extends TestCase {
  
     public static void main(String[] args) throws Exception {
         try {
-            TestUtil.runTest(new TestSuite(TestGal.class));
+            TestUtil.runTest(TestGal.class);
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }

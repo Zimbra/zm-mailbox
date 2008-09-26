@@ -21,7 +21,7 @@
  */
 package com.zimbra.cs.filter;
 
-import org.apache.jsieve.SieveException;
+import org.apache.jsieve.exception.SieveException;
 
 /**
  * @author kchen

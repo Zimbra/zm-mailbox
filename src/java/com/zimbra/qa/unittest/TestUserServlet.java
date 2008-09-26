@@ -150,6 +150,6 @@ extends TestCase {
     public static void main(String[] args)
     throws Exception {
         TestUtil.cliSetup();
-        TestUtil.runTest(new TestSuite(TestUserServlet.class));
+        TestUtil.runTest(TestUserServlet.class);
     }
 }

@@ -116,6 +116,6 @@ extends TestCase
     public static void main(String[] args)
     throws Exception {
         TestUtil.cliSetup();
-        TestUtil.runTest(new TestSuite(TestTagFilterRules.class));
+        TestUtil.runTest(TestTagFilterRules.class);
     }
 }

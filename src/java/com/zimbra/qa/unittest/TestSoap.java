@@ -132,6 +132,6 @@ extends TestCase {
     public static void main(String[] args)
     throws Exception {
         TestUtil.cliSetup();
-        TestUtil.runTest(new TestSuite(TestSoap.class));
+        TestUtil.runTest(TestSoap.class);
     }
 }

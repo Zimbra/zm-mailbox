@@ -1100,7 +1100,7 @@ public class TestDomainStatus extends TestCase {
         // CliUtil.toolSetup("DEBUG");
         CliUtil.toolSetup();
         
-        TestUtil.runTest(new TestSuite(TestDomainStatus.class));
+        TestUtil.runTest(TestDomainStatus.class);
         
         /*
         TestDomainStatus t = new TestDomainStatus();

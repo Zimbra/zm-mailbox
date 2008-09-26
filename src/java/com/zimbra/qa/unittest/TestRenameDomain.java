@@ -991,7 +991,7 @@ public class TestRenameDomain  extends TestCase {
         // ZimbraLog.toolSetupLog4j("INFO", "/Users/pshao/p4/main/ZimbraServer/conf/log4j.properties.cli");
         ZimbraLog.toolSetupLog4j("INFO", "/opt/zimbra/conf/log4j.properties");
 
-        TestUtil.runTest(new TestSuite(TestRenameDomain.class));
+        TestUtil.runTest(TestRenameDomain.class);
 
         
         /*

@@ -205,7 +205,7 @@ public class TestCreateAccount extends TestCase {
     public static void main(String[] args) throws Exception {
         CliUtil.toolSetup();
         try {
-            TestUtil.runTest(new TestSuite(TestCreateAccount.class));
+            TestUtil.runTest(TestCreateAccount.class);
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }

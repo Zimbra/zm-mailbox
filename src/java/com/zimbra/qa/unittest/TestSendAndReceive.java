@@ -149,6 +149,6 @@ public class TestSendAndReceive extends TestCase {
     public static void main(String[] args)
     throws Exception {
         TestUtil.cliSetup();
-        TestUtil.runTest(new TestSuite(TestSendAndReceive.class));
+        TestUtil.runTest(TestSendAndReceive.class);
     }
 }

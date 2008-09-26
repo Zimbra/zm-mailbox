@@ -26,10 +26,12 @@ import java.util.ListIterator;
 
 import javax.mail.MessagingException;
 
+import org.apache.jsieve.Argument;
 import org.apache.jsieve.Arguments;
-import org.apache.jsieve.SieveException;
+import org.apache.jsieve.SieveContext;
+import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.StringListArgument;
-import org.apache.jsieve.SyntaxException;
+import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.TagArgument;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
@@ -42,24 +44,17 @@ import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 
-/**
- * @author kchen
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
 public class BodyTest extends AbstractTest {
 
     static final String CONTAINS = ":contains";
     
-    /* (non-Javadoc)
-     * @see org.apache.jsieve.tests.AbstractTest#executeBasic(org.apache.jsieve.mail.MailAdapter, org.apache.jsieve.Arguments)
-     */
-    protected boolean executeBasic(MailAdapter mail, Arguments arguments)
+    @Override
+    protected boolean executeBasic(MailAdapter mail, Arguments arguments, SieveContext context)
             throws SieveException {
         String comparator = null;
         String key = null;
-        ListIterator argumentsIter = arguments.getArgumentList().listIterator();
+        @SuppressWarnings("unchecked")
+        ListIterator<Argument> argumentsIter = arguments.getArgumentList().listIterator();
 
         // First argument MUST be a tag of ":contains"
         // TODO: handles ":matches" with * and ?
@@ -100,7 +95,8 @@ public class BodyTest extends AbstractTest {
 
     }
     
-    protected void validateArguments(Arguments arguments) {
+    @Override
+    protected void validateArguments(Arguments arguments, SieveContext context) {
         // override validation -- it's already done in executeBasic above
     }
 

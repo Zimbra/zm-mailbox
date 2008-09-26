@@ -489,7 +489,7 @@ public class TestAccess extends TestCase {
  
     public static void main(String[] args) throws Exception {
         TestUtil.cliSetup();
-        TestUtil.runTest(new TestSuite(TestAccess.class));
+        TestUtil.runTest(TestAccess.class);
     }
 
 }

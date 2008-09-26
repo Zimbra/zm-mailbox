@@ -1,11 +1,14 @@
 package com.zimbra.cs.filter;
 
+import java.util.List;
+
 import org.apache.jsieve.parser.generated.Node;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.ElementFactory;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.Mailbox;
 
 class RuleRewriterFactory {
@@ -32,9 +35,9 @@ class RuleRewriterFactory {
     	return new RuleRewriter();
     }
     
-    RuleRewriter createRuleRewriter(ElementFactory factory, Node node) {
+    RuleRewriter createRuleRewriter(ElementFactory factory, Node node, List<String> ruleNames) {
     	RuleRewriter rrw = createRuleRewriter();
-    	rrw.initialize(factory, node);
+    	rrw.initialize(factory, node, ruleNames);
     	return rrw;
     }
     

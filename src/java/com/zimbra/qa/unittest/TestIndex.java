@@ -145,6 +145,6 @@ public class TestIndex extends TestCase {
     public static void main(String[] args)
     throws Exception {
         TestUtil.cliSetup();
-        TestUtil.runTest(new TestSuite(TestIndex.class));
+        TestUtil.runTest(TestIndex.class);
     }
 }

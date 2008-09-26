@@ -181,6 +181,6 @@ extends TestCase {
     public static void main(String[] args)
     throws Exception {
         TestUtil.cliSetup();
-        TestUtil.runTest(new TestSuite(TestMaxMessageSize.class));
+        TestUtil.runTest(TestMaxMessageSize.class);
     }
 }

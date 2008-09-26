@@ -23,7 +23,6 @@ package com.zimbra.cs.filter.jsieve;
 
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
@@ -31,30 +30,26 @@ import java.util.Set;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
+import org.apache.jsieve.Argument;
 import org.apache.jsieve.Arguments;
-import org.apache.jsieve.SieveException;
+import org.apache.jsieve.SieveContext;
 import org.apache.jsieve.StringListArgument;
-import org.apache.jsieve.SyntaxException;
 import org.apache.jsieve.TagArgument;
+import org.apache.jsieve.exception.SieveException;
+import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
-import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 
-/**
- * @author kchen
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
 public class AddressBookTest extends AbstractTest {
 
     static final String IN = ":in";
@@ -63,14 +58,13 @@ public class AddressBookTest extends AbstractTest {
     static final byte[] SEARCH_TYPE = { MailItem.TYPE_CONTACT };
     private static Log mLog = LogFactory.getLog(AddressBookTest.class);
     
-    /* (non-Javadoc)
-     * @see org.apache.jsieve.tests.AbstractTest#executeBasic(org.apache.jsieve.mail.MailAdapter, org.apache.jsieve.Arguments)
-     */
-    protected boolean executeBasic(MailAdapter mail, Arguments arguments)
+    @Override
+    protected boolean executeBasic(MailAdapter mail, Arguments arguments, SieveContext context)
             throws SieveException {
         String comparator = null;
-        Set abooks = null;
-        ListIterator argumentsIter = arguments.getArgumentList().listIterator();
+        Set<String> abooks = null;
+        @SuppressWarnings("unchecked")
+        ListIterator<Argument> argumentsIter = arguments.getArgumentList().listIterator();
 
         // First argument MUST be a tag of ":in"
         if (argumentsIter.hasNext())
@@ -111,7 +105,7 @@ public class AddressBookTest extends AbstractTest {
             Object argument = argumentsIter.next();
             if (argument instanceof StringListArgument) {
                 StringListArgument strList = (StringListArgument) argument;
-                abooks = new HashSet(3);
+                abooks = new HashSet<String>();
                 for (int i=0; i< strList.getList().size(); i++) {
                     String abookName = (String) strList.getList().get(i);
                     if (!CONTACTS.equals(abookName) && !GAL.equals(abookName))
@@ -133,19 +127,19 @@ public class AddressBookTest extends AbstractTest {
         return test(mail, comparator, headers, abooks);
     }
 
-    private boolean test(MailAdapter mail, String comparator, String[] headers, Set abooks) throws SieveException {
+    private boolean test(MailAdapter mail, String comparator, String[] headers, Set<String> abooks) throws SieveException {
         ZimbraMailAdapter zimbraMail = (ZimbraMailAdapter) mail;
-        for (Iterator it = abooks.iterator(); it.hasNext(); ) {
-            String abookName = (String) it.next();
+        for (String abookName : abooks) {
             if (CONTACTS.equals(abookName)) {
                 Mailbox mbox = zimbraMail.getMailbox();
                 // searching contacts
                 for (int i=0; i<headers.length; i++) {
                     // get values for header that should contains address, like From, To, etc.
-                    List headerVals = mail.getHeader(headers[i]);
+                    @SuppressWarnings("unchecked")
+                    List<String> headerVals = mail.getHeader(headers[i]);
                     for (int k=0; k<headerVals.size(); k++) {
                         // each header may contain multiple vaules; e.g., To: may contain many recipients
-                        String headerVal = ((String) headerVals.get(k)).toLowerCase();
+                        String headerVal = (headerVals.get(k)).toLowerCase();
                         ZimbraQueryResults results = null;
                         try {
                             String iaddrStr = headerVal;
@@ -180,7 +174,7 @@ public class AddressBookTest extends AbstractTest {
         return false;
     }
     
-    protected void validateArguments(Arguments arguments) throws SieveException
-    {
+    @Override
+    protected void validateArguments(Arguments arguments, SieveContext context) {
     }
 }

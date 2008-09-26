@@ -178,6 +178,6 @@ public class TestZimbraId extends TestCase {
     }
     
     public static void main(String[] args) throws Exception {
-        TestUtil.runTest(new TestSuite(TestZimbraId.class));        
+        TestUtil.runTest(TestZimbraId.class);        
     }
 }

@@ -30,36 +30,31 @@ import java.util.ListIterator;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.jsieve.Argument;
 import org.apache.jsieve.Arguments;
-import org.apache.jsieve.SieveException;
+import org.apache.jsieve.SieveContext;
+import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.StringListArgument;
-import org.apache.jsieve.SyntaxException;
+import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.TagArgument;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 
-/**
- * @author kchen
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
 public class DateTest extends AbstractTest {
     
     static DateFormat mShortDateFormat = new SimpleDateFormat("yyyyMMdd");
     static final String BEFORE = ":before";
     static final String AFTER = ":after";
 
-    /* (non-Javadoc)
-     * @see org.apache.jsieve.tests.AbstractTest#executeBasic(org.apache.jsieve.mail.MailAdapter, org.apache.jsieve.Arguments)
-     */
-    protected boolean executeBasic(MailAdapter mail, Arguments arguments)
+    @Override
+    protected boolean executeBasic(MailAdapter mail, Arguments arguments, SieveContext context)
             throws SieveException {
         String comparator = null;
         Date date = null;
-        ListIterator argumentsIter = arguments.getArgumentList().listIterator();
+        @SuppressWarnings("unchecked")
+        ListIterator<Argument> argumentsIter = arguments.getArgumentList().listIterator();
 
         // First argument MUST be a tag of ":before" or ":after"
         if (argumentsIter.hasNext())
@@ -104,8 +99,9 @@ public class DateTest extends AbstractTest {
         return test(mail, comparator, date);
     }
     
-    protected void validateArguments(Arguments arguments) throws SieveException {
-        // already done
+    @Override
+    protected void validateArguments(Arguments arguments, SieveContext context) {
+        // override validation -- it's already done in executeBasic above
     }
 
     private boolean test(MailAdapter mail, String comparator, Date date) throws SieveException {

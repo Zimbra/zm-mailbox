@@ -56,7 +56,7 @@ public class TestBuildInfo extends TestCase {
      * @param args
      */
     public static void main(String[] args) throws Exception  {
-        TestUtil.runTest(new TestSuite(TestBuildInfo.class));
+        TestUtil.runTest(TestBuildInfo.class);
     }
 
 }

@@ -93,6 +93,6 @@ extends TestCase
     public static void main(String[] args)
     throws Exception {
         TestUtil.cliSetup();
-        TestUtil.runTest(new TestSuite(TestTaskScheduler.class), System.out);
+        TestUtil.runTest(TestTaskScheduler.class);
     }
 }

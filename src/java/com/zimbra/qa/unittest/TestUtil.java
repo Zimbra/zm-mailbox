@@ -31,9 +31,12 @@ import java.util.Map;
 
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
+
+import org.testng.TestListenerAdapter;
 import org.testng.TestNG;
 import junit.framework.Assert;
 import junit.framework.Test;
+import junit.framework.TestCase;
 import junit.framework.TestResult;
 
 import com.zimbra.common.localconfig.LC;
@@ -446,13 +449,6 @@ extends Assert {
         }
     }
 
-    /**
-     * Runs a test and writes the output to the logfile.
-     */
-    public static TestResult runTest(Test t) {
-        return runTest(t, (OutputStream)null);
-    }
-    
     private static boolean sIsCliInitialized = false;
     
     /**
@@ -470,61 +466,22 @@ extends Assert {
         }
     }
 
-    /**
-     * Runs a test and writes the output to the specified
-     * <code>OutputStream</code>.
-     */
-    public static TestResult runTest(Test t, Element parent) {
-        ZimbraLog.test.debug("Starting unit test suite");
+    public static void runTest(Class<?> testClass) {
+        ZimbraLog.test.info("Starting unit test %s.", testClass.getName());
 
-        long suiteStart = System.currentTimeMillis();
-        TestResult result = new TestResult();
-        /*
-        ZimbraTestListener listener = new ZimbraTestListener(parent);
-        result.addListener(listener);
-        */
-        t.run(result);
-
-        double seconds = (double) (System.currentTimeMillis() - suiteStart) / 1000;
-        String msg = String.format(
-            "Unit test suite finished in %.2f seconds.  %d errors, %d failures.",
-            seconds, result.errorCount(), result.failureCount());
-        ZimbraLog.test.info(msg);
-
-        return result;
-    }
-    
-    /**
-     * Runs a test and writes the output to the specified
-     * <code>OutputStream</code>.
-     */
-    public static TestResult runTest(Test t, OutputStream outputStream) {
-        ZimbraLog.test.debug("Starting unit test suite");
-
-        long suiteStart = System.currentTimeMillis();
-        TestResult result = new TestResult();
-        /*
-        ZimbraTestListener listener = new ZimbraTestListener(null);
-        result.addListener(listener);
-        */
-        t.run(result);
-
-        double seconds = (double) (System.currentTimeMillis() - suiteStart) / 1000;
-        String msg = String.format(
-            "Unit test suite finished in %.2f seconds.  %d errors, %d failures.",
-            seconds, result.errorCount(), result.failureCount());
-        ZimbraLog.test.info(msg);
-
-        if (outputStream != null) {
-            try {
-                outputStream.write(msg.getBytes());
-                outputStream.write('\n');
-            } catch (IOException e) {
-                ZimbraLog.test.error(e.toString());
-            }
+        TestNG testng = TestUtil.newTestNG();
+        TestListenerAdapter listener = new TestListenerAdapter();
+        testng.addListener(listener);
+        testng.addListener(new TestLogger());
+        
+        Class<?>[] classArray = new Class<?>[1];
+        classArray[0] = testClass;
+        
+        testng.setTestClasses(classArray);
+        if (TestCase.class.isAssignableFrom(testClass)) {
+            testng.setJUnit(true);
         }
-
-        return result;
+        testng.run();
     }
     
     

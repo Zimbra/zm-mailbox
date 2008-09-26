@@ -20,16 +20,23 @@
  */
 package com.zimbra.cs.filter;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.mail.MessagingException;
 
-import org.apache.jsieve.SieveException;
+import org.apache.jsieve.ConfigurationManager;
 import org.apache.jsieve.SieveFactory;
+import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.parser.generated.Node;
 import org.apache.jsieve.parser.generated.ParseException;
 import org.apache.jsieve.parser.generated.TokenMgrError;
@@ -61,6 +68,26 @@ public class RuleManager {
         StringUtil.getSimpleClassName(RuleManager.class.getName()) + ".FILTER_RULES_CACHE";
     private static RuleManager mInstance = new RuleManager();
 
+    static {
+        // Initialize custom jSieve extensions
+        try {
+            @SuppressWarnings("unchecked")
+            Map<String, String> commandMap = ConfigurationManager.getInstance().getCommandMap();
+            commandMap.put("disabled_if", com.zimbra.cs.filter.jsieve.DisabledIf.class.getName());
+            commandMap.put("tag", com.zimbra.cs.filter.jsieve.Tag.class.getName());
+            commandMap.put("flag", com.zimbra.cs.filter.jsieve.Flag.class.getName());
+            
+            @SuppressWarnings("unchecked")
+            Map<String, String> testMap = ConfigurationManager.getInstance().getTestMap();
+            testMap.put("date", com.zimbra.cs.filter.jsieve.DateTest.class.getName());
+            testMap.put("body", com.zimbra.cs.filter.jsieve.BodyTest.class.getName());
+            testMap.put("attachment", com.zimbra.cs.filter.jsieve.AttachmentTest.class.getName());
+            testMap.put("addressbook", com.zimbra.cs.filter.jsieve.AddressBookTest.class.getName());
+        } catch (SieveException e) {
+            ZimbraLog.filter.error("Unable to initialize mail filtering extensions.", e);
+        }
+    }
+    
     public static RuleManager getInstance() {
         return mInstance;
     }
@@ -158,8 +185,35 @@ public class RuleManager {
         } catch (TokenMgrError e) {
             throw ServiceException.PARSE_ERROR("parsing Sieve script", e);
         }
-        RuleRewriter t = RuleRewriterFactory.getInstance().createRuleRewriter(factory, node);
+        List<String> ruleNames = getRuleNames(account);
+        RuleRewriter t = RuleRewriterFactory.getInstance().createRuleRewriter(factory, node, ruleNames);
         return t.getElement();
+    }
+    
+    private static final Pattern PAT_RULE_NAME = Pattern.compile("^#\\s+([^\\s]+)");
+    
+    /**
+     * Kind of hacky, but works for now.  Rule names are encoded into the comment preceding
+     * the rule.  Return the values of all lines that begin with <tt>"# "</tt>.
+     */
+    private List<String> getRuleNames(Account account) {
+        String script = account.getAttr(Provisioning.A_zimbraMailSieveScript);
+        List<String> names = new ArrayList<String>();
+        if (script != null) {
+            BufferedReader reader = new BufferedReader(new StringReader(script));
+            String line = null;
+            try {
+                while ((line = reader.readLine()) != null){
+                    Matcher matcher = PAT_RULE_NAME.matcher(line);
+                    if (matcher.find()) {
+                        names.add(matcher.group(1));
+                    }
+                }
+            } catch (IOException e) {
+                ZimbraLog.filter.warn("Unable to determine filter rule names.", e);
+            }
+        }
+        return names;
     }
 
     /**

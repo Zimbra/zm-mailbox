@@ -91,6 +91,6 @@ public class TestDataSource extends TestCase {
     public static void main(String[] args)
     throws Exception {
         TestUtil.cliSetup();
-        TestUtil.runTest(new TestSuite(TestDataSource.class));
+        TestUtil.runTest(TestDataSource.class);
     }
 }

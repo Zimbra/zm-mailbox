@@ -324,7 +324,7 @@ public class TestAttr extends TestCase {
         Cos cos = getCos();
         setAttr(cos, Provisioning.A_zimbraMailSignatureMaxLength, "10");
         
-        // cannot have signature longer than the maxÊlen
+        // cannot have signature longer than the maxï¿½len
         boolean good = false;
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(attrName, "12345678901");
@@ -341,7 +341,7 @@ public class TestAttr extends TestCase {
     public static void main(String[] args) throws Exception {
         CliUtil.toolSetup();
         try {
-            TestUtil.runTest(new TestSuite(TestAttr.class));
+            TestUtil.runTest(TestAttr.class);
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }

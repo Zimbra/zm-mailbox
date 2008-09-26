@@ -80,6 +80,7 @@ public class RuleRewriter {
     private Stack<String> mStack = new Stack<String>();
 
     private Element mRoot;
+    private List<String> mRuleNames;
     
     private Mailbox mMailbox;
     
@@ -92,8 +93,9 @@ public class RuleRewriter {
      * @param node the Sieve parse tree root node
      * @see #getElement()
      */
-    void initialize(ElementFactory factory, Node node) {
+    void initialize(ElementFactory factory, Node node, List<String> ruleNames) {
         mRoot = factory.createElement("rules");
+        mRuleNames = ruleNames;
         traverse(node);
     }
 
@@ -114,18 +116,18 @@ public class RuleRewriter {
     
     private void traverse(Node node) {
         int numChildren = node.jjtGetNumChildren();
+        int nameIndex = 0;
         for (int i = 0; i < numChildren; i++) {
             Node childNode = node.jjtGetChild(i);
             String name = ((SieveNode) childNode).getName();
             if (childNode instanceof ASTcommand && 
-                    ("if".equals(name) || "elsif".equals(name) || "disabled_if".equals(name))) {
-                String ruleName = ((SieveNode) childNode).getComment();
-                if (ruleName != null) {
-                    int hash = ruleName.indexOf("#");
-                    ruleName = ruleName.substring(hash+1).trim();
-                } else {
-                    ruleName = "";
+                ("if".equals(name) || "elsif".equals(name) || "disabled_if".equals(name))) {
+                String ruleName = "";
+                if (mRuleNames != null && nameIndex < mRuleNames.size()) {
+                    ruleName = mRuleNames.get(nameIndex);
+                    nameIndex++;
                 }
+                
                 Element ruleElem = 
                     mRoot.addElement(MailConstants.E_RULE).addAttribute(MailConstants.A_NAME, ruleName);
                 ruleElem.addAttribute(MailConstants.A_ACTIVE, !"disabled_if".equals(name));

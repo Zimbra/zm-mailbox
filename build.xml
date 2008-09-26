@@ -435,7 +435,7 @@
     </target>
 
     <!-- jetty loads jetty-util*.jar, log4j*.jar and slf4j*.jar -->
-    <property name="war.include" value="slf4j*.jar, jsieve*.jar, lucene*.jar, ant-tar*.jar"/>
+    <property name="war.include" value="slf4j*.jar, *jsieve*.jar, lucene*.jar, ant-tar*.jar"/>
 
     <target name="war" depends="jar">
         <echo>war.include=${war.include}</echo>
