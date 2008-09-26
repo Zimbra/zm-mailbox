@@ -349,9 +349,14 @@ public class TarFormatter extends Formatter {
             TarEntry entry = new TarEntry(path + ".meta");
             byte[] meta = new ItemData(mi).encode();
             long miSize = mi.getSize();
-            
-            is = mi.getContentStream();
-            if (is == null && miSize > 0) {
+
+            if (miSize == 0 && mi.getDigest() != null) {
+                ZimbraLog.misc.error("blob db size 0 for item %d", mi.getId());
+                return tos;
+            }
+            try {
+                is = mi.getContentStream();
+            } catch (Exception e) {
                 ZimbraLog.misc.error("missing blob for item %d: expected %d",
                     mi.getId(), miSize);
                 return tos;
