@@ -252,6 +252,7 @@ public class TarFormatter extends Formatter {
         ServiceException {
         String ext = null, name = null;
         Integer fid = mi.getFolderId();
+        InputStream is = null;
         String fldr;
         
         if (!version && mi.isTagged(mi.getMailbox().mVersionedFlag)) {
@@ -343,13 +344,18 @@ public class TarFormatter extends Formatter {
             if (cnt > 0)
                 fldr = fldr + '!' + cnt + '/'; 
         }
-
-        InputStream is = null;
         try {
             String path = getEntryName(mi, fldr, name, ext, names);
             TarEntry entry = new TarEntry(path + ".meta");
             byte[] meta = new ItemData(mi).encode();
+            long miSize = mi.getSize();
             
+            is = mi.getContentStream();
+            if (is == null && miSize > 0) {
+                ZimbraLog.misc.error("missing blob for item %d: expected %d",
+                    mi.getId(), miSize);
+                return tos;
+            }
             entry.setGroupName(MailItem.getNameForType(mi));
             entry.setMajorDeviceId(mi.getType());
             entry.setMinorDeviceId(mi.getId());
@@ -363,36 +369,47 @@ public class TarFormatter extends Formatter {
                     charset);
             }
             tos.setLongFileMode(TarOutputStream.LONGFILE_GNU);
-            
             if (shouldReturnMeta(context)) {
                 tos.putNextEntry(entry);
                 tos.write(meta);
                 tos.closeEntry();
             }
-
-            is = mi.getContentStream();
             if (is != null) {
                 entry.setName(path);
-
                 if (shouldReturnBody(context)) {
                     byte buf[] = new byte[tos.getRecordSize() * 20];
                     int in;
+                    long remain = miSize;
 
-                    entry.setSize(mi.getSize());
+                    entry.setSize(miSize);
                     tos.putNextEntry(entry);
-                    while ((in = is.read(buf)) >= 0)
-                        tos.write(buf, 0, in);
+                    while (remain > 0 && (in = is.read(buf)) >= 0) {
+                        tos.write(buf, 0, remain < in ? (int)remain : in);
+                        remain -= in;
+                    }
+                    if (remain != 0)
+                        ZimbraLog.misc.error("mismatched blob size for item %d: expected %d",
+                             mi.getId(), miSize);
+                    if (remain > 0) {
+                        Arrays.fill(buf, (byte)' ');
+                        while (remain > 0) {
+                            tos.write(buf, 0, remain < buf.length ?
+                                (int)remain : buf.length);
+                            remain -= buf.length;
+                        }
+                    }
                 } else {
                     // Read headers into memory, since we need to write the size first.
                     InputStream headerStream = new HeadersOnlyInputStream(is);
                     ByteArrayOutputStream buf = new ByteArrayOutputStream(1024);
+                    
                     ByteUtil.copy(headerStream, true, buf, false);
                     byte[] headerData = buf.toByteArray();
+                    
                     entry.setSize(headerData.length);
                     tos.putNextEntry(entry);
                     tos.write(headerData);
                 }
-
                 tos.closeEntry();
             }
         } catch (Exception e) {
