@@ -16,12 +16,14 @@
  */
 package com.zimbra.cs.datasource;
 
+import java.io.CharArrayWriter;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -32,12 +34,15 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.client.CalDavClient;
 import com.zimbra.cs.dav.client.CalDavClient.Appointment;
+import com.zimbra.cs.dav.client.DavRequest;
 import com.zimbra.cs.db.DbDataSource;
 import com.zimbra.cs.db.DbDataSource.DataSourceItem;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Mailbox.SetCalendarItemData;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mailbox.MailItem;
@@ -166,27 +171,42 @@ public class CalDavDataImport extends MailItemImport {
 		}
 		return ret;
     }
-    private void pushDelete(int itemId) throws ServiceException {
+    private void pushDelete(Collection<Integer> itemIds) throws ServiceException, IOException, DavException {
     	DataSource ds = getDataSource();
-    	DataSourceItem item = DbDataSource.getMapping(ds.getMailbox(), ds, itemId);
+    	Mailbox mbox = ds.getMailbox();
+    	ArrayList<Integer> toDelete = new ArrayList<Integer>();
+    	for (int itemId : itemIds) {
+    		try {
+            	deleteRemoteItem(DbDataSource.getMapping(mbox, ds, itemId));
+            	toDelete.add(itemId);
+    		} catch (Exception e) {
+        		ZimbraLog.datasource.warn("pushDelete: can't delete remote item for item "+itemId, e);
+    		}
+    	}
+    	DbDataSource.deleteMappings(mbox, ds, toDelete);
+    }
+    private void deleteRemoteItem(DataSourceItem item) throws ServiceException, IOException, DavException {
     	if (item.md == null) {
-    		ZimbraLog.datasource.warn("pushDelete: empty metadata for item %d", itemId);
+    		ZimbraLog.datasource.warn("pushDelete: empty metadata for item %d", item.itemId);
     		return;
     	}
     	String type = item.md.get(METADATA_KEY_TYPE);
+    	String uri = item.remoteId;
     	if (METADATA_TYPE_FOLDER.equals(type)) {
-    		// delete remote folder
+    		ZimbraLog.datasource.debug("pushDelete: deleting remote folder %s", uri);
+    		getClient().sendRequest(DavRequest.DELETE(uri));
     	} else if (METADATA_TYPE_APPOINTMENT.equals(type)) {
-    		// delete remote appointment
+    		ZimbraLog.datasource.debug("pushDelete: deleting remote appointment %s", uri);
+    		getClient().sendRequest(DavRequest.DELETE(uri));
     	} else {
-    		ZimbraLog.datasource.warn("pushDelete: unrecognized item type for %d: %s", itemId, type);
-    		return;
+    		ZimbraLog.datasource.warn("pushDelete: unrecognized item type for %d: %s", item.itemId, type);
     	}
     }
-    private void pushModify(MailItem mitem) throws ServiceException {
+    private void pushModify(MailItem mitem) throws ServiceException, IOException, DavException {
     	int itemId = mitem.getId();
     	DataSource ds = getDataSource();
-    	DataSourceItem item = DbDataSource.getMapping(ds.getMailbox(), ds, itemId);
+    	Mailbox mbox = ds.getMailbox();
+    	DataSourceItem item = DbDataSource.getMapping(mbox, ds, itemId);
     	if (item.md == null) {
     		ZimbraLog.datasource.warn("pushModify: empty metadata for item %d", itemId);
     		return;
@@ -204,12 +224,43 @@ public class CalDavDataImport extends MailItemImport {
         		return;
     		}
     		// push modified appt
+    		String etag = putAppointment((CalendarItem)mitem, item);
+    		item.md.put(METADATA_KEY_ETAG, etag);
+    		DbDataSource.addMapping(mbox, ds, item);
     	} else {
     		ZimbraLog.datasource.warn("pushModify: unrecognized item type for %d: %s", itemId, type);
     		return;
     	}
     }
-    private List<RemoteItem> getRemoteItems(Folder folder) throws ServiceException, IOException {
+    private String putAppointment(CalendarItem calItem, DataSourceItem dsItem) throws ServiceException, IOException, DavException {
+        StringBuilder buf = new StringBuilder();
+
+        buf.append("BEGIN:VCALENDAR\r\n");
+        buf.append("VERSION:").append(ZCalendar.sIcalVersion).append("\r\n");
+        buf.append("PRODID:").append(ZCalendar.sZimbraProdID).append("\r\n");
+        Iterator<ICalTimeZone> iter = calItem.getTimeZoneMap().tzIterator();
+        while (iter.hasNext()) {
+            ICalTimeZone tz = (ICalTimeZone) iter.next();
+            CharArrayWriter wr = new CharArrayWriter();
+            tz.newToVTimeZone().toICalendar(wr);
+            wr.flush();
+            buf.append(wr.toCharArray());
+            wr.close();
+        }
+        for (Invite inv : calItem.getInvites()) {
+            CharArrayWriter wr = new CharArrayWriter();
+            ZCalendar.ZComponent vcomp = inv.newToVComponent(false, true);
+            vcomp.toICalendar(wr);
+            wr.flush();
+            buf.append(wr.toCharArray());
+            wr.close();
+        }
+        buf.append("END:VCALENDAR\r\n");
+    	String etag = dsItem.md.get(METADATA_KEY_ETAG);
+        Appointment appt = new Appointment(dsItem.remoteId, etag, buf.toString());
+        return getClient().sendCalendarData(appt);
+    }
+    private List<RemoteItem> getRemoteItems(Folder folder) throws ServiceException, IOException, DavException {
 		ZimbraLog.datasource.debug("Refresh folder %s", folder.getPath());
     	DataSource ds = getDataSource();
     	Mailbox mbox = ds.getMailbox();
@@ -225,15 +276,11 @@ public class CalDavDataImport extends MailItemImport {
     		allItems.put(localItem.remoteId, localItem);
     	
     	ArrayList<RemoteItem> ret = new ArrayList<RemoteItem>();
-    	try {
-        	CalDavClient client = getClient();
-        	Collection<Appointment> appts = client.getEtags(item.remoteId);
-        	for (Appointment a : appts) {
-        		ret.add(new RemoteCalendarItem(a.href, a.etag));
-        		allItems.remove(a.href);
-        	}
-    	} catch (DavException e) {
-    		throw ServiceException.FAILURE("error getting items for folder "+folder.getName(), e);
+    	CalDavClient client = getClient();
+    	Collection<Appointment> appts = client.getEtags(item.remoteId);
+    	for (Appointment a : appts) {
+    		ret.add(new RemoteCalendarItem(a.href, a.etag));
+    		allItems.remove(a.href);
     	}
     	for (DataSourceItem deletedItem : allItems.values()) {
     		// what's left in the collection are previous mapping that has disappeared.
@@ -317,7 +364,7 @@ public class CalDavDataImport extends MailItemImport {
     	}
     	return mi;
     }
-    private void sync(Mailbox mbox, OperationContext octxt, Folder syncFolder) throws ServiceException, IOException {
+    private void sync(Mailbox mbox, OperationContext octxt, Folder syncFolder) throws ServiceException, IOException, DavException {
     	HashSet<Integer> fid = new HashSet<Integer>();
     	int lastSync = (int)syncFolder.getLastSyncDate();
     	int currentSync = 0;
@@ -331,11 +378,15 @@ public class CalDavDataImport extends MailItemImport {
     		currentSync = mbox.getLastChangeID();
     		
     		// push local deletion
-    		List<Integer> deleted = mbox.getTombstones(lastSync).getAll();
-    		for (int itemId : deleted) {
-    			if (deletedFromRemote.contains(itemId))
+    		List<Integer> deleted = new ArrayList<Integer>();
+    		for (int itemId : mbox.getTombstones(lastSync).getAll()) {
+    			if (deletedFromRemote.contains(itemId)) {
     				continue;  // was just deleted from sync
-    			pushDelete(itemId);
+    			}
+    			deleted.add(itemId);
+    		}
+    		if (deleted.isEmpty()) {
+    			pushDelete(deleted);
     			allDone = false;
     		}
 

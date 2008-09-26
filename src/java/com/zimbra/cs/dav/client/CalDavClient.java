@@ -26,9 +26,12 @@ import java.util.Map;
 import org.dom4j.Element;
 
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavContext.Depth;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
+import com.zimbra.cs.dav.DavProtocol;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.UserServlet.HttpInputStream;
 
 public class CalDavClient extends WebDavClient {
@@ -99,11 +102,22 @@ public class CalDavClient extends WebDavClient {
 		return etags;
 	}
 	
-	public Appointment getCalendarData(Appointment appt) throws IOException, DavException {
+	public Appointment getCalendarData(Appointment appt) throws IOException {
 		HttpInputStream resp = sendGet(appt.href);
 		byte[] res = ByteUtil.getContent(resp, resp.getContentLength());
 		appt.data = new String(res, "UTF-8");
 		return appt;
+	}
+	
+	public String sendCalendarData(Appointment appt) throws IOException, DavException {
+		HttpInputStream resp = sendPut(appt.href, appt.data.getBytes(), Mime.CT_TEXT_CALENDAR, appt.etag);
+		String etag = resp.getHeader(DavProtocol.HEADER_ETAG);
+		ZimbraLog.dav.debug("ETags: "+appt.etag+", "+etag);
+		int status = resp.getStatusCode();
+		if (status != 200 && status != 201) {
+			throw new DavException("Can't send calendar data (status="+status+")", status);
+		}
+		return etag;
 	}
 	
 	public Collection<Appointment> getCalendarData(String url, Collection<Appointment> hrefs) throws IOException, DavException {

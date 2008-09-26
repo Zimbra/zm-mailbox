@@ -85,6 +85,11 @@ public class DavRequest {
 	
 	private static final String PROPFIND = "PROPFIND";
 	private static final String REPORT = "REPORT";
+	private static final String DELETE = "DELETE";
+	private static final String MKCOL = "MKCOL";
+	private static final String MKCALENDAR = "MKCALENDAR";
+	private static final String PROPPATCH = "PROPPATCH";
+	private static final String OPTION = "OPTION";
 	
 	public static DavRequest PROPFIND(String uri) {
 		DavRequest req = new DavRequest(uri, PROPFIND);
@@ -108,6 +113,31 @@ public class DavRequest {
     	root.addElement(DavElements.E_PROP);
     	root.addElement(DavElements.E_FILTER).addElement(DavElements.E_COMP_FILTER).addAttribute(DavElements.P_NAME, "VCALENDAR");
     	req.setRequestMessage(root);
+		return req;
+	}
+	
+	public static DavRequest DELETE(String uri) {
+		DavRequest req = new DavRequest(uri, DELETE);
+		return req;
+	}
+
+	public static DavRequest MKCOL(String uri) {
+		DavRequest req = new DavRequest(uri, MKCOL);
+		return req;
+	}
+
+	public static DavRequest MKCALENDAR(String uri) {
+		DavRequest req = new DavRequest(uri, MKCALENDAR);
+		return req;
+	}
+
+	public static DavRequest PROPPATCH(String uri) {
+		DavRequest req = new DavRequest(uri, PROPPATCH);
+		return req;
+	}
+	
+	public static DavRequest OPTION(String uri) {
+		DavRequest req = new DavRequest(uri, OPTION);
 		return req;
 	}
 }

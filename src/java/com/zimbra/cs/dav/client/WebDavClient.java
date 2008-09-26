@@ -45,6 +45,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.DavContext.Depth;
+import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.service.UserServlet.HttpInputStream;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.NetUtil;
@@ -116,11 +117,13 @@ public class WebDavClient {
 		return new HttpInputStream(get);
 	}
 	
-	public HttpInputStream sendPut(String href, byte[] buf, String contentType) throws IOException {
+	public HttpInputStream sendPut(String href, byte[] buf, String contentType, String etag) throws IOException {
 		PutMethod put = new PutMethod(mBaseUrl + href);
 		put.setRequestEntity(new ByteArrayRequestEntity(buf, contentType));
 		if (ZimbraLog.dav.isDebugEnabled() && contentType.startsWith("text"))
 			ZimbraLog.dav.debug("PUT payload: \n"+new String(buf, "UTF-8"));
+		if (etag != null)
+			put.setRequestHeader(DavProtocol.HEADER_IF_MATCH, etag);
 		executeMethod(put, Depth.zero);
 		return new HttpInputStream(put);
 	}
