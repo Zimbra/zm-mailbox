@@ -61,7 +61,7 @@ public class CheckDomainMXRecord extends AdminDocumentHandler {
 			DirContext ictx = new InitialDirContext(env);
 			Attributes attrs = ictx.getAttributes(domainName, new String[] {"MX"});
 			if(attrs.size()<1) {
-				throw ServiceException.FAILURE(String.format("Failed to retreive MX record for %s from DNS", domainName), null);
+				throw ServiceException.FAILURE("NoMXRecordsForDomain", null);
 			}
 	        for (NamingEnumeration ne = attrs.getAll(); ne.hasMore(); ) {
 	            Attribute attr = (Attribute) ne.next();
@@ -124,7 +124,7 @@ public class CheckDomainMXRecord extends AdminDocumentHandler {
 		}
 		catch (NamingException e) {
 			// TODO Auto-generated catch block
-			throw ServiceException.FAILURE("Failed to verify domain's MX record", e);
+			throw ServiceException.FAILURE("Failed to verify domain's MX record. " + e.getMessage(), e);
 		}
 		return response;
 	}
