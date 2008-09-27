@@ -16,10 +16,20 @@
  */
 package com.zimbra.cs.dav.client;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+
+import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.PutMethod;
+import org.apache.commons.httpclient.methods.RequestEntity;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.QName;
+import org.dom4j.io.OutputFormat;
+import org.dom4j.io.XMLWriter;
 
 import com.zimbra.cs.dav.DavContext.Depth;
 import com.zimbra.cs.dav.DavElements;
@@ -76,6 +86,59 @@ public class DavRequest {
 	}
 	public String getMethod() {
 		return mMethod;
+	}
+	public String getRequestMessageString() throws IOException {
+		if (mDoc != null) {
+			OutputFormat format = OutputFormat.createPrettyPrint();
+			format.setTrimText(false);
+			format.setOmitEncoding(false);
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			XMLWriter writer = new XMLWriter(out, format);
+			writer.write(mDoc);
+			return new String(out.toByteArray(), "UTF-8");
+		}
+		return "";
+	}
+	
+	public static class DocumentRequestEntity implements RequestEntity {
+		private Document doc;
+		public DocumentRequestEntity(Document d) { doc = d; }
+		public boolean isRepeatable() { return true; }
+	    public long getContentLength() { return -1; }
+	    public String getContentType() { return "text/xml"; }
+	    public void writeRequest(OutputStream out) throws IOException {
+			OutputFormat format = OutputFormat.createCompactFormat();
+			format.setTrimText(false);
+			format.setOmitEncoding(false);
+			XMLWriter writer = new XMLWriter(out, format);
+			writer.write(doc);
+	    }
+	}
+	
+	public HttpMethod getHttpMethod(String baseUrl) {
+		if (mDoc == null)
+			return new GetMethod(baseUrl + mUri) {
+	    		public String getName() {
+	    			return mMethod;
+	    		}
+			};
+		
+    	PutMethod m = new PutMethod(baseUrl + mUri) {
+    		RequestEntity re;
+    		public String getName() {
+    			return mMethod;
+    		}
+    	    protected RequestEntity generateRequestEntity() {
+    	    	return re;
+    	    }
+    	    public void setRequestEntity(RequestEntity requestEntity) {
+    	    	re = requestEntity;
+    	    	super.setRequestEntity(requestEntity);
+    	    }
+    	};
+		DocumentRequestEntity re = new DocumentRequestEntity(mDoc);
+		m.setRequestEntity(re);
+    	return m;
 	}
 	
 	private Document mDoc;

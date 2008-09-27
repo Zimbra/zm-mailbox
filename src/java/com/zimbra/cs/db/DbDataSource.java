@@ -42,7 +42,8 @@ public class DbDataSource {
 	
     public static final String TABLE_DATA_SOURCE_ITEM = "data_source_item";
 
-    public static void addMapping(Mailbox mbox, DataSource ds, DataSourceItem item) throws ServiceException {
+    public static void addMapping(DataSource ds, DataSourceItem item) throws ServiceException {
+    	Mailbox mbox = ds.getMailbox();
         Connection conn = null;
         PreparedStatement stmt = null;
         String dataSourceId = ds.getId();
@@ -75,7 +76,7 @@ public class DbDataSource {
             if (Db.supports(Db.Capability.ON_DUPLICATE_KEY) && Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
                 DbPool.closeStatement(stmt);
                 DbPool.quietClose(conn);
-            	updateMapping(mbox, ds, item);
+            	updateMapping(ds, item);
             } else {
                 throw ServiceException.FAILURE("Unable to add mapping for dataSource "+ds.getName(), e);
             }
@@ -85,7 +86,8 @@ public class DbDataSource {
         }
     }
 
-    public static void updateMapping(Mailbox mbox, DataSource ds, DataSourceItem item) throws ServiceException {
+    public static void updateMapping(DataSource ds, DataSourceItem item) throws ServiceException {
+    	Mailbox mbox = ds.getMailbox();
         Connection conn = null;
         PreparedStatement stmt = null;
         ZimbraLog.datasource.debug("Updating mapping for dataSource %s: itemId(%d), remoteId(%s)", ds.getName(), item.itemId, item.remoteId);
@@ -113,7 +115,8 @@ public class DbDataSource {
         }
     }
 
-    public static void deleteMappings(Mailbox mbox, DataSource ds, Collection<Integer> itemIds) throws ServiceException {
+    public static void deleteMappings(DataSource ds, Collection<Integer> itemIds) throws ServiceException {
+    	Mailbox mbox = ds.getMailbox();
         Connection conn = null;
         PreparedStatement stmt = null;
         ZimbraLog.datasource.debug("Deleting %d mappings for dataSource %s", itemIds.size(), ds.getName());
@@ -145,7 +148,8 @@ public class DbDataSource {
         }
     }
 
-    public static void deleteAllMappings(Mailbox mbox, DataSource ds) throws ServiceException {
+    public static void deleteAllMappings(DataSource ds) throws ServiceException {
+    	Mailbox mbox = ds.getMailbox();
         Connection conn = null;
         PreparedStatement stmt = null;
         ZimbraLog.datasource.debug("Deleting all mappings for dataSource %s", ds.getName());
@@ -172,12 +176,13 @@ public class DbDataSource {
         }
     }
 
-    public static boolean hasMapping(Mailbox mbox, DataSource ds, int itemId) throws ServiceException {
-    	DataSourceItem item = getMapping(mbox, ds, itemId);
+    public static boolean hasMapping(DataSource ds, int itemId) throws ServiceException {
+    	DataSourceItem item = getMapping(ds, itemId);
     	return item.remoteId != null;
     }
     
-    public static Collection<DataSourceItem> getAllMappings(Mailbox mbox, DataSource ds) throws ServiceException {
+    public static Collection<DataSourceItem> getAllMappings(DataSource ds) throws ServiceException {
+    	Mailbox mbox = ds.getMailbox();
     	ArrayList<DataSourceItem> items = new ArrayList<DataSourceItem>();
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -217,7 +222,8 @@ public class DbDataSource {
     	return items;
     }
     
-    public static Collection<DataSourceItem> getAllMappingsInFolder(Mailbox mbox, DataSource ds, int folderId) throws ServiceException {
+    public static Collection<DataSourceItem> getAllMappingsInFolder(DataSource ds, int folderId) throws ServiceException {
+    	Mailbox mbox = ds.getMailbox();
     	ArrayList<DataSourceItem> items = new ArrayList<DataSourceItem>();
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -264,7 +270,8 @@ public class DbDataSource {
     	return items;
     }
     
-    public static DataSourceItem getMapping(Mailbox mbox, DataSource ds, int itemId) throws ServiceException {
+    public static DataSourceItem getMapping(DataSource ds, int itemId) throws ServiceException {
+    	Mailbox mbox = ds.getMailbox();
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -306,7 +313,8 @@ public class DbDataSource {
     	return new DataSourceItem(itemId, remoteId, md);
     }
 
-    public static DataSourceItem getReverseMapping(Mailbox mbox, DataSource ds, String remoteId) throws ServiceException {
+    public static DataSourceItem getReverseMapping(DataSource ds, String remoteId) throws ServiceException {
+    	Mailbox mbox = ds.getMailbox();
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;

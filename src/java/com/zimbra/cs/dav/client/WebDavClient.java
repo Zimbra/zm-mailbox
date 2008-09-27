@@ -16,9 +16,7 @@
  */
 package com.zimbra.cs.dav.client;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -32,14 +30,11 @@ import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
-import org.apache.commons.httpclient.methods.RequestEntity;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.QName;
-import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
-import org.dom4j.io.XMLWriter;
 
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.dav.DavElements;
@@ -128,60 +123,14 @@ public class WebDavClient {
 		return new HttpInputStream(put);
 	}
 	
-	private static class DocumentRequestEntity implements RequestEntity {
-		private Document doc;
-		public DocumentRequestEntity(Document d) { doc = d; }
-		public boolean isRepeatable() { return true; }
-	    public long getContentLength() { return -1; }
-	    public String getContentType() { return "text/xml"; }
-	    public void writeRequest(OutputStream out) throws IOException {
-			OutputFormat format = OutputFormat.createCompactFormat();
-			format.setTrimText(false);
-			format.setOmitEncoding(false);
-			XMLWriter writer = new XMLWriter(out, format);
-			writer.write(doc);
-	    }
-	    public void writeDebug(OutputStream out) throws IOException {
-			OutputFormat format = OutputFormat.createPrettyPrint();
-			format.setTrimText(false);
-			format.setOmitEncoding(false);
-			XMLWriter writer = new XMLWriter(out, format);
-			writer.write(doc);
-	    }
-	}
 	protected HttpMethod execute(DavRequest req) throws IOException {
-		final String methodString = req.getMethod();
-    	PutMethod m = new PutMethod(mBaseUrl + req.getUri()) {
-    		RequestEntity re;
-    		public String getName() {
-    			return methodString;
-    		}
-    	    protected RequestEntity generateRequestEntity() {
-    	    	return re;
-    	    }
-    	    public void setRequestEntity(RequestEntity requestEntity) {
-    	    	re = requestEntity;
-    	    	super.setRequestEntity(requestEntity);
-    	    }
-    	};
-		DocumentRequestEntity re = new DocumentRequestEntity(req.getRequestMessage());
-		m.setRequestEntity(re);
-		return executeMethod(m, req.getDepth());
+		if (ZimbraLog.dav.isDebugEnabled())
+			ZimbraLog.dav.debug("Request payload: \n"+req.getRequestMessageString());
+		return executeMethod(req.getHttpMethod(mBaseUrl), req.getDepth());
 	}
 	protected HttpMethod executeMethod(HttpMethod m, Depth d) throws IOException {
-		if (ZimbraLog.dav.isDebugEnabled()) {
-			String buf = "";
-			if (m instanceof PutMethod) {
-				PutMethod put = (PutMethod) m;
-				RequestEntity re = put.getRequestEntity();
-				if (re instanceof DocumentRequestEntity) {
-					ByteArrayOutputStream out = new ByteArrayOutputStream();
-					((DocumentRequestEntity)re).writeDebug(out);
-					buf = "\n" + new String(out.toByteArray(), "UTF-8");
-				}
-			}
-			ZimbraLog.dav.debug("WebDAV request (depth="+d+"): "+m.getPath()+buf);
-		}
+		ZimbraLog.dav.debug("WebDAV request (depth="+d+"): "+m.getPath());
+
 		m.setDoAuthentication(true);
 		m.setRequestHeader("User-Agent", mUserAgent);
 		String depth = "0";
