@@ -19,13 +19,10 @@ package com.zimbra.cs.datasource;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.ListData;
-import com.zimbra.cs.mailclient.imap.IDInfo;
-import com.zimbra.cs.mailclient.imap.ImapCapabilities;
-import com.zimbra.cs.mailclient.CommandFailedException;
+import com.zimbra.cs.mailclient.auth.Authenticator;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.util.ZimbraApplication;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.DummySSLSocketFactory;
@@ -43,10 +40,12 @@ import java.util.Collections;
 
 public class ImapSync extends MailItemImport {
     private final ImapConnection connection;
+    private final Authenticator authenticator;
     private Folder localRootFolder;
     private char delimiter; // Default IMAP hierarchy delimiter (0 if flat)
     private ImapFolderCollection trackedFolders;
     private Map<Integer, ImapFolderSync> syncedFolders;
+    // Optional mail client authenticator (default is plaintext login)
 
     private static final boolean DEBUG =
         Boolean.getBoolean("ZimbraDataSourceImapDebug") ||
@@ -57,18 +56,14 @@ public class ImapSync extends MailItemImport {
         if (DEBUG) LOG.setLevel(Log.Level.debug);
     }
 
-    private static final IDInfo ID_INFO = new IDInfo();
-    static {
-        ID_INFO.setVendor("Zimbra");
-        ID_INFO.setOs(System.getProperty("os.name"));
-        ID_INFO.setOsVersion(System.getProperty("os.version"));
-        ID_INFO.put("guid", ZimbraApplication.getInstance().getId());
-    }
-
-
-    public ImapSync(DataSource ds) throws ServiceException {
+    public ImapSync(DataSource ds, Authenticator auth) throws ServiceException {
         super(ds);
         connection = new ImapConnection(getImapConfig(ds));
+        authenticator = auth;
+    }
+
+    public ImapSync(DataSource ds) throws ServiceException {
+        this(ds, null);
     }
 
     public ImapConnection getConnection() { return connection; }
@@ -133,17 +128,13 @@ public class ImapSync extends MailItemImport {
         if (!connection.isClosed()) return;
         try {
             connection.connect();
-            if (connection.hasCapability(ImapCapabilities.ID)) {
-                try {
-                    IDInfo id = connection.id(ID_INFO);
-                    LOG.info("Server ID: " + id);
-                } catch (CommandFailedException e) {
-                    LOG.warn(e.getMessage());
-                }
+            if (authenticator != null) {
+                connection.authenticate(authenticator);
+            } else {
+                connection.login(dataSource.getDecryptedPassword());
             }
-            connection.login(dataSource.getDecryptedPassword());
             delimiter = connection.getDelimiter();
-        } catch (IOException e) {
+        } catch (Exception e) {
             connection.close();
             throw ServiceException.FAILURE(
                 "Unable to connect to IMAP server: " + dataSource, e);
