@@ -73,7 +73,6 @@ public class CalDavDataImport extends MailItemImport {
             	Folder syncFolder = mbox.getFolderById(octxt, fid);
         		sync(mbox, octxt, syncFolder);
         	}
-    		//DbDataSource.deleteAllMappings(mbox, getDataSource());
     	} catch (DavException e) {
     		throw ServiceException.FAILURE("error importing CalDAV data", e);
     	} catch (IOException e) {
@@ -83,7 +82,6 @@ public class CalDavDataImport extends MailItemImport {
 
     public String test() throws ServiceException {
     	try {
-    		//importData(null, true);
     		DataSource ds = getDataSource();
         	mClient = new CalDavClient(getTargetUrl());
     		mClient.setCredential(ds.getUsername(), ds.getDecryptedPassword());
@@ -154,7 +152,6 @@ public class CalDavDataImport extends MailItemImport {
 			String url = calendars.get(name);
 			DataSourceItem f = DbDataSource.getReverseMapping(ds, url);
 			if (f.itemId == 0) {
-				// XXX add handling for multi level subfolders
 				Folder newFolder = mbox.createFolder(octxt, name, rootFolder.getId(), MailItem.TYPE_APPOINTMENT, 0, (byte)0, null);
 				f.itemId = newFolder.getId();
 				f.remoteId = url;
@@ -163,6 +160,7 @@ public class CalDavDataImport extends MailItemImport {
 				DbDataSource.addMapping(ds, f);
 			} else if (f.md == null) {
 	    		ZimbraLog.datasource.warn("syncFolders: empty metadata for item %d", f.itemId);
+				f.remoteId = url;
 	    		f.md = new Metadata();
 				f.md.put(METADATA_KEY_TYPE, METADATA_TYPE_FOLDER);
 				DbDataSource.addMapping(ds, f);
@@ -216,13 +214,32 @@ public class CalDavDataImport extends MailItemImport {
     		ZimbraLog.datasource.warn("pushDelete: unrecognized item type for %d: %s", item.itemId, type);
     	}
     }
+    private String createTargetUrl(MailItem mitem) throws ServiceException {
+		DataSourceItem folder = DbDataSource.getMapping(getDataSource(), mitem.getFolderId());
+		String url = folder.remoteId;
+		switch (mitem.getType()) {
+		case MailItem.TYPE_APPOINTMENT:
+			url += ((CalendarItem)mitem).getUid() + ".ics";
+			break;
+		default:
+			String name = mitem.getName();
+			if (name != null)
+				url += name;
+			else
+				url += mitem.getSubject();
+			break;
+		}
+		return url;
+    }
     private void pushModify(MailItem mitem) throws ServiceException, IOException, DavException {
     	int itemId = mitem.getId();
     	DataSource ds = getDataSource();
     	DataSourceItem item = DbDataSource.getMapping(ds, itemId);
-    	if (item.md == null) {
-    		ZimbraLog.datasource.warn("pushModify: empty metadata for item %d", itemId);
-    		return;
+    	if (item.remoteId == null) {
+    		// new item
+    		item.md = new Metadata();
+			item.md.put(METADATA_KEY_TYPE, METADATA_TYPE_APPOINTMENT);
+			item.remoteId = createTargetUrl(mitem);
     	}
     	String type = item.md.get(METADATA_KEY_TYPE);
     	if (METADATA_TYPE_FOLDER.equals(type)) {
@@ -264,13 +281,16 @@ public class CalDavDataImport extends MailItemImport {
         for (Invite inv : calItem.getInvites()) {
             CharArrayWriter wr = new CharArrayWriter();
             ZCalendar.ZComponent vcomp = inv.newToVComponent(false, true);
+            ZCalendar.ZProperty organizer = vcomp.getProperty(ZCalendar.ICalTok.ORGANIZER);
+            if (organizer != null)
+                organizer.setValue("mailto:"+getDataSource().getUsername());
             vcomp.toICalendar(wr);
             wr.flush();
             buf.append(wr.toCharArray());
             wr.close();
         }
         buf.append("END:VCALENDAR\r\n");
-    	String etag = dsItem.md.get(METADATA_KEY_ETAG);
+    	String etag = dsItem.md.get(METADATA_KEY_ETAG, null);
         Appointment appt = new Appointment(dsItem.remoteId, etag, buf.toString());
         return getClient().sendCalendarData(appt);
     }
@@ -321,7 +341,7 @@ public class CalDavDataImport extends MailItemImport {
     	if (dsItem.itemId == 0) {
     		isStale = true;
     	} else {
-        	String etag = dsItem.md.get(METADATA_KEY_ETAG);
+        	String etag = dsItem.md.get(METADATA_KEY_ETAG, null);
         	if (item.etag == null) {
         		ZimbraLog.datasource.warn("No Etag returned for item %s", item.href);
         		isStale = true;

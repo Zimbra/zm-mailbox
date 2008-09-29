@@ -144,7 +144,7 @@ public class WebDavClient {
 		}
 		m.setRequestHeader("Depth", depth);
 		mClient.executeMethod(m);
-		if (ZimbraLog.dav.isDebugEnabled())
+		if (ZimbraLog.dav.isDebugEnabled() && m.getResponseBody() != null)
 			ZimbraLog.dav.debug("WebDAV response:\n"+new String(m.getResponseBody(), "UTF-8"));
 
         return m;
