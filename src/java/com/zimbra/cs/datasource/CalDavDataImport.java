@@ -167,6 +167,12 @@ public class CalDavDataImport extends MailItemImport {
 				f.md.put(METADATA_KEY_TYPE, METADATA_TYPE_FOLDER);
 				DbDataSource.addMapping(ds, f);
 			}
+			Folder folder = mbox.getFolderById(octxt, f.itemId);
+			String fname = folder.getName();
+			if (!fname.equals(name)) {
+        		ZimbraLog.datasource.warn("renaming folder %s to %s", fname, name);
+				mbox.rename(octxt, f.itemId, MailItem.TYPE_FOLDER, name, folder.getFolderId());
+			}
 			ret.add(f.itemId);
 		}
 		return ret;

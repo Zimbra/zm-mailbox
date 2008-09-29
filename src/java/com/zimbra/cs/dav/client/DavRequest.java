@@ -102,16 +102,34 @@ public class DavRequest {
 	
 	public static class DocumentRequestEntity implements RequestEntity {
 		private Document doc;
-		public DocumentRequestEntity(Document d) { doc = d; }
+		private byte[] buffer;
+		public DocumentRequestEntity(Document d) { doc = d; buffer = null; }
 		public boolean isRepeatable() { return true; }
-	    public long getContentLength() { return -1; }
+	    public long getContentLength() {
+	    	if (buffer == null)
+	    		try {
+		    		getContents();
+	    		} catch (Exception e) {
+	    		}
+	    	if (buffer == null) return -1;
+	    	return buffer.length;
+	    }
 	    public String getContentType() { return "text/xml"; }
 	    public void writeRequest(OutputStream out) throws IOException {
+	    	if (buffer != null) {
+	    		out.write(buffer);
+	    		return;
+	    	}
 			OutputFormat format = OutputFormat.createCompactFormat();
 			format.setTrimText(false);
 			format.setOmitEncoding(false);
 			XMLWriter writer = new XMLWriter(out, format);
 			writer.write(doc);
+	    }
+	    private void getContents() throws IOException {
+	    	ByteArrayOutputStream out = new ByteArrayOutputStream();
+	    	writeRequest(out);
+			buffer = out.toByteArray();
 	    }
 	}
 	
