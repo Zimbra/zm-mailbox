@@ -274,6 +274,7 @@ public class LC {
     public static final KnownKey mailboxd_keystore_password;
     public static final KnownKey mailboxd_truststore;
     public static final KnownKey mailboxd_truststore_password;
+    public static final KnownKey mailboxd_output_filename;
     public static final KnownKey mailboxd_output_file;
     public static final KnownKey mailboxd_output_rotate_interval;
     public static final KnownKey mailboxd_thread_stack_size;
@@ -933,8 +934,11 @@ public class LC {
         mailboxd_truststore_password = new KnownKey("mailboxd_truststore_password");
         mailboxd_truststore_password.setDefault("changeit");
 
+        mailboxd_output_filename = new KnownKey("mailboxd_output_filename");
+        mailboxd_output_filename.setDefault("zmmailboxd.out");
+
         mailboxd_output_file = new KnownKey("mailboxd_output_file");
-        mailboxd_output_file.setDefault("${zimbra_log_directory}" + FS + "zmmailboxd.out");
+        mailboxd_output_file.setDefault("${zimbra_log_directory}" + FS + "${mailboxd_output_filename}");
 
         mailboxd_output_rotate_interval = new KnownKey("mailboxd_output_rotate_interval");
         mailboxd_output_rotate_interval.setDefault("86400");
