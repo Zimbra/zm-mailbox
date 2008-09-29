@@ -323,10 +323,16 @@ public class SoapServlet extends ZimbraServlet {
              * 
              * The fileBufferedWriter.finish() call triggers writing to the http response.
              */
+            
+            // Note: resp.setContentType has to be called *before* resp.getWriter(), or else jetty thinks this response 
+            // is already in writing(even if nothing has been written to the writer yet) state and will ignore the charset in 
+            // setContentType call.  It will then use whatever charset is last set (by setCharacterEncoding() or setContentType()).  
+            // If none was set, it will use iso-8859-1 as the charset.
+            resp.setContentType(soapProto.getContentType());  
+            resp.setStatus(statusCode);
+            
             FileBufferedWriter fileBufferedWriter = new FileBufferedWriter(resp.getWriter(), 
                     LC.soap_max_in_memory_buffer_size.intValueWithinRange(0, FileBufferedWriter.MAX_BUFFER_SIZE));
-            resp.setContentType(soapProto.getContentType());
-            resp.setStatus(statusCode);
             try {
                 // serialize envelope to a FileBufferedWriter
                 envelope.toUTF8(fileBufferedWriter);
