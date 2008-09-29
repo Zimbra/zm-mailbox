@@ -28,8 +28,6 @@ import java.util.Map.Entry;
 
 import org.apache.log4j.PropertyConfigurator;
 
-import com.zimbra.common.localconfig.LC;
-
 
 /**
  * @author schemers
@@ -379,19 +377,13 @@ public class ZimbraLog {
         return sContextString.get();
     }
     
-    private static final Set<String> CONTEXT_FILTER = new HashSet<String>();
-    static {
-    	for (String item : LC.zimbra_log_context_filter.value().split(","))
-    		CONTEXT_FILTER.add(item);
-    }
-    
     /**
      * Adds a key/value pair to the current thread's logging context.  If
      * <tt>key</tt> is null, does nothing.  If <tt>value</tt> is null,
      * removes the context entry.
      */
     public static void addToContext(String key, String value) {
-        if (key == null || CONTEXT_FILTER.contains(key))
+        if (key == null)
             return;
         if (key.equals(C_NAME) || key.equals(C_ANAME)) {
             addAccountForThread(value);
