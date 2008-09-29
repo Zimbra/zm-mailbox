@@ -157,48 +157,4 @@ public class CalDavClient extends WebDavClient {
 	}
 	
 	private HashSet<String> mCalendarHomeSet;
-	
-	public static void main(String[] args) throws Exception {
-		if (args.length < 3)
-			return;
-		String principalPath = "/principals/users/user1";
-		if (args.length > 3)
-			principalPath = args[3];
-		CalDavClient client = new CalDavClient(args[0]);
-		client.setCredential(args[1], args[2]);
-		client.login(principalPath);
-		if (false) {
-			Collection<Appointment> calData = client.getEtags("/dav/user1/Inbox/");
-			for (Appointment a : calData) {
-				System.out.println("\tappt: "+a.href+", \t etag: "+a.etag+", \t data: "+a.data);
-			}
-		}
-		if (true) {
-			Map<String,String> calendars = client.getCalendars();
-			for (String key : calendars.keySet()) {
-				String url = calendars.get(key);
-				System.out.println("name: "+key+", \turl: "+url);
-				
-				if (false) {
-					Collection<Appointment> calData = client.getAllCalendarData(url);
-					for (Appointment a : calData) {
-						System.out.println("\tappt: "+a.href+", \t etag: "+a.etag+", \t data: "+a.data);
-					}
-				}
-				
-
-				if (true) {
-					Collection<Appointment> etags = client.getEtags(url);
-					for (Appointment a : etags) {
-						System.out.println("\tappt: "+a.href+", \t etag: "+a.etag);
-					}
-					Collection<Appointment> calData = client.getCalendarData(url, etags);
-					for (Appointment a : calData) {
-						System.out.println("\tappt: "+a.href+", \t data: "+a.data);
-					}
-				}
-
-			}
-		}
-	}
 }

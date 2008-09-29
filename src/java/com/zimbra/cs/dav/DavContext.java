@@ -196,9 +196,11 @@ public class DavContext {
 
 	/* Returns true if the DAV request contains a message. */
 	public boolean hasRequestMessage() {
-		String hdr = mReq.getHeader(DavProtocol.HEADER_CONTENT_LENGTH);
-		return (mRequestMsg != null || 
-				hdr != null && Integer.parseInt(hdr) > 0);
+		try {
+			return getUpload().getSize() > 0;
+		} catch (Exception e) {
+		}
+		return false;
 	}
 	
 	public FileUploadServlet.Upload getUpload() throws DavException, IOException {
