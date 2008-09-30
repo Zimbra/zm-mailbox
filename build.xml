@@ -516,12 +516,6 @@
         <antcall target="start-webserver"/>
     </target>
 
-    <target name="reset-im" depends="disable-im">
-        <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:7306/" userid="root" password="zimbra"
-             classpathref="class.path" onerror="abort" src="${im.dir}/src/db/wildfireDrop.sql"/>
-        <antcall target="enable-im"/>
-    </target>
-
     <target name="dev-dist" depends="war,dev-dist-unix,choose-db-schema">
         <!-- bin, libexec -->
         <copy todir="${dist.dir}/bin" overwrite="true">
