@@ -28,6 +28,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.zimbra.common.stats.RealtimeStatsCallback;
 import com.zimbra.cs.stats.ZimbraPerf;
@@ -291,9 +293,29 @@ public final class MemoryStats implements RealtimeStatsCallback {
 //                continue;
 //            }
             String poolName = pool.getName().toLowerCase();
-            MemoryUsage usage = pool.getUsage();
-            long committed = usage.getCommitted();
-            long used = usage.getUsed();
+            long committed;
+            long used;
+            try {
+                MemoryUsage usage = pool.getUsage();
+                committed = usage.getCommitted();
+                used      = usage.getUsed();
+            }
+            catch (IllegalArgumentException e) {
+                // bug 31685, on java 1.5 we're getting an exception in the MemoryPoolMXBean:
+                // java.lang.IllegalArgumentException: committed = 494993408 should be < max = 494927872
+                // try to parse out the committed and max values if they match the string that we know.
+                String msg = e.getMessage();
+                
+                Pattern p = Pattern.compile("committed = (\\d+) should be < max = (\\d+)");
+                Matcher m = p.matcher(msg);
+                if (m.find()) {
+                    committed = Long.parseLong(m.group(1));
+                    used      = Long.parseLong(m.group(2));
+                } else {
+                    committed = 0;
+                    used      = 0;
+                }
+            }
             if (pool.getType() == MemoryType.HEAP) {
                 heapTotal += committed;
                 heapUsed += used;
