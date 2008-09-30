@@ -147,6 +147,11 @@ public class Validators {
                 parseLimit(cosLimitMap, limit);
             for (String limit : featureLimit)
                 parseLimit(featureLimitMap, limit);
+            // populate count maps with the cos and features we are interested in
+            for (Map.Entry<String,Integer> e : cosLimitMap.entrySet())
+                cosCountMap.put(e.getKey(), 0);
+            for (Map.Entry<String,Integer> e : featureLimitMap.entrySet())
+                featureCountMap.put(e.getKey(), 0);
             
             String desiredCosId = (String) attrs.get(Provisioning.A_zimbraCOSId);
             if (desiredCosId == null)
@@ -210,7 +215,6 @@ public class Validators {
             if (max < 0)
                 return;
             map.put(parts[0], max);
-            
         }
         
         // mostly pawned off from LdapProvisioning.countAccounts(domain)
@@ -218,6 +222,16 @@ public class Validators {
                 Map<String,Integer> cosCount, Map<String,Integer> featureCount)
         throws ServiceException {
             String query = LdapFilter.allNonSystemAccounts();
+            // make query into:  (&query(|(zimbracosid=cosId)(featureEnabled=true)))
+            // query is already bracketed
+            StringBuilder queryFilter = new StringBuilder();
+            queryFilter.append("(&").append(query).append(")(|");
+            for (String cosId : cosCount.keySet())
+                queryFilter.append("(zimbracosid=").append(cosId).append(")");
+            for (String featureAttr : featureCount.keySet())
+                queryFilter.append("(").append(featureAttr).append("=TRUE)");
+            queryFilter.append(")");
+            query = queryFilter.toString();
 
             ZimbraLdapContext zlc = null;
             try {
@@ -275,9 +289,8 @@ public class Validators {
         }
         private static void incrementCount(Map<String,Integer> map, String key) {
             if (!map.containsKey(key))
-                map.put(key, 1);
-            else
-                map.put(key, map.get(key) + 1);
+                return; // not something that we care about
+            map.put(key, map.get(key) + 1);
         }
     }
 }
