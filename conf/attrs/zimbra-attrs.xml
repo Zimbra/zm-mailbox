@@ -3637,4 +3637,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
+<attr id="749" name="zimbraPrefMandatorySpellCheckEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="future">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>whether mandatory spell check is enabled</desc>
+</attr>
+
+
 </attrs>
