@@ -840,7 +840,7 @@ public abstract class Provisioning {
 
 	public static final String A_zimbraFeatureNewAddrBookEnabled = "zimbraFeatureNewAddrBookEnabled";
 
-    
+	public static final String A_zimbraFeatureImportExportFolderEnabled = "zimbraFeatureImportExportFolderEnabled";
 
     /**
      * administrative notes for an entry.
