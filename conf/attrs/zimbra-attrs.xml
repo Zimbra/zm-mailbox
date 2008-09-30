@@ -3642,5 +3642,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether mandatory spell check is enabled</desc>
 </attr>
 
+<attr id="750" name="zimbraFeatureImportExportFolderEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="future">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether import export folder feature is enabled</desc>
+</attr>
 
 </attrs>
