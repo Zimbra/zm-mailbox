@@ -1041,9 +1041,9 @@ public abstract class CalendarItem extends MailItem {
     }
 
     boolean processNewInvite(ParsedMessage pm, Invite invite,
-                             int folderId, short volumeId)
+                             int folderId, short volumeId, boolean replaceExistingInvites)
     throws ServiceException {
-        return processNewInvite(pm, invite, folderId, volumeId, 0, true, false);
+        return processNewInvite(pm, invite, folderId, volumeId, 0, true, replaceExistingInvites);
     }
 
     /**
@@ -1115,13 +1115,6 @@ public abstract class CalendarItem extends MailItem {
 
         if (!canAccess(isCancel ? ACL.RIGHT_DELETE : ACL.RIGHT_WRITE))
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on this calendar item");
-
-        // If updating (but not canceling) an appointment in trash folder, use default calendar folder
-        // and discard all existing invites.
-        if (!isCancel && getFolderId() == Mailbox.ID_FOLDER_TRASH && folderId == Mailbox.ID_FOLDER_TRASH) {
-            folderId = Mailbox.ID_FOLDER_CALENDAR;
-            discardExistingInvites = true;
-        }
 
         // Don't allow creating/editing a private appointment on behalf of another user,
         // unless that other user is a calendar resource.

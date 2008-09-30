@@ -560,7 +560,18 @@ public class Message extends MailItem {
                             // the calendar item in the folder it's currently in.
                             if (addRevision)
                                 calItem.snapshotRevision();
-                            modifiedCalItem = calItem.processNewInvite(pm, cur, calItem.getFolderId(), volumeId);
+                            // If updating (but not canceling) an appointment in trash folder,
+                            // use default calendar folder and discard all existing invites.
+                            boolean discardExistingInvites = false;
+                            int calFolderId = calItem.getFolderId();
+                            if (!cur.isCancel() && calFolderId == Mailbox.ID_FOLDER_TRASH) {
+                            	discardExistingInvites = true;
+                                if (calItem.getType() == MailItem.TYPE_TASK)
+                                	calFolderId = Mailbox.ID_FOLDER_TASKS;
+                                else
+                                	calFolderId = Mailbox.ID_FOLDER_CALENDAR;
+                            }
+                            modifiedCalItem = calItem.processNewInvite(pm, cur, calFolderId, volumeId, discardExistingInvites);
                         }
                     }
                 }
