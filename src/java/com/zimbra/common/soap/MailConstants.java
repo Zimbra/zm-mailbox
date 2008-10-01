@@ -229,13 +229,45 @@ public class MailConstants {
     public static final String E_VCARD = "vcard";
     public static final String E_SIGNATURE = "signature";
 
-    // filter rules
+    // Old filter rules constants
     public static final String E_RULE = "r";
     public static final String E_RULES = "rules";
     public static final String E_CONDITION_GROUP = "g";
     public static final String E_CONDITION = "c";
     public static final String E_FILTER_ARG = "arg";
 
+    // Filter rules constants
+    public static final String E_FILTER_RULES = "filterRules";
+    public static final String E_FILTER_RULE = "filterRule";
+    public static final String E_FILTER_TESTS = "filterTests";
+    
+    public static final String E_HEADER_TEST = "headerTest";
+    public static final String E_HEADER_EXISTS_TEST = "headerExistsTest";
+    public static final String E_SIZE_TEST = "sizeTest";
+    public static final String E_DATE_TEST = "dateTest";
+    public static final String E_BODY_TEST = "bodyTest";
+    public static final String E_ATTACHMENT_TEST = "attachmentTest";
+    public static final String E_ADDRESS_BOOK_TEST = "addressBookTest";
+    
+    public static final String E_FILTER_ACTIONS = "filterActions";
+    public static final String E_ACTION_KEEP = "actionKeep";
+    public static final String E_ACTION_DISCARD = "actionDiscard";
+    public static final String E_ACTION_FILE_INTO = "actionFileInto";
+    public static final String E_ACTION_TAG = "actionTag";
+    public static final String E_ACTION_FLAG = "actionFlag";
+    public static final String E_ACTION_REDIRECT = "actionRedirect";
+    public static final String E_ACTION_STOP = "actionStop";
+
+    public static final String A_STRING_COMPARISON = "stringComparison";
+    public static final String A_NUMBER_COMPARISON = "numberComparison";
+    public static final String A_DATE_COMPARISON = "dateComparison";
+    public static final String A_CONDITION = "condition";
+    public static final String A_ENABLED = "enabled";
+    public static final String A_NEGATIVE = "negative";
+    public static final String A_FOLDER_PATH = "folderPath";
+    public static final String A_FLAG_NAME = "flagName";
+    public static final String A_TAG_NAME = "tagName";
+    
     // grants
     public static final String E_ACL = "acl";
     public static final String E_GRANT = "grant";
