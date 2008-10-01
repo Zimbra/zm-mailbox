@@ -20,24 +20,33 @@ import java.io.IOException;
 
 public class AuthenticationException extends IOException {
     private final ErrorCode code;
+    private String captchaUrl;
+    private String captchaData;
 
-    public AuthenticationException(ErrorCode code, String msg) {
-        super(msg);
+    public AuthenticationException(ErrorCode code, String detail) {
+        super(detail);
         this.code = code;
-    }
-    
-    public AuthenticationException(String msg) {
-        this(ErrorCode.GENERIC_ERROR, msg);
     }
 
     public AuthenticationException(ErrorCode code) {
         this(code, code.getDescription());
     }
-
+    
     public ErrorCode getErrorCode() {
         return code;
     }
-    
+
+    public void setCaptchaUrl(String url) {
+        captchaUrl = url;
+    }
+
+    public void setCaptchaData(String data) {
+        captchaData = data;
+    }
+
+    public String getCaptchaUrl() { return captchaUrl; }
+    public String getCaptchaData() { return captchaData; }
+
     public static AuthenticationException invalidToken() {
         return new AuthenticationException(ErrorCode.INVALID_TOKEN);
     }
