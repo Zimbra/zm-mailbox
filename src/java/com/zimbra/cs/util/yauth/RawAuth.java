@@ -27,6 +27,7 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.log4j.Logger;
+import org.apache.log4j.Level;
 
 /**
  * Implementation of Yahoo "Raw Auth" aka "Token Login v2"
@@ -41,6 +42,12 @@ public class RawAuth implements Auth {
     private static final Logger LOG = Logger.getLogger(RawAuth.class);
 
     private static final boolean DEBUG = false;
+
+    static {
+        if (DEBUG) {
+            LOG.setLevel(Level.DEBUG);
+        }
+    }
 
     private static final String BASE_URI = "https://login.yahoo.com/WSLogin/V1";
     private static final String GET_AUTH_TOKEN = "get_auth_token";
@@ -144,13 +151,14 @@ public class RawAuth implements Auth {
         AuthenticationException e = new AuthenticationException(code, description);
         e.setCaptchaUrl(res.getField(CAPTCHA_URL));
         e.setCaptchaData(res.getField(CAPTCHA_DATA));
-        return res;
+        throw e;
     }
 
     private static class Response {
         final Map<String, String> attributes;
 
         Response(GetMethod method) throws IOException {
+            debug("Response status: %s", method.getStatusLine());
             attributes = new HashMap<String, String>();
             InputStream is = method.getResponseBodyAsStream();
             BufferedReader br = new BufferedReader(
@@ -177,7 +185,13 @@ public class RawAuth implements Auth {
         
         String getField(String name) {
             String s = attributes.get(name.toLowerCase());
-            return s != null && s.length() > 0 ? s.trim() : null;
+            if (s != null) {
+                s = s.trim();
+                if (s.length() > 0) {
+                    return s;
+                }
+            }
+            return null;
         }
     }
 
