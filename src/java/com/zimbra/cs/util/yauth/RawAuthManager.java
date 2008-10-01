@@ -32,13 +32,15 @@ public final class RawAuthManager {
         cookies = new HashMap<String, RawAuth>();
     }
 
-    public RawAuth authenticate(String appId, String user) throws IOException {
+    public RawAuth authenticate(String appId, String user, String pass)
+        throws IOException {
         RawAuth auth = cookies.get(key(appId, user));
         if (auth == null || auth.isExpired()) {
             // Cookie missing or expired, so get a new one
             String token = store.getToken(appId, user);
             if (token == null) {
-                throw AuthenticationException.invalidToken();
+                // If token not found, try generating a new one
+                token = store.newToken(appId, user, pass);
             }
             auth = RawAuth.authenticate(appId, token);
             cookies.put(key(appId, user), auth);
@@ -50,10 +52,12 @@ public final class RawAuthManager {
         cookies.remove(key(appId, user));
     }
     
-    public Authenticator newAuthenticator(final String appId, final String user) {
+    public Authenticator newAuthenticator(final String appId,
+                                          final String user,
+                                          final String pass) {
         return new Authenticator() {
             public RawAuth authenticate() throws IOException {
-                return RawAuthManager.this.authenticate(appId, user);
+                return RawAuthManager.this.authenticate(appId, user, pass);
             }
             public void invalidate() {
                 RawAuthManager.this.invalidate(appId, user);
