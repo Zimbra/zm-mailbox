@@ -32,6 +32,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.MailItem;
@@ -200,7 +201,7 @@ public class WaitSetRequest extends MailDocumentHandler {
             List<Mailbox> referencedMailboxes = new ArrayList<Mailbox>();
             for (WaitSetAccount acct : add) {
                 try {
-                    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.accountId, MailboxManager.FetchMode.AUTOCREATE);
+                    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getAccountId(), MailboxManager.FetchMode.AUTOCREATE);
                     referencedMailboxes.add(mbox);
                 } catch (ServiceException e) {
                     ZimbraLog.session.debug("Caught exception preloading mailbox for waitset", e);
@@ -208,7 +209,7 @@ public class WaitSetRequest extends MailDocumentHandler {
             }
             for (WaitSetAccount acct : update) {
                 try {
-                    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.accountId, MailboxManager.FetchMode.AUTOCREATE);
+                    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getAccountId(), MailboxManager.FetchMode.AUTOCREATE);
                     referencedMailboxes.add(mbox);
                 } catch (ServiceException e) {
                     ZimbraLog.session.debug("Caught exception preloading mailbox for waitset", e);
@@ -289,7 +290,13 @@ public class WaitSetRequest extends MailDocumentHandler {
                 String id;
                 String name = a.getAttribute(MailConstants.A_NAME, null);
                 if (name != null) {
-                    id = Provisioning.getInstance().get(AccountBy.name, name).getId();
+                    Account acct = Provisioning.getInstance().get(AccountBy.name, name);
+                    if (acct != null)
+                        id = acct.getId();
+                    else {
+                        WaitSetError err = new WaitSetError(name, WaitSetError.Type.NO_SUCH_ACCOUNT);
+                        continue;
+                    }
                 } else {
                     id = a.getAttribute(MailConstants.A_ID);
                 }

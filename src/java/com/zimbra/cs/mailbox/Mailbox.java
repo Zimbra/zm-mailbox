@@ -661,12 +661,29 @@ public class Mailbox {
         return false;
     }
 
+    /**
+     * Loookup a {@link Session) in the set of listeners on this mailbox
+     * 
+     * @param sessionId
+     * @return
+     */
+    public synchronized Session getListener(String sessionId) {
+        if (sessionId != null) {
+            for (Session session : mListeners) {
+                if (sessionId.equals(session.getSessionId()))
+                    return session;
+            }
+        }
+        return null;
+    }
+    
     /** Adds a {@link Session} to the set of listeners notified on Mailbox
      *  changes.
      * 
      * @param session  The Session registering for notifications.
      * @throws ServiceException  If the mailbox is in maintenance mode. */
     public synchronized void addListener(Session session) throws ServiceException {
+        assert(session.getSessionId() != null);
         if (session == null)
             return;
         if (mMaintenance != null)

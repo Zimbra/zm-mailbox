@@ -52,6 +52,8 @@ public abstract class Session {
     private   long      mLastAccessed;
     private   long      mCreationTime;
     private   boolean   mCleanedUp = false;
+    private   boolean   mIsRegistered = false;
+    private   boolean   mAddedToCache = false;
 
     
     /**
@@ -100,6 +102,7 @@ public abstract class Session {
         mSessionType = type;
         mCreationTime = System.currentTimeMillis();
         mLastAccessed = mCreationTime;
+        mSessionId = SessionCache.getNextSessionId(mSessionType);
     }
     
     public Type getType() {
@@ -124,9 +127,9 @@ public abstract class Session {
      * @see #isMailboxListener()
      * @see #isRegisteredInCache() */
     public Session register() throws ServiceException {
-        if (mSessionId != null)
+        if (mIsRegistered) 
             return this;
-
+        
         if (isMailboxListener()) {
             Mailbox mbox = mMailbox = MailboxManager.getInstance().getMailboxByAccountId(mTargetAccountId);
             
@@ -136,8 +139,12 @@ public abstract class Session {
         }
 
         // registering the session automatically sets mSessionId
-        if (isRegisteredInCache())
+        if (isRegisteredInCache()) {
             SessionCache.registerSession(this);
+            mAddedToCache = true; 
+        }
+        
+        mIsRegistered = true;
 
         return this;
     }
@@ -168,11 +175,12 @@ public abstract class Session {
             mMailbox = null;
         }
 
-        if (mSessionId != null && isRegisteredInCache()) {
+        if (mIsRegistered && isRegisteredInCache()) {
             SessionCache.unregisterSession(this);
-            mSessionId = null;
+            mAddedToCache = false;
         }
-
+        mIsRegistered = false;
+        
         return this;
     }
     
@@ -225,14 +233,22 @@ public abstract class Session {
     }
 
     protected void doEncodeState(Element parent)  { }
+    
+    /**
+     * @return TRUE if this session has been added to the cache
+     */
+    public boolean isAddedToSessionCache() {
+        return mAddedToCache;
+    }
 
     /** Returns the Session's identifier. */
     public String getSessionId() {
         return mSessionId;
     }
 
-    /** Sets the Session's identifier. */
-    Session setSessionId(String sessionId) {
+    /** Sets the Session's identifier. Used for unit testing only, 
+     * DO NOT CALL THIS API EXCEPT FOR TEST PURPOSES */
+    final Session testSetSessionId(String sessionId) {
         mSessionId = sessionId;
         return this;
     }

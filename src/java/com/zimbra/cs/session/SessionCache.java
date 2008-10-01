@@ -55,11 +55,9 @@ public final class SessionCache {
 
         Session.Type sessionType = session.getSessionType();
         String sessionId = session.getSessionId();
-        if (sessionId == null)
-            sessionId = getNextSessionId(sessionType);
+        assert(sessionId != null);
 
         getSessionMap(sessionType).putAndPrune(session.getAuthenticatedAccountId(), sessionId, session, sessionType.getMaxPerAccount());
-        session.setSessionId(sessionId);
         return sessionId;
     }
 
@@ -109,12 +107,12 @@ public final class SessionCache {
      * @see #clearSession(Session)
      * @see #registerSession(Session) */
     public static Session unregisterSession(Session session) {
-        if (sShutdown || session == null || session.getSessionId() == null)
+        if (sShutdown || session == null || !session.isAddedToSessionCache())
             return null;
-
+        
         if (ZimbraLog.session.isDebugEnabled())
             ZimbraLog.session.debug("Unregistering session " + session.getSessionId());
-
+        
         Session.Type type = session.getSessionType();
         return getSessionMap(type).remove(session.getAuthenticatedAccountId(), session.getSessionId());
     }
@@ -178,7 +176,7 @@ public final class SessionCache {
     /** The ID for the next generated {@link Session}. */
     private static long sContextSeqNo = 1;
 
-    private synchronized static String getNextSessionId(Session.Type type) {
+    synchronized static String getNextSessionId(Session.Type type) {
         return Integer.toString(type.getIndex())+Long.toString(sContextSeqNo++);
     }
 
