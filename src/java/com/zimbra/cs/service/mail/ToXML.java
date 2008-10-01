@@ -1832,10 +1832,9 @@ public class ToXML {
 
     public static Element encodeDataSource(Element parent, DataSource ds) {
         Element m;
-        if (ds.getType() == DataSource.Type.imap)
-            m = parent.addElement(MailConstants.E_DS_IMAP);
-        else
-            m = parent.addElement(MailConstants.E_DS_POP3);
+        
+        m = parent.addElement(getDsType(ds));
+
         m.addAttribute(MailConstants.A_ID, ds.getId());
         m.addAttribute(MailConstants.A_NAME, ds.getName());
         m.addAttribute(MailConstants.A_FOLDER, ds.getFolderId());
@@ -1871,6 +1870,23 @@ public class ToXML {
         return m;
     }
 
+    private static String getDsType(DataSource ds) {
+        switch (ds.getType()) {
+        case imap:
+            return MailConstants.E_DS_IMAP;
+        case pop3:
+            return MailConstants.E_DS_POP3;
+        case caldav:
+            return MailConstants.E_DS_CALDAV;
+        case live:
+            return MailConstants.E_DS_LIVE;
+        case yab:
+            return MailConstants.E_DS_YAB;
+        default:
+            return MailConstants.E_DS_UNKNOWN;
+        }
+    }
+    
     private static void setCalendarItemType(Element elem, CalendarItem calItem) {
         elem.addAttribute(MailConstants.A_CAL_ITEM_TYPE,
                 calItem.getType() == MailItem.TYPE_APPOINTMENT ? "appt" : "task");
