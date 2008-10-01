@@ -69,9 +69,11 @@ public class MailHost extends AttributeCallback {
              * if it would, then replace both zimbraMailHost and set new zimbraMailTransport.  Otherwise error.
              */
             if (entry != null && !isCreate) {
-        	    // as long as the new mail host matches the current mail transport, 
-                // allow it since we are not stomping mail transport 
-                if (mailTransportMatch(server, entry.getAttr(Provisioning.A_zimbraMailTransport)))
+                // as long as the new mail host matches the current mail transport, 
+                // allow it since we are not stomping mail transport
+                // use the full match here instead of calling mailTransportMatch, we don't update mail transport only if 
+                // attrs on the new server matches the current mail transport.
+                if (mailTransport(server).equals(entry.getAttr(Provisioning.A_zimbraMailTransport)))   
                     return;
         	
                 String oldMailHost = entry.getAttr(Provisioning.A_zimbraMailHost);
@@ -105,7 +107,7 @@ public class MailHost extends AttributeCallback {
     
     /*
      * compare only proto and host, ignore port, because if port on the server was changed we 
-     * still want to the 
+     * still want the change to go through.
      */
     private static boolean mailTransportMatch(Server server, String mailTransport) {
         String serviceName = server.getAttr(Provisioning.A_zimbraServiceHostname, null);
