@@ -39,47 +39,51 @@ public class RawAuth implements Auth {
     private long expiration;
 
     private static final Logger LOG = Logger.getLogger(RawAuth.class);
-    
+
+    private static final boolean DEBUG = false;
+
     private static final String BASE_URI = "https://login.yahoo.com/WSLogin/V1";
     private static final String GET_AUTH_TOKEN = "get_auth_token";
     private static final String GET_AUTH = "get_auth";
 
+    // Auth request parameters
     private static final String LOGIN = "login";
     private static final String PASSWD = "passwd";
     private static final String APPID = "appid";
     private static final String TOKEN = "token";
 
+    // Auth response fields
     private static final String AUTH_TOKEN = "AuthToken";
     private static final String COOKIE = "Cookie";
     private static final String WSSID = "WSSID";
     private static final String EXPIRATION = "Expiration";
     private static final String ERROR = "Error";
     private static final String ERROR_DESCRIPTION = "ErrorDescription";
+    private static final String CAPTCHA_URL = "CaptchaUrl";
+    private static final String CAPTCHA_DATA = "CaptchaData";
 
     // Maximum number of milliseconds between current time and expiration
-    // time before cookie is considered expired.
-    private static final long EXPIRATION_LIMIT = 60 * 60 * 1000;
+    // time before cookie is considered no longer valid.
+    private static final long EXPIRATION_LIMIT = 60 * 1000; // 1 minute
     
     public static String getToken(String appId, String user, String pass)
         throws IOException {
-        LOG.debug(String.format(
-            "Sending getToken request: appId = %s, user = %s", appId, user));
+        debug("Sending getToken request: appId = %s, user = %s", appId, user);
         Response res = doGet(GET_AUTH_TOKEN,
             new NameValuePair(APPID, appId),
             new NameValuePair(LOGIN, user),
             new NameValuePair(PASSWD, pass));
         String token = res.getRequiredField(AUTH_TOKEN);
-        LOG.debug("Got getToken response: token = " + token);
+        debug("Got getToken response: token = %s", token);
         return token;
     }
 
     public static RawAuth authenticate(String appId, String token)
         throws IOException {
-        LOG.debug(String.format(
-            "Sending authenticate request: appId = %s, token = %s", appId, token));
+        debug("Sending authenticate request: appId = %s, token = %s", appId, token);
         RawAuth auth = new RawAuth(appId);
         auth.authenticate(token);
-        LOG.debug("Got authenticate response: " + auth);
+        debug("Got authenticate response: %s", auth);
         return auth;
     }
 
@@ -100,7 +104,7 @@ public class RawAuth implements Auth {
     }
 
     public boolean isExpired() {
-        return System.currentTimeMillis() - expiration < EXPIRATION_LIMIT;
+        return System.currentTimeMillis() + EXPIRATION_LIMIT > expiration;
     }
     
     private void authenticate(String token)
@@ -126,16 +130,21 @@ public class RawAuth implements Auth {
         int rc = new HttpClient().executeMethod(method);
         Response res = new Response(method);
         String error = res.getField(ERROR);
+        // Request can sometimes fail even with a 200 status code, so always
+        // check for "Error" attribute in response.
         if (rc == 200 && error == null) {
-            // Request can sometimes fail even with 200 status code, so always
-            // check for "Error" attribute in response.
             return res;
         }
         ErrorCode code = error != null ?
             ErrorCode.get(error) : ErrorCode.GENERIC_ERROR;
         String description = res.getField(ERROR_DESCRIPTION);
-        throw new AuthenticationException(code,
-            description != null ? description : code.getDescription());
+        if (description == null) {
+            description = code.getDescription();
+        }
+        AuthenticationException e = new AuthenticationException(code, description);
+        e.setCaptchaUrl(res.getField(CAPTCHA_URL));
+        e.setCaptchaData(res.getField(CAPTCHA_DATA));
+        return res;
     }
 
     private static class Response {
@@ -148,7 +157,7 @@ public class RawAuth implements Auth {
                 new InputStreamReader(is, method.getResponseCharSet()));
             String line;
             while ((line = br.readLine()) != null) {
-                LOG.debug("Response line: " + line);
+                debug("Response line: %s", line);
                 int i = line.indexOf('=');
                 if (i != -1) {
                     String name = line.substring(0, i);
@@ -167,12 +176,21 @@ public class RawAuth implements Auth {
         }
         
         String getField(String name) {
-            return attributes.get(name.toLowerCase());
+            String s = attributes.get(name.toLowerCase());
+            return s != null && s.length() > 0 ? s.trim() : null;
         }
     }
 
     public String toString() {
-        return String.format("{appid=%s,cookie=%s,wssId=%s,expiration=%d}",
-                             appId, cookie, wssId, expiration);
+        if (DEBUG) {
+            return String.format("{appid=%s,cookie=%s,wssId=%s,expiration=%d}",
+                                 appId, cookie, wssId, expiration);
+        } else {
+            return super.toString();
+        }
+    }
+
+    private static void debug(String fmt, Object... args) {
+        LOG.debug(String.format(fmt, args));
     }
 }
