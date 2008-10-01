@@ -185,19 +185,19 @@ public class RuleManager {
         } catch (TokenMgrError e) {
             throw ServiceException.PARSE_ERROR("parsing Sieve script", e);
         }
-        List<String> ruleNames = getRuleNames(account);
+        String script = account.getAttr(Provisioning.A_zimbraMailSieveScript);
+        List<String> ruleNames = getRuleNames(script);
         RuleRewriter t = RuleRewriterFactory.getInstance().createRuleRewriter(factory, node, ruleNames);
         return t.getElement();
     }
     
-    private static final Pattern PAT_RULE_NAME = Pattern.compile("^#\\s+([^\\s]+)");
+    private static final Pattern PAT_RULE_NAME = Pattern.compile("# (.*)");
     
     /**
      * Kind of hacky, but works for now.  Rule names are encoded into the comment preceding
      * the rule.  Return the values of all lines that begin with <tt>"# "</tt>.
      */
-    private List<String> getRuleNames(Account account) {
-        String script = account.getAttr(Provisioning.A_zimbraMailSieveScript);
+    public static List<String> getRuleNames(String script) {
         List<String> names = new ArrayList<String>();
         if (script != null) {
             BufferedReader reader = new BufferedReader(new StringReader(script));
@@ -205,7 +205,7 @@ public class RuleManager {
             try {
                 while ((line = reader.readLine()) != null){
                     Matcher matcher = PAT_RULE_NAME.matcher(line);
-                    if (matcher.find()) {
+                    if (matcher.matches()) {
                         names.add(matcher.group(1));
                     }
                 }
