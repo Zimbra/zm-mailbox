@@ -108,7 +108,6 @@ final class SessionMap {
                     mSessionAccessSet.remove(removedTimeout);
                 if (acctMap.isEmpty())
                     mAcctSessionMap.remove(accountId);
-                removed.setSessionId(null);
             }
             return removed;
         } else {
@@ -282,7 +281,6 @@ final class SessionMap {
                     if (removed != null) {
                         if (acctMap.isEmpty())
                             mAcctSessionMap.remove(s.getAuthenticatedAccountId());
-                        removed.setSessionId(null);
                     }
                 } else {
                     // iter is last-access order, so we know we can quit now
@@ -322,13 +320,13 @@ final class SessionMap {
         try {
             SessionMap map = new SessionMap(Session.Type.NULL);
 
-            Session s1 =   new AdminSession("a1").setSessionId("s1");
-            Session s1_2 = new AdminSession("a1").setSessionId("s2");
-            Session s2 =   new AdminSession("a2").setSessionId("s1");
-            Session s3 =   new AdminSession("a3").setSessionId("s1");
-            Session s4 =   new AdminSession("a4").setSessionId("s1");
-            Session s5 =   new AdminSession("a5").setSessionId("s1");
-            Session s5_2 = new AdminSession("a5").setSessionId("s2");
+            Session s1 =   new AdminSession("a1").testSetSessionId("s1");
+            Session s1_2 = new AdminSession("a1").testSetSessionId("s2");
+            Session s2 =   new AdminSession("a2").testSetSessionId("s1");
+            Session s3 =   new AdminSession("a3").testSetSessionId("s1");
+            Session s4 =   new AdminSession("a4").testSetSessionId("s1");
+            Session s5 =   new AdminSession("a5").testSetSessionId("s1");
+            Session s5_2 = new AdminSession("a5").testSetSessionId("s2");
             
             map.put("a1", "s1", s1);
             map.put("a1", "s2", s1_2);

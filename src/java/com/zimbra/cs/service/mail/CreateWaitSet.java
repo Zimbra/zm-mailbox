@@ -86,7 +86,7 @@ public class CreateWaitSet extends MailDocumentHandler {
         for (WaitSetAccount acct : add) {
             try {
                 MailboxManager.FetchMode fetchMode = MailboxManager.FetchMode.AUTOCREATE;
-                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.accountId, fetchMode);
+                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(acct.getAccountId(), fetchMode);
                 referencedMailboxes.add(mbox);
             } catch (ServiceException e) {
                 ZimbraLog.session.debug("Caught exception preloading mailbox for waitset", e);

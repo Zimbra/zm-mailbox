@@ -170,11 +170,7 @@ public class WaitSetMgr {
             if (toCleanup != null) {
                 assert(!Thread.holdsLock(ws));
                 for (WaitSetAccount wsa: toCleanup.values()) {
-                    WaitSetSession session = wsa.getSession();
-                    if (session != null) {
-                        session.doCleanup();
-                        wsa.ref = null;
-                    }
+                    wsa.cleanupSession();
                 }
             }
         }
@@ -310,11 +306,7 @@ public class WaitSetMgr {
                 if (toCleanup != null) {
                     assert(!Thread.holdsLock(ws));
                     for (WaitSetAccount wsa : toCleanup.values()) {
-                        WaitSetSession session = wsa.getSession();
-                        if (session != null) {
-                            session.doCleanup();
-                            wsa.ref = null;
-                        }
+                        wsa.cleanupSession();
                     }
                 }
             }
