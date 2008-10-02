@@ -25,6 +25,7 @@ import com.zimbra.common.service.ServiceException;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.io.IOException;
 
 public class MetadataTokenStore extends TokenStore {
     private final Mailbox mbox;
@@ -44,6 +45,12 @@ public class MetadataTokenStore extends TokenStore {
         loadTokens();
     }
 
+    @Override
+    public String newToken(String appId, String user, String pass) throws IOException {
+        LOG.debug("Generating new yauth token for user '%s'", user);
+        return super.newToken(appId, user, pass);
+    }
+    
     public String getToken(String appId, String user) {
         synchronized (this) {
             return tokens.get(key(appId, user));
@@ -57,6 +64,12 @@ public class MetadataTokenStore extends TokenStore {
         }
     }
 
+    public void removeToken(String appId, String user) {
+        synchronized (this) {
+            tokens.remove(key(appId, user));
+        }
+    }
+    
     public int size() {
         return tokens.size();
     }
@@ -76,7 +89,7 @@ public class MetadataTokenStore extends TokenStore {
 
     private void loadTokens(MetadataList ml) throws ServiceException {
         int size = ml.size();
-        LOG.debug("Loading %d yauth token(s) for account '%s'", size, getAccountName());
+        LOG.debug("Loading %d yauth token(s) for user '%s'", size, getAccountName());
         for (int i = 0; i < size; i++) {
             String[] parts = ml.get(i).split(" ");
             if (parts.length == 3) {
@@ -90,7 +103,7 @@ public class MetadataTokenStore extends TokenStore {
     }
 
     private void saveTokens() {
-        LOG.debug("Saving %d yauth token(s) for account '%s'", tokens.size(), getAccountName());
+        LOG.debug("Saving %d yauth token(s) for user '%s'", tokens.size(), getAccountName());
         try {
             Metadata md = new Metadata();
             md.put(VERSION_KEY, VERSION);
