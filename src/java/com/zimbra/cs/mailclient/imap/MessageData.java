@@ -133,6 +133,12 @@ public final class MessageData {
 
     private static Date readInternalDate(ImapInputStream is) throws IOException {
         String s = is.readQuoted().toString().trim();
+        if (s.length() == 0) {
+            // Workaround for YMail IMAP server issue where INTERNALDATE is
+            // sometimes missing (bug 31818). Return null in this case so the
+            // caller can choose a different value.
+            return null;
+        }
         synchronized (INTERNALDATE_FORMAT) {
             try {
                 return INTERNALDATE_FORMAT.parse(s);
