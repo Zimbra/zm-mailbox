@@ -49,6 +49,12 @@ public final class ListData {
     }
 
     private ListData() {}
+
+    public ListData(String mailbox, char delimiter) {
+        this.mailbox = mailbox;
+        this.delimiter = delimiter;
+        flags = new Flags();
+    }
     
     private void readMailboxList(ImapInputStream is) throws IOException {
         flags = readFlags(is);
