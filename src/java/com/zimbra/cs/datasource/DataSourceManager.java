@@ -150,14 +150,12 @@ public class DataSourceManager {
         }
         
         
-        DataImport di = newDataImport(ds);
         boolean success = false;
         String error = null;
 
         try {
-            ZimbraLog.datasource.info("Importing data.");
-            di.importData(folderIds, fullSync);
-            ZimbraLog.datasource.info("Import completed.");
+            ZimbraLog.datasource.info("Importing data for data source '%s'", ds.getName());
+            newDataImport(ds).importData(folderIds, fullSync);
             success = true;
         } catch (ServiceException x) {
             error = x.getMessage();
@@ -166,6 +164,7 @@ public class DataSourceManager {
             }
             throw x;
         } finally {
+            ZimbraLog.datasource.info("Import completed for data source '%s'", ds.getName());
             synchronized (importStatus) {
                 importStatus.mSuccess = success;
                 importStatus.mError = error;

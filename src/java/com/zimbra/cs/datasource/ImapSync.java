@@ -257,7 +257,10 @@ public class ImapSync extends MailItemImport {
         if (canContinue(e)) {
             error += ". Synchronization has been disabled for this folder";
             // Report the error and continue synchronization of other folders...
-            getDataSource().reportError(itemId, error, e);
+            dataSource.reportError(itemId, error, e);
+            if (itemId > 0) {
+                dataSource.disableSync(itemId);
+            }
         } else if (e instanceof ServiceException) {
             throw (ServiceException) e;
         } else {
