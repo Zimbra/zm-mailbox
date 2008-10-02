@@ -1964,7 +1964,7 @@ u attribute is present iff count > 0
     <mp ct="{content-type}" [ci="{content-id}"]>
       <content>...</content>
     </mp>
-    <attach [aid="{attach-upload-id}"]>
+    <attach [aid="{attach-upload-id}[,{attach-upload-id}]"]>
       [<m id="{message-id}"/>]*
       [<mp mid="{message-id}" part="{part-id}"/>]*
       [<cn id="{contact-id}"/>]*
