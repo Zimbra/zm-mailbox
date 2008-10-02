@@ -40,6 +40,7 @@ import com.zimbra.common.localconfig.LC;
 import javax.mail.MessagingException;
 import javax.mail.internet.MailDateFormat;
 import javax.mail.internet.MimeMessage;
+import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.io.File;
 import java.io.InputStream;
@@ -136,8 +137,12 @@ public class Pop3Sync extends MailItemImport {
         if (!connection.isClosed()) return;
         try {
             connection.connect();
-            connection.login(dataSource.getDecryptedPassword());
-        } catch (IOException e) {
+            try {
+                connection.login(dataSource.getDecryptedPassword());
+            } catch (CommandFailedException e) {
+                throw new LoginException(e.getError());
+            }
+        } catch (Exception e) {
             connection.close();
             throw ServiceException.FAILURE(
                 "Unable to connect to IMAP server: " + dataSource, e);

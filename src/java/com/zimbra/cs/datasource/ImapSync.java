@@ -20,6 +20,7 @@ import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.ListData;
 import com.zimbra.cs.mailclient.auth.Authenticator;
+import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -32,6 +33,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.SystemUtil;
 
+import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -128,10 +130,14 @@ public class ImapSync extends MailItemImport {
         if (!connection.isClosed()) return;
         try {
             connection.connect();
-            if (authenticator != null) {
-                connection.authenticate(authenticator);
-            } else {
-                connection.login(dataSource.getDecryptedPassword());
+            try {
+                if (authenticator != null) {
+                    connection.authenticate(authenticator);
+                } else {
+                    connection.login(dataSource.getDecryptedPassword());
+                }
+            } catch (CommandFailedException e) {
+                throw new LoginException(e.getError());
             }
             delimiter = connection.getDelimiter();
         } catch (Exception e) {
@@ -163,7 +169,7 @@ public class ImapSync extends MailItemImport {
         return folders;
     }
 
-    private void syncRemoteFolders(List<ListData> folders) throws IOException {
+    private void syncRemoteFolders(List<ListData> folders) throws ServiceException {
         for (ListData ld : folders) {
             try {
                 ImapFolderSync ifs = new ImapFolderSync(this);
@@ -172,12 +178,12 @@ public class ImapSync extends MailItemImport {
                     syncedFolders.put(tracker.getItemId(), ifs);
                 }
             } catch (Exception e) {
-                logSyncFailed(ld.getMailbox(), e);
+                syncFailed(ld.getMailbox(), 0, e);
             }
         }
     }
 
-    private void syncLocalFolders(List<Folder> folders) throws IOException {
+    private void syncLocalFolders(List<Folder> folders) throws ServiceException {
         for (Folder folder : folders) {
             int id = folder.getId();
             if (id != localRootFolder.getId() && !syncedFolders.containsKey(id)) {
@@ -191,7 +197,7 @@ public class ImapSync extends MailItemImport {
                         }
                     }
                 } catch (Exception e) {
-                    logSyncFailed(folder.getPath(), e);
+                    syncFailed(folder.getPath(), folder.getId(), e);
                 }
             }
         }
@@ -211,7 +217,7 @@ public class ImapSync extends MailItemImport {
                     ifs.syncMessages(fullSync);
                 }
             } catch (Exception e) {
-                logSyncFailed(folder.getPath(), e);
+                syncFailed(folder.getPath(), folder.getId(), e);
             }
         }
     }
@@ -221,7 +227,7 @@ public class ImapSync extends MailItemImport {
         return ss == null || ss.getLastModSeq() < lastModSeq;
     }
 
-    private void finishSync() {
+    private void finishSync() throws ServiceException {
         // Append new IMAP messages for folders which have been synchronized.
         // This is done after IMAP messages have been deleted in order to
         // avoid problems when local messages are moved between folders
@@ -230,7 +236,8 @@ public class ImapSync extends MailItemImport {
             try {
                 ifs.finishSync();
             } catch (Exception e) {
-                logSyncFailed(ifs.getLocalFolder().getPath(), e);
+                LocalFolder folder = ifs.getLocalFolder();
+                syncFailed(folder.getPath(), folder.getId(), e);
             }
         }
     }
@@ -243,10 +250,28 @@ public class ImapSync extends MailItemImport {
         }
     }
 
-    private void logSyncFailed(String path, Throwable e) {
-        LOG.error("Synchronization of folder '%s' failed", path, e);
+    private void syncFailed(String path, int itemId, Exception e)
+        throws ServiceException {
+        String error = String.format("Synchronization of folder '%s' failed", path);
+        LOG.error(error, e);
+        if (canContinue(e)) {
+            error += ". Synchronization has been disabled for this folder";
+            // Report the error and continue synchronization of other folders...
+            getDataSource().reportError(itemId, error, e);
+        } else if (e instanceof ServiceException) {
+            throw (ServiceException) e;
+        } else {
+            throw ServiceException.FAILURE(error, e);
+        }
     }
 
+    /*
+     * Returns true if synchronization of other folders can continue following
+     * the specified sync error.
+     */
+    private boolean canContinue(Exception e) {
+        return e instanceof ServiceException || e instanceof CommandFailedException;
+    }
     /*
      * Returns the path to the Zimbra folder that stores messages for the given
      * IMAP folder. The Zimbra folder has the same path as the IMAP folder,
