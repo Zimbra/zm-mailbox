@@ -55,12 +55,18 @@ public class FileTokenStore extends TokenStore {
         }
     }
 
+    public void removeToken(String appId, String user) {
+        synchronized (this) {
+            tokens.remove(key(appId, user));
+        }
+    }
+
     public int size() {
         return tokens.size();
     }
 
     private void saveTokens() {
-        LOG.debug("Saving tokens to '" + file + "'");
+        debug("Saving yauth tokens to file '%s'", file);
         Writer w = null;
         try {
             w = new FileWriter(file);
@@ -72,7 +78,7 @@ public class FileTokenStore extends TokenStore {
                 try {
                     w.close();
                 } catch (IOException e) {
-                    LOG.error("Error closing tokens file '" + file + "'", e);
+                    debug("Error closing tokens file '" + file + "'", e);
                 }
             }
         }
@@ -93,15 +99,13 @@ public class FileTokenStore extends TokenStore {
         Reader r = null;
         try {
             r = new FileReader(file);
-            LOG.debug("Loading auth tokens from '" + file + "'");
             readTokens(r);
+            debug("Loaded yauth tokens from file '%s'", file);
         } catch (FileNotFoundException e) {
-            LOG.debug("No previously saved auth tokens in '" + file + "'");
             // Fall through...
         } catch (IOException e) {
             // Invalid token file
-            LOG.info("Deleting invalid tokens file '" + file + "'");
-            e.printStackTrace(); // DEBUG
+            debug("Deleting invalid tokens file ''%s'", file);
             r.close();
             file.delete();
         } finally {
@@ -119,12 +123,16 @@ public class FileTokenStore extends TokenStore {
             if (parts.length != 3) {
                 throw new IOException("Invalid token file");
             }
-            LOG.debug(String.format("Read token appId=%s, user=%s, token=%s",
-                parts[0], parts[1], parts[2]));
+            //debug("Read token appId=%s, user=%s, token=%s",
+            //      parts[0], parts[1], parts[2]));
             tokens.put(key(parts[0], parts[1]), parts[2]);
         }
     }
 
+    private static void debug(String fmt, Object... args) {
+        LOG.debug(String.format(fmt, args));
+    }
+    
     private static String key(String appId, String user) {
         return appId + " " + user;
     }

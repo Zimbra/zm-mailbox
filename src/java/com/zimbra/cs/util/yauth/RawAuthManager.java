@@ -39,10 +39,26 @@ public final class RawAuthManager {
             // Cookie missing or expired, so get a new one
             String token = store.getToken(appId, user);
             if (token == null) {
-                // If token not found, try generating a new one
+                // If token not found, generating a new one
                 token = store.newToken(appId, user, pass);
             }
-            auth = RawAuth.authenticate(appId, token);
+            try {
+                auth = RawAuth.authenticate(appId, token);
+            } catch (AuthenticationException e) {
+                // If authentication failed, check for invalid token in which
+                // case we will generate a new one and try again...
+                switch (e.getErrorCode()) {
+                case TOKEN_REQUIRED:
+                case INVALID_TOKEN:
+                    invalidate(appId, user);
+                    token = store.newToken(appId, user, pass);
+                    auth = RawAuth.authenticate(appId, token);
+                    break;
+                default:
+                    throw e;
+                }
+
+            }
             cookies.put(key(appId, user), auth);
         }
         return auth;
