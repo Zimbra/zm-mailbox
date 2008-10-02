@@ -18,7 +18,6 @@ package com.zimbra.cs.datasource;
 
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.ListData;
-import com.zimbra.cs.mailclient.imap.MessageData;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -66,6 +65,11 @@ public final class ImapUtil {
             }
         }
         List<ListData> sorted = new ArrayList<ListData>(folders.size());
+        if (inbox == null) {
+            // If INBOX missing from LIST response, then see if we can
+            // determine a reasonable default (bug 30844).
+            inbox = getDefaultInbox(sorted);
+        }
         if (inbox != null) {
             sorted.add(inbox);
         }
@@ -76,6 +80,15 @@ public final class ImapUtil {
         return sorted;
     }
 
+    private static ListData getDefaultInbox(List<ListData> sorted) {
+        for (ListData ld : sorted) {
+            if (isInboxInferior(ld)) {
+                return new ListData(INBOX, ld.getDelimiter());
+            }
+        }
+        return null;
+    }
+    
     private static String getNormalizedName(ListData ld) {
         String name = ld.getMailbox();
         if (name.equalsIgnoreCase(INBOX)) {
