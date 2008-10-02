@@ -70,7 +70,7 @@ public class DataSource extends NamedEntry {
                 throw ServiceException.INVALID_REQUEST("invalid type: " + s + ", valid values: " + Arrays.asList(Type.values()), e); 
             }
         }
-    };
+    }
 
     public enum ConnectionType {
         cleartext, ssl;
@@ -344,6 +344,10 @@ public class DataSource extends NamedEntry {
     // Overridden by OfflineDataSource
     public void clearSyncState(int folderId) {}
 
+    public void reportError(int itemId, String error, Exception e) {
+        // Do nothing by default...
+    }
+    
     public Mailbox getMailbox() throws ServiceException {
         if (mailbox == null) {
             mailbox = MailboxManager.getInstance().getMailboxByAccount(getAccount());
