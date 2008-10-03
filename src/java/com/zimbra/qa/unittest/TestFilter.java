@@ -16,17 +16,27 @@
  */
 package com.zimbra.qa.unittest;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 import junit.framework.TestCase;
-import junit.framework.TestSuite;
+
+import org.apache.jsieve.SieveFactory;
+import org.apache.jsieve.parser.generated.Node;
 
 import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.filter.FilterUtil;
+import com.zimbra.cs.filter.RuleManager;
+import com.zimbra.cs.filter.SieveToSoap;
+import com.zimbra.cs.filter.SoapToSieve;
 import com.zimbra.cs.zclient.ZFilterAction;
 import com.zimbra.cs.zclient.ZFilterCondition;
 import com.zimbra.cs.zclient.ZFilterRule;
@@ -44,7 +54,6 @@ import com.zimbra.cs.zclient.ZFilterAction.ZTagAction;
 import com.zimbra.cs.zclient.ZFilterCondition.HeaderOp;
 import com.zimbra.cs.zclient.ZFilterCondition.ZHeaderCondition;
 import com.zimbra.cs.zclient.ZMessage.Flag;
-
 
 public class TestFilter
 extends TestCase {
@@ -289,6 +298,58 @@ extends TestCase {
         assertEquals(0, TestUtil.search(mbox,
             "in:\"" + MOUNTPOINT_SUBFOLDER_PATH + "\" subject:\"" + subject + "\"").size());
     }
+
+    /**
+     * Tests {@link FilterUtil#escape}.
+     */
+    public void testEscape() {
+        assertEquals("Hello, \\\"Dave\\\"", FilterUtil.escape("Hello, \"Dave\""));
+        assertEquals("\\\\/\\\\/", FilterUtil.escape("\\/\\/"));
+        assertEquals("\\\"\\\\\\\"", FilterUtil.escape("\"\\\""));
+    }
+
+    /**
+     * Tests {@link SoapToSieve} and {@link SieveToSoap}.
+     */
+    public void testConversion()
+    throws Exception {
+        // Load script.
+        String scriptPath = "/opt/zimbra/unittest/test.sieve";
+        String script = new String(ByteUtil.getContent(new File(scriptPath)));
+        assertNotNull(script);
+        assertTrue(script.length() > 0);
+        List<String> ruleNames = RuleManager.getRuleNames(script);
+        Node node = SieveFactory.getInstance().parse(new FileInputStream(scriptPath));
+        
+        // Convert from Sieve to SOAP and back again. 
+        SieveToSoap sieveToSoap = new SieveToSoap(XMLElement.mFactory, ruleNames);
+        sieveToSoap.accept(node);
+        SoapToSieve soapToSieve = new SoapToSieve(sieveToSoap.getRootElement());
+        String convertedScript = soapToSieve.getSieveScript();
+        
+        // Compare result.
+        script = normalizeWhiteSpace(script);
+        convertedScript = normalizeWhiteSpace(convertedScript);
+        assertEquals(script, convertedScript);
+    }
+    
+    private String normalizeWhiteSpace(String script) {
+        StringBuilder buf = new StringBuilder(script.length());
+        boolean inWhiteSpace = false;
+        for (int i = 0; i < script.length(); i++) {
+            String c = script.substring(i, i + 1);
+            if (c.matches("\\s") || c.equals("\\n")) {
+                if (!inWhiteSpace) {
+                    buf.append(" ");
+                    inWhiteSpace = true;
+                }
+            } else {
+                inWhiteSpace = false;
+                buf.append(c);
+            }
+        }
+        return buf.toString();
+    }
     
     protected void tearDown() throws Exception {
         mMbox.saveFilterRules(mOriginalRules);
@@ -368,7 +429,7 @@ extends TestCase {
         
         return new ZFilterRules(rules);
     }
-
+    
     public static void main(String[] args)
     throws Exception {
         TestUtil.cliSetup();

@@ -639,6 +639,11 @@
         <copy todir="${dist.dir}/wiki" overwrite="true">
             <fileset dir="data/wiki" includes="**"/>
         </copy>
+    	
+    	<!-- unit test -->
+    	<copy todir="${dist.dir}/unittest" overwrite="true">
+    	    <fileset dir="data/unittest" includes="**"/>
+        </copy>
     </target>
 
     <target name="dev-dist-unix" if="is-unix">

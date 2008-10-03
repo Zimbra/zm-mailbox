@@ -1,6 +1,5 @@
 package com.zimbra.cs.filter;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -12,87 +11,22 @@ import org.apache.jsieve.parser.generated.ASTtest;
 import org.apache.jsieve.parser.generated.Node;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.DateParser;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.filter.FilterUtil.Condition;
+import com.zimbra.cs.filter.FilterUtil.DateComparison;
+import com.zimbra.cs.filter.FilterUtil.Flag;
+import com.zimbra.cs.filter.FilterUtil.NumberComparison;
+import com.zimbra.cs.filter.FilterUtil.StringComparison;
 
 /**
- * Walk
- * @author boris
- *
+ * Iterates a Sieve node tree and calls callbacks at various
+ * points.  A subclass can override whichever <tt>visitXXX()</tt>
+ * callbacks it is interested in.
  */
 public abstract class SieveVisitor {
 
-    protected enum VisitPhase { begin, end };
-    protected enum ConditionType { allof, anyof };
-    
-    protected enum Flag {
-        read, flagged;
-        
-        protected static Flag fromString(String value)
-        throws ServiceException {
-            if (value == null) {
-                return null;
-            }
-            try {
-                return Flag.valueOf(value);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.PARSE_ERROR(
-                    "Invalid value: " + value + ", valid values: " + Arrays.asList(Flag.values()), e);
-            }
-        }
-    }
-    
-    protected enum StringComparison {
-        is, contains, matches;
-        
-        protected static StringComparison fromString(String value)
-        throws ServiceException {
-            if (value == null) {
-                return null;
-            }
-            try {
-                return StringComparison.valueOf(value);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.PARSE_ERROR(
-                    "Invalid value: "+ value +", valid values: " + Arrays.asList(StringComparison.values()), e);
-            }
-        }
-    }
-    
-    protected enum NumberComparison {
-        over, under;
-        
-        protected static NumberComparison fromString(String value)
-        throws ServiceException {
-            if (value == null) {
-                return null;
-            }
-            try {
-                return NumberComparison.valueOf(value);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.PARSE_ERROR(
-                    "Invalid value: "+ value +", valid values: " + Arrays.asList(NumberComparison.values()), e);
-            }
-        }
-    };
-    
-    protected enum DateComparison {
-        before, after;
-        
-        protected static DateComparison fromString(String value)
-        throws ServiceException {
-            if (value == null) {
-                return null;
-            }
-            try {
-                return DateComparison.valueOf(value);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.PARSE_ERROR(
-                    "Invalid value: "+ value +", valid values: " + Arrays.asList(StringComparison.values()), e);
-            }
-        }
-    };
-    
+    protected enum VisitPhase { begin, end }
+
     @SuppressWarnings("unused")
     protected void visitNode(Node node, VisitPhase phase, RuleProperties props)
     throws ServiceException { }
@@ -120,12 +54,17 @@ public abstract class SieveVisitor {
     
     @SuppressWarnings("unused")
     protected void visitSizeTest(Node node, VisitPhase phase, RuleProperties props,
-                                 NumberComparison comparison, int size)
+        NumberComparison comparison, int size)
     throws ServiceException { }
     
     @SuppressWarnings("unused")
     protected void visitDateTest(Node node, VisitPhase phase, RuleProperties props,
-                                 DateComparison comparison, Date date)
+        DateComparison comparison, Date date)
+    throws ServiceException { }
+    
+    @SuppressWarnings("unused")
+    protected void visitAddressBookTest(Node node, VisitPhase phase, RuleProperties props,
+        String header, String folderPath)
     throws ServiceException { }
     
     @SuppressWarnings("unused")
@@ -177,7 +116,7 @@ public abstract class SieveVisitor {
     public class RuleProperties {
         boolean isEnabled = true;
         boolean isNegativeTest = false;
-        ConditionType conditionType = ConditionType.allof;
+        Condition conditionType = Condition.allof;
         Node testNode;
     }
     
@@ -201,23 +140,12 @@ public abstract class SieveVisitor {
                 if ("disabled_if".equals(sieveNode.getName())) {
                     newProps.isEnabled = false;
                 }
+                newProps.conditionType = getCondition(getNode(node, 0, 0));
                 visitRule(node, VisitPhase.begin, newProps);
                 accept(node, newProps);
                 visitRule(node, VisitPhase.end, newProps);
             } else if (node instanceof ASTtest) {
-                String name = ((SieveNode) node).getName();
-                if ("anyof".equals(name)) {
-                    props.conditionType = ConditionType.anyof;
-                    accept(node, props);
-                } else if ("allof".equals(name)) {
-                    props.conditionType = ConditionType.allof;
-                    accept(node, props);
-                } else if ("not".equals(name)) {
-                    props.isNegativeTest = true;
-                    accept(node, props);
-                } else {
-                    acceptTest(node, props);
-                }
+                acceptTest(node, props);
             } else if (node instanceof ASTcommand) {
                 acceptAction(node, props);
             } else {
@@ -228,14 +156,34 @@ public abstract class SieveVisitor {
         visitNode(parent, VisitPhase.end, props);
     }
     
-    private static final DateParser SIEVE_DATE_PARSER = new DateParser("yyyyMMdd");
+    /**
+     * Returns <tt>anyof</tt> if this node is an <tt>anyof</tt> test,
+     * or <tt>allof</tt> in all other cases (condition is not specified).
+     */
+    private Condition getCondition(Node node) {
+        if (!(node instanceof ASTtest)) {
+            return Condition.allof;
+        }
+        String name = ((SieveNode) node).getName();
+        if ("anyof".equals(name)) {
+            return Condition.anyof;
+        } else {
+            return Condition.allof;
+        }
+    }
     
     private void acceptTest(Node node, RuleProperties props)
     throws ServiceException {
         visitTest(node, VisitPhase.begin, props);
         String nodeName = ((SieveNode) node).getName();
         
-        if ("header".equals(nodeName)) {
+        if ("not".equals(nodeName)) {
+            props.isNegativeTest = true;
+            accept(node, props);
+        } else if ("allof".equals(nodeName) || "anyof".equals(nodeName)) {
+            // allof and anyof are handled in accept() 
+            accept(node, props);
+        } else if ("header".equals(nodeName)) {
             String s = stripLeadingColon(getValue(node, 0, 0));
             StringComparison comparison = StringComparison.fromString(s);
             String header = stripQuotes(getValue(node, 0, 1, 0, 0));
@@ -262,7 +210,7 @@ public abstract class SieveVisitor {
             String s = stripLeadingColon(getValue(node, 0, 0));
             DateComparison comparison = DateComparison.fromString(s);
             String dateString = stripQuotes(getValue(node, 0, 1, 0, 0));
-            Date date = SIEVE_DATE_PARSER.parse(dateString);
+            Date date = FilterUtil.SIEVE_DATE_PARSER.parse(dateString);
             if (date == null) {
                 throw ServiceException.PARSE_ERROR("Invalid date value: " + dateString, null);
             }
@@ -280,6 +228,12 @@ public abstract class SieveVisitor {
             visitAttachmentTest(node, VisitPhase.begin, props);
             accept(node, props);
             visitAttachmentTest(node, VisitPhase.end, props);
+        } else if ("addressbook".equals(nodeName)) {
+            String header = stripQuotes(getValue(node, 0, 1, 0, 0));
+            String folderPath = stripQuotes(getValue(node, 0, 2, 0, 0));
+            visitAddressBookTest(node, VisitPhase.begin, props, header, folderPath);
+            accept(node, props);
+            visitAddressBookTest(node, VisitPhase.end, props, header, folderPath);
         } else {
             ZimbraLog.filter.debug("Ignoring unrecognized test type '%s'.", nodeName);
             accept(node, props);
@@ -344,21 +298,39 @@ public abstract class SieveVisitor {
         }
     }
 
-    protected String getValue(Node node, int ... indexes) {
-        if (indexes == null || indexes.length == 0) {
-            return null;
-        }
+    protected Node getNode(Node parent, int ... indexes)
+    throws ServiceException {
+        Node node = parent;
         for (int i = 0; i < indexes.length; i++) {
-            node = node.jjtGetChild(indexes[i]);
-            if (node == null) {
-                return null;
+            if (node.jjtGetNumChildren() == 0) {
+                throw ServiceException.PARSE_ERROR(
+                    "Subnode " + i + " has no children.", null);
             }
+            
+            if (indexes[i] >= node.jjtGetNumChildren()) {
+                throw ServiceException.PARSE_ERROR(
+                    "Subnode " + i + " has " + node.jjtGetNumChildren() + " children." +
+                    "  Requested child " + indexes[i] + ".", null);
+            }
+            node = node.jjtGetChild(indexes[i]);
         }
-        Object value = ((SieveNode) node).getValue();
+        return node;
+    }
+    
+    protected String getValue(Node parent, int ... indexes)
+    throws ServiceException {
+        Node child = getNode(parent, indexes);
+        Object value = ((SieveNode) child).getValue();
         if (value == null) {
             return null;
         }
         return value.toString();
+    }
+    
+    protected String getName(Node parent, int ... indexes)
+    throws ServiceException {
+        Node child = getNode(parent, indexes);
+        return ((SieveNode) child).getName();
     }
     
     protected String stripLeadingColon(String s) {
@@ -438,3 +410,4 @@ public abstract class SieveVisitor {
     }
     */
 }
+
