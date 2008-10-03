@@ -79,7 +79,10 @@ public class ZFolder implements ZItem, Comparable, ToZJSONObject {
         doesNotInheritPermissions('i'),
         excludeFreeBusyInfo('b'),
         imapDeleted('x'),
-        imapSubscribed('*');
+        imapSubscribed('*'),
+        syncFolder('y'),
+        syncEnabled('~'),
+        noInferiors('o');
 
         private char mFlagChar;
         
@@ -422,6 +425,18 @@ public class ZFolder implements ZItem, Comparable, ToZJSONObject {
 
     public boolean isIMAPDeleted() {
         return hasFlags() && mFlags.indexOf(Flag.imapDeleted.getFlagChar()) != -1;
+    }
+
+    public boolean isSyncFolder() {
+        return hasFlags() && mFlags.indexOf(Flag.syncFolder.getFlagChar()) != -1;
+    }
+
+    public boolean isSyncEnabled() {
+        return hasFlags() && mFlags.indexOf(Flag.syncEnabled.getFlagChar()) != -1;
+    }
+
+    public boolean isNoInferiors() {
+        return hasFlags() && mFlags.indexOf(Flag.noInferiors.getFlagChar()) != -1;
     }
 
     /**

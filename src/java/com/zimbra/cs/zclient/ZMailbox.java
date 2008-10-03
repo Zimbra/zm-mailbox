@@ -2609,7 +2609,7 @@ public class ZMailbox {
             action.addAttribute(MailConstants.A_COLOR, newColor.getValue());
         if (flags != null)
             action.addAttribute(MailConstants.A_FLAGS, flags);
-        if (acl != null && !acl.isEmpty()) {
+        if (acl != null) {
             Element aclEl = action.addElement(MailConstants.E_ACL);
             for (ZGrant grant : acl) {
                 grant.toElement(aclEl);
