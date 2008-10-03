@@ -1528,7 +1528,11 @@ public class ZMailboxUtil implements DebugListener {
             granteeName = args[1];
             right = args[2];
             break;
-        case all:    
+        case all:
+            if (args.length != 2) throw ZClientException.CLIENT_ERROR("wrong number of args", null);
+            granteeId = ACL.GUID_AUTHUSER;
+            right = args[1];
+            break;
         case pub:
             if (args.length != 2) throw ZClientException.CLIENT_ERROR("wrong number of args", null);
             granteeId = ACL.GUID_PUBLIC;
