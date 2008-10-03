@@ -36,11 +36,19 @@ public class DateParser {
     }
     
     public Date parse(String s) {
+        return getFormatter().parse(s, new ParsePosition(0));
+    }
+    
+    public String format(Date date) {
+        return getFormatter().format(date);
+    }
+    
+    private SimpleDateFormat getFormatter() {
         SimpleDateFormat formatter = mFormatterHolder.get();
         if (formatter == null) {
             formatter = new SimpleDateFormat(mDatePattern);
             mFormatterHolder.set(formatter);
         }
-        return formatter.parse(s, new ParsePosition(0));
+        return formatter;
     }
 }
