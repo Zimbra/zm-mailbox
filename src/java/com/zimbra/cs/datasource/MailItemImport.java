@@ -32,11 +32,13 @@ import java.util.List;
 
 public abstract class MailItemImport implements DataSource.DataImport {
     protected final DataSource dataSource;
+    protected final Mailbox mbox;
 
     private static final RuleManager RULE_MANAGER = RuleManager.getInstance();
 
-    protected MailItemImport(DataSource ds) {
+    protected MailItemImport(DataSource ds) throws ServiceException {
         dataSource = ds;
+        mbox = ds.getMailbox();
     }
 
     public abstract String test() throws ServiceException;
@@ -63,10 +65,10 @@ public abstract class MailItemImport implements DataSource.DataImport {
     protected boolean isOffline() {
         return getDataSource().isOffline();
     }
-    
+
     protected Message offlineAddMessage(ParsedMessage pm, int folderId, int flags)
         throws ServiceException, IOException {
-        Mailbox mbox = dataSource.getMailbox();
+        Mailbox mbox = getMailbox();
         SharedDeliveryContext context = new SharedDeliveryContext();
         Message msg = null;
         switch (folderId) {
@@ -105,5 +107,9 @@ public abstract class MailItemImport implements DataSource.DataImport {
 
     public DataSource getDataSource() {
         return dataSource;
+    }
+
+    public Mailbox getMailbox() {
+        return mbox;
     }
 }

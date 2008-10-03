@@ -58,7 +58,6 @@ public class DataSource extends NamedEntry {
         StringUtil.getSimpleClassName(DataSource.class.getName());
     
     private final String mAcctId;
-    private Mailbox mailbox;
 
     public enum Type {
         pop3, imap, caldav, live, yab;
@@ -353,10 +352,7 @@ public class DataSource extends NamedEntry {
     }
     
     public Mailbox getMailbox() throws ServiceException {
-        if (mailbox == null) {
-            mailbox = MailboxManager.getInstance().getMailboxByAccount(getAccount());
-        }
-        return mailbox;
+        return MailboxManager.getInstance().getMailboxByAccount(getAccount());
     }
     
     private static byte[] randomSalt() {

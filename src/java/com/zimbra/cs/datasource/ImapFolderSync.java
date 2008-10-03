@@ -93,7 +93,7 @@ class ImapFolderSync {
         this.imapSync = imapSync;
         connection = imapSync.getConnection();
         ds = imapSync.getDataSource();
-        mailbox = ds.getMailbox();
+        mailbox = imapSync.getMailbox();
     }
 
     /*

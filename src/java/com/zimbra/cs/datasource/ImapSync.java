@@ -115,7 +115,7 @@ public class ImapSync extends MailItemImport {
         validateDataSource();
         connect();
         int folderId = dataSource.getFolderId();
-        localRootFolder = dataSource.getMailbox().getFolderById(null, folderId);
+        localRootFolder = getMailbox().getFolderById(null, folderId);
         try {
             syncFolders(folderIds, fullSync);
             connection.logout();
@@ -150,7 +150,7 @@ public class ImapSync extends MailItemImport {
     private void syncFolders(List<Integer> folderIds, boolean fullSync)
         throws ServiceException, IOException {
         if (dataSource.isOffline()) {
-            dataSource.getMailbox().beginTrackingSync();
+            getMailbox().beginTrackingSync();
         }
         trackedFolders = dataSource.getImapFolders();
         syncedFolders = new HashMap<Integer, ImapFolderSync>();
@@ -207,7 +207,7 @@ public class ImapSync extends MailItemImport {
         throws ServiceException {
         // If folder ids specified, then only sync messages for specified
         // folders, otherwise sync messages for all folders.
-        int lastModSeq = dataSource.getMailbox().getLastChangeID();
+        int lastModSeq = getMailbox().getLastChangeID();
         for (ImapFolderSync ifs : syncedFolders.values()) {
             LocalFolder folder = ifs.getLocalFolder();
             int folderId = folder.getId();
