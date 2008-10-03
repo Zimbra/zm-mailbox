@@ -41,10 +41,12 @@ public class ReportGenerator implements Runnable {
     // the cast will wrap to the correct signedness
     private final static byte[] GZIP_MAGIC = { 0x1f, (byte) 0x8b };
     private final boolean checkCompressed;
-    private final boolean skipBlobStore;
+    private boolean skipBlobStore;
     private final String mysqlPasswd;
     private final File reportFile;
-    private final static String JDBC_URL = "jdbc:mysql://localhost:7306/";
+    private final int mailboxId;
+    private final int mboxGroupId;
+    final static String JDBC_URL = "jdbc:mysql://localhost:7306/";
     private final static char[] SPINNER = { '|', '/', '-', '\\' };
     
     /**
@@ -70,13 +72,18 @@ public class ReportGenerator implements Runnable {
             " ON i.id = r.item_id AND i.mailbox_id = r.mailbox_id" +
             " WHERE (i.blob_digest is not null or r.blob_digest is not null)" +
             " AND (i.volume_id is not null or r.volume_id is not null)";
+    
+    private final static String MBOX_ITEM_QUERY = ITEM_QUERY + " AND i.mailbox_id = ?";
 
     public ReportGenerator(String mysqlPasswd, File reportFile,
-            boolean checkCompressed, boolean skipBlobStore) {
+            boolean checkCompressed, boolean skipBlobStore,
+            int mailboxId, int mboxGroupId) {
         this.mysqlPasswd = mysqlPasswd;
         this.reportFile = reportFile;
         this.checkCompressed = checkCompressed;
         this.skipBlobStore = skipBlobStore;
+        this.mailboxId = mailboxId;
+        this.mboxGroupId = mboxGroupId;
     }
     private Map<Byte,Volume> volumes;
 
@@ -92,7 +99,10 @@ public class ReportGenerator implements Runnable {
                         BlobConsistencyCheck.ZIMBRA_USER, mysqlPasswd);
                 StatementExecutor e = new StatementExecutor(c);
                 volumes = getVolumeInfo(e);
-                List<Integer> mboxGroups = getMailboxGroupList(e);
+                
+                List<Integer> mboxGroups = null;
+                if (mailboxId == -1)
+                    mboxGroups = getMailboxGroupList(e);
                 c.close();
 
                 tmpFile = File.createTempFile("mailitems", ".lst");
@@ -100,15 +110,29 @@ public class ReportGenerator implements Runnable {
                         new FileOutputStream(tmpFile, true));
                 System.out.println("Spooling item list to " + tmpFile);
                 int items = 0;
-                for (int group : mboxGroups) {
-                    String mboxgroup = "mboxgroup" + group;
-                    System.out.println("Retrieving items from " + mboxgroup);
+
+                if (mailboxId != -1 && mboxGroupId != -1) {
+                    skipBlobStore = true; // TODO implement the blob store search as well?
+                    String mboxgroup = "mboxgroup" + mboxGroupId;
+                    System.out.println("Retrieving items from " +
+                            mboxgroup + " mailbox " + mailboxId);
                     c = DriverManager.getConnection(JDBC_URL + mboxgroup,
-                        BlobConsistencyCheck.ZIMBRA_USER, mysqlPasswd);
+                            BlobConsistencyCheck.ZIMBRA_USER, mysqlPasswd);
                     e = new StatementExecutor(c);
-                    items += getMailItems(group, e, out);
+                    items += getMailItems(mailboxId, mboxGroupId, e, out);
                     c.close();
+                } else {
+                    for (int group : mboxGroups) {
+                        String mboxgroup = "mboxgroup" + group;
+                        System.out.println("Retrieving items from " + mboxgroup);
+                        c = DriverManager.getConnection(JDBC_URL + mboxgroup,
+                                BlobConsistencyCheck.ZIMBRA_USER, mysqlPasswd);
+                        e = new StatementExecutor(c);
+                        items += getMailItems(group, e, out);
+                        c.close();
+                    }
                 }
+
                 out.close();
 
                 long start = System.currentTimeMillis();
@@ -478,14 +502,19 @@ public class ReportGenerator implements Runnable {
         return l;
     }
 
-    private int getMailItems(final int group,
+    private int getMailItems(int group, StatementExecutor e,
+            ObjectOutputStream oos)
+    throws SQLException, IOException {
+        return getMailItems(-1, group, e, oos);
+    }
+    private int getMailItems(final int mboxId, final int group,
             StatementExecutor e, final ObjectOutputStream oos)
     throws SQLException, IOException {
         // lazy, fake pointer
         final int[] countref = new int[1];
         final Item[] lastItem = new Item[1];
 
-        e.query(ITEM_QUERY, new StatementExecutor.ObjectMapper() {
+        StatementExecutor.ObjectMapper mapper = new StatementExecutor.ObjectMapper() {
             private void serialize(Item o) throws SQLException {
                 Collections.sort(o.revisions);
                 try {
@@ -531,7 +560,12 @@ public class ReportGenerator implements Runnable {
 
 
             }
-        });
+        };
+        if (mboxId == -1)
+            e.query(ITEM_QUERY, mapper);
+        else
+            e.query(MBOX_ITEM_QUERY, new Object[] { mboxId }, mapper);
+
         if (lastItem[0] != null) {
             Collections.sort(lastItem[0].revisions);
             oos.writeObject(lastItem[0]);

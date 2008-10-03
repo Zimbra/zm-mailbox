@@ -19,17 +19,25 @@ package com.zimbra.cs.store.consistency;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import javax.xml.xpath.XPathFactory;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.PosixParser;
 import org.apache.commons.cli.CommandLine;
-
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.PosixParser;
 import org.xml.sax.InputSource;
+
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.store.consistency.StatementExecutor.ObjectMapper;
 
 public class BlobConsistencyCheck {
     private final static String REPAIR_WARNING =
@@ -57,6 +65,7 @@ public class BlobConsistencyCheck {
         { "f", "file",     "save/load report to/from file", true,  false },
         { "k", "skip-fs",  "skip blob store reverse check", false, false },
         { "l", "load",     "display report from file",      true,  false },
+        { "u", "user",     "check only the user/mbox-id",   true,  false },
         //{ "r", "repair",   "repair/delete missing blobs",   false, false },
         //{ "c", "force",    "required when repairing",       false, false },
     };
@@ -110,8 +119,46 @@ public class BlobConsistencyCheck {
             reportFile = new File(cmdLine.getOptionValue("l"));
             new ReportDisplay(reportFile).run();
         } else {
+            // lazy, need pointers...
+            final int[] mailboxId = { -1 };
+            final int[] mboxGroupId = { -1 };
+            if (cmdLine.hasOption("u")) {
+                String userName = cmdLine.getOptionValue("u");
+                try {
+                    mailboxId[0] = Integer.parseInt(userName);
+                }
+                catch (NumberFormatException e) { } // ignore
+                if (mailboxId[0] == -1) {
+                    System.out.println("Looking up user: " + userName);
+                    Provisioning p = Provisioning.getInstance();
+                    Account acct = p.getAccount(userName);
+                    String uuid = acct.getId();
+                    if (!userName.equals(uuid)) {
+                        System.out.println(userName + ": resolves to " + uuid);
+                    }
+                    Connection c = null;
+                    try {
+                        c = DriverManager.getConnection(
+                                ReportGenerator.JDBC_URL + "zimbra",
+                                ZIMBRA_USER, mysqlPasswd);
+                        StatementExecutor e = new StatementExecutor(c);
+                        e.query("SELECT id, group_id FROM mailbox where account_id = ?",
+                                new Object[] { uuid }, new ObjectMapper() {
+                            public void mapRow(ResultSet rs) throws SQLException {
+                                mailboxId[0] = rs.getInt(1);
+                                mboxGroupId[0] = rs.getInt(2);
+                            }
+                        });
+                    }
+                    finally {
+                        if (c != null) c.close();
+                    }
+                }
+            }
             // generate report
-            new ReportGenerator(mysqlPasswd, reportFile, cmdLine.hasOption("z"), cmdLine.hasOption("k")).run();
+            new ReportGenerator(mysqlPasswd, reportFile,
+                    cmdLine.hasOption("z"), cmdLine.hasOption("k"),
+                    mailboxId[0], mboxGroupId[0]).run();
         }
     }
 
