@@ -4343,15 +4343,14 @@ public class Mailbox {
         }
     }
 
-    public int fixAllCalendarItemEndTime(OperationContext octxt)
-    throws ServiceException {
+    public int fixAllCalendarItemEndTime(OperationContext octxt) throws ServiceException {
         int numFixed = 0;
         ZimbraLog.calendar.info("Started: end time fixup in calendar of mailbox " + getId());
-        List[] lists = new List[2];
+        List<MailItem>[] lists = new List[2];
         lists[0] = getItemList(octxt, MailItem.TYPE_APPOINTMENT);
         lists[1] = getItemList(octxt, MailItem.TYPE_TASK);
-        for (List items : lists) {
-            for (Iterator iter = items.iterator(); iter.hasNext(); ) {
+        for (List<MailItem> items : lists) {
+            for (Iterator<MailItem> iter = items.iterator(); iter.hasNext(); ) {
                 Object obj = iter.next();
                 if (!(obj instanceof CalendarItem))
                     continue;
@@ -4531,11 +4530,11 @@ public class Mailbox {
                 return false;
             }
         } else if (pref.equalsIgnoreCase(DEDUPE_INBOX)) {   // move the existing mail from sent to inbox
-                // XXX: not implemented
-                return false;
+            // XXX: not implemented
+            return false;
         } else {
-                return false;
-    }
+            return false;
+        }
     }
 
     public int getConversationIdFromReferent(MimeMessage newMsg, int parentID) {
@@ -4739,12 +4738,12 @@ public class Mailbox {
         boolean checkDuplicates = (!isRedo && msgidHeader != null);
         if (checkDuplicates && !isSent && mSentMessageIDs.containsKey(msgidHeader)) {
             Integer sentMsgID = (Integer) mSentMessageIDs.get(msgidHeader);
-            // if the rules say to drop this duplicated incoming message, return null now
-            // don't dedupe messages carrying calendar part
+            // if the deduping rules say to drop this duplicated incoming message, return null now...
+            //   ... but only dedupe messages not carrying a calendar part
             CalendarPartInfo cpi = pm.getCalendarPartInfo();
-            if ((cpi == null || !CalendarItem.isAcceptableInvite(getAccount(), cpi)) &&
-                dedupe(pm.getMimeMessage(), sentMsgID))
-                return null;
+            if (cpi == null || !CalendarItem.isAcceptableInvite(getAccount(), cpi))
+                if (dedupe(pm.getMimeMessage(), sentMsgID))
+                    return null;
             // if we're not dropping the new message, see if it goes in the same conversation as the old sent message
             if (conversationId == ID_AUTO_INCREMENT) {
                 conversationId = getConversationIdFromReferent(pm.getMimeMessage(), sentMsgID.intValue());
@@ -6477,9 +6476,6 @@ public class Mailbox {
             beginTransaction("addDocumentRevision", octxt, redoRecorder);
 
             Document doc = getDocumentById(docId);
-            if (!doc.canAccess(ACL.RIGHT_WRITE))
-                throw ServiceException.PERM_DENIED("you do not have the required rights on the " + MailItem.getNameForType(doc));
-
             Blob blob = doc.setContent(pd);
 
             redoRecorder.setDocument(pd);

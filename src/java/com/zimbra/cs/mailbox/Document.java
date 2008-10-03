@@ -192,9 +192,13 @@ public class Document extends MailItem {
         markItemModified(Change.MODIFIED_CONTENT  | Change.MODIFIED_DATE |
                          Change.MODIFIED_IMAP_UID | Change.MODIFIED_SIZE);
 
+        // delete the old blob *unless* we've already rewritten it in this transaction
         if (getSavedSequence() != mMailbox.getOperationChangeID()) {
+            if (!canAccess(ACL.RIGHT_WRITE))
+                throw ServiceException.PERM_DENIED("you do not have the necessary permissions on the item");
+
             boolean delete = true;
-            // Don't delete blob if last revision uses it.
+            // don't delete blob if last revision uses it
             if (isTagged(mMailbox.mVersionedFlag)) {
                 List<MailItem> revisions = loadRevisions();
                 if (!revisions.isEmpty()) {

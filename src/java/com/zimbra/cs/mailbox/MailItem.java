@@ -1284,10 +1284,17 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (digest == null && getDigest() == null)
             return null;
 
+        // update the item's relevant attributes
+        markItemModified(Change.MODIFIED_CONTENT  | Change.MODIFIED_DATE |
+                         Change.MODIFIED_IMAP_UID | Change.MODIFIED_SIZE);
+
         // delete the old blob *unless* we've already rewritten it in this transaction
         if (getSavedSequence() != mMailbox.getOperationChangeID()) {
+            if (!canAccess(ACL.RIGHT_WRITE))
+                throw ServiceException.PERM_DENIED("you do not have the necessary permissions on the item");
+
             boolean delete = true;
-            // Don't delete blob if last revision uses it.
+            // don't delete blob if last revision uses it
             if (isTagged(mMailbox.mVersionedFlag)) {
                 List<MailItem> revisions = loadRevisions();
                 if (!revisions.isEmpty()) {
@@ -1302,10 +1309,6 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         // remove the content from the cache
         MessageCache.purge(this);
-
-        // update the item's relevant attributes
-        markItemModified(Change.MODIFIED_CONTENT  | Change.MODIFIED_DATE |
-                         Change.MODIFIED_IMAP_UID | Change.MODIFIED_SIZE);
 
         int size = dataStream == null ? 0 : dataLength;
         if (mData.size != size) {
@@ -1372,13 +1375,12 @@ public abstract class MailItem implements Comparable<MailItem> {
                     return;
 
                 int maxVer = 0;
-                for (MailItem rev : mRevisions) {
+                for (MailItem rev : mRevisions)
                     maxVer = Math.max(maxVer, rev.getVersion());
-                }
+
                 if (mVersion <= maxVer) {
-                    ZimbraLog.mailop.info(
-                            "Item's current version is not greater than highest revision; adjusting to " +
-                            (maxVer + 1) + " (was " + mVersion + ")");
+                    ZimbraLog.mailop.info("Item's current version is not greater than highest revision; " +
+                    		              "adjusting to " + (maxVer + 1) + " (was " + mVersion + ")");
                     mVersion = maxVer + 1;
                 }
             }
