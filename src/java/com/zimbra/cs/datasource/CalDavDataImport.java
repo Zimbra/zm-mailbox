@@ -57,7 +57,7 @@ public class CalDavDataImport extends MailItemImport {
 	
 	private CalDavClient mClient;
 	
-    public CalDavDataImport(DataSource ds) {
+    public CalDavDataImport(DataSource ds) throws ServiceException {
     	super(ds);
     }
 	
