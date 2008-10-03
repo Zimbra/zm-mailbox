@@ -100,7 +100,7 @@ public class DataSource extends NamedEntry {
     }
     
     public DataImport getDataImport() throws ServiceException {
-        String val = getAttr(Provisioning.A_zimbraDataSourceImportClassName, false);
+        String val = getAttr(Provisioning.A_zimbraDataSourceImportClassName, getDefaultImportClass(mType));
         if (val != null) {
             try {
                 Object di = (DataImport)Class.forName(val).getConstructor(DataSource.class).newInstance(this);
