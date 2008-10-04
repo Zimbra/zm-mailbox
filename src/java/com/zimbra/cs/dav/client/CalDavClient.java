@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import org.apache.commons.httpclient.HttpStatus;
 import org.dom4j.Element;
 
 import com.zimbra.common.util.ByteUtil;
@@ -114,7 +115,7 @@ public class CalDavClient extends WebDavClient {
 		String etag = resp.getHeader(DavProtocol.HEADER_ETAG);
 		ZimbraLog.dav.debug("ETags: "+appt.etag+", "+etag);
 		int status = resp.getStatusCode();
-		if (status != 200 && status != 201) {
+		if (status != HttpStatus.SC_OK && status != HttpStatus.SC_CREATED && status != HttpStatus.SC_NO_CONTENT) {
 			throw new DavException("Can't send calendar data (status="+status+")", status);
 		}
 		return etag;
