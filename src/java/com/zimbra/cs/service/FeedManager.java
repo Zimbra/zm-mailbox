@@ -122,10 +122,11 @@ public class FeedManager {
                     HttpURL httpurl = lcurl.startsWith("https:") ? new HttpsURL(url) : new HttpURL(url);
                     if (httpurl.getUser() != null) {
                         String user = httpurl.getUser();
-                        if (user.indexOf('%') != -1)
+                        if (user.indexOf('%') != -1) {
                             try {
                                 user = URLDecoder.decode(httpurl.getUser());
-                            } catch (Throwable t) { } 
+                            } catch (Throwable t) { }
+                        }
                         UsernamePasswordCredentials creds = new UsernamePasswordCredentials(user, httpurl.getPassword());
                         client.getParams().setAuthenticationPreemptive(true);
                         client.getState().setCredentials(AuthScope.ANY, creds);
@@ -133,7 +134,11 @@ public class FeedManager {
                 }
 
 
-                get = new GetMethod(url);
+                try {
+                    get = new GetMethod(url);
+                } catch (Throwable t) {
+                    throw ServiceException.INVALID_REQUEST("invalid url for feed: " + url, t);
+                }
                 get.setParams(params);
                 get.setFollowRedirects(true);
                 get.setDoAuthentication(true);
