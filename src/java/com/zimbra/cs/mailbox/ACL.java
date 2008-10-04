@@ -208,7 +208,7 @@ public class ACL {
                 return mType == ACL.GRANTEE_PUBLIC;
             switch (mType) {
                 case ACL.GRANTEE_PUBLIC:   return true;
-                case ACL.GRANTEE_AUTHUSER: return !acct.equals(ANONYMOUS_ACCT);
+                case ACL.GRANTEE_AUTHUSER: return !acct.getId().equals(GUID_PUBLIC);
                 case ACL.GRANTEE_COS:      return mGrantee.equals(getId(prov.getCOS(acct)));
                 case ACL.GRANTEE_DOMAIN:   return mGrantee.equals(getId(prov.getDomain(acct)));
                 case ACL.GRANTEE_GROUP:    return prov.inDistributionList(acct, mGrantee);
