@@ -985,6 +985,16 @@ public class ZMailbox {
     }
 
     /**
+     *
+     * @return true if mailbox has any tags
+     * @throws ServiceException
+     */
+    public boolean hasTags() throws ServiceException {
+        populateTagCache();
+        return !mNameToTag.isEmpty();
+    }
+
+    /**
      * @return current list of all tags names in the mailbox, sorted
      * @throws com.zimbra.common.service.ServiceException on error
      */
