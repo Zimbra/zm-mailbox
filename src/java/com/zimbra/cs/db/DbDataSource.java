@@ -63,6 +63,9 @@ public class DbDataSource {
             sb.append("data_source_id, item_id, remote_id, metadata) VALUES (");
             sb.append(DbMailItem.MAILBOX_ID_VALUE);
             sb.append("?, ?, ?, ?)");
+            if (Db.supports(Db.Capability.ON_DUPLICATE_KEY)) {
+            	sb.append(" ON DUPLICATE KEY UPDATE data_source_id = ?, item_id = ?, remote_id = ?, metadata = ?");
+            }
             stmt = conn.prepareStatement(sb.toString());
             int i = 1;
             i = DbMailItem.setMailboxId(stmt, mbox, i);
@@ -70,10 +73,16 @@ public class DbDataSource {
             stmt.setInt(i++, item.itemId);
             stmt.setString(i++, item.remoteId);
             stmt.setString(i++, DbMailItem.checkMetadataLength((item.md == null) ? null : item.md.toString()));
+            if (Db.supports(Db.Capability.ON_DUPLICATE_KEY)) {
+                stmt.setString(i++, dataSourceId);
+                stmt.setInt(i++, item.itemId);
+                stmt.setString(i++, item.remoteId);
+                stmt.setString(i++, DbMailItem.checkMetadataLength((item.md == null) ? null : item.md.toString()));
+            }
             stmt.executeUpdate();
             conn.commit();
         } catch (SQLException e) {
-            if (Db.supports(Db.Capability.ON_DUPLICATE_KEY) && Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
+            if (!Db.supports(Db.Capability.ON_DUPLICATE_KEY) && Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
                 DbPool.closeStatement(stmt);
                 DbPool.quietClose(conn);
             	updateMapping(ds, item);
