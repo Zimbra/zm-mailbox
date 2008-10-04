@@ -296,12 +296,6 @@ public class ItemActionHelper {
     protected OperationContext getOpCtxt() { return mOpCtxt; }
 
     protected void schedule() throws ServiceException {
-        if (mOperation == Op.SPAM && mHopCount == 0) {
-            // make sure to always do the spam training before moving to the target folder
-            for (int id : mIds)
-                SpamHandler.getInstance().handle(getMailbox(), id, mItemType, mFlagValue);
-        }
-        
         boolean targeted = mOperation == Op.MOVE || mOperation == Op.SPAM || mOperation == Op.COPY || mOperation == Op.RENAME || mOperation == Op.UPDATE;
 
         // deal with local mountpoints pointing at local folders here
@@ -432,7 +426,6 @@ public class ItemActionHelper {
     }
     
     private void executeRemote() throws ServiceException, IOException {
-
         Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mIidFolder.getAccountId());
         ZMailbox.Options zoptions = new ZMailbox.Options(getAuthToken().toZAuthToken(), AccountUtil.getSoapUri(target));
         zoptions.setNoSession(true);
@@ -455,6 +448,9 @@ public class ItemActionHelper {
         boolean deleteOriginal = mOperation != Op.COPY;
         String folderStr = mIidFolder.toString();
         mCreatedIds = new ArrayList<String>(mIds.length);
+
+        boolean toSpam = mIidFolder.getId() == Mailbox.ID_FOLDER_SPAM;
+        boolean toMailbox = !toSpam && mIidFolder.getId() != Mailbox.ID_FOLDER_TRASH;
 
         for (MailItem item : mMailbox.getItemById(mOpCtxt, mIds, mItemType)) {
             if (item == null)
@@ -486,6 +482,16 @@ public class ItemActionHelper {
                 } else {
                     if (!canDelete(item))
                         throw ServiceException.PERM_DENIED("cannot delete existing copy of " + MailItem.getNameForType(item) + " " + item.getId());
+                }
+            }
+
+            boolean fromSpam = item.inSpam();
+            if ((fromSpam && toMailbox) || (!fromSpam && toSpam)) {
+                try {
+                    SpamHandler.getInstance().handle(mMailbox, item.getId(), item.getType(), toSpam);
+                    ZimbraLog.mailop.info("sent to spam filter for training (marked as " + (toSpam ? "" : "not ") + "spam): " + new ItemId(item).toString());
+                } catch (Throwable t) {
+                    ZimbraLog.mailop.info("could not train spam filter: " + new ItemId(item).toString(), t);
                 }
             }
 
