@@ -967,7 +967,10 @@ public class ChartUtil {
             mPlotSettings = ps;
             mDataSeries = ds;
             mIndex = 0;
-            mSum = mLast = 0.0;
+            mSum = 0.0;
+            // for diff function, if NaN
+            // then set mLast to current value and result is 0
+            mLast = Double.NaN;
             mLastTstamp = 0;
             String func = mPlotSettings.getDataFunction();
             if (PlotSettings.DATA_FUNCTION_DIFF.equals(func))
@@ -994,6 +997,8 @@ public class ChartUtil {
             if (divisor != 0.0)
                 val /= divisor;
             if (mFunc.equals(Func.DIFF)) {
+                if (Double.isNaN(mLast)) // initialize
+                    mLast = val;
                 double diff = val - mLast;
                 mLast = val;
                 val = diff;
