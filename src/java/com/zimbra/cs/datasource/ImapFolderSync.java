@@ -127,11 +127,11 @@ class ImapFolderSync {
             remoteFolder = new RemoteFolder(connection, tracker.getRemotePath());
             if (!remoteFolder.exists()) {
                 remoteFolder.info("folder was deleted");
-                if (ds.isSyncCapable(folder)) //don't delete folder moved into archive
+                if (ds.isSyncEnabled(folder)) //only delete local if sync enabled
                 	localFolder.delete();
                 ds.deleteImapFolder(tracker);
                 tracker = null;
-            } else if (!ds.isSyncCapable(folder)) {
+            } else if (!ds.isSyncCapable(folder) && !localFolder.getPath().equals(tracker.getLocalPath())) {
             	//we moved local into archive, so delete remote
             	remoteFolder.delete();
             	ds.deleteImapFolder(tracker);
@@ -370,7 +370,8 @@ class ImapFolderSync {
         throws ServiceException, IOException {
         // Check if local folder was deleted
         localFolder = LocalFolder.fromId(mailbox, tracker.getItemId());
-        if (localFolder == null || !ds.isSyncCapable(localFolder.getFolder())) {
+        if (localFolder == null || (!ds.isSyncCapable(localFolder.getFolder()) &&
+        		                    !localFolder.getPath().equals(tracker.getLocalPath()))) {
             LOG.debug("Local folder '%s' was deleted", tracker.getLocalPath());
             remoteFolder.delete();
             imapSync.getDataSource().deleteImapFolder(tracker);
