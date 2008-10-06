@@ -22,11 +22,13 @@ The following terms are used in modeling and implementation of the system:
             - account
             - calendar resource
             - cos
+            - cos base
             - distribution list
             - domain
+            - domain base
             - global config
             - server
-            - zimlet
+            - server base 
            
     There are three aspects of targets that need to be dealt with:
     (A) target object, on which a rights are granted.
@@ -125,6 +127,9 @@ Depending on the context, there are three aspects of targets that need to be dea
         
         - cos               : the cos itself
         
+        - cos base          : - like cos
+                              - grants on cos base would apply to all cos's 
+        
         - distribution list : if the right is applicable to:
                               - distribution lists: 
                                     the distribution list and all distribution lists under this distribution list.
@@ -140,402 +145,573 @@ Depending on the context, there are three aspects of targets that need to be dea
                               - accounts and calendar resources: 
                                     all accounts and calendar resources in this domain
                                     
+         
+        - domain base       : - like domain
+                              - grants on domain base would apply to all domains                             
+                                    
         - global config     : the global config itself
         
         - server            : the server itself
         
-        - zimlet            : the zimlet itself
+        - sersver base      : - like server
+                              - grants on server base would apply to all servers 
         
-      
 
 ===========
 3. Rights
 ===========
 
-3.1 Types of Rights
-    Rights can be categorized into "lower level" and "higher level" rights.
-    
-    Generally speaking, 
-        - "lower level" rights are orthogonal to the functionalities of the target type. 
-          There are 4 types of lower level rights: 
-              - get{object}    : read all attributes of the entry
-              - modify{object} : *read and write* all attributes of the entry
-              - rename{object} : rename the entry
-              - delete{object} : delete the entry
-              
-          {object} = Account | CalendarResource | DistributionList | Cos | Domain | Server | Config(only get/modify)
-          
-          
-        - "higher level" rights are for functional operations on applicable target types. 
-          They (usually) associated with a corresponding SOAP command.
-          e.g. For account targets: reindexMailbox, addAccountAlias
-               For domain targets: createAccount, deleteDistributionList
-               For server targets: deployAdminExtension, manageCertificate
-               
-    There is a category "in between" lower level and higher level rights: those that can only modify a certain subset 
-    of attributes of an entry.   In SOAP get{object}/modify{object} handlers that handles request to read/write an 
-    entry, those rights will be checked in conjunction with the get{object} and modify{object} rights and other such 
-    rights granted on the entry.  As follows:
-    
-    We call those rights "configure***" in the following section as a notion to indicate such rights. 
-    The "configure***" can be, for example, configureQuota, configurePasswordRule, ...
-    We can use the "configure" prefix as a naming convention for the rights when we implement them, but it's not mandated.
-    
-    ---------------------------------------------------
-    Notes on Reading and Writing Attributes Permissions
-    ---------------------------------------------------
-    (1) allow get{object}     : can read all attributes on the entry
-    (2) allow modify{object}  : can *read and write* *all* attributes on the entry     (note: allow read is implied)
-    (3) allow configure***    : can *read and write* *certain* attributes on the entry (note: allow read is implied)
-    (4) deny get{object}      : cannot read any attributes on the entry
-    (5) deny modify{object}   : cannot write any attributes on the entry               (note: does not deny read, just don't have a say on read)
-    (6) deny configure***     : cannot write certain attributes on the entry           (note: does not deny read, just don't have a say on read)
-    
-    
-    Ths above can be short-handed in this table:
-    (Table-1)
-                                          allow    allow    deny    deny 
-                                          read     write    read    write
-                                          (A)      (B)      (C)     (D)
-    -----------------------------------------------------------------------
-    (1) allow get{object}                 all
-    (2) allow modify{object}              all      all
-    (3) allow setXXX and configureXXX     certain  certain
-    (4) deny get{object}                                    any
-    (5) deny modify{object}                                         any
-    (6) deny setXXX and configureXXX                                certain
-    
-    
-    For each attribute, the read/write permission is determined as follows:
-    (Table-2)
-          
-         allow     deny     result
-    --------------------------------  
-    (W)                      deny
-    (X)    X                 allow
-    (Y)             X        deny
-    (Z)    X        X        deny
-             
-             
-    e.g. 
-    1. Q: target allows modifyAccount right to the current admin, but does not have an ACE entry for configureQuota right 
-          - can the current admin modify zimbraMailQuota of the target?
-       A: Yes.  Because (2):(B)="allow write all" => result in (X)
-    
-    
-    2. Q: target allows modifyAccount right to the current admin, but has an entry for "deny configureQuota" 
-          - can the current admin modify zimbraMailQuota of the target?
-       A: No.  Because (2):(B)="allow write all" and (6):(D)="deny write certain" => result in (Z)
-    
-    3. Q: target has ACE entry "deny getAccount" and an ACE entry "allow configureQuota" for the current admin 
-          - can the current admin see the value of zimbraMailQuota of the target?
-       A: No.   Because (4):(C)="deny read all" and (3):(A)="allow read certain" =>  => result in (Z)
-          However, if the question is "can the current admin *modify* the value of zimbraMailQuota of the target?" the answer would be Yes.
-          Because (4):(D)="not specified" and (3):(B)="allow write certain" => result in (X)
- 
+3.1 System-Defined Rights
 
-3.2 Operation that Require Rights on Multiple Targets
+3.1.1 High Level Rights - Rights for Functional Operations on Applicable Target Types. 
 
-    If a right involves accessing multiple targets, the grantee needs to have adequate rights on  
-    all pertinent targets. 
-    
-    For example:
-        - to create alias alias-1@domain-2.com for account account-1@domain-1.com, the grantee must 
-          have rights to: 
-              - addAccountAlias on account-1 (this allows adding an alias for account-1) 
-                AND 
-              - createAlias in domain-2.com (this allows creating an alias entry in domain domain-2.com)
-        - Likewise to remove the alias from the account, the grantee must have rights to: 
-              - removeAccountAlias of account-1@domain-1.com
-                AND 
-              - deleteAlias in domain-2.com.
-    
-
-3.3 The Rights
-
-    In 3.3.1 and 3.3.2, rights are tagged with:
-      - (L) : lower level right
-      - (H) : higher level right
-      - (C) : configure*** right
-
-3.3.1 System Defined Rights
-     
->>>>> OPEN-ISSUE-1
-- How to model ModifyAccount in functional areas?
-      e.g.  - enable/disable IMAP/POP and mobile access for all users
-            - enable/disable sharing of folders
-            - enable/disable zimlets/themes
-            - enable/disable email aggregation
+      There are two types of such rights:
+      
+      (A) Non-configure*** Rights
+          - Usually associated with a corresponding SOAP command.
+      
+          - Independent of other rights on the same target.  
+            For example:
+                - if grantee G is allowed the setPassword, renameAccount, restoreAccount rights on 
+                  account A, we do not check if G is allowed/denied the modifyAccount right on A when 
+                  set password/rename account/restore account are executed.
+                - if grantee G is allowed the backupAccount, viewEmail, getMailboxDump rights on 
+                  domain D, we do not check if G is allowed/denied the getAccount right on A 
+                  when backup account/view email/get mailbox dump are executed.
             
-      Should we define hard Rights for each (e.g. configureImap, configurePop, ...)
-      or 
-      should we provide a mechanism so rights can be "softly" defined/configured?
-      e.g. admin can define a right called "configureImap" by specifying all imap related 
-           attributes the Right can modify.  System can also have pre-configured 
-           "soft rights" that are available out of the box.
-           Need to come up with LDAP structure/storage of soft Rights.  TODO.
-<<<<<
-         
-3.3.1.1 account/calendar resource:
-          - (L) getAccount                   : get all account attributes
-          - (L) modifyAccount                : modify all account attributes
-          - (L) modifyAccountWithinCosLimit  : modify all account attributes within COS limit
+          - Some Operations Require Rights on Multiple Targets
+            If a right involves accessing multiple targets, the grantee needs to have adequate 
+            rights on all pertinent targets. 
+            For example:
+                - to create alias alias-1@domain-2.com for account account-1@domain-1.com, the grantee must 
+                  have rights to: 
+                      - addAccountAlias on account-1 (this allows adding an alias for account-1) 
+                        AND 
+                      - createAlias in domain-2.com (this allows creating an alias entry in domain domain-2.com)
+                - Likewise to remove the alias from the account, the grantee must have rights to: 
+                      - removeAccountAlias of account-1@domain-1.com
+                        AND 
+                      - deleteAlias in domain-2.com.
+                      
+      
+      (B) configure*** Rights
+          - Can only modify a certain subset of attributes of an entry.
+            For example:
+                configureQuota right can modify attributes: 
+                    zimbraMailQuota
+                    zimbraQuotaWarnPercent
+                    zimbraQuotaWarnInterval
+                    zimbraQuotaWarnMessage
           
-          - (L) renameAccount                : rename account
-          - (L) deleteAccount                : delete account
+          - Checked in SOAP get{object}/modify{object} handlers.  As follows:
+    
+            Definition of rights:
+            (1) allow get{object}     : can read all attributes on the entry
+            (2) allow modify{object}  : can *read and write* *all* attributes on the entry     (note: allow read is implied)
+            (3) allow configure***    : can *read and write* *certain* attributes on the entry (note: allow read is implied)
+            (4) deny get{object}      : cannot read any attributes on the entry
+            (5) deny modify{object}   : cannot write any attributes on the entry               (note: does not deny read, just doesn't have a say on read)
+            (6) deny configure***     : cannot write certain attributes on the entry           (note: does not deny read, just doesn't have a say on read)
+    
+            The above can be short-handed in this table:
+            (Table-1)
+                                                  allow    allow    deny    deny 
+                                                  read     write    read    write
+                                                  (A)      (B)      (C)     (D)
+            -----------------------------------------------------------------------
+            (1) allow get{object}                 all
+            (2) allow modify{object}              all      all
+            (3) allow setXXX and configureXXX     certain  certain
+            (4) deny get{object}                                    any
+            (5) deny modify{object}                                         any
+            (6) deny setXXX and configureXXX                                certain
+    
+    
+            For each attribute, the read/write permission is determined as follows:
+            (Table-2)
+                  
+                 allow     deny     result
+            --------------------------------  
+            (W)                      deny
+            (X)    X                 allow
+            (Y)             X        deny
+            (Z)    X        X        deny
+             
+             
+            e.g. 
+            1. Q: target allows modifyAccount right to the current admin, but does not have an ACE entry for configureQuota right 
+                  - can the current admin modify zimbraMailQuota of the target?
+               A: Yes.  Because (2):(B)="allow write all" => result in (X)
+            
+            
+            2. Q: target allows modifyAccount right to the current admin, but has an entry for "deny configureQuota" 
+                  - can the current admin modify zimbraMailQuota of the target?
+               A: No.  Because (2):(B)="allow write all" and (6):(D)="deny write certain" => result in (Z)
+            
+            3. Q: target has ACE entry "deny getAccount" and an ACE entry "allow configureQuota" for the current admin 
+                  - can the current admin see the value of zimbraMailQuota of the target?
+               A: No.   Because (4):(C)="deny read all" and (3):(A)="allow read certain" =>  => result in (Z)
+                  However, if the question is "can the current admin *modify* the value of zimbraMailQuota of the target?" the answer would be Yes.
+                  Because (4):(D)="not specified" and (3):(B)="allow write certain" => result in (X)
+ 
+      
+      
+      System-defined high level rights are described by target types below in 3.1.1.X.
+      The lists are tentative, they can certainly change during the development cycles of the delegate admin
+      project, and afterwards as the product evolves.
+
+3.1.1.1 account/calendar resource:
+          - getAccount                         : get all account attributes
+          - modifyAccount                      : modify all account attributes
+          - modifyAccountWithinInheritedLimit  : modify all account attributes within COS limit
           
-          - (H) addAccountAlias              : add alias to account
-          - (H) removeAccountAlias           : remove alias from account
-          - (H) viewEmail                    : view the account's email
-          - (H) getMailboxDump               : get mailbox dump for legal intercept
-          - (H) move mailbox                 : move mailbox from one server to anohter
-          - (H) restoreAccount               : restore account from backup
-          - (H) reindexMailbox               : reindex mailbox
+          - renameAccount                      : rename account
+          - deleteAccount                      : delete account
           
-          - (C) setCos                       : assign cos to account
-          - (C) setPassword                  : set account password
-          - (C) configureQuota               : configure quota
-          - (C) configureFeature             : enable/disable features
-          - (C) configurePasswordRule        : configure password rules
-          - (C) configureLoginPolicy         : configure login/lockout policies
-          - (C) configureZimlet              : configure available zimlets
-          - (C) configureTheme               : configure available themes(skins)
+          - addAccountAlias                    : add alias to account
+          - removeAccountAlias                 : remove alias from account
+          
+          - getMailboxDump                     : get mailbox dump for legal intercept
+          - moveMailbox                        : move mailbox from one server to another
+          - reindexMailbox                     : reindex mailbox
+          - viewEmail                          : view the account's email
+          
+          - backupAccount                      : backup account
+          - restoreAccount                     : restore account from backup
+          
+          - setPassword                        : set account password
+          
+          - configureQuota                     : configure quota
+          - configureFeature                   : enable/disable features
+          - configurePasswordRule              : configure password rules
+          - configureLoginPolicy               : configure login/lockout policies
+          - configureZimlet                    : configure available zimlets
+          - configureTheme                     : configure available themes(skins)
+
 
 3.1.1.2 calendar resource:
-          Same as those for accounts.
+          - getCalenceResource                 : get all calendar resource attributes
+          - modifyCalenceResource              : modify all calendar resource attributes
+          - modifyCalenceResourceWithinInheritedLimit : modify all calendar resource attributes within COS limit
           
-3.3.1.3 cos
-          - (L) getCos                       : get all cos attributes
-          - (L) modifyCos                    : modify all cos attributes
-          - (L) modifyCosWithinCosLimit      : modify all cos attributes within the current COS limit
+          - renameCalenceResource              : rename calendar resource
+          - deleteCalenceResource              : delete calendar resource
           
-          - (L) renameCos                    : rename cos
-          - (L) deleteCos                    : delete cos
-          
-          - (C) configureQuota               : configure quota
-          - (C) configureFeature             : enable/disable features
-          - (C) configurePasswordRule        : configure password rules
-          - (C) configureLoginPolicy         : configure login/lockout policies
-          - (C) configureZimlet              : configure available zimlets
-          - (C) configureTheme               : configure available themes(skins)
+          - addCalenceResourceAlias            : add alias to calendar resource
+          - removeCalenceResourceAlias         : remove alias from calendar resource
 
-    
-3.3.1.4 distribution list
-          - All rights for accounts/CRs
-                When account/CR rights are specified on a DL entry, the ACEs are interpreted as 
-                "apply to all direct or indirect account/CR members of this DL"
-                
-          - (L) getDistributionList          : get all distribution list attributes
-          - (L) modifyDistributionList       : modify all distribution list attributes
-          - (L) renameDistributionList       : rename distribution list
-          - (L) deleteDistributionList       : delete distribution list
+          - getMailboxDump                     : get mailbox dump for legal intercept
+          - moveMailbox                        : move mailbox from one server to another
+          - reindexMailbox                     : reindex mailbox
+          - viewEmail                          : view the calendar resource's email
           
-          - (H) addDistributionListAlias     : add alias to distribution list
-          - (H) removeDistributionListAlias  : remove alias from distribution list
-          - (H) addDistributionListMember    : add member to distribution list
-          - (H) removeDistributionListMember : remove member from distribution list
+          - backupCalenceResource              : backup calendar resource
+          - restoreCalenceResource             : restore calendar resource from backup
+          
+          - setPassword                        : set calendar resource password
+
+
+3.1.1.3 cos
+          - getCos                             : get all cos attributes
+          - modifyCos                          : modify all cos attributes
+          - modifyCosWithinInheritedLimit      : modify all cos attributes within the current COS limit
+          
+          - renameCos                          : rename cos
+          - deleteCos                          : delete cos
+          
+          - configureQuota                     : configure quota
+          - configureFeature                   : enable/disable features
+          - configurePasswordRule              : configure password rules
+          - configureLoginPolicy               : configure login/lockout policies
+          - configureZimlet                    : configure available zimlets
+          - configureTheme                     : configure available themes(skins)
+
+
+3.1.1.4 cos base
+          - All rights for cos
+          Also see "3.1.1.3 cos" and "(C) scope of targets" under "2. About Targets".   
+          
+          - createCos                          : create cos
+          
+    
+3.1.1.5 distribution list
+          - All rights for account/calendar resource
+                When account/calendar resource rights are specified on a DL entry, the ACEs are 
+                interpreted as "apply to all direct or indirect account/calendar resource members 
+                of this distribution list".  Also see "(C) scope of targets" under "2. About Targets".
+                
+          - getDistributionList               : get all distribution list attributes
+          - modifyDistributionList            : modify all distribution list attributes
+          
+          - renameDistributionList            : rename distribution list
+          - deleteDistributionList            : delete distribution list
+          
+          - addDistributionListAlias          : add alias to distribution list
+          - removeDistributionListAlias       : remove alias from distribution list
+          
+          - addDistributionListMember         : add member to distribution list
+          - removeDistributionListMember      : remove member from distribution list
     
 
-3.3.1.5 domain
-          - All rights for accounts/CRs
-                When account/CR rights are specified on a domain entry, the ACEs are interpreted as 
-                "apply to all accounts/CRs in this domain"
-          - All rights for DLs
-                When DL rights are specified on a domain entry, the ACEs are interpreted as 
-                "apply to all DLs in this domain"
+3.1.1.6 domain
+          - All rights for account/calendar resource
+                When account/calendar resources rights are specified on a domain entry, the ACEs are 
+                interpreted as "apply to all accounts/calendar resources in this domain"
+          - All rights for distribution list
+                When distribution list rights are specified on a domain entry, the ACEs are interpreted 
+                as "apply to all distribution lists in this domain"
+          Also see "(C) scope of targets" under "2. About Targets".      
                 
-          - (L) getDomain                    : get all domain attributes
-          - (L) modifyDomain                 : modify all domain attributes
+          - getDomain                         : get all domain attributes
+          - modifyDomain                      : modify all domain attributes
+          - modifyDomainWithinInheritedLimit  : modify all domain attributes within global config limit
           
-          - (L) renameDomain                 : rename domain
-          - (L) deleteDomain                 : delete domain
+          - renameDomain                      : rename domain
+          - deleteDomain                      : delete domain
           
-          - (H) createSubDomain              : create sub domain
-          - (H) createAccount                : create account in the domain
-          - (H) deleteAccount                : delete account in the domain
-          - (H) createCalendarResource       : create calendar resource in the domain
-          - (H) deleteCalendarResource       : delete calendar resource in the domain
-          - (H) createDistributionList       : create distribution list in the domain
-          - (H) deleteDistributionList       : delete distribution list in the domain
-          - (H) createAlias                  : create alias in this domain
-          - (H) deleteAlias                  : delete alias in this domain
+          - createSubDomain                   : create sub domain
           
-          - (C) configureExternalGAL         : configure external GAL
-          - (C) configureExternaAuth         : configure external auth
+          - crossMailboxSearch                : run search mail (CMBS) functionality
+           
+          - createAccount                     : create account in the domain
+          - createCalendarResource            : create calendar resource in the domain
+          - createDistributionList            : create distribution list in the domain
+          - createAlias                       : create alias in this domain
+          - deleteAlias                       : delete alias in this domain
+          
+          - configureExternalGAL              : configure external GAL
+          - configureExternaAuth              : configure external auth
     
 >>>>> OPEN-ISSUE-2          
           Should we consider domain hierarchy like we do for DLs? 
           i.e. if G is allowed to createAccount in company.com, does G automatically have 
                right to createAccount in support.company.com and sales.company.com?
+               
+          For now we don't.     
 <<<<<
 
 
-3.3.1.6 global config
-          - (L) getGlobalConfig              : get global config attributes
-          - (L) modifyGlobalConfig           : modify global config attributes
+3.1.1.7 domain base
+          - All rights for domain/account/calendar resource/distribution list
+          Also see "3.1.1.6 domain" and "(C) scope of targets" under "2. About Targets".      
           
-          - (H) createCos                    : create cos
-          - (H) createTopLevelDomain         : create top level domain
-          - (H) createServer                 : create server
-          - (H) createZimlet                 : create zimlet
+          - createTopDomain                  : create top level domain
 
 
->>>>> OPEN-ISSUE-3         
-          Should we grant the create{top-level-object} rights on the global config entry?
-          or should we have a separate sub-tree (under the config branch cn=zimbra) for 
-          granting those rights? 
-<<<<<
-    
-3.3.1.7 server
-          - (L) getServer                    : get attributes of this server
-          - (L) modifyServer                 : modify attributes of this server
-          - (L) deleteServer                 : delete this server
+3.1.1.8 global config
+          - getGlobalConfig                  : get all global config attributes
+          - modifyGlobalConfig               : modify all global config attributes
           
-          - (H) deployAdminExtension         : deploy admin extensions
-          - (H) editAdminExtension           : edit admin extensions
-          - (H) removeAdminExtension         : remove admin extensions
-          - (H) viewMailQueue                : view mail queues
-          - (H) manageMailQueue              : take actions on mail queues
-          - (H) manageCertificate            : manage certificates
-          - (H) deployZimlets                : deploy zimlets
-
-          - (H) configureMTA                 : configure MTA
-          - (H) configurePOP3                : configure POP3
-          - (H) configureIMAP                : configure IMAP
-          - (H) configurePOPProxy            : configure POP3 proxy
-          - (H) configureIMAPProxy           : configure IMAP proxy
-          - (H) configureVolumes             : configure volumes
-          - (H) configureServiceEnabled      : configure services enabled
+    
+3.1.1.9 server
+          - getServer                        : get all server attributes
+          - modifyServer                     : modify all server attributes
+          - modifyServerWithinInheritedLimit : modify all server attributes within global config limit
           
- 
+          - deleteServer                     : delete server
+          
+          - deployAdminExtension             : deploy admin extensions
+          - editAdminExtension               : edit admin extensions
+          - removeAdminExtension             : remove admin extensions
+          
+          - viewMailQueue                    : view mail queues
+          - manageMailQueue                  : take actions on mail queues
+          - manageCertificate                : manage certificates
+          - deployZimlets                    : deploy zimlets
 
-    
-3.3.2 User Defined "Combo" or "Macro" Rights 
-      To simplify the granting process, admins can define "macro" rights that contain 
-      a collection of system defined rights.
-    
-      For example: 
-          PASSWORD_ADMIN = setPassword, setPasswordRule
-          FEATURE_ADMIN = setFeature, setZimlet, setTheme
-          SUPER_ADMIN = PASSWORD_ADMIN, FEATURE_ADMIN, setQuota
+          - configureMTA                     : configure MTA
+          - configurePOP3                    : configure POP3
+          - configureIMAP                    : configure IMAP
+          - configurePOPProxy                : configure POP3 proxy
+          - configureIMAPProxy               : configure IMAP proxy
+          - configureVolumes                 : configure volumes
+          - configureServiceEnabled          : configure services enabled
 
->>>>> OPEN-ISSUE-4
-    Should we support "Macro" rights in the server?  If so need to come up with storage.  TODO.                                        
-<<<<<
+
+3.1.1.10 server base
+          - all rights for server
+          Also see "3.1.1.9 server" and "(C) scope of targets" under "2. About Targets". 
+          
+          - createServer                     : createServer
+      
+       
+3.1.2 Attribute Level Rights - Fine-Grained Rights on Individual Attributes
+          - getAttr.{attr-name}              : get this attribute
+          - modifyAttr.{attr-name}           : get and modify this attribute
+          - modifyAttrWithinInheritedLimit.{attr-name} : modify this attribute within inherited limit
+               "inherited limit" is:
+                   - for account: cos value
+                   - for cos: current cos value
+                   - for domain: global config value
+                   - for server: global config value
+
+          e.g. getAttr.zimbraMailQuota
+               modifyAttr.zimbraMailQuota
+               modifyAttrWithinInheritedLimit.zimbraMailQuota
+               
+
+3.2 User(admin) Defined Rights
+
+    Admin defined rights can span multiple types of targets.  When an admin right spanning multiple 
+    target types is granted on a target, only those sub-rights that are applicable to the target 
+    type are effective.  Non-applicable sub-rights are ignored.
+    
+    For example, if an admin right spanning account, server, domain is granted on a domain, then only 
+    the sub-rights that are applicable to domain and account are effective; rights for server will be 
+    ignored.
+    
+
+3.2.1 Rights on Modifying Combination of Attributes on Various Entry Types
+          e.g. admin can define a configureFooBar right that allows:
+               - modify attr A, B, C on accounts/cos
+               - modify attr D, E, F on accounts/cos within inherited limit
+               - modify attr G, H on domains
+               - modify attr I on servers
+               - modify attr J, K on servers within inherited limit
+               - modify attr L on global config
+
+
+3.2.2 Combo Rights - Rights Combining any Rights 
+      (we will probably not support this)
+      
+          e.g. admin can define a right that combines the following rights:
+               - modifyAttrWithinInheritedLimit.zimbraMailQuota
+               - configureFooBar
+               - createAccount
+               - backupAccount
+               - restoreAccount
 
 
 =================
-3. Storage - LDAP
+4. Storage - LDAP
 =================
-ACE is stored in a LDAP attribute on target entries.  
 
-LDAP attribute:
----------------     
-    zimbraACE
+4.1 Grants
+
+    A grant, which is represented by an ACE, is stored in a LDAP attribute zimbraACE on target entries.  
+
+    zimbraACE:
+    ---------- 
         type="astring"
         cardinality="multi" (each value is an Access Control Entry, hence making an ACL)
-        optionalIn="account,distributionList,cos,domain,globalConfig,server,zimletEntry" 
+        optionalIn="account,distributionList,cos,domain,globalConfig,server"  (TODO: cos/domain/server base)
+            
+            
+    zimbraACE Format:
+    -----------------   
+        {grantee-zimbraId} {grantee-type} [-]{right} 
         
+            {grantee-zimbraId} = zimbraId of the grantee
+            
+            {grantee-type} = usr - grantee is an admin account
+                             grp - grantee is a group of admin accounts
+                             
+            {right} = the right.
+                      if a '-' (minus sign) is prepended to the right, it means the right is 
+                      specifically denied.              
         
-zimbraACE Format:
------------------   
-    {grantee-zimbraId} {grantee-type} [-]{right} 
     
-        {grantee-zimbraId} = zimbraId of the grantee
-        
-        {grantee-type} = usr - grantee is an admin account
-                         grp - grantee is a group of admin accounts
-                         
-        {right} = the right.
-                  if a '-' (minus sign) is prepended to the right, it means the right is 
-                  specifically denied.              
-    
-
-     e.g.
-        - On a domain target:    
-              75b0677b-6ed1-4f0a-a37e-e5b24e4c2d22 usr createAccount
-                  ==> account 75b0677b-6ed1-4f0a-a37e-e5b24e4c2d22 can create accounts in this domain.
-                  
-              55e1d53f-83cb-4d4c-a6a8-3b3da7841fd1 grp -setPassword
-                  ==> None of any direct or indirect members of DL 55e1d53f-83cb-4d4c-a6a8-3b3da7841fd1 can  
-                      set password for all accounts in this domain
+         e.g.
+            - On a domain target:    
+                  75b0677b-6ed1-4f0a-a37e-e5b24e4c2d22 usr createAccount
+                      ==> account 75b0677b-6ed1-4f0a-a37e-e5b24e4c2d22 can create accounts in this domain.
                       
-              75b0677b-6ed1-4f0a-a37e-e5b24e4c2d22 usr -configureGAL
-                  ==> account 75b0677b-6ed1-4f0a-a37e-e5b24e4c2d22 can configure GAL on this domain 
+                  55e1d53f-83cb-4d4c-a6a8-3b3da7841fd1 grp -setPassword
+                      ==> None of any direct or indirect members of DL 55e1d53f-83cb-4d4c-a6a8-3b3da7841fd1 can  
+                          set password for any accounts in this domain
+                          
+                  75b0677b-6ed1-4f0a-a37e-e5b24e4c2d22 usr -configureGAL
+                      ==> account 75b0677b-6ed1-4f0a-a37e-e5b24e4c2d22 can configure GAL on this domain 
+        
+            - On an account target:
+                  3b00a6bd-12ca-417d-9312-c5664a8c26b3 grp -setPassword
+                      ==> None of any direct or indirect members of DL 3b00a6bd-12ca-417d-9312-c5664a8c26b3 can 
+                          set password for this account.
+                          
+                  c2e3fd70-97ac-43a4-8caa-4bf681251a49 usr configureQuota
+                      ==> account c2e3fd70-97ac-43a4-8caa-4bf681251a49 can configure quota of this account.
+                       
+        
+    Indexing:
+    ---------    
+        zimbraACE is indexed.  This is to discover the "all rights granted to a grantee G" information for admin console.
+        
     
-        - On an account target:
-              3b00a6bd-12ca-417d-9312-c5664a8c26b3 grp -setPassword
-                  ==> None of any direct or indirect members of DL 3b00a6bd-12ca-417d-9312-c5664a8c26b3 can 
-                      set password for this account.
-                      
-              c2e3fd70-97ac-43a4-8caa-4bf681251a49 usr setQuota
-                  ==> account c2e3fd70-97ac-43a4-8caa-4bf681251a49 can set quota of this account.
-                   
-    
-Indexing:
----------    
-    zimbraACE is indexed.  This is to discover the "all rights granted to a grantee G" information for admin console.
-    
+    Queries:
+    --------
+        TODO
 
-Queries:
---------
+
+4.2 Admin Defined Rights
     TODO
     
     
-===================
-4. Granting Rules
-===================
-When more than one ACEs of an ACL on the same right match a grantee and all ACEs 
-don't agree on the same allow/deny for the right, the ACE with the most specific 
-match takes precedence; and if all matching ACEs are equally related to the grantee, 
-the negative ACE takes precedence.
+4.3 Changes for Cos/Domain/Server Base Entries
+    TODO
 
-example 1:
-    - ACL has:
-          . allow user A for right R
-          . deny group G for right R
-    - user A is in group G
-    => user A will be allowed for right R, because user match is more specific than group match.
-     
-     
-example 2:
-    - ACL has:
-          . allow group G1 for right R
-          . deny group G2 for right R
-    - group G2 is a member of group G1
-    - user A is a member of group G2
-    => user A will be denied for right R, because G2 is a more specific match than G1.
-     
-     
-example 3:
-    - ACL has:
-          . allow group G1 for right R
-          . deny group G2 for right R
-    - group G1 and G2 are not member of each other
-    - user A is in both group G1 and group G2
-    => user A will be denied, because negative ACE takes precedence.
     
+===================
+5. Granting Rules
+===================
+
+5.1 The Most Specific Grant Takes Precedence
+    A) Target Scope
+       
+       most specific                                                 least specific 
+       --------------------------------------------------------------------------
+       account  ->  group hierarchy  ->  domain(of the account)  ->  domain base
+       cos                                                           cos base
+       server                                                        server base
+       
+       Note, there is no "domain hierarchy" in the initial release.
+       Each domain is treated equally as far as target scope is concerned.
+       
+       e.g. 
+       1. For this hierarchy:
+              domain  domain.com
+              domain  sub.domain.com
+              group   g1@domain.com
+              group   g2@domain.com (a member of group g1@domain.com)
+              account user1@domain.com (a member of group g2@domain.com)
+              account user2@sub.domain.com (a member of group g1@domain.com)
+       
+          if a right R is:
+              (a) allow admin A on domain.com
+              (b) deny  admin A on sub.domain.com
+              (c) allow admin A on group g1@domain.com
+              (d) deny  admin A on group g2@domain.com
+                 
+          then:
+              - admin A is denied right R on user1@domain.com, because the most specific grant,
+                which is (d), denies it.
                 
-If multiple ACEs conflict for a right for the same grantee, this is a wrong setting, which 
-should not happen if all modification to ACLs are done via the supported granting/revoking 
-interfaces: SOAP and zmmailbox.   If for any reason such ACL does exist (e.g. 
-via ldapmodify, or zmprov ma command(should we make zimberaACE immutable so 
-it cannot be modified by zmprov?)), the result is **unexpected**, depending on 
-which ACE is encountered first when we iterate through the ACL.  We could've 
-spent more cycles detecting such settings and honor the negative ACE if there 
-is one, but currently the implementation choice is not to do so.
+              - admin A is allowed right R on user@@sub.domain.com, because the most specific 
+                grant, which is (c), allows it.
+                
+          Note, in (a), (b), (c), (d), admin A is not necessarily the grantee of each grant, 
+          it can be a member of the group to which the right is granted.  (see B) below) 
+              
+    
+    
+    B) Grantee Scope
+    
+       most specific                                 least specific 
+       ------------------------------------------------------------
+       account                                       group hierarchy
+       
+       e.g.
+       1. For this hierarchy:
+              group g1@domain.com
+              account user1@domain.com (a member of group g1@domain.com)
+              group admin-group@domain.com
+              admin account admin1@domain.com (a member of group admin-group@domain.com)
+              admin account admin2@domain.com (a member of group admin-group@domain.com)
+          
+          and the grants are:
+              (a) on account entry user1@domain.com
+                    {id of admin-group@domain.com} grp -rightR
+                    i.e. deny any direct or indirect member of group admin-group@domain.com 
+                         rightR on user1@domain.com.
+                         
+              (b) on account entry user1@domain.com
+                    {id of admin2@domain.com} usr rightR
+                    i.e. allow admin admin2@domain.com for rightR on user1@domain.com          
+                
+              (c) on group entry g1@domain.com
+                    {id of admin1@domain.com} usr rightR
+                    i.e. allow admin admin1@domain.com for rightR on any direct or indirect 
+                         members of g1@domain.com
+                     
+          then:
+              - admin1@domain.com is denied for rightR on user1@domain.com
+                because grant (a) denies it.  Even if admin1@domain.com is allowed by grant (c), 
+                but it is on the group level in the target scope, so grant (a) takes precedence 
+                over grant (c).
+                
+              - admin2@domain.com is allowed for rightR on user1@domain.com
+                because grant (b) allows it.  Even if grant (a) denies it, but it on the group 
+                level in the grantee scope, so grant (b) takes precedence over grant (a).
+       
 
-e.g. - ACL has:
-           . allow user A for right R
-           . deny user A for right R
-     => user A could be allowed or denied for right R, randomly.   
-        
-                          
+5.2 Negative Grants Takes Precedence Over Positive Grants
+    If grants are all equal in both target and grantee scope, and they conflict with each other, 
+    then the negative grant takes precedence.
+    
+    e.g. 
+    1. For this hierarchy:
+           group admin-group1@domain.com
+           group admin-group2@domain.com
+           admin account admin1@domain.com (a member in both admin-group1@domain.com and admin-group2@domain.com)
+           account user1@domain.com
+           
+       and the grants are:
+           (a) on account entry user1@domain.com
+                 {id of admin-group1@domain.com} grp -rightR
+            
+           (b) on account entry user1@domain.com
+                 {id of admin-group1@domain.com} grp rightR  
+                 
+       then:
+           - admin admin1@domain.com is denied for rightR on user1@domain.com, because of grant (a), which is 
+             a negative grant that takes precedence over the positive grant (b) on equally scoped target/grantee.
+             
+    2. For this hierarchy:
+           group g1@domain.com
+           group g2@domain.com
+           account user1@domain.com (a member in both group g1@domain.com and group g2@domain.com)
+           admin account admin1@domain.com
+           
+       and the grants are:
+           (a) on group entry g1@domain.com
+                 {id-of-admin1@domain.com} usr -rightR 
+                 
+           (b) on group entry g2@domain.com
+                 {id-of-admin1@domain.com} usr rightR 
+                 
+       then:
+           admin admin1@domain.com is denied for rightR on user1@domain.com, because of grant (a), which is 
+           a negative grant that takes precedence over the positive grant (b) on equally scoped target/grantee.                       
+    
+
+5.3 Conflict Grants on the Same Target, to the Same Grantee, on the Same Right, the Result is "unexpected"
+    5.1 and 5.1 are for scenarios when grants on *different* entries or to *different* grantees, conflict with 
+    one another.  
+    
+    When an existing grant is modified or when a new grant is added, our granting code will ensure that 
+    only one grant can exist for the same grantee, same right.
+    
+    For example, if there is a grant on user1@domain.com
+        {id-of_admin@domain.com} usr rightR
+    then on user1@domain.com there can't be a     
+        {id-of_admin@domain.com} usr -rightR
+    
+    However, if such grants does get into LDAP for any reason (e.g. by ldapmodify), the result is *unexpected*.
+    
+    We could've spent more cycles detecting such conflicting settings and honor the negative grant if there 
+    is one, but currently the implementation choice is not to do so.  If this becomes a problem, we can change 
+    the implementation.  For example, while walking through all grants on a target for rightR, it will stop 
+    with a result if a grant specifically granted to the authed account for rightR(allow or deny) is found.
+    It will not continue to examine other grants because this is grant is as specific as can be.
+    
+    However, note, for checking rights for Get{object}/Modify{object} SOAP Calls, we will iterate through all 
+    rights, instead of stopping when a most specific grant is found.  This is because we need to expand all 
+    rights down to attribute level.  See 5.4 below. 
+    
+    
+5.4 For Get{object}/Modify{object} SOAP Calls
+    All positive/negative rights will be expanded down to each attribute level and computed into a net set 
+    of attributes allowed for read/write.
+    
+    Get{object}/Modify{object} will be allowed only if all attributes requested for Get/Modify is allowed 
+    to be read/written; otherwise the entire request will be denied(PERM_DENIED exception) and no attribute 
+    is returned/updated.
+
+                             
 
 ===============
-5. Admin SOAP
+6. Admin SOAP
 ===============
-5.1 GetRightsRequest
+6.1 GetRightsRequest
     Given a target entry, returns all positive and negative rights the authed admin has.
     
     The result can help the admin console decide on what tabs to display after a target 
@@ -571,7 +747,7 @@ e.g. - ACL has:
     </GetRightsRequest>
 
     
-5.2 GrantPermissionRequest
+6.2 GrantPermissionRequest
 
     Grant permission on a target.  The authed admin can only modify(grant/revoke) a subset of rights/targets granted to itself 
     to other admins.
@@ -603,7 +779,7 @@ GrantPermissionResponse returns grants on the target after granting rights in th
 </GrantPermissionRequest>
 
 
-5.3 RevokePermissionRequest
+6.3 RevokePermissionRequest
     Revoke permission previously granted on a target.  The authed admin can only modify(grant/revoke) a subset of rights/targets 
     granted to itself to other admins.
  
@@ -635,13 +811,13 @@ RevokePermissionResponse returns grants on the target after revoking rights in t
 
 
 ===========
-6. zmprov
+7. zmprov
 ===========
 TODO
 
                 
 ==========================
-7. Backwards compatibility
+8. Backwards compatibility
 ==========================
 - For current admins (zimbraIsAdminAccount), allow:
      - All permissions on global config
@@ -656,7 +832,7 @@ Customers can then turn off those bits and explicitly grant only the permissions
 
 
 ===========================
-8. References, requirements
+9. References, requirements
 ===========================
 - Kevin Kluge's requirement doc: 
   https://dogfood.zimbra.com/home/kluge/Public/delegateAdmin
