@@ -23,8 +23,8 @@ public class AuthenticationException extends IOException {
     private String captchaUrl;
     private String captchaData;
 
-    public AuthenticationException(ErrorCode code, String detail) {
-        super(detail);
+    public AuthenticationException(ErrorCode code, String msg) {
+        super(msg);
         this.code = code;
     }
 
@@ -46,8 +46,4 @@ public class AuthenticationException extends IOException {
 
     public String getCaptchaUrl() { return captchaUrl; }
     public String getCaptchaData() { return captchaData; }
-
-    public static AuthenticationException invalidToken() {
-        return new AuthenticationException(ErrorCode.INVALID_TOKEN);
-    }
 }
