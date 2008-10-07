@@ -191,12 +191,21 @@ public class DbSearch {
     /**
      * @param fieldName
      * @return TRUE if this field is case-sensitive for search/sort -- ie do we need to
-     *         do an UPPER(fieldName) on it in places? 
+     *         do an UPPER(fieldName) on it in places?
      */
     private static boolean isCaseSensitiveField(String fieldName) {
-        return (fieldName.equals("sender") || 
-                        fieldName.equals("subject") ||
-                        fieldName.equals("name")); 
+        // we need to handle things like "mi.sender" for the sender column, etc
+        // so look for the last . in the fieldname, return the string after that.
+        String colNameAfterPeriod; 
+        int periodOffset = fieldName.lastIndexOf('.');
+        if (periodOffset <= 0 && periodOffset < (fieldName.length()+1))
+            colNameAfterPeriod = fieldName;
+        else
+            colNameAfterPeriod = fieldName.substring(periodOffset+1);
+        
+        return (colNameAfterPeriod.equals("sender") || 
+                        colNameAfterPeriod.equals("subject") ||
+                        colNameAfterPeriod.equals("name")); 
     }
 
     private static String sortField(byte sort, boolean useAlias) {
@@ -941,7 +950,7 @@ public class DbSearch {
         if (ListUtil.isEmpty(ranges))
             return 0;
         
-        if (isCaseSensitiveField(column) && Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON)) {
+        if (Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON) && isCaseSensitiveField(column) ) {
             column = "UPPER("+column+")";
         }
 
@@ -983,7 +992,7 @@ public class DbSearch {
     private static final int encodeRange(StringBuilder statement, String column, Collection<? extends DbSearchConstraints.StringRange> ranges) {
         int retVal = 0;
         
-        if (isCaseSensitiveField(column) && Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON)) {
+        if (Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON) && isCaseSensitiveField(column)) {
             column = "UPPER("+column+")";
         }
         
