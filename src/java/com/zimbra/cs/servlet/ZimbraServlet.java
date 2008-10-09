@@ -394,7 +394,7 @@ public class ZimbraServlet extends HttpServlet {
         Provisioning prov = Provisioning.getInstance();
         
         if (user.indexOf('@') == -1) {
-            String host = req.getServerName();
+            String host = HttpUtil.getVirtulaHost(req);
             if (host != null) {
                 Domain d = prov.get(DomainBy.virtualHostname, host.toLowerCase());
                 if (d != null) user += "@" + d.getName();
