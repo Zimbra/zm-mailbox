@@ -107,7 +107,7 @@ tar -xzf $SRCDIR/ThirdPartyBuilds/MACOSXx86/bdb/bdb-4.7.25.2.tgz
 tar -xzf $SRCDIR/ThirdPartyBuilds/MACOSXx86/curl/curl-7.19.0.tgz
 tar -xzf $SRCDIR/ThirdPartyBuilds/MACOSXx86/cyrus-sasl/cyrus-sasl-2.1.22.3z.tgz
 tar -xzf $SRCDIR/ThirdPartyBuilds/MACOSXx86/heimdal/heimdal-1.2.1.tgz
-tar -xfz $SRCDIR/ThirdPartyBuilds/MACOSXx86/libtool/libtool-2.2.4.tgz
+tar -xzf $SRCDIR/ThirdPartyBuilds/MACOSXx86/libtool/libtool-2.2.4.tgz
 tar -xzf $SRCDIR/ThirdPartyBuilds/MACOSXx86/openldap/openldap-2.4.12.2z.tgz
 tar -xzf $SRCDIR/ThirdPartyBuilds/MACOSXx86/openssl/openssl-0.9.8i.tgz
 
